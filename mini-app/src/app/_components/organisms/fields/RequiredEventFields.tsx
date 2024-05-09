@@ -1,0 +1,213 @@
+'use client'
+
+import React, {
+    ChangeEvent,
+    Dispatch,
+    FC,
+    SetStateAction,
+    useState,
+} from 'react'
+import Card from '../../atoms/cards'
+import Labels from '../../atoms/labels'
+import Input from '../../atoms/inputs'
+import Pickers from '../../molecules/pickers'
+import { TRequiredEventFields, ZodErrors } from '@/types'
+import { Switch } from '@/components/ui/switch'
+
+export type RequiredEventFieldsProps = {
+    formData: TRequiredEventFields
+    setFormData: Dispatch<SetStateAction<TRequiredEventFields>>
+    zodErrors: ZodErrors
+}
+
+const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
+    formData,
+    setFormData,
+    zodErrors,
+}) => {
+    const [timeZone, setTimeZone] = useState(formData?.timezone || '')
+
+    const handleChange = (e: ChangeEvent<HTMLInputElement>, field: string) => {
+        setFormData((prev) => {
+            return { ...prev, [field]: e.target.value }
+        })
+    }
+
+    const handlePropertyChange = (value: string | number | object | boolean, field: string) => {
+        setFormData((prev) => {
+            return { ...prev, [field]: value }
+        })
+    }
+
+    console.log({ formData })
+
+
+    return (
+        <div>
+            <Card className="flex flex-col items-start pt-1">
+                <div className="flex justify-between w-full">
+                    <Labels.Label>Is Giveaway?</Labels.Label>
+                    <Labels.Label>
+                        {zodErrors?.isGiveaway && (
+                            <div className="text-red-500 text-end">
+                                {zodErrors.type}
+                            </div>
+                        )}
+                    </Labels.Label>
+                </div>
+
+                <Switch
+                    className='mt-2'
+                    checked={!!formData.type}
+                    onCheckedChange={(checked) => {
+                        if (formData.type !== 2) {
+                            handlePropertyChange(+checked, "type")
+                        }
+                    }}
+                />
+            </Card>
+
+            <Card className="flex flex-col items-start pt-1">
+                <div className="flex justify-between w-full">
+                    <Labels.Label>Title</Labels.Label>
+                    <Labels.Label>
+                        {zodErrors?.title && (
+                            <div className="text-red-500 text-end">
+                                {zodErrors.title}
+                            </div>
+                        )}
+                    </Labels.Label>
+                </div>
+
+                <Input
+                    value={formData.title}
+                    onChange={(e) => handleChange(e, 'title')}
+                />
+            </Card>
+            <Card className="flex flex-col items-start pt-1">
+                <div className="flex justify-between w-full">
+                    <Labels.Label>Subtitle</Labels.Label>
+                    <Labels.Label>
+                        {zodErrors?.subtitle && (
+                            <div className="text-red-500 text-end">
+                                {zodErrors.subtitle}
+                            </div>
+                        )}
+                    </Labels.Label>
+                </div>
+
+                <Input
+                    value={formData.subtitle}
+                    onChange={(e) => handleChange(e, 'subtitle')}
+                />
+            </Card>
+            <Card className="flex flex-col items-start pt-1">
+                <div className="flex justify-between w-full">
+                    <Labels.Label>Description</Labels.Label>
+                    <Labels.Label>
+                        {zodErrors?.description && (
+                            <div className="text-red-500 text-end">
+                                {zodErrors.description}
+                            </div>
+                        )}
+                    </Labels.Label>
+                </div>
+
+                <Input
+                    value={formData.description}
+                    onChange={(e) => handleChange(e, 'description')}
+                />
+            </Card>
+
+            <Pickers.TonHubPicker
+                value={formData.society_hub}
+                onValueChange={(e) => handlePropertyChange(e, 'society_hub')}
+                errors={zodErrors}
+            />
+
+            <Card className="flex flex-col items-start pt-1">
+                <div className="flex justify-between w-full">
+                    <Labels.Label>Location</Labels.Label>
+                    <Labels.Label>
+                        {zodErrors?.location && (
+                            <div className="text-red-500 text-end">
+                                {zodErrors.location}
+                            </div>
+                        )}
+                    </Labels.Label>
+                </div>
+
+                <Input
+                    value={formData.location}
+                    onChange={(e) => handleChange(e, 'location')}
+                />
+            </Card>
+
+            <Card className="flex flex-col items-start pt-1">
+                <div className="flex justify-between w-full">
+                    <Labels.Label>Image URL</Labels.Label>
+                    <Labels.Label>
+                        {zodErrors?.image_url && (
+                            <div className="text-red-500 text-end">
+                                {zodErrors.image_url}
+                            </div>
+                        )}
+                    </Labels.Label>
+                </div>
+
+                <Input
+                    value={formData.image_url}
+                    onChange={(e) => handleChange(e, 'image_url')}
+                />
+            </Card>
+
+            <Card className="flex flex-col items-start pt-1">
+                <div className="flex justify-between w-full">
+                    <Labels.Label>Secret Phrase</Labels.Label>
+                    <Labels.Label>
+                        {zodErrors?.secret_phrase && (
+                            <div className="text-red-500 text-end">
+                                {zodErrors.secret_phrase}
+                            </div>
+                        )}
+                    </Labels.Label>
+                </div>
+
+                <Input
+                    placeholder="Leave blank for public events"
+                    value={formData.secret_phrase}
+                    onChange={(e) => handleChange(e, 'secret_phrase')}
+                />
+            </Card>
+
+            <Pickers.Datetimepicker
+                title={'Start Date'}
+                value={formData.start_date}
+                setTimestamp={(num: number) => {
+                    handlePropertyChange(num, 'start_date')
+                }}
+                errors={zodErrors}
+            />
+
+            <Pickers.Datetimepicker
+                title={'End Date'}
+                value={formData.end_date}
+                setTimestamp={(num: number) => {
+                    handlePropertyChange(num, 'end_date')
+                }}
+                errors={zodErrors}
+            />
+
+            <Pickers.Timezonepicker
+                value={timeZone}
+                onValueChange={(timezone) => {
+                    setTimeZone(timezone)
+                    handlePropertyChange(timezone, 'timezone')
+                }}
+                errors={zodErrors}
+            />
+        </div>
+    )
+}
+
+export default RequiredEventFields

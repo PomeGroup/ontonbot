@@ -1,0 +1,45 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+mini-app/node_modules
+mini-app/.pnp
+mini-app/.pnp.js
+
+# testing
+mini-app/coverage
+
+# next.js
+mini-app/.next/
+mini-app/out/
+
+# production
+mini-app/build
+
+# misc
+mini-app/.DS_Store
+mini-app/*.pem
+
+# debug
+mini-app/npm-debug.log*
+mini-app/yarn-debug.log*
+mini-app/yarn-error.log*
+
+# local env files
+mini-app/.env*.local
+
+# vercel
+mini-app/.vercel
+
+mini-app/drizzle
+
+# typescript
+mini-app/*.tsbuildinfo
+mini-app/next-env.d.ts
+
+data/
+
+.DS_Store
+
+node_modules
+
+.env
