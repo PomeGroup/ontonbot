@@ -84,7 +84,7 @@ const EventsAdminPage = () => {
                             <Button className="w-full" variant={'outline'}>Manage</Button>
                         </Link>
                         <div className="flex-1">
-                            <QrCodeButton url={`https://t.me/theontonbot/event?startapp=${event.event_uuid}`} hub={event.society_hub!} />
+                            <QrCodeButton url={`https://t.me/on_ton_bot/event?startapp=${event.event_uuid}`} hub={event.society_hub!} />
                         </div>
                     </div>
                 </div>
