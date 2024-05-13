@@ -1,56 +1,69 @@
 import { db } from '@/db/db'
-import { publicProcedure, router } from '../trpc'
-import { eventFields, events, userEventFields, users, visitors } from '@/db/schema'
-import { z } from 'zod'
-import { and, desc, eq, isNotNull, or, sql } from 'drizzle-orm'
+import {
+    eventFields,
+    events,
+    userEventFields,
+    users,
+    visitors,
+} from '@/db/schema'
 import { EventDataSchema } from '@/types'
-import { v4 as uuidv4 } from 'uuid'
 import { fetchBalance, sleep, validateMiniAppData } from '@/utils'
 import axios from 'axios'
+import dotenv from 'dotenv'
+import { and, desc, eq, isNotNull, or, sql } from 'drizzle-orm'
+import Papa from 'papaparse'
 import nacl from 'tweetnacl'
 import naclUtil from 'tweetnacl-util'
-import dotenv from 'dotenv';
+import { Client } from 'twitter-api-sdk'
+import { v4 as uuidv4 } from 'uuid'
+import { z } from 'zod'
+import {
+    checkIsAdminOrOrganizer,
+    checkIsEventOwner,
+    selectEventByUuid,
+} from '../db/events'
 import { selectVisitorsByEventUuid } from '../db/visitors'
-import Papa from 'papaparse'
-import { Client } from "twitter-api-sdk";
-import { checkIsAdminOrOrganizer, checkIsEventOwner, selectEventByUuid } from '../db/events'
-dotenv.config();
+import { publicProcedure, router } from '../trpc'
+dotenv.config()
 
 export const eventsRouter = router({
     // private
-    getVisitorsWithWalletsNumber: publicProcedure.input(
-        z.object(
-            {
+    getVisitorsWithWalletsNumber: publicProcedure
+        .input(
+            z.object({
                 event_uuid: z.string(),
-                initData: z.string().optional()
-            }
+                initData: z.string().optional(),
+            })
         )
-    ).query(async (opts) => {
-        if (!opts.input.initData) {
-            return undefined;
-        }
+        .query(async (opts) => {
+            if (!opts.input.initData) {
+                return undefined
+            }
 
-        const { valid, role } = await checkIsAdminOrOrganizer(opts.input.initData);
-
-        if (!valid) {
-            throw new Error('Unauthorized access or invalid role');
-        }
-
-
-        return (await db
-            .select()
-            .from(visitors)
-            .fullJoin(users, eq(visitors.user_id, users.user_id))
-            .where(
-                and(
-                    eq(visitors.event_uuid, opts.input.event_uuid),
-                    isNotNull(users.wallet_address)
-                )
+            const { valid, role } = await checkIsAdminOrOrganizer(
+                opts.input.initData
             )
-            .execute()).length || 0;
-    }),
 
+            if (!valid) {
+                throw new Error('Unauthorized access or invalid role')
+            }
 
+            return (
+                (
+                    await db
+                        .select()
+                        .from(visitors)
+                        .fullJoin(users, eq(visitors.user_id, users.user_id))
+                        .where(
+                            and(
+                                eq(visitors.event_uuid, opts.input.event_uuid),
+                                isNotNull(users.wallet_address)
+                            )
+                        )
+                        .execute()
+                ).length || 0
+            )
+        }),
 
     getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
         const balance = await fetchBalance(opts.input)
@@ -61,365 +74,406 @@ export const eventsRouter = router({
         return selectEventByUuid(opts.input)
     }),
 
-
     // private
-    getEvents: publicProcedure.input(
-        z.object(
-            {
-                initData: z.string().optional()
-            }
+    getEvents: publicProcedure
+        .input(
+            z.object({
+                initData: z.string().optional(),
+            })
         )
-    ).query(async (opts) => {
-        if (!opts.input.initData) {
-            return undefined;
-        }
+        .query(async (opts) => {
+            if (!opts.input.initData) {
+                return undefined
+            }
 
-        const { valid, role, initDataJson } = await checkIsAdminOrOrganizer(opts.input.initData);
+            const { valid, role, initDataJson } = await checkIsAdminOrOrganizer(
+                opts.input.initData
+            )
 
-        if (!valid) {
-            throw new Error('Unauthorized access or invalid role');
-        }
+            if (!valid) {
+                throw new Error('Unauthorized access or invalid role')
+            }
 
-        let eventsData = [];
+            let eventsData = []
 
-        if (role === 'admin') {
-            eventsData = await db
-                .select()
-                .from(events)
-                .where(eq(events.hidden, false))
-                .orderBy(desc(events.created_at))
-                .execute();
-        } else if (role === 'organizer') {
-            eventsData = await db
-                .select()
-                .from(events)
-                .where(and(
-                    eq(events.hidden, false),
-                    eq(events.owner, initDataJson.user.id)
-                ))
-                .orderBy(desc(events.created_at))
-                .execute();
-        } else {
-            throw new Error('Unauthorized access or invalid role');
-        }
+            if (role === 'admin') {
+                eventsData = await db
+                    .select()
+                    .from(events)
+                    .where(eq(events.hidden, false))
+                    .orderBy(desc(events.created_at))
+                    .execute()
+            } else if (role === 'organizer') {
+                eventsData = await db
+                    .select()
+                    .from(events)
+                    .where(
+                        and(
+                            eq(events.hidden, false),
+                            eq(events.owner, initDataJson.user.id)
+                        )
+                    )
+                    .orderBy(desc(events.created_at))
+                    .execute()
+            } else {
+                throw new Error('Unauthorized access or invalid role')
+            }
 
-        const filteredEventsData = eventsData.map(({ wallet_seed_phrase, ...restEventData }) => restEventData);
+            const filteredEventsData = eventsData.map(
+                ({ wallet_seed_phrase, ...restEventData }) => restEventData
+            )
 
-        return filteredEventsData;
-    }),
-
+            return filteredEventsData
+        }),
 
     // private
-    addEvent: publicProcedure.input(
-        z.object(
-            {
+    addEvent: publicProcedure
+        .input(
+            z.object({
                 eventData: EventDataSchema,
-                initData: z.string().optional()
-            }
+                initData: z.string().optional(),
+            })
         )
-    ).mutation(async (opts) => {
-        if (!opts.input.initData) {
-            return undefined;
-        }
+        .mutation(async (opts) => {
+            if (!opts.input.initData) {
+                return undefined
+            }
 
-        const { valid, initDataJson } = await checkIsAdminOrOrganizer(opts.input.initData);
+            const { valid, initDataJson } = await checkIsAdminOrOrganizer(
+                opts.input.initData
+            )
 
-        if (!valid) {
-            throw new Error('Unauthorized access or invalid role');
-        }
-        try {
-            const eventDraft = {
-                title: opts.input.eventData.title,
-                subtitle: opts.input.eventData.subtitle,
-                description: opts.input.eventData.description,
-                society_hub_id: opts.input.eventData.society_hub.id,
-                start_date: timestampToIsoString(opts.input.eventData.start_date),
-                end_date: timestampToIsoString(opts.input.eventData.end_date!),
-                additional_info: opts.input.eventData.location
-            };
+            if (!valid) {
+                throw new Error('Unauthorized access or invalid role')
+            }
+            try {
+                const eventDraft = {
+                    title: opts.input.eventData.title,
+                    subtitle: opts.input.eventData.subtitle,
+                    description: opts.input.eventData.description,
+                    society_hub_id: opts.input.eventData.society_hub.id,
+                    start_date: timestampToIsoString(
+                        opts.input.eventData.start_date
+                    ),
+                    end_date: timestampToIsoString(
+                        opts.input.eventData.end_date!
+                    ),
+                    additional_info: opts.input.eventData.location,
+                }
 
-            const apiKey = process.env.TON_SOCIETY_API_KEY || "";
+                const apiKey = process.env.TON_SOCIETY_API_KEY || ''
 
-            const res = await registerActivity(apiKey, eventDraft)
+                const res = await registerActivity(apiKey, eventDraft)
 
-            // const res = {
-            //     status: "success",
-            //     data: {
-            //         activity_id: Math.trunc(Math.random() * 100),
-            //         collection_address: "asd"
+                // const res = {
+                //     status: "success",
+                //     data: {
+                //         activity_id: Math.trunc(Math.random() * 100),
+                //         collection_address: "asd"
+                //     }
+                // }
+
+                if (res && res.status === 'success') {
+                    console.log(
+                        'Activity registered successfully with ID:',
+                        res.data.activity_id
+                    )
+
+                    let highloadWallet: HighloadWalletResponse =
+                        {} as HighloadWalletResponse
+
+                    try {
+                        highloadWallet = await fetchHighloadWallet()
+                    } catch (error) {
+                        console.error('Error fetching highload wallet:', error)
+                        return { success: false }
+                    }
+
+                    const result = await db.transaction(async (trx) => {
+                        const newEvent = await trx
+                            .insert(events)
+                            .values({
+                                type: opts.input.eventData.type,
+                                activity_id: res.data.activity_id,
+                                collection_address: res.data.collection_address,
+                                event_uuid: uuidv4(),
+                                title: opts.input.eventData.title,
+                                subtitle: opts.input.eventData.subtitle,
+                                description: opts.input.eventData.description,
+                                image_url: opts.input.eventData.image_url,
+                                wallet_address: highloadWallet.wallet_address,
+                                wallet_seed_phrase: highloadWallet.seed_phrase,
+                                society_hub:
+                                    opts.input.eventData.society_hub.name,
+                                society_hub_id:
+                                    opts.input.eventData.society_hub.id,
+                                secret_phrase:
+                                    opts.input.eventData.secret_phrase,
+                                start_date: opts.input.eventData.start_date,
+                                end_date: opts.input.eventData.end_date,
+                                timezone: opts.input.eventData.timezone,
+                                location: opts.input.eventData.location,
+                                owner: initDataJson.user.id,
+                            })
+                            .returning()
+
+                        for (
+                            let i = 0;
+                            i < opts.input.eventData.dynamic_fields.length;
+                            i++
+                        ) {
+                            const field = opts.input.eventData.dynamic_fields[i]
+                            await trx.insert(eventFields).values({
+                                emoji: field.emoji,
+                                title: field.title,
+                                description: field.description,
+                                placeholder:
+                                    field.type === 'button'
+                                        ? field.url
+                                        : field.placeholder,
+                                type: field.type,
+                                order_place: i,
+                                event_id: newEvent[0].event_id,
+                            })
+                        }
+
+                        if (opts.input.eventData.secret_phrase !== '') {
+                            await trx.insert(eventFields).values({
+                                emoji: '🔒',
+                                title: 'Secret Phrase',
+                                description: 'Enter the secret phrase',
+                                placeholder: opts.input.eventData.secret_phrase,
+                                type: 'input',
+                                order_place:
+                                    opts.input.eventData.dynamic_fields.length,
+                                event_id: newEvent[0].event_id,
+                            })
+                        }
+
+                        return newEvent
+                    })
+
+                    return { success: true, eventId: result[0].event_id }
+                } else {
+                    console.error(
+                        'API call failed with status:',
+                        res.data.status,
+                        'and message:',
+                        res.data.message || res.data
+                    )
+                    return { success: false }
+                }
+            } catch (error) {
+                if (axios.isAxiosError(error)) {
+                    console.error('Error during API call:', error)
+                } else {
+                    console.error('Unexpected error:', error)
+                }
+                return { success: false }
+            }
+        }),
+
+    // private
+    deleteEvent: publicProcedure
+        .input(
+            z.object({
+                event_uuid: z.string(),
+                initData: z.string().optional(),
+            })
+        )
+        .mutation(async (opts) => {
+            if (!opts.input.initData) {
+                return undefined
+            }
+
+            const { valid } = await checkIsEventOwner(
+                opts.input.initData,
+                opts.input.event_uuid
+            )
+
+            if (!valid) {
+                throw new Error('Unauthorized access or invalid role')
+            }
+
+            try {
+                const result = await db.transaction(async (trx) => {
+                    await trx
+                        .update(events)
+                        .set({ hidden: true }) // Set the 'hidden' field to true
+                        .where(eq(events.event_uuid, opts.input.event_uuid))
+                        .execute()
+
+                    return { success: true }
+                })
+
+                return result
+            } catch (error) {
+                console.error(error)
+                return { success: false }
+            }
+        }),
+
+    // private
+    withdraw: publicProcedure
+        .input(
+            z.object({
+                event_uuid: z.string(),
+                initData: z.string().optional(),
+            })
+        )
+        .mutation(async (opts) => {
+            if (!opts.input.initData) {
+                return undefined
+            }
+
+            const { valid } = await checkIsEventOwner(
+                opts.input.initData,
+                opts.input.event_uuid
+            )
+
+            if (!valid) {
+                throw new Error('Unauthorized access or invalid role')
+            }
+
+            const eventOwner = await db
+                .select()
+                .from(events)
+                .leftJoin(users, eq(events.owner, users.user_id))
+                .where(and(eq(events.event_uuid, opts.input.event_uuid)))
+                .execute()
+
+            if (
+                eventOwner.length === 0 ||
+                eventOwner[0].events.wallet_seed_phrase === null ||
+                eventOwner[0].users?.wallet_address === null ||
+                eventOwner[0].users === null
+            ) {
+                return
+            }
+
+            await withdrawRequest(
+                eventOwner[0].events.wallet_seed_phrase,
+                eventOwner[0].users.wallet_address
+            )
+        }),
+
+    // private
+    distribute: publicProcedure
+        .input(
+            z.object({
+                event_uuid: z.string(),
+                amount: z.string(),
+                initData: z.string().optional(),
+            })
+        )
+        .mutation(async (opts) => {
+            // select all visitors and which does not have claimed reward
+            if (!opts.input.initData) {
+                return undefined
+            }
+
+            const { valid } = await checkIsEventOwner(
+                opts.input.initData,
+                opts.input.event_uuid
+            )
+
+            if (!valid) {
+                throw new Error('Unauthorized access or invalid role')
+            }
+
+            const event = (
+                await db
+                    .select()
+                    .from(events)
+                    .where(and(eq(events.event_uuid, opts.input.event_uuid)))
+                    .execute()
+            ).pop()
+
+            // let eligibleUserIds = new Set();
+            // if (event?.event_id && await hasTwitterTask(event.event_id)) {
+            //     const twitterHandle = await getTwitterHandle(event.event_id);
+            //     if (twitterHandle) {
+            //         const subscribedUsers = await getSubscribedUsers(twitterHandle, event.event_id);
+            //         console.log({ subscribedUsers })
+            //         eligibleUserIds = new Set(subscribedUsers.map(user => user.user_id));
+            //         console.log({ eligibleUserIds })
             //     }
             // }
 
-            if (res && res.status === "success") {
-                console.log("Activity registered successfully with ID:", res.data.activity_id);
+            const eventVisitors = await db
+                .select()
+                .from(visitors)
+                .fullJoin(users, eq(visitors.user_id, users.user_id))
+                .where(
+                    and(
+                        eq(visitors.event_uuid, opts.input.event_uuid),
+                        isNotNull(users.wallet_address)
+                    )
+                )
+                .execute()
 
-                let highloadWallet: HighloadWalletResponse = {} as HighloadWalletResponse;
+            if (
+                eventVisitors.length === 0 ||
+                event?.wallet_seed_phrase === null ||
+                event?.wallet_seed_phrase === undefined ||
+                eventVisitors[0].users?.wallet_address === null
+            ) {
+                return
+            }
 
-                try {
-                    highloadWallet = await fetchHighloadWallet();
-                } catch (error) {
-                    console.error("Error fetching highload wallet:", error);
-                    return { success: false };
+            const balance = await fetchBalance(event?.wallet_address!)
+
+            const perUser =
+                Number.parseFloat(opts.input.amount) ||
+                balance / eventVisitors.length - 0.02
+
+            const receivers: HighloadWalletTransaction = {
+                receivers: {},
+            }
+
+            // Filter visitors against the eligible users and prepare the distribution
+            eventVisitors.forEach((visitor) => {
+                if (
+                    visitor.users !== null &&
+                    visitor.users.wallet_address !==
+                        null /* && eligibleUserIds.has(visitor.users.user_id) */
+                ) {
+                    receivers.receivers[
+                        visitor.users.wallet_address!.toString()
+                    ] = perUser.toFixed(2)
                 }
-
-                const result = await db.transaction(async (trx) => {
-                    const newEvent = await trx
-                        .insert(events)
-                        .values({
-                            type: opts.input.eventData.type,
-                            activity_id: res.data.activity_id,
-                            collection_address: res.data.collection_address,
-                            event_uuid: uuidv4(),
-                            title: opts.input.eventData.title,
-                            subtitle: opts.input.eventData.subtitle,
-                            description: opts.input.eventData.description,
-                            image_url: opts.input.eventData.image_url,
-                            wallet_address: highloadWallet.wallet_address,
-                            wallet_seed_phrase: highloadWallet.seed_phrase,
-                            society_hub: opts.input.eventData.society_hub.name,
-                            society_hub_id: opts.input.eventData.society_hub.id,
-                            secret_phrase: opts.input.eventData.secret_phrase,
-                            start_date: opts.input.eventData.start_date,
-                            end_date: opts.input.eventData.end_date,
-                            timezone: opts.input.eventData.timezone,
-                            location: opts.input.eventData.location,
-                            owner: initDataJson.user.id,
-                        })
-                        .returning();
-
-                    for (let i = 0; i < opts.input.eventData.dynamic_fields.length; i++) {
-                        const field = opts.input.eventData.dynamic_fields[i];
-                        await trx.insert(eventFields).values({
-                            emoji: field.emoji,
-                            title: field.title,
-                            description: field.description,
-                            placeholder: field.type === 'button' ? field.url : field.placeholder,
-                            type: field.type,
-                            order_place: i,
-                            event_id: newEvent[0].event_id,
-                        });
-                    }
-
-                    if (opts.input.eventData.secret_phrase !== '') {
-                        await trx.insert(eventFields).values({
-                            emoji: '🔒',
-                            title: 'Secret Phrase',
-                            description: 'Enter the secret phrase',
-                            placeholder: opts.input.eventData.secret_phrase,
-                            type: 'input',
-                            order_place: opts.input.eventData.dynamic_fields.length,
-                            event_id: newEvent[0].event_id,
-                        });
-                    }
-
-                    return newEvent;
-                });
-
-                return { success: true, eventId: result[0].event_id };
-            } else {
-                console.error("API call failed with status:", res.data.status, "and message:", res.data.message || res.data);
-                return { success: false };
-            }
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                console.error("Error during API call:", error);
-            } else {
-                console.error("Unexpected error:", error);
-            }
-            return { success: false };
-        }
-    }),
-
-
-    // private
-    deleteEvent: publicProcedure.input(
-        z.object(
-            {
-                event_uuid: z.string(),
-                initData: z.string().optional()
-            }
-        )
-
-    ).mutation(async (opts) => {
-        if (!opts.input.initData) {
-            return undefined;
-        }
-
-        const { valid } = await checkIsEventOwner(opts.input.initData, opts.input.event_uuid);
-
-        if (!valid) {
-            throw new Error('Unauthorized access or invalid role');
-        }
-
-
-        try {
-            const result = await db.transaction(async (trx) => {
-                await trx
-                    .update(events)
-                    .set({ hidden: true }) // Set the 'hidden' field to true
-                    .where(eq(events.event_uuid, opts.input.event_uuid))
-                    .execute()
-
-                return { success: true }
             })
 
-            return result
-        } catch (error) {
-            console.error(error)
-            return { success: false }
-        }
-    }),
-
-
-    // private
-    withdraw: publicProcedure.input(
-        z.object(
-            {
-                event_uuid: z.string(),
-                initData: z.string().optional()
-            }
-        )
-    ).mutation(async (opts) => {
-        if (!opts.input.initData) {
-            return undefined;
-        }
-
-        const { valid } = await checkIsEventOwner(opts.input.initData, opts.input.event_uuid);
-
-        if (!valid) {
-            throw new Error('Unauthorized access or invalid role');
-        }
-
-        const eventOwner = await db
-            .select()
-            .from(events)
-            .leftJoin(users, eq(events.owner, users.user_id))
-            .where(
-                and(
-                    eq(events.event_uuid, opts.input.event_uuid),
-                )
-            )
-            .execute();
-
-
-        if (eventOwner.length === 0 || eventOwner[0].events.wallet_seed_phrase === null || eventOwner[0].users?.wallet_address === null || eventOwner[0].users === null) {
-            return;
-        }
-
-        await withdrawRequest(eventOwner[0].events.wallet_seed_phrase, eventOwner[0].users.wallet_address)
-    }),
-
-
-    // private
-    distribute: publicProcedure.input(
-        z.object(
-            {
-                event_uuid: z.string(),
-                amount: z.string(),
-                initData: z.string().optional()
-            }
-        )
-    ).mutation(async (opts) => {
-        // select all visitors and which does not have claimed reward
-        if (!opts.input.initData) {
-            return undefined;
-        }
-
-        const { valid } = await checkIsEventOwner(opts.input.initData, opts.input.event_uuid);
-
-        if (!valid) {
-            throw new Error('Unauthorized access or invalid role');
-        }
-
-        const event = (await db
-            .select()
-            .from(events)
-            .where(
-                and(
-                    eq(events.event_uuid, opts.input.event_uuid),
-                )
-            )
-            .execute())
-            .pop();
-
-        // let eligibleUserIds = new Set();
-        // if (event?.event_id && await hasTwitterTask(event.event_id)) {
-        //     const twitterHandle = await getTwitterHandle(event.event_id);
-        //     if (twitterHandle) {
-        //         const subscribedUsers = await getSubscribedUsers(twitterHandle, event.event_id);
-        //         console.log({ subscribedUsers })
-        //         eligibleUserIds = new Set(subscribedUsers.map(user => user.user_id));
-        //         console.log({ eligibleUserIds })
-        //     }
-        // }
-
-        const eventVisitors = await db
-            .select()
-            .from(visitors)
-            .fullJoin(users, eq(visitors.user_id, users.user_id))
-            .where(
-                and(
-                    eq(visitors.event_uuid, opts.input.event_uuid),
-                    isNotNull(users.wallet_address)
-                )
-            )
-            .execute();
-
-        if (eventVisitors.length === 0
-            || event?.wallet_seed_phrase === null
-            || event?.wallet_seed_phrase === undefined
-            || eventVisitors[0].users?.wallet_address === null
-        ) {
-            return;
-        }
-
-        const balance = await fetchBalance(event?.wallet_address!);
-
-        const perUser = Number.parseFloat(opts.input.amount) || (balance / eventVisitors.length) - 0.02;
-
-        const receivers: HighloadWalletTransaction = {
-            receivers: {}
-        };
-
-        // Filter visitors against the eligible users and prepare the distribution
-        eventVisitors.forEach((visitor) => {
-            if (visitor.users !== null && visitor.users.wallet_address !== null /* && eligibleUserIds.has(visitor.users.user_id) */) {
-                receivers.receivers[visitor.users.wallet_address!.toString()] = perUser.toFixed(2);
-            }
-        });
-
-        await distributionRequest(event?.wallet_seed_phrase, receivers);
-    }),
-
+            await distributionRequest(event?.wallet_seed_phrase, receivers)
+        }),
 
     // private
     updateEvent: publicProcedure
         .input(
-            z.object(
-                {
-                    initData: z.string().optional(),
-                    eventData: EventDataSchema
-                }
-            )
-
+            z.object({
+                initData: z.string().optional(),
+                eventData: EventDataSchema,
+            })
         )
         .mutation(async (opts) => {
             if (!opts.input.initData || !opts.input.eventData.event_uuid) {
-                return undefined;
+                return undefined
             }
 
-            const { valid } = await checkIsEventOwner(opts.input.initData, opts.input.eventData.event_uuid);
+            const { valid } = await checkIsEventOwner(
+                opts.input.initData,
+                opts.input.eventData.event_uuid
+            )
 
             if (!valid) {
-                throw new Error('Unauthorized access or invalid role');
+                throw new Error('Unauthorized access or invalid role')
             }
 
-
-            const eventData = opts.input.eventData;
+            const eventData = opts.input.eventData
 
             if (typeof eventData.event_uuid === 'undefined') {
-                console.error("event_uuid is undefined");
-                return { success: false, message: "event_uuid is required" };
+                console.error('event_uuid is undefined')
+                return { success: false, message: 'event_uuid is required' }
             }
 
             const eventDraft = {
@@ -429,26 +483,30 @@ export const eventsRouter = router({
                 society_hub_id: eventData.society_hub.id,
                 start_date: timestampToIsoString(eventData.start_date),
                 end_date: timestampToIsoString(eventData.end_date!),
-                additional_info: eventData.location
-            };
+                additional_info: eventData.location,
+            }
 
-            const apiKey = process.env.TON_SOCIETY_API_KEY || "";
+            const apiKey = process.env.TON_SOCIETY_API_KEY || ''
 
             try {
-                const res = await registerActivity(apiKey, eventDraft)
+                // const res =  await registerActivity(apiKey, eventDraft)
 
-                // const res = {
-                //     status: "success",
-                //     data: {
-                //         activity_id: Math.trunc(Math.random() * 100)
-                //     }
-                // }
+                const res = {
+                    status: 'success',
+                    data: {
+                        activity_id: Math.trunc(Math.random() * 100),
+                        message: 'Message error',
+                    },
+                }
 
                 console.log(res.data)
 
-                if (res.data && res.status === "success") {
-                    console.log("Activity updated successfully with ID:", res.data.activity_id);
-                    console.log({ eventData });
+                if (res.data && res.status === 'success') {
+                    console.log(
+                        'Activity updated successfully with ID:',
+                        res.data.activity_id
+                    )
+                    console.log({ eventData })
 
                     const result = await db.transaction(async (trx) => {
                         await trx
@@ -466,15 +524,17 @@ export const eventsRouter = router({
                                 start_date: eventData.start_date,
                                 end_date: eventData.end_date,
                                 location: eventData.location,
-                                timezone: eventData.timezone
+                                timezone: eventData.timezone,
                             })
                             .where(eq(events.event_uuid, eventData.event_uuid!))
-                            .execute();
+                            .execute()
 
                         const currentFields = await trx
                             .select()
                             .from(eventFields)
-                            .where(eq(eventFields.event_id, eventData.event_id!))
+                            .where(
+                                eq(eventFields.event_id, eventData.event_id!)
+                            )
                             .execute()
 
                         const fieldsToDelete = currentFields.filter(
@@ -494,24 +554,44 @@ export const eventsRouter = router({
                         const secretPhraseTask = await trx
                             .select()
                             .from(eventFields)
-                            .where(and(eq(eventFields.event_id, eventData.event_id!), eq(eventFields.title, 'Secret Phrase')))
-                            .execute();
+                            .where(
+                                and(
+                                    eq(
+                                        eventFields.event_id,
+                                        eventData.event_id!
+                                    ),
+                                    eq(eventFields.title, 'Secret Phrase')
+                                )
+                            )
+                            .execute()
 
-                        if (eventData.secret_phrase !== '' && secretPhraseTask.length === 0) {
-                            await trx.insert(eventFields).values({
-                                emoji: '🔒',
-                                title: 'Secret Phrase',
-                                description: 'Enter the secret phrase',
-                                placeholder: eventData.secret_phrase,
-                                type: 'input',
-                                order_place: eventData.dynamic_fields.length,
-                                event_id: eventData.event_id,
-                            }).execute();
-                        } else if (eventData.secret_phrase === '' && secretPhraseTask.length > 0) {
+                        if (
+                            eventData.secret_phrase !== '' &&
+                            secretPhraseTask.length === 0
+                        ) {
+                            await trx
+                                .insert(eventFields)
+                                .values({
+                                    emoji: '🔒',
+                                    title: 'Secret Phrase',
+                                    description: 'Enter the secret phrase',
+                                    placeholder: eventData.secret_phrase,
+                                    type: 'input',
+                                    order_place:
+                                        eventData.dynamic_fields.length,
+                                    event_id: eventData.event_id,
+                                })
+                                .execute()
+                        } else if (
+                            eventData.secret_phrase === '' &&
+                            secretPhraseTask.length > 0
+                        ) {
                             await trx
                                 .delete(eventFields)
-                                .where(eq(eventFields.id, secretPhraseTask[0].id))
-                                .execute();
+                                .where(
+                                    eq(eventFields.id, secretPhraseTask[0].id)
+                                )
+                                .execute()
                         }
 
                         for (const [
@@ -553,234 +633,295 @@ export const eventsRouter = router({
                             }
                         }
 
-                        return { success: true, eventId: eventData.event_id };
-                    });
+                        return { success: true, eventId: eventData.event_id }
+                    })
 
-                    return result;
+                    return result
                 } else {
-                    console.warn("API call succeeded but returned an unexpected status:", res.data);
-                    return { success: false, message: "API update failed: " + res.data.message };
+                    console.warn(
+                        'API call succeeded but returned an unexpected status:',
+                        res.data
+                    )
+                    return {
+                        success: false,
+                        message: `API update failed: ${res.data.message}`,
+                    }
                 }
             } catch (error) {
                 if (axios.isAxiosError(error)) {
-                    console.error("Error during API call:", error.message);
-                    return { success: false, message: "API call error: " + error.message };
+                    console.error('Error during API call:', error.message)
+                    return {
+                        success: false,
+                        message: 'API call error: ' + error.message,
+                    }
                 } else {
-                    console.error("Unexpected error:", error);
-                    return { success: false, message: "Unexpected error: " + error };
+                    console.error('Unexpected error:', error)
+                    return {
+                        success: false,
+                        message: 'Unexpected error: ' + error,
+                    }
                 }
             }
         }),
 
-
     // private
     getHubs: publicProcedure.query(async (opts) => {
         try {
-            const response = await axios.get("https://society.ton.org/v1/society-hubs");
+            const response = await axios.get(
+                'https://society.ton.org/v1/society-hubs'
+            )
 
             if (response.status === 200 && response.data) {
-                const sortedHubs = (response.data.data as Array<{ id: number, name: string }>).sort((a, b) => a.id - b.id);
+                const sortedHubs = (
+                    response.data.data as Array<{ id: number; name: string }>
+                ).sort((a, b) => a.id - b.id)
 
-                const transformedHubs = sortedHubs.map(hub => ({
+                const transformedHubs = sortedHubs.map((hub) => ({
                     ...hub,
                     id: hub.id.toString(),
-                }));
+                }))
 
                 return {
                     status: response.data.status,
-                    hubs: transformedHubs
-                };
+                    hubs: transformedHubs,
+                }
             } else {
                 return {
-                    status: "error",
-                    message: "Failed to fetch data"
-                };
+                    status: 'error',
+                    message: 'Failed to fetch data',
+                }
             }
         } catch (error) {
-            console.error(error);
+            console.error(error)
 
             return {
-                status: "error",
-                message: "Internal server error"
-            };
+                status: 'error',
+                message: 'Internal server error',
+            }
         }
     }),
 
     // private
     postActivityParticipants: publicProcedure
-        .input(z.object({
-            event_id: z.number(),
-        }))
+        .input(
+            z.object({
+                event_id: z.number(),
+            })
+        )
         .mutation(async ({ input }) => {
-            const { event_id } = input;
+            const { event_id } = input
 
             try {
                 const data = await db
                     .select({
                         event_uuid: events.event_uuid,
                         activity_id: events.activity_id,
-                        wallet: users.wallet_address
+                        wallet: users.wallet_address,
                     })
                     .from(events)
-                    .fullJoin(visitors, eq(visitors.event_uuid, events.event_uuid))
+                    .fullJoin(
+                        visitors,
+                        eq(visitors.event_uuid, events.event_uuid)
+                    )
                     .fullJoin(users, eq(visitors.user_id, users.user_id))
                     .where(eq(events.event_id, event_id))
-                    .execute();
+                    .execute()
 
                 // Assuming the data array is not empty and all entries have the same activity_id
-                const activityId = data[0]?.activity_id; // This will hold the activity_id or be undefined if data is empty
+                const activityId = data[0]?.activity_id // This will hold the activity_id or be undefined if data is empty
 
                 // Creating an array of wallets that are not null
-                const participantWallets = [...new Set(data.filter(item => item.wallet !== null).map(item => item.wallet))];
+                const participantWallets = [
+                    ...new Set(
+                        data
+                            .filter((item) => item.wallet !== null)
+                            .map((item) => item.wallet)
+                    ),
+                ]
 
                 const payload = {
                     activity_id: activityId?.toString() || '',
                     participants: participantWallets,
-                };
+                }
 
-                const apiKey = process.env.TON_SOCIETY_API_KEY || "";
+                const apiKey = process.env.TON_SOCIETY_API_KEY || ''
 
                 const response = await postParticipants(apiKey, payload)
 
                 if (response && response.status === 'success') {
-                    return { status: 'success', data: null };
+                    return { status: 'success', data: null }
                 } else {
-                    return { status: 'fail', data: response.data };
+                    return { status: 'fail', data: response.data }
                 }
             } catch (error) {
                 if (axios.isAxiosError(error)) {
-                    console.error('API call error:', error.response?.data || error.message);
-                    return { status: 'error', message: error.response?.data?.message || 'Erroneous payload signature provided' };
+                    console.error(
+                        'API call error:',
+                        error.response?.data || error.message
+                    )
+                    return {
+                        status: 'error',
+                        message:
+                            error.response?.data?.message ||
+                            'Erroneous payload signature provided',
+                    }
                 } else {
-                    console.error('Error:', error);
-                    return { status: 'error', message: 'Internal server error' };
+                    console.error('Error:', error)
+                    return { status: 'error', message: 'Internal server error' }
                 }
             }
         }),
 
     // private
     requestExportFile: publicProcedure
-        .input(z.object({
-            event_uuid: z.string(),
-            initData: z.string(),
-        }))
+        .input(
+            z.object({
+                event_uuid: z.string(),
+                initData: z.string(),
+            })
+        )
         .mutation(async (opts) => {
-            const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid);
-            const validationResult = validateMiniAppData(opts.input.initData);
+            const visitors = await selectVisitorsByEventUuid(
+                opts.input.event_uuid
+            )
+            const validationResult = validateMiniAppData(opts.input.initData)
 
             if (!validationResult.valid) {
-                return { status: 'fail', data: null };
+                return { status: 'fail', data: null }
             }
 
-            const dataForCsv = visitors.visitorsWithDynamicFields?.map(visitor => ({
-                ...visitor,
-                dynamicFields: JSON.stringify(visitor.dynamicFields),
-            }));
+            const dataForCsv = visitors.visitorsWithDynamicFields?.map(
+                (visitor) => ({
+                    ...visitor,
+                    dynamicFields: JSON.stringify(visitor.dynamicFields),
+                })
+            )
 
             const csvString = Papa.unparse(dataForCsv || [], {
                 header: true,
-            });
+            })
 
             try {
-                const formData = new FormData();
+                const formData = new FormData()
 
-                const fileBlob = new Blob([csvString], { type: 'text/csv' });
-                formData.append('file', fileBlob, 'visitors.csv');
+                const fileBlob = new Blob([csvString], { type: 'text/csv' })
+                formData.append('file', fileBlob, 'visitors.csv')
 
-                const userId = validationResult.initDataJson?.user?.id;
-                const response = await axios.post(`http://telegram-bot:3333/send-file?id=${userId}`, formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+                const userId = validationResult.initDataJson?.user?.id
+                const response = await axios.post(
+                    `http://telegram-bot:3333/send-file?id=${userId}`,
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                )
 
                 if (response.status === 200) {
-                    return { status: 'success', data: null };
+                    return { status: 'success', data: null }
                 } else {
-                    return { status: 'fail', data: response.data };
+                    return { status: 'fail', data: response.data }
                 }
             } catch (error) {
-                console.error("Error while sending file: ", error);
-                return { status: 'fail', data: null };
+                console.error('Error while sending file: ', error)
+                return { status: 'fail', data: null }
             }
-        })
-    ,
-
+        }),
     // private
     requestSendQRcode: publicProcedure
-        .input(z.object({
-            url: z.string(),
-            initData: z.string(),
-            hub: z.string().optional()
-        }))
+        .input(
+            z.object({
+                url: z.string(),
+                initData: z.string(),
+                hub: z.string().optional(),
+            })
+        )
         .mutation(async (opts) => {
             const validationResult = validateMiniAppData(opts.input.initData)
 
             if (!validationResult.valid) {
-                return { status: 'fail', data: null };
+                return { status: 'fail', data: null }
             }
 
             try {
-                const response = await axios.get('http://telegram-bot:3333/generate-qr', {
-                    params: {
-                        id: validationResult.initDataJson?.user?.id,
-                        url: opts.input.url,
-                        hub: opts.input.hub
+                const response = await axios.get(
+                    'http://telegram-bot:3333/generate-qr',
+                    {
+                        params: {
+                            id: validationResult.initDataJson?.user?.id,
+                            url: opts.input.url,
+                            hub: opts.input.hub,
+                        },
                     }
-                });
+                )
 
                 if (response.status === 200) {
-                    return { status: 'success', data: null };
+                    return { status: 'success', data: null }
                 } else {
-                    return { status: 'fail', data: response.data };
+                    return { status: 'fail', data: response.data }
                 }
             } catch (error) {
-                console.error("Error while generating QR Code: ", error)
-                return { status: 'fail', data: null };
+                console.error('Error while generating QR Code: ', error)
+                return { status: 'fail', data: null }
             }
-        })
+        }),
 })
 
-async function postParticipants(apiKey: string, activityParticipantsPayload: {
-    activity_id: string | null;
-    participants: Array<string | null>
-}) {
+async function postParticipants(
+    apiKey: string,
+    activityParticipantsPayload: {
+        activity_id: string | null
+        participants: Array<string | null>
+    }
+) {
     const headers = {
         'x-api-key': apiKey,
         'Content-Type': 'application/json',
-    };
+    }
 
     try {
-        const response = await axios.post('https://society.ton.org/v1/activity-participants', activityParticipantsPayload, { headers });
-        console.log(response.data);
-        return response.data;
+        const response = await axios.post(
+            'https://society.ton.org/v1/activity-participants',
+            activityParticipantsPayload,
+            { headers }
+        )
+        console.log(response.data)
+        return response.data
     } catch (error) {
-        console.error(error);
-        throw error;
+        console.error(error)
+        throw error
     }
 }
 
-async function registerActivity(apiKey: string, activityDetails: {
-    title: string;
-    subtitle: string;
-    additional_info?: string
-    description: string;
-    society_hub_id: string;
-    start_date: string;
-    end_date: string;
-}) {
+async function registerActivity(
+    apiKey: string,
+    activityDetails: {
+        title: string
+        subtitle: string
+        additional_info?: string
+        description: string
+        society_hub_id: string
+        start_date: string
+        end_date: string
+    }
+) {
     const headers = {
         'x-api-key': apiKey,
         'Content-Type': 'application/json',
-    };
+    }
 
     try {
-        const response = await axios.post('https://society.ton.org/v1/register-activity', activityDetails, { headers });
-        console.log(response.data);
-        return response.data;
+        const response = await axios.post(
+            'https://society.ton.org/v1/register-activity',
+            activityDetails,
+            { headers }
+        )
+        console.log(response.data)
+        return response.data
     } catch (error) {
-        console.error(error);
-        throw error;
+        console.error(error)
+        throw error
     }
 }
 
@@ -788,10 +929,13 @@ const getUsersTwitters = async (eventId: number) => {
     const userAnswers = await db
         .select({
             user_id: userEventFields.user_id,
-            data: userEventFields.data
+            data: userEventFields.data,
         })
         .from(userEventFields)
-        .innerJoin(eventFields, eq(userEventFields.event_field_id, eventFields.id))
+        .innerJoin(
+            eventFields,
+            eq(userEventFields.event_field_id, eventFields.id)
+        )
         // Assuming there's a direct or indirect relationship you can use to join `events`
         .innerJoin(events, eq(events.event_id, eventFields.event_id)) // Adjust the join condition based on your schema
         .where(
@@ -799,94 +943,113 @@ const getUsersTwitters = async (eventId: number) => {
                 eq(events.event_id, eventId), // Now `events` is properly joined
                 or(
                     sql`lower(${eventFields.title}) = 'twitter'`,
-                    sql`lower(${eventFields.title}) = 'x'`,
+                    sql`lower(${eventFields.title}) = 'x'`
                 ),
-                isNotNull(userEventFields.data),
-            ))
-        .execute();
+                isNotNull(userEventFields.data)
+            )
+        )
+        .execute()
 
-    return userAnswers || [];
+    return userAnswers || []
 }
 
 const fetchTwitterFollowers = async (twitterHandle: string) => {
     console.log({ twitterHandle })
     try {
-        const twitterClient = new Client(process.env.TWITTER_BEARER_TOKEN || "");
-        const twitterAccount = await twitterClient.users.findUserByUsername(twitterHandle);
+        const twitterClient = new Client(process.env.TWITTER_BEARER_TOKEN || '')
+        const twitterAccount = await twitterClient.users.findUserByUsername(
+            twitterHandle
+        )
         if (twitterAccount.errors && twitterAccount.errors?.length !== 0) {
             console.log(twitterAccount.errors)
-            console.error(`Failed fetching Twitter account ${twitterHandle}. Reasons: \n${twitterAccount.errors?.join("\n")}`);
-            return [];
+            console.error(
+                `Failed fetching Twitter account ${twitterHandle}. Reasons: \n${twitterAccount.errors?.join(
+                    '\n'
+                )}`
+            )
+            return []
         }
 
         if (!twitterAccount.data) {
-            console.error(`Failed fetching Twitter account ${twitterHandle}. No data returned`);
-            return [];
+            console.error(
+                `Failed fetching Twitter account ${twitterHandle}. No data returned`
+            )
+            return []
         }
 
-        const twitterId = twitterAccount.data.id;
-        const totalFollowers = [];
-        let fetchedCount = 0;
-        let nextToken = undefined;
-        let requestCount = 0;
+        const twitterId = twitterAccount.data.id
+        const totalFollowers = []
+        let fetchedCount = 0
+        let nextToken = undefined
+        let requestCount = 0
 
         do {
-            if (requestCount >= 299) { // Wait before making the 300th request
-                console.log("Rate limit approached, pausing for 15 minutes...");
-                await sleep(900000); // 15 minutes in milliseconds
-                requestCount = 0; // Reset request count after waiting
+            if (requestCount >= 299) {
+                // Wait before making the 300th request
+                console.log('Rate limit approached, pausing for 15 minutes...')
+                await sleep(900000) // 15 minutes in milliseconds
+                requestCount = 0 // Reset request count after waiting
             }
 
-            const followersResponse = await twitterClient.users.usersIdFollowers(twitterId, {
-                max_results: 1000,
-                pagination_token: nextToken
-            });
+            const followersResponse =
+                await twitterClient.users.usersIdFollowers(twitterId, {
+                    max_results: 1000,
+                    pagination_token: nextToken,
+                })
 
-            requestCount++; // Increment request count after each successful request
+            requestCount++ // Increment request count after each successful request
 
             if (followersResponse.errors?.length !== 0) {
-                console.error(`Failed fetching Twitter followers for ${twitterHandle}. Reasons: \n${followersResponse.errors?.join("\n")}`);
-                return [];
+                console.error(
+                    `Failed fetching Twitter followers for ${twitterHandle}. Reasons: \n${followersResponse.errors?.join(
+                        '\n'
+                    )}`
+                )
+                return []
             }
 
             if (!followersResponse.data) {
-                console.error(`Failed fetching Twitter followers for ${twitterHandle}. No data returned`);
-                return [];
+                console.error(
+                    `Failed fetching Twitter followers for ${twitterHandle}. No data returned`
+                )
+                return []
             }
 
-            totalFollowers.push(...followersResponse.data);
-            nextToken = followersResponse.meta?.next_token;
-            fetchedCount = followersResponse.data.length;
+            totalFollowers.push(...followersResponse.data)
+            nextToken = followersResponse.meta?.next_token
+            fetchedCount = followersResponse.data.length
 
             // Adding a short delay before the next request to avoid hitting rate limit
-            await sleep(3000); // Wait for 3 seconds before making the next request
+            await sleep(3000) // Wait for 3 seconds before making the next request
+        } while (fetchedCount === 1000)
 
-        } while (fetchedCount === 1000);
-
-        return totalFollowers;
+        return totalFollowers
     } catch (error) {
-        console.error("Failed fetching Twitter followers. Reason: ", error);
-        return [];
+        console.error('Failed fetching Twitter followers. Reason: ', error)
+        return []
     }
 }
 
 const getSubscribedUsers = async (twitterHandle: string, eventId: number) => {
     // Step 1: Fetch users' Twitter handles for the event
-    const userAnswers = await getUsersTwitters(eventId);
+    const userAnswers = await getUsersTwitters(eventId)
 
     // Step 2: Fetch Twitter followers of the given handle
-    const followers = await fetchTwitterFollowers(twitterHandle);
+    const followers = await fetchTwitterFollowers(twitterHandle)
 
     // Convert follower usernames to a set for efficient lookup
-    const followerHandlesSet = new Set(followers.map(follower => follower.username.toLowerCase()));
+    const followerHandlesSet = new Set(
+        followers.map((follower) => follower.username.toLowerCase())
+    )
 
     // Step 3: Filter to find users who are followers of the given Twitter handle
     // Now actually using a Set for efficient lookup
-    const subscribedUsers = userAnswers.filter(user =>
+    const subscribedUsers = userAnswers.filter((user) =>
         // @ts-expect-error TS sucks here. Not null check is done in the getter function
-        followerHandlesSet.has(user.data.toLowerCase()));
+        followerHandlesSet.has(user.data.toLowerCase())
+    )
 
-    return subscribedUsers;
+    return subscribedUsers
 }
 
 const hasTwitterTask = async (eventId: number) => {
@@ -894,27 +1057,30 @@ const hasTwitterTask = async (eventId: number) => {
         .select({
             type: eventFields.type,
             title: eventFields.title,
-            description: eventFields.description
+            description: eventFields.description,
         })
         .from(eventFields)
         .where(eq(eventFields.event_id, eventId))
-        .execute();
+        .execute()
 
-    const hasInputField = eventFieldsData.some(field =>
-        field.type?.toLowerCase() === 'input' &&
-        (field.title?.toLowerCase() === 'twitter' || field.title?.toLowerCase() === 'x')
-    );
+    const hasInputField = eventFieldsData.some(
+        (field) =>
+            field.type?.toLowerCase() === 'input' &&
+            (field.title?.toLowerCase() === 'twitter' ||
+                field.title?.toLowerCase() === 'x')
+    )
 
     console.log({ eventFieldsData })
 
-    const subscribeButtonRegex = /subscribe to @\w+/i;
+    const subscribeButtonRegex = /subscribe to @\w+/i
 
-    const hasSubscribeButton = eventFieldsData.some(field =>
-        field.type?.toLowerCase() === 'button' &&
-        subscribeButtonRegex.test(field.description!)
-    );
+    const hasSubscribeButton = eventFieldsData.some(
+        (field) =>
+            field.type?.toLowerCase() === 'button' &&
+            subscribeButtonRegex.test(field.description!)
+    )
 
-    return hasInputField && hasSubscribeButton;
+    return hasInputField && hasSubscribeButton
 }
 
 const getTwitterHandle = async (eventId: number) => {
@@ -922,47 +1088,57 @@ const getTwitterHandle = async (eventId: number) => {
         .select({
             type: eventFields.type,
             title: eventFields.title,
-            description: eventFields.description
+            description: eventFields.description,
         })
         .from(eventFields)
         .where(eq(eventFields.event_id, eventId))
-        .execute();
+        .execute()
 
-    console.log({ eventFieldsData });
+    console.log({ eventFieldsData })
 
-    const subscribeButtonRegex = /subscribe to @(\w+)/i;
+    const subscribeButtonRegex = /subscribe to @(\w+)/i
 
-    const matchingField = eventFieldsData.find(field =>
-        field.type?.toLowerCase() === 'button' &&
-        subscribeButtonRegex.test(field.description!)
-    );
+    const matchingField = eventFieldsData.find(
+        (field) =>
+            field.type?.toLowerCase() === 'button' &&
+            subscribeButtonRegex.test(field.description!)
+    )
 
     if (matchingField) {
-        const matches = matchingField.description!.match(subscribeButtonRegex);
+        const matches = matchingField.description!.match(subscribeButtonRegex)
         console.log({ matches })
-        return matches ? matches[1] : null;
+        return matches ? matches[1] : null
     }
 
-    return null;
+    return null
 }
 
-
 function timestampToIsoString(timestamp: number) {
-    const date = new Date(timestamp * 1000);
-    return date.toISOString();
+    const date = new Date(timestamp * 1000)
+    return date.toISOString()
 }
 
 // may be used later with another way of authentication
-function createAuthHeader(jsonPayload: object, partnerId: string, privateKey: string) {
-    const privateKeyUint8 = naclUtil.decodeBase64(privateKey);
+function createAuthHeader(
+    jsonPayload: object,
+    partnerId: string,
+    privateKey: string
+) {
+    const privateKeyUint8 = naclUtil.decodeBase64(privateKey)
 
-    const sortedPayload = JSON.stringify(jsonPayload, Object.keys(jsonPayload).sort());
+    const sortedPayload = JSON.stringify(
+        jsonPayload,
+        Object.keys(jsonPayload).sort()
+    )
 
-    const signature = nacl.sign.detached(naclUtil.decodeUTF8(sortedPayload), privateKeyUint8);
+    const signature = nacl.sign.detached(
+        naclUtil.decodeUTF8(sortedPayload),
+        privateKeyUint8
+    )
 
-    const encodedSignature = naclUtil.encodeBase64(signature);
+    const encodedSignature = naclUtil.encodeBase64(signature)
 
-    const authHeader = `Signature partnerId="${partnerId}",algorithm="ed25519",signature="${encodedSignature}"`;
+    const authHeader = `Signature partnerId="${partnerId}",algorithm="ed25519",signature="${encodedSignature}"`
 
     return authHeader
 }
@@ -972,58 +1148,60 @@ type HighloadWalletResponse = {
     wallet_address: string
 }
 
-
 type HighloadWalletTransaction = {
-    receivers: { [address: string]: string };
-};
-
+    receivers: { [address: string]: string }
+}
 
 const withdrawRequest = async (seedPhrase: string, address: string) => {
     try {
-        const url = new URL('http://golang-server:9999/withdraw');
-        url.searchParams.append('seed_phrase', seedPhrase);
-        url.searchParams.append('address', address);
+        const url = new URL('http://golang-server:9999/withdraw')
+        url.searchParams.append('seed_phrase', seedPhrase)
+        url.searchParams.append('address', address)
 
         const response = await axios.get(url.toString(), {
             headers: {
-                Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb29tX2hhc2giOiJiZWFyZXIiLCJ1c2VyX2lkIjoiMTIzNDU2Nzg5MCIsImV4cCI6MTYx',
+                Authorization:
+                    'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb29tX2hhc2giOiJiZWFyZXIiLCJ1c2VyX2lkIjoiMTIzNDU2Nzg5MCIsImV4cCI6MTYx',
             },
             timeout: 5000,
-        });
+        })
 
-        return response.data;
+        return response.data
     } catch (error) {
-        console.error('Error fetching highload wallet:', error);
-        throw error;
+        console.error('Error fetching highload wallet:', error)
+        throw error
     }
-};
+}
 
 // eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb29tX2hhc2giOiJiZWFyZXIiLCJ1c2VyX2lkIjoiMTIzNDU2Nzg5MCIsImV4cCI6MTYx
 
-
-const distributionRequest = async (seedPhrase: string, receivers: HighloadWalletTransaction) => {
+const distributionRequest = async (
+    seedPhrase: string,
+    receivers: HighloadWalletTransaction
+) => {
     try {
         const response = await axios.post(
             'http://golang-server:9999/send',
             { receivers: receivers.receivers },
             {
                 headers: {
-                    Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb29tX2hhc2giOiJiZWFyZXIiLCJ1c2VyX2lkIjoiMTIzNDU2Nzg5MCIsImV4cCI6MTYx',
-                    'Content-Type': 'application/json'
+                    Authorization:
+                        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb29tX2hhc2giOiJiZWFyZXIiLCJ1c2VyX2lkIjoiMTIzNDU2Nzg5MCIsImV4cCI6MTYx',
+                    'Content-Type': 'application/json',
                 },
                 params: {
                     seed_phrase: seedPhrase, // Add seed phrase as a query parameter
                 },
                 timeout: 5000,
             }
-        );
+        )
 
-        return response.data;
+        return response.data
     } catch (error) {
-        console.error('Error sending highload wallet transactions:', error);
-        throw error;
+        console.error('Error sending highload wallet transactions:', error)
+        throw error
     }
-};
+}
 
 const fetchHighloadWallet = async (): Promise<HighloadWalletResponse> => {
     try {
