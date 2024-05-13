@@ -163,15 +163,17 @@ export const eventsRouter = router({
 
                 const apiKey = process.env.TON_SOCIETY_API_KEY || ''
 
-                const res = await registerActivity(apiKey, eventDraft)
+                // const res = await registerActivity(apiKey, eventDraft)
 
-                // const res = {
-                //     status: "success",
-                //     data: {
-                //         activity_id: Math.trunc(Math.random() * 100),
-                //         collection_address: "asd"
-                //     }
-                // }
+                const res = {
+                    status: 'success',
+                    data: {
+                        activity_id: Math.trunc(Math.random() * 100),
+                        collection_address: 'asd',
+                        message: 'Error messsage',
+                        status: 200,
+                    },
+                }
 
                 if (res && res.status === 'success') {
                     console.log(
