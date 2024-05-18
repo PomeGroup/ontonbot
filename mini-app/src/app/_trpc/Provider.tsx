@@ -14,7 +14,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
         trpc.createClient({
             links: [
                 httpBatchLink({
-                    url: 'https://onton.challenquiz.online/api/trpc',
+                    url: `${process.env.APP_BASE_URL}/api/trpc`,
                 }),
             ],
         })
@@ -28,5 +28,3 @@ export default function Provider({ children }: { children: React.ReactNode }) {
         </trpc.Provider>
     )
 }
-
-
