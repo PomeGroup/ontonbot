@@ -4,14 +4,10 @@ export default function Home({ searchParams }: { searchParams: any }) {
     const tgWebAppStartParam = searchParams.tgWebAppStartParam
 
     if (tgWebAppStartParam !== undefined) {
-        redirect("/events/" + tgWebAppStartParam)
+        redirect('/events/' + tgWebAppStartParam)
     }
 
-    redirect("https://society.ton.org/activities/events")
-
-    return (
-        <div>
-            meow
-        </div>
-    )
+    // redirect('https://society.ton.org/activities/events')
+    redirect('/events')
+    return <div>meow</div>
 }
