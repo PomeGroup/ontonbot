@@ -7,7 +7,5 @@ export default function Home({ searchParams }: { searchParams: any }) {
         redirect('/events/' + tgWebAppStartParam)
     }
 
-    // redirect('https://society.ton.org/activities/events')
-    redirect('/events')
-    return <div>meow</div>
+    redirect('https://society.ton.org/activities/events')
 }
