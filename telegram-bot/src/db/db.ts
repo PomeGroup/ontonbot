@@ -36,8 +36,8 @@
 
 //         // Query to count today's referrals by the user
 //         const todayReferralsQuery = `
-//             SELECT COUNT(*) AS today 
-//             FROM referrals 
+//             SELECT COUNT(*) AS today
+//             FROM referrals
 //             WHERE referee = ? AND DATE(created_at) = DATE('now')`;
 //         const todayRefResult = await db.get(todayReferralsQuery, [userId]);
 //         const todayReferrals = todayRefResult ? todayRefResult.today : 0;
@@ -87,19 +87,20 @@
 
 // createDatabase()
 
-
-import { Client } from 'pg';
-import { TVisitor } from '../utils/types';
+import { Client } from "pg";
+import { TVisitor } from "../utils/types";
 
 async function createDatabase() {
-    const client = new Client({
-        connectionString: process.env.DATABASE_URL
-    });
 
-    await client.connect();
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
 
-    try {
-        await client.query(`
+
+  await client.connect();
+
+  try {
+    await client.query(`
             CREATE TABLE IF NOT EXISTS telegram_bot_visitors (
                 id SERIAL PRIMARY KEY,
                 telegram_id TEXT NOT NULL,
@@ -109,81 +110,86 @@ async function createDatabase() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-    } finally {
-        await client.end();
-    }
+  } finally {
+    await client.end();
+  }
 }
 
-export async function countReferrals(userId: number): Promise<{ totalReferrals: number, todayReferrals: number }> {
-    const client = new Client({
-        connectionString: process.env.DATABASE_URL
-    });
+export async function countReferrals(
+  userId: number
+): Promise<{ totalReferrals: number; todayReferrals: number }> {
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
 
-    await client.connect();
+  await client.connect();
 
-    try {
-        // Total referrals
-        const totalReferralsQuery = 'SELECT COUNT(*) AS total FROM referrals WHERE referee = $1';
-        const totalRefResult = await client.query(totalReferralsQuery, [userId]);
-        const totalReferrals = totalRefResult.rows[0].total;
+  try {
+    // Total referrals
+    const totalReferralsQuery =
+      "SELECT COUNT(*) AS total FROM referrals WHERE referee = $1";
+    const totalRefResult = await client.query(totalReferralsQuery, [userId]);
+    const totalReferrals = totalRefResult.rows[0].total;
 
-        // Today's referrals
-        const todayReferralsQuery = `
+    // Today's referrals
+    const todayReferralsQuery = `
             SELECT COUNT(*) AS today 
             FROM referrals 
             WHERE referee = $1 AND DATE(created_at) = CURRENT_DATE`;
-        const todayRefResult = await client.query(todayReferralsQuery, [userId]);
-        const todayReferrals = todayRefResult.rows[0].today;
+    const todayRefResult = await client.query(todayReferralsQuery, [userId]);
+    const todayReferrals = todayRefResult.rows[0].today;
 
-        return { totalReferrals, todayReferrals };
-    } catch (error) {
-        console.error("Error in countReferrals:", error);
-        throw error;
-    } finally {
-        await client.end();
-    }
+    return { totalReferrals, todayReferrals };
+  } catch (error) {
+    console.error("Error in countReferrals:", error);
+    throw error;
+  } finally {
+    await client.end();
+  }
 }
 
 export async function addVisitor(visitor: TVisitor) {
-    const client = new Client({
-        connectionString: process.env.DATABASE_URL
-    });
-    await client.connect();
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
+  await client.connect();
 
-    try {
-        const visitorExists = await client.query(
-            'SELECT * FROM telegram_bot_visitors WHERE telegram_id = $1', [visitor.telegram_id]
-        );
+  try {
+    const visitorExists = await client.query(
+      "SELECT * FROM telegram_bot_visitors WHERE telegram_id = $1",
+      [visitor.telegram_id]
+    );
 
-        if (visitorExists.rowCount === 0) {
-            await client.query(
-                'INSERT INTO telegram_bot_visitors (telegram_id, first_name, last_name, username) VALUES ($1, $2, $3, $4)', [
-                visitor.telegram_id,
-                visitor.first_name,
-                visitor.last_name,
-                visitor.username
-            ]);
-        }
-    } finally {
-        await client.end();
+    if (visitorExists.rowCount === 0) {
+      await client.query(
+        "INSERT INTO telegram_bot_visitors (telegram_id, first_name, last_name, username) VALUES ($1, $2, $3, $4)",
+        [
+          visitor.telegram_id,
+          visitor.first_name,
+          visitor.last_name,
+          visitor.username,
+        ]
+      );
     }
+  } finally {
+    await client.end();
+  }
 }
-
 
 export async function changeRole(username: string, newRole: string) {
-    const client = new Client({
-        connectionString: process.env.DATABASE_URL
-    });
-    await client.connect();
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
+  await client.connect();
 
-    try {
-        await client.query(
-            'UPDATE users SET role = $1 WHERE username = $2', [newRole, username]
-        );
-    } finally {
-        await client.end();
-    }
+  try {
+    await client.query("UPDATE users SET role = $1 WHERE username = $2", [
+      newRole,
+      username,
+    ]);
+  } finally {
+    await client.end();
+  }
 }
 
-
- createDatabase(); // Call to initialize the database
+createDatabase(); // Call to initialize the database
