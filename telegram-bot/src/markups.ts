@@ -1,7 +1,4 @@
-import { Markup } from "telegraf";
-import { button } from "telegraf/typings/markup";
-
-const BASE_URL = process.env.BASE_URL || 'https://app.tonsites.io'
+import { Markup } from "telegraf"
 
 const startKeyboard = () => {
     const data = [
@@ -9,7 +6,7 @@ const startKeyboard = () => {
             {
                 text: "Discover Events",
                 web_app: {
-                    url: "https://onton.challenquiz.online/events",
+                    url: `${process.env.APP_BASE_URL}/events`,
                     display_name: "Open",
                 },
             },
@@ -35,7 +32,7 @@ const shareKeyboard = (url: string) => {
             {
                 text: "Manage Event",
                 web_app: {
-                    url: `https://onton.challenquiz.online/events/${id}/edit`,
+                    url: `${process.env.APP_BASE_URL}/events/${id}/edit`,
                     display_name: "Open",
                 },
             },
@@ -44,7 +41,7 @@ const shareKeyboard = (url: string) => {
             {
                 text: "All Events",
                 web_app: {
-                    url: "https://onton.challenquiz.online/events",
+                    url: `${process.env.APP_BASE_URL}/events`,
                     display_name: "Open",
                 },
             },
@@ -60,4 +57,5 @@ const inlineSendKeyboard = () => {
     return [[{ text: "Refresh", callback_data: "refresh" }]];
 };
 
-export { startKeyboard, backKeyboard, inlineSendKeyboard, shareKeyboard };
+export { backKeyboard, inlineSendKeyboard, shareKeyboard, startKeyboard }
+
