@@ -104,14 +104,19 @@ export const eventTicket = pgTable('event_tickets', {
     title: text('title'),
     description: text('description'),
     price: integer('price'),
+    ticketImage: text('ticket_image'),
     count: integer('count'),
+    collectionAddress: text('collection_address'),
     created_at: timestamp('created_at').defaultNow(),
 })
 
 export const ticketStatus = pgEnum('event_ticket_status', ['USED', 'VALID'])
 export const tickets = pgTable('tickets', {
     id: serial('id').primaryKey(),
+    name: text('name'),
+    telegram: text('telegram'),
     company: text('company'),
+    position: text('position'),
     status: ticketStatus('status'),
     nftAddress: text('nft_address'),
     event_id: serial('event_id').references(() => events.event_id),
