@@ -1,18 +1,12 @@
 'use client'
 
-import React, {
-    ChangeEvent,
-    Dispatch,
-    FC,
-    SetStateAction,
-    useState,
-} from 'react'
-import Card from '../../atoms/cards'
-import Labels from '../../atoms/labels'
-import Input from '../../atoms/inputs'
-import Pickers from '../../molecules/pickers'
-import { TRequiredEventFields, ZodErrors } from '@/types'
 import { Switch } from '@/components/ui/switch'
+import { TRequiredEventFields, ZodErrors } from '@/types'
+import { ChangeEvent, Dispatch, FC, SetStateAction, useState } from 'react'
+import Card from '../../atoms/cards'
+import Input from '../../atoms/inputs'
+import Labels from '../../atoms/labels'
+import Pickers from '../../molecules/pickers'
 
 export type RequiredEventFieldsProps = {
     formData: TRequiredEventFields
@@ -33,14 +27,14 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
         })
     }
 
-    const handlePropertyChange = (value: string | number | object | boolean, field: string) => {
+    const handlePropertyChange = (
+        value: string | number | object | boolean,
+        field: string
+    ) => {
         setFormData((prev) => {
             return { ...prev, [field]: value }
         })
     }
-
-    console.log({ formData })
-
 
     return (
         <div>
@@ -57,11 +51,11 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
                 </div>
 
                 <Switch
-                    className='mt-2'
+                    className="mt-2"
                     checked={!!formData.type}
                     onCheckedChange={(checked) => {
                         if (formData.type !== 2) {
-                            handlePropertyChange(+checked, "type")
+                            handlePropertyChange(+checked, 'type')
                         }
                     }}
                 />

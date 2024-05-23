@@ -17,7 +17,7 @@ import Labels from '../../atoms/labels'
 // https://society.ton.org/v1/society-hubs
 
 const TonHubPicker: FC<{
-    value: HubType
+    value: { id: string; name: string }
     onValueChange: (value: HubType) => void
     errors: ZodErrors
 }> = ({ value, onValueChange, errors }) => {
