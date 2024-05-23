@@ -1,5 +1,5 @@
 # mini-app/Dockerfile
-FROM node:18-alpine3.17
+FROM node:20.13.1-alpine3.20
 
 # Install pnpm
 RUN npm install -g pnpm
