@@ -74,12 +74,14 @@ export const validateMiniAppData = (rawInitData: string) => {
         initDataJson[key] = value
     }
     try {
-        validate(rawInitData, BOT_TOKEN)
+        validate(initData, BOT_TOKEN)
         return {
             valid: true,
             initDataJson,
         }
     } catch (error) {
+        console.info(error)
+
         return {
             valid: false,
             initDataJson,

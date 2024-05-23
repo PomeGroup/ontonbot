@@ -670,7 +670,13 @@ export const eventsRouter = router({
     getHubs: publicProcedure.query(async (opts) => {
         try {
             const response = await axios.get(
-                'https://society.ton.org/v1/society-hubs'
+                `${process.env.TON_SOCIETY_BASE_URL}/v1/hubs`,
+                {
+                    params: {
+                        _start: 0,
+                        _end: 100,
+                    },
+                }
             )
 
             if (response.status === 200 && response.data) {
