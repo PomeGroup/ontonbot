@@ -8,7 +8,7 @@
         "start": "next start",
         "lint": "next lint",
         "test": "jest",
-	"db:gen": "drizzle-kit generate:pg",
+        "db:gen": "drizzle-kit generate:pg",
         "test:watch": "jest --watch"
     },
     "dependencies": {

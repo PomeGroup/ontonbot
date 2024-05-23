@@ -1,17 +1,18 @@
 import {
-    integer,
-    text,
-    pgTable,
+    bigint,
     boolean,
-    timestamp,
-    uuid,
+    integer,
+    pgEnum,
+    pgTable,
     serial,
+    text,
+    timestamp,
     unique,
-    bigint
+    uuid,
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
-    user_id: bigint('user_id', { "mode": "number" }).primaryKey(),
+    user_id: bigint('user_id', { mode: 'number' }).primaryKey(),
     username: text('username'),
     first_name: text('first_name'),
     last_name: text('last_name'),
@@ -40,8 +41,9 @@ export const events = pgTable('events', {
     end_date: integer('end_date').default(0),
     timezone: text('timezone'),
     location: text('location'),
-    owner: bigint('owner', { mode: "number" }).references(() => users.user_id),
+    owner: bigint('owner', { mode: 'number' }).references(() => users.user_id),
     hidden: boolean('hidden').default(false),
+    ticketToCheckIn: boolean('ticketToCheckIn').default(false),
     created_at: timestamp('created_at').defaultNow(),
 })
 
@@ -57,7 +59,9 @@ export const eventFields = pgTable('event_fields', {
 })
 
 export const visitors = pgTable('visitors', {
-    user_id: bigint('user_id', { mode: 'number' }).references(() => users.user_id),
+    user_id: bigint('user_id', { mode: 'number' }).references(
+        () => users.user_id
+    ),
     event_uuid: uuid('event_uuid').references(() => events.event_uuid),
     claimed: integer('claimed'),
     amount: integer('amount'),
@@ -72,7 +76,9 @@ export const userEventFields = pgTable(
         event_field_id: serial('event_field_id').references(
             () => eventFields.id
         ),
-        user_id: bigint('user_id', { mode: "number" }).references(() => users.user_id),
+        user_id: bigint('user_id', { mode: 'number' }).references(
+            () => users.user_id
+        ),
         data: text('data'),
         completed: boolean('completed'),
         created_at: timestamp('created_at').defaultNow(),
@@ -85,7 +91,38 @@ export const userEventFields = pgTable(
 export const airdropRoutines = pgTable('airdrop_routines', {
     id: serial('id').primaryKey(),
     event_id: serial('event_id').references(() => events.event_id),
-    user_id: bigint('user_id', { mode: "number" }).references(() => users.user_id),
+    user_id: bigint('user_id', { mode: 'number' }).references(
+        () => users.user_id
+    ),
     status: text('status'),
+    created_at: timestamp('created_at').defaultNow(),
+})
+
+export const eventTicket = pgTable('event_tickets', {
+    id: serial('id').primaryKey(),
+    event_id: serial('event_id').references(() => events.event_id),
+    title: text('title'),
+    description: text('description'),
+    price: integer('price'),
+    ticketImage: text('ticket_image'),
+    count: integer('count'),
+    collectionAddress: text('collection_address'),
+    created_at: timestamp('created_at').defaultNow(),
+})
+
+export const ticketStatus = pgEnum('event_ticket_status', ['USED', 'VALID'])
+export const tickets = pgTable('tickets', {
+    id: serial('id').primaryKey(),
+    name: text('name'),
+    telegram: text('telegram'),
+    company: text('company'),
+    position: text('position'),
+    status: ticketStatus('status'),
+    nftAddress: text('nft_address'),
+    event_id: serial('event_id').references(() => events.event_id),
+    ticket_id: serial('event_ticket_id').references(() => eventTicket.id),
+    user_id: bigint('user_id', { mode: 'number' }).references(
+        () => users.user_id
+    ),
     created_at: timestamp('created_at').defaultNow(),
 })
