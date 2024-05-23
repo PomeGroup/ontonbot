@@ -1,8 +1,8 @@
 'use client'
 
 import { DynamicFields } from '@/types'
-import React, { FC } from 'react'
-import useWebApp from '@/hooks/useWebApp'
+import { useLaunchParams } from '@tma.js/sdk-react'
+import { FC } from 'react'
 import { trpc } from '../_trpc/client'
 import Tasks from './molecules/tasks'
 
@@ -10,15 +10,13 @@ const AllTasks: FC<{
     tasks: DynamicFields
     eventHash: string
 }> = ({ tasks, eventHash }) => {
-    const WebApp = useWebApp()
+    const initData = useLaunchParams().initDataRaw
     const validatedData = trpc.users.validateUserInitData.useQuery(
-        WebApp?.initData || ''
+        initData || ''
     )
 
-    const userId = validatedData.data?.initDataJson?.user?.id || -1
-
     const userEventFields = trpc.userEventFields.getUserEventFields.useQuery({
-        initData: WebApp?.initData,
+        initData,
         event_hash: eventHash,
     }).data
 

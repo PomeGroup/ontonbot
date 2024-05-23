@@ -10,7 +10,6 @@ import { trpc } from './client'
 
 export default function Provider({ children }: { children: React.ReactNode }) {
     const [queryClient] = useState(() => new QueryClient({}))
-    console.log(`${process.env.APP_BASE_URL}/api/trpc`)
 
     const [trpcClient] = useState(() =>
         trpc.createClient({

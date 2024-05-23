@@ -1,15 +1,15 @@
 'use client'
 
+import { useLaunchParams } from '@tma.js/sdk-react'
 import React, { FC, useLayoutEffect } from 'react'
 import { trpc } from '../_trpc/client'
-import useWebApp from '@/hooks/useWebApp'
 
 const AddVisitorWrapper: FC<{ children: React.ReactNode; hash: string }> = ({
     children,
     hash,
 }) => {
     const addVisitorMutation = trpc.visitors.add.useMutation()
-    const WebApp = useWebApp()
+    const initData = useLaunchParams().initDataRaw
 
     useLayoutEffect(() => {
         if (!hash) {
@@ -18,13 +18,13 @@ const AddVisitorWrapper: FC<{ children: React.ReactNode; hash: string }> = ({
 
         async function addVisitor() {
             await addVisitorMutation.mutateAsync({
-                initData: WebApp?.initData,
+                initData,
                 event_uuid: hash,
             })
         }
 
         addVisitor()
-    }, [hash, WebApp?.initData])
+    }, [hash, initData])
 
     return <>{children}</>
 }

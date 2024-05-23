@@ -1,29 +1,32 @@
 'use client'
 
-import { FC, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import useWebApp from '@/hooks/useWebApp'
 import {
     CreateEventData,
     FieldElement,
-    TRequiredEventFields,
     RequiredEventFieldsSchema,
+    TRequiredEventFields,
     ZodErrors,
 } from '@/types'
-import { trpc } from '../_trpc/client'
-import { useRouter } from 'next/navigation'
+import { useLaunchParams } from '@tma.js/sdk-react'
 import { GithubIcon, Trash, TwitterIcon } from 'lucide-react'
-import useWebApp from '@/hooks/useWebApp'
+import { useRouter } from 'next/navigation'
+import { FC, useState } from 'react'
+import { trpc } from '../_trpc/client'
 import Buttons from './atoms/buttons'
-import Popovers from './molecules/popovers'
 import Labels from './atoms/labels'
+import Popovers from './molecules/popovers'
 import Fields from './organisms/fields'
 
 const CreateEventFields: FC<{
     event?: CreateEventData
     event_uuid: string
 }> = ({ event, event_uuid }) => {
+    const lunchParams = useLaunchParams()
     const WebApp = useWebApp()
-    const userId = WebApp?.initDataUnsafe.user?.id
+    const initData = useLaunchParams().initDataRaw
+    const userId = lunchParams.initData?.user?.id
     const router = useRouter()
     const addEventMutation = trpc.events.addEvent.useMutation()
     const updateEventMutation = trpc.events.updateEvent.useMutation()
@@ -66,39 +69,38 @@ const CreateEventFields: FC<{
                     end_date: requiredEventFields.end_date || null,
                     dynamic_fields: fields,
                 },
-                initData: WebApp?.initData,
+                initData,
             })
             router.push(`/events`)
         } else {
             await addEventMutation.mutateAsync({
-                eventData:
-                {
+                eventData: {
                     owner: userId || 0,
                     ...requiredEventFields,
                     start_date: requiredEventFields.start_date!,
                     end_date: requiredEventFields.end_date || null,
                     dynamic_fields: fields,
                 },
-                initData: WebApp?.initData,
+                initData,
             })
             router.push(`/events/${event_uuid}`)
         }
     }
 
     const handleDelete = async (): Promise<void> => {
-        WebApp?.showConfirm('Are you sure you want to delete this event?\nThis action cannot be undone.', async (confirmed: boolean) => {
-
-            if (confirmed === false) {
-                return
-            }
-            await deleteEventMutation.mutateAsync(
-                {
-                    event_uuid,
-                    initData: WebApp?.initData,
+        WebApp?.showConfirm(
+            'Are you sure you want to delete this event?\nThis action cannot be undone.',
+            async (confirmed: boolean) => {
+                if (confirmed === false) {
+                    return
                 }
-            )
-            router.push('/events')
-        })
+                await deleteEventMutation.mutateAsync({
+                    event_uuid,
+                    initData,
+                })
+                router.push('/events')
+            }
+        )
     }
 
     const addGitHubField = () => {
@@ -108,9 +110,9 @@ const CreateEventFields: FC<{
             description: 'Please enter your GitHub username',
             placeholder: 'GitHub username',
             emoji: '🐙',
-        };
-        setFields((prevFields) => [...prevFields, newField]);
-    };
+        }
+        setFields((prevFields) => [...prevFields, newField])
+    }
 
     const addTwitterField = () => {
         const newField = {
@@ -119,9 +121,9 @@ const CreateEventFields: FC<{
             description: 'Please enter your Twitter handle',
             placeholder: '@example',
             emoji: '🐦',
-        };
-        setFields((prevFields) => [...prevFields, newField]);
-    };
+        }
+        setFields((prevFields) => [...prevFields, newField])
+    }
 
     return (
         <>
