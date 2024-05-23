@@ -64,8 +64,6 @@ export const dateToUtime = (date: Date | undefined) => {
 export const validateMiniAppData = (rawInitData: string) => {
     const initData = new URLSearchParams(rawInitData)
 
-    validate(rawInitData, BOT_TOKEN)
-
     const initDataJson: TelegramInitDataJson = {} as TelegramInitDataJson
     for (const [key, value] of initData) {
         if (key === 'user') {
@@ -75,10 +73,17 @@ export const validateMiniAppData = (rawInitData: string) => {
 
         initDataJson[key] = value
     }
-
-    return {
-        valid: true,
-        initDataJson,
+    try {
+        validate(rawInitData, BOT_TOKEN)
+        return {
+            valid: true,
+            initDataJson,
+        }
+    } catch (error) {
+        return {
+            valid: false,
+            initDataJson,
+        }
     }
 }
 
