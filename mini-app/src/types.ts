@@ -25,8 +25,13 @@ export interface HubsResponse {
 }
 
 export interface HubType {
-    id: string | number
+    id: number
     attributes: Attributes
+}
+
+export type SocietyHub = {
+    id: string
+    name: string
 }
 
 export interface Attributes {

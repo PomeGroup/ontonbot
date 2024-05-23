@@ -9,7 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { HubType, ZodErrors } from '@/types'
+import { SocietyHub, ZodErrors } from '@/types'
 import { FC, useEffect, useState } from 'react'
 import Card from '../../atoms/cards'
 import Labels from '../../atoms/labels'
@@ -17,11 +17,11 @@ import Labels from '../../atoms/labels'
 // https://society.ton.org/v1/society-hubs
 
 const TonHubPicker: FC<{
-    value: { id: string; name: string }
-    onValueChange: (value: HubType) => void
+    value: SocietyHub
+    onValueChange: (value: SocietyHub) => void
     errors: ZodErrors
 }> = ({ value, onValueChange, errors }) => {
-    const [hubs, setHubs] = useState<HubType[]>([])
+    const [hubs, setHubs] = useState<Array<SocietyHub>>([])
     const hubsResponse = trpc.events.getHubs.useQuery()
 
     useEffect(() => {
@@ -33,7 +33,7 @@ const TonHubPicker: FC<{
     }, [hubsResponse.status])
 
     function onHubChange(id: string) {
-        const hub = hubs.find((hub) => hub.id.toString() === id)!
+        const hub = hubs.find((hub) => hub.id === id)!
         onValueChange(hub)
     }
 
@@ -49,7 +49,7 @@ const TonHubPicker: FC<{
                     )}
                 </Labels.Label>
             </div>
-            <Select value={value?.id.toString()} onValueChange={onHubChange}>
+            <Select value={value?.id} onValueChange={onHubChange}>
                 <SelectTrigger className="w-full dark:bg-separator">
                     <SelectValue placeholder="Select TON Hub" />
                 </SelectTrigger>
@@ -67,9 +67,9 @@ const TonHubPicker: FC<{
                             <SelectItem
                                 className="dark:hover:bg-separator"
                                 key={societyHub.id}
-                                value={societyHub.id.toString()}
+                                value={societyHub.id}
                             >
-                                {societyHub.attributes.title}
+                                {societyHub.name}
                             </SelectItem>
                         ))}
                     </SelectGroup>

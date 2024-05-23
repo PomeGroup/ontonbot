@@ -6,7 +6,7 @@ import {
     users,
     visitors,
 } from '@/db/schema'
-import { EventDataSchema, HubsResponse } from '@/types'
+import { EventDataSchema, HubsResponse, SocietyHub } from '@/types'
 import { fetchBalance, sleep, validateMiniAppData } from '@/utils'
 import axios from 'axios'
 import dotenv from 'dotenv'
@@ -667,47 +667,54 @@ export const eventsRouter = router({
         }),
 
     // private
-    getHubs: publicProcedure.query(async (opts) => {
-        try {
-            const response = await axios.get<HubsResponse>(
-                `${process.env.TON_SOCIETY_BASE_URL}/v1/hubs`,
-                {
-                    params: {
-                        _start: 0,
-                        _end: 100,
-                    },
-                }
-            )
-
-            if (response.status === 200 && response.data) {
-                const sortedHubs = response.data.data.sort(
-                    (a, b) => Number(a.id) - Number(b.id)
+    getHubs: publicProcedure.query(
+        async (
+            opts
+        ): Promise<
+            | { status: 'success'; hubs: SocietyHub[] }
+            | { status: 'error'; message: string }
+        > => {
+            try {
+                const response = await axios.get<HubsResponse>(
+                    `${process.env.TON_SOCIETY_BASE_URL}/v1/hubs`,
+                    {
+                        params: {
+                            _start: 0,
+                            _end: 100,
+                        },
+                    }
                 )
 
-                const transformedHubs = sortedHubs.map((hub) => ({
-                    ...hub,
-                    id: hub.id.toString(),
-                }))
+                if (response.status === 200 && response.data) {
+                    const sortedHubs = response.data.data.sort(
+                        (a, b) => Number(a.id) - Number(b.id)
+                    )
 
-                return {
-                    status: 'success',
-                    hubs: transformedHubs,
-                } as const
-            } else {
+                    const transformedHubs = sortedHubs.map((hub) => ({
+                        id: hub.id.toString(),
+                        name: hub.attributes.title,
+                    }))
+
+                    return {
+                        status: 'success',
+                        hubs: transformedHubs,
+                    } as const
+                } else {
+                    return {
+                        status: 'error',
+                        message: 'Failed to fetch data',
+                    } as const
+                }
+            } catch (error) {
+                console.error(error)
+
                 return {
                     status: 'error',
-                    message: 'Failed to fetch data',
+                    message: 'Internal server error',
                 } as const
             }
-        } catch (error) {
-            console.error(error)
-
-            return {
-                status: 'error',
-                message: 'Internal server error',
-            } as const
         }
-    }),
+    ),
 
     // private
     postActivityParticipants: publicProcedure
