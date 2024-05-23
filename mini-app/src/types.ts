@@ -25,7 +25,7 @@ export interface HubsResponse {
 }
 
 export interface HubType {
-    id: number
+    id: string | number
     attributes: Attributes
 }
 

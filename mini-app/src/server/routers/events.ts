@@ -681,12 +681,12 @@ export const eventsRouter = router({
 
             if (response.status === 200 && response.data) {
                 const sortedHubs = response.data.data.sort(
-                    (a, b) => a.id - b.id
+                    (a, b) => Number(a.id) - Number(b.id)
                 )
 
                 const transformedHubs = sortedHubs.map((hub) => ({
                     ...hub,
-                    id: hub.id,
+                    id: hub.id.toString(),
                 }))
 
                 return {
