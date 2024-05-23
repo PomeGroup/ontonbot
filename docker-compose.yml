@@ -72,7 +72,7 @@ services:
       timeout: 5s
       retries: 5
   postgres:
-    image: postgres:15.3-alpine
+    image: postgres:latest
     restart: "unless-stopped"
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
