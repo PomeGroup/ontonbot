@@ -1,4 +1,3 @@
-import { Dispatch, SetStateAction } from 'react'
 import { z } from 'zod'
 import { serverClient } from './app/_trpc/serverClient'
 
@@ -20,9 +19,22 @@ export type ButtonField = {
 
 export type FieldElement = InputField | ButtonField
 
-export type SocietyHub = {
-    id: string
-    name: string
+export interface HubsResponse {
+    status: string
+    data: HubType[]
+}
+
+export interface HubType {
+    id: number
+    attributes: Attributes
+}
+
+export interface Attributes {
+    title: string
+    url: string
+    createdAt: string
+    updatedAt: string
+    publishedAt: string
 }
 
 export type TRequiredEventFields = {
@@ -34,7 +46,7 @@ export type TRequiredEventFields = {
     image_url: string
     secret_phrase: string
     society_hub: {
-        id: string,
+        id: string
         name: string
     }
     start_date: number | null
@@ -89,8 +101,6 @@ export type CreateEventData = TRequiredEventFields & {
     dynamic_fields: DynamicField[]
 }
 
-
-
 export type ZodErrors = {
     [key: string]: string
 }
@@ -118,7 +128,7 @@ export const EventDataSchema = z.object({
     image_url: z.string(),
     society_hub: z.object({
         id: z.string(),
-        name: z.string()
+        name: z.string(),
     }),
     secret_phrase: z.string(),
     start_date: z.number(),
@@ -180,7 +190,6 @@ export type TRequiredEventFieldsSchema = z.infer<
     typeof RequiredEventFieldsSchema
 >
 
-
 // user_id: opts.input.user.id,
 // username: opts.input.user.username,
 // first_name: opts.input.user.first_name,
@@ -196,23 +205,23 @@ export const UserSchema = z.object({
     last_name: z.string(),
     language_code: z.string(),
     role: z.string(),
-    wallet_address: z.string().optional()
+    wallet_address: z.string().optional(),
 })
 
 export type TelegramInitDataJson = {
-    query_id: string;
-    user: TelegramUser;
-    auth_date: string;
-    hash: string;
-    [key: string]: string | TelegramUser | undefined;
+    query_id: string
+    user: TelegramUser
+    auth_date: string
+    hash: string
+    [key: string]: string | TelegramUser | undefined
 }
 
 export type TelegramUser = {
-    id: number;
-    first_name: string;
-    last_name: string;
-    username: string;
-    language_code: string;
-    is_premium: boolean;
-    allows_write_to_pm: boolean;
+    id: number
+    first_name: string
+    last_name: string
+    username: string
+    language_code: string
+    is_premium: boolean
+    allows_write_to_pm: boolean
 }

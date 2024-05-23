@@ -6,7 +6,7 @@ import {
     users,
     visitors,
 } from '@/db/schema'
-import { EventDataSchema } from '@/types'
+import { EventDataSchema, HubsResponse } from '@/types'
 import { fetchBalance, sleep, validateMiniAppData } from '@/utils'
 import axios from 'axios'
 import dotenv from 'dotenv'
@@ -669,7 +669,7 @@ export const eventsRouter = router({
     // private
     getHubs: publicProcedure.query(async (opts) => {
         try {
-            const response = await axios.get(
+            const response = await axios.get<HubsResponse>(
                 `${process.env.TON_SOCIETY_BASE_URL}/v1/hubs`,
                 {
                     params: {
@@ -680,24 +680,24 @@ export const eventsRouter = router({
             )
 
             if (response.status === 200 && response.data) {
-                const sortedHubs = (
-                    response.data.data as Array<{ id: number; name: string }>
-                ).sort((a, b) => a.id - b.id)
+                const sortedHubs = response.data.data.sort(
+                    (a, b) => a.id - b.id
+                )
 
                 const transformedHubs = sortedHubs.map((hub) => ({
                     ...hub,
-                    id: hub.id.toString(),
+                    id: hub.id,
                 }))
 
                 return {
-                    status: response.data.status,
+                    status: 'success',
                     hubs: transformedHubs,
-                }
+                } as const
             } else {
                 return {
                     status: 'error',
                     message: 'Failed to fetch data',
-                }
+                } as const
             }
         } catch (error) {
             console.error(error)
@@ -705,7 +705,7 @@ export const eventsRouter = router({
             return {
                 status: 'error',
                 message: 'Internal server error',
-            }
+            } as const
         }
     }),
 
