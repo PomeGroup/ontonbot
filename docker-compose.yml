@@ -12,6 +12,8 @@ services:
       - postgres
       - golang-server
       - golang-worker
+    volumes:
+      - drizzle:/app/drizzle
 
   telegram-bot:
     build: ./telegram-bot
@@ -82,5 +84,9 @@ services:
     depends_on:
       - mini-app
       - postgres
+    volumes:
+      - drizzle:/app/drizzle
+
 volumes:
   pgdata:
+  drizzle:  
