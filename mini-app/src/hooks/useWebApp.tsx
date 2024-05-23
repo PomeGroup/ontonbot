@@ -1,8 +1,10 @@
 import { isEmptyObject } from '@/utils'
-import { useState, useEffect } from 'react'
+import { useLaunchParams } from '@tma.js/sdk-react'
+import { useEffect, useState } from 'react'
 
 const useWebApp = () => {
     const [webApp, setWebApp] = useState<WebApp>({} as WebApp)
+    const initData = useLaunchParams().initDataRaw
 
     useEffect(() => {
         const checkWebApp = () => {
@@ -26,7 +28,7 @@ const useWebApp = () => {
         return null
     }
 
-    return webApp
+    return { ...webApp, initData }
 }
 
 export default useWebApp

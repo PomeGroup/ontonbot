@@ -3,17 +3,14 @@
 import { trpc } from '@/app/_trpc/client'
 import { Button } from '@/components/ui/button'
 import useWebApp from '@/hooks/useWebApp'
-import React, { useEffect, useRef, useState } from 'react'
+import { useHapticFeedback, useLaunchParams } from '@tma.js/sdk-react'
 
 const QrCodeButton = ({ url, hub }: { url: string; hub?: string }) => {
-    const [initData, setInitData] = useState<string>('')
-
     const WebApp = useWebApp()
-    const requestSendQRcodeMutation = trpc.events.requestSendQRcode.useMutation()
-
-    useEffect(() => {
-        setInitData(WebApp?.initData || '')
-    }, [WebApp, WebApp?.initData])
+    const initData = useLaunchParams().initDataRaw
+    const hapticFeedback = useHapticFeedback(true)
+    const requestSendQRcodeMutation =
+        trpc.events.requestSendQRcode.useMutation()
 
     return (
         <Button
@@ -21,7 +18,7 @@ const QrCodeButton = ({ url, hub }: { url: string; hub?: string }) => {
             variant={'outline'}
             disabled={!initData}
             onClick={async () => {
-                WebApp?.HapticFeedback.impactOccurred("medium")
+                hapticFeedback?.impactOccurred('medium')
                 requestSendQRcodeMutation.mutate({
                     url,
                     hub,

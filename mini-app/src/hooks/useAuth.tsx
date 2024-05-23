@@ -1,29 +1,19 @@
 import { trpc } from '@/app/_trpc/client'
+import { useLaunchParams } from '@tma.js/sdk-react'
 import { useEffect, useState } from 'react'
 
 const useAuth = () => {
     const [authorized, setAuthorized] = useState<boolean | null>(null)
     const [isLoading, setIsLoading] = useState(true)
-
-    let WebApp = {
-        initData: '',
-    } as WebApp
-
-    if (
-        typeof window !== 'undefined' &&
-        window.Telegram &&
-        window.Telegram.WebApp
-    ) {
-        WebApp = window.Telegram.WebApp
-    }
+    const initData = useLaunchParams().initDataRaw
 
     const validateUserInitDataQuery =
-        trpc.users.haveAccessToEventAdministration.useQuery(WebApp.initData, {
-            enabled: !!WebApp.initData,
+        trpc.users.haveAccessToEventAdministration.useQuery(initData, {
+            enabled: !!initData,
         })
 
     useEffect(() => {
-        if (!WebApp.initData) {
+        if (!initData) {
             setIsLoading(false)
             return
         }
@@ -39,7 +29,7 @@ const useAuth = () => {
         setAuthorized(validateUserInitDataQuery.data!)
         setIsLoading(false)
     }, [
-        WebApp.initData,
+        initData,
         validateUserInitDataQuery.data,
         validateUserInitDataQuery.isLoading,
         validateUserInitDataQuery.isError,

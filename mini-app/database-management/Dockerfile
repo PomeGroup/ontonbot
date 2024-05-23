@@ -6,7 +6,6 @@ WORKDIR /app
 
 COPY . .
 
-COPY --from=ontonbot-mini-app:latest app/drizzle ./drizzle
  #install neede dependency for image
 RUN pip install python-dotenv && apk --update add postgresql-client
 
