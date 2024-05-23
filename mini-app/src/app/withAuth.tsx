@@ -1,13 +1,14 @@
 'use client'
 
-import { useLaunchParams } from '@tma.js/sdk-react'
+import useWebApp from '@/hooks/useWebApp'
 import React, { ComponentType, useEffect, useState } from 'react'
 import { trpc } from './_trpc/client'
 
 const withAuth = <P extends object>(WrappedComponent: ComponentType<P>) => {
     const WithAuthComponent: React.FC<P> = (props) => {
         const [authorized, setAuthorized] = useState(false)
-        const initData = useLaunchParams().initDataRaw
+        const WebApp = useWebApp()
+        const initData = WebApp?.initData || ''
         const validateUserInitDataQuery =
             trpc.users.haveAccessToEventAdministration.useQuery(initData, {
                 enabled: !!initData,

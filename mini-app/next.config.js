@@ -8,7 +8,7 @@ const nextConfig = {
             },
         ],
     },
-    webpack: (config, { isServer, buildId, dev, webpack }) => {
+    webpack: (config, { isServer, webpack }) => {
         if (!isServer) {
             config.resolve.fallback = {
                 ...config.resolve.fallback,

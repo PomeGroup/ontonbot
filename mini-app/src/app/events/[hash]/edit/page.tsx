@@ -1,16 +1,16 @@
 'use client'
 
-import { FC } from 'react'
-import CreateEventFields from '@/app/_components/CreateEventFields'
-import { trpc } from '@/app/_trpc/client'
-import useAuth from '@/hooks/useAuth'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Buttons from '@/app/_components/atoms/buttons'
+import CreateEventFields from '@/app/_components/CreateEventFields'
 import Alerts from '@/app/_components/molecules/alerts'
 import Tables from '@/app/_components/molecules/tables'
 import RoomWallet from '@/app/_components/organisms/room-wallet'
+import { trpc } from '@/app/_trpc/client'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import useAuth from '@/hooks/useAuth'
 import useWebApp from '@/hooks/useWebApp'
+import { FC } from 'react'
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
     const WebApp = useWebApp()
@@ -23,12 +23,10 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
     const { authorized, isLoading } = useAuth()
 
-    const requestExportFileMutation = trpc.events.requestExportFile.useMutation()
+    const requestExportFileMutation =
+        trpc.events.requestExportFile.useMutation()
 
-    if (
-        isLoading ||
-        event.status === 'loading'
-    ) {
+    if (isLoading || event.status === 'loading') {
         return null
     }
 
@@ -41,7 +39,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
     }
 
     const handleVisitorsExport = () => {
-        WebApp?.HapticFeedback.impactOccurred("medium")
+        WebApp?.HapticFeedback.impactOccurred('medium')
 
         requestExportFileMutation.mutate({
             event_uuid: params.hash,
@@ -92,8 +90,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
                         Upload Visitors to society.ton.org
                     </Button>
 
-
-                    <div className='mt-2'>
+                    <div className="mt-2">
                         <Button
                             className="w-full relative"
                             variant={'outline'}
@@ -123,3 +120,5 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 }
 
 export default CreateEventAdminPage
+
+export const dynamic = 'force-dynamic'

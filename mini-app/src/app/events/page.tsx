@@ -4,19 +4,11 @@ import { Button } from '@/components/ui/button'
 import useAuth from '@/hooks/useAuth'
 import useWebApp from '@/hooks/useWebApp'
 import { getDateFromUnix, getTimeFromUnix } from '@/utils'
-import { useLaunchParams } from '@tma.js/sdk-react'
 import { BadgePlus } from 'lucide-react'
-import { StaticImport } from 'next/dist/shared/lib/get-img-props'
+import { unstable_noStore as noStore } from 'next/cache'
 import Image from 'next/image'
 import Link from 'next/link'
-import {
-    JSXElementConstructor,
-    PromiseLikeOfReactNode,
-    ReactElement,
-    ReactNode,
-    ReactPortal,
-    useState,
-} from 'react'
+import { useState } from 'react'
 import QrCodeButton from '../_components/atoms/buttons/QrCodeButton'
 import Card from '../_components/atoms/cards'
 import Labels from '../_components/atoms/labels'
@@ -24,15 +16,17 @@ import Skeletons from '../_components/molecules/skeletons'
 import { trpc } from '../_trpc/client'
 
 const EventsAdminPage = () => {
+    noStore()
+
     const WebApp = useWebApp()
     const { authorized, isLoading } = useAuth()
-    const initData = useLaunchParams().initDataRaw
+    const initData = WebApp?.initData
     const [redirectDone, setRedirectDone] = useState(false)
 
     const validatedData = trpc.users.validateUserInitData.useQuery(
         initData || ''
     )
-    const eventsData = trpc.events.getEvents.useQuery({ initData: initData })
+    const eventsData = trpc.events.getEvents.useQuery({ initData })
 
     if (
         eventsData?.status === 'loading' ||
@@ -66,90 +60,64 @@ const EventsAdminPage = () => {
                 </Button>
             </Link>
 
-            {eventsData?.data?.map(
-                (event: {
-                    event_id: any
-                    image_url: string | StaticImport
-                    title: string
-                    subtitle: string
-                    location:
-                        | string
-                        | number
-                        | boolean
-                        | ReactElement<any, string | JSXElementConstructor<any>>
-                        | Iterable<ReactNode>
-                        | ReactPortal
-                        | PromiseLikeOfReactNode
-                        | null
-                        | undefined
-                    start_date: number
-                    end_date: number | null
-                    timezone: string
-                    event_uuid: any
-                    society_hub: string | undefined
-                }) => (
-                    <div key={`event-${event.event_id}-link`} className="my-4">
-                        <Card className="flex flex-col w-full p-0 my-0">
-                            <div className="relative h-[200px] w-full overflow-hidden">
-                                <Image
-                                    className="rounded-t-xl w-full h-full object-contain"
-                                    src={event.image_url!}
-                                    alt="event image"
-                                    layout="fill"
-                                    objectFit="cover"
+            {eventsData?.data?.map((event: any) => (
+                <div key={`event-${event.event_id}-link`} className="my-4">
+                    <Card className="flex flex-col w-full p-0 my-0">
+                        <div className="relative h-[200px] w-full overflow-hidden">
+                            <Image
+                                className="rounded-t-xl w-full h-full object-contain"
+                                src={event.image_url!}
+                                alt="event image"
+                                layout="fill"
+                                objectFit="cover"
+                            />
+                        </div>
+
+                        <div className="w-full flex flex-col gap-2">
+                            <div className="text-primary p-4 pb-1">
+                                <Labels.CampaignTitle title={event.title!} />
+                                <Labels.CampaignDescription
+                                    className="text-secondary"
+                                    description={event.subtitle!}
                                 />
                             </div>
-
-                            <div className="w-full flex flex-col gap-2">
-                                <div className="text-primary p-4 pb-1">
-                                    <Labels.CampaignTitle
-                                        title={event.title!}
-                                    />
-                                    <Labels.CampaignDescription
-                                        className="text-secondary"
-                                        description={event.subtitle!}
+                            <div className="h-[1px] w-full bg-separator" />
+                            <div className="flex flex-col gap-1 p-4 pt-1">
+                                <div className="text-secondary text-sm">
+                                    {event.location}
+                                </div>
+                                <div className="flex flex-row whitespace-nowrap gap-3 text-primary text-sm items-center">
+                                    <TimeRow
+                                        start_date={event.start_date!}
+                                        end_date={event.end_date}
+                                        timeZone={event.timezone!}
                                     />
                                 </div>
-                                <div className="h-[1px] w-full bg-separator" />
-                                <div className="flex flex-col gap-1 p-4 pt-1">
-                                    <div className="text-secondary text-sm">
-                                        {event.location}
-                                    </div>
-                                    <div className="flex flex-row whitespace-nowrap gap-3 text-primary text-sm items-center">
-                                        <TimeRow
-                                            start_date={event.start_date!}
-                                            end_date={event.end_date}
-                                            timeZone={event.timezone!}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </Card>
-
-                        <div className="flex gap-2 mt-2">
-                            <Link
-                                className="flex-1"
-                                href={`events/${event.event_uuid}/edit`}
-                                onClick={() =>
-                                    WebApp?.HapticFeedback.impactOccurred(
-                                        'medium'
-                                    )
-                                }
-                            >
-                                <Button className="w-full" variant={'outline'}>
-                                    Manage
-                                </Button>
-                            </Link>
-                            <div className="flex-1">
-                                <QrCodeButton
-                                    url={`https://t.me/on_ton_bot/event?startapp=${event.event_uuid}`}
-                                    hub={event.society_hub!}
-                                />
                             </div>
                         </div>
+                    </Card>
+
+                    <div className="flex gap-2 mt-2">
+                        <Link
+                            className="flex-1"
+                            href={`events/${event.event_uuid}/edit`}
+                            onClick={() =>
+                                WebApp?.HapticFeedback.impactOccurred('medium')
+                            }
+                        >
+                            <Button className="w-full" variant={'outline'}>
+                                Manage
+                            </Button>
+                        </Link>
+                        <div className="flex-1">
+                            <QrCodeButton
+                                url={`https://t.me/on_ton_bot/event?startapp=${event.event_uuid}`}
+                                hub={event.society_hub!}
+                            />
+                        </div>
                     </div>
-                )
-            )}
+                </div>
+            ))}
         </div>
     )
 }
@@ -205,3 +173,5 @@ const TimeRow = ({
 }
 
 export default EventsAdminPage
+
+export const dynamic = 'force-dynamic'

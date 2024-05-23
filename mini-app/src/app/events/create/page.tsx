@@ -4,7 +4,6 @@ import CreateEventFields from '@/app/_components/CreateEventFields'
 import Labels from '@/app/_components/atoms/labels'
 import Alerts from '@/app/_components/molecules/alerts'
 import useAuth from '@/hooks/useAuth'
-import { redirect } from 'next/navigation'
 
 const CreateEventAdminPage = () => {
     const { authorized, isLoading } = useAuth()
@@ -28,3 +27,5 @@ const CreateEventAdminPage = () => {
 }
 
 export default CreateEventAdminPage
+
+export const dynamic = 'force-dynamic'

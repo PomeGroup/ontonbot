@@ -1,11 +1,12 @@
 import { trpc } from '@/app/_trpc/client'
-import { useLaunchParams } from '@tma.js/sdk-react'
 import { useEffect, useState } from 'react'
+import useWebApp from './useWebApp'
 
 const useAuth = () => {
     const [authorized, setAuthorized] = useState<boolean | null>(null)
     const [isLoading, setIsLoading] = useState(true)
-    const initData = useLaunchParams().initDataRaw
+    const WebApp = useWebApp()
+    const initData = WebApp?.initData || ''
 
     const validateUserInitDataQuery =
         trpc.users.haveAccessToEventAdministration.useQuery(initData, {

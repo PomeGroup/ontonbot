@@ -1,11 +1,12 @@
 'use client'
 
-import { useLaunchParams } from '@tma.js/sdk-react'
+import useWebApp from '@/hooks/useWebApp'
 import { FC, ReactNode, useEffect } from 'react'
 import { trpc } from '../_trpc/client'
 
 const UserSaver: FC<{ children: ReactNode }> = ({ children }) => {
-    const initData = useLaunchParams().initDataRaw
+    const WebApp = useWebApp()
+    const initData = WebApp?.initData || ''
     const userSaver = trpc.users.addUser.useMutation()
 
     useEffect(() => {

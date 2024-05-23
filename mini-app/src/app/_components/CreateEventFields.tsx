@@ -9,7 +9,7 @@ import {
     TRequiredEventFields,
     ZodErrors,
 } from '@/types'
-import { useLaunchParams } from '@tma.js/sdk-react'
+import { useInitData } from '@tma.js/sdk-react'
 import { GithubIcon, Trash, TwitterIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
@@ -23,10 +23,10 @@ const CreateEventFields: FC<{
     event?: CreateEventData
     event_uuid: string
 }> = ({ event, event_uuid }) => {
-    const lunchParams = useLaunchParams()
     const WebApp = useWebApp()
-    const initData = useLaunchParams().initDataRaw
-    const userId = lunchParams.initData?.user?.id
+    const data = useInitData(true)
+    const initData = WebApp?.initData || ''
+    const userId = data?.user?.id
     const router = useRouter()
     const addEventMutation = trpc.events.addEvent.useMutation()
     const updateEventMutation = trpc.events.updateEvent.useMutation()

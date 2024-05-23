@@ -1,10 +1,10 @@
 import { isEmptyObject } from '@/utils'
-import { useLaunchParams } from '@tma.js/sdk-react'
+import { retrieveLaunchParams } from '@tma.js/sdk-react'
 import { useEffect, useState } from 'react'
 
 const useWebApp = () => {
     const [webApp, setWebApp] = useState<WebApp>({} as WebApp)
-    const initData = useLaunchParams().initDataRaw
+    const [initData, setInitData] = useState('')
 
     useEffect(() => {
         const checkWebApp = () => {
@@ -14,6 +14,10 @@ const useWebApp = () => {
                 window.Telegram.WebApp
             ) {
                 setWebApp(window.Telegram.WebApp)
+                try {
+                    const lunchParams = retrieveLaunchParams()
+                    setInitData(lunchParams.initDataRaw || '')
+                } catch (error) {}
             }
         }
 
