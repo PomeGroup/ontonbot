@@ -1,6 +1,5 @@
 # Use the official Golang image as a parent image
-FROM golang:1.20 
-
+FROM golang:1.20.3-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -18,8 +17,11 @@ COPY ./highload/config.json ./
 # Copy the worker's worker.go into the container
 COPY worker/worker.go .
 
+RUN go mod tidy
+
 # Build the application
 RUN go build -o worker .
 
 # Command to run the executable
-CMD ["./worker"]
+ CMD ["./worker"]
+#CMD ["sleep", "infinity"]

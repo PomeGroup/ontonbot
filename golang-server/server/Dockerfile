@@ -1,6 +1,5 @@
 # Use the official Golang image as a parent image
-FROM golang:1.20 
-
+FROM golang:1.20.3-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -17,6 +16,8 @@ COPY ./highload/config.json ./
 
 # Copy the server's main.go into the container
 COPY server/main.go .
+
+RUN go mod tidy
 
 # Build the application
 RUN go build -o server .
