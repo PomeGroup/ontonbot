@@ -68,7 +68,7 @@ export const usersRouter = router({
                 }
             }
 
-            return await db
+            const data = await db
                 .insert(users)
                 .values({
                     user_id: initDataJson.user.id,
@@ -80,6 +80,14 @@ export const usersRouter = router({
                 })
                 .onConflictDoNothing()
                 .execute()
+
+            if (!data.length) {
+                return {
+                    message: 'user already exists',
+                }
+            }
+
+            return data
         }),
 
     // private
