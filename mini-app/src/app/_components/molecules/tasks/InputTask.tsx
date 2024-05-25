@@ -1,15 +1,15 @@
 'use client'
 
+import { trpc } from '@/app/_trpc/client'
+import useWebApp from '@/hooks/useWebApp'
+import Image from 'next/image'
 import React, {
-    useState,
     KeyboardEvent,
     MouseEvent,
     useEffect,
     useRef,
+    useState,
 } from 'react'
-import Image from 'next/image'
-import useWebApp from '@/hooks/useWebApp'
-import { trpc } from '@/app/_trpc/client'
 import GenericTask from './GenericTask'
 
 const InputTypeCampaignTask: React.FC<{
@@ -112,6 +112,8 @@ const InputTypeCampaignTask: React.FC<{
                     <input
                         className="w-full h-10 rounded-lg border border-separator p-2 mr-2"
                         type="text"
+                        inputMode="text"
+                        placeholder="Type something..."
                         value={inputText || ''}
                         onChange={handleInputChange}
                         onKeyDown={(e) => {
