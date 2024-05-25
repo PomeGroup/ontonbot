@@ -80,7 +80,7 @@ export const validateMiniAppData = (rawInitData: string) => {
             initDataJson,
         }
     } catch (error) {
-        console.info(error)
+        console.error(error)
 
         return {
             valid: false,

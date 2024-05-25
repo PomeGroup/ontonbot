@@ -53,7 +53,9 @@ export const usersRouter = router({
         .input(z.object({ initData: z.string() }))
         .mutation(async (opts) => {
             if (!opts.input.initData) {
-                return
+                return {
+                    message: 'initdata is required',
+                }
             }
 
             const { valid, initDataJson } = validateMiniAppData(
@@ -61,10 +63,12 @@ export const usersRouter = router({
             )
 
             if (!valid) {
-                return
+                return {
+                    message: 'initdata is invalid',
+                }
             }
 
-            return await db
+            const data = await db
                 .insert(users)
                 .values({
                     user_id: initDataJson.user.id,
@@ -76,6 +80,14 @@ export const usersRouter = router({
                 })
                 .onConflictDoNothing()
                 .execute()
+
+            if (!data.length) {
+                return {
+                    message: 'user already exists',
+                }
+            }
+
+            return data
         }),
 
     // private
