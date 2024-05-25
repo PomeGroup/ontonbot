@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 const useWebApp = () => {
     const [webApp, setWebApp] = useState<WebApp>({} as WebApp)
-    const [initData, setInitData] = useState('')
+    const [initData, setInitData] = useState<undefined | string>(undefined)
 
     useEffect(() => {
         const checkWebApp = () => {
@@ -16,7 +16,7 @@ const useWebApp = () => {
                 setWebApp(window.Telegram.WebApp)
                 try {
                     const lunchParams = retrieveLaunchParams()
-                    setInitData(lunchParams.initDataRaw || '')
+                    setInitData(lunchParams.initDataRaw)
                 } catch (error) {}
             }
         }

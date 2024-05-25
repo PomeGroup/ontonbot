@@ -9,9 +9,7 @@ const useAuth = () => {
     const initData = WebApp?.initData || ''
 
     const validateUserInitDataQuery =
-        trpc.users.haveAccessToEventAdministration.useQuery(initData, {
-            enabled: !!initData,
-        })
+        trpc.users.haveAccessToEventAdministration.useQuery(initData)
 
     useEffect(() => {
         if (!initData) {
