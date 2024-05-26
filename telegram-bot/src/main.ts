@@ -1,12 +1,11 @@
-import { config } from "dotenv";
-config();
+import "dotenv/config"
 
-import { Telegraf } from "telegraf";
-import express from "express";
+import express from "express"
+import { Telegraf } from "telegraf"
 
-import { startHandler, orgHandler } from "./handlers";
-import fileUpload from "express-fileupload";
-import { handleFileSend, handleSendQRCode } from "./controllers";
+import fileUpload from "express-fileupload"
+import { handleFileSend, handleSendQRCode } from "./controllers"
+import { orgHandler, startHandler } from "./handlers"
 
 const port = 3333;
 

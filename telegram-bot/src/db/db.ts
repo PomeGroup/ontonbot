@@ -87,11 +87,10 @@
 
 // createDatabase()
 
-import { Client } from "pg";
-import { TVisitor } from "../utils/types";
+import { Client } from "pg"
+import { TVisitor } from "../utils/types"
 
 async function createDatabase() {
-
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
   });
