@@ -6,6 +6,10 @@ const nextConfig = {
                 protocol: 'https',
                 hostname: 'telegra.ph',
             },
+            {
+                protocol: 'https',
+                hostname: 'raw.githubusercontent.com',
+            },
         ],
     },
     webpack: (config, { isServer, webpack }) => {

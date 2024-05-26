@@ -2,6 +2,7 @@ import AddVisitorWrapper from '@/app/_components/AddVisitorWrapper'
 import Buttons from '@/app/_components/atoms/buttons'
 import Images from '@/app/_components/atoms/images'
 import Labels from '@/app/_components/atoms/labels'
+import EventNotStarted from '@/app/_components/EventNotStarted'
 import Tasks from '@/app/_components/molecules/tasks'
 import AllTasks from '@/app/_components/Tasks'
 import { serverClient } from '@/app/_trpc/serverClient'
@@ -22,6 +23,13 @@ async function EventPage({ params }: { params: { hash: string } }) {
         return <div>Something went wrong...</div>
     }
 
+    const startUTC = Number(eventData.start_date) * 1000
+    const endUTC = Number(eventData.end_date) * 1000
+
+    const currentTime = Date.now()
+    const isNotEnded = currentTime < endUTC
+    const isStarted = currentTime > startUTC
+
     return (
         <AddVisitorWrapper hash={params.hash}>
             <Images.Event url={eventData.image_url!} />
@@ -31,13 +39,28 @@ async function EventPage({ params }: { params: { hash: string } }) {
                 className="text-secondary text-[14px] mb-2"
             />
             <Labels.CampaignDescription description={eventData.description!} />
-
-            <Tasks.Wallet />
-            <AllTasks
-                tasks={eventData.dynamic_fields}
-                eventHash={params.hash}
-            />
-
+            {isStarted && isNotEnded ? (
+                <>
+                    <Tasks.Wallet />
+                    <AllTasks
+                        tasks={eventData.dynamic_fields}
+                        eventHash={params.hash}
+                    />
+                </>
+            ) : // if it was not ended than it means the event is not started yet
+            isNotEnded ? (
+                <EventNotStarted
+                    title="Event is not started yet"
+                    end_date={endUTC}
+                    start_date={startUTC}
+                />
+            ) : (
+                <EventNotStarted
+                    title="Event is ended already"
+                    end_date={endUTC}
+                    start_date={startUTC}
+                />
+            )}
             <Buttons.Support />
         </AddVisitorWrapper>
     )
