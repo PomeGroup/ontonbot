@@ -1,10 +1,8 @@
 import { validate } from '@tma.js/init-data-node'
 import { type ClassValue, clsx } from 'clsx'
-import dotenv from 'dotenv'
 import { twMerge } from 'tailwind-merge'
 import { TelegramInitDataJson, TelegramUser } from './types'
 
-dotenv.config()
 const BOT_TOKEN = process.env.BOT_TOKEN || ''
 
 const TONAPI_BEARER = 'Bearer ' + process.env.TONAPI_API_KEY
