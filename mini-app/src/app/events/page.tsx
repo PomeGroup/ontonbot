@@ -111,7 +111,7 @@ const EventsAdminPage = () => {
                         </Link>
                         <div className="flex-1">
                             <QrCodeButton
-                                url={`https://t.me/on_ton_bot/event?startapp=${event.event_uuid}`}
+                                url={`https://t.me/${process.env.BOT_USERNAME}/event?startapp=${event.event_uuid}`}
                                 hub={event.society_hub!}
                             />
                         </div>
