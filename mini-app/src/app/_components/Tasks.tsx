@@ -35,6 +35,7 @@ const AllTasks: FC<{
                             defaultEmoji={task.emoji!}
                             data={userEventField?.data || null}
                             fieldId={task.id}
+                            eventId={task.event_id!}
                         />
                     )
                 }
@@ -49,6 +50,7 @@ const AllTasks: FC<{
                                 defaultEmoji={task.emoji!}
                                 url={task.placeholder!}
                                 fieldId={task.id}
+                                eventId={task.event_id!}
                             />
                         </div>
                     )

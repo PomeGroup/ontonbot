@@ -1,9 +1,10 @@
 import { db } from '@/db/db'
-import { publicProcedure, router } from '../trpc'
-import { userEventFields, eventFields, events } from '@/db/schema'
-import { z } from 'zod'
-import { eq, and } from 'drizzle-orm'
+import { eventFields, events, userEventFields } from '@/db/schema'
 import { validateMiniAppData } from '@/utils'
+import { TRPCError } from '@trpc/server'
+import { and, eq } from 'drizzle-orm'
+import { z } from 'zod'
+import { publicProcedure, router } from '../trpc'
 
 interface UserEventField {
     id: number
@@ -17,7 +18,6 @@ interface UserEventField {
 type GetUserEventFieldsReturnType = Record<number, UserEventField>
 
 export const userEventFieldsRouter = router({
-
     // protect
     upsertUserEventField: publicProcedure
         .input(
@@ -26,19 +26,43 @@ export const userEventFieldsRouter = router({
                 data: z.string(),
                 completed: z.boolean(),
                 field_id: z.number(),
+                event_id: z.number(),
             })
         )
         .mutation(async (opts) => {
             if (!opts.input.initData) {
-                return undefined;
+                return undefined
             }
 
-            const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
+            const { valid, initDataJson } = validateMiniAppData(
+                opts.input.initData
+            )
 
             if (!valid) {
-                throw new Error('Unauthorized access or invalid role');
+                throw new Error('Unauthorized access or invalid role')
             }
 
+            const eventData = await db
+                .select()
+                .from(events)
+                .where(and(eq(events.event_id, opts.input.event_id)))
+                .execute()
+
+            if (eventData.length === 0) {
+                throw new TRPCError({
+                    message: 'Event not found',
+                    code: 'BAD_REQUEST',
+                })
+            }
+            const startDate = Number(eventData[0].start_date) * 1000
+            const endDate = Number(eventData[0].end_date) * 1000
+
+            if (Date.now() < startDate || Date.now() > endDate) {
+                throw new TRPCError({
+                    message: 'Event is not active',
+                    code: 'FORBIDDEN',
+                })
+            }
 
             const res = await db
                 .insert(userEventFields)
@@ -64,7 +88,6 @@ export const userEventFieldsRouter = router({
             return res
         }),
 
-
     // protect
     // TODO: WHY WE DO NOT USE THIS?
     deleteUserEventField: publicProcedure
@@ -76,15 +99,16 @@ export const userEventFieldsRouter = router({
         )
         .mutation(async (opts) => {
             if (!opts.input.initData) {
-                return undefined;
+                return undefined
             }
 
-            const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
+            const { valid, initDataJson } = validateMiniAppData(
+                opts.input.initData
+            )
 
             if (!valid) {
-                throw new Error('Unauthorized access or invalid role');
+                throw new Error('Unauthorized access or invalid role')
             }
-
 
             await db
                 .delete(userEventFields)
@@ -97,69 +121,72 @@ export const userEventFieldsRouter = router({
                 .execute()
         }),
 
-
     // protect
     getUserEventFields: publicProcedure
         .input(
-            z.object(
-                {
-                    initData: z.string().optional(),
-                    event_hash: z.string()
-                }
-            )
+            z.object({
+                initData: z.string().optional(),
+                event_hash: z.string(),
+            })
         )
-        .query(async (opts): Promise<GetUserEventFieldsReturnType | undefined> => {
-            if (!opts.input.initData) {
-                return undefined;
-            }
-
-            const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
-
-            if (!valid) {
-                throw new Error('Unauthorized access or invalid role');
-            }
-
-
-            const userEventFieldsResult = await db
-                .select({
-                    eventFieldId: userEventFields.event_field_id,
-                    userData: userEventFields.data,
-                    completed: userEventFields.completed,
-                    createdAt: userEventFields.created_at,
-                    // Add other fields from userEventFields as necessary
-                })
-                .from(events)
-                .innerJoin(
-                    eventFields,
-                    eq(eventFields.event_id, events.event_id)
-                )
-                .leftJoin(
-                    userEventFields,
-                    and(
-                        eq(userEventFields.event_field_id, eventFields.id),
-                        eq(userEventFields.user_id, initDataJson.user.id)
-                    )
-                )
-                .where(eq(events.event_uuid, opts.input.event_hash))
-                .execute()
-
-            if (!userEventFieldsResult || userEventFieldsResult.length === 0)
-                return {}
-
-            const data = userEventFieldsResult.reduce((acc, field) => {
-                // @ts-expect-error here something bad
-                acc[field.eventFieldId] = {
-                    id: field.eventFieldId,
-                    event_field_id: field.eventFieldId,
-                    user_id: initDataJson.user.id,
-                    data: field.userData,
-                    completed: field.completed,
-                    created_at: field.createdAt,
-                    // Map other necessary fields from userEventFields
+        .query(
+            async (opts): Promise<GetUserEventFieldsReturnType | undefined> => {
+                if (!opts.input.initData) {
+                    return undefined
                 }
-                return acc
-            }, {})
 
-            return data
-        }),
+                const { valid, initDataJson } = validateMiniAppData(
+                    opts.input.initData
+                )
+
+                if (!valid) {
+                    throw new Error('Unauthorized access or invalid role')
+                }
+
+                const userEventFieldsResult = await db
+                    .select({
+                        eventFieldId: userEventFields.event_field_id,
+                        userData: userEventFields.data,
+                        completed: userEventFields.completed,
+                        createdAt: userEventFields.created_at,
+                        // Add other fields from userEventFields as necessary
+                    })
+                    .from(events)
+                    .innerJoin(
+                        eventFields,
+                        eq(eventFields.event_id, events.event_id)
+                    )
+                    .leftJoin(
+                        userEventFields,
+                        and(
+                            eq(userEventFields.event_field_id, eventFields.id),
+                            eq(userEventFields.user_id, initDataJson.user.id)
+                        )
+                    )
+                    .where(eq(events.event_uuid, opts.input.event_hash))
+                    .execute()
+
+                if (
+                    !userEventFieldsResult ||
+                    userEventFieldsResult.length === 0
+                )
+                    return {}
+
+                const data = userEventFieldsResult.reduce((acc, field) => {
+                    // @ts-expect-error here something bad
+                    acc[field.eventFieldId] = {
+                        id: field.eventFieldId,
+                        event_field_id: field.eventFieldId,
+                        user_id: initDataJson.user.id,
+                        data: field.userData,
+                        completed: field.completed,
+                        created_at: field.createdAt,
+                        // Map other necessary fields from userEventFields
+                    }
+                    return acc
+                }, {})
+
+                return data
+            }
+        ),
 })

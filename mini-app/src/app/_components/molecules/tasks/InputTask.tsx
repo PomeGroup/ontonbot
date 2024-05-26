@@ -19,7 +19,16 @@ const InputTypeCampaignTask: React.FC<{
     defaultEmoji: string
     data: string | null
     fieldId: number
-}> = ({ title, description, completed, defaultEmoji, data, fieldId }) => {
+    eventId: number
+}> = ({
+    title,
+    description,
+    completed,
+    defaultEmoji,
+    data,
+    fieldId,
+    eventId,
+}) => {
     const WebApp = useWebApp()
 
     const validatedData = trpc.users.validateUserInitData.useQuery(
@@ -82,6 +91,7 @@ const InputTypeCampaignTask: React.FC<{
             field_id: fieldId,
             data: inputText || '',
             completed: inputText ? true : false,
+            event_id: eventId,
         })
 
         WebApp?.HapticFeedback.notificationOccurred('success')

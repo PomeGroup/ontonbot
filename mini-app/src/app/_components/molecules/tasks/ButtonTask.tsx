@@ -1,8 +1,8 @@
 'use client'
 
-import React from 'react'
-import useWebApp from '@/hooks/useWebApp'
 import { trpc } from '@/app/_trpc/client'
+import useWebApp from '@/hooks/useWebApp'
+import React from 'react'
 import GenericTask from './GenericTask'
 
 const ButtonTask: React.FC<{
@@ -12,7 +12,16 @@ const ButtonTask: React.FC<{
     url: string
     completed: boolean
     fieldId: number
-}> = ({ title, description, defaultEmoji, url, completed, fieldId }) => {
+    eventId: number
+}> = ({
+    title,
+    description,
+    defaultEmoji,
+    url,
+    completed,
+    fieldId,
+    eventId,
+}) => {
     const WebApp = useWebApp()
     const validatedData = trpc.users.validateUserInitData.useQuery(
         WebApp?.initData || ''
@@ -32,6 +41,7 @@ const ButtonTask: React.FC<{
             field_id: fieldId,
             data: '',
             completed: true,
+            event_id: eventId,
         })
 
         setCompletedInternal(true)
