@@ -1,8 +1,8 @@
 import os
 import subprocess
 
+from database_configuration import DB_URL, MIGRATIONS_PATH, RESTORE_FILE
 from dotenv import load_dotenv
-from database_configuration import DB_URL, MIGRATIONS_PATH ,RESTORE_FILE
 
 # Load environment variables (including DATABASE_URL)
 load_dotenv()
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         if filename.endswith(".sql"):
             run_migration(filename)
 
-    command = f"psql -f {RESTORE_FILE} {DB_URL} "
-    subprocess.run(command, shell=True, capture_output=True, text=True)
+    # command = f"psql -f {RESTORE_FILE} {DB_URL} "
+    # subprocess.run(command, shell=True, capture_output=True, text=True)
     
     print("All migrations completed.")

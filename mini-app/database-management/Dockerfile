@@ -11,12 +11,12 @@ RUN pip install python-dotenv && apk --update add postgresql-client
 
 EXPOSE 8080
 
-RUN PGPASSWORD=AVNS_SF-V9s5GCKbRRhY9aL9 \
-    pg_dump -a \
-    -U doadmin \
-    -h db-postgresql-fra1-96017-do-user-16430870-0.c.db.ondigitalocean.com \
-    -p 25060 -d defaultdb -F p \ 
-    > ${backup}
+# RUN PGPASSWORD=AVNS_SF-V9s5GCKbRRhY9aL9 \
+#     pg_dump -a \
+#     -U doadmin \
+#     -h db-postgresql-fra1-96017-do-user-16430870-0.c.db.ondigitalocean.com \
+#     -p 25060 -d defaultdb -F p \ 
+#     > ${backup}
 
 
 FROM base AS dev
