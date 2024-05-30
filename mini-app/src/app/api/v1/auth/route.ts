@@ -1,0 +1,115 @@
+import { db } from '@/db/db'
+import { users } from '@/db/schema'
+import { validate } from '@tma.js/init-data-node'
+import { eq } from 'drizzle-orm'
+import * as jwt from 'jsonwebtoken'
+import { cookies } from 'next/headers'
+import { z, ZodError } from 'zod'
+
+const zodSchema = z.object({
+    initData: z.string(),
+})
+
+const userDataSchema = z.object({
+    id: z.number(),
+    first_name: z.string(),
+    last_name: z.string(),
+    username: z.string(),
+    language_code: z.string(),
+    is_premium: z.boolean(),
+    allows_write_to_pm: z.boolean(),
+})
+
+export async function POST(req: Request) {
+    try {
+        const body = await req.json()
+
+        const { initData } = zodSchema.parse(body)
+        const initDataSearchParams = new URLSearchParams(initData)
+
+        // Check if the request is valid and from Telegram
+        try {
+            validate(initDataSearchParams, process.env.BOT_TOKEN as string)
+        } catch (error) {
+            return Response.json(
+                { error: 'invalid_init_data' },
+                { status: 403, headers: { 'Content-Type': 'application/json' } }
+            )
+        }
+
+        const userRaw = initDataSearchParams.get('user')
+
+        const userdata = userDataSchema.safeParse(JSON.parse(userRaw as string))
+
+        if (!userdata.success) {
+            return Response.json(
+                { error: 'invalid_init_user_data' },
+                { status: 403, headers: { 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // Check if user exists in db
+        let user = (
+            await db
+                .select()
+                .from(users)
+                .where(eq(users.user_id, userdata.data.id))
+        )[0]
+
+        if (!user) {
+            user = (
+                await db.insert(users).values({
+                    user_id: userdata.data.id,
+                    first_name: userdata.data.first_name,
+                    role: 'user',
+                    language_code: userdata.data.language_code,
+                    last_name: userdata.data.last_name,
+                    username: userdata.data.username,
+                })
+            )[0]
+        }
+
+        // Every time user signs in we generate another jwt token
+        const token = jwt.sign(
+            {
+                id: user.user_id,
+                name: user.first_name,
+                // 6h expiration for jwt token
+                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 6,
+            },
+            process.env.BOT_TOKEN as string
+        )
+        cookies().set('token', token)
+
+        return Response.json(
+            { token, user, ok: true },
+            {
+                status: 200,
+            }
+        )
+    } catch (error) {
+        console.log('==============================')
+        console.error('Error:', error)
+        console.log('==============================')
+
+        if (error instanceof ZodError) {
+            return Response.json(
+                {
+                    error: 'zod_error',
+                    message: error.message,
+                },
+                { status: 400, headers: { 'Content-Type': 'application/json' } }
+            )
+        }
+
+        return Response.json(
+            { error: 'server_error' },
+            {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' },
+            }
+        )
+    }
+}
+
+export const dynamic = 'force-dynamic'
