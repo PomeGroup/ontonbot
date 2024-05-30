@@ -9,11 +9,13 @@ on:
     outputs:
       run_job:
         description: "Whether the job should run or not"
-        value: ${{ steps.check.outputs.run_job }}
+        value: ${{ jobs.outputs.run_job }}
 
 jobs:
   check:
     runs-on: ubuntu-latest
+    outputs:
+      run_job: ${{ steps.check.outputs.run_job }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -37,4 +39,5 @@ jobs:
               break
             fi
           done < files.txt
-          echo "::set-output name=run_job::$run_job"
+          echo "run_job=$run_job" >> "$GITHUB_OUTPUT"
+
