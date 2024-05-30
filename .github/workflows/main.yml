@@ -43,6 +43,7 @@ jobs:
     with:
       image_dir: 'giveaway-checker'
       image_name: ${{ env.REGISTRY }}/${{ github.repository }}/giveaway-checker
+      registry: ${{ env.REGISTRY }}
 
   build-go-server-image:
     needs: [check-go-server-changes]
@@ -51,6 +52,7 @@ jobs:
     with:
       image_dir: 'golang-server/server'
       image_name: ${{ env.REGISTRY }}/${{ github.repository }}/go-server
+      registry: ${{ env.REGISTRY }}
 
   build-go-worker-image:
     needs: [check-go-worker-changes]
@@ -59,6 +61,7 @@ jobs:
     with:
         image_dir: 'golang-server/worker'
         image_name: ${{ env.REGISTRY }}/${{ github.repository }}/go-worker
+        registry: ${{ env.REGISTRY }}
 
   build-mini-app-image:
     needs: [check-mini-app-changes]
@@ -67,6 +70,7 @@ jobs:
     with:
         image_dir: 'mini-app'
         image_name: ${{ env.REGISTRY }}/${{ github.repository }}/mini-app
+        registry: ${{ env.REGISTRY }}
 
   build-telegram-bot-image:
     needs: [check-telegram-bot-changes]
@@ -75,3 +79,4 @@ jobs:
     with:
         image_dir: 'telegram-bot'
         image_name: ${{ env.REGISTRY }}/${{ github.repository }}/tlg-bot
+        registry: ${{ env.REGISTRY }}
