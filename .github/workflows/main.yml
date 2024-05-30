@@ -49,7 +49,7 @@ jobs:
     with:
       image_dir: 'golang-server'
       dockerfile: '/server/Dockerfile'
-      image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/go-server
+      image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/golang-server
       registry: ${{ vars.REGISTRY }}
 
   build-go-worker-image:
@@ -57,9 +57,9 @@ jobs:
     if: ${{ ((github.event_name == 'push' || github.event_name == 'pull_request') && needs.check-go-server-changes.outputs.run_job == 'true') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/') }}
     uses: ./.github/workflows/build-docker.yml
     with:
-        image_dir: 'golang-server/worker'
+        image_dir: 'golang-server'
         dockerfile: '/worker/Dockerfile'
-        image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/go-worker
+        image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/golang-worker
         registry: ${{ vars.REGISTRY }}
 
   build-mini-app-image:
