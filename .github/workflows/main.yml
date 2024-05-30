@@ -49,7 +49,7 @@ jobs:
     with:
       image_dir: 'golang-server'
       dockerfile: '/server/Dockerfile'
-      image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/golang-server
+      image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/go-main-srv
       registry: ${{ vars.REGISTRY }}
 
   build-go-worker-image:
