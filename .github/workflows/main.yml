@@ -47,7 +47,8 @@ jobs:
     if: ${{ ((github.event_name == 'push' || github.event_name == 'pull_request') && needs.check-go-server-changes.outputs.run_job == 'true') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/') }}
     uses: ./.github/workflows/build-docker.yml
     with:
-      image_dir: 'golang-server/server'
+      image_dir: 'golang-server'
+      dockerfile: '/server/Dockerfile'
       image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/go-server
       registry: ${{ vars.REGISTRY }}
 
@@ -57,6 +58,7 @@ jobs:
     uses: ./.github/workflows/build-docker.yml
     with:
         image_dir: 'golang-server/worker'
+        dockerfile: '/worker/Dockerfile'
         image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/go-worker
         registry: ${{ vars.REGISTRY }}
 

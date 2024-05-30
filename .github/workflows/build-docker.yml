@@ -13,6 +13,10 @@ on:
         required: false
         type: string
         default: 'ghcr.io'
+      dockerfile:
+        required: false
+        type: string
+        default: '/Dockerfile'
 
 jobs:
   build:
@@ -53,6 +57,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ${{ inputs.image_dir }}
+          file: ${{inputs.image_dir}}${{inputs.dockerfile}}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
