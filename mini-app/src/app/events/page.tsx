@@ -113,7 +113,7 @@ const EventsAdminPage = () => {
                             <QrCodeButton
                                 url={`https://t.me/${
                                     process.env.NODE_ENV === 'development'
-                                        ? process.env.BOT_USERNAME
+                                        ? process.env.NEXT_PUBLIC_BOT_USERNAME
                                         : 'theontonbot'
                                 }/event?startapp=${event.event_uuid}`}
                                 hub={event.society_hub!}
