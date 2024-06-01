@@ -37,7 +37,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
     const data = {
         ...event[0],
-        ticket,
+        eventTicket: ticket,
         organizer,
     }
 
