@@ -1,5 +1,5 @@
 import { db } from '@/db/db'
-import { tickets } from '@/db/schema'
+import { eventTicket, tickets } from '@/db/schema'
 import { getAuthenticatedUser } from '@/server/auth'
 import { eq } from 'drizzle-orm'
 
@@ -19,12 +19,32 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
             .where(eq(tickets.event_uuid, eventId))
             .where(eq(tickets.user_id, userId))
             .execute()
-    )[0]
+    ).pop()
 
     if (!ticket) {
         // ticket not found error
         return Response.json({ error: 'Ticket not found' }, { status: 400 })
     }
 
-    return Response.json({ ticket })
+    const eventTicketData = (
+        await db
+            .select()
+            .from(eventTicket)
+            .where(eq(eventTicket.id, ticket.ticket_id))
+            .execute()
+    ).pop()
+
+    if (!eventTicketData) {
+        // ticket not found error
+        return Response.json(
+            { error: 'Ticket data not found' },
+            { status: 400 }
+        )
+    }
+    const data = {
+        ...ticket,
+        ticketData: eventTicketData,
+    }
+
+    return Response.json(data)
 }

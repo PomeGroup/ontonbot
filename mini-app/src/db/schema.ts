@@ -100,7 +100,7 @@ export const airdropRoutines = pgTable('airdrop_routines', {
 
 export const eventTicket = pgTable('event_tickets', {
     id: serial('id').primaryKey(),
-    event_id: serial('event_id').references(() => events.event_id),
+    event_uuid: text('event_uuid').references(() => events.event_uuid),
     title: text('title'),
     description: text('description'),
     price: integer('price'),
