@@ -13,11 +13,9 @@ const zodSchema = z.object({
 const userDataSchema = z.object({
     id: z.number(),
     first_name: z.string(),
-    last_name: z.string(),
-    username: z.string(),
-    language_code: z.string(),
-    is_premium: z.boolean(),
-    allows_write_to_pm: z.boolean(),
+    last_name: z.string().optional(),
+    username: z.string().optional(),
+    language_code: z.string().optional(),
 })
 
 export async function POST(req: Request) {
