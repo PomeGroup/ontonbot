@@ -1,0 +1,81 @@
+name: Docker Build
+
+on:
+  schedule:
+    - cron: '32 10 * * *'
+  push:
+    branches: [ "main", "dev" ]
+    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+
+jobs:
+  check-giveaway-checker-changes:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    uses: ./.github/workflows/check-changes.yml
+    with:
+      dir: 'giveaway-checker'
+
+  check-go-server-changes:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    uses: ./.github/workflows/check-changes.yml
+    with:
+      dir: 'golang-server'
+
+  check-mini-app-changes:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    uses: ./.github/workflows/check-changes.yml
+    with:
+        dir: 'mini-app'
+
+  check-telegram-bot-changes:
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    uses: ./.github/workflows/check-changes.yml
+    with:
+        dir: 'telegram-bot'
+  
+  build-giveaway-checker-image:
+    needs: [check-giveaway-checker-changes]
+    if: ${{ ((github.event_name == 'push' || github.event_name == 'pull_request') && needs.check-giveaway-checker-changes.outputs.run_job == 'true') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/') }}
+    uses: ./.github/workflows/build-docker.yml
+    with:
+      image_dir: 'giveaway-checker'
+      image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/giveaway-checker
+      registry: ${{ vars.REGISTRY }}
+
+  build-go-server-image:
+    needs: [check-go-server-changes]
+    if: ${{ ((github.event_name == 'push' || github.event_name == 'pull_request') && needs.check-go-server-changes.outputs.run_job == 'true') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/') }}
+    uses: ./.github/workflows/build-docker.yml
+    with:
+      image_dir: 'golang-server'
+      dockerfile: '/server/Dockerfile'
+      image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/go-main-srv
+      registry: ${{ vars.REGISTRY }}
+
+  build-go-worker-image:
+    needs: [check-go-server-changes]
+    if: ${{ ((github.event_name == 'push' || github.event_name == 'pull_request') && needs.check-go-server-changes.outputs.run_job == 'true') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/') }}
+    uses: ./.github/workflows/build-docker.yml
+    with:
+        image_dir: 'golang-server'
+        dockerfile: '/worker/Dockerfile'
+        image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/golang-worker
+        registry: ${{ vars.REGISTRY }}
+
+  build-mini-app-image:
+    needs: [check-mini-app-changes]
+    if: ${{ ((github.event_name == 'push' || github.event_name == 'pull_request') && needs.check-mini-app-changes.outputs.run_job == 'true') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/') }}
+    uses: ./.github/workflows/build-docker.yml
+    with:
+        image_dir: 'mini-app'
+        image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/mini-app
+        registry: ${{ vars.REGISTRY }}
+
+  build-telegram-bot-image:
+    needs: [check-telegram-bot-changes]
+    if: ${{ ((github.event_name == 'push' || github.event_name == 'pull_request') && needs.check-telegram-bot-changes.outputs.run_job == 'true') || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/') }}
+    uses: ./.github/workflows/build-docker.yml
+    with:
+        image_dir: 'telegram-bot'
+        image_name: ${{ vars.REGISTRY }}/${{ github.repository }}/tlg-bot
+        registry: ${{ vars.REGISTRY }}
