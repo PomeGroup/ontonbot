@@ -110,7 +110,7 @@ export const eventTicket = pgTable('event_tickets', {
     created_at: timestamp('created_at').defaultNow(),
 })
 
-export const ticketStatus = pgEnum('event_ticket_status', ['USED', 'VALID'])
+export const ticketStatus = pgEnum('event_ticket_status', ['USED', 'UNUSED'])
 export const tickets = pgTable('tickets', {
     id: serial('id').primaryKey(),
     name: text('name'),
