@@ -119,7 +119,7 @@ export const tickets = pgTable('tickets', {
     position: text('position'),
     status: ticketStatus('status'),
     nftAddress: text('nft_address'),
-    event_id: serial('event_id').references(() => events.event_id),
+    event_uuid: serial('event_uuid').references(() => events.event_uuid),
     ticket_id: serial('event_ticket_id').references(() => eventTicket.id),
     user_id: bigint('user_id', { mode: 'number' }).references(
         () => users.user_id
