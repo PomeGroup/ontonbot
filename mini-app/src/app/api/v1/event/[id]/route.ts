@@ -1,9 +1,16 @@
 import { db } from '@/db/db'
 import { events, eventTicket, users } from '@/db/schema'
+import { getAuthenticatedUser } from '@/server/auth'
 import { eq } from 'drizzle-orm'
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
     const eventId = params.id
+
+    const [, unauthorized] = getAuthenticatedUser()
+
+    if (unauthorized) {
+        return unauthorized
+    }
 
     // get event data using drizzle
     const event = await db
