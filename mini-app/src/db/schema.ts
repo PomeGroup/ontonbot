@@ -103,14 +103,18 @@ export const eventTicket = pgTable('event_tickets', {
     event_uuid: text('event_uuid').references(() => events.event_uuid),
     title: text('title'),
     description: text('description'),
-    price: integer('price'),
+    price: text('price'),
     ticketImage: text('ticket_image'),
     count: integer('count'),
     collectionAddress: text('collection_address'),
     created_at: timestamp('created_at').defaultNow(),
 })
 
-export const ticketStatus = pgEnum('event_ticket_status', ['USED', 'UNUSED'])
+export const ticketStatus = pgEnum('event_ticket_status', [
+    'MINTING',
+    'USED',
+    'UNUSED',
+])
 export const tickets = pgTable('tickets', {
     id: serial('id').primaryKey(),
     name: text('name'),
