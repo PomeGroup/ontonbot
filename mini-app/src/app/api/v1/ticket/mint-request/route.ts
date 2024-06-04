@@ -97,7 +97,7 @@ export async function POST(req: Request) {
                 }
             )
 
-            if (res.status !== 200) {
+            if (res.status !== 201) {
                 tx.rollback()
             }
 
