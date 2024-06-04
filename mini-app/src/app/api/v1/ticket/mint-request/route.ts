@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     })
 
     // return the response returned by this fetch
-    return await fetch(`http://localhost:4002/validateTrx`, {
+    return await fetch(`${process.env.NFT_MANAGER_BASE_URL}/validateTrx`, {
         method: 'POST',
         body,
         headers: {
