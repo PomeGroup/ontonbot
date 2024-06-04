@@ -1,9 +1,16 @@
 import { db } from '@/db/db'
-import { events, eventTicket, users } from '@/db/schema'
+import { events, eventTicket, tickets, users } from '@/db/schema'
+import { getAuthenticatedUser } from '@/server/auth'
 import { eq } from 'drizzle-orm'
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
     const eventId = params.id
+
+    const [userId, unauthorized] = getAuthenticatedUser()
+
+    if (unauthorized) {
+        return unauthorized
+    }
 
     // get event data using drizzle
     const event = (
@@ -37,10 +44,27 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
           )[0]
         : undefined
 
+    const userTicket = (
+        await db
+            .select()
+            .from(tickets)
+            .where(eq(tickets.user_id, userId))
+            .where(eq(tickets.event_uuid, event.event_uuid as string))
+    ).pop()
+
+    const soldTicketsCount = (
+        await db
+            .select()
+            .from(tickets)
+            .where(eq(tickets.event_uuid, event.event_uuid as string))
+    ).length
+
     const data = {
         ...event,
         eventTicket: ticket,
         organizer,
+        userTicket,
+        isSoldOut: soldTicketsCount === ticket?.count,
     }
 
     // return event data
