@@ -104,6 +104,8 @@ export async function POST(req: Request) {
             return res
         })
     } catch (error) {
+        console.error(error)
+
         return Response.json(
             {
                 error: 'an error occurred while validating your transaction',
