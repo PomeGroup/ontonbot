@@ -52,26 +52,38 @@ export async function POST(req: Request) {
                 .select()
                 .from(users)
                 .where(eq(users.user_id, userdata.data.id))
-        )[0]
+                .execute()
+        ).pop()
 
         if (!user) {
             user = (
-                await db.insert(users).values({
-                    user_id: userdata.data.id,
-                    first_name: userdata.data.first_name,
-                    role: 'user',
-                    language_code: userdata.data.language_code,
-                    last_name: userdata.data.last_name,
-                    username: userdata.data.username,
-                })
-            )[0]
+                await db
+                    .insert(users)
+                    .values({
+                        user_id: userdata.data.id,
+                        first_name: userdata.data.first_name,
+                        role: 'user',
+                        language_code: userdata.data.language_code,
+                        last_name: userdata.data.last_name,
+                        username: userdata.data.username,
+                    })
+                    .returning()
+                    .execute()
+            ).pop()
+        }
+
+        if (!user) {
+            return Response.json(
+                { error: 'user_data_not_found' },
+                { status: 400, headers: { 'Content-Type': 'application/json' } }
+            )
         }
 
         // Every time user signs in we generate another jwt token
         const token = jwt.sign(
             {
-                id: user.user_id,
-                name: user.first_name,
+                id: user?.user_id,
+                name: user?.first_name,
                 // 6h expiration for jwt token
                 exp: Math.floor(Date.now() / 1000) + 60 * 60 * 6,
             },
