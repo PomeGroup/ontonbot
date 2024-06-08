@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
     if (!parsedData.success) {
         return Response.json(
-            { error: 'invalid userid' },
+            { error: 'invalid data' },
             {
                 status: 400,
             }
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     await db
         .update(tickets)
         .set({
-            status: 'USED',
+            status: 'UNUSED',
             nftAddress: parsedData.data.nft_address,
         })
         .where(eq(tickets.id, parsedData.data.ticket_id))

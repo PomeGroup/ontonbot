@@ -70,23 +70,32 @@ export async function POST(req: Request) {
 
     try {
         return await db.transaction(async (tx) => {
-            // TODO: we should pass ticket_id ton function bellow
-            await tx.insert(tickets).values({
-                name: data.full_name,
-                company: data.company,
-                position: data.position,
-                event_uuid: data.event_id,
-                telegram: data.telegram,
-                ticket_id: eventTicketData?.id,
-                user_id: data.user_id,
-                status: 'UNUSED',
-            })
+            const ticket = (
+                await tx
+                    .insert(tickets)
+                    .values({
+                        name: data.full_name,
+                        company: data.company,
+                        position: data.position,
+                        event_uuid: data.event_id,
+                        telegram: data.telegram,
+                        ticket_id: eventTicketData?.id,
+                        user_id: data.user_id,
+                        status: 'MINTING',
+                    })
+                    .returning()
+            ).pop()
+
+            if (!ticket) {
+                tx.rollback()
+            }
 
             const body = JSON.stringify({
                 exBoc: data.boc,
                 participantAddress: data.owner_address,
                 collectionAddress: eventTicketData.collectionAddress,
                 ticketValue: eventTicketData.price,
+                ticket_id: ticket?.id,
             })
 
             // return the response returned by this fetch
