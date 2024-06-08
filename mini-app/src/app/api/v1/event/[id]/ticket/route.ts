@@ -1,7 +1,7 @@
 import { db } from '@/db/db'
 import { eventTicket, tickets } from '@/db/schema'
 import { getAuthenticatedUser } from '@/server/auth'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
     const eventId = params.id
@@ -16,8 +16,13 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
         await db
             .select()
             .from(tickets)
-            .where(eq(tickets.event_uuid, eventId))
-            .where(eq(tickets.user_id, userId))
+            .where(
+                and(
+                    eq(tickets.event_uuid, eventId),
+                    eq(tickets.user_id, userId)
+                )
+            )
+
             .execute()
     ).pop()
 

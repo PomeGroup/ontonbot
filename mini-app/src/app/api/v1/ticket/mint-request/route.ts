@@ -1,7 +1,7 @@
 import { db } from '@/db/db'
 import { eventTicket, tickets } from '@/db/schema'
 import { Address } from '@ton/core'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
 const buyTicketSchema = z.object({
@@ -53,8 +53,12 @@ export async function POST(req: Request) {
         await db
             .select()
             .from(tickets)
-            .where(eq(tickets.user_id, parsedData.data.user_id))
-            .where(eq(tickets.event_uuid, parsedData.data.event_id))
+            .where(
+                and(
+                    eq(tickets.user_id, parsedData.data.user_id),
+                    eq(tickets.event_uuid, parsedData.data.event_id)
+                )
+            )
     ).pop()
 
     if (userHasTicket) {
