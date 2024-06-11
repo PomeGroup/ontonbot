@@ -18,6 +18,9 @@ const userDataSchema = z.object({
     language_code: z.string().optional(),
 })
 
+// in seconds
+const JWT_COOKIE_EXPIRATION = 604_800 // 1 week
+
 export async function POST(req: Request) {
     try {
         const body = await req.json()
@@ -85,11 +88,14 @@ export async function POST(req: Request) {
                 id: user?.user_id,
                 name: user?.first_name,
                 // 6h expiration for jwt token
-                exp: Math.floor(Date.now() / 1000) + 60 * 60 * 6,
+                exp: Math.floor(Date.now() / 1000) + JWT_COOKIE_EXPIRATION,
             },
             process.env.BOT_TOKEN as string
         )
-        cookies().set('token', token)
+        cookies().set('token', token, {
+            // expiration 7 days
+            expires: new Date(Date.now() + 1000 * JWT_COOKIE_EXPIRATION),
+        })
 
         return Response.json(
             { token, user, ok: true },
