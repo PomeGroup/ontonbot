@@ -151,7 +151,9 @@ export const eventsRouter = router({
                     title: opts.input.eventData.title,
                     subtitle: opts.input.eventData.subtitle,
                     description: opts.input.eventData.description,
-                    society_hub_id: opts.input.eventData.society_hub.id,
+                    society_hub_id: parseInt(
+                        opts.input.eventData.society_hub.id
+                    ),
                     start_date: timestampToIsoString(
                         opts.input.eventData.start_date
                     ),
@@ -470,7 +472,7 @@ export const eventsRouter = router({
                 title: eventData.title,
                 subtitle: eventData.subtitle,
                 description: eventData.description,
-                society_hub_id: eventData.society_hub.id,
+                society_hub_id: parseInt(eventData.society_hub.id),
                 start_date: timestampToIsoString(eventData.start_date),
                 end_date: timestampToIsoString(eventData.end_date!),
                 additional_info: eventData.location,
@@ -893,7 +895,7 @@ async function registerActivity(activityDetails: {
     subtitle: string
     additional_info?: string
     description: string
-    society_hub_id: string
+    society_hub_id: number
     start_date: string
     end_date: string
 }) {
@@ -932,7 +934,7 @@ async function updateActivity(
         description: string
         start_date: string
         end_date: string
-        society_hub_id: string
+        society_hub_id: number
     },
     activity_id: string | number
 ) {
