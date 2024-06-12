@@ -1,38 +1,36 @@
-import { db } from "@/db/db";
-import { eventFields, events, users } from "@/db/schema";
-import { validateMiniAppData } from "@/utils";
-import { and, eq } from "drizzle-orm";
+import { db } from '@/db/db'
+import { eventFields, events, users } from '@/db/schema'
+import { validateMiniAppData } from '@/utils'
+import { and, eq } from 'drizzle-orm'
 
-export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) => {
-    const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData);
+export const checkIsEventOwner = async (
+    rawInitData: string,
+    eventUuid: string
+) => {
+    const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData)
 
     if (!valid) {
-        return { isOwner: false, valid, initDataJson };
+        return { isOwner: false, valid, initDataJson }
     }
 
     const event = await db
         .select()
         .from(events)
-        .where(
-            and(
-                eq(events.event_uuid, eventUuid),
-                eq(events.hidden, false)
-            )
-        )
+        .where(and(eq(events.event_uuid, eventUuid), eq(events.hidden, false)))
         .execute()
 
     if (!event || event[0].owner !== initDataJson.user.id) {
-        return { isOwner: false, valid, initDataJson };
+        return { isOwner: false, valid, initDataJson }
     }
 
-    return { isOwner: true, valid, initDataJson };
+    return { isOwner: true, valid, initDataJson }
 }
 
 export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
-    const data = validateMiniAppData(rawInitData);
+    const data = validateMiniAppData(rawInitData)
 
     if (!data.valid) {
-        return { role: null, ...data };
+        return { role: null, ...data }
     }
 
     const role = await db
@@ -42,10 +40,10 @@ export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
         .execute()
 
     if (!role || (role[0].role !== 'admin' && role[0].role !== 'organizer')) {
-        return { role: role[0].role, ...data };
+        return { role: role[0].role, ...data }
     }
 
-    return { role: role[0].role, ...data };
+    return { role: role[0].role, ...data }
 }
 
 export const selectEventByUuid = async (eventUuid: string) => {
@@ -58,10 +56,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
             .select()
             .from(events)
             .where(
-                and(
-                    eq(events.event_uuid, eventUuid),
-                    eq(events.hidden, false)
-                )
+                and(eq(events.event_uuid, eventUuid), eq(events.hidden, false))
             )
             .execute()
     ).pop()
@@ -70,7 +65,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
         return null
     }
 
-    const { wallet_seed_phrase, ...restEventData } = eventData;
+    const { wallet_seed_phrase, ...restEventData } = eventData
 
     const dynamicFields = await db
         .select()
@@ -84,8 +79,9 @@ export const selectEventByUuid = async (eventUuid: string) => {
         ...restEventData, // Spread the rest of eventData properties
         society_hub: {
             id: restEventData.society_hub_id,
-            name: restEventData.society_hub
+            name: restEventData.society_hub,
         },
         dynamic_fields: dynamicFields,
+        activity_id: restEventData.activity_id,
     }
 }

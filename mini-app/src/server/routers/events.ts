@@ -161,19 +161,7 @@ export const eventsRouter = router({
                     additional_info: opts.input.eventData.location,
                 }
 
-                const apiKey = process.env.TON_SOCIETY_API_KEY || ''
-
-                // const res = await registerActivity(apiKey, eventDraft)
-
-                const res = {
-                    status: 'success',
-                    data: {
-                        activity_id: Math.trunc(Math.random() * 100),
-                        collection_address: 'asd',
-                        message: 'Error messsage',
-                        status: 200,
-                    },
-                }
+                const res = await registerActivity(eventDraft)
 
                 if (res && res.status === 'success') {
                     console.log(
@@ -488,20 +476,11 @@ export const eventsRouter = router({
                 additional_info: eventData.location,
             }
 
-            const apiKey = process.env.TON_SOCIETY_API_KEY || ''
-
             try {
-                // const res =  await registerActivity(apiKey, eventDraft)
-
-                const res = {
-                    status: 'success',
-                    data: {
-                        activity_id: Math.trunc(Math.random() * 100),
-                        message: 'Message error',
-                    },
-                }
-
-                console.log(res.data)
+                const res = await updateActivity(
+                    eventDraft,
+                    eventData.activity_id
+                )
 
                 if (res.data && res.status === 'success') {
                     console.log(
@@ -909,34 +888,78 @@ async function postParticipants(
     }
 }
 
-async function registerActivity(
-    apiKey: string,
-    activityDetails: {
-        title: string
-        subtitle: string
-        additional_info?: string
-        description: string
-        society_hub_id: string
-        start_date: string
-        end_date: string
-    }
-) {
+async function registerActivity(activityDetails: {
+    title: string
+    subtitle: string
+    additional_info?: string
+    description: string
+    society_hub_id: string
+    start_date: string
+    end_date: string
+}) {
     const headers = {
-        'x-api-key': apiKey,
+        'x-api-key': process.env.TON_SOCIETY_API_KEY,
         'Content-Type': 'application/json',
     }
 
     try {
         const response = await axios.post(
-            'https://society.ton.org/v1/register-activity',
+            `${process.env.TON_SOCIETY_BASE_URL}/v1/activities`,
             activityDetails,
             { headers }
         )
-        console.log(response.data)
+        console.info(response.data)
         return response.data
     } catch (error) {
         console.error(error)
-        throw error
+        /*
+        We set the activity id to -100 to be able select the ones that failed to be send to ton society
+        */
+        return {
+            status: 'success',
+            data: {
+                activity_id: -100,
+            },
+        }
+    }
+}
+
+async function updateActivity(
+    activityDetails: {
+        title: string
+        subtitle: string
+        additional_info?: string
+        description: string
+        start_date: string
+        end_date: string
+        society_hub_id: string
+    },
+    activity_id: string | number
+) {
+    const headers = {
+        'x-api-key': process.env.TON_SOCIETY_API_KEY,
+        'Content-Type': 'application/json',
+    }
+
+    try {
+        const response = await axios.patch(
+            `${process.env.TON_SOCIETY_BASE_URL}/v1/activities/${activity_id}`,
+            activityDetails,
+            { headers }
+        )
+        console.info(response.data)
+        return response.data
+    } catch (error) {
+        console.error(error)
+        /*
+        We set the activity id to -100 to be able select the ones that failed to be send to ton society
+        */
+        return {
+            status: 'success',
+            data: {
+                activity_id: -100,
+            },
+        }
     }
 }
 

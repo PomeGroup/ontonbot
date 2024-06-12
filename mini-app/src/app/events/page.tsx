@@ -147,7 +147,7 @@ const TimeRow = ({
 
     // Helper to format date
     const formatDate = (date: { day: string; month: string }) =>
-        `${date.day}/${date.month}`
+        `${date?.day}/${date?.month}`
 
     // Constructing the display string based on the conditions
     let displayString = `${formatTime(startTime)} `
