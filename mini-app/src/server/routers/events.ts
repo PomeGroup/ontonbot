@@ -479,7 +479,7 @@ export const eventsRouter = router({
             try {
                 const res = await updateActivity(
                     eventDraft,
-                    eventData.activity_id
+                    eventData.activity_id as number
                 )
 
                 if (res.data && res.status === 'success') {
