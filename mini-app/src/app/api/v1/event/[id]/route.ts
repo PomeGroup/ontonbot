@@ -2,9 +2,34 @@ import { db } from '@/db/db'
 import { events, eventTicket, tickets, users } from '@/db/schema'
 import { getAuthenticatedUser } from '@/server/auth'
 import { and, eq } from 'drizzle-orm'
+import { type NextRequest } from 'next/server'
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(
+    req: NextRequest,
+    { params }: { params: { id: string } }
+) {
     const eventId = params.id
+    const searchParams = req.nextUrl.searchParams
+    const dataOnly = searchParams.get('data_only') as 'true' | undefined
+
+    if (dataOnly === 'true') {
+        // get event data using drizzle
+        const event = await db.query.events.findFirst({
+            where(fields, { eq }) {
+                return eq(fields.event_uuid, eventId)
+            },
+        })
+
+        // error 400 if not found
+        if (!event) {
+            return Response.json({ error: 'Event not found' }, { status: 400 })
+        }
+
+        // return event data
+        return Response.json(event, {
+            status: 200,
+        })
+    }
 
     const [userId, unauthorized] = getAuthenticatedUser()
 
