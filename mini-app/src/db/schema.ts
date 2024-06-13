@@ -1,7 +1,9 @@
+import { relations } from 'drizzle-orm'
 import {
     bigint,
     boolean,
     integer,
+    json,
     pgEnum,
     pgTable,
     serial,
@@ -41,6 +43,7 @@ export const events = pgTable('events', {
     end_date: integer('end_date').default(0),
     timezone: text('timezone'),
     location: text('location'),
+    website: json('website'),
     owner: bigint('owner', { mode: 'number' }).references(() => users.user_id),
     hidden: boolean('hidden').default(false),
     ticketToCheckIn: boolean('ticketToCheckIn').default(false),
@@ -121,12 +124,151 @@ export const tickets = pgTable('tickets', {
     telegram: text('telegram'),
     company: text('company'),
     position: text('position'),
+    order_uuid: text('order_uuid').references(() => orders.uuid),
     status: ticketStatus('status'),
     nftAddress: text('nft_address'),
     event_uuid: text('event_uuid').references(() => events.event_uuid),
-    ticket_id: serial('event_ticket_id').references(() => eventTicket.id),
+    ticket_id: integer('event_ticket_id').references(() => eventTicket.id),
     user_id: bigint('user_id', { mode: 'number' }).references(
         () => users.user_id
     ),
     created_at: timestamp('created_at').defaultNow(),
 })
+
+export const orderState = pgEnum('order_state', [
+    'created',
+    'mint_request',
+    'minted',
+    'failed',
+    'validation_failed',
+])
+export const orders = pgTable('orders', {
+    uuid: uuid('uuid').primaryKey(),
+    event_uuid: text('event_uuid').references(() => events.event_uuid),
+    user_id: bigint('user_id', { mode: 'number' }).references(
+        () => users.user_id
+    ),
+    transaction_id: text('transaction_id').references(() => transactions.uuid),
+    count: integer('count'),
+    total_price: bigint('total_price', { mode: 'bigint' }),
+    state: orderState('state'),
+    failed_reason: text('failed_reason'),
+    created_at: timestamp('created_at').defaultNow(),
+})
+export const transactionType = pgEnum('transaction_type', ['order'])
+export const transactionState = pgEnum('transaction_state', [
+    'created',
+    'paid',
+    'failed',
+])
+export const transactions = pgTable('transactions', {
+    uuid: uuid('uuid').primaryKey(),
+    user_id: bigint('user_id', { mode: 'number' }).references(
+        () => users.user_id
+    ),
+    event_uuid: text('event_uuid').references(() => events.event_uuid),
+    from_address: text('from_address'),
+    to_address: text('to_address'),
+    value: bigint('total_price', { mode: 'bigint' }),
+    type: transactionType('type'),
+    state: transactionState('state'),
+    created_at: timestamp('created_at').defaultNow(),
+})
+
+export const ticketsRelations = relations(tickets, ({ one }) => ({
+    order: one(orders, {
+        fields: [tickets.order_uuid],
+        references: [orders.uuid],
+    }),
+    event: one(events, {
+        fields: [tickets.event_uuid],
+        references: [events.event_uuid],
+    }),
+    eventTicket: one(eventTicket, {
+        fields: [tickets.ticket_id],
+        references: [eventTicket.id],
+    }),
+    user: one(users, {
+        fields: [tickets.user_id],
+        references: [users.user_id],
+    }),
+}))
+
+export const orderRelations = relations(orders, ({ one, many }) => ({
+    event: one(events, {
+        fields: [orders.event_uuid],
+        references: [events.event_uuid],
+    }),
+    user: one(users, {
+        fields: [orders.user_id],
+        references: [users.user_id],
+    }),
+    transaction: one(transactions, {
+        fields: [orders.transaction_id],
+        references: [transactions.uuid],
+    }),
+    tickets: many(tickets),
+}))
+
+export const transactionRelations = relations(
+    transactions,
+    ({ one, many }) => ({
+        user: one(users, {
+            fields: [transactions.user_id],
+            references: [users.user_id],
+        }),
+        event: one(events, {
+            fields: [transactions.event_uuid],
+            references: [events.event_uuid],
+        }),
+        order: one(orders, {
+            fields: [transactions.uuid],
+            references: [orders.transaction_id],
+        }),
+    })
+)
+
+export const userRelations = relations(users, ({ many }) => ({
+    visitors: many(visitors),
+    userEventFields: many(userEventFields),
+    airdropRoutines: many(airdropRoutines),
+    tickets: many(tickets),
+    orders: many(orders),
+    transactions: many(transactions),
+}))
+
+export const eventFieldRelations = relations(eventFields, ({ one, many }) => ({
+    event: one(events, {
+        fields: [eventFields.event_id],
+        references: [events.event_id],
+    }),
+    userEventFields: many(userEventFields),
+}))
+
+export const userEventFieldRelations = relations(
+    userEventFields,
+    ({ one }) => ({
+        eventField: one(eventFields, {
+            fields: [userEventFields.event_field_id],
+            references: [eventFields.id],
+        }),
+        user: one(users, {
+            fields: [userEventFields.user_id],
+            references: [users.user_id],
+        }),
+    })
+)
+
+export const airdropRoutineRelations = relations(
+    airdropRoutines,
+    ({ one }) => ({
+        event: one(events, {
+            fields: [airdropRoutines.event_id],
+            references: [events.event_id],
+        }),
+        user: one(users, {
+            fields: [airdropRoutines.user_id],
+            references: [users.user_id],
+        }),
+    })
+)
