@@ -106,7 +106,7 @@ export const eventTicket = pgTable('event_tickets', {
     event_uuid: text('event_uuid').references(() => events.event_uuid),
     title: text('title'),
     description: text('description'),
-    price: text('price'),
+    price: text('price').notNull(),
     ticketImage: text('ticket_image'),
     count: integer('count'),
     collectionAddress: text('collection_address'),
@@ -143,35 +143,19 @@ export const orderState = pgEnum('order_state', [
     'validation_failed',
 ])
 export const orders = pgTable('orders', {
-    uuid: uuid('uuid').primaryKey(),
+    uuid: uuid('uuid').defaultRandom().primaryKey(),
     event_uuid: text('event_uuid').references(() => events.event_uuid),
     user_id: bigint('user_id', { mode: 'number' }).references(
         () => users.user_id
     ),
-    transaction_id: text('transaction_id').references(() => transactions.uuid),
+    event_ticket_id: bigint('event_ticket_id', { mode: 'number' }).references(
+        () => eventTicket.id
+    ),
+    transaction_id: text('transaction_id'),
     count: integer('count'),
     total_price: bigint('total_price', { mode: 'bigint' }),
     state: orderState('state'),
     failed_reason: text('failed_reason'),
-    created_at: timestamp('created_at').defaultNow(),
-})
-export const transactionType = pgEnum('transaction_type', ['order'])
-export const transactionState = pgEnum('transaction_state', [
-    'created',
-    'paid',
-    'failed',
-])
-export const transactions = pgTable('transactions', {
-    uuid: uuid('uuid').primaryKey(),
-    user_id: bigint('user_id', { mode: 'number' }).references(
-        () => users.user_id
-    ),
-    event_uuid: text('event_uuid').references(() => events.event_uuid),
-    from_address: text('from_address'),
-    to_address: text('to_address'),
-    value: bigint('total_price', { mode: 'bigint' }),
-    type: transactionType('type'),
-    state: transactionState('state'),
     created_at: timestamp('created_at').defaultNow(),
 })
 
@@ -203,30 +187,12 @@ export const orderRelations = relations(orders, ({ one, many }) => ({
         fields: [orders.user_id],
         references: [users.user_id],
     }),
-    transaction: one(transactions, {
-        fields: [orders.transaction_id],
-        references: [transactions.uuid],
+    eventTicket: one(eventTicket, {
+        fields: [orders.event_ticket_id],
+        references: [eventTicket.id],
     }),
     tickets: many(tickets),
 }))
-
-export const transactionRelations = relations(
-    transactions,
-    ({ one, many }) => ({
-        user: one(users, {
-            fields: [transactions.user_id],
-            references: [users.user_id],
-        }),
-        event: one(events, {
-            fields: [transactions.event_uuid],
-            references: [events.event_uuid],
-        }),
-        order: one(orders, {
-            fields: [transactions.uuid],
-            references: [orders.transaction_id],
-        }),
-    })
-)
 
 export const userRelations = relations(users, ({ many }) => ({
     visitors: many(visitors),
@@ -234,7 +200,6 @@ export const userRelations = relations(users, ({ many }) => ({
     airdropRoutines: many(airdropRoutines),
     tickets: many(tickets),
     orders: many(orders),
-    transactions: many(transactions),
 }))
 
 export const eventFieldRelations = relations(eventFields, ({ one, many }) => ({
