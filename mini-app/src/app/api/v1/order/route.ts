@@ -1,22 +1,32 @@
 import { db } from '@/db/db'
 import { orders } from '@/db/schema'
 import { getAuthenticatedUser } from '@/server/auth'
-import { toNano } from '@ton/core'
-import { and, eq, sql } from 'drizzle-orm'
+import { Address, toNano } from '@ton/core'
+import { and, eq, lt, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
 const addOrderSchema = z.object({
     event_ticket_id: z.number(),
     // count: z.number(),
+    // form fields
+    full_name: z.string(),
+    telegram: z.string(),
+    company: z.string(),
+    position: z.string(),
+    owner_address: z
+        .string()
+        .refine((data) => Address.isAddress(Address.parse(data))),
 })
 
 export async function POST(request: Request) {
-    const [userId, error] = await getAuthenticatedUser()
+    const [userId, error] = getAuthenticatedUser()
     if (error) {
         return error
     }
 
-    const rawBody = request.json()
+    const rawBody = await request.json()
+    console.log(rawBody)
+
     const body = addOrderSchema.safeParse(rawBody)
 
     if (!body.success) {
@@ -69,11 +79,11 @@ export async function POST(request: Request) {
             .values({
                 // TODO: change for multiple tickets
                 count: 1,
-                event_ticket_id: eventTicket.id,
                 event_uuid: eventTicket.event_uuid,
                 state: 'created',
                 total_price: toNano(eventTicket.price),
                 user_id: userId,
+                ...body.data,
             })
             .returning()
     ).pop()
@@ -83,3 +93,26 @@ export async function POST(request: Request) {
         message: 'order created successfully',
     })
 }
+
+/**
+ *  update orders that are older than 5min at created state to failed state
+ */
+export async function PATCH() {
+    await db
+        .update(orders)
+        .set({
+            state: 'failed',
+        })
+        .where(
+            and(
+                eq(orders.state, 'created'),
+                lt(orders.created_at, new Date(Date.now() - 1000 * 60 * 5))
+            )
+        )
+
+    return Response.json({
+        message: 'orders updated',
+    })
+}
+
+export const dynamic = 'force-dynamic'

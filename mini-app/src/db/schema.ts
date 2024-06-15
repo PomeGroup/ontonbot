@@ -128,7 +128,9 @@ export const tickets = pgTable('tickets', {
     status: ticketStatus('status'),
     nftAddress: text('nft_address'),
     event_uuid: text('event_uuid').references(() => events.event_uuid),
-    ticket_id: integer('event_ticket_id').references(() => eventTicket.id),
+    ticket_id: integer('event_ticket_id')
+        .references(() => eventTicket.id)
+        .notNull(),
     user_id: bigint('user_id', { mode: 'number' }).references(
         () => users.user_id
     ),
@@ -148,14 +150,21 @@ export const orders = pgTable('orders', {
     user_id: bigint('user_id', { mode: 'number' }).references(
         () => users.user_id
     ),
-    event_ticket_id: bigint('event_ticket_id', { mode: 'number' }).references(
-        () => eventTicket.id
-    ),
+    event_ticket_id: bigint('event_ticket_id', { mode: 'number' })
+        .references(() => eventTicket.id)
+        .notNull(),
     transaction_id: text('transaction_id'),
     count: integer('count'),
     total_price: bigint('total_price', { mode: 'bigint' }),
     state: orderState('state'),
     failed_reason: text('failed_reason'),
+    // form fields
+    telegram: text('telegram').notNull(),
+    full_name: text('full_name').notNull(),
+    company: text('company').notNull(),
+    position: text('position').notNull(),
+    owner_address: text('owner_address').notNull(),
+    //
     created_at: timestamp('created_at').defaultNow(),
 })
 
@@ -195,7 +204,6 @@ export const orderRelations = relations(orders, ({ one, many }) => ({
 }))
 
 export const userRelations = relations(users, ({ many }) => ({
-    visitors: many(visitors),
     userEventFields: many(userEventFields),
     airdropRoutines: many(airdropRoutines),
     tickets: many(tickets),

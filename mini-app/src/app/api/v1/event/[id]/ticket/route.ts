@@ -1,7 +1,7 @@
 import { db } from '@/db/db'
 import { eventTicket, tickets } from '@/db/schema'
 import { getAuthenticatedUser } from '@/server/auth'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, or } from 'drizzle-orm'
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
     const eventId = params.id
@@ -17,9 +17,19 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
             .select()
             .from(tickets)
             .where(
-                and(
-                    eq(tickets.event_uuid, eventId),
-                    eq(tickets.user_id, userId)
+                or(
+                    and(
+                        eq(tickets.order_uuid, eventId),
+                        eq(tickets.user_id, userId)
+                    ),
+                    and(
+                        eq(tickets.event_uuid, eventId),
+                        eq(tickets.user_id, userId)
+                    ),
+                    and(
+                        eq(tickets.id, parseInt(eventId)),
+                        eq(tickets.user_id, userId)
+                    )
                 )
             )
 
@@ -28,7 +38,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
     if (!ticket) {
         // ticket not found error
-        return Response.json({ error: 'Ticket not found' }, { status: 400 })
+        return Response.json({ error: 'Ticket not found' }, { status: 404 })
     }
 
     const eventTicketData = (
