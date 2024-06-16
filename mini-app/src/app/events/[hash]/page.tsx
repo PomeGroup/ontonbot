@@ -34,16 +34,6 @@ async function EventPage({ params }: { params: { hash: string } }) {
     const urlSchema = zod.string().url()
     const { success } = urlSchema.safeParse(location)
 
-    // const normalizeURL = (url: string) => {
-    //     return url.replace(/www\./, '').replace(/(^\w+:|^)\/\//, '').replace(/\/.*/, '')
-    // }
-
-    const normalizeURL2 = (url: string) => {
-        // remove protocol from the url, remove www if any, keep the rest of it, but cut it after 30 characters
-        return url.replace(/(^\w+:|^)\/\//, '').replace(/www\./, '').slice(0, 30)
-
-    }
-
     return (
         <AddVisitorWrapper hash={params.hash}>
             <Images.Event url={eventData.image_url!} />
@@ -55,11 +45,8 @@ async function EventPage({ params }: { params: { hash: string } }) {
             {
                 location ?
                     success ?
-                        <Labels.Label>
-                            <a href={location} target={'_blank'}>
-                                {normalizeURL2(location)}
-                            </a>
-                        </Labels.Label> :
+                        <Labels.WebsiteLink location={location}>
+                        </Labels.WebsiteLink> :
                         <Labels.CampaignDescription
                             description={location}
                             className="text-secondary text-[14px] mb-2"
