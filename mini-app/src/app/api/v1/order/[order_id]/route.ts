@@ -1,6 +1,7 @@
 import { db } from '@/db/db'
 import { orders, tickets } from '@/db/schema'
 import { Address } from '@ton/core'
+import { eq } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -90,10 +91,13 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
                 })
             }
 
-            await db.update(orders).set({
-                state: body.data.state,
-                transaction_id: body.data.transaction_id,
-            })
+            await db
+                .update(orders)
+                .set({
+                    state: body.data.state,
+                    transaction_id: body.data.transaction_id,
+                })
+                .where(eq(orders.uuid, order.uuid))
             return
         } catch (error) {
             tx.rollback()
