@@ -2,7 +2,7 @@ import { db } from '@/db/db'
 import { orders } from '@/db/schema'
 import { getAuthenticatedUser } from '@/server/auth'
 import { Address, toNano } from '@ton/core'
-import { and, eq, lt, sql } from 'drizzle-orm'
+import { and, eq, lt, or, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
 const addOrderSchema = z.object({
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
         .where(
             and(
                 eq(orders.event_ticket_id, body.data.event_ticket_id),
-                eq(orders.state, 'minted')
+                or(eq(orders.state, 'minted'), eq(orders.state, 'created'))
             )
         )
 
