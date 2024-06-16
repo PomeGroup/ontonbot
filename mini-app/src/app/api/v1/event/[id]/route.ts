@@ -95,20 +95,25 @@ export async function GET(
                 )
             )
         )
+        .execute()
 
-    const userOrder = await db.query.orders.findFirst({
-        where(fields, { eq, and, or }) {
-            return and(
-                eq(fields.user_id, userId),
-                eq(fields.event_ticket_id, eventTicket.id),
-                or(
-                    eq(fields.state, 'created'),
-                    eq(fields.state, 'minted'),
-                    eq(fields.state, 'mint_request')
+    const userOrder = (
+        await db
+            .select()
+            .from(orders)
+            .where(
+                and(
+                    eq(orders.user_id, userId),
+                    eq(orders.event_ticket_id, ticket?.id || -1),
+                    or(
+                        eq(orders.state, 'created'),
+                        eq(orders.state, 'minted'),
+                        eq(orders.state, 'mint_request')
+                    )
                 )
             )
-        },
-    })
+            .execute()
+    ).pop()
 
     const data = {
         ...event,

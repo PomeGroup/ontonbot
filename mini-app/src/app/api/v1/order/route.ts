@@ -54,6 +54,7 @@ export async function POST(request: Request) {
                 )
             )
         )
+        .execute()
 
     if (!eventTicket || !mintedTicketsCount.length) {
         return Response.json(
