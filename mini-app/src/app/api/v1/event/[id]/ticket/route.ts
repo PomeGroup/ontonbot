@@ -26,10 +26,14 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
                         eq(tickets.event_uuid, eventId),
                         eq(tickets.user_id, userId)
                     ),
-                    and(
-                        eq(tickets.id, parseInt(eventId)),
-                        eq(tickets.user_id, userId)
-                    )
+                    ...[
+                        isNaN(parseInt(eventId))
+                            ? null
+                            : and(
+                                  eq(tickets.id, parseInt(eventId)),
+                                  eq(tickets.user_id, userId)
+                              ),
+                    ].filter((v) => !!v)
                 )
             )
 
