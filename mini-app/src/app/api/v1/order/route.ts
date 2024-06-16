@@ -47,7 +47,11 @@ export async function POST(request: Request) {
         .where(
             and(
                 eq(orders.event_ticket_id, body.data.event_ticket_id),
-                or(eq(orders.state, 'minted'), eq(orders.state, 'created'))
+                or(
+                    eq(orders.state, 'minted'),
+                    eq(orders.state, 'created'),
+                    eq(orders.state, 'mint_request')
+                )
             )
         )
 
@@ -57,7 +61,32 @@ export async function POST(request: Request) {
                 message: 'Event ticket does not exist',
             },
             {
-                status: 400,
+                status: 404,
+            }
+        )
+    }
+
+    const userOrder = await db.query.orders.findFirst({
+        where(fields, { eq, and, or }) {
+            return and(
+                eq(fields.user_id, userId),
+                eq(fields.event_ticket_id, eventTicket.id),
+                or(
+                    eq(fields.state, 'created'),
+                    eq(fields.state, 'minted'),
+                    eq(fields.state, 'mint_request')
+                )
+            )
+        },
+    })
+
+    if (userOrder) {
+        return Response.json(
+            {
+                message: 'An order is already being proccessed',
+            },
+            {
+                status: 409,
             }
         )
     }
@@ -68,7 +97,7 @@ export async function POST(request: Request) {
                 message: 'Event tickets are sold out',
             },
             {
-                status: 401,
+                status: 410,
             }
         )
     }

@@ -1,7 +1,7 @@
 import { db } from '@/db/db'
-import { events, eventTicket, tickets, users } from '@/db/schema'
+import { events, eventTicket, orders, tickets, users } from '@/db/schema'
 import { getAuthenticatedUser } from '@/server/auth'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, or, sql } from 'drizzle-orm'
 import { type NextRequest } from 'next/server'
 
 export async function GET(
@@ -47,7 +47,7 @@ export async function GET(
     ).pop()
 
     // error 400 if not found
-    if (!event) {
+    if (!event?.event_uuid) {
         return Response.json({ error: 'Event not found' }, { status: 400 })
     }
 
@@ -82,19 +82,41 @@ export async function GET(
             .execute()
     ).pop()
 
-    const soldTicketsCount = (
-        await db
-            .select()
-            .from(tickets)
-            .where(eq(tickets.event_uuid, event.event_uuid as string))
-    ).length
+    const soldTicketsCount = await db
+        .select({ count: sql`count(*)`.mapWith(Number) })
+        .from(orders)
+        .where(
+            and(
+                eq(orders.event_uuid, event.event_uuid),
+                or(
+                    eq(orders.state, 'minted'),
+                    eq(orders.state, 'created'),
+                    eq(orders.state, 'mint_request')
+                )
+            )
+        )
+
+    const userOrder = await db.query.orders.findFirst({
+        where(fields, { eq, and, or }) {
+            return and(
+                eq(fields.user_id, userId),
+                eq(fields.event_ticket_id, eventTicket.id),
+                or(
+                    eq(fields.state, 'created'),
+                    eq(fields.state, 'minted'),
+                    eq(fields.state, 'mint_request')
+                )
+            )
+        },
+    })
 
     const data = {
         ...event,
         eventTicket: ticket,
         organizer,
         userTicket,
-        isSoldOut: soldTicketsCount === ticket?.count,
+        orderAlreadyPlace: !!userOrder,
+        isSoldOut: soldTicketsCount[0].count === ticket?.count,
     }
 
     // return event data
