@@ -6,6 +6,7 @@ import EventNotStarted from '@/app/_components/EventNotStarted'
 import Tasks from '@/app/_components/molecules/tasks'
 import AllTasks from '@/app/_components/Tasks'
 import { serverClient } from '@/app/_trpc/serverClient'
+import zod from 'zod'
 
 async function EventPage({ params }: { params: { hash: string } }) {
     if (params.hash?.length !== 36) {
@@ -29,6 +30,19 @@ async function EventPage({ params }: { params: { hash: string } }) {
     const currentTime = Date.now()
     const isNotEnded = currentTime < endUTC
     const isStarted = currentTime > startUTC
+    const location = eventData.location
+    const urlSchema = zod.string().url()
+    const { success } = urlSchema.safeParse(location)
+
+    // const normalizeURL = (url: string) => {
+    //     return url.replace(/www\./, '').replace(/(^\w+:|^)\/\//, '').replace(/\/.*/, '')
+    // }
+
+    const normalizeURL2 = (url: string) => {
+        // remove protocol from the url, remove www if any, keep the rest of it, but cut it after 30 characters
+        return url.replace(/(^\w+:|^)\/\//, '').replace(/www\./, '').slice(0, 30)
+
+    }
 
     return (
         <AddVisitorWrapper hash={params.hash}>
@@ -38,29 +52,43 @@ async function EventPage({ params }: { params: { hash: string } }) {
                 description={eventData.subtitle!}
                 className="text-secondary text-[14px] mb-2"
             />
+            {
+                location ?
+                    success ?
+                        <Labels.Label>
+                            <a href={location} target={'_blank'}>
+                                {normalizeURL2(location)}
+                            </a>
+                        </Labels.Label> :
+                        <Labels.CampaignDescription
+                            description={location}
+                            className="text-secondary text-[14px] mb-2"
+                        />
+                    : null
+            }
             <Labels.CampaignDescription description={eventData.description!} />
             {isStarted && isNotEnded ? (
-                <>
-                    <Tasks.Wallet />
-                    <AllTasks
-                        tasks={eventData.dynamic_fields}
-                        eventHash={params.hash}
+                    <>
+                        <Tasks.Wallet />
+                        <AllTasks
+                            tasks={eventData.dynamic_fields}
+                            eventHash={params.hash}
+                        />
+                    </>
+                ) : // if it was not ended than it means the event is not started yet
+                isNotEnded ? (
+                    <EventNotStarted
+                        title="Event is not started yet"
+                        end_date={endUTC}
+                        start_date={startUTC}
                     />
-                </>
-            ) : // if it was not ended than it means the event is not started yet
-            isNotEnded ? (
-                <EventNotStarted
-                    title="Event is not started yet"
-                    end_date={endUTC}
-                    start_date={startUTC}
-                />
-            ) : (
-                <EventNotStarted
-                    title="Event is ended already"
-                    end_date={endUTC}
-                    start_date={startUTC}
-                />
-            )}
+                ) : (
+                    <EventNotStarted
+                        title="Event is ended already"
+                        end_date={endUTC}
+                        start_date={startUTC}
+                    />
+                )}
             <Buttons.Support />
         </AddVisitorWrapper>
     )
