@@ -75,7 +75,7 @@ export async function GET(
             .from(tickets)
             .where(
                 and(
-                    eq(tickets.event_uuid, event.event_uuid as string),
+                    eq(tickets.event_uuid, event.event_uuid),
                     eq(tickets.user_id, userId)
                 )
             )
@@ -107,6 +107,7 @@ export async function GET(
                     eq(orders.event_ticket_id, ticket?.id || -1),
                     or(
                         eq(orders.state, 'created'),
+                        eq(orders.state, 'minted'),
                         eq(orders.state, 'mint_request')
                     )
                 )
@@ -122,6 +123,8 @@ export async function GET(
         orderAlreadyPlace: !!userOrder,
         isSoldOut: soldTicketsCount[0].count === ticket?.count,
     }
+
+    console.log(data)
 
     // return event data
     return Response.json(data, {
