@@ -107,7 +107,6 @@ export async function GET(
                     eq(orders.event_ticket_id, ticket?.id || -1),
                     or(
                         eq(orders.state, 'created'),
-                        eq(orders.state, 'minted'),
                         eq(orders.state, 'mint_request')
                     )
                 )
