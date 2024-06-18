@@ -16,7 +16,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         return Response.json({ message: 'invalid params' }, { status: 400 })
     }
 
-    await axios.post(`http://localhost:3333/share-event`, {
+    await axios.post(`http://telegram-bot:3333/share-event`, {
         user_id,
         id: event_uuid,
         url: `${req.nextUrl.origin}/ptma/event/${event_uuid}`,
