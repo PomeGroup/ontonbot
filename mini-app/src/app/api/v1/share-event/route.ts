@@ -19,7 +19,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     await axios.post(`http://telegram-bot:3333/share-event`, {
         user_id,
         id: event_uuid,
-        url: `${req.nextUrl.origin}/ptma/event/${event_uuid}`,
+        url: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/ptma/event/${event_uuid}`,
     })
 
     return Response.json({ message: 'share message sent successfully' })
