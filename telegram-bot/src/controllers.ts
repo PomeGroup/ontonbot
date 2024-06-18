@@ -94,7 +94,7 @@ export const handleFileSend = async (req: Request, res: Response) => {
 export const handleShareEvent = async (req: Request & {
     bot: Telegraf<Context<Update>>
 }, res: Response) => {
-    const { id, user_id, url } = req.query;
+    const { id, user_id, url } = req.body;
     
     if (typeof id === 'string' && typeof user_id === 'string' && typeof url === 'string') {
         try {
@@ -116,6 +116,8 @@ ${event.subtitle}`,
             
             res.json(event)
         } catch (error) {
+            console.log(error);
+            
             res.status(404)
             res.json({message: "event not found"})
         }

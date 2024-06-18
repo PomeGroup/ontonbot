@@ -3,9 +3,11 @@ import "dotenv/config"
 import express from "express"
 import { Telegraf } from "telegraf"
 
+import bodyParser from "body-parser"
 import fileUpload from "express-fileupload"
 import { handleFileSend, handleSendQRCode, handleShareEvent } from "./controllers"
 import { orgHandler, startHandler } from "./handlers"
+// parse application/json
 
 const port = 3333;
 
@@ -18,6 +20,9 @@ bot.start(startHandler);
 bot.command("org", orgHandler);
 
 const app = express();
+
+app.use(bodyParser.json())
+
 app.use(fileUpload());
 app.use((req, res, next) => {
   // @ts-expect-error fix express.d.ts
@@ -27,7 +32,7 @@ app.use((req, res, next) => {
 
 app.post("/send-file", handleFileSend);
 app.get("/generate-qr", handleSendQRCode);
-app.get("/share-event", handleShareEvent);
+app.post("/share-event", handleShareEvent);
 
 bot.catch((err) => console.error(err));
 

@@ -5,7 +5,7 @@ import { NextRequest } from 'next/server'
 export async function GET(req: NextRequest): Promise<Response> {
     console.log(req.nextUrl)
     const [, err] = getAuthenticatedUser()
-    if (err) {
+    if (err && process.env.NODE_ENV === 'production') {
         return err
     }
 
@@ -16,12 +16,10 @@ export async function GET(req: NextRequest): Promise<Response> {
         return Response.json({ message: 'invalid params' }, { status: 400 })
     }
 
-    await axios.get(`http://telegram-bot:3333/share-event`, {
-        params: {
-            user_id,
-            id: event_uuid,
-            url: `${req.nextUrl.origin}/ptma/event/598729cf-f4b8-45da-afef-9a1dbeaf28e5`,
-        },
+    await axios.post(`http://localhost:3333/share-event`, {
+        user_id,
+        id: event_uuid,
+        url: `${req.nextUrl.origin}/ptma/event/${event_uuid}`,
     })
 
     return Response.json({ message: 'share message sent successfully' })
