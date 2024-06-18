@@ -12,8 +12,6 @@ import { shareKeyboard } from "./markups"
 export const handleSendQRCode = async (req, res) => {
     const { url, hub, id } = req.query;
 
-    console.log(url, hub, id);
-
 
     if (!url || typeof url !== 'string' || !id || typeof id !== 'string') {
         return res.status(400).send('URL is required');
@@ -97,10 +95,6 @@ export const handleShareEvent = async (req: Request & {
     bot: Telegraf<Context<Update>>
 }, res: Response) => {
     const { id, user_id, url } = req.query;
-
-    console.log({
-        id
-    });
     
     if (typeof id === 'string' && typeof user_id === 'string' && typeof url === 'string') {
         try {

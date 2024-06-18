@@ -3,6 +3,7 @@ import axios from 'axios'
 import { NextRequest } from 'next/server'
 
 export async function GET(req: NextRequest): Promise<Response> {
+    console.log(req.nextUrl)
     const [, err] = getAuthenticatedUser()
     if (err) {
         return err
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         params: {
             user_id,
             id: event_uuid,
-            url: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=598729cf-f4b8-45da-afef-9a1dbeaf28e5`,
+            url: `${req.nextUrl.origin}/ptma/event/598729cf-f4b8-45da-afef-9a1dbeaf28e5`,
         },
     })
 
