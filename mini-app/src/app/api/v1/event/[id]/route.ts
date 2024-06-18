@@ -104,7 +104,7 @@ export async function GET(
             .where(
                 and(
                     eq(orders.user_id, userId),
-                    eq(orders.event_ticket_id, ticket?.id || -1),
+                    eq(orders.event_ticket_id, ticket?.id as number),
                     or(
                         eq(orders.state, 'created'),
                         eq(orders.state, 'minted'),

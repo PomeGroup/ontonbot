@@ -4,7 +4,7 @@ import express from "express"
 import { Telegraf } from "telegraf"
 
 import fileUpload from "express-fileupload"
-import { handleFileSend, handleSendQRCode } from "./controllers"
+import { handleFileSend, handleSendQRCode, handleShareEvent } from "./controllers"
 import { orgHandler, startHandler } from "./handlers"
 
 const port = 3333;
@@ -27,6 +27,7 @@ app.use((req, res, next) => {
 
 app.post("/send-file", handleFileSend);
 app.get("/generate-qr", handleSendQRCode);
+app.get("/share-event", handleShareEvent);
 
 bot.catch((err) => console.error(err));
 
@@ -39,3 +40,4 @@ app.listen(port, () => console.log(`Example app listening on port ${port}`));
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
+
