@@ -1,0 +1,27 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1715162276325,
+      "tag": "0000_famous_kinsey_walden",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1718798788025,
+      "tag": "0001_natural_ultron",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1718799213912,
+      "tag": "0002_lovely_scourge",
+      "breakpoints": true
+    }
+  ]
+}
