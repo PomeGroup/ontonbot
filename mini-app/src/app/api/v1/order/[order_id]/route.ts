@@ -20,7 +20,6 @@ export async function GET(_: NextRequest, { params }: OptionsProps) {
         },
         with: {
             eventTicket: true,
-            tickets: true,
         },
     })
 
@@ -28,10 +27,17 @@ export async function GET(_: NextRequest, { params }: OptionsProps) {
         return Response.json({ message: 'order_not_found' }, { status: 404 })
     }
 
+    const tickets = await db.query.tickets.findMany({
+        where(fields, { eq }) {
+            return eq(fields.order_uuid, order.uuid)
+        },
+    })
+
     return Response.json({
         ...order,
         total_price: BigInt(order.total_price as bigint).toString(),
         nft_collection_address: order.eventTicket.collectionAddress,
+        tickets,
     })
 }
 
