@@ -1,7 +1,7 @@
 import { db } from '@/db/db'
 import { events, eventTicket, orders, tickets, users } from '@/db/schema'
 import { getAuthenticatedUser } from '@/server/auth'
-import { and, eq, or, sql } from 'drizzle-orm'
+import { and, asc, eq, or, sql } from 'drizzle-orm'
 import { type NextRequest } from 'next/server'
 
 export async function GET(
@@ -79,6 +79,7 @@ export async function GET(
                     eq(tickets.user_id, userId)
                 )
             )
+            .orderBy(asc(tickets.created_at))
             .execute()
     ).pop()
 
