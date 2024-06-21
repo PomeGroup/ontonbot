@@ -136,7 +136,7 @@ export async function PATCH() {
         .where(
             and(
                 eq(orders.state, 'created'),
-                lt(orders.created_at, new Date(Date.now() - 1000 * 60 * 5))
+                lt(orders.created_at, new Date(Date.now() - 1000 * 60 * 10))
             )
         )
 
