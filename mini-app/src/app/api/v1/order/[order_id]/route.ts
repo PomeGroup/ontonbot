@@ -20,6 +20,7 @@ export async function GET(_: NextRequest, { params }: OptionsProps) {
         },
         with: {
             eventTicket: true,
+            tickets: true,
         },
     })
 
