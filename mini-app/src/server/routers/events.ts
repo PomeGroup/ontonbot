@@ -503,7 +503,9 @@ export const eventsRouter = router({
                                 society_hub: eventData.society_hub.name,
                                 society_hub_id: eventData.society_hub.id,
                                 activity_id: res.data.activity_id,
-                                secret_phrase: eventData.secret_phrase,
+                                secret_phrase: eventData.secret_phrase.trim()
+                                    ? eventData.secret_phrase.trim()
+                                    : '',
                                 start_date: eventData.start_date,
                                 end_date: eventData.end_date,
                                 location: eventData.location,

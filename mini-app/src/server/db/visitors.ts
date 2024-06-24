@@ -1,6 +1,12 @@
-import { db } from "@/db/db";
-import { eventFields, events, userEventFields, users, visitors } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { db } from '@/db/db'
+import {
+    eventFields,
+    events,
+    userEventFields,
+    users,
+    visitors,
+} from '@/db/schema'
+import { and, between, eq, isNotNull, isNull, or, sql } from 'drizzle-orm'
 
 const generateRandomVisitor = (userId: number) => ({
     user_id: userId,
@@ -15,21 +21,31 @@ const generateRandomVisitor = (userId: number) => ({
             data: `Sample data ${userId}`,
         },
     ],
-});
+})
 
-export const selectVisitorsByEventUuidMock = async (event_uuid: string, limit: number, cursor: number) => {
-    const visitorsData = Array.from({ length: limit }, (_, index) => generateRandomVisitor(cursor + index + 1));
+export const selectVisitorsByEventUuidMock = async (
+    event_uuid: string,
+    limit: number,
+    cursor: number
+) => {
+    const visitorsData = Array.from({ length: limit }, (_, index) =>
+        generateRandomVisitor(cursor + index + 1)
+    )
 
-    const moreRecordsAvailable = visitorsData.length === limit; // Simulate the possibility of more records
+    const moreRecordsAvailable = visitorsData.length === limit // Simulate the possibility of more records
 
     return {
         visitorsWithDynamicFields: visitorsData,
         moreRecordsAvailable,
         nextCursor: moreRecordsAvailable ? cursor + limit : null,
-    };
-};
+    }
+}
 
-export const selectVisitorsByEventUuid = async (event_uuid: string, limit?: number, cursor?: number) => {
+export const selectVisitorsByEventUuid = async (
+    event_uuid: string,
+    limit?: number,
+    cursor?: number
+) => {
     let visitorsQuery = db
         .select({
             user_id: visitors.user_id,
@@ -41,17 +57,56 @@ export const selectVisitorsByEventUuid = async (event_uuid: string, limit?: numb
         })
         .from(visitors)
         .fullJoin(users, eq(visitors.user_id, users.user_id))
-        .where(eq(visitors.event_uuid, event_uuid))
+        .fullJoin(events, eq(visitors.event_uuid, event_uuid))
+        .leftJoin(
+            eventFields,
+            and(
+                eq(eventFields.title, 'Secret Phrase'),
+                eq(eventFields.id, events.event_id),
+                eq(eventFields.description, 'Enter the secret phrase')
+            )
+        )
+        .where(
+            and(
+                eq(visitors.event_uuid, event_uuid),
+                isNotNull(events.start_date),
+                isNotNull(events.end_date),
+                isNotNull(users.wallet_address),
+                between(
+                    visitors.created_at,
+                    sql`TO_TIMESTAMP(events.start_date)`,
+                    sql`TO_TIMESTAMP(events.end_date)`
+                ),
+                or(
+                    sql`(select count(*) from event_fields where event_fields.event_id = events.event_id) = 0`,
+                    sql`(select count(*) from user_event_fields uef join event_fields ef on ef.id = uef.event_field_id where uef.user_id = users.user_id and events.event_id = ef.event_id) = (select count(*) from event_fields ef where ef.event_id = events.event_id)`
+                ),
+                or(
+                    eq(events.secret_phrase, ''),
+                    isNull(events.secret_phrase),
+                    // the user entered event field for pass phrase should be eq to events.secret_phrase
+                    sql`EXISTS (
+                        SELECT 1
+                        FROM user_event_fields uef
+                        JOIN event_fields ef ON ef.id = uef.event_field_id
+                        WHERE uef.user_id = users.user_id
+                          AND ef.event_id = events.event_id
+                          AND ef.title = 'Secret Phrase'
+                          AND uef.data = events.secret_phrase
+                    )`
+                )
+            )
+        )
 
     if (typeof limit === 'number') {
-        visitorsQuery = visitorsQuery.limit(limit);
+        visitorsQuery = visitorsQuery.limit(limit)
     }
 
     if (typeof cursor === 'number') {
-        visitorsQuery = visitorsQuery.offset(cursor);
+        visitorsQuery = visitorsQuery.offset(cursor)
     }
 
-    const visitorsData = await visitorsQuery.execute();
+    const visitorsData = await visitorsQuery.execute()
 
     let userEventFieldsData = await db
         .select({
@@ -61,32 +116,38 @@ export const selectVisitorsByEventUuid = async (event_uuid: string, limit?: numb
             title: eventFields.title,
         })
         .from(userEventFields)
-        .fullJoin(eventFields, eq(userEventFields.event_field_id, eventFields.id))
+        .fullJoin(
+            eventFields,
+            eq(userEventFields.event_field_id, eventFields.id)
+        )
         .fullJoin(events, eq(eventFields.event_id, events.event_id))
         .where(eq(events.event_uuid, event_uuid))
-        .execute();
+        .execute()
 
-    const visitorsWithDynamicFields = visitorsData.map(visitor => {
+    const visitorsWithDynamicFields = visitorsData.map((visitor) => {
         const dynamicFields = userEventFieldsData
-            .filter(field => field.user_id === visitor.user_id)
-            .map(field => ({
+            .filter((field) => field.user_id === visitor.user_id)
+            .map((field) => ({
                 event_field_id: field.event_field_id,
                 data: field.data,
-            }));
+            }))
 
         return {
             ...visitor,
             dynamicFields,
-        };
-    });
+        }
+    })
 
-    const moreRecordsAvailable = typeof limit === 'number' ? visitorsData.length === limit : false;
-    const nextCursor = moreRecordsAvailable && typeof cursor === 'number' ? cursor + limit! : null;
+    const moreRecordsAvailable =
+        typeof limit === 'number' ? visitorsData.length === limit : false
+    const nextCursor =
+        moreRecordsAvailable && typeof cursor === 'number'
+            ? cursor + limit!
+            : null
 
     return {
         visitorsWithDynamicFields,
         moreRecordsAvailable,
         nextCursor,
-    };
-};
-
+    }
+}
