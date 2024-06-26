@@ -5,7 +5,7 @@ import { appRouter } from '@/server'
 export const serverClient = appRouter.createCaller({
     links: [
         httpBatchLink({
-            url: 'https://onton.shard.zone/api/trpc',
+            url: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/api/trpc`,
         }),
     ],
 })
