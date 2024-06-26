@@ -6,7 +6,12 @@ import {
     users,
     visitors,
 } from '@/db/schema'
-import { EventDataSchema, HubsResponse, SocietyHub } from '@/types'
+import {
+    EventDataSchema,
+    HubsResponse,
+    SocietyHub,
+    TonSocietyRegisterActivityT,
+} from '@/types'
 import { fetchBalance, sleep, validateMiniAppData } from '@/utils'
 import axios from 'axios'
 import dotenv from 'dotenv'
@@ -151,9 +156,7 @@ export const eventsRouter = router({
                     title: opts.input.eventData.title,
                     subtitle: opts.input.eventData.subtitle,
                     description: opts.input.eventData.description,
-                    society_hub_id: parseInt(
-                        opts.input.eventData.society_hub.id
-                    ),
+                    hub_id: parseInt(opts.input.eventData.society_hub.id),
                     start_date: timestampToIsoString(
                         opts.input.eventData.start_date
                     ),
@@ -472,7 +475,7 @@ export const eventsRouter = router({
                 title: eventData.title,
                 subtitle: eventData.subtitle,
                 description: eventData.description,
-                society_hub_id: parseInt(eventData.society_hub.id),
+                hub_id: parseInt(eventData.society_hub.id),
                 start_date: timestampToIsoString(eventData.start_date),
                 end_date: timestampToIsoString(eventData.end_date!),
                 additional_info: eventData.location,
@@ -659,7 +662,7 @@ export const eventsRouter = router({
         > => {
             try {
                 const response = await axios.get<HubsResponse>(
-                    `${process.env.TON_SOCIETY_BASE_URL}/v1/hubs`,
+                    `${process.env.TON_SOCIETY_BASE_URL}/hubs`,
                     {
                         params: {
                             _start: 0,
@@ -892,23 +895,16 @@ async function postParticipants(
     }
 }
 
-async function registerActivity(activityDetails: {
-    title: string
-    subtitle: string
-    additional_info?: string
-    description: string
-    society_hub_id: number
-    start_date: string
-    end_date: string
-}) {
+async function registerActivity(activityDetails: TonSocietyRegisterActivityT) {
     const headers = {
         'x-api-key': process.env.TON_SOCIETY_API_KEY,
+        'x-partner-id': 'onton',
         'Content-Type': 'application/json',
     }
 
     try {
         const response = await axios.post(
-            `${process.env.TON_SOCIETY_BASE_URL}/v1/activities`,
+            `${process.env.TON_SOCIETY_BASE_URL}/activities`,
             activityDetails,
             { headers }
         )
@@ -929,25 +925,18 @@ async function registerActivity(activityDetails: {
 }
 
 async function updateActivity(
-    activityDetails: {
-        title: string
-        subtitle: string
-        additional_info?: string
-        description: string
-        start_date: string
-        end_date: string
-        society_hub_id: number
-    },
+    activityDetails: TonSocietyRegisterActivityT,
     activity_id: string | number
 ) {
     const headers = {
         'x-api-key': process.env.TON_SOCIETY_API_KEY,
+        'x-partner-id': 'onton',
         'Content-Type': 'application/json',
     }
 
     try {
         const response = await axios.patch(
-            `${process.env.TON_SOCIETY_BASE_URL}/v1/activities/${activity_id}`,
+            `${process.env.TON_SOCIETY_BASE_URL}/activities/${activity_id}`,
             activityDetails,
             { headers }
         )
@@ -1246,6 +1235,15 @@ const distributionRequest = async (
 }
 
 const fetchHighloadWallet = async (): Promise<HighloadWalletResponse> => {
+    // Setting up the golang server does not work because of connection issues with
+    // db or redis in my local dev environment so this is a temporary fix for development
+    if (process.env.NODE_ENV === 'development') {
+        return {
+            wallet_address: 'moc_wallet_address',
+            seed_phrase: 'moc seed words',
+        }
+    }
+
     try {
         const response = await axios.get(
             'http://golang-server:9999/createHighloadWallet',
