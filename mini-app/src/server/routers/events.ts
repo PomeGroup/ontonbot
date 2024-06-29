@@ -6,7 +6,12 @@ import {
     users,
     visitors,
 } from '@/db/schema'
-import { EventDataSchema, HubsResponse, SocietyHub } from '@/types'
+import {
+    EventDataSchema,
+    HubsResponse,
+    SocietyHub,
+    TonSocietyRegisterActivityT,
+} from '@/types'
 import { fetchBalance, sleep, validateMiniAppData } from '@/utils'
 import axios from 'axios'
 import dotenv from 'dotenv'
@@ -151,7 +156,7 @@ export const eventsRouter = router({
                     title: opts.input.eventData.title,
                     subtitle: opts.input.eventData.subtitle,
                     description: opts.input.eventData.description,
-                    society_hub_id: opts.input.eventData.society_hub.id,
+                    hub_id: parseInt(opts.input.eventData.society_hub.id),
                     start_date: timestampToIsoString(
                         opts.input.eventData.start_date
                     ),
@@ -161,19 +166,7 @@ export const eventsRouter = router({
                     additional_info: opts.input.eventData.location,
                 }
 
-                const apiKey = process.env.TON_SOCIETY_API_KEY || ''
-
-                // const res = await registerActivity(apiKey, eventDraft)
-
-                const res = {
-                    status: 'success',
-                    data: {
-                        activity_id: Math.trunc(Math.random() * 100),
-                        collection_address: 'asd',
-                        message: 'Error messsage',
-                        status: 200,
-                    },
-                }
+                const res = await registerActivity(eventDraft)
 
                 if (res && res.status === 'success') {
                     console.log(
@@ -482,26 +475,17 @@ export const eventsRouter = router({
                 title: eventData.title,
                 subtitle: eventData.subtitle,
                 description: eventData.description,
-                society_hub_id: eventData.society_hub.id,
+                hub_id: parseInt(eventData.society_hub.id),
                 start_date: timestampToIsoString(eventData.start_date),
                 end_date: timestampToIsoString(eventData.end_date!),
                 additional_info: eventData.location,
             }
 
-            const apiKey = process.env.TON_SOCIETY_API_KEY || ''
-
             try {
-                // const res =  await registerActivity(apiKey, eventDraft)
-
-                const res = {
-                    status: 'success',
-                    data: {
-                        activity_id: Math.trunc(Math.random() * 100),
-                        message: 'Message error',
-                    },
-                }
-
-                console.log(res.data)
+                const res = await updateActivity(
+                    eventDraft,
+                    eventData.activity_id as number
+                )
 
                 if (res.data && res.status === 'success') {
                     console.log(
@@ -522,7 +506,9 @@ export const eventsRouter = router({
                                 society_hub: eventData.society_hub.name,
                                 society_hub_id: eventData.society_hub.id,
                                 activity_id: res.data.activity_id,
-                                secret_phrase: eventData.secret_phrase,
+                                secret_phrase: eventData.secret_phrase.trim()
+                                    ? eventData.secret_phrase.trim()
+                                    : '',
                                 start_date: eventData.start_date,
                                 end_date: eventData.end_date,
                                 location: eventData.location,
@@ -676,7 +662,7 @@ export const eventsRouter = router({
         > => {
             try {
                 const response = await axios.get<HubsResponse>(
-                    `${process.env.TON_SOCIETY_BASE_URL}/v1/hubs`,
+                    `${process.env.TON_SOCIETY_BASE_URL}/hubs`,
                     {
                         params: {
                             _start: 0,
@@ -909,34 +895,64 @@ async function postParticipants(
     }
 }
 
-async function registerActivity(
-    apiKey: string,
-    activityDetails: {
-        title: string
-        subtitle: string
-        additional_info?: string
-        description: string
-        society_hub_id: string
-        start_date: string
-        end_date: string
-    }
-) {
+async function registerActivity(activityDetails: TonSocietyRegisterActivityT) {
     const headers = {
-        'x-api-key': apiKey,
+        'x-api-key': process.env.TON_SOCIETY_API_KEY,
+        'x-partner-id': 'onton',
         'Content-Type': 'application/json',
     }
 
     try {
         const response = await axios.post(
-            'https://society.ton.org/v1/register-activity',
+            `${process.env.TON_SOCIETY_BASE_URL}/activities`,
             activityDetails,
             { headers }
         )
-        console.log(response.data)
+        console.info(response.data)
         return response.data
     } catch (error) {
         console.error(error)
-        throw error
+        /*
+        We set the activity id to -100 to be able select the ones that failed to be send to ton society
+        */
+        return {
+            status: 'success',
+            data: {
+                activity_id: -100,
+            },
+        }
+    }
+}
+
+async function updateActivity(
+    activityDetails: TonSocietyRegisterActivityT,
+    activity_id: string | number
+) {
+    const headers = {
+        'x-api-key': process.env.TON_SOCIETY_API_KEY,
+        'x-partner-id': 'onton',
+        'Content-Type': 'application/json',
+    }
+
+    try {
+        const response = await axios.patch(
+            `${process.env.TON_SOCIETY_BASE_URL}/activities/${activity_id}`,
+            activityDetails,
+            { headers }
+        )
+        console.info(response.data)
+        return response.data
+    } catch (error) {
+        console.error(error)
+        /*
+        We set the activity id to -100 to be able select the ones that failed to be send to ton society
+        */
+        return {
+            status: 'success',
+            data: {
+                activity_id: -100,
+            },
+        }
     }
 }
 
@@ -1219,6 +1235,15 @@ const distributionRequest = async (
 }
 
 const fetchHighloadWallet = async (): Promise<HighloadWalletResponse> => {
+    // Setting up the golang server does not work because of connection issues with
+    // db or redis in my local dev environment so this is a temporary fix for development
+    if (process.env.NODE_ENV === 'development') {
+        return {
+            wallet_address: 'moc_wallet_address',
+            seed_phrase: 'moc seed words',
+        }
+    }
+
     try {
         const response = await axios.get(
             'http://golang-server:9999/createHighloadWallet',

@@ -4,11 +4,7 @@ const nextConfig = {
         remotePatterns: [
             {
                 protocol: 'https',
-                hostname: 'telegra.ph',
-            },
-            {
-                protocol: 'https',
-                hostname: 'raw.githubusercontent.com',
+                hostname: '**',
             },
         ],
     },

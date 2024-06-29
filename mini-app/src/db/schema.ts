@@ -1,7 +1,9 @@
+import { relations } from 'drizzle-orm'
 import {
     bigint,
     boolean,
     integer,
+    json,
     pgEnum,
     pgTable,
     serial,
@@ -41,6 +43,7 @@ export const events = pgTable('events', {
     end_date: integer('end_date').default(0),
     timezone: text('timezone'),
     location: text('location'),
+    website: json('website'),
     owner: bigint('owner', { mode: 'number' }).references(() => users.user_id),
     hidden: boolean('hidden').default(false),
     ticketToCheckIn: boolean('ticketToCheckIn').default(false),
@@ -100,29 +103,145 @@ export const airdropRoutines = pgTable('airdrop_routines', {
 
 export const eventTicket = pgTable('event_tickets', {
     id: serial('id').primaryKey(),
-    event_id: serial('event_id').references(() => events.event_id),
+    event_uuid: text('event_uuid').references(() => events.event_uuid),
     title: text('title'),
     description: text('description'),
-    price: integer('price'),
+    price: text('price').notNull(),
     ticketImage: text('ticket_image'),
     count: integer('count'),
     collectionAddress: text('collection_address'),
     created_at: timestamp('created_at').defaultNow(),
 })
 
-export const ticketStatus = pgEnum('event_ticket_status', ['USED', 'VALID'])
+export const ticketStatus = pgEnum('event_ticket_status', [
+    'MINTING',
+    'USED',
+    'UNUSED',
+])
 export const tickets = pgTable('tickets', {
     id: serial('id').primaryKey(),
     name: text('name'),
     telegram: text('telegram'),
     company: text('company'),
     position: text('position'),
+    order_uuid: text('order_uuid').references(() => orders.uuid),
     status: ticketStatus('status'),
     nftAddress: text('nft_address'),
-    event_id: serial('event_id').references(() => events.event_id),
-    ticket_id: serial('event_ticket_id').references(() => eventTicket.id),
+    event_uuid: text('event_uuid').references(() => events.event_uuid),
+    ticket_id: integer('event_ticket_id')
+        .references(() => eventTicket.id)
+        .notNull(),
     user_id: bigint('user_id', { mode: 'number' }).references(
         () => users.user_id
     ),
     created_at: timestamp('created_at').defaultNow(),
 })
+
+export const orderState = pgEnum('order_state', [
+    'created',
+    'mint_request',
+    'minted',
+    'failed',
+    'validation_failed',
+])
+export const orders = pgTable('orders', {
+    uuid: uuid('uuid').defaultRandom().primaryKey(),
+    event_uuid: text('event_uuid').references(() => events.event_uuid),
+    user_id: bigint('user_id', { mode: 'number' }).references(
+        () => users.user_id
+    ),
+    event_ticket_id: bigint('event_ticket_id', { mode: 'number' })
+        .references(() => eventTicket.id)
+        .notNull(),
+    transaction_id: text('transaction_id'),
+    count: integer('count'),
+    total_price: bigint('total_price', { mode: 'bigint' }),
+    state: orderState('state'),
+    failed_reason: text('failed_reason'),
+    // form fields
+    telegram: text('telegram').notNull(),
+    full_name: text('full_name').notNull(),
+    company: text('company').notNull(),
+    position: text('position').notNull(),
+    owner_address: text('owner_address').notNull(),
+    //
+    created_at: timestamp('created_at').defaultNow(),
+})
+
+export const ticketsRelations = relations(tickets, ({ one }) => ({
+    order: one(orders, {
+        fields: [tickets.order_uuid],
+        references: [orders.uuid],
+    }),
+    event: one(events, {
+        fields: [tickets.event_uuid],
+        references: [events.event_uuid],
+    }),
+    eventTicket: one(eventTicket, {
+        fields: [tickets.ticket_id],
+        references: [eventTicket.id],
+    }),
+    user: one(users, {
+        fields: [tickets.user_id],
+        references: [users.user_id],
+    }),
+}))
+
+export const orderRelations = relations(orders, ({ one, many }) => ({
+    event: one(events, {
+        fields: [orders.event_uuid],
+        references: [events.event_uuid],
+    }),
+    user: one(users, {
+        fields: [orders.user_id],
+        references: [users.user_id],
+    }),
+    eventTicket: one(eventTicket, {
+        fields: [orders.event_ticket_id],
+        references: [eventTicket.id],
+    }),
+    tickets: many(tickets),
+}))
+
+export const userRelations = relations(users, ({ many }) => ({
+    userEventFields: many(userEventFields),
+    airdropRoutines: many(airdropRoutines),
+    tickets: many(tickets),
+    orders: many(orders),
+}))
+
+export const eventFieldRelations = relations(eventFields, ({ one, many }) => ({
+    event: one(events, {
+        fields: [eventFields.event_id],
+        references: [events.event_id],
+    }),
+    userEventFields: many(userEventFields),
+}))
+
+export const userEventFieldRelations = relations(
+    userEventFields,
+    ({ one }) => ({
+        eventField: one(eventFields, {
+            fields: [userEventFields.event_field_id],
+            references: [eventFields.id],
+        }),
+        user: one(users, {
+            fields: [userEventFields.user_id],
+            references: [users.user_id],
+        }),
+    })
+)
+
+export const airdropRoutineRelations = relations(
+    airdropRoutines,
+    ({ one }) => ({
+        event: one(events, {
+            fields: [airdropRoutines.event_id],
+            references: [events.event_id],
+        }),
+        user: one(users, {
+            fields: [airdropRoutines.user_id],
+            references: [users.user_id],
+        }),
+    })
+)

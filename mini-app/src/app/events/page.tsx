@@ -111,11 +111,7 @@ const EventsAdminPage = () => {
                         </Link>
                         <div className="flex-1">
                             <QrCodeButton
-                                url={`https://t.me/${
-                                    process.env.NODE_ENV === 'development'
-                                        ? process.env.BOT_USERNAME
-                                        : 'theontonbot'
-                                }/event?startapp=${event.event_uuid}`}
+                                url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event.event_uuid}`}
                                 hub={event.society_hub!}
                             />
                         </div>
@@ -147,7 +143,7 @@ const TimeRow = ({
 
     // Helper to format date
     const formatDate = (date: { day: string; month: string }) =>
-        `${date.day}/${date.month}`
+        `${date?.day}/${date?.month}`
 
     // Constructing the display string based on the conditions
     let displayString = `${formatTime(startTime)} `

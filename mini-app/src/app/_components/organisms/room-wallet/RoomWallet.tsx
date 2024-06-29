@@ -8,12 +8,12 @@ import {
     useTonWallet,
 } from '@tonconnect/ui-react'
 
-import { trpc } from '../../../_trpc/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { toNano, address, Address } from '@ton/core'
 import useWebApp from '@/hooks/useWebApp'
+import { address, Address, toNano } from '@ton/core'
 import { Loader2 } from 'lucide-react'
+import { trpc } from '../../../_trpc/client'
 import Card from '../../atoms/cards'
 
 const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
@@ -43,8 +43,10 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
         refetchInterval: 1000 * 10,
     }).data
 
-    const numberOfVisitors =
-        trpc.events.getVisitorsWithWalletsNumber.useQuery({ event_uuid: hash, initData: WebApp?.initData })
+    const numberOfVisitors = trpc.events.getVisitorsWithWalletsNumber.useQuery({
+        event_uuid: hash,
+        initData: WebApp?.initData,
+    })
 
     const addWalletMutation = trpc.users.addWallet.useMutation()
 
@@ -71,8 +73,8 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
         []
     )
 
-    const handleTopUpClick = () => {
-        WebApp?.HapticFeedback.impactOccurred("medium")
+    const handleTopUpClick = async () => {
+        WebApp?.HapticFeedback.impactOccurred('medium')
         if (!wallet) {
             open()
             return
@@ -98,19 +100,18 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
             }
 
             setTopupLoading(true)
-            tonConnectUI.sendTransaction(tx)
-
+            await tonConnectUI.sendTransaction(tx)
 
             setTimeout(() => {
                 setTopupLoading(false)
-            }, 1000 * 20)
+            }, 1000 * 3)
         } catch (error) {
             return
         }
     }
 
     const handleWithdrawClick = () => {
-        WebApp?.HapticFeedback.impactOccurred("medium")
+        WebApp?.HapticFeedback.impactOccurred('medium')
         if (!wallet) {
             open()
             return
@@ -132,7 +133,7 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     }
 
     const handleDistributeClick = () => {
-        WebApp?.HapticFeedback.impactOccurred("medium")
+        WebApp?.HapticFeedback.impactOccurred('medium')
 
         if (!wallet) {
             open()
@@ -229,7 +230,7 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
                                 distributionLoading ||
                                 isSmallBalance ||
                                 Number.parseFloat(distributeAmount) >
-                                amountPerPerson
+                                    amountPerPerson
                             }
                         >
                             Distribute (

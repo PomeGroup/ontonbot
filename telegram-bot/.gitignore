@@ -40,8 +40,6 @@ dist/**/*
 # ignore yarn.lock
 yarn.lock
 
-img/*
-
 
 # General
 .DS_Store

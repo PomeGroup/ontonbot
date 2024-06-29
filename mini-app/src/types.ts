@@ -139,6 +139,7 @@ export const EventDataSchema = z.object({
     start_date: z.number(),
     end_date: z.number().nullable(),
     owner: z.number(),
+    activity_id: z.number().optional(),
     timezone: z.string(),
     dynamic_fields: DynamicFieldsSchema,
 })
@@ -229,4 +230,18 @@ export type TelegramUser = {
     language_code: string
     is_premium: boolean
     allows_write_to_pm: boolean
+}
+
+export type TonSocietyRegisterActivityT = {
+    title: string
+    subtitle: string
+    additional_info?: string
+    description: string
+    hub_id: number
+    start_date: string
+    end_date: string
+    cta_button?: {
+        label: string
+        link: string
+    }
 }

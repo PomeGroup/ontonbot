@@ -30,8 +30,6 @@ mini-app/.env*.local
 # vercel
 mini-app/.vercel
 
-mini-app/drizzle
-
 # typescript
 mini-app/*.tsbuildinfo
 mini-app/next-env.d.ts
@@ -43,3 +41,4 @@ data/
 node_modules
 
 .env
+.vscode/settings.json

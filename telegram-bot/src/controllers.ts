@@ -1,18 +1,16 @@
-import { Request, Response } from "express";
-import { UploadedFile } from "express-fileupload";
-import { existsSync, readFileSync } from "fs";
-import path from "path";
-import { toBuffer } from "qrcode";
-import sharp from "sharp";
-import { shareKeyboard } from "./markups";
-import fs from "fs";
-import QRCode from "qrcode";
+import { Request, Response } from "express"
+import { UploadedFile } from "express-fileupload"
+import fs from "fs"
+import QRCode from "qrcode"
+import sharp from "sharp"
+import { Context, Telegraf } from "telegraf"
+import { Update } from "telegraf/typings/core/types/typegram"
+import { getEvent } from "./db/db"
+import { shareKeyboard } from "./markups"
 
 
 export const handleSendQRCode = async (req, res) => {
     const { url, hub, id } = req.query;
-
-    console.log(url, hub, id);
 
 
     if (!url || typeof url !== 'string' || !id || typeof id !== 'string') {
@@ -90,5 +88,41 @@ export const handleFileSend = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         return res.status(500).send('Internal Server Error');
+    }
+};
+
+export const handleShareEvent = async (req: Request & {
+    bot: Telegraf<Context<Update>>
+}, res: Response) => {
+    const { id, user_id, url } = req.body;
+    
+    if (typeof id === 'string' && typeof user_id === 'string' && typeof url === 'string') {
+        try {
+            const event = await getEvent(id)
+            await req.bot.telegram.sendPhoto(parseInt(user_id), {
+                url: event.image_url
+            }, {
+                caption: `
+<b>${event.title}</b>
+${event.subtitle}`,
+                parse_mode: "HTML",
+                reply_markup: {
+                    inline_keyboard: [[{
+                        text: "Buy Ticket",
+                        web_app: {url}
+                    }]]
+                } 
+            })
+            
+            res.json(event)
+        } catch (error) {
+            console.log(error);
+            
+            res.status(404)
+            res.json({message: "event not found"})
+        }
+    } else {
+        res.status(400)
+        res.json({message: "invalid query id"})
     }
 };

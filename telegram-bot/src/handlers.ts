@@ -1,10 +1,10 @@
-import { Context } from "telegraf";
-import { startKeyboard } from "./markups";
-import { editOrSend } from "./utils/utils";
-import { TVisitor } from "./utils/types";
-import { addVisitor, changeRole, countReferrals } from "./db/db";
+import { Context } from "telegraf"
+import { addVisitor, changeRole } from "./db/db"
+import { startKeyboard } from "./markups"
+import { TVisitor } from "./utils/types"
+import { editOrSend } from "./utils/utils"
 
-const admins = ["samyar_kd", "Mfarimani", "mahdi_davaeiha"];
+const admins = ["samyar_kd", "Mfarimani"];
 
 export const orgHandler = async (ctx: Context) => {
   try {
@@ -75,4 +75,5 @@ Please click the link below to discover current future events.`,
   }
 };
 
-export { startHandler };
+export { startHandler }
+

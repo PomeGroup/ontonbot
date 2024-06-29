@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # command = "pnpm drizzle-kit generate:pg"
     # result = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-    for filename in sorted(os.listdir(MIGRATIONS_PATH))[-2:]:
+    for filename in sorted(os.listdir(MIGRATIONS_PATH)):
         if filename.endswith(".sql"):
             run_migration(filename)
 

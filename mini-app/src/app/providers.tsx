@@ -12,11 +12,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
             <SDKProvider>
                 <TonConnectUIProvider
                     actionsConfiguration={{
-                        twaReturnUrl: `https://t.me/${
-                            process.env.NODE_ENV === 'development'
-                                ? process.env.BOT_USERNAME
-                                : 'theontonbot'
-                        }/event`,
+                        twaReturnUrl: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event`,
                     }}
                     manifestUrl="https://gist.githubusercontent.com/nichitagutu/3cc22ee9749e77222c38313de47c94bc/raw/f37de28e672932101702f841d02d7414b93ca9ac/tonconnect-manifest.json"
                 >

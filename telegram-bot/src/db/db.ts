@@ -114,6 +114,31 @@ async function createDatabase() {
   }
 }
 
+export async function getEvent(uuid: string) {
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
+
+  await client.connect()
+
+  let event: undefined | {
+    title: string
+    description:string
+    subtitle: string
+    image_url: string
+  }
+
+  try {
+    event = (await client.query(`
+        SELECT * FROM events WHERE event_uuid = $1;
+      `, [uuid])).rows[0]
+  } finally {
+    client.end()
+  }
+
+  return event
+}
+
 export async function countReferrals(
   userId: number
 ): Promise<{ totalReferrals: number; todayReferrals: number }> {
