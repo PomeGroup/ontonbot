@@ -32,6 +32,10 @@ export async function POST(req: Request) {
         try {
             validate(initDataSearchParams, process.env.BOT_TOKEN as string)
         } catch (error) {
+            console.error('Authentication Failed in 35 auth/route')
+            console.error(error)
+            console.error('==========')
+
             return Response.json(
                 { error: 'invalid_init_data' },
                 { status: 403, headers: { 'Content-Type': 'application/json' } }
@@ -43,6 +47,9 @@ export async function POST(req: Request) {
         const userdata = userDataSchema.safeParse(JSON.parse(userRaw as string))
 
         if (!userdata.success) {
+            console.error('Authentication Failed in 50 auth/route')
+            console.error(userRaw, userdata.error)
+            console.error('==========')
             return Response.json(
                 { error: 'invalid_init_user_data' },
                 { status: 403, headers: { 'Content-Type': 'application/json' } }
@@ -104,9 +111,9 @@ export async function POST(req: Request) {
             }
         )
     } catch (error) {
-        console.log('==============================')
+        console.error('==============================')
         console.error('Error:', error)
-        console.log('==============================')
+        console.error('==============================')
 
         if (error instanceof ZodError) {
             return Response.json(
