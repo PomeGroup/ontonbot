@@ -4,6 +4,7 @@ import { validate } from '@tma.js/init-data-node'
 import { eq } from 'drizzle-orm'
 import * as jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
+import { NextRequest } from 'next/server'
 import { z, ZodError } from 'zod'
 
 const zodSchema = z.object({
@@ -21,16 +22,22 @@ const userDataSchema = z.object({
 // in seconds
 const JWT_COOKIE_EXPIRATION = 604_800 // 1 week
 
-export async function POST(req: Request) {
+export async function GET(req: NextRequest) {
     try {
-        const body = await req.json()
+        const initData = req.nextUrl.searchParams.get('init_data')
 
-        const { initData } = zodSchema.parse(body)
+        if (!initData) {
+            return Response.json(
+                { error: 'no_init_data' },
+                { status: 400, headers: { 'Content-Type': 'application/json' } }
+            )
+        }
+
         const initDataSearchParams = new URLSearchParams(initData)
 
         // Check if the request is valid and from Telegram
         try {
-            validate(initDataSearchParams, process.env.BOT_TOKEN as string)
+            validate(initData, process.env.BOT_TOKEN as string)
         } catch (error) {
             console.error('Authentication Failed in 35 auth/route')
             console.error(error)
