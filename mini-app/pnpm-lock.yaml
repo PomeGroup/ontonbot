@@ -60,14 +60,14 @@ importers:
         specifier: ^8.13.2
         version: 8.13.2(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@tma.js/init-data-node':
-        specifier: ^1.2.4
-        version: 1.2.4
+        specifier: ^1.3.0
+        version: 1.3.0
       '@tma.js/sdk':
-        specifier: ^2.2.0
-        version: 2.2.0
+        specifier: ^2.5.1
+        version: 2.5.1
       '@tma.js/sdk-react':
-        specifier: ^2.2.0
-        version: 2.2.0(@types/react@18.2.45)(react@18.2.0)
+        specifier: ^2.2.5
+        version: 2.2.5(@types/react@18.2.45)(react@18.2.0)
       '@ton/core':
         specifier: ^0.53.0
         version: 0.53.0(@ton/crypto@3.2.0)
@@ -1559,11 +1559,11 @@ packages:
       react: ^18.0.0
       react-dom: ^18.0.0
 
-  '@tma.js/init-data-node@1.2.4':
-    resolution: {integrity: sha512-BW8DTwP0jmqoXV2fIdil3v8pGwbhxT3yovvTsPHJ+uYXxhJ6t8GuBEDs37mMdlbMoiQJt8Tui/9MqXgB7zzBgQ==}
+  '@tma.js/init-data-node@1.3.0':
+    resolution: {integrity: sha512-8pcouJy8asVBEuSoqedKBZLiLCtuTOguunJbADgxyMWOp01GzGWFVqVHNk9URPO00KdHn9mnWJWxwqxb4+ydLg==}
 
-  '@tma.js/sdk-react@2.2.0':
-    resolution: {integrity: sha512-AaJ+syds4FMxPrOpzghpJEEkxviAghCUUh2WATFVSQcQKrP6MGXnBBVt5moSFhFGBtGrpnH5WiyiDaVdAKcvMA==}
+  '@tma.js/sdk-react@2.2.5':
+    resolution: {integrity: sha512-AgKrxlVHNiwHGM9PPPcRGcmfkCDb27jnVGkaIyUX68Gk7bmpNjP/LIO82OuziFjJzTkgDkiCv5hDYxrpLjQRKA==}
     peerDependencies:
       '@types/react': ^17.0.0 || ^18.0.0
       react: ^17.0.0 || ^18.0.0
@@ -1571,8 +1571,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@tma.js/sdk@2.2.0':
-    resolution: {integrity: sha512-Dn2Rg248NCCidI8qia77PJheDx2KDvHn6Fg3AHmOdv7DEMMfNf8D4o5DFHtZzGoMvvNTrrYrqK/KQxbs0wpYTg==}
+  '@tma.js/sdk@2.5.1':
+    resolution: {integrity: sha512-uUFv3oINGRwkh4KbGxMq9OxDdSQOhH9O45i9i0aqen6pIakeiIxxzrF8Yhv2xSFWrn8V+gaOpr3IDrushlo5TA==}
 
   '@ton/core@0.53.0':
     resolution: {integrity: sha512-tB5RxXFS6Z/ivmsqMn/eebEZmkWXIAz+hS1PDZXhbBkcvnBTknZ12g2AFrZtXyuvpm8O6SbL15UI/3NgkyIWzQ==}
@@ -6151,18 +6151,18 @@ snapshots:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
 
-  '@tma.js/init-data-node@1.2.4':
+  '@tma.js/init-data-node@1.3.0':
     dependencies:
-      '@tma.js/sdk': 2.2.0
+      '@tma.js/sdk': 2.5.1
 
-  '@tma.js/sdk-react@2.2.0(@types/react@18.2.45)(react@18.2.0)':
+  '@tma.js/sdk-react@2.2.5(@types/react@18.2.45)(react@18.2.0)':
     dependencies:
-      '@tma.js/sdk': 2.2.0
+      '@tma.js/sdk': 2.5.1
       react: 18.2.0
     optionalDependencies:
       '@types/react': 18.2.45
 
-  '@tma.js/sdk@2.2.0': {}
+  '@tma.js/sdk@2.5.1': {}
 
   '@ton/core@0.53.0(@ton/crypto@3.2.0)':
     dependencies:
