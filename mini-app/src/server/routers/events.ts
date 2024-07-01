@@ -152,7 +152,7 @@ export const eventsRouter = router({
                 throw new Error('Unauthorized access or invalid role')
             }
             try {
-                const eventDraft = {
+                const eventDraft: TonSocietyRegisterActivityT = {
                     title: opts.input.eventData.title,
                     subtitle: opts.input.eventData.subtitle,
                     description: opts.input.eventData.description,
@@ -162,8 +162,12 @@ export const eventsRouter = router({
                     ),
                     end_date: timestampToIsoString(
                         opts.input.eventData.end_date!
-                    ),
-                    additional_info: opts.input.eventData.location,
+                    ), additional_info: opts.input.eventData.location,
+                    cta_button: {
+                        link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${opts.input.eventData.event_uuid}`,
+                        label: "Enter Event"
+                    }
+
                 }
 
                 const res = await registerActivity(eventDraft)
@@ -466,7 +470,7 @@ export const eventsRouter = router({
                 return { success: false, message: 'event_uuid is required' }
             }
 
-            const eventDraft = {
+            const eventDraft: TonSocietyRegisterActivityT = {
                 title: eventData.title,
                 subtitle: eventData.subtitle,
                 description: eventData.description,
@@ -474,6 +478,10 @@ export const eventsRouter = router({
                 start_date: timestampToIsoString(eventData.start_date),
                 end_date: timestampToIsoString(eventData.end_date!),
                 additional_info: eventData.location,
+                cta_button: {
+                    link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
+                    label: "Enter Event"
+                }
             }
 
             try {
