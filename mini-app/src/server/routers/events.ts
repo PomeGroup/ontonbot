@@ -169,11 +169,6 @@ export const eventsRouter = router({
                 const res = await registerActivity(eventDraft)
 
                 if (res && res.status === 'success') {
-                    console.log(
-                        'Activity registered successfully with ID:',
-                        res.data.activity_id
-                    )
-
                     let highloadWallet: HighloadWalletResponse =
                         {} as HighloadWalletResponse
 
@@ -431,7 +426,7 @@ export const eventsRouter = router({
                 if (
                     visitor.users !== null &&
                     visitor.users.wallet_address !==
-                        null /* && eligibleUserIds.has(visitor.users.user_id) */
+                    null /* && eligibleUserIds.has(visitor.users.user_id) */
                 ) {
                     receivers.receivers[
                         visitor.users.wallet_address!.toString()
@@ -488,12 +483,6 @@ export const eventsRouter = router({
                 )
 
                 if (res.data && res.status === 'success') {
-                    console.log(
-                        'Activity updated successfully with ID:',
-                        res.data.activity_id
-                    )
-                    console.log({ eventData })
-
                     const result = await db.transaction(async (trx) => {
                         await trx
                             .update(events)
@@ -887,7 +876,6 @@ async function postParticipants(
             activityParticipantsPayload,
             { headers }
         )
-        console.log(response.data)
         return response.data
     } catch (error) {
         console.error(error)
@@ -1101,8 +1089,6 @@ const hasTwitterTask = async (eventId: number) => {
                 field.title?.toLowerCase() === 'x')
     )
 
-    console.log({ eventFieldsData })
-
     const subscribeButtonRegex = /subscribe to @\w+/i
 
     const hasSubscribeButton = eventFieldsData.some(
@@ -1125,8 +1111,6 @@ const getTwitterHandle = async (eventId: number) => {
         .where(eq(eventFields.event_id, eventId))
         .execute()
 
-    console.log({ eventFieldsData })
-
     const subscribeButtonRegex = /subscribe to @(\w+)/i
 
     const matchingField = eventFieldsData.find(
@@ -1137,7 +1121,6 @@ const getTwitterHandle = async (eventId: number) => {
 
     if (matchingField) {
         const matches = matchingField.description!.match(subscribeButtonRegex)
-        console.log({ matches })
         return matches ? matches[1] : null
     }
 

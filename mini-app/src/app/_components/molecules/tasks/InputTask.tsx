@@ -29,126 +29,134 @@ const InputTypeCampaignTask: React.FC<{
     fieldId,
     eventId,
 }) => {
-    const WebApp = useWebApp()
+        const WebApp = useWebApp()
 
-    const validatedData = trpc.users.validateUserInitData.useQuery(
-        WebApp?.initData || ''
-    )
+        const validatedData = trpc.users.validateUserInitData.useQuery(
+            WebApp?.initData || ''
+        )
 
-    const [inputText, setInputText] = useState(data)
-    const [isCompleted, setIsCompleted] = useState(completed)
-    const [isEditing, setIsEditing] = useState(false)
-    const editingRef = useRef<HTMLDivElement>(null)
+        const [inputText, setInputText] = useState(data)
+        const [isCompleted, setIsCompleted] = useState(completed)
+        const [isEditing, setIsEditing] = useState(false)
+        const editingRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        function handleClickOutside(
-            this: Document,
-            event: globalThis.MouseEvent
-        ) {
-            if (
-                editingRef.current &&
-                !editingRef.current.contains(event.target as Node)
+        useEffect(() => {
+            function handleClickOutside(
+                this: Document,
+                event: globalThis.MouseEvent
             ) {
-                WebApp?.HapticFeedback.notificationOccurred('error')
-                setIsEditing(false)
+                if (
+                    editingRef.current &&
+                    !editingRef.current.contains(event.target as Node)
+                ) {
+                    WebApp?.HapticFeedback.notificationOccurred('error')
+                    setIsEditing(false)
+                }
             }
+
+            document.addEventListener('mousedown', handleClickOutside)
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside)
+            }
+        }, [])
+
+        useEffect(() => {
+            setInputText(data)
+        }, [data])
+
+        useEffect(() => {
+            setIsCompleted(completed)
+        }, [completed])
+
+        const upsertUserEventFieldMutation =
+            trpc.userEventFields.upsertUserEventField.useMutation({
+                onError: () => {
+                    WebApp?.HapticFeedback.notificationOccurred('error')
+                    // use toast instead of alert
+                    WebApp?.showAlert("Wrong Secret Entered")
+                },
+                onSuccess: () => {
+                    WebApp?.HapticFeedback.notificationOccurred('success')
+                    setIsCompleted(inputText ? true : false)
+                }
+            })
+
+        function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+            setInputText(e.target.value)
         }
 
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside)
-        }
-    }, [])
+        function handleConfirm(
+            e: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLInputElement>
+        ) {
+            e.preventDefault()
+            setIsEditing(false)
 
-    useEffect(() => {
-        setInputText(data)
-    }, [data])
+            if (!validatedData.data?.valid) {
+                WebApp?.HapticFeedback.notificationOccurred('error')
+                return
+            }
 
-    useEffect(() => {
-        setIsCompleted(completed)
-    }, [completed])
+            upsertUserEventFieldMutation.mutate({
+                initData: WebApp?.initData,
+                field_id: fieldId,
+                data: inputText || '',
+                completed: inputText ? true : false,
+                event_id: eventId,
+            })
 
-    const upsertUserEventFieldMutation =
-        trpc.userEventFields.upsertUserEventField.useMutation()
-
-    function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-        setInputText(e.target.value)
-    }
-
-    function handleConfirm(
-        e: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLInputElement>
-    ) {
-        e.preventDefault()
-        setIsEditing(false)
-
-        if (!validatedData.data?.valid) {
-            WebApp?.HapticFeedback.notificationOccurred('error')
-            return
         }
 
-        upsertUserEventFieldMutation.mutate({
-            initData: WebApp?.initData,
-            field_id: fieldId,
-            data: inputText || '',
-            completed: inputText ? true : false,
-            event_id: eventId,
-        })
-
-        WebApp?.HapticFeedback.notificationOccurred('success')
-        setIsCompleted(inputText ? true : false)
-    }
-
-    return (
-        <div className="input-type-campaign-task">
-            {!isEditing ? (
-                <div
-                    onClick={() => {
-                        WebApp?.HapticFeedback.impactOccurred('medium')
-                        setIsEditing(true)
-                    }}
-                >
-                    <GenericTask
-                        title={title}
-                        description={description}
-                        completed={isCompleted}
-                        defaultEmoji={defaultEmoji}
-                    />
-                </div>
-            ) : (
-                <div
-                    className="my-4 rounded-[14px] p-4 border border-separator flex items-center justify-start"
-                    ref={editingRef}
-                >
-                    <input
-                        className="w-full h-10 rounded-lg border border-separator p-2 mr-2"
-                        type="text"
-                        inputMode="text"
-                        placeholder="Type something..."
-                        value={inputText || ''}
-                        onChange={handleInputChange}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                handleConfirm(e)
-                            }
+        return (
+            <div className="input-type-campaign-task">
+                {!isEditing ? (
+                    <div
+                        onClick={() => {
+                            WebApp?.HapticFeedback.impactOccurred('medium')
+                            setIsEditing(true)
                         }}
-                        autoFocus
-                    />
-                    <button
-                        onClick={handleConfirm}
-                        className={`rounded-lg min-w-[40px] min-h-[40px] flex items-center justify-center bg-tertiary`}
                     >
-                        <Image
-                            className="fill-tertiary"
-                            src="/checkmark.svg"
-                            alt="checkmark"
-                            width={16}
-                            height={16}
+                        <GenericTask
+                            title={title}
+                            description={description}
+                            completed={isCompleted}
+                            defaultEmoji={defaultEmoji}
                         />
-                    </button>
-                </div>
-            )}
-        </div>
-    )
-}
+                    </div>
+                ) : (
+                    <div
+                        className="my-4 rounded-[14px] p-4 border border-separator flex items-center justify-start"
+                        ref={editingRef}
+                    >
+                        <input
+                            className="w-full h-10 rounded-lg border border-separator p-2 mr-2"
+                            type="text"
+                            inputMode="text"
+                            placeholder="Type something..."
+                            value={inputText || ''}
+                            onChange={handleInputChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    handleConfirm(e)
+                                }
+                            }}
+                            autoFocus
+                        />
+                        <button
+                            onClick={handleConfirm}
+                            className={`rounded-lg min-w-[40px] min-h-[40px] flex items-center justify-center bg-tertiary`}
+                        >
+                            <Image
+                                className="fill-tertiary"
+                                src="/checkmark.svg"
+                                alt="checkmark"
+                                width={16}
+                                height={16}
+                            />
+                        </button>
+                    </div>
+                )}
+            </div>
+        )
+    }
 
 export default InputTypeCampaignTask

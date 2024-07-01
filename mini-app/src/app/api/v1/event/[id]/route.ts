@@ -61,12 +61,12 @@ export async function GET(
 
     const ticket = event.ticketToCheckIn
         ? (
-              await db
-                  .select()
-                  .from(eventTicket)
-                  .where(eq(eventTicket.event_uuid, event.event_uuid as string))
-                  .execute()
-          )[0]
+            await db
+                .select()
+                .from(eventTicket)
+                .where(eq(eventTicket.event_uuid, event.event_uuid as string))
+                .execute()
+        )[0]
         : undefined
 
     const userTicket = (
@@ -124,8 +124,6 @@ export async function GET(
         orderAlreadyPlace: !!userOrder,
         isSoldOut: soldTicketsCount[0].count === ticket?.count,
     }
-
-    console.log(data)
 
     // return event data
     return Response.json(data, {
