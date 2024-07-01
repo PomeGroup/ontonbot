@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { GoogleTagManager } from '@next/third-parties/google'
 
 import Providers from './providers'
 
@@ -21,28 +22,32 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({
-    children,
+   children,
 }: {
     children: React.ReactNode
 }) {
     return (
         <html lang="en">
-            <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
-            <body className={inter.className}>
-                <Provider>
-                    <Providers>
-                        <UserSaver>
-                            {/* <WebAppInitialization> */}
+        {
+            process.env.NODE_ENV === 'production' && (
+                <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />)
+        }
+        <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
+        <body className={inter.className}>
+        <Provider>
+            <Providers>
+                <UserSaver>
+                    {/* <WebAppInitialization> */}
 
-                            <main className="p-4">
-                                <Header />
-                                {children}
-                            </main>
-                            {/* </WebAppInitialization> */}
-                        </UserSaver>
-                    </Providers>
-                </Provider>
-            </body>
+                    <main className="p-4">
+                        <Header />
+                        {children}
+                    </main>
+                    {/* </WebAppInitialization> */}
+                </UserSaver>
+            </Providers>
+        </Provider>
+        </body>
         </html>
     )
 }
