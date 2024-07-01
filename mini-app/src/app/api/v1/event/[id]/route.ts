@@ -1,9 +1,12 @@
 import { db } from '@/db/db'
 import { events, eventTicket, orders, tickets, users } from '@/db/schema'
+import { removeKey } from '@/lib/utils'
 import { getAuthenticatedUser } from '@/server/auth'
 import { and, asc, eq, or, sql } from 'drizzle-orm'
 import { type NextRequest } from 'next/server'
 
+
+// TODO: create api key for these endpoints
 export async function GET(
     req: NextRequest,
     { params }: { params: { id: string } }
@@ -14,16 +17,18 @@ export async function GET(
 
     if (dataOnly === 'true') {
         // get event data using drizzle
-        const event = await db.query.events.findFirst({
+        const unsafeEvent = await db.query.events.findFirst({
             where(fields, { eq }) {
                 return eq(fields.event_uuid, eventId)
             },
         })
 
         // error 400 if not found
-        if (!event) {
+        if (!unsafeEvent) {
             return Response.json({ error: 'Event not found' }, { status: 400 })
         }
+
+        const event = removeKey(unsafeEvent, "secret_phrase")
 
         // return event data
         return Response.json(event, {
@@ -38,7 +43,7 @@ export async function GET(
     }
 
     // get event data using drizzle
-    const event = (
+    const unsafeEvent = (
         await db
             .select()
             .from(events)
@@ -46,10 +51,13 @@ export async function GET(
             .execute()
     ).pop()
 
+
     // error 400 if not found
-    if (!event?.event_uuid) {
+    if (!unsafeEvent?.event_uuid) {
         return Response.json({ error: 'Event not found' }, { status: 400 })
     }
+
+    const event = removeKey(unsafeEvent, 'secret_phrase')
 
     const organizer = (
         await db
@@ -75,7 +83,7 @@ export async function GET(
             .from(tickets)
             .where(
                 and(
-                    eq(tickets.event_uuid, event.event_uuid),
+                    eq(tickets.event_uuid, event.event_uuid as string),
                     eq(tickets.user_id, userId)
                 )
             )
@@ -88,7 +96,7 @@ export async function GET(
         .from(orders)
         .where(
             and(
-                eq(orders.event_uuid, event.event_uuid),
+                eq(orders.event_uuid, event.event_uuid as string),
                 or(
                     eq(orders.state, 'minted'),
                     eq(orders.state, 'created'),
