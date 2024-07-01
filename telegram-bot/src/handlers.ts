@@ -4,7 +4,11 @@ import { startKeyboard } from "./markups"
 import { TVisitor } from "./utils/types"
 import { editOrSend } from "./utils/utils"
 
-const admins = ["samyar_kd", "Mfarimani"];
+const BOT_ADMINS = process.env.BOT_ADMINS_LIST
+
+if (!BOT_ADMINS) throw new Error("BOT_ADMINS_LIST env is required")
+
+const admins = BOT_ADMINS.split(",")
 
 export const orgHandler = async (ctx: Context) => {
   try {
@@ -38,7 +42,7 @@ export const orgHandler = async (ctx: Context) => {
     } else {
       await editOrSend(ctx, `Invalid command.`, startKeyboard());
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const startHandler = async (ctx: Context) => {
