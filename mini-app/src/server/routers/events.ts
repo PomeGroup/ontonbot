@@ -152,7 +152,7 @@ export const eventsRouter = router({
                 throw new Error('Unauthorized access or invalid role')
             }
             try {
-                const eventDraft = {
+                const eventDraft: TonSocietyRegisterActivityT = {
                     title: opts.input.eventData.title,
                     subtitle: opts.input.eventData.subtitle,
                     description: opts.input.eventData.description,
@@ -162,18 +162,17 @@ export const eventsRouter = router({
                     ),
                     end_date: timestampToIsoString(
                         opts.input.eventData.end_date!
-                    ),
-                    additional_info: opts.input.eventData.location,
+                    ), additional_info: opts.input.eventData.location,
+                    cta_button: {
+                        link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${opts.input.eventData.event_uuid}`,
+                        label: "Enter Event"
+                    }
+
                 }
 
                 const res = await registerActivity(eventDraft)
 
                 if (res && res.status === 'success') {
-                    console.log(
-                        'Activity registered successfully with ID:',
-                        res.data.activity_id
-                    )
-
                     let highloadWallet: HighloadWalletResponse =
                         {} as HighloadWalletResponse
 
@@ -431,7 +430,7 @@ export const eventsRouter = router({
                 if (
                     visitor.users !== null &&
                     visitor.users.wallet_address !==
-                        null /* && eligibleUserIds.has(visitor.users.user_id) */
+                    null /* && eligibleUserIds.has(visitor.users.user_id) */
                 ) {
                     receivers.receivers[
                         visitor.users.wallet_address!.toString()
@@ -471,7 +470,7 @@ export const eventsRouter = router({
                 return { success: false, message: 'event_uuid is required' }
             }
 
-            const eventDraft = {
+            const eventDraft: TonSocietyRegisterActivityT = {
                 title: eventData.title,
                 subtitle: eventData.subtitle,
                 description: eventData.description,
@@ -479,6 +478,10 @@ export const eventsRouter = router({
                 start_date: timestampToIsoString(eventData.start_date),
                 end_date: timestampToIsoString(eventData.end_date!),
                 additional_info: eventData.location,
+                cta_button: {
+                    link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
+                    label: "Enter Event"
+                }
             }
 
             try {
@@ -488,12 +491,6 @@ export const eventsRouter = router({
                 )
 
                 if (res.data && res.status === 'success') {
-                    console.log(
-                        'Activity updated successfully with ID:',
-                        res.data.activity_id
-                    )
-                    console.log({ eventData })
-
                     const result = await db.transaction(async (trx) => {
                         await trx
                             .update(events)
@@ -887,7 +884,6 @@ async function postParticipants(
             activityParticipantsPayload,
             { headers }
         )
-        console.log(response.data)
         return response.data
     } catch (error) {
         console.error(error)
@@ -1101,8 +1097,6 @@ const hasTwitterTask = async (eventId: number) => {
                 field.title?.toLowerCase() === 'x')
     )
 
-    console.log({ eventFieldsData })
-
     const subscribeButtonRegex = /subscribe to @\w+/i
 
     const hasSubscribeButton = eventFieldsData.some(
@@ -1125,8 +1119,6 @@ const getTwitterHandle = async (eventId: number) => {
         .where(eq(eventFields.event_id, eventId))
         .execute()
 
-    console.log({ eventFieldsData })
-
     const subscribeButtonRegex = /subscribe to @(\w+)/i
 
     const matchingField = eventFieldsData.find(
@@ -1137,7 +1129,6 @@ const getTwitterHandle = async (eventId: number) => {
 
     if (matchingField) {
         const matches = matchingField.description!.match(subscribeButtonRegex)
-        console.log({ matches })
         return matches ? matches[1] : null
     }
 

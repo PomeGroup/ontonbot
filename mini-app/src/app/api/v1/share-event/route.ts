@@ -3,7 +3,6 @@ import axios from 'axios'
 import { NextRequest } from 'next/server'
 
 export async function GET(req: NextRequest): Promise<Response> {
-    console.log(req.nextUrl)
     const [, err] = getAuthenticatedUser()
     if (err && process.env.NODE_ENV === 'production') {
         return err

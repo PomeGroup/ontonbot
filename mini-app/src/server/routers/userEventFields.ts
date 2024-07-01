@@ -5,6 +5,7 @@ import { TRPCError } from '@trpc/server'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { publicProcedure, router } from '../trpc'
+import { TRPC_ERROR_CODES_BY_NUMBER } from '@trpc/server/http'
 
 interface UserEventField {
     id: number
@@ -62,6 +63,31 @@ export const userEventFieldsRouter = router({
                     message: 'Event is not active',
                     code: 'FORBIDDEN',
                 })
+            }
+
+            const userField = (await db
+                .select({ data: userEventFields.data })
+                .from(userEventFields)
+                .leftJoin(eventFields,
+                    and(
+                        eq(eventFields.title, "Secret Phrase"),
+                        eq(eventFields.id, opts.input.field_id),
+                    )
+                )
+                .where(
+                    and(
+                        eq(userEventFields.event_field_id, opts.input.field_id),
+                        eq(userEventFields.user_id, initDataJson.user.id)
+                    )
+                )).pop()
+
+            if (eventData[0].secret_phrase !== opts.input.data) {
+                throw new TRPCError(
+                    {
+                        message: "wrong secret phrase entered",
+                        code: TRPC_ERROR_CODES_BY_NUMBER['-32003']
+                    }
+                )
             }
 
             const res = await db

@@ -18,9 +18,6 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         cacheTime: 0,
     })
 
-    const postVisitorsMutation =
-        trpc.events.postActivityParticipants.useMutation()
-
     const { authorized, isLoading } = useAuth()
 
     const requestExportFileMutation =
@@ -77,19 +74,6 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
                             walletAddress={event.data?.wallet_address}
                         />
                     )}
-
-                    <Button
-                        className="w-full mt-2"
-                        variant={'outline'}
-                        onClick={async () => {
-                            const res = postVisitorsMutation.mutate({
-                                event_id: event.data!.event_id,
-                            })
-                        }}
-                    >
-                        Upload Visitors to society.ton.org
-                    </Button>
-
                     <div className="mt-2">
                         <Button
                             className="w-full relative"

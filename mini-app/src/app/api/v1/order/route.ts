@@ -25,7 +25,6 @@ export async function POST(request: Request) {
     }
 
     const rawBody = await request.json()
-    console.log(rawBody)
 
     const body = addOrderSchema.safeParse(rawBody)
 
