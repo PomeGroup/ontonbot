@@ -44,8 +44,6 @@ export function getAuthenticatedUser(): [number, null] | [null, Response] {
     }
 }
 
-
-const API_KEY = 'cly43qy60000608lb372z7ohg'
 /**
  * By using this function in routes.
  * that route need to have a 'x-api-key' header to be accessed
@@ -60,7 +58,7 @@ export function apiKeyAuthentication(req: Request) {
                 message: "No x-api-key header found"
             }, { status: 401 })
 
-    if (apiKey !== API_KEY)
+    if (apiKey !== process.env.ONTON_API_SECRET)
         return Response.json(
             {
                 error: "authentication_failed",

@@ -1,5 +1,6 @@
 import { db } from '@/db/db'
 import { orders, tickets } from '@/db/schema'
+import { apiKeyAuthentication, getAuthenticatedUser } from '@/server/auth'
 import { Address } from '@ton/core'
 import { eq } from 'drizzle-orm'
 import { NextRequest } from 'next/server'
@@ -11,8 +12,12 @@ type OptionsProps = {
     }
 }
 
-export async function GET(_: NextRequest, { params }: OptionsProps) {
+export async function GET(req: NextRequest, { params }: OptionsProps) {
     const orderId = params.order_id
+
+    const [, error] = getAuthenticatedUser()
+    const apiKeyError = apiKeyAuthentication(req)
+    if (error && apiKeyError) return error || apiKeyError
 
     const order = await db.query.orders.findFirst({
         where(fields, { eq }) {

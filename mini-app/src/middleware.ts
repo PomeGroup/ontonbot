@@ -4,8 +4,7 @@ import { NextResponse, NextRequest } from 'next/server';
 const protectWithAPIKeyPatterns: ProtectedRoute[] = [
     { methods: ['*'], pattern: /^\/api\/v1\/event(\/.*)?$/ },
     { methods: ['*'], pattern: /^\/api\/v1\/ticket(\/.*)?$/ },
-    { methods: ['*'], pattern: /^\/api\/v1\/order\/[^\/]+$/ },
-    { methods: ['PATCH'], pattern: /^\/api\/v1\/order/ }
+    { methods: ['PATCH'], pattern: /^\/api\/v1\/order(\/.*)?$/ },
 ];
 
 export function middleware(request: NextRequest) {
