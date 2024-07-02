@@ -10,26 +10,36 @@ const ticketMintedSchema = z.object({
 })
 
 export async function POST(req: Request) {
-    const body = await req.json()
-    const parsedData = ticketMintedSchema.safeParse(body)
+    try {
+        const body = await req.json()
+        const parsedData = ticketMintedSchema.safeParse(body)
 
-    if (!parsedData.success) {
-        return Response.json(
-            { error: 'invalid data' },
+        if (!parsedData.success) {
+            return Response.json(
+                { error: 'invalid data' },
+                {
+                    status: 400,
+                }
+            )
+        }
+
+        await db
+            .update(tickets)
+            .set({
+                status: 'UNUSED',
+                nftAddress: parsedData.data.nft_address,
+            })
+            .where(eq(tickets.id, parsedData.data.ticket_id))
+            .execute()
+
+        return Response.json({ message: 'user ticked minted' })
+    } catch (error) {
+        if (error instanceof SyntaxError) return Response.json(
             {
-                status: 400,
-            }
+                error: "invalid_body",
+                message: "invalid json body provided"
+            },
+            { status: 400 }
         )
     }
-
-    await db
-        .update(tickets)
-        .set({
-            status: 'UNUSED',
-            nftAddress: parsedData.data.nft_address,
-        })
-        .where(eq(tickets.id, parsedData.data.ticket_id))
-        .execute()
-
-    return Response.json({ message: 'user ticked minted' })
 }

@@ -30,9 +30,9 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
                         isNaN(parseInt(eventId))
                             ? undefined
                             : and(
-                                  eq(tickets.id, parseInt(eventId)),
-                                  eq(tickets.user_id, userId)
-                              ),
+                                eq(tickets.id, parseInt(eventId)),
+                                eq(tickets.user_id, userId)
+                            ),
                     ]
                 )
             )

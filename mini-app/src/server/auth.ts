@@ -1,5 +1,6 @@
 import { verify } from 'jsonwebtoken'
 import { cookies } from 'next/headers'
+import { NextRequest } from 'next/server'
 
 export function getAuthenticatedUser(): [number, null] | [null, Response] {
     const userToken = cookies().get('token')
@@ -41,4 +42,30 @@ export function getAuthenticatedUser(): [number, null] | [null, Response] {
             ),
         ]
     }
+}
+
+
+const API_KEY = 'cly43qy60000608lb372z7ohg'
+/**
+ * By using this function in routes.
+ * that route need to have a 'x-api-key' header to be accessed
+ * @param req {Request}
+ */
+export function apiKeyAuthentication(req: Request) {
+    const apiKey = req.headers.get("x-api-key")
+    if (!apiKey)
+        return Response.json(
+            {
+                error: "authentication_failed",
+                message: "No x-api-key header found"
+            }, { status: 401 })
+
+    if (apiKey !== API_KEY)
+        return Response.json(
+            {
+                error: "authentication_failed",
+                message: "Invalid x-api-key header found"
+            }, { status: 401 })
+
+    return null
 }
