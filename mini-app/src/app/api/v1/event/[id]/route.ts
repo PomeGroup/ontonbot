@@ -5,8 +5,6 @@ import { getAuthenticatedUser } from '@/server/auth'
 import { and, asc, eq, or, sql } from 'drizzle-orm'
 import { type NextRequest } from 'next/server'
 
-
-// TODO: create api key for these endpoints
 export async function GET(
     req: NextRequest,
     { params }: { params: { id: string } }
