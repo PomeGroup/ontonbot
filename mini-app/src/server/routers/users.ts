@@ -4,6 +4,8 @@ import { validateMiniAppData } from '@/utils'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { publicProcedure, router } from '../trpc'
+import { TRPCError } from '@trpc/server'
+import { TRPC_ERROR_CODES_BY_KEY, TRPC_ERROR_CODES_BY_NUMBER } from '@trpc/server/rpc'
 
 export const usersRouter = router({
     validateUserInitData: publicProcedure
@@ -53,9 +55,10 @@ export const usersRouter = router({
         .input(z.object({ initData: z.string() }))
         .mutation(async (opts) => {
             if (!opts.input.initData) {
-                return {
+                throw new TRPCError({
                     message: 'initdata is required',
-                }
+                    code: 'BAD_REQUEST'
+                })
             }
 
             const { valid, initDataJson } = validateMiniAppData(
@@ -63,9 +66,10 @@ export const usersRouter = router({
             )
 
             if (!valid) {
-                return {
-                    message: 'initdata is invalid',
-                }
+                throw new TRPCError({
+                    message: 'invalid initdata',
+                    code: 'UNPROCESSABLE_CONTENT'
+                })
             }
 
             const data = await db
@@ -82,9 +86,10 @@ export const usersRouter = router({
                 .execute()
 
             if (!data.length) {
-                return {
+                throw new TRPCError({
                     message: 'user already exists',
-                }
+                    code: 'CONFLICT'
+                })
             }
 
             return data
