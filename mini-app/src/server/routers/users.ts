@@ -1,5 +1,5 @@
 import { db } from '@/db/db'
-import { rewardType, rewards, users, visitors } from '@/db/schema'
+import { events, rewardType, rewards, users, visitors } from '@/db/schema'
 import { validateMiniAppData } from '@/utils'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
@@ -183,9 +183,7 @@ export const usersRouter = router({
     createUserReward: initDataProtectedProcedure
         .input(
             z.object({
-                activity_id: z.number(),
                 event_uuid: z.string().uuid(),
-                data: createUserRewardLinkInputZod
             })
         )
         .mutation(async (opts) => {
@@ -217,8 +215,27 @@ export const usersRouter = router({
                     });
                 }
 
+                const eventData = await db.query.events.findFirst({
+                    where(fields, { eq }) {
+                        return eq(fields.event_uuid, opts.input.event_uuid)
+                    },
+                })
+                if (!eventData?.activity_id || eventData.activity_id < 0) {
+                    throw new TRPCError({
+                        code: "BAD_REQUEST",
+                        message: "Invalid event_uuid"
+                    });
+                }
+
                 // Create the user reward link
-                const res = await createUserRewardLink(opts.input.activity_id, opts.input.data);
+                const res = await createUserRewardLink(eventData.activity_id, {
+                    wallet_address: opts.ctx.user?.wallet_address as string,
+                    telegram_user_id: opts.ctx.user?.user_id as number,
+                    attributes: eventData.society_hub ? [{
+                        trait_type: "Organizer",
+                        value: eventData.society_hub
+                    }] : undefined
+                });
 
                 // Ensure the response contains data
                 if (!res || !res.data || !res.data.data) {

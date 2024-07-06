@@ -20,7 +20,7 @@ export function ClaimRewardButton(props: { eventId: string }) {
     }
 
     useEffect(() => {
-        if (visitorReward.isSuccess) {
+        if (visitorReward.isSuccess && visitorReward.data?.id) {
             mainButton?.setText("Claim Reward")
             mainButton?.on('click', openRewardLink)
             mainButton?.enable().show()
@@ -30,7 +30,7 @@ export function ClaimRewardButton(props: { eventId: string }) {
             mainButton?.off('click', openRewardLink)
             mainButton?.hide().disable()
         }
-    }, [visitorReward.isSuccess])
+    }, [visitorReward.isSuccess, visitorReward.data?.id])
 
     return <></>
 }

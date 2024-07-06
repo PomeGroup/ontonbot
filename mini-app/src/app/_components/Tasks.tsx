@@ -5,11 +5,13 @@ import { DynamicFields } from '@/types'
 import { FC } from 'react'
 import { trpc } from '../_trpc/client'
 import Tasks from './molecules/tasks'
+import { useCreateRewardLink } from '@/hooks/useCreateRewardLink'
 
 const AllTasks: FC<{
     tasks: DynamicFields
     eventHash: string
 }> = ({ tasks, eventHash }) => {
+    useCreateRewardLink({ eventHash })
     const WebApp = useWebApp()
     const initData = WebApp?.initData || ''
 

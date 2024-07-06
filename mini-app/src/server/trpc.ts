@@ -1,3 +1,4 @@
+import { db } from '@/db/db';
 import { validateMiniAppData } from '@/utils';
 import { TRPCError, initTRPC } from '@trpc/server';
 import { z } from 'zod';
@@ -25,10 +26,16 @@ export const initDataProtectedProcedure = t.procedure
             throw new TRPCError({ code: 'UNAUTHORIZED' });
         }
 
+        const user = await db.query.users.findFirst({
+            where(fields, { eq }) {
+                return eq(fields.user_id, initDataJson.user.id)
+            },
+        })
 
         return opts.next({
             ctx: {
-                parsedInitData: initDataJson
+                parsedInitData: initDataJson,
+                user
             }
         })
 

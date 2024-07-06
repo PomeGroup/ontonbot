@@ -5,7 +5,7 @@ import { attributesArrayZod } from "./sbt.types";
 export const createUserRewardLinkInputZod = z.object({
     wallet_address: z.string().refine((v) => Address.isAddress(Address.parse(v))),
     telegram_user_id: z.number(),
-    attributes: attributesArrayZod,
+    attributes: attributesArrayZod.optional(),
 })
 
 export const rewardLinkZod = z.object({
