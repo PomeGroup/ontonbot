@@ -20,6 +20,6 @@ export const tonSocietyClient = axios.create({
   *
   */
 export async function createUserRewardLink(activityId: number, data: CreateUserRewardLinkInputType) {
-  return await axios.post<CreateUserRewardLinkReturnType>(`/activities/${activityId}/rewards`, data)
+  return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(`/activities/${activityId}/rewards`, data)
 }
 
