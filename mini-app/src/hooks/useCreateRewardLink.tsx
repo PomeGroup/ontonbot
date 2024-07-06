@@ -1,6 +1,6 @@
 import { trpc } from "@/app/_trpc/client"
 import useWebApp from "./useWebApp"
-import { useMemo } from "react"
+import { useEffect } from "react"
 
 export function useCreateRewardLink(props: { eventHash: string }) {
     const WebApp = useWebApp()
@@ -13,7 +13,8 @@ export function useCreateRewardLink(props: { eventHash: string }) {
         }
     })
 
-    useMemo(() => {
+    useEffect(() => {
+        if (!initData) return
         createRewardLink.mutate({ init_data: initData, event_uuid: props.eventHash })
-    }, [])
+    }, [initData])
 }
