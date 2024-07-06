@@ -8,13 +8,17 @@ export const createUserRewardLinkInputZod = z.object({
     attributes: attributesArrayZod,
 })
 
+export const rewardLinkZod = z.object({
+    reward_link: z.string().url()
+})
+
+
 export const createUserRewardLinkReturnZod = z.object({
     status: z.enum(['success']),
-    data: z.object({
-        reward_link: z.string()
-    })
+    data: rewardLinkZod
 })
 
 
 export type CreateUserRewardLinkInputType = z.infer<typeof createUserRewardLinkInputZod>
 export type CreateUserRewardLinkReturnType = z.infer<typeof createUserRewardLinkReturnZod>
+export type RewardLinkType = z.infer<typeof rewardLinkZod>
