@@ -1,3 +1,4 @@
+'use client'
 import useWebApp from "@/hooks/useWebApp";
 import { trpc } from "../_trpc/client";
 import { useEffect } from "react";
