@@ -16,7 +16,7 @@ export const initDataProtectedProcedure = t.procedure
     .use(async (opts) => {
         const initData = opts.input.init_data
 
-        if (initData) {
+        if (!initData) {
             throw new TRPCError({ code: 'UNAUTHORIZED' });
         }
 
