@@ -62,6 +62,7 @@ export const eventFields = pgTable('event_fields', {
 })
 
 export const visitors = pgTable('visitors', {
+    id: serial('id').primaryKey(),
     user_id: bigint('user_id', { mode: 'number' }).references(
         () => users.user_id
     ),
@@ -71,6 +72,17 @@ export const visitors = pgTable('visitors', {
     tx_hash: text('tx_hash'),
     created_at: timestamp('created_at').defaultNow(),
 })
+
+export const rewardType = pgEnum('reward_types', [
+    'ton_society_sbt'
+])
+export const rewards = pgTable('rewards', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    visitor_id: serial('visitor_id').references(() => visitors.id),
+    type: rewardType('type'),
+    data: json('data'),
+    created_at: timestamp('created_at').defaultNow(),
+});
 
 export const userEventFields = pgTable(
     'user_event_fields',
