@@ -51,6 +51,7 @@ export function getAuthenticatedUser(): [number, null] | [null, Response] {
  */
 export function apiKeyAuthentication(req: Request) {
     const apiKey = req.headers.get("x-api-key")
+    console.log({ apiKey })
     if (!apiKey)
         return Response.json(
             {
