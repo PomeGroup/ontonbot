@@ -17,7 +17,6 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
 
     const [, error] = getAuthenticatedUser()
     const apiKeyError = apiKeyAuthentication(req)
-    console.log({ apiKeyError })
     if (error && apiKeyError) return error || apiKeyError
 
     const order = await db.query.orders.findFirst({
