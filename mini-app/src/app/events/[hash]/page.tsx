@@ -2,6 +2,7 @@ import AddVisitorWrapper from '@/app/_components/AddVisitorWrapper'
 import Buttons from '@/app/_components/atoms/buttons'
 import Images from '@/app/_components/atoms/images'
 import Labels from '@/app/_components/atoms/labels'
+import { ClaimRewardButton } from '@/app/_components/ClaimRewardButton'
 import EventNotStarted from '@/app/_components/EventNotStarted'
 import Tasks from '@/app/_components/molecules/tasks'
 import AllTasks from '@/app/_components/Tasks'
@@ -55,14 +56,14 @@ async function EventPage({ params }: { params: { hash: string } }) {
             }
             <Labels.CampaignDescription description={eventData.description!} />
             {isStarted && isNotEnded ? (
-                    <>
-                        <Tasks.Wallet />
-                        <AllTasks
-                            tasks={eventData.dynamic_fields}
-                            eventHash={params.hash}
-                        />
-                    </>
-                ) : // if it was not ended than it means the event is not started yet
+                <>
+                    <Tasks.Wallet />
+                    <AllTasks
+                        tasks={eventData.dynamic_fields}
+                        eventHash={params.hash}
+                    />
+                </>
+            ) : // if it was not ended than it means the event is not started yet
                 isNotEnded ? (
                     <EventNotStarted
                         title="Event is not started yet"
@@ -76,6 +77,11 @@ async function EventPage({ params }: { params: { hash: string } }) {
                         start_date={startUTC}
                     />
                 )}
+
+            {
+                eventData.event_uuid &&
+                <ClaimRewardButton eventId={eventData.event_uuid} />
+            }
             <Buttons.Support />
         </AddVisitorWrapper>
     )

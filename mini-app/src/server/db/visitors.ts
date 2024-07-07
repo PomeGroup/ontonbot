@@ -41,6 +41,61 @@ export const selectVisitorsByEventUuidMock = async (
     }
 }
 
+export const selectVisitorById = async (visitorId: number, event_uuid: string) => {
+    return await db
+        .select({
+            user_id: visitors.user_id,
+            username: users.username,
+            first_name: users.first_name,
+            last_name: users.last_name,
+            wallet_address: users.wallet_address,
+            created_at: visitors.created_at,
+        })
+        .from(visitors)
+        .fullJoin(users, eq(visitors.user_id, users.user_id))
+        .fullJoin(events, eq(visitors.event_uuid, event_uuid))
+        .leftJoin(
+            eventFields,
+            and(
+                eq(eventFields.title, 'Secret Phrase'),
+                eq(eventFields.id, events.event_id),
+                eq(eventFields.description, 'Enter the secret phrase')
+            )
+        )
+        .where(
+            and(
+                eq(visitors.id, visitorId),
+                isNotNull(events.start_date),
+                isNotNull(events.end_date),
+                isNotNull(users.wallet_address),
+                between(
+                    visitors.created_at,
+                    sql`TO_TIMESTAMP(events.start_date)`,
+                    sql`TO_TIMESTAMP(events.end_date)`
+                ),
+                or(
+                    sql`(select count(*) from event_fields where event_fields.event_id = events.event_id) = 0`,
+                    sql`(select count(*) from user_event_fields uef join event_fields ef on ef.id = uef.event_field_id where uef.user_id = users.user_id and events.event_id = ef.event_id) = (select count(*) from event_fields ef where ef.event_id = events.event_id)`
+                ),
+                or(
+                    eq(events.secret_phrase, ''),
+                    isNull(events.secret_phrase),
+                    // the user entered event field for pass phrase should be eq to events.secret_phrase
+                    sql`EXISTS (
+                        SELECT 1
+                        FROM user_event_fields uef
+                        JOIN event_fields ef ON ef.id = uef.event_field_id
+                        WHERE uef.user_id = users.user_id
+                          AND ef.event_id = events.event_id
+                          AND ef.title = 'Secret Phrase'
+                          AND uef.data = events.secret_phrase
+                    )`
+                )
+            )
+        ).execute()
+
+}
+
 export const selectVisitorsByEventUuid = async (
     event_uuid: string,
     limit?: number,

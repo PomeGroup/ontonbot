@@ -22,6 +22,20 @@
       "when": 1718799213912,
       "tag": "0002_lovely_scourge",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1720255506533,
+      "tag": "0003_uneven_veda",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1720255810644,
+      "tag": "0004_cultured_doorman",
+      "breakpoints": true
     }
   ]
 }
