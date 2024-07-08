@@ -12,4 +12,4 @@ const tasks = {
     Wallet
 }
 
-export default tasks    
+export default tasks

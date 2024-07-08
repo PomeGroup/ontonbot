@@ -30,7 +30,6 @@ const InputTypeCampaignTask: React.FC<{
     eventId,
 }) => {
         const WebApp = useWebApp()
-
         const validatedData = trpc.users.validateUserInitData.useQuery(
             WebApp?.initData || ''
         )
@@ -39,6 +38,8 @@ const InputTypeCampaignTask: React.FC<{
         const [isCompleted, setIsCompleted] = useState(completed)
         const [isEditing, setIsEditing] = useState(false)
         const editingRef = useRef<HTMLDivElement>(null)
+
+        const trpcUtils = trpc.useUtils()
 
         useEffect(() => {
             function handleClickOutside(
@@ -78,6 +79,7 @@ const InputTypeCampaignTask: React.FC<{
                 onSuccess: () => {
                     WebApp?.HapticFeedback.notificationOccurred('success')
                     setIsCompleted(inputText ? true : false)
+                    trpcUtils.userEventFields.invalidate()
                 }
             })
 

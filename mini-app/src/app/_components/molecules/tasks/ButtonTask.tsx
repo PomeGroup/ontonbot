@@ -22,40 +22,42 @@ const ButtonTask: React.FC<{
     fieldId,
     eventId,
 }) => {
-    const WebApp = useWebApp()
-    const validatedData = trpc.users.validateUserInitData.useQuery(
-        WebApp?.initData || ''
-    )
-    const upsertUserEventFieldMutation =
-        trpc.userEventFields.upsertUserEventField.useMutation()
+        const WebApp = useWebApp()
+        const trpcUtils = trpc.useUtils()
+        const upsertUserEventFieldMutation =
+            trpc.userEventFields.upsertUserEventField.useMutation({
+                onSuccess() {
+                    trpcUtils.userEventFields.invalidate()
+                },
+            })
 
-    const [completedInternal, setCompletedInternal] = React.useState(completed)
+        const [completedInternal, setCompletedInternal] = React.useState(completed)
 
-    const handleConfirm = (e: any) => {
-        e.stopPropagation()
+        const handleConfirm = (e: any) => {
+            e.stopPropagation()
 
-        WebApp?.openLink(url)
+            WebApp?.openLink(url)
 
-        upsertUserEventFieldMutation.mutate({
-            initData: WebApp?.initData,
-            field_id: fieldId,
-            data: '',
-            completed: true,
-            event_id: eventId,
-        })
+            upsertUserEventFieldMutation.mutate({
+                initData: WebApp?.initData,
+                field_id: fieldId,
+                data: '',
+                completed: true,
+                event_id: eventId,
+            })
 
-        setCompletedInternal(true)
+            setCompletedInternal(true)
+        }
+
+        return (
+            <GenericTask
+                title={title}
+                description={description}
+                completed={completed || completedInternal}
+                defaultEmoji={defaultEmoji}
+                onClick={handleConfirm}
+            />
+        )
     }
-
-    return (
-        <GenericTask
-            title={title}
-            description={description}
-            completed={completed || completedInternal}
-            defaultEmoji={defaultEmoji}
-            onClick={handleConfirm}
-        />
-    )
-}
 
 export default ButtonTask
