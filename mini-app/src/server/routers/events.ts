@@ -473,7 +473,6 @@ export const eventsRouter = router({
 
             try {
                 const result = await db.transaction(async (trx) => {
-
                     await trx
                         .update(events)
                         .set({
@@ -622,7 +621,6 @@ export const eventsRouter = router({
                         eventDraft,
                         eventData.activity_id as number
                     )
-
 
                     return { success: true, eventId: eventData.event_id }
                 })

@@ -215,6 +215,23 @@ export const usersRouter = router({
                     });
                 }
 
+                // check if the user already does not own the reward
+                const reward = await db.query.rewards.findFirst({
+                    where(fields, { eq, and }) {
+                        return and(eq(fields.visitor_id, visitor.id))
+                    },
+                })
+
+                if (reward) {
+                    const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${opts.input.event_uuid}`
+                    console.log(err_msg)
+                    throw new TRPCError({
+                        code: "BAD_REQUEST",
+                        message: err_msg
+                    });
+                }
+
+
                 const eventData = await db.query.events.findFirst({
                     where(fields, { eq }) {
                         return eq(fields.event_uuid, opts.input.event_uuid)

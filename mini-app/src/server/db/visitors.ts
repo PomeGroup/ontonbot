@@ -41,7 +41,7 @@ export const selectVisitorsByEventUuidMock = async (
     }
 }
 
-export const selectVisitorById = async (visitorId: number, event_uuid: string) => {
+export const selectVisitorById = async (visitorId: number) => {
     return await db
         .select({
             user_id: visitors.user_id,
@@ -53,7 +53,7 @@ export const selectVisitorById = async (visitorId: number, event_uuid: string) =
         })
         .from(visitors)
         .fullJoin(users, eq(visitors.user_id, users.user_id))
-        .fullJoin(events, eq(visitors.event_uuid, event_uuid))
+        .fullJoin(events, eq(events.event_uuid, visitors.event_uuid))
         .leftJoin(
             eventFields,
             and(
