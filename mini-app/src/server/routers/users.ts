@@ -208,7 +208,7 @@ export const usersRouter = router({
 
                 // Validate the visitor
                 const isValidVisitor = await selectVisitorById(visitor.id);
-                if (!isValidVisitor) {
+                if (!isValidVisitor.length) {
                     throw new TRPCError({
                         code: "BAD_REQUEST",
                         message: "Invalid visitor: please complete the tasks."
