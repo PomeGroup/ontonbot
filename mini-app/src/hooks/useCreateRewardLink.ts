@@ -2,7 +2,7 @@ import { trpc } from "@/app/_trpc/client"
 import useWebApp from "./useWebApp"
 import { useEffect } from "react"
 
-export function useCreateRewardLink(props: { eventHash: string }) {
+export function useCreateRewardLink(props: { eventHash: string, tasksCompleted: boolean }) {
     const WebApp = useWebApp()
     const initData = WebApp?.initData || ''
 
@@ -16,5 +16,5 @@ export function useCreateRewardLink(props: { eventHash: string }) {
     useEffect(() => {
         if (!initData) return
         createRewardLink.mutate({ init_data: initData, event_uuid: props.eventHash })
-    }, [initData])
+    }, [initData, props.tasksCompleted])
 }

@@ -231,7 +231,6 @@ export const usersRouter = router({
                     });
                 }
 
-
                 const eventData = await db.query.events.findFirst({
                     where(fields, { eq }) {
                         return eq(fields.event_uuid, opts.input.event_uuid)
