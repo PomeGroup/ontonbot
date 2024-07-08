@@ -251,7 +251,7 @@ export const eventsRouter = router({
 
                     await db.update(events)
                         .set({ activity_id: res.data.activity_id })
-                        .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
+                        .where(eq(events.event_uuid, newEvent[0].event_uuid as string)).execute()
 
                     return newEvent
                 })
@@ -644,9 +644,7 @@ export const eventsRouter = router({
 
     // private
     getHubs: publicProcedure.query(
-        async (
-            opts
-        ): Promise<
+        async (): Promise<
             | { status: 'success'; hubs: SocietyHub[] }
             | { status: 'error'; message: string }
         > => {

@@ -220,10 +220,11 @@ export const usersRouter = router({
                         return eq(fields.event_uuid, opts.input.event_uuid)
                     },
                 })
+
                 if (!eventData?.activity_id || eventData.activity_id < 0) {
                     throw new TRPCError({
                         code: "BAD_REQUEST",
-                        message: "Invalid event_uuid"
+                        message: `this event does not have an activity id ${eventData?.activity_id}`
                     });
                 }
 
