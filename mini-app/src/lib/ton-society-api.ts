@@ -1,6 +1,5 @@
 // The integration with ton society apis will be here
-// TODO: move old integrations here
-
+import { TonSocietyRegisterActivityResponse, TonSocietyRegisterActivityT } from "@/types/event.types"
 import { CreateUserRewardLinkReturnType, type CreateUserRewardLinkInputType } from "@/types/user.types"
 import axios from "axios"
 
@@ -10,16 +9,42 @@ export const tonSocietyClient = axios.create({
   headers: {
     'x-api-key': process.env.TON_SOCIETY_API_KEY,
     'x-partner-id': 'onton',
-
   }
 })
 
 /**
   * Returns a unique reward link for users to receive rewards through particpation in activities
   * more: https://ton-society.github.io/sbt-platform/#/Activities/createRewardLink
-  *
-  */
+*/
 export async function createUserRewardLink(activityId: number, data: CreateUserRewardLinkInputType) {
   return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(`/activities/${activityId}/rewards`, data)
 }
+
+/**
+  * An endpoint that allows to create a new activity of the "Events" activity group.  
+  * more: https://ton-society.github.io/sbt-platform/#/Activities/createEvent
+*/
+export async function registerActivity(activityDetails: TonSocietyRegisterActivityT) {
+  const response = await tonSocietyClient.post(
+    '/activities',
+    activityDetails,
+  )
+  return response.data as TonSocietyRegisterActivityResponse
+}
+
+/**
+  * An endpoint that allows to create a new activity of the "Events" activity group.  
+  * more: https://ton-society.github.io/sbt-platform/#/Activities/updateEvent
+*/
+export async function updateActivity(
+  activityDetails: TonSocietyRegisterActivityT,
+  activity_id: string | number
+) {
+  const response = await tonSocietyClient.patch(
+    `/activities/${activity_id}`,
+    activityDetails,
+  )
+  return response.data as { status: "success", data: {} }
+}
+
 
