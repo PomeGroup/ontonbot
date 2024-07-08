@@ -248,8 +248,9 @@ export const eventsRouter = router({
                     }
 
                     const res = await registerActivity(eventDraft)
+                    console.log("activity created by id", res)
 
-                    await db.update(events)
+                    await trx.update(events)
                         .set({ activity_id: res.data.activity_id })
                         .where(eq(events.event_uuid, newEvent[0].event_uuid as string)).execute()
 
@@ -470,31 +471,8 @@ export const eventsRouter = router({
                 return { success: false, message: 'event_uuid is required' }
             }
 
-            const additional_info = z
-                .string()
-                .url()
-                .safeParse(eventData).success ? "Online" : opts.input.eventData.location
-
-            const eventDraft: TonSocietyRegisterActivityT = {
-                title: eventData.title,
-                subtitle: eventData.subtitle,
-                description: eventData.description,
-                hub_id: parseInt(eventData.society_hub.id),
-                start_date: timestampToIsoString(eventData.start_date),
-                end_date: timestampToIsoString(eventData.end_date!),
-                additional_info,
-                cta_button: {
-                    link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
-                    label: "Enter Event"
-                }
-            }
-
             try {
                 const result = await db.transaction(async (trx) => {
-                    await updateActivity(
-                        eventDraft,
-                        eventData.activity_id as number
-                    )
 
                     await trx
                         .update(events)
@@ -620,6 +598,31 @@ export const eventsRouter = router({
                                 .execute()
                         }
                     }
+
+                    const additional_info = z
+                        .string()
+                        .url()
+                        .safeParse(eventData).success ? "Online" : opts.input.eventData.location
+
+                    const eventDraft: TonSocietyRegisterActivityT = {
+                        title: eventData.title,
+                        subtitle: eventData.subtitle,
+                        description: eventData.description,
+                        hub_id: parseInt(eventData.society_hub.id),
+                        start_date: timestampToIsoString(eventData.start_date),
+                        end_date: timestampToIsoString(eventData.end_date!),
+                        additional_info,
+                        cta_button: {
+                            link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
+                            label: "Enter Event"
+                        }
+                    }
+
+                    await updateActivity(
+                        eventDraft,
+                        eventData.activity_id as number
+                    )
+
 
                     return { success: true, eventId: eventData.event_id }
                 })
