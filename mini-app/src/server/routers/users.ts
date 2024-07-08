@@ -207,7 +207,7 @@ export const usersRouter = router({
                 }
 
                 // Validate the visitor
-                const isValidVisitor = await selectVisitorById(visitor.id, opts.input.event_uuid);
+                const isValidVisitor = await selectVisitorById(visitor.id);
                 if (!isValidVisitor) {
                     throw new TRPCError({
                         code: "BAD_REQUEST",
