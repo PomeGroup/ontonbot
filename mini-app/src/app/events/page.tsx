@@ -14,6 +14,7 @@ import Card from '../_components/atoms/cards'
 import Labels from '../_components/atoms/labels'
 import Skeletons from '../_components/molecules/skeletons'
 import { trpc } from '../_trpc/client'
+import { CommingSoon } from '../_components/CommingSoon'
 
 const EventsAdminPage = () => {
     noStore()
@@ -21,31 +22,24 @@ const EventsAdminPage = () => {
     const WebApp = useWebApp()
     const { authorized, isLoading } = useAuth()
     const initData = WebApp?.initData
-    const [redirectDone, setRedirectDone] = useState(false)
-
     const validatedData = trpc.users.validateUserInitData.useQuery(
         initData || ''
     )
     const eventsData = trpc.events.getEvents.useQuery({ initData })
 
     if (
-        eventsData?.status === 'loading' ||
+        eventsData.isLoading ||
         isLoading ||
-        validatedData.status === 'loading' ||
-        (!initData && eventsData?.status === 'error')
+        validatedData.isLoading ||
+        !initData
     ) {
         return <Skeletons.Events />
     }
 
-    if (authorized === false && !redirectDone) {
-        window.open('https://society.ton.org/activities/events', '_blank')
-        setRedirectDone(true)
-        return null
+    if (!authorized || eventsData.isError) {
+        return <CommingSoon />
     }
 
-    if (eventsData?.status === 'error' || !authorized) {
-        return null
-    }
 
     return (
         <div>
