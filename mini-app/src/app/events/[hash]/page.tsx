@@ -23,12 +23,15 @@ export async function generateMetadata(
         }
     }
 
+    const description = eventData.description?.slice(0, 300)
     return {
         title: eventData.title,
-        description: eventData.description,
+        description,
         openGraph: {
             images: [eventData.image_url as string],
-            siteName: "Onton"
+            siteName: "Onton",
+            description,
+            title: eventData.title || "Onton Event",
         },
     }
 }
