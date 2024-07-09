@@ -7,9 +7,34 @@ import EventNotStarted from '@/app/_components/EventNotStarted'
 import Tasks from '@/app/_components/molecules/tasks'
 import AllTasks from '@/app/_components/Tasks'
 import { serverClient } from '@/app/_trpc/serverClient'
+import { type Metadata } from 'next/types'
 import zod from 'zod'
 
-async function EventPage({ params }: { params: { hash: string } }) {
+type Props = { params: { hash: string } }
+
+export async function generateMetadata(
+    { params }: Props,
+): Promise<Metadata> {
+    const eventData = await serverClient.events.getEvent(params.hash)
+
+    if (eventData === null) {
+        return {
+            title: "Onton - Not Found",
+        }
+    }
+
+    return {
+        title: eventData.title,
+        description: eventData.description,
+        openGraph: {
+            images: [eventData.image_url as string],
+            siteName: "Onton"
+        },
+    }
+}
+
+
+async function EventPage({ params }: Props) {
     if (params.hash?.length !== 36) {
         return (
             <div>
