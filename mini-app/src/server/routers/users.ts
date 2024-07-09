@@ -244,6 +244,17 @@ export const usersRouter = router({
                     });
                 }
 
+                const startDate = Number(eventData.start_date) * 1000
+                const endDate = Number(eventData.end_date) * 1000
+
+                if (Date.now() < startDate || Date.now() > endDate) {
+                    throw new TRPCError({
+                        message: 'Eather event is not started or ended',
+                        code: 'FORBIDDEN',
+                    })
+                }
+
+
                 // Create the user reward link
                 const res = await createUserRewardLink(eventData.activity_id, {
                     wallet_address: opts.ctx.user?.wallet_address as string,
