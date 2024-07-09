@@ -7,7 +7,6 @@ import Providers from './providers'
 
 import dynamic from 'next/dynamic'
 import Script from 'next/script'
-import Header from './_components/organisms/header'
 import Provider from './_trpc/Provider'
 
 const UserSaver = dynamic(() => import('./_components/UserSaver'), {
@@ -22,32 +21,32 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({
-   children,
+    children,
 }: {
     children: React.ReactNode
 }) {
     return (
         <html lang="en">
-        {
-            process.env.NODE_ENV === 'production' && (
-                <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />)
-        }
-        <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
-        <body className={inter.className}>
-        <Provider>
-            <Providers>
-                <UserSaver>
-                    {/* <WebAppInitialization> */}
+            {
+                process.env.NODE_ENV === 'production' && (
+                    <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />)
+            }
+            <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
+            <body className={inter.className}>
+                <Provider>
+                    <Providers>
+                        <UserSaver>
+                            {/* <WebAppInitialization> */}
 
-                    <main className="p-4">
-                        <Header />
-                        {children}
-                    </main>
-                    {/* </WebAppInitialization> */}
-                </UserSaver>
-            </Providers>
-        </Provider>
-        </body>
+                            <main className="p-4">
+                                { /*<Header /> */}
+                                {children}
+                            </main>
+                            {/* </WebAppInitialization> */}
+                        </UserSaver>
+                    </Providers>
+                </Provider>
+            </body>
         </html>
     )
 }

@@ -10,7 +10,6 @@ import {
     EventDataSchema,
     HubsResponse,
     SocietyHub,
-    TonSocietyRegisterActivityT,
 } from '@/types'
 import { fetchBalance, sleep, validateMiniAppData } from '@/utils'
 import axios from 'axios'
@@ -29,6 +28,8 @@ import {
 } from '../db/events'
 import { selectVisitorsByEventUuid } from '../db/visitors'
 import { publicProcedure, router } from '../trpc'
+import { TonSocietyRegisterActivityT } from '@/types/event.types'
+import { registerActivity, updateActivity } from '@/lib/ton-society-api'
 dotenv.config()
 
 export const eventsRouter = router({
@@ -152,114 +153,114 @@ export const eventsRouter = router({
                 throw new Error('Unauthorized access or invalid role')
             }
             try {
-                const eventDraft: TonSocietyRegisterActivityT = {
-                    title: opts.input.eventData.title,
-                    subtitle: opts.input.eventData.subtitle,
-                    description: opts.input.eventData.description,
-                    hub_id: parseInt(opts.input.eventData.society_hub.id),
-                    start_date: timestampToIsoString(
-                        opts.input.eventData.start_date
-                    ),
-                    end_date: timestampToIsoString(
-                        opts.input.eventData.end_date!
-                    ), additional_info: opts.input.eventData.location,
-                    cta_button: {
-                        link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${opts.input.eventData.event_uuid}`,
-                        label: "Enter Event"
-                    }
 
-                }
+                let highloadWallet: HighloadWalletResponse =
+                    {} as HighloadWalletResponse
 
-                const res = await registerActivity(eventDraft)
-
-                if (res && res.status === 'success') {
-                    let highloadWallet: HighloadWalletResponse =
-                        {} as HighloadWalletResponse
-
-                    try {
-                        highloadWallet = await fetchHighloadWallet()
-                    } catch (error) {
-                        console.error('Error fetching highload wallet:', error)
-                        return { success: false }
-                    }
-
-                    const result = await db.transaction(async (trx) => {
-                        const newEvent = await trx
-                            .insert(events)
-                            .values({
-                                type: opts.input.eventData.type,
-                                activity_id: res.data.activity_id,
-                                collection_address: res.data.collection_address,
-                                event_uuid: uuidv4(),
-                                title: opts.input.eventData.title,
-                                subtitle: opts.input.eventData.subtitle,
-                                description: opts.input.eventData.description,
-                                image_url: opts.input.eventData.image_url,
-                                wallet_address: highloadWallet.wallet_address,
-                                wallet_seed_phrase: highloadWallet.seed_phrase,
-                                society_hub:
-                                    opts.input.eventData.society_hub.name,
-                                society_hub_id:
-                                    opts.input.eventData.society_hub.id,
-                                secret_phrase:
-                                    opts.input.eventData.secret_phrase,
-                                start_date: opts.input.eventData.start_date,
-                                end_date: opts.input.eventData.end_date,
-                                timezone: opts.input.eventData.timezone,
-                                location: opts.input.eventData.location,
-                                owner: initDataJson.user.id,
-                            })
-                            .returning()
-
-                        for (
-                            let i = 0;
-                            i < opts.input.eventData.dynamic_fields.length;
-                            i++
-                        ) {
-                            const field = opts.input.eventData.dynamic_fields[i]
-                            await trx.insert(eventFields).values({
-                                emoji: field.emoji,
-                                title: field.title,
-                                description: field.description,
-                                placeholder:
-                                    field.type === 'button'
-                                        ? field.url
-                                        : field.placeholder,
-                                type: field.type,
-                                order_place: i,
-                                event_id: newEvent[0].event_id,
-                            })
-                        }
-
-                        if (opts.input.eventData.secret_phrase !== '') {
-                            await trx.insert(eventFields).values({
-                                emoji: '🔒',
-                                title: 'Secret Phrase',
-                                description: 'Enter the secret phrase',
-                                placeholder: opts.input.eventData.secret_phrase,
-                                type: 'input',
-                                order_place:
-                                    opts.input.eventData.dynamic_fields.length,
-                                event_id: newEvent[0].event_id,
-                            })
-                        }
-
-                        return newEvent
-                    })
-
-                    return { success: true, eventId: result[0].event_id }
-                } else {
-                    console.error(
-                        'API call failed with status:',
-                        res.data.status,
-                        'and message:',
-                        res.data.message || res.data
-                    )
+                try {
+                    highloadWallet = await fetchHighloadWallet()
+                } catch (error) {
+                    console.error('Error fetching highload wallet:', error)
                     return { success: false }
                 }
+
+                const result = await db.transaction(async (trx) => {
+                    const newEvent = await trx
+                        .insert(events)
+                        .values({
+                            type: opts.input.eventData.type,
+                            event_uuid: uuidv4(),
+                            title: opts.input.eventData.title,
+                            subtitle: opts.input.eventData.subtitle,
+                            description: opts.input.eventData.description,
+                            image_url: opts.input.eventData.image_url,
+                            wallet_address: highloadWallet.wallet_address,
+                            wallet_seed_phrase: highloadWallet.seed_phrase,
+                            society_hub:
+                                opts.input.eventData.society_hub.name,
+                            society_hub_id:
+                                opts.input.eventData.society_hub.id,
+                            secret_phrase:
+                                opts.input.eventData.secret_phrase,
+                            start_date: opts.input.eventData.start_date,
+                            end_date: opts.input.eventData.end_date,
+                            timezone: opts.input.eventData.timezone,
+                            location: opts.input.eventData.location,
+                            owner: initDataJson.user.id,
+                        })
+                        .returning()
+
+                    for (
+                        let i = 0;
+                        i < opts.input.eventData.dynamic_fields.length;
+                        i++
+                    ) {
+                        const field = opts.input.eventData.dynamic_fields[i]
+                        await trx.insert(eventFields).values({
+                            emoji: field.emoji,
+                            title: field.title,
+                            description: field.description,
+                            placeholder:
+                                field.type === 'button'
+                                    ? field.url
+                                    : field.placeholder,
+                            type: field.type,
+                            order_place: i,
+                            event_id: newEvent[0].event_id,
+                        })
+                    }
+
+                    if (opts.input.eventData.secret_phrase !== '') {
+                        await trx.insert(eventFields).values({
+                            emoji: '🔒',
+                            title: 'Secret Phrase',
+                            description: 'Enter the secret phrase',
+                            placeholder: opts.input.eventData.secret_phrase,
+                            type: 'input',
+                            order_place:
+                                opts.input.eventData.dynamic_fields.length,
+                            event_id: newEvent[0].event_id,
+                        })
+                    }
+
+                    const additional_info = z
+                        .string()
+                        .url()
+                        .safeParse(opts.input.eventData.location).success ? "Online" : opts.input.eventData.location
+
+                    const eventDraft: TonSocietyRegisterActivityT = {
+                        title: opts.input.eventData.title,
+                        subtitle: opts.input.eventData.subtitle,
+                        description: opts.input.eventData.description,
+                        hub_id: parseInt(opts.input.eventData.society_hub.id),
+                        start_date: timestampToIsoString(
+                            opts.input.eventData.start_date
+                        ),
+                        end_date: timestampToIsoString(
+                            opts.input.eventData.end_date!
+                        ),
+                        additional_info,
+                        cta_button: {
+                            link:
+                                `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}`,
+                            label: "Enter Event"
+                        }
+                    }
+
+                    const res = await registerActivity(eventDraft)
+                    console.log("activity created by id", res)
+
+                    await trx.update(events)
+                        .set({ activity_id: res.data.activity_id })
+                        .where(eq(events.event_uuid, newEvent[0].event_uuid as string)).execute()
+
+                    return newEvent
+                })
+
+                return { success: true, eventId: result[0].event_id }
             } catch (error) {
                 if (axios.isAxiosError(error)) {
-                    console.error('Error during API call:', error)
+                    console.error('Error during API call:', error.message, error.response?.data)
                 } else {
                     console.error('Unexpected error:', error)
                 }
@@ -470,168 +471,161 @@ export const eventsRouter = router({
                 return { success: false, message: 'event_uuid is required' }
             }
 
-            const eventDraft: TonSocietyRegisterActivityT = {
-                title: eventData.title,
-                subtitle: eventData.subtitle,
-                description: eventData.description,
-                hub_id: parseInt(eventData.society_hub.id),
-                start_date: timestampToIsoString(eventData.start_date),
-                end_date: timestampToIsoString(eventData.end_date!),
-                additional_info: eventData.location,
-                cta_button: {
-                    link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
-                    label: "Enter Event"
-                }
-            }
-
             try {
-                const res = await updateActivity(
-                    eventDraft,
-                    eventData.activity_id as number
-                )
+                const result = await db.transaction(async (trx) => {
+                    await trx
+                        .update(events)
+                        .set({
+                            type: eventData.type,
+                            title: eventData.title,
+                            subtitle: eventData.subtitle,
+                            description: eventData.description,
+                            image_url: eventData.image_url,
+                            society_hub: eventData.society_hub.name,
+                            society_hub_id: eventData.society_hub.id,
+                            secret_phrase: eventData.secret_phrase.trim()
+                                ? eventData.secret_phrase.trim()
+                                : '',
+                            start_date: eventData.start_date,
+                            end_date: eventData.end_date,
+                            location: eventData.location,
+                            timezone: eventData.timezone,
+                        })
+                        .where(eq(events.event_uuid, eventData.event_uuid!))
+                        .execute()
 
-                if (res.data && res.status === 'success') {
-                    const result = await db.transaction(async (trx) => {
+                    const currentFields = await trx
+                        .select()
+                        .from(eventFields)
+                        .where(
+                            eq(eventFields.event_id, eventData.event_id!)
+                        )
+                        .execute()
+
+                    const fieldsToDelete = currentFields.filter(
+                        (field) =>
+                            !eventData.dynamic_fields.some(
+                                (newField) => newField.id === field.id
+                            )
+                    )
+
+                    for (const field of fieldsToDelete) {
                         await trx
-                            .update(events)
-                            .set({
-                                type: eventData.type,
-                                title: eventData.title,
-                                subtitle: eventData.subtitle,
-                                description: eventData.description,
-                                image_url: eventData.image_url,
-                                society_hub: eventData.society_hub.name,
-                                society_hub_id: eventData.society_hub.id,
-                                activity_id: res.data.activity_id,
-                                secret_phrase: eventData.secret_phrase.trim()
-                                    ? eventData.secret_phrase.trim()
-                                    : '',
-                                start_date: eventData.start_date,
-                                end_date: eventData.end_date,
-                                location: eventData.location,
-                                timezone: eventData.timezone,
-                            })
-                            .where(eq(events.event_uuid, eventData.event_uuid!))
+                            .delete(eventFields)
+                            .where(eq(eventFields.id, field.id))
                             .execute()
+                    }
 
-                        const currentFields = await trx
-                            .select()
-                            .from(eventFields)
+                    const secretPhraseTask = await trx
+                        .select()
+                        .from(eventFields)
+                        .where(
+                            and(
+                                eq(
+                                    eventFields.event_id,
+                                    eventData.event_id!
+                                ),
+                                eq(eventFields.title, 'Secret Phrase')
+                            )
+                        )
+                        .execute()
+
+                    if (
+                        eventData.secret_phrase !== '' &&
+                        secretPhraseTask.length === 0
+                    ) {
+                        await trx
+                            .insert(eventFields)
+                            .values({
+                                emoji: '🔒',
+                                title: 'Secret Phrase',
+                                description: 'Enter the secret phrase',
+                                placeholder: eventData.secret_phrase,
+                                type: 'input',
+                                order_place:
+                                    eventData.dynamic_fields.length,
+                                event_id: eventData.event_id,
+                            })
+                            .execute()
+                    } else if (
+                        eventData.secret_phrase === '' &&
+                        secretPhraseTask.length > 0
+                    ) {
+                        await trx
+                            .delete(eventFields)
                             .where(
-                                eq(eventFields.event_id, eventData.event_id!)
+                                eq(eventFields.id, secretPhraseTask[0].id)
                             )
                             .execute()
+                    }
 
-                        const fieldsToDelete = currentFields.filter(
-                            (field) =>
-                                !eventData.dynamic_fields.some(
-                                    (newField) => newField.id === field.id
-                                )
-                        )
-
-                        for (const field of fieldsToDelete) {
+                    for (const [
+                        index,
+                        field,
+                    ] of eventData.dynamic_fields.entries()) {
+                        if (field.id) {
                             await trx
-                                .delete(eventFields)
+                                .update(eventFields)
+                                .set({
+                                    emoji: field.emoji,
+                                    title: field.title,
+                                    description: field.description,
+                                    placeholder:
+                                        field.type === 'button'
+                                            ? field.url
+                                            : field.placeholder,
+                                    type: field.type,
+                                    order_place: index,
+                                })
                                 .where(eq(eventFields.id, field.id))
                                 .execute()
-                        }
-
-                        const secretPhraseTask = await trx
-                            .select()
-                            .from(eventFields)
-                            .where(
-                                and(
-                                    eq(
-                                        eventFields.event_id,
-                                        eventData.event_id!
-                                    ),
-                                    eq(eventFields.title, 'Secret Phrase')
-                                )
-                            )
-                            .execute()
-
-                        if (
-                            eventData.secret_phrase !== '' &&
-                            secretPhraseTask.length === 0
-                        ) {
+                        } else {
                             await trx
                                 .insert(eventFields)
                                 .values({
-                                    emoji: '🔒',
-                                    title: 'Secret Phrase',
-                                    description: 'Enter the secret phrase',
-                                    placeholder: eventData.secret_phrase,
-                                    type: 'input',
-                                    order_place:
-                                        eventData.dynamic_fields.length,
+                                    emoji: field.emoji,
+                                    title: field.title,
+                                    description: field.description,
+                                    placeholder:
+                                        field.type === 'button'
+                                            ? field.url
+                                            : field.placeholder,
+                                    type: field.type,
+                                    order_place: index,
                                     event_id: eventData.event_id,
                                 })
                                 .execute()
-                        } else if (
-                            eventData.secret_phrase === '' &&
-                            secretPhraseTask.length > 0
-                        ) {
-                            await trx
-                                .delete(eventFields)
-                                .where(
-                                    eq(eventFields.id, secretPhraseTask[0].id)
-                                )
-                                .execute()
                         }
-
-                        for (const [
-                            index,
-                            field,
-                        ] of eventData.dynamic_fields.entries()) {
-                            if (field.id) {
-                                await trx
-                                    .update(eventFields)
-                                    .set({
-                                        emoji: field.emoji,
-                                        title: field.title,
-                                        description: field.description,
-                                        placeholder:
-                                            field.type === 'button'
-                                                ? field.url
-                                                : field.placeholder,
-                                        type: field.type,
-                                        order_place: index,
-                                    })
-                                    .where(eq(eventFields.id, field.id))
-                                    .execute()
-                            } else {
-                                await trx
-                                    .insert(eventFields)
-                                    .values({
-                                        emoji: field.emoji,
-                                        title: field.title,
-                                        description: field.description,
-                                        placeholder:
-                                            field.type === 'button'
-                                                ? field.url
-                                                : field.placeholder,
-                                        type: field.type,
-                                        order_place: index,
-                                        event_id: eventData.event_id,
-                                    })
-                                    .execute()
-                            }
-                        }
-
-                        return { success: true, eventId: eventData.event_id }
-                    })
-
-                    return result
-                } else {
-                    console.warn(
-                        'API call succeeded but returned an unexpected status:',
-                        res.data
-                    )
-                    return {
-                        success: false,
-                        message: `API update failed: ${res.data.message}`,
                     }
-                }
+
+                    const additional_info = z
+                        .string()
+                        .url()
+                        .safeParse(eventData).success ? "Online" : opts.input.eventData.location
+
+                    const eventDraft: TonSocietyRegisterActivityT = {
+                        title: eventData.title,
+                        subtitle: eventData.subtitle,
+                        description: eventData.description,
+                        hub_id: parseInt(eventData.society_hub.id),
+                        start_date: timestampToIsoString(eventData.start_date),
+                        end_date: timestampToIsoString(eventData.end_date!),
+                        additional_info,
+                        cta_button: {
+                            link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
+                            label: "Enter Event"
+                        }
+                    }
+
+                    await updateActivity(
+                        eventDraft,
+                        eventData.activity_id as number
+                    )
+
+                    return { success: true, eventId: eventData.event_id }
+                })
+
+                return result
             } catch (error) {
                 if (axios.isAxiosError(error)) {
                     console.error('Error during API call:', error.message)
@@ -651,9 +645,7 @@ export const eventsRouter = router({
 
     // private
     getHubs: publicProcedure.query(
-        async (
-            opts
-        ): Promise<
+        async (): Promise<
             | { status: 'success'; hubs: SocietyHub[] }
             | { status: 'error'; message: string }
         > => {
@@ -698,77 +690,6 @@ export const eventsRouter = router({
             }
         }
     ),
-
-    // private
-    postActivityParticipants: publicProcedure
-        .input(
-            z.object({
-                event_id: z.number(),
-            })
-        )
-        .mutation(async ({ input }) => {
-            const { event_id } = input
-
-            try {
-                const data = await db
-                    .select({
-                        event_uuid: events.event_uuid,
-                        activity_id: events.activity_id,
-                        wallet: users.wallet_address,
-                    })
-                    .from(events)
-                    .fullJoin(
-                        visitors,
-                        eq(visitors.event_uuid, events.event_uuid)
-                    )
-                    .fullJoin(users, eq(visitors.user_id, users.user_id))
-                    .where(eq(events.event_id, event_id))
-                    .execute()
-
-                // Assuming the data array is not empty and all entries have the same activity_id
-                const activityId = data[0]?.activity_id // This will hold the activity_id or be undefined if data is empty
-
-                // Creating an array of wallets that are not null
-                const participantWallets = [
-                    ...new Set(
-                        data
-                            .filter((item) => item.wallet !== null)
-                            .map((item) => item.wallet)
-                    ),
-                ]
-
-                const payload = {
-                    activity_id: activityId?.toString() || '',
-                    participants: participantWallets,
-                }
-
-                const apiKey = process.env.TON_SOCIETY_API_KEY || ''
-
-                const response = await postParticipants(apiKey, payload)
-
-                if (response && response.status === 'success') {
-                    return { status: 'success', data: null }
-                } else {
-                    return { status: 'fail', data: response.data }
-                }
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    console.error(
-                        'API call error:',
-                        error.response?.data || error.message
-                    )
-                    return {
-                        status: 'error',
-                        message:
-                            error.response?.data?.message ||
-                            'Erroneous payload signature provided',
-                    }
-                } else {
-                    console.error('Error:', error)
-                    return { status: 'error', message: 'Internal server error' }
-                }
-            }
-        }),
 
     // private
     requestExportFile: publicProcedure
@@ -865,92 +786,6 @@ export const eventsRouter = router({
             }
         }),
 })
-
-async function postParticipants(
-    apiKey: string,
-    activityParticipantsPayload: {
-        activity_id: string | null
-        participants: Array<string | null>
-    }
-) {
-    const headers = {
-        'x-api-key': apiKey,
-        'Content-Type': 'application/json',
-    }
-
-    try {
-        const response = await axios.post(
-            'https://society.ton.org/v1/activity-participants',
-            activityParticipantsPayload,
-            { headers }
-        )
-        return response.data
-    } catch (error) {
-        console.error(error)
-        throw error
-    }
-}
-
-async function registerActivity(activityDetails: TonSocietyRegisterActivityT) {
-    const headers = {
-        'x-api-key': process.env.TON_SOCIETY_API_KEY,
-        'x-partner-id': 'onton',
-        'Content-Type': 'application/json',
-    }
-
-    try {
-        const response = await axios.post(
-            `${process.env.TON_SOCIETY_BASE_URL}/activities`,
-            activityDetails,
-            { headers }
-        )
-        console.info(response.data)
-        return response.data
-    } catch (error) {
-        console.error(error)
-        /*
-        We set the activity id to -100 to be able select the ones that failed to be send to ton society
-        */
-        return {
-            status: 'success',
-            data: {
-                activity_id: -100,
-            },
-        }
-    }
-}
-
-async function updateActivity(
-    activityDetails: TonSocietyRegisterActivityT,
-    activity_id: string | number
-) {
-    const headers = {
-        'x-api-key': process.env.TON_SOCIETY_API_KEY,
-        'x-partner-id': 'onton',
-        'Content-Type': 'application/json',
-    }
-
-    try {
-        const response = await axios.patch(
-            `${process.env.TON_SOCIETY_BASE_URL}/activities/${activity_id}`,
-            activityDetails,
-            { headers }
-        )
-        console.info(response.data)
-        return response.data
-    } catch (error) {
-        console.error(error)
-        /*
-        We set the activity id to -100 to be able select the ones that failed to be send to ton society
-        */
-        return {
-            status: 'success',
-            data: {
-                activity_id: -100,
-            },
-        }
-    }
-}
 
 const getUsersTwitters = async (eventId: number) => {
     const userAnswers = await db

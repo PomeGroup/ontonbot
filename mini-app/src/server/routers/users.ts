@@ -207,11 +207,27 @@ export const usersRouter = router({
                 }
 
                 // Validate the visitor
-                const isValidVisitor = await selectVisitorById(visitor.id, opts.input.event_uuid);
-                if (!isValidVisitor) {
+                const isValidVisitor = await selectVisitorById(visitor.id);
+                if (!isValidVisitor.length) {
                     throw new TRPCError({
                         code: "BAD_REQUEST",
                         message: "Invalid visitor: please complete the tasks."
+                    });
+                }
+
+                // check if the user already does not own the reward
+                const reward = await db.query.rewards.findFirst({
+                    where(fields, { eq, and }) {
+                        return and(eq(fields.visitor_id, visitor.id))
+                    },
+                })
+
+                if (reward) {
+                    const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${opts.input.event_uuid}`
+                    console.log(err_msg)
+                    throw new TRPCError({
+                        code: "BAD_REQUEST",
+                        message: err_msg
                     });
                 }
 
@@ -220,10 +236,11 @@ export const usersRouter = router({
                         return eq(fields.event_uuid, opts.input.event_uuid)
                     },
                 })
+
                 if (!eventData?.activity_id || eventData.activity_id < 0) {
                     throw new TRPCError({
                         code: "BAD_REQUEST",
-                        message: "Invalid event_uuid"
+                        message: `this event does not have an activity id ${eventData?.activity_id}`
                     });
                 }
 

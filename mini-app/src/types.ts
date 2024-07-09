@@ -232,16 +232,3 @@ export type TelegramUser = {
     allows_write_to_pm: boolean
 }
 
-export type TonSocietyRegisterActivityT = {
-    title: string
-    subtitle: string
-    additional_info?: string
-    description: string
-    hub_id: number
-    start_date: string
-    end_date: string
-    cta_button?: {
-        label: string
-        link: string
-    }
-}
