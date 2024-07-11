@@ -1,9 +1,11 @@
 import { db } from '@/db/db'
-import { events, orders, tickets } from '@/db/schema'
+import { orders, tickets } from '@/db/schema'
 import { removeKey } from '@/lib/utils'
 import { getAuthenticatedUser } from '@/server/auth'
 import { and, asc, eq, or, sql } from 'drizzle-orm'
 import { type NextRequest } from 'next/server'
+
+// TODO: fix the return type for the places that it is being used
 
 export async function GET(
     req: NextRequest,
@@ -19,7 +21,6 @@ export async function GET(
             return (eq(fields.event_uuid, eventId))
         },
     })
-
 
     // error 400 if not found
     if (!unsafeEvent?.event_uuid) {
