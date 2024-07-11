@@ -1,5 +1,5 @@
 import { db } from '@/db/db'
-import { events, eventTicket, orders, tickets, users } from '@/db/schema'
+import { events, orders, tickets } from '@/db/schema'
 import { removeKey } from '@/lib/utils'
 import { getAuthenticatedUser } from '@/server/auth'
 import { and, asc, eq, or, sql } from 'drizzle-orm'
@@ -12,6 +12,51 @@ export async function GET(
     const eventId = params.id
     const searchParams = req.nextUrl.searchParams
     const dataOnly = searchParams.get('data_only') as 'true' | undefined
+
+    // get event data using drizzle
+    const unsafeEvent = await db.query.events.findFirst({
+        where(fields, { eq }) {
+            return (eq(fields.event_uuid, eventId))
+        },
+    })
+
+
+    // error 400 if not found
+    if (!unsafeEvent?.event_uuid) {
+        return Response.json({ error: 'Event not found' }, { status: 400 })
+    }
+
+    const event = removeKey(unsafeEvent, 'secret_phrase')
+
+    const organizer = await db.query.users.findFirst({
+        where(fields, { eq }) {
+            return eq(fields.user_id, event.owner as number)
+        },
+    })
+
+    const ticket = event.ticketToCheckIn
+        ? (
+            await db.query.eventTicket.findFirst({
+                where(fields, { eq }) {
+                    return eq(fields.event_uuid, event.event_uuid as string)
+                }
+            }))
+        : undefined
+
+    const soldTicketsCount = await db
+        .select({ count: sql`count(*)`.mapWith(Number) })
+        .from(orders)
+        .where(
+            and(
+                eq(orders.event_uuid, event.event_uuid as string),
+                or(
+                    eq(orders.state, 'minted'),
+                    eq(orders.state, 'created'),
+                    eq(orders.state, 'mint_request')
+                )
+            )
+        )
+        .execute()
 
     if (dataOnly === 'true') {
         // get event data using drizzle
@@ -29,7 +74,12 @@ export async function GET(
         const event = removeKey(unsafeEvent, "secret_phrase")
 
         // return event data
-        return Response.json(event, {
+        return Response.json({
+            ...event,
+            organizer,
+            eventTicket: ticket,
+            isSoldOut: soldTicketsCount[0].count === ticket?.count,
+        }, {
             status: 200,
         })
     }
@@ -39,41 +89,6 @@ export async function GET(
     if (unauthorized) {
         return unauthorized
     }
-
-    // get event data using drizzle
-    const unsafeEvent = (
-        await db
-            .select()
-            .from(events)
-            .where(eq(events.event_uuid, eventId))
-            .execute()
-    ).pop()
-
-
-    // error 400 if not found
-    if (!unsafeEvent?.event_uuid) {
-        return Response.json({ error: 'Event not found' }, { status: 400 })
-    }
-
-    const event = removeKey(unsafeEvent, 'secret_phrase')
-
-    const organizer = (
-        await db
-            .select()
-            .from(users)
-            .where(eq(users.user_id, event.owner as number))
-            .execute()
-    )[0]
-
-    const ticket = event.ticketToCheckIn
-        ? (
-            await db
-                .select()
-                .from(eventTicket)
-                .where(eq(eventTicket.event_uuid, event.event_uuid as string))
-                .execute()
-        )[0]
-        : undefined
 
     const userTicket = (
         await db
@@ -89,20 +104,6 @@ export async function GET(
             .execute()
     ).pop()
 
-    const soldTicketsCount = await db
-        .select({ count: sql`count(*)`.mapWith(Number) })
-        .from(orders)
-        .where(
-            and(
-                eq(orders.event_uuid, event.event_uuid as string),
-                or(
-                    eq(orders.state, 'minted'),
-                    eq(orders.state, 'created'),
-                    eq(orders.state, 'mint_request')
-                )
-            )
-        )
-        .execute()
 
     const userOrder = (
         await db
@@ -124,10 +125,10 @@ export async function GET(
 
     const data = {
         ...event,
-        eventTicket: ticket,
-        organizer,
         userTicket,
         orderAlreadyPlace: !!userOrder,
+        organizer,
+        eventTicket: ticket,
         isSoldOut: soldTicketsCount[0].count === ticket?.count,
     }
 
