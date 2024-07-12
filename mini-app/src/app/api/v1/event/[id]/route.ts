@@ -59,6 +59,9 @@ export async function GET(
         )
         .execute()
 
+    // TODO: fix the typing here
+    const isSoldOut = (soldTicketsCount[0].count) as unknown as number >= (ticket?.count as unknown as number)
+
     if (dataOnly === 'true') {
         // get event data using drizzle
         const unsafeEvent = await db.query.events.findFirst({
@@ -79,7 +82,7 @@ export async function GET(
             ...event,
             organizer,
             eventTicket: ticket,
-            isSoldOut: soldTicketsCount[0].count === ticket?.count,
+            isSoldOut
         }, {
             status: 200,
         })
@@ -130,7 +133,7 @@ export async function GET(
         orderAlreadyPlace: !!userOrder,
         organizer,
         eventTicket: ticket,
-        isSoldOut: soldTicketsCount[0].count === ticket?.count,
+        isSoldOut,
     }
 
     // return event data
