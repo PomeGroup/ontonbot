@@ -60,7 +60,7 @@ export async function GET(
         .execute()
 
     // TODO: fix the typing here
-    const isSoldOut = (soldTicketsCount[0].count) as unknown as number >= (ticket?.count as unknown as number)
+    const isSoldOut = (soldTicketsCount[0].count as unknown as number) >= (ticket?.count as unknown as number);
 
     if (dataOnly === 'true') {
         // get event data using drizzle
