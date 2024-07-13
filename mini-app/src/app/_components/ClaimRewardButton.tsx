@@ -3,30 +3,18 @@
 import useWebApp from "@/hooks/useWebApp";
 import { trpc } from "../_trpc/client";
 import { useEffect, useState } from "react";
-import { useMainButton, useUtils } from "@tma.js/sdk-react";
+import { useUtils } from "@tma.js/sdk-react";
+import MainButton from "./atoms/buttons/web-app/MainButton";
 
 // Child component
 function ClaimRewardButtonChild({ link }: { link: string }) {
-    const mainButton = useMainButton(true)
     const tmaUtils = useUtils(true)
 
     function openRewardLink() {
-        console.log({ link })
         tmaUtils?.openLink(link)
     }
 
-    useEffect(() => {
-        mainButton?.setText("Claim Reward")
-        mainButton?.on('click', openRewardLink)
-        mainButton?.enable().show()
-
-        return () => {
-            mainButton?.off('click', openRewardLink)
-            mainButton?.hide().disable()
-        }
-    }, [mainButton])
-
-    return null
+    return <MainButton text="Claim Reward" onClick={openRewardLink} />
 }
 
 // Parent component
