@@ -8,18 +8,19 @@ import { BadgePlus } from 'lucide-react'
 import { unstable_noStore as noStore } from 'next/cache'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
 import QrCodeButton from '../_components/atoms/buttons/QrCodeButton'
 import Card from '../_components/atoms/cards'
 import Labels from '../_components/atoms/labels'
 import Skeletons from '../_components/molecules/skeletons'
 import { trpc } from '../_trpc/client'
 import { CommingSoon } from '../_components/CommingSoon'
+import { useHapticFeedback } from '@tma.js/sdk-react'
 
 const EventsAdminPage = () => {
     noStore()
 
     const WebApp = useWebApp()
+    const hapticfeedback = useHapticFeedback(true)
     const { authorized, isLoading } = useAuth()
     const initData = WebApp?.initData
     const validatedData = trpc.users.validateUserInitData.useQuery(
@@ -46,7 +47,7 @@ const EventsAdminPage = () => {
             <Link
                 href={`/events/create`}
                 className="w-full"
-                onClick={() => WebApp?.HapticFeedback.impactOccurred('medium')}
+                onClick={() => hapticfeedback?.impactOccurred('medium')}
             >
                 <Button className="w-full" variant="outline" type="submit">
                     <BadgePlus className="mr-1" width={15} />
@@ -96,7 +97,7 @@ const EventsAdminPage = () => {
                             className="flex-1"
                             href={`events/${event.event_uuid}/edit`}
                             onClick={() =>
-                                WebApp?.HapticFeedback.impactOccurred('medium')
+                                hapticfeedback?.impactOccurred('medium')
                             }
                         >
                             <Button className="w-full" variant={'outline'}>

@@ -30,7 +30,7 @@ export function ClaimRewardButton(props: { eventId: string }) {
             mainButton?.off('click', openRewardLink)
             mainButton?.hide().disable()
         }
-    }, [visitorReward.isSuccess, visitorReward.data?.id])
+    }, [visitorReward.isSuccess, visitorReward.data?.id, mainButton])
 
     return <></>
 }

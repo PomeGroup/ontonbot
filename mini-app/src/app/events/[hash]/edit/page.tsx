@@ -10,13 +10,16 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useAuth from '@/hooks/useAuth'
 import useWebApp from '@/hooks/useWebApp'
+import { useHapticFeedback, useMiniApp } from '@tma.js/sdk-react'
 import { FC } from 'react'
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
     const WebApp = useWebApp()
+    const miniApp = useMiniApp(true)
     const event = trpc.events.getEvent.useQuery(params.hash, {
         cacheTime: 0,
     })
+    const hapticFeedback = useHapticFeedback(true)
 
     const { authorized, isLoading } = useAuth()
 
@@ -36,14 +39,14 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
     }
 
     const handleVisitorsExport = () => {
-        WebApp?.HapticFeedback.impactOccurred('medium')
+        hapticFeedback?.impactOccurred('medium')
 
         requestExportFileMutation.mutate({
             event_uuid: params.hash,
             initData: WebApp?.initData || '',
         })
 
-        WebApp?.close()
+        miniApp?.close()
     }
 
     return (
@@ -52,7 +55,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger
                         onClick={() =>
-                            WebApp?.HapticFeedback.impactOccurred('medium')
+                            hapticFeedback?.impactOccurred('medium')
                         }
                         value="manage"
                     >
@@ -60,7 +63,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
                     </TabsTrigger>
                     <TabsTrigger
                         onClick={() =>
-                            WebApp?.HapticFeedback.impactOccurred('medium')
+                            hapticFeedback?.impactOccurred('medium')
                         }
                         value="edit"
                     >
