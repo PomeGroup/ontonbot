@@ -157,7 +157,10 @@ const CreateEventFields: FC<{
                 </Button>
             </div>
 
-            <Buttons.WebAppMain text="Save" onClick={handleSubmit} />
+            <Buttons.WebAppMain
+                progress={updateEventMutation.isLoading || addEventMutation.isLoading}
+                disabled={updateEventMutation.isLoading || addEventMutation.isLoading}
+                text="Save" onClick={handleSubmit} />
 
             <div className="flex w-full mt-2">
                 <Button
