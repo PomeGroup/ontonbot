@@ -9,7 +9,7 @@ import ThemeSetter from './themeSetter'
 const Providers = ({ children }: { children: React.ReactNode }) => {
     return (
         <div>
-            <SDKProvider>
+            <SDKProvider debug={true}>
                 <TonConnectUIProvider
                     actionsConfiguration={{
                         twaReturnUrl: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event`,

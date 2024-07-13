@@ -1,8 +1,8 @@
 'use client'
 
-import { useLayoutEffect } from 'react'
+import { useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import { useHapticFeedback, useMiniApp, useThemeParams, useViewport } from '@tma.js/sdk-react'
+import { initViewport, useHapticFeedback, useMiniApp, useThemeParams } from '@tma.js/sdk-react'
 
 export default function ThemeSetter({
     children,
@@ -13,9 +13,21 @@ export default function ThemeSetter({
     const themeParams = useThemeParams(true)
     const webApp = useMiniApp(true)
     const habticfeedback = useHapticFeedback(true)
-    const viewport = useViewport(true)
 
-    useLayoutEffect(() => {
+    useEffect(() => {
+        async function viewport() {
+            try {
+                const [res] = initViewport()
+                const vp = await res
+                !vp.isExpanded && vp.expand()
+            } catch (error
+            ) {
+                console.error(error)
+            }
+        }
+
+        typeof window !== 'undefined' && viewport()
+
         if (!themeParams) {
             return
         }
@@ -24,7 +36,6 @@ export default function ThemeSetter({
         webApp?.setHeaderColor(theme === 'dark' ? '#1C1C1E' : '#ffffff')
         webApp?.setBgColor(theme === 'dark' ? '#1C1C1E' : '#ffffff')
         habticfeedback?.impactOccurred('light')
-        viewport?.expand()
 
     }, [theme, setTheme, themeParams, webApp])
 
