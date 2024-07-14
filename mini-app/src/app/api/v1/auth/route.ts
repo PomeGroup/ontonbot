@@ -109,6 +109,8 @@ export async function GET(req: NextRequest) {
         cookies().set('token', token, {
             // expiration 7 days
             expires: new Date(Date.now() + 1000 * JWT_COOKIE_EXPIRATION),
+            sameSite: "none",
+            secure: true
         })
 
         return Response.json(
