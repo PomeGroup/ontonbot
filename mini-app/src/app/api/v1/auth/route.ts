@@ -7,10 +7,6 @@ import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 import { z, ZodError } from 'zod'
 
-const zodSchema = z.object({
-    initData: z.string(),
-})
-
 const userDataSchema = z.object({
     id: z.number(),
     first_name: z.string(),
@@ -20,7 +16,7 @@ const userDataSchema = z.object({
 })
 
 // in seconds
-const JWT_COOKIE_EXPIRATION = 604_800 // 1 week
+const JWT_COOKIE_EXPIRATION = 86_400 // 1 day
 
 export async function GET(req: NextRequest) {
     try {
@@ -110,7 +106,8 @@ export async function GET(req: NextRequest) {
             // expiration 7 days
             expires: new Date(Date.now() + 1000 * JWT_COOKIE_EXPIRATION),
             sameSite: "none",
-            secure: true
+            secure: true,
+            partitioned: true
         })
 
         return Response.json(
