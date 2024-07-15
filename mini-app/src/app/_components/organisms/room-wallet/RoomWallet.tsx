@@ -15,6 +15,7 @@ import { address, Address, toNano } from '@ton/core'
 import { Loader2 } from 'lucide-react'
 import { trpc } from '../../../_trpc/client'
 import Card from '../../atoms/cards'
+import { useHapticFeedback } from '@tma.js/sdk-react'
 
 const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     walletAddress,
@@ -27,6 +28,7 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     const validatedData = trpc.users.validateUserInitData.useQuery(
         WebApp?.initData || ''
     )
+    const hapticFeedback = useHapticFeedback(true)
 
     const [distributionLoading, setDistributionLoading] = useState(false)
     const [withdrawLoading, setWithdrawLoading] = useState(false)
@@ -74,7 +76,7 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     )
 
     const handleTopUpClick = async () => {
-        WebApp?.HapticFeedback.impactOccurred('medium')
+        hapticFeedback?.impactOccurred('medium')
         if (!wallet) {
             open()
             return
@@ -111,7 +113,7 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     }
 
     const handleWithdrawClick = () => {
-        WebApp?.HapticFeedback.impactOccurred('medium')
+        hapticFeedback?.impactOccurred('medium')
         if (!wallet) {
             open()
             return
@@ -133,7 +135,7 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     }
 
     const handleDistributeClick = () => {
-        WebApp?.HapticFeedback.impactOccurred('medium')
+        hapticFeedback?.impactOccurred('medium')
 
         if (!wallet) {
             open()
@@ -230,7 +232,7 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
                                 distributionLoading ||
                                 isSmallBalance ||
                                 Number.parseFloat(distributeAmount) >
-                                    amountPerPerson
+                                amountPerPerson
                             }
                         >
                             Distribute (

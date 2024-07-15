@@ -9,7 +9,7 @@ import {
     TRequiredEventFields,
     ZodErrors,
 } from '@/types'
-import { useInitData } from '@tma.js/sdk-react'
+import { useInitData, usePopup } from '@tma.js/sdk-react'
 import { GithubIcon, Trash, TwitterIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
@@ -26,6 +26,7 @@ const CreateEventFields: FC<{
     const WebApp = useWebApp()
     const data = useInitData(true)
     const initData = WebApp?.initData || ''
+    const popup = usePopup(true)
     const userId = data?.user?.id
     const router = useRouter()
     const addEventMutation = trpc.events.addEvent.useMutation()
@@ -88,20 +89,19 @@ const CreateEventFields: FC<{
     }
 
     const handleDelete = async (): Promise<void> => {
-        WebApp?.showConfirm(
-            'Are you sure you want to delete this event?\nThis action cannot be undone.',
-            async (confirmed: boolean) => {
-                if (confirmed === false) {
-                    return
-                }
-                await deleteEventMutation.mutateAsync({
-                    event_uuid,
-                    initData,
-                })
-                router.push('/events')
-            }
+        const confirmed = confirm(
+            'Are you sure you want to delete this event?\nThis action cannot be undone.'
         )
+        if (confirmed === false) {
+            return
+        }
+        await deleteEventMutation.mutateAsync({
+            event_uuid,
+            initData,
+        })
+        router.push('/events')
     }
+
 
     const addGitHubField = () => {
         const newField = {
@@ -157,7 +157,10 @@ const CreateEventFields: FC<{
                 </Button>
             </div>
 
-            <Buttons.WebAppMain text="Save" onClick={handleSubmit} />
+            <Buttons.WebAppMain
+                progress={updateEventMutation.isLoading || addEventMutation.isLoading}
+                disabled={updateEventMutation.isLoading || addEventMutation.isLoading}
+                text="Save" onClick={handleSubmit} />
 
             <div className="flex w-full mt-2">
                 <Button

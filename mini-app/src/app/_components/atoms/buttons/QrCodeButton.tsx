@@ -3,10 +3,11 @@
 import { trpc } from '@/app/_trpc/client'
 import { Button } from '@/components/ui/button'
 import useWebApp from '@/hooks/useWebApp'
-import { useHapticFeedback } from '@tma.js/sdk-react'
+import { useHapticFeedback, useMiniApp } from '@tma.js/sdk-react'
 
 const QrCodeButton = ({ url, hub }: { url: string; hub?: string }) => {
     const WebApp = useWebApp()
+    const miniApp = useMiniApp(true)
     const initData = WebApp?.initData || ''
     const hapticFeedback = useHapticFeedback(true)
     const requestSendQRcodeMutation =
@@ -24,7 +25,7 @@ const QrCodeButton = ({ url, hub }: { url: string; hub?: string }) => {
                     hub,
                     initData,
                 })
-                WebApp?.close()
+                miniApp?.close()
             }}
         >
             Get Link and QR

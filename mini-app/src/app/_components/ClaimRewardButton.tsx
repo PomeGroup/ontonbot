@@ -1,38 +1,39 @@
 'use client'
+
 import useWebApp from "@/hooks/useWebApp";
 import { trpc } from "../_trpc/client";
-import { useEffect } from "react";
-import { useMainButton, useUtils } from "@tma.js/sdk-react";
+import { useEffect, useState } from "react";
+import { useUtils } from "@tma.js/sdk-react";
+import MainButton from "./atoms/buttons/web-app/MainButton";
 
-export function ClaimRewardButton(props: { eventId: string }) {
-    const WebApp = useWebApp()
-    const initData = WebApp?.initData || ''
-    const visitorReward = trpc.users.getVisitorReward.useQuery({
-        init_data: initData,
-        event_uuid: props.eventId
-    })
-
-    const mainButton = useMainButton(true)
+// Child component
+function ClaimRewardButtonChild({ link }: { link: string }) {
     const tmaUtils = useUtils(true)
 
     function openRewardLink() {
-        tmaUtils?.openLink(visitorReward?.data?.data as string)
+        tmaUtils?.openLink(link)
     }
 
-    useEffect(() => {
-        if (visitorReward.isSuccess && visitorReward.data?.id) {
-            mainButton?.setText("Claim Reward")
-            mainButton?.on('click', openRewardLink)
-            mainButton?.enable().show()
-        }
-
-        return () => {
-            mainButton?.off('click', openRewardLink)
-            mainButton?.hide().disable()
-        }
-    }, [visitorReward.isSuccess, visitorReward.data?.id])
-
-    return <></>
+    return <MainButton text="Claim Reward" onClick={openRewardLink} />
 }
 
+// Parent component
+export function ClaimRewardButton(props: { eventId: string }) {
+    const WebApp = useWebApp()
+    const initData = WebApp?.initData || ''
+    const visitorReward = trpc.users.getVisitorReward.useQuery({ init_data: initData, event_uuid: props.eventId })
+    const [rewardLink, setRewardLink] = useState<string | undefined>(undefined)
 
+    useEffect(() => {
+        if (visitorReward.isSuccess && visitorReward.data?.data) {
+            console.log({ rewardLink: visitorReward.data })
+            setRewardLink(visitorReward.data.data as string)
+        }
+    }, [visitorReward.isSuccess, visitorReward.data?.data])
+
+    if (!rewardLink) {
+        return null
+    }
+
+    return <ClaimRewardButtonChild link={rewardLink} />
+}

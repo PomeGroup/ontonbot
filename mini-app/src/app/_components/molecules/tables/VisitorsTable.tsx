@@ -3,6 +3,7 @@
 import { trpc } from '@/app/_trpc/client';
 import useWebApp from '@/hooks/useWebApp';
 import { useIntersection } from '@mantine/hooks';
+import { useUtils } from '@tma.js/sdk-react';
 import { Wallet2 } from 'lucide-react';
 import { FC, Fragment, useEffect, useRef } from 'react'
 
@@ -11,12 +12,13 @@ interface VisitorsTableProps {
 }
 
 const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
-    const WebApp = useWebApp()
+    const tmaUtils = useUtils(true)
+    const webApp = useWebApp()
 
     const { fetchNextPage, data, hasNextPage, isFetchingNextPage } = trpc.visitors.getAll.useInfiniteQuery(
         {
             event_uuid,
-            initData: WebApp?.initData,
+            initData: webApp?.initData,
             limit: 25
         },
         {
@@ -58,7 +60,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
                                     className="truncate cursor-pointer"
                                     onClick={() => {
                                         if (visitor?.username) {
-                                            WebApp?.openTelegramLink(`https://t.me/${visitor?.username}`)
+                                            tmaUtils?.openTelegramLink(`https://t.me/${visitor?.username}`)
                                         }
                                     }}>
                                     {visitor?.username ? (
@@ -75,7 +77,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
                                     className="flex justify-end items-center cursor-pointer"
                                     onClick={() => {
                                         if (visitor?.wallet_address) {
-                                            WebApp?.openLink(`https://tonviewer.com/${visitor?.wallet_address}`);
+                                            tmaUtils?.openLink(`https://tonviewer.com/${visitor?.wallet_address}`);
                                         }
                                     }}
                                 >

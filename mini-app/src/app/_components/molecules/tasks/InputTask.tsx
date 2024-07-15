@@ -11,6 +11,7 @@ import React, {
     useState,
 } from 'react'
 import GenericTask from './GenericTask'
+import { useHapticFeedback, usePopup } from '@tma.js/sdk-react'
 
 const InputTypeCampaignTask: React.FC<{
     title: string
@@ -30,6 +31,7 @@ const InputTypeCampaignTask: React.FC<{
     eventId,
 }) => {
         const WebApp = useWebApp()
+        const hapticFeedback = useHapticFeedback(true)
         const validatedData = trpc.users.validateUserInitData.useQuery(
             WebApp?.initData || ''
         )
@@ -39,6 +41,7 @@ const InputTypeCampaignTask: React.FC<{
         const [isEditing, setIsEditing] = useState(false)
         const editingRef = useRef<HTMLDivElement>(null)
 
+        const popups = usePopup(true)
         const trpcUtils = trpc.useUtils()
 
         useEffect(() => {
@@ -50,7 +53,7 @@ const InputTypeCampaignTask: React.FC<{
                     editingRef.current &&
                     !editingRef.current.contains(event.target as Node)
                 ) {
-                    WebApp?.HapticFeedback.notificationOccurred('error')
+                    hapticFeedback?.notificationOccurred('error')
                     setIsEditing(false)
                 }
             }
@@ -72,12 +75,14 @@ const InputTypeCampaignTask: React.FC<{
         const upsertUserEventFieldMutation =
             trpc.userEventFields.upsertUserEventField.useMutation({
                 onError: () => {
-                    WebApp?.HapticFeedback.notificationOccurred('error')
+                    hapticFeedback?.notificationOccurred('error')
                     // use toast instead of alert
-                    WebApp?.showAlert("Wrong Secret Entered")
+                    popups?.open({
+                        message: "Wrong Secret Entered"
+                    })
                 },
                 onSuccess: () => {
-                    WebApp?.HapticFeedback.notificationOccurred('success')
+                    hapticFeedback?.notificationOccurred('success')
                     setIsCompleted(inputText ? true : false)
                     trpcUtils.userEventFields.invalidate()
                 }
@@ -94,7 +99,7 @@ const InputTypeCampaignTask: React.FC<{
             setIsEditing(false)
 
             if (!validatedData.data?.valid) {
-                WebApp?.HapticFeedback.notificationOccurred('error')
+                hapticFeedback?.notificationOccurred('error')
                 return
             }
 
@@ -113,7 +118,7 @@ const InputTypeCampaignTask: React.FC<{
                 {!isEditing ? (
                     <div
                         onClick={() => {
-                            WebApp?.HapticFeedback.impactOccurred('medium')
+                            hapticFeedback?.impactOccurred('medium')
                             setIsEditing(true)
                         }}
                     >

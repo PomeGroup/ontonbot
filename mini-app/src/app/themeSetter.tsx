@@ -1,8 +1,8 @@
 'use client'
 
-import { useLayoutEffect } from 'react'
+import { useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import useWebApp from '@/hooks/useWebApp'
+import { initViewport, useHapticFeedback, useMiniApp, useThemeParams } from '@tma.js/sdk-react'
 
 export default function ThemeSetter({
     children,
@@ -10,19 +10,34 @@ export default function ThemeSetter({
     children: React.ReactNode
 }) {
     const { theme, setTheme } = useTheme()
-    const WebApp = useWebApp()
+    const themeParams = useThemeParams(true)
+    const webApp = useMiniApp(true)
+    const habticfeedback = useHapticFeedback(true)
 
-    useLayoutEffect(() => {
-        if (!WebApp) {
+    useEffect(() => {
+        async function viewport() {
+            try {
+                const [res] = initViewport()
+                const vp = await res
+                !vp.isExpanded && vp.expand()
+            } catch (error
+            ) {
+                console.error(error)
+            }
+        }
+
+        typeof window !== 'undefined' && viewport()
+
+        if (!themeParams) {
             return
         }
 
-        setTheme(WebApp.colorScheme)
-        WebApp.setHeaderColor(theme === 'dark' ? '#1C1C1E' : '#ffffff')
-        WebApp.setBackgroundColor(theme === 'dark' ? '#1C1C1E' : '#ffffff')
-        WebApp?.HapticFeedback.impactOccurred('light')
-        WebApp.expand()
-    }, [theme, setTheme, WebApp])
+        setTheme('dark')
+        webApp?.setHeaderColor(theme === 'dark' ? '#1C1C1E' : '#ffffff')
+        webApp?.setBgColor(theme === 'dark' ? '#1C1C1E' : '#ffffff')
+        habticfeedback?.impactOccurred('light')
+
+    }, [theme, setTheme, themeParams, webApp])
 
     return <div>{children}</div>
 }

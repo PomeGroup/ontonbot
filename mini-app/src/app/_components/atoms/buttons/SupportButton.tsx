@@ -1,18 +1,18 @@
 'use client'
 
-import useWebApp from '@/hooks/useWebApp'
+import { useHapticFeedback, useUtils } from '@tma.js/sdk-react'
 import { MessageSquare } from 'lucide-react'
 import React from 'react'
 
 const SupportButton = () => {
-    const WebApp = useWebApp()
-
+    const hapticfeedback = useHapticFeedback(true)
+    const tmaUtils = useUtils(true)
 
     return (
         <div className='flex items-center justify-center text-[14px] text-secondary' onClick={
             () => {
-                WebApp?.HapticFeedback.impactOccurred("medium")
-                WebApp?.openTelegramLink('https://t.me/ontonsupport')
+                hapticfeedback?.impactOccurred("medium")
+                tmaUtils?.openTelegramLink('https://t.me/ontonsupport')
             }
         }>
             Support
