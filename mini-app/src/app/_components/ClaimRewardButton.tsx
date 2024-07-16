@@ -21,11 +21,13 @@ function ClaimRewardButtonChild({ link }: { link: string }) {
 export function ClaimRewardButton(props: { eventId: string }) {
     const WebApp = useWebApp()
     const initData = WebApp?.initData || ''
-    const visitorReward = trpc.users.getVisitorReward.useQuery({ init_data: initData, event_uuid: props.eventId })
+    const visitorReward = trpc.users.getVisitorReward.useQuery({ init_data: initData, event_uuid: props.eventId }, {
+        refetchInterval: 1000,
+    })
     const [rewardLink, setRewardLink] = useState<string | undefined>(undefined)
 
     useEffect(() => {
-        if (visitorReward.isSuccess && visitorReward.data?.data) {
+        if (visitorReward.data?.data) {
             console.log({ rewardLink: visitorReward.data })
             setRewardLink(visitorReward.data.data as string)
         }
