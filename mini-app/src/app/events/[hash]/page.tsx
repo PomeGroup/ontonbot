@@ -106,10 +106,10 @@ async function EventPage({ params }: Props) {
                     />
                 )}
 
-            {
+            { /*
                 eventData.event_uuid &&
                 <ClaimRewardButton eventId={eventData.event_uuid} />
-            }
+            */}
             <Buttons.Support />
         </AddVisitorWrapper>
     )

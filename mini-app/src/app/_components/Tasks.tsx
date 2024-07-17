@@ -2,10 +2,9 @@
 
 import useWebApp from '@/hooks/useWebApp'
 import { DynamicFields } from '@/types'
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
 import { trpc } from '../_trpc/client'
 import Tasks from './molecules/tasks'
-import { useCreateRewardLink } from '@/hooks/useCreateRewardLink'
 
 const AllTasks: FC<{
     tasks: DynamicFields
@@ -19,17 +18,6 @@ const AllTasks: FC<{
     })
     const userEventFields = userEventFieldsQuery.data
 
-    const tasksCompleted = useMemo(() =>
-        (userEventFields && Object.keys(userEventFields).length) ?
-            Object.values(userEventFields).every(v => v.completed)
-            : false
-        , [userEventFieldsQuery.isFetching, userEventFieldsQuery.status])
-
-    useCreateRewardLink(
-        {
-            eventHash,
-            tasksCompleted
-        })
     return (
         <div>
             {tasks.map((task, index) => {
