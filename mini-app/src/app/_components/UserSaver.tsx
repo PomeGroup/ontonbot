@@ -6,7 +6,7 @@ import { trpc } from '../_trpc/client'
 import { type InferSelectModel } from "drizzle-orm"
 import { users } from '@/db/schema'
 
-const UserSaver: FC<{ children: ReactNode, user: InferSelectModel<typeof users> }> = ({ children, user }) => {
+const UserSaver: FC<{ children: ReactNode, user: InferSelectModel<typeof users> | null }> = ({ children, user }) => {
     const WebApp = useWebApp()
     const initData = WebApp?.initData || ''
     const userSaver = trpc.users.addUser.useMutation()

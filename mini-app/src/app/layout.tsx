@@ -26,8 +26,9 @@ export default async function RootLayout({
     children: React.ReactNode
 }) {
     const [userId] = getAuthenticatedUser()
-    let user: InferSelectModel<typeof users> | undefined
+    let user: InferSelectModel<typeof users> | null = null
     if (userId) {
+        // @ts-expect-error
         user = await db.query.users.findFirst({
             where(fields, { eq }) {
                 return eq(fields.user_id, userId)
