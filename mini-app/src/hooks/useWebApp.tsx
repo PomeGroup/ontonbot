@@ -1,28 +1,32 @@
-import { retrieveLaunchParams, useMiniApp, usePopupRaw } from '@tma.js/sdk-react'
-import { useEffect, useState } from 'react'
+import { isEmptyObject } from '@/utils'
+import { useState, useEffect } from 'react'
 
 const useWebApp = () => {
-    const [initData, setInitData] = useState<undefined | string>(undefined)
-    const miniApp = useMiniApp(true)
+    const [webApp, setWebApp] = useState<WebApp>({} as WebApp)
 
     useEffect(() => {
         const checkWebApp = () => {
-            if (typeof window !== 'undefined') {
-                try {
-                    const lunchParams = retrieveLaunchParams()
-                    setInitData(lunchParams.initDataRaw)
-                } catch (error) { }
+            if (
+                typeof window !== 'undefined' &&
+                window.Telegram &&
+                window.Telegram.WebApp
+            ) {
+                setWebApp(window.Telegram.WebApp)
             }
         }
 
         checkWebApp()
 
-        const intervalId = setInterval(checkWebApp, 1000)
+        const intervalId = setInterval(checkWebApp, 300)
 
         return () => clearInterval(intervalId)
     }, [])
 
-    return { ...miniApp, initData }
+    if (isEmptyObject(webApp)) {
+        return null
+    }
+
+    return webApp
 }
 
 export default useWebApp

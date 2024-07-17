@@ -9,7 +9,6 @@ import {
 import useWebApp from '@/hooks/useWebApp'
 import { trpc } from '@/app/_trpc/client'
 import Tasks from '.'
-import { useHapticFeedback } from '@tma.js/sdk-react'
 
 const ConnectWalletTask = () => {
     const WebApp = useWebApp()
@@ -22,7 +21,8 @@ const ConnectWalletTask = () => {
             initData: WebApp?.initData,
         }
     ).data
-    const hapticFeedback = useHapticFeedback(true)
+    const webApp = useWebApp()
+    const hapticFeedback = webApp?.HapticFeedback
 
     const [isWalletConnected, setIsWalletConnected] = useState<boolean | undefined>(undefined)
 
@@ -46,19 +46,23 @@ const ConnectWalletTask = () => {
         hapticFeedback?.impactOccurred('medium')
 
         if (tonConnectUI.account) {
-            const confirmed = confirm(
+            webApp?.showConfirm(
                 "Do you want to change your current wallet?\nPlease confirm to proceed or cancel to keep your existing wallet.",
-            )
-            if (!confirmed) {
-                hapticFeedback?.notificationOccurred('error')
-                return
-            }
+                (confirmed) => {
+                    if (!confirmed) {
+                        hapticFeedback?.notificationOccurred('error')
+                        return
+                    }
 
-            hapticFeedback?.notificationOccurred('success')
-            tonConnectUI.disconnect()
-            tonConnectUI.openModal()
+                    hapticFeedback?.notificationOccurred('success')
+                    tonConnectUI.disconnect()
+                    tonConnectUI.openModal()
+                }
+            )
+
+        } else {
+            await tonConnectUI.openModal()
         }
-        await tonConnectUI.openModal()
     }
 
     return (

@@ -14,13 +14,12 @@ import Labels from '../_components/atoms/labels'
 import Skeletons from '../_components/molecules/skeletons'
 import { trpc } from '../_trpc/client'
 import { CommingSoon } from '../_components/CommingSoon'
-import { useHapticFeedback } from '@tma.js/sdk-react'
 
 const EventsAdminPage = () => {
     noStore()
 
     const WebApp = useWebApp()
-    const hapticfeedback = useHapticFeedback(true)
+    const hapticfeedback = WebApp?.HapticFeedback
     const { authorized, isLoading } = useAuth()
     const initData = WebApp?.initData
     const validatedData = trpc.users.validateUserInitData.useQuery(

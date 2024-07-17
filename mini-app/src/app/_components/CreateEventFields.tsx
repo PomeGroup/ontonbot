@@ -9,7 +9,6 @@ import {
     TRequiredEventFields,
     ZodErrors,
 } from '@/types'
-import { useInitData, usePopup } from '@tma.js/sdk-react'
 import { GithubIcon, Trash, TwitterIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { FC, useState } from 'react'
@@ -24,9 +23,8 @@ const CreateEventFields: FC<{
     event_uuid: string
 }> = ({ event, event_uuid }) => {
     const WebApp = useWebApp()
-    const data = useInitData(true)
-    const initData = WebApp?.initData || ''
-    const popup = usePopup(true)
+    const data = WebApp?.initDataUnsafe
+    const initData = WebApp?.initData
     const userId = data?.user?.id
     const router = useRouter()
     const addEventMutation = trpc.events.addEvent.useMutation()
@@ -89,17 +87,19 @@ const CreateEventFields: FC<{
     }
 
     const handleDelete = async (): Promise<void> => {
-        const confirmed = confirm(
-            'Are you sure you want to delete this event?\nThis action cannot be undone.'
+        WebApp?.showConfirm(
+            'Are you sure you want to delete this event?\nThis action cannot be undone.',
+            (confirmed) => {
+                if (!confirmed) {
+                    return
+                }
+
+                deleteEventMutation.mutateAsync({
+                    event_uuid,
+                    initData,
+                }).then(() => router.push('/events'))
+            }
         )
-        if (confirmed === false) {
-            return
-        }
-        await deleteEventMutation.mutateAsync({
-            event_uuid,
-            initData,
-        })
-        router.push('/events')
     }
 
 

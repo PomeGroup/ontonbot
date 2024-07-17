@@ -1,25 +1,25 @@
 'use client'
 
-import { useMiniApp } from '@tma.js/sdk-react'
+import useWebApp from '@/hooks/useWebApp'
 import Image from 'next/image'
 import { useEffect } from 'react'
 
 export function CommingSoon() {
-    const tma = useMiniApp(true)
+    const webApp = useWebApp()
 
     useEffect(() => {
-        tma?.setBgColor('#ffffff')
-        tma?.setHeaderColor('#ffffff')
+        webApp?.setBackgroundColor('#ffffff')
+        webApp?.setHeaderColor('#ffffff')
 
         document.querySelector('html')?.classList.remove('dark')
         document.querySelector('html')?.classList.add('light')
         return () => {
             document.querySelector('html')?.classList.remove('light')
             document.querySelector('html')?.classList.add('dark')
-            tma?.setBgColor('#1C1C1E')
-            tma?.setHeaderColor('#1C1C1E')
+            webApp?.setBackgroundColor('#1C1C1E')
+            webApp?.setHeaderColor('#1C1C1E')
         }
-    }, [tma?.headerColor])
+    }, [webApp?.headerColor])
 
     return (
         <div className='text-center text-black bg-white'>

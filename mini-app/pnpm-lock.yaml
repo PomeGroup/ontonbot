@@ -65,12 +65,6 @@ importers:
       '@tma.js/init-data-node':
         specifier: ^1.3.0
         version: 1.3.0
-      '@tma.js/sdk':
-        specifier: ^2.5.1
-        version: 2.5.1
-      '@tma.js/sdk-react':
-        specifier: ^2.2.5
-        version: 2.2.5(@types/react@18.2.45)(react@18.2.0)
       '@ton/core':
         specifier: ^0.53.0
         version: 0.53.0(@ton/crypto@3.2.0)
@@ -1573,15 +1567,6 @@ packages:
 
   '@tma.js/init-data-node@1.3.0':
     resolution: {integrity: sha512-8pcouJy8asVBEuSoqedKBZLiLCtuTOguunJbADgxyMWOp01GzGWFVqVHNk9URPO00KdHn9mnWJWxwqxb4+ydLg==}
-
-  '@tma.js/sdk-react@2.2.5':
-    resolution: {integrity: sha512-AgKrxlVHNiwHGM9PPPcRGcmfkCDb27jnVGkaIyUX68Gk7bmpNjP/LIO82OuziFjJzTkgDkiCv5hDYxrpLjQRKA==}
-    peerDependencies:
-      '@types/react': ^17.0.0 || ^18.0.0
-      react: ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
 
   '@tma.js/sdk@2.5.1':
     resolution: {integrity: sha512-uUFv3oINGRwkh4KbGxMq9OxDdSQOhH9O45i9i0aqen6pIakeiIxxzrF8Yhv2xSFWrn8V+gaOpr3IDrushlo5TA==}
@@ -6185,13 +6170,6 @@ snapshots:
   '@tma.js/init-data-node@1.3.0':
     dependencies:
       '@tma.js/sdk': 2.5.1
-
-  '@tma.js/sdk-react@2.2.5(@types/react@18.2.45)(react@18.2.0)':
-    dependencies:
-      '@tma.js/sdk': 2.5.1
-      react: 18.2.0
-    optionalDependencies:
-      '@types/react': 18.2.45
 
   '@tma.js/sdk@2.5.1': {}
 

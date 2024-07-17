@@ -225,7 +225,9 @@ export const usersRouter = router({
                         user_id: opts.ctx.user?.user_id as number,
                         event_uuid: opts.input.event_uuid
                     })
-                } catch (error) { }
+                } catch (error) {
+                    console.log(error)
+                }
 
                 // Fetch the reward from the database
                 const reward = await db.query.rewards.findFirst({
