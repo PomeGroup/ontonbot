@@ -3,7 +3,6 @@
 import { trpc } from '@/app/_trpc/client';
 import useWebApp from '@/hooks/useWebApp';
 import { useIntersection } from '@mantine/hooks';
-import { useUtils } from '@tma.js/sdk-react';
 import { Wallet2 } from 'lucide-react';
 import { FC, Fragment, useEffect, useRef } from 'react'
 
@@ -12,7 +11,6 @@ interface VisitorsTableProps {
 }
 
 const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
-    const tmaUtils = useUtils(true)
     const webApp = useWebApp()
 
     const { fetchNextPage, data, hasNextPage, isFetchingNextPage } = trpc.visitors.getAll.useInfiniteQuery(
@@ -60,7 +58,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
                                     className="truncate cursor-pointer"
                                     onClick={() => {
                                         if (visitor?.username) {
-                                            tmaUtils?.openTelegramLink(`https://t.me/${visitor?.username}`)
+                                            webApp?.openTelegramLink(`https://t.me/${visitor?.username}`)
                                         }
                                     }}>
                                     {visitor?.username ? (
@@ -77,7 +75,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
                                     className="flex justify-end items-center cursor-pointer"
                                     onClick={() => {
                                         if (visitor?.wallet_address) {
-                                            tmaUtils?.openLink(`https://tonviewer.com/${visitor?.wallet_address}`);
+                                            webApp?.openLink(`https://tonviewer.com/${visitor?.wallet_address}`);
                                         }
                                     }}
                                 >

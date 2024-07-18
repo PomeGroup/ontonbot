@@ -15,7 +15,6 @@ import { address, Address, toNano } from '@ton/core'
 import { Loader2 } from 'lucide-react'
 import { trpc } from '../../../_trpc/client'
 import Card from '../../atoms/cards'
-import { useHapticFeedback } from '@tma.js/sdk-react'
 
 const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     walletAddress,
@@ -28,7 +27,7 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     const validatedData = trpc.users.validateUserInitData.useQuery(
         WebApp?.initData || ''
     )
-    const hapticFeedback = useHapticFeedback(true)
+    const hapticFeedback = WebApp?.HapticFeedback
 
     const [distributionLoading, setDistributionLoading] = useState(false)
     const [withdrawLoading, setWithdrawLoading] = useState(false)

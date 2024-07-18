@@ -1,12 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useUtils } from '@tma.js/sdk-react'
 import Labels from '@/app/_components/atoms/labels/index'
-
-// const normalizeURL = (url: string) => {
-//     return url.replace(/www\./, '').replace(/(^\w+:|^)\/\//, '').replace(/\/.*/, '')
-// }
+import useWebApp from '@/hooks/useWebApp'
 
 const normalizeURL2 = (url: string) => {
     // remove protocol from the url, remove www if any, keep the rest of it, but cut it after 30 characters
@@ -18,12 +14,12 @@ type Props = {
 };
 
 const WebsiteLink = ({ location }: Props) => {
-    const tmaUtils = useUtils()
+    const webApp = useWebApp()
 
     return (
         <Link
             href={'#'}
-            onClick={() => tmaUtils?.openLink(location)}
+            onClick={() => webApp?.openLink(location)}
         >
             <Labels.Label>
                 {normalizeURL2(location)}

@@ -4,7 +4,6 @@ import { trpc } from '@/app/_trpc/client'
 import useWebApp from '@/hooks/useWebApp'
 import React from 'react'
 import GenericTask from './GenericTask'
-import { useUtils } from '@tma.js/sdk-react'
 
 const ButtonTask: React.FC<{
     title: string
@@ -23,7 +22,6 @@ const ButtonTask: React.FC<{
     fieldId,
     eventId,
 }) => {
-        const tmaUtils = useUtils(true)
         const webApp = useWebApp()
         const trpcUtils = trpc.useUtils()
         const upsertUserEventFieldMutation =
@@ -38,7 +36,7 @@ const ButtonTask: React.FC<{
         const handleConfirm = (e: any) => {
             e.stopPropagation()
 
-            tmaUtils?.openLink(url)
+            webApp?.openLink(url)
 
             upsertUserEventFieldMutation.mutate({
                 initData: webApp?.initData,

@@ -11,7 +11,6 @@ import React, {
     useState,
 } from 'react'
 import GenericTask from './GenericTask'
-import { useHapticFeedback, usePopup } from '@tma.js/sdk-react'
 
 const InputTypeCampaignTask: React.FC<{
     title: string
@@ -31,17 +30,14 @@ const InputTypeCampaignTask: React.FC<{
     eventId,
 }) => {
         const WebApp = useWebApp()
-        const hapticFeedback = useHapticFeedback(true)
+        const hapticFeedback = WebApp?.HapticFeedback
         const validatedData = trpc.users.validateUserInitData.useQuery(
             WebApp?.initData || ''
         )
-
         const [inputText, setInputText] = useState(data)
         const [isCompleted, setIsCompleted] = useState(completed)
         const [isEditing, setIsEditing] = useState(false)
         const editingRef = useRef<HTMLDivElement>(null)
-
-        const popups = usePopup(true)
         const trpcUtils = trpc.useUtils()
 
         useEffect(() => {
@@ -77,7 +73,7 @@ const InputTypeCampaignTask: React.FC<{
                 onError: () => {
                     hapticFeedback?.notificationOccurred('error')
                     // use toast instead of alert
-                    popups?.open({
+                    WebApp?.showPopup({
                         message: "Wrong Secret Entered"
                     })
                 },

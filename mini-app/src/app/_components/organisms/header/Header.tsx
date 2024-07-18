@@ -3,11 +3,12 @@
 import React from 'react'
 import Image from 'next/image'
 import { useTheme } from 'next-themes'
-import { useHapticFeedback } from '@tma.js/sdk-react'
+import useWebApp from '@/hooks/useWebApp'
 
 const Header = () => {
   const { theme } = useTheme()
-  const hapticFeedback = useHapticFeedback(true)
+  const webApp = useWebApp()
+  const hapticFeedback = webApp?.HapticFeedback
   let imageSuffix = '-white'
 
   if (theme === 'light') {

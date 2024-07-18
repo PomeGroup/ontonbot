@@ -10,16 +10,14 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import useAuth from '@/hooks/useAuth'
 import useWebApp from '@/hooks/useWebApp'
-import { useHapticFeedback, useMiniApp } from '@tma.js/sdk-react'
 import { FC } from 'react'
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
     const WebApp = useWebApp()
-    const miniApp = useMiniApp(true)
     const event = trpc.events.getEvent.useQuery(params.hash, {
         cacheTime: 0,
     })
-    const hapticFeedback = useHapticFeedback(true)
+    const hapticFeedback = WebApp?.HapticFeedback
 
     const { authorized, isLoading } = useAuth()
 
@@ -46,7 +44,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
             initData: WebApp?.initData || '',
         })
 
-        miniApp?.close()
+        WebApp?.close()
     }
 
     return (

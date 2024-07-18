@@ -1,12 +1,11 @@
 import { db } from '@/db/db'
-import { events, rewardType, rewards, users, visitors } from '@/db/schema'
+import { rewards, users } from '@/db/schema'
 import { validateMiniAppData } from '@/utils'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { initDataProtectedProcedure, publicProcedure, router } from '../trpc'
 import { TRPCError } from '@trpc/server'
-import { TRPC_ERROR_CODES_BY_KEY, TRPC_ERROR_CODES_BY_NUMBER } from '@trpc/server/rpc'
-import { createUserRewardLinkInputZod, rewardLinkZod } from '@/types/user.types'
+import { rewardLinkZod } from '@/types/user.types'
 import { createUserRewardLink } from '@/lib/ton-society-api'
 import { selectVisitorById } from '../db/visitors'
 
@@ -187,112 +186,11 @@ export const usersRouter = router({
             })
         )
         .mutation(async (opts) => {
-            try {
-                // Fetch the visitor from the database
-                const visitor = await db.query.visitors.findFirst({
-                    where(fields, { eq, and }) {
-                        return and(
-                            eq(fields.user_id, opts.ctx.parsedInitData.user.id),
-                            eq(fields.event_uuid, opts.input.event_uuid)
-                        )
-                    },
-                });
-
-                // Check if visitor exists
-                if (!visitor) {
-                    throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: "Visitor not found with the provided user ID and event UUID."
-                    });
-                }
-
-                // Validate the visitor
-                const isValidVisitor = await selectVisitorById(visitor.id);
-                if (!isValidVisitor.length) {
-                    throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: "Invalid visitor: please complete the tasks."
-                    });
-                }
-
-                // check if the user already does not own the reward
-                const reward = await db.query.rewards.findFirst({
-                    where(fields, { eq, and }) {
-                        return and(eq(fields.visitor_id, visitor.id))
-                    },
-                })
-
-                if (reward) {
-                    const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${opts.input.event_uuid}`
-                    console.log(err_msg)
-                    throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: err_msg
-                    });
-                }
-
-                const eventData = await db.query.events.findFirst({
-                    where(fields, { eq }) {
-                        return eq(fields.event_uuid, opts.input.event_uuid)
-                    },
-                })
-
-                if (!eventData?.activity_id || eventData.activity_id < 0) {
-                    throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: `this event does not have an activity id ${eventData?.activity_id}`
-                    });
-                }
-
-                const startDate = Number(eventData.start_date) * 1000
-                const endDate = Number(eventData.end_date) * 1000
-
-                if (Date.now() < startDate || Date.now() > endDate) {
-                    throw new TRPCError({
-                        message: 'Eather event is not started or ended',
-                        code: 'FORBIDDEN',
-                    })
-                }
-
-
-                // Create the user reward link
-                const res = await createUserRewardLink(eventData.activity_id, {
-                    wallet_address: opts.ctx.user?.wallet_address as string,
-                    telegram_user_id: opts.ctx.user?.user_id as number,
-                    attributes: eventData.society_hub ? [{
-                        trait_type: "Organizer",
-                        value: eventData.society_hub
-                    }] : undefined
-                });
-
-                // Ensure the response contains data
-                if (!res || !res.data || !res.data.data) {
-                    throw new TRPCError({
-                        code: "INTERNAL_SERVER_ERROR",
-                        message: "Failed to create user reward link."
-                    });
-                }
-
-                // Insert the reward into the database
-                await db.insert(rewards).values({
-                    visitor_id: visitor.id,
-                    type: 'ton_society_sbt',
-                    data: res.data.data,
-                }).execute();
-
-                return res.data.data;
-
-            } catch (error) {
-                console.error("Error in createUserReward mutation:", error);
-                if (error instanceof TRPCError) {
-                    throw error;
-                } else {
-                    throw new TRPCError({
-                        code: "INTERNAL_SERVER_ERROR",
-                        message: "An unexpected error occurred while creating user reward."
-                    });
-                }
-            }
+            return await createUserReward({
+                wallet_address: opts.ctx.user?.wallet_address as string,
+                user_id: opts.ctx.user?.user_id as number,
+                event_uuid: opts.input.event_uuid
+            })
         }),
 
     getVisitorReward: initDataProtectedProcedure
@@ -319,6 +217,16 @@ export const usersRouter = router({
                         code: "BAD_REQUEST",
                         message: "Visitor not found with the provided user ID and event UUID."
                     });
+                }
+
+                try {
+                    await createUserReward({
+                        wallet_address: opts.ctx.user?.wallet_address as string,
+                        user_id: opts.ctx.user?.user_id as number,
+                        event_uuid: opts.input.event_uuid
+                    })
+                } catch (error) {
+                    console.log(error)
                 }
 
                 // Fetch the reward from the database
@@ -363,3 +271,113 @@ export const usersRouter = router({
             }
         })
 })
+
+async function createUserReward(props: { wallet_address: string, user_id: number, event_uuid: string }) {
+    try {
+        // Fetch the visitor from the database
+        const visitor = await db.query.visitors.findFirst({
+            where(fields, { eq, and }) {
+                return and(
+                    eq(fields.user_id, props.user_id),
+                    eq(fields.event_uuid, props.event_uuid)
+                )
+            },
+        });
+
+        // Check if visitor exists
+        if (!visitor) {
+            throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Visitor not found with the provided user ID and event UUID."
+            });
+        }
+
+        // Validate the visitor
+        const isValidVisitor = await selectVisitorById(visitor.id);
+        if (!isValidVisitor.length) {
+            throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Invalid visitor: please complete the tasks."
+            });
+        }
+
+        // check if the user already does not own the reward
+        const reward = await db.query.rewards.findFirst({
+            where(fields, { eq, and }) {
+                return and(eq(fields.visitor_id, visitor.id))
+            },
+        })
+
+        if (reward) {
+            const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${props.event_uuid}`
+            console.log(err_msg)
+            throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: err_msg
+            });
+        }
+
+        const eventData = await db.query.events.findFirst({
+            where(fields, { eq }) {
+                return eq(fields.event_uuid, props.event_uuid)
+            },
+        })
+
+        if (!eventData?.activity_id || eventData.activity_id < 0) {
+            throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: `this event does not have an activity id ${eventData?.activity_id}`
+            });
+        }
+
+        const startDate = Number(eventData.start_date) * 1000
+        const endDate = Number(eventData.end_date) * 1000
+
+        if (Date.now() < startDate || Date.now() > endDate) {
+            throw new TRPCError({
+                message: 'Eather event is not started or ended',
+                code: 'FORBIDDEN',
+            })
+        }
+
+
+        // Create the user reward link
+        const res = await createUserRewardLink(eventData.activity_id, {
+            wallet_address: props.wallet_address,
+            telegram_user_id: props.user_id,
+            attributes: eventData.society_hub ? [{
+                trait_type: "Organizer",
+                value: eventData.society_hub
+            }] : undefined
+        });
+
+        // Ensure the response contains data
+        if (!res || !res.data || !res.data.data) {
+            throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Failed to create user reward link."
+            });
+        }
+
+        // Insert the reward into the database
+        await db.insert(rewards).values({
+            visitor_id: visitor.id,
+            type: 'ton_society_sbt',
+            data: res.data.data,
+        }).execute();
+
+        return res.data.data;
+
+    } catch (error) {
+        console.error("Error in createUserReward mutation:", error);
+        if (error instanceof TRPCError) {
+            throw error;
+        } else {
+            throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "An unexpected error occurred while creating user reward."
+            });
+        }
+    }
+
+}
