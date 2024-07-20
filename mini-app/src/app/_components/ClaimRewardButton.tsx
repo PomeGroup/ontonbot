@@ -1,9 +1,9 @@
 'use client'
 
-import useWebApp from "@/hooks/useWebApp";
-import { trpc } from "../_trpc/client";
-import { useEffect, useState } from "react";
-import MainButton from "./atoms/buttons/web-app/MainButton";
+import useWebApp from "@/hooks/useWebApp"
+import { useEffect, useState } from "react"
+import { trpc } from "../_trpc/client"
+import MainButton from "./atoms/buttons/web-app/MainButton"
 
 // Child component
 function ClaimRewardButtonChild({ link }: { link: string }) {
@@ -20,10 +20,12 @@ function ClaimRewardButtonChild({ link }: { link: string }) {
 export function ClaimRewardButton(props: { eventId: string }) {
     const WebApp = useWebApp()
     const initData = WebApp?.initData || ''
+    const [rewardLink, setRewardLink] = useState<string | undefined>(undefined)
+    
     const visitorReward = trpc.users.getVisitorReward.useQuery({ init_data: initData, event_uuid: props.eventId }, {
         refetchInterval: 1000,
+        enabled: !!rewardLink
     })
-    const [rewardLink, setRewardLink] = useState<string | undefined>(undefined)
 
     useEffect(() => {
         if (visitorReward.data?.data) {
