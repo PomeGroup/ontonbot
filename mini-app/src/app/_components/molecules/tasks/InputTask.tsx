@@ -81,6 +81,7 @@ const InputTypeCampaignTask: React.FC<{
                     hapticFeedback?.notificationOccurred('success')
                     setIsCompleted(inputText ? true : false)
                     trpcUtils.userEventFields.invalidate()
+                    trpcUtils.users.getVisitorReward.refetch()
                 }
             })
 

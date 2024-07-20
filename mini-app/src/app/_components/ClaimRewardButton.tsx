@@ -23,7 +23,6 @@ export function ClaimRewardButton(props: { eventId: string }) {
     const [rewardLink, setRewardLink] = useState<string | undefined>(undefined)
     
     const visitorReward = trpc.users.getVisitorReward.useQuery({ init_data: initData, event_uuid: props.eventId }, {
-        refetchInterval: 1000,
         enabled: !rewardLink
     })
 
