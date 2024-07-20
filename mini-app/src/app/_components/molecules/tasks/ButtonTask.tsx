@@ -28,6 +28,7 @@ const ButtonTask: React.FC<{
             trpc.userEventFields.upsertUserEventField.useMutation({
                 onSuccess() {
                     trpcUtils.userEventFields.invalidate()
+                    trpcUtils.users.getVisitorReward.invalidate({}, {refetchType: "all"})
                 },
             })
 

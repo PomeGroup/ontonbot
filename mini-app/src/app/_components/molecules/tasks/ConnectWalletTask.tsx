@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import { trpc } from '@/app/_trpc/client'
+import useWebApp from '@/hooks/useWebApp'
 import {
     useTonAddress,
     useTonConnectUI,
     useTonWallet,
 } from '@tonconnect/ui-react'
-import useWebApp from '@/hooks/useWebApp'
-import { trpc } from '@/app/_trpc/client'
+import { useEffect, useState } from 'react'
 import Tasks from '.'
 
 const ConnectWalletTask = () => {
@@ -15,7 +15,12 @@ const ConnectWalletTask = () => {
     const wallet = useTonWallet()
     const friendlyAddress = useTonAddress()
     const [tonConnectUI] = useTonConnectUI()
-    const addWalletMutation = trpc.users.addWallet.useMutation()
+    const trpcUtils = trpc.useUtils()
+    const addWalletMutation = trpc.users.addWallet.useMutation({
+        onSuccess: () => {
+            trpcUtils.users.getVisitorReward.invalidate({}, {refetchType: "all"})
+        }
+    })
     const userAddress = trpc.users.getWallet.useQuery(
         {
             initData: WebApp?.initData,

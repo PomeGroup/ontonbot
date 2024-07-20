@@ -1,13 +1,13 @@
 import { db } from '@/db/db'
 import { rewards, users } from '@/db/schema'
+import { createUserRewardLink } from '@/lib/ton-society-api'
+import { rewardLinkZod } from '@/types/user.types'
 import { validateMiniAppData } from '@/utils'
+import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { initDataProtectedProcedure, publicProcedure, router } from '../trpc'
-import { TRPCError } from '@trpc/server'
-import { rewardLinkZod } from '@/types/user.types'
-import { createUserRewardLink } from '@/lib/ton-society-api'
 import { selectVisitorById } from '../db/visitors'
+import { initDataProtectedProcedure, publicProcedure, router } from '../trpc'
 
 export const usersRouter = router({
     validateUserInitData: publicProcedure
