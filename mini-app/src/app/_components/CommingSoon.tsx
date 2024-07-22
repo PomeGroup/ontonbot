@@ -1,5 +1,6 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
 import useWebApp from '@/hooks/useWebApp'
 import Image from 'next/image'
 import { useEffect } from 'react'
@@ -31,6 +32,11 @@ export function CommingSoon() {
                 <Image src='/comming-soon.gif' width={194} height={194} alt='comming soon gif' />
                 <h1 className='font-bold text-3xl'>Comming Soon</h1>
                 <p className='font-bold leading-4'>Discover a World of Events at Your Fingertips</p>
+                <Button
+                    onClick={() => {
+                        webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=6acf01ed-3122-498a-a937-329766b459aa`)
+                    }}
+                className='text-white'>TON Gateway ticket 2024</Button>
             </div>
         </div>
     )

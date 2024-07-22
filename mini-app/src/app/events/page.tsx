@@ -11,9 +11,9 @@ import Link from 'next/link'
 import QrCodeButton from '../_components/atoms/buttons/QrCodeButton'
 import Card from '../_components/atoms/cards'
 import Labels from '../_components/atoms/labels'
+import { CommingSoon } from '../_components/CommingSoon'
 import Skeletons from '../_components/molecules/skeletons'
 import { trpc } from '../_trpc/client'
-import { CommingSoon } from '../_components/CommingSoon'
 
 const EventsAdminPage = () => {
     noStore()
