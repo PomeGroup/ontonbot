@@ -36,7 +36,7 @@ export function CommingSoon() {
                     onClick={() => {
                         webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=6acf01ed-3122-498a-a937-329766b459aa`)
                     }}
-                className='text-white'>TON Gateway ticket 2024</Button>
+                className='text-white'>TON Gateway 2024</Button>
             </div>
         </div>
     )
