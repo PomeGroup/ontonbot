@@ -64,10 +64,6 @@ const InputTypeCampaignTask: React.FC<{
             setInputText(data)
         }, [data])
 
-        useEffect(() => {
-            setIsCompleted(completed)
-        }, [completed])
-
         const upsertUserEventFieldMutation =
             trpc.userEventFields.upsertUserEventField.useMutation({
                 onError: () => {
@@ -76,6 +72,7 @@ const InputTypeCampaignTask: React.FC<{
                     WebApp?.showPopup({
                         message: "Wrong Secret Entered"
                     })
+                    setIsCompleted(false)
                 },
                 onSuccess: () => {
                     hapticFeedback?.notificationOccurred('success')
