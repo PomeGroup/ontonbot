@@ -10,12 +10,10 @@ export async function GET(
     { params }: { params: { id: string } }
 ) {
     try {
-        console.log(`GET request received for event ID: ${params.id}`)
         const eventId = params.id
         const searchParams = req.nextUrl.searchParams
         const dataOnly = searchParams.get('data_only') as 'true' | undefined
 
-        console.log(`Fetching event data for ID: ${eventId}`)
         const unsafeEvent = await db.query.events.findFirst({
             where(fields, { eq }) {
                 return (eq(fields.event_uuid, eventId))
@@ -23,13 +21,11 @@ export async function GET(
         })
 
         if (!unsafeEvent?.event_uuid) {
-            console.error(`Event not found for ID: ${eventId}`)
             return Response.json({ error: 'Event not found' }, { status: 400 })
         }
 
         const event = removeKey(unsafeEvent, 'secret_phrase')
 
-        console.log(`Fetching organizer data for user ID: ${event.owner}`)
         const organizer = await db.query.users.findFirst({
             where(fields, { eq }) {
                 return eq(fields.user_id, event.owner as number)
@@ -37,12 +33,12 @@ export async function GET(
         })
 
         if (!organizer) {
-            console.warn(`Organizer not found for event ID: ${eventId}`)
+            console.error(`Organizer not found for event ID: ${eventId}`)
+            return Response.json({ error: `Organizer not found for event ID: ${eventId}` }, { status: 400 })
         }
 
         let ticket
         if (event.ticketToCheckIn) {
-            console.log(`Fetching ticket data for event ID: ${eventId}`)
             ticket = await db.query.eventTicket.findFirst({
                 where(fields, { eq }) {
                     return eq(fields.event_uuid, event.event_uuid as string)
@@ -53,7 +49,6 @@ export async function GET(
             }
         }
 
-        console.log(`Counting sold tickets for event ID: ${eventId}`)
         const soldTicketsCount = await db
             .select({ count: sql`count(*)`.mapWith(Number) })
             .from(orders)
@@ -69,11 +64,9 @@ export async function GET(
             )
             .execute()
 
-        const isSoldOut = (soldTicketsCount[0].count as unknown as number) >= (ticket?.count as unknown as number);
-        console.log(`Event ${eventId} sold out status: ${isSoldOut}`)
+        const isSoldOut = (soldTicketsCount[0].count as unknown as number) >= (ticket?.count as unknown as number)
 
         if (dataOnly === 'true') {
-            console.log(`Returning data-only response for event ID: ${eventId}`)
             return Response.json({
                 ...event,
                 organizer,
@@ -91,7 +84,6 @@ export async function GET(
             return unauthorized
         }
 
-        console.log(`Fetching user ticket for user ID: ${userId} and event ID: ${eventId}`)
         const userTicket = (
             await db
                 .select()
@@ -106,7 +98,6 @@ export async function GET(
                 .execute()
         ).pop()
 
-        console.log(`Fetching user order for user ID: ${userId} and event ID: ${eventId}`)
         const userOrder = (
             await db
                 .select()
@@ -134,7 +125,6 @@ export async function GET(
             isSoldOut,
         }
 
-        console.log(`Successfully processed request for event ID: ${eventId}`)
         return Response.json(data, {
             status: 200,
         })
