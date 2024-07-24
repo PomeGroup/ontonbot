@@ -65,10 +65,10 @@ export const userEventFieldsRouter = router({
                 })
             }
 
-            const userField = (await db
+            let userField = (await db
                 .select({ data: userEventFields.data })
                 .from(userEventFields)
-                .leftJoin(eventFields,
+                .rightJoin(eventFields,
                     and(
                         eq(eventFields.title, "Secret Phrase"),
                         eq(eventFields.id, opts.input.field_id),
@@ -79,16 +79,30 @@ export const userEventFieldsRouter = router({
                         eq(userEventFields.event_field_id, opts.input.field_id),
                         eq(userEventFields.user_id, initDataJson.user.id)
                     )
-                )).pop()
-
-            if (eventData[0].secret_phrase !== opts.input.data) {
-                throw new TRPCError(
-                    {
-                        message: "wrong secret phrase entered",
-                        code: TRPC_ERROR_CODES_BY_NUMBER['-32003']
-                    }
-                )
+                )).pop();
+            
+            // Check if eventFields were not found
+            const eventFieldsFound = (await db
+                .select({ id: eventFields.id })
+                .from(eventFields)
+                .where(
+                    and(
+                        eq(eventFields.title, "Secret Phrase"),
+                        eq(eventFields.id, opts.input.field_id)
+                    )
+                )).length > 0;
+            
+            if (!eventFieldsFound) {
+                userField = undefined;
             }
+            
+            if (userField && eventData[0].secret_phrase !== opts.input.data) {
+                throw new TRPCError({
+                    message: "wrong secret phrase entered",
+                    code: TRPC_ERROR_CODES_BY_NUMBER['-32003']
+                });
+            }
+            
 
             const res = await db
                 .insert(userEventFields)
