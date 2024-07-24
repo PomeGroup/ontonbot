@@ -2,10 +2,10 @@ import { db } from '@/db/db'
 import { eventFields, events, userEventFields } from '@/db/schema'
 import { validateMiniAppData } from '@/utils'
 import { TRPCError } from '@trpc/server'
+import { TRPC_ERROR_CODES_BY_NUMBER } from '@trpc/server/http'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 import { publicProcedure, router } from '../trpc'
-import { TRPC_ERROR_CODES_BY_NUMBER } from '@trpc/server/http'
 
 interface UserEventField {
     id: number
@@ -31,8 +31,8 @@ export const userEventFieldsRouter = router({
             })
         )
         .mutation(async (opts) => {
-            if (!opts.input.initData) {
-                return undefined
+            if (!opts.input.initData) {            
+                throw new Error('Unauthorized access or invalid role no initdata found')
             }
 
             const { valid, initDataJson } = validateMiniAppData(
@@ -81,7 +81,7 @@ export const userEventFieldsRouter = router({
                     )
                 )).pop()
 
-            if (userField && eventData[0].secret_phrase !== opts.input.data) {
+            if (eventData[0].secret_phrase !== opts.input.data) {
                 throw new TRPCError(
                     {
                         message: "wrong secret phrase entered",
