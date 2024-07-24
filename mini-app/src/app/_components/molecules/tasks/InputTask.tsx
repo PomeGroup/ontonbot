@@ -4,11 +4,9 @@ import { trpc } from '@/app/_trpc/client'
 import useWebApp from '@/hooks/useWebApp'
 import Image from 'next/image'
 import React, {
-    KeyboardEvent,
-    MouseEvent,
     useEffect,
     useRef,
-    useState,
+    useState
 } from 'react'
 import GenericTask from './GenericTask'
 
@@ -32,12 +30,14 @@ const InputTypeCampaignTask: React.FC<{
         const WebApp = useWebApp()
         const hapticFeedback = WebApp?.HapticFeedback
         const validatedData = trpc.users.validateUserInitData.useQuery(
-            WebApp?.initData || ''
+            WebApp?.initData || '', {
+                queryKey: ['users.validateUserInitData', WebApp?.initData || ''],
+            }
         )
         const [inputText, setInputText] = useState(data)
         const [isCompleted, setIsCompleted] = useState(completed)
         const [isEditing, setIsEditing] = useState(false)
-        const editingRef = useRef<HTMLDivElement>(null)
+        const editingRef = useRef<HTMLFormElement>(null)
         const trpcUtils = trpc.useUtils()
 
         useEffect(() => {
@@ -64,10 +64,6 @@ const InputTypeCampaignTask: React.FC<{
             setInputText(data)
         }, [data])
 
-        useEffect(() => {
-            setIsCompleted(completed)
-        }, [completed])
-
         const upsertUserEventFieldMutation =
             trpc.userEventFields.upsertUserEventField.useMutation({
                 onError: () => {
@@ -76,6 +72,7 @@ const InputTypeCampaignTask: React.FC<{
                     WebApp?.showPopup({
                         message: "Wrong Secret Entered"
                     })
+                    setIsCompleted(false)
                 },
                 onSuccess: () => {
                     hapticFeedback?.notificationOccurred('success')
@@ -89,9 +86,7 @@ const InputTypeCampaignTask: React.FC<{
             setInputText(e.target.value)
         }
 
-        function handleConfirm(
-            e: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLInputElement>
-        ) {
+        const handleConfirm: React.FormEventHandler<HTMLFormElement> = (e) => {
             e.preventDefault()
             setIsEditing(false)
 
@@ -127,9 +122,10 @@ const InputTypeCampaignTask: React.FC<{
                         />
                     </div>
                 ) : (
-                    <div
+                    <form
                         className="my-4 rounded-[14px] p-4 border border-separator flex items-center justify-start"
                         ref={editingRef}
+                        onSubmit={handleConfirm}
                     >
                         <input
                             className="w-full h-10 rounded-lg border border-separator p-2 mr-2"
@@ -138,15 +134,10 @@ const InputTypeCampaignTask: React.FC<{
                             placeholder="Type something..."
                             value={inputText || ''}
                             onChange={handleInputChange}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    handleConfirm(e)
-                                }
-                            }}
                             autoFocus
                         />
                         <button
-                            onClick={handleConfirm}
+                            type='submit'
                             className={`rounded-lg min-w-[40px] min-h-[40px] flex items-center justify-center bg-tertiary`}
                         >
                             <Image
@@ -157,7 +148,7 @@ const InputTypeCampaignTask: React.FC<{
                                 height={16}
                             />
                         </button>
-                    </div>
+                    </form>
                 )}
             </div>
         )

@@ -25,7 +25,10 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     const [tonConnectUI] = useTonConnectUI()
     const WebApp = useWebApp()
     const validatedData = trpc.users.validateUserInitData.useQuery(
-        WebApp?.initData || ''
+        WebApp?.initData || '',
+        {
+            queryKey: ['users.validateUserInitData', WebApp?.initData || ''],
+        }
     )
     const hapticFeedback = WebApp?.HapticFeedback
 
@@ -42,12 +45,20 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
 
     const walletBalance = trpc.events.getWalletBalance.useQuery(walletAddress, {
         refetchInterval: 1000 * 10,
+        queryKey: ["events.getWalletBalance", walletAddress],
     }).data
 
     const numberOfVisitors = trpc.events.getVisitorsWithWalletsNumber.useQuery({
         event_uuid: hash,
         initData: WebApp?.initData,
-    })
+    },
+    {
+        queryKey: ["events.getVisitorsWithWalletsNumber", {
+            event_uuid: hash,
+            initData: WebApp?.initData,
+        }]
+    }
+)
 
     const addWalletMutation = trpc.users.addWallet.useMutation()
 

@@ -4,7 +4,6 @@ import Buttons from '@/app/_components/atoms/buttons'
 import CreateEventFields from '@/app/_components/CreateEventFields'
 import Alerts from '@/app/_components/molecules/alerts'
 import Tables from '@/app/_components/molecules/tables'
-import RoomWallet from '@/app/_components/organisms/room-wallet'
 import { trpc } from '@/app/_trpc/client'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -16,6 +15,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
     const WebApp = useWebApp()
     const event = trpc.events.getEvent.useQuery(params.hash, {
         cacheTime: 0,
+        queryKey: ['events.getEvent', params.hash],
     })
     const hapticFeedback = WebApp?.HapticFeedback
 
@@ -69,12 +69,6 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="manage">
-                    {event.data?.wallet_address && (
-                        <RoomWallet
-                            hash={params.hash}
-                            walletAddress={event.data?.wallet_address}
-                        />
-                    )}
                     <div className="mt-2">
                         <Button
                             className="w-full relative"

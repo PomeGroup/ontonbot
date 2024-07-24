@@ -15,6 +15,11 @@ const AllTasks: FC<{
     const userEventFieldsQuery = trpc.userEventFields.getUserEventFields.useQuery({
         initData,
         event_hash: eventHash,
+    }, {
+        queryKey: ['userEventFields.getUserEventFields', {
+            event_hash:eventHash,
+            initData 
+        }]
     })
     const userEventFields = userEventFieldsQuery.data
 
