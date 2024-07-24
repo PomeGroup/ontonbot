@@ -15,6 +15,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
     const WebApp = useWebApp()
     const event = trpc.events.getEvent.useQuery(params.hash, {
         cacheTime: 0,
+        queryKey: ['events.getEvent', params.hash],
     })
     const hapticFeedback = WebApp?.HapticFeedback
 

@@ -24,8 +24,11 @@ export function ClaimRewardButton(props: { eventId: string }) {
     
     const visitorReward = trpc.users.getVisitorReward.useQuery({ init_data: initData, event_uuid: props.eventId }, {
         enabled: !rewardLink,
-        retry: 2,
-        retryDelay: 1000
+        retry: false,
+        queryKey: ['users.getVisitorReward', {
+            init_data: initData,
+            event_uuid: props.eventId
+        }],
     })
 
     useEffect(() => {

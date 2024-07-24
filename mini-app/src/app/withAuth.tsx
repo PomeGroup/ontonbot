@@ -12,6 +12,7 @@ const withAuth = <P extends object>(WrappedComponent: ComponentType<P>) => {
         const validateUserInitDataQuery =
             trpc.users.haveAccessToEventAdministration.useQuery(initData, {
                 enabled: !!initData,
+                queryKey: ['users.haveAccessToEventAdministration', initData],
             })
 
         useEffect(() => {

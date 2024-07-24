@@ -23,9 +23,13 @@ const EventsAdminPage = () => {
     const { authorized, isLoading } = useAuth()
     const initData = WebApp?.initData
     const validatedData = trpc.users.validateUserInitData.useQuery(
-        initData || ''
+        initData || '', {
+            queryKey: ["users.validateUserInitData", initData || ""],
+        }
     )
-    const eventsData = trpc.events.getEvents.useQuery({ initData })
+    const eventsData = trpc.events.getEvents.useQuery({ initData }, {
+        queryKey: ['events.getEvents', {initData}],
+    })
 
     if (
         eventsData.isLoading ||

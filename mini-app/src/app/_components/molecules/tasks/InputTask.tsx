@@ -32,7 +32,9 @@ const InputTypeCampaignTask: React.FC<{
         const WebApp = useWebApp()
         const hapticFeedback = WebApp?.HapticFeedback
         const validatedData = trpc.users.validateUserInitData.useQuery(
-            WebApp?.initData || ''
+            WebApp?.initData || '', {
+                queryKey: ['users.validateUserInitData', WebApp?.initData || ''],
+            }
         )
         const [inputText, setInputText] = useState(data)
         const [isCompleted, setIsCompleted] = useState(completed)
