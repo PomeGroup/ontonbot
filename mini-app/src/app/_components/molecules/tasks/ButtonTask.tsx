@@ -39,13 +39,14 @@ const ButtonTask: React.FC<{
 
             webApp?.openLink(url)
 
-            upsertUserEventFieldMutation.mutate({
-                initData: webApp?.initData,
-                field_id: fieldId,
-                data: '',
-                completed: true,
-                event_id: eventId,
-            })
+            if (webApp?.initData) {
+                upsertUserEventFieldMutation.mutate({
+                    init_data: webApp.initData,
+                    field_id: fieldId,
+                    data: '',
+                    event_id: eventId,
+                })
+            }
 
             setCompletedInternal(true)
         }
