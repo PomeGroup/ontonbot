@@ -57,7 +57,7 @@ export const selectVisitorById = async (visitorId: number) => {
         .leftJoin(
             eventFields,
             and(
-                eq(eventFields.title, 'Secret Phrase'),
+                eq(eventFields.title, 'secret_phrase_onton_input'),
                 eq(eventFields.id, events.event_id),
                 eq(eventFields.description, 'Enter the secret phrase')
             )
@@ -87,13 +87,13 @@ export const selectVisitorById = async (visitorId: number) => {
                         JOIN event_fields ef ON ef.id = uef.event_field_id
                         WHERE uef.user_id = users.user_id
                           AND ef.event_id = events.event_id
-                          AND ef.title = 'Secret Phrase'
+                          AND ef.title = 'secret_phrase_onton_input'
                           AND uef.data = events.secret_phrase
                     )`
                 )
             )
-        ).execute()
-
+        )
+        .execute()
 }
 
 export const selectVisitorsByEventUuid = async (
@@ -116,7 +116,7 @@ export const selectVisitorsByEventUuid = async (
         .leftJoin(
             eventFields,
             and(
-                eq(eventFields.title, 'Secret Phrase'),
+                eq(eventFields.title, 'secret_phrase_onton_input'),
                 eq(eventFields.id, events.event_id),
                 eq(eventFields.description, 'Enter the secret phrase')
             )
@@ -146,7 +146,7 @@ export const selectVisitorsByEventUuid = async (
                         JOIN event_fields ef ON ef.id = uef.event_field_id
                         WHERE uef.user_id = users.user_id
                           AND ef.event_id = events.event_id
-                          AND ef.title = 'Secret Phrase'
+                          AND ef.title = 'secret_phrase_onton_input'
                           AND uef.data = events.secret_phrase
                     )`
                 )

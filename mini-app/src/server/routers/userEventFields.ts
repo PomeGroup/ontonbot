@@ -50,23 +50,33 @@ export const userEventFieldsRouter = router({
                     code: 'FORBIDDEN',
                 })
             }
-            
+
             // Check if eventFields were not found
-            const eventSecretField = (await db
-                .select({ id: eventFields.id })
-                .from(eventFields)
-                .where(
-                    and(
-                        eq(eventFields.title, "Secret Phrase"),
-                        eq(eventFields.id, opts.input.field_id)
-                    )
-                )).length > 0;
-            
-            if (eventSecretField && !!eventData[0].secret_phrase && eventData[0].secret_phrase !== opts.input.data) { 
+            const eventSecretField =
+                (
+                    await db
+                        .select({ id: eventFields.id })
+                        .from(eventFields)
+                        .where(
+                            and(
+                                eq(
+                                    eventFields.title,
+                                    'secret_phrase_onton_input'
+                                ),
+                                eq(eventFields.id, opts.input.field_id)
+                            )
+                        )
+                ).length > 0
+
+            if (
+                eventSecretField &&
+                !!eventData[0].secret_phrase &&
+                eventData[0].secret_phrase !== opts.input.data
+            ) {
                 throw new TRPCError({
-                    message: "wrong secret phrase entered",
-                    code: TRPC_ERROR_CODES_BY_NUMBER['-32003']
-                });
+                    message: 'wrong secret phrase entered',
+                    code: TRPC_ERROR_CODES_BY_NUMBER['-32003'],
+                })
             }
 
             const res = await db
@@ -101,92 +111,93 @@ export const userEventFieldsRouter = router({
                 event_hash: z.string(),
             })
         )
-        .query(
-            async (opts) => {
-                try {
-                    if (!opts.input.initData) {
-                        throw new TRPCError({
-                            code: "BAD_REQUEST",
-                            message: "initData is required"
-                        });
-                    }
+        .query(async (opts) => {
+            try {
+                if (!opts.input.initData) {
+                    throw new TRPCError({
+                        code: 'BAD_REQUEST',
+                        message: 'initData is required',
+                    })
+                }
 
-                    const { valid, initDataJson } = validateMiniAppData(
-                        opts.input.initData
-                    );
+                const { valid, initDataJson } = validateMiniAppData(
+                    opts.input.initData
+                )
 
-                    if (!valid) {
-                        throw new TRPCError({
-                            code: "UNAUTHORIZED",
-                            message: "Unauthorized access or invalid role"
-                        });
-                    }
+                if (!valid) {
+                    throw new TRPCError({
+                        code: 'UNAUTHORIZED',
+                        message: 'Unauthorized access or invalid role',
+                    })
+                }
 
-                    const userEventFieldsResult = await db
-                        .select({
-                            eventFieldId: userEventFields.event_field_id,
-                            userData: userEventFields.data,
-                            completed: userEventFields.completed,
-                            createdAt: userEventFields.created_at,
-                            // Add other fields from userEventFields as necessary
-                        })
-                        .from(events)
-                        .innerJoin(
-                            eventFields,
-                            eq(eventFields.event_id, events.event_id)
+                const userEventFieldsResult = await db
+                    .select({
+                        eventFieldId: userEventFields.event_field_id,
+                        userData: userEventFields.data,
+                        completed: userEventFields.completed,
+                        createdAt: userEventFields.created_at,
+                        // Add other fields from userEventFields as necessary
+                    })
+                    .from(events)
+                    .innerJoin(
+                        eventFields,
+                        eq(eventFields.event_id, events.event_id)
+                    )
+                    .leftJoin(
+                        userEventFields,
+                        and(
+                            eq(userEventFields.event_field_id, eventFields.id),
+                            eq(userEventFields.user_id, initDataJson.user.id)
                         )
-                        .leftJoin(
-                            userEventFields,
-                            and(
-                                eq(userEventFields.event_field_id, eventFields.id),
-                                eq(userEventFields.user_id, initDataJson.user.id)
-                            )
-                        )
-                        .where(eq(events.event_uuid, opts.input.event_hash))
-                        .execute();
+                    )
+                    .where(eq(events.event_uuid, opts.input.event_hash))
+                    .execute()
 
-                    if (!userEventFieldsResult || userEventFieldsResult.length === 0) {
-                        return {}
-                    }
+                if (
+                    !userEventFieldsResult ||
+                    userEventFieldsResult.length === 0
+                ) {
+                    return {}
+                }
 
-                    const data: { [key: string]: EventFieldData } = {};
+                const data: { [key: string]: EventFieldData } = {}
 
-                    for (const field of userEventFieldsResult) {
-                        data[field.eventFieldId ?? 'unknown'] = {
-                            id: field.eventFieldId ?? 'unknown',
-                            event_field_id: field.eventFieldId ?? 'unknown',
-                            user_id: initDataJson.user.id,
-                            data: field.userData ?? null,
-                            completed: field.completed ?? false,
-                            created_at: field.createdAt ?? null,
-                            // Map other necessary fields from userEventFields
-                        };
-                    }
-
-                    return data;
-
-                } catch (error) {
-                    console.error("Error in getUserEventFields query:", error);
-
-                    if (error instanceof TRPCError) {
-                        throw error;
-                    } else {
-                        throw new TRPCError({
-                            code: "INTERNAL_SERVER_ERROR",
-                            message: "An unexpected error occurred while retrieving user event fields"
-                        });
+                for (const field of userEventFieldsResult) {
+                    data[field.eventFieldId ?? 'unknown'] = {
+                        id: field.eventFieldId ?? 'unknown',
+                        event_field_id: field.eventFieldId ?? 'unknown',
+                        user_id: initDataJson.user.id,
+                        data: field.userData ?? null,
+                        completed: field.completed ?? false,
+                        created_at: field.createdAt ?? null,
+                        // Map other necessary fields from userEventFields
                     }
                 }
+
+                return data
+            } catch (error) {
+                console.error('Error in getUserEventFields query:', error)
+
+                if (error instanceof TRPCError) {
+                    throw error
+                } else {
+                    throw new TRPCError({
+                        code: 'INTERNAL_SERVER_ERROR',
+                        message:
+                            'An unexpected error occurred while retrieving user event fields',
+                    })
+                }
             }
-        )
+        }),
 })
 
 interface EventFieldData {
-    id: number | string;
-    event_field_id: number | string;
-    user_id: number;
-    data: any;
-    completed: boolean;
-    created_at: Date | null;
+    id: number | string
+    event_field_id: number | string
+    user_id: number
+    data: any
+    completed: boolean
+    created_at: Date | null
     // Add other necessary fields from userEventFields
 }

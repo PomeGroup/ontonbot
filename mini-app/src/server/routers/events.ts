@@ -6,11 +6,7 @@ import {
     users,
     visitors,
 } from '@/db/schema'
-import {
-    EventDataSchema,
-    HubsResponse,
-    SocietyHub,
-} from '@/types'
+import { EventDataSchema, HubsResponse, SocietyHub } from '@/types'
 import { fetchBalance, sleep, validateMiniAppData } from '@/utils'
 import axios from 'axios'
 import dotenv from 'dotenv'
@@ -153,7 +149,6 @@ export const eventsRouter = router({
                 throw new Error('Unauthorized access or invalid role')
             }
             try {
-
                 let highloadWallet: HighloadWalletResponse =
                     {} as HighloadWalletResponse
 
@@ -176,12 +171,9 @@ export const eventsRouter = router({
                             image_url: opts.input.eventData.image_url,
                             wallet_address: highloadWallet.wallet_address,
                             wallet_seed_phrase: highloadWallet.seed_phrase,
-                            society_hub:
-                                opts.input.eventData.society_hub.name,
-                            society_hub_id:
-                                opts.input.eventData.society_hub.id,
-                            secret_phrase:
-                                opts.input.eventData.secret_phrase,
+                            society_hub: opts.input.eventData.society_hub.name,
+                            society_hub_id: opts.input.eventData.society_hub.id,
+                            secret_phrase: opts.input.eventData.secret_phrase,
                             start_date: opts.input.eventData.start_date,
                             end_date: opts.input.eventData.end_date,
                             timezone: opts.input.eventData.timezone,
@@ -213,7 +205,7 @@ export const eventsRouter = router({
                     if (opts.input.eventData.secret_phrase !== '') {
                         await trx.insert(eventFields).values({
                             emoji: '🔒',
-                            title: 'Secret Phrase',
+                            title: 'secret_phrase_onton_input',
                             description: 'Enter the secret phrase',
                             placeholder: opts.input.eventData.secret_phrase,
                             type: 'input',
@@ -226,7 +218,9 @@ export const eventsRouter = router({
                     const additional_info = z
                         .string()
                         .url()
-                        .safeParse(opts.input.eventData.location).success ? "Online" : opts.input.eventData.location
+                        .safeParse(opts.input.eventData.location).success
+                        ? 'Online'
+                        : opts.input.eventData.location
 
                     const eventDraft: TonSocietyRegisterActivityT = {
                         title: opts.input.eventData.title,
@@ -241,18 +235,24 @@ export const eventsRouter = router({
                         ),
                         additional_info,
                         cta_button: {
-                            link:
-                                `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}`,
-                            label: "Enter Event"
-                        }
+                            link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}`,
+                            label: 'Enter Event',
+                        },
                     }
 
                     const res = await registerActivity(eventDraft)
-                    console.log("activity created by id", res)
+                    console.log('activity created by id', res)
 
-                    await trx.update(events)
+                    await trx
+                        .update(events)
                         .set({ activity_id: res.data.activity_id })
-                        .where(eq(events.event_uuid, newEvent[0].event_uuid as string)).execute()
+                        .where(
+                            eq(
+                                events.event_uuid,
+                                newEvent[0].event_uuid as string
+                            )
+                        )
+                        .execute()
 
                     return newEvent
                 })
@@ -260,7 +260,11 @@ export const eventsRouter = router({
                 return { success: true, eventId: result[0].event_id }
             } catch (error) {
                 if (axios.isAxiosError(error)) {
-                    console.error('Error during API call:', error.message, error.response?.data)
+                    console.error(
+                        'Error during API call:',
+                        error.message,
+                        error.response?.data
+                    )
                 } else {
                     console.error('Unexpected error:', error)
                 }
@@ -431,7 +435,7 @@ export const eventsRouter = router({
                 if (
                     visitor.users !== null &&
                     visitor.users.wallet_address !==
-                    null /* && eligibleUserIds.has(visitor.users.user_id) */
+                        null /* && eligibleUserIds.has(visitor.users.user_id) */
                 ) {
                     receivers.receivers[
                         visitor.users.wallet_address!.toString()
@@ -497,9 +501,7 @@ export const eventsRouter = router({
                     const currentFields = await trx
                         .select()
                         .from(eventFields)
-                        .where(
-                            eq(eventFields.event_id, eventData.event_id!)
-                        )
+                        .where(eq(eventFields.event_id, eventData.event_id!))
                         .execute()
 
                     const fieldsToDelete = currentFields.filter(
@@ -521,11 +523,11 @@ export const eventsRouter = router({
                         .from(eventFields)
                         .where(
                             and(
+                                eq(eventFields.event_id, eventData.event_id!),
                                 eq(
-                                    eventFields.event_id,
-                                    eventData.event_id!
-                                ),
-                                eq(eventFields.title, 'Secret Phrase')
+                                    eventFields.title,
+                                    'secret_phrase_onton_input'
+                                )
                             )
                         )
                         .execute()
@@ -538,12 +540,11 @@ export const eventsRouter = router({
                             .insert(eventFields)
                             .values({
                                 emoji: '🔒',
-                                title: 'Secret Phrase',
+                                title: 'secret_phrase_onton_input',
                                 description: 'Enter the secret phrase',
                                 placeholder: eventData.secret_phrase,
                                 type: 'input',
-                                order_place:
-                                    eventData.dynamic_fields.length,
+                                order_place: eventData.dynamic_fields.length,
                                 event_id: eventData.event_id,
                             })
                             .execute()
@@ -553,9 +554,7 @@ export const eventsRouter = router({
                     ) {
                         await trx
                             .delete(eventFields)
-                            .where(
-                                eq(eventFields.id, secretPhraseTask[0].id)
-                            )
+                            .where(eq(eventFields.id, secretPhraseTask[0].id))
                             .execute()
                     }
 
@@ -601,7 +600,9 @@ export const eventsRouter = router({
                     const additional_info = z
                         .string()
                         .url()
-                        .safeParse(eventData).success ? "Online" : opts.input.eventData.location
+                        .safeParse(eventData).success
+                        ? 'Online'
+                        : opts.input.eventData.location
 
                     const eventDraft: TonSocietyRegisterActivityT = {
                         title: eventData.title,
@@ -613,8 +614,8 @@ export const eventsRouter = router({
                         additional_info,
                         cta_button: {
                             link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
-                            label: "Enter Event"
-                        }
+                            label: 'Enter Event',
+                        },
                     }
 
                     await updateActivity(
@@ -819,9 +820,8 @@ const fetchTwitterFollowers = async (twitterHandle: string) => {
     console.log({ twitterHandle })
     try {
         const twitterClient = new Client(process.env.TWITTER_BEARER_TOKEN || '')
-        const twitterAccount = await twitterClient.users.findUserByUsername(
-            twitterHandle
-        )
+        const twitterAccount =
+            await twitterClient.users.findUserByUsername(twitterHandle)
         if (twitterAccount.errors && twitterAccount.errors?.length !== 0) {
             console.log(twitterAccount.errors)
             console.error(
