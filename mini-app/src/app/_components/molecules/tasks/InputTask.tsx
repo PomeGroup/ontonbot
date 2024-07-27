@@ -1,14 +1,14 @@
+// InputTypeCampaignTask.tsx
+
 'use client'
 
-import {trpc} from '@/app/_trpc/client'
+import { trpc } from '@/app/_trpc/client'
 import useWebApp from '@/hooks/useWebApp'
 import Image from 'next/image'
-import React, {
-    useEffect,
-    useRef,
-    useState
-} from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import GenericTask from './GenericTask'
+import ModalDialog from '../../SecretSavedModal'
+
 
 const InputTypeCampaignTask: React.FC<{
     title: string
@@ -34,27 +34,22 @@ const InputTypeCampaignTask: React.FC<{
             queryKey: ['users.validateUserInitData', WebApp?.initData || ''],
         }
     )
-    console.log("***completed value is: ", title, completed)
     const [inputText, setInputText] = useState(data)
     const [isCompleted, setIsCompleted] = useState(completed)
     const [isEditing, setIsEditing] = useState(false)
+    const [isModalVisible, setIsModalVisible] = useState(completed)
     const editingRef = useRef<HTMLFormElement>(null)
     const trpcUtils = trpc.useUtils()
     const isSecretPhrase = title === 'secret_phrase_onton_input'
+    const [modalOpen, setModalOpen] = useState(true)
 
     if (isSecretPhrase && isCompleted) {
         description = 'Your secret phrase is saved'
     }
 
     useEffect(() => {
-        function handleClickOutside(
-            this: Document,
-            event: globalThis.MouseEvent
-        ) {
-            if (
-                editingRef.current &&
-                !editingRef.current.contains(event.target as Node)
-            ) {
+        function handleClickOutside(event: MouseEvent) {
+            if (editingRef.current && !editingRef.current.contains(event.target as Node)) {
                 hapticFeedback?.notificationOccurred('error')
                 setIsEditing(false)
             }
@@ -74,19 +69,18 @@ const InputTypeCampaignTask: React.FC<{
         trpc.userEventFields.upsertUserEventField.useMutation({
             onError: (error) => {
                 hapticFeedback?.notificationOccurred('error')
-                // use toast instead of alert
                 WebApp?.showPopup({
                     message: error.message
                 })
                 setIsCompleted(false)
-
             },
             onSuccess: () => {
                 hapticFeedback?.notificationOccurred('success')
                 setIsCompleted(true)
                 trpcUtils.userEventFields.invalidate()
-                trpcUtils.users.getVisitorReward.invalidate({}, {refetchType: "all"})
+                trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" })
 
+                setIsModalVisible(true)
             }
         })
 
@@ -120,13 +114,10 @@ const InputTypeCampaignTask: React.FC<{
     return (
         <div className="input-type-campaign-task">
             {!isEditing || isCompleted ? (
-                <div
-                    onClick={() => {
-
-                        hapticFeedback?.impactOccurred('medium')
-                        setIsEditing(true)
-                    }}
-                >
+                <div onClick={() => {
+                    hapticFeedback?.impactOccurred('medium')
+                    setIsEditing(true)
+                }}>
                     <GenericTask
                         title={title}
                         description={description}
@@ -163,6 +154,14 @@ const InputTypeCampaignTask: React.FC<{
                     </button>
                 </form>
             )}
+
+            <ModalDialog
+                isVisible={isModalVisible}
+                onClose={() => setIsModalVisible(false)}
+                description="We successfully collected your data, you'll receive your reward link through a bot message."
+                closeButtonText="Back to ONTON"
+                icon="/checkmark.svg"
+            />
         </div>
     )
 }
