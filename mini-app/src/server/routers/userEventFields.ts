@@ -98,6 +98,7 @@ export const userEventFieldsRouter = router({
                         completed: true,
                     },
                 })
+                .returning()
                 .execute()
 
             return res
