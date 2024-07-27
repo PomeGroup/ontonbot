@@ -154,14 +154,16 @@ const InputTypeCampaignTask: React.FC<{
                     </button>
                 </form>
             )}
+            {isSecretPhrase  && (
+                <ModalDialog
+                    isVisible={isModalVisible}
+                    onClose={() => setIsModalVisible(false)}
+                    description="We successfully collected your data, you'll receive your reward link through a bot message."
+                    closeButtonText="Back to ONTON"
+                    icon="/checkmark.svg"
+                />
+            )}
 
-            <ModalDialog
-                isVisible={isModalVisible}
-                onClose={() => setIsModalVisible(false)}
-                description="We successfully collected your data, you'll receive your reward link through a bot message."
-                closeButtonText="Back to ONTON"
-                icon="/checkmark.svg"
-            />
         </div>
     )
 }
