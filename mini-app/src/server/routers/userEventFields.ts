@@ -5,7 +5,7 @@ import { TRPCError } from '@trpc/server'
 import { TRPC_ERROR_CODES_BY_NUMBER } from '@trpc/server/http'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { publicProcedure, router } from '../trpc'
+import { initDataProtectedProcedure, publicProcedure, router } from '../trpc'
 
 interface UserEventField {
     id: number
@@ -20,29 +20,15 @@ type GetUserEventFieldsReturnType = Record<number, UserEventField>
 
 export const userEventFieldsRouter = router({
     // protect
-    upsertUserEventField: publicProcedure
+    upsertUserEventField: initDataProtectedProcedure
         .input(
             z.object({
-                initData: z.string().optional(),
                 data: z.string(),
-                completed: z.boolean(),
                 field_id: z.number(),
                 event_id: z.number(),
             })
         )
         .mutation(async (opts) => {
-            if (!opts.input.initData) {            
-                throw new Error('Unauthorized access or invalid role no initdata found')
-            }
-
-            const { valid, initDataJson } = validateMiniAppData(
-                opts.input.initData
-            )
-
-            if (!valid) {
-                throw new Error('Unauthorized access or invalid role')
-            }
-
             const eventData = await db
                 .select()
                 .from(events)
@@ -64,25 +50,9 @@ export const userEventFieldsRouter = router({
                     code: 'FORBIDDEN',
                 })
             }
-
-            let userField = (await db
-                .select({ data: userEventFields.data })
-                .from(userEventFields)
-                .rightJoin(eventFields,
-                    and(
-                        eq(eventFields.title, "Secret Phrase"),
-                        eq(eventFields.id, opts.input.field_id),
-                    )
-                )
-                .where(
-                    and(
-                        eq(userEventFields.event_field_id, opts.input.field_id),
-                        eq(userEventFields.user_id, initDataJson.user.id)
-                    )
-                )).pop();
             
             // Check if eventFields were not found
-            const eventFieldsFound = (await db
+            const eventSecretField = (await db
                 .select({ id: eventFields.id })
                 .from(eventFields)
                 .where(
@@ -92,25 +62,20 @@ export const userEventFieldsRouter = router({
                     )
                 )).length > 0;
             
-            if (!eventFieldsFound) {
-                userField = undefined;
-            }
-            
-            if (userField && eventData[0].secret_phrase !== opts.input.data) {
+            if (eventSecretField && !!eventData[0].secret_phrase && eventData[0].secret_phrase !== opts.input.data) { 
                 throw new TRPCError({
                     message: "wrong secret phrase entered",
                     code: TRPC_ERROR_CODES_BY_NUMBER['-32003']
                 });
             }
-            
 
             const res = await db
                 .insert(userEventFields)
                 .values({
-                    user_id: initDataJson.user.id,
+                    user_id: opts.ctx.user.user_id,
                     event_field_id: opts.input.field_id,
                     data: opts.input.data,
-                    completed: opts.input.completed,
+                    completed: true,
                     created_at: new Date(),
                 })
                 .onConflictDoUpdate({
@@ -120,45 +85,12 @@ export const userEventFieldsRouter = router({
                     ],
                     set: {
                         data: opts.input.data,
-                        completed: opts.input.completed,
+                        completed: true,
                     },
                 })
                 .execute()
 
             return res
-        }),
-
-    // protect
-    // TODO: WHY WE DO NOT USE THIS?
-    deleteUserEventField: publicProcedure
-        .input(
-            z.object({
-                initData: z.string().optional(),
-                id: z.number(),
-            })
-        )
-        .mutation(async (opts) => {
-            if (!opts.input.initData) {
-                return undefined
-            }
-
-            const { valid, initDataJson } = validateMiniAppData(
-                opts.input.initData
-            )
-
-            if (!valid) {
-                throw new Error('Unauthorized access or invalid role')
-            }
-
-            await db
-                .delete(userEventFields)
-                .where(
-                    and(
-                        eq(userEventFields.id, opts.input.id),
-                        eq(userEventFields.user_id, initDataJson.user.id)
-                    )
-                )
-                .execute()
         }),
 
     // protect

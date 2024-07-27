@@ -66,17 +66,17 @@ const InputTypeCampaignTask: React.FC<{
 
         const upsertUserEventFieldMutation =
             trpc.userEventFields.upsertUserEventField.useMutation({
-                onError: () => {
+                onError: (error) => {
                     hapticFeedback?.notificationOccurred('error')
                     // use toast instead of alert
                     WebApp?.showPopup({
-                        message: "Wrong Secret Entered"
+                        message: error.message 
                     })
                     setIsCompleted(false)
                 },
                 onSuccess: () => {
                     hapticFeedback?.notificationOccurred('success')
-                    setIsCompleted(inputText ? true : false)
+                    setIsCompleted(true)
                     trpcUtils.userEventFields.invalidate()
                     trpcUtils.users.getVisitorReward.invalidate({}, {refetchType: "all"})
                 }
@@ -95,14 +95,18 @@ const InputTypeCampaignTask: React.FC<{
                 return
             }
 
-            upsertUserEventFieldMutation.mutate({
-                initData: WebApp?.initData,
-                field_id: fieldId,
-                data: inputText || '',
-                completed: inputText ? true : false,
-                event_id: eventId,
-            })
-
+            if (inputText && WebApp?.initData) {                
+                upsertUserEventFieldMutation.mutate({
+                    init_data: WebApp?.initData,
+                    field_id: fieldId,
+                    data: inputText,
+                    event_id: eventId,
+                })
+            } else {
+                WebApp?.showPopup({
+                    message: "No input provided"
+                })
+            }
         }
 
         return (
