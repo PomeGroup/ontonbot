@@ -12,16 +12,20 @@ const AllTasks: FC<{
 }> = ({ tasks, eventHash }) => {
     const WebApp = useWebApp()
     const initData = WebApp?.initData || ''
-    const userEventFieldsQuery = trpc.userEventFields.getUserEventFields.useQuery({
+
+    const { data: userEventFields, isLoading } = trpc.userEventFields.getUserEventFields.useQuery({
         initData,
         event_hash: eventHash,
     }, {
         queryKey: ['userEventFields.getUserEventFields', {
-            event_hash:eventHash,
-            initData 
+            event_hash: eventHash,
+            initData
         }]
     })
-    const userEventFields = userEventFieldsQuery.data
+
+    if (isLoading) {
+        return <div>Loading...</div>
+    }
 
     return (
         <div>
@@ -29,7 +33,7 @@ const AllTasks: FC<{
                 const userEventField = userEventFields
                     ? userEventFields[task.id]
                     : undefined
-
+                console.log("-************-", task.title, userEventField?.completed)
                 if (task.type === 'input') {
                     return (
                         <Tasks.Input

@@ -59,7 +59,7 @@ export const selectVisitorById = async (visitorId: number) => {
             and(
                 eq(eventFields.title, 'secret_phrase_onton_input'),
                 eq(eventFields.id, events.event_id),
-                eq(eventFields.description, 'Enter the secret phrase')
+                // eq(eventFields.description, 'Enter the secret phrase')
             )
         )
         .where(

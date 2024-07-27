@@ -21,7 +21,7 @@ const GenericTask: React.FC<{
         'bg-tertiary': !completed || theme !== 'light',
         'bg-[rgb(234,249,230)]': completed && theme === 'light',
     })
-
+    console.log("***- generic task completed value is: ", title, completed)
     return (
         <div
             className={cn(

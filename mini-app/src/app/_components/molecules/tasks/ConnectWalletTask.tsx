@@ -80,10 +80,10 @@ const ConnectWalletTask = () => {
         <>
             <Tasks.Generic
                 title="Connect TON Wallet"
-                description="Register at event and receive an SBT"
+                description={!isWalletConnected ? "Register at event and receive an SBT" : "You have connected your wallet"}
                 completed={isWalletConnected}
                 defaultEmoji="👛"
-                onClick={onConnectClick}
+                onClick={!isWalletConnected && onConnectClick || undefined}
             />
         </>
     )
