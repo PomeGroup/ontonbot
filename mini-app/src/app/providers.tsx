@@ -5,10 +5,11 @@ import { ThemeProvider } from 'next-themes'
 import React from 'react'
 import ThemeSetter from './themeSetter'
 import WebAppProvider from './_components/WebAppProvider'
+import { AppRoot } from '@telegram-apps/telegram-ui';
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
     return (
-        <div>
+        <AppRoot>
             <TonConnectUIProvider
                 actionsConfiguration={{
                     twaReturnUrl: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event`,
@@ -21,7 +22,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
                     </WebAppProvider>
                 </ThemeProvider>
             </TonConnectUIProvider>
-        </div>
+        </AppRoot>
     )
 }
 
