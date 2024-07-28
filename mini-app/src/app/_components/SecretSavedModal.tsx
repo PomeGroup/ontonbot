@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { Title } from '@radix-ui/react-toast'
 import { Button } from '@/components/ui/button'
 import MainButton from './atoms/buttons/web-app/MainButton'
-
+import  PopupFooterWrapper  from './PopupFooterWrapper'
 interface ModalDialogProps {
     isVisible: boolean
     onClose: () => void
@@ -17,7 +17,7 @@ const modalOverlayStyle: React.CSSProperties = {
     bottom: 0,
     left: 0,
     width: '100%',
-    height: '50vh',
+      height: '70vh',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -31,22 +31,25 @@ const backdropStyle: React.CSSProperties = {
     left: 0,
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'transparent',
 }
 
 const modalStyle: React.CSSProperties = {
     position: 'relative',
     backgroundColor: '#18222d',
+    height: '100%',
     padding: 0,
-    borderRadius: '10px',
+    borderTopLeftRadius: '10px',
+    borderTopRightRadius: '10px',
     textAlign: 'center',
     zIndex: 1001,
     width: '100%',
-    maxWidth: '400px',
+    maxWidth: '100%',
     transition: 'transform 1.2s ease',
 }
 
 const contentStyle: React.CSSProperties = {
+    marginTop: '10vh',
     marginBottom: '20px',
     textAlign: 'center',
     padding: 20,
@@ -62,14 +65,14 @@ const descriptionStyle: React.CSSProperties = {
 const footerStyle: React.CSSProperties = {
     width: '100%',
     padding: '20px',
-    backgroundColor: 'rgba(40,116,142,0.48)',
+    backgroundColor: '#18222d',
     height: '15vh',
     verticalAlign: 'bottom',
 }
 
 const buttonStyle: React.CSSProperties = {
     width: '100%',
-    backgroundColor: '#1d55d6',
+    backgroundColor: '#2ea6ff',
     color: '#fafafa',
     padding: '10px',
     borderRadius: '10px',
@@ -122,7 +125,9 @@ const ModalDialog: React.FC<ModalDialogProps> = ({
                     <Title style={{ fontSize: 20 }}>{description}</Title>
                 </div>
                 {isVisible && show && (
-                    <MainButton onClick={onClose} text={closeButtonText} />
+
+                    <MainButton onClick={onClose} text={closeButtonText} color={'#2ea6ff'} />
+
                 )}
             </div>
         </div>
