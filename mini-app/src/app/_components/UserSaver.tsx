@@ -5,6 +5,7 @@ import { FC, ReactNode, useEffect } from 'react'
 import { trpc } from '../_trpc/client'
 import { type InferSelectModel } from 'drizzle-orm'
 import { users } from '@/db/schema'
+import EventSkeleton from './molecules/skeletons/EventSkeleton'
 
 const UserSaver: FC<{
     children: ReactNode
@@ -19,7 +20,17 @@ const UserSaver: FC<{
         userSaver.mutate({ initData })
     }, [initData])
 
-    return <>{children}</>
+    return (
+        <>
+            {userSaver.isIdle || userSaver.isLoading ? (
+                <div className="h-screen px-4">
+                    <EventSkeleton />
+                </div>
+            ) : (
+                children
+            )}
+        </>
+    )
 }
 
 export default UserSaver
