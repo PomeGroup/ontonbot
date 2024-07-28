@@ -59,7 +59,7 @@ export const usersRouter = router({
             if (!opts.input.initData) {
                 throw new TRPCError({
                     message: 'initdata is required',
-                    code: 'BAD_REQUEST'
+                    code: 'BAD_REQUEST',
                 })
             }
 
@@ -70,7 +70,7 @@ export const usersRouter = router({
             if (!valid) {
                 throw new TRPCError({
                     message: 'invalid initdata',
-                    code: 'UNPROCESSABLE_CONTENT'
+                    code: 'UNPROCESSABLE_CONTENT',
                 })
             }
 
@@ -90,7 +90,7 @@ export const usersRouter = router({
             if (!data.length) {
                 throw new TRPCError({
                     message: 'user already exists',
-                    code: 'CONFLICT'
+                    code: 'CONFLICT',
                 })
             }
 
@@ -189,7 +189,7 @@ export const usersRouter = router({
             return await createUserReward({
                 wallet_address: opts.ctx.user?.wallet_address as string,
                 user_id: opts.ctx.user?.user_id as number,
-                event_uuid: opts.input.event_uuid
+                event_uuid: opts.input.event_uuid,
             })
         }),
 
@@ -207,72 +207,91 @@ export const usersRouter = router({
                         return and(
                             eq(fields.user_id, opts.ctx.parsedInitData.user.id),
                             eq(fields.event_uuid, opts.input.event_uuid)
-                        );
+                        )
                     },
-                });
+                })
 
                 // Check if visitor exists
                 if (!visitor) {
                     throw new TRPCError({
-                        code: "BAD_REQUEST",
-                        message: "Visitor not found with the provided user ID and event UUID."
-                    });
+                        code: 'BAD_REQUEST',
+                        message:
+                            'Visitor not found with the provided user ID and event UUID.',
+                    })
                 }
 
                 try {
                     await createUserReward({
                         wallet_address: opts.ctx.user?.wallet_address as string,
                         user_id: opts.ctx.user?.user_id as number,
-                        event_uuid: opts.input.event_uuid
+                        event_uuid: opts.input.event_uuid,
                     })
                 } catch (error) {
+                    if (
+                        error instanceof TRPCError &&
+                        error.code === 'CONFLICT'
+                    ) {
+                        return {
+                            type: 'wait_for_reward',
+                            message:
+                                "We successfully collected your data, you'll receive your reward link through a bot message.",
+                            data: null,
+                        } as const
+                    }
                     console.log(error)
                 }
 
                 // Fetch the reward from the database
                 const reward = await db.query.rewards.findFirst({
                     where(fields, { eq }) {
-                        return eq(fields.visitor_id, visitor.id);
+                        return eq(fields.visitor_id, visitor.id)
                     },
-                });
+                })
 
                 // Check if reward exists
                 if (!reward) {
                     throw new TRPCError({
-                        code: "NOT_FOUND",
-                        message: "No reward found for the specified visitor."
-                    });
+                        code: 'NOT_FOUND',
+                        message: 'No reward found for the specified visitor.',
+                    })
                 }
 
                 // validate reward data
                 const dataValidation = rewardLinkZod.safeParse(reward.data)
                 if (!dataValidation.success) {
                     throw new TRPCError({
-                        code: "CONFLICT",
-                        message: "Reward data is invalid: " + JSON.stringify(reward.data)
-                    });
+                        code: 'CONFLICT',
+                        message:
+                            'Reward data is invalid: ' +
+                            JSON.stringify(reward.data),
+                    })
                 }
 
                 return {
                     ...reward,
-                    data: dataValidation.data.reward_link
-                };
-
+                    data: dataValidation.data.reward_link,
+                    type: 'reward_link_generated',
+                } as const
             } catch (error) {
-                console.error("Error in getVisitorReward query:", error);
+                console.error('Error in getVisitorReward query:', error)
                 if (error instanceof TRPCError) {
-                    throw error;
+                    throw error
                 } else {
                     throw new TRPCError({
-                        code: "INTERNAL_SERVER_ERROR",
-                        message: "An unexpected error occurred while retrieving visitor reward."
-                    });
+                        code: 'INTERNAL_SERVER_ERROR',
+                        message:
+                            'An unexpected error occurred while retrieving visitor reward.',
+                    })
                 }
             }
-        })
+        }),
 })
 
-async function createUserReward(props: { wallet_address: string, user_id: number, event_uuid: string }) {
+async function createUserReward(props: {
+    wallet_address: string
+    user_id: number
+    event_uuid: string
+}) {
     try {
         // Fetch the visitor from the database
         const visitor = await db.query.visitors.findFirst({
@@ -282,23 +301,24 @@ async function createUserReward(props: { wallet_address: string, user_id: number
                     eq(fields.event_uuid, props.event_uuid)
                 )
             },
-        });
+        })
 
         // Check if visitor exists
         if (!visitor) {
             throw new TRPCError({
-                code: "BAD_REQUEST",
-                message: "Visitor not found with the provided user ID and event UUID."
-            });
+                code: 'BAD_REQUEST',
+                message:
+                    'Visitor not found with the provided user ID and event UUID.',
+            })
         }
 
         // Validate the visitor
-        const isValidVisitor = await selectVisitorById(visitor.id);
+        const isValidVisitor = await selectVisitorById(visitor.id)
         if (!isValidVisitor.length) {
             throw new TRPCError({
-                code: "BAD_REQUEST",
-                message: "Invalid visitor: please complete the tasks."
-            });
+                code: 'BAD_REQUEST',
+                message: 'Invalid visitor: please complete the tasks.',
+            })
         }
 
         // check if the user already does not own the reward
@@ -312,9 +332,9 @@ async function createUserReward(props: { wallet_address: string, user_id: number
             const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${props.event_uuid}`
             console.log(err_msg)
             throw new TRPCError({
-                code: "BAD_REQUEST",
-                message: err_msg
-            });
+                code: 'BAD_REQUEST',
+                message: err_msg,
+            })
         }
 
         const eventData = await db.query.events.findFirst({
@@ -325,9 +345,9 @@ async function createUserReward(props: { wallet_address: string, user_id: number
 
         if (!eventData?.activity_id || eventData.activity_id < 0) {
             throw new TRPCError({
-                code: "BAD_REQUEST",
-                message: `this event does not have an activity id ${eventData?.activity_id}`
-            });
+                code: 'BAD_REQUEST',
+                message: `this event does not have an activity id ${eventData?.activity_id}`,
+            })
         }
 
         const startDate = Number(eventData.start_date) * 1000
@@ -340,44 +360,49 @@ async function createUserReward(props: { wallet_address: string, user_id: number
             })
         }
 
-
         // Create the user reward link
         const res = await createUserRewardLink(eventData.activity_id, {
             wallet_address: props.wallet_address,
             telegram_user_id: props.user_id,
-            attributes: eventData.society_hub ? [{
-                trait_type: "Organizer",
-                value: eventData.society_hub
-            }] : undefined
-        });
+            attributes: eventData.society_hub
+                ? [
+                      {
+                          trait_type: 'Organizer',
+                          value: eventData.society_hub,
+                      },
+                  ]
+                : undefined,
+        })
 
         // Ensure the response contains data
         if (!res || !res.data || !res.data.data) {
             throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "Failed to create user reward link."
-            });
+                code: 'CONFLICT',
+                message: 'Failed to create user reward link.',
+            })
         }
 
         // Insert the reward into the database
-        await db.insert(rewards).values({
-            visitor_id: visitor.id,
-            type: 'ton_society_sbt',
-            data: res.data.data,
-        }).execute();
+        await db
+            .insert(rewards)
+            .values({
+                visitor_id: visitor.id,
+                type: 'ton_society_sbt',
+                data: res.data.data,
+            })
+            .execute()
 
-        return res.data.data;
-
+        return res.data.data
     } catch (error) {
-        console.error("Error in createUserReward mutation:", error);
+        console.error('Error in createUserReward mutation:', error)
         if (error instanceof TRPCError) {
-            throw error;
+            throw error
         } else {
             throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "An unexpected error occurred while creating user reward."
-            });
+                code: 'INTERNAL_SERVER_ERROR',
+                message:
+                    'An unexpected error occurred while creating user reward.',
+            })
         }
     }
-
 }

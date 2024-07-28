@@ -7,8 +7,6 @@ import useWebApp from '@/hooks/useWebApp'
 import Image from 'next/image'
 import React, { useEffect, useRef, useState } from 'react'
 import GenericTask from './GenericTask'
-import ModalDialog from '../../SecretSavedModal'
-
 
 const InputTypeCampaignTask: React.FC<{
     title: string
@@ -19,29 +17,28 @@ const InputTypeCampaignTask: React.FC<{
     fieldId: number
     eventId: number
 }> = ({
-          title,
-          description,
-          completed,
-          defaultEmoji,
-          data,
-          fieldId,
-          eventId,
-      }) => {
+    title,
+    description,
+    completed,
+    defaultEmoji,
+    data,
+    fieldId,
+    eventId,
+}) => {
     const WebApp = useWebApp()
     const hapticFeedback = WebApp?.HapticFeedback
     const validatedData = trpc.users.validateUserInitData.useQuery(
-        WebApp?.initData || '', {
+        WebApp?.initData || '',
+        {
             queryKey: ['users.validateUserInitData', WebApp?.initData || ''],
         }
     )
     const [inputText, setInputText] = useState(data)
     const [isCompleted, setIsCompleted] = useState(completed)
     const [isEditing, setIsEditing] = useState(false)
-    const [isModalVisible, setIsModalVisible] = useState(completed)
     const editingRef = useRef<HTMLFormElement>(null)
     const trpcUtils = trpc.useUtils()
     const isSecretPhrase = title === 'secret_phrase_onton_input'
-    const [modalOpen, setModalOpen] = useState(true)
 
     if (isSecretPhrase && isCompleted) {
         description = 'Your secret phrase is saved'
@@ -49,7 +46,10 @@ const InputTypeCampaignTask: React.FC<{
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (editingRef.current && !editingRef.current.contains(event.target as Node)) {
+            if (
+                editingRef.current &&
+                !editingRef.current.contains(event.target as Node)
+            ) {
                 hapticFeedback?.notificationOccurred('error')
                 setIsEditing(false)
             }
@@ -70,7 +70,7 @@ const InputTypeCampaignTask: React.FC<{
             onError: (error) => {
                 hapticFeedback?.notificationOccurred('error')
                 WebApp?.showPopup({
-                    message: error.message
+                    message: error.message,
                 })
                 setIsCompleted(false)
             },
@@ -78,10 +78,11 @@ const InputTypeCampaignTask: React.FC<{
                 hapticFeedback?.notificationOccurred('success')
                 setIsCompleted(true)
                 trpcUtils.userEventFields.invalidate()
-                trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" })
-
-                setIsModalVisible(true)
-            }
+                trpcUtils.users.getVisitorReward.invalidate(
+                    {},
+                    { refetchType: 'all' }
+                )
+            },
         })
 
     function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -106,7 +107,7 @@ const InputTypeCampaignTask: React.FC<{
             })
         } else {
             WebApp?.showPopup({
-                message: "No input provided"
+                message: 'No input provided',
             })
         }
     }
@@ -114,10 +115,12 @@ const InputTypeCampaignTask: React.FC<{
     return (
         <div className="input-type-campaign-task">
             {!isEditing || isCompleted ? (
-                <div onClick={() => {
-                    hapticFeedback?.impactOccurred('medium')
-                    setIsEditing(true)
-                }}>
+                <div
+                    onClick={() => {
+                        hapticFeedback?.impactOccurred('medium')
+                        setIsEditing(true)
+                    }}
+                >
                     <GenericTask
                         title={title}
                         description={description}
@@ -141,7 +144,7 @@ const InputTypeCampaignTask: React.FC<{
                         autoFocus
                     />
                     <button
-                        type='submit'
+                        type="submit"
                         className={`rounded-lg min-w-[40px] min-h-[40px] flex items-center justify-center bg-tertiary`}
                     >
                         <Image
@@ -154,16 +157,6 @@ const InputTypeCampaignTask: React.FC<{
                     </button>
                 </form>
             )}
-            {isSecretPhrase  && (
-                <ModalDialog
-                    isVisible={isModalVisible}
-                    onClose={() => setIsModalVisible(false)}
-                    description="We successfully collected your data, you'll receive your reward link through a bot message."
-                    closeButtonText="Back to ONTON"
-                    icon="/checkmark.svg"
-                />
-            )}
-
         </div>
     )
 }

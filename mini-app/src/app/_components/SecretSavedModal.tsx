@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { Title } from '@radix-ui/react-toast';
-import { Button } from '@mui/base';
+import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { Title } from '@radix-ui/react-toast'
+import { Button } from '@/components/ui/button'
 
 interface ModalDialogProps {
-    isVisible: boolean;
-    onClose: () => void;
-    description: string;
-    closeButtonText: string;
-    icon: string;
+    isVisible: boolean
+    onClose: () => void
+    description: string
+    closeButtonText: string
+    icon: string
 }
 
 const modalOverlayStyle: React.CSSProperties = {
@@ -22,7 +22,7 @@ const modalOverlayStyle: React.CSSProperties = {
     alignItems: 'center',
     zIndex: 1000,
     transition: 'opacity 1.2s ease',
-};
+}
 
 const backdropStyle: React.CSSProperties = {
     position: 'absolute',
@@ -31,7 +31,7 @@ const backdropStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-};
+}
 
 const modalStyle: React.CSSProperties = {
     position: 'relative',
@@ -43,20 +43,20 @@ const modalStyle: React.CSSProperties = {
     width: '100%',
     maxWidth: '400px',
     transition: 'transform 1.2s ease',
-};
+}
 
 const contentStyle: React.CSSProperties = {
     marginBottom: '20px',
     textAlign: 'center',
     padding: 20,
-};
+}
 
 const descriptionStyle: React.CSSProperties = {
     marginBottom: '20px',
     padding: 20,
     fontSize: '16px',
     color: '#fff',
-};
+}
 
 const footerStyle: React.CSSProperties = {
     width: '100%',
@@ -64,7 +64,7 @@ const footerStyle: React.CSSProperties = {
     backgroundColor: 'rgba(40,116,142,0.48)',
     height: '15vh',
     verticalAlign: 'bottom',
-};
+}
 
 const buttonStyle: React.CSSProperties = {
     width: '100%',
@@ -72,27 +72,27 @@ const buttonStyle: React.CSSProperties = {
     color: '#fafafa',
     padding: '10px',
     borderRadius: '10px',
-};
+}
 
 const ModalDialog: React.FC<ModalDialogProps> = ({
-                                                     isVisible,
-                                                     onClose,
-                                                     description,
-                                                     closeButtonText,
-                                                     icon,
-                                                 }) => {
-    const [show, setShow] = useState(isVisible);
+    isVisible,
+    onClose,
+    description,
+    closeButtonText,
+    icon,
+}) => {
+    const [show, setShow] = useState(isVisible)
 
     useEffect(() => {
         if (isVisible) {
-            setShow(true);
+            setShow(true)
         } else {
-            const timer = setTimeout(() => setShow(false), 300);
-            return () => clearTimeout(timer);
+            const timer = setTimeout(() => setShow(false), 300)
+            return () => clearTimeout(timer)
         }
-    }, [isVisible]);
+    }, [isVisible])
 
-    if (!show) return null;
+    if (!show) return null
 
     return (
         <div
@@ -101,10 +101,7 @@ const ModalDialog: React.FC<ModalDialogProps> = ({
                 opacity: isVisible ? 1 : 0,
             }}
         >
-            <div
-                style={backdropStyle}
-                onClick={onClose}
-            ></div>
+            <div style={backdropStyle} onClick={onClose}></div>
             <div
                 style={{
                     ...modalStyle,
@@ -112,27 +109,25 @@ const ModalDialog: React.FC<ModalDialogProps> = ({
                 }}
             >
                 <div style={contentStyle}>
-                    <Image src={icon} style={{ margin: 'auto' }} alt="Icon" width={48} height={48} />
+                    <Image
+                        src={icon}
+                        style={{ margin: 'auto' }}
+                        alt="Icon"
+                        width={48}
+                        height={48}
+                    />
                 </div>
                 <div style={descriptionStyle}>
-                    <Title style={{ fontSize: 20 }} weight="2">
-                        {description}
-                    </Title>
+                    <Title style={{ fontSize: 20 }}>{description}</Title>
                 </div>
                 <div style={footerStyle}>
-                    <Button
-                        onClick={onClose}
-                        mode="filled"
-                        size="m"
-                        stretched
-                        style={buttonStyle}
-                    >
+                    <Button onClick={onClose} size="lg" style={buttonStyle}>
                         {closeButtonText}
                     </Button>
                 </div>
             </div>
         </div>
-    );
-};
+    )
+}
 
-export default ModalDialog;
+export default ModalDialog
