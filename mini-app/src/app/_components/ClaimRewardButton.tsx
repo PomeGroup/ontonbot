@@ -7,14 +7,30 @@ import MainButton from './atoms/buttons/web-app/MainButton'
 import ModalDialog from './SecretSavedModal'
 
 // Child component
-function ClaimRewardButtonChild({ link }: { link: string }) {
+function ClaimRewardButtonChild(props: { link: string | null }) {
     const webApp = useWebApp()
+    const [isRewardModalOpen, setIsRewardModalOpen] = useState(false)
 
     function openRewardLink() {
-        webApp?.openLink(link)
+        if (props.link) {
+            webApp?.openLink(props.link)
+        } else {
+            setIsRewardModalOpen(true)
+        }
     }
 
-    return <MainButton text="Claim Reward" onClick={openRewardLink} />
+    return (
+        <>
+            <MainButton text="Claim Reward" onClick={openRewardLink} />
+            <ModalDialog
+                isVisible={isRewardModalOpen}
+                onClose={() => setIsRewardModalOpen(false)}
+                description="We successfully collected your data, you'll receive your reward link through a bot message."
+                closeButtonText="Back to ONTON"
+                icon="/checkmark.svg"
+            />
+        </>
+    )
 }
 
 // Parent component
@@ -22,7 +38,6 @@ export function ClaimRewardButton(props: { eventId: string }) {
     const WebApp = useWebApp()
     const initData = WebApp?.initData || ''
     const [rewardLink, setRewardLink] = useState<string | undefined>(undefined)
-    const [isRewardModalOpen, setIsRewardModalOpen] = useState(false)
 
     const visitorReward = trpc.users.getVisitorReward.useQuery(
         { init_data: initData, event_uuid: props.eventId },
@@ -36,31 +51,16 @@ export function ClaimRewardButton(props: { eventId: string }) {
                 },
             ],
             onSuccess: (data) => {
-                if (data.type === 'wait_for_reward') {
-                    setIsRewardModalOpen(true)
+                if (data.type === 'reward_link_generated') {
+                    setRewardLink(visitorReward.data?.data as string)
                 }
             },
         }
     )
 
-    useEffect(() => {
-        if (visitorReward.data?.data) {
-            console.log({ rewardLink: visitorReward.data })
-            setRewardLink(visitorReward.data.data as string)
-        }
-    }, [visitorReward.isSuccess, visitorReward.data?.data])
-
     return (
-        <>
-            {rewardLink && <ClaimRewardButtonChild link={rewardLink} />}
-
-            <ModalDialog
-                isVisible={isRewardModalOpen}
-                onClose={() => setIsRewardModalOpen(false)}
-                description="We successfully collected your data, you'll receive your reward link through a bot message."
-                closeButtonText="Back to ONTON"
-                icon="/checkmark.svg"
-            />
-        </>
+        visitorReward.isSuccess && (
+            <ClaimRewardButtonChild link={visitorReward.data.data} />
+        )
     )
 }
