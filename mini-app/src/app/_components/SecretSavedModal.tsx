@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Title } from '@radix-ui/react-toast'
 import { Button } from '@/components/ui/button'
+import MainButton from './atoms/buttons/web-app/MainButton'
 
 interface ModalDialogProps {
     isVisible: boolean
@@ -35,7 +36,7 @@ const backdropStyle: React.CSSProperties = {
 
 const modalStyle: React.CSSProperties = {
     position: 'relative',
-    backgroundColor: '#0f303a',
+    backgroundColor: '#18222d',
     padding: 0,
     borderRadius: '10px',
     textAlign: 'center',
@@ -120,11 +121,9 @@ const ModalDialog: React.FC<ModalDialogProps> = ({
                 <div style={descriptionStyle}>
                     <Title style={{ fontSize: 20 }}>{description}</Title>
                 </div>
-                <div style={footerStyle}>
-                    <Button onClick={onClose} size="lg" style={buttonStyle}>
-                        {closeButtonText}
-                    </Button>
-                </div>
+                {isVisible && show && (
+                    <MainButton onClick={onClose} text={closeButtonText} />
+                )}
             </div>
         </div>
     )

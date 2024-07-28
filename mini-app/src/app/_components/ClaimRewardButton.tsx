@@ -21,7 +21,9 @@ function ClaimRewardButtonChild(props: { link: string | null }) {
 
     return (
         <>
-            <MainButton text="Claim Reward" onClick={openRewardLink} />
+            {!isRewardModalOpen && (
+                <MainButton text="Claim Reward" onClick={openRewardLink} />
+            )}
             <ModalDialog
                 isVisible={isRewardModalOpen}
                 onClose={() => setIsRewardModalOpen(false)}
