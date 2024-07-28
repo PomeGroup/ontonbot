@@ -1,12 +1,18 @@
-import "dotenv/config"
+import "dotenv/config";
 
-import express from "express"
-import { Telegraf } from "telegraf"
+import express from "express";
+import { Telegraf } from "telegraf";
 
-import bodyParser from "body-parser"
-import fileUpload from "express-fileupload"
-import { handleFileSend, handleSendQRCode, handleShareEvent } from "./controllers"
-import { orgHandler, startHandler } from "./handlers"
+import bodyParser from "body-parser";
+import fileUpload from "express-fileupload";
+import {
+  handleFileSend,
+  handleSendQRCode,
+  handleShareEvent,
+} from "./controllers";
+import { orgHandler, startHandler } from "./handlers";
+import { CronJob } from "cron";
+import axios from "axios";
 // parse application/json
 
 const port = 3333;
@@ -21,7 +27,7 @@ bot.command("org", orgHandler);
 
 const app = express();
 
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 
 app.use(fileUpload());
 app.use((req, res, next) => {
@@ -46,3 +52,15 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
+// start
+new CronJob(
+  "*/10 * * * *",
+  () => {
+    console.log("hello champ");
+    axios
+      .get(`${process.env.APP_BASE_URL}/api/v1/cron`)
+      .then((r) => console.log(r.data));
+  },
+  null,
+  true,
+);
