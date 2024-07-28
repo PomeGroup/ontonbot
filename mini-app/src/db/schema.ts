@@ -73,16 +73,14 @@ export const visitors = pgTable('visitors', {
     created_at: timestamp('created_at').defaultNow(),
 })
 
-export const rewardType = pgEnum('reward_types', [
-    'ton_society_sbt'
-])
+export const rewardType = pgEnum('reward_types', ['ton_society_sbt'])
 export const rewards = pgTable('rewards', {
     id: uuid('id').defaultRandom().primaryKey(),
     visitor_id: serial('visitor_id').references(() => visitors.id),
     type: rewardType('type'),
     data: json('data'),
     created_at: timestamp('created_at').defaultNow(),
-});
+})
 
 export const userEventFields = pgTable(
     'user_event_fields',
