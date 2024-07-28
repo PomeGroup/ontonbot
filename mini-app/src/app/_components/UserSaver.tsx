@@ -15,7 +15,7 @@ const UserSaver: FC<{
     const userSaver = trpc.users.addUser.useMutation()
 
     useEffect(() => {
-        if (!initData) return
+        if (!initData || !userSaver.isIdle) return
 
         userSaver.mutate({ initData })
     }, [initData])
