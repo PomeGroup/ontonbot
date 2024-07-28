@@ -25,31 +25,30 @@ export default async function RootLayout({
 }: {
     children: React.ReactNode
 }) {
-    const [userId] = getAuthenticatedUser()
-    let user: InferSelectModel<typeof users> | null = null
-    if (userId) {
-        // @ts-expect-error
-        user = await db.query.users.findFirst({
-            where(fields, { eq }) {
-                return eq(fields.user_id, userId)
-            },
-        })
-    }
+    // const [userId] = getAuthenticatedUser()
+    // let user: InferSelectModel<typeof users> | null = null
+    // if (userId) {
+    //     // @ts-expect-error
+    //     user = await db.query.users.findFirst({
+    //         where(fields, { eq }) {
+    //             return eq(fields.user_id, userId)
+    //         },
+    //     })
+    // }
 
     return (
         <html lang="en">
-            {
-                process.env.NODE_ENV === 'production' && (
-                    <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />)
-            }
+            {process.env.NODE_ENV === 'production' && (
+                <GoogleTagManager
+                    gtmId={process.env.NEXT_PUBLIC_GTM as string}
+                />
+            )}
             <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
             <body className={inter.className}>
                 <Provider>
                     <Providers>
-                        <UserSaver user={user}>
-                            <main className="p-4">
-                                {children}
-                            </main>
+                        <UserSaver>
+                            <main className="p-4">{children}</main>
                         </UserSaver>
                     </Providers>
                 </Provider>
