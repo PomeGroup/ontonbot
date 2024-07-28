@@ -11,7 +11,7 @@ import {
 } from '@/types'
 import { GithubIcon, Trash, TwitterIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { FC, useState } from 'react'
+import {FC, useMemo, useState} from 'react'
 import { trpc } from '../_trpc/client'
 import Buttons from './atoms/buttons'
 import Labels from './atoms/labels'
@@ -124,6 +124,16 @@ const CreateEventFields: FC<{
         }
         setFields((prevFields) => [...prevFields, newField])
     }
+    // replace secret_phrase_onton_input with Secret Phrase
+    const updatedFields = useMemo(() => {
+        return fields.map((field) => {
+            if (field.title === 'secret_phrase_onton_input') {
+                return { ...field, title: 'Secret Phrase' };
+            }
+            return field;
+        });
+    }, [fields]);
+
 
     return (
         <>
@@ -133,7 +143,7 @@ const CreateEventFields: FC<{
                 zodErrors={requredEventErrors}
             />
             <Labels.CampaignTitle className="text-lg" title={'Event Fields'} />
-            <Fields.Dynamic fields={fields} setFields={setFields} />
+            <Fields.Dynamic fields={updatedFields} setFields={setFields} />
 
             <div className="flex gap-2">
                 <Popovers.AddInputField setFields={setFields} />
