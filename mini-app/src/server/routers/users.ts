@@ -360,39 +360,47 @@ async function createUserReward(props: {
             })
         }
 
-        // Create the user reward link
-        const res = await createUserRewardLink(eventData.activity_id, {
-            wallet_address: props.wallet_address,
-            telegram_user_id: props.user_id,
-            attributes: eventData.society_hub
-                ? [
-                      {
-                          trait_type: 'Organizer',
-                          value: eventData.society_hub,
-                      },
-                  ]
-                : undefined,
-        })
+        try {
+            // Create the user reward link
+            const res = await createUserRewardLink(eventData.activity_id, {
+                wallet_address: props.wallet_address,
+                telegram_user_id: props.user_id,
+                attributes: eventData.society_hub
+                    ? [
+                          {
+                              trait_type: 'Organizer',
+                              value: eventData.society_hub,
+                          },
+                      ]
+                    : undefined,
+            })
 
-        // Ensure the response contains data
-        if (!res || !res.data || !res.data.data) {
+            // Ensure the response contains data
+            if (!res || !res.data || !res.data.data) {
+                throw new TRPCError({
+                    code: 'CONFLICT',
+                    message: 'Failed to create user reward link.',
+                })
+            }
+
+            // Insert the reward into the database
+            await db
+                .insert(rewards)
+                .values({
+                    visitor_id: visitor.id,
+                    type: 'ton_society_sbt',
+                    data: res.data.data,
+                })
+                .execute()
+
+            return res.data.data
+        } catch {
+            // Ensure the response contains data
             throw new TRPCError({
                 code: 'CONFLICT',
                 message: 'Failed to create user reward link.',
             })
         }
-
-        // Insert the reward into the database
-        await db
-            .insert(rewards)
-            .values({
-                visitor_id: visitor.id,
-                type: 'ton_society_sbt',
-                data: res.data.data,
-            })
-            .execute()
-
-        return res.data.data
     } catch (error) {
         console.error('Error in createUserReward mutation:', error)
         if (error instanceof TRPCError) {
