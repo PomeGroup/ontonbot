@@ -394,11 +394,16 @@ async function createUserReward(props: {
                 .execute()
 
             return res.data.data
-        } catch {
+        } catch (error) {
+            console.error('error ehile creating reward link', error)
+            if (error instanceof TRPCError) {
+                throw error
+            }
             // Ensure the response contains data
             throw new TRPCError({
                 code: 'CONFLICT',
                 message: 'Failed to create user reward link.',
+                cause: error,
             })
         }
     } catch (error) {
