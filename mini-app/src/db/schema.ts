@@ -74,11 +74,22 @@ export const visitors = pgTable('visitors', {
 })
 
 export const rewardType = pgEnum('reward_types', ['ton_society_sbt'])
+export const rewardStatus = pgEnum('reward_status', [
+    'pending_creation',
+    'created',
+    'received',
+    'notified',
+    'failed',
+])
 export const rewards = pgTable('rewards', {
     id: uuid('id').defaultRandom().primaryKey(),
-    visitor_id: serial('visitor_id').references(() => visitors.id),
+    visitor_id: serial('visitor_id')
+        .references(() => visitors.id)
+        .notNull(),
     type: rewardType('type'),
     data: json('data'),
+    tryCount: integer('try_count').default(0).notNull(),
+    status: rewardStatus('status').notNull().default('created'),
     created_at: timestamp('created_at').defaultNow(),
 })
 

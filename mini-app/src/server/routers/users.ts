@@ -231,6 +231,14 @@ export const usersRouter = router({
                         error instanceof TRPCError &&
                         error.code === 'CONFLICT'
                     ) {
+                        await db
+                            .insert(rewards)
+                            .values({
+                                status: 'pending_creation',
+                                type: 'ton_society_sbt',
+                                visitor_id: visitor.id,
+                            })
+                            .execute()
                         return {
                             type: 'wait_for_reward',
                             message:
@@ -254,6 +262,15 @@ export const usersRouter = router({
                         code: 'NOT_FOUND',
                         message: 'No reward found for the specified visitor.',
                     })
+                }
+
+                if (reward.status === 'pending_creation') {
+                    return {
+                        type: 'wait_for_reward',
+                        message:
+                            "We successfully collected your data, you'll receive your reward link through a bot message.",
+                        data: null,
+                    } as const
                 }
 
                 // validate reward data

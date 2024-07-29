@@ -9,6 +9,7 @@ import {
   handleFileSend,
   handleSendQRCode,
   handleShareEvent,
+  sendMessage,
 } from "./controllers";
 import { orgHandler, startHandler } from "./handlers";
 import { CronJob } from "cron";
@@ -39,6 +40,7 @@ app.use((req, res, next) => {
 app.post("/send-file", handleFileSend);
 app.get("/generate-qr", handleSendQRCode);
 app.post("/share-event", handleShareEvent);
+app.post("/send-message", sendMessage);
 
 bot.catch((err) => console.error(err));
 
@@ -56,7 +58,6 @@ process.on("unhandledRejection", (reason, promise) => {
 new CronJob(
   "*/10 * * * *",
   () => {
-    console.log("hello champ");
     axios
       .get(`${process.env.APP_BASE_URL}/api/v1/cron`)
       .then((r) => console.log(r.data));
