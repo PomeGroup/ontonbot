@@ -38,7 +38,7 @@ export async function createUserRewardLink(
             error.response?.data?.message ===
                 'reward link with such activity id and wallet address already created'
         ) {
-            return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(
+            return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
                 `/activities/${activityId}/rewards/${Address.parse(
                     data.wallet_address
                 ).toString()}`
