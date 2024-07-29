@@ -3,9 +3,19 @@ import { NextResponse } from 'next/server'
 import { eq } from 'drizzle-orm'
 import { rewards } from '@/db/schema'
 import { createUserRewardLink } from '@/lib/ton-society-api'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 
 export async function GET() {
+    await createRewards()
+    await notifyUsersForRewards()
+
+    return NextResponse.json({
+        message: 'Cron job executed successfully',
+        now: Date.now(),
+    })
+}
+
+async function createRewards() {
     const pendingRewards = await db.query.rewards.findMany({
         where: (fields, { eq }) => {
             return eq(fields.status, 'pending_creation')
@@ -47,18 +57,6 @@ export async function GET() {
                 }
             )
 
-            // send bot message to valid users
-            axios
-                .post(`http://telegram-bot:3333/send-message`, {
-                    link: response.data.data.reward_link,
-                    chat_id: user?.user_id,
-                    custom_message:
-                        'Hey there, you just received your reward. please click on the link below to claim it',
-                })
-                .catch((error) => {
-                    console.error('BOT_API_ERROR', error)
-                })
-
             await db
                 .update(rewards)
                 .set({
@@ -68,9 +66,20 @@ export async function GET() {
                 .where(eq(rewards.id, pendingReward.id))
                 .execute()
         } catch (error) {
+            const isEventPublished =
+                error instanceof AxiosError
+                    ? error.response?.data?.message !== 'activity not found'
+                    : true
+
+            const shouldFail = pendingReward.tryCount >= 5 && isEventPublished
+
             db.update(rewards)
                 .set({
-                    tryCount: pendingReward.tryCount + 1,
+                    tryCount: isEventPublished
+                        ? pendingReward.tryCount + 1
+                        : undefined,
+                    status: shouldFail ? 'failed' : undefined,
+                    data: shouldFail ? { fail_reason: error } : undefined,
                 })
                 .where(eq(rewards.id, pendingReward.id))
                 .execute()
@@ -79,11 +88,59 @@ export async function GET() {
             console.error('CRON_JOB_ERROR', error)
         }
     }
+}
 
-    return NextResponse.json({
-        message: 'Cron job executed successfully',
-        now: Date.now(),
+async function notifyUsersForRewards() {
+    const createdRewards = await db.query.rewards.findMany({
+        where: (fields, { eq }) => {
+            return eq(fields.status, 'created')
+        },
     })
+
+    for (const createdReward of createdRewards) {
+        try {
+            const visitor = await db.query.visitors.findFirst({
+                where: (fields, { eq }) => {
+                    return eq(fields.id, createdReward.visitor_id)
+                },
+            })
+
+            const event = await db.query.events.findFirst({
+                where: (fields, { eq }) => {
+                    return eq(fields.event_uuid, visitor?.event_uuid as string)
+                },
+            })
+
+            // send bot message to valid users
+            await axios.post(`http://telegram-bot:3333/send-message`, {
+                // @ts-expect-error
+                link: createdReward.data.reward_link,
+                chat_id: visitor?.user_id,
+                custom_message: `Hey there, you just received your reward for ${event?.title} event. please click on the link below to claim it`,
+            })
+
+            await db
+                .update(rewards)
+                .set({
+                    status: 'notified',
+                })
+                .where(eq(rewards.id, createdReward.id))
+                .execute()
+        } catch (error) {
+            const shouldFail = createdReward.tryCount >= 10
+            db.update(rewards)
+                .set({
+                    tryCount: createdReward.tryCount + 1,
+                    status: shouldFail ? 'notification_failed' : undefined,
+                    data: shouldFail ? { fail_reason: error } : undefined,
+                })
+                .where(eq(rewards.id, createdReward.id))
+                .execute()
+                .catch((error) => console.error('DB_ERROR: ', error))
+
+            console.error('BOT_API_ERROR', error)
+        }
+    }
 }
 
 export const dynamic = 'force-dynamic'

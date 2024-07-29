@@ -43,6 +43,13 @@
       "when": 1722243914388,
       "tag": "0005_odd_viper",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1722268298501,
+      "tag": "0006_secret_namor",
+      "breakpoints": true
     }
   ]
 }

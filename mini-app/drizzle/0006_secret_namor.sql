@@ -1,0 +1,1 @@
+ALTER TYPE "reward_status" ADD VALUE 'notification_failed';

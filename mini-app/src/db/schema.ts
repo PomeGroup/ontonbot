@@ -79,6 +79,7 @@ export const rewardStatus = pgEnum('reward_status', [
     'created',
     'received',
     'notified',
+    'notification_failed',
     'failed',
 ])
 export const rewards = pgTable('rewards', {
