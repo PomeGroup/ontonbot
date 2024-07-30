@@ -2,11 +2,7 @@
 
 import { trpc } from '@/app/_trpc/client'
 import useWebApp from '@/hooks/useWebApp'
-import {
-    useTonAddress,
-    useTonConnectUI,
-    useTonWallet,
-} from '@tonconnect/ui-react'
+import { useTonConnectUI, useTonWallet } from '@tonconnect/ui-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Address } from '@ton/core'
 import Tasks from '.'
@@ -61,15 +57,19 @@ const ConnectWalletTask = () => {
     }, [wallet, userAddress])
 
     useEffect(() => {
-        if (isWalletConnected && friendlyAddress) {
-            addWalletMutation.mutate({
-                initData: WebApp?.initData,
-                wallet: friendlyAddress,
-            })
+        try {
+            if (isWalletConnected && tonConnectUI.account?.address) {
+                addWalletMutation.mutate({
+                    initData: WebApp?.initData,
+                    wallet: Address.parse(
+                        tonConnectUI.account.address
+                    ).toString(),
+                })
 
-            return
-        }
-    }, [isWalletConnected, friendlyAddress])
+                return
+            }
+        } catch {}
+    }, [isWalletConnected, tonConnectUI.account?.address])
 
     const onConnectClick = async () => {
         hapticFeedback?.impactOccurred('medium')
