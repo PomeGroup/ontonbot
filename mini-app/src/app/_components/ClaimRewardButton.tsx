@@ -24,14 +24,15 @@ function ClaimRewardButtonChild(props: {
 
     return (
         <>
-            {(!isRewardModalOpen || !props.isNotified) && (
+            {!isRewardModalOpen && !props.isNotified && (
                 <MainButton
                     text="Claim Reward"
                     onClick={openRewardLink}
                     color={'#2ea6ff'}
                 />
             )}
-            {!props.isNotified && (
+
+            {props.isNotified && (
                 <MainButton text="Claim Reward" color={'#747480'} />
             )}
 
