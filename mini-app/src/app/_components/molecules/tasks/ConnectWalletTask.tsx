@@ -25,12 +25,6 @@ const ConnectWalletTask = () => {
         },
     })
 
-    const friendlyAddress = useMemo(() => {
-        if (tonConnectUI.account?.address) {
-            return Address.parse(tonConnectUI.account.address).toString()
-        }
-    }, [tonConnectUI.account?.address])
-
     const userAddress = trpc.users.getWallet.useQuery(
         {
             initData: WebApp?.initData,
@@ -46,6 +40,12 @@ const ConnectWalletTask = () => {
     ).data
     const webApp = useWebApp()
     const hapticFeedback = webApp?.HapticFeedback
+
+    const friendlyAddress = useMemo(() => {
+        if (userAddress) {
+            return Address.parse(userAddress).toString()
+        }
+    }, [userAddress])
 
     const [isWalletConnected, setIsWalletConnected] = useState<
         boolean | undefined
