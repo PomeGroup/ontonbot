@@ -26,7 +26,9 @@ const ConnectWalletTask = () => {
     })
 
     const friendlyAddress = useMemo(() => {
-        return Address.parse(tonConnectUI.account?.address as string).toString()
+        if (tonConnectUI.account?.address) {
+            return Address.parse(tonConnectUI.account.address).toString()
+        }
     }, [tonConnectUI.account?.address])
 
     const userAddress = trpc.users.getWallet.useQuery(
@@ -59,7 +61,7 @@ const ConnectWalletTask = () => {
     }, [wallet, userAddress])
 
     useEffect(() => {
-        if (isWalletConnected && friendlyAddress !== '') {
+        if (isWalletConnected && friendlyAddress) {
             addWalletMutation.mutate({
                 initData: WebApp?.initData,
                 wallet: friendlyAddress,
@@ -78,7 +80,7 @@ const ConnectWalletTask = () => {
     }
 
     const connectedWallet = useMemo(() => {
-        return friendlyAddress.slice(0, 4) + '...' + friendlyAddress.slice(-4)
+        return friendlyAddress?.slice(0, 4) + '...' + friendlyAddress?.slice(-4)
     }, [friendlyAddress])
 
     return (
