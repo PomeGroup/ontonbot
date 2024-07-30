@@ -7,7 +7,10 @@ import MainButton from './atoms/buttons/web-app/MainButton'
 import ModalDialog from './SecretSavedModal'
 
 // Child component
-function ClaimRewardButtonChild(props: { link: string | null }) {
+function ClaimRewardButtonChild(props: {
+    link: string | null
+    isNotified: boolean
+}) {
     const webApp = useWebApp()
     const [isRewardModalOpen, setIsRewardModalOpen] = useState(false)
 
@@ -21,9 +24,17 @@ function ClaimRewardButtonChild(props: { link: string | null }) {
 
     return (
         <>
-            {!isRewardModalOpen && (
-                <MainButton text="Claim Reward" onClick={openRewardLink} color={'#2ea6ff'} />
+            {(!isRewardModalOpen || !props.isNotified) && (
+                <MainButton
+                    text="Claim Reward"
+                    onClick={openRewardLink}
+                    color={'#2ea6ff'}
+                />
             )}
+            {!props.isNotified && (
+                <MainButton text="Claim Reward" color={'#7474801F'} />
+            )}
+
             <ModalDialog
                 isVisible={isRewardModalOpen}
                 onClose={() => setIsRewardModalOpen(false)}
@@ -60,9 +71,15 @@ export function ClaimRewardButton(props: { eventId: string }) {
         }
     )
 
-    return (
-        visitorReward.isSuccess && (
-            <ClaimRewardButtonChild link={visitorReward.data.data} />
-        )
+    return visitorReward.isSuccess ? (
+        <ClaimRewardButtonChild
+            isNotified={
+                visitorReward.data.type === 'reward_link_generated' &&
+                visitorReward.data.status === 'notified'
+            }
+            link={visitorReward.data.data}
+        />
+    ) : (
+        <MainButton text="Claim Reward" color={'#7474801F'} />
     )
 }
