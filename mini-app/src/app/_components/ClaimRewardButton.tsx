@@ -32,7 +32,7 @@ function ClaimRewardButtonChild(props: {
                 />
             )}
             {!props.isNotified && (
-                <MainButton text="Claim Reward" color={'#7474801F'} />
+                <MainButton text="Claim Reward" color={'#747480'} />
             )}
 
             <ModalDialog
@@ -80,6 +80,6 @@ export function ClaimRewardButton(props: { eventId: string }) {
             link={visitorReward.data.data}
         />
     ) : (
-        <MainButton text="Claim Reward" color={'#7474801F'} />
+        <MainButton text="Claim Reward" color={'#747480'} />
     )
 }
