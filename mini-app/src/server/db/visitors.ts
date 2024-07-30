@@ -2,6 +2,7 @@ import { db } from '@/db/db'
 import {
     eventFields,
     events,
+    rewards,
     userEventFields,
     users,
     visitors,
@@ -52,47 +53,9 @@ export const selectVisitorById = async (visitorId: number) => {
             created_at: visitors.created_at,
         })
         .from(visitors)
-        .fullJoin(users, eq(visitors.user_id, users.user_id))
-        .fullJoin(events, eq(events.event_uuid, visitors.event_uuid))
-        .leftJoin(
-            eventFields,
-            and(
-                eq(eventFields.title, 'secret_phrase_onton_input'),
-                eq(eventFields.id, events.event_id),
-                // eq(eventFields.description, 'Enter the secret phrase')
-            )
-        )
-        .where(
-            and(
-                eq(visitors.id, visitorId),
-                isNotNull(events.start_date),
-                isNotNull(events.end_date),
-                isNotNull(users.wallet_address),
-                between(
-                    visitors.created_at,
-                    sql`TO_TIMESTAMP(events.start_date)`,
-                    sql`TO_TIMESTAMP(events.end_date)`
-                ),
-                or(
-                    sql`(select count(*) from event_fields where event_fields.event_id = events.event_id) = 0`,
-                    sql`(select count(*) from user_event_fields uef join event_fields ef on ef.id = uef.event_field_id where uef.user_id = users.user_id and events.event_id = ef.event_id) = (select count(*) from event_fields ef where ef.event_id = events.event_id)`
-                ),
-                or(
-                    eq(events.secret_phrase, ''),
-                    isNull(events.secret_phrase),
-                    // the user entered event field for pass phrase should be eq to events.secret_phrase
-                    sql`EXISTS (
-                        SELECT 1
-                        FROM user_event_fields uef
-                        JOIN event_fields ef ON ef.id = uef.event_field_id
-                        WHERE uef.user_id = users.user_id
-                          AND ef.event_id = events.event_id
-                          AND ef.title = 'secret_phrase_onton_input'
-                          AND uef.data = events.secret_phrase
-                    )`
-                )
-            )
-        )
+        .leftJoin(users, eq(visitors.user_id, users.user_id))
+        .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
+        .where(and(isNotNull(rewards.id), eq(visitors.id, visitorId)))
         .execute()
 }
 
@@ -111,47 +74,9 @@ export const selectVisitorsByEventUuid = async (
             created_at: visitors.created_at,
         })
         .from(visitors)
-        .fullJoin(users, eq(visitors.user_id, users.user_id))
-        .fullJoin(events, eq(visitors.event_uuid, event_uuid))
-        .leftJoin(
-            eventFields,
-            and(
-                eq(eventFields.title, 'secret_phrase_onton_input'),
-                eq(eventFields.id, events.event_id),
-                eq(eventFields.description, 'Enter the secret phrase')
-            )
-        )
-        .where(
-            and(
-                eq(visitors.event_uuid, event_uuid),
-                isNotNull(events.start_date),
-                isNotNull(events.end_date),
-                isNotNull(users.wallet_address),
-                between(
-                    visitors.created_at,
-                    sql`TO_TIMESTAMP(events.start_date)`,
-                    sql`TO_TIMESTAMP(events.end_date)`
-                ),
-                or(
-                    sql`(select count(*) from event_fields where event_fields.event_id = events.event_id) = 0`,
-                    sql`(select count(*) from user_event_fields uef join event_fields ef on ef.id = uef.event_field_id where uef.user_id = users.user_id and events.event_id = ef.event_id) = (select count(*) from event_fields ef where ef.event_id = events.event_id)`
-                ),
-                or(
-                    eq(events.secret_phrase, ''),
-                    isNull(events.secret_phrase),
-                    // the user entered event field for pass phrase should be eq to events.secret_phrase
-                    sql`EXISTS (
-                        SELECT 1
-                        FROM user_event_fields uef
-                        JOIN event_fields ef ON ef.id = uef.event_field_id
-                        WHERE uef.user_id = users.user_id
-                          AND ef.event_id = events.event_id
-                          AND ef.title = 'secret_phrase_onton_input'
-                          AND uef.data = events.secret_phrase
-                    )`
-                )
-            )
-        )
+        .leftJoin(users, eq(visitors.user_id, users.user_id))
+        .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
+        .where(and(isNotNull(rewards.id), eq(visitors.event_uuid, event_uuid)))
 
     if (typeof limit === 'number') {
         visitorsQuery = visitorsQuery.limit(limit)
@@ -171,11 +96,11 @@ export const selectVisitorsByEventUuid = async (
             title: eventFields.title,
         })
         .from(userEventFields)
-        .fullJoin(
+        .leftJoin(
             eventFields,
             eq(userEventFields.event_field_id, eventFields.id)
         )
-        .fullJoin(events, eq(eventFields.event_id, events.event_id))
+        .leftJoin(events, eq(eventFields.event_id, events.event_id))
         .where(eq(events.event_uuid, event_uuid))
         .execute()
 
@@ -203,6 +128,7 @@ export const selectVisitorsByEventUuid = async (
     return {
         visitorsWithDynamicFields,
         moreRecordsAvailable,
+        visitors,
         nextCursor,
     }
 }

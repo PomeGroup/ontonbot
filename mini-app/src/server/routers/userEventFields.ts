@@ -75,7 +75,8 @@ export const userEventFieldsRouter = router({
                     opts.input.data?.toLowerCase().trim()
             ) {
                 throw new TRPCError({
-                    message: 'wrong secret phrase entered',
+                    message:
+                        'Sorry, you entered the wrong secret phrase. Try again.',
                     code: TRPC_ERROR_CODES_BY_NUMBER['-32003'],
                 })
             }

@@ -227,26 +227,26 @@ export const usersRouter = router({
                         event_uuid: opts.input.event_uuid,
                     })
                 } catch (error) {
-                    if (
-                        error instanceof TRPCError &&
-                        error.code === 'CONFLICT'
-                    ) {
-                        await db
-                            .insert(rewards)
-                            .values({
-                                status: 'pending_creation',
-                                type: 'ton_society_sbt',
-                                visitor_id: visitor.id,
-                            })
-                            .execute()
-                        return {
-                            type: 'wait_for_reward',
-                            message:
-                                "We successfully collected your data, you'll receive your reward link through a bot message.",
-                            data: null,
-                        } as const
+                    if (error instanceof TRPCError) {
+                        if (error.code === 'CONFLICT') {
+                            await db
+                                .insert(rewards)
+                                .values({
+                                    status: 'pending_creation',
+                                    type: 'ton_society_sbt',
+                                    visitor_id: visitor.id,
+                                })
+                                .execute()
+                            return {
+                                type: 'wait_for_reward',
+                                message:
+                                    "We successfully collected your data, you'll receive your reward link through a bot message.",
+                                data: null,
+                            } as const
+                        }
+                    } else {
+                        console.log(error)
                     }
-                    console.log(error)
                 }
 
                 // Fetch the reward from the database

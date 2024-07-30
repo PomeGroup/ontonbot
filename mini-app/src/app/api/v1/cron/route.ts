@@ -25,7 +25,7 @@ export async function GET() {
 }
 
 async function createRewards() {
-    const pendingRewards = await db.query.rewards.findMany({
+    let pendingRewards = await db.query.rewards.findMany({
         where: (fields, { eq }) => {
             return eq(fields.status, 'pending_creation')
         },
@@ -80,6 +80,41 @@ async function createRewards() {
                 error instanceof AxiosError
                     ? error.response?.data?.message !== 'activity not found'
                     : true
+            // if it was not published we will delete all the other rewards assosieted with this event from the loop
+            if (!isEventPublished) {
+                const visitor = await db.query.visitors.findFirst({
+                    where: (fields, { eq }) => {
+                        return eq(fields.id, pendingReward.visitor_id)
+                    },
+                })
+
+                const unpublishedEvent = await db.query.events.findFirst({
+                    where: (fields, { eq }) => {
+                        return eq(
+                            fields.event_uuid,
+                            visitor?.event_uuid as string
+                        )
+                    },
+                })
+                pendingRewards = pendingRewards.filter(async (r) => {
+                    const visitor = await db.query.visitors.findFirst({
+                        where: (fields, { eq }) => {
+                            return eq(fields.id, r.visitor_id)
+                        },
+                    })
+
+                    const event = await db.query.events.findFirst({
+                        where: (fields, { eq }) => {
+                            return eq(
+                                fields.event_uuid,
+                                visitor?.event_uuid as string
+                            )
+                        },
+                    })
+
+                    return event?.activity_id !== unpublishedEvent?.activity_id
+                })
+            }
 
             const shouldFail = pendingReward.tryCount >= 5 && isEventPublished
 
