@@ -18,6 +18,7 @@ const ConnectWalletTask = () => {
                 {},
                 { refetchType: 'all' }
             )
+            trpcUtils.users.getWallet.invalidate({}, { refetchType: 'all' })
         },
     })
 
@@ -65,7 +66,6 @@ const ConnectWalletTask = () => {
                         tonConnectUI.account.address
                     ).toString(),
                 })
-
                 return
             }
         } catch {}
