@@ -21,7 +21,10 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
 }) => {
     const [timeZone, setTimeZone] = useState(formData?.timezone || '')
 
-    const handleChange = (e: ChangeEvent<HTMLInputElement>, field: string) => {
+    const handleChange = (
+        e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>,
+        field: string
+    ) => {
         setFormData((prev) => {
             return { ...prev, [field]: e.target.value }
         })
@@ -107,7 +110,8 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
                     </Labels.Label>
                 </div>
 
-                <Input
+                <textarea
+                    className="w-full h-10 rounded-lg border border-separator p-2"
                     value={formData.description}
                     onChange={(e) => handleChange(e, 'description')}
                 />
