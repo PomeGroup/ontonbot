@@ -6,8 +6,17 @@ import { createUserRewardLink } from '@/lib/ton-society-api'
 import axios, { AxiosError } from 'axios'
 
 export async function GET() {
-    await createRewards()
-    await notifyUsersForRewards()
+    try {
+        await createRewards()
+    } catch (error) {
+        console.error('ERROR_IN_CREATE_REWARDS: ', error)
+    }
+
+    try {
+        await notifyUsersForRewards()
+    } catch (error) {
+        console.error('ERROR_IN_NOTIFICATION: ', error)
+    }
 
     return NextResponse.json({
         message: 'Cron job executed successfully',
@@ -66,6 +75,7 @@ async function createRewards() {
                 .where(eq(rewards.id, pendingReward.id))
                 .execute()
         } catch (error) {
+            console.error('CRON_JOB_ERROR', error)
             const isEventPublished =
                 error instanceof AxiosError
                     ? error.response?.data?.message !== 'activity not found'
@@ -73,19 +83,22 @@ async function createRewards() {
 
             const shouldFail = pendingReward.tryCount >= 5 && isEventPublished
 
-            db.update(rewards)
-                .set({
-                    tryCount: isEventPublished
-                        ? pendingReward.tryCount + 1
-                        : undefined,
-                    status: shouldFail ? 'failed' : undefined,
-                    data: shouldFail ? { fail_reason: error } : undefined,
-                })
-                .where(eq(rewards.id, pendingReward.id))
-                .execute()
-                .catch((error) => console.error('DB_ERROR: ', error))
-
-            console.error('CRON_JOB_ERROR', error)
+            if (!isEventPublished && !shouldFail) return
+            try {
+                await db
+                    .update(rewards)
+                    .set({
+                        tryCount: isEventPublished
+                            ? pendingReward.tryCount + 1
+                            : undefined,
+                        status: shouldFail ? 'failed' : undefined,
+                        data: shouldFail ? { fail_reason: error } : undefined,
+                    })
+                    .where(eq(rewards.id, pendingReward.id))
+                    .execute()
+            } catch (error) {
+                console.log('DB_ERROR_102', error)
+            }
         }
     }
 }
@@ -127,18 +140,21 @@ async function notifyUsersForRewards() {
                 .where(eq(rewards.id, createdReward.id))
                 .execute()
         } catch (error) {
-            const shouldFail = createdReward.tryCount >= 10
-            db.update(rewards)
-                .set({
-                    tryCount: createdReward.tryCount + 1,
-                    status: shouldFail ? 'notification_failed' : undefined,
-                    data: shouldFail ? { fail_reason: error } : undefined,
-                })
-                .where(eq(rewards.id, createdReward.id))
-                .execute()
-                .catch((error) => console.error('DB_ERROR: ', error))
-
             console.error('BOT_API_ERROR', error)
+            const shouldFail = createdReward.tryCount >= 10
+
+            try {
+                db.update(rewards)
+                    .set({
+                        tryCount: createdReward.tryCount + 1,
+                        status: shouldFail ? 'notification_failed' : undefined,
+                        data: shouldFail ? { fail_reason: error } : undefined,
+                    })
+                    .where(eq(rewards.id, createdReward.id))
+                    .execute()
+            } catch (error) {
+                console.error('DB_ERROR_156', error)
+            }
         }
     }
 }

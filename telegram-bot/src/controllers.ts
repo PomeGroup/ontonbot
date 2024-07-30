@@ -170,7 +170,6 @@ export async function sendMessage(
     const message = custom_message; // || defaultMessage;
 
     await req.bot.telegram.sendMessage(chat_id, message.trim(), {
-      parse_mode: "Markdown",
       reply_markup: {
         inline_keyboard: [
           [

@@ -71,7 +71,8 @@ export const userEventFieldsRouter = router({
             if (
                 eventSecretField &&
                 !!eventData[0].secret_phrase &&
-                eventData[0].secret_phrase !== opts.input.data
+                eventData[0].secret_phrase?.toLowerCase().trim() !==
+                    opts.input.data?.toLowerCase().trim()
             ) {
                 throw new TRPCError({
                     message: 'wrong secret phrase entered',
