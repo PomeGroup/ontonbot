@@ -1,9 +1,9 @@
 import { db } from '@/db/db'
-import { NextResponse } from 'next/server'
-import { eq } from 'drizzle-orm'
 import { rewards } from '@/db/schema'
 import { createUserRewardLink } from '@/lib/ton-society-api'
 import axios, { AxiosError } from 'axios'
+import { eq } from 'drizzle-orm'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
     try {
@@ -30,6 +30,8 @@ async function createRewards() {
             return eq(fields.status, 'pending_creation')
         },
     })
+
+    console.log('pendingRewards', pendingRewards.length)
 
     // create reward ton society integration
     for (const pendingReward of pendingRewards) {
@@ -73,9 +75,7 @@ async function createRewards() {
                     data: response.data.data,
                 })
                 .where(eq(rewards.id, pendingReward.id))
-                .execute()
         } catch (error) {
-            console.error('CRON_JOB_ERROR', error)
             const isEventPublished =
                 error instanceof AxiosError
                     ? error.response?.data?.message !== 'activity not found'
@@ -83,21 +83,32 @@ async function createRewards() {
 
             const shouldFail = pendingReward.tryCount >= 5 && isEventPublished
 
-            if (!isEventPublished && !shouldFail) return
-            try {
-                await db
-                    .update(rewards)
-                    .set({
-                        tryCount: isEventPublished
-                            ? pendingReward.tryCount + 1
-                            : undefined,
-                        status: shouldFail ? 'failed' : undefined,
-                        data: shouldFail ? { fail_reason: error } : undefined,
-                    })
-                    .where(eq(rewards.id, pendingReward.id))
-                    .execute()
-            } catch (error) {
-                console.log('DB_ERROR_102', error)
+            if (isEventPublished || shouldFail) {
+                try {
+                    await db
+                        .update(rewards)
+                        .set({
+                            tryCount: isEventPublished
+                                ? pendingReward.tryCount + 1
+                                : undefined,
+                            status: shouldFail ? 'failed' : undefined,
+                            data: shouldFail
+                                ? { fail_reason: error }
+                                : undefined,
+                        })
+                        .where(eq(rewards.id, pendingReward.id))
+                } catch (error) {
+                    console.log('DB_ERROR_102', error)
+                }
+            }
+            if (error instanceof AxiosError) {
+                console.error(
+                    'CRON_JOB_ERROR',
+                    error.message,
+                    error.response?.data
+                )
+            } else {
+                console.error('CRON_JOB_ERROR', error)
             }
         }
     }
@@ -109,6 +120,8 @@ async function notifyUsersForRewards() {
             return eq(fields.status, 'created')
         },
     })
+
+    console.log('createdRewards ', createdRewards.length)
 
     for (const createdReward of createdRewards) {
         try {
@@ -138,7 +151,6 @@ async function notifyUsersForRewards() {
                     status: 'notified',
                 })
                 .where(eq(rewards.id, createdReward.id))
-                .execute()
         } catch (error) {
             console.error('BOT_API_ERROR', error)
             const shouldFail = createdReward.tryCount >= 10
@@ -151,7 +163,6 @@ async function notifyUsersForRewards() {
                         data: shouldFail ? { fail_reason: error } : undefined,
                     })
                     .where(eq(rewards.id, createdReward.id))
-                    .execute()
             } catch (error) {
                 console.error('DB_ERROR_156', error)
             }
