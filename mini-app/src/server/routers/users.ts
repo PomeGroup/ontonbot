@@ -6,7 +6,7 @@ import { validateMiniAppData } from '@/utils'
 import { TRPCError } from '@trpc/server'
 import { eq } from 'drizzle-orm'
 import { z } from 'zod'
-import { selectVisitorById } from '../db/visitors'
+import { selectValidVisitorById } from '../db/visitors'
 import { initDataProtectedProcedure, publicProcedure, router } from '../trpc'
 
 export const usersRouter = router({
@@ -330,7 +330,7 @@ async function createUserReward(props: {
         }
 
         // Validate the visitor
-        const isValidVisitor = await selectVisitorById(visitor.id)
+        const isValidVisitor = await selectValidVisitorById(visitor.id)
         if (!isValidVisitor.length) {
             throw new TRPCError({
                 code: 'BAD_REQUEST',

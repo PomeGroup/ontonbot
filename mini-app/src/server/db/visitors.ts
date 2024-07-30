@@ -42,7 +42,7 @@ export const selectVisitorsByEventUuidMock = async (
     }
 }
 
-export const selectVisitorById = async (visitorId: number) => {
+export const selectValidVisitorById = async (visitorId: number) => {
     return await db
         .select({
             user_id: visitors.user_id,
@@ -54,9 +54,24 @@ export const selectVisitorById = async (visitorId: number) => {
         })
         .from(visitors)
         .leftJoin(users, eq(visitors.user_id, users.user_id))
-        .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
-        .where(and(isNotNull(rewards.id), eq(visitors.id, visitorId)))
-        .execute()
+        .leftJoin(events, eq(events.event_uuid, visitors.event_uuid))
+        .where(
+            and(
+                eq(visitors.id, visitorId),
+                isNotNull(events.start_date),
+                isNotNull(events.end_date),
+                isNotNull(users.wallet_address),
+                between(
+                    visitors.created_at,
+                    sql`TO_TIMESTAMP(events.start_date)`,
+                    sql`TO_TIMESTAMP(events.end_date)`
+                ),
+                or(
+                    sql`(select count(*) from event_fields where event_fields.event_id = events.event_id) = 0`,
+                    sql`(select count(*) from user_event_fields uef left join event_fields ef on ef.id = uef.event_field_id where uef.user_id = users.user_id and events.event_id = ef.event_id and uef.completed=true) = (select count(*) from event_fields ef where ef.event_id = events.event_id)`
+                )
+            )
+        )
 }
 
 export const selectVisitorsByEventUuid = async (
