@@ -88,6 +88,7 @@ export const selectVisitorsByEventUuid = async (
 
     const visitorsData = await visitorsQuery.execute()
 
+    console.log('visitorsData', visitorsData.length)
     let userEventFieldsData = await db
         .select({
             user_id: userEventFields.user_id,
@@ -102,7 +103,6 @@ export const selectVisitorsByEventUuid = async (
         )
         .leftJoin(events, eq(eventFields.event_id, events.event_id))
         .where(eq(events.event_uuid, event_uuid))
-        .execute()
 
     const visitorsWithDynamicFields = visitorsData.map((visitor) => {
         const dynamicFields = userEventFieldsData
@@ -128,7 +128,7 @@ export const selectVisitorsByEventUuid = async (
     return {
         visitorsWithDynamicFields,
         moreRecordsAvailable,
-        visitors,
+        visitorsData,
         nextCursor,
     }
 }
