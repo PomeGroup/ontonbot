@@ -7,14 +7,13 @@ import {
     useTonConnectUI,
     useTonWallet,
 } from '@tonconnect/ui-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Address } from '@ton/core'
 import Tasks from '.'
 
 const ConnectWalletTask = () => {
     const WebApp = useWebApp()
     const wallet = useTonWallet()
-    const friendlyAddress = useTonAddress(true)
     const [tonConnectUI] = useTonConnectUI()
     const trpcUtils = trpc.useUtils()
     const addWalletMutation = trpc.users.addWallet.useMutation({
@@ -25,6 +24,11 @@ const ConnectWalletTask = () => {
             )
         },
     })
+
+    const friendlyAddress = useMemo(() => {
+        return Address.parse(tonConnectUI.account?.address as string).toString()
+    }, [tonConnectUI.account?.address])
+
     const userAddress = trpc.users.getWallet.useQuery(
         {
             initData: WebApp?.initData,
@@ -73,8 +77,9 @@ const ConnectWalletTask = () => {
         }
     }
 
-    const connectedWallet =
-        friendlyAddress.slice(0, 4) + '...' + friendlyAddress.slice(-4)
+    const connectedWallet = useMemo(() => {
+        return friendlyAddress.slice(0, 4) + '...' + friendlyAddress.slice(-4)
+    }, [friendlyAddress])
 
     return (
         <>
