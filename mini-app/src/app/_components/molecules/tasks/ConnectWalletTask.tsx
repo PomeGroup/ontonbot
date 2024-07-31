@@ -40,7 +40,7 @@ const ConnectWalletTask = () => {
 
     const friendlyAddress = useMemo(() => {
         if (userAddress) {
-            return Address.parse(userAddress).toString()
+            return Address.parse(userAddress).toString({ bounceable: false })
         }
     }, [userAddress])
 
