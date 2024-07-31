@@ -51,12 +51,11 @@ function ClaimRewardButtonChild(props: {
 export function ClaimRewardButton(props: { eventId: string }) {
     const WebApp = useWebApp()
     const initData = WebApp?.initData || ''
-    const [rewardLink, setRewardLink] = useState<string | undefined>(undefined)
 
     const visitorReward = trpc.users.getVisitorReward.useQuery(
         { init_data: initData, event_uuid: props.eventId },
         {
-            enabled: !rewardLink && !!initData && !!props.eventId,
+            enabled: !!initData && !!props.eventId,
             queryKey: [
                 'users.getVisitorReward',
                 {
@@ -64,11 +63,6 @@ export function ClaimRewardButton(props: { eventId: string }) {
                     event_uuid: props.eventId,
                 },
             ],
-            onSuccess: (data) => {
-                if (data.type === 'reward_link_generated') {
-                    setRewardLink(visitorReward.data?.data as string)
-                }
-            },
         }
     )
 
@@ -81,6 +75,6 @@ export function ClaimRewardButton(props: { eventId: string }) {
             link={visitorReward.data.data}
         />
     ) : (
-        <MainButton text="Claim Reward" color={'#747480'} />
+        <MainButton text="Fill The Form" color={'#747480'} />
     )
 }
