@@ -57,7 +57,11 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
                 startUTC,
                 location,
             }
-        }, [])
+        }, [
+            eventData.data?.start_date,
+            eventData.data?.end_date,
+            eventData.data?.location,
+        ])
 
     return eventData.isLoading ? (
         <EventPageLoadingSkeleton />
