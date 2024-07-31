@@ -13,10 +13,17 @@ import { FC } from 'react'
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
     const WebApp = useWebApp()
-    const event = trpc.events.getEvent.useQuery(params.hash, {
-        cacheTime: 0,
-        queryKey: ['events.getEvent', params.hash],
-    })
+    const event = trpc.events.getEvent.useQuery(
+        { event_uuid: params.hash, init_data: WebApp?.initData || '' },
+        {
+            cacheTime: 0,
+            enabled: Boolean(WebApp?.initData),
+            queryKey: [
+                'events.getEvent',
+                { event_uuid: params.hash, init_data: WebApp?.initData || '' },
+            ],
+        }
+    )
     const hapticFeedback = WebApp?.HapticFeedback
 
     const { authorized, isLoading } = useAuth()
@@ -52,17 +59,13 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
             <Tabs defaultValue="manage" className="mb-4">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger
-                        onClick={() =>
-                            hapticFeedback?.impactOccurred('medium')
-                        }
+                        onClick={() => hapticFeedback?.impactOccurred('medium')}
                         value="manage"
                     >
                         Manage
                     </TabsTrigger>
                     <TabsTrigger
-                        onClick={() =>
-                            hapticFeedback?.impactOccurred('medium')
-                        }
+                        onClick={() => hapticFeedback?.impactOccurred('medium')}
                         value="edit"
                     >
                         ⚙️ Edit

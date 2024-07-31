@@ -1,5 +1,6 @@
 import { db } from '@/db/db'
 import { eventFields, events, users } from '@/db/schema'
+import { removeKey } from '@/lib/utils'
 import { validateMiniAppData } from '@/utils'
 import { and, eq } from 'drizzle-orm'
 
@@ -46,7 +47,7 @@ export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
     return { role: role[0].role, ...data }
 }
 
-export const selectEventByUuid = async (eventUuid: string) => {
+export const selectEventByUuid = async (eventUuid: string, role: string) => {
     if (eventUuid.length !== 36) {
         return null
     }
@@ -65,7 +66,12 @@ export const selectEventByUuid = async (eventUuid: string) => {
         return null
     }
 
-    const { wallet_seed_phrase, ...restEventData } = eventData
+    const { wallet_seed_phrase, ...restEventData } = [
+        'admin',
+        'organizer',
+    ].includes(role)
+        ? eventData
+        : removeKey(eventData, 'secret_phrase')
 
     const dynamicFields = await db
         .select()

@@ -20,7 +20,7 @@ export const users = pgTable('users', {
     last_name: text('last_name'),
     wallet_address: text('wallet_address'),
     language_code: text('language_code'),
-    role: text('role'),
+    role: text('role').notNull(),
     created_at: timestamp('created_at').defaultNow(),
 })
 
@@ -70,6 +70,7 @@ export const visitors = pgTable('visitors', {
     claimed: integer('claimed'),
     amount: integer('amount'),
     tx_hash: text('tx_hash'),
+    last_visit: timestamp('last_visit').defaultNow(),
     created_at: timestamp('created_at').defaultNow(),
 })
 

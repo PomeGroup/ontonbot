@@ -22,8 +22,11 @@ import {
     checkIsEventOwner,
     selectEventByUuid,
 } from '../db/events'
-import { selectVisitorsByEventUuid } from '../db/visitors'
-import { publicProcedure, router } from '../trpc'
+import {
+    selectVisitorsByEventUuid,
+    updateVisitorLastVisitc as updateVisitorLastVisit,
+} from '../db/visitors'
+import { initDataProtectedProcedure, publicProcedure, router } from '../trpc'
 import { TonSocietyRegisterActivityT } from '@/types/event.types'
 import { registerActivity, updateActivity } from '@/lib/ton-society-api'
 dotenv.config()
@@ -72,9 +75,22 @@ export const eventsRouter = router({
         return balance
     }),
 
-    getEvent: publicProcedure.input(z.string()).query(async (opts) => {
-        return selectEventByUuid(opts.input)
-    }),
+    getEvent: initDataProtectedProcedure
+        .input(z.object({ event_uuid: z.string() }))
+        .query(async (opts) => {
+            const eventVisitor = await db.query.visitors.findFirst({
+                where: (fields, { eq, and }) => {
+                    return and(
+                        eq(fields.user_id, opts.ctx.user.user_id),
+                        eq(fields.event_uuid, opts.input.event_uuid)
+                    )
+                },
+            })
+            if (eventVisitor) {
+                await updateVisitorLastVisit(eventVisitor.id)
+            }
+            return selectEventByUuid(opts.input.event_uuid, opts.ctx.user.role)
+        }),
 
     // private
     getEvents: publicProcedure

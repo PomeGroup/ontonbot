@@ -62,7 +62,7 @@ export const selectValidVisitorById = async (visitorId: number) => {
                 isNotNull(events.end_date),
                 isNotNull(users.wallet_address),
                 between(
-                    visitors.created_at,
+                    visitors.last_visit,
                     sql`TO_TIMESTAMP(events.start_date)`,
                     sql`TO_TIMESTAMP(events.end_date)`
                 ),
@@ -146,4 +146,10 @@ export const selectVisitorsByEventUuid = async (
         visitorsData,
         nextCursor,
     }
+}
+
+export async function updateVisitorLastVisitc(id: number) {
+    return await db.update(visitors).set({
+        last_visit: sql`now()`,
+    })
 }

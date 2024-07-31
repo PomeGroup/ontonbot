@@ -1,7 +1,7 @@
-import React from 'react';
-import { Skeleton } from '@mui/material';
+import React from 'react'
+import { Skeleton } from '@mui/material'
 
-const loading = () => {
+const EventPageLoadingSkeleton = () => {
     return (
         <div>
             <div className="flex justify-between">
@@ -60,7 +60,7 @@ const loading = () => {
                 />
             ))}
         </div>
-    );
-};
+    )
+}
 
-export default loading;
+export default EventPageLoadingSkeleton
