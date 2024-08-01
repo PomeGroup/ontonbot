@@ -148,8 +148,8 @@ export const selectVisitorsByEventUuid = async (
     }
 }
 
-export async function updateVisitorLastVisitc(id: number) {
+export async function updateVisitorLastVisit(id: number) {
     return await db.update(visitors).set({
         last_visit: sql`now()`,
-    })
+    }).where(eq(visitors.id, id))
 }

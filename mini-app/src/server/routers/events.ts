@@ -24,7 +24,7 @@ import {
 } from '../db/events'
 import {
     selectVisitorsByEventUuid,
-    updateVisitorLastVisitc as updateVisitorLastVisit,
+    updateVisitorLastVisit,
 } from '../db/visitors'
 import { initDataProtectedProcedure, publicProcedure, router } from '../trpc'
 import { TonSocietyRegisterActivityT } from '@/types/event.types'
@@ -78,6 +78,7 @@ export const eventsRouter = router({
     getEvent: initDataProtectedProcedure
         .input(z.object({ event_uuid: z.string() }))
         .query(async (opts) => {
+          try {
             const eventVisitor = await db.query.visitors.findFirst({
                 where: (fields, { eq, and }) => {
                     return and(
@@ -89,7 +90,11 @@ export const eventsRouter = router({
             if (eventVisitor) {
                 await updateVisitorLastVisit(eventVisitor.id)
             }
-            return selectEventByUuid(opts.input.event_uuid, opts.ctx.user.role)
+          } catch (error) {
+            console.log("Error at updating visitor", error)
+          }
+
+          return selectEventByUuid(opts.input.event_uuid, opts.ctx.user.role)
         }),
 
     // private
