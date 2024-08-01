@@ -10,6 +10,7 @@ import {
     text,
     timestamp,
     unique,
+    index,
     uuid,
 } from 'drizzle-orm/pg-core'
 
@@ -22,7 +23,12 @@ export const users = pgTable('users', {
     language_code: text('language_code'),
     role: text('role').notNull(),
     created_at: timestamp('created_at').defaultNow(),
-})
+}, (table) => ({
+    usernameIdx: index('username_idx').on(table.username),
+    walletAddressIdx: index('wallet_address_idx').on(table.wallet_address),
+    roleIdx: index('role_idx').on(table.role),
+    createdAtIdx: index('created_at_idx').on(table.created_at),
+}))
 
 export const events = pgTable('events', {
     event_id: serial('event_id').primaryKey(),
@@ -48,7 +54,18 @@ export const events = pgTable('events', {
     hidden: boolean('hidden').default(false),
     ticketToCheckIn: boolean('ticketToCheckIn').default(false),
     created_at: timestamp('created_at').defaultNow(),
-})
+}, (table) => ({
+    eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
+    typeIdx: index('type_idx').on(table.type),
+    titleIdx: index('title_idx').on(table.title),
+    walletAddressIdx: index('wallet_address_idx').on(table.wallet_address),
+    societyHubIdx: index('society_hub_idx').on(table.society_hub),
+    startDateIdx: index('start_date_idx').on(table.start_date),
+    endDateIdx: index('end_date_idx').on(table.end_date),
+    ownerIdx: index('owner_idx').on(table.owner),
+    hiddenIdx: index('hidden_idx').on(table.hidden),
+    createdAtIdx: index('created_at_idx').on(table.created_at),
+}))
 
 export const eventFields = pgTable('event_fields', {
     id: serial('id').primaryKey(),
@@ -59,7 +76,11 @@ export const eventFields = pgTable('event_fields', {
     type: text('type'),
     order_place: integer('order_place'),
     event_id: integer('event_id').references(() => events.event_id),
-})
+}, (table) => ({
+    titleIdx: index('title_idx').on(table.title),
+    typeIdx: index('type_idx').on(table.type),
+    eventIdIdx: index('event_id_idx').on(table.event_id),
+}))
 
 export const visitors = pgTable('visitors', {
     id: serial('id').primaryKey(),
@@ -72,7 +93,12 @@ export const visitors = pgTable('visitors', {
     tx_hash: text('tx_hash'),
     last_visit: timestamp('last_visit').defaultNow(),
     created_at: timestamp('created_at').defaultNow(),
-})
+}, (table) => ({
+    userIdIdx: index('user_id_idx').on(table.user_id),
+    eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
+    lastVisitIdx: index('last_visit_idx').on(table.last_visit),
+    createdAtIdx: index('created_at_idx').on(table.created_at),
+}))
 
 export const rewardType = pgEnum('reward_types', ['ton_society_sbt'])
 export const rewardStatus = pgEnum('reward_status', [
@@ -93,7 +119,12 @@ export const rewards = pgTable('rewards', {
     tryCount: integer('try_count').default(0).notNull(),
     status: rewardStatus('status').notNull().default('created'),
     created_at: timestamp('created_at').defaultNow(),
-})
+}, (table) => ({
+    visitorIdIdx: index('visitor_id_idx').on(table.visitor_id),
+    typeIdx: index('type_idx').on(table.type),
+    statusIdx: index('status_idx').on(table.status),
+    createdAtIdx: index('created_at_idx').on(table.created_at),
+}))
 
 export const userEventFields = pgTable(
     'user_event_fields',
@@ -111,6 +142,10 @@ export const userEventFields = pgTable(
     },
     (table) => ({
         unq: unique().on(table.event_field_id, table.user_id),
+        eventFieldIdIdx: index('event_field_id_idx').on(table.event_field_id),
+        userIdIdx: index('user_id_idx').on(table.user_id),
+        completedIdx: index('completed_idx').on(table.completed),
+        createdAtIdx: index('created_at_idx').on(table.created_at),
     })
 )
 
@@ -122,7 +157,12 @@ export const airdropRoutines = pgTable('airdrop_routines', {
     ),
     status: text('status'),
     created_at: timestamp('created_at').defaultNow(),
-})
+}, (table) => ({
+    eventIdIdx: index('event_id_idx').on(table.event_id),
+    userIdIdx: index('user_id_idx').on(table.user_id),
+    statusIdx: index('status_idx').on(table.status),
+    createdAtIdx: index('created_at_idx').on(table.created_at),
+}))
 
 export const eventTicket = pgTable('event_tickets', {
     id: serial('id').primaryKey(),
@@ -134,7 +174,13 @@ export const eventTicket = pgTable('event_tickets', {
     count: integer('count'),
     collectionAddress: text('collection_address'),
     created_at: timestamp('created_at').defaultNow(),
-})
+}, (table) => ({
+    eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
+    titleIdx: index('title_idx').on(table.title),
+    priceIdx: index('price_idx').on(table.price),
+    collectionAddressIdx: index('collection_address_idx').on(table.collectionAddress),
+    createdAtIdx: index('created_at_idx').on(table.created_at),
+}))
 
 export const ticketStatus = pgEnum('event_ticket_status', [
     'MINTING',
@@ -158,6 +204,19 @@ export const tickets = pgTable('tickets', {
         () => users.user_id
     ),
     created_at: timestamp('created_at').defaultNow(),
+}, (table) => {
+  return {
+    nameIdx: index('name_idx').on(table.name),
+    telegramIdx: index('telegram_idx').on(table.telegram),
+    companyIdx: index('company_idx').on(table.company),
+    orderUuidIdx: index('order_uuid_idx').on(table.order_uuid),
+    statusIdx: index('status_idx').on(table.status),
+    nftAddressIdx: index('nft_address_idx').on(table.nftAddress),
+    eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
+    ticketIdIdx: index('ticket_id_idx').on(table.ticket_id),
+    userIdIdx: index('user_id_idx').on(table.user_id),
+    createdAtIdx: index('created_at_idx').on(table.created_at),
+  }
 })
 
 export const orderState = pgEnum('order_state', [
@@ -181,16 +240,26 @@ export const orders = pgTable('orders', {
     total_price: bigint('total_price', { mode: 'bigint' }),
     state: orderState('state'),
     failed_reason: text('failed_reason'),
-    // form fields
     telegram: text('telegram').notNull(),
     full_name: text('full_name').notNull(),
     company: text('company').notNull(),
     position: text('position').notNull(),
     owner_address: text('owner_address').notNull(),
-    //
     created_at: timestamp('created_at').defaultNow(),
-})
+}, (table) => ({
+    eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
+    userIdIdx: index('user_id_idx').on(table.user_id),
+    eventTicketIdIdx: index('event_ticket_id_idx').on(table.event_ticket_id),
+    transactionIdIdx: index('transaction_id_idx').on(table.transaction_id),
+    stateIdx: index('state_idx').on(table.state),
+    telegramIdx: index('telegram_idx').on(table.telegram),
+    fullNameIdx: index('full_name_idx').on(table.full_name),
+    companyIdx: index('company_idx').on(table.company),
+    ownerAddressIdx: index('owner_address_idx').on(table.owner_address),
+    createdAtIdx: index('created_at_idx').on(table.created_at),
+}))
 
+// Relations remain unchanged
 export const ticketsRelations = relations(tickets, ({ one }) => ({
     order: one(orders, {
         fields: [tickets.order_uuid],
