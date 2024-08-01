@@ -56,6 +56,7 @@ export function ClaimRewardButton(props: { eventId: string }) {
         { init_data: initData, event_uuid: props.eventId },
         {
             enabled: !!initData && !!props.eventId,
+            retry: false,
             queryKey: [
                 'users.getVisitorReward',
                 {
