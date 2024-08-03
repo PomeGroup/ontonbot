@@ -73,7 +73,7 @@ export const selectValidVisitorById = async (visitorId: number) => {
                         .where(
                             and(
                                 eq(userEventFields.user_id, visitors.user_id),
-                                eq(userEventFields.completed, false),
+                                eq(userEventFields.completed, true),
                                 eq(userEventFields.event_id, events.event_id)
                             )
                         ),
