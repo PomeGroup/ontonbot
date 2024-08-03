@@ -11,7 +11,7 @@ import {
 } from '@/types'
 import { GithubIcon, Trash, TwitterIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import {FC, useMemo, useState} from 'react'
+import { FC, useMemo, useState } from 'react'
 import { trpc } from '../_trpc/client'
 import Buttons from './atoms/buttons'
 import Labels from './atoms/labels'
@@ -124,11 +124,11 @@ const CreateEventFields: FC<{
         }
         setFields((prevFields) => [...prevFields, newField])
     }
-    // replace secret_phrase_onton_input with Secret Phrase
+    // replace secret_phrase_onton_input with Event Password
     const updatedFields = useMemo(() => {
         return fields.map((field) => {
             if (field.title === 'secret_phrase_onton_input') {
-                return { ...field, title: 'Secret Phrase' };
+                return { ...field, title: 'Event Password' };
             }
             return field;
         });

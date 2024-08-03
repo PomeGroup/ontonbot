@@ -161,7 +161,7 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
 
             <Card className="flex flex-col items-start pt-1">
                 <div className="flex justify-between w-full">
-                    <Labels.Label>Secret Phrase</Labels.Label>
+                    <Labels.Label>Event Password</Labels.Label>
                     <Labels.Label>
                         {zodErrors?.secret_phrase && (
                             <div className="text-red-500 text-end">

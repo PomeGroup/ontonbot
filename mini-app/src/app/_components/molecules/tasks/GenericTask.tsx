@@ -1,11 +1,11 @@
 'use client'
 
+import { cn } from '@/utils'
+import clsx from 'clsx'
+import { useTheme } from 'next-themes'
 import Image from 'next/image'
 import React from 'react'
-import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { useTheme } from 'next-themes'
-import { cn } from '@/utils'
 
 const GenericTask: React.FC<{
     title: string
@@ -53,7 +53,7 @@ const GenericTask: React.FC<{
             <div className="flex flex-col">
                 <div className="text-[17px] font-medium leading-[22px]">
                     {title === 'secret_phrase_onton_input'
-                        ? 'Secret Phrase'
+                        ? 'Event Password'
                         : title}
                 </div>
                 <div className="text-secondary text-[14px] leading-none font-light">
