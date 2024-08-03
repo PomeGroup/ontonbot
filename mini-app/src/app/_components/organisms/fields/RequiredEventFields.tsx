@@ -111,7 +111,7 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
                 </div>
 
                 <textarea
-                    className="w-full h-10 rounded-lg border border-separator p-2"
+                    className="w-full h-32 rounded-lg border border-separator p-2"
                     value={formData.description}
                     onChange={(e) => handleChange(e, 'description')}
                 />
