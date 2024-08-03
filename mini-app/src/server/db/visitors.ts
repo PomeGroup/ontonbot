@@ -7,7 +7,7 @@ import {
     users,
     visitors,
 } from '@/db/schema'
-import { and, between, eq, isNotNull, notExists, sql } from 'drizzle-orm'
+import { and, between, eq, isNotNull, sql } from 'drizzle-orm'
 
 const generateRandomVisitor = (userId: number) => ({
     user_id: userId,
@@ -66,9 +66,9 @@ export const selectValidVisitorById = async (visitorId: number) => {
                     sql`TO_TIMESTAMP(events.start_date)`,
                     sql`TO_TIMESTAMP(events.end_date)`
                 ),
-                notExists(
+                eq(
                     db
-                        .select()
+                        .select({ count: sql`count(*)`.mapWith(Number) })
                         .from(userEventFields)
                         .where(
                             and(
@@ -76,7 +76,11 @@ export const selectValidVisitorById = async (visitorId: number) => {
                                 eq(userEventFields.completed, false),
                                 eq(userEventFields.event_id, events.event_id)
                             )
-                        )
+                        ),
+                    db
+                        .select({ count: sql`count(*)`.mapWith(Number) })
+                        .from(eventFields)
+                        .where(and(eq(eventFields.event_id, events.event_id)))
                 )
             )
         )

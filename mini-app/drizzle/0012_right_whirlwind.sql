@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS "uef_event_id_idx" ON "user_event_fields" ("event_id");
