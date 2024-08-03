@@ -67,6 +67,13 @@ export function ClaimRewardButton(props: { eventId: string }) {
         }
     )
 
+    // invalidate the query if the init data changed
+    useEffect(() => {
+        console.info('INITDATA:', initData);
+        if (!initData) return
+        visitorReward.refetch()
+    }, [initData])
+
     return visitorReward.isSuccess ? (
         <ClaimRewardButtonChild
             isNotified={
