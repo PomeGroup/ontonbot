@@ -1,7 +1,7 @@
 'use client'
 
 import useWebApp from '@/hooks/useWebApp'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { trpc } from '../_trpc/client'
 import MainButton from './atoms/buttons/web-app/MainButton'
 import ModalDialog from './SecretSavedModal'
@@ -62,13 +62,6 @@ export function ClaimRewardButton(props: { eventId: string }) {
             ],
         }
     )
-
-    // invalidate the query if the init data changed
-    useEffect(() => {
-        console.info('INITDATA:', initData);
-        if (!initData) return
-        visitorReward.refetch()
-    }, [initData])
 
     return visitorReward.isSuccess ? (
         <ClaimRewardButtonChild
