@@ -126,12 +126,7 @@ const CreateEventFields: FC<{
     }
     // replace secret_phrase_onton_input with Event Password
     const updatedFields = useMemo(() => {
-        return fields.map((field) => {
-            if (field.title === 'secret_phrase_onton_input') {
-                return { ...field, title: 'Event Password' };
-            }
-            return field;
-        });
+        return fields.filter((field) => field.title !== 'secret_phrase_onton_input');
     }, [fields]);
 
 
