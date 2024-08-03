@@ -1,6 +1,5 @@
 'use client'
 
-import { Switch } from '@/components/ui/switch'
 import { TRequiredEventFields, ZodErrors } from '@/types'
 import { ChangeEvent, Dispatch, FC, SetStateAction, useState } from 'react'
 import Card from '../../atoms/cards'
@@ -41,29 +40,6 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
 
     return (
         <div>
-            <Card className="flex flex-col items-start pt-1">
-                <div className="flex justify-between w-full">
-                    <Labels.Label>Is Giveaway?</Labels.Label>
-                    <Labels.Label>
-                        {zodErrors?.isGiveaway && (
-                            <div className="text-red-500 text-end">
-                                {zodErrors.type}
-                            </div>
-                        )}
-                    </Labels.Label>
-                </div>
-
-                <Switch
-                    className="mt-2"
-                    checked={!!formData.type}
-                    onCheckedChange={(checked) => {
-                        if (formData.type !== 2) {
-                            handlePropertyChange(+checked, 'type')
-                        }
-                    }}
-                />
-            </Card>
-
             <Card className="flex flex-col items-start pt-1">
                 <div className="flex justify-between w-full">
                     <Labels.Label>Title</Labels.Label>
