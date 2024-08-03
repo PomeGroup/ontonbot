@@ -64,6 +64,20 @@
       "when": 1722517036215,
       "tag": "0008_familiar_puck",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1722690463609,
+      "tag": "0009_exotic_sleeper",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1722690574968,
+      "tag": "0010_white_silver_surfer",
+      "breakpoints": true
     }
   ]
 }

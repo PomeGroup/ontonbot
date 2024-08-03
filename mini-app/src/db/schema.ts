@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   bigint,
   boolean,
+  index,
   integer,
   json,
   pgEnum,
@@ -10,7 +11,6 @@ import {
   text,
   timestamp,
   unique,
-  index,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -151,6 +151,9 @@ export const userEventFields = pgTable(
   {
     id: serial("id").primaryKey(),
     event_field_id: serial("event_field_id").references(() => eventFields.id),
+    event_id: integer("event_id")
+      .references(() => events.event_id)
+      .notNull(),
     user_id: bigint("user_id", { mode: "number" }).references(
       () => users.user_id,
     ),
