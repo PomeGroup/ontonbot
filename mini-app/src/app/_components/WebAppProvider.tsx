@@ -1,17 +1,15 @@
-'use client'
-import useWebApp from '@/hooks/useWebApp'
-import EventsSkeleton from './molecules/skeletons/EventsSkeleton'
+"use client";
+import useWebApp from "@/hooks/useWebApp";
+import EventsSkeleton from "./molecules/skeletons/EventsSkeleton";
 
 const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
-    const webApp = useWebApp()
+  const webApp = useWebApp();
 
-    if (!webApp) {
-        return <EventsSkeleton />
-    }
+  if (!webApp) {
+    return <EventsSkeleton />;
+  }
 
-    return (
-        <>{children}</>
-    )
-}
+  return <>{children}</>;
+};
 
-export default WebAppProvider
+export default WebAppProvider;

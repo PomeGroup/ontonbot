@@ -1,14 +1,12 @@
-import React, { FC, ReactNode, useEffect } from 'react';
-import  "./PopupFooterWrapper.module.css";
+import React, { FC, ReactNode, useEffect } from "react";
+import "./PopupFooterWrapper.module.css";
 
 interface PopupFooterWrapperProps {
-    children: ReactNode;
+  children: ReactNode;
 }
 
 const PopupFooterWrapper: FC<PopupFooterWrapperProps> = ({ children }) => {
-
-
-    return <>{children}</>;
+  return <>{children}</>;
 };
 
 export default PopupFooterWrapper;

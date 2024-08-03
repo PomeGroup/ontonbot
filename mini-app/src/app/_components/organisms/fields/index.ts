@@ -1,6 +1,6 @@
-import Required from './RequiredEventFields'
-import Dynamic from './DynamicEventFields'
+import Required from "./RequiredEventFields";
+import Dynamic from "./DynamicEventFields";
 
-const fields = { Required, Dynamic }
+const fields = { Required, Dynamic };
 
 export default fields;

@@ -1,32 +1,32 @@
-import { isEmptyObject } from '@/utils'
-import { useState, useEffect } from 'react'
+import { isEmptyObject } from "@/utils";
+import { useState, useEffect } from "react";
 
 const useWebApp = () => {
-    const [webApp, setWebApp] = useState<WebApp>({} as WebApp)
+  const [webApp, setWebApp] = useState<WebApp>({} as WebApp);
 
-    useEffect(() => {
-        const checkWebApp = () => {
-            if (
-                typeof window !== 'undefined' &&
-                window.Telegram &&
-                window.Telegram.WebApp
-            ) {
-                setWebApp(window.Telegram.WebApp)
-            }
-        }
+  useEffect(() => {
+    const checkWebApp = () => {
+      if (
+        typeof window !== "undefined" &&
+        window.Telegram &&
+        window.Telegram.WebApp
+      ) {
+        setWebApp(window.Telegram.WebApp);
+      }
+    };
 
-        checkWebApp()
+    checkWebApp();
 
-        const intervalId = setInterval(checkWebApp, 300)
+    const intervalId = setInterval(checkWebApp, 300);
 
-        return () => clearInterval(intervalId)
-    }, [])
+    return () => clearInterval(intervalId);
+  }, []);
 
-    if (isEmptyObject(webApp)) {
-        return null
-    }
+  if (isEmptyObject(webApp)) {
+    return null;
+  }
 
-    return webApp
-}
+  return webApp;
+};
 
-export default useWebApp
+export default useWebApp;

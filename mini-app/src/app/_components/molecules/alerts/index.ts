@@ -1,8 +1,7 @@
 import NotAuthorized from "./NotAuthorized";
 
-
 const alerts = {
-    NotAuthorized
-}
+  NotAuthorized,
+};
 
-export default alerts;   
+export default alerts;

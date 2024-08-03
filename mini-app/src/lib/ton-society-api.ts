@@ -24,12 +24,12 @@ export const tonSocietyClient = axios.create({
  */
 export async function createUserRewardLink(
   activityId: number,
-  data: CreateUserRewardLinkInputType
+  data: CreateUserRewardLinkInputType,
 ) {
   try {
     return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(
       `/activities/${activityId}/rewards`,
-      data
+      data,
     );
   } catch (error) {
     if (
@@ -38,7 +38,7 @@ export async function createUserRewardLink(
         "reward link with such activity id and wallet address already created"
     ) {
       return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
-        `/activities/${activityId}/rewards/${data.telegram_user_id}`
+        `/activities/${activityId}/rewards/${data.telegram_user_id}`,
       );
     }
 
@@ -51,7 +51,7 @@ export async function createUserRewardLink(
  * more: https://ton-society.github.io/sbt-platform/#/Activities/createEvent
  */
 export async function registerActivity(
-  activityDetails: TonSocietyRegisterActivityT
+  activityDetails: TonSocietyRegisterActivityT,
 ) {
   const response = await tonSocietyClient.post("/activities", activityDetails);
   return response.data as TonSocietyRegisterActivityResponse;
@@ -63,11 +63,11 @@ export async function registerActivity(
  */
 export async function updateActivity(
   activityDetails: TonSocietyRegisterActivityT,
-  activity_id: string | number
+  activity_id: string | number,
 ) {
   const response = await tonSocietyClient.patch(
     `/activities/${activity_id}`,
-    activityDetails
+    activityDetails,
   );
   return response.data as { status: "success"; data: {} };
 }

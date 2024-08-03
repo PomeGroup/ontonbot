@@ -1,42 +1,42 @@
-import { trpc } from '@/app/_trpc/client'
-import { useEffect, useState } from 'react'
-import useWebApp from './useWebApp'
+import { trpc } from "@/app/_trpc/client";
+import { useEffect, useState } from "react";
+import useWebApp from "./useWebApp";
 
 const useAuth = () => {
-    const [authorized, setAuthorized] = useState<boolean | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
-    const WebApp = useWebApp()
-    const initData = WebApp?.initData || ''
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const WebApp = useWebApp();
+  const initData = WebApp?.initData || "";
 
-    const validateUserInitDataQuery =
-        trpc.users.haveAccessToEventAdministration.useQuery(initData, {
-            queryKey: ['users.haveAccessToEventAdministration', initData] 
-        })
+  const validateUserInitDataQuery =
+    trpc.users.haveAccessToEventAdministration.useQuery(initData, {
+      queryKey: ["users.haveAccessToEventAdministration", initData],
+    });
 
-    useEffect(() => {
-        if (!initData) {
-            setIsLoading(false)
-            return
-        }
+  useEffect(() => {
+    if (!initData) {
+      setIsLoading(false);
+      return;
+    }
 
-        if (
-            validateUserInitDataQuery.isLoading ||
-            validateUserInitDataQuery.isError
-        ) {
-            setIsLoading(true)
-            return
-        }
+    if (
+      validateUserInitDataQuery.isLoading ||
+      validateUserInitDataQuery.isError
+    ) {
+      setIsLoading(true);
+      return;
+    }
 
-        setAuthorized(validateUserInitDataQuery.data!)
-        setIsLoading(false)
-    }, [
-        initData,
-        validateUserInitDataQuery.data,
-        validateUserInitDataQuery.isLoading,
-        validateUserInitDataQuery.isError,
-    ])
+    setAuthorized(validateUserInitDataQuery.data!);
+    setIsLoading(false);
+  }, [
+    initData,
+    validateUserInitDataQuery.data,
+    validateUserInitDataQuery.isLoading,
+    validateUserInitDataQuery.isError,
+  ]);
 
-    return { authorized, isLoading }
-}
+  return { authorized, isLoading };
+};
 
-export default useAuth
+export default useAuth;

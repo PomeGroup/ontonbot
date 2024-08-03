@@ -64,7 +64,7 @@ async function createRewards() {
               value: event?.society_hub as string,
             },
           ],
-        }
+        },
       );
 
       await db

@@ -1,11 +1,11 @@
-import { httpBatchLink } from '@trpc/client'
+import { httpBatchLink } from "@trpc/client";
 
-import { appRouter } from '@/server'
+import { appRouter } from "@/server";
 
 export const serverClient = appRouter.createCaller({
-    links: [
-        httpBatchLink({
-            url: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/api/trpc`,
-        }),
-    ],
-})
+  links: [
+    httpBatchLink({
+      url: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/api/trpc`,
+    }),
+  ],
+});
