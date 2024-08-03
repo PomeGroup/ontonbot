@@ -24,16 +24,12 @@ function ClaimRewardButtonChild(props: {
 
     return (
         <>
-            {!isRewardModalOpen && !props.isNotified && (
+            {!isRewardModalOpen && (
                 <MainButton
                     text="Claim Reward"
                     onClick={openRewardLink}
-                    color={'#2ea6ff'}
+                    color={props.isNotified ? '#747480':'#2ea6ff'}
                 />
-            )}
-
-            {props.isNotified && (
-                <MainButton text="Claim Reward" color={'#747480'} />
             )}
 
             <ModalDialog
