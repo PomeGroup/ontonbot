@@ -1,5 +1,6 @@
 import { db } from '@/db/db'
 import { eventFields, events, userEventFields } from '@/db/schema'
+import { comparePassword } from '@/lib/bcrypt'
 import { validateMiniAppData } from '@/utils'
 import { TRPCError } from '@trpc/server'
 import { TRPC_ERROR_CODES_BY_NUMBER } from '@trpc/server/http'
@@ -68,12 +69,14 @@ export const userEventFieldsRouter = router({
                         )
                 ).length > 0
 
-            if (
-                eventSecretField &&
-                !!eventData[0].secret_phrase &&
-                eventData[0].secret_phrase?.toLowerCase().trim() !==
-                    opts.input.data?.toLowerCase().trim()
-            ) {
+            const correctSecretPhrase = eventData[0].secret_phrase
+                ? await comparePassword(
+                      opts.input.data.trim().toLowerCase(),
+                      eventData[0].secret_phrase
+                  )
+                : true
+
+            if (!correctSecretPhrase) {
                 throw new TRPCError({
                     message:
                         'Sorry, you entered the wrong secret phrase. Try again.',
