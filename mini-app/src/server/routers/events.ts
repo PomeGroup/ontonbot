@@ -92,10 +92,10 @@ export const eventsRouter = router({
           await updateVisitorLastVisit(eventVisitor.id);
         }
       } catch (error) {
-        console.log("Error at updating visitor", error);
+        console.error("Error at updating visitor", error);
       }
 
-      return selectEventByUuid(opts.input.event_uuid, opts.ctx.user.role);
+      return selectEventByUuid(opts.input.event_uuid);
     }),
 
   // private
@@ -182,6 +182,14 @@ export const eventsRouter = router({
         }
 
         const result = await db.transaction(async (trx) => {
+          const inputSecretPhrase = opts.input.eventData.secret_phrase
+            .trim()
+            .toLowerCase();
+
+          const hashedSecretPhrase = Boolean(inputSecretPhrase)
+            ? await hashPassword(inputSecretPhrase)
+            : undefined;
+
           const newEvent = await trx
             .insert(events)
             .values({
@@ -195,7 +203,7 @@ export const eventsRouter = router({
               wallet_seed_phrase: highloadWallet.seed_phrase,
               society_hub: opts.input.eventData.society_hub.name,
               society_hub_id: opts.input.eventData.society_hub.id,
-              secret_phrase: opts.input.eventData.secret_phrase,
+              secret_phrase: hashedSecretPhrase,
               start_date: opts.input.eventData.start_date,
               end_date: opts.input.eventData.end_date,
               timezone: opts.input.eventData.timezone,
@@ -218,12 +226,12 @@ export const eventsRouter = router({
             });
           }
 
-          if (opts.input.eventData.secret_phrase !== "") {
+          if (inputSecretPhrase) {
             await trx.insert(eventFields).values({
               emoji: "🔒",
               title: "secret_phrase_onton_input",
               description: "Enter the secret phrase",
-              placeholder: opts.input.eventData.secret_phrase,
+              placeholder: hashedSecretPhrase,
               type: "input",
               order_place: opts.input.eventData.dynamic_fields.length,
               event_id: newEvent[0].event_id,
@@ -252,7 +260,6 @@ export const eventsRouter = router({
           };
 
           const res = await registerActivity(eventDraft);
-          console.log("activity created by id", res);
 
           await trx
             .update(events)
@@ -540,33 +547,38 @@ export const eventsRouter = router({
             )
             .execute();
 
+          console.log({ secretPhraseTask, eventData, hashedSecretPhrase });
+
           if (hashedSecretPhrase) {
             if (secretPhraseTask.length) {
+              console.log("Updating secret phrase task");
+
               await trx
                 .update(eventFields)
                 .set({
                   placeholder: hashedSecretPhrase,
                 })
-                .where(
-                  and(
-                    eq(eventFields.event_id, eventData.event_id!),
-                    eq(eventFields.title, "secret_phrase_onton_input")
-                  )
-                );
+                .where(eq(eventFields.id, secretPhraseTask[0].id))
+                .execute();
             } else {
-              await trx.insert(eventFields).values({
-                emoji: "🔒",
-                title: "secret_phrase_onton_input",
-                description: "Enter the secret phrase",
-                placeholder: hashedSecretPhrase,
-                type: "input",
-                order_place: eventData.dynamic_fields.length,
-                event_id: eventData.event_id,
-              });
+              await trx
+                .insert(eventFields)
+                .values({
+                  emoji: "🔒",
+                  title: "secret_phrase_onton_input",
+                  description: "Enter the secret phrase",
+                  placeholder: hashedSecretPhrase,
+                  type: "input",
+                  order_place: eventData.dynamic_fields.length,
+                  event_id: eventData.event_id,
+                })
+                .execute();
             }
           }
 
-          for (const [index, field] of eventData.dynamic_fields.entries()) {
+          for (const [index, field] of eventData.dynamic_fields
+            .filter((f) => f.title !== "secret_phrase_onton_input")
+            .entries()) {
             if (field.id) {
               await trx
                 .update(eventFields)

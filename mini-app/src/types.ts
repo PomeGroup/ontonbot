@@ -166,7 +166,13 @@ export const RequiredEventFieldsSchema = z
       .refine((url) => url.includes("telegra.ph"), {
         message: "URL must be from the 'telegra.ph' domain",
       }),
-    secret_phrase: z.string().optional(),
+    secret_phrase: z
+      .string()
+      .transform((phrase) => phrase.trim().toLowerCase())
+      .refine(
+        (phrase) => phrase.length >= 4 && phrase.length <= 32,
+        "Length must be between 4 and 32"
+      ),
     start_date: z
       .number()
       .min(new Date("2023-01-01").getTime() / 1000)

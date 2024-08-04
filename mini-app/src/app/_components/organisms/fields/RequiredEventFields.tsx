@@ -1,7 +1,14 @@
 "use client";
 
 import { TRequiredEventFields, ZodErrors } from "@/types";
-import { ChangeEvent, Dispatch, FC, SetStateAction, useState } from "react";
+import {
+  ChangeEvent,
+  Dispatch,
+  FC,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 import Card from "../../atoms/cards";
 import Input from "../../atoms/inputs";
 import Labels from "../../atoms/labels";
@@ -19,6 +26,15 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
   zodErrors,
 }) => {
   const [timeZone, setTimeZone] = useState(formData?.timezone || "");
+
+  useEffect(() => {
+    const currentLocalTimezone =
+      Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setTimeZone(currentLocalTimezone);
+    setFormData((prev) => {
+      return { ...prev, timezone: currentLocalTimezone };
+    });
+  }, [timeZone]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>,
@@ -140,7 +156,7 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
         </div>
 
         <Input
-          placeholder="Leave blank for public events"
+          placeholder="Enter the Event Password"
           value={formData.secret_phrase}
           onChange={(e) => handleChange(e, "secret_phrase")}
         />
@@ -163,15 +179,18 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
         }}
         errors={zodErrors}
       />
-
-      <Pickers.Timezonepicker
-        value={timeZone}
-        onValueChange={(timezone) => {
-          setTimeZone(timezone);
-          handlePropertyChange(timezone, "timezone");
-        }}
-        errors={zodErrors}
-      />
+      <div className="mb-4">
+        <p className="w-full flex gap-2 items-center">
+          Timezone
+          <span className="text-blue-500">
+            {formData.timezone ? formData.timezone : "UTC"}
+          </span>
+        </p>
+        <p className="text-xs text-gray-500">
+          Event timezone is automatically set based on your location, and also
+          it will be converted to other users based on their timezones.
+        </p>
+      </div>
     </div>
   );
 };

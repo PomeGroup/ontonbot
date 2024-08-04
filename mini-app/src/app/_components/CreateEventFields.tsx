@@ -47,7 +47,11 @@ const CreateEventFields: FC<{
 
     let zodErrors = {};
     if (!parseResult.success) {
+      console.log(parseResult.error);
+
       parseResult.error.issues.forEach((issue) => {
+        console.log(issue);
+
         zodErrors = { ...zodErrors, [issue.path[0]]: issue.message };
       });
 

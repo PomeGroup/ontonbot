@@ -47,7 +47,7 @@ export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
   return { role: role[0].role, ...data };
 };
 
-export const selectEventByUuid = async (eventUuid: string, role: string) => {
+export const selectEventByUuid = async (eventUuid: string) => {
   if (eventUuid.length !== 36) {
     return null;
   }
@@ -64,12 +64,10 @@ export const selectEventByUuid = async (eventUuid: string, role: string) => {
     return null;
   }
 
-  const { wallet_seed_phrase, ...restEventData } = [
-    "admin",
-    "organizer",
-  ].includes(role)
-    ? eventData
-    : removeKey(eventData, "secret_phrase");
+  const { wallet_seed_phrase, ...restEventData } = removeKey(
+    eventData,
+    "secret_phrase"
+  );
 
   const dynamicFields = await db
     .select()

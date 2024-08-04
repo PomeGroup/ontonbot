@@ -43,7 +43,6 @@ const MainButton: FC<MainButtonProps> = ({
     if (typeof progress === "boolean") {
       if (progress) {
         WebApp.MainButton.showProgress();
-        WebApp.MainButton.disable();
       } else {
         WebApp.MainButton.hideProgress();
       }
