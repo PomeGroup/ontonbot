@@ -1,24 +1,31 @@
-import "dotenv/config";
+import "dotenv/config"
 
-import express from "express";
-import { Telegraf } from "telegraf";
+import express from "express"
+import { Telegraf } from "telegraf"
 
-import bodyParser from "body-parser";
-import fileUpload from "express-fileupload";
+import axios from "axios"
+import bodyParser from "body-parser"
+import { CronJob } from "cron"
+import fileUpload from "express-fileupload"
 import {
   handleFileSend,
   handleSendQRCode,
   handleShareEvent,
   sendMessage,
-} from "./controllers";
-import { orgHandler, startHandler } from "./handlers";
-import { CronJob } from "cron";
-import axios from "axios";
+} from "./controllers"
+import { orgHandler, startHandler } from "./handlers"
 // parse application/json
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
+console.log(process.env.TG_PROXY);
+
+const agent = process.env.TG_PROXY && new HttpsProxyAgent(process.env.TG_PROXY);
 const port = 3333;
 
-const bot = new Telegraf(process.env.BOT_TOKEN || "");
+const bot = new Telegraf(process.env.BOT_TOKEN || "", {
+  telegram: {
+    agent
+  }});
 console.log("Starting bot... v2");
 console.log(process.env.BOT_TOKEN || "");
 
