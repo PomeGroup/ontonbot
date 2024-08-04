@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         { error: "invalid data" },
         {
           status: 400,
-        },
+        }
       );
     }
 
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
           error: "invalid_body",
           message: "invalid json body provided",
         },
-        { status: 400 },
+        { status: 400 }
       );
   }
 }

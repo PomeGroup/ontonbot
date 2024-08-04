@@ -60,7 +60,7 @@ export function ClaimRewardButton(props: { eventId: string }) {
           event_uuid: props.eventId,
         },
       ],
-    },
+    }
   );
 
   return visitorReward.isSuccess ? (

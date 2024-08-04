@@ -22,7 +22,7 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>,
-    field: string,
+    field: string
   ) => {
     setFormData((prev) => {
       return { ...prev, [field]: e.target.value };
@@ -31,7 +31,7 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
 
   const handlePropertyChange = (
     value: string | number | object | boolean,
-    field: string,
+    field: string
   ) => {
     setFormData((prev) => {
       return { ...prev, [field]: value };

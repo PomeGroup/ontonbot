@@ -55,7 +55,7 @@ const withAuth = <P extends object>(WrappedComponent: ComponentType<P>) => {
   };
 
   WithAuthComponent.displayName = `WithAuth(${getDisplayName(
-    WrappedComponent,
+    WrappedComponent
   )})`;
 
   return WithAuthComponent;

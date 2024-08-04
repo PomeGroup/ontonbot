@@ -10,7 +10,7 @@ export function getAuthenticatedUser(): [number, null] | [null, Response] {
       null,
       Response.json(
         { error: "Unauthorized: No token provided" },
-        { status: 401 },
+        { status: 401 }
       ),
     ];
   }
@@ -24,7 +24,7 @@ export function getAuthenticatedUser(): [number, null] | [null, Response] {
         null,
         Response.json(
           { error: "Unauthorized: Validation failed" },
-          { status: 401 },
+          { status: 401 }
         ),
       ];
     }
@@ -51,7 +51,7 @@ export function apiKeyAuthentication(req: Request) {
         error: "authentication_failed",
         message: "No x-api-key header found",
       },
-      { status: 401 },
+      { status: 401 }
     );
 
   if (apiKey !== process.env.ONTON_API_SECRET)
@@ -60,7 +60,7 @@ export function apiKeyAuthentication(req: Request) {
         error: "authentication_failed",
         message: "Invalid x-api-key header found",
       },
-      { status: 401 },
+      { status: 401 }
     );
 
   return null;

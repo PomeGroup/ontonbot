@@ -18,7 +18,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
           url: `/api/trpc`,
         }),
       ],
-    }),
+    })
   );
 
   return (

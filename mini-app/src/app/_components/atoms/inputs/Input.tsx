@@ -19,7 +19,7 @@ const Input: React.FC<InputProps> = ({
 }) => {
   const inputClass = cn(
     "w-full h-10 rounded-lg border border-separator p-2",
-    className,
+    className
   );
 
   return (

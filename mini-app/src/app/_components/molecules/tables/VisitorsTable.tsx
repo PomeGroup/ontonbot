@@ -23,7 +23,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
       {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
         initialCursor: 0,
-      },
+      }
     );
 
   const lastItemRef = useRef<HTMLDivElement>(null);
@@ -70,7 +70,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
                   onClick={() => {
                     if (visitor?.username) {
                       webApp?.openTelegramLink(
-                        `https://t.me/${visitor?.username}`,
+                        `https://t.me/${visitor?.username}`
                       );
                     }
                   }}
@@ -86,7 +86,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
                   onClick={() => {
                     if (visitor?.wallet_address) {
                       webApp?.openLink(
-                        `https://tonviewer.com/${visitor?.wallet_address}`,
+                        `https://tonviewer.com/${visitor?.wallet_address}`
                       );
                     }
                   }}

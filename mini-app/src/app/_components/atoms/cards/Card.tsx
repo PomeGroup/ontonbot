@@ -9,7 +9,7 @@ const Card: React.FC<{
     <div
       className={cn(
         "my-4 rounded-[14px] p-4 border border-separator flex items-center justify-start",
-        className,
+        className
       )}
     >
       {children}

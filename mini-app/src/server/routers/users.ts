@@ -123,7 +123,7 @@ export const usersRouter = router({
       z.object({
         initData: z.string().optional(),
         wallet: z.string(),
-      }),
+      })
     )
     .mutation(async (opts) => {
       if (!opts.input.initData) {
@@ -149,7 +149,7 @@ export const usersRouter = router({
     .input(
       z.object({
         initData: z.string().optional(),
-      }),
+      })
     )
     .mutation(async (opts) => {
       if (!opts.input.initData) {
@@ -174,7 +174,7 @@ export const usersRouter = router({
     .input(
       z.object({
         event_uuid: z.string().uuid(),
-      }),
+      })
     )
     .mutation(async (opts) => {
       return await createUserReward({
@@ -188,7 +188,7 @@ export const usersRouter = router({
     .input(
       z.object({
         event_uuid: z.string().uuid(),
-      }),
+      })
     )
     .query(async (opts) => {
       try {
@@ -197,7 +197,7 @@ export const usersRouter = router({
           where(fields, { eq, and }) {
             return and(
               eq(fields.user_id, opts.ctx.parsedInitData.user.id),
-              eq(fields.event_uuid, opts.input.event_uuid),
+              eq(fields.event_uuid, opts.input.event_uuid)
             );
           },
         });
@@ -304,7 +304,7 @@ async function createUserReward(props: {
       where(fields, { eq, and }) {
         return and(
           eq(fields.user_id, props.user_id),
-          eq(fields.event_uuid, props.event_uuid),
+          eq(fields.event_uuid, props.event_uuid)
         );
       },
     });

@@ -7,7 +7,7 @@ import { type NextRequest } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: { id: string } }
 ) {
   try {
     const eventId = params.id;
@@ -36,7 +36,7 @@ export async function GET(
       console.error(`Organizer not found for event ID: ${eventId}`);
       return Response.json(
         { error: `Organizer not found for event ID: ${eventId}` },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -61,9 +61,9 @@ export async function GET(
           or(
             eq(orders.state, "minted"),
             eq(orders.state, "created"),
-            eq(orders.state, "mint_request"),
-          ),
-        ),
+            eq(orders.state, "mint_request")
+          )
+        )
       )
       .execute();
 
@@ -81,7 +81,7 @@ export async function GET(
         },
         {
           status: 200,
-        },
+        }
       );
     }
 
@@ -99,8 +99,8 @@ export async function GET(
         .where(
           and(
             eq(tickets.event_uuid, event.event_uuid as string),
-            eq(tickets.user_id, userId),
-          ),
+            eq(tickets.user_id, userId)
+          )
         )
         .orderBy(asc(tickets.created_at))
         .execute()
@@ -117,9 +117,9 @@ export async function GET(
             or(
               eq(orders.state, "created"),
               eq(orders.state, "minted"),
-              eq(orders.state, "mint_request"),
-            ),
-          ),
+              eq(orders.state, "mint_request")
+            )
+          )
         )
         .execute()
     ).pop();

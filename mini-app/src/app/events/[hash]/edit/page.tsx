@@ -22,7 +22,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         "events.getEvent",
         { event_uuid: params.hash, init_data: WebApp?.initData || "" },
       ],
-    },
+    }
   );
   const hapticFeedback = WebApp?.HapticFeedback;
 

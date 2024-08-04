@@ -30,7 +30,7 @@ const ConnectWalletTask = () => {
           initData: WebApp?.initData,
         },
       ],
-    },
+    }
   ).data;
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
@@ -50,7 +50,7 @@ const ConnectWalletTask = () => {
       wallet !== null ||
         (userAddress !== "" &&
           userAddress !== null &&
-          userAddress !== undefined),
+          userAddress !== undefined)
     );
   }, [wallet, userAddress]);
 

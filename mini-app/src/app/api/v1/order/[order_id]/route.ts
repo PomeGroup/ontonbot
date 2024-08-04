@@ -72,7 +72,7 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
       { message: "invalid body" },
       {
         status: 400,
-      },
+      }
     );
   }
 

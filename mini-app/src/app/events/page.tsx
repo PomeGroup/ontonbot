@@ -26,13 +26,13 @@ const EventsAdminPage = () => {
     initData || "",
     {
       queryKey: ["users.validateUserInitData", initData || ""],
-    },
+    }
   );
   const eventsData = trpc.events.getEvents.useQuery(
     { initData },
     {
       queryKey: ["events.getEvents", { initData }],
-    },
+    }
   );
 
   if (
@@ -162,13 +162,13 @@ const TimeRow = ({
     // If there's an end date, but it's the same as the start date (only times differ)
     if (endDate && startDate && formatDate(endDate) === formatDate(startDate)) {
       displayString += `- ${formatTime(endTime!)} ${formatDate(
-        startDate,
+        startDate
       )} ${timeZone}`;
     }
     // If there's an end date and it differs from the start date
     else if (endDate && startDate) {
       displayString += `${formatDate(startDate)} - ${formatTime(
-        endTime!,
+        endTime!
       )} ${formatDate(endDate)} ${timeZone}`;
     }
   } else {

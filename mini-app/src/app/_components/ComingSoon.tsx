@@ -47,7 +47,7 @@ export function ComingSoon() {
         <Button
           onClick={() => {
             webApp?.openTelegramLink(
-              `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=6acf01ed-3122-498a-a937-329766b459aa`,
+              `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=6acf01ed-3122-498a-a937-329766b459aa`
             );
           }}
           className="text-white"

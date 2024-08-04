@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       },
       {
         status: 400,
-      },
+      }
     );
   }
   const data = parsedData.data;
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   if (!eventTicketData) {
     return Response.json(
       { error: "Event ticket data not found" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -54,15 +54,15 @@ export async function POST(req: Request) {
       .where(
         and(
           eq(tickets.user_id, parsedData.data.user_id),
-          eq(tickets.event_uuid, parsedData.data.event_id),
-        ),
+          eq(tickets.event_uuid, parsedData.data.event_id)
+        )
       )
   ).pop();
 
   if (userHasTicket) {
     return Response.json(
       { error: "User already owns a ticket" },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
           headers: {
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (res.status !== 201) {
@@ -123,7 +123,7 @@ export async function POST(req: Request) {
       },
       {
         status: 500,
-      },
+      }
     );
   }
 }

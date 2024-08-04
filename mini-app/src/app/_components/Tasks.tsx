@@ -27,7 +27,7 @@ const AllTasks: FC<{
             initData,
           },
         ],
-      },
+      }
     );
 
   if (isLoading) {

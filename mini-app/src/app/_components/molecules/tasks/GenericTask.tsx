@@ -26,14 +26,14 @@ const GenericTask: React.FC<{
     <div
       className={cn(
         "my-4 rounded-[14px] p-4 border border-separator flex items-center justify-start cursor-pointer",
-        className,
+        className
       )}
       onClick={onClick}
     >
       <div
         className={twMerge(
           `rounded-lg mr-[10px] min-w-[40px] min-h-[40px] flex items-center justify-center`,
-          bgColorClass,
+          bgColorClass
         )}
       >
         {completed !== undefined &&

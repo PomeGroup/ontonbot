@@ -49,9 +49,9 @@ export async function POST(request: Request) {
         or(
           eq(orders.state, "minted"),
           eq(orders.state, "created"),
-          eq(orders.state, "mint_request"),
-        ),
-      ),
+          eq(orders.state, "mint_request")
+        )
+      )
     )
     .execute();
 
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       },
       {
         status: 404,
-      },
+      }
     );
   }
 
@@ -74,8 +74,8 @@ export async function POST(request: Request) {
         or(
           eq(fields.state, "created"),
           eq(fields.state, "minted"),
-          eq(fields.state, "mint_request"),
-        ),
+          eq(fields.state, "mint_request")
+        )
       );
     },
   });
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       },
       {
         status: 409,
-      },
+      }
     );
   }
 
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
       },
       {
         status: 410,
-      },
+      }
     );
   }
 
@@ -135,8 +135,8 @@ export async function PATCH() {
     .where(
       and(
         eq(orders.state, "created"),
-        lt(orders.created_at, new Date(Date.now() - 1000 * 60 * 10)),
-      ),
+        lt(orders.created_at, new Date(Date.now() - 1000 * 60 * 10))
+      )
     );
 
   return Response.json({

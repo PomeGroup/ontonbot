@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
   const isProtected = protectWithAPIKeyPatterns.some(
     (route) =>
       (route.methods.includes("*") || route.methods.includes(method)) &&
-      route.pattern.test(pathname),
+      route.pattern.test(pathname)
   );
 
   if (isProtected) {

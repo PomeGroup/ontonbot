@@ -119,7 +119,7 @@ export const DynamicFieldsSchema = z.array(
     emoji: z.string(),
     placeholder: z.string().optional(),
     url: z.string().optional(),
-  }),
+  })
 );
 
 export const EventDataSchema = z.object({
@@ -189,7 +189,7 @@ export const RequiredEventFieldsSchema = z
     {
       message: "Start date must be before end date",
       path: ["start_date", "end_date"],
-    },
+    }
   );
 
 export type TRequiredEventFieldsSchema = z.infer<

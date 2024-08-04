@@ -50,10 +50,10 @@ declare global {
 
   interface HapticFeedback {
     impactOccurred: (
-      style: "light" | "medium" | "heavy" | "rigid" | "soft",
+      style: "light" | "medium" | "heavy" | "rigid" | "soft"
     ) => HapticFeedback;
     notificationOccurred: (
-      type: "error" | "success" | "warning",
+      type: "error" | "success" | "warning"
     ) => HapticFeedback;
     selectionChanged: () => HapticFeedback;
   }
@@ -69,29 +69,26 @@ declare global {
     setItem: (
       key: CloudStorageKey,
       value: CloudStorageValue,
-      callback?: (error: string | null, result?: boolean) => void,
+      callback?: (error: string | null, result?: boolean) => void
     ) => void;
     getItem: (
       key: CloudStorageKey,
-      callback?: (error: string | null, result?: CloudStorageValue) => void,
+      callback?: (error: string | null, result?: CloudStorageValue) => void
     ) => void;
     getItems: (
       keys: Array<CloudStorageKey>,
-      callback?: (error: string | null, result?: CloudStorageItems) => void,
+      callback?: (error: string | null, result?: CloudStorageItems) => void
     ) => void;
     getKeys: (
-      callback?: (
-        error: string | null,
-        result?: Array<CloudStorageKey>,
-      ) => void,
+      callback?: (error: string | null, result?: Array<CloudStorageKey>) => void
     ) => void;
     removeItem: (
       key: CloudStorageKey,
-      callback?: (error: string | null, result?: boolean) => void,
+      callback?: (error: string | null, result?: boolean) => void
     ) => void;
     removeItems: (
       key: Array<CloudStorageKey>,
-      callback?: (error: string | null, result?: boolean) => void,
+      callback?: (error: string | null, result?: boolean) => void
     ) => void;
   }
 
@@ -204,11 +201,11 @@ declare global {
     colorScheme: "light" | "dark";
     onEvent: <T extends EventNames>(
       eventName: T,
-      callback: (params: EventParams[T]) => unknown,
+      callback: (params: EventParams[T]) => unknown
     ) => void;
     offEvent: <T extends EventNames>(
       eventName: T,
-      callback: (params: EventParams[T]) => unknown,
+      callback: (params: EventParams[T]) => unknown
     ) => void;
     sendData: (data: unknown) => void;
     close: VoidFunction;
@@ -223,35 +220,35 @@ declare global {
     isVersionAtLeast: (version: string) => boolean;
     openInvoice: (
       url: string,
-      callback?: (status: InvoiceStatuses) => unknown,
+      callback?: (status: InvoiceStatuses) => unknown
     ) => void;
     setHeaderColor: (
-      color: "bg_color" | "secondary_bg_color" | `#${string}`,
+      color: "bg_color" | "secondary_bg_color" | `#${string}`
     ) => void;
     setBackgroundColor: (
-      color: "bg_color" | "secondary_bg_color" | `#${string}`,
+      color: "bg_color" | "secondary_bg_color" | `#${string}`
     ) => void;
     showConfirm: (
       message: string,
-      callback?: (confirmed: boolean) => void,
+      callback?: (confirmed: boolean) => void
     ) => void;
     showPopup: (
       params: PopupParams,
-      callback?: (id?: string) => unknown,
+      callback?: (id?: string) => unknown
     ) => void;
     showAlert: (message: string, callback?: () => unknown) => void;
     enableClosingConfirmation: VoidFunction;
     disableClosingConfirmation: VoidFunction;
     showScanQrPopup: (
       params: ScanQrPopupParams,
-      callback?: (text: string) => void | true,
+      callback?: (text: string) => void | true
     ) => void;
     closeScanQrPopup: () => void;
     readTextFromClipboard: (callback?: (text: string) => unknown) => void;
     ready: VoidFunction;
     switchInlineQuery: (
       query: string,
-      chooseChatTypes?: Array<"users" | "bots" | "groups" | "channels">,
+      chooseChatTypes?: Array<"users" | "bots" | "groups" | "channels">
     ) => void;
     requestWriteAccess: (callback?: (access: boolean) => unknown) => void;
     requestContact: (callback?: (access: boolean) => unknown) => void;

@@ -29,12 +29,12 @@ const Datetimepicker: FC<DatetimepickerProps> = ({
   const [date, setDate] = useState(
     value && formDate
       ? `${formDate.year}-${formDate.month}-${formDate.day}`
-      : `${currentDate!.year}-${currentDate!.month}-${currentDate!.day}`,
+      : `${currentDate!.year}-${currentDate!.month}-${currentDate!.day}`
   );
   const [time, setTime] = useState(
     value
       ? `${formTime.hours}:${formTime.minutes}`
-      : `${currentTime.hours}:${currentTime.minutes}`,
+      : `${currentTime.hours}:${currentTime.minutes}`
   );
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {

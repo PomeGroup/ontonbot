@@ -29,7 +29,7 @@ const AddButtonFieldPopover: React.FC<{
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    property: keyof ButtonField,
+    property: keyof ButtonField
   ) => {
     setNewButtonField({ ...newButtonField, [property]: e.target.value });
   };

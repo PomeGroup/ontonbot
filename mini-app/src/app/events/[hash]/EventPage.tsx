@@ -28,7 +28,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
         { event_uuid: eventHash, init_data: webApp?.initData || "" },
       ],
       enabled: Boolean(webApp?.initData),
-    },
+    }
   );
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =

@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     if (!initData) {
       return Response.json(
         { error: "no_init_data" },
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 
       return Response.json(
         { error: "invalid_init_data" },
-        { status: 403, headers: { "Content-Type": "application/json" } },
+        { status: 403, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
       console.error("==========");
       return Response.json(
         { error: "invalid_init_user_data" },
-        { status: 403, headers: { "Content-Type": "application/json" } },
+        { status: 403, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
     if (!user) {
       return Response.json(
         { error: "user_data_not_found" },
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest) {
         // 6h expiration for jwt token
         exp: Math.floor(Date.now() / 1000) + JWT_COOKIE_EXPIRATION,
       },
-      process.env.BOT_TOKEN as string,
+      process.env.BOT_TOKEN as string
     );
     cookies().set("token", token, {
       // expiration 7 days
@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
       { token, user, ok: true },
       {
         status: 200,
-      },
+      }
     );
   } catch (error) {
     console.error("==============================");
@@ -127,7 +127,7 @@ export async function GET(req: NextRequest) {
           error: "zod_error",
           message: error.message,
         },
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }

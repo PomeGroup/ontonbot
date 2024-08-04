@@ -6,7 +6,7 @@ import { and, eq } from "drizzle-orm";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
-  eventUuid: string,
+  eventUuid: string
 ) => {
   const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData);
 

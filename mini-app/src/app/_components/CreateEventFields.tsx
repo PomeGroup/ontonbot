@@ -35,10 +35,10 @@ const CreateEventFields: FC<{
 
   const [requiredEventFields, setRequiredEventFields] =
     useState<TRequiredEventFields>(
-      (event || { secret_phrase: "", type: 0 }) as TRequiredEventFields,
+      (event || { secret_phrase: "", type: 0 }) as TRequiredEventFields
     );
   const [fields, setFields] = useState<FieldElement[]>(
-    event?.dynamic_fields || [],
+    event?.dynamic_fields || []
   );
 
   const handleSubmit = async (): Promise<void> => {
@@ -100,7 +100,7 @@ const CreateEventFields: FC<{
             initData,
           })
           .then(() => router.push("/events"));
-      },
+      }
     );
   };
 
@@ -128,7 +128,7 @@ const CreateEventFields: FC<{
   // replace secret_phrase_onton_input with Event Password
   const updatedFields = useMemo(() => {
     return fields.filter(
-      (field) => field.title !== "secret_phrase_onton_input",
+      (field) => field.title !== "secret_phrase_onton_input"
     );
   }, [fields]);
 

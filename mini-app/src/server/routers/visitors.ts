@@ -16,7 +16,7 @@ export const visitorsRouter = router({
         initData: z.string().optional(),
         limit: z.number().optional(),
         cursor: z.number().optional(),
-      }),
+      })
     )
     .query(async (opts) => {
       const { event_uuid, initData, limit = 25, cursor = 0 } = opts.input;
@@ -40,7 +40,7 @@ export const visitorsRouter = router({
       z.object({
         initData: z.string().optional(),
         event_uuid: z.string(),
-      }),
+      })
     )
     .mutation(async (opts) => {
       if (!opts.input.initData) {
@@ -59,8 +59,8 @@ export const visitorsRouter = router({
         .where(
           and(
             eq(visitors.user_id, initDataJson.user.id),
-            eq(visitors.event_uuid, opts.input.event_uuid),
-          ),
+            eq(visitors.event_uuid, opts.input.event_uuid)
+          )
         )
         .execute();
 

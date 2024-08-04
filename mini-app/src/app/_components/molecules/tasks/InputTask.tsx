@@ -31,7 +31,7 @@ const InputTypeCampaignTask: React.FC<{
     WebApp?.initData || "",
     {
       queryKey: ["users.validateUserInitData", WebApp?.initData || ""],
-    },
+    }
   );
   const [inputText, setInputText] = useState(data);
   const [isCompleted, setIsCompleted] = useState(completed);

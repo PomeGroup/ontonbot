@@ -25,10 +25,10 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
               ? undefined
               : and(
                   eq(tickets.id, parseInt(eventId)),
-                  eq(tickets.user_id, userId),
+                  eq(tickets.user_id, userId)
                 ),
-          ],
-        ),
+          ]
+        )
       )
 
       .execute()

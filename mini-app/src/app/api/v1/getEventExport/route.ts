@@ -27,7 +27,7 @@ const handler = async (req: Request, res: NextApiResponse<ResponseData>) => {
         headers: {
           "Content-Type": "application/json", // Set appropriate content type
         },
-      },
+      }
     );
   }
 
@@ -37,7 +37,7 @@ const handler = async (req: Request, res: NextApiResponse<ResponseData>) => {
         initData,
         hash,
       }),
-    }),
+    })
   );
 };
 

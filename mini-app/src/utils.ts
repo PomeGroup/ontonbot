@@ -88,7 +88,7 @@ export const validateMiniAppData = (rawInitData: string) => {
 };
 
 export const getTimeFromUnix = (
-  unixTimestamp: number,
+  unixTimestamp: number
 ): { hours: string; minutes: string } => {
   const date = new Date(unixTimestamp * 1000);
   const hours = date.getHours().toString().padStart(2, "0");
@@ -100,7 +100,7 @@ export const getTimeFromUnix = (
 };
 
 export const getDateFromUnix = (
-  unixTimestamp: number,
+  unixTimestamp: number
 ): { day: string; month: string; year: string } | null => {
   const date = new Date(unixTimestamp * 1000);
   const day = date.getDate().toString().padStart(2, "0");
