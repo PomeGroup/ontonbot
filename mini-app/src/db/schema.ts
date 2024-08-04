@@ -27,10 +27,12 @@ export const users = pgTable(
         created_at: timestamp('created_at').defaultNow(),
     },
     (table) => ({
-        usernameIdx: index('username_idx').on(table.username),
-        walletAddressIdx: index('wallet_address_idx').on(table.wallet_address),
-        roleIdx: index('role_idx').on(table.role),
-        createdAtIdx: index('created_at_idx').on(table.created_at),
+        usernameIdx: index('users_username_idx').on(table.username),
+        walletAddressIdx: index('users_wallet_address_idx').on(
+            table.wallet_address
+        ),
+        roleIdx: index('users_role_idx').on(table.role),
+        createdAtIdx: index('users_created_at_idx').on(table.created_at),
     })
 )
 
@@ -64,16 +66,18 @@ export const events = pgTable(
         created_at: timestamp('created_at').defaultNow(),
     },
     (table) => ({
-        eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
-        typeIdx: index('type_idx').on(table.type),
-        titleIdx: index('title_idx').on(table.title),
-        walletAddressIdx: index('wallet_address_idx').on(table.wallet_address),
-        societyHubIdx: index('society_hub_idx').on(table.society_hub),
-        startDateIdx: index('start_date_idx').on(table.start_date),
-        endDateIdx: index('end_date_idx').on(table.end_date),
-        ownerIdx: index('owner_idx').on(table.owner),
-        hiddenIdx: index('hidden_idx').on(table.hidden),
-        createdAtIdx: index('created_at_idx').on(table.created_at),
+        eventUuidIdx: index('events_event_uuid_idx').on(table.event_uuid),
+        typeIdx: index('events_type_idx').on(table.type),
+        titleIdx: index('events_title_idx').on(table.title),
+        walletAddressIdx: index('events_wallet_address_idx').on(
+            table.wallet_address
+        ),
+        societyHubIdx: index('events_society_hub_idx').on(table.society_hub),
+        startDateIdx: index('events_start_date_idx').on(table.start_date),
+        endDateIdx: index('events_end_date_idx').on(table.end_date),
+        ownerIdx: index('events_owner_idx').on(table.owner),
+        hiddenIdx: index('events_hidden_idx').on(table.hidden),
+        createdAtIdx: index('events_created_at_idx').on(table.created_at),
     })
 )
 
@@ -90,9 +94,9 @@ export const eventFields = pgTable(
         event_id: integer('event_id').references(() => events.event_id),
     },
     (table) => ({
-        titleIdx: index('title_idx').on(table.title),
-        typeIdx: index('type_idx').on(table.type),
-        eventIdIdx: index('event_id_idx').on(table.event_id),
+        titleIdx: index('eventf_title_idx').on(table.title),
+        typeIdx: index('eventf_type_idx').on(table.type),
+        eventIdIdx: index('eventf_event_id_idx').on(table.event_id),
     })
 )
 
@@ -111,10 +115,10 @@ export const visitors = pgTable(
         created_at: timestamp('created_at').defaultNow(),
     },
     (table) => ({
-        userIdIdx: index('user_id_idx').on(table.user_id),
-        eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
-        lastVisitIdx: index('last_visit_idx').on(table.last_visit),
-        createdAtIdx: index('created_at_idx').on(table.created_at),
+        userIdIdx: index('visitors_user_id_idx').on(table.user_id),
+        eventUuidIdx: index('visitors_event_uuid_idx').on(table.event_uuid),
+        lastVisitIdx: index('visitors_last_visit_idx').on(table.last_visit),
+        createdAtIdx: index('visitors_created_at_idx').on(table.created_at),
     })
 )
 
@@ -141,10 +145,10 @@ export const rewards = pgTable(
         created_at: timestamp('created_at').defaultNow(),
     },
     (table) => ({
-        visitorIdIdx: index('visitor_id_idx').on(table.visitor_id),
-        typeIdx: index('type_idx').on(table.type),
-        statusIdx: index('status_idx').on(table.status),
-        createdAtIdx: index('created_at_idx').on(table.created_at),
+        visitorIdIdx: index('rewards_visitor_id_idx').on(table.visitor_id),
+        typeIdx: index('rewards_type_idx').on(table.type),
+        statusIdx: index('rewards_status_idx').on(table.status),
+        createdAtIdx: index('rewards_created_at_idx').on(table.created_at),
     })
 )
 
@@ -168,10 +172,12 @@ export const userEventFields = pgTable(
     (table) => ({
         unq: unique().on(table.event_field_id, table.user_id),
         eventId: index('uef_event_id_idx').on(table.event_id),
-        eventFieldIdIdx: index('event_field_id_idx').on(table.event_field_id),
-        userIdIdx: index('user_id_idx').on(table.user_id),
-        completedIdx: index('completed_idx').on(table.completed),
-        createdAtIdx: index('created_at_idx').on(table.created_at),
+        eventFieldIdIdx: index('uef_event_field_id_idx').on(
+            table.event_field_id
+        ),
+        userIdIdx: index('uef_user_id_idx').on(table.user_id),
+        completedIdx: index('uef_completed_idx').on(table.completed),
+        createdAtIdx: index('uef_created_at_idx').on(table.created_at),
     })
 )
 
@@ -187,10 +193,10 @@ export const airdropRoutines = pgTable(
         created_at: timestamp('created_at').defaultNow(),
     },
     (table) => ({
-        eventIdIdx: index('event_id_idx').on(table.event_id),
-        userIdIdx: index('user_id_idx').on(table.user_id),
-        statusIdx: index('status_idx').on(table.status),
-        createdAtIdx: index('created_at_idx').on(table.created_at),
+        eventIdIdx: index('airdrop_event_id_idx').on(table.event_id),
+        userIdIdx: index('airdrop_user_id_idx').on(table.user_id),
+        statusIdx: index('airdrop_status_idx').on(table.status),
+        createdAtIdx: index('airdrop_created_at_idx').on(table.created_at),
     })
 )
 
@@ -208,13 +214,13 @@ export const eventTicket = pgTable(
         created_at: timestamp('created_at').defaultNow(),
     },
     (table) => ({
-        eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
-        titleIdx: index('title_idx').on(table.title),
-        priceIdx: index('price_idx').on(table.price),
-        collectionAddressIdx: index('collection_address_idx').on(
+        eventUuidIdx: index('eventt_event_uuid_idx').on(table.event_uuid),
+        titleIdx: index('eventt_title_idx').on(table.title),
+        priceIdx: index('eventt_price_idx').on(table.price),
+        collectionAddressIdx: index('eventt_collection_address_idx').on(
             table.collectionAddress
         ),
-        createdAtIdx: index('created_at_idx').on(table.created_at),
+        createdAtIdx: index('eventt_created_at_idx').on(table.created_at),
     })
 )
 
@@ -245,16 +251,18 @@ export const tickets = pgTable(
     },
     (table) => {
         return {
-            nameIdx: index('name_idx').on(table.name),
-            telegramIdx: index('telegram_idx').on(table.telegram),
-            companyIdx: index('company_idx').on(table.company),
-            orderUuidIdx: index('order_uuid_idx').on(table.order_uuid),
-            statusIdx: index('status_idx').on(table.status),
-            nftAddressIdx: index('nft_address_idx').on(table.nftAddress),
-            eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
-            ticketIdIdx: index('ticket_id_idx').on(table.ticket_id),
-            userIdIdx: index('user_id_idx').on(table.user_id),
-            createdAtIdx: index('created_at_idx').on(table.created_at),
+            nameIdx: index('tickets_name_idx').on(table.name),
+            telegramIdx: index('tickets_telegram_idx').on(table.telegram),
+            companyIdx: index('tickets_company_idx').on(table.company),
+            orderUuidIdx: index('tickets_order_uuid_idx').on(table.order_uuid),
+            statusIdx: index('tickets_status_idx').on(table.status),
+            nftAddressIdx: index('tickets_nft_address_idx').on(
+                table.nftAddress
+            ),
+            eventUuidIdx: index('tickets_event_uuid_idx').on(table.event_uuid),
+            ticketIdIdx: index('tickets_ticket_id_idx').on(table.ticket_id),
+            userIdIdx: index('tickets_user_id_idx').on(table.user_id),
+            createdAtIdx: index('tickets_created_at_idx').on(table.created_at),
         }
     }
 )
@@ -290,18 +298,22 @@ export const orders = pgTable(
         created_at: timestamp('created_at').defaultNow(),
     },
     (table) => ({
-        eventUuidIdx: index('event_uuid_idx').on(table.event_uuid),
-        userIdIdx: index('user_id_idx').on(table.user_id),
-        eventTicketIdIdx: index('event_ticket_id_idx').on(
+        eventUuidIdx: index('orders_event_uuid_idx').on(table.event_uuid),
+        userIdIdx: index('orders_user_id_idx').on(table.user_id),
+        eventTicketIdIdx: index('orders_event_ticket_id_idx').on(
             table.event_ticket_id
         ),
-        transactionIdIdx: index('transaction_id_idx').on(table.transaction_id),
-        stateIdx: index('state_idx').on(table.state),
-        telegramIdx: index('telegram_idx').on(table.telegram),
-        fullNameIdx: index('full_name_idx').on(table.full_name),
-        companyIdx: index('company_idx').on(table.company),
-        ownerAddressIdx: index('owner_address_idx').on(table.owner_address),
-        createdAtIdx: index('created_at_idx').on(table.created_at),
+        transactionIdIdx: index('orders_transaction_id_idx').on(
+            table.transaction_id
+        ),
+        stateIdx: index('orders_state_idx').on(table.state),
+        telegramIdx: index('orders_telegram_idx').on(table.telegram),
+        fullNameIdx: index('orders_full_name_idx').on(table.full_name),
+        companyIdx: index('orders_company_idx').on(table.company),
+        ownerAddressIdx: index('orders_owner_address_idx').on(
+            table.owner_address
+        ),
+        createdAtIdx: index('orders_created_at_idx').on(table.created_at),
     })
 )
 
