@@ -175,7 +175,7 @@ async function notifyUsersForRewards() {
         .where(eq(rewards.id, createdReward.id));
     } catch (error) {
       console.error("BOT_API_ERROR", error);
-      const shouldFail = createdReward.tryCount >= 10;
+      const shouldFail = createdReward.tryCount >= 5;
 
       try {
         db.update(rewards)

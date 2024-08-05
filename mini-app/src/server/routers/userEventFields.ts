@@ -75,7 +75,7 @@ export const userEventFieldsRouter = router({
 
       if (!correctSecretPhrase) {
         throw new TRPCError({
-          message: "Sorry, you entered the wrong secret phrase. Try again.",
+          message: "Sorry, you entered the wrong event password. Try again.",
           code: TRPC_ERROR_CODES_BY_NUMBER["-32003"],
         });
       }

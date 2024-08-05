@@ -11,6 +11,7 @@ import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { EventDataSchema, HubsResponse, SocietyHub } from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import { fetchBalance, sleep, validateMiniAppData } from "@/utils";
+import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
 import { and, desc, eq, isNotNull, or, sql } from "drizzle-orm";
@@ -168,7 +169,10 @@ export const eventsRouter = router({
       );
 
       if (!valid) {
-        throw new Error("Unauthorized access or invalid role");
+        throw new TRPCError({
+          message: "Unauthorized access or invalid role",
+          code: "FORBIDDEN",
+        });
       }
       try {
         let highloadWallet: HighloadWalletResponse =
@@ -230,7 +234,7 @@ export const eventsRouter = router({
             await trx.insert(eventFields).values({
               emoji: "🔒",
               title: "secret_phrase_onton_input",
-              description: "Enter the secret phrase",
+              description: "Enter the event password",
               placeholder: hashedSecretPhrase,
               type: "input",
               order_place: opts.input.eventData.dynamic_fields.length,
@@ -566,7 +570,7 @@ export const eventsRouter = router({
                 .values({
                   emoji: "🔒",
                   title: "secret_phrase_onton_input",
-                  description: "Enter the secret phrase",
+                  description: "Enter the event password",
                   placeholder: hashedSecretPhrase,
                   type: "input",
                   order_place: eventData.dynamic_fields.length,
