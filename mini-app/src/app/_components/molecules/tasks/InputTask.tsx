@@ -41,7 +41,7 @@ const InputTypeCampaignTask: React.FC<{
   const isSecretPhrase = title === "secret_phrase_onton_input";
 
   if (isSecretPhrase && isCompleted) {
-    description = "Your secret phrase is saved";
+    description = "Your event password is saved";
   }
 
   useEffect(() => {
