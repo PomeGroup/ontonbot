@@ -1,3 +1,6 @@
+import { events, rewards, visitors } from "@/db/schema";
+import { InferSelectModel } from "drizzle-orm";
+
 export type TonSocietyRegisterActivityT = {
   title: string;
   subtitle: string;
@@ -19,3 +22,7 @@ export type TonSocietyRegisterActivityResponse = {
     activity_url: string;
   };
 };
+
+export type RewardType = InferSelectModel<typeof rewards>;
+export type VisitorsType = InferSelectModel<typeof visitors>;
+export type EventType = InferSelectModel<typeof events>;

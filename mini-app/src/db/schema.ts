@@ -40,7 +40,7 @@ export const events = pgTable(
   "events",
   {
     event_id: serial("event_id").primaryKey(),
-    event_uuid: uuid("event_uuid"),
+    event_uuid: uuid("event_uuid").notNull(),
     type: integer("type"),
     title: text("title"),
     subtitle: text("subtitle"),
@@ -105,7 +105,9 @@ export const visitors = pgTable(
     user_id: bigint("user_id", { mode: "number" }).references(
       () => users.user_id
     ),
-    event_uuid: uuid("event_uuid").references(() => events.event_uuid),
+    event_uuid: uuid("event_uuid")
+      .references(() => events.event_uuid)
+      .notNull(),
     claimed: integer("claimed"),
     amount: integer("amount"),
     tx_hash: text("tx_hash"),

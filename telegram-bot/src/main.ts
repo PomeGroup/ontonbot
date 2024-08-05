@@ -61,9 +61,9 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
-// start
+// run the cron job every 8 hours
 new CronJob(
-  "*/10 * * * *",
+  "0 */8 * * *",
   () => {
     axios
       .get(`${process.env.APP_BASE_URL}/api/v1/cron`)
