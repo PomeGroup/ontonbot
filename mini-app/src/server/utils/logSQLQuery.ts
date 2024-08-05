@@ -18,9 +18,5 @@ export const logSQLQuery = (sql: string, params: SQLParams): void => {
 
     console.log("*****query\n", fullQuery);
 };
-export const executeAndLogQuery = async (query: Query) => {
-    const { sql: sqlString, params } = query.toSQL();
-    logSQLQuery(sqlString, params);
-    return await query.execute();
-};
+
 

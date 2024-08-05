@@ -806,6 +806,7 @@ export const eventsRouter = router({
     getEventsWithFilters: publicProcedure
         .input(getEventsInputSchema)
         .query(async (opts) => {
+            console.log("*****opts",opts);
             try {
                 const events = await getEventsWithFilters(opts.input);
                 return { status: "success", data: events };

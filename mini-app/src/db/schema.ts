@@ -387,3 +387,27 @@ export const airdropRoutineRelations = relations(
     }),
   })
 );
+// this view is used to get the event details with the ticket and visitor count
+export const event_details_search_list = pgTable('event_details_search_list', {
+    event_id: integer('event_id').notNull(),
+    event_uuid: uuid('event_uuid').notNull(),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    start_date: integer('start_date').notNull(),
+    end_date: integer('end_date').notNull(),
+    type: integer('type').notNull(),
+    society_hub: text('society_hub').notNull(),
+    image_url: text('image_url').notNull(),
+    location: text('location').notNull(),
+    subtitle: text('subtitle').notNull(),
+    ticketToCheckIn: boolean('ticketToCheckIn').notNull(),
+    timezone: text('timezone').notNull(),
+    website: text('website').notNull(),
+    created_at: timestamp('created_at').notNull(),
+    organizer_user_id: integer('organizer_user_id').notNull(),
+    organizer_first_name: text('organizer_first_name').notNull(),
+    organizer_last_name: text('organizer_last_name').notNull(),
+    organizer_username: text('organizer_username').notNull(),
+    reserved_count: integer('reserved_count').notNull(),
+    visitor_count: integer('visitor_count').notNull(),
+});

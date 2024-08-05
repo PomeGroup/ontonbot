@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events, users,tickets } from "@/db/schema";
+import {eventFields, events, users, tickets, event_details_search_list} from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { validateMiniAppData } from "@/utils";
 import { sql, eq, and, or, desc, asc } from "drizzle-orm";
@@ -94,89 +94,87 @@ export const selectEventByUuid = async (eventUuid: string) => {
 
 // Define input schema using zod
 const getEventsInputSchema = z.object({
-  limit: z.number().min(1).max(100).optional(),
-  offset: z.number().min(0).optional(),
-  search: z.string().optional(),
-  filter: z.object({
-    eventTypes: z.array(z.enum(["online", "in_person"])).optional(),
-  }).optional(),
-  sortBy: z.enum(["default", "time", "most_people_reached"]).optional(),
+    limit: z.number().min(1).max(10).optional(),
+    offset: z.number().min(0).optional(),
+    search: z.string().optional(),
+    filter: z.object({
+        eventTypes: z.array(z.enum(["online", "in_person"])).optional(),
+    }).optional(),
+    sortBy: z.enum(["default", "time", "most_people_reached"]).optional(),
 });
 
-// Type for the reserved count
-interface ReservedCount {
-  reserved_count: number;
-}
+/**
+ * Retrieves events with pagination, filtering, and sorting.
+ *
+ * @param {object} params - The parameters for the query.
+ * @param {number} params.limit - The maximum number of events to return (default is 10, min is 1, max is 10).
+ * @param {number} params.offset - The number of events to skip (default is 0).
+ * @param {string} params.search - The search term for full-text search on event title, organizer first name, organizer last name, and location.
+ * @param {object} params.filter - The filter criteria for the events.
+ * @param {array} params.filter.eventTypes - The event types to filter by (either "online" or "in_person").
+ * @param {string} params.sortBy - The sorting criteria (default, time, most_people_reached).
+ *
+ * @returns {Promise<Array>} - A promise that resolves to an array of events.
+ *
+ * @example
+ * // Postman request example:
+ * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "Yuki","filter":{"eventTypes":["online","in_person"]},"sortBy":"most_people_reached"}}
+ *
+ * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "istanbul","filter":{"eventTypes":["online","in_person"]},"sortBy":"time"}}
+ */
+export const getEventsWithFilters = async (params: z.infer<typeof getEventsInputSchema>): Promise<Array<any>> => {
+    const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
+    console.log("*****params", params);
 
-// Arrow function to get events with pagination, filtering, and sorting
-export const getEventsWithFilters = async (params: z.infer<typeof getEventsInputSchema>) => {
-  const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
-  console.log("*****params",params);
-  let query = db
-      .select()
-      .from(events)
-      .leftJoin(users, eq(events.owner, users.user_id))
-      .leftJoin(tickets, sql`${events.event_uuid} = ${tickets.event_uuid}::uuid`) // Cast event_uuid to text
-      .where(sql`true`);
+    let query = db
+        .select()
+        .from(event_details_search_list);
 
-  // Apply search filters
-  if (search) {
-    query = query.where(
-        or(
-            sql`lower(${events.title}) like ${`%${search.toLowerCase()}%`}`,
-            sql`lower(${users.first_name}) like ${`%${search.toLowerCase()}%`}`,
-            sql`lower(${users.last_name}) like ${`%${search.toLowerCase()}%`}`
-        )
-    );
-  }
-
-  // Apply event type filters
-  if (filter?.eventTypes?.length) {
-    query = query.where(
-        or(
-            filter.eventTypes.includes("online") ? eq(events.type, 1) : sql`false`,
-            filter.eventTypes.includes("in_person") ? eq(events.type, 2) : sql`false`
-        )
-    );
-  }
-
-  // Apply sorting
-  if (sortBy === "time") {
-    query = query.orderBy(desc(events.start_date));
-  } else if (sortBy === "most_people_reached") {
-    query = query
-        .groupBy(events.event_id)
-        .orderBy(desc(sql`count(${tickets.id})`));
-  } else {
-    query = query.orderBy(desc(events.created_at));
-  }
-
-  // Apply pagination
-  query = query.limit(limit).offset(offset);
-  // Get the SQL string and parameters
-
-  // // Get the SQL string and parameters
-
-  const eventsData = await query.execute();
-  const { sql: sqlString, params:paraSql } = query.toSQL();
-  logSQLQuery( sqlString, paraSql);
-  console.log("*****eventsData",eventsData);
-
-  // Calculate the count of reserved tickets for each event
-  const eventsWithTicketCount = await Promise.all(
-      eventsData.map(async (event) => {
-        const ticketCount = await executeAndLogQuery(
-            db
-                .select(sql`count(${tickets.id}) as reserved_count`)
-                .from(tickets)
-                .where(eq(tickets.event_uuid, event.event_uuid))
+    // Apply event type filters
+    if (filter?.eventTypes?.length) {
+        query = query.where(
+            or(
+                filter.eventTypes.includes("online") ? eq(event_details_search_list.type, 1) : sql`false`,
+                filter.eventTypes.includes("in_person") ? eq(event_details_search_list.type, 2) : sql`false`
+            )
         );
+    }
 
-        // Convert the result to unknown first, then cast to ReservedCount[]
-        const reservedCount = ticketCount as unknown as ReservedCount[];
-        return { ...event, reserved_count: reservedCount[0].reserved_count };
-      })
-  );
+    // Apply search filters
+    if (search) {
+        const processedSearch = search.split(' ').join(' & ');
+        query = query.where(
+            or(
+                sql`to_tsvector('pg_catalog.simple', ${event_details_search_list.title}) @@ to_tsquery('pg_catalog.simple', ${processedSearch})`,
+                sql`to_tsvector('pg_catalog.simple', ${event_details_search_list.organizer_first_name}) @@ to_tsquery('pg_catalog.simple', ${processedSearch})`,
+                sql`to_tsvector('pg_catalog.simple', ${event_details_search_list.organizer_last_name}) @@ to_tsquery('pg_catalog.simple', ${processedSearch})`,
+                sql`to_tsvector('pg_catalog.simple', ${event_details_search_list.location}) @@ to_tsquery('pg_catalog.simple', ${processedSearch})`
+            )
+        );
+        // Use rank for sorting when search is applied
+        query = query.orderBy(sql`ts_rank_cd(setweight(to_tsvector('pg_catalog.simple', ${event_details_search_list.title}), 'A') || 
+                                  setweight(to_tsvector('pg_catalog.simple', ${event_details_search_list.organizer_first_name}), 'B') || 
+                                  setweight(to_tsvector('pg_catalog.simple', ${event_details_search_list.organizer_last_name}), 'C') || 
+                                  setweight(to_tsvector('pg_catalog.simple', ${event_details_search_list.location}), 'D'), 
+                          to_tsquery('pg_catalog.simple', ${processedSearch})) desc`);
+    }
 
-  return eventsWithTicketCount;
+    // Apply additional sorting
+    if (sortBy === "time") {
+        query = query.orderBy(desc(event_details_search_list.start_date));
+    } else if (sortBy === "most_people_reached") {
+        query = query.orderBy(desc(event_details_search_list.visitor_count));
+    } else {
+        query = query.orderBy(desc(event_details_search_list.created_at));
+    }
+
+    // Apply pagination
+    query = query.limit(limit).offset(offset);
+
+    // Execute the query
+    const eventsData = await query.execute();
+
+    console.log("*****eventsData", eventsData);
+
+    return eventsData;
 };
