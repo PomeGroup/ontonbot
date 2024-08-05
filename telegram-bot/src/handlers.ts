@@ -1,8 +1,8 @@
-import { Context } from "telegraf";
-import { addVisitor, changeRole } from "./db/db";
-import { startKeyboard } from "./markups";
-import { TVisitor } from "./utils/types";
-import { editOrSend } from "./utils/utils";
+import { Context } from "telegraf"
+import { addVisitor, changeRole } from "./db/db"
+import { startKeyboard } from "./markups"
+import { TVisitor } from "./utils/types"
+import { editOrSend } from "./utils/utils"
 
 const BOT_ADMINS = process.env.BOT_ADMINS_LIST;
 
@@ -12,7 +12,7 @@ const admins = BOT_ADMINS.split(",");
 
 export const orgHandler = async (ctx: Context) => {
   try {
-    if (!admins.includes(ctx.from?.username || "")) {
+    if (!admins.map(Number).includes(ctx.from.id)) {
       await editOrSend(
         ctx,
         `You are not authorized to perform this operation.`,
@@ -79,4 +79,5 @@ Please click the link below to discover current future events.`,
   }
 };
 
-export { startHandler };
+export { startHandler }
+

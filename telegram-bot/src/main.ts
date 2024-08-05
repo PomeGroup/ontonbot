@@ -67,7 +67,35 @@ new CronJob(
   () => {
     axios
       .get(`${process.env.APP_BASE_URL}/api/v1/cron`)
-      .then((r) => console.log(r.data));
+      .then(async (r) => {
+        process.env.BOT_ADMINS_LIST.split(",").forEach(async (admin) =>{
+        await bot.telegram.sendMessage(
+          admin,
+          `Cron Job Update,
+\`\`\`json
+${JSON.stringify(r.data, null, 2)}
+\`\`\`
+          `,
+        {
+          parse_mode: "Markdown"
+        })
+        })
+      }).catch((e) => {
+        // send the error to the admin
+        console.error(e);
+        process.env.BOT_ADMINS_LIST.split(",").forEach(async (admin) =>{
+          await bot.telegram.sendMessage(
+            admin,
+            `Cron Job Error
+\`\`\`json
+${JSON.stringify(e, null, 2)}
+\`\`\`
+          `,
+          {
+            parse_mode: "Markdown"
+          })
+        })
+      });
   },
   null,
   true,
