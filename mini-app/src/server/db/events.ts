@@ -1,8 +1,10 @@
 import { db } from "@/db/db";
-import { eventFields, events, users } from "@/db/schema";
+import { eventFields, events, users,tickets } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { validateMiniAppData } from "@/utils";
-import { and, eq } from "drizzle-orm";
+import { sql, eq, and, or, desc, asc } from "drizzle-orm";
+import { z } from "zod";
+import { logSQLQuery ,executeAndLogQuery } from "@/server/utils/logSQLQuery";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -86,4 +88,95 @@ export const selectEventByUuid = async (eventUuid: string) => {
     dynamic_fields: dynamicFields,
     activity_id: restEventData.activity_id,
   };
+};
+
+
+
+// Define input schema using zod
+const getEventsInputSchema = z.object({
+  limit: z.number().min(1).max(100).optional(),
+  offset: z.number().min(0).optional(),
+  search: z.string().optional(),
+  filter: z.object({
+    eventTypes: z.array(z.enum(["online", "in_person"])).optional(),
+  }).optional(),
+  sortBy: z.enum(["default", "time", "most_people_reached"]).optional(),
+});
+
+// Type for the reserved count
+interface ReservedCount {
+  reserved_count: number;
+}
+
+// Arrow function to get events with pagination, filtering, and sorting
+export const getEventsWithFilters = async (params: z.infer<typeof getEventsInputSchema>) => {
+  const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
+  console.log("*****params",params);
+  let query = db
+      .select()
+      .from(events)
+      .leftJoin(users, eq(events.owner, users.user_id))
+      .leftJoin(tickets, sql`${events.event_uuid} = ${tickets.event_uuid}::uuid`) // Cast event_uuid to text
+      .where(sql`true`);
+
+  // Apply search filters
+  if (search) {
+    query = query.where(
+        or(
+            sql`lower(${events.title}) like ${`%${search.toLowerCase()}%`}`,
+            sql`lower(${users.first_name}) like ${`%${search.toLowerCase()}%`}`,
+            sql`lower(${users.last_name}) like ${`%${search.toLowerCase()}%`}`
+        )
+    );
+  }
+
+  // Apply event type filters
+  if (filter?.eventTypes?.length) {
+    query = query.where(
+        or(
+            filter.eventTypes.includes("online") ? eq(events.type, 1) : sql`false`,
+            filter.eventTypes.includes("in_person") ? eq(events.type, 2) : sql`false`
+        )
+    );
+  }
+
+  // Apply sorting
+  if (sortBy === "time") {
+    query = query.orderBy(desc(events.start_date));
+  } else if (sortBy === "most_people_reached") {
+    query = query
+        .groupBy(events.event_id)
+        .orderBy(desc(sql`count(${tickets.id})`));
+  } else {
+    query = query.orderBy(desc(events.created_at));
+  }
+
+  // Apply pagination
+  query = query.limit(limit).offset(offset);
+  // Get the SQL string and parameters
+
+  // // Get the SQL string and parameters
+
+  const eventsData = await query.execute();
+  const { sql: sqlString, params:paraSql } = query.toSQL();
+  logSQLQuery( sqlString, paraSql);
+  console.log("*****eventsData",eventsData);
+
+  // Calculate the count of reserved tickets for each event
+  const eventsWithTicketCount = await Promise.all(
+      eventsData.map(async (event) => {
+        const ticketCount = await executeAndLogQuery(
+            db
+                .select(sql`count(${tickets.id}) as reserved_count`)
+                .from(tickets)
+                .where(eq(tickets.event_uuid, event.event_uuid))
+        );
+
+        // Convert the result to unknown first, then cast to ReservedCount[]
+        const reservedCount = ticketCount as unknown as ReservedCount[];
+        return { ...event, reserved_count: reservedCount[0].reserved_count };
+      })
+  );
+
+  return eventsWithTicketCount;
 };

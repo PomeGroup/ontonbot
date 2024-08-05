@@ -25,13 +25,25 @@ import {
   checkIsAdminOrOrganizer,
   checkIsEventOwner,
   selectEventByUuid,
+  getEventsWithFilters,
 } from "../db/events";
 import {
   selectVisitorsByEventUuid,
   updateVisitorLastVisit,
 } from "../db/visitors";
 import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
+
 dotenv.config();
+const getEventsInputSchema = z.object({
+    limit: z.number().min(1).max(100).optional(),
+    offset: z.number().min(0).optional(),
+    search: z.string().optional(),
+    filter: z.object({
+        eventTypes: z.array(z.enum(["online", "in_person"])).optional(),
+    }).optional(),
+    sortBy: z.enum(["default", "time", "most_people_reached"]).optional(),
+});
+
 
 export const eventsRouter = router({
   // private
@@ -791,6 +803,17 @@ export const eventsRouter = router({
         return { status: "fail", data: null };
       }
     }),
+    getEventsWithFilters: publicProcedure
+        .input(getEventsInputSchema)
+        .query(async (opts) => {
+            try {
+                const events = await getEventsWithFilters(opts.input);
+                return { status: "success", data: events };
+            } catch (error) {
+                console.error("Error fetching events:", error);
+                return { status: "fail", data: null };
+            }
+        }),
 });
 
 const getUsersTwitters = async (eventId: number) => {
