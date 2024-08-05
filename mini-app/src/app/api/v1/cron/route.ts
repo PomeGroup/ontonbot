@@ -76,7 +76,7 @@ async function createRewards() {
         error instanceof AxiosError
           ? error.response?.data?.message !== "activity not found"
           : true;
-      // if it was not published we will delete all the other rewards assosieted with this event from the loop
+      // if it was not published we will delete all the other rewards associated with this event from the loop
       if (!isEventPublished) {
         const visitor = await db.query.visitors.findFirst({
           where: (fields, { eq }) => {
