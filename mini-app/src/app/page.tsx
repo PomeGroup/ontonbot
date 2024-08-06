@@ -7,12 +7,12 @@ import { trpc } from "./_trpc/client";
 export default function Home({searchParams}: { searchParams: any }) {
     noStore();
     const tgWebAppStartParam = searchParams.tgWebAppStartParam;
-    // if (tgWebAppStartParam !== undefined) {
-    //   console.log("*******tgWebAppStartParam", tgWebAppStartParam);
-    //   redirect(`/events/${tgWebAppStartParam}`);
-    // }
-    //
-    // redirect("https://society.ton.org/activities/events");
+    if (tgWebAppStartParam !== undefined) {
+      console.log("*******tgWebAppStartParam", tgWebAppStartParam);
+      redirect(`/events/${tgWebAppStartParam}`);
+    }
+
+    redirect("https://society.ton.org/activities/events");
     console.log("*******tgWebAppStartParam", tgWebAppStartParam);
 
 

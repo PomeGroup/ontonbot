@@ -1,4 +1,5 @@
 import NodeCache from "node-cache";
+import {getEventsWithFilters} from "@/server/db/events";
 
 // Create a new cache instance with a default TTL (time-to-live) of 10 minutes
 // and a check period of 2 minutes to prune expired entries.
@@ -37,3 +38,7 @@ export const getCache = (key: string): any | undefined => {
 export const deleteCache = (key: string): void => {
     cache.del(key);
 };
+
+export const cacheKeys = {
+    getEventsWithFilters: `getEventsWithFilters_`,
+}

@@ -5,7 +5,7 @@ import { validateMiniAppData } from "@/utils";
 import { sql, eq, and, or, desc, asc } from "drizzle-orm";
 import { z } from "zod";
 import { logSQLQuery  } from "@/lib/logSQLQuery";
-import {getCache, setCache} from "@/lib/cache";
+import {cacheKeys,  getCache, setCache} from "@/lib/cache";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -128,7 +128,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof getEventsInput
     console.log("*****params", params);
 
     // Generate a cache key based on the input parameters
-    const cacheKey = JSON.stringify({ limit, offset, search, filter, sortBy });
+    const cacheKey = cacheKeys.getEventsWithFilters+ JSON.stringify({ limit, offset, search, filter, sortBy });
 
     // Check if the result is already cached
     const cachedResult = getCache(cacheKey);
