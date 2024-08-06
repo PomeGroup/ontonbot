@@ -6,6 +6,7 @@ import { sql, eq, and, or, desc, asc } from "drizzle-orm";
 import { z } from "zod";
 import { logSQLQuery  } from "@/lib/logSQLQuery";
 import {cacheKeys,  getCache, setCache} from "@/lib/cache";
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -93,17 +94,6 @@ export const selectEventByUuid = async (eventUuid: string) => {
 
 
 
-// Define input schema using zod
-const getEventsInputSchema = z.object({
-    limit: z.number().min(1).max(10).optional(),
-    offset: z.number().min(0).optional(),
-    search: z.string().optional(),
-    filter: z.object({
-        eventTypes: z.array(z.enum(["online", "in_person"])).optional(),
-    }).optional(),
-    sortBy: z.enum(["default", "time", "most_people_reached"]).optional(),
-});
-
 /**
  * Retrieves events with pagination, filtering, and sorting.
  *
@@ -113,6 +103,9 @@ const getEventsInputSchema = z.object({
  * @param {string} params.search - The search term for full-text search on event title, organizer first name, organizer last name, and location.
  * @param {object} params.filter - The filter criteria for the events.
  * @param {array} params.filter.eventTypes - The event types to filter by (either "online" or "in_person").
+ * @param {date} params.filter.startDate - The start date to filter events from.
+ * @param {date} params.filter.endDate - The end date to filter events to.
+ * @param {number} params.filter.organizer_user_id - The user ID of the event organizer to filter by.
  * @param {string} params.sortBy - The sorting criteria (default, time, most_people_reached).
  *
  * @returns {Promise<Array>} - A promise that resolves to an array of events.
@@ -120,15 +113,15 @@ const getEventsInputSchema = z.object({
  * @example
  * // Postman request example:
  * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "Yuki","filter":{"eventTypes":["online","in_person"]},"sortBy":"most_people_reached"}}}
- *
+ * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "istanbul","filter":{"eventTypes":["online","in_person"],"startDate":"2024-07-01","endDate":"2024-07-31"},"sortBy":"time"}}}
  * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "istanbul","filter":{"eventTypes":["online","in_person"]},"sortBy":"time"}}}
  */
-export const getEventsWithFilters = async (params: z.infer<typeof getEventsInputSchema>): Promise<any[]> => {
+export const getEventsWithFilters = async (params: z.infer<typeof searchEventsInputZod>): Promise<any[]> => {
     const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
     console.log("*****params", params);
 
     // Generate a cache key based on the input parameters
-    const cacheKey = cacheKeys.getEventsWithFilters+ JSON.stringify({ limit, offset, search, filter, sortBy });
+    const cacheKey = cacheKeys.getEventsWithFilters + JSON.stringify({ limit, offset, search, filter, sortBy });
 
     // Check if the result is already cached
     const cachedResult = getCache(cacheKey);
@@ -149,6 +142,20 @@ export const getEventsWithFilters = async (params: z.infer<typeof getEventsInput
                 filter.eventTypes.includes("in_person") ? eq(event_details_search_list.type, 2) : sql`false`
             )
         );
+    }
+
+    // Apply date filters
+    if (filter?.startDate) {
+        query = query.where(sql`${event_details_search_list.start_date} >= ${filter.startDate}`);
+    }
+
+    if (filter?.endDate) {
+        query = query.where(sql`${event_details_search_list.end_date} <= ${filter.endDate}`);
+    }
+
+    // Apply organizer_user_id filter
+    if (filter?.organizer_user_id) {
+        query = query.where(eq(event_details_search_list.organizer_user_id, filter.organizer_user_id));
     }
 
     // Apply search filters

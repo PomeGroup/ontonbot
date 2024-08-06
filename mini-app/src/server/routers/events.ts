@@ -32,17 +32,8 @@ import {
   updateVisitorLastVisit,
 } from "../db/visitors";
 import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
-
+import  searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 dotenv.config();
-const getEventsInputSchema = z.object({
-    limit: z.number().min(1).max(100).optional(),
-    offset: z.number().min(0).optional(),
-    search: z.string().optional(),
-    filter: z.object({
-        eventTypes: z.array(z.enum(["online", "in_person"])).optional(),
-    }).optional(),
-    sortBy: z.enum(["default", "time", "most_people_reached"]).optional(),
-});
 
 
 export const eventsRouter = router({
@@ -804,7 +795,7 @@ export const eventsRouter = router({
       }
     }),
     getEventsWithFilters: publicProcedure
-        .input(getEventsInputSchema)
+        .input(searchEventsInputZod)
         .query(async (opts) => {
             console.log("*****opts",opts);
             try {
