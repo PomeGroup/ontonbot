@@ -29,7 +29,13 @@ export async function GET() {
   }
 
   try {
-    throw Error("test error");
+    const notificationCount = await notifyUsersForRewards();
+    deleteCache(cacheKeys.cronJobLock);
+    return NextResponse.json({
+      message: "Cron job executed successfully",
+      now: Date.now(),
+      notificationCount,
+    });
   } catch (error) {
     // remove lock in cache
     deleteCache(cacheKeys.cronJobLock);
