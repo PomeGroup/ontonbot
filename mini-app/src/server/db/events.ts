@@ -103,8 +103,8 @@ export const selectEventByUuid = async (eventUuid: string) => {
  * @param {string} params.search - The search term for full-text search on event title, organizer first name, organizer last name, and location.
  * @param {object} params.filter - The filter criteria for the events.
  * @param {array} params.filter.eventTypes - The event types to filter by (either "online" or "in_person").
- * @param {date} params.filter.startDate - The start date to filter events from.
- * @param {date} params.filter.endDate - The end date to filter events to.
+ * @param {number} params.filter.startDate - The start date to filter events from.
+ * @param {number} params.filter.endDate - The end date to filter events to.
  * @param {number} params.filter.organizer_user_id - The user ID of the event organizer to filter by.
  * @param {array} params.filter.event_ids - The event IDs to filter by.
  * @param {array} params.filter.event_uuids - The event UUIDs to filter by.

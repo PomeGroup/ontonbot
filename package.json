@@ -1,5 +1,6 @@
 {
 	"dependencies": {
+		"compression": "^1.7.4",
 		"form-data": "^4.0.0",
 		"fs": "0.0.1-security",
 		"net": "^1.0.2",

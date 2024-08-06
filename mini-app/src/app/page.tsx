@@ -17,8 +17,9 @@ export default function Home({searchParams}: { searchParams: any }) {
     console.log("*******tgWebAppStartParam", tgWebAppStartParam);
 
 
-    const { data: events, isLoading, isError } = trpc.events.getEventsWithFilters.useQuery({
-        limit: 10,
+    // Define the query parameters using the Zod schema
+    const upcomingEventsParams = searchEventsInputZod.parse({
+        limit: 30,
         offset: 0,
         filter: {
             eventTypes: ["online", "in_person"],
@@ -26,17 +27,60 @@ export default function Home({searchParams}: { searchParams: any }) {
         sortBy: "time",
     });
 
+    const pastEventsParams = searchEventsInputZod.parse({
+        limit: 30,
+        offset: 0,
+        filter: {
+            eventTypes: ["online", "in_person"],
+            endDate: Math.floor(Date.now() / 1000),
+        },
+        sortBy: "start_date_desc",
+    });
+
+    // Request for upcoming events ordered by closest time
+    const { data: upcomingEvents, isLoading: isLoadingUpcoming, isError: isErrorUpcoming } = trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams);
+
+    // Request for past events ordered by closest time
+    const { data: pastEvents, isLoading: isLoadingPast, isError: isErrorPast } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams);
+
     useEffect(() => {
-        if (events) {
-            console.log("Upcoming events:", events);
+        if (upcomingEvents) {
+            console.log("Upcoming events:", upcomingEvents);
         }
-    }, [events]);
+    }, [upcomingEvents]);
 
-    console.log("*******tgWebAppStartParam", tgWebAppStartParam);
+    useEffect(() => {
+        if (pastEvents) {
+            console.log("Past events:", pastEvents);
+        }
+    }, [pastEvents]);
 
-    return(
-    <>
+    if (isLoadingUpcoming || isLoadingPast) {
+        return <div>Loading...</div>;
+    }
 
+    if (isErrorUpcoming || isErrorPast) {
+        return <div>Error loading events.</div>;
+    }
 
-    </>);
+    return (
+        <>
+            <div>
+                <h2>Upcoming Events</h2>
+                <ul>
+                    {upcomingEvents?.map(event => (
+                        <li key={event.event_uuid}>{event.title}</li>
+                    ))}
+                </ul>
+            </div>
+            <div>
+                <h2>Past Events</h2>
+                <ul>
+                    {pastEvents?.map(event => (
+                        <li key={event.event_uuid}>{event.title}</li>
+                    ))}
+                </ul>
+            </div>
+        </>
+    );
 }
