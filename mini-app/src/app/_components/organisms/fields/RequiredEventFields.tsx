@@ -159,6 +159,8 @@ const RequiredEventFields: FC<RequiredEventFieldsProps> = ({
           placeholder="Enter the Event Password"
           value={formData.secret_phrase}
           onChange={(e) => handleChange(e, "secret_phrase")}
+          minLength={4}
+          maxLength={20}
         />
       </Card>
 
