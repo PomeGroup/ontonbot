@@ -4,7 +4,8 @@ import { removeKey } from "@/lib/utils";
 import { validateMiniAppData } from "@/utils";
 import { sql, eq, and, or, desc, asc } from "drizzle-orm";
 import { z } from "zod";
-import { logSQLQuery ,executeAndLogQuery } from "@/server/utils/logSQLQuery";
+import { logSQLQuery  } from "@/lib/logSQLQuery";
+import {getCache, setCache} from "@/lib/cache";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -118,13 +119,23 @@ const getEventsInputSchema = z.object({
  *
  * @example
  * // Postman request example:
- * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "Yuki","filter":{"eventTypes":["online","in_person"]},"sortBy":"most_people_reached"}}
+ * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "Yuki","filter":{"eventTypes":["online","in_person"]},"sortBy":"most_people_reached"}}}
  *
- * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "istanbul","filter":{"eventTypes":["online","in_person"]},"sortBy":"time"}}
+ * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "istanbul","filter":{"eventTypes":["online","in_person"]},"sortBy":"time"}}}
  */
-export const getEventsWithFilters = async (params: z.infer<typeof getEventsInputSchema>): Promise<Array<any>> => {
+export const getEventsWithFilters = async (params: z.infer<typeof getEventsInputSchema>): Promise<any[]> => {
     const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
     console.log("*****params", params);
+
+    // Generate a cache key based on the input parameters
+    const cacheKey = JSON.stringify({ limit, offset, search, filter, sortBy });
+
+    // Check if the result is already cached
+    const cachedResult = getCache(cacheKey);
+    if (cachedResult) {
+        console.log("Returning cached result");
+        return cachedResult;
+    }
 
     let query = db
         .select()
@@ -170,11 +181,14 @@ export const getEventsWithFilters = async (params: z.infer<typeof getEventsInput
 
     // Apply pagination
     query = query.limit(limit).offset(offset);
-
+    logSQLQuery(query.toSQL().sql, query.toSQL().params);
     // Execute the query
     const eventsData = await query.execute();
 
     console.log("*****eventsData", eventsData);
+
+    // Cache the result
+    setCache(cacheKey, eventsData, 60);
 
     return eventsData;
 };
