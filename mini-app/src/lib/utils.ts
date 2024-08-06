@@ -12,3 +12,7 @@ export function removeKey<T extends object, K extends keyof T>(
   const { [key]: _, ...rest } = obj;
   return rest;
 }
+
+export function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
