@@ -124,6 +124,10 @@ const InputTypeCampaignTask: React.FC<{
         message: "No input provided",
       });
     }
+
+    if (autoSubmitTimerRef.current) {
+      clearTimeout(autoSubmitTimerRef.current);
+    }
   };
 
   return (
