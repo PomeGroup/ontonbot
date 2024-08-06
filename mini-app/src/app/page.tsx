@@ -4,15 +4,16 @@ import {redirect} from "next/navigation";
 import { useEffect } from "react";
 import "./page.css";
 import { trpc } from "./_trpc/client";
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 export default function Home({searchParams}: { searchParams: any }) {
     noStore();
     const tgWebAppStartParam = searchParams.tgWebAppStartParam;
-    if (tgWebAppStartParam !== undefined) {
-      console.log("*******tgWebAppStartParam", tgWebAppStartParam);
-      redirect(`/events/${tgWebAppStartParam}`);
-    }
-
-    redirect("https://society.ton.org/activities/events");
+    // if (tgWebAppStartParam !== undefined) {
+    //   console.log("*******tgWebAppStartParam", tgWebAppStartParam);
+    //   redirect(`/events/${tgWebAppStartParam}`);
+    // }
+    //
+    // redirect("https://society.ton.org/activities/events");
     console.log("*******tgWebAppStartParam", tgWebAppStartParam);
 
 

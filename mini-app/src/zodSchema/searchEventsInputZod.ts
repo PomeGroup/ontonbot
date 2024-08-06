@@ -10,7 +10,9 @@ const searchEventsInputZod = z.object({
         organizer_user_id: z.number().optional(),
         startDate: z.date().optional(),
         endDate: z.date().optional(),
+        event_ids: z.array(z.number()).optional(),
+        event_uuids: z.array(z.string()).optional(),
     }).optional(),
-    sortBy: z.enum(["default", "time", "most_people_reached"]).optional(),
+    sortBy: z.enum(["default", "time", "most_people_reached", "start_date_asc", "start_date_desc"]).optional(),
 });
 export default searchEventsInputZod;

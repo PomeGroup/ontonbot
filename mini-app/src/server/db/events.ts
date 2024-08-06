@@ -106,7 +106,9 @@ export const selectEventByUuid = async (eventUuid: string) => {
  * @param {date} params.filter.startDate - The start date to filter events from.
  * @param {date} params.filter.endDate - The end date to filter events to.
  * @param {number} params.filter.organizer_user_id - The user ID of the event organizer to filter by.
- * @param {string} params.sortBy - The sorting criteria (default, time, most_people_reached).
+ * @param {array} params.filter.event_ids - The event IDs to filter by.
+ * @param {array} params.filter.event_uuids - The event UUIDs to filter by.
+ * @param {string} params.sortBy - The sorting criteria (default, time, most_people_reached, start_date_asc, start_date_desc).
  *
  * @returns {Promise<Array>} - A promise that resolves to an array of events.
  *
@@ -127,6 +129,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
     const cachedResult = getCache(cacheKey);
     if (cachedResult) {
         console.log("Returning cached result");
+        console.log(cachedResult);
         return cachedResult;
     }
 
@@ -158,6 +161,16 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
         query = query.where(eq(event_details_search_list.organizer_user_id, filter.organizer_user_id));
     }
 
+    // Apply event_ids filter
+    if (filter?.event_ids) {
+        query = query.where(sql`${event_details_search_list.event_id} = any(${filter.event_ids})`);
+    }
+
+    // Apply event_uuids filter
+    if (filter?.event_uuids) {
+        query = query.where(sql`${event_details_search_list.event_uuid} = any(${filter.event_uuids})`);
+    }
+
     // Apply search filters
     if (search) {
         const processedSearch = search.split(' ').join(' & ');
@@ -178,7 +191,9 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
     }
 
     // Apply additional sorting
-    if (sortBy === "time") {
+    if (sortBy === "start_date_asc") {
+        query = query.orderBy(asc(event_details_search_list.start_date));
+    } else if (sortBy === "start_date_desc") {
         query = query.orderBy(desc(event_details_search_list.start_date));
     } else if (sortBy === "most_people_reached") {
         query = query.orderBy(desc(event_details_search_list.visitor_count));
