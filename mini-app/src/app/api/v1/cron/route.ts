@@ -19,7 +19,6 @@ export async function GET() {
       now: Date.now(),
     });
   }
-
   // update lock in cache for 7h and 50m
   setCache(cacheKeys.cronJobLock, true, 28_200);
 
@@ -30,23 +29,17 @@ export async function GET() {
   }
 
   try {
-    const notificationCount = await notifyUsersForRewards();
-    return NextResponse.json({
-      message: "Cron job executed successfully",
-      now: Date.now(),
-      notificationCount,
-    });
+    throw Error("test error");
   } catch (error) {
+    // remove lock in cache
+    deleteCache(cacheKeys.cronJobLock);
     console.error("ERROR_IN_NOTIFICATION: ", error);
+    return NextResponse.json({
+      message: "Error in cron job",
+      now: Date.now(),
+      error: error instanceof Error ? error.message : error,
+    });
   }
-
-  // remove lock in cache
-  deleteCache(cacheKeys.cronJobLock);
-
-  return NextResponse.json({
-    message: "Error in cron job",
-    now: Date.now(),
-  });
 }
 
 async function createRewards() {
