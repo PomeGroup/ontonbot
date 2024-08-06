@@ -52,20 +52,6 @@ export const userEventFieldsRouter = router({
         });
       }
 
-      // Check if eventFields were not found
-      const eventSecretField =
-        (
-          await db
-            .select({ id: eventFields.id })
-            .from(eventFields)
-            .where(
-              and(
-                eq(eventFields.title, "secret_phrase_onton_input"),
-                eq(eventFields.id, opts.input.field_id)
-              )
-            )
-        ).length > 0;
-
       const correctSecretPhrase = eventData[0].secret_phrase
         ? await comparePassword(
             opts.input.data.trim().toLowerCase(),
@@ -75,7 +61,7 @@ export const userEventFieldsRouter = router({
 
       if (!correctSecretPhrase) {
         throw new TRPCError({
-          message: "Sorry, you entered the wrong event password. Try again.",
+          message: "Re-enter the password",
           code: TRPC_ERROR_CODES_BY_NUMBER["-32003"],
         });
       }

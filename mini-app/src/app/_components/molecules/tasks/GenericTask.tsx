@@ -12,9 +12,20 @@ const GenericTask: React.FC<{
   description: string;
   completed: boolean | undefined;
   defaultEmoji: string;
+  isError?: boolean;
+  errorMessage?: string;
   onClick?: (e: any) => void;
   className?: string;
-}> = ({ title, description, completed, defaultEmoji, onClick, className }) => {
+}> = ({
+  title,
+  description,
+  completed,
+  defaultEmoji,
+  onClick,
+  className,
+  errorMessage,
+  isError,
+}) => {
   const { theme } = useTheme();
 
   const bgColorClass = clsx({
@@ -25,7 +36,14 @@ const GenericTask: React.FC<{
   return (
     <div
       className={cn(
-        "my-4 rounded-[14px] p-4 border border-separator flex items-center justify-start cursor-pointer",
+        "my-4 rounded-[14px] p-4 border flex items-center justify-start cursor-pointer",
+
+        {
+          "border-confirm": completed,
+          "border-separator": !completed && !isError,
+          "border-destructive": isError,
+        },
+
         className
       )}
       onClick={onClick}
@@ -37,7 +55,15 @@ const GenericTask: React.FC<{
         )}
       >
         {completed !== undefined &&
-          (completed === true ? (
+          (isError ? (
+            <Image
+              className="fill-tertiary"
+              src="/red-cross-mark.svg"
+              alt="error"
+              width={16}
+              height={16}
+            />
+          ) : completed ? (
             <Image
               className="fill-tertiary"
               src="/checkmark.svg"
@@ -54,8 +80,12 @@ const GenericTask: React.FC<{
         <div className="text-[17px] font-medium leading-[22px]">
           {title === "secret_phrase_onton_input" ? "Event Password" : title}
         </div>
-        <div className="text-secondary text-[14px] leading-none font-light">
-          {description}
+        <div
+          className={cn("text-secondary text-[14px] leading-none font-normal", {
+            "text-destructive": isError,
+          })}
+        >
+          {isError && Boolean(errorMessage) ? errorMessage : description}
         </div>
       </div>
     </div>

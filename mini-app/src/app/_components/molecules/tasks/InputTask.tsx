@@ -1,7 +1,3 @@
-// InputTypeCampaignTask.tsx
-
-"use client";
-
 import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import Image from "next/image";
@@ -36,9 +32,12 @@ const InputTypeCampaignTask: React.FC<{
   const [inputText, setInputText] = useState(data);
   const [isCompleted, setIsCompleted] = useState(completed);
   const [isEditing, setIsEditing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const editingRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const trpcUtils = trpc.useUtils();
   const isSecretPhrase = title === "secret_phrase_onton_input";
+  const autoSubmitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   if (isSecretPhrase && isCompleted) {
     description = "Your event password is saved";
@@ -65,16 +64,29 @@ const InputTypeCampaignTask: React.FC<{
     setInputText(data);
   }, [data]);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden" && isEditing) {
+        handleConfirm();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isEditing]);
+
   const upsertUserEventFieldMutation =
     trpc.userEventFields.upsertUserEventField.useMutation({
       onError: (error) => {
         hapticFeedback?.notificationOccurred("error");
-        WebApp?.showPopup({
-          message: error.message,
-        });
+        setError(error.message);
         setIsCompleted(false);
       },
       onSuccess: () => {
+        setError(null);
         hapticFeedback?.notificationOccurred("success");
         setIsCompleted(true);
         trpcUtils.userEventFields.invalidate();
@@ -84,10 +96,15 @@ const InputTypeCampaignTask: React.FC<{
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInputText(e.target.value);
+    if (autoSubmitTimerRef.current) {
+      clearTimeout(autoSubmitTimerRef.current);
+    }
+    autoSubmitTimerRef.current = setTimeout(() => {
+      handleConfirm();
+    }, 3000);
   }
 
-  const handleConfirm: React.FormEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault();
+  const handleConfirm = () => {
     setIsEditing(false);
 
     if (!validatedData.data?.valid) {
@@ -110,7 +127,7 @@ const InputTypeCampaignTask: React.FC<{
   };
 
   return (
-    <div className="input-type-campaign-task">
+    <div>
       {!isEditing || isCompleted ? (
         <div
           onClick={() => {
@@ -121,6 +138,8 @@ const InputTypeCampaignTask: React.FC<{
           <GenericTask
             title={title}
             description={description}
+            isError={Boolean(error)}
+            errorMessage={error ?? undefined}
             completed={isCompleted}
             defaultEmoji={defaultEmoji}
           />
@@ -129,7 +148,10 @@ const InputTypeCampaignTask: React.FC<{
         <form
           className="my-4 rounded-[14px] p-4 border border-separator flex items-center justify-start"
           ref={editingRef}
-          onSubmit={handleConfirm}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleConfirm();
+          }}
         >
           <input
             className="w-full h-10 rounded-lg border border-separator p-2 mr-2"
@@ -139,6 +161,13 @@ const InputTypeCampaignTask: React.FC<{
             value={inputText || ""}
             onChange={handleInputChange}
             autoFocus
+            ref={inputRef}
+            onBlur={() => {
+              // Check if the keyboard is closed (for mobile devices)
+              if (window.innerHeight === window.outerHeight) {
+                handleConfirm();
+              }
+            }}
           />
           <button
             type="submit"
