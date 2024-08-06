@@ -52,12 +52,27 @@ export const userEventFieldsRouter = router({
         });
       }
 
-      const correctSecretPhrase = eventData[0].secret_phrase
-        ? await comparePassword(
-            opts.input.data.trim().toLowerCase(),
-            eventData[0].secret_phrase
-          )
-        : true;
+      const inputField = await db
+        .select()
+        .from(eventFields)
+        .where(and(eq(eventFields.id, opts.input.field_id)))
+        .execute();
+
+      if (inputField.length === 0) {
+        throw new TRPCError({
+          message: "Field not found",
+          code: "BAD_REQUEST",
+        });
+      }
+
+      const correctSecretPhrase =
+        inputField[0].title === "secret_phrase_onton_input" &&
+        eventData[0].secret_phrase
+          ? await comparePassword(
+              opts.input.data.trim().toLowerCase(),
+              eventData[0].secret_phrase
+            )
+          : true;
 
       if (!correctSecretPhrase) {
         throw new TRPCError({
