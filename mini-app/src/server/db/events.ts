@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import {eventFields, events, users, tickets, event_details_search_list} from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { validateMiniAppData } from "@/utils";
-import { sql, eq, and, or, desc, asc } from "drizzle-orm";
+import {sql, eq, and, or, desc, asc, inArray} from "drizzle-orm";
 import { z } from "zod";
 import { logSQLQuery  } from "@/lib/logSQLQuery";
 import {cacheKeys,  getCache, setCache} from "@/lib/cache";
@@ -123,7 +123,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
     console.log("*****params", params);
 
     // Generate a cache key based on the input parameters
-    const cacheKey = cacheKeys.getEventsWithFilters + JSON.stringify({ limit, offset, search, filter, sortBy });
+    const cacheKey = cacheKeys.getEventsWithFilters +  JSON.stringify({ limit, offset, search, filter, sortBy }) ;
 
     // Check if the result is already cached
     const cachedResult = getCache(cacheKey);
@@ -168,7 +168,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
 
     // Apply event_uuids filter
     if (filter?.event_uuids) {
-        query = query.where(sql`${event_details_search_list.event_uuid} = any(${filter.event_uuids})`);
+        query = query.where(inArray(event_details_search_list.event_uuid, filter.event_uuids));
     }
 
     // Apply search filters
@@ -189,20 +189,22 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
                                   setweight(to_tsvector('pg_catalog.simple', ${event_details_search_list.location}), 'D'), 
                           to_tsquery('pg_catalog.simple', ${processedSearch})) desc`);
     }
+    console.log("*****limit", limit);
+    if(limit > 1) {
+        // Apply additional sorting
+        if (sortBy === "start_date_asc") {
+            query = query.orderBy(asc(event_details_search_list.start_date));
+        } else if (sortBy === "start_date_desc") {
+            query = query.orderBy(desc(event_details_search_list.start_date));
+        } else if (sortBy === "most_people_reached") {
+            query = query.orderBy(desc(event_details_search_list.visitor_count));
+        } else {
+            query = query.orderBy(desc(event_details_search_list.created_at));
+        }
 
-    // Apply additional sorting
-    if (sortBy === "start_date_asc") {
-        query = query.orderBy(asc(event_details_search_list.start_date));
-    } else if (sortBy === "start_date_desc") {
-        query = query.orderBy(desc(event_details_search_list.start_date));
-    } else if (sortBy === "most_people_reached") {
-        query = query.orderBy(desc(event_details_search_list.visitor_count));
-    } else {
-        query = query.orderBy(desc(event_details_search_list.created_at));
+        // Apply pagination
+        query = query.limit(limit).offset(offset);
     }
-
-    // Apply pagination
-    query = query.limit(limit).offset(offset);
     logSQLQuery(query.toSQL().sql, query.toSQL().params);
     // Execute the query
     const eventsData = await query.execute();

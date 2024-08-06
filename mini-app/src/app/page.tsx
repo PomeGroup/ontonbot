@@ -19,7 +19,7 @@ export default function Home({searchParams}: { searchParams: any }) {
 
     // Define the query parameters using the Zod schema
     const upcomingEventsParams = searchEventsInputZod.parse({
-        limit: 30,
+        limit: 2,
         offset: 0,
         filter: {
             eventTypes: ["online", "in_person"],
@@ -28,13 +28,20 @@ export default function Home({searchParams}: { searchParams: any }) {
     });
 
     const pastEventsParams = searchEventsInputZod.parse({
-        limit: 30,
+        limit: 2,
         offset: 0,
         filter: {
             eventTypes: ["online", "in_person"],
-            endDate: Math.floor(Date.now() / 1000),
+            endDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000)% 600),
         },
         sortBy: "start_date_desc",
+    });
+    const sliderEventParams = searchEventsInputZod.parse({
+        limit: 1,
+        filter: {
+            event_uuids: ["6636297e-7b58-4d80-aa3e-c877688ebae9"],
+        },
+
     });
 
     // Request for upcoming events ordered by closest time
@@ -42,6 +49,10 @@ export default function Home({searchParams}: { searchParams: any }) {
 
     // Request for past events ordered by closest time
     const { data: pastEvents, isLoading: isLoadingPast, isError: isErrorPast } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams);
+
+    // Request for specific slider event by UUID
+    const { data: sliderEvent, isLoading: isLoadingSlider, isError: isErrorSlider } = trpc.events.getEventsWithFilters.useQuery(sliderEventParams);
+
 
     useEffect(() => {
         if (upcomingEvents) {
@@ -55,31 +66,46 @@ export default function Home({searchParams}: { searchParams: any }) {
         }
     }, [pastEvents]);
 
-    if (isLoadingUpcoming || isLoadingPast) {
-        return <div>Loading...</div>;
-    }
 
-    if (isErrorUpcoming || isErrorPast) {
-        return <div>Error loading events.</div>;
-    }
+    useEffect(() => {
+        if (sliderEvent) {
+            console.log("Slider event:", sliderEvent);
+        }
+    }, [sliderEvent]);
+
+
 
     return (
         <>
+            {isLoadingUpcoming && <p>Loading upcoming events...</p>}
+            {isLoadingPast && <p>Loading past events...</p>}
+            {isLoadingSlider && <p>Loading slider event...</p>}
+
+            {isErrorUpcoming && <p>Error loading upcoming events</p>}
+            {isErrorPast && <p>Error loading past events</p>}
+            {isErrorSlider && <p>Error loading slider event</p>}
+
             <div>
                 <h2>Upcoming Events</h2>
                 <ul>
-                    {upcomingEvents?.map(event => (
+                    {upcomingEvents?.data?.map(event => (
                         <li key={event.event_uuid}>{event.title}</li>
                     ))}
                 </ul>
             </div>
+
             <div>
                 <h2>Past Events</h2>
                 <ul>
-                    {pastEvents?.map(event => (
+                    {pastEvents?.data?.map(event => (
                         <li key={event.event_uuid}>{event.title}</li>
                     ))}
                 </ul>
+            </div>
+
+            <div>
+                <h2>Slider Event</h2>
+                {sliderEvent && <div>{sliderEvent?.data[0]?.title}</div>}
             </div>
         </>
     );
