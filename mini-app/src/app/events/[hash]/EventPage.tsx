@@ -66,6 +66,8 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
     <EventPageLoadingSkeleton />
   ) : eventData.isError || !eventData.isSuccess ? (
     <div>Something went wrong...</div>
+  ) : eventData.data === null ? (
+    <div>Event Not Found</div>
   ) : (
     <AddVisitorWrapper hash={eventHash}>
       <Images.Event url={eventData.data?.image_url!} />
