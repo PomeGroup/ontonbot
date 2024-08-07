@@ -52,4 +52,5 @@ export const deleteCache = (key: string): void => {
 
 export const cacheKeys = {
   getEventsWithFilters: `getEventsWithFilters_`,
+  cronJobLock: "cronJobLock",
 };
