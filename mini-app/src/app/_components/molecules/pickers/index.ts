@@ -1,12 +1,11 @@
-import Datetimepicker from './Datetimepicker';
-import Timezonepicker from './Timezonepicker';
-import TonHubPicker from './TonHubpicker';
-
+import Datetimepicker from "./Datetimepicker";
+import Timezonepicker from "./Timezonepicker";
+import TonHubPicker from "./TonHubpicker";
 
 const pickers = {
-    Datetimepicker,
-    Timezonepicker,
-    TonHubPicker
-}
+  Datetimepicker,
+  Timezonepicker,
+  TonHubPicker,
+};
 
-export default pickers
+export default pickers;

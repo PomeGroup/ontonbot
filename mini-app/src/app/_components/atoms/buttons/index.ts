@@ -5,11 +5,11 @@ import ThemeToggle from "./ThemeToggleButton";
 import Support from "./SupportButton";
 
 const buttons = {
-    Button,
-    WebAppMain,
-    WebAppBack,
-    ThemeToggle,
-    Support,
+  Button,
+  WebAppMain,
+  WebAppBack,
+  ThemeToggle,
+  Support,
 };
 
-export default buttons; 
+export default buttons;

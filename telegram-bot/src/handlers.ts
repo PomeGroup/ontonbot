@@ -4,19 +4,19 @@ import { startKeyboard } from "./markups"
 import { TVisitor } from "./utils/types"
 import { editOrSend } from "./utils/utils"
 
-const BOT_ADMINS = process.env.BOT_ADMINS_LIST
+const BOT_ADMINS = process.env.BOT_ADMINS_LIST;
 
-if (!BOT_ADMINS) throw new Error("BOT_ADMINS_LIST env is required")
+if (!BOT_ADMINS) throw new Error("BOT_ADMINS_LIST env is required");
 
-const admins = BOT_ADMINS.split(",")
+const admins = BOT_ADMINS.split(",");
 
 export const orgHandler = async (ctx: Context) => {
   try {
-    if (!admins.includes(ctx.from?.username || "")) {
+    if (!admins.map(Number).includes(ctx.from.id)) {
       await editOrSend(
         ctx,
         `You are not authorized to perform this operation.`,
-        startKeyboard()
+        startKeyboard(),
       );
       return;
     }
@@ -37,12 +37,12 @@ export const orgHandler = async (ctx: Context) => {
       await editOrSend(
         ctx,
         `Role for ${username} changed to ${role}.`,
-        startKeyboard()
+        startKeyboard(),
       );
     } else {
       await editOrSend(ctx, `Invalid command.`, startKeyboard());
     }
-  } catch (error) { }
+  } catch (error) {}
 };
 
 const startHandler = async (ctx: Context) => {
@@ -70,9 +70,9 @@ const startHandler = async (ctx: Context) => {
     await editOrSend(
       ctx,
       `<b>Welcome to ONTON - TON Society Event Bot</b>
-    
+
 Please click the link below to discover current future events.`,
-      startKeyboard()
+      startKeyboard(),
     );
   } catch (error) {
     console.log(error);

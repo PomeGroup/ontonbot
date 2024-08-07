@@ -1,21 +1,28 @@
+import { events, rewards, visitors } from "@/db/schema";
+import { InferSelectModel } from "drizzle-orm";
+
 export type TonSocietyRegisterActivityT = {
-    title: string
-    subtitle: string
-    additional_info?: string
-    description: string
-    hub_id: number
-    start_date: string
-    end_date: string
-    cta_button?: {
-        label: string
-        link: string
-    }
-}
+  title: string;
+  subtitle: string;
+  additional_info?: string;
+  description: string;
+  hub_id: number;
+  start_date: string;
+  end_date: string;
+  cta_button?: {
+    label: string;
+    link: string;
+  };
+};
 
 export type TonSocietyRegisterActivityResponse = {
-    status: "success" | "failed",
-    data: {
-        activity_id: number,
-        activity_url: string
-    }
-}
+  status: "success" | "failed";
+  data: {
+    activity_id: number;
+    activity_url: string;
+  };
+};
+
+export type RewardType = InferSelectModel<typeof rewards>;
+export type VisitorsType = InferSelectModel<typeof visitors>;
+export type EventType = InferSelectModel<typeof events>;

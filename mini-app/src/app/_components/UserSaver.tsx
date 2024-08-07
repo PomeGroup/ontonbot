@@ -1,23 +1,36 @@
-'use client'
+"use client";
 
-import useWebApp from '@/hooks/useWebApp'
-import { FC, ReactNode, useEffect } from 'react'
-import { trpc } from '../_trpc/client'
-import { type InferSelectModel } from "drizzle-orm"
-import { users } from '@/db/schema'
+import useWebApp from "@/hooks/useWebApp";
+import { FC, ReactNode, useEffect } from "react";
+import { trpc } from "../_trpc/client";
+import { type InferSelectModel } from "drizzle-orm";
+import { users } from "@/db/schema";
+import EventSkeleton from "./molecules/skeletons/EventSkeleton";
 
-const UserSaver: FC<{ children: ReactNode, user: InferSelectModel<typeof users> | null }> = ({ children, user }) => {
-    const WebApp = useWebApp()
-    const initData = WebApp?.initData || ''
-    const userSaver = trpc.users.addUser.useMutation()
+const UserSaver: FC<{
+  children: ReactNode;
+}> = ({ children }) => {
+  const WebApp = useWebApp();
+  const initData = WebApp?.initData || "";
+  const userSaver = trpc.users.addUser.useMutation();
 
-    useEffect(() => {
-        if (!initData || user) return
+  useEffect(() => {
+    if (!initData || !userSaver.isIdle) return;
 
-        userSaver.mutateAsync({ initData })
-    }, [initData])
+    userSaver.mutate({ initData });
+  }, [initData]);
 
-    return <>{children}</>
-}
+  return (
+    <>
+      {userSaver.isIdle || userSaver.isLoading ? (
+        <div className="h-screen px-4">
+          <EventSkeleton />
+        </div>
+      ) : (
+        children
+      )}
+    </>
+  );
+};
 
-export default UserSaver
+export default UserSaver;

@@ -1,48 +1,48 @@
-'use client'
-import { useRouter } from 'next/navigation'
-import { FC, useEffect } from 'react'
+"use client";
+import { useRouter } from "next/navigation";
+import { FC, useEffect } from "react";
 
 export interface BackButtonProps {
-    whereTo: string
+  whereTo: string;
 }
 
-let isButtonShown = false
+let isButtonShown = false;
 
 const BackButton: FC<BackButtonProps> = ({ whereTo }) => {
-    const router = useRouter()
-    const goBack = () => {
-        router.push(whereTo)
-    }
+  const router = useRouter();
+  const goBack = () => {
+    router.push(whereTo);
+  };
 
-    useEffect(() => {
-        if (typeof window === 'undefined') return
-        const WebApp = window.Telegram.WebApp
-        const backButton = WebApp.BackButton
-        backButton.show()
-        isButtonShown = true
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const WebApp = window.Telegram.WebApp;
+    const backButton = WebApp.BackButton;
+    backButton.show();
+    isButtonShown = true;
 
-        return () => {
-            isButtonShown = false
-            setTimeout(() => {
-                if (!isButtonShown) {
-                    backButton.hide()
-                }
-            }, 10)
+    return () => {
+      isButtonShown = false;
+      setTimeout(() => {
+        if (!isButtonShown) {
+          backButton.hide();
         }
-    }, [])
+      }, 10);
+    };
+  }, []);
 
-    useEffect(() => {
-        if (typeof window === 'undefined') return
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
-        const WebApp = window.Telegram.WebApp
-        WebApp.onEvent('backButtonClicked', goBack)
+    const WebApp = window.Telegram.WebApp;
+    WebApp.onEvent("backButtonClicked", goBack);
 
-        return () => {
-            WebApp.offEvent('backButtonClicked', goBack)
-        }
-    }, [whereTo])
+    return () => {
+      WebApp.offEvent("backButtonClicked", goBack);
+    };
+  }, [whereTo]);
 
-    return null
-}
+  return null;
+};
 
-export default BackButton
+export default BackButton;

@@ -3,15 +3,29 @@ import "dotenv/config"
 import express from "express"
 import { Telegraf } from "telegraf"
 
+import axios from "axios"
 import bodyParser from "body-parser"
+import { CronJob } from "cron"
 import fileUpload from "express-fileupload"
-import { handleFileSend, handleSendQRCode, handleShareEvent } from "./controllers"
+import {
+  handleFileSend,
+  handleSendQRCode,
+  handleShareEvent,
+  sendMessage,
+} from "./controllers"
 import { orgHandler, startHandler } from "./handlers"
 // parse application/json
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
+console.log(process.env.TG_PROXY);
+
+const agent = process.env.TG_PROXY && new HttpsProxyAgent(process.env.TG_PROXY);
 const port = 3333;
 
-const bot = new Telegraf(process.env.BOT_TOKEN || "");
+const bot = new Telegraf(process.env.BOT_TOKEN || "", {
+  telegram: {
+    agent
+  }});
 console.log("Starting bot... v2");
 console.log(process.env.BOT_TOKEN || "");
 
@@ -21,7 +35,7 @@ bot.command("org", orgHandler);
 
 const app = express();
 
-app.use(bodyParser.json())
+app.use(bodyParser.json());
 
 app.use(fileUpload());
 app.use((req, res, next) => {
@@ -33,6 +47,7 @@ app.use((req, res, next) => {
 app.post("/send-file", handleFileSend);
 app.get("/generate-qr", handleSendQRCode);
 app.post("/share-event", handleShareEvent);
+app.post("/send-message", sendMessage);
 
 bot.catch((err) => console.error(err));
 
@@ -46,3 +61,42 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
+// run the cron job every 8 hours
+new CronJob(
+  "0 */8 * * *",
+  () => {
+    axios
+      .get(`${process.env.APP_BASE_URL}/api/v1/cron`)
+      .then(async (r) => {
+        process.env.BOT_ADMINS_LIST.split(",").forEach(async (admin) =>{
+        await bot.telegram.sendMessage(
+          admin,
+          `Cron Job Update,
+\`\`\`json
+${JSON.stringify(r.data, null, 2)}
+\`\`\`
+          `,
+        {
+          parse_mode: "Markdown"
+        })
+        })
+      }).catch((e) => {
+        // send the error to the admin
+        console.error(e);
+        process.env.BOT_ADMINS_LIST.split(",").forEach(async (admin) =>{
+          await bot.telegram.sendMessage(
+            admin,
+            `Cron Job Error
+\`\`\`json
+${JSON.stringify(e, null, 2)}
+\`\`\`
+          `,
+          {
+            parse_mode: "Markdown"
+          })
+        })
+      });
+  },
+  null,
+  true,
+);

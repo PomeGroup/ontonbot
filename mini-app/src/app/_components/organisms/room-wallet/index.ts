@@ -1,4 +1,3 @@
+import RoomWallet from "./RoomWallet";
 
-import RoomWallet from './RoomWallet'
-
-export default RoomWallet
+export default RoomWallet;

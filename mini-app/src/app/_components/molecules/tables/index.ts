@@ -1,10 +1,7 @@
-import Visitors from './VisitorsTable'
-
-
+import Visitors from "./VisitorsTable";
 
 const tables = {
-    Visitors
-}
-
+  Visitors,
+};
 
 export default tables;

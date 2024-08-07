@@ -10,12 +10,14 @@ import { validateMiniAppData } from "@/utils";
 export const visitorsRouter = router({
   // protect
   getAll: publicProcedure
-    .input(z.object({
-      event_uuid: z.string(),
-      initData: z.string().optional(),
-      limit: z.number().optional(),
-      cursor: z.number().optional()
-    }))
+    .input(
+      z.object({
+        event_uuid: z.string(),
+        initData: z.string().optional(),
+        limit: z.number().optional(),
+        cursor: z.number().optional(),
+      })
+    )
     .query(async (opts) => {
       const { event_uuid, initData, limit = 25, cursor = 0 } = opts.input;
 
@@ -26,7 +28,7 @@ export const visitorsRouter = router({
       const { valid } = await checkIsAdminOrOrganizer(initData);
 
       if (!valid) {
-        throw new Error('Unauthorized access or invalid role');
+        throw new Error("Unauthorized access or invalid role");
       }
 
       return selectVisitorsByEventUuid(event_uuid, limit, cursor);
@@ -37,21 +39,19 @@ export const visitorsRouter = router({
     .input(
       z.object({
         initData: z.string().optional(),
-        event_uuid: z.string()
+        event_uuid: z.string(),
       })
     )
     .mutation(async (opts) => {
-
       if (!opts.input.initData) {
-        return
+        return;
       }
 
       const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
 
       if (!valid) {
-        return
+        return;
       }
-
 
       const existingVisitor = await db
         .select()
@@ -68,7 +68,8 @@ export const visitorsRouter = router({
         return;
       }
 
-      await db.insert(visitors)
+      await db
+        .insert(visitors)
         .values({
           user_id: initDataJson.user.id,
           event_uuid: opts.input.event_uuid,
