@@ -410,4 +410,10 @@ export const event_details_search_list = pgTable('event_details_search_list', {
     organizer_username: text('organizer_username').notNull(),
     reserved_count: integer('reserved_count').notNull(),
     visitor_count: integer('visitor_count').notNull(),
+    ticket_id: integer('ticket_id').notNull(),
+    ticket_title: text('ticket_title').notNull(),
+    ticket_description: text('ticket_description').notNull(),
+    ticket_price: integer('ticket_price').notNull(),
+    ticket_image: text('ticket_image').notNull(),
+    ticket_count: integer('ticket_count').notNull(),
 });

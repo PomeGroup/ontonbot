@@ -1,10 +1,13 @@
 "use client";
 import {unstable_noStore as noStore} from "next/cache";
 import {redirect} from "next/navigation";
-import { useEffect } from "react";
+import {useEffect} from "react";
 import "./page.css";
-import { trpc } from "./_trpc/client";
+import {trpc} from "./_trpc/client";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import Image from "next/image";
+import EventCard from "@/app/_components/EventCard/EventCard";
+import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 export default function Home({searchParams}: { searchParams: any }) {
     noStore();
     const tgWebAppStartParam = searchParams.tgWebAppStartParam;
@@ -32,7 +35,7 @@ export default function Home({searchParams}: { searchParams: any }) {
         offset: 0,
         filter: {
             eventTypes: ["online", "in_person"],
-            endDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000)% 600),
+            endDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
         },
         sortBy: "start_date_desc",
     });
@@ -45,13 +48,25 @@ export default function Home({searchParams}: { searchParams: any }) {
     });
 
     // Request for upcoming events ordered by closest time
-    const { data: upcomingEvents, isLoading: isLoadingUpcoming, isError: isErrorUpcoming } = trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams);
+    const {
+        data: upcomingEvents,
+        isLoading: isLoadingUpcoming,
+        isError: isErrorUpcoming
+    } = trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams);
 
     // Request for past events ordered by closest time
-    const { data: pastEvents, isLoading: isLoadingPast, isError: isErrorPast } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams);
+    const {
+        data: pastEvents,
+        isLoading: isLoadingPast,
+        isError: isErrorPast
+    } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams);
 
     // Request for specific slider event by UUID
-    const { data: sliderEvent, isLoading: isLoadingSlider, isError: isErrorSlider } = trpc.events.getEventsWithFilters.useQuery(sliderEventParams);
+    const {
+        data: sliderEvent,
+        isLoading: isLoadingSlider,
+        isError: isErrorSlider
+    } = trpc.events.getEventsWithFilters.useQuery(sliderEventParams);
 
 
     useEffect(() => {
@@ -74,10 +89,9 @@ export default function Home({searchParams}: { searchParams: any }) {
     }, [sliderEvent]);
 
 
-
     return (
         <>
-            {isLoadingUpcoming && <p>Loading upcoming events...</p>}
+
             {isLoadingPast && <p>Loading past events...</p>}
             {isLoadingSlider && <p>Loading slider event...</p>}
 
@@ -85,27 +99,42 @@ export default function Home({searchParams}: { searchParams: any }) {
             {isErrorPast && <p>Error loading past events</p>}
             {isErrorSlider && <p>Error loading slider event</p>}
 
+
             <div>
+                <div
+                    className='h-[218px] self-stretch shrink-0 bg-[url(/assets/images/d031a625d74d175408b21f82f177ac6a69f33975.png)] bg-cover bg-no-repeat relative'/>
+
                 <h2>Upcoming Events</h2>
                 <ul>
-                    {upcomingEvents?.data?.map(event => (
-                        <li key={event.event_uuid}>{event.title}</li>
-                    ))}
+                    {isLoadingUpcoming ? (
+                        [1, 2].map((index) => <EventCardSkeleton key={index}/>)
+                    ) : (
+                        upcomingEvents?.data?.map((event) => (
+                            <EventCard key={event.event_uuid} event={event}/>
+                        ))
+                    )}
+
                 </ul>
             </div>
-
             <div>
                 <h2>Past Events</h2>
                 <ul>
-                    {pastEvents?.data?.map(event => (
-                        <li key={event.event_uuid}>{event.title}</li>
-                    ))}
+                    {isLoadingPast ? (
+                        [1, 2].map((index) => <EventCardSkeleton key={index}/>)
+                    ) : (
+                        pastEvents?.data?.map((event) => (
+                            <EventCard key={event.event_uuid} event={event}/>
+                        ))
+                    )}
                 </ul>
             </div>
-
             <div>
                 <h2>Slider Event</h2>
-                {sliderEvent && <div>{sliderEvent?.data[0]?.title}</div>}
+                {!(sliderEvent?.data?.length > 0) ? (
+                    <p>No event found for the given UUID.</p>
+                ) : (
+                    <EventCard event={sliderEvent?.data[0]}/>
+                )}
             </div>
         </>
     );

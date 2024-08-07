@@ -1,5 +1,6 @@
 {
 	"dependencies": {
+		"@tailwindcss/line-clamp": "^0.4.4",
 		"compression": "^1.7.4",
 		"crypto-js": "^4.2.0",
 		"form-data": "^4.0.0",
