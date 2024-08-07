@@ -100,28 +100,25 @@ const InputTypeCampaignTask: React.FC<{
       clearTimeout(autoSubmitTimerRef.current);
     }
     autoSubmitTimerRef.current = setTimeout(() => {
-      handleConfirm();
+      handleConfirm(e.target.value);
     }, 3000);
   }
 
-  const handleConfirm = () => {
+  const handleConfirm = (value?: string) => {
     setIsEditing(false);
 
-    if (!validatedData.data?.valid) {
+    if (!validatedData.data?.valid || !WebApp?.initData) {
       hapticFeedback?.notificationOccurred("error");
       return;
     }
 
-    if (inputText && WebApp?.initData) {
+    if (inputText || value) {
       upsertUserEventFieldMutation.mutate({
-        init_data: WebApp?.initData,
+        init_data: WebApp.initData,
         field_id: fieldId,
-        data: inputText,
+        // @ts-expect-error
+        data: value ?? inputText,
         event_id: eventId,
-      });
-    } else {
-      WebApp?.showPopup({
-        message: "No input provided",
       });
     }
 
