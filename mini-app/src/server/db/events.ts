@@ -127,11 +127,11 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
 
     // Check if the result is already cached
     const cachedResult = getCache(cacheKey);
-    if (cachedResult) {
-        console.log("Returning cached result");
-        console.log(cachedResult);
-        return cachedResult;
-    }
+    // if (cachedResult) {
+    //     console.log("Returning cached result");
+    //     console.log(cachedResult);
+    //     return cachedResult;
+    // }
 
     let query = db
         .select()
@@ -173,33 +173,49 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
 
     // Apply search filters
     if (search) {
-        const processedSearch = search.split(' ').join(' & ');
+        const searchPattern = `%${search}%`; // Add wildcards for partial matching
         query = query.where(
             or(
-                sql`to_tsvector('pg_catalog.simple', ${event_details_search_list.title}) @@ to_tsquery('pg_catalog.simple', ${processedSearch})`,
-                sql`to_tsvector('pg_catalog.simple', ${event_details_search_list.organizer_first_name}) @@ to_tsquery('pg_catalog.simple', ${processedSearch})`,
-                sql`to_tsvector('pg_catalog.simple', ${event_details_search_list.organizer_last_name}) @@ to_tsquery('pg_catalog.simple', ${processedSearch})`,
-                sql`to_tsvector('pg_catalog.simple', ${event_details_search_list.location}) @@ to_tsquery('pg_catalog.simple', ${processedSearch})`
+                sql`${event_details_search_list.title} ILIKE ${searchPattern}`,
+                // sql`${event_details_search_list.organizer_first_name} ILIKE ${searchPattern}`,
+                // sql`${event_details_search_list.organizer_last_name} ILIKE ${searchPattern}`,
+                sql`${event_details_search_list.location} ILIKE ${searchPattern}`
             )
-        );
-        // Use rank for sorting when search is applied
-        query = query.orderBy(sql`ts_rank_cd(setweight(to_tsvector('pg_catalog.simple', ${event_details_search_list.title}), 'A') || 
-                                  setweight(to_tsvector('pg_catalog.simple', ${event_details_search_list.organizer_first_name}), 'B') || 
-                                  setweight(to_tsvector('pg_catalog.simple', ${event_details_search_list.organizer_last_name}), 'C') || 
-                                  setweight(to_tsvector('pg_catalog.simple', ${event_details_search_list.location}), 'D'), 
-                          to_tsquery('pg_catalog.simple', ${processedSearch})) desc`);
-    }
-    console.log("*****limit", limit);
-    if(limit > 1) {
-        // Apply additional sorting
-        if (sortBy === "start_date_asc") {
-            query = query.orderBy(asc(event_details_search_list.start_date));
+        )
+        let sortByFieldLike ;
+        if (sortBy === "start_date_asc"  ) {
+            sortByFieldLike = ` , start_date asc`;
         } else if (sortBy === "start_date_desc") {
-            query = query.orderBy(desc(event_details_search_list.start_date));
-        } else if (sortBy === "most_people_reached") {
-            query = query.orderBy(desc(event_details_search_list.visitor_count));
-        } else {
-            query = query.orderBy(desc(event_details_search_list.created_at));
+            sortByFieldLike = `, start_date desc`;
+        } else if (sortBy === "most_people_reached" ) {
+            sortByFieldLike = ` , visitor_count desc`;
+
+        }
+        // similarity(${event_details_search_list.organizer_first_name}, ${search}),
+        // similarity(${event_details_search_list.organizer_last_name}, ${search}),,
+        //
+        //                 similarity(${event_details_search_list.location}, ${search})
+        query = query.orderBy(
+            sql`greatest(
+                similarity(${event_details_search_list.title}, ${search}),
+
+                        similarity(${event_details_search_list.location}, ${search})
+            ) desc
+              ${sortByFieldLike}`
+        );
+    }
+    console.log("*****limit", search);
+    if(limit > 1   ){
+
+        // Apply sorting
+        if(search === "" && search === undefined) {
+            if (sortBy === "start_date_asc") {
+                query = query.orderBy(asc(event_details_search_list.start_date));
+            } else if (sortBy === "start_date_desc") {
+                query = query.orderBy(desc(event_details_search_list.start_date));
+            } else if (sortBy === "most_people_reached" || sortBy === "default") {
+                query = query.orderBy(desc(event_details_search_list.visitor_count));
+            }
         }
 
         // Apply pagination

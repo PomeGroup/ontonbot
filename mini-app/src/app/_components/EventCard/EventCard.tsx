@@ -1,7 +1,7 @@
 import Image from "next/image";
-import React from "react";
+import React, {useState} from "react";
 import { isValidTimezone } from "@/lib/DateAndTime";
-
+import { isValidImageUrl } from "@/lib/isValidImageUrl";
 interface EventCardProps {
     event_uuid: string;
     title?: string;
@@ -29,7 +29,7 @@ const EventCard: React.FC<{ event: EventCardProps }> = ({ event }) => {
         start_date,
         end_date,
         location = "No Location",
-        image_url = "/path/to/default/image.png",
+        image_url = "/ton-logo.png",
         subtitle = "No Subtitle",
         organizer_first_name = "Unknown",
         organizer_last_name = "",
@@ -42,7 +42,8 @@ const EventCard: React.FC<{ event: EventCardProps }> = ({ event }) => {
         visitor_count = 0,
         ticket_price =0,
     } = event;
-
+    const defaultImage = "/ton-logo.png";
+    const [src, setSrc] = useState(isValidImageUrl(image_url) ? image_url : defaultImage);
     const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
 
     const formatDateRange = (start: number, end: number, timezone: string): string => {
@@ -66,15 +67,19 @@ const EventCard: React.FC<{ event: EventCardProps }> = ({ event }) => {
             ? `tg://user?id=${organizer_user_id}`
             : null;
 
+
+
+
     return (
         <div className="flex w-full pt-4 pr-4 pb-4 pl-0 gap-4 items-start flex-nowrap relative overflow-hidden">
             <div className="w-24 h-24 shrink-0 rounded-lg relative overflow-hidden">
                 <Image
-                    src={image_url}
+                    src={src}
                     alt={title}
                     layout="fill"
                     objectFit="cover"
                     className="rounded-lg"
+                    onError={(e) => { setSrc(defaultImage); }}
                 />
             </div>
             <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
