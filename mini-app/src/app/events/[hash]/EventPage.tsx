@@ -9,7 +9,6 @@ import EventNotStarted from "@/app/_components/EventNotStarted";
 import Tasks from "@/app/_components/molecules/tasks";
 import AllTasks from "@/app/_components/Tasks";
 import { trpc } from "@/app/_trpc/client";
-import { serverClient } from "@/app/_trpc/serverClient";
 import useWebApp from "@/hooks/useWebApp";
 import { useMemo } from "react";
 import zod from "zod";
@@ -67,6 +66,8 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
     <EventPageLoadingSkeleton />
   ) : eventData.isError || !eventData.isSuccess ? (
     <div>Something went wrong...</div>
+  ) : eventData.data === null ? (
+    <div>Event Not Found</div>
   ) : (
     <AddVisitorWrapper hash={eventHash}>
       <Images.Event url={eventData.data?.image_url!} />
@@ -80,7 +81,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       />
       {location ? (
         success ? (
-          <Labels.WebsiteLink location={location}></Labels.WebsiteLink>
+          <Labels.WebsiteLink location={location} />
         ) : (
           <Labels.CampaignDescription
             description={location}
@@ -96,6 +97,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
             tasks={eventData.data.dynamic_fields}
             eventHash={eventHash}
           />
+          <ClaimRewardButton eventId={eventData.data?.event_uuid as string} />
         </>
       ) : // if it was not ended than it means the event is not started yet
       isNotEnded ? (
@@ -112,7 +114,6 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
         />
       )}
 
-      <ClaimRewardButton eventId={eventData.data?.event_uuid as string} />
       <Buttons.Support />
     </AddVisitorWrapper>
   );

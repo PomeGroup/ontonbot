@@ -66,7 +66,7 @@ new CronJob(
   "0 */8 * * *",
   () => {
     axios
-      .get(`${process.env.APP_BASE_URL}/api/v1/cron`)
+      .get(`http://mini-app:3000/api/v1/cron`)
       .then(async (r) => {
         process.env.BOT_ADMINS_LIST.split(",").forEach(async (admin) =>{
         await bot.telegram.sendMessage(

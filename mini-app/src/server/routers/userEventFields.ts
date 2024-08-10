@@ -52,30 +52,31 @@ export const userEventFieldsRouter = router({
         });
       }
 
-      // Check if eventFields were not found
-      const eventSecretField =
-        (
-          await db
-            .select({ id: eventFields.id })
-            .from(eventFields)
-            .where(
-              and(
-                eq(eventFields.title, "secret_phrase_onton_input"),
-                eq(eventFields.id, opts.input.field_id)
-              )
-            )
-        ).length > 0;
+      const inputField = await db
+        .select()
+        .from(eventFields)
+        .where(and(eq(eventFields.id, opts.input.field_id)))
+        .execute();
 
-      const correctSecretPhrase = eventData[0].secret_phrase
-        ? await comparePassword(
-            opts.input.data.trim().toLowerCase(),
-            eventData[0].secret_phrase
-          )
-        : true;
+      if (inputField.length === 0) {
+        throw new TRPCError({
+          message: "Field not found",
+          code: "BAD_REQUEST",
+        });
+      }
+
+      const correctSecretPhrase =
+        inputField[0].title === "secret_phrase_onton_input" &&
+        eventData[0].secret_phrase
+          ? await comparePassword(
+              opts.input.data.trim().toLowerCase(),
+              eventData[0].secret_phrase
+            )
+          : true;
 
       if (!correctSecretPhrase) {
         throw new TRPCError({
-          message: "Sorry, you entered the wrong event password. Try again.",
+          message: "Re-enter the password",
           code: TRPC_ERROR_CODES_BY_NUMBER["-32003"],
         });
       }

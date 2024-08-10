@@ -26,7 +26,7 @@ function ClaimRewardButtonChild(props: {
     <>
       {!isRewardModalOpen && (
         <MainButton
-          text="Claim Reward"
+          text={props.isNotified ? "Reward claimed!" : "Claim Reward"}
           onClick={openRewardLink}
           color={props.isNotified ? "#747480" : "#2ea6ff"}
         />
@@ -73,7 +73,7 @@ export function ClaimRewardButton(props: { eventId: string }) {
     />
   ) : (
     <MainButton
-      text="Fill The Form"
+      text="Claim Reward"
       color={"#747480"}
     />
   );

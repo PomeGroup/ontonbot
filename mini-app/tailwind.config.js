@@ -30,6 +30,7 @@ module.exports = {
         foreground: "hsl(var(--foreground))",
         "main-button-color": "#007AFF",
         "disabled-font": "#B9B9BA",
+        confirm: "#34C759",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

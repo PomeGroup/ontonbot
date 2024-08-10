@@ -1,5 +1,6 @@
 import { db } from "@/db/db";
 import { rewards } from "@/db/schema";
+import { cacheKeys, deleteCache, getCache, setCache } from "@/lib/cache";
 import { createUserRewardLink } from "@/lib/ton-society-api";
 import { EventType, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
@@ -9,6 +10,18 @@ import { NextResponse } from "next/server";
 import pLimit from "p-limit";
 
 export async function GET() {
+  // set lock in cache
+  const cronLock = getCache(cacheKeys.cronJobLock);
+
+  if (cronLock) {
+    return NextResponse.json({
+      message: "Cron job already running",
+      now: Date.now(),
+    });
+  }
+  // update lock in cache for 7h and 50m
+  setCache(cacheKeys.cronJobLock, true, 28_200);
+
   try {
     await createRewards();
   } catch (error) {
@@ -16,15 +29,23 @@ export async function GET() {
   }
 
   try {
-    await notifyUsersForRewards();
+    const notificationCount = await notifyUsersForRewards();
+    deleteCache(cacheKeys.cronJobLock);
+    return NextResponse.json({
+      message: "Cron job executed successfully",
+      now: Date.now(),
+      notificationCount,
+    });
   } catch (error) {
+    // remove lock in cache
+    deleteCache(cacheKeys.cronJobLock);
     console.error("ERROR_IN_NOTIFICATION: ", error);
+    return NextResponse.json({
+      message: "Error in cron job",
+      now: Date.now(),
+      error: error instanceof Error ? error.message : error,
+    });
   }
-
-  return NextResponse.json({
-    message: "Cron job executed successfully",
-    now: Date.now(),
-  });
 }
 
 async function createRewards() {
@@ -146,6 +167,8 @@ async function notifyUsersForRewards() {
   );
 
   await Promise.allSettled(notificationPromises);
+
+  return createdRewards.length;
 }
 
 async function processReward(createdReward: RewardType) {

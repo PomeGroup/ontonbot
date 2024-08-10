@@ -170,8 +170,8 @@ export const RequiredEventFieldsSchema = z
       .string()
       .transform((phrase) => phrase.trim().toLowerCase())
       .refine(
-        (phrase) => phrase.length >= 4 && phrase.length <= 32,
-        "Length must be between 4 and 32"
+        (phrase) => phrase.length >= 4 && phrase.length <= 20,
+        "Length must be between 4 and 20"
       ),
     start_date: z
       .number()

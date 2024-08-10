@@ -1,7 +1,7 @@
-import React, { ChangeEvent, KeyboardEvent } from "react";
 import { cn } from "@/utils";
+import React, { ChangeEvent, InputHTMLAttributes } from "react";
 
-interface InputProps {
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   type?: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;

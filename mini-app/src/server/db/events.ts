@@ -1,11 +1,17 @@
 import { db } from "@/db/db";
-import {eventFields, events, users, tickets, event_details_search_list} from "@/db/schema";
+import {
+  eventFields,
+  events,
+  users,
+  tickets,
+  event_details_search_list,
+} from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { validateMiniAppData } from "@/utils";
-import {sql, eq, and, or, desc, asc, inArray} from "drizzle-orm";
+import { sql, eq, and, or, desc, asc, inArray } from "drizzle-orm";
 import { z } from "zod";
-import { logSQLQuery  } from "@/lib/logSQLQuery";
-import {cacheKeys,  getCache, setCache} from "@/lib/cache";
+import { logSQLQuery } from "@/lib/logSQLQuery";
+import { cacheKeys, getCache, setCache } from "@/lib/cache";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 
 export const checkIsEventOwner = async (
@@ -92,8 +98,6 @@ export const selectEventByUuid = async (eventUuid: string) => {
   };
 };
 
-
-
 /**
  * Retrieves events with pagination, filtering, and sorting.
  *
@@ -118,117 +122,131 @@ export const selectEventByUuid = async (eventUuid: string) => {
  * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "istanbul","filter":{"eventTypes":["online","in_person"],"startDate":"2024-07-01","endDate":"2024-07-31"},"sortBy":"time"}}}
  * // http://localhost:3000/api/trpc/events.getEventsWithFilters?batch=1&input={"0":{"limit":10,"offset":0,"search": "istanbul","filter":{"eventTypes":["online","in_person"]},"sortBy":"time"}}}
  */
-export const getEventsWithFilters = async (params: z.infer<typeof searchEventsInputZod>): Promise<any[]> => {
-    const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
-    console.log("*****params", params);
+export const getEventsWithFilters = async (
+  params: z.infer<typeof searchEventsInputZod>
+): Promise<any[]> => {
+  const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
+  console.log("*****params", params);
 
-    // Generate a cache key based on the input parameters
-    const cacheKey = cacheKeys.getEventsWithFilters +  JSON.stringify({ limit, offset, search, filter, sortBy }) ;
+  // Generate a cache key based on the input parameters
+  const cacheKey =
+    cacheKeys.getEventsWithFilters +
+    JSON.stringify({ limit, offset, search, filter, sortBy });
 
-    // Check if the result is already cached
-    const cachedResult = getCache(cacheKey);
-    // if (cachedResult) {
-    //     console.log("Returning cached result");
-    //     console.log(cachedResult);
-    //     return cachedResult;
-    // }
+  // Check if the result is already cached
+  const cachedResult = getCache(cacheKey);
+  // if (cachedResult) {
+  //     console.log("Returning cached result");
+  //     console.log(cachedResult);
+  //     return cachedResult;
+  // }
 
-    let query = db
-        .select()
-        .from(event_details_search_list);
+  let query = db.select().from(event_details_search_list);
 
-    // Apply event type filters
-    if (filter?.eventTypes?.length) {
-        query = query.where(
-            or(
-                filter.eventTypes.includes("online") ? eq(event_details_search_list.type, 1) : sql`false`,
-                filter.eventTypes.includes("in_person") ? eq(event_details_search_list.type, 2) : sql`false`
-            )
-        );
+  // Apply event type filters
+  if (filter?.eventTypes?.length) {
+    query = query.where(
+      or(
+        filter.eventTypes.includes("online")
+          ? eq(event_details_search_list.type, 1)
+          : sql`false`,
+        filter.eventTypes.includes("in_person")
+          ? eq(event_details_search_list.type, 2)
+          : sql`false`
+      )
+    );
+  }
+
+  // Apply date filters
+  if (filter?.startDate) {
+    query = query.where(
+      sql`${event_details_search_list.start_date} >= ${filter.startDate}`
+    );
+  }
+
+  if (filter?.endDate) {
+    query = query.where(
+      sql`${event_details_search_list.end_date} <= ${filter.endDate}`
+    );
+  }
+
+  // Apply organizer_user_id filter
+  if (filter?.organizer_user_id) {
+    query = query.where(
+      eq(event_details_search_list.organizer_user_id, filter.organizer_user_id)
+    );
+  }
+
+  // Apply event_ids filter
+  if (filter?.event_ids) {
+    query = query.where(
+      sql`${event_details_search_list.event_id} = any(${filter.event_ids})`
+    );
+  }
+
+  // Apply event_uuids filter
+  if (filter?.event_uuids) {
+    query = query.where(
+      inArray(event_details_search_list.event_uuid, filter.event_uuids)
+    );
+  }
+
+  // Apply search filters
+  if (search) {
+    const searchPattern = `%${search}%`; // Add wildcards for partial matching
+    query = query.where(
+      or(
+        sql`${event_details_search_list.title} ILIKE ${searchPattern}`,
+        // sql`${event_details_search_list.organizer_first_name} ILIKE ${searchPattern}`,
+        // sql`${event_details_search_list.organizer_last_name} ILIKE ${searchPattern}`,
+        sql`${event_details_search_list.location} ILIKE ${searchPattern}`
+      )
+    );
+    let sortByFieldLike;
+    if (sortBy === "start_date_asc") {
+      sortByFieldLike = ` , start_date asc`;
+    } else if (sortBy === "start_date_desc") {
+      sortByFieldLike = `, start_date desc`;
+    } else if (sortBy === "most_people_reached") {
+      sortByFieldLike = ` , visitor_count desc`;
     }
-
-    // Apply date filters
-    if (filter?.startDate) {
-        query = query.where(sql`${event_details_search_list.start_date} >= ${filter.startDate}`);
-    }
-
-    if (filter?.endDate) {
-        query = query.where(sql`${event_details_search_list.end_date} <= ${filter.endDate}`);
-    }
-
-    // Apply organizer_user_id filter
-    if (filter?.organizer_user_id) {
-        query = query.where(eq(event_details_search_list.organizer_user_id, filter.organizer_user_id));
-    }
-
-    // Apply event_ids filter
-    if (filter?.event_ids) {
-        query = query.where(sql`${event_details_search_list.event_id} = any(${filter.event_ids})`);
-    }
-
-    // Apply event_uuids filter
-    if (filter?.event_uuids) {
-        query = query.where(inArray(event_details_search_list.event_uuid, filter.event_uuids));
-    }
-
-    // Apply search filters
-    if (search) {
-        const searchPattern = `%${search}%`; // Add wildcards for partial matching
-        query = query.where(
-            or(
-                sql`${event_details_search_list.title} ILIKE ${searchPattern}`,
-                // sql`${event_details_search_list.organizer_first_name} ILIKE ${searchPattern}`,
-                // sql`${event_details_search_list.organizer_last_name} ILIKE ${searchPattern}`,
-                sql`${event_details_search_list.location} ILIKE ${searchPattern}`
-            )
-        )
-        let sortByFieldLike ;
-        if (sortBy === "start_date_asc"  ) {
-            sortByFieldLike = ` , start_date asc`;
-        } else if (sortBy === "start_date_desc") {
-            sortByFieldLike = `, start_date desc`;
-        } else if (sortBy === "most_people_reached" ) {
-            sortByFieldLike = ` , visitor_count desc`;
-
-        }
-        // similarity(${event_details_search_list.organizer_first_name}, ${search}),
-        // similarity(${event_details_search_list.organizer_last_name}, ${search}),,
-        //
-        //                 similarity(${event_details_search_list.location}, ${search})
-        query = query.orderBy(
-            sql`greatest(
+    // similarity(${event_details_search_list.organizer_first_name}, ${search}),
+    // similarity(${event_details_search_list.organizer_last_name}, ${search}),,
+    //
+    //                 similarity(${event_details_search_list.location}, ${search})
+    query = query.orderBy(
+      sql`greatest(
                 similarity(${event_details_search_list.title}, ${search}),
 
                         similarity(${event_details_search_list.location}, ${search})
             ) desc
               ${sortByFieldLike}`
-        );
+    );
+  }
+  console.log("*****limit", search);
+  if (limit > 1) {
+    // Apply sorting
+    if (search === "" && search === undefined) {
+      if (sortBy === "start_date_asc") {
+        query = query.orderBy(asc(event_details_search_list.start_date));
+      } else if (sortBy === "start_date_desc") {
+        query = query.orderBy(desc(event_details_search_list.start_date));
+      } else if (sortBy === "most_people_reached" || sortBy === "default") {
+        query = query.orderBy(desc(event_details_search_list.visitor_count));
+      }
     }
-    console.log("*****limit", search);
-    if(limit > 1   ){
 
-        // Apply sorting
-        if(search === "" && search === undefined) {
-            if (sortBy === "start_date_asc") {
-                query = query.orderBy(asc(event_details_search_list.start_date));
-            } else if (sortBy === "start_date_desc") {
-                query = query.orderBy(desc(event_details_search_list.start_date));
-            } else if (sortBy === "most_people_reached" || sortBy === "default") {
-                query = query.orderBy(desc(event_details_search_list.visitor_count));
-            }
-        }
+    // Apply pagination
+    query = query.limit(limit).offset(offset);
+  }
+  logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  // Execute the query
+  const eventsData = await query.execute();
 
-        // Apply pagination
-        query = query.limit(limit).offset(offset);
-    }
-    logSQLQuery(query.toSQL().sql, query.toSQL().params);
-    // Execute the query
-    const eventsData = await query.execute();
+  console.log("*****eventsData", eventsData);
 
-    console.log("*****eventsData", eventsData);
+  // Cache the result
+  setCache(cacheKey, eventsData, 60);
 
-    // Cache the result
-    setCache(cacheKey, eventsData, 60);
-
-    return eventsData;
+  return eventsData;
 };

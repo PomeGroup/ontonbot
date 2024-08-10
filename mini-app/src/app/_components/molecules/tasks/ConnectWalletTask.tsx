@@ -2,9 +2,9 @@
 
 import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
+import { Address } from "@ton/core";
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { useEffect, useMemo, useState } from "react";
-import { Address } from "@ton/core";
 import Tasks from ".";
 
 const ConnectWalletTask = () => {
@@ -79,19 +79,17 @@ const ConnectWalletTask = () => {
   }, [friendlyAddress]);
 
   return (
-    <>
-      <Tasks.Generic
-        title="Connect TON Wallet"
-        description={
-          !isWalletConnected
-            ? "Register at event and receive an SBT"
-            : `You have connected your wallet (${connectedWallet})`
-        }
-        completed={isWalletConnected}
-        defaultEmoji="👛"
-        onClick={(!isWalletConnected && onConnectClick) || undefined}
-      />
-    </>
+    <Tasks.Generic
+      title="Connect TON Wallet"
+      description={
+        isWalletConnected
+          ? `You have connected your wallet (${connectedWallet})`
+          : "Register at event and receive an SBT"
+      }
+      completed={isWalletConnected}
+      defaultEmoji="👛"
+      onClick={(!isWalletConnected && onConnectClick) || undefined}
+    />
   );
 };
 

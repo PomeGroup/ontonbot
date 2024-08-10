@@ -52,9 +52,14 @@ const EventsAdminPage = () => {
   return (
     <div>
       <Link
-        href={`/events/create`}
+        href={`#`}
         className="w-full"
-        onClick={() => hapticfeedback?.impactOccurred("medium")}
+        onClick={() => {
+          hapticfeedback?.impactOccurred("medium");
+          WebApp.showPopup({
+            message: "Event creation is temporally unavailable",
+          });
+        }}
       >
         <Button
           className="w-full"
@@ -124,6 +129,7 @@ const EventsAdminPage = () => {
               <QrCodeButton
                 url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event.event_uuid}`}
                 hub={event.society_hub!}
+                event_uuid={event.event_uuid}
               />
             </div>
           </div>

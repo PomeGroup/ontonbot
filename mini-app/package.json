@@ -10,7 +10,8 @@
         "test": "jest",
         "db:gen": "drizzle-kit generate:pg",
         "test:watch": "jest --watch",
-        "format": "prettier --write ./src"
+        "format": "prettier --write ./src",
+        "type:check": "tsc --noEmit"
     },
     "dependencies": {
         "@emotion/react": "^11.11.1",
@@ -58,6 +59,7 @@
         "fs": "0.0.1-security",
         "https-browserify": "^1.0.0",
         "jsonwebtoken": "^9.0.2",
+        "lodash": "^4.17.21",
         "lucide-react": "^0.303.0",
         "mark42": "link:@types/@twa-dev/mark42",
         "net": "^1.0.2",
@@ -99,6 +101,7 @@
         "@types/bcrypt": "^5.0.2",
         "@types/better-sqlite3": "^7.6.5",
         "@types/jest": "^29.5.11",
+        "@types/lodash": "^4.17.7",
         "@types/node": "^20",
         "@types/papaparse": "^5.3.14",
         "@types/react": "^18",

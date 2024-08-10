@@ -47,7 +47,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
     requestExportFileMutation.mutate({
       event_uuid: params.hash,
-      initData: WebApp?.initData || "",
+      init_data: WebApp?.initData || "",
     });
 
     WebApp?.close();
