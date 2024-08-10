@@ -17,17 +17,17 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
           className={cn(
             "flex items-center text-white ",
             {
-              "after:content-[''] after:w-full after:h-1 after:border-b after:border-4 after:inline-block flex-1":
+              "after:content-[''] after:w-full after:mx-1 after:h-[1px]  after:inline-block flex-1":
                 index !== steps.length - 1,
             },
             index < currentStep
-              ? "after:border-main-button-color"
-              : "after:border-disabled-font"
+              ? "after:bg-main-button-color"
+              : "after:bg-disabled-font"
           )}
         >
           <span
             className={cn(
-              "flex items-center justify-center w-10 h-10 rounded-full lg:h-12 lg:w-12 shrink-0",
+              "flex items-center justify-center w-6 h-6 rounded-full lg:h-12 lg:w-12 shrink-0",
               index < currentStep ? "bg-main-button-color" : "bg-disabled-font"
             )}
           >

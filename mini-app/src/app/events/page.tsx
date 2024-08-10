@@ -52,13 +52,10 @@ const EventsAdminPage = () => {
   return (
     <div>
       <Link
-        href={`#`}
+        href="/events/create"
         className="w-full"
         onClick={() => {
           hapticfeedback?.impactOccurred("medium");
-          WebApp.showPopup({
-            message: "Event creation is temporally unavailable",
-          });
         }}
       >
         <Button
