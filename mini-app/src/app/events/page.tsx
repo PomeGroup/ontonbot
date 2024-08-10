@@ -11,9 +11,9 @@ import Link from "next/link";
 import QrCodeButton from "../_components/atoms/buttons/QrCodeButton";
 import Card from "../_components/atoms/cards";
 import Labels from "../_components/atoms/labels";
+import { ComingSoon } from "../_components/ComingSoon";
 import Skeletons from "../_components/molecules/skeletons";
 import { trpc } from "../_trpc/client";
-import { ComingSoon } from "../_components/ComingSoon";
 
 const EventsAdminPage = () => {
   noStore();
@@ -29,9 +29,10 @@ const EventsAdminPage = () => {
     }
   );
   const eventsData = trpc.events.getEvents.useQuery(
-    { initData },
+    { init_data: initData || "" },
     {
-      queryKey: ["events.getEvents", { initData }],
+      enabled: Boolean(initData),
+      queryKey: ["events.getEvents", { init_data: initData || "" }],
     }
   );
 

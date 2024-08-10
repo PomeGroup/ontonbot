@@ -10,7 +10,8 @@ import { hashPassword } from "@/lib/bcrypt";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { EventDataSchema, HubsResponse, SocietyHub } from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
-import { fetchBalance, sleep, validateMiniAppData } from "@/utils";
+import { fetchBalance, sleep } from "@/utils";
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
@@ -21,43 +22,24 @@ import naclUtil from "tweetnacl-util";
 import { Client } from "twitter-api-sdk";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import {
-  checkIsAdminOrOrganizer,
-  checkIsEventOwner,
-  selectEventByUuid,
-  getEventsWithFilters,
-} from "../db/events";
+import { getEventsWithFilters, selectEventByUuid } from "../db/events";
 import {
   selectVisitorsByEventUuid,
   updateVisitorLastVisit,
 } from "../db/visitors";
-import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
-import  searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import {
+  adminOrganizerProtectedProcedure,
+  eventManagementProtectedProcedure,
+  initDataProtectedProcedure,
+  publicProcedure,
+  router,
+} from "../trpc";
 dotenv.config();
-
 
 export const eventsRouter = router({
   // private
-  getVisitorsWithWalletsNumber: publicProcedure
-    .input(
-      z.object({
-        event_uuid: z.string(),
-        initData: z.string().optional(),
-      })
-    )
-    .query(async (opts) => {
-      if (!opts.input.initData) {
-        return undefined;
-      }
-
-      const { valid, role } = await checkIsAdminOrOrganizer(
-        opts.input.initData
-      );
-
-      if (!valid) {
-        throw new Error("Unauthorized access or invalid role");
-      }
-
+  getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
+    async (opts) => {
       return (
         (
           await db
@@ -73,11 +55,11 @@ export const eventsRouter = router({
             .execute()
         ).length || 0
       );
-    }),
+    }
+  ),
 
   getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
-    const balance = await fetchBalance(opts.input);
-    return balance;
+    return await fetchBalance(opts.input);
   }),
 
   getEvent: initDataProtectedProcedure
@@ -103,91 +85,46 @@ export const eventsRouter = router({
     }),
 
   // private
-  getEvents: publicProcedure
-    .input(
-      z.object({
-        initData: z.string().optional(),
-      })
-    )
-    .query(async (opts) => {
-      if (!opts.input.initData) {
-        return undefined;
-      }
+  getEvents: adminOrganizerProtectedProcedure.query(async (opts) => {
+    let eventsData = [];
 
-      const { valid, role, initDataJson } = await checkIsAdminOrOrganizer(
-        opts.input.initData
-      );
+    if (opts.ctx.userRole === "admin") {
+      eventsData = await db
+        .select()
+        .from(events)
+        .where(eq(events.hidden, false))
+        .orderBy(desc(events.created_at))
+        .execute();
+    } else if (opts.ctx.userRole === "organizer") {
+      eventsData = await db
+        .select()
+        .from(events)
+        .where(
+          and(eq(events.hidden, false), eq(events.owner, opts.ctx.user.user_id))
+        )
+        .orderBy(desc(events.created_at))
+        .execute();
+    } else {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Unauthorized access, invalid role",
+      });
+    }
 
-      if (!valid) {
-        throw new Error("Unauthorized access or invalid role");
-      }
-
-      let eventsData = [];
-
-      if (role === "admin") {
-        eventsData = await db
-          .select()
-          .from(events)
-          .where(eq(events.hidden, false))
-          .orderBy(desc(events.created_at))
-          .execute();
-      } else if (role === "organizer") {
-        eventsData = await db
-          .select()
-          .from(events)
-          .where(
-            and(
-              eq(events.hidden, false),
-              eq(events.owner, initDataJson.user.id)
-            )
-          )
-          .orderBy(desc(events.created_at))
-          .execute();
-      } else {
-        throw new Error("Unauthorized access or invalid role");
-      }
-
-      const filteredEventsData = eventsData.map(
-        ({ wallet_seed_phrase, ...restEventData }) => restEventData
-      );
-
-      return filteredEventsData;
-    }),
+    return eventsData.map(
+      ({ wallet_seed_phrase, ...restEventData }) => restEventData
+    );
+  }),
 
   // private
-  addEvent: publicProcedure
+  addEvent: adminOrganizerProtectedProcedure
     .input(
       z.object({
         eventData: EventDataSchema,
-        initData: z.string().optional(),
       })
     )
     .mutation(async (opts) => {
-      if (!opts.input.initData) {
-        return undefined;
-      }
-
-      const { valid, initDataJson } = await checkIsAdminOrOrganizer(
-        opts.input.initData
-      );
-
-      if (!valid) {
-        throw new TRPCError({
-          message: "Unauthorized access or invalid role",
-          code: "FORBIDDEN",
-        });
-      }
       try {
-        let highloadWallet: HighloadWalletResponse =
-          {} as HighloadWalletResponse;
-
-        try {
-          highloadWallet = await fetchHighloadWallet();
-        } catch (error) {
-          console.error("Error fetching highload wallet:", error);
-          return { success: false };
-        }
-
         const result = await db.transaction(async (trx) => {
           const inputSecretPhrase = opts.input.eventData.secret_phrase
             .trim()
@@ -206,8 +143,6 @@ export const eventsRouter = router({
               subtitle: opts.input.eventData.subtitle,
               description: opts.input.eventData.description,
               image_url: opts.input.eventData.image_url,
-              wallet_address: highloadWallet.wallet_address,
-              wallet_seed_phrase: highloadWallet.seed_phrase,
               society_hub: opts.input.eventData.society_hub.name,
               society_hub_id: opts.input.eventData.society_hub.id,
               secret_phrase: hashedSecretPhrase,
@@ -215,7 +150,7 @@ export const eventsRouter = router({
               end_date: opts.input.eventData.end_date,
               timezone: opts.input.eventData.timezone,
               location: opts.input.eventData.location,
-              owner: initDataJson.user.id,
+              owner: opts.ctx.user.user_id,
             })
             .returning();
 
@@ -293,113 +228,55 @@ export const eventsRouter = router({
     }),
 
   // private
-  deleteEvent: publicProcedure
-    .input(
-      z.object({
-        event_uuid: z.string(),
-        initData: z.string().optional(),
-      })
-    )
-    .mutation(async (opts) => {
-      if (!opts.input.initData) {
-        return undefined;
-      }
+  deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
+    try {
+      return await db.transaction(async (trx) => {
+        await trx
+          .update(events)
+          .set({ hidden: true }) // Set the 'hidden' field to true
+          .where(eq(events.event_uuid, opts.input.event_uuid))
+          .execute();
 
-      const { valid } = await checkIsEventOwner(
-        opts.input.initData,
-        opts.input.event_uuid
-      );
-
-      if (!valid) {
-        throw new Error("Unauthorized access or invalid role");
-      }
-
-      try {
-        const result = await db.transaction(async (trx) => {
-          await trx
-            .update(events)
-            .set({ hidden: true }) // Set the 'hidden' field to true
-            .where(eq(events.event_uuid, opts.input.event_uuid))
-            .execute();
-
-          return { success: true };
-        });
-
-        return result;
-      } catch (error) {
-        console.error(error);
-        return { success: false };
-      }
-    }),
+        return { success: true };
+      });
+    } catch (error) {
+      console.error(error);
+      return { success: false };
+    }
+  }),
 
   // private
-  withdraw: publicProcedure
-    .input(
-      z.object({
-        event_uuid: z.string(),
-        initData: z.string().optional(),
-      })
-    )
-    .mutation(async (opts) => {
-      if (!opts.input.initData) {
-        return undefined;
-      }
+  withdraw: eventManagementProtectedProcedure.mutation(async (opts) => {
+    const eventOwner = await db
+      .select()
+      .from(events)
+      .leftJoin(users, eq(events.owner, users.user_id))
+      .where(and(eq(events.event_uuid, opts.input.event_uuid)))
+      .execute();
 
-      const { valid } = await checkIsEventOwner(
-        opts.input.initData,
-        opts.input.event_uuid
-      );
+    if (
+      eventOwner.length === 0 ||
+      eventOwner[0].events.wallet_seed_phrase === null ||
+      eventOwner[0].users?.wallet_address === null ||
+      eventOwner[0].users === null
+    ) {
+      return;
+    }
 
-      if (!valid) {
-        throw new Error("Unauthorized access or invalid role");
-      }
-
-      const eventOwner = await db
-        .select()
-        .from(events)
-        .leftJoin(users, eq(events.owner, users.user_id))
-        .where(and(eq(events.event_uuid, opts.input.event_uuid)))
-        .execute();
-
-      if (
-        eventOwner.length === 0 ||
-        eventOwner[0].events.wallet_seed_phrase === null ||
-        eventOwner[0].users?.wallet_address === null ||
-        eventOwner[0].users === null
-      ) {
-        return;
-      }
-
-      await withdrawRequest(
-        eventOwner[0].events.wallet_seed_phrase,
-        eventOwner[0].users.wallet_address
-      );
-    }),
+    await withdrawRequest(
+      eventOwner[0].events.wallet_seed_phrase,
+      eventOwner[0].users.wallet_address
+    );
+  }),
 
   // private
-  distribute: publicProcedure
+  distribute: eventManagementProtectedProcedure
     .input(
       z.object({
-        event_uuid: z.string(),
         amount: z.string(),
-        initData: z.string().optional(),
       })
     )
     .mutation(async (opts) => {
-      // select all visitors and which does not have claimed reward
-      if (!opts.input.initData) {
-        return undefined;
-      }
-
-      const { valid } = await checkIsEventOwner(
-        opts.input.initData,
-        opts.input.event_uuid
-      );
-
-      if (!valid) {
-        throw new Error("Unauthorized access or invalid role");
-      }
-
       const event = (
         await db
           .select()
@@ -407,17 +284,6 @@ export const eventsRouter = router({
           .where(and(eq(events.event_uuid, opts.input.event_uuid)))
           .execute()
       ).pop();
-
-      // let eligibleUserIds = new Set();
-      // if (event?.event_id && await hasTwitterTask(event.event_id)) {
-      //     const twitterHandle = await getTwitterHandle(event.event_id);
-      //     if (twitterHandle) {
-      //         const subscribedUsers = await getSubscribedUsers(twitterHandle, event.event_id);
-      //         console.log({ subscribedUsers })
-      //         eligibleUserIds = new Set(subscribedUsers.map(user => user.user_id));
-      //         console.log({ eligibleUserIds })
-      //     }
-      // }
 
       const eventVisitors = await db
         .select()
@@ -466,27 +332,13 @@ export const eventsRouter = router({
     }),
 
   // private
-  updateEvent: publicProcedure
+  updateEvent: eventManagementProtectedProcedure
     .input(
       z.object({
-        initData: z.string().optional(),
         eventData: EventDataSchema,
       })
     )
     .mutation(async (opts) => {
-      if (!opts.input.initData || !opts.input.eventData.event_uuid) {
-        return undefined;
-      }
-
-      const { valid } = await checkIsEventOwner(
-        opts.input.initData,
-        opts.input.eventData.event_uuid
-      );
-
-      if (!valid) {
-        throw new Error("Unauthorized access or invalid role");
-      }
-
       const eventData = opts.input.eventData;
 
       if (typeof eventData.event_uuid === "undefined") {
@@ -705,20 +557,9 @@ export const eventsRouter = router({
   ),
 
   // private
-  requestExportFile: publicProcedure
-    .input(
-      z.object({
-        event_uuid: z.string(),
-        initData: z.string(),
-      })
-    )
-    .mutation(async (opts) => {
+  requestExportFile: eventManagementProtectedProcedure.mutation(
+    async (opts) => {
       const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid);
-      const validationResult = validateMiniAppData(opts.input.initData);
-
-      if (!validationResult.valid) {
-        return { status: "fail", data: null };
-      }
 
       const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => ({
         ...visitor,
@@ -735,7 +576,7 @@ export const eventsRouter = router({
         const fileBlob = new Blob([csvString], { type: "text/csv" });
         formData.append("file", fileBlob, "visitors.csv");
 
-        const userId = validationResult.initDataJson?.user?.id;
+        const userId = opts.ctx.user.user_id;
         const response = await axios.post(
           `http://telegram-bot:3333/send-file?id=${userId}`,
           formData,
@@ -746,66 +587,56 @@ export const eventsRouter = router({
           }
         );
 
-        if (response.status === 200) {
-          return { status: "success", data: null };
-        } else {
-          return { status: "fail", data: response.data };
-        }
+        return response.status === 200
+          ? { status: "success", data: null }
+          : { status: "fail", data: response.data };
       } catch (error) {
         console.error("Error while sending file: ", error);
         return { status: "fail", data: null };
       }
-    }),
+    }
+  ),
   // private
-  requestSendQRcode: publicProcedure
+  requestSendQRcode: eventManagementProtectedProcedure
     .input(
       z.object({
         url: z.string(),
-        initData: z.string(),
         hub: z.string().optional(),
       })
     )
     .mutation(async (opts) => {
-      const validationResult = validateMiniAppData(opts.input.initData);
-
-      if (!validationResult.valid) {
-        return { status: "fail", data: null };
-      }
-
       try {
         const response = await axios.get(
           "http://telegram-bot:3333/generate-qr",
           {
             params: {
-              id: validationResult.initDataJson?.user?.id,
+              id: opts.ctx.user.user_id,
               url: opts.input.url,
               hub: opts.input.hub,
             },
           }
         );
 
-        if (response.status === 200) {
-          return { status: "success", data: null };
-        } else {
-          return { status: "fail", data: response.data };
-        }
+        return response.status === 200
+          ? { status: "success", data: null }
+          : { status: "fail", data: response.data };
       } catch (error) {
         console.error("Error while generating QR Code: ", error);
         return { status: "fail", data: null };
       }
     }),
-    getEventsWithFilters: publicProcedure
-        .input(searchEventsInputZod)
-        .query(async (opts) => {
-            console.log("*****opts",opts);
-            try {
-                const events = await getEventsWithFilters(opts.input);
-                return { status: "success", data: events };
-            } catch (error) {
-                console.error("Error fetching events:", error);
-                return { status: "fail", data: null };
-            }
-        }),
+  getEventsWithFilters: publicProcedure
+    .input(searchEventsInputZod)
+    .query(async (opts) => {
+      console.log("*****opts", opts);
+      try {
+        const events = await getEventsWithFilters(opts.input);
+        return { status: "success", data: events };
+      } catch (error) {
+        console.error("Error fetching events:", error);
+        return { status: "fail", data: null };
+      }
+    }),
 });
 
 const getUsersTwitters = async (eventId: number) => {
