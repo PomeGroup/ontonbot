@@ -1,25 +1,22 @@
+// Home.tsx
+
 "use client";
 import { unstable_noStore as noStore } from "next/cache";
-import { redirect, useRouter } from "next/navigation";
-import React, {useEffect, useState} from "react";
+import React, { useEffect } from "react";
 import "./page.css";
 import { trpc } from "./_trpc/client";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import Image from "next/image";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
-import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
-import { useSearchEvents } from "@/hooks/useSearchEvents";
-import { FaSearch ,FaTimes} from "react-icons/fa";
+import SearchBar from "@/app/_components/SearchBar";
+
 export default function Home({ searchParams }: { searchParams: any }) {
     noStore();
-    const router = useRouter();
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const { searchTerm, setSearchTerm, autoSuggestions, setAutoSuggestions, searchLoading, handleSearchChange } = useSearchEvents();    const tgWebAppStartParam = searchParams.tgWebAppStartParam;
+
+    const tgWebAppStartParam = searchParams.tgWebAppStartParam;
 
     console.log("*******tgWebAppStartParam", tgWebAppStartParam);
 
-    // Define the query parameters using the Zod schema
     const upcomingEventsParams = searchEventsInputZod.parse({
         limit: 2,
         offset: 0,
@@ -34,8 +31,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
         offset: 0,
         filter: {
             eventTypes: ["online", "in_person"],
-            endDate:
-                Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+            endDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
         },
         sortBy: "start_date_desc",
     });
@@ -47,38 +43,24 @@ export default function Home({ searchParams }: { searchParams: any }) {
         },
     });
 
-    // Request for upcoming events ordered by closest time
     const {
         data: upcomingEvents,
         isLoading: isLoadingUpcoming,
         isError: isErrorUpcoming,
     } = trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams);
 
-    // Request for past events ordered by closest time
     const {
         data: pastEvents,
         isLoading: isLoadingPast,
         isError: isErrorPast,
     } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams);
 
-    // Request for specific slider event by UUID
     const {
         data: sliderEvent,
         isLoading: isLoadingSlider,
         isError: isErrorSlider,
     } = trpc.events.getEventsWithFilters.useQuery(sliderEventParams);
 
-
-
-    const handleFullResultClick = () => {
-        router.push(`/search?query=${searchTerm}`);
-    };
-    // use effect to log autoSuggestions
-    useEffect(() => {
-        if (autoSuggestions) {
-            console.log("****//Auto suggestions:", autoSuggestions);
-        }
-    }, [autoSuggestions]);
     useEffect(() => {
         if (upcomingEvents) {
             console.log("Upcoming events:", upcomingEvents);
@@ -96,84 +78,31 @@ export default function Home({ searchParams }: { searchParams: any }) {
             console.log("Slider event:", sliderEvent);
         }
     }, [sliderEvent]);
-    const handleCloseSuggestions = () => {
-        setShowSuggestions(false);
-    };
 
-    const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        handleSearchChange(event);
-        setShowSuggestions(event.target.value.length > 2);
-    };
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        handleSearchChange(event);
-        if (event.target.value.length > 2) {
-            setShowSuggestions(true);
-        } else {
-            setShowSuggestions(false);
-        }
-    };
-    const closeSuggestions = () => {
-        setShowSuggestions(false);
-    };
-    const handleFocus = () => {
-        if (searchTerm.length > 2) {
-            setShowSuggestions(true);
-        }
-    };
     return (
         <>
-            <div className="relative">
-                <input
-                    type="text"
-                    placeholder="Search"
-                    className="w-full pl-10 pr-10 p-2 rounded-md focus:ring-0 focus:outline-none"
-                    onChange={handleInputChange}
-                    value={searchTerm}
-                    onFocus={handleFocus}
-                />
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaSearch className="text-gray-500 w-5 h-5"/>
-                </div>
-                {searchTerm && (
-                    <FaTimes
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600"
-                        onClick={handleCloseSuggestions}
-                    />
-                )}
-                {showSuggestions && (
-                    <EventSearchSuggestion
-                        searchTerm={searchTerm}
-                        onClose={closeSuggestions}
-                        autoSuggestions={autoSuggestions}
-                        setAutoSuggestions={setAutoSuggestions}
+            <SearchBar />
 
-                    />
+            <div className="pt-2">
+
+                {sliderEvent?.data?.length &&  (
+                    <>
+                        {isLoadingSlider ? (
+                            <EventCardSkeleton mode={"detailed"} />
+                        ) : (
+                            <EventCard event={sliderEvent?.data[0]} mode={"detailed"} />
+                        )}
+                    </>
+
                 )}
             </div>
-
-
-
-            {isErrorUpcoming && <p>Error loading upcoming events</p>}
-            {isErrorPast && <p>Error loading past events</p>}
-            {isErrorSlider && <p>Error loading slider event</p>}
-            {!(sliderEvent?.data?.length) ? (
-                <p>No event found for the given UUID.</p>
-            ) : (
-                <EventCard event={sliderEvent?.data[0]} mode={"detailed"}/>
-            )}
-            <div>
-                <div className="pt-2">
-
-
+            <div className="pt-2">
                 <h2>Upcoming Events</h2>
                 <ul>
                     {isLoadingUpcoming
-                        ? [1, 2].map((index) => <EventCardSkeleton key={index}/>)
+                        ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
                         : upcomingEvents?.data?.map((event) => (
-                            <EventCard
-                                key={event.event_uuid}
-                                event={event}
-                            />
+                            <EventCard key={event.event_uuid} event={event} />
                         ))}
                 </ul>
             </div>
@@ -181,17 +110,12 @@ export default function Home({ searchParams }: { searchParams: any }) {
                 <h2>Past Events</h2>
                 <ul>
                     {isLoadingPast
-                        ? [1, 2].map((index) => <EventCardSkeleton key={index}/>)
+                        ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
                         : pastEvents?.data?.map((event) => (
-                            <EventCard
-                                key={event.event_uuid}
-                                event={event}
-                            />
+                            <EventCard key={event.event_uuid} event={event} />
                         ))}
                 </ul>
             </div>
-            </div>
-
         </>
     );
 }

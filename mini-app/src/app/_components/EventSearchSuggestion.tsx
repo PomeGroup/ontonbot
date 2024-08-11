@@ -4,6 +4,7 @@ import { trpc } from "@/app/_trpc/client";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { debounce } from "lodash";
 import { FaTimes } from "react-icons/fa";
+import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 
 interface EventSearchSuggestionProps {
     searchTerm: string;
@@ -89,12 +90,16 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
             {/*        <FaTimes />*/}
             {/*    </button>*/}
             {/*</div>*/}
-            {searchLoading ? (
-                <div className="p-2">Loading...</div>
+            {searchLoading   ? (
+                <div className="p-2">
+                    {Array.from({length: 2}).map((_, index) => (
+                        <EventCardSkeleton key={index} mode="small"/>
+                    ))}
+                </div>
             ) : autoSuggestions?.length > 0 ? (
                 <>
                     {autoSuggestions.map((event) => (
-                        <EventCard key={event.event_uuid} event={event} mode="small" />
+                        <EventCard key={event.event_uuid} event={event} mode="small"/>
                     ))}
                     <div className="p-2">
                         <button className="w-full text-blue-500">All Results</button>
