@@ -99,63 +99,79 @@ export default function Home({ searchParams }: { searchParams: any }) {
   }, [sliderEvent]);
 
   return (
-    <>
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Search"
-          className="w-full p-2 border rounded-md"
-          onChange={handleSearchChange}
-          value={searchTerm}
-        />
-        {searchTerm.length > 2 && (
-          <EventSearchSuggestion searchTerm={searchTerm} />
-        )}
-      </div>
+      <>
+        <div className="relative">
+          <input
+              type="text"
+              placeholder="Search"
+              className="w-full pl-10 p-2 rounded-md"
+              onChange={handleSearchChange}
+              value={searchTerm}
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg
+                className="w-5 h-5 text-gray-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M8 4a4 4 0 104 4H8m0 0a4 4 0 104 4H8m6-4h2a2 2 0 110 4h-4a2 2 0 110-4h2zm0 4h4"
+              ></path>
+            </svg>
+          </div>
+          {searchTerm.length > 2 && (
+              <EventSearchSuggestion searchTerm={searchTerm}/>
+          )}
+        </div>
 
-      {isLoadingPast && <p>Loading past events...</p>}
-      {isLoadingSlider && <p>Loading slider event...</p>}
+        {isLoadingPast && <p>Loading past events...</p>}
+        {isLoadingSlider && <p>Loading slider event...</p>}
 
-      {isErrorUpcoming && <p>Error loading upcoming events</p>}
-      {isErrorPast && <p>Error loading past events</p>}
-      {isErrorSlider && <p>Error loading slider event</p>}
+        {isErrorUpcoming && <p>Error loading upcoming events</p>}
+        {isErrorPast && <p>Error loading past events</p>}
+        {isErrorSlider && <p>Error loading slider event</p>}
 
-      <div>
-        <div className="h-[218px] self-stretch shrink-0 bg-cover bg-no-repeat relative" />
+        <div>
+          <div className="h-[218px] self-stretch shrink-0 bg-cover bg-no-repeat relative"/>
 
-        <h2>Upcoming Events</h2>
-        <ul>
-          {isLoadingUpcoming
-            ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
-            : upcomingEvents?.data?.map((event) => (
-                <EventCard
-                  key={event.event_uuid}
-                  event={event}
-                />
-              ))}
-        </ul>
-      </div>
-      <div>
-        <h2>Past Events</h2>
-        <ul>
-          {isLoadingPast
-            ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
-            : pastEvents?.data?.map((event) => (
-                <EventCard
-                  key={event.event_uuid}
-                  event={event}
-                />
-              ))}
-        </ul>
-      </div>
-      <div>
-        <h2>Slider Event</h2>
-        {!(sliderEvent?.data?.length > 0) ? (
-          <p>No event found for the given UUID.</p>
-        ) : (
-          <EventCard event={sliderEvent?.data[0]} />
-        )}
-      </div>
-    </>
+          <h2>Upcoming Events</h2>
+          <ul>
+            {isLoadingUpcoming
+                ? [1, 2].map((index) => <EventCardSkeleton key={index}/>)
+                : upcomingEvents?.data?.map((event) => (
+                    <EventCard
+                        key={event.event_uuid}
+                        event={event}
+                    />
+                ))}
+          </ul>
+        </div>
+        <div>
+          <h2>Past Events</h2>
+          <ul>
+            {isLoadingPast
+                ? [1, 2].map((index) => <EventCardSkeleton key={index}/>)
+                : pastEvents?.data?.map((event) => (
+                    <EventCard
+                        key={event.event_uuid}
+                        event={event}
+                    />
+                ))}
+          </ul>
+        </div>
+        <div>
+          <h2>Slider Event</h2>
+          {!(sliderEvent?.data?.length) ? (
+              <p>No event found for the given UUID.</p>
+          ) : (
+              <EventCard event={sliderEvent?.data[0]}/>
+          )}
+        </div>
+      </>
   );
 }

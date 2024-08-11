@@ -64,22 +64,26 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
   }, [searchResults]);
 
   return (
-    <div className="absolute top-12 w-full bg-white border rounded-md shadow-lg bg-[rgba(51,51,51,0.95)]  z-10">
+    <div className="absolute top-12 w-full border rounded-md shadow-lg bg-[rgba(51,51,51,0.95)]  z-10">
       {searchLoading ? (
         <div className="p-2">Loading...</div>
       ) : autoSuggestions?.length > 0 ? (
-        autoSuggestions.map((event) => (
-          <EventCard
-            key={event.event_uuid}
-            event={event}
-          />
-        ))
+          <>
+          {autoSuggestions.map((event) => (
+              <EventCard
+                key={event.event_uuid}
+                event={event}
+              />
+            ))}
+            <div className="p-2">
+          <button className="w-full text-blue-500">All Result</button>
+          </div>
+          </>
+
       ) : (
         <div className="p-2">No results found</div>
       )}
-      <div className="p-2">
-        <button className="w-full text-blue-500">Full Result</button>
-      </div>
+
     </div>
   );
 };
