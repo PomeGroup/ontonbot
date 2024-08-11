@@ -70,6 +70,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
       .execute()
   ).pop();
 
+
   if (!eventData) {
     return null;
   }
@@ -190,7 +191,10 @@ export const getEventsWithFilters = async (
       inArray(event_details_search_list.event_uuid, filter.event_uuids)
     );
   }
-
+  // Apply hidden
+  query = query.where(
+      inArray(event_details_search_list.hidden, [false])
+  );
   // Apply search filters
   if (search) {
     const searchPattern = `%${search}%`; // Add wildcards for partial matching

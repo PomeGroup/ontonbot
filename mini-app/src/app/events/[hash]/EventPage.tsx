@@ -61,7 +61,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.end_date,
       eventData.data?.location,
     ]);
-
+  console.log(eventData.data);
   return eventData.isLoading ? (
     <EventPageLoadingSkeleton />
   ) : eventData.isError || !eventData.isSuccess ? (

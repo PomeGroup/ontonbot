@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import { formatDate, formatDateRange } from "@/lib/DateAndTime";
+import useWebApp from "@/hooks/useWebApp";
 
 interface EventCardProps {
   event: {
@@ -47,7 +48,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
     visitor_count = 0,
     ticket_price = 0,
   } = event;
-
+  const webApp = useWebApp();
   const defaultImage = "/ton-logo.png";
   const [src, setSrc] = useState(
       isValidImageUrl(image_url) ? image_url : defaultImage
@@ -143,8 +144,18 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
           className={`flex w-full pt-4 gap-4 items-start flex-nowrap relative overflow-hidden`}
       >
         <div className="relative overflow-hidden rounded-lg w-24 h-24">
-          <a href={`/event/${event_uuid}`}>
-            <Image
+          <a href="#"
+             onClick={() => {
+
+
+               console.log("Opening Telegram",`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`);
+               webApp?.openTelegramLink(
+                   `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`
+               );
+               webApp?.close();
+             }}
+          >
+          <Image
                 src={src}
                 alt={title}
                 layout="fill"

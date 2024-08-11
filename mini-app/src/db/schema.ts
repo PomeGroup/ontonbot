@@ -416,4 +416,5 @@ export const event_details_search_list = pgTable("event_details_search_list", {
   ticket_price: integer("ticket_price").notNull(),
   ticket_image: text("ticket_image").notNull(),
   ticket_count: integer("ticket_count").notNull(),
+  hidden: boolean("hidden").notNull()  ,
 });
