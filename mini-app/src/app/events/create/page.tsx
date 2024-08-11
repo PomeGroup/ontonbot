@@ -1,13 +1,16 @@
 "use client";
 
-import CreateEventFields from "@/app/_components/CreateEventFields";
-import Labels from "@/app/_components/atoms/labels";
 import Alerts from "@/app/_components/molecules/alerts";
 import Stepper from "@/app/_components/molecules/stepper";
 import useAuth from "@/hooks/useAuth";
+import { useCreateEventStore } from "./createEventStore";
+import { FirstStep } from "./firstTab";
+import { SecondStep } from "./secondTab";
+import { ThirdStep } from "./thirdTab";
 
 const CreateEventAdminPage = () => {
   const { authorized, isLoading } = useAuth();
+  const currentStep = useCreateEventStore((state) => state.currentStep);
 
   if (isLoading) {
     return null;
@@ -25,12 +28,12 @@ const CreateEventAdminPage = () => {
           { icon: <span>2</span> },
           { icon: <span>3</span> },
         ]}
-        currentStep={1}
+        currentStep={currentStep}
       />
-      <div>
-        <Labels.CampaignTitle title={"✨ Create New Event"} />
-        <CreateEventFields event_uuid="" />
-      </div>
+
+      {currentStep === 0 && <FirstStep />}
+      {currentStep === 1 && <SecondStep />}
+      {currentStep === 2 && <ThirdStep />}
     </>
   );
 };
