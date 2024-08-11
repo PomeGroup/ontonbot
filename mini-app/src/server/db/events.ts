@@ -135,11 +135,11 @@ export const getEventsWithFilters = async (
 
   // Check if the result is already cached
   const cachedResult = getCache(cacheKey);
-  // if (cachedResult) {
-  //     console.log("Returning cached result");
-  //     console.log(cachedResult);
-  //     return cachedResult;
-  // }
+  if (cachedResult) {
+      console.log("Returning cached result");
+      console.log(cachedResult);
+      return cachedResult;
+  }
 
   let query = db.select().from(event_details_search_list);
 

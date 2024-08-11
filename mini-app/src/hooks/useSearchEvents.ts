@@ -17,7 +17,7 @@ export const useSearchEvents = () => {
       {
         enabled: false,
         onSuccess: (data) => {
-          setAutoSuggestions(data || []);
+          setAutoSuggestions(data );
           setSearchLoading(false);
         },
         onError: () => {

@@ -10,7 +10,7 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
 import { useSearchEvents } from "@/hooks/useSearchEvents";
-
+import { FaSearch } from "react-icons/fa";
 export default function Home({ searchParams }: { searchParams: any }) {
   noStore();
   const router = useRouter();
@@ -104,25 +104,12 @@ export default function Home({ searchParams }: { searchParams: any }) {
           <input
               type="text"
               placeholder="Search"
-              className="w-full pl-10 p-2 rounded-md"
+              className="w-full pl-10 p-2 rounded-md focus:ring-0 focus:outline-none"
               onChange={handleSearchChange}
               value={searchTerm}
           />
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg
-                className="w-5 h-5 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M8 4a4 4 0 104 4H8m0 0a4 4 0 104 4H8m6-4h2a2 2 0 110 4h-4a2 2 0 110-4h2zm0 4h4"
-              ></path>
-            </svg>
+            <FaSearch className="text-gray-500 w-5 h-5"/>
           </div>
           {searchTerm.length > 2 && (
               <EventSearchSuggestion searchTerm={searchTerm}/>

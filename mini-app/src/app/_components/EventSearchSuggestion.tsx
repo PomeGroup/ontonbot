@@ -9,13 +9,12 @@ interface EventSearchSuggestionProps {
 }
 
 const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
-  searchTerm,
-}) => {
+                                                                       searchTerm,
+                                                                     }) => {
   const [autoSuggestions, setAutoSuggestions] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
-  const { data: searchResults, refetch } =
-    trpc.events.getEventsWithFilters.useQuery(
+  const { refetch } = trpc.events.getEventsWithFilters.useQuery(
       searchEventsInputZod.parse({
         limit: 5,
         offset: 0,
@@ -24,7 +23,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
       {
         enabled: false,
         onSuccess: (data) => {
-          setAutoSuggestions(data || []);
+          setAutoSuggestions(data?.data || []);
           setSearchLoading(false);
         },
         onError: () => {
@@ -32,20 +31,14 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
           setSearchLoading(false);
         },
       }
-    );
+  );
 
   const debouncedFetchSearchResults = useCallback(
-    debounce((value: string) => {
-      setSearchLoading(true);
-      refetch({
-        queryKey: searchEventsInputZod.parse({
-          limit: 5,
-          offset: 0,
-          search: value,
-        }),
-      });
-    }, 300),
-    [refetch]
+      debounce((value: string) => {
+        setSearchLoading(true);
+        refetch();
+      }, 300),
+      [refetch]
   );
 
   useEffect(() => {
@@ -56,35 +49,23 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
     }
   }, [searchTerm, debouncedFetchSearchResults]);
 
-  useEffect(() => {
-    if (searchResults) {
-      setAutoSuggestions(searchResults.data || []);
-      console.log("Search results:", searchResults);
-    }
-  }, [searchResults]);
-
   return (
-    <div className="absolute top-12 w-full border rounded-md shadow-lg bg-[rgba(51,51,51,0.95)]  z-10">
-      {searchLoading ? (
-        <div className="p-2">Loading...</div>
-      ) : autoSuggestions?.length > 0 ? (
-          <>
-          {autoSuggestions.map((event) => (
-              <EventCard
-                key={event.event_uuid}
-                event={event}
-              />
-            ))}
-            <div className="p-2">
-          <button className="w-full text-blue-500">All Result</button>
-          </div>
-          </>
-
-      ) : (
-        <div className="p-2">No results found</div>
-      )}
-
-    </div>
+      <div className="absolute top-12 w-full border-0 rounded-md shadow-lg bg-[rgba(51,51,51,0.95)]  z-10">
+        {searchLoading ? (
+            <div className="p-2">Loading...</div>
+        ) : autoSuggestions?.length > 0 ? (
+            <>
+              {autoSuggestions.map((event) => (
+                  <EventCard key={event.event_uuid} event={event} mode="small" />
+              ))}
+              <div className="p-2">
+                <button className="w-full text-blue-500">All Results</button>
+              </div>
+            </>
+        ) : (
+            <div className="p-2">No results found</div>
+        )}
+      </div>
   );
 };
 
