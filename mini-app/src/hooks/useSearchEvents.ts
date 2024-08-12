@@ -10,7 +10,7 @@ export const useSearchEvents = () => {
 
   const { data: searchResults, refetch } = trpc.events.getEventsWithFilters.useQuery(
       searchEventsInputZod.parse({
-        limit: 5,
+        limit: 3,
         offset: 0,
         search: searchTerm,
       }),

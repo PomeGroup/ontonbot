@@ -53,6 +53,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
   const [src, setSrc] = useState(
       isValidImageUrl(image_url) ? image_url : defaultImage
   );
+
+
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
   const isOnline = website || location.includes("http") ? "Online" : location;
   const organizerLink = organizer_username
@@ -68,6 +70,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
             alt={title}
             layout="fill"
             objectFit="cover"
+            loading="lazy"
             className="absolute inset-0 w-full h-full object-cover"
             onError={() => setSrc(defaultImage)}
         />
@@ -108,6 +111,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
               layout="fill"
               objectFit="cover"
               className="rounded-lg"
+              loading="lazy"
               onError={() => setSrc(defaultImage)}
           />
         </div>
@@ -148,7 +152,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
              onClick={() => {
 
 
-               console.log("Opening Telegram",`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`);
+
                webApp?.openTelegramLink(
                    `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`
                );
@@ -159,9 +163,11 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
                 src={src}
                 alt={title}
                 layout="fill"
-                objectFit="cover"
+
+                style={{objectFit: "cover"  }}
                 className="rounded-lg"
                 onError={() => setSrc(defaultImage)}
+                loading="lazy"
             />
           </a>
         </div>

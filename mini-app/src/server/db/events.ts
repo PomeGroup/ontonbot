@@ -170,7 +170,10 @@ export const getEventsWithFilters = async (
       sql`${event_details_search_list.end_date} <= ${filter.endDate}`
     );
   }
-
+  // Apply hidden
+  query = query.where(
+      sql`${event_details_search_list.hidden} = ${false}`
+  );
   // Apply organizer_user_id filter
   if (filter?.organizer_user_id) {
     query = query.where(
@@ -191,18 +194,15 @@ export const getEventsWithFilters = async (
       inArray(event_details_search_list.event_uuid, filter.event_uuids)
     );
   }
-  // Apply hidden
-  query = query.where(
-      inArray(event_details_search_list.hidden, [false])
-  );
+
   // Apply search filters
   if (search) {
     const searchPattern = `%${search}%`; // Add wildcards for partial matching
     query = query.where(
       or(
         sql`${event_details_search_list.title} ILIKE ${searchPattern}`,
-        // sql`${event_details_search_list.organizer_first_name} ILIKE ${searchPattern}`,
-        // sql`${event_details_search_list.organizer_last_name} ILIKE ${searchPattern}`,
+        sql`${event_details_search_list.organizer_first_name} ILIKE ${searchPattern}`,
+        sql`${event_details_search_list.organizer_last_name} ILIKE ${searchPattern}`,
         sql`${event_details_search_list.location} ILIKE ${searchPattern}`
       )
     );

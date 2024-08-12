@@ -5,6 +5,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { debounce } from "lodash";
 import { FaTimes } from "react-icons/fa";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
+import { useRouter } from "next/navigation";
 
 interface EventSearchSuggestionProps {
     searchTerm: string;
@@ -17,15 +18,15 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
                                                                          searchTerm,
                                                                          onClose,
                                                                          autoSuggestions,
-                                                                         setAutoSuggestions
+                                                                         setAutoSuggestions,
                                                                      }) => {
-    // const [autoSuggestions, setAutoSuggestions] = useState<any[]>([]);
-        const [searchLoading, setSearchLoading] = useState(false);
+     const router = useRouter();
+    const [searchLoading, setSearchLoading] = useState(false);
     const suggestionBoxRef = useRef<HTMLDivElement>(null);
 
     const { data: searchResults, refetch } = trpc.events.getEventsWithFilters.useQuery(
         searchEventsInputZod.parse({
-            limit: 5,
+            limit: 3,
             offset: 0,
             search: searchTerm,
         }),
@@ -45,7 +46,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
     const debouncedFetchSearchResults = useCallback(
         debounce((value: string) => {
             setSearchLoading(true);
-            refetch().then(r => console.log(r));
+            refetch().then((r) => console.log(r));
         }, 300),
         [refetch]
     );
@@ -74,36 +75,38 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [onClose]);
+
     useEffect(() => {
         if (autoSuggestions) {
             console.log("****---------------//Auto suggestions:", autoSuggestions);
         }
     }, [autoSuggestions]);
+
+    const handleNavigate = useCallback(() => {
+        if (router) {
+            router.push(`/search?query=${searchTerm}`);
+        }
+    }, [ searchTerm]);
+
     return (
         <div
             ref={suggestionBoxRef}
-            className="absolute top-9 pt-1 w-full border-0 rounded-b-md  shadow-lg bg-[rgba(51,51,51,0.98)] z-10"
+            className="absolute top-9 pt-1 w-full border-0 rounded-b-md shadow-lg bg-[rgba(51,51,51,0.98)] z-10"
         >
-            {/*<div className="flex justify-between p-2 border-b border-gray-700">*/}
-            {/*    <span>Suggestions</span>*/}
-            {/*    <button onClick={onClose} className="text-gray-400">*/}
-            {/*        <FaTimes />*/}
-            {/*    </button>*/}
-            {/*</div>*/}
-            {searchLoading   ? (
+            {searchLoading ? (
                 <div className="p-2">
-                    {Array.from({length: 2}).map((_, index) => (
-                        <EventCardSkeleton key={index} mode="small"/>
+                    {Array.from({ length: 2 }).map((_, index) => (
+                        <EventCardSkeleton key={index} mode="small" />
                     ))}
                 </div>
             ) : autoSuggestions?.length > 0 ? (
                 <>
                     {autoSuggestions.map((event) => (
-                        <EventCard key={event.event_uuid} event={event} mode="small"/>
+                        <EventCard key={event.event_uuid} event={event} mode="small" />
                     ))}
-                    <div className="p-2">
-                        <button className="w-full text-blue-500">All Results</button>
-                    </div>
+                    <button className="w-full text-blue-500" onClick={handleNavigate}>
+                        All Results
+                    </button>
                 </>
             ) : (
                 <div className="p-2">No results found</div>
