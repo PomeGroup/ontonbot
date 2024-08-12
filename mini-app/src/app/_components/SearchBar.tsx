@@ -3,6 +3,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
 import { useSearchEvents } from "@/hooks/useSearchEvents";
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer";
+import useWebApp from "@/hooks/useWebApp";
 
 interface SearchBarProps {
     includeQueryParam?: boolean; // Add a prop to control whether the query param is included
@@ -11,6 +22,7 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
     const router = useRouter();
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const webApp = useWebApp();
     const {
         searchTerm,
         setSearchTerm,
@@ -46,9 +58,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
             setShowSuggestions(true);
         }
     };
-
+    const webAppMainButtonDefaultState = webApp?.MainButton.isVisible;
+    webApp?.MainButton.show();
+    webApp?.MainButton.hide();
     return (
-        <div className="relative">
+        <div className="relative flex items-center">
             <input
                 type="text"
                 placeholder="Search"
@@ -74,6 +88,41 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
                     setAutoSuggestions={setAutoSuggestions}
                 />
             )}
+            <Drawer
+                onOpenChange={(open) => {
+
+                    if (open) {
+                        webApp?.MainButton.hide();
+                    } else {
+                        if(webAppMainButtonDefaultState===false) {
+                            webApp?.MainButton.hide();
+                        }
+                        else {
+                            webApp?.MainButton.show();
+                        }
+                    }
+                }}
+            >
+                <DrawerTrigger >
+                    <button className="ml-4 p-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+                        Open Drawer
+                    </button>
+                </DrawerTrigger>
+                <DrawerContent>
+                    <DrawerHeader>
+                        <DrawerTitle>Drawer Title</DrawerTitle>
+                        <DrawerDescription>
+                            This is a description inside the drawer.
+                        </DrawerDescription>
+                    </DrawerHeader>
+                    <div className="p-4">
+                        <p>Your content goes here.</p>
+                    </div>
+                    <DrawerFooter >
+                        <button className="btn">Close</button>
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
         </div>
     );
 };

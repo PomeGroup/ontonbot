@@ -14,11 +14,9 @@ import useAuth from "@/hooks/useAuth";
 
 export default function Home({ searchParams }: { searchParams: any }) {
     noStore();
-
+    const { authorized, isLoading } = useAuth();
+    const webApp = useWebApp();
     const tgWebAppStartParam = searchParams.tgWebAppStartParam;
-
-    console.log("*******tgWebAppStartParam", tgWebAppStartParam);
-
     const upcomingEventsParams = searchEventsInputZod.parse({
         limit: 2,
         offset: 0,
