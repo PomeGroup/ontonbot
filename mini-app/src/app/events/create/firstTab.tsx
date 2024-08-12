@@ -47,7 +47,7 @@ export const FirstStep = () => {
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
-  const [hub, setHub] = useState<SocietyHub>();
+  const [hub, setHub] = useState<SocietyHub>(eventData?.society_hub!);
   const [errors, setErrors] = useState<{
     title?: string[] | undefined;
     subtitle?: string[] | undefined;
@@ -68,6 +68,8 @@ export const FirstStep = () => {
     const formDataObject = Object.fromEntries(formData.entries());
     const formDataParsed = firstStepDataSchema.safeParse(formDataObject);
 
+    console.log(formDataParsed);
+
     if (!formDataParsed.success) {
       setErrors(formDataParsed.error.flatten().fieldErrors);
       return;
@@ -75,8 +77,15 @@ export const FirstStep = () => {
 
     const data = formDataParsed.data;
 
-    setEventData({ ...eventData, ...data });
-    setCurrentStep(1);
+    setEventData({
+      ...eventData,
+      society_hub: {
+        id: hub?.id || "",
+        name: hub?.name || "",
+      },
+      ...data,
+    });
+    setCurrentStep(2);
   };
 
   return (
@@ -90,12 +99,14 @@ export const FirstStep = () => {
             placeholder="Name"
             name="title"
             errors={errors?.title}
+            value={eventData?.title}
             required
           />
           <Input
             placeholder="Subtitle"
             name="subtitle"
             errors={errors?.subtitle}
+            value={eventData?.subtitle}
             required
           />
           <Textarea
@@ -103,6 +114,7 @@ export const FirstStep = () => {
             name="description"
             required
             errors={errors?.description}
+            value={eventData?.description}
           />
         </div>
 

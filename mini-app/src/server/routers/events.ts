@@ -223,7 +223,10 @@ export const eventsRouter = router({
         } else {
           console.error("Unexpected error:", error);
         }
-        return { success: false };
+        throw new TRPCError({
+          message: "Unexpected error",
+          code: "INTERNAL_SERVER_ERROR",
+        });
       }
     }),
 

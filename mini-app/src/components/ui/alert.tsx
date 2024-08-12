@@ -2,6 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { Info } from "lucide-react";
 
 const alertVariants = cva(
   "relative w-full rounded-xl p-4 [&>svg~*]:pl-8 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
@@ -56,4 +57,17 @@ const AlertDescription = React.forwardRef<
 ));
 AlertDescription.displayName = "AlertDescription";
 
-export { Alert, AlertDescription, AlertTitle };
+const AlertGeneric = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    variant?: "info" | "destructive";
+  }
+>(({ className, ...props }, ref) => (
+  <Alert ref={ref}>
+    {props.variant === "info" && <Info />}
+    <AlertDescription>{props.children}</AlertDescription>
+  </Alert>
+));
+AlertGeneric.displayName = "AlertGeneric";
+
+export { Alert, AlertDescription, AlertGeneric, AlertTitle };

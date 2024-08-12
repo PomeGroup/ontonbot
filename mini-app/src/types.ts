@@ -154,13 +154,12 @@ export const EventDataSchema = z.object({
 });
 
 export const EventDataSchemaAllOptional = z.object({
-  event_id: z.number().optional(),
-  event_uuid: z.string().optional(),
   title: z.string().optional(),
   subtitle: z.string().optional(),
   description: z.string().optional(),
   location: z.string().optional(),
   image_url: z.string().optional(),
+  type: z.number().optional(),
   society_hub: z
     .object({
       id: z.string(),

@@ -57,16 +57,16 @@ export const SecondStep = () => {
     const data = formDataParsed.data;
 
     setEventData({ ...eventData, ...data });
-    setCurrentStep(2);
+    setCurrentStep(3);
   };
 
   useEffect(() => {
     setEventData({
       ...eventData,
-      start_date: new Date().getTime() / 1000,
-      end_date: new Date().getTime() / 1000 + 60 * 60,
+      start_date: (new Date().getTime() / 1000) >> 0,
+      end_date: ((new Date().getTime() / 1000) >> 0) + 60 * 60,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      eventLocationType: "online",
+      eventLocationType: eventData?.eventLocationType || "online",
     });
   }, []);
 
@@ -82,7 +82,6 @@ export const SecondStep = () => {
             errors={errors?.start_date}
             setTimestamp={(time) =>
               setEventData({
-                ...eventData,
                 start_date: time,
               })
             }
@@ -93,7 +92,6 @@ export const SecondStep = () => {
             errors={errors?.end_date}
             setTimestamp={(time) =>
               setEventData({
-                ...eventData,
                 end_date: time,
               })
             }
@@ -130,13 +128,12 @@ export const SecondStep = () => {
           <RadioGroup
             orientation="horizontal"
             className="flex justify-between"
-            value={eventData?.eventLocationType || "online"}
-            onValueChange={(value) =>
+            value={eventData?.eventLocationType}
+            onValueChange={(value) => {
               setEventData({
-                ...eventData,
                 eventLocationType: value as "in_person" | "online",
-              })
-            }
+              });
+            }}
           >
             <Label>Type</Label>
             <div className="flex items-center space-x-2">
@@ -158,6 +155,7 @@ export const SecondStep = () => {
             <Input
               type="text"
               value={eventData?.location || ""}
+              errors={errors?.location}
               onChange={(e) =>
                 setEventData({
                   ...eventData,

@@ -1,3 +1,4 @@
+import { useCreateEventStore } from "@/app/events/create/createEventStore";
 import { cn } from "@/lib/utils";
 import React from "react";
 
@@ -9,6 +10,7 @@ type StepperProps = {
 };
 
 const Stepper = ({ steps, currentStep }: StepperProps) => {
+  const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   return (
     <ol className="flex items-center justify-between w-full">
       {steps.map((step, index) => (
@@ -24,6 +26,7 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
               ? "after:bg-main-button-color"
               : "after:bg-disabled-font"
           )}
+          onClick={() => index < currentStep && setCurrentStep(index + 1)}
         >
           <span
             className={cn(

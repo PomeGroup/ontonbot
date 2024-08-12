@@ -31,9 +31,9 @@ const CreateEventAdminPage = () => {
         currentStep={currentStep}
       />
 
-      {currentStep === 0 && <FirstStep />}
-      {currentStep === 1 && <SecondStep />}
-      {currentStep === 2 && <ThirdStep />}
+      {currentStep === 1 && <FirstStep />}
+      {currentStep === 2 && <SecondStep />}
+      {currentStep === 3 && <ThirdStep />}
     </>
   );
 };
