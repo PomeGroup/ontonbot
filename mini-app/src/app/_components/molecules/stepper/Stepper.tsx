@@ -1,4 +1,4 @@
-import { useCreateEventStore } from "@/app/events/create/createEventStore";
+import { useCreateEventStore } from "@/app/_components/organisms/events/createEventStore";
 import { cn } from "@/lib/utils";
 import React from "react";
 

@@ -153,6 +153,37 @@ export const EventDataSchema = z.object({
   dynamic_fields: DynamicFieldsSchema,
 });
 
+export const UpdateEventDataSchema = z.object({
+  event_id: z.number().optional(),
+  event_uuid: z.string().optional(),
+  type: z.number(),
+  youtube_video_url: z
+    .string()
+    .url()
+    .refine(
+      (value) =>
+        new URL(value).hostname === "www.youtube.com" ||
+        new URL(value).hostname === "youtube.com"
+    )
+    .optional(),
+  title: z.string(),
+  subtitle: z.string(),
+  description: z.string(),
+  location: z.string(),
+  image_url: z.string(),
+  society_hub: z.object({
+    id: z.string(),
+    name: z.string(),
+  }),
+  secret_phrase: z.string().optional(),
+  start_date: z.number(),
+  end_date: z.number().nullable(),
+  owner: z.number(),
+  activity_id: z.number().optional(),
+  timezone: z.string(),
+  dynamic_fields: DynamicFieldsSchema,
+});
+
 export const EventDataSchemaAllOptional = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),

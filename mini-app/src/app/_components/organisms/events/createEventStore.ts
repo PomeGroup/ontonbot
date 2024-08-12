@@ -8,6 +8,10 @@ type CreateEventStoreType = {
   setCurrentStep: (step: number) => void;
   eventData?: z.infer<typeof EventDataSchemaAllOptional>;
   setEventData: (data: z.infer<typeof EventDataSchemaAllOptional>) => void;
+  edit?: {
+    eventHash?: string;
+  };
+  setEdit: (edit: { eventHash?: string }) => void;
 };
 
 export const useCreateEventStore = create(
@@ -25,5 +29,8 @@ export const useCreateEventStore = create(
         ...state,
         eventData: { ...state.eventData, ...data },
       })),
+
+    setEdit: (edit: { eventHash?: string }) =>
+      set((state) => ({ ...state, edit })),
   }))
 );

@@ -8,7 +8,12 @@ import {
 } from "@/db/schema";
 import { hashPassword } from "@/lib/bcrypt";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
-import { EventDataSchema, HubsResponse, SocietyHub } from "@/types";
+import {
+  EventDataSchema,
+  HubsResponse,
+  SocietyHub,
+  UpdateEventDataSchema,
+} from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import { fetchBalance, sleep } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
@@ -338,24 +343,21 @@ export const eventsRouter = router({
   updateEvent: eventManagementProtectedProcedure
     .input(
       z.object({
-        eventData: EventDataSchema,
+        eventData: UpdateEventDataSchema,
       })
     )
     .mutation(async (opts) => {
       const eventData = opts.input.eventData;
-
-      if (typeof eventData.event_uuid === "undefined") {
-        console.error("event_uuid is undefined");
-        return { success: false, message: "event_uuid is required" };
-      }
+      const eventUuid = opts.ctx.event.event_uuid;
+      const eventId = opts.ctx.event.event_id;
 
       try {
         return await db.transaction(async (trx) => {
           const inputSecretPhrase = eventData.secret_phrase
-            .trim()
-            .toLowerCase();
+            ? eventData.secret_phrase.trim().toLowerCase()
+            : undefined;
 
-          const hashedSecretPhrase = Boolean(inputSecretPhrase)
+          const hashedSecretPhrase = inputSecretPhrase
             ? await hashPassword(inputSecretPhrase)
             : undefined;
 
@@ -375,13 +377,13 @@ export const eventsRouter = router({
               location: eventData.location,
               timezone: eventData.timezone,
             })
-            .where(eq(events.event_uuid, eventData.event_uuid!))
+            .where(eq(events.event_uuid, eventUuid!))
             .execute();
 
           const currentFields = await trx
             .select()
             .from(eventFields)
-            .where(eq(eventFields.event_id, eventData.event_id!))
+            .where(eq(eventFields.event_id, eventId!))
             .execute();
 
           const fieldsToDelete = currentFields.filter(
@@ -403,18 +405,14 @@ export const eventsRouter = router({
             .from(eventFields)
             .where(
               and(
-                eq(eventFields.event_id, eventData.event_id!),
+                eq(eventFields.event_id, eventId!),
                 eq(eventFields.title, "secret_phrase_onton_input")
               )
             )
             .execute();
 
-          console.log({ secretPhraseTask, eventData, hashedSecretPhrase });
-
           if (hashedSecretPhrase) {
             if (secretPhraseTask.length) {
-              console.log("Updating secret phrase task");
-
               await trx
                 .update(eventFields)
                 .set({
@@ -432,7 +430,7 @@ export const eventsRouter = router({
                   placeholder: hashedSecretPhrase,
                   type: "input",
                   order_place: eventData.dynamic_fields.length,
-                  event_id: eventData.event_id,
+                  event_id: eventId,
                 })
                 .execute();
             }
@@ -466,7 +464,7 @@ export const eventsRouter = router({
                     field.type === "button" ? field.url : field.placeholder,
                   type: field.type,
                   order_place: index,
-                  event_id: eventData.event_id,
+                  event_id: eventId,
                 })
                 .execute();
             }
@@ -485,14 +483,17 @@ export const eventsRouter = router({
             end_date: timestampToIsoString(eventData.end_date!),
             additional_info,
             cta_button: {
-              link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
+              link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`,
               label: "Enter Event",
             },
           };
 
-          await updateActivity(eventDraft, eventData.activity_id as number);
+          await updateActivity(
+            eventDraft,
+            opts.ctx.event.activity_id as number
+          );
 
-          return { success: true, eventId: eventData.event_id };
+          return { success: true, eventId: opts.ctx.event.event_uuid };
         });
       } catch (error) {
         if (axios.isAxiosError(error)) {

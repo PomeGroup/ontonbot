@@ -3,19 +3,17 @@ import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import useWebApp from "@/hooks/useWebApp";
-import { EventDataSchema } from "@/types";
+import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
 
-const thirdStepDataSchema = z.object({
-  secret_phrase: z.string().min(4).max(20),
-});
 export const ThirdStep = () => {
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
+  const editOptions = useCreateEventStore((state) => state.edit);
   const [errors, setErrors] = useState<{
     secret_phrase?: string[] | undefined;
   }>();
@@ -26,26 +24,50 @@ export const ThirdStep = () => {
       router.push("/");
     },
   });
+  const updateEvent = trpc.events.updateEvent.useMutation({
+    onSuccess() {
+      setEventData({});
+      router.push("/");
+    },
+  });
   const webApp = useWebApp();
 
+  const thirdStepDataSchema = z.object({
+    // if it's edit it's not required
+    secret_phrase: editOptions
+      ? z.string().min(4).max(20).optional()
+      : z.string().min(4).max(20),
+  });
   const handleSubmit = () => {
     const parseData = thirdStepDataSchema.safeParse({
       secret_phrase: eventData?.secret_phrase,
     });
 
-    if (!addEvent.isIdle) {
-      return;
-    }
-
     if (parseData.success) {
       setErrors({});
+      const updateParsedData = UpdateEventDataSchema.safeParse(eventData);
+      if (updateParsedData.success && editOptions?.eventHash) {
+        updateEvent.mutate({
+          event_uuid: editOptions.eventHash,
+          init_data: webApp?.initData || "",
+          eventData: updateParsedData.data,
+        });
+        return;
+      }
+
       const parsedEventData = EventDataSchema.safeParse(eventData);
       if (parsedEventData.success) {
+        if (!addEvent.isIdle) {
+          return;
+        }
         addEvent.mutate({
           eventData: parsedEventData.data,
           init_data: webApp?.initData || "",
         });
+      } else {
+        console.log(parsedEventData.error.flatten());
       }
+
       return;
     }
 
@@ -70,12 +92,21 @@ export const ThirdStep = () => {
         By setting a password for the event, you can prevent checking-in
         unexpectedly and receiving reward without attending the event.
       </AlertGeneric>
-      <MainButton
-        onClick={handleSubmit}
-        text="Create event"
-        disabled={addEvent.isLoading}
-        progress={addEvent.isLoading}
-      />
+      {editOptions?.eventHash ? (
+        <MainButton
+          onClick={handleSubmit}
+          text="Update event"
+          disabled={updateEvent.isLoading}
+          progress={updateEvent.isLoading}
+        />
+      ) : (
+        <MainButton
+          onClick={handleSubmit}
+          text="Create event"
+          disabled={addEvent.isLoading}
+          progress={addEvent.isLoading}
+        />
+      )}
     </StepLayout>
   );
 };

@@ -17,8 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import useWebApp from "@/hooks/useWebApp";
 import { fileToBase64 } from "@/lib/utils";
-import { SocietyHub } from "@/types";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { z, ZodError } from "zod";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
@@ -47,7 +46,6 @@ export const FirstStep = () => {
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
-  const [hub, setHub] = useState<SocietyHub>(eventData?.society_hub!);
   const [errors, setErrors] = useState<{
     title?: string[] | undefined;
     subtitle?: string[] | undefined;
@@ -63,12 +61,10 @@ export const FirstStep = () => {
     }
 
     const formData = new FormData(formRef.current);
-    formData.append("hub", hub?.id || "");
+    formData.append("hub", eventData?.society_hub?.id || "");
     formData.append("image_url", eventData?.image_url || "");
     const formDataObject = Object.fromEntries(formData.entries());
     const formDataParsed = firstStepDataSchema.safeParse(formDataObject);
-
-    console.log(formDataParsed);
 
     if (!formDataParsed.success) {
       setErrors(formDataParsed.error.flatten().fieldErrors);
@@ -79,10 +75,6 @@ export const FirstStep = () => {
 
     setEventData({
       ...eventData,
-      society_hub: {
-        id: hub?.id || "",
-        name: hub?.name || "",
-      },
       ...data,
     });
     setCurrentStep(2);
@@ -99,14 +91,14 @@ export const FirstStep = () => {
             placeholder="Name"
             name="title"
             errors={errors?.title}
-            value={eventData?.title}
+            defaultValue={eventData?.title}
             required
           />
           <Input
             placeholder="Subtitle"
             name="subtitle"
             errors={errors?.subtitle}
-            value={eventData?.subtitle}
+            defaultValue={eventData?.subtitle}
             required
           />
           <Textarea
@@ -114,15 +106,17 @@ export const FirstStep = () => {
             name="description"
             required
             errors={errors?.description}
-            value={eventData?.description}
+            defaultValue={eventData?.description}
           />
         </div>
 
         <TonHubPicker
           onValueChange={(data) => {
-            setHub(data);
+            if (data) {
+              setEventData({ society_hub: data });
+            }
           }}
-          value={hub}
+          value={eventData?.society_hub}
           errors={errors?.hub}
         />
         <ImageUploadDrawer errors={errors?.image_url} />
@@ -138,17 +132,21 @@ export const FirstStep = () => {
 const ImageUploadDrawer = (props: { errors?: (string | undefined)[] }) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const webApp = useWebApp();
-  const formRef = useRef<HTMLFormElement>(null);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
   const [imagePreview, setImagePreview] = useState<string | undefined>(
-    eventData?.image_url
+    undefined
   );
   const uploadImage = trpc.files.uploadImage.useMutation({
     onSuccess: (data) => {
       setImagePreview(data.imageUrl);
     },
   });
+
+  useEffect(() => {
+    // Set the initial image preview when the component mounts
+    setImagePreview(eventData?.image_url);
+  }, [eventData?.image_url]);
 
   const setImageAsEventImage = () => {
     setEventData({
@@ -157,15 +155,14 @@ const ImageUploadDrawer = (props: { errors?: (string | undefined)[] }) => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formRef.current) {
+  const handleSubmit = async () => {
+    const fileInput = imageInputRef.current;
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
       return;
     }
 
-    const formData = new FormData(formRef.current);
-
-    const image = (await fileToBase64(formData.get("image") as Blob)) as string;
+    const file = fileInput.files[0];
+    const image = (await fileToBase64(file)) as string;
     uploadImage.mutate({
       init_data: webApp?.initData || "",
       image,
@@ -209,9 +206,11 @@ const ImageUploadDrawer = (props: { errors?: (string | undefined)[] }) => {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Upload Image</DrawerTitle>
-            <DrawerDescription>
-              Upload your event’s poster from your device
-            </DrawerDescription>
+            {!imagePreview && (
+              <DrawerDescription>
+                Upload your event’s poster from your device
+              </DrawerDescription>
+            )}
           </DrawerHeader>
           {imagePreview && (
             <img
@@ -221,43 +220,38 @@ const ImageUploadDrawer = (props: { errors?: (string | undefined)[] }) => {
             />
           )}
           <DrawerFooter>
-            <form
-              ref={formRef}
-              onSubmit={handleSubmit}
+            <input
+              ref={imageInputRef}
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              id="event_image_input"
+              className="hidden"
+            />
+            <Button
+              variant="secondary"
+              type="button"
+              className="w-full h-12.5 flex items-center gap-2"
+              onClick={(e) => {
+                e.preventDefault();
+                imageInputRef.current?.click();
+              }}
+              isLoading={uploadImage.isLoading}
             >
-              <input
-                ref={imageInputRef}
-                type="file"
-                name="image"
-                accept="image/*"
-                onChange={(e) => {
-                  e.preventDefault();
-                  formRef.current?.requestSubmit();
-                }}
-                id="event_image_input"
-                className="hidden"
-              />
-              <Button
-                variant="secondary"
-                type="button"
-                className="w-full h-12.5 flex items-center gap-2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  imageInputRef.current?.click();
-                }}
-                isLoading={uploadImage.isLoading}
-              >
-                <CircleArrowUp className="w-5" />
-                <span>{imagePreview ? "Change Image" : "Upload Image"}</span>
-              </Button>
-              {uploadImage.isError && (
-                <div className="text-red-500">{errors}</div>
-              )}
-            </form>
+              <CircleArrowUp className="w-5" />
+              <span>{imagePreview ? "Change Image" : "Upload Image"}</span>
+            </Button>
+            {uploadImage.isError && (
+              <div className="text-red-500">{errors}</div>
+            )}
             {imagePreview && (
               <DrawerClose asChild>
                 <Button
-                  className="w-16 h-10 mx-auto rounded-full mt-8"
+                  className="w-16 h-10 mx-auto rounded-full mt-4"
                   variant="secondary"
                   onClick={setImageAsEventImage}
                 >
