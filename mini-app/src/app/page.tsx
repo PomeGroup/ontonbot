@@ -9,6 +9,8 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar";
+import useWebApp from "@/hooks/useWebApp";
+import useAuth from "@/hooks/useAuth";
 
 export default function Home({ searchParams }: { searchParams: any }) {
     noStore();
@@ -22,6 +24,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
         offset: 0,
         filter: {
             eventTypes: ["online", "in_person"],
+            startDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
         },
         sortBy: "time",
     });

@@ -4,7 +4,9 @@ import { isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import { formatDate, formatDateRange } from "@/lib/DateAndTime";
 import useWebApp from "@/hooks/useWebApp";
-
+import useAuth from "@/hooks/useAuth";
+import {trpc} from "@/app/_trpc/client";
+import { useCookies } from 'next-client-cookies';
 interface EventCardProps {
   event: {
     event_uuid: string;
@@ -49,10 +51,25 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
     ticket_price = 0,
   } = event;
   const webApp = useWebApp();
+  const cookies = useCookies();
   const defaultImage = "/ton-logo.png";
   const [src, setSrc] = useState(
       isValidImageUrl(image_url) ? image_url : defaultImage
   );
+
+  // const WebApp = useWebApp();
+  // const hapticfeedback = WebApp?.HapticFeedback;
+  // const { authorized, isLoading } = useAuth();
+  // const initData = WebApp?.initData;
+  // const validatedData = trpc.users.validateUserInitData.useQuery(
+  //     initData || "",
+  //     {
+  //       queryKey: ["users.validateUserInitData", initData || ""],
+  //     }
+  // );
+  // let startParam = WebApp?.initDataUnsafe
+  //
+  // const userToken = cookies.get("token");
 
 
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
@@ -62,7 +79,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
       : organizer_user_id
           ? `tg://user?id=${organizer_user_id}`
           : null;
-
+  const eventLink = ticketToCheckIn ? `/ptma/events/?tgWebAppStartParam=${event_uuid}` : `/events/${event_uuid}`;
   const renderDetailedMode = () => (
       <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg">
         <Image
@@ -148,16 +165,16 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
           className={`flex w-full pt-4 gap-4 items-start flex-nowrap relative overflow-hidden`}
       >
         <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
-          <a href="#"
-             onClick={() => {
-
-
-
-               webApp?.openTelegramLink(
-                   `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`
-               );
-               webApp?.close();
-             }}
+          <a href={eventLink}
+              // onClick={() => {
+             //
+             //
+             //
+             //   webApp?.openTelegramLink(
+             //       `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`
+             //   );
+             //   webApp?.close();
+             // }}
           >
             <Image
                 src={src}
@@ -187,7 +204,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
               )}
             </div>
             <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-              <a href={`/event/${event_uuid}`} className="grow">
+              <a href={eventLink} className="grow">
               <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
                 {title}
               </span>
