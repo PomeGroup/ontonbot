@@ -11,11 +11,11 @@ const BackButtonHandler: React.FC = () => {
 
     useEffect(() => {
         if (webApp) {
-            console.log("********************pathname", pathname);
+
             if (pathname === "/") {
-                webApp.BackButton.hide(); // Hide the back button on the home page
+                webApp.BackButton.hide();
             } else {
-                webApp.BackButton.show(); // Show the back button on other pages
+                webApp.BackButton.show();
 
                 const handleBackButtonClick = () => {
                     if (history.length > 1) {

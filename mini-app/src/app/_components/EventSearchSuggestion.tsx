@@ -3,7 +3,7 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import { trpc } from "@/app/_trpc/client";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { debounce } from "lodash";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaArrowAltCircleRight } from "react-icons/fa";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import { useRouter } from "next/navigation";
 
@@ -20,7 +20,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
                                                                          autoSuggestions,
                                                                          setAutoSuggestions,
                                                                      }) => {
-     const router = useRouter();
+    const router = useRouter();
     const [searchLoading, setSearchLoading] = useState(false);
     const suggestionBoxRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +59,6 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
         }
     }, [searchTerm, debouncedFetchSearchResults]);
 
-    // Close suggestion box when clicking outside of it
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
@@ -76,17 +75,11 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
         };
     }, [onClose]);
 
-    useEffect(() => {
-        if (autoSuggestions) {
-            console.log("****---------------//Auto suggestions:", autoSuggestions);
-        }
-    }, [autoSuggestions]);
-
     const handleNavigate = useCallback(() => {
         if (router) {
             router.push(`/search?query=${searchTerm}`);
         }
-    }, [ searchTerm]);
+    }, [searchTerm, router]);
 
     return (
         <div
@@ -104,8 +97,12 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
                     {autoSuggestions.map((event) => (
                         <EventCard key={event.event_uuid} event={event} mode="small" />
                     ))}
-                    <button className="w-full text-blue-500" onClick={handleNavigate}>
-                        All Results
+                    <button
+                        className="w-full text-s text-right pr-3 text-zinc-100 h-8 flex items-center justify-end"
+                        onClick={handleNavigate}
+                    >
+                        <span>Show More Results</span>
+                        <FaArrowAltCircleRight className="ml-2 align-middle" style={{ verticalAlign: 'middle' }} />
                     </button>
                 </>
             ) : (

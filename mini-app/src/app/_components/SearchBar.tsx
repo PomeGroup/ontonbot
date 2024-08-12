@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import {useRouter, useSearchParams} from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FaSearch, FaTimes } from "react-icons/fa";
 import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
 import { useSearchEvents } from "@/hooks/useSearchEvents";
@@ -18,11 +18,15 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
         setAutoSuggestions,
         handleSearchChange,
     } = useSearchEvents();
-    const searchParams = useSearchParams(); // Use useSearchParams instead of useRouter
-    const searchTermQuery = searchParams.get('query'); // Get the 'query' parameter
+    const searchParams = useSearchParams();
+    const searchTermQuery = searchParams.get('query');
 
-
-
+    // useEffect to initialize searchTerm only once with searchTermQuery
+    useEffect(() => {
+        if (searchTermQuery && !searchTerm) {
+            setSearchTerm(searchTermQuery);
+        }
+    }, [searchTermQuery]);
 
     const handleCloseSuggestions = () => {
         setShowSuggestions(false);
@@ -42,15 +46,15 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
             setShowSuggestions(true);
         }
     };
-    const  searchBarValue = searchTerm ==="" ? searchTermQuery || "" : searchTerm || "";
+
     return (
         <div className="relative">
             <input
                 type="text"
                 placeholder="Search"
-                className="w-full pl-10 pr-10 p-2 rounded-md focus:ring-0 focus:outline-none"
+                className="w-full pl-10 pr-10 p-2 rounded-md focus:ring-0 focus:outline-none focus:text-zinc-100"
                 onChange={handleSearchInputChange}
-                value={searchBarValue}
+                value={searchTerm} // use searchTerm directly
                 onFocus={handleFocus}
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

@@ -104,7 +104,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
           href={`/event/${event_uuid}`}
           className="flex w-full p-2 gap-2 cursor-pointer items-start flex-nowrap relative overflow-hidden"
       >
-        <div className="relative overflow-hidden rounded-lg w-12 h-12">
+        <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
           <Image
               src={src}
               alt={title}
@@ -147,7 +147,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
       <div
           className={`flex w-full pt-4 gap-4 items-start flex-nowrap relative overflow-hidden`}
       >
-        <div className="relative overflow-hidden rounded-lg w-24 h-24">
+        <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
           <a href="#"
              onClick={() => {
 
@@ -159,7 +159,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
                webApp?.close();
              }}
           >
-          <Image
+            <Image
                 src={src}
                 alt={title}
                 layout="fill"
