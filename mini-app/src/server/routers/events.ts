@@ -156,6 +156,7 @@ export const eventsRouter = router({
               timezone: opts.input.eventData.timezone,
               location: opts.input.eventData.location,
               owner: opts.ctx.user.user_id,
+              participationType: opts.input.eventData.eventLocationType,
             })
             .returning();
 
@@ -375,6 +376,7 @@ export const eventsRouter = router({
               start_date: eventData.start_date,
               end_date: eventData.end_date,
               location: eventData.location,
+              participationType: eventData.eventLocationType,
               timezone: eventData.timezone,
             })
             .where(eq(events.event_uuid, eventUuid!))

@@ -126,15 +126,6 @@ export const EventDataSchema = z.object({
   event_id: z.number().optional(),
   event_uuid: z.string().optional(),
   type: z.number(),
-  youtube_video_url: z
-    .string()
-    .url()
-    .refine(
-      (value) =>
-        new URL(value).hostname === "www.youtube.com" ||
-        new URL(value).hostname === "youtube.com"
-    )
-    .optional(),
   title: z.string(),
   subtitle: z.string(),
   description: z.string(),
@@ -151,21 +142,13 @@ export const EventDataSchema = z.object({
   activity_id: z.number().optional(),
   timezone: z.string(),
   dynamic_fields: DynamicFieldsSchema,
+  eventLocationType: z.enum(["online", "in_person"]).optional(),
 });
 
 export const UpdateEventDataSchema = z.object({
   event_id: z.number().optional(),
   event_uuid: z.string().optional(),
   type: z.number(),
-  youtube_video_url: z
-    .string()
-    .url()
-    .refine(
-      (value) =>
-        new URL(value).hostname === "www.youtube.com" ||
-        new URL(value).hostname === "youtube.com"
-    )
-    .optional(),
   title: z.string(),
   subtitle: z.string(),
   description: z.string(),
@@ -182,6 +165,7 @@ export const UpdateEventDataSchema = z.object({
   activity_id: z.number().optional(),
   timezone: z.string(),
   dynamic_fields: DynamicFieldsSchema,
+  eventLocationType: z.enum(["online", "in_person"]).optional(),
 });
 
 export const EventDataSchemaAllOptional = z.object({

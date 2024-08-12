@@ -36,6 +36,10 @@ export const users = pgTable(
   })
 );
 
+export const eventParticipationType = pgEnum("event_participation_type", [
+  "in_person",
+  "online",
+]);
 export const events = pgTable(
   "events",
   {
@@ -61,6 +65,9 @@ export const events = pgTable(
     owner: bigint("owner", { mode: "number" }).references(() => users.user_id),
     hidden: boolean("hidden").default(false),
     ticketToCheckIn: boolean("ticketToCheckIn").default(false),
+    participationType: eventParticipationType("participation_type")
+      .default("online")
+      .notNull(),
     created_at: timestamp("created_at").defaultNow(),
   },
   (table) => ({
@@ -76,6 +83,9 @@ export const events = pgTable(
     ownerIdx: index("events_owner_idx").on(table.owner),
     hiddenIdx: index("events_hidden_idx").on(table.hidden),
     createdAtIdx: index("events_created_at_idx").on(table.created_at),
+    participationTypeIdx: index("events_participation_type_idx").on(
+      table.participationType
+    ),
   })
 );
 
@@ -416,5 +426,5 @@ export const event_details_search_list = pgTable("event_details_search_list", {
   ticket_price: integer("ticket_price").notNull(),
   ticket_image: text("ticket_image").notNull(),
   ticket_count: integer("ticket_count").notNull(),
-  hidden: boolean("hidden").notNull()  ,
+  hidden: boolean("hidden").notNull(),
 });

@@ -1,5 +1,5 @@
 import { type RouterOutput } from "@/server";
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import Stepper from "../../molecules/stepper";
 import { useCreateEventStore } from "./createEventStore";
 import { FirstStep } from "./firstTab";
@@ -15,7 +15,7 @@ const ManageEvent = (props: ManageEventProps) => {
   const setEdit = useCreateEventStore((state) => state.setEdit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (props.eventHash) {
       setEdit({
         eventHash: props.eventHash,
@@ -36,6 +36,7 @@ const ManageEvent = (props: ManageEventProps) => {
                   name: props.event.society_hub.name,
                 }
               : undefined,
+          eventLocationType: props.event.participationType,
         });
       }
     }
