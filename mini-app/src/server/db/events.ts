@@ -112,8 +112,7 @@ export const getEventsWithFilters = async (
   const cachedResult = getCache(cacheKey);
   if (cachedResult) {
     console.log("Returning cached result");
-    console.log(cachedResult);
-    return cachedResult;
+     return cachedResult;
   }
 
   let query = db.select().from(event_details_search_list);
@@ -186,7 +185,6 @@ export const getEventsWithFilters = async (
         )
     );
 
-
     let orderByClause;
     if (sortBy === "start_date_asc" ) {
       orderByClause = sql`start_date ASC`;
@@ -222,13 +220,8 @@ export const getEventsWithFilters = async (
 
   // Apply pagination
   query = query.limit(limit).offset(offset);
-
-  logSQLQuery(query.toSQL().sql, query.toSQL().params);
-
+  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
-  console.log("*****eventsData", eventsData);
-
   setCache(cacheKey, eventsData, 60);
-
   return eventsData;
 };

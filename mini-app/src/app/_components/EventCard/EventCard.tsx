@@ -91,28 +91,28 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
             className="absolute inset-0 w-full h-full object-cover"
             onError={() => setSrc(defaultImage)}
         />
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-between p-6 text-white">
-          <div>
-            <div className="flex justify-between items-start">
-              <div className="text-sm">TON Syndicate</div>
-              <div className="text-xs bg-white text-black px-2 py-1 rounded">
-                Organized by {organizer_first_name} {organizer_last_name}
-              </div>
-            </div>
-            <h2 className="text-3xl font-bold mt-2">{title}</h2>
-            <h3 className="text-lg">{subtitle}</h3>
-          </div>
-          <div className="flex justify-between items-center text-sm">
-            <div>{location}</div>
-            <div>
-              {formatDate(start_date)} ·{" "}
-              {new Date(start_date * 1000).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </div>
-          </div>
-        </div>
+        {/*<div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-between p-6 text-white">*/}
+        {/*  <div>*/}
+        {/*    <div className="flex justify-between items-start">*/}
+        {/*      <div className="text-sm">TON Syndicate</div>*/}
+        {/*      <div className="text-xs bg-white text-black px-2 py-1 rounded">*/}
+        {/*        Organized by {organizer_first_name} {organizer_last_name}*/}
+        {/*      </div>*/}
+        {/*    </div>*/}
+        {/*    <h2 className="text-3xl font-bold mt-2">{title}</h2>*/}
+        {/*    <h3 className="text-lg">{subtitle}</h3>*/}
+        {/*  </div>*/}
+        {/*  <div className="flex justify-between items-center text-sm">*/}
+        {/*    <div>{location}</div>*/}
+        {/*    <div>*/}
+        {/*      {formatDate(start_date)} ·{" "}*/}
+        {/*      {new Date(start_date * 1000).toLocaleTimeString([], {*/}
+        {/*        hour: "2-digit",*/}
+        {/*        minute: "2-digit",*/}
+        {/*      })}*/}
+        {/*    </div>*/}
+        {/*  </div>*/}
+        {/*</div>*/}
       </div>
   );
 
