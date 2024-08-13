@@ -9,6 +9,7 @@ import {
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
+import { getObjectDifference, removeKey } from "@/lib/utils";
 import { EventDataSchema, HubsResponse, SocietyHub } from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import { fetchBalance, sleep, validateMiniAppData } from "@/utils";
@@ -270,11 +271,13 @@ export const eventsRouter = router({
           const res = await registerActivity(eventDraft);
           await sendLogNotification({
             message: `
-@${initDataJson.user.username} <b>Added</b> A New Event <code>${newEvent[0].event_uuid}</code> successfully
+@${initDataJson.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
 
+<pre>
 <code>
 ${JSON.stringify(newEvent[0], null, 2)}
 </code>
+</pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
             `,
@@ -339,11 +342,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
           await sendLogNotification({
             message: `
-@${initDataJson.user.username} <b>Deleted</b> an Event <code>${deletedEvent[0].event_uuid}</code>.
+@${initDataJson.user.username} <b>Deleted</b> an event <code>${deletedEvent[0].event_uuid}</code>.
 
+<pre>
 <code>
 ${JSON.stringify(deletedEvent[0], null, 2)}
 </code>
+</pre>
 `,
           });
 
@@ -529,6 +534,12 @@ ${JSON.stringify(deletedEvent[0], null, 2)}
             ? await hashPassword(inputSecretPhrase)
             : undefined;
 
+          const oldEvent = await trx
+            .select()
+            .from(events)
+            .where(eq(events.event_uuid, eventData.event_uuid!))
+            .execute();
+
           const updatedEvent = await trx
             .update(events)
             .set({
@@ -665,13 +676,23 @@ ${JSON.stringify(deletedEvent[0], null, 2)}
             },
           };
 
+          const updateChanges = getObjectDifference(
+            oldEvent[0],
+            updatedEvent[0]
+          );
+
+          const eventDataSafe =
+            updateChanges && removeKey(updateChanges, "secret_phrase");
+
           await sendLogNotification({
             message: `
-@${initDataJson.user.username} <b>updated</b> A New Event <code>${updatedEvent[0].event_uuid}</code> successfully
+@${initDataJson.user.username} $<b>Updated</b> an event <code>${updatedEvent[0].event_uuid}</code> successfully
 
+<pre>
 <code>
-${JSON.stringify(updatedEvent[0], null, 2)}
+${eventDataSafe && Object.keys(eventDataSafe).length > 0 ? JSON.stringify(eventDataSafe, null, 2) : eventData.secret_phrase ? "Only event password updated" : "No changes"}
 </code>
+</pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${updatedEvent[0].event_uuid}
             `,

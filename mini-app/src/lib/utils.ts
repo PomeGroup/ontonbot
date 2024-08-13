@@ -16,3 +16,28 @@ export function removeKey<T extends object, K extends keyof T>(
 export function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export function getObjectDifference<T extends object>(
+  obj1: T,
+  obj2: T
+): Partial<T> | null {
+  const diff: Partial<T> = {};
+
+  for (const key in obj1) {
+    if (obj1.hasOwnProperty(key)) {
+      if (obj1[key] !== obj2[key]) {
+        diff[key] = obj2[key];
+      }
+    }
+  }
+
+  for (const key in obj2) {
+    if (obj2.hasOwnProperty(key)) {
+      if (obj1[key] === undefined && obj2[key] !== undefined) {
+        diff[key] = obj2[key];
+      }
+    }
+  }
+
+  return Object.keys(diff).length > 0 ? diff : null;
+}
