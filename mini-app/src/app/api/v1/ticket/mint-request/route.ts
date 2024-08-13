@@ -80,6 +80,7 @@ export async function POST(req: Request) {
             ticket_id: eventTicketData?.id,
             user_id: data.user_id,
             status: "MINTING",
+            updatedBy: "system",
           })
           .returning()
       ).pop();

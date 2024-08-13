@@ -90,6 +90,7 @@ export const userEventFieldsRouter = router({
           data: opts.input.data,
           completed: true,
           created_at: new Date(),
+          updatedBy: opts.ctx.user.user_id.toString(),
         })
         .onConflictDoUpdate({
           target: [userEventFields.user_id, userEventFields.event_field_id],

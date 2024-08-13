@@ -7,7 +7,9 @@ import {
   visitors,
 } from "@/db/schema";
 import { hashPassword } from "@/lib/bcrypt";
+import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
+import { getObjectDifference } from "@/lib/utils";
 import { EventDataSchema, HubsResponse, SocietyHub } from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import { fetchBalance, sleep, validateMiniAppData } from "@/utils";
@@ -213,6 +215,7 @@ export const eventsRouter = router({
               timezone: opts.input.eventData.timezone,
               location: opts.input.eventData.location,
               owner: initDataJson.user.id,
+              updatedBy: initDataJson.user.id.toString(),
             })
             .returning();
 
@@ -227,6 +230,7 @@ export const eventsRouter = router({
               type: field.type,
               order_place: i,
               event_id: newEvent[0].event_id,
+              updatedBy: initDataJson.user.id.toString(),
             });
           }
 
@@ -239,6 +243,7 @@ export const eventsRouter = router({
               type: "input",
               order_place: opts.input.eventData.dynamic_fields.length,
               event_id: newEvent[0].event_id,
+              updatedBy: initDataJson.user.id.toString(),
             });
           }
 
@@ -264,10 +269,22 @@ export const eventsRouter = router({
           };
 
           const res = await registerActivity(eventDraft);
+          await sendLogNotification({
+            message: `
+@${initDataJson.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
+
+<pre><code>${JSON.stringify(newEvent[0], null, 2)}</code></pre>
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
+            `,
+          });
 
           await trx
             .update(events)
-            .set({ activity_id: res.data.activity_id })
+            .set({
+              activity_id: res.data.activity_id,
+              updatedBy: initDataJson.user.id.toString(),
+            })
             .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
             .execute();
 
@@ -302,7 +319,7 @@ export const eventsRouter = router({
         return undefined;
       }
 
-      const { valid } = await checkIsEventOwner(
+      const { valid, initDataJson } = await checkIsEventOwner(
         opts.input.initData,
         opts.input.event_uuid
       );
@@ -313,11 +330,19 @@ export const eventsRouter = router({
 
       try {
         const result = await db.transaction(async (trx) => {
-          await trx
+          const deletedEvent = await trx
             .update(events)
-            .set({ hidden: true }) // Set the 'hidden' field to true
+            .set({ hidden: true, updatedBy: opts.input.initData }) // Set the 'hidden' field to true
             .where(eq(events.event_uuid, opts.input.event_uuid))
-            .execute();
+            .returning();
+
+          await sendLogNotification({
+            message: `
+@${initDataJson.user.username} <b>Deleted</b> an event <code>${deletedEvent[0].event_uuid}</code>.
+
+<pre><code>${JSON.stringify(deletedEvent[0], null, 2)}</code></pre>
+`,
+          });
 
           return { success: true };
         });
@@ -475,7 +500,7 @@ export const eventsRouter = router({
         return undefined;
       }
 
-      const { valid } = await checkIsEventOwner(
+      const { valid, initDataJson } = await checkIsEventOwner(
         opts.input.initData,
         opts.input.eventData.event_uuid
       );
@@ -501,7 +526,13 @@ export const eventsRouter = router({
             ? await hashPassword(inputSecretPhrase)
             : undefined;
 
-          await trx
+          const oldEvent = await trx
+            .select()
+            .from(events)
+            .where(eq(events.event_uuid, eventData.event_uuid!))
+            .execute();
+
+          const updatedEvent = await trx
             .update(events)
             .set({
               type: eventData.type,
@@ -516,9 +547,10 @@ export const eventsRouter = router({
               end_date: eventData.end_date,
               location: eventData.location,
               timezone: eventData.timezone,
+              updatedBy: initDataJson.user.id.toString(),
             })
             .where(eq(events.event_uuid, eventData.event_uuid!))
-            .execute();
+            .returning();
 
           const currentFields = await trx
             .select()
@@ -561,6 +593,7 @@ export const eventsRouter = router({
                 .update(eventFields)
                 .set({
                   placeholder: hashedSecretPhrase,
+                  updatedBy: initDataJson.user.id.toString(),
                 })
                 .where(eq(eventFields.id, secretPhraseTask[0].id))
                 .execute();
@@ -575,6 +608,7 @@ export const eventsRouter = router({
                   type: "input",
                   order_place: eventData.dynamic_fields.length,
                   event_id: eventData.event_id,
+                  updatedBy: initDataJson.user.id.toString(),
                 })
                 .execute();
             }
@@ -594,6 +628,7 @@ export const eventsRouter = router({
                     field.type === "button" ? field.url : field.placeholder,
                   type: field.type,
                   order_place: index,
+                  updatedBy: initDataJson.user.id.toString(),
                 })
                 .where(eq(eventFields.id, field.id))
                 .execute();
@@ -609,6 +644,7 @@ export const eventsRouter = router({
                   type: field.type,
                   order_place: index,
                   event_id: eventData.event_id,
+                  updatedBy: initDataJson.user.id.toString(),
                 })
                 .execute();
             }
@@ -632,13 +668,40 @@ export const eventsRouter = router({
             },
           };
 
+          const oldChanges = getObjectDifference(updatedEvent[0], oldEvent[0]);
+
+          const updateChanges = getObjectDifference(
+            oldEvent[0],
+            updatedEvent[0]
+          );
+
+          await sendLogNotification({
+            message: `
+@${initDataJson.user.username} <b>Updated</b> an event <code>${updatedEvent[0].event_uuid}</code> successfully
+
+Before:
+<pre><code>${JSON.stringify(oldChanges, null, 2)}</code></pre>
+
+After:
+<pre><code>${JSON.stringify(updateChanges, null, 2)}</code></pre>
+
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${updatedEvent[0].event_uuid}
+            `,
+          });
+
           await updateActivity(eventDraft, eventData.activity_id as number);
 
           return { success: true, eventId: eventData.event_id };
         });
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          console.error("Error during API call:", error.message);
+          console.error(
+            "Error during API call:",
+            error.message,
+            error.request,
+            error.response?.data.error
+          );
           return {
             success: false,
             message: "API call error: " + error.message,

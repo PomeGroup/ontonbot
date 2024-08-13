@@ -39,7 +39,7 @@
         }
       },
       "indexes": {
-        "event_id_idx": {
+        "airdrop_event_id_idx": {
           "columns": [
             {
               "expression": "event_id",
@@ -49,12 +49,12 @@
             }
           ],
           "with": {},
-          "name": "event_id_idx",
+          "name": "airdrop_event_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "user_id_idx": {
+        "airdrop_user_id_idx": {
           "columns": [
             {
               "expression": "user_id",
@@ -64,12 +64,12 @@
             }
           ],
           "with": {},
-          "name": "user_id_idx",
+          "name": "airdrop_user_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "status_idx": {
+        "airdrop_status_idx": {
           "columns": [
             {
               "expression": "status",
@@ -79,12 +79,12 @@
             }
           ],
           "with": {},
-          "name": "status_idx",
+          "name": "airdrop_status_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "created_at_idx": {
+        "airdrop_created_at_idx": {
           "columns": [
             {
               "expression": "created_at",
@@ -94,7 +94,7 @@
             }
           ],
           "with": {},
-          "name": "created_at_idx",
+          "name": "airdrop_created_at_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -185,7 +185,7 @@
         }
       },
       "indexes": {
-        "title_idx": {
+        "eventf_title_idx": {
           "columns": [
             {
               "expression": "title",
@@ -195,12 +195,12 @@
             }
           ],
           "with": {},
-          "name": "title_idx",
+          "name": "eventf_title_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "type_idx": {
+        "eventf_type_idx": {
           "columns": [
             {
               "expression": "type",
@@ -210,12 +210,12 @@
             }
           ],
           "with": {},
-          "name": "type_idx",
+          "name": "eventf_type_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "event_id_idx": {
+        "eventf_event_id_idx": {
           "columns": [
             {
               "expression": "event_id",
@@ -225,7 +225,7 @@
             }
           ],
           "with": {},
-          "name": "event_id_idx",
+          "name": "eventf_event_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -310,7 +310,7 @@
         }
       },
       "indexes": {
-        "event_uuid_idx": {
+        "eventt_event_uuid_idx": {
           "columns": [
             {
               "expression": "event_uuid",
@@ -320,12 +320,12 @@
             }
           ],
           "with": {},
-          "name": "event_uuid_idx",
+          "name": "eventt_event_uuid_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "title_idx": {
+        "eventt_title_idx": {
           "columns": [
             {
               "expression": "title",
@@ -335,12 +335,12 @@
             }
           ],
           "with": {},
-          "name": "title_idx",
+          "name": "eventt_title_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "price_idx": {
+        "eventt_price_idx": {
           "columns": [
             {
               "expression": "price",
@@ -350,12 +350,12 @@
             }
           ],
           "with": {},
-          "name": "price_idx",
+          "name": "eventt_price_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "collection_address_idx": {
+        "eventt_collection_address_idx": {
           "columns": [
             {
               "expression": "collection_address",
@@ -365,12 +365,12 @@
             }
           ],
           "with": {},
-          "name": "collection_address_idx",
+          "name": "eventt_collection_address_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "created_at_idx": {
+        "eventt_created_at_idx": {
           "columns": [
             {
               "expression": "created_at",
@@ -380,7 +380,7 @@
             }
           ],
           "with": {},
-          "name": "created_at_idx",
+          "name": "eventt_created_at_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -404,6 +404,190 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "public.event_details_search_list": {
+      "name": "event_details_search_list",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_uuid": {
+          "name": "event_uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "society_hub": {
+          "name": "society_hub",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subtitle": {
+          "name": "subtitle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticketToCheckIn": {
+          "name": "ticketToCheckIn",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "website": {
+          "name": "website",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organizer_user_id": {
+          "name": "organizer_user_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organizer_first_name": {
+          "name": "organizer_first_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organizer_last_name": {
+          "name": "organizer_last_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "organizer_username": {
+          "name": "organizer_username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reserved_count": {
+          "name": "reserved_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "visitor_count": {
+          "name": "visitor_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticket_id": {
+          "name": "ticket_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticket_title": {
+          "name": "ticket_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticket_description": {
+          "name": "ticket_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticket_price": {
+          "name": "ticket_price",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticket_image": {
+          "name": "ticket_image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticket_count": {
+          "name": "ticket_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hidden": {
+          "name": "hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "participation_type": {
+          "name": "participation_type",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.events": {
       "name": "events",
       "schema": "",
@@ -418,7 +602,7 @@
           "name": "event_uuid",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "type": {
           "name": "type",
@@ -544,6 +728,13 @@
           "notNull": false,
           "default": false
         },
+        "participation_type": {
+          "name": "participation_type",
+          "type": "event_participation_type",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'online'"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -553,7 +744,7 @@
         }
       },
       "indexes": {
-        "event_uuid_idx": {
+        "events_event_uuid_idx": {
           "columns": [
             {
               "expression": "event_uuid",
@@ -563,12 +754,12 @@
             }
           ],
           "with": {},
-          "name": "event_uuid_idx",
+          "name": "events_event_uuid_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "type_idx": {
+        "events_type_idx": {
           "columns": [
             {
               "expression": "type",
@@ -578,12 +769,12 @@
             }
           ],
           "with": {},
-          "name": "type_idx",
+          "name": "events_type_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "title_idx": {
+        "events_title_idx": {
           "columns": [
             {
               "expression": "title",
@@ -593,12 +784,12 @@
             }
           ],
           "with": {},
-          "name": "title_idx",
+          "name": "events_title_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "wallet_address_idx": {
+        "events_wallet_address_idx": {
           "columns": [
             {
               "expression": "wallet_address",
@@ -608,12 +799,12 @@
             }
           ],
           "with": {},
-          "name": "wallet_address_idx",
+          "name": "events_wallet_address_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "society_hub_idx": {
+        "events_society_hub_idx": {
           "columns": [
             {
               "expression": "society_hub",
@@ -623,12 +814,12 @@
             }
           ],
           "with": {},
-          "name": "society_hub_idx",
+          "name": "events_society_hub_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "start_date_idx": {
+        "events_start_date_idx": {
           "columns": [
             {
               "expression": "start_date",
@@ -638,12 +829,12 @@
             }
           ],
           "with": {},
-          "name": "start_date_idx",
+          "name": "events_start_date_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "end_date_idx": {
+        "events_end_date_idx": {
           "columns": [
             {
               "expression": "end_date",
@@ -653,12 +844,12 @@
             }
           ],
           "with": {},
-          "name": "end_date_idx",
+          "name": "events_end_date_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "owner_idx": {
+        "events_owner_idx": {
           "columns": [
             {
               "expression": "owner",
@@ -668,12 +859,12 @@
             }
           ],
           "with": {},
-          "name": "owner_idx",
+          "name": "events_owner_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "hidden_idx": {
+        "events_hidden_idx": {
           "columns": [
             {
               "expression": "hidden",
@@ -683,12 +874,12 @@
             }
           ],
           "with": {},
-          "name": "hidden_idx",
+          "name": "events_hidden_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "created_at_idx": {
+        "events_created_at_idx": {
           "columns": [
             {
               "expression": "created_at",
@@ -698,7 +889,22 @@
             }
           ],
           "with": {},
-          "name": "created_at_idx",
+          "name": "events_created_at_idx",
+          "isUnique": false,
+          "method": "btree",
+          "concurrently": false
+        },
+        "events_participation_type_idx": {
+          "columns": [
+            {
+              "expression": "participation_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "with": {},
+          "name": "events_participation_type_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -820,7 +1026,7 @@
         }
       },
       "indexes": {
-        "event_uuid_idx": {
+        "orders_event_uuid_idx": {
           "columns": [
             {
               "expression": "event_uuid",
@@ -830,12 +1036,12 @@
             }
           ],
           "with": {},
-          "name": "event_uuid_idx",
+          "name": "orders_event_uuid_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "user_id_idx": {
+        "orders_user_id_idx": {
           "columns": [
             {
               "expression": "user_id",
@@ -845,12 +1051,12 @@
             }
           ],
           "with": {},
-          "name": "user_id_idx",
+          "name": "orders_user_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "event_ticket_id_idx": {
+        "orders_event_ticket_id_idx": {
           "columns": [
             {
               "expression": "event_ticket_id",
@@ -860,12 +1066,12 @@
             }
           ],
           "with": {},
-          "name": "event_ticket_id_idx",
+          "name": "orders_event_ticket_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "transaction_id_idx": {
+        "orders_transaction_id_idx": {
           "columns": [
             {
               "expression": "transaction_id",
@@ -875,12 +1081,12 @@
             }
           ],
           "with": {},
-          "name": "transaction_id_idx",
+          "name": "orders_transaction_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "state_idx": {
+        "orders_state_idx": {
           "columns": [
             {
               "expression": "state",
@@ -890,12 +1096,12 @@
             }
           ],
           "with": {},
-          "name": "state_idx",
+          "name": "orders_state_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "telegram_idx": {
+        "orders_telegram_idx": {
           "columns": [
             {
               "expression": "telegram",
@@ -905,12 +1111,12 @@
             }
           ],
           "with": {},
-          "name": "telegram_idx",
+          "name": "orders_telegram_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "full_name_idx": {
+        "orders_full_name_idx": {
           "columns": [
             {
               "expression": "full_name",
@@ -920,12 +1126,12 @@
             }
           ],
           "with": {},
-          "name": "full_name_idx",
+          "name": "orders_full_name_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "company_idx": {
+        "orders_company_idx": {
           "columns": [
             {
               "expression": "company",
@@ -935,12 +1141,12 @@
             }
           ],
           "with": {},
-          "name": "company_idx",
+          "name": "orders_company_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "owner_address_idx": {
+        "orders_owner_address_idx": {
           "columns": [
             {
               "expression": "owner_address",
@@ -950,12 +1156,12 @@
             }
           ],
           "with": {},
-          "name": "owner_address_idx",
+          "name": "orders_owner_address_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "created_at_idx": {
+        "orders_created_at_idx": {
           "columns": [
             {
               "expression": "created_at",
@@ -965,7 +1171,7 @@
             }
           ],
           "with": {},
-          "name": "created_at_idx",
+          "name": "orders_created_at_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -1067,7 +1273,7 @@
         }
       },
       "indexes": {
-        "visitor_id_idx": {
+        "rewards_visitor_id_idx": {
           "columns": [
             {
               "expression": "visitor_id",
@@ -1077,12 +1283,12 @@
             }
           ],
           "with": {},
-          "name": "visitor_id_idx",
+          "name": "rewards_visitor_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "type_idx": {
+        "rewards_type_idx": {
           "columns": [
             {
               "expression": "type",
@@ -1092,12 +1298,12 @@
             }
           ],
           "with": {},
-          "name": "type_idx",
+          "name": "rewards_type_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "status_idx": {
+        "rewards_status_idx": {
           "columns": [
             {
               "expression": "status",
@@ -1107,12 +1313,12 @@
             }
           ],
           "with": {},
-          "name": "status_idx",
+          "name": "rewards_status_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "created_at_idx": {
+        "rewards_created_at_idx": {
           "columns": [
             {
               "expression": "created_at",
@@ -1122,7 +1328,7 @@
             }
           ],
           "with": {},
-          "name": "created_at_idx",
+          "name": "rewards_created_at_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -1225,7 +1431,7 @@
         }
       },
       "indexes": {
-        "name_idx": {
+        "tickets_name_idx": {
           "columns": [
             {
               "expression": "name",
@@ -1235,12 +1441,12 @@
             }
           ],
           "with": {},
-          "name": "name_idx",
+          "name": "tickets_name_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "telegram_idx": {
+        "tickets_telegram_idx": {
           "columns": [
             {
               "expression": "telegram",
@@ -1250,12 +1456,12 @@
             }
           ],
           "with": {},
-          "name": "telegram_idx",
+          "name": "tickets_telegram_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "company_idx": {
+        "tickets_company_idx": {
           "columns": [
             {
               "expression": "company",
@@ -1265,12 +1471,12 @@
             }
           ],
           "with": {},
-          "name": "company_idx",
+          "name": "tickets_company_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "order_uuid_idx": {
+        "tickets_order_uuid_idx": {
           "columns": [
             {
               "expression": "order_uuid",
@@ -1280,12 +1486,12 @@
             }
           ],
           "with": {},
-          "name": "order_uuid_idx",
+          "name": "tickets_order_uuid_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "status_idx": {
+        "tickets_status_idx": {
           "columns": [
             {
               "expression": "status",
@@ -1295,12 +1501,12 @@
             }
           ],
           "with": {},
-          "name": "status_idx",
+          "name": "tickets_status_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "nft_address_idx": {
+        "tickets_nft_address_idx": {
           "columns": [
             {
               "expression": "nft_address",
@@ -1310,12 +1516,12 @@
             }
           ],
           "with": {},
-          "name": "nft_address_idx",
+          "name": "tickets_nft_address_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "event_uuid_idx": {
+        "tickets_event_uuid_idx": {
           "columns": [
             {
               "expression": "event_uuid",
@@ -1325,12 +1531,12 @@
             }
           ],
           "with": {},
-          "name": "event_uuid_idx",
+          "name": "tickets_event_uuid_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "ticket_id_idx": {
+        "tickets_ticket_id_idx": {
           "columns": [
             {
               "expression": "event_ticket_id",
@@ -1340,12 +1546,12 @@
             }
           ],
           "with": {},
-          "name": "ticket_id_idx",
+          "name": "tickets_ticket_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "user_id_idx": {
+        "tickets_user_id_idx": {
           "columns": [
             {
               "expression": "user_id",
@@ -1355,12 +1561,12 @@
             }
           ],
           "with": {},
-          "name": "user_id_idx",
+          "name": "tickets_user_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "created_at_idx": {
+        "tickets_created_at_idx": {
           "columns": [
             {
               "expression": "created_at",
@@ -1370,7 +1576,7 @@
             }
           ],
           "with": {},
-          "name": "created_at_idx",
+          "name": "tickets_created_at_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -1497,7 +1703,7 @@
           "method": "btree",
           "concurrently": false
         },
-        "event_field_id_idx": {
+        "uef_event_field_id_idx": {
           "columns": [
             {
               "expression": "event_field_id",
@@ -1507,12 +1713,12 @@
             }
           ],
           "with": {},
-          "name": "event_field_id_idx",
+          "name": "uef_event_field_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "user_id_idx": {
+        "uef_user_id_idx": {
           "columns": [
             {
               "expression": "user_id",
@@ -1522,12 +1728,12 @@
             }
           ],
           "with": {},
-          "name": "user_id_idx",
+          "name": "uef_user_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "completed_idx": {
+        "uef_completed_idx": {
           "columns": [
             {
               "expression": "completed",
@@ -1537,12 +1743,12 @@
             }
           ],
           "with": {},
-          "name": "completed_idx",
+          "name": "uef_completed_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "created_at_idx": {
+        "uef_created_at_idx": {
           "columns": [
             {
               "expression": "created_at",
@@ -1552,7 +1758,7 @@
             }
           ],
           "with": {},
-          "name": "created_at_idx",
+          "name": "uef_created_at_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -1666,7 +1872,7 @@
         }
       },
       "indexes": {
-        "username_idx": {
+        "users_username_idx": {
           "columns": [
             {
               "expression": "username",
@@ -1676,12 +1882,12 @@
             }
           ],
           "with": {},
-          "name": "username_idx",
+          "name": "users_username_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "wallet_address_idx": {
+        "users_wallet_address_idx": {
           "columns": [
             {
               "expression": "wallet_address",
@@ -1691,12 +1897,12 @@
             }
           ],
           "with": {},
-          "name": "wallet_address_idx",
+          "name": "users_wallet_address_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "role_idx": {
+        "users_role_idx": {
           "columns": [
             {
               "expression": "role",
@@ -1706,12 +1912,12 @@
             }
           ],
           "with": {},
-          "name": "role_idx",
+          "name": "users_role_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "created_at_idx": {
+        "users_created_at_idx": {
           "columns": [
             {
               "expression": "created_at",
@@ -1721,7 +1927,7 @@
             }
           ],
           "with": {},
-          "name": "created_at_idx",
+          "name": "users_created_at_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -1751,7 +1957,7 @@
           "name": "event_uuid",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "claimed": {
           "name": "claimed",
@@ -1787,7 +1993,7 @@
         }
       },
       "indexes": {
-        "user_id_idx": {
+        "visitors_user_id_idx": {
           "columns": [
             {
               "expression": "user_id",
@@ -1797,12 +2003,12 @@
             }
           ],
           "with": {},
-          "name": "user_id_idx",
+          "name": "visitors_user_id_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "event_uuid_idx": {
+        "visitors_event_uuid_idx": {
           "columns": [
             {
               "expression": "event_uuid",
@@ -1812,12 +2018,12 @@
             }
           ],
           "with": {},
-          "name": "event_uuid_idx",
+          "name": "visitors_event_uuid_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "last_visit_idx": {
+        "visitors_last_visit_idx": {
           "columns": [
             {
               "expression": "last_visit",
@@ -1827,12 +2033,12 @@
             }
           ],
           "with": {},
-          "name": "last_visit_idx",
+          "name": "visitors_last_visit_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
         },
-        "created_at_idx": {
+        "visitors_created_at_idx": {
           "columns": [
             {
               "expression": "created_at",
@@ -1842,7 +2048,7 @@
             }
           ],
           "with": {},
-          "name": "created_at_idx",
+          "name": "visitors_created_at_idx",
           "isUnique": false,
           "method": "btree",
           "concurrently": false
@@ -1881,6 +2087,14 @@
     }
   },
   "enums": {
+    "public.event_participation_type": {
+      "name": "event_participation_type",
+      "schema": "public",
+      "values": [
+        "in_person",
+        "online"
+      ]
+    },
     "public.order_state": {
       "name": "order_state",
       "schema": "public",
@@ -1927,7 +2141,7 @@
     "tables": {},
     "columns": {}
   },
-  "id": "23f7edf7-bbaf-47e0-8c0c-62c5f5f93f8f",
-  "prevId": "c459cb05-2bd3-4985-aa2d-a3050e6c774c",
+  "id": "e71d33fd-8215-43c8-ac9a-b1e0e82c8cc5",
+  "prevId": "22aa1ac9-4b4a-4eef-81f7-d32b5a8f9f8f",
   "sequences": {}
 }

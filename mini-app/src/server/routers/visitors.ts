@@ -1,11 +1,11 @@
 import { db } from "@/db/db";
-import { publicProcedure, router } from "../trpc";
 import { visitors } from "@/db/schema";
-import { z } from "zod";
-import { and, eq } from "drizzle-orm";
-import { selectVisitorsByEventUuid } from "../db/visitors";
-import { checkIsAdminOrOrganizer } from "../db/events";
 import { validateMiniAppData } from "@/utils";
+import { and, eq } from "drizzle-orm";
+import { z } from "zod";
+import { checkIsAdminOrOrganizer } from "../db/events";
+import { selectVisitorsByEventUuid } from "../db/visitors";
+import { publicProcedure, router } from "../trpc";
 
 export const visitorsRouter = router({
   // protect
@@ -73,6 +73,7 @@ export const visitorsRouter = router({
         .values({
           user_id: initDataJson.user.id,
           event_uuid: opts.input.event_uuid,
+          updatedBy: initDataJson.user.id.toString(),
         })
         .execute();
     }),

@@ -100,6 +100,7 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
           event_uuid: order.event_uuid,
           ticket_id: order.event_ticket_id,
           nftAddress: body.data.nft_address,
+          updatedBy: "system",
         });
       }
 
@@ -108,6 +109,7 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
         .set({
           state: body.data.state,
           transaction_id: body.data.transaction_id,
+          updatedBy: "system",
         })
         .where(eq(orders.uuid, order.uuid));
       return;

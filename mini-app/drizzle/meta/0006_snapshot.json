@@ -1,10 +1,8 @@
 {
-  "version": "5",
-  "dialect": "pg",
-  "id": "13477ded-6b61-4930-b1a2-d6debc74cd00",
-  "prevId": "ba91abfc-e96f-4ca8-9f77-e49088ce617b",
+  "version": "7",
+  "dialect": "postgresql",
   "tables": {
-    "airdrop_routines": {
+    "public.airdrop_routines": {
       "name": "airdrop_routines",
       "schema": "",
       "columns": {
@@ -45,34 +43,34 @@
         "airdrop_routines_event_id_events_event_id_fk": {
           "name": "airdrop_routines_event_id_events_event_id_fk",
           "tableFrom": "airdrop_routines",
-          "tableTo": "events",
           "columnsFrom": [
             "event_id"
           ],
+          "tableTo": "events",
           "columnsTo": [
             "event_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "airdrop_routines_user_id_users_user_id_fk": {
           "name": "airdrop_routines_user_id_users_user_id_fk",
           "tableFrom": "airdrop_routines",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "user_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "event_fields": {
+    "public.event_fields": {
       "name": "event_fields",
       "schema": "",
       "columns": {
@@ -130,21 +128,21 @@
         "event_fields_event_id_events_event_id_fk": {
           "name": "event_fields_event_id_events_event_id_fk",
           "tableFrom": "event_fields",
-          "tableTo": "events",
           "columnsFrom": [
             "event_id"
           ],
+          "tableTo": "events",
           "columnsTo": [
             "event_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "event_tickets": {
+    "public.event_tickets": {
       "name": "event_tickets",
       "schema": "",
       "columns": {
@@ -209,21 +207,21 @@
         "event_tickets_event_uuid_events_event_uuid_fk": {
           "name": "event_tickets_event_uuid_events_event_uuid_fk",
           "tableFrom": "event_tickets",
-          "tableTo": "events",
           "columnsFrom": [
             "event_uuid"
           ],
+          "tableTo": "events",
           "columnsTo": [
             "event_uuid"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "events": {
+    "public.events": {
       "name": "events",
       "schema": "",
       "columns": {
@@ -376,21 +374,21 @@
         "events_owner_users_user_id_fk": {
           "name": "events_owner_users_user_id_fk",
           "tableFrom": "events",
-          "tableTo": "users",
           "columnsFrom": [
             "owner"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "user_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "orders": {
+    "public.orders": {
       "name": "orders",
       "schema": "",
       "columns": {
@@ -492,47 +490,47 @@
         "orders_event_uuid_events_event_uuid_fk": {
           "name": "orders_event_uuid_events_event_uuid_fk",
           "tableFrom": "orders",
-          "tableTo": "events",
           "columnsFrom": [
             "event_uuid"
           ],
+          "tableTo": "events",
           "columnsTo": [
             "event_uuid"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "orders_user_id_users_user_id_fk": {
           "name": "orders_user_id_users_user_id_fk",
           "tableFrom": "orders",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "user_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "orders_event_ticket_id_event_tickets_id_fk": {
           "name": "orders_event_ticket_id_event_tickets_id_fk",
           "tableFrom": "orders",
-          "tableTo": "event_tickets",
           "columnsFrom": [
             "event_ticket_id"
           ],
+          "tableTo": "event_tickets",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "rewards": {
+    "public.rewards": {
       "name": "rewards",
       "schema": "",
       "columns": {
@@ -588,21 +586,21 @@
         "rewards_visitor_id_visitors_id_fk": {
           "name": "rewards_visitor_id_visitors_id_fk",
           "tableFrom": "rewards",
-          "tableTo": "visitors",
           "columnsFrom": [
             "visitor_id"
           ],
+          "tableTo": "visitors",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "tickets": {
+    "public.tickets": {
       "name": "tickets",
       "schema": "",
       "columns": {
@@ -685,60 +683,60 @@
         "tickets_order_uuid_orders_uuid_fk": {
           "name": "tickets_order_uuid_orders_uuid_fk",
           "tableFrom": "tickets",
-          "tableTo": "orders",
           "columnsFrom": [
             "order_uuid"
           ],
+          "tableTo": "orders",
           "columnsTo": [
             "uuid"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "tickets_event_uuid_events_event_uuid_fk": {
           "name": "tickets_event_uuid_events_event_uuid_fk",
           "tableFrom": "tickets",
-          "tableTo": "events",
           "columnsFrom": [
             "event_uuid"
           ],
+          "tableTo": "events",
           "columnsTo": [
             "event_uuid"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "tickets_event_ticket_id_event_tickets_id_fk": {
           "name": "tickets_event_ticket_id_event_tickets_id_fk",
           "tableFrom": "tickets",
-          "tableTo": "event_tickets",
           "columnsFrom": [
             "event_ticket_id"
           ],
+          "tableTo": "event_tickets",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "tickets_user_id_users_user_id_fk": {
           "name": "tickets_user_id_users_user_id_fk",
           "tableFrom": "tickets",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "user_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "user_event_fields": {
+    "public.user_event_fields": {
       "name": "user_event_fields",
       "schema": "",
       "columns": {
@@ -785,43 +783,43 @@
         "user_event_fields_event_field_id_event_fields_id_fk": {
           "name": "user_event_fields_event_field_id_event_fields_id_fk",
           "tableFrom": "user_event_fields",
-          "tableTo": "event_fields",
           "columnsFrom": [
             "event_field_id"
           ],
+          "tableTo": "event_fields",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "user_event_fields_user_id_users_user_id_fk": {
           "name": "user_event_fields_user_id_users_user_id_fk",
           "tableFrom": "user_event_fields",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "user_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "user_event_fields_event_field_id_user_id_unique": {
           "name": "user_event_fields_event_field_id_user_id_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "event_field_id",
             "user_id"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       }
     },
-    "users": {
+    "public.users": {
       "name": "users",
       "schema": "",
       "columns": {
@@ -880,7 +878,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "visitors": {
+    "public.visitors": {
       "name": "visitors",
       "schema": "",
       "columns": {
@@ -933,28 +931,28 @@
         "visitors_user_id_users_user_id_fk": {
           "name": "visitors_user_id_users_user_id_fk",
           "tableFrom": "visitors",
-          "tableTo": "users",
           "columnsFrom": [
             "user_id"
           ],
+          "tableTo": "users",
           "columnsTo": [
             "user_id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "visitors_event_uuid_events_event_uuid_fk": {
           "name": "visitors_event_uuid_events_event_uuid_fk",
           "tableFrom": "visitors",
-          "tableTo": "events",
           "columnsFrom": [
             "event_uuid"
           ],
+          "tableTo": "events",
           "columnsTo": [
             "event_uuid"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -962,40 +960,44 @@
     }
   },
   "enums": {
-    "order_state": {
+    "public.order_state": {
       "name": "order_state",
-      "values": {
-        "created": "created",
-        "mint_request": "mint_request",
-        "minted": "minted",
-        "failed": "failed",
-        "validation_failed": "validation_failed"
-      }
+      "schema": "public",
+      "values": [
+        "created",
+        "mint_request",
+        "minted",
+        "failed",
+        "validation_failed"
+      ]
     },
-    "reward_status": {
+    "public.reward_status": {
       "name": "reward_status",
-      "values": {
-        "pending_creation": "pending_creation",
-        "created": "created",
-        "received": "received",
-        "notified": "notified",
-        "notification_failed": "notification_failed",
-        "failed": "failed"
-      }
+      "schema": "public",
+      "values": [
+        "pending_creation",
+        "created",
+        "received",
+        "notified",
+        "notification_failed",
+        "failed"
+      ]
     },
-    "reward_types": {
+    "public.reward_types": {
       "name": "reward_types",
-      "values": {
-        "ton_society_sbt": "ton_society_sbt"
-      }
+      "schema": "public",
+      "values": [
+        "ton_society_sbt"
+      ]
     },
-    "event_ticket_status": {
+    "public.event_ticket_status": {
       "name": "event_ticket_status",
-      "values": {
-        "MINTING": "MINTING",
-        "USED": "USED",
-        "UNUSED": "UNUSED"
-      }
+      "schema": "public",
+      "values": [
+        "MINTING",
+        "USED",
+        "UNUSED"
+      ]
     }
   },
   "schemas": {},
@@ -1003,5 +1005,8 @@
     "schemas": {},
     "tables": {},
     "columns": {}
-  }
+  },
+  "id": "13477ded-6b61-4930-b1a2-d6debc74cd00",
+  "prevId": "ba91abfc-e96f-4ca8-9f77-e49088ce617b",
+  "sequences": {}
 }
