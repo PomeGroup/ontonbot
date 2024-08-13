@@ -21,7 +21,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
         limit: 2,
         offset: 0,
         filter: {
-            eventTypes: ["online", "in_person"],
+            participationType: ["online", "in_person"],
             startDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
         },
         sortBy: "time",
@@ -31,7 +31,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
         limit: 2,
         offset: 0,
         filter: {
-            eventTypes: ["online", "in_person"],
+            participationType: ["online", "in_person"],
             endDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
         },
         sortBy: "start_date_desc",

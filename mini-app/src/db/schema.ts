@@ -427,4 +427,7 @@ export const event_details_search_list = pgTable("event_details_search_list", {
   ticket_image: text("ticket_image").notNull(),
   ticket_count: integer("ticket_count").notNull(),
   hidden: boolean("hidden").notNull(),
+  participation_type: eventParticipationType("participation_type")
+      .default("online")
+      .notNull(),
 });

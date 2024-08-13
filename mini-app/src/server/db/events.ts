@@ -122,14 +122,14 @@ export const getEventsWithFilters = async (
   let conditions = [];
 
   // Apply event type filters
-  if (filter?.eventTypes?.length) {
+  if (filter?.participationType?.length) {
     conditions.push(
         or(
-            filter.eventTypes.includes("online")
-                ? eq(event_details_search_list.type, 1)
+            filter.participationType.includes("online")
+                ? eq(event_details_search_list.participation_type, "online")
                 : sql`false`,
-            filter.eventTypes.includes("in_person")
-                ? eq(event_details_search_list.type, 2)
+            filter.participationType.includes("in_person")
+                ? eq(event_details_search_list.participation_type, "in_person")
                 : sql`false`
         )
     );
@@ -186,21 +186,21 @@ export const getEventsWithFilters = async (
         )
     );
 
-    let sortByFieldLike;
-    if (sortBy === "start_date_asc") {
-      sortByFieldLike = ` , start_date asc`;
+
+    let orderByClause;
+    if (sortBy === "start_date_asc" ) {
+      orderByClause = sql`start_date ASC`;
     } else if (sortBy === "start_date_desc") {
-      sortByFieldLike = `, start_date desc`;
-    } else if (sortBy === "most_people_reached") {
-      sortByFieldLike = ` , visitor_count desc`;
+      orderByClause = sql`start_date DESC`;
+    } else if (sortBy === "most_people_reached" || sortBy === "default") {
+      orderByClause = sql`visitor_count DESC`;
     }
 
     query = query.orderBy(
         sql`greatest(
                 similarity(${event_details_search_list.title}, ${search}),
                 similarity(${event_details_search_list.location}, ${search})
-            ) desc
-              ${sortByFieldLike}`
+            ) DESC ${orderByClause ? sql`, ${orderByClause}` : sql``}`
     );
   }
 

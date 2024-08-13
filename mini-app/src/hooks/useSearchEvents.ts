@@ -7,18 +7,22 @@ export const useSearchEvents = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [autoSuggestions, setAutoSuggestions] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [filters, setFilters] = useState({ participationType: ["online", "in_person"], sortBy: "default" });
 
   const { data: searchResults, refetch } = trpc.events.getEventsWithFilters.useQuery(
       searchEventsInputZod.parse({
         limit: 3,
         offset: 0,
         search: searchTerm,
+        filter: {
+          participationType: filters.participationType,
+        },
+        sortBy: filters.sortBy,
       }),
       {
         enabled: false,
         onSuccess: (data) => {
-          console.log("Data is like that:", data);
-           setAutoSuggestions(data.data || []);
+          setAutoSuggestions(data.data || []);
           setSearchLoading(false);
         },
         onError: () => {
@@ -46,10 +50,15 @@ export const useSearchEvents = () => {
       setAutoSuggestions([]);
     }
   };
+
+  const refetchWithFilters = (newFilters: { participationType: string[], sortBy: string }) => {
+    setFilters(newFilters);
+    refetch();
+  };
+
   useEffect(() => {
     if (searchResults) {
       setAutoSuggestions(searchResults.data || []);
-      console.log("Search results:", searchResults);
     }
   }, [searchResults]);
 
@@ -60,5 +69,6 @@ export const useSearchEvents = () => {
     setAutoSuggestions,
     searchLoading,
     handleSearchChange,
+    refetchWithFilters,
   };
 };
