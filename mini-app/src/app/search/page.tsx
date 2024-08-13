@@ -5,7 +5,7 @@ import { trpc } from "@/app/_trpc/client";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
-import SearchBar from "@/app/_components/SearchBar";
+import SearchBar from "@/app/_components/SearchBar/SearchBar";
 
 
 const LIMIT = 20;

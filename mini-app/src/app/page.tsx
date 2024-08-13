@@ -6,17 +6,17 @@ import { trpc } from "./_trpc/client";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
-import SearchBar from "@/app/_components/SearchBar";
+import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import useWebApp from "@/hooks/useWebApp";
 import useAuth from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {any} from "zod";
 
 export default function Home({ searchParams }: { searchParams: any }) {
     noStore();
-    const { authorized, isLoading } = useAuth();
     const webApp = useWebApp();
-    console.log("asdasdasdasd", webApp?.initDataUnsafe);
-    const UserId = webApp?.initDataUnsafe?.user?.id;
+    const { authorized, isLoading } = useAuth();
+    const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
 
     const [isMyEventsTabActive, setIsMyEventsTabActive] = useState(false);
 
@@ -84,30 +84,37 @@ export default function Home({ searchParams }: { searchParams: any }) {
         enabled: false, // Disable automatic fetching
     });
 
-    useEffect(() => {
-        if (upcomingEvents) {
-            console.log("Upcoming events:", upcomingEvents);
-        }
-    }, [upcomingEvents]);
+    const  generateQueryString= (params: any) => {
+        const filteredParams = {
+            ...params,
+            limit: undefined,
+            offset: undefined,
+        };
 
-    useEffect(() => {
-        if (pastEvents) {
-            console.log("Past events:", pastEvents);
-        }
-    }, [pastEvents]);
+        const queryString = new URLSearchParams(
+            Object.entries(filteredParams)
+                .filter(([_, v]) => v !== undefined && v !== null)
+                .map(([key, value]) => {
+                    if (typeof value === "object" && !Array.isArray(value)) {
+                        return [key, JSON.stringify(value)];
+                    } else if (Array.isArray(value)) {
+                        return [key, value.join(",")];
+                    } else {
+                        return [key, String(value)];
+                    }
+                })
+        ).toString();
 
-    useEffect(() => {
-        if (sliderEvent) {
-            console.log("Slider event:", sliderEvent);
-        }
-    }, [sliderEvent]);
+        return queryString;
+    }
 
     useEffect(() => {
         if (isMyEventsTabActive) {
-            refetchOrganizerEvents(); // Fetch organizer events when tab is activated
+            refetchOrganizerEvents();
         }
     }, [isMyEventsTabActive, refetchOrganizerEvents]);
-
+    const upcomingEventsQuery = generateQueryString(upcomingEventsParams);
+    const pastEventsQuery = generateQueryString(pastEventsParams);
     return (
         <>
             <SearchBar />
@@ -139,9 +146,9 @@ export default function Home({ searchParams }: { searchParams: any }) {
                 </TabsList>
 
                 <TabsContent value="all-events">
-                    <div className="pt-2 flex justify-between items-center">
+                    <div className="pt-4 pb-4  flex justify-between items-center">
                         <h2>Upcoming Events</h2>
-                        <a href="/search?tab=upcoming" className="text-zinc-300 hover:underline">See All</a>
+                        <a href={`/search?${upcomingEventsQuery}`} className="text-zinc-300 hover:underline">See All</a>
                     </div>
                     <ul>
                         {isLoadingUpcoming
@@ -150,9 +157,9 @@ export default function Home({ searchParams }: { searchParams: any }) {
                                 <EventCard key={event.event_uuid} event={event} />
                             ))}
                     </ul>
-                    <div className="pt-2 flex justify-between items-center">
+                    <div className="pt-4 pb-4 flex justify-between items-center">
                         <h2>Past Events</h2>
-                        <a href="/search?tab=past" className="text-blue-500 hover:underline">See All</a>
+                        <a  href={`/search?${pastEventsQuery}`} className="text-zinc-300  hover:underline">See All</a>
                     </div>
                     <ul>
                         {isLoadingPast
