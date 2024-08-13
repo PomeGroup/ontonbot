@@ -9,7 +9,7 @@ import {
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
-import { getObjectDifference, removeKey } from "@/lib/utils";
+import { getObjectDifference } from "@/lib/utils";
 import { EventDataSchema, HubsResponse, SocietyHub } from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import { fetchBalance, sleep, validateMiniAppData } from "@/utils";
@@ -681,16 +681,13 @@ ${JSON.stringify(deletedEvent[0], null, 2)}
             updatedEvent[0]
           );
 
-          const eventDataSafe =
-            updateChanges && removeKey(updateChanges, "secret_phrase");
-
           await sendLogNotification({
             message: `
 @${initDataJson.user.username} $<b>Updated</b> an event <code>${updatedEvent[0].event_uuid}</code> successfully
 
 <pre>
 <code>
-${eventDataSafe && Object.keys(eventDataSafe).length > 0 ? JSON.stringify(eventDataSafe, null, 2) : eventData.secret_phrase ? "Only event password updated" : "No changes"}
+${JSON.stringify(updateChanges, null, 2)}
 </code>
 </pre>
 
