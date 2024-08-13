@@ -273,11 +273,7 @@ export const eventsRouter = router({
             message: `
 @${initDataJson.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
 
-<pre>
-<code>
-${JSON.stringify(newEvent[0], null, 2)}
-</code>
-</pre>
+<pre><code>${JSON.stringify(newEvent[0], null, 2)}</code></pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
             `,
@@ -344,11 +340,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             message: `
 @${initDataJson.user.username} <b>Deleted</b> an event <code>${deletedEvent[0].event_uuid}</code>.
 
-<pre>
-<code>
-${JSON.stringify(deletedEvent[0], null, 2)}
-</code>
-</pre>
+<pre><code>${JSON.stringify(deletedEvent[0], null, 2)}</code></pre>
 `,
           });
 
@@ -676,6 +668,8 @@ ${JSON.stringify(deletedEvent[0], null, 2)}
             },
           };
 
+          const oldChanges = getObjectDifference(updatedEvent[0], oldEvent[0]);
+
           const updateChanges = getObjectDifference(
             oldEvent[0],
             updatedEvent[0]
@@ -685,11 +679,12 @@ ${JSON.stringify(deletedEvent[0], null, 2)}
             message: `
 @${initDataJson.user.username} <b>Updated</b> an event <code>${updatedEvent[0].event_uuid}</code> successfully
 
-<pre>
-<code>
-${JSON.stringify(updateChanges, null, 2)}
-</code>
-</pre>
+Before:
+<pre><code>${JSON.stringify(oldChanges, null, 2)}</code></pre>
+
+After:
+<pre><code>${JSON.stringify(updateChanges, null, 2)}</code></pre>
+
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${updatedEvent[0].event_uuid}
             `,
