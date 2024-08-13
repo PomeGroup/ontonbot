@@ -48,5 +48,3 @@ LEFT JOIN
              WHERE et.event_uuid = e.event_uuid
              ORDER BY et.price
              LIMIT 1) min_tickets ON true;
-
-ALTER TABLE "public"."event_details_search_list" OWNER TO "tonbotuser";
