@@ -1,8 +1,16 @@
 DROP VIEW IF EXISTS "event_details_search_list";
 
-ALTER TABLE "event_tickets" ALTER COLUMN "event_uuid" SET DATA TYPE uuid;--> statement-breakpoint
-ALTER TABLE "orders" ALTER COLUMN "event_uuid" SET DATA TYPE uuid;--> statement-breakpoint
-ALTER TABLE "tickets" ALTER COLUMN "event_uuid" SET DATA TYPE uuid;
+-- For table "event_tickets"
+ALTER TABLE "event_tickets"
+ALTER COLUMN "event_uuid" TYPE uuid USING ("event_uuid"::uuid);
+
+-- For table "orders"
+ALTER TABLE "orders"
+ALTER COLUMN "event_uuid" TYPE uuid USING ("event_uuid"::uuid);
+
+-- For table "tickets"
+ALTER TABLE "tickets"
+ALTER COLUMN "event_uuid" TYPE uuid USING ("event_uuid"::uuid);
 
 CREATE OR REPLACE VIEW "public"."event_details_search_list" AS
 SELECT
