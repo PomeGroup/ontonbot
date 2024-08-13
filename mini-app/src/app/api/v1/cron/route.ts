@@ -90,6 +90,7 @@ async function createRewards() {
         .set({
           status: "created",
           data: response.data.data,
+          updatedBy: "system",
         })
         .where(eq(rewards.id, pendingReward.id));
     } catch (error) {
@@ -139,6 +140,7 @@ async function createRewards() {
                 : undefined,
               status: shouldFail ? "failed" : undefined,
               data: shouldFail ? { fail_reason: error } : undefined,
+              updatedBy: "system",
             })
             .where(eq(rewards.id, pendingReward.id));
         } catch (error) {
@@ -216,7 +218,7 @@ async function updateRewardStatus(
 ) {
   await db
     .update(rewards)
-    .set({ status, ...(data && { data }) })
+    .set({ status, ...(data && { data }), updatedBy: "system" })
     .where(eq(rewards.id, rewardId));
 }
 

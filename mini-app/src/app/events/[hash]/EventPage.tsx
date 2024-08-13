@@ -94,6 +94,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
         <>
           <Tasks.Wallet />
           <AllTasks
+            // @ts-expect-error
             tasks={eventData.data.dynamic_fields}
             eventHash={eventHash}
           />

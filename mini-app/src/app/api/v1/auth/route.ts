@@ -79,6 +79,7 @@ export async function GET(req: NextRequest) {
             language_code: userdata.data.language_code,
             last_name: userdata.data.last_name,
             username: userdata.data.username,
+            updatedBy: "system",
           })
           .returning()
           .execute()
