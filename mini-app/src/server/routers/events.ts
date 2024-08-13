@@ -683,7 +683,7 @@ ${JSON.stringify(deletedEvent[0], null, 2)}
 
           await sendLogNotification({
             message: `
-@${initDataJson.user.username} $<b>Updated</b> an event <code>${updatedEvent[0].event_uuid}</code> successfully
+@${initDataJson.user.username} <b>Updated</b> an event <code>${updatedEvent[0].event_uuid}</code> successfully
 
 <pre>
 <code>
