@@ -1,27 +1,3 @@
-CREATE TABLE IF NOT EXISTS "event_details_search_list" (
-	"event_id" integer NOT NULL,
-	"event_uuid" uuid NOT NULL,
-	"title" text NOT NULL,
-	"description" text NOT NULL,
-	"start_date" integer NOT NULL,
-	"end_date" integer NOT NULL,
-	"type" integer NOT NULL,
-	"society_hub" text NOT NULL,
-	"image_url" text NOT NULL,
-	"location" text NOT NULL,
-	"subtitle" text NOT NULL,
-	"ticketToCheckIn" boolean NOT NULL,
-	"timezone" text NOT NULL,
-	"website" text NOT NULL,
-	"created_at" timestamp NOT NULL,
-	"organizer_user_id" integer NOT NULL,
-	"organizer_first_name" text NOT NULL,
-	"organizer_last_name" text NOT NULL,
-	"organizer_username" text NOT NULL,
-	"reserved_count" integer NOT NULL,
-	"visitor_count" integer NOT NULL
-);
---> statement-breakpoint
 DROP INDEX IF EXISTS "event_id_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "user_id_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "status_idx";--> statement-breakpoint
