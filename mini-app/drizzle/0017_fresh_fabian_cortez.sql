@@ -1,3 +1,9 @@
+DROP VIEW IF EXISTS "event_details_search_list";
+
+ALTER TABLE "event_tickets" ALTER COLUMN "event_uuid" SET DATA TYPE uuid;--> statement-breakpoint
+ALTER TABLE "orders" ALTER COLUMN "event_uuid" SET DATA TYPE uuid;--> statement-breakpoint
+ALTER TABLE "tickets" ALTER COLUMN "event_uuid" SET DATA TYPE uuid;
+
 CREATE OR REPLACE VIEW "public"."event_details_search_list" AS
 SELECT
     e.event_id,
@@ -45,6 +51,6 @@ LEFT JOIN
                     et.ticket_image,
                     et.count
              FROM event_tickets et
-             WHERE et.event_uuid::uuid = e.event_uuid::uuid
+             WHERE et.event_uuid = e.event_uuid
              ORDER BY et.price
              LIMIT 1) min_tickets ON true;

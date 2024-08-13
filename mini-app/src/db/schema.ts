@@ -210,7 +210,7 @@ export const eventTicket = pgTable(
   "event_tickets",
   {
     id: serial("id").primaryKey(),
-    event_uuid: text("event_uuid").references(() => events.event_uuid),
+    event_uuid: uuid("event_uuid").references(() => events.event_uuid),
     title: text("title"),
     description: text("description"),
     price: text("price").notNull(),
@@ -246,7 +246,7 @@ export const tickets = pgTable(
     order_uuid: text("order_uuid").references(() => orders.uuid),
     status: ticketStatus("status"),
     nftAddress: text("nft_address"),
-    event_uuid: text("event_uuid").references(() => events.event_uuid),
+    event_uuid: uuid("event_uuid").references(() => events.event_uuid),
     ticket_id: integer("event_ticket_id")
       .references(() => eventTicket.id)
       .notNull(),
@@ -282,7 +282,7 @@ export const orders = pgTable(
   "orders",
   {
     uuid: uuid("uuid").defaultRandom().primaryKey(),
-    event_uuid: text("event_uuid").references(() => events.event_uuid),
+    event_uuid: uuid("event_uuid").references(() => events.event_uuid),
     user_id: bigint("user_id", { mode: "number" }).references(
       () => users.user_id
     ),
@@ -428,6 +428,6 @@ export const event_details_search_list = pgTable("event_details_search_list", {
   ticket_count: integer("ticket_count").notNull(),
   hidden: boolean("hidden").notNull(),
   participation_type: eventParticipationType("participation_type")
-      .default("online")
-      .notNull(),
+    .default("online")
+    .notNull(),
 });
