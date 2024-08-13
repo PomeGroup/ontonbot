@@ -6,6 +6,7 @@ import { useSearchEvents } from "@/hooks/useSearchEvents";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { VscSettings } from "react-icons/vsc";
+import { Separator } from "@/components/ui/separator";
 import {
     Drawer,
     DrawerClose,
@@ -65,6 +66,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
         setShowSuggestions(event.target.value.length > 2);
     };
 
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === "Enter") {
+            handleFilterApply();
+        }
+    };
+
     const handleFilterApply = () => {
         const queryParams = new URLSearchParams({
             query: searchTerm,
@@ -86,6 +93,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
                     placeholder="Search"
                     className="w-full pl-10 pr-10 p-2 rounded-md focus:ring-0 focus:outline-none focus:text-zinc-100 transition-width duration-300"
                     onChange={handleSearchInputChange}
+                    onKeyDown={handleKeyDown}  // Listen for Enter key
                     value={searchTerm}
                     onFocus={handleSearchInputChange}
                 />
@@ -123,22 +131,19 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
                 >
                     <DrawerTrigger>
                         <button className="ml-4 p-2 rounded-md text-gray-500 hover:text-gray-700">
-
-                            <VscSettings className="w-8 h-8" />
+                            <VscSettings className="w-7 h-7" />
                         </button>
                     </DrawerTrigger>
                     <DrawerContent>
                         <DrawerHeader>
-                            <DrawerTitle>Filter Events</DrawerTitle>
-                            <DrawerDescription>
-                                Select filters to apply
-                            </DrawerDescription>
+                            <DrawerTitle>Filter List</DrawerTitle>
                         </DrawerHeader>
                         <div className="p-4 space-y-6">
                             <div className="space-y-4">
-                                <p className="text-sm font-medium text-gray-700">EVENT TYPE</p>
+                                <p className="text-sm font-medium text-zinc-100">EVENT TYPE</p>
                                 <div className="flex flex-col space-y-2">
-                                    <label className="flex items-center space-x-3">
+                                    <label className="flex justify-between items-center">
+                                        <span className="text-zinc-400">Online</span>
                                         <Checkbox
                                             checked={participationType.includes("online")}
                                             onCheckedChange={(checked) => {
@@ -147,9 +152,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
                                                 );
                                             }}
                                         />
-                                        <span className="text-gray-700">Online</span>
                                     </label>
-                                    <label className="flex items-center space-x-3">
+                                    <Separator className="my-0" />
+                                    <label className="flex justify-between items-center">
+                                        <span className="text-zinc-400">In-person</span>
                                         <Checkbox
                                             checked={participationType.includes("in_person")}
                                             onCheckedChange={(checked) => {
@@ -158,51 +164,52 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
                                                 );
                                             }}
                                         />
-                                        <span className="text-gray-700">In-person</span>
                                     </label>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
-                                <p className="text-sm font-medium text-gray-700">SORT BY</p>
+                                <p className="text-sm font-medium text-zinc-100">SORT BY</p>
                                 <RadioGroup
                                     orientation="vertical"
                                     value={sortBy}
                                     onValueChange={setSortBy}
                                 >
-                                    <label className="flex items-center space-x-3">
+                                    <label className="flex justify-between items-center">
+                                        <span className="text-zinc-400">Default</span>
                                         <RadioGroupItem value="default" />
-                                        <span className="text-gray-700">Default</span>
                                     </label>
-                                    <label className="flex items-center space-x-3">
+                                    <Separator className="my-0" />
+                                    <label className="flex justify-between items-center">
+                                        <span className="text-zinc-400">Time</span>
                                         <RadioGroupItem value="start_date_asc" />
-                                        <span className="text-gray-700">Time</span>
                                     </label>
-                                    <label className="flex items-center space-x-3">
+                                    <Separator className="my-0" />
+                                    <label className="flex justify-between items-center">
+                                        <span className="text-zinc-400">Most People Reached</span>
                                         <RadioGroupItem value="most_people_reached" />
-                                        <span className="text-gray-700">Most People Reached</span>
                                     </label>
                                 </RadioGroup>
                             </div>
                         </div>
 
-                        <DrawerFooter className="flex justify-between items-center p-4">
+                        <DrawerFooter className="flex justify-end space-x-4 p-4">
                             <DrawerClose asChild>
                                 <button
-                                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                                    className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full hover:bg-blue-200"
                                     onClick={handleFilterApply}
                                 >
-                                    Apply Filters
+                                    Filter Events
                                 </button>
                             </DrawerClose>
                             <button
-                                className="text-blue-600 hover:underline"
+                                className="text-blue-600 hover:underline px-4 py-2 rounded-full"
                                 onClick={() => {
                                     setParticipationType(["online", "in_person"]);
                                     setSortBy("default");
                                 }}
                             >
-                                Reset Filters
+                                Reset filters
                             </button>
                         </DrawerFooter>
                     </DrawerContent>

@@ -7,6 +7,7 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar";
 
+
 const LIMIT = 20;
 
 const Search: React.FC = () => {
@@ -44,7 +45,7 @@ const Search: React.FC = () => {
         onSuccess: (data) => {
             setResults((prev) => (offset === 0 ? data?.data || [] : [...prev, ...data.data || []]));
             setHasMore(data?.data?.length === LIMIT);
-       },
+        },
     });
 
     const loadMoreResults = useCallback(() => {
@@ -89,6 +90,7 @@ const Search: React.FC = () => {
 
     return (
         <div className="container mx-auto p-4">
+
             <SearchBar includeQueryParam={true} />
 
             <div className="pt-4">
