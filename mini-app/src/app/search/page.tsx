@@ -43,8 +43,9 @@ const Search: React.FC = () => {
         enabled: initialFetchDone,
         keepPreviousData: true,
         onSuccess: (data) => {
-            setResults((prev) => (offset === 0 ? data?.data || [] : [...prev, ...data.data || []]));
+            setResults((prev) => (   [...prev, ...data.data || []]));
             setHasMore(data?.data?.length === LIMIT);
+            console.log("*****data", data?.data );
         },
     });
 
@@ -76,9 +77,6 @@ const Search: React.FC = () => {
         if (!initialFetchDone) {
             refetch();
             setInitialFetchDone(true);
-        } else {
-            setOffset(0); // Reset the offset on search/filter change
-
         }
     }, [searchTerm, participationType, sortBy, refetch]);
 
