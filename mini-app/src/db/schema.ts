@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -25,6 +25,14 @@ export const users = pgTable(
     language_code: text("language_code"),
     role: text("role").notNull(),
     created_at: timestamp("created_at").defaultNow(),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => ({
     usernameIdx: index("users_username_idx").on(table.username),
@@ -33,6 +41,8 @@ export const users = pgTable(
     ),
     roleIdx: index("users_role_idx").on(table.role),
     createdAtIdx: index("users_created_at_idx").on(table.created_at),
+    updatedAtIdx: index("users_updated_at_idx").on(table.updatedAt),
+    updateCounterIdx: index("users_update_counter_idx").on(table.updateCounter),
   })
 );
 
@@ -62,6 +72,14 @@ export const events = pgTable(
     hidden: boolean("hidden").default(false),
     ticketToCheckIn: boolean("ticketToCheckIn").default(false),
     created_at: timestamp("created_at").defaultNow(),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => ({
     eventUuidIdx: index("events_event_uuid_idx").on(table.event_uuid),
@@ -76,6 +94,10 @@ export const events = pgTable(
     ownerIdx: index("events_owner_idx").on(table.owner),
     hiddenIdx: index("events_hidden_idx").on(table.hidden),
     createdAtIdx: index("events_created_at_idx").on(table.created_at),
+    updatedAtIdx: index("events_updated_at_idx").on(table.updatedAt),
+    updateCounterIdx: index("events_update_counter_idx").on(
+      table.updateCounter
+    ),
   })
 );
 
@@ -90,11 +112,23 @@ export const eventFields = pgTable(
     type: text("type"),
     order_place: integer("order_place"),
     event_id: integer("event_id").references(() => events.event_id),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => ({
     titleIdx: index("eventf_title_idx").on(table.title),
     typeIdx: index("eventf_type_idx").on(table.type),
     eventIdIdx: index("eventf_event_id_idx").on(table.event_id),
+    updateCounterIdx: index("eventf_update_counter_idx").on(
+      table.updateCounter
+    ),
+    updatedAtIdx: index("eventf_updated_at_idx").on(table.updatedAt),
   })
 );
 
@@ -113,12 +147,24 @@ export const visitors = pgTable(
     tx_hash: text("tx_hash"),
     last_visit: timestamp("last_visit").defaultNow(),
     created_at: timestamp("created_at").defaultNow(),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => ({
     userIdIdx: index("visitors_user_id_idx").on(table.user_id),
     eventUuidIdx: index("visitors_event_uuid_idx").on(table.event_uuid),
     lastVisitIdx: index("visitors_last_visit_idx").on(table.last_visit),
     createdAtIdx: index("visitors_created_at_idx").on(table.created_at),
+    updateCounterIdx: index("visitors_update_counter_idx").on(
+      table.updateCounter
+    ),
+    updatedAtIdx: index("visitors_updated_at_idx").on(table.updatedAt),
   })
 );
 
@@ -143,12 +189,24 @@ export const rewards = pgTable(
     tryCount: integer("try_count").default(0).notNull(),
     status: rewardStatus("status").notNull().default("created"),
     created_at: timestamp("created_at").defaultNow(),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => ({
     visitorIdIdx: index("rewards_visitor_id_idx").on(table.visitor_id),
     typeIdx: index("rewards_type_idx").on(table.type),
     statusIdx: index("rewards_status_idx").on(table.status),
     createdAtIdx: index("rewards_created_at_idx").on(table.created_at),
+    updateCounterIdx: index("rewards_update_counter_idx").on(
+      table.updateCounter
+    ),
+    updatedAtIdx: index("rewards_updated_at_idx").on(table.updatedAt),
   })
 );
 
@@ -166,6 +224,14 @@ export const userEventFields = pgTable(
     data: text("data"),
     completed: boolean("completed"),
     created_at: timestamp("created_at").defaultNow(),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => ({
     unq: unique().on(table.event_field_id, table.user_id),
@@ -174,6 +240,8 @@ export const userEventFields = pgTable(
     userIdIdx: index("uef_user_id_idx").on(table.user_id),
     completedIdx: index("uef_completed_idx").on(table.completed),
     createdAtIdx: index("uef_created_at_idx").on(table.created_at),
+    updateCounterIdx: index("uef_update_counter_idx").on(table.updateCounter),
+    updatedAtIdx: index("uef_updated_at_idx").on(table.updatedAt),
   })
 );
 
@@ -187,12 +255,24 @@ export const airdropRoutines = pgTable(
     ),
     status: text("status"),
     created_at: timestamp("created_at").defaultNow(),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => ({
     eventIdIdx: index("airdrop_event_id_idx").on(table.event_id),
     userIdIdx: index("airdrop_user_id_idx").on(table.user_id),
     statusIdx: index("airdrop_status_idx").on(table.status),
     createdAtIdx: index("airdrop_created_at_idx").on(table.created_at),
+    updateCounterIdx: index("airdrop_update_counter_idx").on(
+      table.updateCounter
+    ),
+    updatedAtIdx: index("airdrop_updated_at_idx").on(table.updatedAt),
   })
 );
 
@@ -208,6 +288,14 @@ export const eventTicket = pgTable(
     count: integer("count"),
     collectionAddress: text("collection_address"),
     created_at: timestamp("created_at").defaultNow(),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => ({
     eventUuidIdx: index("eventt_event_uuid_idx").on(table.event_uuid),
@@ -217,6 +305,10 @@ export const eventTicket = pgTable(
       table.collectionAddress
     ),
     createdAtIdx: index("eventt_created_at_idx").on(table.created_at),
+    updateCounterIdx: index("eventt_update_counter_idx").on(
+      table.updateCounter
+    ),
+    updatedAtIdx: index("eventt_updated_at_idx").on(table.updatedAt),
   })
 );
 
@@ -244,6 +336,14 @@ export const tickets = pgTable(
       () => users.user_id
     ),
     created_at: timestamp("created_at").defaultNow(),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => {
     return {
@@ -257,6 +357,10 @@ export const tickets = pgTable(
       ticketIdIdx: index("tickets_ticket_id_idx").on(table.ticket_id),
       userIdIdx: index("tickets_user_id_idx").on(table.user_id),
       createdAtIdx: index("tickets_created_at_idx").on(table.created_at),
+      updateCounterIdx: index("tickets_update_counter_idx").on(
+        table.updateCounter
+      ),
+      updatedAtIdx: index("tickets_updated_at_idx").on(table.updatedAt),
     };
   }
 );
@@ -290,6 +394,14 @@ export const orders = pgTable(
     position: text("position").notNull(),
     owner_address: text("owner_address").notNull(),
     created_at: timestamp("created_at").defaultNow(),
+    updateCounter: integer("update_counter")
+      .default(sql`1`)
+      .$onUpdateFn(() => sql`update_counter + 1`),
+    updatedAt: timestamp("updated_at", {
+      mode: "date",
+      precision: 3,
+    }).$onUpdate(() => new Date()),
+    updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => ({
     eventUuidIdx: index("orders_event_uuid_idx").on(table.event_uuid),
@@ -306,6 +418,10 @@ export const orders = pgTable(
     companyIdx: index("orders_company_idx").on(table.company),
     ownerAddressIdx: index("orders_owner_address_idx").on(table.owner_address),
     createdAtIdx: index("orders_created_at_idx").on(table.created_at),
+    updateCounterIdx: index("orders_update_counter_idx").on(
+      table.updateCounter
+    ),
+    updatedAtIdx: index("orders_updated_at_idx").on(table.updatedAt),
   })
 );
 
