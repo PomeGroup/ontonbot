@@ -1,12 +1,12 @@
-import { Request, Response } from "express";
-import { UploadedFile } from "express-fileupload";
-import fs from "fs";
-import QRCode from "qrcode";
-import sharp from "sharp";
-import { Context, Telegraf } from "telegraf";
-import { Update } from "telegraf/typings/core/types/typegram";
-import { getEvent } from "./db/db";
-import { shareKeyboard } from "./markups";
+import { Request, Response } from "express"
+import { UploadedFile } from "express-fileupload"
+import fs from "fs"
+import QRCode from "qrcode"
+import sharp from "sharp"
+import { Context, Telegraf } from "telegraf"
+import { Update } from "telegraf/typings/core/types/typegram"
+import { getEvent } from "./db/db"
+import { shareKeyboard } from "./markups"
 
 export const handleSendQRCode = async (req, res) => {
   const { url, hub, id } = req.query;
@@ -149,44 +149,57 @@ interface SendRewardLinkBody {
   custom_message: string;
 }
 
+/**
+ * Sends a message to a Telegram chat.
+ *
+ * @param {Request & { bot: Telegraf<Context<Update>> }} req - The request object.
+ * @param {Response} res - The response object.
+ * @return {Promise<Response>} The response object.
+ */
 export async function sendMessage(
   req: Request & { bot: Telegraf<Context<Update>> },
   res: Response,
 ): Promise<Response> {
   try {
+    // Destructure the request body
     const { chat_id, link, custom_message }: SendRewardLinkBody = req.body;
 
     // Input validation
-    if (!chat_id || typeof chat_id !== "number") {
+    if (!chat_id || typeof Number(chat_id) !== "number") {
+      // Return an error response if chat_id is invalid or missing
       return res.status(400).json({ error: "Invalid or missing chat_id" });
     }
-    if (!link || typeof link !== "string" || !link.startsWith("http")) {
-      return res.status(400).json({ error: "Invalid or missing link" });
+    if (link && (typeof link !== "string" || !link?.startsWith("http"))) {
+      // Return an error response if link is invalid
+      return res.status(400).json({ error: "Invalid link" });
     }
     if (!custom_message || typeof custom_message !== "string") {
-      return res.status(400).json({ error: "Invalid or missing chat_idd" });
+      // Return an error response if custom_message is missing or invalid
+      return res.status(400).json({ error: "Invalid custom_message" });
     }
 
-    const message = custom_message; // || defaultMessage;
-
-    await req.bot.telegram.sendMessage(chat_id, message.trim(), {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: "Claim Reward",
-              url: link,
-            },
-          ],
+    // Create the reply_markup object if link is provided
+    const reply_markup = link ? {
+      inline_keyboard: [
+        [
+          {
+            text: "Claim Reward",
+            url: link,
+          },
         ],
-      },
-    });
+      ],
+    } : undefined;
 
+    // Send the message to the chat
+    await req.bot.telegram.sendMessage(chat_id, custom_message.trim(), { reply_markup, parse_mode: "HTML"});
+
+    // Return a success response
     return res.status(200).json({
       success: true,
       message: "Message sent successfully",
     });
   } catch (error) {
+    // Log and return an error response if an error occurs
     console.error("Error sending message:", error);
     return res.status(500).json({
       success: false,

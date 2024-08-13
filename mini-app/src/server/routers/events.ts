@@ -7,6 +7,7 @@ import {
   visitors,
 } from "@/db/schema";
 import { hashPassword } from "@/lib/bcrypt";
+import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { EventDataSchema, HubsResponse, SocietyHub } from "@/types";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
@@ -267,6 +268,17 @@ export const eventsRouter = router({
           };
 
           const res = await registerActivity(eventDraft);
+          await sendLogNotification({
+            message: `
+@${initDataJson.user.username} <b>Added</b> A New Event <code>${newEvent[0].event_uuid}</code> successfully
+
+<code>
+${JSON.stringify(newEvent[0], null, 2)}
+</code>
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
+            `,
+          });
 
           await trx
             .update(events)
@@ -308,7 +320,7 @@ export const eventsRouter = router({
         return undefined;
       }
 
-      const { valid } = await checkIsEventOwner(
+      const { valid, initDataJson } = await checkIsEventOwner(
         opts.input.initData,
         opts.input.event_uuid
       );
@@ -319,11 +331,21 @@ export const eventsRouter = router({
 
       try {
         const result = await db.transaction(async (trx) => {
-          await trx
+          const deletedEvent = await trx
             .update(events)
             .set({ hidden: true, updatedBy: opts.input.initData }) // Set the 'hidden' field to true
             .where(eq(events.event_uuid, opts.input.event_uuid))
-            .execute();
+            .returning();
+
+          await sendLogNotification({
+            message: `
+@${initDataJson.user.username} <b>Deleted</b> an Event <code>${deletedEvent[0].event_uuid}</code>.
+
+<code>
+${JSON.stringify(deletedEvent[0], null, 2)}
+</code>
+`,
+          });
 
           return { success: true };
         });
@@ -507,7 +529,7 @@ export const eventsRouter = router({
             ? await hashPassword(inputSecretPhrase)
             : undefined;
 
-          await trx
+          const updatedEvent = await trx
             .update(events)
             .set({
               type: eventData.type,
@@ -525,7 +547,7 @@ export const eventsRouter = router({
               updatedBy: initDataJson.user.id.toString(),
             })
             .where(eq(events.event_uuid, eventData.event_uuid!))
-            .execute();
+            .returning();
 
           const currentFields = await trx
             .select()
@@ -643,13 +665,30 @@ export const eventsRouter = router({
             },
           };
 
+          await sendLogNotification({
+            message: `
+@${initDataJson.user.username} <b>updated</b> A New Event <code>${updatedEvent[0].event_uuid}</code> successfully
+
+<code>
+${JSON.stringify(updatedEvent[0], null, 2)}
+</code>
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${updatedEvent[0].event_uuid}
+            `,
+          });
+
           await updateActivity(eventDraft, eventData.activity_id as number);
 
           return { success: true, eventId: eventData.event_id };
         });
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          console.error("Error during API call:", error.message);
+          console.error(
+            "Error during API call:",
+            error.message,
+            error.request,
+            error.response?.data.error
+          );
           return {
             success: false,
             message: "API call error: " + error.message,
