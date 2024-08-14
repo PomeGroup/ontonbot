@@ -17,6 +17,10 @@ module.exports = {
       },
     },
     extend: {
+      spacing: {
+        11.5: "46px",
+        12.5: "50px",
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
@@ -28,7 +32,10 @@ module.exports = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        "main-button-color": "#007AFF",
+        "disabled-font": "#B9B9BA",
         confirm: "#34C759",
+        "wallet-tertiary_fill_background": "#747480",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -57,13 +64,12 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        primary: "var(--color-text-primary)",
-        secondary: "var(--color-text-secondary)",
         separator: "var(--color-separator)",
         tertiary: "var(--color-bg-tertiary)",
         separatorwo: "var( --color-separator-without-opacity)",
       },
       borderRadius: {
+        xl: "calc(var(--radius) + 2px)",
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",

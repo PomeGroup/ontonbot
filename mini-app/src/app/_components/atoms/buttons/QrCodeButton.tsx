@@ -6,7 +6,15 @@ import useWebApp from "@/hooks/useWebApp";
 import { cn, wait } from "@/lib/utils";
 import { LoaderIcon } from "lucide-react";
 
-const QrCodeButton = ({ url, hub }: { url: string; hub?: string }) => {
+const QrCodeButton = ({
+  url,
+  hub,
+  event_uuid,
+}: {
+  event_uuid: string;
+  url: string;
+  hub?: string;
+}) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
   const hapticFeedback = WebApp?.HapticFeedback;
@@ -22,10 +30,13 @@ const QrCodeButton = ({ url, hub }: { url: string; hub?: string }) => {
       disabled={!initData || requestSendQRcodeMutation.isLoading}
       onClick={async () => {
         hapticFeedback?.impactOccurred("medium");
+
+        if (!initData) return;
         await requestSendQRcodeMutation.mutateAsync({
           url,
           hub,
-          initData,
+          init_data: initData,
+          event_uuid,
         });
         WebApp?.openTelegramLink(
           `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`
