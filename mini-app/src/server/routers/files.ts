@@ -11,7 +11,6 @@ export const fieldsRouter = router({
           .refine(
             async (file) => {
               const url = file.replace(/^data:image\/\w+;base64,/, "");
-              // @ts-expect-error
               const image = sizeOf(Buffer.from(url, "base64"));
 
               return image.width === image.height;
