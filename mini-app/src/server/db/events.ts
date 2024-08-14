@@ -11,6 +11,7 @@ import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
+import {logSQLQuery} from "@/lib/logSQLQuery";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -107,10 +108,10 @@ export const getEventsWithFilters = async (
     JSON.stringify({ limit, offset, search, filter, sortBy });
 
   const cachedResult = getCache(cacheKey);
-  if (cachedResult) {
-    console.log("Returning cached result");
-    return cachedResult;
-  }
+  // if (cachedResult) {
+  //   console.log("Returning cached result");
+  //   return cachedResult;
+  // }
 
   let query = db.select().from(event_details_search_list);
 
@@ -215,7 +216,7 @@ export const getEventsWithFilters = async (
 
   // Apply pagination
   query = query.limit(limit).offset(offset);
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   setCache(cacheKey, eventsData, 60);
   return eventsData;

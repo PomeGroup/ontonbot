@@ -84,6 +84,13 @@ export default function Home({ searchParams }: { searchParams: any }) {
         enabled: false, // Disable automatic fetching
     });
 
+    useEffect(() => {
+
+
+            console.log("asdasdasdasd",upcomingEvents);
+
+    }, [upcomingEvents]);
+
     const  generateQueryString= (params: any) => {
         const filteredParams = {
             ...params,

@@ -2,226 +2,176 @@ import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
 import React, { useState } from "react";
+
 interface EventCardProps {
   event: {
-    event_uuid: string;
+    eventUuid: string;
     title?: string;
-    start_date: number;
-    end_date: number;
+    startDate: number;
+    endDate: number;
     location?: string;
-    image_url?: string;
+    imageUrl?: string;
     subtitle?: string;
-    organizer_first_name?: string;
-    organizer_last_name?: string;
-    organizer_username?: string;
-    organizer_user_id?: number;
+    organizerFirstName?: string;
+    organizerLastName?: string;
+    organizerUsername?: string;
+    organizerUserId?: number;
     ticketToCheckIn?: boolean;
     timezone?: string;
     website?: string | null;
-    reserved_count?: number;
-    visitor_count?: number;
-    ticket_price?: number;
+    reservedCount?: number;
+    visitorCount?: number;
+    ticketPrice?: number;
   };
   mode?: "normal" | "small" | "detailed";
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
   const {
-    event_uuid,
+    eventUuid,
     title = "No Title",
-    start_date,
-    end_date,
+    startDate,
+    endDate,
     location = "No Location",
-    image_url = "/ton-logo.png",
+    imageUrl = "/ton-logo.png",
     subtitle = "No Subtitle",
-    organizer_first_name = "Unknown",
-    organizer_last_name = "",
-    organizer_username = null,
-    organizer_user_id = null,
+    organizerFirstName = "Unknown",
+    organizerLastName = "",
+    organizerUsername = null,
+    organizerUserId = null,
     ticketToCheckIn = false,
     timezone = "GMT",
     website = null,
-    reserved_count = 0,
-    visitor_count = 0,
-    ticket_price = 0,
+    reservedCount = 0,
+    visitorCount = 0,
+    ticketPrice = 0,
   } = event;
   const defaultImage = "/ton-logo.png";
   const [src, setSrc] = useState(
-    isValidImageUrl(image_url) ? image_url : defaultImage
+      isValidImageUrl(imageUrl) ? imageUrl : defaultImage
   );
-
-  // const WebApp = useWebApp();
-  // const hapticfeedback = WebApp?.HapticFeedback;
-  // const { authorized, isLoading } = useAuth();
-  // const initData = WebApp?.initData;
-  // const validatedData = trpc.users.validateUserInitData.useQuery(
-  //     initData || "",
-  //     {
-  //       queryKey: ["users.validateUserInitData", initData || ""],
-  //     }
-  // );
-  // let startParam = WebApp?.initDataUnsafe
-  //
-  // const userToken = cookies.get("token");
 
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
   const isOnline = website || location.includes("http") ? "Online" : location;
-  const organizerLink = organizer_username
-    ? `https://t.me/${organizer_username}`
-    : organizer_user_id
-      ? `tg://user?id=${organizer_user_id}`
-      : null;
+  const organizerLink = organizerUsername
+      ? `https://t.me/${organizerUsername}`
+      : organizerUserId
+          ? `tg://user?id=${organizerUserId}`
+          : null;
   const eventLink = ticketToCheckIn
-    ? `/ptma/events/?tgWebAppStartParam=${event_uuid}`
-    : `/events/${event_uuid}`;
+      ? `/ptma/events/?tgWebAppStartParam=${eventUuid}`
+      : `/events/${eventUuid}`;
+
   const renderDetailedMode = () => (
-    <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg">
-      <Image
-        src={src}
-        alt={title}
-        layout="fill"
-        objectFit="cover"
-        loading="lazy"
-        className="absolute inset-0 w-full h-full object-cover"
-        onError={() => setSrc(defaultImage)}
-      />
-      {/*<div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-between p-6 text-white">*/}
-      {/*  <div>*/}
-      {/*    <div className="flex justify-between items-start">*/}
-      {/*      <div className="text-sm">TON Syndicate</div>*/}
-      {/*      <div className="text-xs bg-white text-black px-2 py-1 rounded">*/}
-      {/*        Organized by {organizer_first_name} {organizer_last_name}*/}
-      {/*      </div>*/}
-      {/*    </div>*/}
-      {/*    <h2 className="text-3xl font-bold mt-2">{title}</h2>*/}
-      {/*    <h3 className="text-lg">{subtitle}</h3>*/}
-      {/*  </div>*/}
-      {/*  <div className="flex justify-between items-center text-sm">*/}
-      {/*    <div>{location}</div>*/}
-      {/*    <div>*/}
-      {/*      {formatDate(start_date)} ·{" "}*/}
-      {/*      {new Date(start_date * 1000).toLocaleTimeString([], {*/}
-      {/*        hour: "2-digit",*/}
-      {/*        minute: "2-digit",*/}
-      {/*      })}*/}
-      {/*    </div>*/}
-      {/*  </div>*/}
-      {/*</div>*/}
-    </div>
-  );
-
-  const renderSmallMode = () => (
-    <a
-      href={`/event/${event_uuid}`}
-      className="flex w-full p-2 gap-2 cursor-pointer items-start flex-nowrap relative overflow-hidden"
-    >
-      <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
+      <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg">
         <Image
-          src={src}
-          alt={title}
-          layout="fill"
-          objectFit="cover"
-          className="rounded-lg"
-          loading="lazy"
-          onError={() => setSrc(defaultImage)}
-        />
-      </div>
-      <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
-        <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
-          <div className="flex items-center self-stretch flex-nowrap relative">
-            <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-4">
-              {formatDateRange(start_date, end_date, validTimezone)} ·{" "}
-              {isOnline}
-            </span>
-            {ticket_price > 0 && (
-              <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-7 p-1">
-                <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-sm leading-3">
-                  ${ticket_price}
-                </span>
-              </button>
-            )}
-          </div>
-          <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-            <span className="grow font-sans text-black dark:text-white text-left line-clamp-2 text-xs font-medium leading-2">
-              {title}
-            </span>
-          </div>
-          <span className="grow font-sans text-left line-clamp-1 text-xs leading-2 text-gray-600 dark:text-gray-400">
-            by {organizer_first_name} {organizer_last_name}
-          </span>
-        </div>
-      </div>
-    </a>
-  );
-
-  const renderNormalMode = () => (
-    <div
-      className={`flex w-full pt-4 gap-4 items-start flex-nowrap relative overflow-hidden`}
-    >
-      <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
-        <a
-          href={eventLink}
-          // onClick={() => {
-          //
-          //
-          //
-          //   webApp?.openTelegramLink(
-          //       `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`
-          //   );
-          //   webApp?.close();
-          // }}
-        >
-          <Image
             src={src}
             alt={title}
             layout="fill"
-            style={{ objectFit: "cover" }}
-            className="rounded-lg"
-            onError={() => setSrc(defaultImage)}
+            objectFit="cover"
             loading="lazy"
-          />
-        </a>
+            className="absolute inset-0 w-full h-full object-cover"
+            onError={() => setSrc(defaultImage)}
+        />
       </div>
-      <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
-        <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
-          <div className="flex items-center self-stretch flex-nowrap relative">
-            <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
-              {formatDateRange(start_date, end_date, validTimezone)} ·{" "}
-              {isOnline}
+  );
+
+  const renderSmallMode = () => (
+      <a
+          href={`/event/${eventUuid}`}
+          className="flex w-full p-2 gap-2 cursor-pointer items-start flex-nowrap relative overflow-hidden"
+      >
+        <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
+          <Image
+              src={src}
+              alt={title}
+              layout="fill"
+              objectFit="cover"
+              className="rounded-lg"
+              loading="lazy"
+              onError={() => setSrc(defaultImage)}
+          />
+        </div>
+        <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
+          <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
+            <div className="flex items-center self-stretch flex-nowrap relative">
+            <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-4">
+              {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
             </span>
-            {ticket_price > 0 && (
-              <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-9 p-2">
-                <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-xs leading-3.5">
-                  ${ticket_price}
+              {ticketPrice > 0 && (
+                  <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-7 p-1">
+                <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-sm leading-3">
+                  ${ticketPrice}
                 </span>
-              </button>
-            )}
+                  </button>
+              )}
+            </div>
+            <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
+            <span className="grow font-sans text-black dark:text-white text-left line-clamp-2 text-xs font-medium leading-2">
+              {title}
+            </span>
+            </div>
+            <span className="grow font-sans text-left line-clamp-1 text-xs leading-2 text-gray-600 dark:text-gray-400">
+            by {organizerFirstName} {organizerLastName}
+          </span>
           </div>
-          <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-            <a
-              href={eventLink}
-              className="grow"
-            >
+        </div>
+      </a>
+  );
+
+  const renderNormalMode = () => (
+      <div
+          className={`flex w-full pt-4 gap-4 items-start flex-nowrap relative overflow-hidden`}
+      >
+        <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
+          <a href={eventLink}>
+            <Image
+                src={src}
+                alt={title}
+                layout="fill"
+                style={{ objectFit: "cover" }}
+                className="rounded-lg"
+                onError={() => setSrc(defaultImage)}
+                loading="lazy"
+            />
+          </a>
+        </div>
+        <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
+          <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
+            <div className="flex items-center self-stretch flex-nowrap relative">
+            <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
+              {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
+            </span>
+              {ticketPrice > 0 && (
+                  <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-9 p-2">
+                <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-xs leading-3.5">
+                  ${ticketPrice}
+                </span>
+                  </button>
+              )}
+            </div>
+            <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
+              <a href={eventLink} className="grow">
               <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
                 {title}
               </span>
-            </a>
-          </div>
-          {organizerLink ? (
-            <a
-              href={organizerLink}
-              className="grow font-sans text-left line-clamp-1 text-xs leading-5.5"
-            >
-              by {organizer_first_name} {organizer_last_name}
-            </a>
-          ) : (
-            <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
-              by {organizer_first_name} {organizer_last_name}
+              </a>
+            </div>
+            {organizerLink ? (
+                <a
+                    href={organizerLink}
+                    className="grow font-sans text-left line-clamp-1 text-xs leading-5.5"
+                >
+                  by {organizerFirstName} {organizerLastName}
+                </a>
+            ) : (
+                <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
+              by {organizerFirstName} {organizerLastName}
             </span>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
   );
 
   if (mode === "detailed") {
