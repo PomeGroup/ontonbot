@@ -1,0 +1,1 @@
+DROP TABLE "event_details_search_list";

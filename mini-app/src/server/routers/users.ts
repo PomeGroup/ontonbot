@@ -28,7 +28,7 @@ export const usersRouter = router({
         const data = validateMiniAppData(opts.input);
 
         if (!data.valid) {
-          return false;
+          return { valid: false } as const;
         }
 
         const userRole = await db
@@ -41,14 +41,18 @@ export const usersRouter = router({
           !userRole ||
           (userRole[0].role !== "admin" && userRole[0].role !== "organizer")
         ) {
-          return false;
+          return { valid: false } as const;
         }
 
-        return true;
+        return {
+          valid: true,
+          role: userRole[0].role,
+          user: data.initDataJson.user,
+        } as const;
       } catch (error) {
         console.error(error);
       }
-      return false;
+      return { valid: false } as const;
     }),
 
   // private

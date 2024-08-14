@@ -29,9 +29,10 @@ const EventsAdminPage = () => {
     }
   );
   const eventsData = trpc.events.getEvents.useQuery(
-    { initData },
+    { init_data: initData || "" },
     {
-      queryKey: ["events.getEvents", { initData }],
+      enabled: Boolean(initData),
+      queryKey: ["events.getEvents", { init_data: initData || "" }],
     }
   );
 
@@ -53,6 +54,9 @@ const EventsAdminPage = () => {
       <Link
         href={`/events/create`}
         className="w-full"
+        onClick={() => {
+          hapticfeedback?.impactOccurred("medium");
+        }}
       >
         <Button
           className="w-full"
@@ -122,6 +126,7 @@ const EventsAdminPage = () => {
               <QrCodeButton
                 url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event.event_uuid}`}
                 hub={event.society_hub!}
+                event_uuid={event.event_uuid}
               />
             </div>
           </div>

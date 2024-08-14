@@ -2,6 +2,7 @@
 
 import AddVisitorWrapper from "@/app/_components/AddVisitorWrapper";
 import Buttons from "@/app/_components/atoms/buttons";
+import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
 import { ClaimRewardButton } from "@/app/_components/ClaimRewardButton";
@@ -9,13 +10,16 @@ import EventNotStarted from "@/app/_components/EventNotStarted";
 import Tasks from "@/app/_components/molecules/tasks";
 import AllTasks from "@/app/_components/Tasks";
 import { trpc } from "@/app/_trpc/client";
+import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import zod from "zod";
 import EventPageLoadingSkeleton from "./loading";
 
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   const webApp = useWebApp();
+  const { role, authorized, user } = useAuth();
   const eventData = trpc.events.getEvent.useQuery(
     {
       event_uuid: eventHash,
@@ -29,6 +33,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       enabled: Boolean(webApp?.initData),
     }
   );
+  const router = useRouter();
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {
@@ -61,7 +66,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.end_date,
       eventData.data?.location,
     ]);
-
+  console.log(eventData.data);
   return eventData.isLoading ? (
     <EventPageLoadingSkeleton />
   ) : eventData.isError || !eventData.isSuccess ? (
@@ -98,7 +103,9 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
             tasks={eventData.data.dynamic_fields}
             eventHash={eventHash}
           />
-          <ClaimRewardButton eventId={eventData.data?.event_uuid as string} />
+          {!authorized && (
+            <ClaimRewardButton eventId={eventData.data?.event_uuid as string} />
+          )}
         </>
       ) : // if it was not ended than it means the event is not started yet
       isNotEnded ? (
@@ -115,6 +122,15 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
         />
       )}
 
+      {authorized &&
+        (role === "admin" || user?.id === eventData.data.owner) && (
+          <MainButton
+            text="Manage Event"
+            onClick={() => {
+              router.push(`/events/${eventHash}/edit`);
+            }}
+          />
+        )}
       <Buttons.Support />
     </AddVisitorWrapper>
   );

@@ -1,4 +1,5 @@
 DROP VIEW IF EXISTS "event_details_search_list";
+DROP TABLE IF EXISTS "event_details_search_list";
 
 -- For table "event_tickets"
 ALTER TABLE "event_tickets"
