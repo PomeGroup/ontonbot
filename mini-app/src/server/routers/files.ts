@@ -37,7 +37,7 @@ export const fieldsRouter = router({
         `event_image.${opts.input.image.type.split("/")[1]}`
       );
       const res = await axios.post(
-        "http://nft-manager:7863/files/upload",
+        "http://nft-microservice:7863/files/upload",
         formData
       );
 
