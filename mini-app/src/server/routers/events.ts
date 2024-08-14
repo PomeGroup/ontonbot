@@ -269,26 +269,26 @@ export const eventsRouter = router({
           };
 
           const res = await registerActivity(eventDraft);
-          await sendLogNotification({
-            message: `
-@${initDataJson.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
 
-<pre><code>${JSON.stringify(newEvent[0], null, 2)}</code></pre>
-
-Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
-            `,
-          });
-
-          await trx
+          const eventDataUpdated = await trx
             .update(events)
             .set({
               activity_id: res.data.activity_id,
               updatedBy: initDataJson.user.id.toString(),
             })
             .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
-            .execute();
+            .returning();
 
-          return newEvent;
+          await sendLogNotification({
+            message: `
+@${initDataJson.user.username} <b>Added</b> a new event <code>${eventDataUpdated[0].event_uuid}</code> successfully
+
+<pre><code>${JSON.stringify(eventDataUpdated[0], null, 2)}</code></pre>
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventDataUpdated[0].event_uuid}
+            `,
+          });
+          return eventDataUpdated;
         });
 
         return { success: true, eventId: result[0].event_id };
