@@ -1,10 +1,11 @@
 import { db } from "@/db/db";
 import { rewards } from "@/db/schema";
 import { cacheKeys, deleteCache, getCache, setCache } from "@/lib/cache";
+import { sendTelegramMessage } from "@/lib/tgBot";
 import { createUserRewardLink } from "@/lib/ton-society-api";
 import { EventType, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import pLimit from "p-limit";
@@ -90,6 +91,7 @@ async function createRewards() {
         .set({
           status: "created",
           data: response.data.data,
+          updatedBy: "system",
         })
         .where(eq(rewards.id, pendingReward.id));
     } catch (error) {
@@ -139,6 +141,7 @@ async function createRewards() {
                 : undefined,
               status: shouldFail ? "failed" : undefined,
               data: shouldFail ? { fail_reason: error } : undefined,
+              updatedBy: "system",
             })
             .where(eq(rewards.id, pendingReward.id));
         } catch (error) {
@@ -189,7 +192,7 @@ async function processReward(createdReward: RewardType) {
       throw new Error("Event not found");
     }
 
-    await sendTelegramMessage(createdReward, visitor, event);
+    await sendRewardNotification(createdReward, visitor, event);
     await updateRewardStatus(createdReward.id, "notified");
   } catch (error) {
     console.error("BOT_API_ERROR", error);
@@ -197,15 +200,15 @@ async function processReward(createdReward: RewardType) {
   }
 }
 
-async function sendTelegramMessage(
+async function sendRewardNotification(
   reward: RewardType,
   visitor: VisitorsType,
   event: EventType
 ) {
-  await axios.post("http://telegram-bot:3333/send-message", {
+  await sendTelegramMessage({
     link: rewardLinkZod.parse(reward.data).reward_link,
-    chat_id: visitor.user_id,
-    custom_message: `Hey there, you just received your reward for ${event.title} event. Please click on the link below to claim it`,
+    chat_id: visitor.user_id as number,
+    message: `Hey there, you just received your reward for ${event.title} event. Please click on the link below to claim it`,
   });
 }
 
@@ -216,7 +219,7 @@ async function updateRewardStatus(
 ) {
   await db
     .update(rewards)
-    .set({ status, ...(data && { data }) })
+    .set({ status, ...(data && { data }), updatedBy: "system" })
     .where(eq(rewards.id, rewardId));
 }
 

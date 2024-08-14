@@ -18,10 +18,10 @@ export function hashPassword(text: string): Promise<string> {
 export function comparePassword(text: string, hash: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     bcrypt.compare(text, hash, (err, result) => {
-      if (result) {
-        resolve(result);
-      } else {
+      if (err) {
         reject(err);
+      } else {
+        resolve(result);
       }
     });
   });

@@ -52,7 +52,7 @@ const EventsAdminPage = () => {
   return (
     <div>
       <Link
-        href="/events/create"
+        href={`/events/create`}
         className="w-full"
         onClick={() => {
           hapticfeedback?.impactOccurred("medium");

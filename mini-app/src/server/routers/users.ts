@@ -143,6 +143,7 @@ export const usersRouter = router({
       db.update(users)
         .set({
           wallet_address: opts.input.wallet,
+          updatedBy: initDataJson.user.id.toString(),
         })
         .where(eq(users.user_id, initDataJson.user.id))
         .execute();
@@ -169,6 +170,7 @@ export const usersRouter = router({
       db.update(users)
         .set({
           wallet_address: null,
+          updatedBy: initDataJson.user.id.toString(),
         })
         .where(eq(users.user_id, initDataJson.user.id))
         .execute();
@@ -230,6 +232,7 @@ export const usersRouter = router({
                   status: "pending_creation",
                   type: "ton_society_sbt",
                   visitor_id: visitor.id,
+                  updatedBy: opts.ctx.user.user_id.toString(),
                 })
                 .execute();
               return {
@@ -398,6 +401,7 @@ async function createUserReward(props: {
           visitor_id: visitor.id,
           type: "ton_society_sbt",
           data: res.data.data,
+          updatedBy: props.user_id.toString(),
         })
         .execute();
 

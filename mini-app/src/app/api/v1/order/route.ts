@@ -113,6 +113,7 @@ export async function POST(request: Request) {
         total_price: toNano(eventTicket.price),
         user_id: userId,
         ...body.data,
+        updatedBy: "system",
       })
       .returning()
   ).pop();
@@ -131,6 +132,7 @@ export async function PATCH() {
     .update(orders)
     .set({
       state: "failed",
+      updatedBy: "system",
     })
     .where(
       and(

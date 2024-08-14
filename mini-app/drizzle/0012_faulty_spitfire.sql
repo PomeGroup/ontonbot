@@ -1,4 +1,3 @@
---> statement-breakpoint
 DROP INDEX IF EXISTS "event_id_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "user_id_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "status_idx";--> statement-breakpoint

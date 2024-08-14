@@ -106,10 +106,12 @@ export const selectVisitorsByEventUuid = async (
     .where(and(isNotNull(rewards.id), eq(visitors.event_uuid, event_uuid)));
 
   if (typeof limit === "number") {
+    // @ts-expect-error
     visitorsQuery = visitorsQuery.limit(limit);
   }
 
   if (typeof cursor === "number") {
+    // @ts-expect-error
     visitorsQuery = visitorsQuery.offset(cursor);
   }
 
@@ -160,6 +162,7 @@ export async function updateVisitorLastVisit(id: number) {
     .update(visitors)
     .set({
       last_visit: sql`now()`,
+      updatedBy: "system",
     })
     .where(eq(visitors.id, id));
 }
