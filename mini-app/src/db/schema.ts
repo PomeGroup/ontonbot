@@ -8,15 +8,12 @@ import {
   pgEnum,
   pgTable,
   pgView,
-  QueryBuilder,
   serial,
   text,
   timestamp,
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
-
-const qb = new QueryBuilder();
 
 export const users = pgTable(
   "users",
