@@ -51,17 +51,16 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
   const numberOfVisitors = trpc.events.getVisitorsWithWalletsNumber.useQuery(
     {
       event_uuid: hash,
-      init_data: WebApp?.initData || "",
+      initData: WebApp?.initData,
     },
     {
       queryKey: [
         "events.getVisitorsWithWalletsNumber",
         {
           event_uuid: hash,
-          init_data: WebApp?.initData || "",
+          initData: WebApp?.initData,
         },
       ],
-      enabled: Boolean(WebApp?.initData),
     }
   );
 
@@ -130,13 +129,9 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     }
 
     async function withdraw() {
-      if (!WebApp?.initData) {
-        return;
-      }
-
       await withdrawMutation.mutateAsync({
         event_uuid: hash,
-        init_data: WebApp?.initData,
+        initData: WebApp?.initData,
       });
     }
 
@@ -157,14 +152,10 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     }
 
     async function distribute() {
-      if (!WebApp?.initData) {
-        return;
-      }
-
       await distributeMutation.mutateAsync({
         event_uuid: hash,
         amount: distributeAmount,
-        init_data: WebApp?.initData,
+        initData: WebApp?.initData,
       });
     }
 

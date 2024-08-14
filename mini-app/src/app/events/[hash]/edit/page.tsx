@@ -1,9 +1,9 @@
 "use client";
 
 import Buttons from "@/app/_components/atoms/buttons";
+import CreateEventFields from "@/app/_components/CreateEventFields";
 import Alerts from "@/app/_components/molecules/alerts";
 import Tables from "@/app/_components/molecules/tables";
-import { ManageEvent } from "@/app/_components/organisms/events";
 import { trpc } from "@/app/_trpc/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,7 +47,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
     requestExportFileMutation.mutate({
       event_uuid: params.hash,
-      init_data: WebApp?.initData || "",
+      initData: WebApp?.initData || "",
     });
 
     WebApp?.close();
@@ -90,10 +90,10 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         </TabsContent>
 
         <TabsContent value="edit">
-          <ManageEvent
+          <CreateEventFields
             /* @ts-ignore  */
             event={event.data}
-            eventHash={params.hash}
+            event_uuid={params.hash}
           />
 
           <Buttons.WebAppBack whereTo={"/events"} />

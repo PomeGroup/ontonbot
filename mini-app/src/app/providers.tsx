@@ -5,8 +5,7 @@ import { ThemeProvider } from "next-themes";
 import React from "react";
 import ThemeSetter from "./themeSetter";
 import WebAppProvider from "./_components/WebAppProvider";
-import { NavigationHistoryProvider } from "@/context/NavigationHistoryContext";
-import BackButtonHandler from "./_components/BackButtonHandler";
+
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <TonConnectUIProvider
@@ -20,10 +19,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         attribute="class"
       >
         <WebAppProvider>
-          <NavigationHistoryProvider>
-            <BackButtonHandler />
-            <ThemeSetter>{children}</ThemeSetter>
-          </NavigationHistoryProvider>
+          <ThemeSetter>{children}</ThemeSetter>
         </WebAppProvider>
       </ThemeProvider>
     </TonConnectUIProvider>

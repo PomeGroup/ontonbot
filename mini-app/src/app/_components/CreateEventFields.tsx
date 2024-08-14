@@ -59,7 +59,6 @@ const CreateEventFields: FC<{
       return;
     }
 
-    if (!initData) return;
     // @ts-ignore
     if (event?.event_uuid) {
       // @ts-ignore
@@ -73,8 +72,7 @@ const CreateEventFields: FC<{
           end_date: requiredEventFields.end_date || null,
           dynamic_fields: fields,
         },
-        init_data: initData,
-        event_uuid,
+        initData,
       });
       router.push(`/events`);
     } else {
@@ -86,7 +84,7 @@ const CreateEventFields: FC<{
           end_date: requiredEventFields.end_date || null,
           dynamic_fields: fields,
         },
-        init_data: initData,
+        initData,
       });
       router.push(`/events/${event_uuid}`);
     }
@@ -96,14 +94,14 @@ const CreateEventFields: FC<{
     WebApp?.showConfirm(
       "Are you sure you want to delete this event?\nThis action cannot be undone.",
       (confirmed) => {
-        if (!confirmed || !initData) {
+        if (!confirmed) {
           return;
         }
 
         deleteEventMutation
           .mutateAsync({
             event_uuid,
-            init_data: initData,
+            initData,
           })
           .then(() => router.push("/events"));
       }

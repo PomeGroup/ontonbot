@@ -1,7 +1,8 @@
 "use client";
 
+import CreateEventFields from "@/app/_components/CreateEventFields";
+import Labels from "@/app/_components/atoms/labels";
 import Alerts from "@/app/_components/molecules/alerts";
-import { ManageEvent } from "@/app/_components/organisms/events";
 import useAuth from "@/hooks/useAuth";
 
 const CreateEventAdminPage = () => {
@@ -15,7 +16,14 @@ const CreateEventAdminPage = () => {
     return <Alerts.NotAuthorized />;
   }
 
-  return <ManageEvent />;
+  return (
+    <>
+      <div>
+        <Labels.CampaignTitle title={"✨ Create New Event"} />
+        <CreateEventFields event_uuid="" />
+      </div>
+    </>
+  );
 };
 
 export default CreateEventAdminPage;

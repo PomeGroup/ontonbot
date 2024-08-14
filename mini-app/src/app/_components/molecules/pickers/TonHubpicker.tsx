@@ -9,15 +9,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SocietyHub } from "@/types";
+import { SocietyHub, ZodErrors } from "@/types";
 import { FC, useEffect, useState } from "react";
+import Card from "../../atoms/cards";
+import Labels from "../../atoms/labels";
 
 // https://society.ton.org/v1/society-hubs
 
 const TonHubPicker: FC<{
-  value?: SocietyHub;
+  value: SocietyHub;
   onValueChange: (value: SocietyHub) => void;
-  errors?: (string | undefined)[];
+  errors: ZodErrors;
 }> = ({ value, onValueChange, errors }) => {
   const [hubs, setHubs] = useState<Array<SocietyHub>>([]);
   const hubsResponse = trpc.events.getHubs.useQuery();
@@ -36,12 +38,20 @@ const TonHubPicker: FC<{
   }
 
   return (
-    <div>
+    <Card className="flex flex-col items-start pt-1 w-full">
+      <div className="flex justify-between w-full">
+        <Labels.Label>TON Hub</Labels.Label>
+        <Labels.Label>
+          {errors?.society_hub && (
+            <div className="text-red-500 text-end">{errors.society_hub}</div>
+          )}
+        </Labels.Label>
+      </div>
       <Select
         value={value?.id}
         onValueChange={onHubChange}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full dark:bg-separator">
           <SelectValue placeholder="Select TON Hub" />
         </SelectTrigger>
         <SelectContent
@@ -51,7 +61,7 @@ const TonHubPicker: FC<{
               e.preventDefault();
             };
           }}
-          className="max-h-[250px]"
+          className="max-h-[250px] dark:bg-separatorwo"
         >
           <SelectGroup className="max-h-[250px]">
             {hubs.map((societyHub) => (
@@ -66,11 +76,7 @@ const TonHubPicker: FC<{
           </SelectGroup>
         </SelectContent>
       </Select>
-
-      <div className="text-red-500">
-        {errors?.map((error) => <p key={error}>{error}</p>)}
-      </div>
-    </div>
+    </Card>
   );
 };
 
