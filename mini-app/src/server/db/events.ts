@@ -6,12 +6,12 @@ import {
   users,
 } from "@/db/schema";
 import { cacheKeys, getCache, setCache } from "@/lib/cache";
+import { logSQLQuery } from "@/lib/logSQLQuery";
 import { removeKey } from "@/lib/utils";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import {logSQLQuery} from "@/lib/logSQLQuery";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -190,6 +190,7 @@ export const getEventsWithFilters = async (
       orderByClause = sql`visitor_count DESC`;
     }
 
+    // @ts-expect-error
     query = query.orderBy(
       sql`greatest(
                 similarity(${event_details_search_list.title}, ${search}),
@@ -200,21 +201,26 @@ export const getEventsWithFilters = async (
 
   // Apply all conditions with AND
   if (conditions.length) {
+    // @ts-expect-error
     query = query.where(and(...conditions));
   }
 
   // Apply sorting if no search is specified
   if (!search) {
     if (sortBy === "start_date_asc") {
+      // @ts-expect-error
       query = query.orderBy(asc(event_details_search_list.startDate));
     } else if (sortBy === "start_date_desc") {
+      // @ts-expect-error
       query = query.orderBy(desc(event_details_search_list.startDate));
     } else if (sortBy === "most_people_reached" || sortBy === "default") {
+      // @ts-expect-error
       query = query.orderBy(desc(event_details_search_list.visitorCount));
     }
   }
 
   // Apply pagination
+  // @ts-expect-errorr
   query = query.limit(limit).offset(offset);
   logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
