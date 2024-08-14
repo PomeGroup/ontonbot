@@ -48,7 +48,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
   const sliderEventParams = searchEventsInputZod.parse({
     limit: 1,
     filter: {
-      event_uuids: ["6636297e-7b58-4d80-aa3e-c877688ebae9"],
+      event_uuids: ["a49dfc09-3375-4a04-920e-3b997888a615"],
     },
   });
 
