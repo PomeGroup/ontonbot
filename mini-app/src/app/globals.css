@@ -186,34 +186,50 @@ body {
   }
 
   .dark {
-    --background: 240 3.45% 11.37%;
-    --foreground: 211, 11%, 47%, 1;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 240, 1%, 73%;
-    --card-foreground: 0 0.72% 72.75%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 211 100% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 201 11% 98%;
-    --secondary-foreground: 201, 100%, 46%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
     --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 210 40% 98%;
+    --muted-foreground: 215 20.2% 65.1%;
 
     --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 212.7 26.8% 83.9%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 3, 100%, 59%, 1;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240, 1%, 73%;
-    --input: 240, 1%, 73%;
-    --ring: 217.2 32.6% 17.5%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
+}
+
+:root {
+  --color-text-secondary: rgba(60, 60, 67, 0.6);
+  --color-text-primary: #000000;
+  --color-separator: rgba(60, 60, 67, 0.19);
+  --color-separator-without-opacity: #ffffff;
+  --color-bg-tertiary: #f2f5f8;
+}
+
+.dark {
+  --color-text-secondary: rgba(235, 235, 245, 0.6);
+  --color-text-primary: #ffffff;
+  --color-separator: rgba(84, 84, 88, 0.65);
+  --color-separator-without-opacity: #1c1c1e;
+  --color-bg-tertiary: rgba(235, 235, 245, 0.05);
 }
 
 @layer base {
