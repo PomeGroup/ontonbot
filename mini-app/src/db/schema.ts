@@ -7,6 +7,7 @@ import {
   json,
   pgEnum,
   pgTable,
+  pgView,
   serial,
   text,
   timestamp,
@@ -398,7 +399,7 @@ export const airdropRoutineRelations = relations(
   })
 );
 // this view is used to get the event details with the ticket and visitor count
-export const event_details_search_list = pgTable("event_details_search_list", {
+export const event_details_search_list = pgView("event_details_search_list", {
   event_id: integer("event_id").notNull(),
   event_uuid: uuid("event_uuid").notNull(),
   title: text("title").notNull(),
