@@ -16,19 +16,12 @@ const BackButtonHandler: React.FC = () => {
                 webApp.BackButton.hide();
             } else {
                 webApp.BackButton.show();
-
                 const handleBackButtonClick = () => {
-                    if (history.length > 1) {
-                        const lastPage = history[history.length - 2];
-                        setHistory((prev) => prev.slice(0, -1)); // Remove the last entry from history
-                        router.push(lastPage); // Navigate to the last page
-                    } else {
-                        webApp.close(); // Close the web app if there's no history
-                    }
+                    window.history.back()
+                    return false;
                 };
 
                 webApp.BackButton.onClick(handleBackButtonClick);
-
                 // Clean up the event listener on unmount
                 return () => {
                     webApp.BackButton.offClick(handleBackButtonClick);
