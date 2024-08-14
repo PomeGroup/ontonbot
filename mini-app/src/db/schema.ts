@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -8,12 +8,15 @@ import {
   pgEnum,
   pgTable,
   pgView,
+  QueryBuilder,
   serial,
   text,
   timestamp,
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
+
+const qb = new QueryBuilder();
 
 export const users = pgTable(
   "users",
@@ -398,37 +401,86 @@ export const airdropRoutineRelations = relations(
     }),
   })
 );
+
 // this view is used to get the event details with the ticket and visitor count
 export const event_details_search_list = pgView("event_details_search_list", {
-  event_id: integer("event_id").notNull(),
-  event_uuid: uuid("event_uuid").notNull(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  start_date: integer("start_date").notNull(),
-  end_date: integer("end_date").notNull(),
-  type: integer("type").notNull(),
-  society_hub: text("society_hub").notNull(),
-  image_url: text("image_url").notNull(),
-  location: text("location").notNull(),
-  subtitle: text("subtitle").notNull(),
-  ticketToCheckIn: boolean("ticketToCheckIn").notNull(),
-  timezone: text("timezone").notNull(),
-  website: text("website").notNull(),
-  created_at: timestamp("created_at").notNull(),
-  organizer_user_id: integer("organizer_user_id").notNull(),
-  organizer_first_name: text("organizer_first_name").notNull(),
-  organizer_last_name: text("organizer_last_name").notNull(),
-  organizer_username: text("organizer_username").notNull(),
-  reserved_count: integer("reserved_count").notNull(),
-  visitor_count: integer("visitor_count").notNull(),
-  ticket_id: integer("ticket_id").notNull(),
-  ticket_title: text("ticket_title").notNull(),
-  ticket_description: text("ticket_description").notNull(),
-  ticket_price: integer("ticket_price").notNull(),
-  ticket_image: text("ticket_image").notNull(),
-  ticket_count: integer("ticket_count").notNull(),
-  hidden: boolean("hidden").notNull(),
-  participation_type: eventParticipationType("participation_type")
-    .default("online")
-    .notNull(),
-});
+  eventId: bigint("event_id", { mode: "number" }),
+  eventUuid: uuid("event_uuid"),
+  title: text("title"),
+  description: text("description"),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  type: text("type"),
+  societyHub: text("society_hub"),
+  imageUrl: text("image_url"),
+  location: text("location"),
+  subtitle: text("subtitle"),
+  ticketToCheckIn: boolean("ticketToCheckIn"),
+  timezone: text("timezone"),
+  website: text("website"),
+  createdAt: timestamp("created_at"),
+  hidden: boolean("hidden"),
+  participationType: text("participation_type"),
+  organizerUserId: bigint("organizer_user_id", { mode: "number" }),
+  organizerFirstName: text("organizer_first_name"),
+  organizerLastName: text("organizer_last_name"),
+  organizerUsername: text("organizer_username"),
+  reservedCount: bigint("reserved_count", { mode: "number" }),
+  visitorCount: bigint("visitor_count", { mode: "number" }),
+  ticketId: bigint("ticket_id", { mode: "number" }),
+  ticketTitle: text("ticket_title"),
+  ticketDescription: text("ticket_description"),
+  ticketPrice: integer("ticket_price"),
+  ticketImage: text("ticket_image"),
+  ticketCount: integer("ticket_count"),
+}).as(sql`
+  SELECT
+    e.event_id,
+    e.event_uuid,
+    e.title,
+    e.description,
+    e.start_date,
+    e.end_date,
+    e.type,
+    e.society_hub,
+    e.image_url,
+    e.location,
+    e.subtitle,
+    e."ticketToCheckIn",
+    e.timezone,
+    e.website,
+    e.created_at,
+    e.hidden,
+    e.participation_type,
+    organizer.user_id AS organizer_user_id,
+    organizer.first_name AS organizer_first_name,
+    organizer.last_name AS organizer_last_name,
+    organizer.username AS organizer_username,
+    (SELECT count(t.id) AS count
+     FROM ${tickets} t
+     WHERE t.event_uuid::uuid = e.event_uuid) AS reserved_count,
+    (SELECT count(v.id) AS count
+     FROM ${visitors} v
+     WHERE v.event_uuid = e.event_uuid) AS visitor_count,
+    min_tickets.id AS ticket_id,
+    min_tickets.title AS ticket_title,
+    min_tickets.description AS ticket_description,
+    min_tickets.price AS ticket_price,
+    min_tickets.ticket_image,
+    min_tickets.count AS ticket_count
+  FROM
+    ${events} e
+  LEFT JOIN
+    ${users} organizer ON e.owner = organizer.user_id
+  LEFT JOIN
+    LATERAL (SELECT et.id,
+                    et.title,
+                    et.description,
+                    et.price,
+                    et.ticket_image,
+                    et.count
+             FROM ${eventTicket} et
+             WHERE et.event_uuid = e.event_uuid
+             ORDER BY et.price
+             LIMIT 1) min_tickets ON true
+`);
