@@ -1,7 +1,8 @@
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
+import useWebApp from "@/hooks/useWebApp";
 
 interface EventCardProps {
   event: {
@@ -50,7 +51,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
   const [src, setSrc] = useState(
       isValidImageUrl(imageUrl) ? imageUrl : defaultImage
   );
-
+  const webApp = useWebApp();
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
   const isOnline = website || location.includes("http") ? "Online" : location;
   const organizerLink = organizerUsername
@@ -58,9 +59,17 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
       : organizerUserId
           ? `tg://user?id=${organizerUserId}`
           : null;
-  const eventLink = ticketToCheckIn
-      ? `/ptma/events/?tgWebAppStartParam=${eventUuid}`
-      : `/events/${eventUuid}`;
+
+  const handleEventClick =  () => {
+    if (ticketToCheckIn) {
+      webApp?.openTelegramLink(
+              `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
+      );
+    } else {
+      window.location.href = `/events/${eventUuid}`; // Correct usage of window.location.href
+      return false;
+    }
+  }
 
   const renderDetailedMode = () => (
       <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg">
@@ -77,8 +86,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
   );
 
   const renderSmallMode = () => (
-      <a
-          href={`/event/${eventUuid}`}
+      <div
+          onClick={handleEventClick}
           className="flex w-full p-2 gap-2 cursor-pointer items-start flex-nowrap relative overflow-hidden"
       >
         <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
@@ -116,25 +125,24 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
           </span>
           </div>
         </div>
-      </a>
+      </div>
   );
 
   const renderNormalMode = () => (
       <div
+          onClick={handleEventClick}
           className={`flex w-full pt-4 gap-4 items-start flex-nowrap relative overflow-hidden`}
       >
         <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
-          <a href={eventLink}>
-            <Image
-                src={src}
-                alt={title}
-                layout="fill"
-                style={{ objectFit: "cover" }}
-                className="rounded-lg"
-                onError={() => setSrc(defaultImage)}
-                loading="lazy"
-            />
-          </a>
+          <Image
+              src={src}
+              alt={title}
+              layout="fill"
+              style={{ objectFit: "cover" }}
+              className="rounded-lg"
+              onError={() => setSrc(defaultImage)}
+              loading="lazy"
+          />
         </div>
         <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
           <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
@@ -151,11 +159,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
               )}
             </div>
             <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-              <a href={eventLink} className="grow">
-              <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
-                {title}
-              </span>
-              </a>
+            <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+              {title}
+            </span>
             </div>
             {organizerLink ? (
                 <a
