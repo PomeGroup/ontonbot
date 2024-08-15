@@ -111,7 +111,7 @@ const Search: React.FC = () => {
               {results.length > 0 ? (
                 results.map((event, index) => {
                   if (results.length === index + 1) {
-                    console.log("lastElementRef results", results);
+
                     return (
                       <div
                         ref={lastElementRef}

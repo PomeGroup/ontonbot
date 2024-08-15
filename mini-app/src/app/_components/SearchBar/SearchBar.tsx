@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FaSearch, FaTimes } from "react-icons/fa";
@@ -78,7 +79,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
             participationType: participationType.join(","),
             sortBy: sortBy,
         });
-        router.push(`/search?${queryParams.toString()}`);
+        // console.log("queryParams", queryParams.toString());
+        if(!includeQueryParam) {
+            router.push(`/search?${queryParams.toString()}`);
+        }
+        else {
+            window.location.href =`/search?${queryParams.toString()}`;  // Correct usage of window.location.href
+            return false;// it must be false to prevent the default action
+        }
+
+
     };
 
     return (

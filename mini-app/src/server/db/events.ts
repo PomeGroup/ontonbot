@@ -224,7 +224,7 @@ export const getEventsWithFilters = async (
   query = query.limit(limit).offset(offset);
   logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
-  console.log(eventsData);
+  // console.log(eventsData);
   setCache(cacheKey, eventsData, 60);
   return eventsData;
 };
