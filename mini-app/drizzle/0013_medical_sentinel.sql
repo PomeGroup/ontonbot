@@ -105,3 +105,5 @@ LEFT JOIN
              WHERE et.event_uuid = e.event_uuid
              ORDER BY et.price
              LIMIT 1) min_tickets ON true;
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
