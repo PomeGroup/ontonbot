@@ -70,7 +70,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
       return false;
     }
   }
-
+console.log("startDate startDate", startDate)
   const renderDetailedMode = () => (
       <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg">
         <Image
