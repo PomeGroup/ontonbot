@@ -212,14 +212,15 @@ async function sendRewardNotification(
   });
 }
 
+type InsertReward = typeof rewards.$inferInsert;
 async function updateRewardStatus(
   rewardId: string,
-  status?: string,
-  data?: any
+  status?: typeof rewards.$inferInsert.status,
+  data?: InsertReward
 ) {
   await db
     .update(rewards)
-    .set({ status, ...(data && { data }), updatedBy: "system" })
+    .set({ status, ...data, updatedBy: "system" })
     .where(eq(rewards.id, rewardId));
 }
 
