@@ -56,8 +56,6 @@ async function createRewards() {
     },
   });
 
-  console.log("pendingRewards", pendingRewards.length);
-
   // create reward ton society integration
   for (const pendingReward of pendingRewards) {
     try {
@@ -140,7 +138,11 @@ async function createRewards() {
                 ? pendingReward.tryCount + 1
                 : undefined,
               status: shouldFail ? "failed" : undefined,
-              data: shouldFail ? { fail_reason: error } : undefined,
+              failed_reason: shouldFail
+                ? Array.isArray(pendingReward.failed_reason)
+                  ? [...pendingReward.failed_reason, error]
+                  : [error]
+                : [],
               updatedBy: "system",
             })
             .where(eq(rewards.id, pendingReward.id));
@@ -162,8 +164,6 @@ async function notifyUsersForRewards() {
   const createdRewards = await db.query.rewards.findMany({
     where: (fields, { eq }) => eq(fields.status, "created"),
   });
-
-  console.log("createdRewards ", createdRewards.length);
 
   const notificationPromises = createdRewards.map((createdReward) =>
     limit(() => processReward(createdReward))
@@ -227,12 +227,14 @@ async function updateRewardStatus(
 async function handleRewardError(reward: RewardType, error: any) {
   const shouldFail = reward.tryCount >= 4;
   const newStatus = shouldFail ? "notification_failed" : undefined;
-  const newData = shouldFail ? { fail_reason: error.message } : undefined;
 
   try {
     await updateRewardStatus(reward.id, newStatus, {
       tryCount: reward.tryCount + 1,
-      ...newData,
+      failed_reason:
+        reward.failed_reason && Array.isArray(reward.failed_reason)
+          ? [...reward.failed_reason, error.message]
+          : [error.message],
     });
   } catch (dbError) {
     console.error("DB_ERROR_156", dbError);

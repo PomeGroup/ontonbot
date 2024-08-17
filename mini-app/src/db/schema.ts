@@ -5,6 +5,7 @@ import {
   index,
   integer,
   json,
+  jsonb,
   pgEnum,
   pgTable,
   serial,
@@ -165,6 +166,7 @@ export const rewards = pgTable(
     type: rewardType("type"),
     data: json("data"),
     tryCount: integer("try_count").default(0).notNull(),
+    failed_reason: jsonb("failed_reason"),
     status: rewardStatus("status").notNull().default("created"),
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {

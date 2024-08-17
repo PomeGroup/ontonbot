@@ -1,0 +1,1 @@
+ALTER TABLE "rewards" ADD COLUMN "failed_reason" jsonb;
