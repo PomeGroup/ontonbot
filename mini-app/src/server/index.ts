@@ -1,6 +1,7 @@
 import { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { eventsRouter } from "./routers/events";
 import { fieldsRouter } from "./routers/files";
+import { locationRouter } from "./routers/location";
 import { userEventFieldsRouter } from "./routers/userEventFields";
 import { usersRouter } from "./routers/users";
 import { visitorsRouter } from "./routers/visitors";
@@ -12,6 +13,7 @@ export const appRouter = router({
   events: eventsRouter,
   files: fieldsRouter,
   userEventFields: userEventFieldsRouter,
+  location: locationRouter,
 });
 
 export type AppRouter = typeof appRouter;

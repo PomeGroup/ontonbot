@@ -1,0 +1,11 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "driver": "PostgreSQL",
+      "name": "Onton",
+      "connectString": "postgresql://postgres:xor@127.0.0.1:5432/ontondev"
+    }
+  ]
+}
