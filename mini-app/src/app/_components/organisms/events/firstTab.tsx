@@ -3,6 +3,7 @@ import CircleArrowUp from "@/app/_components/atoms/icons/CircleArrowUp";
 import TonHubPicker from "@/app/_components/molecules/pickers/TonHubpicker";
 import { trpc } from "@/app/_trpc/client";
 import { Button } from "@/components/ui/button";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Drawer,
   DrawerClose,
@@ -109,7 +110,7 @@ export const FirstStep = () => {
             defaultValue={eventData?.description}
           />
         </div>
-
+        <SelectLocation />
         <TonHubPicker
           onValueChange={(data) => {
             if (data) {
@@ -126,6 +127,44 @@ export const FirstStep = () => {
         onClick={() => formRef.current?.requestSubmit()}
       />
     </form>
+  );
+};
+
+const SelectLocation = () => {
+  const eventData = useCreateEventStore((state) => state.eventData);
+  const setEventData = useCreateEventStore((state) => state.setEventData);
+  const countries = trpc.location.getCountries.useQuery({});
+  const cities = trpc.location.getCities.useQuery(
+    {
+      // @ts-expect-error
+      countryId: eventData?.countryId,
+    },
+    {
+      enabled: Boolean(eventData?.countryId),
+    }
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Combobox
+        options={countries.data?.map((country) => ({
+          label: country.title,
+          value: country.id.toString(),
+        }))}
+        onSelect={(data) => {
+          if (data) {
+            setEventData({ countryId: Number(data) });
+          }
+        }}
+      />
+
+      <Combobox
+        options={cities.data?.map((city) => ({
+          label: city.title,
+          value: city.id.toString(),
+        }))}
+      />
+    </div>
   );
 };
 
@@ -195,7 +234,7 @@ const ImageUploadDrawer = (props: { errors?: (string | undefined)[] }) => {
       >
         <DrawerTrigger asChild>
           <Button
-            variant="secondary"
+            variant="default"
             className="w-full h-12.5 flex items-center gap-2"
             isLoading={uploadImage.isLoading}
           >
@@ -233,7 +272,6 @@ const ImageUploadDrawer = (props: { errors?: (string | undefined)[] }) => {
               className="hidden"
             />
             <Button
-              variant="secondary"
               type="button"
               className="w-full h-12.5 flex items-center gap-2"
               onClick={(e) => {

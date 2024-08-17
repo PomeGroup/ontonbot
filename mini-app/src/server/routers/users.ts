@@ -7,7 +7,12 @@ import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { selectValidVisitorById } from "../db/visitors";
-import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
+import {
+  adminOrganizerProtectedProcedure,
+  initDataProtectedProcedure,
+  publicProcedure,
+  router,
+} from "../trpc";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure
@@ -17,43 +22,15 @@ export const usersRouter = router({
       return data;
     }),
 
-  haveAccessToEventAdministration: publicProcedure
-    .input(z.string())
-    .query(async (opts) => {
-      if (!opts.input) {
-        return undefined;
-      }
-
-      try {
-        const data = validateMiniAppData(opts.input);
-
-        if (!data.valid) {
-          return { valid: false } as const;
-        }
-
-        const userRole = await db
-          .select({ role: users.role })
-          .from(users)
-          .where(eq(users.user_id, data.initDataJson.user.id))
-          .execute();
-
-        if (
-          !userRole ||
-          (userRole[0].role !== "admin" && userRole[0].role !== "organizer")
-        ) {
-          return { valid: false } as const;
-        }
-
-        return {
-          valid: true,
-          role: userRole[0].role,
-          user: data.initDataJson.user,
-        } as const;
-      } catch (error) {
-        console.error(error);
-      }
-      return { valid: false } as const;
-    }),
+  haveAccessToEventAdministration: adminOrganizerProtectedProcedure.query(
+    async (opts) => {
+      return {
+        valid: true,
+        role: opts.ctx.userRole,
+        user: opts.ctx.user,
+      } as const;
+    }
+  ),
 
   // private
   addUser: publicProcedure

@@ -189,6 +189,8 @@ export const EventDataSchemaAllOptional = z.object({
   timezone: z.string().optional(),
   dynamic_fields: DynamicFieldsSchema.optional(),
   eventLocationType: z.enum(["online", "in_person"]).optional(),
+  countryId: z.number().optional(),
+  cityId: z.number().optional(),
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;
