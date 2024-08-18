@@ -30,7 +30,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [participationType, setParticipationType] = useState<string[]>(["online", "in_person"]);
     const [sortBy, setSortBy] = useState<string>("default");
-
+    const [showFilterButton, setShowFilterButton] = useState(true);
     const webApp = useWebApp();
     const {
         searchTerm,
@@ -48,21 +48,24 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
             setSearchTerm(searchTerm);
             setParticipationType(participationType);
             setSortBy(sortBy);
+
         }
     }, [searchParams]);
 
-    useEffect(() => {
-        if (searchTerm) {
-            setShowSuggestions(true);
-        }
-    }, [searchTerm]);
+    // useEffect(() => {
+    //     if (searchTerm) {
+    //         setShowSuggestions(true);
+    //     }
+    // }, [searchTerm]);
 
     const handleCloseSuggestions = () => {
         setShowSuggestions(false);
-        setSearchTerm("");  // Clear the search term to show the button
+        setShowFilterButton(true);
+        //setSearchTerm("");  // Clear the search term to show the button
     };
 
     const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setShowFilterButton(event.target.value.length < 2)
         handleSearchChange(event);
         setShowSuggestions(event.target.value.length > 2);
     };
@@ -77,10 +80,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
         const queryParams = new URLSearchParams({
             query: searchTerm,
             participationType: participationType.join(","),
+      //      startDate:  (Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600)).toString(),
             sortBy: sortBy,
         });
         // console.log("queryParams", queryParams.toString());
         if(!includeQueryParam) {
+
             router.push(`/search?${queryParams.toString()}`);
         }
         else {
@@ -103,14 +108,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
                     placeholder="Search"
                     className="w-full pl-10 pr-10 p-2 rounded-md focus:ring-0 focus:outline-none focus:text-zinc-100 transition-width duration-300"
                     onChange={handleSearchInputChange}
+
                     onKeyDown={handleKeyDown}  // Listen for Enter key
                     value={searchTerm}
-                    onFocus={handleSearchInputChange}
+
+                     onFocusCapture={handleSearchInputChange}
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <FaSearch className="text-gray-500 w-5 h-5" />
                 </div>
-                {searchTerm && (
+                {!showFilterButton && (
                     <FaTimes
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-gray-600"
                         onClick={handleCloseSuggestions}
@@ -122,10 +129,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
                         onClose={handleCloseSuggestions}
                         autoSuggestions={autoSuggestions}
                         setAutoSuggestions={setAutoSuggestions}
+                        handleFilterApply={handleFilterApply}
                     />
                 )}
             </div>
-            {!searchTerm && (
+            {showFilterButton && (
                 <Drawer
                     onOpenChange={(open) => {
                         if (open) {

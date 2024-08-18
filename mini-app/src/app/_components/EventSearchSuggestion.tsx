@@ -12,6 +12,7 @@ interface EventSearchSuggestionProps {
     onClose: () => void;
     autoSuggestions: any[];
     setAutoSuggestions: (value: any[]) => void;
+    handleFilterApply: (value: any[]) => void;
 }
 
 const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
@@ -19,6 +20,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
                                                                          onClose,
                                                                          autoSuggestions,
                                                                          setAutoSuggestions,
+                                                                         handleFilterApply
                                                                      }) => {
     const router = useRouter();
     const [searchLoading, setSearchLoading] = useState(false);
@@ -29,6 +31,10 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
             limit: 3,
             offset: 0,
             search: searchTerm,
+            filter: {
+                startDate:
+                    Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+            },
         }),
         {
             enabled: false,
@@ -75,11 +81,11 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
         };
     }, [onClose]);
 
-    const handleNavigate = useCallback(() => {
-        if (router) {
-            router.push(`/search?query=${searchTerm}`);
-        }
-    }, [searchTerm, router]);
+    // const handleNavigate = useCallback(() => {
+    //     if (router) {
+    //         router.push(`/search?query=${searchTerm}`);
+    //     }
+    // }, [searchTerm, router]);
 
     return (
         <div
@@ -88,7 +94,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
         >
             {searchLoading ? (
                 <div className="p-2">
-                    {Array.from({ length: 2 }).map((_, index) => (
+                    {Array.from({ length: 1 }).map((_, index) => (
                         <EventCardSkeleton key={index} mode="small" />
                     ))}
                 </div>
@@ -99,14 +105,14 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
                     ))}
                     <button
                         className="w-full text-s text-right pr-3 text-zinc-100 h-8 flex items-center justify-end"
-                        onClick={handleNavigate}
+                        onClick={handleFilterApply as any}
                     >
                         <span>Show More Results</span>
                         <FaArrowAltCircleRight className="ml-2 align-middle" style={{ verticalAlign: 'middle' }} />
                     </button>
                 </>
             ) : (
-                <div className="p-2">No results found</div>
+               <></>
             )}
         </div>
     );

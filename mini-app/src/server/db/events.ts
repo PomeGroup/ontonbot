@@ -182,11 +182,11 @@ export const getEventsWithFilters = async (
     );
 
     let orderByClause;
-    if (sortBy === "start_date_asc") {
+    if (sortBy === "start_date_asc" || sortBy === "default") {
       orderByClause = sql`start_date ASC`;
     } else if (sortBy === "start_date_desc") {
       orderByClause = sql`start_date DESC`;
-    } else if (sortBy === "most_people_reached" || sortBy === "default") {
+    } else if (sortBy === "most_people_reached" ) {
       orderByClause = sql`visitor_count DESC`;
     }
 

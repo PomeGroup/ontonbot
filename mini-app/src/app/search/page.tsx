@@ -7,7 +7,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-const LIMIT = 20;
+const LIMIT = 2;
 
 const Search: React.FC = () => {
   const searchParams = useSearchParams();
@@ -29,10 +29,13 @@ const Search: React.FC = () => {
     limit: LIMIT,
     offset: offset,
     search: searchTerm || undefined,
+
     filter: {
       participationType: participationType,
+      startDate:
+          Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
     },
-    sortBy: sortBy,
+    sortBy: sortBy || "default",
   });
 
   const {
@@ -44,13 +47,16 @@ const Search: React.FC = () => {
     enabled: initialFetchDone,
     keepPreviousData: true,
     onSuccess: (data) => {
+      if (!initialFetchDone) {
+        setResults([])
+      }
       setResults((prev) => [...prev, ...(data.data || [])]);
       setHasMore(data?.data?.length === LIMIT);
-      console.log("*****data", data?.data);
     },
   });
 
   const loadMoreResults = useCallback(() => {
+
     if (hasMore && !isFetchingSearchResults) {
       setOffset((prevOffset) => prevOffset + LIMIT);
     }
@@ -76,13 +82,15 @@ const Search: React.FC = () => {
 
   useEffect(() => {
     if (!initialFetchDone) {
+
       refetch();
       setInitialFetchDone(true);
     }
   }, [searchTerm, participationType, sortBy, refetch]);
 
   useEffect(() => {
-    if (offset > 0) {
+    if (offset > 0  ) {
+
       refetch();
     }
   }, [offset, refetch]);
@@ -111,7 +119,6 @@ const Search: React.FC = () => {
               {results.length > 0 ? (
                 results.map((event, index) => {
                   if (results.length === index + 1) {
-
                     return (
                       <div
                         ref={lastElementRef}

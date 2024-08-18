@@ -16,7 +16,11 @@ export const useSearchEvents = () => {
         search: searchTerm,
         filter: {
           participationType: filters.participationType,
+          ...(filters.sortBy === "default" && {
+            startDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+          })
         },
+
         sortBy: filters.sortBy,
       }),
       {

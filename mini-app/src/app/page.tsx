@@ -31,7 +31,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
       startDate:
         Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
     },
-    sortBy: "time",
+    sortBy: "start_date_asc",
   });
 
   const pastEventsParams = searchEventsInputZod.parse({
@@ -123,24 +123,10 @@ export default function Home({ searchParams }: { searchParams: any }) {
   }, [isMyEventsTabActive, refetchOrganizerEvents]);
   const upcomingEventsQuery = generateQueryString(upcomingEventsParams);
   const pastEventsQuery = generateQueryString(pastEventsParams);
+
   return (
     <>
       <SearchBar />
-
-      <div className="pt-2">
-        {sliderEvent?.data?.length && (
-          <>
-            {isLoadingSlider ? (
-              <EventCardSkeleton mode={"detailed"} />
-            ) : (
-              <EventCard
-                event={sliderEvent?.data[0]}
-                mode={"detailed"}
-              />
-            )}
-          </>
-        )}
-      </div>
 
       <Tabs
         defaultValue="all-events"
@@ -163,7 +149,24 @@ export default function Home({ searchParams }: { searchParams: any }) {
         </TabsList>
 
         <TabsContent value="all-events">
-          <div className="pt-4 pb-4  flex justify-between items-center">
+          <div className="pt-2 w-full">
+            <>
+              {isLoadingSlider ? (
+                <EventCardSkeleton mode={"detailed"} />
+              ) : (
+                <>
+                  {sliderEvent?.data?.length &&
+                    sliderEvent?.data?.length > 0 && (
+                      <EventCard
+                        event={sliderEvent?.data[0]}
+                        mode={"detailed"}
+                      />
+                    )}
+                </>
+              )}
+            </>
+          </div>
+          <div className="pt-4  w-full pb-4  flex justify-between items-center">
             <h2>Upcoming Events</h2>
             <a
               href={`/search?${upcomingEventsQuery}`}
