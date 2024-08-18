@@ -1,6 +1,8 @@
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { Title3 } from "@/app/_components/atoms/typography/Titles";
 import Datetimepicker from "@/app/_components/molecules/pickers/Datetimepicker";
+import { trpc } from "@/app/_trpc/client";
+import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
@@ -152,18 +154,21 @@ export const SecondStep = () => {
             </div>
           </RadioGroup>
           {eventData?.eventLocationType === "in_person" && (
-            <Input
-              type="text"
-              value={eventData?.location || ""}
-              errors={errors?.location}
-              onChange={(e) =>
-                setEventData({
-                  ...eventData,
-                  location: e.target.value,
-                })
-              }
-              placeholder="Location Detail"
-            />
+            <div className="space-y-4">
+              <SelectLocation />
+              <Input
+                type="text"
+                value={eventData?.location || ""}
+                errors={errors?.location}
+                onChange={(e) =>
+                  setEventData({
+                    ...eventData,
+                    location: e.target.value,
+                  })
+                }
+                placeholder="Location Detail"
+              />
+            </div>
           )}
 
           {eventData?.eventLocationType === "online" && (
@@ -187,5 +192,47 @@ export const SecondStep = () => {
         onClick={() => formRef.current?.requestSubmit()}
       />
     </>
+  );
+};
+
+const SelectLocation = () => {
+  const eventData = useCreateEventStore((state) => state.eventData);
+  const setEventData = useCreateEventStore((state) => state.setEventData);
+  const countries = trpc.location.getCountries.useQuery({});
+  const cities = trpc.location.getCities.useQuery(
+    {
+      countryId: eventData?.countryId!,
+    },
+    {
+      enabled: Boolean(eventData?.countryId),
+    }
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Combobox
+        options={countries.data?.map((country) => ({
+          label: country.title,
+          value: country.id.toString(),
+        }))}
+        onSelect={(data) => {
+          if (data) {
+            setEventData({ countryId: Number(data) });
+          }
+        }}
+      />
+
+      <Combobox
+        options={cities.data?.map((city) => ({
+          label: city.title,
+          value: city.id.toString(),
+        }))}
+        onSelect={(data) => {
+          if (data) {
+            setEventData({ cityId: Number(data) });
+          }
+        }}
+      />
+    </div>
   );
 };

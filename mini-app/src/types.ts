@@ -191,6 +191,7 @@ export const EventDataSchemaAllOptional = z.object({
   eventLocationType: z.enum(["online", "in_person"]).optional(),
   countryId: z.number().optional(),
   cityId: z.number().optional(),
+  countryId: z.number().optional(),
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;

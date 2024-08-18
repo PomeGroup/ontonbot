@@ -41,7 +41,10 @@ const TonHubPicker: FC<{
         value={value?.id}
         onValueChange={onHubChange}
       >
-        <SelectTrigger className="w-full">
+        <SelectTrigger
+          className="w-full"
+          isError={Boolean(errors?.length)}
+        >
           <SelectValue placeholder="Select TON Hub" />
         </SelectTrigger>
         <SelectContent
