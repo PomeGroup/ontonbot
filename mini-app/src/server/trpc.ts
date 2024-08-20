@@ -54,6 +54,7 @@ export const initDataProtectedProcedure = t.procedure
 
 export const adminOrganizerProtectedProcedure = initDataProtectedProcedure.use(
   (opts) => {
+
     if (opts.ctx.user.role !== "admin" && opts.ctx.user.role !== "organizer") {
       throw new TRPCError({
         code: "UNAUTHORIZED",
@@ -88,6 +89,7 @@ export const eventManagementProtectedProcedure =
       }
 
       // check if the user is the owner of the event
+
       if (
         opts.ctx.userRole === "organizer" &&
         event.owner !== opts.ctx.user.user_id

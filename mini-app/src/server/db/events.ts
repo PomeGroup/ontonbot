@@ -101,17 +101,17 @@ export const getEventsWithFilters = async (
   params: z.infer<typeof searchEventsInputZod>
 ): Promise<any[]> => {
   const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
-  console.log("*****params", params);
+  //console.log("*****params", params);
 
   const cacheKey =
     cacheKeys.getEventsWithFilters +
     JSON.stringify({ limit, offset, search, filter, sortBy });
 
   const cachedResult = getCache(cacheKey);
-  // if (cachedResult) {
-  //   console.log("Returning cached result");
-  //   return cachedResult;
-  // }
+  if (cachedResult) {
+    console.log("Returning cached result");
+    return cachedResult;
+  }
 
   let query = db.select().from(event_details_search_list);
 
@@ -222,7 +222,7 @@ export const getEventsWithFilters = async (
   // Apply pagination
   // @ts-expect-errorr
   query = query.limit(limit).offset(offset);
-  logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
   setCache(cacheKey, eventsData, 60);
