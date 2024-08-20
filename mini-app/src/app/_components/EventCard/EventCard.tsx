@@ -55,11 +55,6 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
   const webApp = useWebApp();
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
   const isOnline = website || location.includes("http") ? "Online" : location;
-  const organizerLink = organizerUsername
-    ? `https://t.me/${organizerUsername}`
-    : organizerUserId
-      ? `tg://user?id=${organizerUserId}`
-      : null;
 
   const handleEventClick = () => {
     if (ticketToCheckIn) {
@@ -74,7 +69,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
 
   const renderDetailedMode = () => (
     <div
-      className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg"
+      className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg  cursor-pointer"
       onClick={handleEventClick}
     >
       <Image
@@ -92,7 +87,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
   const renderSmallMode = () => (
     <div
       onClick={handleEventClick}
-      className="flex w-full p-2 gap-2 cursor-pointer items-start flex-nowrap relative overflow-hidden"
+      className="flex w-full p-2 gap-2 cursor-pointer items-start flex-nowrap relative overflow-hidden cursor-pointer"
     >
       <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
         <Image
@@ -135,7 +130,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
   const renderNormalMode = () => (
     <div
       onClick={handleEventClick}
-      className={`flex w-full pt-4 gap-4 items-start flex-nowrap relative overflow-hidden`}
+      className={`flex w-full pt-4 gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer`}
     >
       <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
         <Image
@@ -173,18 +168,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
               {title}
             </span>
           </div>
-          {organizerLink ? (
-            <a
-              href={organizerLink}
-              className="grow font-sans text-left line-clamp-1 text-xs leading-5.5"
-            >
-              by {organizerFirstName} {organizerLastName}
-            </a>
-          ) : (
-            <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
-              by {organizerFirstName} {organizerLastName}
-            </span>
-          )}
+          <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
+            by {organizerFirstName} {organizerLastName}
+          </span>
         </div>
       </div>
     </div>
