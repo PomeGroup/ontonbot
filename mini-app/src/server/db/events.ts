@@ -108,10 +108,10 @@ export const getEventsWithFilters = async (
     JSON.stringify({ limit, offset, search, filter, sortBy });
 
   const cachedResult = getCache(cacheKey);
-  if (cachedResult) {
-    console.log("Returning cached result");
-    return cachedResult;
-  }
+  // if (cachedResult) {
+  //   console.log("Returning cached result");
+  //   return cachedResult;
+  // }
 
   let query = db.select().from(event_details_search_list);
 
@@ -161,7 +161,12 @@ export const getEventsWithFilters = async (
       sql`${event_details_search_list.eventId} = any(${filter.event_ids})`
     );
   }
-
+  // Apply society_hub_id filter
+    if (filter?.society_hub_id) {
+        conditions.push(
+          inArray(event_details_search_list.societyHubID, filter.society_hub_id)
+        );
+    }
   // Apply event_uuids filter
   if (filter?.event_uuids) {
     conditions.push(
@@ -222,7 +227,7 @@ export const getEventsWithFilters = async (
   // Apply pagination
   // @ts-expect-errorr
   query = query.limit(limit).offset(offset);
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
   setCache(cacheKey, eventsData, 60);

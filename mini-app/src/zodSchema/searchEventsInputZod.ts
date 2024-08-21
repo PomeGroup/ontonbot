@@ -13,6 +13,7 @@ const searchEventsInputZod = z.object({
       endDate: z.number().optional(),
       event_ids: z.array(z.number()).optional(),
       event_uuids: z.array(z.string()).optional(),
+      society_hub_id: z.array(z.number()).optional(),
     })
     .optional(),
   sortBy: z

@@ -15,8 +15,14 @@ const Search: React.FC = () => {
 
   const searchTerm = searchParams.get("query") || "";
   const participationType = searchParams
-    .get("participationType")
-    ?.split(",") || ["online", "in_person"];
+      .get("participationType")
+      ?.split(",")
+      .filter(pt => pt === "online" || pt === "in_person") || [];  // Validate participation type
+  const selectedHubs = searchParams
+      .get("selectedHubs")
+      ?.split(",")
+      .map(id => parseInt(id, 10))
+      .filter(id => !isNaN(id)) || [];
   const sortBy = searchParams.get("sortBy") || "default";
 
   const [results, setResults] = useState<any[]>([]);
@@ -25,19 +31,19 @@ const Search: React.FC = () => {
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastElementRef = useRef<HTMLDivElement | null>(null);
-
+  const startDate = Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600);
   const searchParamsParsed = searchEventsInputZod.parse({
     limit: LIMIT,
     offset: offset,
     search: searchTerm || undefined,
-
     filter: {
-      participationType: participationType,
-      startDate:
-        Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+      ...(participationType.length > 0 && { participationType }), // Include if valid
+      startDate, // Always include startDate
+      ...(selectedHubs.length > 0 && { society_hub_id: selectedHubs }), // Include if valid
     },
     sortBy: sortBy || "default",
   });
+
 
   const {
     data: searchResults,

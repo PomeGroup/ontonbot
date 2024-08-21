@@ -14,6 +14,7 @@ import {
   unique,
   uuid,
 } from "drizzle-orm/pg-core";
+import {int} from "drizzle-orm/mysql-core";
 
 export const users = pgTable(
   "users",
@@ -492,6 +493,7 @@ export const event_details_search_list = pgView("event_details_search_list", {
   endDate: bigint("end_date", { mode: "number" }),
   type: text("type"),
   societyHub: text("society_hub"),
+  societyHubID: bigint("society_hub_id", { mode: "number" }),
   imageUrl: text("image_url"),
   location: text("location"),
   subtitle: text("subtitle"),
@@ -523,6 +525,7 @@ export const event_details_search_list = pgView("event_details_search_list", {
     e.end_date,
     e.type,
     e.society_hub,
+    e.society_hub_id,
     e.image_url,
     e.location,
     e.subtitle,

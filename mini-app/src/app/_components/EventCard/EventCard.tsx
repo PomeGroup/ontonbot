@@ -86,7 +86,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
   const renderSmallMode = () => (
     <div
       onClick={handleEventClick}
-      className="flex w-full p-2 gap-2 cursor-pointer items-start flex-nowrap relative overflow-hidden cursor-pointer"
+      className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
     >
       <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
         <Image

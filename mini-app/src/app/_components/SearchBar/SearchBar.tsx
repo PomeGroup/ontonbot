@@ -23,6 +23,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import useWebApp from "@/hooks/useWebApp";
+import { trpc } from "@/app/_trpc/client";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
@@ -36,9 +37,15 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
     "online",
     "in_person",
   ]);
+  const [selectedHubs, setSelectedHubs] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("default");
   const [showFilterButton, setShowFilterButton] = useState(true);
+  const [isEventTypeDrawerOpen, setIsEventTypeDrawerOpen] = useState(false);
+  const [isHubDrawerOpen, setIsHubDrawerOpen] = useState(false);
   const webApp = useWebApp();
+  const hubsResponse = trpc.events.getHubs.useQuery();
+ 
+  const hubs = hubsResponse.data?.hubs || [];
   const {
     searchTerm,
     setSearchTerm,
@@ -50,30 +57,27 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
   useEffect(() => {
     if (includeQueryParam) {
       const participationType = searchParams
-        .get("participationType")
-        ?.split(",") || ["online", "in_person"];
+          .get("participationType")
+          ?.split(",") || ["online", "in_person"];
+      const selectedHubs = searchParams
+          .get("selectedHubs")
+          ?.split(",") || [];
       const sortBy = searchParams.get("sortBy") || "default";
       const searchTerm = searchParams.get("query") || "";
       setSearchTerm(searchTerm);
       setParticipationType(participationType);
+      setSelectedHubs(selectedHubs);
       setSortBy(sortBy);
     }
   }, [searchParams]);
 
-  // useEffect(() => {
-  //     if (searchTerm) {
-  //         setShowSuggestions(true);
-  //     }
-  // }, [searchTerm]);
-
   const handleCloseSuggestions = () => {
     setShowSuggestions(false);
     setShowFilterButton(true);
-    //setSearchTerm("");  // Clear the search term to show the button
   };
 
   const handleSearchInputChange = (
-    event: React.ChangeEvent<HTMLInputElement>
+      event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const isFocused = document.activeElement === event.target;
     setShowFilterButton(!isFocused);
@@ -91,16 +95,32 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
     const queryParams = new URLSearchParams({
       query: searchTerm,
       participationType: participationType.join(","),
-      //      startDate:  (Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600)).toString(),
+      selectedHubs: selectedHubs.join(","),
       sortBy: sortBy,
     });
-    // console.log("queryParams", queryParams.toString());
+
     if (!includeQueryParam) {
       router.push(`/search?${queryParams.toString()}`);
     } else {
-      window.location.href = `/search?${queryParams.toString()}`; // Correct usage of window.location.href
-      return false; // it must be false to prevent the default action
+      window.location.href = `/search?${queryParams.toString()}`;
+      return false;
     }
+  };
+
+  const toggleParticipationType = (type: string) => {
+    setParticipationType((prev) =>
+        prev.includes(type)
+            ? prev.filter((t) => t !== type)
+            : [...prev, type]
+    );
+  };
+
+  const toggleHubSelection = (hubId: string) => {
+    setSelectedHubs((prev) =>
+        prev.includes(hubId)
+            ? prev.filter((id) => id !== hubId)
+            : [...prev, hubId]
+    );
   };
 
   return (
@@ -162,40 +182,28 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
             <DrawerHeader>
               <DrawerTitle>Filter List</DrawerTitle>
             </DrawerHeader>
-            <div className="p-4 space-y-6">
-              <div className="space-y-4">
+            <div className="p-4 space-y-6 cursor-pointer">
+              <div
+                className="space-y-4"
+                onClick={() => setIsEventTypeDrawerOpen(true)}
+              >
                 <p className="text-sm font-medium text-zinc-100">EVENT TYPE</p>
-                <div className="flex flex-col space-y-2">
-                  <label className="flex justify-between items-center">
-                    <span className="text-zinc-400">Online</span>
-                    <Checkbox
-                      checked={participationType.includes("online")}
-                      onCheckedChange={(checked) => {
-                        setParticipationType((prev) =>
-                          checked
-                            ? [...prev, "online"]
-                            : prev.filter((t) => t !== "online")
-                        );
-                      }}
-                    />
-                  </label>
-                  <Separator className="my-0" />
-                  <label className="flex justify-between items-center">
-                    <span className="text-zinc-400">In-person</span>
-                    <Checkbox
-                      checked={participationType.includes("in_person")}
-                      onCheckedChange={(checked) => {
-                        setParticipationType((prev) =>
-                          checked
-                            ? [...prev, "in_person"]
-                            : prev.filter((t) => t !== "in_person")
-                        );
-                      }}
-                    />
-                  </label>
+                <div className="cursor-pointer text-blue-500">
+                  {participationType.join(", ").replace("_", " ")}
                 </div>
               </div>
-
+              <div
+                className="space-y-4"
+                onClick={() => setIsHubDrawerOpen(true)}
+              >
+                <p className="text-sm font-medium text-zinc-100">Ton hub</p>
+                <div className="cursor-pointer text-blue-500">
+                  {selectedHubs
+                    .map((hubId) => hubs.find((hub) => hub.id === hubId)?.name)
+                    .filter(Boolean)
+                    .join(", ")}
+                </div>
+              </div>
               <div className="space-y-4">
                 <p className="text-sm font-medium text-zinc-100">SORT BY</p>
                 <RadioGroup
@@ -203,10 +211,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
                   value={sortBy}
                   onValueChange={setSortBy}
                 >
-                  <label className="flex justify-between items-center">
-                    <span className="text-zinc-400">Default</span>
-                    <RadioGroupItem value="default" />
-                  </label>
                   <Separator className="my-0" />
                   <label className="flex justify-between items-center">
                     <span className="text-zinc-400">Time</span>
@@ -234,6 +238,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
                 className="text-blue-600 hover:underline px-4 py-2 rounded-full"
                 onClick={() => {
                   setParticipationType(["online", "in_person"]);
+                  setSelectedHubs([]);
                   setSortBy("default");
                 }}
               >
@@ -243,6 +248,88 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
           </DrawerContent>
         </Drawer>
       )}
+
+      {/* Event Type Drawer */}
+      <Drawer
+        open={isEventTypeDrawerOpen}
+        onOpenChange={setIsEventTypeDrawerOpen}
+      >
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Event Type</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 space-y-4">
+            <div className="space-y-2">
+              <div
+                className="flex justify-between items-center cursor-pointer"
+                onClick={() => toggleParticipationType("online")}
+              >
+                <span className="text-zinc-400">Online</span>
+                <Checkbox
+                  checked={participationType.includes("online")}
+                  onCheckedChange={() => toggleParticipationType("online")}
+                />
+              </div>
+              <Separator className="my-0" />
+              <div
+                className="flex justify-between items-center cursor-pointer"
+                onClick={() => toggleParticipationType("in_person")}
+              >
+                <span className="text-zinc-400">In-person</span>
+                <Checkbox
+                  checked={participationType.includes("in_person")}
+                  onCheckedChange={() => toggleParticipationType("in_person")}
+                />
+              </div>
+            </div>
+          </div>
+          <DrawerFooter className="flex justify-end space-x-4 p-4">
+            <button
+              className="text-blue-600 hover:underline px-4 py-2 rounded-full"
+              onClick={() => setIsEventTypeDrawerOpen(false)}
+            >
+              Done
+            </button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Hub Drawer */}
+      <Drawer
+        open={isHubDrawerOpen}
+        onOpenChange={setIsHubDrawerOpen}
+      >
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Select Hubs</DrawerTitle>
+          </DrawerHeader>
+          <div className="p-4 space-y-4">
+            {hubs.map((hub) => {
+              return (
+                <div
+                  key={hub.id}
+                  className="flex justify-between items-center cursor-pointer"
+                  onClick={() => toggleHubSelection(hub.id)}
+                >
+                  <span className="text-zinc-400">{hub.name}</span>
+                  <Checkbox
+                    checked={selectedHubs.includes(hub.id)}
+                    onCheckedChange={() => toggleHubSelection(hub.id)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <DrawerFooter className="flex justify-end space-x-4 p-4">
+            <button
+              className="text-blue-600 hover:underline px-4 py-2 rounded-full"
+              onClick={() => setIsHubDrawerOpen(false)}
+            >
+              Done
+            </button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };
