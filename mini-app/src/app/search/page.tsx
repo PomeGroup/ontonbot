@@ -25,6 +25,7 @@ const Search: React.FC = () => {
       ?.split(",")
       .map((id) => parseInt(id, 10))
       .filter((id) => !isNaN(id)) || [];
+
   const sortBy = searchParams.get("sortBy") || "default";
 
   const [results, setResults] = useState<any[]>([]);

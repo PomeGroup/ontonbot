@@ -62,7 +62,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const hubs: Hub[] = hubsResponse.data?.hubs || [];
 
-
   const {
     searchTerm,
     setSearchTerm,
@@ -87,7 +86,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setSearchTerm(searchTerm);
       setParticipationType(participationType);
       setSortBy(sortBy);
-
+      console.log("selectedHubsFromParams");
       if (selectedHubsFromParams.length === 0) {
         setSelectedHubs(hubs.map((hub: Hub) => hub.id));
       } else {
@@ -98,6 +97,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setTimeout(() => {
         setpageInit(true);
       }, 0);
+    } else if (!includeQueryParam && !initialHubsSet) {
+      setSelectedHubs(hubs.map((hub: Hub) => hub.id));
+      setInitialHubsSet(true);
+      setTimeout(() => {
+        setpageInit(true);
+      });
     }
   }, [searchParams, hubs, includeQueryParam, initialHubsSet]);
 
@@ -106,9 +111,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setHubText("All");
     } else {
       const selectedHubNames = selectedHubs
-          .map((hubId) => hubs.find((hub: Hub) => hub.id === hubId)?.name)
-          .filter(Boolean)
-          .join(", ");
+        .map((hubId) => hubs.find((hub: Hub) => hub.id === hubId)?.name)
+        .filter(Boolean)
+        .join(", ");
       setHubText(selectedHubNames);
     }
   }, [selectedHubs, hubs]);
@@ -142,13 +147,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-
     if (event.key === "Enter") {
-
       handleFilterApply().then((r) => {
-
         window.location.href = `/search?${createQueryParams().toString()}`;
-        return ;
+        return;
       });
     }
   };
@@ -158,10 +160,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
       offset: 0,
       search: searchTerm,
       filter: {
-        participationType: participationType,
-        startDate:
-          Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
-        // society_hub_id: selectedHubs || [],
+        participationType: participationType.filter(Boolean),
+        startDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+        society_hub_id: selectedHubs.length > 0 ? selectedHubs.map(hub => Number(hub)) : [],
       },
       sortBy: sortBy,
     }),
@@ -181,11 +182,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setShowFilterButton(true);
     const queryParamsRedirect = new URLSearchParams({
       query: searchTerm,
-      sortBy: 'start_date_asc',
+      sortBy: "start_date_asc",
     });
     window.location.href = `/search?${queryParamsRedirect.toString()}`;
     return;
-  }
+  };
   const createQueryParams = () => {
     return new URLSearchParams({
       query: searchTerm,
@@ -193,15 +194,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
       selectedHubs: selectedHubs.join(","),
       sortBy: sortBy,
     });
-  }
+  };
   const handleFilterApply = async () => {
     const queryParams = createQueryParams();
 
+
     if (!includeQueryParam && !searchIsFocused) {
-
       router.push(`/search?${queryParams.toString()}`);
-    } else if(includeQueryParam && !searchIsFocused) {
-
+    } else if (includeQueryParam && !searchIsFocused) {
       await responseRefresh.refetch();
     }
   };
@@ -211,9 +211,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setParticipationType(["online", "in_person"]);
     setSelectedHubs(allHubs);
     setSortBy("start_date_asc");
-    handleFilterApply().then((r) => {
-      console.log(r);
-    });
+    // handleFilterApply().then((r) => {
+    //   console.log(r);
+    // });
   };
 
   const toggleParticipationType = (type: string) => {
@@ -234,16 +234,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const selectAllHubs = () => {
     const allHubs = hubs.map((hub: Hub) => hub.id);
     setSelectedHubs(allHubs);
-    handleFilterApply().then((r) => {
-      console.log(r);
-    });
+    // handleFilterApply().then((r) => {
+    //   console.log(r);
+    // });
   };
 
   const deselectAllHubs = () => {
     setSelectedHubs([]);
-    handleFilterApply().then((r) => {
-      console.log(r);
-    });
+    // handleFilterApply().then((r) => {
+    //   console.log(r);
+    // });
   };
 
   const clearFilter = (filter: string) => {
@@ -258,7 +258,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     //setTimeout(handleFilterApply, 0);
   };
   useEffect(() => {
-    if (pageInit) {
+    if (pageInit  ) {
       handleFilterApply().then((r) => {
         console.log(r);
       });
@@ -282,9 +282,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
       </Button>
     ));
 
-    if (selectedHubs.length > 0) {
+    if (selectedHubs.length > 0  && selectedHubs.length !== hubs.length) {
       selectedHubs.forEach((hubId, index) => {
         const hubName = hubs.find((hub) => hub.id === hubId)?.name;
+        if(!hubName) return;
         filterButtons.push(
           <Button
             key={`hub-${index}`}
