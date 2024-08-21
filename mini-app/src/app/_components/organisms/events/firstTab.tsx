@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import useWebApp from "@/hooks/useWebApp";
 import { fileToBase64 } from "@/lib/utils";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { z, ZodError } from "zod";
+import { ZodError, z } from "zod";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
 
@@ -88,7 +88,7 @@ export const FirstStep = () => {
       <StepLayout title="General Info">
         <div className="space-y-4">
           <Input
-            placeholder="Name"
+            placeholder="Event Title"
             name="title"
             errors={errors?.title}
             defaultValue={eventData?.title}

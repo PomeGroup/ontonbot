@@ -7,6 +7,7 @@ import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { z } from "zod";
+import TgsFilePlayer from "../../atoms/TgsFilePlayer";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
 
@@ -76,8 +77,13 @@ export const ThirdStep = () => {
 
   return (
     <StepLayout title="Event's password">
+      <TgsFilePlayer
+        src="/pass_lock.tgs"
+        autoplay
+        loop
+        className="w-40 h-40 mx-auto"
+      />
       <Input
-        type="password"
         placeholder="Enter your chosen password"
         onChange={(e) =>
           setEventData({

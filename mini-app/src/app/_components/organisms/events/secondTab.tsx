@@ -2,6 +2,7 @@ import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { Title3 } from "@/app/_components/atoms/typography/Titles";
 import Datetimepicker from "@/app/_components/molecules/pickers/Datetimepicker";
 import { trpc } from "@/app/_trpc/client";
+import { AlertGeneric } from "@/components/ui/alert";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,34 +22,62 @@ export const SecondStep = () => {
     end_date?: string[] | undefined;
     timezone?: string[] | undefined;
     location?: string[] | undefined;
+    cityId?: string[] | undefined;
+    countryId?: string[] | undefined;
   }>();
 
-  const secondStepDataSchema = z.object({
-    start_date: z.number(),
-    end_date: z.number(),
-    timezone: z.string().min(1),
-    location:
-      eventData?.eventLocationType === "online"
-        ? z.string().url("Please enter a valid url")
-        : z.string().min(1, "Please enter a valid location"),
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = () => {
     if (!formRef.current) {
       return;
     }
+    console.log(eventData?.eventLocationType);
+
+    const secondStepDataSchema = z.object({
+      start_date: z.number(),
+      end_date: z.number(),
+      timezone: z.string().min(1),
+      location:
+        eventData?.eventLocationType === "online"
+          ? z.string().url("Please enter a valid url")
+          : z.string().min(1, "Please enter a valid location"),
+      cityId:
+        eventData?.eventLocationType === "in_person"
+          ? z
+              .string()
+              .refine(
+                (value) => {
+                  return !isNaN(Number(value));
+                },
+                { message: "Please enter a valid city" }
+              )
+              .transform((value) => Number(value))
+          : z.undefined(),
+      countryId:
+        eventData?.eventLocationType === "in_person"
+          ? z
+              .string()
+              .refine(
+                (value) => {
+                  return !isNaN(Number(value));
+                },
+                { message: "Please enter a valid country" }
+              )
+              .transform((value) => Number(value))
+          : z.undefined(),
+    });
 
     const formData = new FormData(formRef.current);
     formData.append("timezone", eventData?.timezone || "");
     formData.append("location", eventData?.location || "");
+    formData.append("cityId", String(eventData?.cityId) || "");
+    formData.append("countryId", String(eventData?.countryId) || "");
     const formDataObject = Object.fromEntries(formData.entries()) as Record<
       string,
       any
     >;
     formDataObject.start_date = eventData?.start_date;
     formDataObject.end_date = eventData?.end_date;
+
     const formDataParsed = secondStepDataSchema.safeParse(formDataObject);
 
     if (!formDataParsed.success) {
@@ -74,10 +103,7 @@ export const SecondStep = () => {
 
   return (
     <>
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit}
-      >
+      <form ref={formRef}>
         <StepLayout title="Ticket Info">
           <Datetimepicker
             title="Starts at"
@@ -125,6 +151,9 @@ export const SecondStep = () => {
               </span>
             </label>
           </div>
+          <AlertGeneric variant="info">
+            The time is set by your location and time zone.
+          </AlertGeneric>
           <Title3>Location</Title3>
 
           <RadioGroup
@@ -155,7 +184,10 @@ export const SecondStep = () => {
           </RadioGroup>
           {eventData?.eventLocationType === "in_person" && (
             <div className="space-y-4">
-              <SelectLocation />
+              <SelectLocation
+                cityErrors={errors?.cityId}
+                countryErrors={errors?.countryId}
+              />
               <Input
                 type="text"
                 value={eventData?.location || ""}
@@ -182,20 +214,23 @@ export const SecondStep = () => {
                   location: e.target.value,
                 })
               }
-              placeholder="Event URL"
+              placeholder="https://ton.com"
             />
           )}
         </StepLayout>
       </form>
       <MainButton
         text="Next Step"
-        onClick={() => formRef.current?.requestSubmit()}
+        onClick={handleSubmit}
       />
     </>
   );
 };
 
-const SelectLocation = () => {
+const SelectLocation = (props: {
+  cityErrors?: string[];
+  countryErrors?: string[];
+}) => {
   const eventData = useCreateEventStore((state) => state.eventData);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const countries = trpc.location.getCountries.useQuery({});
@@ -209,7 +244,7 @@ const SelectLocation = () => {
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex w-full flex-col gap-4">
       <Combobox
         options={countries.data?.map((country) => ({
           label: country.title,
@@ -220,6 +255,9 @@ const SelectLocation = () => {
             setEventData({ countryId: Number(data) });
           }
         }}
+        errors={props.countryErrors}
+        className="w-full"
+        defaultValue={eventData?.countryId?.toString()}
       />
 
       <Combobox
@@ -227,11 +265,14 @@ const SelectLocation = () => {
           label: city.title,
           value: city.id.toString(),
         }))}
+        defaultValue={eventData?.cityId?.toString()}
         onSelect={(data) => {
           if (data) {
             setEventData({ cityId: Number(data) });
           }
         }}
+        errors={props.cityErrors}
+        className="w-full"
       />
     </div>
   );

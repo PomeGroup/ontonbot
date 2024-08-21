@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Info } from "lucide-react";
 
 const alertVariants = cva(
-  "relative w-full rounded-xl p-4 [&>svg~*]:pl-8 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground",
+  "relative w-full rounded-xl p-2 items-center grid grid-cols-12",
   {
     variants: {
       variant: {
@@ -19,7 +19,6 @@ const alertVariants = cva(
     },
   }
 );
-
 const Alert = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
@@ -63,9 +62,14 @@ const AlertGeneric = React.forwardRef<
     variant?: "info" | "destructive";
   }
 >(({ className, ...props }, ref) => (
-  <Alert ref={ref}>
-    {props.variant === "info" && <Info />}
-    <AlertDescription>{props.children}</AlertDescription>
+  <Alert
+    ref={ref}
+    className="gap-1"
+  >
+    {props.variant === "info" && <Info className="col-span-1" />}
+    <AlertDescription className="col-span-11">
+      {props.children}
+    </AlertDescription>
   </Alert>
 ));
 AlertGeneric.displayName = "AlertGeneric";
