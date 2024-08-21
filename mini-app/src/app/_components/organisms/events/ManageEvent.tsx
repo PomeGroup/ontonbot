@@ -46,9 +46,9 @@ const ManageEvent = (props: ManageEventProps) => {
     <>
       <Stepper
         steps={[
-          { icon: <span>1</span> },
-          { icon: <span>2</span> },
-          { icon: <span>3</span> },
+          { icon: <span>1</span>, label: "General info" },
+          { icon: <span>2</span>, label: "Time and place" },
+          { icon: <span>3</span>, label: "Event’s Password" },
         ]}
         currentStep={currentStep}
       />
