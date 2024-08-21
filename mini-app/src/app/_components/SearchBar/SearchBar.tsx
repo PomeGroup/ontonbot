@@ -36,7 +36,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
   const webApp = useWebApp();
   const hubsResponse = trpc.events.getHubs.useQuery();
 
-  const hubs = hubsResponse.data?.hubs || [];
+  const hubs: Hub[] = hubsResponse.data?.hubs || [];
   const {
     searchTerm,
     setSearchTerm,
