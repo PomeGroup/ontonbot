@@ -118,7 +118,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
 
   useEffect(() => {
     if (isMyEventsTabActive) {
-      refetchOrganizerEvents();
+      refetchOrganizerEvents().then(r => console.log(r));
     }
   }, [isMyEventsTabActive, refetchOrganizerEvents]);
   const upcomingEventsQuery = generateQueryString(upcomingEventsParams);
@@ -126,7 +126,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
 
   return (
     <>
-      <SearchBar />
+      <SearchBar  includeQueryParam={false}   onUpdateResults={()=>{}}/>
 
       <Tabs
         defaultValue="all-events"

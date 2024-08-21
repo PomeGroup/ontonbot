@@ -11,6 +11,7 @@ import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
 import { useSearchEvents } from "@/hooks/useSearchEvents";
 import useWebApp from "@/hooks/useWebApp";
 import { trpc } from "@/app/_trpc/client";
+import { useQuery } from "@trpc/react";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
 import MainFilterDrawer from "./MainFilterDrawer";
@@ -21,6 +22,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 interface SearchBarProps {
   includeQueryParam?: boolean;
   showFilterTags?: boolean;
+  onUpdateResults: (data: any) => void;
 }
 
 interface Hub {
@@ -31,10 +33,12 @@ interface Hub {
 const SearchBar: React.FC<SearchBarProps> = ({
   includeQueryParam = true,
   showFilterTags = false,
+  onUpdateResults = () => {},
 }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [showSuggestions, setShowSuggestions] = useState(false);
+
   const [participationType, setParticipationType] = useState<string[]>([
     "online",
     "in_person",
@@ -47,12 +51,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [isHubDrawerOpen, setIsHubDrawerOpen] = useState(false);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
+  const [searchIsFocused, setSearchIsFocused] = useState(false);
   const webApp = useWebApp();
   const hubsResponse = trpc.events.getHubs.useQuery();
-  const searchRefetch = trpc.events.getEventsWithFilters.useQuery({}, { enabled: false });
+  const searchRefetch = trpc.events.getEventsWithFilters.useQuery(
+    {},
+    { enabled: false }
+  );
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const hubs: Hub[] = hubsResponse.data?.hubs || [];
+
+
   const {
     searchTerm,
     setSearchTerm,
@@ -63,7 +73,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   } = useSearchEvents();
 
   const [initialHubsSet, setInitialHubsSet] = useState(false);
-  const [pageinit, setPageinit] = useState(false);
+  const [pageInit, setpageInit] = useState(false);
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
       const participationType = searchParams
@@ -86,7 +96,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
       setInitialHubsSet(true);
       setTimeout(() => {
-        setPageinit(true);
+        setpageInit(true);
       }, 0);
     }
   }, [searchParams, hubs, includeQueryParam, initialHubsSet]);
@@ -96,9 +106,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setHubText("All");
     } else {
       const selectedHubNames = selectedHubs
-        .map((hubId) => hubs.find((hub: Hub) => hub.id === hubId)?.name)
-        .filter(Boolean)
-        .join(", ");
+          .map((hubId) => hubs.find((hub: Hub) => hub.id === hubId)?.name)
+          .filter(Boolean)
+          .join(", ");
       setHubText(selectedHubNames);
     }
   }, [selectedHubs, hubs]);
@@ -112,41 +122,87 @@ const SearchBar: React.FC<SearchBarProps> = ({
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const searchValue = event.target.value;
+
+    // check is focus
+    const isFocus = event.target === document.activeElement;
+    setSearchIsFocused(isFocus);
     setSearchTerm(searchValue);
 
     if (searchValue.length > 2) {
-      handleFilterApply();
+      setShowSuggestions(true);
+      setShowFilterButton(false);
+      handleFilterApply().then((r) => {
+        console.log(r);
+      });
     } else {
       setAutoSuggestions([]);
+      setShowSuggestions(false);
+      setShowFilterButton(true);
     }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+
     if (event.key === "Enter") {
-      handleFilterApply();
+
+      handleFilterApply().then((r) => {
+
+        window.location.href = `/search?${createQueryParams().toString()}`;
+        return ;
+      });
     }
   };
-
-  const handleFilterApply = async () => {
-    const queryParams = new URLSearchParams({
+  const responseRefresh = trpc.events.getEventsWithFilters.useQuery(
+    searchEventsInputZod.parse({
+      limit: 3,
+      offset: 0,
+      search: searchTerm,
+      filter: {
+        participationType: participationType,
+        startDate:
+          Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+        // society_hub_id: selectedHubs || [],
+      },
+      sortBy: sortBy,
+    }),
+    {
+      enabled: false,
+      onSuccess: (data) => {
+        onUpdateResults(data.data || []);
+      },
+      onError: () => {
+        onUpdateResults([]);
+      },
+    }
+  );
+  const handleAutoSuggestionAllResults = () => {
+    setAutoSuggestions([]);
+    setShowSuggestions(false);
+    setShowFilterButton(true);
+    const queryParamsRedirect = new URLSearchParams({
+      query: searchTerm,
+      sortBy: 'start_date_asc',
+    });
+    window.location.href = `/search?${queryParamsRedirect.toString()}`;
+    return;
+  }
+  const createQueryParams = () => {
+    return new URLSearchParams({
       query: searchTerm,
       participationType: participationType.join(","),
       selectedHubs: selectedHubs.join(","),
       sortBy: sortBy,
     });
+  }
+  const handleFilterApply = async () => {
+    const queryParams = createQueryParams();
 
-    if (!includeQueryParam) {
+    if (!includeQueryParam && !searchIsFocused) {
+
       router.push(`/search?${queryParams.toString()}`);
-      // const response = await trpc.events.getEventsWithFilters.query({
-      //   query: searchTerm,
-      //   participationType: participationType.filter(Boolean),
-      //   selectedHubs,
-      //   sortBy,
-      // });
-        //// it must set the data to the searchResults
-    } else {
+    } else if(includeQueryParam && !searchIsFocused) {
 
-      window.location.href = `/search?${queryParams.toString()}`;
+      await responseRefresh.refetch();
     }
   };
 
@@ -155,7 +211,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setParticipationType(["online", "in_person"]);
     setSelectedHubs(allHubs);
     setSortBy("start_date_asc");
-    handleFilterApply();
+    handleFilterApply().then((r) => {
+      console.log(r);
+    });
   };
 
   const toggleParticipationType = (type: string) => {
@@ -176,12 +234,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const selectAllHubs = () => {
     const allHubs = hubs.map((hub: Hub) => hub.id);
     setSelectedHubs(allHubs);
-    handleFilterApply();
+    handleFilterApply().then((r) => {
+      console.log(r);
+    });
   };
 
   const deselectAllHubs = () => {
     setSelectedHubs([]);
-    handleFilterApply();
+    handleFilterApply().then((r) => {
+      console.log(r);
+    });
   };
 
   const clearFilter = (filter: string) => {
@@ -196,8 +258,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
     //setTimeout(handleFilterApply, 0);
   };
   useEffect(() => {
-    if (pageinit) {
-      handleFilterApply();
+    if (pageInit) {
+      handleFilterApply().then((r) => {
+        console.log(r);
+      });
     }
   }, [participationType, selectedHubs, sortBy]);
   const renderFilterButtons = () => {
@@ -311,6 +375,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
               autoSuggestions={autoSuggestions}
               setAutoSuggestions={setAutoSuggestions}
               handleFilterApply={handleFilterApply}
+              handleAutoSuggestionAllResults={handleAutoSuggestionAllResults}
             />
           )}
         </div>

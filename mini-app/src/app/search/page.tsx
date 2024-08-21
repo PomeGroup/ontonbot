@@ -106,10 +106,11 @@ const Search: React.FC = () => {
       <SearchBar
         includeQueryParam={true}
         showFilterTags={true}
+        onUpdateResults={setResults}
       />
 
       <div className="pt-4">
-        {!isLoadingSearchResults && results.length == 0 && (
+        {!isLoadingSearchResults && !isFetchingSearchResults && results.length == 0 && (
           <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
             <div>
               <Image
