@@ -90,7 +90,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
     return (
         <div
             ref={suggestionBoxRef}
-            className="absolute top-9 pt-1 w-full border-0 rounded-b-md shadow-lg bg-[rgba(51,51,51,0.98)] z-10"
+            className="absolute pt-4  mt-1 w-full border-0 rounded-t-3xl shadow-lg bg-[rgba(51,51,51,0.98)] z-10"
         >
             {searchLoading ? (
                 <div className="p-2">
@@ -104,11 +104,11 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
                         <EventCard key={event.event_uuid} event={event} mode="small" />
                     ))}
                     <button
-                        className="w-full text-s text-right pr-3 text-zinc-100 h-8 flex items-center justify-end"
+                        className="w-full text-s text-center py-2 bg-zinc-400 text-zinc-100 h-8 flex items-center justify-center"
                         onClick={handleFilterApply as any}
                     >
-                        <span>Show More Results</span>
-                        <FaArrowAltCircleRight className="ml-2 align-middle" style={{ verticalAlign: 'middle' }} />
+                        <span>All Results</span>
+
                     </button>
                 </>
             ) : (

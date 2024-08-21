@@ -69,16 +69,15 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
 
   const renderDetailedMode = () => (
     <div
-      className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg  cursor-pointer"
+      className="relative w-full h-auto overflow-hidden shadow-lg  cursor-pointer"
       onClick={handleEventClick}
     >
       <Image
         src={src}
         alt={title}
-        layout="fill"
-        objectFit="cover"
-        loading="lazy"
-        className="absolute inset-0 w-full h-full object-cover"
+        width={400}
+        height={400}
+        className="w-full h-auto object-cover"
         onError={() => setSrc(defaultImage)}
       />
     </div>
@@ -106,16 +105,16 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
             <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-4">
               {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
             </span>
-            {ticketPrice > 0 && (
-              <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-7 p-1">
-                <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-sm leading-3">
-                  ${ticketPrice}
-                </span>
-              </button>
-            )}
+            {/*{ticketPrice > 0 && (*/}
+            {/*  <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-7 p-1">*/}
+            {/*    <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-sm leading-3">*/}
+            {/*      ${ticketPrice}*/}
+            {/*    </span>*/}
+            {/*  </button>*/}
+            {/*)}*/}
           </div>
           <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-            <span className="grow font-sans text-black dark:text-white text-left line-clamp-2 text-xs font-medium leading-2">
+            <span className="grow font-sans text-black dark:text-white text-left line-clamp-1 text-sm font-medium leading-2">
               {title}
             </span>
           </div>

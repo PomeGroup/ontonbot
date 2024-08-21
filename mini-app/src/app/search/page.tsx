@@ -6,6 +6,7 @@ import { trpc } from "@/app/_trpc/client";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 const LIMIT = 2;
 
@@ -33,7 +34,7 @@ const Search: React.FC = () => {
     filter: {
       participationType: participationType,
       startDate:
-          Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+        Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
     },
     sortBy: sortBy || "default",
   });
@@ -48,7 +49,7 @@ const Search: React.FC = () => {
     keepPreviousData: true,
     onSuccess: (data) => {
       if (!initialFetchDone) {
-        setResults([])
+        setResults([]);
       }
       setResults((prev) => [...prev, ...(data.data || [])]);
       setHasMore(data?.data?.length === LIMIT);
@@ -56,7 +57,6 @@ const Search: React.FC = () => {
   });
 
   const loadMoreResults = useCallback(() => {
-
     if (hasMore && !isFetchingSearchResults) {
       setOffset((prevOffset) => prevOffset + LIMIT);
     }
@@ -82,15 +82,13 @@ const Search: React.FC = () => {
 
   useEffect(() => {
     if (!initialFetchDone) {
-
       refetch();
       setInitialFetchDone(true);
     }
   }, [searchTerm, participationType, sortBy, refetch]);
 
   useEffect(() => {
-    if (offset > 0  ) {
-
+    if (offset > 0) {
       refetch();
     }
   }, [offset, refetch]);
@@ -100,10 +98,27 @@ const Search: React.FC = () => {
       <SearchBar includeQueryParam={true} />
 
       <div className="pt-4">
-        <h5 className="text-2xl font-semibold">
-          Search Results for: <br />
-          &#34;{searchTerm || "All Events"}&#34;
-        </h5>
+        {results.length > 0 ? (
+          <h5 className="text-2xl font-semibold">
+            Search Results for: <br />
+            &#34;{searchTerm || "All Events"}&#34;
+          </h5>
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+            <div>
+              <Image
+                src={"/template-images/no-search-result.gif"}
+                alt={"No search results found"}
+                width={180}
+                height={180}
+              />
+            </div>
+            <div className="text-gray-500 max-w-md">
+              No Events were found matching your Search. Please try changing
+              some of your parameters and try again.
+            </div>
+          </div>
+        )}
         <div className="pt-2">
           {isLoadingSearchResults && results.length === 0 ? (
             <div className="flex flex-col gap-2">
