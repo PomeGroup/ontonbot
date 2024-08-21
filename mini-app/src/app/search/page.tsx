@@ -14,15 +14,17 @@ const Search: React.FC = () => {
   const searchParams = useSearchParams();
 
   const searchTerm = searchParams.get("query") || "";
-  const participationType = searchParams
+  const participationType =
+    searchParams
       .get("participationType")
       ?.split(",")
-      .filter(pt => pt === "online" || pt === "in_person") || [];  // Validate participation type
-  const selectedHubs = searchParams
+      .filter((pt) => pt === "online" || pt === "in_person") || []; // Validate participation type
+  const selectedHubs =
+    searchParams
       .get("selectedHubs")
       ?.split(",")
-      .map(id => parseInt(id, 10))
-      .filter(id => !isNaN(id)) || [];
+      .map((id) => parseInt(id, 10))
+      .filter((id) => !isNaN(id)) || [];
   const sortBy = searchParams.get("sortBy") || "default";
 
   const [results, setResults] = useState<any[]>([]);
@@ -31,7 +33,8 @@ const Search: React.FC = () => {
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastElementRef = useRef<HTMLDivElement | null>(null);
-  const startDate = Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600);
+  const startDate =
+    Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600);
   const searchParamsParsed = searchEventsInputZod.parse({
     limit: LIMIT,
     offset: offset,
@@ -43,7 +46,6 @@ const Search: React.FC = () => {
     },
     sortBy: sortBy || "default",
   });
-
 
   const {
     data: searchResults,
@@ -104,26 +106,30 @@ const Search: React.FC = () => {
       <SearchBar includeQueryParam={true} />
 
       <div className="pt-4">
-        {results.length > 0 ? (
-          <h5 className="text-2xl font-semibold">
-            Search Results for: <br />
-            &#34;{searchTerm || "All Events"}&#34;
-          </h5>
-        ) : (
-          <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
-            <div>
-              <Image
-                src={"/template-images/no-search-result.gif"}
-                alt={"No search results found"}
-                width={180}
-                height={180}
-              />
-            </div>
-            <div className="text-gray-500 max-w-md">
-              No Events were found matching your Search. Please try changing
-              some of your parameters and try again.
-            </div>
-          </div>
+        {!isLoadingSearchResults && (
+          <>
+            {results.length > 0 ? (
+              <h5 className="text-2xl font-semibold">
+                Search Results for: <br />
+                &#34;{searchTerm || "All Events"}&#34;
+              </h5>
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+                <div>
+                  <Image
+                    src={"/template-images/no-search-result.gif"}
+                    alt={"No search results found"}
+                    width={180}
+                    height={180}
+                  />
+                </div>
+                <div className="text-gray-500 max-w-md">
+                  No Events were found matching your Search. Please try changing
+                  some of your parameters and try again.
+                </div>
+              </div>
+            )}
+          </>
         )}
         <div className="pt-2">
           {isLoadingSearchResults && results.length === 0 ? (

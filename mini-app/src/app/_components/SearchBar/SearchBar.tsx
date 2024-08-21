@@ -1,32 +1,22 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  IoSearchOutline,
-  IoCloseOutline,
-  IoOptionsOutline,
-} from "react-icons/io5";
+import { IoSearchOutline, IoCloseOutline } from "react-icons/io5";
 import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
 import { useSearchEvents } from "@/hooks/useSearchEvents";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
-import { VscSettings } from "react-icons/vsc";
-import { Separator } from "@/components/ui/separator";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import useWebApp from "@/hooks/useWebApp";
 import { trpc } from "@/app/_trpc/client";
+import EventTypeDrawer from "./EventTypeDrawer";
+import HubSelectorDrawer from "./HubSelectorDrawer";
+import MainFilterDrawer from "./MainFilterDrawer";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
+}
+
+interface Hub {
+  id: string;
+  name: string;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
@@ -38,13 +28,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
     "in_person",
   ]);
   const [selectedHubs, setSelectedHubs] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<string>("default");
+  const [hubText, setHubText] = useState<string>("All"); // To track the displayed hub text
+  const [sortBy, setSortBy] = useState<string>("start_date_asc"); // Default to "Time"
   const [showFilterButton, setShowFilterButton] = useState(true);
   const [isEventTypeDrawerOpen, setIsEventTypeDrawerOpen] = useState(false);
   const [isHubDrawerOpen, setIsHubDrawerOpen] = useState(false);
   const webApp = useWebApp();
   const hubsResponse = trpc.events.getHubs.useQuery();
- 
+
   const hubs = hubsResponse.data?.hubs || [];
   const {
     searchTerm,
@@ -57,12 +48,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
   useEffect(() => {
     if (includeQueryParam) {
       const participationType = searchParams
-          .get("participationType")
-          ?.split(",") || ["online", "in_person"];
-      const selectedHubs = searchParams
-          .get("selectedHubs")
-          ?.split(",") || [];
-      const sortBy = searchParams.get("sortBy") || "default";
+        .get("participationType")
+        ?.split(",") || ["online", "in_person"];
+      const selectedHubs = searchParams.get("selectedHubs")?.split(",") || [];
+      const sortBy = searchParams.get("sortBy") || "start_date_asc"; // Default to "Time"
       const searchTerm = searchParams.get("query") || "";
       setSearchTerm(searchTerm);
       setParticipationType(participationType);
@@ -71,13 +60,26 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    // Update hub text whenever selectedHubs changes or if no hubs are selected
+    if (selectedHubs.length === 0 || selectedHubs.length === hubs.length) {
+      setHubText("All");
+    } else {
+      const selectedHubNames = selectedHubs
+        .map((hubId) => hubs.find((hub: Hub) => hub.id === hubId)?.name)
+        .filter(Boolean)
+        .join(", ");
+      setHubText(selectedHubNames);
+    }
+  }, [selectedHubs, hubs]);
+
   const handleCloseSuggestions = () => {
     setShowSuggestions(false);
     setShowFilterButton(true);
   };
 
   const handleSearchInputChange = (
-      event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const isFocused = document.activeElement === event.target;
     setShowFilterButton(!isFocused);
@@ -107,21 +109,28 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
     }
   };
 
+  const resetFilters = () => {
+    setParticipationType(["online", "in_person"]);
+    setSelectedHubs([]);
+    setSortBy("start_date_asc"); // Default to "Time" on reset
+  };
+
   const toggleParticipationType = (type: string) => {
     setParticipationType((prev) =>
-        prev.includes(type)
-            ? prev.filter((t) => t !== type)
-            : [...prev, type]
+      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
   };
 
   const toggleHubSelection = (hubId: string) => {
     setSelectedHubs((prev) =>
-        prev.includes(hubId)
-            ? prev.filter((id) => id !== hubId)
-            : [...prev, hubId]
+      prev.includes(hubId)
+        ? prev.filter((id) => id !== hubId)
+        : [...prev, hubId]
     );
   };
+
+  const selectAllHubs = () => setSelectedHubs(hubs.map((hub) => hub.id));
+  const deselectAllHubs = () => setSelectedHubs([]);
 
   return (
     <div className="relative flex items-center">
@@ -160,176 +169,38 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
         )}
       </div>
       {showFilterButton && (
-        <Drawer
-          onOpenChange={(open) => {
-            if (open) {
-              webApp?.MainButton.hide();
-            } else {
-              if (webApp?.MainButton.isVisible === false) {
-                webApp?.MainButton.hide();
-              } else {
-                webApp?.MainButton.show();
-              }
-            }
-          }}
-        >
-          <DrawerTrigger>
-            <button className="ml-4 p-2 rounded-md text-gray-500 hover:text-gray-700">
-              <IoOptionsOutline className="w-7 h-7" />
-            </button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Filter List</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-4 space-y-6 cursor-pointer">
-              <div
-                className="space-y-4"
-                onClick={() => setIsEventTypeDrawerOpen(true)}
-              >
-                <p className="text-sm font-medium text-zinc-100">EVENT TYPE</p>
-                <div className="cursor-pointer text-blue-500">
-                  {participationType.join(", ").replace("_", " ")}
-                </div>
-              </div>
-              <div
-                className="space-y-4"
-                onClick={() => setIsHubDrawerOpen(true)}
-              >
-                <p className="text-sm font-medium text-zinc-100">Ton hub</p>
-                <div className="cursor-pointer text-blue-500">
-                  {selectedHubs
-                    .map((hubId) => hubs.find((hub) => hub.id === hubId)?.name)
-                    .filter(Boolean)
-                    .join(", ")}
-                </div>
-              </div>
-              <div className="space-y-4">
-                <p className="text-sm font-medium text-zinc-100">SORT BY</p>
-                <RadioGroup
-                  orientation="vertical"
-                  value={sortBy}
-                  onValueChange={setSortBy}
-                >
-                  <Separator className="my-0" />
-                  <label className="flex justify-between items-center">
-                    <span className="text-zinc-400">Time</span>
-                    <RadioGroupItem value="start_date_asc" />
-                  </label>
-                  <Separator className="my-0" />
-                  <label className="flex justify-between items-center">
-                    <span className="text-zinc-400">Most People Reached</span>
-                    <RadioGroupItem value="most_people_reached" />
-                  </label>
-                </RadioGroup>
-              </div>
-            </div>
-
-            <DrawerFooter className="flex justify-end space-x-4 p-4">
-              <DrawerClose asChild>
-                <button
-                  className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full hover:bg-blue-200"
-                  onClick={handleFilterApply}
-                >
-                  Filter Events
-                </button>
-              </DrawerClose>
-              <button
-                className="text-blue-600 hover:underline px-4 py-2 rounded-full"
-                onClick={() => {
-                  setParticipationType(["online", "in_person"]);
-                  setSelectedHubs([]);
-                  setSortBy("default");
-                }}
-              >
-                Reset filters
-              </button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
+        <MainFilterDrawer
+          isOpen={true}
+          onOpenChange={() => {}}
+          participationType={participationType}
+          hubText={hubText}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          setIsEventTypeDrawerOpen={setIsEventTypeDrawerOpen}
+          setIsHubDrawerOpen={setIsHubDrawerOpen}
+          handleFilterApply={handleFilterApply}
+          resetFilters={resetFilters}
+        />
       )}
 
       {/* Event Type Drawer */}
-      <Drawer
-        open={isEventTypeDrawerOpen}
+      <EventTypeDrawer
+        isOpen={isEventTypeDrawerOpen}
         onOpenChange={setIsEventTypeDrawerOpen}
-      >
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Event Type</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4 space-y-4">
-            <div className="space-y-2">
-              <div
-                className="flex justify-between items-center cursor-pointer"
-                onClick={() => toggleParticipationType("online")}
-              >
-                <span className="text-zinc-400">Online</span>
-                <Checkbox
-                  checked={participationType.includes("online")}
-                  onCheckedChange={() => toggleParticipationType("online")}
-                />
-              </div>
-              <Separator className="my-0" />
-              <div
-                className="flex justify-between items-center cursor-pointer"
-                onClick={() => toggleParticipationType("in_person")}
-              >
-                <span className="text-zinc-400">In-person</span>
-                <Checkbox
-                  checked={participationType.includes("in_person")}
-                  onCheckedChange={() => toggleParticipationType("in_person")}
-                />
-              </div>
-            </div>
-          </div>
-          <DrawerFooter className="flex justify-end space-x-4 p-4">
-            <button
-              className="text-blue-600 hover:underline px-4 py-2 rounded-full"
-              onClick={() => setIsEventTypeDrawerOpen(false)}
-            >
-              Done
-            </button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+        participationType={participationType}
+        toggleParticipationType={toggleParticipationType}
+      />
 
-      {/* Hub Drawer */}
-      <Drawer
-        open={isHubDrawerOpen}
+      {/* Hub Selector Drawer */}
+      <HubSelectorDrawer
+        isOpen={isHubDrawerOpen}
         onOpenChange={setIsHubDrawerOpen}
-      >
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Select Hubs</DrawerTitle>
-          </DrawerHeader>
-          <div className="p-4 space-y-4">
-            {hubs.map((hub) => {
-              return (
-                <div
-                  key={hub.id}
-                  className="flex justify-between items-center cursor-pointer"
-                  onClick={() => toggleHubSelection(hub.id)}
-                >
-                  <span className="text-zinc-400">{hub.name}</span>
-                  <Checkbox
-                    checked={selectedHubs.includes(hub.id)}
-                    onCheckedChange={() => toggleHubSelection(hub.id)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <DrawerFooter className="flex justify-end space-x-4 p-4">
-            <button
-              className="text-blue-600 hover:underline px-4 py-2 rounded-full"
-              onClick={() => setIsHubDrawerOpen(false)}
-            >
-              Done
-            </button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+        selectedHubs={selectedHubs}
+        toggleHubSelection={toggleHubSelection}
+        hubs={hubs}
+        selectAllHubs={selectAllHubs}
+        deselectAllHubs={deselectAllHubs}
+      />
     </div>
   );
 };
