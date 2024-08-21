@@ -129,7 +129,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ includeQueryParam = true }) => {
     );
   };
 
-  const selectAllHubs = () => setSelectedHubs(hubs.map((hub) => hub.id));
+  const selectAllHubs = () => setSelectedHubs(hubs.map((hub: Hub) => hub.id));
   const deselectAllHubs = () => setSelectedHubs([]);
 
   return (
