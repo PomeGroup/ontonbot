@@ -103,33 +103,27 @@ const Search: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <SearchBar includeQueryParam={true} />
+      <SearchBar
+        includeQueryParam={true}
+        showFilterTags={true}
+      />
 
       <div className="pt-4">
-        {!isLoadingSearchResults && (
-          <>
-            {results.length > 0 ? (
-              <h5 className="text-2xl font-semibold">
-                Search Results for: <br />
-                &#34;{searchTerm || "All Events"}&#34;
-              </h5>
-            ) : (
-              <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
-                <div>
-                  <Image
-                    src={"/template-images/no-search-result.gif"}
-                    alt={"No search results found"}
-                    width={180}
-                    height={180}
-                  />
-                </div>
-                <div className="text-gray-500 max-w-md">
-                  No Events were found matching your Search. Please try changing
-                  some of your parameters and try again.
-                </div>
-              </div>
-            )}
-          </>
+        {!isLoadingSearchResults && results.length == 0 && (
+          <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+            <div>
+              <Image
+                src={"/template-images/no-search-result.gif"}
+                alt={"No search results found"}
+                width={180}
+                height={180}
+              />
+            </div>
+            <div className="text-gray-500 max-w-md">
+              No Events were found matching your Search. Please try changing
+              some of your parameters and try again.
+            </div>
+          </div>
         )}
         <div className="pt-2">
           {isLoadingSearchResults && results.length === 0 ? (
