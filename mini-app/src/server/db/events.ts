@@ -133,15 +133,16 @@ export const getEventsWithFilters = async (
   }
 
   // Apply date filters
-  if (filter?.startDate) {
+  console.log(filter)
+  if (filter?.startDate && filter?.startDateOperator ) {
     conditions.push(
-      sql`${event_details_search_list.startDate} >= ${filter.startDate}`
+      sql`${event_details_search_list.startDate} ${sql.raw(filter.startDateOperator)} ${filter.startDate}`
     );
   }
 
-  if (filter?.endDate) {
+  if (filter?.endDate && filter?.endDateOperator) {
     conditions.push(
-      sql`${event_details_search_list.endDate} <= ${filter.endDate}`
+      sql`${event_details_search_list.endDate} ${sql.raw(filter.endDateOperator)} ${filter.endDate}`
     );
   }
 

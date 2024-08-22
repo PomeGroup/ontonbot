@@ -10,7 +10,9 @@ const searchEventsInputZod = z.object({
       participationType: z.array(z.enum(["online", "in_person"])).optional(),
       organizer_user_id: z.number().optional(),
       startDate: z.number().optional(),
+      startDateOperator: z.enum([">=", ">", "=", "<", "<="]).default(">="),
       endDate: z.number().optional(),
+      endDateOperator: z.enum([">=", ">", "=", "<", "<="]).default("<="),
       event_ids: z.array(z.number()).optional(),
       event_uuids: z.array(z.string()).optional(),
       society_hub_id: z.array(z.number()).optional(),
@@ -18,7 +20,7 @@ const searchEventsInputZod = z.object({
     .optional(),
   sortBy: z
     .enum([
-      "default",
+      "default", // default is by same as start_date_asc
       "time",
       "most_people_reached",
       "start_date_asc",
