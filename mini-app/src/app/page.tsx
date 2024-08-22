@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import MainButton from "./_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "./_trpc/client";
 import "./page.css";
+import zod from "zod";
 
 export default function Home({ searchParams }: { searchParams: any }) {
   noStore();
@@ -21,6 +22,18 @@ export default function Home({ searchParams }: { searchParams: any }) {
 
   const router = useRouter();
   const [isMyEventsTabActive, setIsMyEventsTabActive] = useState(false);
+  const createSearchQueryParams = (
+    params: zod.infer<typeof searchEventsInputZod>
+  ) => {
+    return new URLSearchParams(
+      Object.entries({
+        query: params.search || "",
+        startDate: params.filter?.startDate?.toString() || "",
+        endDate: params.filter?.endDate?.toString() || "",
+        sortBy: params.sortBy || "default",
+      }).filter(([_, value]) => value !== "")
+    ).toString();
+  };
 
   const tgWebAppStartParam = searchParams.tgWebAppStartParam;
   const upcomingEventsParams = searchEventsInputZod.parse({
@@ -51,6 +64,10 @@ export default function Home({ searchParams }: { searchParams: any }) {
       event_uuids: ["b8032306-47e0-4735-b351-e62b8948138d"],
     },
   });
+  const seeAllUpcomingEventsLink =
+    "/search/?" + createSearchQueryParams(upcomingEventsParams);
+  const seeAllPastEventsLink =
+    "/search/?" + createSearchQueryParams(pastEventsParams);
 
   const organizerEventsParams = searchEventsInputZod.parse({
     limit: 50,
@@ -88,10 +105,6 @@ export default function Home({ searchParams }: { searchParams: any }) {
     enabled: false, // Disable automatic fetching
   });
 
-  useEffect(() => {
-    console.log("asdasdasdasd", upcomingEvents);
-  }, [upcomingEvents]);
-
   const generateQueryString = (params: any) => {
     const filteredParams = {
       ...params,
@@ -118,7 +131,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
 
   useEffect(() => {
     if (isMyEventsTabActive) {
-      refetchOrganizerEvents().then(r => console.log(r));
+      refetchOrganizerEvents().then((r) => console.log(r));
     }
   }, [isMyEventsTabActive, refetchOrganizerEvents]);
   const upcomingEventsQuery = generateQueryString(upcomingEventsParams);
@@ -126,7 +139,10 @@ export default function Home({ searchParams }: { searchParams: any }) {
 
   return (
     <>
-      <SearchBar  includeQueryParam={false}   onUpdateResults={()=>{}}/>
+      <SearchBar
+        includeQueryParam={false}
+        onUpdateResults={() => {}}
+      />
 
       <Tabs
         defaultValue="all-events"
@@ -169,7 +185,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
           <div className="pt-4  w-full pb-4  flex justify-between items-center">
             <h2>Upcoming Events</h2>
             <a
-              href={`/search?${upcomingEventsQuery}`}
+              href={`${seeAllUpcomingEventsLink}`}
               className="text-zinc-300 hover:underline"
             >
               See All
@@ -188,7 +204,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
           <div className="pt-4 pb-4 flex justify-between items-center">
             <h2>Past Events</h2>
             <a
-              href={`/search?${pastEventsQuery}`}
+              href={`${seeAllPastEventsLink}`}
               className="text-zinc-300  hover:underline"
             >
               See All

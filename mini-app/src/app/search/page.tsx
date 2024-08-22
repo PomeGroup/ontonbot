@@ -27,15 +27,22 @@ const Search: React.FC = () => {
       .filter((id) => !isNaN(id)) || [];
 
   const sortBy = searchParams.get("sortBy") || "default";
+  // Get startDate from URL or default to current time
 
+
+  const endDate = searchParams.get("endDate")
+      ? parseInt(searchParams.get("endDate") as string, 10)
+      : undefined;
+  const startDate = searchParams.get("startDate")
+      ? parseInt(searchParams.get("startDate") as string, 10)
+      : endDate ? undefined : Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600);
   const [results, setResults] = useState<any[]>([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastElementRef = useRef<HTMLDivElement | null>(null);
-  const startDate =
-    Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600);
+
   const searchParamsParsed = searchEventsInputZod.parse({
     limit: LIMIT,
     offset: offset,
@@ -43,11 +50,12 @@ const Search: React.FC = () => {
     filter: {
       ...(participationType.length > 0 && { participationType }), // Include if valid
       startDate, // Always include startDate
+      ...(endDate   && { endDate }), // Include if valid
       ...(selectedHubs.length > 0 && { society_hub_id: selectedHubs }), // Include if valid
     },
     sortBy: sortBy || "default",
   });
-
+  console.log('--searchParamsParsed', searchParamsParsed);
   const {
     data: searchResults,
     isLoading: isLoadingSearchResults,
@@ -91,16 +99,17 @@ const Search: React.FC = () => {
 
   useEffect(() => {
     if (!initialFetchDone) {
-      refetch();
-      setInitialFetchDone(true);
+      refetch().then(() => {
+        setInitialFetchDone(true);
+      });
     }
   }, [searchTerm, participationType, sortBy, refetch]);
 
-  useEffect(() => {
-    if (offset > 0) {
-      refetch();
-    }
-  }, [offset, refetch]);
+  // useEffect(() => {
+  //   if (offset > 0) {
+  //     refetch();
+  //   }
+  // }, [offset, refetch]);
 
   return (
     <div className="container mx-auto p-4">
