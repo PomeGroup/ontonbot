@@ -123,7 +123,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       )}
 
       {authorized &&
-        (role === "admin" || user?.id === eventData.data.owner) && (
+        (role === "admin" || user?.user_id === eventData.data.owner) && (
           <MainButton
             text="Manage Event"
             onClick={() => {

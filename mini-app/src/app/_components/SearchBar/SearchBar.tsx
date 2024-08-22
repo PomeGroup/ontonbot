@@ -9,9 +9,7 @@ import {
 } from "react-icons/io5";
 import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
 import { useSearchEvents } from "@/hooks/useSearchEvents";
-import useWebApp from "@/hooks/useWebApp";
 import { trpc } from "@/app/_trpc/client";
-import { useQuery } from "@trpc/react";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
 import MainFilterDrawer from "./MainFilterDrawer";
@@ -52,27 +50,25 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const [searchIsFocused, setSearchIsFocused] = useState(false);
-  const webApp = useWebApp();
   const hubsResponse = trpc.events.getHubs.useQuery();
-  const searchRefetch = trpc.events.getEventsWithFilters.useQuery(
-    {},
-    { enabled: false }
-  );
+  const [hubs, setHubs] = useState<Hub[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (hubsResponse?.data?.status === 'success') {
+      setHubs(hubsResponse.data.hubs || []);
+    }
+  }, [hubsResponse]);
 
-  const hubs: Hub[] = hubsResponse.data?.hubs || [];
 
   const {
     searchTerm,
     setSearchTerm,
     autoSuggestions,
     setAutoSuggestions,
-    handleSearchChange,
-    refetchWithFilters,
   } = useSearchEvents();
 
   const [initialHubsSet, setInitialHubsSet] = useState(false);
-  const [pageInit, setpageInit] = useState(false);
+  const [pageInit, setPageInit] = useState(false);
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
       const participationType = searchParams
@@ -95,13 +91,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
       setInitialHubsSet(true);
       setTimeout(() => {
-        setpageInit(true);
+        setPageInit(true);
       }, 0);
     } else if (!includeQueryParam && !initialHubsSet) {
       setSelectedHubs(hubs.map((hub: Hub) => hub.id));
       setInitialHubsSet(true);
       setTimeout(() => {
-        setpageInit(true);
+        setPageInit(true);
       });
     }
   }, [searchParams, hubs, includeQueryParam, initialHubsSet]);
@@ -148,34 +144,37 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
-      handleFilterApply().then((r) => {
+      handleFilterApply().then(() => {
         window.location.href = `/search?${createQueryParams().toString()}`;
         return;
       });
     }
   };
   const responseRefresh = trpc.events.getEventsWithFilters.useQuery(
-    searchEventsInputZod.parse({
-      limit: 3,
-      offset: 0,
-      search: searchTerm,
-      filter: {
-        participationType: participationType.filter(Boolean),
-        startDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
-        society_hub_id: selectedHubs.length > 0 ? selectedHubs.map(hub => Number(hub)) : [],
-      },
-      sortBy: sortBy,
-    }),
-    {
-      enabled: false,
-      onSuccess: (data) => {
-        onUpdateResults(data.data || []);
-      },
-      onError: () => {
-        onUpdateResults([]);
-      },
-    }
+      searchEventsInputZod.parse({
+        limit: 3,
+        offset: 0,
+        search: searchTerm,
+        filter: {
+          participationType: participationType.filter(Boolean),
+          startDate:
+              Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+          society_hub_id:
+              selectedHubs.length > 0 ? selectedHubs.map((hub) => Number(hub)) : [],
+        },
+        sortBy: sortBy,
+      }),
+      {
+        enabled: false,
+      }
   );
+  useEffect(() => {
+    if (responseRefresh.status === "success") {
+      onUpdateResults(responseRefresh.data.data || []);
+    } else if (responseRefresh.status === "error") {
+      onUpdateResults([]);
+    }
+  }, [responseRefresh.status, responseRefresh.data, onUpdateResults]);
   const handleAutoSuggestionAllResults = () => {
     setAutoSuggestions([]);
     setShowSuggestions(false);
