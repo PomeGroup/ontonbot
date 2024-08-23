@@ -27,8 +27,9 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
       eventTicket: true,
     },
   });
-
-  if (!order || !order.eventTicket?.collectionAddress) {
+  // @samyar Review this
+// || !order.event_ticket_id?.collectionAddress
+  if (!order ) {
     return Response.json({ message: "order_not_found" }, { status: 404 });
   }
 
@@ -41,7 +42,8 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
   return Response.json({
     ...order,
     total_price: BigInt(order.total_price as bigint).toString(),
-    nft_collection_address: order.eventTicket.collectionAddress,
+    // @samyar Review this
+    //nft_collection_address: order.eventTicket.collectionAddress,
     tickets,
   });
 }
