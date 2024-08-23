@@ -16,6 +16,8 @@ import zod from "zod";
 
 export default function Home({ searchParams }: { searchParams: any }) {
   noStore();
+  //const SliderEventUUID = "b8032306-47e0-4735-b351-e62b8948138d";
+  const SliderEventUUID = "f2956dfc-2641-4a41-83ac-b37988fb8f36";
   const webApp = useWebApp();
   const { authorized, isLoading : useAuthLoading ,role : userRole ,user  } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
@@ -61,7 +63,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
   const sliderEventParams = searchEventsInputZod.parse({
     limit: 1,
     filter: {
-      event_uuids: ["b8032306-47e0-4735-b351-e62b8948138d"],
+      event_uuids: [SliderEventUUID],
     },
   });
   const seeAllUpcomingEventsLink =
