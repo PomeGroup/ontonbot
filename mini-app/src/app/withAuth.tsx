@@ -49,10 +49,10 @@ const withAuth = <P extends object>(WrappedComponent: ComponentType<P>) => {
     ) {
       return;
     }
-
+    // @samyar Review this
     if (
-      authorized === false &&
-      validateUserInitDataQuery.data.valid === false
+        !authorized &&
+        !validateUserInitDataQuery.data.valid
     ) {
       return (
         <div className="text-center text-2xl mt-20">
