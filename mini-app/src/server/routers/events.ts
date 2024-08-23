@@ -159,6 +159,8 @@ export const eventsRouter = router({
               location: opts.input.eventData.location,
               owner: opts.ctx.user.user_id,
               participationType: opts.input.eventData.eventLocationType,
+              countryId: opts.input.eventData.countryId,
+              cityId: opts.input.eventData.cityId,
             })
             .returning();
 
@@ -246,7 +248,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
   // private
   deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
-
     try {
       return await db.transaction(async (trx) => {
         const deletedEvent = await trx
@@ -365,7 +366,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       })
     )
     .mutation(async (opts) => {
-        console.log("111111111111111111*****opts", opts);
       const eventData = opts.input.eventData;
       const eventUuid = opts.ctx.event.event_uuid;
       const eventId = opts.ctx.event.event_id;
@@ -401,6 +401,8 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               location: eventData.location,
               participationType: eventData.eventLocationType,
               timezone: eventData.timezone,
+              countryId: eventData.countryId,
+              cityId: eventData.cityId,
               updatedBy: opts.ctx.user.user_id.toString(),
             })
             .where(eq(events.event_uuid, eventUuid))

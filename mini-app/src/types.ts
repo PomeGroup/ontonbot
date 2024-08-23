@@ -143,6 +143,8 @@ export const EventDataSchema = z.object({
   timezone: z.string(),
   dynamic_fields: DynamicFieldsSchema,
   eventLocationType: z.enum(["online", "in_person"]).optional(),
+  countryId: z.number().optional(),
+  cityId: z.number().optional(),
 });
 
 export const UpdateEventDataSchema = z.object({
@@ -166,6 +168,8 @@ export const UpdateEventDataSchema = z.object({
   timezone: z.string(),
   dynamic_fields: DynamicFieldsSchema,
   eventLocationType: z.enum(["online", "in_person"]).optional(),
+  countryId: z.number().optional(),
+  cityId: z.number().optional(),
 });
 
 export const EventDataSchemaAllOptional = z.object({
