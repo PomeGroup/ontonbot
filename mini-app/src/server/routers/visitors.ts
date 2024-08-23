@@ -52,7 +52,7 @@ export const visitorsRouter = router({
       if (!valid) {
         return;
       }
-
+    // @todo: Add cache for this
       const existingVisitor = await db
         .select()
         .from(visitors)

@@ -17,9 +17,9 @@ import zod from "zod";
 export default function Home({ searchParams }: { searchParams: any }) {
   noStore();
   const webApp = useWebApp();
-  const { authorized, isLoading } = useAuth();
+  const { authorized, isLoading : useAuthLoading ,role : userRole ,user  } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
-
+  console.log("Authorized", authorized  , "UserId", UserId , "useAuthLoading", useAuthLoading , "userRole", userRole , "user", user);
   const router = useRouter();
   const [isMyEventsTabActive, setIsMyEventsTabActive] = useState(false);
   const createSearchQueryParams = (

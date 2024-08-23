@@ -21,6 +21,8 @@ interface SearchBarProps {
   includeQueryParam?: boolean;
   showFilterTags?: boolean;
   onUpdateResults: (data: any) => void;
+  offset?: number;
+  setOffset?: (offset: number) => void;
 }
 
 interface Hub {
@@ -32,6 +34,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   includeQueryParam = true,
   showFilterTags = false,
   onUpdateResults = () => {},
+    offset = 0,
+    setOffset = () => {},
 }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -197,7 +201,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleFilterApply = async () => {
     const queryParams = createQueryParams();
 
-
+    setOffset(0);
     if (!includeQueryParam && !searchIsFocused) {
       router.push(`/search?${queryParams.toString()}`);
     } else if (includeQueryParam && !searchIsFocused) {

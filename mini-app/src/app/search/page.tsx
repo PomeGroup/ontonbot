@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
-const LIMIT = 2;
+const LIMIT = 10;
 
 const Search: React.FC = () => {
   const searchParams = useSearchParams();
@@ -25,7 +25,7 @@ const Search: React.FC = () => {
       ?.split(",")
       .map((id) => parseInt(id, 10))
       .filter((id) => !isNaN(id)) || [];
-
+console.log('--selectedHubs', selectedHubs);
   const sortBy = searchParams.get("sortBy") || "default";
   // Get startDate from URL or default to current time
 
@@ -51,7 +51,7 @@ const Search: React.FC = () => {
       ...(participationType.length > 0 && { participationType }), // Include if valid
       startDate, // Always include startDate
       ...(endDate   && { endDate }), // Include if valid
-      ...(selectedHubs.length > 0 && { society_hub_id: selectedHubs }), // Include if valid
+      ...(selectedHubs.length > 0 && { society_hub_id: selectedHubs } ), // Include if valid
     },
     sortBy: sortBy || "default",
   });
@@ -101,6 +101,7 @@ const Search: React.FC = () => {
     if (!initialFetchDone) {
       refetch().then(() => {
         setInitialFetchDone(true);
+        setOffset((prevOffset) => prevOffset + LIMIT);
       });
     }
   }, [searchTerm, participationType, sortBy, refetch]);
@@ -117,6 +118,8 @@ const Search: React.FC = () => {
         includeQueryParam={true}
         showFilterTags={true}
         onUpdateResults={setResults}
+        offset={offset}
+        setOffset={setOffset}
       />
 
       <div className="pt-4">
