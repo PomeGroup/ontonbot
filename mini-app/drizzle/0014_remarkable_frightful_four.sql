@@ -28,7 +28,8 @@ END $$;
 
 --> statement-breakpoint
 DO $$ BEGIN
-CREATE OR REPLACE VIEW  "public"."event_details_search_list" AS  SELECT e.event_id,
+DROP VIEW "event_details_search_list";
+CREATE  VIEW  "public"."event_details_search_list" AS  SELECT e.event_id,
     e.event_uuid,
     e.title,
     e.description,
