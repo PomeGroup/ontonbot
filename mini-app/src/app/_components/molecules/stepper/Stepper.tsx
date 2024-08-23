@@ -20,7 +20,7 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
           <li
             key={index}
             className={cn(
-              "flex w-96 text-center px-1 items-center text-white relative flex-col"
+              "flex w-64 text-center px-1 items-center text-white relative flex-col"
             )}
             onClick={() => index < currentStep && setCurrentStep(index + 1)}
           >
@@ -38,11 +38,11 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
                 step.icon
               )}
             </span>
-            <span className={"mt-1 text-sm"}>{step.label}</span>
+            <span className={"mt-1 mb-2 h-0 text-xs"}>{step.label}</span>
           </li>
           {index !== steps.length - 1 && (
             <div
-              className={cn("h-[1px] -translate-y-1  w-full", {
+              className={cn("h-[1px] translate-y-1 w-full", {
                 "bg-main-button-color": index < currentStep,
                 "bg-disabled-font": index >= currentStep,
               })}
