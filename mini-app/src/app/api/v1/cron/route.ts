@@ -22,30 +22,20 @@ export async function GET() {
   }
   // update lock in cache for 7h and 50m
   setCache(cacheKeys.cronJobLock, true, 28_200);
-
   try {
-    await createRewards();
-  } catch (error) {
-    console.error("ERROR_IN_CREATE_REWARDS: ", error);
-  }
+    const [res1, res2] = await Promise.allSettled([
+      createRewards(),
+      notifyUsersForRewards(),
+    ]);
 
-  try {
-    const notificationCount = await notifyUsersForRewards();
-    deleteCache(cacheKeys.cronJobLock);
     return NextResponse.json({
       message: "Cron job executed successfully",
       now: Date.now(),
-      notificationCount,
+      res1: res1.status === "fulfilled" ? res1.value : res1.reason,
+      res2: res2.status === "fulfilled" ? res2.value : res2.reason,
     });
-  } catch (error) {
-    // remove lock in cache
+  } finally {
     deleteCache(cacheKeys.cronJobLock);
-    console.error("ERROR_IN_NOTIFICATION: ", error);
-    return NextResponse.json({
-      message: "Error in cron job",
-      now: Date.now(),
-      error: error instanceof Error ? error.message : error,
-    });
   }
 }
 
@@ -56,10 +46,7 @@ async function createRewards() {
     },
   });
 
-  console.log("pendingRewards", pendingRewards.length);
-
-  // create reward ton society integration
-  for (const pendingReward of pendingRewards) {
+  const createRewardPromises = pendingRewards.map(async (pendingReward) => {
     try {
       const visitor = await db.query.visitors.findFirst({
         where: (fields, { eq }) => {
@@ -154,7 +141,8 @@ async function createRewards() {
         console.error("CRON_JOB_ERROR", error);
       }
     }
-  }
+  });
+  await Promise.allSettled(createRewardPromises);
 }
 
 async function notifyUsersForRewards() {
