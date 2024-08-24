@@ -22,30 +22,26 @@ export async function GET() {
   }
   // update lock in cache for 7h and 50m
   setCache(cacheKeys.cronJobLock, true, 28_200);
-
   try {
-    await createRewards();
-  } catch (error) {
-    console.error("ERROR_IN_CREATE_REWARDS: ", error);
-  }
+    const [res1, res2] = await Promise.allSettled([
+      createRewards(),
+      notifyUsersForRewards(),
+    ]);
 
-  try {
-    const notificationCount = await notifyUsersForRewards();
-    deleteCache(cacheKeys.cronJobLock);
     return NextResponse.json({
       message: "Cron job executed successfully",
       now: Date.now(),
-      notificationCount,
+      res1: res1.status === "fulfilled" ? res1.value : res1.reason,
+      res2: res2.status === "fulfilled" ? res2.value : res2.reason,
     });
   } catch (error) {
-    // remove lock in cache
-    deleteCache(cacheKeys.cronJobLock);
-    console.error("ERROR_IN_NOTIFICATION: ", error);
     return NextResponse.json({
-      message: "Error in cron job",
+      message: "Cron job failed",
       now: Date.now(),
-      error: error instanceof Error ? error.message : error,
+      error,
     });
+  } finally {
+    deleteCache(cacheKeys.cronJobLock);
   }
 }
 
@@ -56,8 +52,7 @@ async function createRewards() {
     },
   });
 
-  // create reward ton society integration
-  for (const pendingReward of pendingRewards) {
+  const createRewardPromises = pendingRewards.map(async (pendingReward) => {
     try {
       const visitor = await db.query.visitors.findFirst({
         where: (fields, { eq }) => {
@@ -138,11 +133,7 @@ async function createRewards() {
                 ? pendingReward.tryCount + 1
                 : undefined,
               status: shouldFail ? "failed" : undefined,
-              failed_reason: shouldFail
-                ? Array.isArray(pendingReward.failed_reason)
-                  ? [...pendingReward.failed_reason, error]
-                  : [error]
-                : [],
+              data: shouldFail ? { fail_reason: error } : undefined,
               updatedBy: "system",
             })
             .where(eq(rewards.id, pendingReward.id));
@@ -156,7 +147,8 @@ async function createRewards() {
         console.error("CRON_JOB_ERROR", error);
       }
     }
-  }
+  });
+  await Promise.allSettled(createRewardPromises);
 }
 
 async function notifyUsersForRewards() {
@@ -164,6 +156,8 @@ async function notifyUsersForRewards() {
   const createdRewards = await db.query.rewards.findMany({
     where: (fields, { eq }) => eq(fields.status, "created"),
   });
+
+  console.log("createdRewards ", createdRewards.length);
 
   const notificationPromises = createdRewards.map((createdReward) =>
     limit(() => processReward(createdReward))
@@ -212,29 +206,26 @@ async function sendRewardNotification(
   });
 }
 
-type InsertReward = typeof rewards.$inferInsert;
 async function updateRewardStatus(
   rewardId: string,
-  status?: typeof rewards.$inferInsert.status,
-  data?: InsertReward
+  status?: string,
+  data?: any
 ) {
   await db
     .update(rewards)
-    .set({ status, ...data, updatedBy: "system" })
+    .set({ status, ...(data && { data }), updatedBy: "system" })
     .where(eq(rewards.id, rewardId));
 }
 
 async function handleRewardError(reward: RewardType, error: any) {
   const shouldFail = reward.tryCount >= 4;
   const newStatus = shouldFail ? "notification_failed" : undefined;
+  const newData = shouldFail ? { fail_reason: error.message } : undefined;
 
   try {
     await updateRewardStatus(reward.id, newStatus, {
       tryCount: reward.tryCount + 1,
-      failed_reason:
-        reward.failed_reason && Array.isArray(reward.failed_reason)
-          ? [...reward.failed_reason, error.message]
-          : [error.message],
+      ...newData,
     });
   } catch (dbError) {
     console.error("DB_ERROR_156", dbError);
