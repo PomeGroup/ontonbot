@@ -6,7 +6,7 @@ import { createUserRewardLink } from "@/lib/ton-society-api";
 import { EventType, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
 import { AxiosError } from "axios";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import pLimit from "p-limit";
 
@@ -40,126 +40,154 @@ export async function GET() {
 }
 
 async function createRewards() {
-  let pendingRewards = await db.query.rewards.findMany({
-    where: (fields, { eq }) => {
-      return eq(fields.status, "pending_creation");
-    },
-  });
+  const pendingRewardCount = await db
+    .select({ count: sql`count(*)`.mapWith(Number) })
+    .from(rewards)
+    .where(eq(rewards.status, "pending_creation"));
 
-  const createRewardPromises = pendingRewards.map(async (pendingReward) => {
-    try {
-      const visitor = await db.query.visitors.findFirst({
-        where: (fields, { eq }) => {
-          return eq(fields.id, pendingReward.visitor_id);
-        },
-      });
+  if (pendingRewardCount[0].count === 0) {
+    return;
+  }
 
-      const event = await db.query.events.findFirst({
-        where: (fields, { eq }) => {
-          return eq(fields.event_uuid, visitor?.event_uuid as string);
-        },
-      });
+  // for pending rewards count divided by 100 round up to 3
+  const pendingRewardsCount = Math.ceil(pendingRewardCount[0].count / 100);
 
-      const response = await createUserRewardLink(
-        event?.activity_id as number,
-        {
-          telegram_user_id: visitor?.user_id as number,
-          attributes: [
-            {
-              trait_type: "Organizer",
-              value: event?.society_hub as string,
-            },
-          ],
-        }
-      );
+  for (let i = 0; i < pendingRewardsCount; i++) {
+    let pendingRewards = await db.query.rewards.findMany({
+      where: (fields, { eq }) => {
+        return eq(fields.status, "pending_creation");
+      },
+      limit: 100,
+    });
 
-      await db
-        .update(rewards)
-        .set({
-          status: "created",
-          data: response.data.data,
-          updatedBy: "system",
-        })
-        .where(eq(rewards.id, pendingReward.id));
-    } catch (error) {
-      const isEventPublished =
-        error instanceof AxiosError
-          ? error.response?.data?.message !== "activity not found"
-          : true;
-      // if it was not published we will delete all the other rewards associated with this event from the loop
-      if (!isEventPublished) {
+    const createRewardPromises = pendingRewards.map(async (pendingReward) => {
+      try {
         const visitor = await db.query.visitors.findFirst({
           where: (fields, { eq }) => {
             return eq(fields.id, pendingReward.visitor_id);
           },
         });
 
-        const unpublishedEvent = await db.query.events.findFirst({
+        const event = await db.query.events.findFirst({
           where: (fields, { eq }) => {
             return eq(fields.event_uuid, visitor?.event_uuid as string);
           },
         });
-        pendingRewards = pendingRewards.filter(async (r) => {
+
+        const response = await createUserRewardLink(
+          event?.activity_id as number,
+          {
+            telegram_user_id: visitor?.user_id as number,
+            attributes: [
+              {
+                trait_type: "Organizer",
+                value: event?.society_hub as string,
+              },
+            ],
+          }
+        );
+
+        await db
+          .update(rewards)
+          .set({
+            status: "created",
+            data: response.data.data,
+            updatedBy: "system",
+          })
+          .where(eq(rewards.id, pendingReward.id));
+      } catch (error) {
+        const isEventPublished =
+          error instanceof AxiosError
+            ? error.response?.data?.message !== "activity not found"
+            : true;
+        // if it was not published we will delete all the other rewards associated with this event from the loop
+        if (!isEventPublished) {
           const visitor = await db.query.visitors.findFirst({
             where: (fields, { eq }) => {
-              return eq(fields.id, r.visitor_id);
+              return eq(fields.id, pendingReward.visitor_id);
             },
           });
 
-          const event = await db.query.events.findFirst({
+          const unpublishedEvent = await db.query.events.findFirst({
             where: (fields, { eq }) => {
               return eq(fields.event_uuid, visitor?.event_uuid as string);
             },
           });
+          pendingRewards = pendingRewards.filter(async (r) => {
+            const visitor = await db.query.visitors.findFirst({
+              where: (fields, { eq }) => {
+                return eq(fields.id, r.visitor_id);
+              },
+            });
 
-          return event?.activity_id !== unpublishedEvent?.activity_id;
-        });
-      }
+            const event = await db.query.events.findFirst({
+              where: (fields, { eq }) => {
+                return eq(fields.event_uuid, visitor?.event_uuid as string);
+              },
+            });
 
-      const shouldFail = pendingReward.tryCount >= 5 && isEventPublished;
+            return event?.activity_id !== unpublishedEvent?.activity_id;
+          });
+        }
 
-      if (isEventPublished || shouldFail) {
-        try {
-          await db
-            .update(rewards)
-            .set({
-              tryCount: isEventPublished
-                ? pendingReward.tryCount + 1
-                : undefined,
-              status: shouldFail ? "failed" : undefined,
-              data: shouldFail ? { fail_reason: error } : undefined,
-              updatedBy: "system",
-            })
-            .where(eq(rewards.id, pendingReward.id));
-        } catch (error) {
-          console.log("DB_ERROR_102", error);
+        const shouldFail = pendingReward.tryCount >= 5 && isEventPublished;
+
+        if (isEventPublished || shouldFail) {
+          try {
+            await db
+              .update(rewards)
+              .set({
+                tryCount: isEventPublished
+                  ? pendingReward.tryCount + 1
+                  : undefined,
+                status: shouldFail ? "failed" : undefined,
+                data: shouldFail ? { fail_reason: error } : undefined,
+                updatedBy: "system",
+              })
+              .where(eq(rewards.id, pendingReward.id));
+          } catch (error) {
+            console.log("DB_ERROR_102", error);
+          }
+        }
+        if (error instanceof AxiosError) {
+          console.error("CRON_JOB_ERROR", error.message, error.response?.data);
+        } else {
+          console.error("CRON_JOB_ERROR", error);
         }
       }
-      if (error instanceof AxiosError) {
-        console.error("CRON_JOB_ERROR", error.message, error.response?.data);
-      } else {
-        console.error("CRON_JOB_ERROR", error);
-      }
-    }
-  });
-  await Promise.allSettled(createRewardPromises);
+    });
+    await Promise.allSettled(createRewardPromises);
+  }
 }
 
 async function notifyUsersForRewards() {
   const limit = pLimit(25); // Limit concurrent requests to 25
-  const createdRewards = await db.query.rewards.findMany({
-    where: (fields, { eq }) => eq(fields.status, "created"),
-  });
+  const createdRewardCount = await db
+    .select({ count: sql`count(*)`.mapWith(Number) })
+    .from(rewards)
+    .where(eq(rewards.status, "created"));
 
-  console.log("createdRewards ", createdRewards.length);
+  if (createdRewardCount[0].count === 0) {
+    return;
+  }
 
-  const notificationPromises = createdRewards.map((createdReward) =>
-    limit(() => processReward(createdReward))
-  );
+  // for pending rewards count divided by 100 round up to 3
+  const createdRewardsCount = Math.ceil(createdRewardCount[0].count / 100);
 
-  await Promise.allSettled(notificationPromises);
+  for (let i = 0; i < createdRewardsCount; i++) {
+    const createdRewards = await db.query.rewards.findMany({
+      where: (fields, { eq }) => eq(fields.status, "created"),
+      limit: 100,
+    });
 
-  return createdRewards.length;
+    const notificationPromises = createdRewards.map((createdReward) =>
+      limit(() => processReward(createdReward))
+    );
+
+    await Promise.allSettled(notificationPromises);
+  }
+
+  return createdRewardCount[0].count;
 }
 
 async function processReward(createdReward: RewardType) {
