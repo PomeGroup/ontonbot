@@ -3,7 +3,8 @@ import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
 import React, { useState, useCallback } from "react";
 import useWebApp from "@/hooks/useWebApp";
-
+import { Badge } from "@/components/ui/badge" ;
+import {Separator} from "@/components/ui/separator";
 interface EventCardProps {
   event: {
     eventUuid: string;
@@ -85,102 +86,94 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" ,currentUs
   );
 
   const renderSmallMode = () => (
-    <div
-      onClick={handleEventClick}
-      className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
-    >
-      <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
-        <Image
-          src={src}
-          alt={title}
-          layout="fill"
-          objectFit="cover"
-          className="rounded-lg"
-          loading="lazy"
-          onError={() => setSrc(defaultImage)}
-        />
-      </div>
-      <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
-        <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
-          <div className="flex items-center self-stretch flex-nowrap relative">
-            <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-4">
-              {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
+    <>
+      <div
+        onClick={handleEventClick}
+        className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+      >
+        <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
+          <Image
+            src={src}
+            alt={title}
+            layout="fill"
+            objectFit="cover"
+            className="rounded-lg"
+            loading="lazy"
+            onError={() => setSrc(defaultImage)}
+          />
+        </div>
+        <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
+          <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
+            <div className="flex items-center self-stretch flex-nowrap relative">
+              <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-4">
+                {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
+              </span>
+
+            </div>
+            <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
+              <span className="grow font-sans text-black dark:text-white text-left line-clamp-1 text-sm font-medium leading-2">
+                {title}
+              </span>
+            </div>
+            <span className="grow font-sans text-left line-clamp-1 text-xs leading-2 text-gray-600 dark:text-gray-400">
+              by {organizerFirstName} {organizerLastName}
             </span>
-            {/*{ticketPrice > 0 && (*/}
-            {/*  <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-7 p-1">*/}
-            {/*    <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-sm leading-3">*/}
-            {/*      ${ticketPrice}*/}
-            {/*    </span>*/}
-            {/*  </button>*/}
-            {/*)}*/}
           </div>
-          <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-            <span className="grow font-sans text-black dark:text-white text-left line-clamp-1 text-sm font-medium leading-2">
-              {title}
-            </span>
-          </div>
-          <span className="grow font-sans text-left line-clamp-1 text-xs leading-2 text-gray-600 dark:text-gray-400">
-            by {organizerFirstName} {organizerLastName}
-          </span>
         </div>
       </div>
-    </div>
+      <Separator className="my-0 bg-[#545458]" />
+    </>
   );
 
   const renderNormalMode = () => (
-    <div
-      onClick={handleEventClick}
-      className={`flex w-full pt-4 gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer`}
-    >
-      <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
-        <Image
-          src={src}
-          alt={title}
-          layout="fill"
-          style={{ objectFit: "cover" }}
-          className="rounded-lg"
-          onError={() => setSrc(defaultImage)}
-          loading="lazy"
-        />
-      </div>
-      <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
-        <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
-          <div className="flex items-center self-stretch flex-nowrap relative">
-            <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
-              {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
-            </span>
-            {ticketPrice > 0 ? (
-              <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-9 p-2">
-                <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-xs leading-3.5">
-                  ${ticketPrice}
+      <>
+        <div
+          onClick={handleEventClick}
+          className={`flex w-full   gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer`}
+        >
+          <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
+            <Image
+              src={src}
+              alt={title}
+              layout="fill"
+              style={{ objectFit: "cover" }}
+              className="rounded-lg"
+              onError={() => setSrc(defaultImage)}
+              loading="lazy"
+            />
+          </div>
+          <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
+            <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
+              <div className="flex items-center self-stretch flex-nowrap relative">
+                <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
+                  {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
                 </span>
-              </button>
-            ) : (
-              <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-12 p-2">
-                { currentUserId === organizerUserId ? (
-                  <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-xs leading-3.5">
-                    Hosted
-                  </span>
-                ) : (
-                  <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-xs leading-3.5">
-                    free
-                  </span>
-                )}
+                {ticketPrice > 0 ? (
+                  <Badge  variant="ontonDark"  >
 
-              </button>
-            )}
+                      ${ticketPrice}
+
+                  </Badge>
+                ) : (
+                    <Badge  variant="ontonDark"  >
+                    { currentUserId === organizerUserId ? "hosted" : "free" }
+
+                    </Badge>
+                )}
+              </div>
+              <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative ">
+                <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+                  {title}
+                </span>
+              </div>
+              <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
+                by {organizerFirstName} {organizerLastName}
+              </span>
+            </div>
           </div>
-          <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-            <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
-              {title}
-            </span>
-          </div>
-          <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
-            by {organizerFirstName} {organizerLastName}
-          </span>
         </div>
-      </div>
-    </div>
+        <Separator className="my-4 bg-[#545458]" />
+      </>
   );
 
   if (mode === "detailed") {

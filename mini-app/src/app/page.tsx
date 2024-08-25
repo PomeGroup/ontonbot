@@ -75,9 +75,10 @@ export default function Home({ searchParams }: { searchParams: any }) {
     limit: 50,
     offset: 0,
     filter: {
-      organizer_user_id: UserId,
+      // organizer_user_id: UserId,
+        user_id: UserId,
     },
-    sortBy: "start_date_asc",
+    sortBy: "start_date_desc",
   });
 
   const {
@@ -186,7 +187,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
             </>
           </div>
           <div className="pt-4  w-full pb-4  flex justify-between items-center">
-            <h2>Upcoming Events</h2>
+            <h2 className="font-bold text-lg">Upcoming Events</h2>
             <a
               href={`${seeAllUpcomingEventsLink}`}
               className="text-zinc-300 hover:underline"
@@ -194,7 +195,6 @@ export default function Home({ searchParams }: { searchParams: any }) {
               See All
             </a>
           </div>
-          <ul>
             {isLoadingUpcoming
               ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
               : upcomingEvents?.data?.map((event) => (
@@ -204,9 +204,8 @@ export default function Home({ searchParams }: { searchParams: any }) {
                     currentUserId={UserId}
                   />
                 ))}
-          </ul>
           <div className="pt-4 pb-4 flex justify-between items-center">
-            <h2>Past Events</h2>
+            <h2 className="font-bold text-lg" >Past Events</h2>
             <a
               href={`${seeAllPastEventsLink}`}
               className="text-zinc-300  hover:underline"
@@ -214,7 +213,6 @@ export default function Home({ searchParams }: { searchParams: any }) {
               See All
             </a>
           </div>
-          <ul>
             {isLoadingPast
               ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
               : pastEvents?.data?.map((event) => (
@@ -224,13 +222,11 @@ export default function Home({ searchParams }: { searchParams: any }) {
                     currentUserId={UserId}
                   />
                 ))}
-          </ul>
         </TabsContent>
 
         <TabsContent value="my-events">
           <div className="pt-2">
-            <h2>Your Events as Organizer</h2>
-            <ul>
+
               {isLoadingOrganizer
                 ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
                 : organizerEvents?.data?.map((event) => (
@@ -240,7 +236,6 @@ export default function Home({ searchParams }: { searchParams: any }) {
                       currentUserId={UserId}
                     />
                   ))}
-            </ul>
           </div>
         </TabsContent>
       </Tabs>

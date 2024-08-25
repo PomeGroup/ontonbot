@@ -109,7 +109,7 @@ export const  getUserEvents =async(
     .select({
       event_uuid: visitors.event_uuid,
       user_id: visitors.user_id,
-      role: sql<string>`"participant"`.as("role"),
+      role: sql<string>`'participant'`.as("role"),
       created_at: visitors.created_at,
     })
     .from(rewards)
@@ -148,13 +148,13 @@ export const getEventsWithFilters = async (
     JSON.stringify({ limit, offset, search, filter, sortBy });
 
   const cachedResult = getCache(cacheKey);
-  // if (cachedResult) {
-  //   console.log("Returning cached result");
-  //   return cachedResult;
-  // }
+  if (cachedResult) {
+    console.log("Returning cached result");
+    return cachedResult;
+  }
 
   let query = db.select().from(event_details_search_list);
-
+  let userEventUuids = [];
   // Initialize an array to hold the conditions
   let conditions = [];
 
@@ -171,7 +171,12 @@ export const getEventsWithFilters = async (
       )
     );
   }
-
+  // Apply user_id filter
+    if (filter?.user_id) {
+        const userEvents = await getUserEvents(filter.user_id, 1000, 0);
+        userEventUuids = userEvents.map((event) => event.event_uuid);
+        console.log("userEventUuids", userEventUuids);
+    }
   // Apply date filters
   console.log(filter);
   if (filter?.startDate && filter?.startDateOperator) {
