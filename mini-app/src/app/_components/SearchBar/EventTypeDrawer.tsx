@@ -41,7 +41,7 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
                 <span className="text-zinc-400">Online</span>
                 <Checkbox
                   checked={participationType.includes("online")}
-                  onCheckedChange={() => toggleParticipationType("online")}
+                 // onCheckedChange={() => toggleParticipationType("online")}
                 />
               </div>
               <Separator className="my-0" />
@@ -52,7 +52,7 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
                 <span className="text-zinc-400">In-person</span>
                 <Checkbox
                   checked={participationType.includes("in_person")}
-                  onCheckedChange={() => toggleParticipationType("in_person")}
+                 // onCheckedChange={() => toggleParticipationType("in_person")}
                 />
               </div>
             </div>

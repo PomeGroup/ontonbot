@@ -25,9 +25,10 @@ interface EventCardProps {
     ticketPrice?: number;
   };
   mode?: "normal" | "small" | "detailed";
+  currentUserId?: number;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" ,currentUserId= 0 }) => {
   const {
     eventUuid,
     title = "No Title",
@@ -155,10 +156,17 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" }) => {
                 </span>
               </button>
             ) : (
-              <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-9 p-2">
-                <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-xs leading-3.5">
-                  free
-                </span>
+              <button className="flex items-center shrink-0 rounded-md border-none relative overflow-hidden w-12 p-2">
+                { currentUserId === organizerUserId ? (
+                  <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-xs leading-3.5">
+                    Hosted
+                  </span>
+                ) : (
+                  <span className="font-sans text-black dark:text-white text-left whitespace-nowrap text-xs leading-3.5">
+                    free
+                  </span>
+                )}
+
               </button>
             )}
           </div>

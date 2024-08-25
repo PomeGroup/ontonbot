@@ -21,7 +21,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
   const webApp = useWebApp();
   const { authorized, isLoading : useAuthLoading ,role : userRole ,user  } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
-  console.log("Authorized", authorized  , "UserId", UserId , "useAuthLoading", useAuthLoading , "userRole", userRole , "user", user);
+
   const router = useRouter();
   const [isMyEventsTabActive, setIsMyEventsTabActive] = useState(false);
   const createSearchQueryParams = (
@@ -178,6 +178,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
                       <EventCard
                         event={sliderEvent?.data[0]}
                         mode={"detailed"}
+                        currentUserId={UserId}
                       />
                     )}
                 </>
@@ -200,6 +201,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
                   <EventCard
                     key={event.event_uuid}
                     event={event}
+                    currentUserId={UserId}
                   />
                 ))}
           </ul>
@@ -219,6 +221,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
                   <EventCard
                     key={event.event_uuid}
                     event={event}
+                    currentUserId={UserId}
                   />
                 ))}
           </ul>
@@ -234,6 +237,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
                     <EventCard
                       key={event.event_uuid}
                       event={event}
+                      currentUserId={UserId}
                     />
                   ))}
             </ul>

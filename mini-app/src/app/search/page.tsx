@@ -68,6 +68,7 @@ console.log('--selectedHubs', selectedHubs);
       if (!initialFetchDone) {
         setResults([]);
       }
+
       setResults((prev) => [...prev, ...(data.data || [])]);
       setHasMore(data?.data?.length === LIMIT);
     },

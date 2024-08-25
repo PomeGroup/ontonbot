@@ -46,6 +46,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     "in_person",
   ]);
   const [selectedHubs, setSelectedHubs] = useState<string[]>([]);
+  const [applyingFilters, setApplyingFilters] = useState(false);
   const [hubText, setHubText] = useState<string>("All");
   const [sortBy, setSortBy] = useState<string>("start_date_asc");
   const [showFilterButton, setShowFilterButton] = useState(true);
@@ -60,6 +61,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   useEffect(() => {
     if (hubsResponse?.data?.status === 'success') {
       setHubs(hubsResponse.data.hubs || []);
+      console.log('---hubsResponse',hubsResponse.data.hubs);
     }
   }, [hubsResponse]);
 
@@ -74,6 +76,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [initialHubsSet, setInitialHubsSet] = useState(false);
   const [pageInit, setPageInit] = useState(false);
   useEffect(() => {
+    console.log('---hubs',hubs , "initialHubsSet",initialHubsSet , "includeQueryParam",includeQueryParam);
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
       const participationType = searchParams
         .get("participationType")
@@ -86,7 +89,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setSearchTerm(searchTerm);
       setParticipationType(participationType);
       setSortBy(sortBy);
-      console.log("selectedHubsFromParams");
+
       if (selectedHubsFromParams.length === 0) {
         setSelectedHubs(hubs.map((hub: Hub) => hub.id));
       } else {
@@ -97,18 +100,21 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setTimeout(() => {
         setPageInit(true);
       }, 0);
-    } else if (!includeQueryParam && !initialHubsSet) {
+    } else if (hubs.length > 0 && !includeQueryParam && !initialHubsSet) {
+
       setSelectedHubs(hubs.map((hub: Hub) => hub.id));
       setInitialHubsSet(true);
       setTimeout(() => {
         setPageInit(true);
       });
     }
+
   }, [searchParams, hubs, includeQueryParam, initialHubsSet]);
 
   useEffect(() => {
     if (selectedHubs.length === 0 || selectedHubs.length === hubs.length) {
       setHubText("All");
+      // setSelectedHubs(hubs.map((hub: Hub) => hub.id));
     } else {
       const selectedHubNames = selectedHubs
         .map((hubId) => hubs.find((hub: Hub) => hub.id === hubId)?.name)
@@ -173,6 +179,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
       }
   );
   useEffect(() => {
+    handleFilterApply().then(() => {
+        console.log("filter apply");
+    });
+  }, [applyingFilters]);
+  useEffect(() => {
     if (responseRefresh.status === "success") {
       onUpdateResults(responseRefresh.data.data || []);
     } else if (responseRefresh.status === "error") {
@@ -201,7 +212,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleFilterApply = async () => {
     const queryParams = createQueryParams();
 
-    setOffset(0);
+    if(!applyingFilters) return;
+
+
+
     if (!includeQueryParam && !searchIsFocused) {
       router.push(`/search?${queryParams.toString()}`);
     } else if (includeQueryParam && !searchIsFocused) {
@@ -214,9 +228,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setParticipationType(["online", "in_person"]);
     setSelectedHubs(allHubs);
     setSortBy("start_date_asc");
-    // handleFilterApply().then((r) => {
-    //   console.log(r);
-    // });
   };
 
   const toggleParticipationType = (type: string) => {
@@ -237,16 +248,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const selectAllHubs = () => {
     const allHubs = hubs.map((hub: Hub) => hub.id);
     setSelectedHubs(allHubs);
-    // handleFilterApply().then((r) => {
-    //   console.log(r);
-    // });
   };
 
   const deselectAllHubs = () => {
     setSelectedHubs([]);
-    // handleFilterApply().then((r) => {
-    //   console.log(r);
-    // });
   };
 
   const clearFilter = (filter: string) => {
@@ -257,8 +262,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     } else if (filter === "Sort by Most People Reached") {
       setSortBy("start_date_asc");
     }
-
-    //setTimeout(handleFilterApply, 0);
+    setApplyingFilters(true);
   };
   useEffect(() => {
     if (pageInit  ) {
@@ -394,6 +398,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             setIsEventTypeDrawerOpen={setIsEventTypeDrawerOpen}
             setIsHubDrawerOpen={setIsHubDrawerOpen}
             handleFilterApply={handleFilterApply}
+            setApplyingFilters={setApplyingFilters}
             resetFilters={resetFilters}
           />
         )}

@@ -24,6 +24,7 @@ interface MainFilterDrawerProps {
   setIsHubDrawerOpen: (open: boolean) => void;
   handleFilterApply: () => void;
   resetFilters: () => void;
+  setApplyingFilters: (value: boolean) => void;
 }
 
 const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
@@ -37,6 +38,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
   setIsHubDrawerOpen,
   handleFilterApply,
   resetFilters,
+  setApplyingFilters,
 }) => {
   return (
     <Drawer onOpenChange={onOpenChange}>
@@ -91,7 +93,10 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           <DrawerClose asChild>
             <button
               className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full hover:bg-blue-200"
-              onClick={handleFilterApply}
+              onClick={() => {
+                    setApplyingFilters(true);
+
+              }}
             >
               Filter Events
             </button>
