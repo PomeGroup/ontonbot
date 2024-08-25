@@ -14,13 +14,18 @@ import { trpc } from "./_trpc/client";
 import "./page.css";
 import zod from "zod";
 import { useConfig } from "@/context/ConfigContext";
-export default function Home({ searchParams }: { searchParams: any }) {
+
+export default function Home() {
   noStore();
   const { config } = useConfig();
   //const SliderEventUUID = "b8032306-47e0-4735-b351-e62b8948138d";
   const SliderEventUUID = config?.homeSliderEventUUID || "";
   const webApp = useWebApp();
-  const { authorized, isLoading : useAuthLoading ,role : userRole ,user  } = useAuth();
+  const {
+    authorized,
+    isLoading: useAuthLoading,
+    role: userRole,
+  } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
 
   const router = useRouter();
@@ -38,7 +43,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
     ).toString();
   };
 
-  const tgWebAppStartParam = searchParams.tgWebAppStartParam;
+
   const upcomingEventsParams = searchEventsInputZod.parse({
     limit: 2,
     offset: 0,
@@ -77,7 +82,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
     offset: 0,
     filter: {
       // organizer_user_id: UserId,
-        user_id: UserId,
+      user_id: UserId,
     },
     sortBy: "start_date_desc",
   });
@@ -109,40 +114,34 @@ export default function Home({ searchParams }: { searchParams: any }) {
     enabled: false, // Disable automatic fetching
   });
 
-  const generateQueryString = (params: any) => {
-    const filteredParams = {
-      ...params,
-      limit: undefined,
-      offset: undefined,
-    };
-
-    const queryString = new URLSearchParams(
-      Object.entries(filteredParams)
-        .filter(([_, v]) => v !== undefined && v !== null)
-        .map(([key, value]) => {
-          if (typeof value === "object" && !Array.isArray(value)) {
-            return [key, JSON.stringify(value)];
-          } else if (Array.isArray(value)) {
-            return [key, value.join(",")];
-          } else {
-            return [key, String(value)];
-          }
-        })
-    ).toString();
-
-    return queryString;
-  };
-
   useEffect(() => {
     if (isMyEventsTabActive) {
-      refetchOrganizerEvents().then((r) => console.log(r));
+      refetchOrganizerEvents().then(() => console.log("Refetched organizer events"));
     }
   }, [isMyEventsTabActive, refetchOrganizerEvents]);
-  const upcomingEventsQuery = generateQueryString(upcomingEventsParams);
-  const pastEventsQuery = generateQueryString(pastEventsParams);
+  const error = isErrorUpcoming || isErrorPast || isErrorSlider || isErrorOrganizer;
+  const isLoading = isLoadingUpcoming || isLoadingPast || isLoadingSlider || useAuthLoading ;
+  if(error) {
+    console.error("Error fetching data", {
+      isErrorUpcoming,
+      isErrorPast,
+      isErrorSlider,
+      isErrorOrganizer,
 
+    });
+    return  (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+          An error occurred while fetching data. Please try again later.
+        </div>
+    )
+  }
   return (
     <>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+          An error occurred while fetching data. Please try again later.
+        </div>
+      )}
       <SearchBar
         includeQueryParam={false}
         onUpdateResults={() => {}}
@@ -171,7 +170,7 @@ export default function Home({ searchParams }: { searchParams: any }) {
         <TabsContent value="all-events">
           <div className="pt-2 w-full">
             <>
-              {isLoadingSlider ? (
+              {isLoading ? (
                 <EventCardSkeleton mode={"detailed"} />
               ) : (
                 <>
@@ -196,17 +195,17 @@ export default function Home({ searchParams }: { searchParams: any }) {
               See All
             </a>
           </div>
-            {isLoadingUpcoming
-              ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
-              : upcomingEvents?.data?.map((event) => (
-                  <EventCard
-                    key={event.event_uuid}
-                    event={event}
-                    currentUserId={UserId}
-                  />
-                ))}
+          {isLoading
+            ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
+            : upcomingEvents?.data?.map((event) => (
+                <EventCard
+                  key={event.event_uuid}
+                  event={event}
+                  currentUserId={UserId}
+                />
+              ))}
           <div className="pt-4 pb-4 flex justify-between items-center">
-            <h2 className="font-bold text-lg" >Past Events</h2>
+            <h2 className="font-bold text-lg">Past Events</h2>
             <a
               href={`${seeAllPastEventsLink}`}
               className="text-zinc-300  hover:underline"
@@ -214,33 +213,34 @@ export default function Home({ searchParams }: { searchParams: any }) {
               See All
             </a>
           </div>
-            {isLoadingPast
+          {isLoading
+            ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
+            : pastEvents?.data?.map((event) => (
+                <EventCard
+                  key={event.event_uuid}
+                  event={event}
+                  currentUserId={UserId}
+                />
+              ))}
+        </TabsContent>
+
+        <TabsContent value="my-events">
+          <div className="pt-2">
+            {isLoadingOrganizer
               ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
-              : pastEvents?.data?.map((event) => (
+              : organizerEvents?.data?.map((event) => (
                   <EventCard
                     key={event.event_uuid}
                     event={event}
                     currentUserId={UserId}
                   />
                 ))}
-        </TabsContent>
-
-        <TabsContent value="my-events">
-          <div className="pt-2">
-
-              {isLoadingOrganizer
-                ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
-                : organizerEvents?.data?.map((event) => (
-                    <EventCard
-                      key={event.event_uuid}
-                      event={event}
-                      currentUserId={UserId}
-                    />
-                  ))}
           </div>
         </TabsContent>
       </Tabs>
-      {authorized && (
+      {!useAuthLoading  &&
+          ( userRole === "admin" || userRole === "organizer" ) &&
+          authorized && (
         <MainButton
           text="Create new event"
           onClick={() => router.push("/events/create")}

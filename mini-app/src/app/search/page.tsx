@@ -25,7 +25,7 @@ const Search: React.FC = () => {
       ?.split(",")
       .map((id) => parseInt(id, 10))
       .filter((id) => !isNaN(id)) || [];
-console.log('--selectedHubs', selectedHubs);
+
   const sortBy = searchParams.get("sortBy") || "default";
   // Get startDate from URL or default to current time
 
@@ -55,9 +55,8 @@ console.log('--selectedHubs', selectedHubs);
     },
     sortBy: sortBy || "default",
   });
-  console.log('--searchParamsParsed', searchParamsParsed);
+
   const {
-    data: searchResults,
     isLoading: isLoadingSearchResults,
     isFetching: isFetchingSearchResults,
     refetch,
@@ -68,7 +67,6 @@ console.log('--selectedHubs', selectedHubs);
       if (!initialFetchDone) {
         setResults([]);
       }
-
       setResults((prev) => [...prev, ...(data.data || [])]);
       setHasMore(data?.data?.length === LIMIT);
     },

@@ -1,7 +1,7 @@
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import useWebApp from "@/hooks/useWebApp";
 import { Badge } from "@/components/ui/badge" ;
 import {Separator} from "@/components/ui/separator";
@@ -39,16 +39,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" ,currentUs
     endDate,
     location = "No Location",
     imageUrl = "/ton-logo.png",
-    subtitle = "No Subtitle",
     organizerFirstName = "Unknown",
     organizerLastName = "",
-    organizerUsername = null,
     organizerUserId = null,
     ticketToCheckIn = false,
     timezone = "GMT",
     website = null,
-    reservedCount = 0,
-    visitorCount = 0,
     ticketPrice = 0,
     city = null,
     country = null,
