@@ -1,5 +1,6 @@
 "use client";
-import { FC, useEffect } from "react";
+import useWebApp from "@/hooks/useWebApp";
+import { FC, useCallback, useEffect, useMemo } from "react";
 
 export interface MainButtonProps {
   disabled?: boolean;
@@ -11,88 +12,85 @@ export interface MainButtonProps {
 }
 
 const MainButton: FC<MainButtonProps> = ({
-  disabled,
+  disabled = false,
   color,
   textColor,
   text,
   onClick,
-  progress,
+  progress = false,
 }) => {
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const WebApp = window.Telegram.WebApp;
+  const WebApp = useWebApp();
+
+  const buttonParams = useMemo(
+    () => ({
+      color,
+      text_color: textColor,
+    }),
+    [color, textColor]
+  );
+
+  const updateButton = useCallback(() => {
+    if (!WebApp) return;
+
     const { button_color, button_text_color } = WebApp.themeParams;
+
+    if (text) {
+      WebApp.MainButton.setText(text);
+      WebApp.MainButton.show();
+    } else {
+      WebApp.MainButton.hide();
+    }
+
+    WebApp.MainButton.setParams({
+      color: buttonParams.color || button_color,
+      text_color: buttonParams.text_color || button_text_color,
+    });
+
+    if (progress) {
+      WebApp.MainButton.showProgress();
+    } else {
+      WebApp.MainButton.hideProgress();
+    }
+
+    if (disabled || progress) {
+      WebApp.MainButton.disable();
+    } else {
+      WebApp.MainButton.enable();
+    }
+  }, [WebApp, text, buttonParams, disabled, progress, color]);
+
+  useEffect(() => {
+    if (!WebApp) return;
+
+    updateButton();
+
+    if (onClick) {
+      WebApp.MainButton.onClick(onClick);
+    }
 
     return () => {
       WebApp.MainButton.hide();
       WebApp.MainButton.enable();
       WebApp.MainButton.hideProgress();
       WebApp.MainButton.setParams({
-        color: button_color,
-        text_color: button_text_color,
+        color: WebApp.themeParams.button_color,
+        text_color: WebApp.themeParams.button_text_color,
       });
-    };
-  }, []);
-
-  // Handle progress and disabled state
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const WebApp = window.Telegram.WebApp;
-    const { button_color, button_text_color } = WebApp.themeParams;
-
-    if (typeof progress === "boolean") {
-      if (progress) {
-        WebApp.MainButton.showProgress();
-      } else {
-        WebApp.MainButton.hideProgress();
-      }
-    }
-    if (typeof disabled === "boolean") {
-      disabled || progress
-        ? WebApp.MainButton.disable()
-        : WebApp.MainButton.enable();
-    }
-  }, [disabled, progress]);
-
-  // Update button color and text color
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const WebApp = window.Telegram.WebApp;
-    const { button_color, button_text_color } = WebApp.themeParams;
-
-    if (color || textColor) {
-      WebApp.MainButton.setParams({ color, text_color: textColor });
-    }
-  }, [color, textColor]);
-
-  // Update button text and visibility
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const WebApp = window.Telegram.WebApp;
-    const { button_color, button_text_color } = WebApp.themeParams;
-
-    if (text) {
-      WebApp.MainButton.setText(text);
-      if (!WebApp.MainButton.isVisible) {
-        WebApp.MainButton.show();
-      }
-    } else if (WebApp.MainButton.isVisible) {
-      WebApp.MainButton.hide();
-    }
-  }, [text]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const WebApp = window.Telegram.WebApp;
-    const { button_color, button_text_color } = WebApp.themeParams;
-
-    if (onClick) {
-      WebApp.MainButton.onClick(onClick);
-      return () => {
+      if (onClick) {
         WebApp.MainButton.offClick(onClick);
-      };
-    }
-  }, [onClick]);
+      }
+    };
+  }, [
+    WebApp,
+    updateButton,
+    onClick,
+    progress,
+    disabled,
+    buttonParams,
+    text,
+    color,
+    textColor,
+  ]);
 
   return null;
 };
