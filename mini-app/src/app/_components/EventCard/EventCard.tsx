@@ -24,6 +24,8 @@ interface EventCardProps {
     reservedCount?: number;
     visitorCount?: number;
     ticketPrice?: number;
+    city?: string;
+    country?: string;
   };
   mode?: "normal" | "small" | "detailed";
   currentUserId?: number;
@@ -48,6 +50,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" ,currentUs
     reservedCount = 0,
     visitorCount = 0,
     ticketPrice = 0,
+    city = null,
+    country = null,
   } = event;
 
   const defaultImage = "/ton-logo.png";
@@ -56,7 +60,8 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal" ,currentUs
   );
   const webApp = useWebApp();
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
-  const isOnline = website || location.includes("http") ? "Online" : location;
+  const geoLocation = city || country ? `${city}, ${country}` : location;
+  const isOnline = website || location.includes("http") ? "Online" : geoLocation;
 
   const handleEventClick = () => {
     if (ticketToCheckIn) {

@@ -12,6 +12,7 @@ import { eventTicket as tickets } from "@/db/schema/eventTicket";
 import { users } from "@/db/schema/users";
 import { visitors } from "@/db/schema/visitors";
 import { eventTicket } from "@/db/schema/eventTicket";
+import { giataCity } from "@/db/schema/giataCity";
 import {sql} from "drizzle-orm";
 
 // this view is used to get the event details with the ticket and visitor count
@@ -66,6 +67,10 @@ export const event_details_search_list = pgView("event_details_search_list", {
     e.created_at,
     e.hidden,
     e.participation_type,
+    e.country_id,
+    e.city_id,   
+    country.title AS country,
+    city.title AS city,
     organizer.user_id AS organizer_user_id,
     organizer.first_name AS organizer_first_name,
     organizer.last_name AS organizer_last_name,
@@ -86,6 +91,10 @@ export const event_details_search_list = pgView("event_details_search_list", {
     ${events} e
   LEFT JOIN
     ${users} organizer ON e.owner = organizer.user_id
+  LEFT JOIN 
+    ${giataCity} city ON e.city_id = city.id
+  LEFT JOIN 
+    ${giataCity} country ON e.country_id = country.id
   LEFT JOIN
     LATERAL (SELECT et.id,
                     et.title,
