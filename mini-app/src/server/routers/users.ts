@@ -52,6 +52,18 @@ export const usersRouter = router({
         });
       }
 
+
+
+      const tableName = 'users'; // Ensure this matches your table name
+
+      const values = {
+        user_id: initDataJson.user.id,
+        username: initDataJson.user.username,
+        first_name: initDataJson.user.first_name,
+        last_name: initDataJson.user.last_name,
+        language_code: initDataJson.user.language_code,
+        role: "user",
+      };
       const data = await db
         .insert(users)
         .values({
@@ -64,7 +76,7 @@ export const usersRouter = router({
         })
         .onConflictDoNothing()
         .execute();
-
+      console.log("data", data);
       if (!data.length) {
         throw new TRPCError({
           message: "user already exists",
