@@ -54,7 +54,6 @@ export const initDataProtectedProcedure = t.procedure
 
 export const adminOrganizerProtectedProcedure = initDataProtectedProcedure.use(
   (opts) => {
-
     if (opts.ctx.user.role !== "admin" && opts.ctx.user.role !== "organizer") {
       throw new TRPCError({
         code: "UNAUTHORIZED",
