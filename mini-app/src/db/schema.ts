@@ -4,6 +4,7 @@ import {
   rewardStatus,
   ticketStatus,
   orderState,
+  developmentEnvironment,
 } from "@/db/enum";
 
 import {
@@ -18,6 +19,7 @@ import { giataCity } from "./schema/giataCity";
 import { orders } from "./schema/orders";
 import { rewards } from "./schema/rewards";
 import { tickets, ticketsRelations } from "./schema/tickets";
+import { ontoSetting } from "./schema/ontoSetting";
 import {
   userEventFields,
   userEventFieldRelations,
@@ -32,6 +34,7 @@ export {
   rewardStatus,
   ticketStatus,
   orderState,
+  developmentEnvironment,
 };
 
 // export all the tables and relations
@@ -44,6 +47,7 @@ export {
   events,
   eventTicket,
   giataCity,
+  ontoSetting,
   orders,
   rewards,
   tickets,

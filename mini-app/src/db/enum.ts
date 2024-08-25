@@ -25,3 +25,9 @@ export const orderState = pgEnum("order_state", [
     "failed",
     "validation_failed",
 ]);
+export const developmentEnvironment = pgEnum("development_environment", [
+    "local",
+    "development",
+    "staging",
+    "production",
+]);

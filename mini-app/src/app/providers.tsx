@@ -8,6 +8,8 @@ import React from "react";
 import BackButtonHandler from "./_components/BackButtonHandler";
 import WebAppProvider from "./_components/WebAppProvider";
 import ThemeSetter from "./themeSetter";
+import { ConfigProvider } from "@/context/ConfigContext";
+
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <TonConnectUIProvider
@@ -26,8 +28,10 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
       >
         <WebAppProvider>
           <NavigationHistoryProvider>
-            <BackButtonHandler />
-            <ThemeSetter>{children}</ThemeSetter>
+            <ConfigProvider>
+              <BackButtonHandler />
+              <ThemeSetter>{children}</ThemeSetter>
+            </ConfigProvider>
           </NavigationHistoryProvider>
         </WebAppProvider>
       </ThemeProvider>

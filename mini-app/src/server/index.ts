@@ -6,6 +6,7 @@ import { userEventFieldsRouter } from "./routers/userEventFields";
 import { usersRouter } from "./routers/users";
 import { visitorsRouter } from "./routers/visitors";
 import { router } from "./trpc";
+import {configRouter} from "@/server/routers/OntonSetting";
 
 export const appRouter = router({
   users: usersRouter,
@@ -14,6 +15,7 @@ export const appRouter = router({
   files: fieldsRouter,
   userEventFields: userEventFieldsRouter,
   location: locationRouter,
+  config : configRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -16,6 +16,7 @@ import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { unionAll } from "drizzle-orm/pg-core";
 
+
 export const checkIsEventOwner = async (
   rawInitData: string,
   eventUuid: string
@@ -105,7 +106,7 @@ export const  getUserEvents =async(
   limit: number | 100,
   offset: number | 0
 )=> {
-  const rewardQuery = db
+  const rewardQuery =  db
     .select({
       event_uuid: visitors.event_uuid,
       user_id: visitors.user_id,
@@ -128,7 +129,7 @@ export const  getUserEvents =async(
     .where(userId !== null ? eq(users.user_id, userId!) : undefined);
 
   // Use unionAll to combine the results, apply orderBy, limit, and offset
-  const combinedResultsQuery = unionAll(rewardQuery, eventQuery)
+  const combinedResultsQuery =  unionAll(rewardQuery, eventQuery)
     .orderBy((row) => row.created_at)
     .limit(limit !== null ? limit : 100)
     .offset(offset !== null ? offset : 0);

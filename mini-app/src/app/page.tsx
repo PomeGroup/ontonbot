@@ -13,11 +13,12 @@ import MainButton from "./_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "./_trpc/client";
 import "./page.css";
 import zod from "zod";
-
+import { useConfig } from "@/context/ConfigContext";
 export default function Home({ searchParams }: { searchParams: any }) {
   noStore();
+  const { config } = useConfig();
   //const SliderEventUUID = "b8032306-47e0-4735-b351-e62b8948138d";
-  const SliderEventUUID = "f2956dfc-2641-4a41-83ac-b37988fb8f36";
+  const SliderEventUUID = config?.homeSliderEventUUID || "";
   const webApp = useWebApp();
   const { authorized, isLoading : useAuthLoading ,role : userRole ,user  } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
