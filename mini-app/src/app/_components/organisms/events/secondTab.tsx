@@ -31,51 +31,57 @@ export const SecondStep = () => {
       return;
     }
 
-    const secondStepDataSchema = z.object({
-      start_date: z.number(),
-      end_date: z.number(),
-      timezone: z.string().min(1),
-      location:
-        eventData?.eventLocationType === "online"
-          ? z.string().url("Please enter a valid url")
-          : z.string().min(1, "Please enter a valid location"),
-      cityId:
-        eventData?.eventLocationType === "in_person"
-          ? z
-              .string()
-              .refine(
-                (value) => {
-                  return !isNaN(Number(value));
-                },
-                { message: "Please enter a valid city" }
-              )
-              .transform((value) => Number(value))
-          : z.undefined(),
-      countryId:
-        eventData?.eventLocationType === "in_person"
-          ? z
-              .string()
-              .refine(
-                (value) => {
-                  return !isNaN(Number(value));
-                },
-                { message: "Please enter a valid country" }
-              )
-              .transform((value) => Number(value))
-          : z.undefined(),
-    });
+    const secondStepDataSchema = z
+      .object({
+        start_date: z.number(),
+        end_date: z.number(),
+        timezone: z.string().min(1),
+        eventLocationType: z.enum(["online", "in_person"]),
+        location: z.string().min(1),
+        cityId: z.number().optional(),
+        countryId: z.number().optional(),
+      })
+      .refine(
+        (data) => {
+          if (data.eventLocationType === "online") {
+            return z.string().url().safeParse(data.location).success;
+          }
+          return true;
+        },
+        {
+          message: "Please enter a valid URL for online events",
+          path: ["location"],
+        }
+      )
+      .refine(
+        (data) => {
+          if (data.eventLocationType === "in_person") {
+            return data.cityId !== undefined && data.countryId !== undefined;
+          }
+          return true;
+        },
+        {
+          message: "City and Country are required for in-person events",
+          path: ["cityId", "countryId"],
+        }
+      );
 
     const formData = new FormData(formRef.current);
-    formData.append("timezone", eventData?.timezone || "");
-    formData.append("location", eventData?.location || "");
-    formData.append("cityId", String(eventData?.cityId) || "");
-    formData.append("countryId", String(eventData?.countryId) || "");
     const formDataObject = Object.fromEntries(formData.entries()) as Record<
       string,
       any
     >;
     formDataObject.start_date = eventData?.start_date;
     formDataObject.end_date = eventData?.end_date;
+    formDataObject.timezone = eventData?.timezone || "";
+    formDataObject.location = eventData?.location || "";
+    formDataObject.eventLocationType = eventData?.eventLocationType || "online";
+    formDataObject.cityId = eventData?.cityId
+      ? Number(eventData.cityId)
+      : undefined;
+    formDataObject.countryId = eventData?.countryId
+      ? Number(eventData.countryId)
+      : undefined;
 
     const formDataParsed = secondStepDataSchema.safeParse(formDataObject);
 
@@ -162,6 +168,9 @@ export const SecondStep = () => {
             onValueChange={(value) => {
               setEventData({
                 eventLocationType: value as "in_person" | "online",
+                location: "", // Reset location when changing type
+                cityId: undefined,
+                countryId: undefined,
               });
             }}
           >
@@ -204,7 +213,7 @@ export const SecondStep = () => {
 
           {eventData?.eventLocationType === "online" && (
             <Input
-              type="text"
+              type="url"
               value={eventData?.location || ""}
               errors={errors?.location}
               onChange={(e) =>
@@ -213,7 +222,7 @@ export const SecondStep = () => {
                   location: e.target.value,
                 })
               }
-              placeholder="https://ton.com"
+              placeholder="https://example.com"
             />
           )}
         </StepLayout>
