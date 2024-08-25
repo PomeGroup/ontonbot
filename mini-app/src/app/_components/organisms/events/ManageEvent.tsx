@@ -37,10 +37,12 @@ const ManageEvent = (props: ManageEventProps) => {
                 }
               : undefined,
           eventLocationType: props.event.participationType,
+          countryId: props.event.countryId || undefined,
+          cityId: props.event.cityId || undefined,
         });
       }
     }
-  }, []);
+  }, [props.eventHash, props.event]);
 
   return (
     <>

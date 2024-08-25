@@ -1,5 +1,4 @@
 import { db } from "@/db/db";
-import { config  ,  configProtected} from "@/server/config";
 import {
   eventFields,
   events,
@@ -11,6 +10,7 @@ import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference } from "@/lib/utils";
+import { config, configProtected } from "@/server/config";
 import {
   EventDataSchema,
   HubsResponse,
@@ -689,7 +689,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
   getEventsWithFilters: publicProcedure
     .input(searchEventsInputZod)
     .query(async (opts) => {
-      console.log("*****config", config , configProtected);
+      console.log("*****config", config, configProtected);
       try {
         const events = await getEventsWithFilters(opts.input);
         return { status: "success", data: events };
@@ -698,7 +698,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         return { status: "fail", data: null };
       }
     }),
-
 });
 
 const getUsersTwitters = async (eventId: number) => {

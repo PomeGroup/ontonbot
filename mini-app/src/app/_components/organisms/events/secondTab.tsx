@@ -30,7 +30,6 @@ export const SecondStep = () => {
     if (!formRef.current) {
       return;
     }
-    console.log(eventData?.eventLocationType);
 
     const secondStepDataSchema = z.object({
       start_date: z.number(),
