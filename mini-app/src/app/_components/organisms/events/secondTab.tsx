@@ -99,8 +99,9 @@ export const SecondStep = () => {
   useEffect(() => {
     setEventData({
       ...eventData,
-      start_date: (new Date().getTime() / 1000) >> 0,
-      end_date: ((new Date().getTime() / 1000) >> 0) + 60 * 60,
+      start_date: eventData?.start_date || (new Date().getTime() / 1000) >> 0,
+      end_date:
+        eventData?.end_date || ((new Date().getTime() / 1000) >> 0) + 60 * 60,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       eventLocationType: eventData?.eventLocationType || "online",
     });
@@ -139,10 +140,11 @@ export const SecondStep = () => {
               <span className="text-md font-semibold text-white">
                 {eventData?.end_date &&
                   eventData?.start_date &&
-                  ((Number(eventData.end_date) - Number(eventData.start_date)) /
-                    60 /
-                    60) >>
-                    0}{" "}
+                  // duraton in hours between 2 dates
+                  Math.floor(
+                    ((eventData?.end_date - eventData?.start_date) / 60 / 60) *
+                      10
+                  ) / 10}{" "}
                 hours
               </span>
             </label>
@@ -156,7 +158,10 @@ export const SecondStep = () => {
               </span>
             </label>
           </div>
-          <AlertGeneric variant="info">
+          <AlertGeneric
+            className="!mt-4"
+            variant="info"
+          >
             The time is set by your location and time zone.
           </AlertGeneric>
           <Title3>Location</Title3>
