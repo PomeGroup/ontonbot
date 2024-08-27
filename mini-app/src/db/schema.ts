@@ -1,10 +1,16 @@
 import {
   eventParticipationType,
+  EventParticipationType,
   rewardType,
+  RewardType,
   rewardStatus,
+  RewardStatus,
   ticketStatus,
+  TicketStatus,
   orderState,
+  OrderState,
   developmentEnvironment,
+  DevelopmentEnvironment,
 } from "@/db/enum";
 
 import {

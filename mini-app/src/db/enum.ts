@@ -18,6 +18,7 @@ export const ticketStatus = pgEnum("event_ticket_status", [
     "USED",
     "UNUSED",
 ]);
+
 export const orderState = pgEnum("order_state", [
     "created",
     "mint_request",
@@ -31,3 +32,11 @@ export const developmentEnvironment = pgEnum("development_environment", [
     "staging",
     "production",
 ]);
+
+// Type Exports
+export type EventParticipationType = (typeof eventParticipationType.enumValues)[number];
+export type RewardType = (typeof rewardType.enumValues)[number];
+export type RewardStatus = (typeof rewardStatus.enumValues)[number];
+export type TicketStatus = (typeof ticketStatus.enumValues)[number];
+export type OrderState = (typeof orderState.enumValues)[number];
+export type DevelopmentEnvironment = (typeof developmentEnvironment.enumValues)[number];

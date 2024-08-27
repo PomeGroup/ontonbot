@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { FC } from "react";
+import Link from "next/link";
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const WebApp = useWebApp();
@@ -55,6 +56,11 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
   return (
     <div>
+      {/*<Link*/}
+      {/*href={`/events/${params.hash}/checkInGuest`}*/}
+      {/*>*/}
+      {/*  check in guest*/}
+      {/*</Link>*/}
       <Tabs
         defaultValue="manage"
         className="mb-4"
@@ -64,7 +70,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
             onClick={() => hapticFeedback?.impactOccurred("medium")}
             value="manage"
           >
-            Manage
+            Manage11
           </TabsTrigger>
           <TabsTrigger
             onClick={() => hapticFeedback?.impactOccurred("medium")}
