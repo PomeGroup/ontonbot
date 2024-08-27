@@ -109,7 +109,10 @@ export const SecondStep = () => {
 
   return (
     <>
-      <form ref={formRef}>
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        ref={formRef}
+      >
         <StepLayout title="Ticket Info">
           <Datetimepicker
             title="Starts at"

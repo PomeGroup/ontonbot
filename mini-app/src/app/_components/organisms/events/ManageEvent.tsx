@@ -17,6 +17,7 @@ const ManageEvent = (props: ManageEventProps) => {
   const resetState = useCreateEventStore((state) => state.resetState);
 
   useLayoutEffect(() => {
+    resetState();
     if (props.eventHash) {
       setEdit({
         eventHash: props.eventHash,
@@ -42,8 +43,6 @@ const ManageEvent = (props: ManageEventProps) => {
           cityId: props.event.cityId || undefined,
         });
       }
-    } else {
-      resetState();
     }
   }, [props.eventHash, props.event]);
 

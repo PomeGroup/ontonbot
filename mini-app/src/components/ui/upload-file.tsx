@@ -153,11 +153,9 @@ export const UploadImageFile = (props: UploadFileProps) => {
             isLoading={uploadImage.isLoading}
           >
             <CircleArrowUp className="w-5" />
-            <span>
-              {eventData?.image_url ? "Change Image" : "Upload Image"}
-            </span>
+            <span>{imagePreview ? "Change Image" : "Upload Image"}</span>
           </Button>
-          {eventData?.image_url && (
+          {imagePreview && (
             <DrawerClose asChild>
               <Button
                 className="w-16 h-10 mx-auto rounded-full mt-4"

@@ -58,15 +58,10 @@ export const ThirdStep = () => {
 
       const parsedEventData = EventDataSchema.safeParse(eventData);
       if (parsedEventData.success) {
-        if (!addEvent.isIdle) {
-          return;
-        }
         addEvent.mutate({
           eventData: parsedEventData.data,
           init_data: webApp?.initData || "",
         });
-      } else {
-        console.log(parsedEventData.error.flatten());
       }
 
       return;

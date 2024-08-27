@@ -26,15 +26,18 @@ export const useCreateEventStore = create(
     setCurrentStep: (step: number) =>
       set((state) => ({ ...state, currentStep: step })),
     setEventData: (data: z.infer<typeof EventDataSchemaAllOptional>) =>
-      set((state) => ({
-        ...state,
-        eventData: { ...state.eventData, ...data },
-      })),
+      set((state) => {
+        return { ...state, eventData: { ...state.eventData, ...data } };
+      }),
 
     setEdit: (edit: { eventHash?: string }) =>
       set((state) => ({ ...state, edit })),
 
-    resetState: () =>
-      set({ currentStep: 1, eventData: { dynamic_fields: [] } }),
+    resetState: () => {
+      set({
+        currentStep: 1,
+        eventData: { dynamic_fields: [], type: 0, owner: 0 },
+      });
+    },
   }))
 );
