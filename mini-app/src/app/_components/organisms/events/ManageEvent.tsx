@@ -14,6 +14,7 @@ const ManageEvent = (props: ManageEventProps) => {
   const currentStep = useCreateEventStore((state) => state.currentStep);
   const setEdit = useCreateEventStore((state) => state.setEdit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
+  const resetState = useCreateEventStore((state) => state.resetState);
 
   useLayoutEffect(() => {
     if (props.eventHash) {
@@ -41,6 +42,8 @@ const ManageEvent = (props: ManageEventProps) => {
           cityId: props.event.cityId || undefined,
         });
       }
+    } else {
+      resetState();
     }
   }, [props.eventHash, props.event]);
 

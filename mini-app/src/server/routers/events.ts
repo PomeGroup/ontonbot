@@ -407,6 +407,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               updatedBy: opts.ctx.user.user_id.toString(),
             })
             .where(eq(events.event_uuid, eventUuid))
+            .returning()
             .execute();
 
           const currentFields = await trx

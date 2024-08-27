@@ -12,6 +12,7 @@ type CreateEventStoreType = {
     eventHash?: string;
   };
   setEdit: (edit: { eventHash?: string }) => void;
+  resetState: () => void;
 };
 
 export const useCreateEventStore = create(
@@ -32,5 +33,8 @@ export const useCreateEventStore = create(
 
     setEdit: (edit: { eventHash?: string }) =>
       set((state) => ({ ...state, edit })),
+
+    resetState: () =>
+      set({ currentStep: 1, eventData: { dynamic_fields: [] } }),
   }))
 );

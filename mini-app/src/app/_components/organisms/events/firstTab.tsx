@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { UploadImageFile } from "@/components/ui/upload-file";
 import useWebApp from "@/hooks/useWebApp";
 import { fileToBase64 } from "@/lib/utils";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -115,7 +116,13 @@ export const FirstStep = () => {
           value={eventData?.society_hub}
           errors={errors?.hub}
         />
-        <ImageUploadDrawer errors={errors?.image_url} />
+        <UploadImageFile
+          triggerText="Upload Event Image"
+          infoText="Image must be in 1:1 ratio(same height and width)"
+          changeText="Change Image"
+          isError={Boolean(errors?.image_url)}
+        />
+        {/* <ImageUploadDrawer errors={errors?.image_url} /> */}
       </StepLayout>
       <MainButton
         text="Next Step"
@@ -196,7 +203,7 @@ const ImageUploadDrawer = (props: { errors?: (string | undefined)[] }) => {
             isLoading={uploadImage.isLoading}
           >
             <CircleArrowUp className="w-5" />
-            Upload Event’s Image
+            {imagePreview ? "Change Image" : "Upload Event’s Image"}
           </Button>
         </DrawerTrigger>
         <DrawerContent>
