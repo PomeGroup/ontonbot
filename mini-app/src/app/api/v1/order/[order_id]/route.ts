@@ -1,8 +1,9 @@
 import { db } from "@/db/db";
 import { orders, tickets } from "@/db/schema";
+import { sendLogNotification } from "@/lib/tgBot";
 import { apiKeyAuthentication, getAuthenticatedUser } from "@/server/auth";
 import { Address } from "@ton/core";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -28,8 +29,8 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
     },
   });
   // @samyar Review this
-// || !order.event_ticket_id?.collectionAddress
-  if (!order ) {
+  // || !order.event_ticket_id?.collectionAddress
+  if (!order) {
     return Response.json({ message: "order_not_found" }, { status: 404 });
   }
 
@@ -104,6 +105,12 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
           nftAddress: body.data.nft_address,
           updatedBy: "system",
         });
+
+        await sendTicketLogNotification({
+          event_uuid: order.event_uuid as string,
+          username: order.telegram,
+          event_ticket_id: order.event_ticket_id,
+        });
       }
 
       await db
@@ -126,3 +133,46 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
 }
 
 export const dynamic = "force-dynamic";
+
+async function sendTicketLogNotification(props: {
+  event_uuid: string;
+  username: string;
+  event_ticket_id: number;
+}) {
+  try {
+    const event = await db.query.events.findFirst({
+      where(fields, { eq }) {
+        return eq(fields.event_uuid, props.event_uuid);
+      },
+    });
+
+    const eventTicket = await db.query.eventTicket.findFirst({
+      where(fields, { eq }) {
+        return eq(fields.id, props.event_ticket_id);
+      },
+    });
+
+    if (event) {
+      sendLogNotification({
+        message: `
+<b>${event.title}</b> sold
+
+User: ${props.username}
+
+Ticket: ${eventTicket?.price} TON
+
+Total sold count for this event: ${
+          (
+            await db
+              .select({ count: sql`count(*)`.mapWith(Number) })
+              .from(tickets)
+              .where(eq(tickets.event_uuid, props.event_uuid))
+          )[0].count
+        }
+`,
+      });
+    }
+  } catch (error) {
+    console.log("error in notification", error);
+  }
+}
