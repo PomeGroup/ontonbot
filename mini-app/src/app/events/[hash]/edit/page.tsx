@@ -56,11 +56,13 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
   return (
     <div>
-      <Link
-      href={`/events/${params.hash}/checkInGuest`}
-      >
-        check in guest
-      </Link>
+      {event?.data && event.data.ticketToCheckIn === true && (
+        <Link
+        href={`/events/${params.hash}/checkInGuest`}
+        >
+          check in guest
+        </Link>
+      )}
       <Tabs
         defaultValue="manage"
         className="mb-4"
