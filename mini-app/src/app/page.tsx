@@ -16,10 +16,11 @@ import zod from "zod";
 import { useConfig } from "@/context/ConfigContext";
 
 export default function Home() {
-  noStore();
-  const { config } = useConfig();
+
+  const { config  } = useConfig();
   //const SliderEventUUID = "b8032306-47e0-4735-b351-e62b8948138d";
   const SliderEventUUID = config?.homeSliderEventUUID || "";
+  console.log("SliderEventUUID", SliderEventUUID);
   const webApp = useWebApp();
   const {
     authorized,
@@ -120,7 +121,10 @@ export default function Home() {
     }
   }, [isMyEventsTabActive, refetchOrganizerEvents]);
   const error = isErrorUpcoming || isErrorPast || isErrorSlider || isErrorOrganizer;
-  const isLoading = isLoadingUpcoming || isLoadingPast || isLoadingSlider || useAuthLoading ;
+  const isLoading = isLoadingUpcoming || isLoadingPast || isLoadingSlider   ;
+  useEffect(() => {
+    console.log("use isLoadingSlider", isLoadingSlider);
+  }, [isLoadingSlider]);
   if(error) {
     console.error("Error fetching data", {
       isErrorUpcoming,
