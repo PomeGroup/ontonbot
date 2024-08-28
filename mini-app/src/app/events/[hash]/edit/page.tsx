@@ -70,7 +70,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
             onClick={() => hapticFeedback?.impactOccurred("medium")}
             value="manage"
           >
-            Manage11
+            Manage
           </TabsTrigger>
           <TabsTrigger
             onClick={() => hapticFeedback?.impactOccurred("medium")}
