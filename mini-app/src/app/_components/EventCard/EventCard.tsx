@@ -116,11 +116,11 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
             className="mt-[-10px] w-[220px]  bg-black px-3 rounded-none border-spacing-1 border-2 border-gray-600"
         >
           <DropdownMenuItem className="text-lg px-2 rounded-none " onClick={handleEventClick}>
-            <IoReorderFour /> Show Event <IoChevronForwardOutline className="ml-auto" />
+            <IoReorderFour className="mr-1" /> Show Event <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem  className="text-lg  px-2 rounded-none "  onClick={() => window.location.href = `/events/${eventUuid}/edit`}>
-            <IoSettingsOutline /> Manage Event <IoChevronForwardOutline className="ml-auto" />
+            <IoSettingsOutline  className="mr-1"  /> Manage Event <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

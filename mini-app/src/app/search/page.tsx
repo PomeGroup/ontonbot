@@ -7,12 +7,20 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import useAuth from "@/hooks/useAuth";
+import useWebApp from "@/hooks/useWebApp";
 
 const LIMIT = 10;
 
 const Search: React.FC = () => {
   const searchParams = useSearchParams();
-
+  const webApp = useWebApp();
+  const {
+    authorized,
+    isLoading: useAuthLoading,
+    role: userRole,
+  } = useAuth();
+  const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
   const searchTerm = searchParams.get("query") || "";
   const participationType =
     searchParams
@@ -158,7 +166,11 @@ const Search: React.FC = () => {
                         ref={lastElementRef}
                         key={event.event_uuid}
                       >
-                        <EventCard event={event} />
+                        <EventCard
+                            key={event.event_uuid}
+                            event={event}
+                            currentUserId={UserId}
+                        />
                       </div>
                     );
                   } else {
@@ -166,6 +178,7 @@ const Search: React.FC = () => {
                       <EventCard
                         key={event.event_uuid}
                         event={event}
+                        currentUserId={UserId}
                       />
                     );
                   }
