@@ -76,7 +76,7 @@ export const usersRouter = router({
         })
         .onConflictDoNothing()
         .execute();
-      console.log("data", data);
+      //console.log("data", data);
       if (!data.length) {
         throw new TRPCError({
           message: "user already exists",

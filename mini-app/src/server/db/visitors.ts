@@ -44,7 +44,7 @@ export const selectVisitorsByEventUuidMock = async (
 };
 
 export const selectValidVisitorById = async (visitorId: number) => {
-  return await db
+  return  db
     .select({
       user_id: visitors.user_id,
       username: users.username,
@@ -181,7 +181,7 @@ export const selectVisitorsByEventUuid = async (
 };
 
 export async function updateVisitorLastVisit(id: number) {
-  return await db
+  return  db
     .update(visitors)
     .set({
       last_visit: sql`now()`,

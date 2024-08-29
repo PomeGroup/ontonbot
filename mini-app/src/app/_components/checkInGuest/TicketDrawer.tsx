@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/drawer";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import { CheckInState } from "./CheckInState";
+import VariantBadge from "@/app/_components/checkInGuest/VariantBadge";
 
 interface TicketDrawerProps {
   open: boolean;
@@ -75,22 +76,9 @@ const TicketDrawer: FC<TicketDrawerProps> = ({
                   {eventTicketData.description ?? "No description available."}
                 </p>
                 <div className="flex flex-col space-y-1 text-sm text-gray-400 w-full">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center ">
                     <span>Status:</span>
-                    <Badge
-                        variant="outline"
-                        className={`${
-                            ticketData.status === "USED"
-                                ? "text-red-600 border-red-600 bg-gray-200"
-                                : ticketData.status === "UNUSED"
-                                    ? "text-orange-600 border-orange-600 bg-gray-200"
-                                    : checkInState === "checkedInSuccess"
-                                        ? "text-green-600 border-green-600 bg-gray-200"
-                                        : ""
-                        }`}
-                    >
-                      {ticketData.status}
-                    </Badge>
+                      <VariantBadge status={ticketData.status} />
                   </div>
                   <div className="flex justify-between">
                     <span>Owner:</span>

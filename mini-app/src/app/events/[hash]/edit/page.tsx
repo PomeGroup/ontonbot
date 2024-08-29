@@ -48,7 +48,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
   const handleVisitorsExport = () => {
     hapticFeedback?.impactOccurred("medium");
-
+    console.log("Exporting visitors as CSV");
     requestExportFileMutation.mutate({
       event_uuid: params.hash,
       init_data: WebApp?.initData || "",

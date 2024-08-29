@@ -42,6 +42,7 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
+import {VisitorsWithDynamicFields} from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 dotenv.config();
 
 export const eventsRouter = router({
@@ -580,11 +581,27 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
   requestExportFile: eventManagementProtectedProcedure.mutation(
     async (opts) => {
       const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid);
+      const eventData = await selectEventByUuid(opts.input.event_uuid);
+      // Map the data and conditionally remove fields
+        const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+            // Copy the visitor object without modifying dynamicFields directly
+            const visitorData: Partial<VisitorsWithDynamicFields> = { ...visitor };
 
-      const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => ({
-        ...visitor,
-        dynamicFields: JSON.stringify(visitor.dynamicFields),
-      }));
+            // If ticketToCheckIn is false, remove specific fields
+            if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
+                delete visitorData.has_ticket;
+                delete visitorData.ticket_status;
+                delete visitorData.ticket_id;
+            }
+
+            // Generate a new object for CSV with stringified dynamicFields
+            return {
+                ...visitorData,
+                dynamicFields: JSON.stringify(visitor.dynamicFields),
+            };
+        });
+
+        console.log("dataForCsv:  ", dataForCsv);
 
       const csvString = Papa.unparse(dataForCsv || [], {
         header: true,
@@ -593,12 +610,24 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       try {
         const formData = new FormData();
 
-        const fileBlob = new Blob([csvString], { type: "text/csv" });
-        formData.append("file", fileBlob, "visitors.csv");
+        // Add BOM at the beginning of the CSV string for UTF-8 encoding
+        const bom = "\uFEFF";
+        const csvContentWithBom = bom + csvString;
 
+        const fileBlob = new Blob([csvContentWithBom], {
+          type: "text/csv;charset=utf-8;",
+        });
+        formData.append("file", fileBlob, "visitors.csv");
+        // Include the custom message in the form data
+        let customMessage = "Here is the guest list for your event.";
+        if (eventData && eventData?.title) {
+          customMessage = `📂 Download Guest List Report \n\n🟢 ${eventData?.title} \n\n👤 Count of Guests ${visitors.visitorsWithDynamicFields?.length}`;
+        }
+        formData.append("message", customMessage);
+        formData.append("fileName", eventData?.title || "visitors");
         const userId = opts.ctx.user.user_id;
         const response = await axios.post(
-          `http://telegram-bot:3333/send-file?id=${userId}`,
+          `http://localhost:3333/send-file?id=${userId}`,
           formData,
           {
             headers: {
