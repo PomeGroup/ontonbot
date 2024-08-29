@@ -8,6 +8,7 @@ import useWebApp from "@/hooks/useWebApp";
 import TicketDrawer from "./TicketDrawer"; // Import the TicketDrawer component
 import { Button } from "@/components/ui/button";
 import { CheckInState } from "./CheckInState";
+import { RiQrScan2Line } from "react-icons/ri";
 
 const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
   const WebApp = useWebApp();
@@ -17,22 +18,22 @@ const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
   const [drawerTitle, setDrawerTitle] = useState<string | null>(null);
   const [ticketData, setTicketData] = useState<any | null>(null);
   const [checkInState, setCheckInState] =
-      useState<CheckInState>("NoTicketData");
+    useState<CheckInState>("NoTicketData");
 
   const ticketQuery = trpc.ticket.getTicketByUuid.useQuery(
-      { ticketUuid: ticketUuid ?? "" },
-      {
-        enabled: !!ticketUuid,
-        retry: false,
-      }
+    { ticketUuid: ticketUuid ?? "" },
+    {
+      enabled: !!ticketUuid,
+      retry: false,
+    }
   );
 
   const eventTicketQuery = trpc.eventTicket.getEventTicketById.useQuery(
-      { ticketId: ticketData?.ticket_id ?? 0 }, // Assuming ticket_id is available
-      {
-        enabled: !!ticketData?.ticket_id,
-        retry: false,
-      }
+    { ticketId: ticketData?.ticket_id ?? 0 }, // Assuming ticket_id is available
+    {
+      enabled: !!ticketData?.ticket_id,
+      retry: false,
+    }
   );
 
   useEffect(() => {
@@ -108,24 +109,25 @@ const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
   };
 
   return (
-      <>
-        <Link href={`/events/{params.hash}`}>see event</Link>
+    <>
+      <Button
+        onClick={handleScanQr}
+        className="mt-4 w-full"
+      >
+        <RiQrScan2Line className="mr-2" /> Check In Guests
+      </Button>
 
-        <Button onClick={handleScanQr} className="mt-4">
-          Open QR Code Scanner
-        </Button>
-
-        <TicketDrawer
-            open={drawerOpen}
-            onOpenChange={setDrawerOpen}
-            drawerTitle={drawerTitle}
-            checkInState={checkInState}
-            ticketData={ticketData}
-            eventTicketData={eventTicketQuery.data}
-            handleCheckIn={handleCheckIn}
-            handleScanQr={handleScanQr}
-        />
-      </>
+      <TicketDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        drawerTitle={drawerTitle}
+        checkInState={checkInState}
+        ticketData={ticketData}
+        eventTicketData={eventTicketQuery.data}
+        handleCheckIn={handleCheckIn}
+        handleScanQr={handleScanQr}
+      />
+    </>
   );
 };
 

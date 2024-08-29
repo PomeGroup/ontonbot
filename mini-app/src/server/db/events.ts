@@ -16,7 +16,6 @@ import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { unionAll } from "drizzle-orm/pg-core";
 
-
 export const checkIsEventOwner = async (
   rawInitData: string,
   eventUuid: string
@@ -59,7 +58,20 @@ export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
 
   return { role: role[0].role, ...data };
 };
-
+export const checkEventTicketToCheckIn = async (eventUuid: string) => {
+  const event = await db
+    .select({
+              event_uuid: events.event_uuid,
+              ticketToCheckIn: events.ticketToCheckIn
+    })
+    .from(events)
+    .where(eq(events.event_uuid, eventUuid))
+    .execute();
+  if (!event) {
+    return { event_uuid: null, ticketToCheckIn: null };
+  }
+  return { event_uuid: event[0]?.event_uuid, ticketToCheckIn: event[0].ticketToCheckIn };
+};
 export const selectEventByUuid = async (eventUuid: string) => {
   if (eventUuid.length !== 36) {
     return null;
@@ -101,12 +113,12 @@ export const selectEventByUuid = async (eventUuid: string) => {
   };
 };
 
-export const  getUserEvents =async(
+export const getUserEvents = async (
   userId: number | null,
   limit: number | 100,
   offset: number | 0
-)=> {
-  const rewardQuery =  db
+) => {
+  const rewardQuery = db
     .select({
       event_uuid: visitors.event_uuid,
       user_id: visitors.user_id,
@@ -129,14 +141,14 @@ export const  getUserEvents =async(
     .where(userId !== null ? eq(users.user_id, userId!) : undefined);
 
   // Use unionAll to combine the results, apply orderBy, limit, and offset
-  const combinedResultsQuery =  unionAll(rewardQuery, eventQuery)
+  const combinedResultsQuery = unionAll(rewardQuery, eventQuery)
     .orderBy((row) => row.created_at)
     .limit(limit !== null ? limit : 100)
     .offset(offset !== null ? offset : 0);
 
   // Execute the query and return the results
   return await combinedResultsQuery.execute();
-}
+};
 
 export const getEventsWithFilters = async (
   params: z.infer<typeof searchEventsInputZod>
@@ -173,11 +185,11 @@ export const getEventsWithFilters = async (
     );
   }
   // Apply user_id filter
-    if (filter?.user_id) {
-        const userEvents = await getUserEvents(filter.user_id, 1000, 0);
-        userEventUuids = userEvents.map((event) => event.event_uuid);
-        console.log("userEventUuids", userEventUuids);
-    }
+  if (filter?.user_id) {
+    const userEvents = await getUserEvents(filter.user_id, 1000, 0);
+    userEventUuids = userEvents.map((event) => event.event_uuid);
+    console.log("userEventUuids", userEventUuids);
+  }
   // Apply date filters
   console.log(filter);
   if (filter?.startDate && filter?.startDateOperator) {

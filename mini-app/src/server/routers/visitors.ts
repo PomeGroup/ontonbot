@@ -30,8 +30,7 @@ export const visitorsRouter = router({
       if (!valid) {
         throw new Error("Unauthorized access or invalid role");
       }
-
-      return selectVisitorsByEventUuid(event_uuid, limit, cursor);
+      return await selectVisitorsByEventUuid(event_uuid, limit, cursor);
     }),
 
   // protect

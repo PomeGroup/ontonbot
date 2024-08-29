@@ -1,13 +1,14 @@
 import { db } from "@/db/db";
 import {
-  eventFields,
-  events,
-  rewards,
-  userEventFields,
-  users,
-  visitors,
+    eventFields,
+    events,
+    rewards, tickets,
+    userEventFields,
+    users,
+    visitors,
 } from "@/db/schema";
 import { and, between, eq, isNotNull, sql } from "drizzle-orm";
+import {checkEventTicketToCheckIn} from "@/server/db/events";
 
 const generateRandomVisitor = (userId: number) => ({
   user_id: userId,
@@ -91,33 +92,55 @@ export const selectVisitorsByEventUuid = async (
   limit?: number,
   cursor?: number
 ) => {
-  let visitorsQuery = db
-    .select({
-      user_id: visitors.user_id,
-      username: users.username,
-      first_name: users.first_name,
-      last_name: users.last_name,
-      wallet_address: users.wallet_address,
-      created_at: visitors.created_at,
-    })
-    .from(visitors)
-    .leftJoin(users, eq(visitors.user_id, users.user_id))
-    .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
-    .where(and(isNotNull(rewards.id), eq(visitors.event_uuid, event_uuid)));
+  const eventTicketToCheckIn = await checkEventTicketToCheckIn(event_uuid);
+    let userDataQuery ;
+    if(eventTicketToCheckIn.ticketToCheckIn === false) {
+       userDataQuery = db
+          .select({
+              user_id: visitors.user_id,
+              username: users.username,
+              first_name: users.first_name,
+              last_name: users.last_name,
+              wallet_address: users.wallet_address,
+              created_at: visitors.created_at,
+              has_ticket: sql<boolean>`false`.as("has_ticket"),
+              ticket_status: sql<string>`null`.as("ticket_status"),
+              ticket_id: sql<number>`null`.as("ticket_id"),
 
+          })
+          .from(visitors)
+          .leftJoin(users, eq(visitors.user_id, users.user_id))
+          .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
+          .where(and(isNotNull(rewards.id), eq(visitors.event_uuid, event_uuid)));
+  }
+  else {
+       userDataQuery = db
+          .select({
+              user_id: users.user_id,
+              username: users.username,
+              first_name: users.first_name,
+              last_name: users.last_name,
+              wallet_address: users.wallet_address,
+              created_at: tickets.created_at,
+              has_ticket: sql<boolean>`true`.as("has_ticket"),
+              ticket_status: tickets.status,
+              ticket_id: tickets.id,
+
+          })
+          .from(tickets)
+          .innerJoin(users, eq(tickets.user_id, users.user_id))
+          .where(eq(tickets.event_uuid, event_uuid))
+
+  }
   if (typeof limit === "number") {
-    // @ts-expect-error
-    visitorsQuery = visitorsQuery.limit(limit);
+    userDataQuery = userDataQuery.limit(limit);
   }
 
   if (typeof cursor === "number") {
-    // @ts-expect-error
-    visitorsQuery = visitorsQuery.offset(cursor);
+    userDataQuery = userDataQuery.offset(cursor);
   }
 
-  const visitorsData = await visitorsQuery.execute();
-
-  console.log("visitorsData", visitorsData.length);
+  const visitorsData = await userDataQuery.execute();
   let userEventFieldsData = await db
     .select({
       user_id: userEventFields.user_id,

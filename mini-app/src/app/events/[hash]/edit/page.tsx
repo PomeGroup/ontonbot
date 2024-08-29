@@ -11,7 +11,9 @@ import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { FC } from "react";
 import Link from "next/link";
-
+import { FaRegEdit } from "react-icons/fa";
+import CheckInGuest from "@/app/_components/checkInGuest/CheckInGuest";
+import { BsFillPersonLinesFill } from "react-icons/bs";
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const WebApp = useWebApp();
   const event = trpc.events.getEvent.useQuery(
@@ -53,16 +55,10 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
     WebApp?.close();
   };
-
+  const guestCheckInParams = { hash: params.hash};
   return (
     <div>
-      {event?.data && event.data.ticketToCheckIn === true && (
-        <Link
-        href={`/events/${params.hash}/checkInGuest`}
-        >
-          check in guest
-        </Link>
-      )}
+
       <Tabs
         defaultValue="manage"
         className="mb-4"
@@ -72,13 +68,13 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
             onClick={() => hapticFeedback?.impactOccurred("medium")}
             value="manage"
           >
-            Manage
+            <BsFillPersonLinesFill className="mr-2" />Guests List
           </TabsTrigger>
           <TabsTrigger
             onClick={() => hapticFeedback?.impactOccurred("medium")}
             value="edit"
           >
-            ⚙️ Edit
+           <FaRegEdit className="mr-2" /> Edit
           </TabsTrigger>
         </TabsList>
         <TabsContent value="manage">
@@ -90,6 +86,10 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
             >
               Export Visitors as CSV to Clipboard
             </Button>
+            {event?.data && event.data.ticketToCheckIn === true && (
+                <CheckInGuest params={guestCheckInParams} />
+            )}
+
           </div>
 
           <Tables.Visitors event_uuid={params.hash} />
