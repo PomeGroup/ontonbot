@@ -627,7 +627,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         formData.append("fileName", eventData?.title || "visitors");
         const userId = opts.ctx.user.user_id;
         const response = await axios.post(
-          `http://localhost:3333/send-file?id=${userId}`,
+          `http://telegram-bot:3333/send-file?id=${userId}`,
           formData,
           {
             headers: {
