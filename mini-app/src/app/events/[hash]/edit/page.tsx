@@ -14,6 +14,7 @@ import Link from "next/link";
 import { FaRegEdit } from "react-icons/fa";
 import CheckInGuest from "@/app/_components/checkInGuest/CheckInGuest";
 import { BsFillPersonLinesFill } from "react-icons/bs";
+import { FaRegCopy } from "react-icons/fa";
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const WebApp = useWebApp();
   const event = trpc.events.getEvent.useQuery(
@@ -80,11 +81,11 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         <TabsContent value="manage">
           <div className="mt-2">
             <Button
-              className="w-full relative"
+              className="w-full relative text-gray-100"
               variant={"outline"}
               onClick={handleVisitorsExport}
             >
-              Export Visitors as CSV to Clipboard
+              <FaRegCopy className="mr-2"  /> Export Visitors as CSV to Clipboard
             </Button>
             {event?.data && event.data.ticketToCheckIn === true && (
                 <CheckInGuest params={guestCheckInParams} />
