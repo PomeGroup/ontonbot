@@ -46,7 +46,15 @@ export default async function RootLayout({
         <Provider>
           <Providers>
             <UserSaver>
-              <main className="p-4">{children}</main>
+              <main className="p-4">
+                {( process.env.ENV === "staging")  && (
+                  <div className="flex justify-center bg-yellow-100 text-gray-600 py-2 text-xs" >
+                    ⚠️  you are On Staging App   ⚠️
+                  </div>
+                )}
+
+                {children}
+              </main>
             </UserSaver>
           </Providers>
         </Provider>
