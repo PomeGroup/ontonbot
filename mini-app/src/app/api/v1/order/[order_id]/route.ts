@@ -24,12 +24,8 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
     where(fields, { eq }) {
       return eq(fields.uuid, orderId);
     },
-    with: {
-      eventTicket: true,
-    },
   });
-  // @samyar Review this
-  // || !order.event_ticket_id?.collectionAddress
+
   if (!order) {
     return Response.json({ message: "order_not_found" }, { status: 404 });
   }
@@ -40,11 +36,23 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
     },
   });
 
+  // get event ticket and if not found return event ticket not found
+  const eventTicketData = await db.query.eventTicket.findFirst({
+    where(fields, { eq }) {
+      return eq(fields.id, order.event_ticket_id);
+    },
+  });
+
+  if (!eventTicketData)
+    return Response.json(
+      { message: "event_ticket_not_found" },
+      { status: 404 }
+    );
+
   return Response.json({
     ...order,
     total_price: BigInt(order.total_price as bigint).toString(),
-    // @samyar Review this
-    //nft_collection_address: order.eventTicket.collectionAddress,
+    nft_collection_address: eventTicketData.collectionAddress,
     tickets,
   });
 }

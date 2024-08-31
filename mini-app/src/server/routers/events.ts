@@ -11,6 +11,7 @@ import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference } from "@/lib/utils";
 import { config, configProtected } from "@/server/config";
+import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import {
   EventDataSchema,
   HubsResponse,
@@ -42,7 +43,6 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
-import {VisitorsWithDynamicFields} from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 dotenv.config();
 
 export const eventsRouter = router({
@@ -224,7 +224,15 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             `,
         });
 
-        await registerActivity(eventDraft);
+        const res = await registerActivity(eventDraft);
+        await trx
+          .update(events)
+          .set({
+            activity_id: res.data.activity_id,
+            updatedBy: opts.ctx.user.user_id.toString(),
+          })
+          .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
+          .execute();
 
         return newEvent;
       });
@@ -583,25 +591,25 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid);
       const eventData = await selectEventByUuid(opts.input.event_uuid);
       // Map the data and conditionally remove fields
-        const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
-            // Copy the visitor object without modifying dynamicFields directly
-            const visitorData: Partial<VisitorsWithDynamicFields> = { ...visitor };
+      const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+        // Copy the visitor object without modifying dynamicFields directly
+        const visitorData: Partial<VisitorsWithDynamicFields> = { ...visitor };
 
-            // If ticketToCheckIn is false, remove specific fields
-            if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
-                delete visitorData.has_ticket;
-                delete visitorData.ticket_status;
-                delete visitorData.ticket_id;
-            }
+        // If ticketToCheckIn is false, remove specific fields
+        if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
+          delete visitorData.has_ticket;
+          delete visitorData.ticket_status;
+          delete visitorData.ticket_id;
+        }
 
-            // Generate a new object for CSV with stringified dynamicFields
-            return {
-                ...visitorData,
-                dynamicFields: JSON.stringify(visitor.dynamicFields),
-            };
-        });
+        // Generate a new object for CSV with stringified dynamicFields
+        return {
+          ...visitorData,
+          dynamicFields: JSON.stringify(visitor.dynamicFields),
+        };
+      });
 
-        console.log("dataForCsv:  ", dataForCsv);
+      console.log("dataForCsv:  ", dataForCsv);
 
       const csvString = Papa.unparse(dataForCsv || [], {
         header: true,
