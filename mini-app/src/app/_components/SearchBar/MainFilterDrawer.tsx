@@ -98,7 +98,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
 
               }}
             >
-              Apply filter
+              Apply filters
             </button>
           </DrawerClose>
           <button
