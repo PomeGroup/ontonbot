@@ -1,6 +1,7 @@
 import { useCreateEventStore } from "@/app/_components/organisms/events/createEventStore";
 import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
+import { getErrorMessages } from "@/lib/error";
 import { cn, fileToBase64 } from "@/lib/utils";
 import { CircleArrowUp } from "lucide-react";
 import Image from "next/image";
@@ -129,6 +130,15 @@ export const UploadImageFile = (props: UploadFileProps) => {
             alt="event image"
             className="w-full h-auto"
           />
+        )}
+        {uploadImage.error && (
+          <div className="text-red-500 text-sm w-full text-balance mt-2">
+            {getErrorMessages(uploadImage.error.message).map(
+              (errMessage, idx: number) => (
+                <p key={idx}>{errMessage}</p>
+              )
+            )}
+          </div>
         )}
         <DrawerFooter>
           <input
