@@ -125,9 +125,12 @@ export const UploadImageFile = (props: UploadFileProps) => {
           )}
         </DrawerHeader>
         {imagePreview && (
-          <img
+          <Image
             src={imagePreview}
+            width={400}
+            height={400}
             alt="event image"
+            draggable="false"
             className="w-full h-auto"
           />
         )}
