@@ -98,7 +98,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
 
               }}
             >
-              Filter Events
+              Apply filter
             </button>
           </DrawerClose>
           <button

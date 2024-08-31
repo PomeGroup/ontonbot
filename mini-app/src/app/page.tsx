@@ -1,4 +1,5 @@
 "use client";
+import { useCallback , memo ,useEffect, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
@@ -8,12 +9,12 @@ import useWebApp from "@/hooks/useWebApp";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { unstable_noStore as noStore } from "next/cache";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import MainButton from "./_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "./_trpc/client";
 import "./page.css";
 import zod from "zod";
 import { useConfig } from "@/context/ConfigContext";
+// Memoized MainButton to prevent unnecessary re-renders
 
 export default function Home() {
 
@@ -27,7 +28,7 @@ export default function Home() {
     isLoading: useAuthLoading,
     role: userRole,
   } = useAuth();
-  const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
+  const UserId = webApp?.initDataUnsafe?.user?.id ;
 
   const router = useRouter();
   const [isMyEventsTabActive, setIsMyEventsTabActive] = useState(false);
@@ -79,7 +80,7 @@ export default function Home() {
     "/search/?" + createSearchQueryParams(pastEventsParams);
 
   const organizerEventsParams = searchEventsInputZod.parse({
-    limit: 50,
+    limit: 0,
     offset: 0,
     filter: {
       // organizer_user_id: UserId,
@@ -242,14 +243,14 @@ export default function Home() {
           </div>
         </TabsContent>
       </Tabs>
-      {!useAuthLoading  &&
-          ( userRole === "admin" || userRole === "organizer" ) &&
+      {!useAuthLoading &&
+          (userRole === "admin" || userRole === "organizer") &&
           authorized && (
-        <MainButton
-          text="Create new event"
-          onClick={() => router.push("/events/create")}
-        />
-      )}
+              <MainButton
+                  text="Create new event"
+                  onClick={() => router.push("/events/create")}
+              />
+          )}
     </>
   );
 }

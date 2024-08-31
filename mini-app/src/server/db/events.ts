@@ -15,6 +15,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { unionAll } from "drizzle-orm/pg-core";
+import {selectUserById} from "@/server/db/users";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -118,6 +119,27 @@ export const getUserEvents = async (
   limit: number | 100,
   offset: number | 0
 ) => {
+  if(userId === null) {
+    return [];
+  }
+  const userInfo = await selectUserById(userId);
+  if(!userInfo) {
+    return [];
+  }
+  // return all events for admin
+  if(userInfo && userInfo.role === "admin") {
+    const eventQuery = db
+      .select({
+        event_uuid: events.event_uuid,
+        user_id: users.user_id,
+        role: users.role,
+        created_at: events.created_at,
+      })
+      .from(events)
+      .innerJoin(users, eq(events.owner, users.user_id))
+
+    return await eventQuery.execute();
+  }
   const rewardQuery = db
     .select({
       event_uuid: visitors.event_uuid,
@@ -126,8 +148,8 @@ export const getUserEvents = async (
       created_at: visitors.created_at,
     })
     .from(rewards)
-    .leftJoin(visitors, eq(visitors.id, rewards.visitor_id))
-    .where(userId !== null ? eq(visitors.user_id, userId!) : undefined);
+    .innerJoin(visitors, eq(visitors.id, rewards.visitor_id))
+    .where(  eq(visitors.user_id, userId!) );
 
   const eventQuery = db
     .select({
@@ -138,7 +160,7 @@ export const getUserEvents = async (
     })
     .from(events)
     .innerJoin(users, eq(events.owner, users.user_id))
-    .where(userId !== null ? eq(users.user_id, userId!) : undefined);
+    .where(and(eq(users.user_id, userId!) , eq(users.role, "organizer")));
 
   // Use unionAll to combine the results, apply orderBy, limit, and offset
   const combinedResultsQuery = unionAll(rewardQuery, eventQuery)
@@ -154,17 +176,17 @@ export const getEventsWithFilters = async (
   params: z.infer<typeof searchEventsInputZod>
 ): Promise<any[]> => {
   const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
-  //console.log("*****params", params);
+  console.log("*****params search: ", params);
 
   const cacheKey =
     cacheKeys.getEventsWithFilters +
     JSON.stringify({ limit, offset, search, filter, sortBy });
 
   const cachedResult = getCache(cacheKey);
-  if (cachedResult) {
-    console.log("Returning cached result");
-    return cachedResult;
-  }
+  // if (cachedResult) {
+  //   console.log("Returning cached result");
+  //   return cachedResult;
+  // }
 
   let query = db.select().from(event_details_search_list);
   let userEventUuids = [];
@@ -185,9 +207,16 @@ export const getEventsWithFilters = async (
     );
   }
   // Apply user_id filter
+
   if (filter?.user_id) {
     const userEvents = await getUserEvents(filter.user_id, 1000, 0);
     userEventUuids = userEvents.map((event) => event.event_uuid);
+    if(userEventUuids.length) {
+        filter.event_uuids = userEventUuids;
+    }
+    else {
+      return [];
+    }
     console.log("userEventUuids", userEventUuids);
   }
   // Apply date filters
@@ -221,7 +250,7 @@ export const getEventsWithFilters = async (
     );
   }
   // Apply society_hub_id filter
-  if (filter?.society_hub_id) {
+  if (filter?.society_hub_id && filter.society_hub_id.length) {
     conditions.push(
       inArray(event_details_search_list.societyHubID, filter.society_hub_id)
     );
@@ -284,11 +313,15 @@ export const getEventsWithFilters = async (
   }
 
   // Apply pagination
-  // @ts-expect-error
-  query = query.limit(limit).offset(offset);
+
+  if(limit) {
+    // @ts-expect-error
+    query = query.limit(limit).offset(offset);
+  }
+  console.log("query eee " );
   logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
-  // console.log(eventsData);
+   console.log(eventsData);
   setCache(cacheKey, eventsData, 60);
   return eventsData;
 };

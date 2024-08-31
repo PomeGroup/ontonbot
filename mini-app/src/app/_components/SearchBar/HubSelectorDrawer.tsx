@@ -58,7 +58,7 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
             {hubs.map((hub) => (
               <div
                 key={hub.id}
-                className="flex h-8 justify-between items-center cursor-pointer space-y-4"
+                className="flex   justify-between items-center border-b-2 border-b-gray-800 cursor-pointer h-12 "
                 onClick={() => toggleHubSelection(hub.id)}
               >
                 <span className="text-zinc-400">{hub.name}</span>
@@ -68,6 +68,8 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
                 />
               </div>
             ))}
+
+
           </ScrollArea>
         </div>
 

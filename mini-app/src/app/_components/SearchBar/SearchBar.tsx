@@ -16,7 +16,8 @@ import MainFilterDrawer from "./MainFilterDrawer";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-
+import useWebApp from "@/hooks/useWebApp";
+import { AlertDialog, AlertDialogTrigger, AlertDialogAction, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel } from '@/components/ui/alert-dialog';
 interface SearchBarProps {
   includeQueryParam?: boolean;
   showFilterTags?: boolean;
@@ -40,7 +41,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const searchParams = useSearchParams();
   const router = useRouter();
   const [showSuggestions, setShowSuggestions] = useState(false);
-
+  const [showDialogParticipantError, setShowDialogParticipantError] = useState(false);
   const [participationType, setParticipationType] = useState<string[]>([
     "online",
     "in_person",
@@ -58,12 +59,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const hubsResponse = trpc.events.getHubs.useQuery();
   const [hubs, setHubs] = useState<Hub[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const WebApp = useWebApp();
+  const hapticFeedback = WebApp?.HapticFeedback;
   useEffect(() => {
     if (hubsResponse?.data?.status === 'success') {
-      setHubs(hubsResponse.data.hubs || []);
-      console.log('---hubsResponse',hubsResponse.data.hubs);
+      const hubsData = hubsResponse.data.hubs; // TypeScript knows hubs exists here
+      setHubs((prevHubs) => {
+        if (JSON.stringify(prevHubs) !== JSON.stringify(hubsData)) {
+          console.log('---hubsResponse', hubsData);
+          return hubsData;
+        }
+        return prevHubs;
+      });
     }
-  }, [hubsResponse]);
+  }, [hubsResponse.data?.status]);
 
 
   const {
@@ -162,7 +171,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
   const responseRefresh = trpc.events.getEventsWithFilters.useQuery(
       searchEventsInputZod.parse({
-        limit: 3,
+        limit: 10,
         offset: 0,
         search: searchTerm,
         filter: {
@@ -228,12 +237,35 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setParticipationType(["online", "in_person"]);
     setSelectedHubs(allHubs);
     setSortBy("start_date_asc");
+    hapticFeedback?.selectionChanged();
   };
 
-  const toggleParticipationType = (type: string) => {
+  const toggleParticipationType = (type: string , triggerFrom = "filter" ) => {
+    hapticFeedback?.selectionChanged();
+
+
     const updated = participationType.includes(type)
-      ? participationType.filter((t) => t !== type)
-      : [...participationType, type];
+        ? participationType.filter((t) => t !== type)
+        : [...participationType, type];
+    console.log("toggleParticipationType", type);
+
+      // Display error message using showAlert if no option is selected
+      if(updated.length === 0  && triggerFrom === "filter")
+      {
+        setShowDialogParticipantError(true);
+        return;
+      }
+      else if(updated.length === 0  && triggerFrom === "tag")
+        {
+            setParticipationType(["online", "in_person"]);
+            setTimeout(() => {
+              handleFilterApply().then((r) => {
+                console.log(r);
+              });
+            });
+        }
+
+
     setParticipationType(updated);
   };
 
@@ -243,26 +275,32 @@ const SearchBar: React.FC<SearchBarProps> = ({
         ? prev.filter((id) => id !== hubId)
         : [...prev, hubId];
     });
+    hapticFeedback?.selectionChanged();
   };
 
   const selectAllHubs = () => {
     const allHubs = hubs.map((hub: Hub) => hub.id);
     setSelectedHubs(allHubs);
+    hapticFeedback?.selectionChanged();
   };
 
   const deselectAllHubs = () => {
     setSelectedHubs([]);
+    hapticFeedback?.selectionChanged();
   };
 
   const clearFilter = (filter: string) => {
     if (participationType.includes(filter)) {
-      toggleParticipationType(filter);
+
+      toggleParticipationType(filter , "tag");
+
     } else if (selectedHubs.includes(filter)) {
       toggleHubSelection(filter);
     } else if (filter === "Sort by Most People Reached") {
       setSortBy("start_date_asc");
     }
     setApplyingFilters(true);
+    hapticFeedback?.selectionChanged();
   };
   useEffect(() => {
     if (pageInit  ) {
@@ -272,6 +310,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, [participationType, selectedHubs, sortBy]);
   const renderFilterButtons = () => {
+
+
     const filters = [
       ...participationType,
       sortBy !== "start_date_asc" ? "Sort by Most People Reached" : null,
@@ -344,7 +384,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
       );
     }
   };
-
+  const handleShowAll = () => {
+    setParticipationType(['in_person', 'online']);
+    setShowDialogParticipantError(false); // Close the dialog after setting the types
+  };
   useEffect(() => {
     checkScrollArrows(); // Check scroll arrows on initial render
   }, [selectedHubs, participationType, sortBy]);
@@ -370,6 +413,22 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <IoSearchOutline className="text-gray-500 w-5 h-5" />
           </div>
+          <AlertDialog open={showDialogParticipantError} onOpenChange={setShowDialogParticipantError}>
+            <AlertDialogContent
+                className="w-[80%] max-w-none border-none"
+            >
+              <AlertDialogHeader>
+                <AlertDialogTitle>Error</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You must select at least one participation type.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setShowDialogParticipantError(false)}>Close</AlertDialogCancel>
+                <AlertDialogAction onClick={handleShowAll}>Show All</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           {!showFilterButton && (
             <IoCloseOutline
               className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-white w-4 h-4 p-1 rounded-full bg-gray-600"

@@ -2,7 +2,7 @@
 import { z } from "zod";
 
 const searchEventsInputZod = z.object({
-  limit: z.number().min(1).max(100).optional(),
+  limit: z.number().min(0).max(100).optional(),
   offset: z.number().min(0).optional(),
   search: z.string().optional(),
   filter: z
