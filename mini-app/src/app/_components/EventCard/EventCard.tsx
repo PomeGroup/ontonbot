@@ -5,8 +5,19 @@ import Image from "next/image";
 import useWebApp from "@/hooks/useWebApp";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { IoChevronForwardOutline ,IoReorderFour , IoSettingsOutline } from "react-icons/io5";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  IoChevronForwardOutline,
+  IoReorderFour,
+  IoSettingsOutline,
+} from "react-icons/io5";
+import { IoIosPlayCircle } from "react-icons/io";
 
 interface EventCardProps {
   event: {
@@ -30,10 +41,15 @@ interface EventCardProps {
     city?: string;
     country?: string;
   };
-  mode?: "normal" | "small" | "detailed";
+  mode?: "normal" | "small" | "detailed" | "ongoing";
   currentUserId?: number;
 }
-const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUserId = 0 }) => {
+
+const EventCard: React.FC<EventCardProps> = ({
+  event,
+  mode = "normal",
+  currentUserId = 0,
+}) => {
   const {
     eventUuid,
     title = "No Title",
@@ -57,14 +73,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
   const webApp = useWebApp();
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
   const geoLocation = city || country ? `${city}, ${country}` : location;
-  const isOnline = website || location.includes("http") ? "Online" : geoLocation;
+  const isOnline =
+    website || location.includes("http") ? "Online" : geoLocation;
 
-
-  console.log(`ssssss `+ title + ` /events/${eventUuid}/edit`);
   const handleEventClick = () => {
     if (ticketToCheckIn) {
       webApp?.openTelegramLink(
-          `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
+        `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
       );
     } else {
       window.location.href = `/events/${eventUuid}`;
@@ -73,171 +88,197 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
   };
 
   const renderDropdownMenu = () => (
-      <DropdownMenu key={`dropdown-${eventUuid}`}>
-        <DropdownMenuTrigger asChild>
-          <div className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer">
-            <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
-              <Image
-                  src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-                  alt={title}
-                  layout="fill"
-                  style={{ objectFit: "cover" }}
-                  className="rounded-lg"
-                  onError={(e) => (e.currentTarget.src = defaultImage)}
-                  loading="lazy"
-              />
-            </div>
-            <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
-              <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
-                <div className="flex items-center self-stretch flex-nowrap relative">
+    <DropdownMenu key={`dropdown-${eventUuid}`}>
+      <DropdownMenuTrigger asChild>
+        <div className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer">
+          <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
+            <Image
+              src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+              alt={title}
+              layout="fill"
+              style={{ objectFit: "cover" }}
+              className="rounded-lg"
+              onError={(e) => (e.currentTarget.src = defaultImage)}
+              loading="lazy"
+            />
+          </div>
+          <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
+            <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
+              <div className="flex items-center self-stretch flex-nowrap relative">
                 <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
-                  {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
-                </span>
-                  {ticketPrice > 0 ? (
-                      <Badge variant="ontonDark">
-                        ${ticketPrice}
-                      </Badge>
+                  {mode === "ongoing" ? (
+                    <div className="flex items-center text-green-500 animate-pulse">
+                      <IoIosPlayCircle className="mr-1" /> Now
+                    </div>
                   ) : (
-                      <Badge variant="ontonDark">
-                        {currentUserId === organizerUserId ? "hosted" : "free"}
-                      </Badge>
+                    <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
+                      {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
+                      {isOnline}
+                    </span>
                   )}
-                </div>
-                <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
+                </span>
+                {ticketPrice > 0 ? (
+                  <Badge variant="ontonDark">${ticketPrice}</Badge>
+                ) : (
+                  <Badge variant="ontonDark">
+                    {currentUserId === organizerUserId ? "hosted" : "free"}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
                 <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
                   {title}
                 </span>
-                </div>
-                <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
+              </div>
+              <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
                 by {organizerFirstName} {organizerLastName}
               </span>
-              </div>
-            </div>
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent key={`dropdown-show-${eventUuid}`}
-            align="center"
-            className="mt-[-10px] w-[220px]  bg-black px-3 rounded-none border-spacing-1 border-2 border-gray-600"
-        >
-          <DropdownMenuItem className="text-lg px-2 rounded-none " onClick={handleEventClick}>
-            <IoReorderFour className="mr-1" /> Show Event <IoChevronForwardOutline className="ml-auto" />
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem   key={`dropdown-manage-${eventUuid}`} className="text-lg  px-2 rounded-none "
-                             onClick={() => {
-                                window.location.href = `/events/${eventUuid}/edit`;
-                                return false;
-                             }}
-          >
-            <IoSettingsOutline  className="mr-1"  /> Manage Event <IoChevronForwardOutline className="ml-auto" />
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-  );
-
-  const renderNormalMode = () => (
-      <>
-        {currentUserId === organizerUserId ? renderDropdownMenu() : (
-            <div onClick={handleEventClick} className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer">
-              <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
-                <Image
-                    src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-                    alt={title}
-                    layout="fill"
-                    style={{ objectFit: "cover" }}
-                    className="rounded-lg"
-                    onError={(e) => (e.currentTarget.src = defaultImage)}
-                    loading="lazy"
-                />
-              </div>
-              <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
-                <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
-                  <div className="flex items-center self-stretch flex-nowrap relative">
-                <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
-                  {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
-                </span>
-                    {ticketPrice > 0 ? (
-                        <Badge variant="ontonDark">
-                          ${ticketPrice}
-                        </Badge>
-                    ) : (
-                        <Badge variant="ontonDark">
-                          {currentUserId === organizerUserId ? "hosted" : "free"}
-                        </Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-                <span
-                    className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
-                  {title}
-                </span>
-                  </div>
-
-                  <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
-                by {organizerFirstName} {organizerLastName}
-              </span>
-                </div>
-              </div>
-            </div>
-        )}
-        <Separator className="my-4 bg-[#545458]" />
-      </>
-  );
-
-  const renderDetailedMode = () => (
-      <div
-          className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
-          onClick={handleEventClick}
-      >
-        <Image
-            src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-            alt={title}
-            width={400}
-            height={400}
-            className="w-full h-auto object-cover"
-            onError={(e) => (e.currentTarget.src = defaultImage)}
-        />
-      </div>
-  );
-
-  const renderSmallMode = () => (
-      <>
-        <div
-            onClick={handleEventClick}
-            className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
-        >
-          <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
-            <Image
-                src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-                alt={title}
-                layout="fill"
-                objectFit="cover"
-                className="rounded-lg"
-                loading="lazy"
-                onError={(e) => (e.currentTarget.src = defaultImage)}
-            />
-          </div>
-          <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
-            <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
-              <div className="flex items-center self-stretch flex-nowrap relative">
-              <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-4">
-                {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
-              </span>
-
-              </div>
-              <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-              <span className="grow font-sans text-black dark:text-white text-left line-clamp-1 text-sm font-medium leading-2">
-                {title}
-              </span>
-              </div>
-              <span className="grow font-sans text-left line-clamp-1 text-xs leading-2 text-gray-600 dark:text-gray-400">
-              by {organizerFirstName} {organizerLastName}
-            </span>
             </div>
           </div>
         </div>
-        <Separator className="my-0 bg-[#545458]" />
-      </>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        key={`dropdown-show-${eventUuid}`}
+        align="center"
+        className="mt-[-10px] w-[220px]  bg-black px-3 rounded-none border-spacing-1 border-2 border-gray-600"
+      >
+        <DropdownMenuItem
+          className="text-lg px-2 rounded-none "
+          onClick={handleEventClick}
+        >
+          <IoReorderFour className="mr-1" /> Show Event{" "}
+          <IoChevronForwardOutline className="ml-auto" />
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          key={`dropdown-manage-${eventUuid}`}
+          className="text-lg  px-2 rounded-none "
+          onClick={() => {
+            window.location.href = `/events/${eventUuid}/edit`;
+            return false;
+          }}
+        >
+          <IoSettingsOutline className="mr-1" /> Manage Event{" "}
+          <IoChevronForwardOutline className="ml-auto" />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const renderNormalMode = () => (
+    <>
+      {currentUserId === organizerUserId ? (
+        renderDropdownMenu()
+      ) : (
+        <div
+          onClick={handleEventClick}
+          className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+        >
+          <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
+            <Image
+              src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+              alt={title}
+              layout="fill"
+              style={{ objectFit: "cover" }}
+              className="rounded-lg"
+              onError={(e) => (e.currentTarget.src = defaultImage)}
+              loading="lazy"
+            />
+          </div>
+          <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
+            <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
+              <div className="flex items-center self-stretch flex-nowrap relative">
+                <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
+                  {mode === "ongoing" ? (
+                    <div className="flex items-center text-green-500 animate-pulse">
+                      <IoIosPlayCircle className="mr-1" /> Now
+                    </div>
+                  ) : (
+                    <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
+                      {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
+                      {isOnline}
+                    </span>
+                  )}
+                </span>
+                {ticketPrice > 0 ? (
+                  <Badge variant="ontonDark">${ticketPrice}</Badge>
+                ) : (
+                  <Badge variant="ontonDark">
+                    {currentUserId === organizerUserId ? "hosted" : "free"}
+                  </Badge>
+                )}
+              </div>
+              <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
+                <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+                  {title}
+                </span>
+              </div>
+
+              <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
+                by {organizerFirstName} {organizerLastName}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+      <Separator className="my-4 bg-[#545458]" />
+    </>
+  );
+
+  const renderDetailedMode = () => (
+    <div
+      className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
+      onClick={handleEventClick}
+    >
+      <Image
+        src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+        alt={title}
+        width={400}
+        height={400}
+        className="w-full h-auto object-cover"
+        onError={(e) => (e.currentTarget.src = defaultImage)}
+      />
+    </div>
+  );
+
+  const renderSmallMode = () => (
+    <>
+      <div
+        onClick={handleEventClick}
+        className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+      >
+        <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
+          <Image
+            src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+            alt={title}
+            layout="fill"
+            objectFit="cover"
+            className="rounded-lg"
+            loading="lazy"
+            onError={(e) => (e.currentTarget.src = defaultImage)}
+          />
+        </div>
+        <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
+          <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
+            <div className="flex items-center self-stretch flex-nowrap relative">
+              <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-4">
+                {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
+                {isOnline}
+              </span>
+            </div>
+            <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
+              <span className="grow font-sans text-black dark:text-white text-left line-clamp-1 text-sm font-medium leading-2">
+                {title}
+              </span>
+            </div>
+            <span className="grow font-sans text-left line-clamp-1 text-xs leading-2 text-gray-600 dark:text-gray-400">
+              by {organizerFirstName} {organizerLastName}
+            </span>
+          </div>
+        </div>
+      </div>
+      <Separator className="my-0 bg-[#545458]" />
+    </>
   );
 
   if (mode === "detailed") {

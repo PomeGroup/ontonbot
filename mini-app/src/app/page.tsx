@@ -57,7 +57,18 @@ export default function Home() {
     },
     sortBy: "start_date_asc",
   });
-
+  const ongoingEventsParams = searchEventsInputZod.parse({
+    limit: 2,
+    offset: 0,
+    filter: {
+      participationType: ["online", "in_person"],
+      startDate: Math.floor(Date.now() / 1000),
+      startDateOperator: "<=",
+      endDate: Math.floor(Date.now() / 1000),
+      endDateOperator: ">=",
+    },
+    sortBy: "start_date_asc",
+  });
   const pastEventsParams = searchEventsInputZod.parse({
     limit: 2,
     offset: 0,
@@ -98,6 +109,14 @@ export default function Home() {
   } = trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams);
 
   const {
+    data: ongoingEvents,
+    isLoading: isLoadingOngoing,
+    isError: isErrorOngoing,
+  } = trpc.events.getEventsWithFilters.useQuery(ongoingEventsParams);
+  useEffect(() => {
+    console.log("ongoingEvents", ongoingEvents);
+  }, [ongoingEvents]);
+  const {
     data: pastEvents,
     isLoading: isLoadingPast,
     isError: isErrorPast,
@@ -125,8 +144,8 @@ export default function Home() {
   }, [isMyEventsTabActive, refetchMyEvents]);
 
 
-  const error = isErrorUpcoming || isErrorPast || isErrorSlider || isErrorMyEvents;
-  const isLoading = isLoadingUpcoming || isLoadingPast || isLoadingSlider   ;
+  const error = isErrorUpcoming || isErrorPast || isErrorSlider || isErrorMyEvents || isErrorOngoing;
+  const isLoading = isLoadingUpcoming || isLoadingPast || isLoadingSlider  || isLoadingOngoing ;
   if(error) {
     console.error("Error fetching data", {
       isErrorUpcoming,
@@ -176,6 +195,7 @@ export default function Home() {
         <TabsContent value="all-events">
           <div className="pt-2 w-full">
             <>
+
               {isLoading ? (
                 <EventCardSkeleton mode={"detailed"} />
               ) : (
@@ -192,6 +212,26 @@ export default function Home() {
               )}
             </>
           </div>
+
+          {ongoingEvents?.data && ongoingEvents?.data?.length > 0 && (
+              <>
+              <div className="pt-4  w-full pb-4  flex justify-between items-center">
+                <h2 className="font-bold text-lg">Ongoing Events</h2>
+                {/* Optionally, add a link to see all ongoing events */}
+              </div>
+              {isLoading
+                  ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
+                  : ongoingEvents?.data?.map((event) => (
+                      <EventCard
+                          key={event.event_uuid}
+                          event={event}
+                          mode={"ongoing"}
+                          currentUserId={UserId}
+                      />
+                  ))}
+              </>
+        )}
+
           <div className="pt-4  w-full pb-4  flex justify-between items-center">
             <h2 className="font-bold text-lg">Upcoming Events</h2>
             <a
