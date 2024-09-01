@@ -55,6 +55,7 @@ const EventsAdminPage = () => {
     return <Skeletons.Events />;
   }
 
+
   if (!authorized || eventsData.isError) {
     return <ComingSoon />;
   }
