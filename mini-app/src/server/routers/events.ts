@@ -531,6 +531,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             `,
         });
 
+
         await updateActivity(eventDraft, opts.ctx.event.activity_id as number);
 
         return { success: true, eventId: opts.ctx.event.event_uuid };

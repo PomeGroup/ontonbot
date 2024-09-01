@@ -60,7 +60,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
   const isOnline = website || location.includes("http") ? "Online" : geoLocation;
 
 
-
+  console.log(`ssssss `+ title + ` /events/${eventUuid}/edit`);
   const handleEventClick = () => {
     if (ticketToCheckIn) {
       webApp?.openTelegramLink(
@@ -73,7 +73,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
   };
 
   const renderDropdownMenu = () => (
-      <DropdownMenu>
+      <DropdownMenu key={`dropdown-${eventUuid}`}>
         <DropdownMenuTrigger asChild>
           <div className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer">
             <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
@@ -115,7 +115,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
             </div>
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent
+        <DropdownMenuContent key={`dropdown-show-${eventUuid}`}
             align="center"
             className="mt-[-10px] w-[220px]  bg-black px-3 rounded-none border-spacing-1 border-2 border-gray-600"
         >
@@ -123,10 +123,10 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
             <IoReorderFour className="mr-1" /> Show Event <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem  className="text-lg  px-2 rounded-none "
+          <DropdownMenuItem   key={`dropdown-manage-${eventUuid}`} className="text-lg  px-2 rounded-none "
                              onClick={() => {
-                               window.location.href = `/events/${eventUuid}/edit`;
-                               return false;
+                                window.location.href = `/events/${eventUuid}/edit`;
+                                return false;
                              }}
           >
             <IoSettingsOutline  className="mr-1"  /> Manage Event <IoChevronForwardOutline className="ml-auto" />

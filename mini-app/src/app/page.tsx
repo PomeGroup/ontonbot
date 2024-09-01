@@ -62,8 +62,9 @@ export default function Home() {
     offset: 0,
     filter: {
       participationType: ["online", "in_person"],
-      endDate:
+      startDate:
         Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+      startDateOperator: "<=",
     },
     sortBy: "start_date_desc",
   });
@@ -118,9 +119,11 @@ export default function Home() {
 
   useEffect(() => {
     if (isMyEventsTabActive) {
-      refetchMyEvents().then(() => console.log("Refetched organizer events"));
+      refetchMyEvents().then(() =>   console.log("----use myEvents", myEvents));
     }
   }, [isMyEventsTabActive, refetchMyEvents]);
+
+
   const error = isErrorUpcoming || isErrorPast || isErrorSlider || isErrorMyEvents;
   const isLoading = isLoadingUpcoming || isLoadingPast || isLoadingSlider   ;
   useEffect(() => {

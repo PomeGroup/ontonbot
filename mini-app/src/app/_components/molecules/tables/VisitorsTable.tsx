@@ -22,12 +22,15 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
     trpc.visitors.getAll.useInfiniteQuery(
       {
         event_uuid,
-        initData: webApp?.initData,
+        init_data: webApp?.initData || "",
+
         limit: 25,
       },
       {
         getNextPageParam: (lastPage) => lastPage?.nextCursor,
         initialCursor: 0,
+        enabled: Boolean(webApp?.initData) && Boolean(event_uuid),
+        retry: false,
       }
     );
 

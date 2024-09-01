@@ -5,32 +5,31 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { checkIsAdminOrOrganizer } from "../db/events";
 import { selectVisitorsByEventUuid } from "../db/visitors";
-import { publicProcedure, router } from "../trpc";
+import {adminOrganizerProtectedProcedure, eventManagementProtectedProcedure, publicProcedure, router} from "../trpc";
 
 export const visitorsRouter = router({
   // protect
-  getAll: publicProcedure
+  getAll: eventManagementProtectedProcedure
     .input(
       z.object({
-        event_uuid: z.string(),
-        initData: z.string().optional(),
+
         limit: z.number().optional(),
         cursor: z.number().optional(),
       })
     )
     .query(async (opts) => {
-      const { event_uuid, initData, limit = 25, cursor = 0 } = opts.input;
+      const {  limit = 25, cursor = 0 } = opts.input;
 
-      if (!initData) {
-        return undefined;
-      }
+      // if (!initData) {
+      //   return undefined;
+      // }
 
-      const { valid } = await checkIsAdminOrOrganizer(initData);
-
-      if (!valid) {
-        throw new Error("Unauthorized access or invalid role");
-      }
-      return await selectVisitorsByEventUuid(event_uuid, limit, cursor);
+      // const { valid } = await checkIsAdminOrOrganizer(initData);
+      //
+      // if (!valid) {
+      //   throw new Error("Unauthorized access or invalid role");
+      // }
+      return await selectVisitorsByEventUuid(opts.input.event_uuid, limit, cursor);
     }),
 
   // protect

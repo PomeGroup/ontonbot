@@ -132,6 +132,7 @@ export const selectVisitorsByEventUuid = async (
           .where(eq(tickets.event_uuid, event_uuid))
 
   }
+    console.log("User Data Query Before Pagination:",event_uuid , userDataQuery.toSQL());
   if (typeof limit === "number") {
     userDataQuery = userDataQuery.limit(limit);
   }
