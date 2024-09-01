@@ -38,7 +38,9 @@ export default function Home() {
       Object.entries({
         query: params.search || "",
         startDate: params.filter?.startDate?.toString() || "",
+        startDateOperator: params.filter?.startDateOperator || "",
         endDate: params.filter?.endDate?.toString() || "",
+        endDateOperator: params.filter?.endDateOperator || "",
         sortBy: params.sortBy || "default",
       }).filter(([_, value]) => value !== "")
     ).toString();
@@ -125,9 +127,6 @@ export default function Home() {
 
   const error = isErrorUpcoming || isErrorPast || isErrorSlider || isErrorMyEvents;
   const isLoading = isLoadingUpcoming || isLoadingPast || isLoadingSlider   ;
-  useEffect(() => {
-    console.log("use isLoadingSlider", isLoadingSlider);
-  }, [isLoadingSlider]);
   if(error) {
     console.error("Error fetching data", {
       isErrorUpcoming,

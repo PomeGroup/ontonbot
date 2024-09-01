@@ -41,9 +41,11 @@ const Search: React.FC = () => {
   const endDate = searchParams.get("endDate")
       ? parseInt(searchParams.get("endDate") as string, 10)
       : undefined;
+  const endDateOperator = searchParams.get("endDateOperator") || "";
   const startDate = searchParams.get("startDate")
       ? parseInt(searchParams.get("startDate") as string, 10)
       : endDate ? undefined : Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600);
+  const startDateOperator = searchParams.get("startDateOperator") || "";
   const [results, setResults] = useState<any[]>([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -58,7 +60,9 @@ const Search: React.FC = () => {
     filter: {
       ...(participationType.length > 0 && { participationType }), // Include if valid
       startDate, // Always include startDate
+      startDateOperator: startDateOperator || undefined,
       ...(endDate   && { endDate }), // Include if valid
+      endDateOperator: endDateOperator || undefined,
       ...(selectedHubs.length > 0 && { society_hub_id: selectedHubs } ), // Include if valid
     },
     sortBy: sortBy || "default",
