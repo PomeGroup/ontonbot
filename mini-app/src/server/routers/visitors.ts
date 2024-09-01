@@ -19,16 +19,6 @@ export const visitorsRouter = router({
     )
     .query(async (opts) => {
       const {  limit = 25, cursor = 0 } = opts.input;
-
-      // if (!initData) {
-      //   return undefined;
-      // }
-
-      // const { valid } = await checkIsAdminOrOrganizer(initData);
-      //
-      // if (!valid) {
-      //   throw new Error("Unauthorized access or invalid role");
-      // }
       return await selectVisitorsByEventUuid(opts.input.event_uuid, limit, cursor);
     }),
 

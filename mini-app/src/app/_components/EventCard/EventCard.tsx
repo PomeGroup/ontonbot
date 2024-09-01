@@ -40,7 +40,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
     startDate,
     endDate,
     location = "No Location",
-    imageUrl = "/template-images/dalle-default.webp",
+    imageUrl = "/template-images/default.webp",
     organizerFirstName = "Unknown",
     organizerLastName = "",
     organizerUserId = null,
@@ -52,7 +52,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
     country = null,
   } = event;
 
-  const defaultImage = "/template-images/dalle-default.webp";
+  const defaultImage = "/template-images/default.webp";
 
   const webApp = useWebApp();
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
