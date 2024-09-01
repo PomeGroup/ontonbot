@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
@@ -14,12 +16,14 @@ import Labels from "../_components/atoms/labels";
 import { ComingSoon } from "../_components/ComingSoon";
 import Skeletons from "../_components/molecules/skeletons";
 import { trpc } from "../_trpc/client";
+import {redirectTo} from "@/lib/utils";
 
 const EventsAdminPage = () => {
   noStore();
 
   const WebApp = useWebApp();
-  const hapticfeedback = WebApp?.HapticFeedback;
+  const router = useRouter();
+  const hapticFeedback = WebApp?.HapticFeedback;
   const { authorized, isLoading } = useAuth();
   const initData = WebApp?.initData;
   const validatedData = trpc.users.validateUserInitData.useQuery(
@@ -35,12 +39,18 @@ const EventsAdminPage = () => {
       queryKey: ["events.getEvents", { init_data: initData || "" }],
     }
   );
+  useEffect(() => {
+    if (typeof window !== "undefined" && document.referrer ==="") {
+      redirectTo("/");
+     }
+    }, [router]);
 
   if (
     eventsData.isLoading ||
     isLoading ||
     validatedData.isLoading ||
-    !initData
+    !initData ||
+    document?.referrer ===""
   ) {
     return <Skeletons.Events />;
   }
@@ -55,7 +65,7 @@ const EventsAdminPage = () => {
         href={`/events/create`}
         className="w-full"
         onClick={() => {
-          hapticfeedback?.impactOccurred("medium");
+          hapticFeedback?.impactOccurred("medium");
         }}
       >
         <Button
@@ -112,8 +122,8 @@ const EventsAdminPage = () => {
           <div className="flex gap-2 mt-2">
             <Link
               className="flex-1"
-              href={`events/${event.event_uuid}/edit`}
-              onClick={() => hapticfeedback?.impactOccurred("medium")}
+              href={`/events/${event.event_uuid}/edit`}
+              onClick={() => hapticFeedback?.impactOccurred("medium")}
             >
               <Button
                 className="w-full"
@@ -169,7 +179,7 @@ const TimeRow = ({
         startDate
       )} ${timeZone}`;
     }
-    // If there's an end date and it differs from the start date
+    // If there's an end date, and it differs from the start date
     else if (endDate && startDate) {
       displayString += `${formatDate(startDate)} - ${formatTime(
         endTime!

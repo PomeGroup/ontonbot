@@ -49,3 +49,8 @@ export const fileToBase64 = (file: Blob) =>
     reader.onload = () => resolve(reader.result);
     reader.onerror = reject;
   });
+
+export const redirectTo = (path: string) => {
+  window.location.replace(path);
+  return false;
+}
