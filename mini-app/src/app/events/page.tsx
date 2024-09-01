@@ -40,10 +40,11 @@ const EventsAdminPage = () => {
     }
   );
   useEffect(() => {
-    if (typeof window !== "undefined" && document.referrer ==="") {
+    console.log("document.referrer ",document.referrer);
+    if (typeof window !== "undefined" && ( document.referrer ==="" || document.referrer==="https://web.telegram.org/") ) {
       redirectTo("/");
      }
-    }, [router]);
+    }, [router,document.referrer]);
 
   if (
     eventsData.isLoading ||

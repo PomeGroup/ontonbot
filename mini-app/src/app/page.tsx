@@ -19,7 +19,6 @@ import Image from "next/image";
 export default function Home() {
 
   const { config  } = useConfig();
-  //const SliderEventUUID = "b8032306-47e0-4735-b351-e62b8948138d";
   const SliderEventUUID = config?.homeSliderEventUUID || "";
   console.log("SliderEventUUID", SliderEventUUID);
   const webApp = useWebApp();
