@@ -1,12 +1,13 @@
+import React from "react";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
-import React, { useState } from "react";
 import useWebApp from "@/hooks/useWebApp";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { IoChevronForwardOutline ,IoReorderFour , IoSettingsOutline } from "react-icons/io5";
+
 interface EventCardProps {
   event: {
     eventUuid: string;
@@ -52,11 +53,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
   } = event;
 
   const defaultImage = "/ton-logo.png";
-  const [src, setSrc] = useState(isValidImageUrl(imageUrl) ? imageUrl : defaultImage);
+
   const webApp = useWebApp();
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
   const geoLocation = city || country ? `${city}, ${country}` : location;
   const isOnline = website || location.includes("http") ? "Online" : geoLocation;
+
+
 
   const handleEventClick = () => {
     if (ticketToCheckIn) {
@@ -65,6 +68,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
       );
     } else {
       window.location.href = `/events/${eventUuid}`;
+      return false;
     }
   };
 
@@ -74,12 +78,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
           <div className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer">
             <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
               <Image
-                  src={src}
+                  src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
                   alt={title}
                   layout="fill"
                   style={{ objectFit: "cover" }}
                   className="rounded-lg"
-                  onError={() => setSrc(defaultImage)}
+                  onError={(e) => (e.currentTarget.src = defaultImage)}
                   loading="lazy"
               />
             </div>
@@ -119,7 +123,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
             <IoReorderFour className="mr-1" /> Show Event <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem  className="text-lg  px-2 rounded-none "  onClick={() => window.location.href = `/events/${eventUuid}/edit`}>
+          <DropdownMenuItem  className="text-lg  px-2 rounded-none "
+                             onClick={() => {
+                               window.location.href = `/events/${eventUuid}/edit`;
+                               return false;
+                             }}
+          >
             <IoSettingsOutline  className="mr-1"  /> Manage Event <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -132,12 +141,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
             <div onClick={handleEventClick} className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer">
               <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
                 <Image
-                    src={src}
+                    src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
                     alt={title}
                     layout="fill"
                     style={{ objectFit: "cover" }}
                     className="rounded-lg"
-                    onError={() => setSrc(defaultImage)}
+                    onError={(e) => (e.currentTarget.src = defaultImage)}
                     loading="lazy"
                 />
               </div>
@@ -158,10 +167,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
                     )}
                   </div>
                   <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-                <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+                <span
+                    className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
                   {title}
                 </span>
                   </div>
+
                   <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
                 by {organizerFirstName} {organizerLastName}
               </span>
@@ -179,12 +190,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
           onClick={handleEventClick}
       >
         <Image
-            src={src}
+            src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
             alt={title}
             width={400}
             height={400}
             className="w-full h-auto object-cover"
-            onError={() => setSrc(defaultImage)}
+            onError={(e) => (e.currentTarget.src = defaultImage)}
         />
       </div>
   );
@@ -197,13 +208,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, mode = "normal", currentUs
         >
           <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
             <Image
-                src={src}
+                src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
                 alt={title}
                 layout="fill"
                 objectFit="cover"
                 className="rounded-lg"
                 loading="lazy"
-                onError={() => setSrc(defaultImage)}
+                onError={(e) => (e.currentTarget.src = defaultImage)}
             />
           </div>
           <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">

@@ -149,7 +149,7 @@ const Search: React.FC = () => {
         <div className="pt-2">
           {isLoadingSearchResults && results.length === 0 ? (
             <div className="flex flex-col gap-2">
-              {Array.from({ length: 10 }).map((_, index) => (
+              {Array.from({ length: LIMIT }).map((_, index) => (
                 <EventCardSkeleton
                   key={index}
                   mode="small"
@@ -164,7 +164,7 @@ const Search: React.FC = () => {
                     return (
                       <div
                         ref={lastElementRef}
-                        key={event.event_uuid}
+                        key={`${event.event_uuid}-last`}
                       >
                         <EventCard
                             key={event.event_uuid}

@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import useWebApp from "@/hooks/useWebApp";
-import { AlertDialog, AlertDialogTrigger, AlertDialogAction, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel } from '@/components/ui/alert-dialog';
+import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
 interface SearchBarProps {
   includeQueryParam?: boolean;
   showFilterTags?: boolean;
@@ -38,6 +38,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     offset = 0,
     setOffset = () => {},
 }) => {
+  const allParticipationTypes = ["online", "in_person"];
   const searchParams = useSearchParams();
   const router = useRouter();
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -89,7 +90,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
       const participationType = searchParams
         .get("participationType")
-        ?.split(",") || ["online", "in_person"];
+        ?.split(",") || allParticipationTypes;
       const selectedHubsFromParams =
         searchParams.get("selectedHubs")?.split(",") || [];
       const sortBy = searchParams.get("sortBy") || "start_date_asc";
@@ -134,6 +135,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [selectedHubs, hubs]);
 
   const handleCloseSuggestions = () => {
+    setSearchTerm("");
     setShowSuggestions(false);
     setShowFilterButton(true);
   };
@@ -147,7 +149,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     const isFocus = event.target === document.activeElement;
     setSearchIsFocused(isFocus);
     setSearchTerm(searchValue);
-
     if (searchValue.length > 2) {
       setShowSuggestions(true);
       setShowFilterButton(false);
@@ -175,7 +176,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         offset: 0,
         search: searchTerm,
         filter: {
-          participationType: participationType.filter(Boolean),
+          participationType: participationType.length ? participationType.filter(Boolean) : allParticipationTypes,
           startDate:
               Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
           society_hub_id:
@@ -234,7 +235,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const resetFilters = () => {
     const allHubs = hubs.map((hub: Hub) => hub.id);
-    setParticipationType(["online", "in_person"]);
+    setParticipationType(allParticipationTypes);
     setSelectedHubs(allHubs);
     setSortBy("start_date_asc");
     hapticFeedback?.selectionChanged();
@@ -242,12 +243,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const toggleParticipationType = (type: string , triggerFrom = "filter" ) => {
     hapticFeedback?.selectionChanged();
-
-
     const updated = participationType.includes(type)
         ? participationType.filter((t) => t !== type)
         : [...participationType, type];
-    console.log("toggleParticipationType", type);
+
 
       // Display error message using showAlert if no option is selected
       if(updated.length === 0  && triggerFrom === "filter")
@@ -257,11 +256,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
       }
       else if(updated.length === 0  && triggerFrom === "tag")
         {
-            setParticipationType(["online", "in_person"]);
+
             setTimeout(() => {
-              handleFilterApply().then((r) => {
-                console.log(r);
-              });
+              setShowDialogParticipantError(true);
+              return false;
+              // setParticipationType(allParticipationTypes);
+              // console.log("***toggleParticipationType", participationType , triggerFrom);
+              // handleFilterApply().then((r) => {
+              //   console.log(r);
+              // });
             });
         }
 
@@ -413,22 +416,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <IoSearchOutline className="text-gray-500 w-5 h-5" />
           </div>
-          <AlertDialog open={showDialogParticipantError} onOpenChange={setShowDialogParticipantError}>
-            <AlertDialogContent
-                className="w-[80%] max-w-none border-none"
-            >
-              <AlertDialogHeader>
-                <AlertDialogTitle>Error</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You must select at least one participation type.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setShowDialogParticipantError(false)}>Close</AlertDialogCancel>
-                <AlertDialogAction onClick={handleShowAll}>Show All</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <ParticipantErrorDialog
+              open={showDialogParticipantError}
+              onClose={() => setShowDialogParticipantError(false)}
+              onConfirm={handleShowAll}
+          />
           {!showFilterButton && (
             <IoCloseOutline
               className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-white w-4 h-4 p-1 rounded-full bg-gray-600"
@@ -448,7 +440,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
         </div>
         {showFilterButton && (
           <MainFilterDrawer
-            isOpen={true}
             onOpenChange={() => {}}
             participationType={participationType}
             hubText={hubText}
@@ -456,9 +447,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
             setSortBy={setSortBy}
             setIsEventTypeDrawerOpen={setIsEventTypeDrawerOpen}
             setIsHubDrawerOpen={setIsHubDrawerOpen}
-            handleFilterApply={handleFilterApply}
             setApplyingFilters={setApplyingFilters}
             resetFilters={resetFilters}
+            allParticipationTypes={allParticipationTypes}
           />
         )}
       </div>

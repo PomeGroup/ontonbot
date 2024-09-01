@@ -1,5 +1,5 @@
 "use client";
-import { useCallback , memo ,useEffect, useState } from "react";
+import React, {  useEffect, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
@@ -7,13 +7,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { unstable_noStore as noStore } from "next/cache";
 import { useRouter } from "next/navigation";
 import MainButton from "./_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "./_trpc/client";
 import "./page.css";
 import zod from "zod";
 import { useConfig } from "@/context/ConfigContext";
+import Image from "next/image";
 // Memoized MainButton to prevent unnecessary re-renders
 
 export default function Home() {
@@ -79,7 +79,7 @@ export default function Home() {
   const seeAllPastEventsLink =
     "/search/?" + createSearchQueryParams(pastEventsParams);
 
-  const organizerEventsParams = searchEventsInputZod.parse({
+  const myEventsParams = searchEventsInputZod.parse({
     limit: 0,
     offset: 0,
     filter: {
@@ -108,20 +108,20 @@ export default function Home() {
   } = trpc.events.getEventsWithFilters.useQuery(sliderEventParams);
 
   const {
-    data: organizerEvents,
-    isLoading: isLoadingOrganizer,
-    isError: isErrorOrganizer,
-    refetch: refetchOrganizerEvents,
-  } = trpc.events.getEventsWithFilters.useQuery(organizerEventsParams, {
+    data: myEvents,
+    isLoading: isLoadingMyEvents,
+    isError: isErrorMyEvents,
+    refetch: refetchMyEvents,
+  } = trpc.events.getEventsWithFilters.useQuery(myEventsParams, {
     enabled: false, // Disable automatic fetching
   });
 
   useEffect(() => {
     if (isMyEventsTabActive) {
-      refetchOrganizerEvents().then(() => console.log("Refetched organizer events"));
+      refetchMyEvents().then(() => console.log("Refetched organizer events"));
     }
-  }, [isMyEventsTabActive, refetchOrganizerEvents]);
-  const error = isErrorUpcoming || isErrorPast || isErrorSlider || isErrorOrganizer;
+  }, [isMyEventsTabActive, refetchMyEvents]);
+  const error = isErrorUpcoming || isErrorPast || isErrorSlider || isErrorMyEvents;
   const isLoading = isLoadingUpcoming || isLoadingPast || isLoadingSlider   ;
   useEffect(() => {
     console.log("use isLoadingSlider", isLoadingSlider);
@@ -131,7 +131,7 @@ export default function Home() {
       isErrorUpcoming,
       isErrorPast,
       isErrorSlider,
-      isErrorOrganizer,
+      isErrorMyEvents,
 
     });
     return  (
@@ -194,7 +194,7 @@ export default function Home() {
           <div className="pt-4  w-full pb-4  flex justify-between items-center">
             <h2 className="font-bold text-lg">Upcoming Events</h2>
             <a
-              href={`${seeAllUpcomingEventsLink}`}
+              href={seeAllUpcomingEventsLink}
               className="text-zinc-300 hover:underline"
             >
               See All
@@ -212,7 +212,7 @@ export default function Home() {
           <div className="pt-4 pb-4 flex justify-between items-center">
             <h2 className="font-bold text-lg">Past Events</h2>
             <a
-              href={`${seeAllPastEventsLink}`}
+              href={seeAllPastEventsLink}
               className="text-zinc-300  hover:underline"
             >
               See All
@@ -231,26 +231,42 @@ export default function Home() {
 
         <TabsContent value="my-events">
           <div className="pt-2">
-            {isLoadingOrganizer
-              ? [1, 2].map((index) => <EventCardSkeleton key={index} />)
-              : organizerEvents?.data?.map((event) => (
-                  <EventCard
-                    key={event.event_uuid}
-                    event={event}
-                    currentUserId={UserId}
+            {isLoadingMyEvents ? (
+              [1, 2].map((index) => <EventCardSkeleton key={index} />)
+            ) : (myEvents?.data?.length === 0  ) ? (
+              <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+                <div>
+                  <Image
+                    src={"/template-images/my-event-empty-list-msg.png"}
+                    alt={"There are no Events"}
+                    width={180}
+                    height={180}
                   />
-                ))}
+                </div>
+                <div className="text-gray-500 max-w-md">
+                  There are no Events <br/>at the time.
+                </div>
+              </div>
+            ) : (
+              myEvents?.data?.map((event) => (
+                <EventCard
+                  key={event.event_uuid}
+                  event={event}
+                  currentUserId={UserId}
+                />
+              ))
+            )}
           </div>
         </TabsContent>
       </Tabs>
       {!useAuthLoading &&
-          (userRole === "admin" || userRole === "organizer") &&
-          authorized && (
-              <MainButton
-                  text="Create new event"
-                  onClick={() => router.push("/events/create")}
-              />
-          )}
+        (userRole === "admin" || userRole === "organizer") &&
+        authorized && (
+          <MainButton
+            text="Create new event"
+            onClick={() => router.push("/events/create")}
+          />
+        )}
     </>
   );
 }

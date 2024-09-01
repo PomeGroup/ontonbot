@@ -14,7 +14,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { Separator } from "@/components/ui/separator";
 
 interface MainFilterDrawerProps {
-  isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   participationType: string[];
   hubText: string;
@@ -22,13 +21,12 @@ interface MainFilterDrawerProps {
   setSortBy: (value: string) => void;
   setIsEventTypeDrawerOpen: (open: boolean) => void;
   setIsHubDrawerOpen: (open: boolean) => void;
-  handleFilterApply: () => void;
   resetFilters: () => void;
   setApplyingFilters: (value: boolean) => void;
+  allParticipationTypes: string[];
 }
 
 const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
-  isOpen,
   onOpenChange,
   participationType,
   hubText,
@@ -36,9 +34,9 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
   setSortBy,
   setIsEventTypeDrawerOpen,
   setIsHubDrawerOpen,
-  handleFilterApply,
   resetFilters,
   setApplyingFilters,
+  allParticipationTypes
 }) => {
   return (
     <Drawer onOpenChange={onOpenChange}>
@@ -58,7 +56,12 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           >
             <p className="text-sm font-medium text-zinc-100">EVENT TYPE</p>
             <div className="cursor-pointer text-blue-500">
-              {participationType.join(", ").replace("_", " ")}
+              {
+                (participationType.length ===0 || participationType.length  == allParticipationTypes.length) ?
+                    "All"
+                    :
+                    participationType.join(", ").replace("_", " ")
+              }
             </div>
           </div>
           <div
