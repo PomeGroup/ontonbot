@@ -13,43 +13,60 @@ type StepperProps = {
 
 const Stepper = ({ steps, currentStep }: StepperProps) => {
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
+
+  const getStepState = (index: number) => {
+    if (index < currentStep - 1) return "completed";
+    if (index === currentStep - 1) return "in-progress";
+    if (index === steps.length - 1) return "last";
+    return "not-active";
+  };
+
   return (
-    <ol className="flex items-center justify-between w-full">
-      {steps.map((step, index) => (
-        <>
-          <li
-            key={index}
-            className={cn(
-              "flex w-64 text-center px-1 items-center text-white relative flex-col"
-            )}
-            onClick={() => index < currentStep && setCurrentStep(index + 1)}
-          >
-            <span
+    <ol className="flex items-center w-full text-xs text-secondary font-medium sm:text-base">
+      {steps.map((step, index) => {
+        const stepState = getStepState(index);
+
+        return (
+          <React.Fragment key={index}>
+            <li
+              onClick={() => index < currentStep && setCurrentStep(index + 1)}
               className={cn(
-                "flex items-center justify-center w-6 h-6 rounded-full lg:h-12 lg:w-12 shrink-0",
-                index < currentStep
-                  ? "bg-main-button-color"
-                  : "bg-disabled-font"
+                "flex w-full justify-center relative",
+                {
+                  "text-primary after:bg-primary":
+                    stepState === "completed" || stepState === "in-progress",
+                  "text-secondary after:bg-muted-foreground":
+                    stepState === "not-active",
+                  "text-secondary": stepState === "last",
+                },
+                "after:content-[''] after:w-full after:h-0.5 after:inline-block after:absolute lg:after:top-5 after:top-3 after:left-1/2"
               )}
             >
-              {index < currentStep - 1 ? (
-                <IoIosCheckmark className="text-4xl" />
-              ) : (
-                step.icon
-              )}
-            </span>
-            <span className={"mt-1 mb-2 h-0 text-xs"}>{step.label}</span>
-          </li>
-          {index !== steps.length - 1 && (
-            <div
-              className={cn("h-[1px] translate-y-1 w-full", {
-                "bg-main-button-color": index < currentStep,
-                "bg-disabled-font": index >= currentStep,
-              })}
-            />
-          )}
-        </>
-      ))}
+              <div className="block whitespace-nowrap z-10">
+                <span
+                  className={cn(
+                    "w-6 h-6 flex justify-center items-center mx-auto mb-2 text-sm rounded-full lg:w-10 lg:h-10",
+                    {
+                      "bg-primary text-white border-transparent":
+                        stepState === "completed" ||
+                        stepState === "in-progress",
+                      "bg-muted text-muted-foreground border-muted":
+                        stepState === "not-active" || stepState === "last",
+                    }
+                  )}
+                >
+                  {stepState === "completed" ? (
+                    <IoIosCheckmark className="text-4xl" />
+                  ) : (
+                    step.icon || index + 1
+                  )}
+                </span>
+                {step.label}
+              </div>
+            </li>
+          </React.Fragment>
+        );
+      })}
     </ol>
   );
 };
