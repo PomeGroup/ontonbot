@@ -80,20 +80,14 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         </TabsList>
         <TabsContent value="manage">
           <div className="mt-2">
-            <Button
-              className="w-full relative text-gray-100"
-              variant={"outline"}
-              onClick={handleVisitorsExport}
-            >
-              <FaRegCopy className="mr-2"  /> Export Visitors as CSV to Clipboard
-            </Button>
+
             {event?.data && event.data.ticketToCheckIn === true && (
                 <CheckInGuest params={guestCheckInParams} />
             )}
 
           </div>
 
-          <Tables.Visitors event_uuid={params.hash} />
+          <Tables.Visitors event_uuid={params.hash} handleVisitorsExport={handleVisitorsExport} />
 
           <Buttons.WebAppBack whereTo={"/events"} />
         </TabsContent>

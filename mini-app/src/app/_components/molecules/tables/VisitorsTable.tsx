@@ -6,16 +6,18 @@ import { useIntersection } from "@mantine/hooks";
 import { Wallet2 } from "lucide-react";
 import React, { FC, Fragment, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
-import { FaUserCircle } from "react-icons/fa";
+import {FaRegCopy, FaUserCircle} from "react-icons/fa";
 import { FiAtSign } from "react-icons/fi";
 import { BsFillPersonLinesFill } from "react-icons/bs";
 import VariantBadge from "@/app/_components/checkInGuest/VariantBadge";
-
+import {Button} from "@/components/ui/button";
+import { FaCloudDownloadAlt } from "react-icons/fa";
 interface VisitorsTableProps {
   event_uuid: string;
+  handleVisitorsExport: () => void;
 }
 
-const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
+const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid ,handleVisitorsExport}) => {
   const webApp = useWebApp();
 
   const { fetchNextPage, data, hasNextPage, isFetchingNextPage } =
@@ -53,10 +55,17 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid }) => {
     <div className="mt-4 overflow-x-auto">
       <div className="w-full">
         <div className="flex flex-col">
-          <div className="flex w-full p-4 bg-gray-700">
-            <div className="inline-flex items-center ">
+          <div className="flex w-full p-4 border-b-gray-400 border-b-2">
+            <div className="inline-flex items-center text-lg w-full">
               <BsFillPersonLinesFill className="mr-2" />
               Guests
+              <Button
+                className="ml-auto bg-transparent hover:bg-transparent    rounded-none text-gray-300 text-sm"
+                variant={"outline"}
+                onClick={handleVisitorsExport}
+              >
+                <FaCloudDownloadAlt className="mr-2" /> Download All
+              </Button>
             </div>
           </div>
 
