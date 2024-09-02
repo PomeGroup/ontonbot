@@ -98,6 +98,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
     }, [searchQuery]);
 
     // Flatten all pages to include newly fetched data
+    // @ts-ignore
     const flatData: Visitor[] = data?.pages.flatMap((page) => page?.visitorsData) || [];
 
     // Memoized filtered visitors
