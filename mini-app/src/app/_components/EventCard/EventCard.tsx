@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
@@ -69,7 +69,7 @@ const EventCard: React.FC<EventCardProps> = ({
   } = event;
 
   const defaultImage = "/template-images/default.webp";
-
+  const [imageLoaded, setImageLoaded] = useState(false);
   const webApp = useWebApp();
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
   const geoLocation = city || country ? `${city}, ${country}` : location;
@@ -86,20 +86,27 @@ const EventCard: React.FC<EventCardProps> = ({
       return false;
     }
   };
-
+  // Skeleton Loader for Image
+  const renderImageSkeleton = () => (
+      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
+  );
   const renderDropdownMenu = () => (
     <DropdownMenu key={`dropdown-${eventUuid}`}>
       <DropdownMenuTrigger asChild>
         <div className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer">
           <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
+            {!imageLoaded && renderImageSkeleton()}
             <Image
-              src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-              alt={title}
-              layout="fill"
-              style={{ objectFit: "cover" }}
-              className="rounded-lg"
-              onError={(e) => (e.currentTarget.src = defaultImage)}
-              loading="lazy"
+                src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+                alt={title}
+                layout="fill"
+                style={{ objectFit: "cover" }}
+                className={`rounded-lg transition-opacity duration-500 ${
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                onError={(e) => (e.currentTarget.src = defaultImage)}
+                onLoad={() => setImageLoaded(true)}
+                loading="lazy"
             />
           </div>
           <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
@@ -175,14 +182,18 @@ const EventCard: React.FC<EventCardProps> = ({
           className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer"
         >
           <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
+            {!imageLoaded && renderImageSkeleton()}
             <Image
-              src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-              alt={title}
-              layout="fill"
-              style={{ objectFit: "cover" }}
-              className="rounded-lg"
-              onError={(e) => (e.currentTarget.src = defaultImage)}
-              loading="lazy"
+                src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+                alt={title}
+                layout="fill"
+                style={{ objectFit: "cover" }}
+                className={`rounded-lg transition-opacity duration-500 ${
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                onError={(e) => (e.currentTarget.src = defaultImage)}
+                onLoad={() => setImageLoaded(true)}
+                loading="lazy"
             />
           </div>
           <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
@@ -230,13 +241,18 @@ const EventCard: React.FC<EventCardProps> = ({
       className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
       onClick={handleEventClick}
     >
+      {!imageLoaded && renderImageSkeleton()}
       <Image
-        src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-        alt={title}
-        width={400}
-        height={400}
-        className="w-full h-auto object-cover"
-        onError={(e) => (e.currentTarget.src = defaultImage)}
+          src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+          alt={title}
+          width={400}
+          height={400}
+          style={{ objectFit: "cover" }}
+          className={`rounded-lg transition-opacity duration-500 ${
+              imageLoaded ? "opacity-100" : "opacity-0"
+          }`}
+          onError={(e) => (e.currentTarget.src = defaultImage)}
+          onLoad={() => setImageLoaded(true)}
       />
     </div>
   );
@@ -248,14 +264,19 @@ const EventCard: React.FC<EventCardProps> = ({
         className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
       >
         <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
+          {!imageLoaded && renderImageSkeleton()}
           <Image
-            src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-            alt={title}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-lg"
-            loading="lazy"
-            onError={(e) => (e.currentTarget.src = defaultImage)}
+              src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+              alt={title}
+              layout="fill"
+              objectFit="cover"
+              style={{ objectFit: "cover" }}
+              className={`rounded-lg transition-opacity duration-500 ${
+                  imageLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              loading="lazy"
+              onError={(e) => (e.currentTarget.src = defaultImage)}
+              onLoad={() => setImageLoaded(true)}
           />
         </div>
         <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
