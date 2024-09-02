@@ -51,7 +51,13 @@ const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
       }
       setDrawerOpen(true); // Ensure the drawer opens after successful data fetch
     } else if (ticketQuery.isError) {
-      setCheckInState("checkInError");
+      console.error(ticketQuery.error);
+      if(ticketQuery.error?.data?.httpStatus === 404 ) {
+        setCheckInState("NoTicketData");
+      }
+      else {
+        setCheckInState("checkInError");
+      }
       setDrawerOpen(true); // Ensure the drawer opens on error as well
     }
   }, [ticketQuery.isSuccess, ticketQuery.isError, ticketQuery.data]);
@@ -67,11 +73,16 @@ const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
 
   const checkInMutation = trpc.ticket.checkInTicket.useMutation({
     onSuccess: (result) => {
+      ticketQuery.refetch().then(() => {
       if (result && "alreadyCheckedIn" in result) {
         setCheckInState("alreadyCheckedIn");
       } else {
         setCheckInState("checkedInSuccess");
+
+
       }
+    });
+
     },
     onError: () => {
       setCheckInState("checkInError");
@@ -88,6 +99,7 @@ const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
   }, [ticketData, checkInMutation]);
 
   const handleScanQr = () => {
+
     if (!WebApp?.isVersionAtLeast("6.0")) {
       setCheckInState("checkInError");
       return;
@@ -95,7 +107,7 @@ const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
 
     WebApp?.showScanQrPopup?.({}, (qrText) => {
       try {
-        const uuidMatch = qrText.match(/ticket_uuid=([\w-]+)/);
+        const uuidMatch = qrText.match(/order_uuid=([\w-]+)/);
         if (uuidMatch && uuidMatch[1]) {
           setTicketUuid(uuidMatch[1]);
         }

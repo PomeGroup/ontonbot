@@ -78,6 +78,7 @@ const TicketDrawer: FC<TicketDrawerProps> = ({
                 <div className="flex flex-col space-y-1 text-sm text-gray-400 w-full">
                   <div className="flex justify-between items-center ">
                     <span>Status:</span>
+
                       <VariantBadge status={ticketData.status} />
                   </div>
                   <div className="flex justify-between">
@@ -160,8 +161,8 @@ const TicketDrawer: FC<TicketDrawerProps> = ({
       <>
         <DrawerHeader>
           <DrawerTitle className="text-left">{drawerTitle}</DrawerTitle>
-          <DrawerDescription className="text-left">
-            {errorMessage}
+          <DrawerDescription className="text-center text-lg">
+            {errorMessage} !
           </DrawerDescription>
         </DrawerHeader>
         <DrawerFooter>
@@ -180,6 +181,8 @@ const TicketDrawer: FC<TicketDrawerProps> = ({
         <DrawerContent>
           {checkInState === "checkInError"
               ? renderScanError("Failed to check in the ticket. Please try again.")
+              : checkInState === "NoTicketData"
+              ? renderScanError("Ticket Not Exist")
               : renderTicketInfo()}
         </DrawerContent>
       </Drawer>
