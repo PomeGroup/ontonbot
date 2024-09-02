@@ -183,10 +183,10 @@ export const getEventsWithFilters = async (
     JSON.stringify({ limit, offset, search, filter, sortBy });
 
   const cachedResult = getCache(cacheKey);
-  // if (cachedResult) {
-  //   console.log("Returning cached result");
-  //   return cachedResult;
-  // }
+  if (cachedResult) {
+    console.log("Returning cached result");
+    return cachedResult;
+  }
 
   let query = db.select().from(event_details_search_list);
   let userEventUuids = [];
@@ -318,10 +318,10 @@ export const getEventsWithFilters = async (
     // @ts-expect-error
     query = query.limit(limit).offset(offset);
   }
-  console.log("query eee " );
+  //console.log("query eee " );
   logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
-   console.log(eventsData);
+  // console.log(eventsData);
   setCache(cacheKey, eventsData, 60);
   return eventsData;
 };
