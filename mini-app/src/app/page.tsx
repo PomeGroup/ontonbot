@@ -29,6 +29,7 @@ export default function Home() {
   } = useAuth();
   const UserId = webApp?.initDataUnsafe?.user?.id ;
 
+
   const router = useRouter();
   const [isMyEventsTabActive, setIsMyEventsTabActive] = useState(false);
   const createSearchQueryParams = (

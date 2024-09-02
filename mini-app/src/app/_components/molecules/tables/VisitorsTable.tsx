@@ -1,149 +1,239 @@
-"use client";
-
 import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { useIntersection } from "@mantine/hooks";
 import { Wallet2 } from "lucide-react";
-import React, { FC, Fragment, useEffect, useRef } from "react";
-import { Badge } from "@/components/ui/badge";
-import {FaRegCopy, FaUserCircle} from "react-icons/fa";
+import React, { FC, Fragment, useEffect, useRef, useState, useMemo } from "react";
+import { FaUserCircle } from "react-icons/fa";
 import { FiAtSign } from "react-icons/fi";
-import { BsFillPersonLinesFill } from "react-icons/bs";
 import VariantBadge from "@/app/_components/checkInGuest/VariantBadge";
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FaCloudDownloadAlt } from "react-icons/fa";
+
+type Visitor = {
+    user_id: number | null;
+    username: string | null;
+    first_name: string | null;
+    last_name: string | null;
+    wallet_address: string | null;
+    created_at: string | null;
+    has_ticket: boolean;
+    ticket_status: string | null;
+    ticket_id: number | null;
+};
+
+type VisitorsDataResponse = {
+    visitorsWithDynamicFields: any;
+    moreRecordsAvailable: boolean;
+    visitorsData: Visitor[];
+    nextCursor: number | null;
+    event: {
+        event_id: number;
+        event_uuid: string;
+        ticketToCheckIn: boolean;
+        title: string;
+    };
+};
+
 interface VisitorsTableProps {
-  event_uuid: string;
-  handleVisitorsExport: () => void;
+    event_uuid: string;
+    handleVisitorsExport: () => void;
+    setNeedRefresh: (data: any) => void;
+    needRefresh: boolean;
 }
 
-const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid ,handleVisitorsExport}) => {
-  const webApp = useWebApp();
+const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExport, setNeedRefresh, needRefresh }) => {
+    const webApp = useWebApp();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("All");
 
-  const { fetchNextPage, data, hasNextPage, isFetchingNextPage } =
-    trpc.visitors.getAll.useInfiniteQuery(
-      {
-        event_uuid,
-        init_data: webApp?.initData || "",
-
-        limit: 25,
-      },
-      {
-        getNextPageParam: (lastPage) => lastPage?.nextCursor,
-        initialCursor: 0,
-        enabled: Boolean(webApp?.initData) && Boolean(event_uuid),
-        retry: false,
-      }
-    );
-
-  const lastItemRef = useRef<HTMLDivElement>(null);
-  const { ref, entry } = useIntersection({
-    root: lastItemRef.current,
-    threshold: 0.2,
-  });
-
-  useEffect(() => {
-    if (entry?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [entry, fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  const flatData =
-    data?.pages?.flatMap((page) => page?.visitorsWithDynamicFields) ?? [];
-
-  return (
-    <div className="mt-4 overflow-x-auto">
-      <div className="w-full">
-        <div className="flex flex-col">
-          <div className="flex w-full p-4 border-b-gray-400 border-b-2">
-            <div className="inline-flex items-center text-lg w-full">
-              <BsFillPersonLinesFill className="mr-2" />
-              Guests
-              <Button
-                className="ml-auto bg-transparent hover:bg-transparent    rounded-none text-gray-300 text-sm"
-                variant={"outline"}
-                onClick={handleVisitorsExport}
-              >
-                <FaCloudDownloadAlt className="mr-2" /> Download All
-              </Button>
-            </div>
-          </div>
-
-          {flatData.map((visitor, index) => {
-            if (!visitor) {
-              return null;
+    const { fetchNextPage, data, hasNextPage, isFetchingNextPage, refetch: refetchVisitors } =
+        trpc.visitors.getAll.useInfiniteQuery(
+            {
+                event_uuid,
+                init_data: webApp?.initData || "",
+                limit: 50,
+                dynamic_fields: false,
+                search: debouncedSearchQuery,
+            },
+            {
+                getNextPageParam: (lastPage) => lastPage?.nextCursor || null,
+                initialCursor: 0,
+                enabled: Boolean(webApp?.initData) && Boolean(event_uuid),
+                retry: false,
             }
+        );
 
-            return (
-              <Fragment key={index}>
-                <div
-                  className="flex w-full p-4 text-sm border-b border-gray-700"
-                  ref={index === flatData.length - 1 ? ref : null}
-                >
-                  <div className="flex-1 truncate text-gray-100">
-                    <div className="inline-flex items-center">
-                      <FaUserCircle className="mr-2" />
-                      {`${visitor?.first_name} ${visitor?.last_name}`}
-                    </div>
-                    <br />
-                    <a
-                      className="flex-1 truncate text-xs py-0 italic cursor-pointer"
-                      onClick={() => {
-                        if (visitor?.username) {
-                          webApp?.openTelegramLink(
-                            `https://t.me/${visitor?.username}`
-                          );
+    const lastItemRef = useRef<HTMLDivElement>(null);
+    const { ref, entry } = useIntersection({
+        root: lastItemRef.current,
+        threshold: 0.2,
+    });
+
+    useEffect(() => {
+        if (needRefresh) {
+            refetchVisitors().then(() => {
+                setNeedRefresh(false);
+            });
+        }
+    }, [needRefresh]);
+
+    useEffect(() => {
+        if (entry?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [entry, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    // Debouncing search query
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 300); // 300ms delay
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchQuery]);
+
+    // Flatten all pages to include newly fetched data
+    const flatData: Visitor[] = data?.pages.flatMap((page) => page?.visitorsData) || [];
+
+    // Memoized filtered visitors
+    const filteredVisitors = useMemo(() => {
+        return flatData.filter((visitor) => {
+            const matchesSearch = visitor?.username
+                    ?.toLowerCase()
+                    .includes(debouncedSearchQuery.toLowerCase()) ||
+                `${visitor?.first_name} ${visitor?.last_name}`
+                    .toLowerCase()
+                    .includes(debouncedSearchQuery.toLowerCase());
+            const matchesStatus =
+                statusFilter === "All" ||
+                (statusFilter === "Waiting" && visitor.ticket_status === "UNUSED") ||
+                (statusFilter === "Checked-In" && visitor.ticket_status === "USED");
+
+            return matchesSearch && matchesStatus;
+        });
+    }, [flatData, debouncedSearchQuery, statusFilter]);
+
+    return (
+        <div className="mt-0 overflow-x-auto">
+            <div className="w-full p-0">
+                {/* Search Bar */}
+                <Input
+                    type="text"
+                    placeholder="Search by username or name"
+                    value={searchQuery}
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setSearchQuery(value);
+                        if (value.length >= 3) {
+                            setDebouncedSearchQuery(value);
                         }
-                      }}
-                    >
-                      <div className="inline-flex items-center py-0 text-gray-400">
-                        <FiAtSign className="ml-5 mr-0" />
-                        {visitor?.username
-                          ? `${visitor?.username}`
-                          : "No Username"}
-                      </div>
-                    </a>
-                  </div>
+                    }}
+                    className="mb-4"
+                />
+                <div className="flex flex-col py-0">
+                    <div className="flex w-full p-0 border-b-gray-800 border-b-2">
+                        <div className="inline-flex py-0 items-center text-lg w-full">
+                            {data?.pages[0]?.event.ticketToCheckIn ? (
+                                <Tabs defaultValue="All" className="bg-transparent px-0 py-0" onValueChange={(value) => setStatusFilter(value)}>
+                                    <TabsList className="bg-transparent px-0">
+                                        <TabsTrigger className="px-4 py-0 text-gray-500 data-[state=active]:text-gray-100 data-[state=active]:font-bold" value="All">All</TabsTrigger>
+                                        <TabsTrigger className="px-4 py-0 border-x-2 border-x-gray-600 rounded-none text-gray-500 data-[state=active]:text-gray-100 data-[state=active]:font-bold" value="Waiting">Waiting</TabsTrigger>
+                                        <TabsTrigger className="px-4 py-0 text-gray-500 data-[state=active]:text-gray-100 data-[state=active]:font-bold" value="Checked-In">Checked-In</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
+                            ) : (
+                                "Guests"
+                            )}
+                            <Button
+                                variant="link"
+                                className="ml-auto flex items-center text-xs py-0 text-gray-300 px-0 no-underline hover:no-underline"
+                                onClick={handleVisitorsExport}
+                            >
+                                <FaCloudDownloadAlt className="mr-2" /> Download
+                            </Button>
+                        </div>
+                    </div>
 
-                  <div className="flex-1 flex justify-end items-center">
-                    {visitor.has_ticket === false ? (
-                      <div
-                        className="cursor-pointer"
-                        onClick={() => {
-                          if (visitor?.wallet_address) {
-                            webApp?.openLink(
-                              `https://tonviewer.com/${visitor?.wallet_address}`
-                            );
-                          }
-                        }}
-                      >
-                        {visitor?.wallet_address ? (
-                          <>
-                            <div className="inline-flex items-center py-0 text-gray-300">
-                              <Wallet2
-                                className="mr-2"
-                                width={12}
-                                height={12}
-                              />{" "}
-                              open wallet
-                            </div>
-                          </>
-                        ) : (
-                          <>No Wallet</>
-                        )}
-                      </div>
-                    ) : (
-                      <VariantBadge status={visitor?.ticket_status || ""} />
-                    )}
-                  </div>
+                    {/* Display filtered visitors */}
+                    {filteredVisitors.map((visitor, index) => {
+                        if (!visitor) {
+                            return null;
+                        }
+
+                        return (
+                            <Fragment key={(visitor.user_id || index)  + Math.random()}>
+                                <div
+                                    className="flex w-full p-4 text-sm border-b border-gray-700"
+                                    ref={index === filteredVisitors.length - 1 ? ref : null}
+                                >
+                                    <div className="flex-1 truncate text-gray-100">
+                                        <div className="inline-flex items-center">
+                                            <FaUserCircle className="mr-2" />
+                                            {`${visitor?.first_name} ${visitor?.last_name}`}
+                                        </div>
+                                        <br />
+                                        <a
+                                            className="flex-1 truncate text-xs py-0 italic cursor-pointer"
+                                            onClick={() => {
+                                                if (visitor?.username) {
+                                                    webApp?.openTelegramLink(
+                                                        `https://t.me/${visitor?.username}`
+                                                    );
+                                                }
+                                            }}
+                                        >
+                                            <div className="inline-flex items-center py-0 text-gray-400">
+                                                <FiAtSign className="ml-5 mr-0" />
+                                                {visitor?.username
+                                                    ? `${visitor?.username}`
+                                                    : "No Username"}
+                                            </div>
+                                        </a>
+                                    </div>
+
+                                    <div className="flex-1 flex justify-end items-center">
+                                        {!visitor.has_ticket ? (
+                                            <div
+                                                className="cursor-pointer"
+                                                onClick={() => {
+                                                    if (visitor?.wallet_address) {
+                                                        webApp?.openLink(
+                                                            `https://tonviewer.com/${visitor?.wallet_address}`
+                                                        );
+                                                    }
+                                                }}
+                                            >
+                                                {visitor?.wallet_address ? (
+                                                    <>
+                                                        <div className="inline-flex items-center py-0 text-gray-300">
+                                                            <Wallet2 className="mr-2" width={12} height={12} />
+                                                            {" "}
+                                                            open wallet
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>No Wallet</>
+                                                )}
+                                            </div>
+                                        ) : (visitor?.ticket_id !== Number(needRefresh) && visitor?.ticket_id) ? (
+                                            <VariantBadge key={visitor?.created_at?.toString()} status={visitor?.ticket_status || ""} />
+                                        ) : (
+                                            <VariantBadge key={visitor?.created_at?.toString()} status={"USED"} />
+                                        )}
+                                    </div>
+                                </div>
+                            </Fragment>
+                        );
+                    })}
                 </div>
-              </Fragment>
-            );
-          })}
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default VisitorsTable;

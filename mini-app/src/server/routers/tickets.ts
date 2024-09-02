@@ -43,13 +43,14 @@ export const ticketRouter = router({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to check in the ticket",
+
         });
       }
 
       if (isAlreadyCheckedIn(result)) {
-        return { alreadyCheckedIn: true };
+        return { alreadyCheckedIn: true , result: result };
       }
 
-      return result;
-    }),
+      return { checkInSuccess: true , result: result };
+      }),
 });

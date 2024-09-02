@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { CheckInState } from "./CheckInState";
 import { RiQrScan2Line } from "react-icons/ri";
 
-const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
+const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (data: any) => void , needRefresh : boolean } }> = ({ params }) => {
   const WebApp = useWebApp();
   const { authorized, isLoading } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -71,23 +71,29 @@ const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
     }
   }, [drawerOpen]);
 
-  const checkInMutation = trpc.ticket.checkInTicket.useMutation({
-    onSuccess: (result) => {
+  const checkInMutation = trpc.ticket.checkInTicket.useMutation();
+
+  useEffect(() => {
+    if (checkInMutation.isSuccess) {
       ticketQuery.refetch().then(() => {
-      if (result && "alreadyCheckedIn" in result) {
-        setCheckInState("alreadyCheckedIn");
-      } else {
-        setCheckInState("checkedInSuccess");
+        const result = checkInMutation.data;
+        // @ts-ignore
+        if (result && result.checkInSuccess) {
+          setCheckInState("checkedInSuccess");
+          // @ts-ignore
+            console.log("Check-in successful, ID:", result.result.id);
+            // @ts-ignore
+            params.setNeedRefresh(result.result.id);
 
-
-      }
-    });
-
-    },
-    onError: () => {
+        }
+        else if (result && "alreadyCheckedIn" in result) {
+          setCheckInState("alreadyCheckedIn");
+        }
+      });
+    } else if (checkInMutation.isError) {
       setCheckInState("checkInError");
-    },
-  });
+    }
+  }, [checkInMutation.isSuccess, checkInMutation.isError, checkInMutation.data]);
 
   const handleCheckIn = useCallback(() => {
     if (ticketData && ticketData.order_uuid) {
@@ -123,10 +129,11 @@ const CheckInGuest: FC<{ params: { hash: string } }> = ({ params }) => {
   return (
     <>
       <Button
-        onClick={handleScanQr}
-        className="mt-4 w-full"
+          onClick={handleScanQr}
+          variant="link" // Use the link variant
+          className="ml-auto flex items-center text-sm text-gray-300 px-0 no-underline hover:no-underline"
       >
-        <RiQrScan2Line className="mr-2" /> Check In Guests
+        <RiQrScan2Line className="mr-2" /> Scan QR
       </Button>
 
       <TicketDrawer

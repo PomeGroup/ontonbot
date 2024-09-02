@@ -39,7 +39,7 @@ async function EventPage({ params }: Props) {
     );
   }
 
-  return <EventDataPage eventHash={params.hash} />;
+  return <EventDataPage eventHash={params.hash}  />;
 }
 
 export default EventPage;

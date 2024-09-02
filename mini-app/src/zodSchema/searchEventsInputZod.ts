@@ -29,5 +29,6 @@ const searchEventsInputZod = z.object({
       "start_date_desc",
     ])
     .optional(),
+    useCache : z.boolean().optional().default(true),
 });
 export default searchEventsInputZod;

@@ -175,7 +175,7 @@ export const getUserEvents = async (
 export const getEventsWithFilters = async (
   params: z.infer<typeof searchEventsInputZod>
 ): Promise<any[]> => {
-  const { limit = 10, offset = 0, search, filter, sortBy = "default" } = params;
+  const { limit = 10, offset = 0, search, filter, sortBy = "default" ,useCache = false } = params;
   console.log("*****params search: ", params);
 
   const cacheKey =
@@ -183,8 +183,8 @@ export const getEventsWithFilters = async (
     JSON.stringify({ limit, offset, search, filter, sortBy });
 
   const cachedResult = getCache(cacheKey);
-  if (cachedResult) {
-    console.log("Returning cached result");
+  if (cachedResult && useCache) {
+
     return cachedResult;
   }
 

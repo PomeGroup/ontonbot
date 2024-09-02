@@ -9,14 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
-import { FC } from "react";
+import React, {FC, useEffect, useState} from "react";
 import Link from "next/link";
-import { FaRegEdit } from "react-icons/fa";
+import { FaCloudDownloadAlt, FaRegEdit } from "react-icons/fa";
 import CheckInGuest from "@/app/_components/checkInGuest/CheckInGuest";
 import { BsFillPersonLinesFill } from "react-icons/bs";
 import { FaRegCopy } from "react-icons/fa";
+
+
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const WebApp = useWebApp();
+  const [needRefresh, setNeedRefresh] = useState(false);
   const event = trpc.events.getEvent.useQuery(
     { event_uuid: params.hash, init_data: WebApp?.initData || "" },
     {
@@ -45,7 +48,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   if (event.error) {
     return <div>{event.error.message}</div>;
   }
-
+  console.log("WebApp?.initDataUnsafe", WebApp?.initDataUnsafe);
   const handleVisitorsExport = () => {
     hapticFeedback?.impactOccurred("medium");
     console.log("Exporting visitors as CSV");
@@ -56,43 +59,50 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
     WebApp?.close();
   };
-  const guestCheckInParams = { hash: params.hash};
+  const guestCheckInParams = { hash: params.hash , setNeedRefresh  , needRefresh };
   return (
     <div>
-
       <Tabs
         defaultValue="manage"
         className="mb-4"
       >
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full py-0  grid-cols-2">
           <TabsTrigger
             onClick={() => hapticFeedback?.impactOccurred("medium")}
             value="manage"
           >
-            <BsFillPersonLinesFill className="mr-2" />Guests List
+            <BsFillPersonLinesFill className="mr-2" />
+            Guests List
           </TabsTrigger>
           <TabsTrigger
             onClick={() => hapticFeedback?.impactOccurred("medium")}
             value="edit"
           >
-           <FaRegEdit className="mr-2" /> Edit
+            <FaRegEdit className="mr-2" /> Edit
           </TabsTrigger>
         </TabsList>
         <TabsContent value="manage">
-          <div className="mt-2">
-
+          <div className="mt-0 flex items-center space-x-2 px-2  ">
+            <span className=" text-2xl font-extrabold tracking-tight text-gray-300 mr-auto" > Guests List </span>
             {event?.data && event.data.ticketToCheckIn === true && (
+              <span >
                 <CheckInGuest params={guestCheckInParams} />
+              </span>
             )}
 
           </div>
 
-          <Tables.Visitors event_uuid={params.hash} handleVisitorsExport={handleVisitorsExport} />
+          <Tables.Visitors
+            event_uuid={params.hash}
+            handleVisitorsExport={handleVisitorsExport}
+            setNeedRefresh={setNeedRefresh}
+            needRefresh={needRefresh}
+          />
 
           <Buttons.WebAppBack whereTo={"/events"} />
         </TabsContent>
 
-        <TabsContent value="edit">
+        <TabsContent value="edit" className="pt-4">
           <ManageEvent
             /* @ts-ignore  */
             event={event.data}

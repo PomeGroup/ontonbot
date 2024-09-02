@@ -7,7 +7,7 @@ import {
     users,
     visitors,
 } from "@/db/schema";
-import { and, between, eq, isNotNull, sql } from "drizzle-orm";
+import {and, between, desc, eq, ilike, isNotNull, or, sql} from "drizzle-orm";
 import {checkEventTicketToCheckIn} from "@/server/db/events";
 
 const generateRandomVisitor = (userId: number) => ({
@@ -90,7 +90,9 @@ export const selectValidVisitorById = async (visitorId: number) => {
 export const selectVisitorsByEventUuid = async (
   event_uuid: string,
   limit?: number,
-  cursor?: number
+  cursor?: number,
+  dynamic_fields: boolean = true,
+  search?: string
 ) => {
   const eventTicketToCheckIn = await checkEventTicketToCheckIn(event_uuid);
     let userDataQuery ;
@@ -111,7 +113,20 @@ export const selectVisitorsByEventUuid = async (
           .from(visitors)
           .leftJoin(users, eq(visitors.user_id, users.user_id))
           .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
-          .where(and(isNotNull(rewards.id), eq(visitors.event_uuid, event_uuid)));
+           .where(
+               and(
+                   isNotNull(rewards.id),
+                   eq(visitors.event_uuid, event_uuid),
+                   search
+                       ? or(
+                           ilike(users.username, `%${search}%`),
+                           ilike(users.first_name, `%${search}%`),
+                           ilike(users.last_name, `%${search}%`)
+                       )
+                       : sql`true`
+               )
+           )
+           .orderBy(desc(visitors.created_at));
   }
   else {
        userDataQuery = db
@@ -129,11 +144,23 @@ export const selectVisitorsByEventUuid = async (
           })
           .from(tickets)
           .innerJoin(users, eq(tickets.user_id, users.user_id))
-          .where(eq(tickets.event_uuid, event_uuid))
+           .where(
+               and(
+                   eq(tickets.event_uuid, event_uuid),
+                   search
+                       ? or(
+                           ilike(users.username, `%${search}%`),
+                           ilike(users.first_name, `%${search}%`),
+                           ilike(users.last_name, `%${search}%`)
+                       )
+                       : sql`true`
+               )
+           )
 
+           .orderBy(desc(tickets.created_at));
   }
-    console.log("User Data Query Before Pagination:",event_uuid , userDataQuery.toSQL());
-  if (typeof limit === "number") {
+
+  if (typeof limit === "number" && limit > 0) {
     userDataQuery = userDataQuery.limit(limit);
   }
 
@@ -142,6 +169,19 @@ export const selectVisitorsByEventUuid = async (
   }
 
   const visitorsData = await userDataQuery.execute();
+
+  const moreRecordsAvailable =
+      typeof limit === "number" ? visitorsData.length === limit : false;
+  const nextCursor =
+      moreRecordsAvailable && typeof cursor === "number" ? cursor + limit! : null;
+    if(!dynamic_fields) {
+        return {
+            visitorsWithDynamicFields: null,
+            moreRecordsAvailable,
+            visitorsData,
+            nextCursor,
+        };
+    }
   let userEventFieldsData = await db
     .select({
       user_id: userEventFields.user_id,
@@ -154,31 +194,27 @@ export const selectVisitorsByEventUuid = async (
     .leftJoin(events, eq(eventFields.event_id, events.event_id))
     .where(eq(events.event_uuid, event_uuid));
 
-  const visitorsWithDynamicFields = visitorsData.map((visitor) => {
-    const dynamicFields = userEventFieldsData
-      .filter((field) => field.user_id === visitor.user_id)
-      .map((field) => ({
-        event_field_id: field.event_field_id,
-        data: field.data,
-      }));
+     const visitorsWithDynamicFields = visitorsData.map((visitor) => {
+         const dynamicFields = userEventFieldsData
+             .filter((field) => field.user_id === visitor.user_id)
+             .map((field) => ({
+                 event_field_id: field.event_field_id,
+                 data: field.data,
+             }));
+
+         return {
+             ...visitor,
+             dynamicFields,
+         };
+     });
 
     return {
-      ...visitor,
-      dynamicFields,
+        visitorsWithDynamicFields,
+        moreRecordsAvailable,
+        visitorsData,
+        nextCursor,
     };
-  });
 
-  const moreRecordsAvailable =
-    typeof limit === "number" ? visitorsData.length === limit : false;
-  const nextCursor =
-    moreRecordsAvailable && typeof cursor === "number" ? cursor + limit! : null;
-
-  return {
-    visitorsWithDynamicFields,
-    moreRecordsAvailable,
-    visitorsData,
-    nextCursor,
-  };
 };
 
 export async function updateVisitorLastVisit(id: number) {

@@ -25,7 +25,7 @@ type CheckInTicketResult =
 export const checkInTicket = async (ticketUuid: string): Promise<CheckInTicketResult | null> => {
   // First, fetch the current status of the ticket
   const ticket = await db
-      .select({ status: tickets.status })
+      .select({ status: tickets.status , order_uuid: tickets.order_uuid , id: tickets.id })
       .from(tickets)
       .where(eq(tickets.order_uuid, ticketUuid))
       .limit(1)
@@ -50,5 +50,5 @@ export const checkInTicket = async (ticketUuid: string): Promise<CheckInTicketRe
       .execute();
 
   // Return the result of the update operation (whether it was successful)
-  return result.length > 0 ? result[0] : null;
+  return result.length > 0 ? ticket[0] : null;
 };
