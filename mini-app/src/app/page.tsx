@@ -74,9 +74,9 @@ export default function Home() {
     offset: 0,
     filter: {
       participationType: ["online", "in_person"],
-      startDate:
+      endDate:
         Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
-      startDateOperator: "<=",
+
     },
     sortBy: "start_date_desc",
   });

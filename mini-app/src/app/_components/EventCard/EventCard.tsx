@@ -117,12 +117,12 @@ const EventCard: React.FC<EventCardProps> = ({
                     </span>
                   )}
                 </span>
-                {ticketPrice > 0 ? (
-                  <Badge variant="ontonDark">${ticketPrice}</Badge>
+                {currentUserId === organizerUserId ? (
+                    <Badge variant="ontonDark">hosted</Badge>
                 ) : (
-                  <Badge variant="ontonDark">
-                    {currentUserId === organizerUserId ? "hosted" : "free"}
-                  </Badge>
+                    <Badge variant="ontonDark">
+                      { ticketPrice > 0 ? ticketPrice : "free"}
+                    </Badge>
                 )}
               </div>
               <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
@@ -200,11 +200,11 @@ const EventCard: React.FC<EventCardProps> = ({
                     </span>
                   )}
                 </span>
-                {ticketPrice > 0 ? (
-                  <Badge variant="ontonDark">${ticketPrice}</Badge>
+                {currentUserId === organizerUserId ? (
+                  <Badge variant="ontonDark">hosted</Badge>
                 ) : (
                   <Badge variant="ontonDark">
-                    {currentUserId === organizerUserId ? "hosted" : "free"}
+                    { ticketPrice > 0 ? ticketPrice : "free"}
                   </Badge>
                 )}
               </div>
