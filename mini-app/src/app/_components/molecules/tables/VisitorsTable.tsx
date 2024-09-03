@@ -54,7 +54,10 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-
+  const [ waitingFoeDebaunce, setWaitingForDebaunc ] = useState(false);
+  const [showNoResults, setShowNoResults] = useState(false); // State to control the delay message
+  const [isTyping, setIsTyping] = useState(false);
+  const [firstLoad, setFirstLoad] = useState(false);
   const { fetchNextPage, data, hasNextPage, isFetchingNextPage, refetch: refetchVisitors } =
       trpc.visitors.getAll.useInfiniteQuery(
           {
@@ -82,6 +85,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
     if (needRefresh) {
       refetchVisitors().then(() => {
         setNeedRefresh(false);
+        setFirstLoad(true);
       });
     }
   }, [needRefresh]);
@@ -94,12 +98,16 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
 
   // Debouncing search query
   useEffect(() => {
+    if (waitingFoeDebaunce) {
+      return;
+    }
+    setWaitingForDebaunc(true);
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
     }, 300); // 300ms delay
-
     return () => {
       clearTimeout(handler);
+      setWaitingForDebaunc(false);
     };
   }, [searchQuery]);
 
@@ -112,6 +120,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
 
   // Memoized filtered visitors
   const filteredVisitors = useMemo(() => {
+    if (!flatData) return [];
     return flatData.filter((visitor) => {
       const matchesSearch = visitor?.username
               ?.toLowerCase()
@@ -127,13 +136,32 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
       return matchesSearch && matchesStatus;
     });
   }, [flatData, debouncedSearchQuery, statusFilter]);
-
   // Check if there are no events after filtering
   const noEvents =
       !isFetchingNextPage &&
       debouncedSearchQuery.length > 0 &&
-      filteredVisitors.length === 0;
-
+      filteredVisitors.length === 0 &&
+      waitingFoeDebaunce;
+  // Check if there are no events after filtering and display after 5 seconds
+  // Check if there are no events after filtering and display immediately if there are no results on load
+  useEffect(() => {
+    console.log("isFetchingNextPage:", isFetchingNextPage);
+    console.log("debouncedSearchQuery:", debouncedSearchQuery);
+    console.log("filteredVisitors Length:", filteredVisitors.length);
+    if(isFetchingNextPage && !firstLoad) {
+        setShowNoResults(true);
+    }
+    else if (!isFetchingNextPage && !isTyping && debouncedSearchQuery.length === 0 && filteredVisitors.length === 0) {
+      setShowNoResults(true); // Show immediately if no results on page load
+    } else if (!isFetchingNextPage && !isTyping && debouncedSearchQuery.length > 0 && filteredVisitors.length === 0) {
+      const timer = setTimeout(() => {
+        setShowNoResults(true); // Show message after 5 seconds when searching
+      }, 5000); // 5-second delay for showing no results
+      return () => clearTimeout(timer); // Clear the timer if the component unmounts or search changes
+    } else {
+      setShowNoResults(false); // Reset the message if results are found or search changes
+    }
+  }, [debouncedSearchQuery, filteredVisitors, isFetchingNextPage, isTyping]);
   return (
     <div className="mt-0 overflow-x-auto">
       <div className="w-full p-0">
@@ -198,8 +226,8 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
                 )}
               </div>
             </div>
-            {(noEvents  ) ? (
-                    <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4  ">
+            {(showNoResults  ) ? (
+                    <div className="flex flex-col  animate-fade items-center justify-center  mt-12 text-center space-y-4  ">
                       <div>
                         <Image
                             src={"/template-images/no-guest.png"}
@@ -209,8 +237,8 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
                         />
                       </div>
                       <div className="text-gray-500 max-w-md">
-                        Nothing Was Found Try
-                        to enter other keywords
+                        Nothing Was Found <br/>
+                        Try to enter other keywords
                       </div>
                     </div>
                 )
