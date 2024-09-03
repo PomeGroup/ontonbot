@@ -1,7 +1,8 @@
 import { db } from "@/db/db";
 import { rewards } from "@/db/schema";
 import { cacheKeys, deleteCache, getCache, setCache } from "@/lib/cache";
-import { sendTelegramMessage } from "@/lib/tgBot";
+import { getErrorMessages } from "@/lib/error";
+import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
 import { createUserRewardLink } from "@/lib/ton-society-api";
 import { EventType, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
@@ -22,21 +23,38 @@ export async function GET() {
   }
   // update lock in cache for 7h and 50m
   setCache(cacheKeys.cronJobLock, true, 28_200);
-  try {
-    const [res1, res2] = await Promise.allSettled([
-      createRewards(),
-      notifyUsersForRewards(),
-    ]);
+  Promise.allSettled([createRewards(), notifyUsersForRewards()])
+    .then(([createdRewards, notifiedUsers]) => {
+      sendLogNotification({
+        message: `
+✅ Cron job executed successfully at ${new Date().toISOString()}
 
-    return NextResponse.json({
-      message: "Cron job executed successfully",
-      now: Date.now(),
-      res1: res1.status === "fulfilled" ? res1.value : res1.reason,
-      res2: res2.status === "fulfilled" ? res2.value : res2.reason,
+<pre><code>
+${JSON.stringify({ createdRewards, notifiedUsers }, null, 2)}
+</code></pre>
+
+`,
+      });
+    })
+    .catch((err) =>
+      sendLogNotification({
+        message: `
+❌ Cron job failed at ${new Date().toISOString()}
+
+<pre><code>
+${getErrorMessages(err).join("\n\n")}
+</code></pre>
+`,
+      })
+    )
+    .finally(() => {
+      deleteCache(cacheKeys.cronJobLock);
     });
-  } finally {
-    deleteCache(cacheKeys.cronJobLock);
-  }
+
+  return NextResponse.json({
+    message: "Cron job execution started",
+    now: Date.now(),
+  });
 }
 
 async function createRewards() {
@@ -46,7 +64,7 @@ async function createRewards() {
     .where(eq(rewards.status, "pending_creation"));
 
   if (pendingRewardCount[0].count === 0) {
-    return;
+    return 0;
   }
 
   // for pending rewards count divided by 100 round up to 3
@@ -158,6 +176,8 @@ async function createRewards() {
     });
     await Promise.allSettled(createRewardPromises);
   }
+
+  return pendingRewardCount[0].count;
 }
 
 async function notifyUsersForRewards() {
@@ -168,7 +188,7 @@ async function notifyUsersForRewards() {
     .where(eq(rewards.status, "created"));
 
   if (createdRewardCount[0].count === 0) {
-    return;
+    return 0;
   }
 
   // for pending rewards count divided by 100 round up to 3
