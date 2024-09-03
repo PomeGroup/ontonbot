@@ -16,7 +16,7 @@ import pLimit from "p-limit";
 import { db } from "./db/db";
 import { wait } from "./lib/utils";
 
-const dev = process.env.NODE_ENV !== "production";
+const dev = process.env.NODE_ENV === "development";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
@@ -77,7 +77,7 @@ ${getErrorMessages(err).join("\n\n")}
 async function createRewards() {
   if (process.env.ENV === "staging") {
     // on stage we simulate a 1hour delay
-    await wait(1000 * 60 * 5);
+    await wait(1000 * 60 * 60);
   }
 
   const pendingRewardCount = await db
