@@ -1,38 +1,49 @@
-import { db } from "@/db/db";
 import { rewards } from "@/db/schema";
-import { cacheKeys, deleteCache, getCache, setCache } from "@/lib/cache";
+import { cacheKeys, deleteCache } from "@/lib/cache";
 import { getErrorMessages } from "@/lib/error";
 import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
 import { createUserRewardLink } from "@/lib/ton-society-api";
-import { msToTime, wait } from "@/lib/utils";
+import { msToTime } from "@/lib/utils";
 import { EventType, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
 import { AxiosError } from "axios";
+import { CronJob } from "cron";
+import "dotenv/config";
 import { eq, sql } from "drizzle-orm";
-import { NextResponse } from "next/server";
+import { createServer } from "http";
+import next from "next";
 import pLimit from "p-limit";
+import { db } from "./db/db";
+import { wait } from "./lib/utils";
 
-export async function GET() {
-  // set lock in cache
-  const cronLock = getCache(cacheKeys.cronJobLock);
+const dev = process.env.NODE_ENV !== "production";
+const app = next({ dev });
+const handle = app.getRequestHandler();
 
-  if (cronLock) {
-    return NextResponse.json({
-      message: "Cron job already running",
-      now: Date.now(),
-    });
-  }
-  // update lock in cache for 7h and 50m
-  setCache(cacheKeys.cronJobLock, true, 28_200);
-  const startTime = Date.now();
+app.prepare().then(() => {
+  const server = createServer((req, res) => {
+    handle(req, res);
+  });
 
-  Promise.allSettled([createRewards(), notifyUsersForRewards()])
-    .then(([createdRewards, notifiedUsers]) => {
-      const endTime = Date.now();
-      const duration = msToTime(endTime - startTime);
+  // Start the server on port 3000
+  // @ts-expect-error
+  server.listen(3000, (err: any) => {
+    if (err) throw err;
+    console.log("> Ready on http://localhost:3000");
+  });
 
-      sendLogNotification({
-        message: `
+  // Example Cron Job
+  new CronJob(
+    "0 */8 * * *",
+    async () => {
+      const startTime = Date.now();
+      void Promise.allSettled([createRewards(), notifyUsersForRewards()])
+        .then(([createdRewards, notifiedUsers]) => {
+          const endTime = Date.now();
+          const duration = msToTime(endTime - startTime);
+
+          void sendLogNotification({
+            message: `
 ✅ Cron job executed successfully at ${new Date().toISOString()}
 
 <pre><code>
@@ -40,33 +51,33 @@ ${JSON.stringify({ createdRewards, notifiedUsers, duration }, null, 2)}
 </code></pre>
 
 `,
-      });
-    })
-    .catch((err) =>
-      sendLogNotification({
-        message: `
+          });
+        })
+        .catch(
+          (err) =>
+            void sendLogNotification({
+              message: `
 ❌ Cron job failed at ${new Date().toISOString()}
 
 <pre><code>
 ${getErrorMessages(err).join("\n\n")}
 </code></pre>
 `,
-      })
-    )
-    .finally(() => {
-      deleteCache(cacheKeys.cronJobLock);
-    });
-
-  return NextResponse.json({
-    message: "Cron job execution started",
-    now: Date.now(),
-  });
-}
+            })
+        )
+        .finally(() => {
+          deleteCache(cacheKeys.cronJobLock);
+        });
+    },
+    null,
+    true
+  );
+});
 
 async function createRewards() {
   if (process.env.ENV === "staging") {
     // on stage we simulate a 1hour delay
-    await wait(1000 * 60 * 60);
+    await wait(1000 * 60 * 5);
   }
 
   const pendingRewardCount = await db
@@ -284,5 +295,3 @@ async function handleRewardError(reward: RewardType, error: any) {
     console.error("DB_ERROR_156", dbError);
   }
 }
-
-export const dynamic = "force-dynamic";

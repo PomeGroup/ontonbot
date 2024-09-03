@@ -3,9 +3,7 @@ import "dotenv/config"
 import express from "express"
 import { Telegraf } from "telegraf"
 
-import axios from "axios"
 import bodyParser from "body-parser"
-import { CronJob } from "cron"
 import fileUpload from "express-fileupload"
 import {
   handleFileSend,
@@ -60,43 +58,3 @@ app.listen(port, () => console.log(`Example app listening on port ${port}`));
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
-
-// run the cron job every 8 hours
-new CronJob(
-  "0 */8 * * *",
-  () => {
-    axios
-      .get(`http://mini-app:3000/api/v1/cron`)
-      .then(async (r) => {
-        process.env.BOT_ADMINS_LIST.split(",").forEach(async (admin) =>{
-        await bot.telegram.sendMessage(
-          admin,
-          `Cron Job Update,
-\`\`\`json
-${JSON.stringify(r.data, null, 2)}
-\`\`\`
-          `,
-        {
-          parse_mode: "Markdown"
-        })
-        })
-      }).catch((e) => {
-        // send the error to the admin
-        console.error(e);
-        process.env.BOT_ADMINS_LIST.split(",").forEach(async (admin) =>{
-          await bot.telegram.sendMessage(
-            admin,
-            `Cron Job Error
-\`\`\`json
-${JSON.stringify(e, null, 2)}
-\`\`\`
-          `,
-          {
-            parse_mode: "Markdown"
-          })
-        })
-      });
-  },
-  null,
-  true,
-);

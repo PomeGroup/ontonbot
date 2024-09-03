@@ -21,6 +21,5 @@ EXPOSE 3000
 
 RUN pnpm run build
 
-RUN pnpm db:up
 # Command to run the application
 CMD ["pnpm", "run", "start"]
