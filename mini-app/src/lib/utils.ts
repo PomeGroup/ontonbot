@@ -1,4 +1,4 @@
-import { type ClassValue, clsx } from "clsx";
+import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -53,4 +53,23 @@ export const fileToBase64 = (file: Blob) =>
 export const redirectTo = (path: string) => {
   window.location.replace(path);
   return false;
+};
+
+/**
+ * Converts a duration in milliseconds to a human-readable time format (HH:MM:SS.SSS).
+ *
+ * @param {number} duration - The duration in milliseconds.
+ * @return {string} The time in the format HH:MM:SS.SSS.
+ */
+export function msToTime(duration: number): string {
+  const milliseconds = Math.floor((duration % 1000) / 100);
+  let seconds: number | string = Math.floor((duration / 1000) % 60);
+  let minutes: number | string = Math.floor((duration / (1000 * 60)) % 60);
+  let hours: number | string = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+  hours = hours < 10 ? `0${hours}` : hours;
+  minutes = minutes < 10 ? `0${minutes}` : minutes;
+  seconds = seconds < 10 ? `0${seconds}` : seconds;
+
+  return `${hours}:${minutes}:${seconds}.${milliseconds}`;
 }

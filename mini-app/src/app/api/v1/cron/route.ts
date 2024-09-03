@@ -4,6 +4,7 @@ import { cacheKeys, deleteCache, getCache, setCache } from "@/lib/cache";
 import { getErrorMessages } from "@/lib/error";
 import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
 import { createUserRewardLink } from "@/lib/ton-society-api";
+import { msToTime } from "@/lib/utils";
 import { EventType, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
 import { AxiosError } from "axios";
@@ -23,14 +24,19 @@ export async function GET() {
   }
   // update lock in cache for 7h and 50m
   setCache(cacheKeys.cronJobLock, true, 28_200);
+  const startTime = Date.now();
+
   Promise.allSettled([createRewards(), notifyUsersForRewards()])
     .then(([createdRewards, notifiedUsers]) => {
+      const endTime = Date.now();
+      const duration = msToTime(endTime - startTime);
+
       sendLogNotification({
         message: `
 ✅ Cron job executed successfully at ${new Date().toISOString()}
 
 <pre><code>
-${JSON.stringify({ createdRewards, notifiedUsers }, null, 2)}
+${JSON.stringify({ createdRewards, notifiedUsers, duration }, null, 2)}
 </code></pre>
 
 `,
