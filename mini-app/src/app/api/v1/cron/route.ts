@@ -4,7 +4,7 @@ import { cacheKeys, deleteCache, getCache, setCache } from "@/lib/cache";
 import { getErrorMessages } from "@/lib/error";
 import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
 import { createUserRewardLink } from "@/lib/ton-society-api";
-import { msToTime } from "@/lib/utils";
+import { msToTime, wait } from "@/lib/utils";
 import { EventType, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
 import { AxiosError } from "axios";
@@ -64,6 +64,11 @@ ${getErrorMessages(err).join("\n\n")}
 }
 
 async function createRewards() {
+  if (process.env.ENV === "staging") {
+    // on stage we simulate a 1hour delay
+    await wait(1000 * 60 * 60);
+  }
+
   const pendingRewardCount = await db
     .select({ count: sql`count(*)`.mapWith(Number) })
     .from(rewards)
