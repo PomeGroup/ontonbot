@@ -1,5 +1,5 @@
 import { rewards } from "@/db/schema";
-import { cacheKeys, deleteCache } from "@/lib/cache";
+import { cacheKeys, deleteCache, getCache, setCache } from "@/lib/cache";
 import { getErrorMessages } from "@/lib/error";
 import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
 import { createUserRewardLink } from "@/lib/ton-society-api";
@@ -34,9 +34,18 @@ app.prepare().then(() => {
 
   // Example Cron Job
   new CronJob(
-    "0 */8 * * *",
+    "0 */2 * * *",
     async () => {
       const startTime = Date.now();
+
+      const cronLock = getCache(cacheKeys.cronJobLock);
+
+      if (cronLock) {
+        console.log("Cron job is already running");
+        return;
+      }
+      // 8h ttl
+      setCache(cacheKeys.cronJobLock, true, 28_800_000);
       void Promise.allSettled([createRewards(), notifyUsersForRewards()])
         .then(([createdRewards, notifiedUsers]) => {
           const endTime = Date.now();
