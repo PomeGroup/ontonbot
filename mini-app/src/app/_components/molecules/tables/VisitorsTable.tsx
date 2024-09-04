@@ -97,20 +97,17 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
   }, [entry, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Debouncing search query
+  // Debouncing search query
   useEffect(() => {
-    if (waitingFoeDebaunce) {
-      return;
-    }
-    setWaitingForDebaunc(true);
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 300); // 300ms delay
+      setIsTyping(false); // User has stopped typing
+    }, 300); // 300ms delay to stabilize typing
+    setIsTyping(true); // User is typing
     return () => {
       clearTimeout(handler);
-      setWaitingForDebaunc(false);
     };
   }, [searchQuery]);
-
   // Flatten all pages to include newly fetched data
   // @ts-ignore
   const flatData: Visitor[] = data?.pages.flatMap((page) => page?.visitorsData) || [];
@@ -121,6 +118,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
   // Memoized filtered visitors
   const filteredVisitors = useMemo(() => {
     if (!flatData) return [];
+
     return flatData.filter((visitor) => {
       const matchesSearch = visitor?.username
               ?.toLowerCase()
@@ -142,26 +140,23 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
       debouncedSearchQuery.length > 0 &&
       filteredVisitors.length === 0 &&
       waitingFoeDebaunce;
-  // Check if there are no events after filtering and display after 5 seconds
   // Check if there are no events after filtering and display immediately if there are no results on load
   useEffect(() => {
     console.log("isFetchingNextPage:", isFetchingNextPage);
     console.log("debouncedSearchQuery:", debouncedSearchQuery);
     console.log("filteredVisitors Length:", filteredVisitors.length);
-    if(isFetchingNextPage && !firstLoad) {
-        setShowNoResults(true);
-    }
-    else if (!isFetchingNextPage && !isTyping && debouncedSearchQuery.length === 0 && filteredVisitors.length === 0) {
-      setShowNoResults(true); // Show immediately if no results on page load
-    } else if (!isFetchingNextPage && !isTyping && debouncedSearchQuery.length > 0 && filteredVisitors.length === 0) {
-      const timer = setTimeout(() => {
-        setShowNoResults(true); // Show message after 5 seconds when searching
-      }, 5000); // 5-second delay for showing no results
-      return () => clearTimeout(timer); // Clear the timer if the component unmounts or search changes
+    console.log("showNoResults:", showNoResults);
+
+
+    if (  !isFetchingNextPage && !isTyping && filteredVisitors.length === 0) {
+      if (debouncedSearchQuery.length === 0 || (debouncedSearchQuery.length > 0 && filteredVisitors.length === 0)) {
+        setShowNoResults(true); // Show message immediately if no results and not loading
+      }
     } else {
       setShowNoResults(false); // Reset the message if results are found or search changes
     }
   }, [debouncedSearchQuery, filteredVisitors, isFetchingNextPage, isTyping]);
+
   return (
     <div className="mt-0 overflow-x-auto">
       <div className="w-full p-0">
