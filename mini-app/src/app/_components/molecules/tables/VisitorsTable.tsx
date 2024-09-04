@@ -102,7 +102,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
       setIsTyping(false); // User has stopped typing
-    }, 300); // 300ms delay to stabilize typing
+    }, 700); // 300ms delay to stabilize typing
     setIsTyping(true); // User is typing
     return () => {
       clearTimeout(handler);
