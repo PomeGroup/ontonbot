@@ -51,7 +51,6 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   console.log("WebApp?.initDataUnsafe", WebApp?.initDataUnsafe);
   const handleVisitorsExport = () => {
     hapticFeedback?.impactOccurred("medium");
-    console.log("Exporting visitors as CSV");
     requestExportFileMutation.mutate({
       event_uuid: params.hash,
       init_data: WebApp?.initData || "",
