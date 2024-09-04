@@ -483,7 +483,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
           >
-            <div className="flex w-max space-x-2 p-2">
+            <div className="flex w-max space-x-2 p-2 pt-0">
               {renderFilterButtons()}
             </div>
             <ScrollBar orientation="horizontal" />

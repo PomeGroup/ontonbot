@@ -15,11 +15,7 @@ const LIMIT = 10;
 const Search: React.FC = () => {
   const searchParams = useSearchParams();
   const webApp = useWebApp();
-  const {
-    authorized,
-    isLoading: useAuthLoading,
-    role: userRole,
-  } = useAuth();
+  const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
   const searchTerm = searchParams.get("query") || "";
   const participationType =
@@ -37,14 +33,15 @@ const Search: React.FC = () => {
   const sortBy = searchParams.get("sortBy") || "default";
   // Get startDate from URL or default to current time
 
-
   const endDate = searchParams.get("endDate")
-      ? parseInt(searchParams.get("endDate") as string, 10)
-      : undefined;
+    ? parseInt(searchParams.get("endDate") as string, 10)
+    : undefined;
   const endDateOperator = searchParams.get("endDateOperator") || "";
   const startDate = searchParams.get("startDate")
-      ? parseInt(searchParams.get("startDate") as string, 10)
-      : endDate ? undefined : Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600);
+    ? parseInt(searchParams.get("startDate") as string, 10)
+    : endDate
+      ? undefined
+      : Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600);
   const startDateOperator = searchParams.get("startDateOperator") || "";
   const [results, setResults] = useState<any[]>([]);
   const [offset, setOffset] = useState(0);
@@ -61,9 +58,9 @@ const Search: React.FC = () => {
       ...(participationType.length > 0 && { participationType }), // Include if valid
       startDate, // Always include startDate
       startDateOperator: startDateOperator || undefined,
-      ...(endDate   && { endDate }), // Include if valid
+      ...(endDate && { endDate }), // Include if valid
       endDateOperator: endDateOperator || undefined,
-      ...(selectedHubs.length > 0 && { society_hub_id: selectedHubs } ), // Include if valid
+      ...(selectedHubs.length > 0 && { society_hub_id: selectedHubs }), // Include if valid
     },
     sortBy: sortBy || "default",
   });
@@ -124,82 +121,92 @@ const Search: React.FC = () => {
   // }, [offset, refetch]);
 
   return (
-    <div className="container mx-auto p-4">
-      <SearchBar
-        includeQueryParam={true}
-        showFilterTags={true}
-        onUpdateResults={setResults}
-        offset={offset}
-        setOffset={setOffset}
-      />
 
-      <div className="pt-4">
-        {!isLoadingSearchResults && !isFetchingSearchResults && results.length == 0 && (
-          <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
-            <div>
-              <Image
-                src={"/template-images/no-search-result.gif"}
-                alt={"No search results found"}
-                width={180}
-                height={180}
-              />
-            </div>
-            <div className="text-gray-500 max-w-md">
-              No Events were found matching your Search. Please try changing
-              some of your parameters and try again.
-            </div>
-          </div>
-        )}
-        <div className="pt-2">
-          {isLoadingSearchResults && results.length === 0 ? (
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: LIMIT }).map((_, index) => (
-                <EventCardSkeleton
-                  key={index}
-                  mode="small"
-                />
-              ))}
-            </div>
-          ) : (
-            <>
-              {results.length > 0 ? (
-                results.map((event, index) => {
-                  if (results.length === index + 1) {
-                    return (
-                      <div
-                        ref={lastElementRef}
-                        key={`${event.event_uuid}-last`}
-                      >
-                        <EventCard
-                            key={event.event_uuid}
-                            event={event}
-                            currentUserId={UserId}
-                        />
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <EventCard
-                        key={event.event_uuid}
-                        event={event}
-                        currentUserId={UserId}
-                      />
-                    );
-                  }
-                })
-              ) : (
-                <div className="text-gray-500">No results found.</div>
-              )}
-            </>
-          )}
+      <div className="flex flex-col h-screen">
+        {/* Fixed Search Bar */}
+        <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+          <SearchBar
+              includeQueryParam={true}
+              showFilterTags={true}
+              onUpdateResults={setResults}
+              offset={offset}
+              setOffset={setOffset}
+          />
         </div>
-        {isFetchingSearchResults && hasMore && (
-          <div className="text-center py-4 pb-5">
-            <div className="loader">Loading more results...</div>
+        <div className="flex flex-col h-screen">
+          {/* Scrollable Content */}
+          <div className="overflow-y-auto flex-grow">
+            <div className="pt-4">
+              {!isLoadingSearchResults &&
+                  !isFetchingSearchResults &&
+                  results.length == 0 && (
+                      <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+                        <div>
+                          <Image
+                              src={"/template-images/no-search-result.gif"}
+                              alt={"No search results found"}
+                              width={180}
+                              height={180}
+                          />
+                        </div>
+                        <div className="text-gray-500 max-w-md">
+                          No Events were found matching your Search. Please try
+                          changing some of your parameters and try again.
+                        </div>
+                      </div>
+                  )}
+              <div className="pt-2">
+                {isLoadingSearchResults && results.length === 0 ? (
+                    <div className="flex flex-col gap-2">
+                      {Array.from({length: LIMIT}).map((_, index) => (
+                          <EventCardSkeleton
+                              key={index}
+                              mode="small"
+                          />
+                      ))}
+                    </div>
+                ) : (
+                    <>
+                      {results.length > 0 ? (
+                          results.map((event, index) => {
+                            if (results.length === index + 1) {
+                              return (
+                                  <div
+                                      ref={lastElementRef}
+                                      key={`${event.event_uuid}-last`}
+                                  >
+                                    <EventCard
+                                        key={event.event_uuid}
+                                        event={event}
+                                        currentUserId={UserId}
+                                    />
+                                  </div>
+                              );
+                            } else {
+                              return (
+                                  <EventCard
+                                      key={event.event_uuid}
+                                      event={event}
+                                      currentUserId={UserId}
+                                  />
+                              );
+                            }
+                          })
+                      ) : (
+                          <div className="text-gray-500">No results found.</div>
+                      )}
+                    </>
+                )}
+              </div>
+              {isFetchingSearchResults && hasMore && (
+                  <div className="text-center py-4 pb-5">
+                    <div className="loader">Loading more results...</div>
+                  </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
-    </div>
   );
 };
 
