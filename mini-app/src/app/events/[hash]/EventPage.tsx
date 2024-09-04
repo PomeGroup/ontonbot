@@ -1,14 +1,14 @@
 "use client";
 
 import AddVisitorWrapper from "@/app/_components/AddVisitorWrapper";
+import { ClaimRewardButton } from "@/app/_components/ClaimRewardButton";
+import EventNotStarted from "@/app/_components/EventNotStarted";
+import AllTasks from "@/app/_components/Tasks";
 import Buttons from "@/app/_components/atoms/buttons";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
-import { ClaimRewardButton } from "@/app/_components/ClaimRewardButton";
-import EventNotStarted from "@/app/_components/EventNotStarted";
 import Tasks from "@/app/_components/molecules/tasks";
-import AllTasks from "@/app/_components/Tasks";
 import { trpc } from "@/app/_trpc/client";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
@@ -96,17 +96,22 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       ) : null}
       <Labels.CampaignDescription description={eventData.data?.description!} />
       {isStarted && isNotEnded && eventData.data?.dynamic_fields ? (
-        <>
-          <Tasks.Wallet />
-          <AllTasks
-            // @ts-expect-error
-            tasks={eventData.data.dynamic_fields}
-            eventHash={eventHash}
-          />
-          {!authorized && (
-            <ClaimRewardButton eventId={eventData.data?.event_uuid as string} />
-          )}
-        </>
+        authorized &&
+        (role !== "admin" || user?.user_id !== eventData.data.owner) && (
+          <>
+            <Tasks.Wallet />
+            <AllTasks
+              // @ts-expect-error
+              tasks={eventData.data.dynamic_fields}
+              eventHash={eventHash}
+            />
+            {!authorized && (
+              <ClaimRewardButton
+                eventId={eventData.data?.event_uuid as string}
+              />
+            )}
+          </>
+        )
       ) : // if it was not ended than it means the event is not started yet
       isNotEnded ? (
         <EventNotStarted
