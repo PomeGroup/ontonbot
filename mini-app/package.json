@@ -96,6 +96,7 @@
         "react-qrcode-logo": "^2.9.0",
         "stream-browserify": "^3.0.0",
         "stream-http": "^3.2.0",
+        "swiper": "^11.1.12",
         "tailwind-merge": "^2.1.0",
         "tailwindcss-animate": "^1.0.7",
         "telegraf": "^4.15.3",
