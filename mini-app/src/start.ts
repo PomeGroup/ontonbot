@@ -17,7 +17,7 @@ import { db } from "./db/db";
 import { wait } from "./lib/utils";
 
 const dev = process.env.NODE_ENV === "development";
-const app = next({ dev });
+const app = next({ dev, isNodeDebugging: dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -29,30 +29,40 @@ app.prepare().then(() => {
   // @ts-expect-error
   server.listen(3000, (err: any) => {
     if (err) throw err;
+    if (dev) {
+      console.log("Dev mode enabled");
+    }
     console.log("> Ready on http://localhost:3000");
   });
 
   // Example Cron Job
-  new CronJob(
-    "0 */2 * * *",
-    async () => {
-      const startTime = Date.now();
+  new CronJob("0 */2 * * *", cronJobFunction, null, true);
+});
 
-      const cronLock = getCache(cacheKeys.cronJobLock);
+process.on("unhandledRejection", (err) => {
+  console.error("START", err);
+});
 
-      if (cronLock) {
-        console.log("Cron job is already running");
-        return;
-      }
-      // 8h ttl
-      setCache(cacheKeys.cronJobLock, true, 28_800_000);
-      void Promise.allSettled([createRewards(), notifyUsersForRewards()])
-        .then(([createdRewards, notifiedUsers]) => {
-          const endTime = Date.now();
-          const duration = msToTime(endTime - startTime);
+cronJobFunction();
 
-          void sendLogNotification({
-            message: `
+async function cronJobFunction() {
+  const startTime = Date.now();
+
+  const cronLock = getCache(cacheKeys.cronJobLock);
+
+  if (cronLock) {
+    console.log("Cron job is already running");
+    return;
+  }
+  // 8h ttl
+  setCache(cacheKeys.cronJobLock, true, 28_800_000);
+  void Promise.allSettled([createRewards(), notifyUsersForRewards()])
+    .then(([createdRewards, notifiedUsers]) => {
+      const endTime = Date.now();
+      const duration = msToTime(endTime - startTime);
+
+      void sendLogNotification({
+        message: `
 ✅ Cron job executed successfully at ${new Date().toISOString()}
 
 <pre><code>
@@ -60,28 +70,24 @@ ${JSON.stringify({ createdRewards, notifiedUsers, duration }, null, 2)}
 </code></pre>
 
 `,
-          });
-        })
-        .catch(
-          (err) =>
-            void sendLogNotification({
-              message: `
+      });
+    })
+    .catch(
+      (err) =>
+        void sendLogNotification({
+          message: `
 ❌ Cron job failed at ${new Date().toISOString()}
 
 <pre><code>
 ${getErrorMessages(err).join("\n\n")}
 </code></pre>
 `,
-            })
-        )
-        .finally(() => {
-          deleteCache(cacheKeys.cronJobLock);
-        });
-    },
-    null,
-    true
-  );
-});
+        })
+    )
+    .finally(() => {
+      deleteCache(cacheKeys.cronJobLock);
+    });
+}
 
 async function createRewards() {
   if (process.env.ENV === "staging") {
