@@ -1,9 +1,10 @@
 import { apiKeyAuthentication } from "@/server/auth";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const protectWithAPIKeyPatterns: ProtectedRoute[] = [
   { methods: ["*"], pattern: /^\/api\/v1\/ticket(\/.*)?$/ },
   { methods: ["PATCH"], pattern: /^\/api\/v1\/order(\/.*)?$/ },
+  { methods: ["*"], pattern: /^\/api\/v1\/user(\/.*)?$/ },
 ];
 
 export function middleware(request: NextRequest) {
