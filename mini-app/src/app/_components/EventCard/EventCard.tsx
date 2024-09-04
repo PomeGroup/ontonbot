@@ -245,7 +245,7 @@ const EventCard: React.FC<EventCardProps> = ({
       <Image
           src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
           alt={title}
-          width={400}
+          width={window?.innerWidth || 400}
           height={400}
           style={{ objectFit: "cover" }}
           className={`rounded-lg transition-opacity duration-500 ${

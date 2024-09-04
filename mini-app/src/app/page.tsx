@@ -1,5 +1,5 @@
 "use client";
-import React, {  useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
@@ -19,8 +19,6 @@ import "swiper/css";
 // Define types for events
 type EventData = any[];
 
-
-
 export default function Home() {
   const { config } = useConfig();
   const SliderEventUUID = config?.homeSliderEventUUID || "";
@@ -35,6 +33,7 @@ export default function Home() {
   // Initialize state with empty arrays to avoid undefined errors
   const [sliderEventData, setSliderEventData] = useState<EventData>([]);
   const [upcomingEventsData, setUpcomingEventsData] = useState<EventData>([]);
+  const [ongoingEventsData, setOngoingEventsData] = useState<EventData>([]);
   const [pastEventsData, setPastEventsData] = useState<EventData>([]);
   const [myEventsData, setMyEventsData] = useState<EventData>([]);
 
@@ -52,6 +51,19 @@ export default function Home() {
     filter: {
       participationType: ["online", "in_person"],
       startDate: Math.floor(Date.now() / 1000),
+    },
+    sortBy: "start_date_asc",
+  });
+
+  const ongoingEventsParams = searchEventsInputZod.parse({
+    limit: 2,
+    offset: 0,
+    filter: {
+      participationType: ["online", "in_person"],
+      startDate: Math.floor(Date.now() / 1000),
+      startDateOperator: "<=",
+      endDate: Math.floor(Date.now() / 1000),
+      endDateOperator: ">=",
     },
     sortBy: "start_date_asc",
   });
@@ -84,6 +96,10 @@ export default function Home() {
     enabled: false,
   });
 
+  const { refetch: refetchOngoingEvents } = trpc.events.getEventsWithFilters.useQuery(ongoingEventsParams, {
+    enabled: false,
+  });
+
   const { refetch: refetchPastEvents } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams, {
     enabled: false,
   });
@@ -107,13 +123,20 @@ export default function Home() {
       }
     });
 
+    // Fetch Ongoing Events
+    refetchOngoingEvents().then((res) => {
+      if (res.status === "success" && Array.isArray(res.data?.data)) {
+        setOngoingEventsData(res.data.data);
+      }
+    });
+
     // Fetch Past Events
     refetchPastEvents().then((res) => {
       if (res.status === "success" && Array.isArray(res.data?.data)) {
         setPastEventsData(res.data.data);
       }
     });
-  }, [refetchSliderEvent, refetchUpcomingEvents, refetchPastEvents]);
+  }, [refetchSliderEvent, refetchUpcomingEvents, refetchOngoingEvents, refetchPastEvents]);
 
   // Handle tab click and data fetching logic
   const handleTabClick = (value: string) => {
@@ -159,7 +182,7 @@ export default function Home() {
                     activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
                 }`}
             >
-                All events
+              All events
             </TabsTrigger>
             <TabsTrigger
                 value="my-events"
@@ -183,14 +206,27 @@ export default function Home() {
             {/* All Events Slide */}
             <SwiperSlide>
               <div className="pt-2">
-
-
+                {/* Slider Event */}
                 {sliderEventData.length === 0 ? (
                     <EventCardSkeleton mode={"detailed"} />
                 ) : (
                     <EventCard event={sliderEventData[0]} mode={"detailed"} currentUserId={UserId} />
                 )}
 
+                {/* Ongoing Events */}
+                <div className="pt-4 w-full pb-4 flex justify-between items-center">
+                  <h2 className="font-bold text-lg">Ongoing Events</h2>
+                </div>
+
+                {ongoingEventsData.length === 0 ? (
+                    <EventCardSkeleton />
+                ) : (
+                    ongoingEventsData.map((event) => (
+                        <EventCard key={event.event_uuid} event={event} currentUserId={UserId} mode={"ongoing"} />
+                    ))
+                )}
+
+                {/* Upcoming Events */}
                 <div className="pt-4 w-full pb-4 flex justify-between items-center">
                   <h2 className="font-bold text-lg">Upcoming Events</h2>
                   <a href="/search/?type=upcoming" className="text-zinc-300 hover:underline">
@@ -206,6 +242,7 @@ export default function Home() {
                     ))
                 )}
 
+                {/* Past Events */}
                 <div className="pt-4 pb-4 flex justify-between items-center">
                   <h2 className="font-bold text-lg">Past Events</h2>
                   <a href="/search/?type=past" className="text-zinc-300 hover:underline">
@@ -225,9 +262,9 @@ export default function Home() {
 
             {/* My Events Slide */}
             <SwiperSlide>
-              <div className="pt-2">
+              <div className="pt-2 min-h-lvh">
                 {myEventsData.length === 0 ? (
-                    [1, 2].map((index) => <EventCardSkeleton key={index} />)
+                    [1, 2,3,4,5].map((index) => <EventCardSkeleton key={index} />)
                 ) : myEventsData.length === 0 ? (
                     <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
                       <Image src={"/template-images/my-event-empty-list-msg.png"} alt={"No Events"} width={180} height={180} />
