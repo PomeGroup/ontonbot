@@ -1,23 +1,24 @@
-import React, {useState} from "react";
-import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
-import { isValidImageUrl } from "@/lib/isValidImageUrl";
-import Image from "next/image";
-import useWebApp from "@/hooks/useWebApp";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import useAuth from "@/hooks/useAuth";
+import useWebApp from "@/hooks/useWebApp";
+import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
+import { isValidImageUrl } from "@/lib/isValidImageUrl";
+import Image from "next/image";
+import React, { useState } from "react";
+import { IoIosPlayCircle } from "react-icons/io";
 import {
   IoChevronForwardOutline,
   IoReorderFour,
   IoSettingsOutline,
 } from "react-icons/io5";
-import { IoIosPlayCircle } from "react-icons/io";
 
 interface EventCardProps {
   event: {
@@ -73,11 +74,22 @@ const EventCard: React.FC<EventCardProps> = ({
   const defaultImage = "/template-images/default.webp";
   const [imageLoaded, setImageLoaded] = useState(false);
   const webApp = useWebApp();
+  const { user } = useAuth();
+  const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
-  const geoLocation = city || country ? `${city}, ${country}` : location.length > 15 ? `${location.slice(0, 15)}...` : location;
+  const geoLocation =
+    city || country
+      ? `${city}, ${country}`
+      : location.length > 15
+        ? `${location.slice(0, 15)}...`
+        : location;
 
   const isOnline =
-      participationType === "online" ? "Online" : participationType=== "in_person" ?  geoLocation : "unknown";
+    participationType === "online"
+      ? "Online"
+      : participationType === "in_person"
+        ? geoLocation
+        : "unknown";
 
   const handleEventClick = () => {
     if (ticketToCheckIn) {
@@ -91,25 +103,32 @@ const EventCard: React.FC<EventCardProps> = ({
   };
   // Skeleton Loader for Image
   const renderImageSkeleton = () => (
-      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
+    <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
   );
   const renderDropdownMenu = () => (
-    <DropdownMenu key={`dropdown-${eventUuid}`}>
+    <DropdownMenu
+      open={isDropdownMenuOpen}
+      onOpenChange={setIsDropdownMenuOpen}
+      key={`dropdown-${eventUuid}`}
+    >
       <DropdownMenuTrigger asChild>
-        <div className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer">
+        <div
+          onClick={() => setIsDropdownMenuOpen(!isDropdownMenuOpen)}
+          className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+        >
           <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
             {!imageLoaded && renderImageSkeleton()}
             <Image
-                src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-                alt={title}
-                layout="fill"
-                style={{ objectFit: "cover" }}
-                className={`rounded-lg transition-opacity duration-500 ${
-                    imageLoaded ? "opacity-100" : "opacity-0"
-                }`}
-                onError={(e) => (e.currentTarget.src = defaultImage)}
-                onLoad={() => setImageLoaded(true)}
-                loading="lazy"
+              src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+              alt={title}
+              layout="fill"
+              style={{ objectFit: "cover" }}
+              className={`rounded-lg transition-opacity duration-500 ${
+                imageLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              onError={(e) => (e.currentTarget.src = defaultImage)}
+              onLoad={() => setImageLoaded(true)}
+              loading="lazy"
             />
           </div>
           <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
@@ -128,11 +147,11 @@ const EventCard: React.FC<EventCardProps> = ({
                   )}
                 </span>
                 {currentUserId === organizerUserId ? (
-                    <Badge variant="ontonDark">hosted</Badge>
+                  <Badge variant="ontonDark">hosted</Badge>
                 ) : (
-                    <Badge variant="ontonDark">
-                      { ticketPrice > 0 ? ticketPrice : "free"}
-                    </Badge>
+                  <Badge variant="ontonDark">
+                    {ticketPrice > 0 ? ticketPrice : "free"}
+                  </Badge>
                 )}
               </div>
               <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
@@ -177,7 +196,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const renderNormalMode = () => (
     <>
-      {currentUserId === organizerUserId ? (
+      {currentUserId === organizerUserId || user?.role === "admin" ? (
         renderDropdownMenu()
       ) : (
         <div
@@ -187,16 +206,16 @@ const EventCard: React.FC<EventCardProps> = ({
           <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
             {!imageLoaded && renderImageSkeleton()}
             <Image
-                src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-                alt={title}
-                layout="fill"
-                style={{ objectFit: "cover" }}
-                className={`rounded-lg transition-opacity duration-500 ${
-                    imageLoaded ? "opacity-100" : "opacity-0"
-                }`}
-                onError={(e) => (e.currentTarget.src = defaultImage)}
-                onLoad={() => setImageLoaded(true)}
-                loading="lazy"
+              src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+              alt={title}
+              layout="fill"
+              style={{ objectFit: "cover" }}
+              className={`rounded-lg transition-opacity duration-500 ${
+                imageLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              onError={(e) => (e.currentTarget.src = defaultImage)}
+              onLoad={() => setImageLoaded(true)}
+              loading="lazy"
             />
           </div>
           <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
@@ -218,7 +237,7 @@ const EventCard: React.FC<EventCardProps> = ({
                   <Badge variant="ontonDark">hosted</Badge>
                 ) : (
                   <Badge variant="ontonDark">
-                    { ticketPrice > 0 ? ticketPrice : "free"}
+                    {ticketPrice > 0 ? ticketPrice : "free"}
                   </Badge>
                 )}
               </div>
@@ -246,16 +265,16 @@ const EventCard: React.FC<EventCardProps> = ({
     >
       {!imageLoaded && renderImageSkeleton()}
       <Image
-          src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-          alt={title}
-          width={window?.innerWidth || 400}
-          height={400}
-          style={{ objectFit: "cover" }}
-          className={`rounded-lg transition-opacity duration-500 ${
-              imageLoaded ? "opacity-100" : "opacity-0"
-          }`}
-          onError={(e) => (e.currentTarget.src = defaultImage)}
-          onLoad={() => setImageLoaded(true)}
+        src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+        alt={title}
+        width={window?.innerWidth || 400}
+        height={400}
+        style={{ objectFit: "cover" }}
+        className={`rounded-lg transition-opacity duration-500 ${
+          imageLoaded ? "opacity-100" : "opacity-0"
+        }`}
+        onError={(e) => (e.currentTarget.src = defaultImage)}
+        onLoad={() => setImageLoaded(true)}
       />
     </div>
   );
@@ -269,17 +288,17 @@ const EventCard: React.FC<EventCardProps> = ({
         <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
           {!imageLoaded && renderImageSkeleton()}
           <Image
-              src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-              alt={title}
-              layout="fill"
-              objectFit="cover"
-              style={{ objectFit: "cover" }}
-              className={`rounded-lg transition-opacity duration-500 ${
-                  imageLoaded ? "opacity-100" : "opacity-0"
-              }`}
-              loading="lazy"
-              onError={(e) => (e.currentTarget.src = defaultImage)}
-              onLoad={() => setImageLoaded(true)}
+            src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+            alt={title}
+            layout="fill"
+            objectFit="cover"
+            style={{ objectFit: "cover" }}
+            className={`rounded-lg transition-opacity duration-500 ${
+              imageLoaded ? "opacity-100" : "opacity-0"
+            }`}
+            loading="lazy"
+            onError={(e) => (e.currentTarget.src = defaultImage)}
+            onLoad={() => setImageLoaded(true)}
           />
         </div>
         <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
