@@ -40,6 +40,7 @@ interface EventCardProps {
     ticketPrice?: number;
     city?: string;
     country?: string;
+    participationType?: string;
   };
   mode?: "normal" | "small" | "detailed" | "ongoing";
   currentUserId?: number;
@@ -66,15 +67,17 @@ const EventCard: React.FC<EventCardProps> = ({
     ticketPrice = 0,
     city = null,
     country = null,
+    participationType = "unknown",
   } = event;
 
   const defaultImage = "/template-images/default.webp";
   const [imageLoaded, setImageLoaded] = useState(false);
   const webApp = useWebApp();
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
-  const geoLocation = city || country ? `${city}, ${country}` : location;
+  const geoLocation = city || country ? `${city}, ${country}` : location.length > 15 ? `${location.slice(0, 15)}...` : location;
+
   const isOnline =
-    website || location.includes("http") ? "Online" : geoLocation;
+      participationType === "online" ? "Online" : participationType=== "in_person" ?  geoLocation : "unknown";
 
   const handleEventClick = () => {
     if (ticketToCheckIn) {
