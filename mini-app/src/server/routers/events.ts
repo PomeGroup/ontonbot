@@ -142,6 +142,13 @@ export const eventsRouter = router({
           ? await hashPassword(inputSecretPhrase)
           : undefined;
 
+        if (!hashedSecretPhrase) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid secret phrase",
+          });
+        }
+
         const newEvent = await trx
           .insert(events)
           .values({
@@ -530,7 +537,6 @@ After:
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
             `,
         });
-
 
         await updateActivity(eventDraft, opts.ctx.event.activity_id as number);
 

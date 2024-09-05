@@ -83,7 +83,7 @@ export const ThirdStep = () => {
         onChange={(e) =>
           setEventData({
             ...eventData,
-            secret_phrase: e.target.value,
+            secret_phrase: e.target.value.trim().toLowerCase(),
           })
         }
         errors={errors?.secret_phrase}
