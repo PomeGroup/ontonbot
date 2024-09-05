@@ -188,16 +188,19 @@ export const eventsRouter = router({
         }
 
         if (inputSecretPhrase) {
-          await trx.insert(eventFields).values({
-            emoji: "🔒",
-            title: "secret_phrase_onton_input",
-            description: "Enter the event password",
-            placeholder: hashedSecretPhrase,
-            type: "input",
-            order_place: opts.input.eventData.dynamic_fields.length,
-            event_id: newEvent[0].event_id,
-            updatedBy: opts.ctx.user.user_id.toString(),
-          });
+          await trx
+            .insert(eventFields)
+            .values({
+              emoji: "🔒",
+              title: "secret_phrase_onton_input",
+              description: "Enter the event password",
+              placeholder: "Enter the event password",
+              type: "input",
+              order_place: opts.input.eventData.dynamic_fields.length,
+              event_id: newEvent[0].event_id,
+              updatedBy: opts.ctx.user.user_id.toString(),
+            })
+            .execute();
         }
 
         const additional_info = z
@@ -445,7 +448,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             await trx
               .update(eventFields)
               .set({
-                placeholder: hashedSecretPhrase,
                 updatedBy: opts.ctx.user.user_id.toString(),
               })
               .where(eq(eventFields.id, secretPhraseTask[0].id))
@@ -457,7 +459,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
                 emoji: "🔒",
                 title: "secret_phrase_onton_input",
                 description: "Enter the event password",
-                placeholder: hashedSecretPhrase,
+                placeholder: "Enter the event password",
                 type: "input",
                 order_place: eventData.dynamic_fields.length,
                 event_id: eventId,
