@@ -167,7 +167,7 @@ const Search: React.FC = () => {
                     </div>
                 ) : (
                     <>
-                      {results.length > 0 ? (
+                      {results.length > 0 && (
                           results.map((event, index) => {
                             if (results.length === index + 1) {
                               return (
@@ -192,9 +192,7 @@ const Search: React.FC = () => {
                               );
                             }
                           })
-                      ) : (
-                          <div className="text-gray-500">No results found.</div>
-                      )}
+                      )  }
                     </>
                 )}
               </div>
