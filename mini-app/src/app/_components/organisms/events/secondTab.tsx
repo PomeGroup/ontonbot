@@ -31,10 +31,11 @@ export const SecondStep = () => {
     if (!formRef.current) {
       return;
     }
+    console.log("CLicked");
 
     const secondStepDataSchema = z
       .object({
-        start_date: z.number().refine((data) => data > Date.now(), {
+        start_date: z.number().refine((data) => data > Date.now() / 1000, {
           message: "Start date must be in the future",
         }),
         end_date: z.number().refine((data) => data > eventData?.start_date!, {
@@ -96,6 +97,7 @@ export const SecondStep = () => {
     const formDataParsed = secondStepDataSchema.safeParse(formDataObject);
 
     if (!formDataParsed.success) {
+      console.log("CLicked error");
       setErrors(formDataParsed.error.flatten().fieldErrors);
       return;
     }
