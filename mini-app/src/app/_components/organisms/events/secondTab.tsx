@@ -22,6 +22,7 @@ export const SecondStep = () => {
     end_date?: string[] | undefined;
     timezone?: string[] | undefined;
     location?: string[] | undefined;
+    duration?: string[] | undefined;
     cityId?: string[] | undefined;
     countryId?: string[] | undefined;
   }>();
@@ -33,9 +34,16 @@ export const SecondStep = () => {
 
     const secondStepDataSchema = z
       .object({
-        start_date: z.number(),
-        end_date: z.number(),
+        start_date: z.number().refine((data) => data > Date.now(), {
+          message: "Start date must be in the future",
+        }),
+        end_date: z.number().refine((data) => data > eventData?.start_date!, {
+          message: "End date must be after start date",
+        }),
         timezone: z.string().min(1),
+        duration: z.number().refine((data) => data > 0, {
+          message: "Duration must be greater than 0",
+        }),
         eventLocationType: z.enum(["online", "in_person"]),
         location: z.string().min(1),
         cityId: z.number().optional(),
@@ -73,6 +81,8 @@ export const SecondStep = () => {
     >;
     formDataObject.start_date = eventData?.start_date;
     formDataObject.end_date = eventData?.end_date;
+    formDataObject.duration =
+      (eventData?.end_date || 0) - (eventData?.start_date || 0);
     formDataObject.timezone = eventData?.timezone || "";
     formDataObject.location = eventData?.location || "";
     formDataObject.eventLocationType = eventData?.eventLocationType || "online";
@@ -92,7 +102,10 @@ export const SecondStep = () => {
 
     const data = formDataParsed.data;
 
-    setEventData({ ...eventData, ...data });
+    setEventData({
+      ...eventData,
+      ...data,
+    });
     setCurrentStep(3);
   };
 
@@ -161,6 +174,9 @@ export const SecondStep = () => {
               </span>
             </label>
           </div>
+          {errors?.duration && (
+            <span className="text-red-500">{errors?.duration[0]}</span>
+          )}
           <AlertGeneric
             className="!mt-4"
             variant="info"
