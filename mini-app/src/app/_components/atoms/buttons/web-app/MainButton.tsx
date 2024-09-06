@@ -81,12 +81,11 @@ const MainButton: FC<MainButtonProps> = ({
       }
     };
   }, [
-    WebApp,
-    updateButton,
-    onClick,
+    WebApp?.MainButton.isActive,
     progress,
     disabled,
-    buttonParams,
+    buttonParams.color,
+    buttonParams.text_color,
     text,
     color,
     textColor,
