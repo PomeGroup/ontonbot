@@ -60,20 +60,23 @@ const MainButton: FC<MainButtonProps> = ({
   }, [
     WebApp?.MainButton.isActive,
     text,
-    buttonParams,
+    buttonParams.color,
+    buttonParams.text_color,
     disabled,
     progress,
     color,
   ]);
 
   useEffect(() => {
+    if (onClick && WebApp) {
+      WebApp.MainButton.onClick(onClick);
+    }
+  }, [onClick, WebApp?.MainButton.isActive]);
+
+  useEffect(() => {
     if (!WebApp) return;
 
     updateButton();
-
-    if (onClick) {
-      WebApp.MainButton.onClick(onClick);
-    }
 
     return () => {
       WebApp.MainButton.hide();
@@ -89,8 +92,6 @@ const MainButton: FC<MainButtonProps> = ({
     };
   }, [
     WebApp?.MainButton.isActive,
-    updateButton,
-    onClick,
     progress,
     disabled,
     buttonParams.color,
