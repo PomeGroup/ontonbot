@@ -1,5 +1,7 @@
 "use client";
 
+import { Toaster } from "@/components/ui/toaster";
+import { ConfigProvider } from "@/context/ConfigContext";
 import { NavigationHistoryProvider } from "@/context/NavigationHistoryContext";
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { ThemeProvider } from "next-themes";
@@ -8,7 +10,6 @@ import React from "react";
 import BackButtonHandler from "./_components/BackButtonHandler";
 import WebAppProvider from "./_components/WebAppProvider";
 import ThemeSetter from "./themeSetter";
-import { ConfigProvider } from "@/context/ConfigContext";
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -30,6 +31,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
           <NavigationHistoryProvider>
             <ConfigProvider>
               <BackButtonHandler />
+              <Toaster />
               <ThemeSetter>{children}</ThemeSetter>
             </ConfigProvider>
           </NavigationHistoryProvider>

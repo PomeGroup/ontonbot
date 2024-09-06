@@ -2,6 +2,7 @@ import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
 import useWebApp from "@/hooks/useWebApp";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { useRouter } from "next/navigation";
@@ -19,16 +20,23 @@ export const ThirdStep = () => {
     secret_phrase?: string[] | undefined;
   }>();
   const router = useRouter();
+
   const addEvent = trpc.events.addEvent.useMutation({
-    onSuccess() {
+    onSuccess(data) {
       setEventData({});
-      router.push("/");
+      toast({
+        title: "Event created successfully",
+      });
+      router.push(`/events/${data.eventId}/edit`);
     },
   });
   const updateEvent = trpc.events.updateEvent.useMutation({
-    onSuccess() {
+    onSuccess(data) {
       setEventData({});
-      router.push("/");
+      toast({
+        title: "Event updated successfully",
+      });
+      router.push(`/events/${data.eventId}/edit`);
     },
   });
   const webApp = useWebApp();
