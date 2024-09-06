@@ -112,9 +112,6 @@ export const SecondStep = () => {
   useEffect(() => {
     setEventData({
       ...eventData,
-      start_date: eventData?.start_date || (new Date().getTime() / 1000) >> 0,
-      end_date:
-        eventData?.end_date || ((new Date().getTime() / 1000) >> 0) + 60 * 60,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       eventLocationType: eventData?.eventLocationType || "online",
     });
@@ -181,7 +178,7 @@ export const SecondStep = () => {
             className="!mt-4"
             variant="info"
           >
-            The time is set by your location and time zone.
+            The time is based on your location and timezone.
           </AlertGeneric>
           <Title3>Location</Title3>
 
