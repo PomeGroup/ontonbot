@@ -4,7 +4,7 @@ import { trpc } from "@/app/_trpc/client";
 import { Button } from "@/components/ui/button";
 import useWebApp from "@/hooks/useWebApp";
 import { cn, wait } from "@/lib/utils";
-import { LoaderIcon } from "lucide-react";
+import { LoaderIcon, QrCode } from "lucide-react";
 
 const QrCodeButton = ({
   url,
@@ -23,7 +23,7 @@ const QrCodeButton = ({
   return (
     <Button
       className={cn(
-        "w-full space-x-1",
+        "w-full space-x-2 mb-4 mt-2",
         requestSendQRcodeMutation.isLoading && Boolean(initData) && "opacity-50"
       )}
       variant={"outline"}
@@ -45,7 +45,8 @@ const QrCodeButton = ({
         WebApp?.close();
       }}
     >
-      <span>Get Link and QR</span>
+      <QrCode />
+      <span className="text-lg">Get Link and QR</span>
       {requestSendQRcodeMutation.isLoading && (
         <LoaderIcon className="h-5 animate-spin" />
       )}

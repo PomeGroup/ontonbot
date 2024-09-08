@@ -1,21 +1,18 @@
 "use client";
 
 import Buttons from "@/app/_components/atoms/buttons";
+import QrCodeButton from "@/app/_components/atoms/buttons/QrCodeButton";
+import CheckInGuest from "@/app/_components/checkInGuest/CheckInGuest";
 import Alerts from "@/app/_components/molecules/alerts";
 import Tables from "@/app/_components/molecules/tables";
 import { ManageEvent } from "@/app/_components/organisms/events";
 import { trpc } from "@/app/_trpc/client";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
-import React, {FC, useEffect, useState} from "react";
-import Link from "next/link";
-import { FaCloudDownloadAlt, FaRegEdit } from "react-icons/fa";
-import CheckInGuest from "@/app/_components/checkInGuest/CheckInGuest";
+import { FC, useState } from "react";
 import { BsFillPersonLinesFill } from "react-icons/bs";
-import { FaRegCopy } from "react-icons/fa";
-
+import { FaRegEdit } from "react-icons/fa";
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const WebApp = useWebApp();
@@ -58,7 +55,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
     WebApp?.close();
   };
-  const guestCheckInParams = { hash: params.hash , setNeedRefresh  , needRefresh };
+  const guestCheckInParams = { hash: params.hash, setNeedRefresh, needRefresh };
   return (
     <div>
       <Tabs
@@ -81,14 +78,24 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="manage">
+          {event.data?.event_uuid && (
+            <QrCodeButton
+              event_uuid={event.data.event_uuid}
+              url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event.data.event_uuid}`}
+              hub={event.data.society_hub.name!}
+            />
+          )}
+
           <div className="mt-0 flex items-center space-x-2 px-2  ">
-            <span className=" text-2xl font-extrabold tracking-tight text-gray-300 mr-auto" > Guests List </span>
+            <span className=" text-2xl font-extrabold tracking-tight text-gray-300 mr-auto">
+              {" "}
+              Guests List{" "}
+            </span>
             {event?.data && event.data.ticketToCheckIn === true && (
-              <span >
+              <span>
                 <CheckInGuest params={guestCheckInParams} />
               </span>
             )}
-
           </div>
 
           <Tables.Visitors
@@ -101,7 +108,10 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           <Buttons.WebAppBack whereTo={"/events"} />
         </TabsContent>
 
-        <TabsContent value="edit" className="pt-4">
+        <TabsContent
+          value="edit"
+          className="pt-4"
+        >
           <ManageEvent
             /* @ts-ignore  */
             event={event.data}

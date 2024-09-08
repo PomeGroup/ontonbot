@@ -32,7 +32,7 @@ export const ThirdStep = () => {
     onSuccess(data) {
       setEventData({});
       toast("Event updated successfully");
-      router.push(`/events/${data.eventId}/edit`);
+      router.push(`/events/${data.eventId}`);
     },
   });
   const webApp = useWebApp();
