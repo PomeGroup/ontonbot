@@ -7,7 +7,7 @@ import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
@@ -26,9 +26,8 @@ export const SecondStep = () => {
     cityId?: string[] | undefined;
     countryId?: string[] | undefined;
   }>();
-  const [userTyping, setUserTyping] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (!formRef.current) {
       return;
     }
@@ -85,7 +84,6 @@ export const SecondStep = () => {
     formDataObject.duration =
       (eventData?.end_date || 0) - (eventData?.start_date || 0);
     formDataObject.timezone = eventData?.timezone || "";
-    formDataObject.location = eventData?.location || "";
     formDataObject.eventLocationType = eventData?.eventLocationType || "online";
     formDataObject.cityId = eventData?.cityId
       ? Number(eventData.cityId)
@@ -108,7 +106,7 @@ export const SecondStep = () => {
       ...data,
     });
     setCurrentStep(3);
-  };
+  }, [Object.values(eventData || {})]);
 
   useEffect(() => {
     setEventData({
@@ -116,21 +114,6 @@ export const SecondStep = () => {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       eventLocationType: eventData?.eventLocationType || "online",
     });
-
-    const handleFocus = () => {
-      setUserTyping(true);
-    };
-    const handleBlur = () => {
-      setUserTyping(false);
-    };
-
-    window.addEventListener("focus", handleFocus);
-    window.addEventListener("blur", handleBlur);
-
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-      window.removeEventListener("blur", handleBlur);
-    };
   }, []);
 
   return (
@@ -235,14 +218,8 @@ export const SecondStep = () => {
               />
               <Input
                 type="text"
-                value={eventData?.location || ""}
+                name="location"
                 errors={errors?.location}
-                onChange={(e) =>
-                  setEventData({
-                    ...eventData,
-                    location: e.target.value,
-                  })
-                }
                 placeholder="Location Detail"
               />
             </div>
@@ -251,25 +228,17 @@ export const SecondStep = () => {
           {eventData?.eventLocationType === "online" && (
             <Input
               type="url"
-              value={eventData?.location || ""}
+              name="location"
               errors={errors?.location}
-              onChange={(e) =>
-                setEventData({
-                  ...eventData,
-                  location: e.target.value,
-                })
-              }
               placeholder="https://example.com"
             />
           )}
         </StepLayout>
       </form>
-      {!userTyping && (
-        <MainButton
-          text="Next Step"
-          onClick={handleSubmit}
-        />
-      )}
+      <MainButton
+        text="Next Step"
+        onClick={handleSubmit}
+      />
     </>
   );
 };
