@@ -100,7 +100,6 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       ) : null}
       <Labels.CampaignDescription description={eventData.data?.description!} />
       {isStarted && isNotEnded && eventData.data?.dynamic_fields ? (
-        !authorized &&
         (role !== "admin" || user?.user_id !== eventData.data.owner) && (
           <>
             <Tasks.Wallet />
