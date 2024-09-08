@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import { useTheme } from "next-themes";
 import useWebApp from "@/hooks/useWebApp";
+import { useTheme } from "next-themes";
+import { useEffect } from "react";
 
 export default function ThemeSetter({
   children,

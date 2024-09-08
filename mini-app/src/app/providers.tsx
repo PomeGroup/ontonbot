@@ -31,8 +31,8 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
           <NavigationHistoryProvider>
             <ConfigProvider>
               <BackButtonHandler />
-              <Toaster />
               <ThemeSetter>{children}</ThemeSetter>
+              <Toaster />
             </ConfigProvider>
           </NavigationHistoryProvider>
         </WebAppProvider>
