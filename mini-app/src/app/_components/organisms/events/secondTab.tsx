@@ -219,6 +219,7 @@ export const SecondStep = () => {
               <Input
                 type="text"
                 name="location"
+                defaultValue={eventData?.location}
                 errors={errors?.location}
                 placeholder="Location Detail"
               />
@@ -229,6 +230,7 @@ export const SecondStep = () => {
             <Input
               type="url"
               name="location"
+              defaultValue={eventData?.location}
               errors={errors?.location}
               placeholder="https://example.com"
             />
