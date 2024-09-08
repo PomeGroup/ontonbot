@@ -100,7 +100,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       ) : null}
       <Labels.CampaignDescription description={eventData.data?.description!} />
       {isStarted && isNotEnded && eventData.data?.dynamic_fields ? (
-        authorized &&
+        !authorized &&
         (role !== "admin" || user?.user_id !== eventData.data.owner) && (
           <>
             <Tasks.Wallet />
@@ -109,11 +109,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
               tasks={eventData.data.dynamic_fields}
               eventHash={eventHash}
             />
-            {!authorized && (
-              <ClaimRewardButton
-                eventId={eventData.data?.event_uuid as string}
-              />
-            )}
+            <ClaimRewardButton eventId={eventData.data?.event_uuid as string} />
           </>
         )
       ) : // if it was not ended than it means the event is not started yet
