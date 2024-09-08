@@ -196,6 +196,13 @@ export const eventsRouter = router({
             ? await hashPassword(inputSecretPhrase)
             : undefined;
 
+          if (!hashedSecretPhrase) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Invalid secret phrase",
+            });
+          }
+
           const newEvent = await trx
             .insert(events)
             .values({
@@ -239,7 +246,7 @@ export const eventsRouter = router({
               emoji: "🔒",
               title: "secret_phrase_onton_input",
               description: "Enter the event password",
-              placeholder: hashedSecretPhrase,
+              placeholder: "Enter the event password",
               type: "input",
               order_place: opts.input.eventData.dynamic_fields.length,
               event_id: newEvent[0].event_id,
@@ -583,8 +590,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             )
             .execute();
 
-          console.log({ secretPhraseTask, eventData, hashedSecretPhrase });
-
           if (hashedSecretPhrase) {
             if (secretPhraseTask.length) {
               console.log("Updating secret phrase task");
@@ -592,7 +597,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               await trx
                 .update(eventFields)
                 .set({
-                  placeholder: hashedSecretPhrase,
                   updatedBy: initDataJson.user.id.toString(),
                 })
                 .where(eq(eventFields.id, secretPhraseTask[0].id))
@@ -604,7 +608,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
                   emoji: "🔒",
                   title: "secret_phrase_onton_input",
                   description: "Enter the event password",
-                  placeholder: hashedSecretPhrase,
+                  placeholder: "Enter the event password",
                   type: "input",
                   order_place: eventData.dynamic_fields.length,
                   event_id: eventData.event_id,
