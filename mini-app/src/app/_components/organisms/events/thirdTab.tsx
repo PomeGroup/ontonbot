@@ -6,6 +6,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
 import { z } from "zod";
 import TgsFilePlayer from "../../atoms/TgsFilePlayer";
@@ -24,14 +25,20 @@ export const ThirdStep = () => {
   const addEvent = trpc.events.addEvent.useMutation({
     onSuccess(data) {
       setEventData({});
-      toast("Event created successfully");
+      toast("Event created successfully", {
+        duration: 10000000,
+        icon: <IoInformationCircle />,
+      });
       router.push(`/events/${data.eventId}/edit`);
     },
   });
   const updateEvent = trpc.events.updateEvent.useMutation({
     onSuccess(data) {
       setEventData({});
-      toast("Event updated successfully");
+      toast("Event updated successfully", {
+        duration: 10000000,
+        icon: <IoInformationCircle />,
+      });
       router.push(`/events/${data.eventId}`);
     },
   });
