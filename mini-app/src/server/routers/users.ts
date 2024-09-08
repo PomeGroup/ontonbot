@@ -52,9 +52,7 @@ export const usersRouter = router({
         });
       }
 
-
-
-      const tableName = 'users'; // Ensure this matches your table name
+      const tableName = "users"; // Ensure this matches your table name
 
       const values = {
         user_id: initDataJson.user.id,
@@ -390,6 +388,7 @@ async function createUserReward(props: {
           visitor_id: visitor.id,
           type: "ton_society_sbt",
           data: res.data.data,
+          status: "notified_by_ui",
           updatedBy: props.user_id.toString(),
         })
         .execute();

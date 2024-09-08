@@ -19,6 +19,9 @@ import zod from "zod";
 import EventPageLoadingSkeleton from "./loading";
 
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
+  useWithBackButton({
+    whereTo: "/",
+  });
   const webApp = useWebApp();
   const { role, authorized, user } = useAuth();
   const eventData = trpc.events.getEvent.useQuery(
@@ -35,9 +38,6 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
     }
   );
   const router = useRouter();
-  useWithBackButton({
-    whereTo: "/",
-  });
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {
