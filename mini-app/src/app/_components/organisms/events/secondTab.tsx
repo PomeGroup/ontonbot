@@ -117,12 +117,20 @@ export const SecondStep = () => {
       eventLocationType: eventData?.eventLocationType || "online",
     });
 
-    document.addEventListener("focus", () => {
+    const handleFocus = () => {
       setUserTyping(true);
-    });
-    document.addEventListener("blur", () => {
+    };
+    const handleBlur = () => {
       setUserTyping(false);
-    });
+    };
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
   }, []);
 
   return (
