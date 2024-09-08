@@ -1,4 +1,5 @@
 import { db } from "@/db/db";
+import crypto from 'crypto';
 import {
   event_details_search_list,
   eventFields,
@@ -198,16 +199,18 @@ export const getEventsWithFilters = async (
     sortBy = "default",
     useCache = false,
   } = params;
-  console.log("*****params search: ", params);
-
-  const cacheKey =
-    cacheKeys.getEventsWithFilters +
-    JSON.stringify({ limit, offset, search, filter, sortBy });
+  //console.log("*****params search: ", params);
+  const stringToHash = JSON.stringify({ limit, offset, search, filter, sortBy });
+  // Create MD5 hash
+  const hash =  crypto.createHash('md5').update(stringToHash).digest('hex');
+  const cacheKey = cacheKeys.getEventsWithFilters + hash;
 
   const cachedResult = getCache(cacheKey);
-  if (cachedResult && useCache) {
-    return cachedResult;
-  }
+  // if (cachedResult && useCache)  {
+  //   /// show return from cache and time
+  //   console.log("👙👙 cachedResult 👙👙" + Date.now());
+  //   return cachedResult;
+  // }
 
   let query = db.select().from(event_details_search_list);
   let userEventUuids = [];
@@ -237,10 +240,9 @@ export const getEventsWithFilters = async (
     } else {
       return [];
     }
-    console.log("userEventUuids", userEventUuids);
+
   }
   // Apply date filters
-  console.log(filter);
   if (filter?.startDate && filter?.startDateOperator) {
     conditions.push(
       sql`${event_details_search_list.startDate} ${sql.raw(filter.startDateOperator)} ${filter.startDate}`
@@ -264,7 +266,7 @@ export const getEventsWithFilters = async (
   }
 
   // Apply event_ids filter
-  if (filter?.event_ids) {
+  if (filter?.event_ids && filter.event_ids.length) {
     conditions.push(
       sql`${event_details_search_list.eventId} = any(${filter.event_ids})`
     );
@@ -276,7 +278,7 @@ export const getEventsWithFilters = async (
     );
   }
   // Apply event_uuids filter
-  if (filter?.event_uuids) {
+  if (filter?.event_uuids && filter.event_uuids.length) {
     conditions.push(
       inArray(event_details_search_list.eventUuid, filter.event_uuids)
     );
@@ -295,9 +297,9 @@ export const getEventsWithFilters = async (
     );
 
     let orderByClause;
-    if (sortBy === "start_date_asc" || sortBy === "default") {
+    if (sortBy === "start_date_asc" ) {
       orderByClause = sql`start_date ASC`;
-    } else if (sortBy === "start_date_desc") {
+    } else if (sortBy === "start_date_desc"|| sortBy === "default") {
       orderByClause = sql`start_date DESC`;
     } else if (sortBy === "most_people_reached") {
       orderByClause = sql`visitor_count DESC`;
@@ -305,10 +307,11 @@ export const getEventsWithFilters = async (
 
     // @ts-expect-error
     query = query.orderBy(
-      sql`greatest(
-                similarity(${event_details_search_list.title}, ${search}),
-                similarity(${event_details_search_list.location}, ${search})
-            ) DESC ${orderByClause ? sql`, ${orderByClause}` : sql``}`
+        sql`${orderByClause ? sql`${orderByClause},` : sql``}
+      greatest(
+          similarity(${event_details_search_list.title}, ${search}),
+          similarity(${event_details_search_list.location}, ${search})
+      ) DESC`
     );
   }
 
@@ -339,7 +342,7 @@ export const getEventsWithFilters = async (
     query = query.limit(limit).offset(offset);
   }
   //console.log("query eee " );
-  logSQLQuery(query.toSQL().sql, query.toSQL().params);
+   logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
   setCache(cacheKey, eventsData, 60);

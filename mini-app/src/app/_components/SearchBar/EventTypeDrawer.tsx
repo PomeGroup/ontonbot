@@ -9,11 +9,17 @@ import {
     DrawerHeader,
     DrawerTitle,
 } from "@/components/ui/drawer";
+import { z } from "zod";
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+
+// Extract the participationType from the Zod schema
+type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
+type ParticipationType = NonNullable<SearchEventsInput['filter']>['participationType'];
 
 interface EventTypeDrawerProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    participationType: string[];
+    participationType: ParticipationType;
     toggleParticipationType: (type: string) => void;
 }
 

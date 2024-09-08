@@ -1,79 +1,66 @@
 "use client";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import Image from "next/image";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import { trpc } from "@/app/_trpc/client";
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { useSearchParams } from "next/navigation";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
+import TabTriggers from "@/app/_components/SearchBar/TabTriggers";
+import useSearchEventsStore from "@/zustand/searchEventsInputZod";
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import { useSearchParams } from "next/navigation";
+import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 
 const LIMIT = 10;
 
 const Search: React.FC = () => {
+  const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();
+  const { searchInput, setSearchInput, setFilter, setOffset } = searchStore;
+  const [finalSearchInput, setFinalSearchInput] = useState(
+    searchEventsInputZod.parse(searchInput)
+  );
   const webApp = useWebApp();
-  const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
+  const { authorized } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
-  const searchTerm = searchParams.get("query") || "";
-  const participationType =
-    searchParams
-      .get("participationType")
-      ?.split(",")
-      .filter((pt) => pt === "online" || pt === "in_person") || []; // Validate participation type
-  const selectedHubs =
-    searchParams
-      .get("selectedHubs")
-      ?.split(",")
-      .map((id) => parseInt(id, 10))
-      .filter((id) => !isNaN(id)) || [];
 
-  const sortBy = searchParams.get("sortBy") || "default";
-  // Get startDate from URL or default to current time
-
-  const endDate = searchParams.get("endDate")
-    ? parseInt(searchParams.get("endDate") as string, 10)
-    : undefined;
-  const endDateOperator = searchParams.get("endDateOperator") || "";
-  const startDate = searchParams.get("startDate")
-    ? parseInt(searchParams.get("startDate") as string, 10)
-    : endDate
-      ? undefined
-      : Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600);
-  const startDateOperator = searchParams.get("startDateOperator") || "";
   const [results, setResults] = useState<any[]>([]);
-  const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const lastElementRef = useRef<HTMLDivElement | null>(null);
-
-  const searchParamsParsed = searchEventsInputZod.parse({
-    limit: LIMIT,
-    offset: offset,
-    search: searchTerm || undefined,
-    filter: {
-      ...(participationType.length > 0 && { participationType }), // Include if valid
-      startDate, // Always include startDate
-      startDateOperator: startDateOperator || undefined,
-      ...(endDate && { endDate }), // Include if valid
-      endDateOperator: endDateOperator || undefined,
-      ...(selectedHubs.length > 0 && { society_hub_id: selectedHubs }), // Include if valid
+  const tabParam = searchParams.get("tab") || "All";
+  const [tabValue, setTabValue] = useState(tabParam);
+  const tabItems = [
+    { value: "All", label: "All" },
+    {
+      value: "Upcoming",
+      label: "Upcoming",
+      borderClass: "border-x-2 border-x-gray-600",
     },
-    sortBy: sortBy || "default",
-  });
+    { value: "Past", label: "Past" },
+    {
+      value: "OnGoing",
+      label: "OnGoing",
+      borderClass: "border-x-2 border-x-gray-600",
+    },
+    { value: "MyEvents", label: "My Events" },
+  ];
 
   const {
     isLoading: isLoadingSearchResults,
     isFetching: isFetchingSearchResults,
     refetch,
-  } = trpc.events.getEventsWithFilters.useQuery(searchParamsParsed, {
+  } = trpc.events.getEventsWithFilters.useQuery(finalSearchInput, {
     enabled: initialFetchDone,
+    // enabled: false,
     keepPreviousData: true,
     onSuccess: (data) => {
-      if (!initialFetchDone) {
+
+
+      if (!initialFetchDone || searchInput.offset === 0) {
         setResults([]);
       }
       setResults((prev) => [...prev, ...(data.data || [])]);
@@ -83,9 +70,9 @@ const Search: React.FC = () => {
 
   const loadMoreResults = useCallback(() => {
     if (hasMore && !isFetchingSearchResults) {
-      setOffset((prevOffset) => prevOffset + LIMIT);
+      setOffset(searchInput?.offset ? searchInput?.offset + LIMIT : 1);
     }
-  }, [hasMore, isFetchingSearchResults]);
+  }, [hasMore, isFetchingSearchResults, searchInput.offset, setSearchInput]);
 
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect();
@@ -109,102 +96,125 @@ const Search: React.FC = () => {
     if (!initialFetchDone) {
       refetch().then(() => {
         setInitialFetchDone(true);
-        setOffset((prevOffset) => prevOffset + LIMIT);
+        setSearchInput({
+          offset: searchInput?.offset ? searchInput?.offset + LIMIT : 0,
+        });
       });
     }
-  }, [searchTerm, participationType, sortBy, refetch]);
+  }, [refetch, initialFetchDone, searchInput.offset, setSearchInput]);
 
-  // useEffect(() => {
-  //   if (offset > 0) {
-  //     refetch();
-  //   }
-  // }, [offset, refetch]);
+  useEffect(() => {
+    //resetFilters();
+    setOffset(0);
 
+    // applyTabFilter(tabValue , searchInput.sortBy);
+    applyTabFilter(tabValue, UserId);
+
+    setResults([]);
+  }, [tabValue, setFilter, UserId]);
+
+  useEffect(() => {
+    setFinalSearchInput(searchEventsInputZod.parse(searchInput));
+    console.log("--------------searchInput", searchInput);
+  }, [searchStore]);
   return (
+    <div className="flex flex-col h-screen">
+      <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+        <SearchBar
+          includeQueryParam={true}
+          showFilterTags={true}
+          onUpdateResults={setResults}
+          offset={searchInput.offset}
+          setOffset={(newOffset) => setSearchInput({ offset: newOffset })}
+          searchParamsParsed={searchInput}
+          setSearchParamsParsed={setSearchInput}
+          refetch={refetch}
+          setFinalSearchInput={setFinalSearchInput}
+          applyTabFilter={applyTabFilter}
+          tabValue={tabValue}
+        />
+      </div>
+      <TabTriggers
+        tabs={tabItems}
+        setTabValue={setTabValue}
+        tabValue={tabValue}
+      />
 
       <div className="flex flex-col h-screen">
-        {/* Fixed Search Bar */}
-        <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
-          <SearchBar
-              includeQueryParam={true}
-              showFilterTags={true}
-              onUpdateResults={setResults}
-              offset={offset}
-              setOffset={setOffset}
-          />
-        </div>
-        <div className="flex flex-col h-screen">
-          {/* Scrollable Content */}
-          <div className="overflow-y-auto flex-grow">
-            <div className="pt-4">
-              {!isLoadingSearchResults &&
-                  !isFetchingSearchResults &&
-                  results.length == 0 && (
-                      <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
-                        <div>
-                          <Image
-                              src={"/template-images/no-search-result.gif"}
-                              alt={"No search results found"}
-                              width={180}
-                              height={180}
-                          />
-                        </div>
-                        <div className="text-gray-500 max-w-md">
-                          No Events were found matching your Search. Please try
-                          changing some of your parameters and try again.
-                        </div>
-                      </div>
-                  )}
-              <div className="pt-2">
-                {isLoadingSearchResults && results.length === 0 ? (
-                    <div className="flex flex-col gap-2">
-                      {Array.from({length: LIMIT}).map((_, index) => (
-                          <EventCardSkeleton
-                              key={index}
-                              mode="small"
-                          />
-                      ))}
-                    </div>
-                ) : (
-                    <>
-                      {results.length > 0 && (
-                          results.map((event, index) => {
-                            if (results.length === index + 1) {
-                              return (
-                                  <div
-                                      ref={lastElementRef}
-                                      key={`${event.event_uuid}-last`}
-                                  >
-                                    <EventCard
-                                        key={event.event_uuid}
-                                        event={event}
-                                        currentUserId={UserId}
-                                    />
-                                  </div>
-                              );
-                            } else {
-                              return (
-                                  <EventCard
-                                      key={event.event_uuid}
-                                      event={event}
-                                      currentUserId={UserId}
-                                  />
-                              );
-                            }
-                          })
-                      )  }
-                    </>
-                )}
-              </div>
-              {isFetchingSearchResults && hasMore && (
-                  <div className="text-center py-4 pb-5">
-                    <div className="loader">Loading more results...</div>
+        <div className="overflow-y-auto flex-grow">
+          <div className="pt-4">
+            {!isLoadingSearchResults &&
+              !isFetchingSearchResults &&
+              results.length === 0 && (
+                <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+                  <div>
+                    <Image
+                      src={"/template-images/no-search-result.gif"}
+                      alt={"No search results found"}
+                      width={180}
+                      height={180}
+                    />
                   </div>
+                  <div className="text-gray-500 max-w-md">
+                    No Events were found matching your Search. Please try
+                    changing some of your parameters and try again.
+                  </div>
+                </div>
+              )}
+
+            <div className="pt-2">
+              {isLoadingSearchResults && results.length === 0 ? (
+                <div className="flex flex-col gap-2">
+                  {Array.from({ length: LIMIT }).map((_, index) => (
+                    <EventCardSkeleton
+                      key={index}
+                      mode="small"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {results.length > 0 &&
+                    results.map((event, index) => {
+                      if (results.length === index + 1) {
+                        return (
+                          <div
+                            ref={lastElementRef}
+                            key={`${event.event_uuid}`}
+                          >
+                            <EventCard
+                              key={event.event_uuid}
+                              event={event}
+                              currentUserId={UserId}
+                            />
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <>
+                            <EventCard
+                              key={event.event_uuid}
+                              event={event}
+                              currentUserId={UserId}
+                            />
+                          </>
+                        );
+                      }
+                    })}
+                </>
               )}
             </div>
+
+            {isFetchingSearchResults && hasMore && (
+              <div className="text-center py-4 pb-5">
+                <div className="loader">Loading more results...</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+    </div>
   );
 };
 

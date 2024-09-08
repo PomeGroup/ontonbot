@@ -694,7 +694,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
   getEventsWithFilters: publicProcedure
     .input(searchEventsInputZod)
     .query(async (opts) => {
-      console.log("*****config", config, configProtected);
+      // console.log("*****config", config, configProtected);
       try {
         const events = await getEventsWithFilters(opts.input);
         return { status: "success", data: events };

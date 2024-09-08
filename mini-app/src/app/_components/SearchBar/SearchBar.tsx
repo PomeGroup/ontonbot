@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   IoChevronBackOutline,
@@ -15,15 +15,26 @@ import HubSelectorDrawer from "./HubSelectorDrawer";
 import MainFilterDrawer from "./MainFilterDrawer";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import useWebApp from "@/hooks/useWebApp";
 import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
+import useSearchEventsStore from "@/zustand/searchEventsInputZod";
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import { z } from "zod";
+import { usePathname } from "next/navigation";
+import useAuth from "@/hooks/useAuth";
+
 interface SearchBarProps {
   includeQueryParam?: boolean;
   showFilterTags?: boolean;
   onUpdateResults: (data: any) => void;
   offset?: number;
   setOffset?: (offset: number) => void;
+  searchParamsParsed?: any;
+  setSearchParamsParsed?: (value: any) => void;
+  refetch?: () => void;
+  setFinalSearchInput?: (value: any) => void;
+  tabValue?: string;
+  applyTabFilter?: (tabValue: string, userId: any) => void;
 }
 
 interface Hub {
@@ -35,22 +46,46 @@ const SearchBar: React.FC<SearchBarProps> = ({
   includeQueryParam = true,
   showFilterTags = false,
   onUpdateResults = () => {},
-    offset = 0,
-    setOffset = () => {},
+  setOffset = () => {},
+  setFinalSearchInput = () => {},
+  tabValue = "All",
+  applyTabFilter = (tabValue: string, userId: number) => {},
 }) => {
-  const allParticipationTypes = ["online", "in_person"];
+  const {
+    searchInput,
+    setSearchInput: storeSetSearchInput,
+    setParticipationType: storeSetParticipationType,
+    setFilter: storeSetSelectedHubs,
+    setSortBy: storeSetSortBy,
+  } = useSearchEventsStore();
+  type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
+  // get pathname
+  const webApp = useWebApp();
+
+  const UserId = webApp?.initDataUnsafe?.user?.id || 0;
+  type SortBy = SearchEventsInput["sortBy"];
+  type ParticipationType = NonNullable<
+    SearchEventsInput["filter"]
+  >["participationType"];
+  type SocietyHubId = NonNullable<
+    SearchEventsInput["filter"]
+  >["society_hub_id"];
+  const [sortBy, setSortBy] = useState<SortBy>(
+    searchInput?.sortBy ? searchInput.sortBy : "start_date_desc"
+  );
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showDialogParticipantError, setShowDialogParticipantError] = useState(false);
-  const [participationType, setParticipationType] = useState<string[]>([
-    "online",
-    "in_person",
-  ]);
+  const [showDialogParticipantError, setShowDialogParticipantError] =
+    useState(false);
+  const allParticipationTypes: ParticipationType = ["online", "in_person"];
+  const [participationType, setParticipationType] = useState<ParticipationType>(
+    ["online", "in_person"]
+  );
   const [selectedHubs, setSelectedHubs] = useState<string[]>([]);
   const [applyingFilters, setApplyingFilters] = useState(false);
   const [hubText, setHubText] = useState<string>("All");
-  const [sortBy, setSortBy] = useState<string>("start_date_asc");
   const [showFilterButton, setShowFilterButton] = useState(true);
   const [isEventTypeDrawerOpen, setIsEventTypeDrawerOpen] = useState(false);
   const [isHubDrawerOpen, setIsHubDrawerOpen] = useState(false);
@@ -59,15 +94,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [searchIsFocused, setSearchIsFocused] = useState(false);
   const hubsResponse = trpc.events.getHubs.useQuery();
   const [hubs, setHubs] = useState<Hub[]>([]);
+  const [renderedFilterTags, setRenderedFilterTags] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const WebApp = useWebApp();
   const hapticFeedback = WebApp?.HapticFeedback;
+
+  const [HideMainButton, setHideMainButton] = useState(false);
+
+
+
   useEffect(() => {
-    if (hubsResponse?.data?.status === 'success') {
+    if (hubsResponse?.data?.status === "success") {
       const hubsData = hubsResponse.data.hubs; // TypeScript knows hubs exists here
       setHubs((prevHubs) => {
         if (JSON.stringify(prevHubs) !== JSON.stringify(hubsData)) {
-          console.log('---hubsResponse', hubsData);
           return hubsData;
         }
         return prevHubs;
@@ -75,29 +115,27 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, [hubsResponse.data?.status]);
 
-
-  const {
-    searchTerm,
-    setSearchTerm,
-    autoSuggestions,
-    setAutoSuggestions,
-  } = useSearchEvents();
+  const { searchTerm, setSearchTerm, autoSuggestions, setAutoSuggestions } =
+    useSearchEvents();
 
   const [initialHubsSet, setInitialHubsSet] = useState(false);
   const [pageInit, setPageInit] = useState(false);
+
   useEffect(() => {
-    console.log('---hubs',hubs , "initialHubsSet",initialHubsSet , "includeQueryParam",includeQueryParam);
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
-      const participationType = searchParams
-        .get("participationType")
-        ?.split(",") || allParticipationTypes;
+      const participationType =
+        searchParams.get("participationType")?.split(",") ||
+        allParticipationTypes;
       const selectedHubsFromParams =
         searchParams.get("selectedHubs")?.split(",") || [];
-      const sortBy = searchParams.get("sortBy") || "start_date_asc";
+      const sortBy = searchParams.get("sortBy") || "start_date_desc";
       const searchTerm = searchParams.get("query") || "";
 
       setSearchTerm(searchTerm);
+      storeSetSearchInput({ search: searchTerm });
+      //@ts-ignore
       setParticipationType(participationType);
+      //@ts-ignore
       setSortBy(sortBy);
 
       if (selectedHubsFromParams.length === 0) {
@@ -111,14 +149,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
         setPageInit(true);
       }, 0);
     } else if (hubs.length > 0 && !includeQueryParam && !initialHubsSet) {
-
       setSelectedHubs(hubs.map((hub: Hub) => hub.id));
       setInitialHubsSet(true);
       setTimeout(() => {
         setPageInit(true);
       });
     }
-
   }, [searchParams, hubs, includeQueryParam, initialHubsSet]);
 
   useEffect(() => {
@@ -144,11 +180,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const searchValue = event.target.value;
-
     // check is focus
     const isFocus = event.target === document.activeElement;
     setSearchIsFocused(isFocus);
     setSearchTerm(searchValue);
+    storeSetSearchInput({ search: searchValue });
+    storeSetSortBy(sortBy);
     if (searchValue.length > 2) {
       setShowSuggestions(true);
       setShowFilterButton(false);
@@ -165,56 +202,57 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       handleFilterApply().then(() => {
-        window.location.href = `/search?${createQueryParams().toString()}`;
+        window.location.href = `/search?tab=${tabValue}&${createQueryParams().toString()}`;
         return;
       });
     }
   };
-  const responseRefresh = trpc.events.getEventsWithFilters.useQuery(
-      searchEventsInputZod.parse({
-        limit: 10,
-        offset: 0,
-        search: searchTerm,
-        filter: {
-          participationType: participationType.length ? participationType.filter(Boolean) : allParticipationTypes,
-          startDate:
-              Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
-          society_hub_id:
-              selectedHubs.length > 0 ? selectedHubs.map((hub) => Number(hub)) : [],
-        },
-        sortBy: sortBy,
-      }),
-      {
-        enabled: false,
-      }
-  );
   useEffect(() => {
-    handleFilterApply().then(() => {
-        console.log("filter apply");
-    });
-  }, [applyingFilters]);
-  useEffect(() => {
-    if (responseRefresh.status === "success") {
-      onUpdateResults(responseRefresh.data.data || []);
-    } else if (responseRefresh.status === "error") {
-      onUpdateResults([]);
+    if (applyingFilters) {
+      // Ensure participationType is only ["online", "in_person"]
+      const participationTypeStore = participationType?.filter((type) =>
+        allParticipationTypes.includes(type)
+      );
+
+      // Ensure selectedHubs are converted from string[] to number[]
+      const society_hub_id: SocietyHubId = selectedHubs
+        .map(Number)
+        .filter((id) => !isNaN(id)); // Ensure only valid numbers are included
+      // @ts-ignore
+      storeSetSelectedHubs({ society_hub_id: society_hub_id });
+      storeSetParticipationType(participationTypeStore);
+      // Ensure sortBy is a valid value
+
+      storeSetSortBy(sortBy);
+      // Reset applying filters flag
+      setApplyingFilters(false);
+      storeSetSearchInput({ search: searchInput.search });
+
+      handleFilterApply().then(() => {
+        console.log("searchInput======", searchInput);
+      });
     }
-  }, [responseRefresh.status, responseRefresh.data, onUpdateResults]);
+  }, [applyingFilters]);
+
   const handleAutoSuggestionAllResults = () => {
     setAutoSuggestions([]);
     setShowSuggestions(false);
     setShowFilterButton(true);
     const queryParamsRedirect = new URLSearchParams({
       query: searchTerm,
-      sortBy: "start_date_asc",
+      sortBy: "start_date_desc",
     });
-    window.location.href = `/search?${queryParamsRedirect.toString()}`;
+    window.location.href = `/search?tab=${tabValue}&${queryParamsRedirect.toString()}`;
     return;
   };
   const createQueryParams = () => {
+    // @ts-ignore
     return new URLSearchParams({
       query: searchTerm,
-      participationType: participationType.join(","),
+      participationType:
+        participationType && participationType.length
+          ? participationType.join(",")
+          : allParticipationTypes.join(","),
       selectedHubs: selectedHubs.join(","),
       sortBy: sortBy,
     });
@@ -222,14 +260,17 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleFilterApply = async () => {
     const queryParams = createQueryParams();
 
-    if(!applyingFilters) return;
-
-
+    // if(!applyingFilters) return;
 
     if (!includeQueryParam && !searchIsFocused) {
       router.push(`/search?${queryParams.toString()}`);
     } else if (includeQueryParam && !searchIsFocused) {
-      await responseRefresh.refetch();
+      setRenderedFilterTags(!renderedFilterTags);
+      applyTabFilter(tabValue, UserId);
+      setOffset(0);
+      onUpdateResults([]);
+
+      setFinalSearchInput && setFinalSearchInput(searchInput);
     }
   };
 
@@ -237,38 +278,38 @@ const SearchBar: React.FC<SearchBarProps> = ({
     const allHubs = hubs.map((hub: Hub) => hub.id);
     setParticipationType(allParticipationTypes);
     setSelectedHubs(allHubs);
-    setSortBy("start_date_asc");
+    setSortBy("start_date_desc");
+    setRenderedFilterTags(!renderedFilterTags);
+    handleFilterApply().then((r) => {
+      console.log(r);
+    });
     hapticFeedback?.selectionChanged();
   };
 
-  const toggleParticipationType = (type: string , triggerFrom = "filter" ) => {
+  const toggleParticipationType = (type: string, triggerFrom = "filter") => {
     hapticFeedback?.selectionChanged();
+    // @ts-ignore
     const updated = participationType.includes(type)
-        ? participationType.filter((t) => t !== type)
-        : [...participationType, type];
+      ? participationType.filter((t) => t !== type)
+      : [...participationType, type];
 
-
-      // Display error message using showAlert if no option is selected
-      if(updated.length === 0  && triggerFrom === "filter")
-      {
+    // Display error message using showAlert if no option is selected
+    if (updated.length === 0 && triggerFrom === "filter") {
+      setShowDialogParticipantError(true);
+      return;
+    } else if (updated.length === 0 && triggerFrom === "tag") {
+      setTimeout(() => {
         setShowDialogParticipantError(true);
-        return;
-      }
-      else if(updated.length === 0  && triggerFrom === "tag")
-        {
+        return false;
+        // setParticipationType(allParticipationTypes);
+        // console.log("***toggleParticipationType", participationType , triggerFrom);
+        // handleFilterApply().then((r) => {
+        //   console.log(r);
+        // });
+      });
+    }
 
-            setTimeout(() => {
-              setShowDialogParticipantError(true);
-              return false;
-              // setParticipationType(allParticipationTypes);
-              // console.log("***toggleParticipationType", participationType , triggerFrom);
-              // handleFilterApply().then((r) => {
-              //   console.log(r);
-              // });
-            });
-        }
-
-
+    //@ts-ignore
     setParticipationType(updated);
   };
 
@@ -293,38 +334,45 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   const clearFilter = (filter: string) => {
+    // @ts-ignore
     if (participationType.includes(filter)) {
-
-      toggleParticipationType(filter , "tag");
-
+      toggleParticipationType(filter, "tag");
     } else if (selectedHubs.includes(filter)) {
       toggleHubSelection(filter);
-    } else if (filter === "Sort by Most People Reached") {
-      setSortBy("start_date_asc");
+    } else if (filter === "Most People Reached") {
+      setSortBy("start_date_desc");
     }
     setApplyingFilters(true);
     hapticFeedback?.selectionChanged();
   };
+
+
   useEffect(() => {
-    if (pageInit  ) {
-      handleFilterApply().then((r) => {
-        console.log(r);
-      });
+    if ("/search" === pathname) {
+      WebApp?.MainButton.hide();
+
     }
-  }, [participationType, selectedHubs, sortBy]);
-  const renderFilterButtons = () => {
-
-
+    else if (WebApp?.MainButton.text !== "") {
+      if (HideMainButton) {
+        WebApp?.MainButton.hide();
+      } else {
+        WebApp?.MainButton.show();
+      }
+    } else {
+      WebApp?.MainButton.hide();
+    }
+  }, [HideMainButton, WebApp?.MainButton]);
+  const renderFilterButtons = useCallback(() => {
     const filters = [
       ...participationType,
-      sortBy !== "start_date_asc" ? "Sort by Most People Reached" : null,
-    ].filter(Boolean); // Filter out false values
+      sortBy !== "start_date_desc" ? "Most People Reached" : null,
+    ].filter(Boolean); // Filter out falsy values
 
     const filterButtons = filters.map((filter, index) => (
       <Button
         key={index}
         variant="outline"
-        className="flex items-center whitespace-nowrap"
+        className="flex items-center text-gray-300 p-2 h-4 py-0 text-xs whitespace-nowrap"
         onClick={() => clearFilter(filter!)}
       >
         <span className="text-sm">{filter}</span>
@@ -332,15 +380,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
       </Button>
     ));
 
-    if (selectedHubs.length > 0  && selectedHubs.length !== hubs.length) {
+    if (selectedHubs.length > 0 && selectedHubs.length !== hubs.length) {
       selectedHubs.forEach((hubId, index) => {
         const hubName = hubs.find((hub) => hub.id === hubId)?.name;
-        if(!hubName) return;
+        if (!hubName) return;
         filterButtons.push(
           <Button
             key={`hub-${index}`}
             variant="outline"
-            className="flex items-center whitespace-nowrap"
+            className="flex items-center text-gray-300 p-2 h-4 py-0 text-xs  whitespace-nowrap"
             onClick={() => clearFilter(hubId)}
           >
             <span className="text-sm">{hubName}</span>
@@ -351,7 +399,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
 
     return filterButtons;
-  };
+  }, [renderedFilterTags]); // Dependencies
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const scrollArea = scrollAreaRef.current;
@@ -388,7 +436,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   };
   const handleShowAll = () => {
-    setParticipationType(['in_person', 'online']);
+    setParticipationType(["in_person", "online"]);
     setShowDialogParticipantError(false); // Close the dialog after setting the types
   };
   useEffect(() => {
@@ -405,7 +453,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
         >
           <input
             type="text"
-            placeholder="Search"
+            placeholder={
+              tabValue === "" ? "Search All Events" : `Search ${tabValue} `
+            }
             className="w-full pl-10 pr-10 p-2 rounded-2xl bg-gray-800 text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-blue-600 focus:outline-none transition-width duration-300"
             onChange={handleSearchInputChange}
             onKeyDown={handleKeyDown}
@@ -417,9 +467,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <IoSearchOutline className="text-gray-500 w-5 h-5" />
           </div>
           <ParticipantErrorDialog
-              open={showDialogParticipantError}
-              onClose={() => setShowDialogParticipantError(false)}
-              onConfirm={handleShowAll}
+            open={showDialogParticipantError}
+            onClose={() => setShowDialogParticipantError(false)}
+            onConfirm={handleShowAll}
           />
           {!showFilterButton && (
             <IoCloseOutline
@@ -440,14 +490,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
         </div>
         {showFilterButton && (
           <MainFilterDrawer
-            onOpenChange={() => {}}
+            onOpenChange={() => {
+              setHideMainButton(!HideMainButton);
+            }}
             participationType={participationType}
             hubText={hubText}
             sortBy={sortBy}
+            // @ts-ignore
             setSortBy={setSortBy}
             setIsEventTypeDrawerOpen={setIsEventTypeDrawerOpen}
             setIsHubDrawerOpen={setIsHubDrawerOpen}
             setApplyingFilters={setApplyingFilters}
+            applyingFilters={applyingFilters}
             resetFilters={resetFilters}
             allParticipationTypes={allParticipationTypes}
           />

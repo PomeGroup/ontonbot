@@ -12,16 +12,21 @@ import {
 import { IoOptionsOutline } from "react-icons/io5";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { Separator } from "@/components/ui/separator";
-
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import {z} from "zod";
+import useWebApp from "@/hooks/useWebApp"; // Import your Zustand store
+export type SortByType = z.infer<typeof searchEventsInputZod>["sortBy"];
+export type setSortByType = (value: string) => void;
 interface MainFilterDrawerProps {
   onOpenChange: (open: boolean) => void;
   participationType: string[];
   hubText: string;
-  sortBy: string;
-  setSortBy: (value: string) => void;
+  sortBy: SortByType;
+  setSortBy: setSortByType;
   setIsEventTypeDrawerOpen: (open: boolean) => void;
   setIsHubDrawerOpen: (open: boolean) => void;
   resetFilters: () => void;
+  applyingFilters: boolean;
   setApplyingFilters: (value: boolean) => void;
   allParticipationTypes: string[];
 }
@@ -35,9 +40,11 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
   setIsEventTypeDrawerOpen,
   setIsHubDrawerOpen,
   resetFilters,
+  applyingFilters,
   setApplyingFilters,
   allParticipationTypes
 }) => {
+
   return (
     <Drawer onOpenChange={onOpenChange}>
       <DrawerTrigger>
@@ -56,12 +63,10 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           >
             <p className="text-sm font-medium text-zinc-100">EVENT TYPE</p>
             <div className="cursor-pointer text-blue-500">
-              {
-                (participationType.length ===0 || participationType.length  == allParticipationTypes.length) ?
-                    "All"
-                    :
-                    participationType.join(", ").replace("_", " ")
-              }
+              {participationType.length === 0 ||
+              participationType.length == allParticipationTypes.length
+                ? "All"
+                : participationType.join(", ").replace("_", " ")}
             </div>
           </div>
           <div
@@ -76,12 +81,12 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             <RadioGroup
               orientation="vertical"
               value={sortBy}
-              onValueChange={setSortBy}
+              onValueChange={(value) => setSortBy(value)}
             >
               <Separator className="my-0" />
               <label className="flex justify-between items-center">
                 <span className="text-zinc-400">Time</span>
-                <RadioGroupItem value="start_date_asc" />
+                <RadioGroupItem value="start_date_desc" />
               </label>
               <Separator className="my-0" />
               <label className="flex justify-between items-center">
@@ -97,8 +102,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             <button
               className="bg-blue-100 text-blue-600 px-4 py-2 rounded-full hover:bg-blue-200"
               onClick={() => {
-                    setApplyingFilters(true);
-
+                setApplyingFilters(!applyingFilters);
               }}
             >
               Apply filters

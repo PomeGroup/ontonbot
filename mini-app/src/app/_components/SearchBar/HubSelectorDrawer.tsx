@@ -44,13 +44,14 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
 
         <div className="p-4 space-y-4  ">
           <div
-            className="flex justify-between items-center cursor-pointer p-4"
+            className="flex justify-between items-center cursor-pointer p-4 px-10"
             onClick={allSelected ? deselectAllHubs : selectAllHubs}
           >
             <span className="text-zinc-400">Select All</span>
             <Checkbox
               checked={allSelected}
               onCheckedChange={allSelected ? deselectAllHubs : selectAllHubs}
+              className="  h-5 w-5"
             />
           </div>
           <Separator className="my-2" />
@@ -58,13 +59,14 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
             {hubs.map((hub) => (
               <div
                 key={hub.id}
-                className="flex   justify-between items-center border-b-2 border-b-gray-800 cursor-pointer h-12 "
+                className="flex   justify-between items-center border-b-2 border-b-gray-800 px-6 cursor-pointer h-12 "
                 onClick={() => toggleHubSelection(hub.id)}
               >
                 <span className="text-zinc-400">{hub.name}</span>
                 <Checkbox
                   checked={selectedHubs.includes(hub.id)}
                   onCheckedChange={() => toggleHubSelection(hub.id)}
+                  className="  h-5 w-5"
                 />
               </div>
             ))}

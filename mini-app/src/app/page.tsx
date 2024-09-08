@@ -15,8 +15,7 @@ import Image from "next/image";
 import MemoizedMainButton from "@/app/_components/Memoized/MemoizedMainButton";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-import zod from "zod";
-
+import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 // Define types for events
 type EventData = any[];
 
@@ -29,6 +28,7 @@ export default function Home() {
 
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("all-events");
+  const [tabValueForSearchBar, setTabValueForSearchBar] = useState("All");
   const swiperRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null); // Ref for scrollable area
 
@@ -37,19 +37,6 @@ export default function Home() {
     "all-events": 0,
     "my-events": 0,
   });
-
-  const createSearchQueryParams = (params: zod.infer<typeof searchEventsInputZod>) => {
-    return new URLSearchParams(
-        Object.entries({
-          query: params.search || "",
-          startDate: params.filter?.startDate?.toString() || "",
-          startDateOperator: params.filter?.startDateOperator || "",
-          endDate: params.filter?.endDate?.toString() || "",
-          endDateOperator: params.filter?.endDateOperator || "",
-          sortBy: params.sortBy || "default",
-        }).filter(([_, value]) => value !== "")
-    ).toString();
-  };
 
   // Fetch parameters
   const sliderEventParams = searchEventsInputZod.parse({
@@ -87,7 +74,8 @@ export default function Home() {
     offset: 0,
     filter: {
       participationType: ["online", "in_person"],
-      endDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+      endDate:
+        Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
     },
     sortBy: "start_date_desc",
   });
@@ -108,24 +96,49 @@ export default function Home() {
   const [pastEventsState, setPastEventsState] = useState<EventData>([]);
 
   // Queries without caching
-  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery(sliderEventParams, { cacheTime: 10000, enabled: sliderEventsState.length === 0 });
-  const { data: upcomingEventsData, isLoading: isLoadingUpcoming } = trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams, { cacheTime: 10000, enabled: upcomingEventsState.length === 0 });
-  const { data: ongoingEventsData, isLoading: isLoadingOngoing } = trpc.events.getEventsWithFilters.useQuery(ongoingEventsParams, { cacheTime: 10000, enabled: ongoingEventsState.length === 0 });
-  const { data: pastEventsData, isLoading: isLoadingPast } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams, { cacheTime: 10000, enabled: pastEventsState.length === 0 });
-  const { data: myEventsData, isLoading: isLoadingMyEvents, refetch: refetchMyEvents } = trpc.events.getEventsWithFilters.useQuery(myEventsParams, {
+  const { data: sliderEventData, isLoading: isLoadingSlider } =
+    trpc.events.getEventsWithFilters.useQuery(sliderEventParams, {
+      cacheTime: 10000,
+      enabled: sliderEventsState.length === 0,
+    });
+  const { data: upcomingEventsData, isLoading: isLoadingUpcoming } =
+    trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams, {
+      cacheTime: 10000,
+      enabled: upcomingEventsState.length === 0,
+    });
+  const { data: ongoingEventsData, isLoading: isLoadingOngoing } =
+    trpc.events.getEventsWithFilters.useQuery(ongoingEventsParams, {
+      cacheTime: 10000,
+      enabled: ongoingEventsState.length === 0,
+    });
+  const { data: pastEventsData, isLoading: isLoadingPast } =
+    trpc.events.getEventsWithFilters.useQuery(pastEventsParams, {
+      cacheTime: 10000,
+      enabled: pastEventsState.length === 0,
+    });
+  const {
+    data: myEventsData,
+    isLoading: isLoadingMyEvents,
+    refetch: refetchMyEvents,
+  } = trpc.events.getEventsWithFilters.useQuery(myEventsParams, {
     cacheTime: 10000,
     enabled: false, // Disable auto-fetch for "My Events"
   });
 
-  const seeAllUpcomingEventsLink = "/search/?" + createSearchQueryParams(upcomingEventsParams);
-  const seeAllPastEventsLink = "/search/?" + createSearchQueryParams(pastEventsParams);
+  const seeAllUpcomingEventsLink = "/search/?tab=Upcoming";
+  const seeAllPastEventsLink = "/search/?tab=Past";
+  const seeAllOngoingEventsLink = "/search/?tab=OnGoing";
 
   // Set local state when data is fetched
   useEffect(() => {
-    if (sliderEventData?.data && sliderEventData?.data?.length > 0) setSliderEventsState(sliderEventData.data);
-    if (upcomingEventsData?.data && upcomingEventsData?.data?.length > 0) setUpcomingEventsState(upcomingEventsData.data);
-    if (ongoingEventsData?.data && ongoingEventsData?.data?.length > 0) setOngoingEventsState(ongoingEventsData.data);
-    if (pastEventsData?.data && pastEventsData?.data?.length > 0) setPastEventsState(pastEventsData.data);
+    if (sliderEventData?.data && sliderEventData?.data?.length > 0)
+      setSliderEventsState(sliderEventData.data);
+    if (upcomingEventsData?.data && upcomingEventsData?.data?.length > 0)
+      setUpcomingEventsState(upcomingEventsData.data);
+    if (ongoingEventsData?.data && ongoingEventsData?.data?.length > 0)
+      setOngoingEventsState(ongoingEventsData.data);
+    if (pastEventsData?.data && pastEventsData?.data?.length > 0)
+      setPastEventsState(pastEventsData.data);
   }, [sliderEventData, upcomingEventsData, ongoingEventsData, pastEventsData]);
 
   // Disable body scroll with inline styles
@@ -141,8 +154,13 @@ export default function Home() {
   // Restore scroll position or scroll to top when tab changes
   useEffect(() => {
     const lastScrollPosition = scrollPositions.current[activeTab] || 0;
+    setTabValueForSearchBar(activeTab === "all-events" ? "All" : "MyEvents");
+    applyTabFilter(activeTab === "all-events" ? "All" : "MyEvents", UserId);
     if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: lastScrollPosition, behavior: 'smooth' });
+      scrollRef.current.scrollTo({
+        top: lastScrollPosition,
+        behavior: "smooth",
+      });
     }
   }, [activeTab]);
 
@@ -167,7 +185,6 @@ export default function Home() {
   const handleSlideChange = (swiper: any) => {
     const activeIndex = swiper.activeIndex;
     const newTab = activeIndex === 0 ? "all-events" : "my-events";
-
     // Save the current scroll position before switching slides
     if (scrollRef.current) {
       scrollPositions.current[activeTab] = scrollRef.current.scrollTop;
@@ -179,191 +196,214 @@ export default function Home() {
       refetchMyEvents();
     }
   };
-
   // Memoized handler for the "Create Event" button
   const handleCreateEvent = useCallback(() => {
     router.push("/events/create");
   }, [router]);
 
   return (
-      <>
-        <div className="flex flex-col h-screen">
-          {/* Fixed Search Bar */}
-          <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
-            <SearchBar includeQueryParam={false} onUpdateResults={() => {}} />
+    <>
+      <div className="flex flex-col h-screen">
+        {/* Fixed Search Bar */}
+        <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+          <SearchBar
+            includeQueryParam={false}
+            onUpdateResults={() => {}}
+            tabValue={tabValueForSearchBar}
+          />
 
-            {/* Tabs Header */}
-            <Tabs
-                value={activeTab}
-                className="pt-2 flex-shrink-0"
-                onValueChange={handleTabClick}
-            >
-              <TabsList className="flex bg-gray-600 h-33 rounded-lg p-1">
-                <TabsTrigger
-                    value="all-events"
-                    className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
-                        activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
-                    }`}
-                >
-                  All events
-                </TabsTrigger>
-                <TabsTrigger
-                    value="my-events"
-                    className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
-                        activeTab === "my-events" ? "bg-blue-600" : "bg-transparent"
-                    }`}
-                >
-                  My events
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          {/* Scrollable Content */}
-          <div ref={scrollRef} className="overflow-y-auto flex-grow">
-            <Swiper
-                onSlideChange={handleSlideChange}
-                slidesPerView={1}
-                spaceBetween={30}
-                pagination={{ clickable: true }}
-                onSwiper={(swiper) => {
-                  swiperRef.current = swiper;
-                }}
-            >
-              {/* All Events Slide */}
-              <SwiperSlide>
-                <div className="pt-2">
-                  {/* Slider Event */}
-                  {isLoadingSlider && sliderEventsState.length === 0 ? (
-                      <>
-                        <EventCardSkeleton mode={"detailed"} />
-                        <EventCardSkeleton mode={"detailed"} />
-                      </>
-                  ) : (
-                      sliderEventsState.length > 0 && (
-                          <EventCard
-                              event={sliderEventsState[0]}
-                              mode={"detailed"}
-                              currentUserId={UserId}
-                          />
-                      )
-                  )}
-
-                  {/* Ongoing Events */}
-                  {isLoadingOngoing && ongoingEventsState.length === 0 ? (
-                      <>
-                        <EventCardSkeleton />
-                        <EventCardSkeleton />
-                      </>
-                  ) : (
-                      ongoingEventsState.length > 0 && (
-                          <>
-                            <div className="pt-4 w-full pb-4 flex justify-between items-center">
-                              <h2 className="font-bold text-lg">Ongoing Events</h2>
-                            </div>
-                            {ongoingEventsState.map((event) => (
-                                <EventCard
-                                    key={event.event_uuid}
-                                    event={event}
-                                    currentUserId={UserId}
-                                    mode={"ongoing"}
-                                />
-                            ))}
-                          </>
-                      )
-                  )}
-
-                  {/* Upcoming Events */}
-                  {isLoadingUpcoming && upcomingEventsState.length === 0 ? (
-                      <>
-                        <EventCardSkeleton />
-                        <EventCardSkeleton />
-                      </>
-                  ) : (
-                      upcomingEventsState.length > 0 && (
-                          <>
-                            <div className="pt-4 w-full pb-4 flex justify-between items-center">
-                              <h2 className="font-bold text-lg">Upcoming Events</h2>
-                              <a
-                                  href={seeAllUpcomingEventsLink}
-                                  className="text-zinc-300 hover:underline"
-                              >
-                                See All
-                              </a>
-                            </div>
-                            {upcomingEventsState.map((event) => (
-                                <EventCard
-                                    key={event.event_uuid}
-                                    event={event}
-                                    currentUserId={UserId}
-                                />
-                            ))}
-                          </>
-                      )
-                  )}
-
-                  {/* Past Events */}
-                  {isLoadingPast && pastEventsState.length === 0 ? (
-                      <>
-                        <EventCardSkeleton />
-                        <EventCardSkeleton />
-                      </>
-                  ) : (
-                      pastEventsState.length > 0 && (
-                          <>
-                            <div className="pt-4 pb-4 flex justify-between items-center">
-                              <h2 className="font-bold text-lg">Past Events</h2>
-                              <a
-                                  href={seeAllPastEventsLink}
-                                  className="text-zinc-300 hover:underline"
-                              >
-                                See All
-                              </a>
-                            </div>
-                            {pastEventsState.map((event) => (
-                                <EventCard
-                                    key={event.event_uuid}
-                                    event={event}
-                                    currentUserId={UserId}
-                                />
-                            ))}
-                          </>
-                      )
-                  )}
-                </div>
-              </SwiperSlide>
-
-              {/* My Events Slide */}
-              <SwiperSlide>
-                <div className="pt-2 min-h-lvh">
-                  {isLoadingMyEvents ? (
-                      [1, 2, 3, 4, 5].map((index) => <EventCardSkeleton key={index} />)
-                  ) : myEventsData?.data?.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
-                        <Image
-                            src={"/template-images/my-event-empty-list-msg.png"}
-                            alt={"No Events"}
-                            width={180}
-                            height={180}
-                        />
-                        <div className="text-gray-500 max-w-md">No Events at this time.</div>
-                      </div>
-                  ) : (
-                      myEventsData?.data?.map((event) => (
-                          <EventCard key={event.event_uuid} event={event} currentUserId={UserId} />
-                      ))
-                  )}
-                </div>
-              </SwiperSlide>
-            </Swiper>
-          </div>
+          {/* Tabs Header */}
+          <Tabs
+            value={activeTab}
+            className="pt-2 flex-shrink-0"
+            onValueChange={handleTabClick}
+          >
+            <TabsList className="flex bg-gray-600 h-33 rounded-lg p-1">
+              <TabsTrigger
+                value="all-events"
+                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
+                  activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
+                }`}
+              >
+                All events
+              </TabsTrigger>
+              <TabsTrigger
+                value="my-events"
+                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
+                  activeTab === "my-events" ? "bg-blue-600" : "bg-transparent"
+                }`}
+              >
+                My events
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
-        {!useAuthLoading &&
-            (userRole === "admin" || userRole === "organizer") &&
-            authorized && (
-                <MemoizedMainButton text="Create new event" onClick={handleCreateEvent} />
-            )}
-      </>
+        {/* Scrollable Content */}
+        <div
+          ref={scrollRef}
+          className="overflow-y-auto flex-grow"
+        >
+          <Swiper
+            onSlideChange={handleSlideChange}
+            slidesPerView={1}
+            spaceBetween={30}
+            pagination={{ clickable: true }}
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+            }}
+          >
+            {/* All Events Slide */}
+            <SwiperSlide>
+              <div className="pt-2">
+                {/* Slider Event */}
+                {isLoadingSlider && sliderEventsState.length === 0 ? (
+                  <>
+                    <EventCardSkeleton mode={"detailed"} />
+                    <EventCardSkeleton mode={"detailed"} />
+                  </>
+                ) : (
+                  sliderEventsState.length > 0 && (
+                    <EventCard
+                      event={sliderEventsState[0]}
+                      mode={"detailed"}
+                      currentUserId={UserId}
+                    />
+                  )
+                )}
+
+                {/* Ongoing Events */}
+                {isLoadingOngoing && ongoingEventsState.length === 0 ? (
+                  <>
+                    <EventCardSkeleton />
+                    <EventCardSkeleton />
+                  </>
+                ) : (
+                  ongoingEventsState.length > 0 && (
+                    <>
+                      <div className="pt-4 w-full pb-4 flex justify-between items-center">
+                        <h2 className="font-bold text-lg">Ongoing Events</h2>
+                        <a
+                          href={seeAllOngoingEventsLink}
+                          className="text-zinc-300 hover:underline"
+                        >
+                          See All
+                        </a>
+                      </div>
+                      {ongoingEventsState.map((event) => (
+                        <EventCard
+                          key={event.event_uuid}
+                          event={event}
+                          currentUserId={UserId}
+                          mode={"ongoing"}
+                        />
+                      ))}
+                    </>
+                  )
+                )}
+
+                {/* Upcoming Events */}
+                {isLoadingUpcoming && upcomingEventsState.length === 0 ? (
+                  <>
+                    <EventCardSkeleton />
+                    <EventCardSkeleton />
+                  </>
+                ) : (
+                  upcomingEventsState.length > 0 && (
+                    <>
+                      <div className="pt-4 w-full pb-4 flex justify-between items-center">
+                        <h2 className="font-bold text-lg">Upcoming Events</h2>
+                        <a
+                          href={seeAllUpcomingEventsLink}
+                          className="text-zinc-300 hover:underline"
+                        >
+                          See All
+                        </a>
+                      </div>
+                      {upcomingEventsState.map((event) => (
+                        <EventCard
+                          key={event.event_uuid}
+                          event={event}
+                          currentUserId={UserId}
+                        />
+                      ))}
+                    </>
+                  )
+                )}
+
+                {/* Past Events */}
+                {isLoadingPast && pastEventsState.length === 0 ? (
+                  <>
+                    <EventCardSkeleton />
+                    <EventCardSkeleton />
+                  </>
+                ) : (
+                  pastEventsState.length > 0 && (
+                    <>
+                      <div className="pt-4 pb-4 flex justify-between items-center">
+                        <h2 className="font-bold text-lg">Past Events</h2>
+                        <a
+                          href={seeAllPastEventsLink}
+                          className="text-zinc-300 hover:underline"
+                        >
+                          See All
+                        </a>
+                      </div>
+                      {pastEventsState.map((event) => (
+                        <EventCard
+                          key={event.event_uuid}
+                          event={event}
+                          currentUserId={UserId}
+                        />
+                      ))}
+                    </>
+                  )
+                )}
+              </div>
+            </SwiperSlide>
+
+            {/* My Events Slide */}
+            <SwiperSlide>
+              <div className="pt-2 min-h-lvh">
+                {isLoadingMyEvents ? (
+                  [1, 2, 3, 4, 5].map((index) => (
+                    <EventCardSkeleton key={index} />
+                  ))
+                ) : myEventsData?.data?.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+                    <Image
+                      src={"/template-images/my-event-empty-list-msg.png"}
+                      alt={"No Events"}
+                      width={180}
+                      height={180}
+                    />
+                    <div className="text-gray-500 max-w-md">
+                      No Events at this time.
+                    </div>
+                  </div>
+                ) : (
+                  myEventsData?.data?.map((event) => (
+                    <EventCard
+                      key={event.event_uuid}
+                      event={event}
+                      currentUserId={UserId}
+                    />
+                  ))
+                )}
+              </div>
+            </SwiperSlide>
+          </Swiper>
+        </div>
+      </div>
+
+      {!useAuthLoading &&
+        (userRole === "admin" || userRole === "organizer") &&
+        authorized && (
+          <MemoizedMainButton
+            text="Create new event"
+            onClick={handleCreateEvent}
+          />
+        )}
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { debounce } from "lodash";
 import { FaTimes, FaArrowAltCircleRight } from "react-icons/fa";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import { useRouter } from "next/navigation";
+import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 
 interface EventSearchSuggestionProps {
   searchTerm: string;
@@ -27,18 +28,32 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
   const router = useRouter();
   const [searchLoading, setSearchLoading] = useState(false);
   const suggestionBoxRef = useRef<HTMLDivElement>(null);
-
+  const {
+    searchInput,
+    setSearchInput: storeSetSearchInput,
+    setParticipationType: storeSetParticipationType,
+    setFilter: storeSetSelectedHubs,
+    setSortBy: storeSetSortBy,
+  } = useSearchEventsStore();
   const { data: searchResults, refetch } =
     trpc.events.getEventsWithFilters.useQuery(
       searchEventsInputZod.parse({
-        limit: 3,
+        limit: 4,
         offset: 0,
         search: searchTerm,
         filter: {
-          startDate:
-            Math.floor(Date.now() / 1000) -
-            (Math.floor(Date.now() / 1000) % 600),
+          startDate: searchInput?.filter?.startDate || undefined,
+          startDateOperator: searchInput?.filter?.startDateOperator || ">=",
+          endDate: searchInput?.filter?.endDate || undefined,
+          endDateOperator: searchInput?.filter?.endDateOperator || "<=",
+          participationType: searchInput?.filter?.participationType || [
+            "online",
+            "in_person",
+          ],
+          society_hub_id: searchInput?.filter?.society_hub_id || [],
+          user_id: searchInput?.filter?.user_id || undefined,
         },
+        sortBy: searchInput?.sortBy || "default",
       }),
       {
         enabled: false,

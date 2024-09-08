@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { debounce } from "lodash";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { trpc } from "@/app/_trpc/client";
+import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 
 export const useSearchEvents = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -11,7 +12,9 @@ export const useSearchEvents = () => {
     sortBy: "default",
     society_hub_id: [],
   });
-
+  const {
+    setSearchInput : storeSetSearchInput,
+  } = useSearchEventsStore();
   const { data: searchResults, refetch } = trpc.events.getEventsWithFilters.useQuery(
       searchEventsInputZod.parse({
         limit: 3,
@@ -45,6 +48,7 @@ export const useSearchEvents = () => {
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = event.target.value;
     setSearchTerm(searchValue);
+    storeSetSearchInput({ search: searchValue });
 
     if (searchValue.length > 2) {
       debouncedFetchSearchResults(searchValue);
