@@ -6,6 +6,7 @@ import EventNotStarted from "@/app/_components/EventNotStarted";
 import AllTasks from "@/app/_components/Tasks";
 import Buttons from "@/app/_components/atoms/buttons";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
+import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
 import Tasks from "@/app/_components/molecules/tasks";
@@ -34,6 +35,9 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
     }
   );
   const router = useRouter();
+  useWithBackButton({
+    whereTo: "/",
+  });
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {

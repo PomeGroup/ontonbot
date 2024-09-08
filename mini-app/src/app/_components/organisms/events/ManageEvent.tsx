@@ -1,5 +1,7 @@
+import useWebApp from "@/hooks/useWebApp";
 import { type RouterOutput } from "@/server";
-import { useLayoutEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useLayoutEffect } from "react";
 import Stepper from "../../molecules/stepper";
 import { useCreateEventStore } from "./createEventStore";
 import { FirstStep } from "./firstTab";
@@ -12,9 +14,12 @@ type ManageEventProps = {
 };
 const ManageEvent = (props: ManageEventProps) => {
   const currentStep = useCreateEventStore((state) => state.currentStep);
+  const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEdit = useCreateEventStore((state) => state.setEdit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const resetState = useCreateEventStore((state) => state.resetState);
+  const webApp = useWebApp();
+  const router = useRouter();
 
   useLayoutEffect(() => {
     resetState();
@@ -45,6 +50,30 @@ const ManageEvent = (props: ManageEventProps) => {
       }
     }
   }, [props.eventHash, props.event]);
+
+  const handleBack = useCallback(() => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else if (props.eventHash) {
+      router.push("/");
+    } else {
+      webApp?.showConfirm("Discard Changes?", (confirmed) => {
+        if (confirmed) {
+          resetState();
+          router.push("/");
+        }
+      });
+    }
+  }, [webApp, currentStep, setCurrentStep, router]);
+
+  useEffect(() => {
+    webApp?.BackButton.show();
+    webApp?.BackButton.onClick(handleBack);
+    return () => {
+      webApp?.BackButton.offClick(handleBack);
+      webApp?.BackButton.hide();
+    };
+  }, [webApp, currentStep, setCurrentStep, router]);
 
   return (
     <>

@@ -1,22 +1,19 @@
 "use client";
 
-import Buttons from "@/app/_components/atoms/buttons";
-import QrCodeButton from "@/app/_components/atoms/buttons/QrCodeButton";
-import CheckInGuest from "@/app/_components/checkInGuest/CheckInGuest";
 import Alerts from "@/app/_components/molecules/alerts";
-import Tables from "@/app/_components/molecules/tables";
 import { ManageEvent } from "@/app/_components/organisms/events";
+import GuestList from "@/app/_components/organisms/events/GuestList";
 import { trpc } from "@/app/_trpc/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
-import { FC, useState } from "react";
+import { FC } from "react";
 import { BsFillPersonLinesFill } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const WebApp = useWebApp();
-  const [needRefresh, setNeedRefresh] = useState(false);
+
   const event = trpc.events.getEvent.useQuery(
     { event_uuid: params.hash, init_data: WebApp?.initData || "" },
     {
@@ -32,8 +29,6 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
   const { authorized, isLoading } = useAuth();
 
-  const requestExportFileMutation = trpc.events.requestExportFile.useMutation();
-
   if (isLoading || event.status === "loading") {
     return null;
   }
@@ -45,17 +40,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   if (event.error) {
     return <div>{event.error.message}</div>;
   }
-  console.log("WebApp?.initDataUnsafe", WebApp?.initDataUnsafe);
-  const handleVisitorsExport = () => {
-    hapticFeedback?.impactOccurred("medium");
-    requestExportFileMutation.mutate({
-      event_uuid: params.hash,
-      init_data: WebApp?.initData || "",
-    });
 
-    WebApp?.close();
-  };
-  const guestCheckInParams = { hash: params.hash, setNeedRefresh, needRefresh };
   return (
     <div>
       <Tabs
@@ -78,34 +63,10 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="manage">
-          {event.data?.event_uuid && (
-            <QrCodeButton
-              event_uuid={event.data.event_uuid}
-              url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event.data.event_uuid}`}
-              hub={event.data.society_hub.name!}
-            />
-          )}
-
-          <div className="mt-0 flex items-center space-x-2 px-2  ">
-            <span className=" text-2xl font-extrabold tracking-tight text-gray-300 mr-auto">
-              {" "}
-              Guests List{" "}
-            </span>
-            {event?.data && event.data.ticketToCheckIn === true && (
-              <span>
-                <CheckInGuest params={guestCheckInParams} />
-              </span>
-            )}
-          </div>
-
-          <Tables.Visitors
-            event_uuid={params.hash}
-            handleVisitorsExport={handleVisitorsExport}
-            setNeedRefresh={setNeedRefresh}
-            needRefresh={needRefresh}
+          <GuestList
+            event={event.data}
+            params={params}
           />
-
-          <Buttons.WebAppBack whereTo={"/events"} />
         </TabsContent>
 
         <TabsContent
@@ -117,8 +78,6 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
             event={event.data}
             eventHash={params.hash}
           />
-
-          <Buttons.WebAppBack whereTo={"/events"} />
         </TabsContent>
       </Tabs>
     </div>

@@ -7,7 +7,6 @@ import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { ThemeProvider } from "next-themes";
 import Script from "next/script";
 import React from "react";
-import BackButtonHandler from "./_components/BackButtonHandler";
 import WebAppProvider from "./_components/WebAppProvider";
 import ThemeSetter from "./themeSetter";
 
@@ -30,7 +29,6 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         <WebAppProvider>
           <NavigationHistoryProvider>
             <ConfigProvider>
-              <BackButtonHandler />
               <ThemeSetter>{children}</ThemeSetter>
               <Toaster />
             </ConfigProvider>
