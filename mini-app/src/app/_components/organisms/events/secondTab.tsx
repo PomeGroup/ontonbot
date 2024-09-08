@@ -26,12 +26,12 @@ export const SecondStep = () => {
     cityId?: string[] | undefined;
     countryId?: string[] | undefined;
   }>();
+  const [userTyping, setUserTyping] = useState(false);
 
   const handleSubmit = () => {
     if (!formRef.current) {
       return;
     }
-    console.log("CLicked");
 
     const secondStepDataSchema = z
       .object({
@@ -97,7 +97,6 @@ export const SecondStep = () => {
     const formDataParsed = secondStepDataSchema.safeParse(formDataObject);
 
     if (!formDataParsed.success) {
-      console.log("CLicked error");
       setErrors(formDataParsed.error.flatten().fieldErrors);
       return;
     }
@@ -116,6 +115,13 @@ export const SecondStep = () => {
       ...eventData,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       eventLocationType: eventData?.eventLocationType || "online",
+    });
+
+    document.addEventListener("focus", () => {
+      setUserTyping(true);
+    });
+    document.addEventListener("blur", () => {
+      setUserTyping(false);
     });
   }, []);
 
@@ -250,10 +256,12 @@ export const SecondStep = () => {
           )}
         </StepLayout>
       </form>
-      <MainButton
-        text="Next Step"
-        onClick={handleSubmit}
-      />
+      {!userTyping && (
+        <MainButton
+          text="Next Step"
+          onClick={handleSubmit}
+        />
+      )}
     </>
   );
 };
