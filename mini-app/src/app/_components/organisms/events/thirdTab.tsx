@@ -26,7 +26,6 @@ export const ThirdStep = () => {
     onSuccess(data) {
       setEventData({});
       toast("Event created successfully", {
-        duration: 10000000,
         icon: <IoInformationCircle />,
       });
       router.push(`/events/${data.eventId}/edit`);
@@ -36,7 +35,6 @@ export const ThirdStep = () => {
     onSuccess(data) {
       setEventData({});
       toast("Event updated successfully", {
-        duration: 10000000,
         icon: <IoInformationCircle />,
       });
       router.push(`/events/${data.eventId}`);
