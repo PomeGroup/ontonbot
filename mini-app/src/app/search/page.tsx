@@ -1,5 +1,11 @@
 "use client";
-import React, {useEffect, useRef, useState, useCallback, Suspense} from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  Suspense,
+} from "react";
 import Image from "next/image";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
@@ -17,9 +23,11 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
-import {Separator} from "@/components/ui/separator";
+import { Separator } from "@/components/ui/separator";
 
-const LIMIT = 15;
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+
+const LIMIT = 5;
 
 const Search: React.FC = () => {
   useWithBackButton({
@@ -46,6 +54,7 @@ const Search: React.FC = () => {
   const tabParam = searchParams.get("tab") || "All";
   const [tabValue, setTabValue] = useState(tabParam);
   const swiperRef = useRef<any>(null);
+  const scrollableDivRef = useRef<HTMLDivElement | null>(null);
   const tabItems = [
     { value: "All", label: "All" },
     {
@@ -104,7 +113,7 @@ const Search: React.FC = () => {
     return () => {
       if (observerRef.current) observerRef.current.disconnect();
     };
-  }, [  results, currentTabIndex, observingTab]);
+  }, [results, currentTabIndex, observingTab]);
 
   useEffect(() => {
     if (!initialFetchDone) {
@@ -129,8 +138,31 @@ const Search: React.FC = () => {
 
   useEffect(() => {
     setFinalSearchInput(searchEventsInputZod.parse(searchInput));
-
   }, [searchStore]);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (scrollableDivRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollableDivRef.current;
+        // Check if user has scrolled to the bottom
+        if (scrollTop + clientHeight >= scrollHeight - 50) {
+          loadMoreResults();
+        }
+      }
+    };
+
+    const scrollableDiv = scrollableDivRef.current;
+
+    if (scrollableDiv) {
+      scrollableDiv.addEventListener("scroll", handleScroll);
+    }
+
+    // Cleanup event listener on component unmount
+    return () => {
+      if (scrollableDiv) {
+        scrollableDiv.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [loadMoreResults]);
   const handleSlideChange = (swiper: any) => {
     const activeIndex = swiper.activeIndex;
     const newTab = tabItems[activeIndex]?.value || "All";
@@ -139,6 +171,11 @@ const Search: React.FC = () => {
     setOffset(0);
     setResults([]);
     setObservingTab(activeIndex);
+
+    // Reset scroll to top
+    if (scrollableDivRef.current) {
+      scrollableDivRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
   return (
     <div className="flex flex-col h-screen">
@@ -165,7 +202,7 @@ const Search: React.FC = () => {
         swiperRef={swiperRef}
       />
 
-      <div className="overflow-y-auto flex-grow">
+      <div ref={scrollableDivRef} className="overflow-y-auto flex-grow">
         <Swiper
           onSlideChange={handleSlideChange}
           slidesPerView={1}
@@ -177,9 +214,10 @@ const Search: React.FC = () => {
         >
           {tabItems.map((tab, index) => (
             <SwiperSlide key={tab.value}>
-              <div
+              <ScrollArea
                 key={`${tab.value}-div`}
-                className="min-h-lvh  "
+                className="w-full max-w-full whitespace-nowrap border-0 min-h-lvh "
+
               >
                 {!isLoadingSearchResults &&
                   !isFetchingSearchResults &&
@@ -215,29 +253,34 @@ const Search: React.FC = () => {
                         <div
                           key={event.event_uuid}
                           className={
-                            (eventIndex === results.length - 2 || eventIndex === results.length - 1)
+                            eventIndex === results.length - 2 ||
+                            eventIndex === results.length - 1
                               ? `last-event-card-${index}`
                               : ""
                           }
                         >
-
                           <EventCard
                             event={event}
                             currentUserId={UserId}
                           />
-
                         </div>
                       ))}
                     </>
                   )}
 
-                  {isFetchingSearchResults && hasMore && (
-                    <div className="text-center py-4 pb-5 ">
-                      <div className="loader">Loading results...</div>
-                    </div>
-                  )}
+                  {isFetchingSearchResults &&
+                    hasMore &&
+                    results.length !== 0 && (
+                      <div className="text-center py-4 pb-5 w-full">
+                        <div className="loader">Loading results...</div>
+                      </div>
+                    )}
+                  <div className="text-center py-4 pb-5 ">
+                    <div className="loader"> &nbsp; </div>
+                  </div>
                 </div>
-              </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </SwiperSlide>
           ))}
         </Swiper>
