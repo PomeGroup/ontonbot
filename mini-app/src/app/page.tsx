@@ -24,6 +24,7 @@ export default function Home() {
   const SliderEventUUID = config?.homeSliderEventUUID || "";
   const webApp = useWebApp();
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
+
   const UserId = webApp?.initDataUnsafe?.user?.id;
 
   const router = useRouter();
@@ -221,6 +222,7 @@ export default function Home() {
             <TabsList className="flex bg-gray-600 h-33 rounded-lg p-1">
               <TabsTrigger
                 value="all-events"
+
                 className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
                   activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
                 }`}

@@ -16,6 +16,10 @@ module.exports = {
         "2xl": "1400px",
       },
     },
+    screens: {
+      "xxs": "320px",
+      xs: "375px",
+    },
     extend: {
       spacing: {
         11.5: "46px",

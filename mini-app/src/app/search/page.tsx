@@ -12,10 +12,17 @@ import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useSearchParams } from "next/navigation";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
-
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/pagination";
+import "swiper/css/navigation";
+import {useWithBackButton} from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 const LIMIT = 10;
 
 const Search: React.FC = () => {
+  useWithBackButton({
+    whereTo: "/",
+  });
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();
   const { searchInput, setSearchInput, setFilter, setOffset } = searchStore;
@@ -33,6 +40,7 @@ const Search: React.FC = () => {
   const lastElementRef = useRef<HTMLDivElement | null>(null);
   const tabParam = searchParams.get("tab") || "All";
   const [tabValue, setTabValue] = useState(tabParam);
+  const swiperRef = useRef<any>(null);
   const tabItems = [
     { value: "All", label: "All" },
     {
@@ -111,111 +119,202 @@ const Search: React.FC = () => {
     applyTabFilter(tabValue, UserId);
 
     setResults([]);
+
   }, [tabValue, setFilter, UserId]);
 
   useEffect(() => {
     setFinalSearchInput(searchEventsInputZod.parse(searchInput));
     console.log("--------------searchInput", searchInput);
   }, [searchStore]);
+  const handleSlideChange = (swiper: any) => {
+    const activeIndex = swiper.activeIndex;
+    console.log("----activeIndex", activeIndex ,tabItems[activeIndex]);
+    const newTab = tabItems[activeIndex]?.value || "All";
+    setTabValue(newTab);
+  };
   return (
-    <div className="flex flex-col h-screen">
-      <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
-        <SearchBar
-          includeQueryParam={true}
-          showFilterTags={true}
-          onUpdateResults={setResults}
-          offset={searchInput.offset}
-          setOffset={(newOffset) => setSearchInput({ offset: newOffset })}
-          searchParamsParsed={searchInput}
-          setSearchParamsParsed={setSearchInput}
-          refetch={refetch}
-          setFinalSearchInput={setFinalSearchInput}
-          applyTabFilter={applyTabFilter}
-          tabValue={tabValue}
-        />
-      </div>
-      <TabTriggers
-        tabs={tabItems}
-        setTabValue={setTabValue}
-        tabValue={tabValue}
-      />
-
       <div className="flex flex-col h-screen">
-        <div className="overflow-y-auto flex-grow">
-          <div className="pt-4">
-            {!isLoadingSearchResults &&
-              !isFetchingSearchResults &&
-              results.length === 0 && (
-                <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
-                  <div>
-                    <Image
-                      src={"/template-images/no-search-result.gif"}
-                      alt={"No search results found"}
-                      width={180}
-                      height={180}
-                    />
-                  </div>
-                  <div className="text-gray-500 max-w-md">
-                    No Events were found matching your Search. Please try
-                    changing some of your parameters and try again.
-                  </div>
-                </div>
-              )}
-
-            <div className="pt-2">
-              {isLoadingSearchResults && results.length === 0 ? (
-                <div className="flex flex-col gap-2">
-                  {Array.from({ length: LIMIT }).map((_, index) => (
-                    <EventCardSkeleton
-                      key={index}
-                      mode="small"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <>
-                  {results.length > 0 &&
-                    results.map((event, index) => {
-                      if (results.length === index + 1) {
-                        return (
-                          <div
-                            ref={lastElementRef}
-                            key={`${event.event_uuid}`}
-                          >
-                            <EventCard
-                              key={event.event_uuid}
-                              event={event}
-                              currentUserId={UserId}
-                            />
-                          </div>
-                        );
-                      } else {
-                        return (
-                          <>
-                            <EventCard
-                              key={event.event_uuid}
-                              event={event}
-                              currentUserId={UserId}
-                            />
-                          </>
-                        );
-                      }
-                    })}
-                </>
-              )}
-            </div>
-
-            {isFetchingSearchResults && hasMore && (
-              <div className="text-center py-4 pb-5">
-                <div className="loader">Loading more results...</div>
-              </div>
-            )}
-          </div>
+        <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+          <SearchBar
+              includeQueryParam={true}
+              showFilterTags={true}
+              onUpdateResults={setResults}
+              offset={searchInput.offset}
+              setOffset={(newOffset) => setSearchInput({offset: newOffset})}
+              searchParamsParsed={searchInput}
+              setSearchParamsParsed={setSearchInput}
+              refetch={refetch}
+              setFinalSearchInput={setFinalSearchInput}
+              applyTabFilter={applyTabFilter}
+              tabValue={tabValue}
+          />
         </div>
-      </div>
+        <TabTriggers
+            tabs={tabItems}
+            setTabValue={setTabValue}
+            tabValue={tabValue}
+            swiperRef={swiperRef}
+        />
 
-    </div>
-  );
-};
 
-export default Search;
+        <div className="overflow-y-auto flex-grow">
+          <Swiper
+
+              onSlideChange={handleSlideChange}
+              slidesPerView={1}
+              spaceBetween={30}
+              pagination={{clickable: true}}
+              onSwiper={(swiper) => {
+                swiperRef.current = swiper;
+              }}
+          >
+            {tabItems.map((tab, index) => (
+
+                <SwiperSlide key={tab.value}>
+                  <div key={`${tab.value}-div`}
+                       className="min-h-lvh  ">
+                    {!isLoadingSearchResults &&
+                        !isFetchingSearchResults &&
+                        results.length === 0 && (
+                            <div
+                                className="flex flex-col items-center justify-center min-h-screen  text-center space-y-4">
+                              <div>
+                                <Image
+                                    src={"/template-images/no-search-result.gif"}
+                                    alt={"No search results found"}
+                                    width={180}
+                                    height={180}
+                                />
+                              </div>
+                              <div className="text-gray-500 max-w-md">
+                                No Events were found matching your Search. Please try
+                                changing some of your parameters and try again.
+                              </div>
+                            </div>
+                        )}
+                    <div className="pt-4">
+                      {isLoadingSearchResults && results.length === 0 ? (
+                          <div className="flex flex-col gap-2">
+                            {Array.from({length: LIMIT}).map((_, index) => (
+                                <EventCardSkeleton key={index} mode="small"/>
+                            ))}
+                          </div>
+                      ) : (
+                          <>
+                            {results.length > 0 &&
+                                results.map((event, index) => {
+                                  if (results.length === index + 1) {
+                                    return (
+                                        <div ref={lastElementRef} key={`${event.event_uuid}`}>
+                                          <EventCard
+                                              key={event.event_uuid}
+                                              event={event}
+                                              currentUserId={UserId}
+                                          />
+                                        </div>
+                                    );
+                                  } else {
+                                    return (
+                                        <EventCard
+                                            key={event.event_uuid}
+                                            event={event}
+                                            currentUserId={UserId}
+                                        />
+                                    );
+                                  }
+                                })}
+                          </>
+                      )}
+
+                      {isFetchingSearchResults && hasMore && (
+                          <div className="text-center py-4 pb-5">
+                            <div className="loader">Loading more results...</div>
+                          </div>
+                      )}
+                    </div>
+                  </div>
+                </SwiperSlide>
+
+              ))}
+          </Swiper>
+        </div>
+
+        {/*<div className="flex flex-col h-screen">*/}
+          {/*  <div className="overflow-y-auto flex-grow">*/}
+          {/*    <div className="pt-4">*/}
+          {/*      {!isLoadingSearchResults &&*/}
+          {/*          !isFetchingSearchResults &&*/}
+          {/*          results.length === 0 && (*/}
+          {/*              <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">*/}
+          {/*                <div>*/}
+          {/*                  <Image*/}
+          {/*                      src={"/template-images/no-search-result.gif"}*/}
+          {/*                      alt={"No search results found"}*/}
+          {/*                      width={180}*/}
+          {/*                      height={180}*/}
+          {/*                  />*/}
+          {/*                </div>*/}
+          {/*                <div className="text-gray-500 max-w-md">*/}
+          {/*                  No Events were found matching your Search. Please try*/}
+          {/*                  changing some of your parameters and try again.*/}
+          {/*                </div>*/}
+          {/*              </div>*/}
+          {/*          )}*/}
+
+          {/*      <div className="pt-2">*/}
+          {/*        {isLoadingSearchResults && results.length === 0 ? (*/}
+          {/*            <div className="flex flex-col gap-2">*/}
+          {/*              {Array.from({length: LIMIT}).map((_, index) => (*/}
+          {/*                  <EventCardSkeleton*/}
+          {/*                      key={index}*/}
+          {/*                      mode="small"*/}
+          {/*                  />*/}
+          {/*              ))}*/}
+          {/*            </div>*/}
+          {/*        ) : (*/}
+          {/*            <>*/}
+          {/*              {results.length > 0 &&*/}
+          {/*                  results.map((event, index) => {*/}
+          {/*                    if (results.length === index + 1) {*/}
+          {/*                      return (*/}
+          {/*                          <div*/}
+          {/*                              ref={lastElementRef}*/}
+          {/*                              key={`${event.event_uuid}`}*/}
+          {/*                          >*/}
+          {/*                            <EventCard*/}
+          {/*                                key={event.event_uuid}*/}
+          {/*                                event={event}*/}
+          {/*                                currentUserId={UserId}*/}
+          {/*                            />*/}
+          {/*                          </div>*/}
+          {/*                      );*/}
+          {/*                    } else {*/}
+          {/*                      return (*/}
+          {/*                          <>*/}
+          {/*                            <EventCard*/}
+          {/*                                key={event.event_uuid}*/}
+          {/*                                event={event}*/}
+          {/*                                currentUserId={UserId}*/}
+          {/*                            />*/}
+          {/*                          </>*/}
+          {/*                      );*/}
+          {/*                    }*/}
+          {/*                  })}*/}
+          {/*            </>*/}
+          {/*        )}*/}
+          {/*      </div>*/}
+
+          {/*      {isFetchingSearchResults && hasMore && (*/}
+          {/*          <div className="text-center py-4 pb-5">*/}
+          {/*            <div className="loader">Loading more results...</div>*/}
+          {/*          </div>*/}
+          {/*      )}*/}
+          {/*    </div>*/}
+          {/*  </div>*/}
+          {/*</div>*/}
+
+        </div>
+        );
+        };
+
+        export default Search;

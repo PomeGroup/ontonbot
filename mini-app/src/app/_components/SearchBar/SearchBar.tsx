@@ -83,6 +83,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [participationType, setParticipationType] = useState<ParticipationType>(
     ["online", "in_person"]
   );
+  useEffect(() => {
+    console.log("initiiiiii sortBy", sortBy);
+  }, [sortBy]);
   const [selectedHubs, setSelectedHubs] = useState<string[]>([]);
   const [applyingFilters, setApplyingFilters] = useState(false);
   const [hubText, setHubText] = useState<string>("All");
@@ -100,8 +103,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const hapticFeedback = WebApp?.HapticFeedback;
 
   const [HideMainButton, setHideMainButton] = useState(false);
-
-
 
   useEffect(() => {
     if (hubsResponse?.data?.status === "success") {
@@ -346,20 +347,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
     hapticFeedback?.selectionChanged();
   };
 
-
   useEffect(() => {
-    if ("/search" === pathname) {
-      WebApp?.MainButton.hide();
-
-    }
-    else if (WebApp?.MainButton.text !== "") {
+    if (WebApp?.MainButton.isVisible) {
       if (HideMainButton) {
         WebApp?.MainButton.hide();
       } else {
         WebApp?.MainButton.show();
       }
-    } else {
-      WebApp?.MainButton.hide();
     }
   }, [HideMainButton, WebApp?.MainButton]);
   const renderFilterButtons = useCallback(() => {

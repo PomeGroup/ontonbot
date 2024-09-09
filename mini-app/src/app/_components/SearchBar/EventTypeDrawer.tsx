@@ -33,6 +33,7 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
       <Drawer
         open={isOpen}
         onOpenChange={onOpenChange}
+
       >
         <DrawerContent>
           <DrawerHeader>

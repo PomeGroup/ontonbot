@@ -27,7 +27,7 @@ const initialState: SearchEventsInput = {
     user_id: undefined,
     role: undefined,
   },
-  sortBy: "default",
+  sortBy: "start_date_desc",
   useCache: true,
 };
 
