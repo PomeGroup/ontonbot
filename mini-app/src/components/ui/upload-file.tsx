@@ -70,12 +70,12 @@ export const UploadImageFile = (props: UploadFileProps) => {
   return (
     <Drawer
       onOpenChange={(open) => {
-        webApp?.HapticFeedback.impactOccurred("medium");
         if (open) {
           webApp?.MainButton.hide();
         } else {
           webApp?.MainButton.show();
         }
+        webApp?.HapticFeedback.impactOccurred("medium");
       }}
     >
       <DrawerTrigger asChild>

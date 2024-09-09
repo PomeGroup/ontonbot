@@ -29,8 +29,6 @@ const QrCodeButton = ({
       variant={"outline"}
       disabled={!initData || requestSendQRcodeMutation.isLoading}
       onClick={async () => {
-        hapticFeedback?.impactOccurred("medium");
-
         if (!initData) return;
         await requestSendQRcodeMutation.mutateAsync({
           url,
@@ -41,6 +39,7 @@ const QrCodeButton = ({
         WebApp?.openTelegramLink(
           `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`
         );
+        hapticFeedback?.impactOccurred("medium");
         await wait(500);
         WebApp?.close();
       }}

@@ -23,11 +23,11 @@ const GuestList = (props: Props) => {
   const hapticFeedback = webApp?.HapticFeedback;
   const requestExportFileMutation = trpc.events.requestExportFile.useMutation();
   const handleVisitorsExport = () => {
-    hapticFeedback?.impactOccurred("medium");
     requestExportFileMutation.mutate({
       event_uuid: props.params.hash,
       init_data: webApp?.initData || "",
     });
+    hapticFeedback?.impactOccurred("medium");
 
     webApp?.close();
   };

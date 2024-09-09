@@ -86,7 +86,9 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
   );
 
   const handleTopUpClick = async () => {
-    hapticFeedback?.impactOccurred("medium");
+    try {
+      hapticFeedback?.impactOccurred("medium");
+    } catch (err) {}
     if (!wallet) {
       open();
       return;
@@ -123,7 +125,6 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
   };
 
   const handleWithdrawClick = () => {
-    hapticFeedback?.impactOccurred("medium");
     if (!wallet) {
       open();
       return;
@@ -146,10 +147,15 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     setTimeout(() => {
       setWithdrawLoading(false);
     }, 1000 * 20);
+    try {
+      hapticFeedback?.impactOccurred("medium");
+    } catch (err) {}
   };
 
   const handleDistributeClick = () => {
-    hapticFeedback?.impactOccurred("medium");
+    try {
+      hapticFeedback?.impactOccurred("medium");
+    } catch (err) {}
 
     if (!wallet) {
       open();
