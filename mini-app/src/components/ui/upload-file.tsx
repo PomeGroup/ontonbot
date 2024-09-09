@@ -75,7 +75,9 @@ export const UploadImageFile = (props: UploadFileProps) => {
         } else {
           webApp?.MainButton.show();
         }
-        webApp?.HapticFeedback.impactOccurred("medium");
+        try {
+          webApp?.HapticFeedback.impactOccurred("medium");
+        } catch (error) {}
       }}
     >
       <DrawerTrigger asChild>
