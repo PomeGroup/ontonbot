@@ -34,6 +34,7 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
               onClick={() => index < currentStep && setCurrentStep(index + 1)}
               className={cn(
                 "flex w-full justify-center relative",
+                "after:content-[''] after:w-full after:h-0.5 after:absolute lg:after:top-5 after:top-3 after:left-1/2",
                 {
                   "text-primary after:bg-primary": [
                     "completed",
@@ -43,11 +44,13 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
                   "text-secondary after:bg-muted-foreground":
                     stepState === "not-active",
                   "text-secondary": stepState === "last",
+                  "after:left-1/2": index !== 0,
+                  "justify-start": index === 0,
+                  "justify-end": index === steps.length - 1,
                 },
                 stepState === "last" || stepState === "in-progress-last"
                   ? "after:hidden"
-                  : "after:inline-block",
-                "after:content-[''] after:w-full after:h-0.5 after:absolute lg:after:top-5 after:top-3 after:left-1/2"
+                  : "after:inline-block"
               )}
             >
               <div className="block whitespace-nowrap z-10">
