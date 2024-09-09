@@ -86,12 +86,12 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               <Separator className="my-0" />
               <label className="flex justify-between items-center">
                 <span className="text-zinc-400">Time</span>
-                <RadioGroupItem value="start_date_desc" />
+                <RadioGroupItem value="start_date_desc" className="h-5 w-5" />
               </label>
               <Separator className="my-0" />
               <label className="flex justify-between items-center">
                 <span className="text-zinc-400">Most People Reached</span>
-                <RadioGroupItem value="most_people_reached" />
+                <RadioGroupItem value="most_people_reached" className="h-5 w-5" />
               </label>
             </RadioGroup>
           </div>
