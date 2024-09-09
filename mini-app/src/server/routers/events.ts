@@ -9,7 +9,7 @@ import {
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
-import { getObjectDifference } from "@/lib/utils";
+import { getObjectDifference, removeKey } from "@/lib/utils";
 import { config, configProtected } from "@/server/config";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import {
@@ -228,7 +228,7 @@ export const eventsRouter = router({
           message: `
 @${opts.ctx.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
 
-<pre><code>${JSON.stringify(newEvent[0], null, 2)}</code></pre>
+<pre><code>${formatChanges(newEvent[0])}</code></pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
             `,
@@ -525,20 +525,19 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
         const updateChanges = getObjectDifference(oldEvent[0], updatedEvent[0]);
 
-        await sendLogNotification({
-          message: `
+        const message = `
 @${opts.ctx.user.username} <b>Updated</b> an event <code>${eventUuid}</code> successfully
 
 Before:
-<pre><code>${JSON.stringify(oldChanges, null, 2)}</code></pre>
+<pre><code>${formatChanges(oldChanges)}</code></pre>
 
 After:
-<pre><code>${JSON.stringify(updateChanges, null, 2)}</code></pre>
-
+<pre><code>${formatChanges(updateChanges)}</code></pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
-            `,
-        });
+`;
+
+        await sendLogNotification({ message });
 
         await updateActivity(eventDraft, opts.ctx.event.activity_id as number);
 
@@ -1004,3 +1003,5 @@ const fetchHighloadWallet = async (): Promise<HighloadWalletResponse> => {
     throw error;
   }
 };
+const formatChanges = (changes: any) =>
+  JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
