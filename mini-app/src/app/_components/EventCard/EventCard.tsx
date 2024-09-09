@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -47,7 +48,7 @@ interface EventCardProps {
   currentUserId?: number;
 }
 
-const EventCard: React.FC<EventCardProps> = ({
+const EventCard: React.FC<EventCardProps> =  memo( ({
   event,
   mode = "normal",
   currentUserId = 0,
@@ -331,6 +332,9 @@ const EventCard: React.FC<EventCardProps> = ({
   } else {
     return renderNormalMode();
   }
-};
-
+}, (prevProps, nextProps) => {
+  // Customize comparison to avoid unnecessary re-renders
+  return prevProps.event.eventUuid === nextProps.event.eventUuid;
+});
+EventCard.displayName = "EventCard";
 export default EventCard;

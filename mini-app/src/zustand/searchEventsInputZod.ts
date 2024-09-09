@@ -11,7 +11,7 @@ type FilterUpdate = Partial<Filter>;
 
 // Define initial state based on default values of the Zod schema
 const initialState: SearchEventsInput = {
-  limit: 10,
+  limit: 15,
   offset: 0,
   search: "",
   filter: {

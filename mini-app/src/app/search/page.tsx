@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, {useEffect, useRef, useState, useCallback, Suspense} from "react";
 import Image from "next/image";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
@@ -17,13 +17,15 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
+import {Separator} from "@/components/ui/separator";
 
-const LIMIT = 10;
+const LIMIT = 15;
 
 const Search: React.FC = () => {
   useWithBackButton({
     whereTo: "/",
   });
+
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();
   const { searchInput, setSearchInput, setFilter, setOffset } = searchStore;
@@ -102,7 +104,7 @@ const Search: React.FC = () => {
     return () => {
       if (observerRef.current) observerRef.current.disconnect();
     };
-  }, [loadMoreResults, results, currentTabIndex, observingTab]);
+  }, [  results, currentTabIndex, observingTab]);
 
   useEffect(() => {
     if (!initialFetchDone) {
@@ -127,7 +129,7 @@ const Search: React.FC = () => {
 
   useEffect(() => {
     setFinalSearchInput(searchEventsInputZod.parse(searchInput));
-    console.log("--------------searchInput", searchInput);
+
   }, [searchStore]);
   const handleSlideChange = (swiper: any) => {
     const activeIndex = swiper.activeIndex;
@@ -155,6 +157,7 @@ const Search: React.FC = () => {
           tabValue={tabValue}
         />
       </div>
+      <Separator className="my-0 bg-gray-700" />
       <TabTriggers
         tabs={tabItems}
         setTabValue={setTabValue}
@@ -202,7 +205,7 @@ const Search: React.FC = () => {
                       {Array.from({ length: LIMIT }).map((_, index) => (
                         <EventCardSkeleton
                           key={index}
-                          mode="small"
+                          mode="normal"
                         />
                       ))}
                     </div>
@@ -212,23 +215,25 @@ const Search: React.FC = () => {
                         <div
                           key={event.event_uuid}
                           className={
-                            eventIndex === results.length - 1
+                            (eventIndex === results.length - 2 || eventIndex === results.length - 1)
                               ? `last-event-card-${index}`
                               : ""
                           }
                         >
+
                           <EventCard
                             event={event}
                             currentUserId={UserId}
                           />
+
                         </div>
                       ))}
                     </>
                   )}
 
                   {isFetchingSearchResults && hasMore && (
-                    <div className="text-center py-4 pb-5">
-                      <div className="loader">Loading more results...</div>
+                    <div className="text-center py-4 pb-5 ">
+                      <div className="loader">Loading results...</div>
                     </div>
                   )}
                 </div>

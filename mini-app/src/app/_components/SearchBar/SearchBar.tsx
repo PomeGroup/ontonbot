@@ -83,9 +83,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [participationType, setParticipationType] = useState<ParticipationType>(
     ["online", "in_person"]
   );
-  useEffect(() => {
-    console.log("initiiiiii sortBy", sortBy);
-  }, [sortBy]);
+
   const [selectedHubs, setSelectedHubs] = useState<string[]>([]);
   const [applyingFilters, setApplyingFilters] = useState(false);
   const [hubText, setHubText] = useState<string>("All");
@@ -230,7 +228,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       storeSetSearchInput({ search: searchInput.search });
 
       handleFilterApply().then(() => {
-        console.log("searchInput======", searchInput);
+
       });
     }
   }, [applyingFilters]);
@@ -357,10 +355,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, [HideMainButton, WebApp?.MainButton]);
   const renderFilterButtons = useCallback(() => {
-    const filters = [
-      ...participationType,
-      sortBy !== "start_date_desc" ? "Most People Reached" : null,
-    ].filter(Boolean); // Filter out falsy values
+    let filters;
+
+
+      filters = [
+      ...(participationType?.length === 0 || participationType.length === 2 ? participationType : ["in_person", "online"]),
+        sortBy !== "start_date_desc" ? "Most People Reached" : null,
+      ].filter(Boolean); // Filter out falsy values
+
+
 
     const filterButtons = filters.map((filter, index) => (
       <Button
