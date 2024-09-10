@@ -67,7 +67,7 @@ const Datetimepicker: FC<DatetimepickerProps> = ({
 
   return (
     <div>
-      <div className="w-full flex items-center justify-between">
+      <div className="w-full flex flex-wrap gap-2 items-center justify-between">
         <label>{title}</label>
         <Input
           type="time"
