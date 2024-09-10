@@ -352,11 +352,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
     if ( userRole === "admin" || userRole === "organizer" ) {
       if (HideMainButton) {
         WebApp?.MainButton.hide();
+        setTimeout(() => {}, 500);
       } else {
+        setTimeout(() => {}, 500);
         WebApp?.MainButton.show();
       }
     }
-  }, [HideMainButton, WebApp?.MainButton]);
+  }, [HideMainButton]);
   const renderFilterButtons = useCallback(() => {
     let filters;
 
