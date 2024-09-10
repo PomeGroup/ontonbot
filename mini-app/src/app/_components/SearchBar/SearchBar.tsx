@@ -368,8 +368,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
         sortBy !== "start_date_desc" ? "Most People Reached" : null,
       ].filter(Boolean); // Filter out falsy values
 
-
-
     const filterButtons = filters.map((filter, index) => (
       <Button
         key={index}

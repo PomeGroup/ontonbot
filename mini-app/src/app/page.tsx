@@ -243,8 +243,8 @@ export default function Home() {
 
         {/* Scrollable Content */}
         <div
-          ref={scrollRef}
-          className="overflow-y-auto flex-grow"
+
+          className=" flex-grow"
         >
           <Swiper
             onSlideChange={handleSlideChange}
@@ -257,7 +257,7 @@ export default function Home() {
           >
             {/* All Events Slide */}
             <SwiperSlide>
-              <div className="pt-2">
+              <div className="pt-2 flex-grow overflow-y-auto h-screen pb-[120px]">
                 {/* Slider Event */}
                 {isLoadingSlider && sliderEventsState.length === 0 ? (
                   <>
@@ -366,7 +366,7 @@ export default function Home() {
 
             {/* My Events Slide */}
             <SwiperSlide>
-              <div className="pt-2 min-h-lvh">
+              <div className="pt-2 flex-grow overflow-y-auto h-screen pb-[120px]">
                 {isLoadingMyEvents ? (
                   [1, 2, 3, 4, 5].map((index) => (
                     <EventCardSkeleton key={index} />
@@ -385,11 +385,14 @@ export default function Home() {
                   </div>
                 ) : (
                   myEventsData?.data?.map((event) => (
-                    <EventCard
-                      key={event.event_uuid}
-                      event={event}
-                      currentUserId={UserId}
-                    />
+                    <>
+                      <EventCard
+                          key={event.event_uuid}
+                          event={event}
+                          currentUserId={UserId}
+                      />
+
+                    </>
                   ))
                 )}
               </div>
