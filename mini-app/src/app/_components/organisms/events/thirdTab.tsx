@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import useWebApp from "@/hooks/useWebApp";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -21,12 +21,14 @@ export const ThirdStep = () => {
     secret_phrase?: string[] | undefined;
   }>();
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
 
   const addEvent = trpc.events.addEvent.useMutation({
     onSuccess(data) {
       setEventData({});
       toast("Event created successfully", {
         icon: <IoInformationCircle />,
+        duration: 1500,
       });
       router.push(`/events/${data.eventId}/edit`);
     },
@@ -36,6 +38,7 @@ export const ThirdStep = () => {
       setEventData({});
       toast("Event updated successfully", {
         icon: <IoInformationCircle />,
+        duration: 1500,
       });
       router.push(`/events/${data.eventId}`);
     },
@@ -43,19 +46,31 @@ export const ThirdStep = () => {
   const webApp = useWebApp();
 
   const thirdStepDataSchema = z.object({
-    // if it's edit it's not required
     secret_phrase: editOptions
       ? z.string().min(4).max(20).optional()
       : z.string().min(4).max(20),
   });
-  const handleSubmit = () => {
-    const parseData = thirdStepDataSchema.safeParse({
-      secret_phrase: eventData?.secret_phrase,
-    });
 
-    if (parseData.success) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent default form submission
+    // get form data
+    if (!formRef.current) {
+      return;
+    }
+
+    const formData = new FormData(formRef.current);
+    const formDataObject = Object.fromEntries(formData.entries());
+    const formDataParsed = thirdStepDataSchema.safeParse(formDataObject);
+
+    if (formDataParsed.success) {
       setErrors({});
-      const updateParsedData = UpdateEventDataSchema.safeParse(eventData);
+      setEventData({
+        secret_phrase: formDataParsed.data.secret_phrase,
+      });
+
+      const dataToSubmit = { ...formDataParsed.data, ...eventData };
+
+      const updateParsedData = UpdateEventDataSchema.safeParse(dataToSubmit);
       if (updateParsedData.success && editOptions?.eventHash) {
         updateEvent.mutate({
           event_uuid: editOptions.eventHash,
@@ -65,7 +80,7 @@ export const ThirdStep = () => {
         return;
       }
 
-      const parsedEventData = EventDataSchema.safeParse(eventData);
+      const parsedEventData = EventDataSchema.safeParse(dataToSubmit);
       if (parsedEventData.success) {
         addEvent.mutate({
           eventData: parsedEventData.data,
@@ -76,8 +91,14 @@ export const ThirdStep = () => {
       return;
     }
 
-    setErrors(parseData.error.flatten().fieldErrors);
+    setErrors(formDataParsed.error.flatten().fieldErrors);
   };
+
+  const handleButtonClick = useCallback(() => {
+    if (formRef.current) {
+      formRef.current.requestSubmit(); // Programmatically submit the form
+    }
+  }, [formRef]);
 
   return (
     <StepLayout title="Event's password">
@@ -87,36 +108,38 @@ export const ThirdStep = () => {
         loop
         className="w-40 h-40 mx-auto"
       />
-      <Input
-        placeholder="Enter your chosen password"
-        onChange={(e) =>
-          setEventData({
-            ...eventData,
-            secret_phrase: e.target.value.trim().toLowerCase(),
-          })
-        }
-        errors={errors?.secret_phrase}
-      />
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        className="space-y-2"
+      >
+        <Input
+          placeholder="Enter your chosen password"
+          name="secret_phrase"
+          errors={errors?.secret_phrase}
+        />
 
-      <AlertGeneric variant="info">
-        By setting a password for the event, you can prevent checking-in
-        unexpectedly and receiving reward without attending the event.
-      </AlertGeneric>
-      {editOptions?.eventHash ? (
-        <MainButton
-          onClick={handleSubmit}
-          text="Update event"
-          disabled={updateEvent.isLoading}
-          progress={updateEvent.isLoading}
-        />
-      ) : (
-        <MainButton
-          onClick={handleSubmit}
-          text="Create event"
-          disabled={addEvent.isLoading}
-          progress={addEvent.isLoading}
-        />
-      )}
+        <AlertGeneric variant="info">
+          By setting a password for the event, you can prevent checking-in
+          unexpectedly and receiving reward without attending the event.
+        </AlertGeneric>
+
+        {editOptions?.eventHash ? (
+          <MainButton
+            onClick={handleButtonClick}
+            text="Update event"
+            disabled={updateEvent.isLoading}
+            progress={updateEvent.isLoading}
+          />
+        ) : (
+          <MainButton
+            onClick={handleButtonClick}
+            text="Create event"
+            disabled={addEvent.isLoading}
+            progress={addEvent.isLoading}
+          />
+        )}
+      </form>
     </StepLayout>
   );
 };
