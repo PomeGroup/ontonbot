@@ -4,7 +4,7 @@ const startKeyboard = () => {
     const data = [
         [
             {
-                text: "Discover Events",
+                text: "Open Event",
                 web_app: {
                     url: `${process.env.APP_BASE_URL}/`,
                     display_name: "Open",

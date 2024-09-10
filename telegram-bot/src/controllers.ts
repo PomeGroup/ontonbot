@@ -34,7 +34,7 @@ export const handleSendQRCode = async (req, res) => {
     // Determine the base layer image path
     let baseImagePath = `./img/${hub === "Hong Kong" ? "SEA" : hub}.png`;
     if (!fs.existsSync(baseImagePath)) {
-      baseImagePath = "./img/society.png";
+      baseImagePath = "./img/onton.png";
     }
 
     // Read the base layer image into a buffer
