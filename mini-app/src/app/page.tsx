@@ -211,6 +211,7 @@ export default function Home() {
             includeQueryParam={false}
             onUpdateResults={() => {}}
             tabValue={tabValueForSearchBar}
+            userRole={authorized ? userRole : "user"}
           />
 
           {/* Tabs Header */}
@@ -222,7 +223,6 @@ export default function Home() {
             <TabsList className="flex bg-gray-600 h-33 rounded-lg p-1">
               <TabsTrigger
                 value="all-events"
-
                 className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
                   activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
                 }`}

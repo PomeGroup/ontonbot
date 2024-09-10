@@ -35,6 +35,7 @@ interface SearchBarProps {
   setFinalSearchInput?: (value: any) => void;
   tabValue?: string;
   applyTabFilter?: (tabValue: string, userId: any) => void;
+  userRole?: 'admin' | 'user' | 'organizer';
 }
 
 interface Hub {
@@ -50,6 +51,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   setFinalSearchInput = () => {},
   tabValue = "All",
   applyTabFilter = (tabValue: string, userId: number) => {},
+  userRole = "user",
 }) => {
   const {
     searchInput,
@@ -346,7 +348,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   useEffect(() => {
-    if (WebApp?.MainButton.isVisible) {
+
+    if ( userRole === "admin" || userRole === "organizer" ) {
       if (HideMainButton) {
         WebApp?.MainButton.hide();
       } else {

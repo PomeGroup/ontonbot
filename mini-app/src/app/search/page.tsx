@@ -41,7 +41,7 @@ const Search: React.FC = () => {
     searchEventsInputZod.parse(searchInput)
   );
   const webApp = useWebApp();
-  const { authorized } = useAuth();
+  const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
 
   const [results, setResults] = useState<any[]>([]);
@@ -193,6 +193,7 @@ const Search: React.FC = () => {
               setFinalSearchInput={setFinalSearchInput}
               applyTabFilter={applyTabFilter}
               tabValue={tabValue}
+              userRole={authorized ? userRole : "user"}
           />
         </div>
         <Separator className="my-0 bg-gray-700"/>
@@ -218,7 +219,7 @@ const Search: React.FC = () => {
 
                   <ScrollArea
                       key={`${tab.value}-div`}
-                      className="  w-full   whitespace-nowrap border-0 min-h-lvh  "
+                      className="  w-full   whitespace-nowrap border-0 min-h-[calc(100vh-11rem)]"
 
                   >
 
