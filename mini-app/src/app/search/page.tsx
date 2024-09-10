@@ -178,114 +178,117 @@ const Search: React.FC = () => {
     }
   };
   return (
-    <div className="flex flex-col h-screen">
-      <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
-        <SearchBar
-          includeQueryParam={true}
-          showFilterTags={true}
-          onUpdateResults={setResults}
-          offset={searchInput.offset}
-          setOffset={(newOffset) => setSearchInput({ offset: newOffset })}
-          searchParamsParsed={searchInput}
-          setSearchParamsParsed={setSearchInput}
-          refetch={refetch}
-          setFinalSearchInput={setFinalSearchInput}
-          applyTabFilter={applyTabFilter}
-          tabValue={tabValue}
+      <div className="flex flex-col h-screen">
+
+        <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+          <SearchBar
+              includeQueryParam={true}
+              showFilterTags={true}
+              onUpdateResults={setResults}
+              offset={searchInput.offset}
+              setOffset={(newOffset) => setSearchInput({offset: newOffset})}
+              searchParamsParsed={searchInput}
+              setSearchParamsParsed={setSearchInput}
+              refetch={refetch}
+              setFinalSearchInput={setFinalSearchInput}
+              applyTabFilter={applyTabFilter}
+              tabValue={tabValue}
+          />
+        </div>
+        <Separator className="my-0 bg-gray-700"/>
+        <TabTriggers
+            tabs={tabItems}
+            setTabValue={setTabValue}
+            tabValue={tabValue}
+            swiperRef={swiperRef}
         />
-      </div>
-      <Separator className="my-0 bg-gray-700" />
-      <TabTriggers
-        tabs={tabItems}
-        setTabValue={setTabValue}
-        tabValue={tabValue}
-        swiperRef={swiperRef}
-      />
 
-      <div ref={scrollableDivRef} className="overflow-y-auto flex-grow">
-        <Swiper
-          onSlideChange={handleSlideChange}
-          slidesPerView={1}
-          spaceBetween={30}
-          pagination={{ clickable: true }}
-          onSwiper={(swiper) => {
-            swiperRef.current = swiper;
-          }}
-        >
-          {tabItems.map((tab, index) => (
-            <SwiperSlide key={tab.value}>
-              <ScrollArea
-                key={`${tab.value}-div`}
-                className="w-full max-w-full whitespace-nowrap border-0 min-h-lvh "
+        <div ref={scrollableDivRef} className="overflow-y-auto  flex-grow">
+          <Swiper
+              onSlideChange={handleSlideChange}
+              slidesPerView={1}
+              spaceBetween={30}
+              pagination={{clickable: true}}
+              onSwiper={(swiper) => {
+                swiperRef.current = swiper;
+              }}
+          >
+            {tabItems.map((tab, index) => (
+                <SwiperSlide key={tab.value}>
 
-              >
-                {!isLoadingSearchResults &&
-                  !isFetchingSearchResults &&
-                  results.length === 0 && (
-                    <div className="flex flex-col items-center justify-center min-h-screen  text-center space-y-4">
-                      <div>
-                        <Image
-                          src={"/template-images/no-search-result.gif"}
-                          alt={"No search results found"}
-                          width={180}
-                          height={180}
-                        />
-                      </div>
-                      <div className="text-gray-500 max-w-md">
-                        No Events were found matching your Search. Please try
-                        changing some of your parameters and try again.
+                  <ScrollArea
+                      key={`${tab.value}-div`}
+                      className="  w-full   whitespace-nowrap border-0 min-h-lvh  "
+
+                  >
+
+                    {!isLoadingSearchResults &&
+                        !isFetchingSearchResults &&
+                        results.length === 0 && (
+                            <div
+                                className="flex flex-col items-center justify-center min-h-screen  text-center space-y-4">
+                              <div>
+                                <Image
+                                    src={"/template-images/no-search-result.gif"}
+                                    alt={"No search results found"}
+                                    width={180}
+                                    height={180}
+                                />
+                              </div>
+                              <div className="text-gray-500 max-w-md">
+                                No Events were found <br/>matching your Search.
+                              </div>
+                            </div>
+                        )}
+                    <div className="pt-4 ">
+                      {isLoadingSearchResults && results.length === 0 ? (
+                          <div className="flex flex-col gap-2">
+                            {Array.from({length: LIMIT}).map((_, index) => (
+                                <EventCardSkeleton
+                                    key={index}
+                                    mode="normal"
+                                />
+                            ))}
+                          </div>
+                      ) : (
+                          <>
+                            {results.map((event, eventIndex) => (
+                                <div
+                                    key={event.event_uuid}
+                                    className={
+                                      eventIndex === results.length - 2 ||
+                                      eventIndex === results.length - 1
+                                          ? `last-event-card-${index}`
+                                          : ""
+                                    }
+                                >
+                                  <EventCard
+                                      event={event}
+                                      currentUserId={UserId}
+                                  />
+                                </div>
+                            ))}
+                          </>
+                      )}
+
+                      {isFetchingSearchResults &&
+                          hasMore &&
+                          results.length !== 0 && (
+                              <div className="text-center py-4 pb-5 w-full">
+                                <div className="loader">Loading results...</div>
+                              </div>
+                          )}
+                      <div className="text-center py-4 pb-5 ">
+                        <div className="loader"> &nbsp; </div>
                       </div>
                     </div>
-                  )}
-                <div className="pt-4">
-                  {isLoadingSearchResults && results.length === 0 ? (
-                    <div className="flex flex-col gap-2">
-                      {Array.from({ length: LIMIT }).map((_, index) => (
-                        <EventCardSkeleton
-                          key={index}
-                          mode="normal"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <>
-                      {results.map((event, eventIndex) => (
-                        <div
-                          key={event.event_uuid}
-                          className={
-                            eventIndex === results.length - 2 ||
-                            eventIndex === results.length - 1
-                              ? `last-event-card-${index}`
-                              : ""
-                          }
-                        >
-                          <EventCard
-                            event={event}
-                            currentUserId={UserId}
-                          />
-                        </div>
-                      ))}
-                    </>
-                  )}
-
-                  {isFetchingSearchResults &&
-                    hasMore &&
-                    results.length !== 0 && (
-                      <div className="text-center py-4 pb-5 w-full">
-                        <div className="loader">Loading results...</div>
-                      </div>
-                    )}
-                  <div className="text-center py-4 pb-5 ">
-                    <div className="loader"> &nbsp; </div>
-                  </div>
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+                    <ScrollBar orientation="horizontal"/>
+                  </ScrollArea>
+                </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
       </div>
-    </div>
   );
 };
 

@@ -135,13 +135,13 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
           <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
             <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
               <div className="flex items-center self-stretch flex-nowrap relative">
-                <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
+                <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
                   {mode === "ongoing" ? (
                     <div className="flex items-center text-green-500 animate-pulse">
                       <IoIosPlayCircle className="mr-1" /> Now
                     </div>
                   ) : (
-                    <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
+                    <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
                       {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
                       {isOnline}
                     </span>
@@ -156,11 +156,11 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
                 )}
               </div>
               <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-                <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+                <span className="font-sans whitespace-normal text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
                   {title}
                 </span>
               </div>
-              <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
+              <span className="grow font-sans text-left line-clamp-1 text-xs leading-4">
                 by {organizerFirstName} {organizerLastName}
               </span>
             </div>
@@ -222,13 +222,13 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
           <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
             <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
               <div className="flex items-center self-stretch flex-nowrap relative">
-                <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
+                <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
                   {mode === "ongoing" ? (
                     <div className="flex items-center text-green-500 animate-pulse">
                       <IoIosPlayCircle className="mr-1" /> Now
                     </div>
                   ) : (
-                    <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-4">
+                    <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
                       {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
                       {isOnline}
                     </span>
@@ -243,12 +243,12 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
                 )}
               </div>
               <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-                <span className="font-sans text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+                <span className="font-sans  whitespace-normal text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
                   {title}
                 </span>
               </div>
 
-              <span className="grow font-sans text-left line-clamp-1 text-xs leading-5.5">
+              <span className="grow font-sans text-left line-clamp-1 text-xs leading-4">
                 by {organizerFirstName} {organizerLastName}
               </span>
             </div>
@@ -305,13 +305,13 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
         <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
           <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
             <div className="flex items-center self-stretch flex-nowrap relative">
-              <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-4">
+              <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-3">
                 {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
                 {isOnline}
               </span>
             </div>
             <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-              <span className="grow font-sans text-black dark:text-white text-left line-clamp-1 text-sm font-medium leading-2">
+              <span className="grow font-sans whitespace-normal text-black dark:text-white text-left line-clamp-1 text-sm font-medium leading-2">
                 {title}
               </span>
             </div>
