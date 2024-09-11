@@ -10,7 +10,6 @@ import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
-import { config, configProtected } from "@/server/config";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import {
   EventDataSchema,
@@ -374,158 +373,162 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       const eventUuid = opts.ctx.event.event_uuid;
       const eventId = opts.ctx.event.event_id;
 
-      return await db.transaction(async (trx) => {
-        const inputSecretPhrase = eventData.secret_phrase
-          ? eventData.secret_phrase.trim().toLowerCase()
-          : undefined;
+      try {
+        return await db.transaction(async (trx) => {
+          const inputSecretPhrase = eventData.secret_phrase
+            ? eventData.secret_phrase.trim().toLowerCase()
+            : undefined;
 
-        const hashedSecretPhrase = inputSecretPhrase
-          ? await hashPassword(inputSecretPhrase)
-          : undefined;
+          const hashedSecretPhrase = inputSecretPhrase
+            ? await hashPassword(inputSecretPhrase)
+            : undefined;
 
-        const oldEvent = await trx
-          .select()
-          .from(events)
-          .where(eq(events.event_uuid, eventUuid!));
+          const oldEvent = await trx
+            .select()
+            .from(events)
+            .where(eq(events.event_uuid, eventUuid!));
 
-        const updatedEvent = await trx
-          .update(events)
-          .set({
-            type: eventData.type,
+          const updatedEvent = await trx
+            .update(events)
+            .set({
+              type: eventData.type,
+              title: eventData.title,
+              subtitle: eventData.subtitle,
+              description: eventData.description,
+              image_url: eventData.image_url,
+              society_hub: eventData.society_hub.name,
+              society_hub_id: eventData.society_hub.id,
+              secret_phrase: hashedSecretPhrase,
+              start_date: eventData.start_date,
+              end_date: eventData.end_date,
+              location: eventData.location,
+              participationType: eventData.eventLocationType,
+              timezone: eventData.timezone,
+              countryId: eventData.countryId,
+              cityId: eventData.cityId,
+              updatedBy: opts.ctx.user.user_id.toString(),
+            })
+            .where(eq(events.event_uuid, eventUuid))
+            .returning()
+            .execute();
+
+          const currentFields = await trx
+            .select()
+            .from(eventFields)
+            .where(eq(eventFields.event_id, eventId!))
+            .execute();
+
+          const fieldsToDelete = currentFields.filter(
+            (field) =>
+              !eventData.dynamic_fields.some(
+                (newField) => newField.id === field.id
+              )
+          );
+
+          for (const field of fieldsToDelete) {
+            await trx
+              .delete(eventFields)
+              .where(eq(eventFields.id, field.id))
+              .execute();
+          }
+
+          const secretPhraseTask = await trx
+            .select()
+            .from(eventFields)
+            .where(
+              and(
+                eq(eventFields.event_id, eventId!),
+                eq(eventFields.title, "secret_phrase_onton_input")
+              )
+            )
+            .execute();
+
+          if (hashedSecretPhrase) {
+            if (secretPhraseTask.length) {
+              await trx
+                .update(eventFields)
+                .set({
+                  updatedBy: opts.ctx.user.user_id.toString(),
+                })
+                .where(eq(eventFields.id, secretPhraseTask[0].id))
+                .execute();
+            } else {
+              await trx
+                .insert(eventFields)
+                .values({
+                  emoji: "🔒",
+                  title: "secret_phrase_onton_input",
+                  description: "Enter the event password",
+                  placeholder: "Enter the event password",
+                  type: "input",
+                  order_place: eventData.dynamic_fields.length,
+                  event_id: eventId,
+                })
+                .execute();
+            }
+          }
+
+          for (const [index, field] of eventData.dynamic_fields
+            .filter((f) => f.title !== "secret_phrase_onton_input")
+            .entries()) {
+            if (field.id) {
+              await trx
+                .update(eventFields)
+                .set({
+                  emoji: field.emoji,
+                  title: field.title,
+                  description: field.description,
+                  placeholder:
+                    field.type === "button" ? field.url : field.placeholder,
+                  type: field.type,
+                  order_place: index,
+                  updatedBy: opts.ctx.user.user_id.toString(),
+                })
+                .where(eq(eventFields.id, field.id))
+                .execute();
+            } else {
+              await trx
+                .insert(eventFields)
+                .values({
+                  emoji: field.emoji,
+                  title: field.title,
+                  description: field.description,
+                  placeholder:
+                    field.type === "button" ? field.url : field.placeholder,
+                  type: field.type,
+                  order_place: index,
+                  event_id: eventId,
+                })
+                .execute();
+            }
+          }
+
+          const additional_info = z.string().url().safeParse(eventData).success
+            ? "Online"
+            : opts.input.eventData.location;
+
+          const eventDraft: TonSocietyRegisterActivityT = {
             title: eventData.title,
             subtitle: eventData.subtitle,
             description: eventData.description,
-            image_url: eventData.image_url,
-            society_hub: eventData.society_hub.name,
-            society_hub_id: eventData.society_hub.id,
-            secret_phrase: hashedSecretPhrase,
-            start_date: eventData.start_date,
-            end_date: eventData.end_date,
-            location: eventData.location,
-            participationType: eventData.eventLocationType,
-            timezone: eventData.timezone,
-            countryId: eventData.countryId,
-            cityId: eventData.cityId,
-            updatedBy: opts.ctx.user.user_id.toString(),
-          })
-          .where(eq(events.event_uuid, eventUuid))
-          .returning()
-          .execute();
+            hub_id: parseInt(eventData.society_hub.id),
+            start_date: timestampToIsoString(eventData.start_date),
+            end_date: timestampToIsoString(eventData.end_date!),
+            additional_info,
+            cta_button: {
+              link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`,
+              label: "Enter Event",
+            },
+          };
 
-        const currentFields = await trx
-          .select()
-          .from(eventFields)
-          .where(eq(eventFields.event_id, eventId!))
-          .execute();
+          const oldChanges = getObjectDifference(updatedEvent[0], oldEvent[0]);
 
-        const fieldsToDelete = currentFields.filter(
-          (field) =>
-            !eventData.dynamic_fields.some(
-              (newField) => newField.id === field.id
-            )
-        );
+          const updateChanges = getObjectDifference(
+            oldEvent[0],
+            updatedEvent[0]
+          );
 
-        for (const field of fieldsToDelete) {
-          await trx
-            .delete(eventFields)
-            .where(eq(eventFields.id, field.id))
-            .execute();
-        }
-
-        const secretPhraseTask = await trx
-          .select()
-          .from(eventFields)
-          .where(
-            and(
-              eq(eventFields.event_id, eventId!),
-              eq(eventFields.title, "secret_phrase_onton_input")
-            )
-          )
-          .execute();
-
-        if (hashedSecretPhrase) {
-          if (secretPhraseTask.length) {
-            await trx
-              .update(eventFields)
-              .set({
-                updatedBy: opts.ctx.user.user_id.toString(),
-              })
-              .where(eq(eventFields.id, secretPhraseTask[0].id))
-              .execute();
-          } else {
-            await trx
-              .insert(eventFields)
-              .values({
-                emoji: "🔒",
-                title: "secret_phrase_onton_input",
-                description: "Enter the event password",
-                placeholder: "Enter the event password",
-                type: "input",
-                order_place: eventData.dynamic_fields.length,
-                event_id: eventId,
-              })
-              .execute();
-          }
-        }
-
-        for (const [index, field] of eventData.dynamic_fields
-          .filter((f) => f.title !== "secret_phrase_onton_input")
-          .entries()) {
-          if (field.id) {
-            await trx
-              .update(eventFields)
-              .set({
-                emoji: field.emoji,
-                title: field.title,
-                description: field.description,
-                placeholder:
-                  field.type === "button" ? field.url : field.placeholder,
-                type: field.type,
-                order_place: index,
-                updatedBy: opts.ctx.user.user_id.toString(),
-              })
-              .where(eq(eventFields.id, field.id))
-              .execute();
-          } else {
-            await trx
-              .insert(eventFields)
-              .values({
-                emoji: field.emoji,
-                title: field.title,
-                description: field.description,
-                placeholder:
-                  field.type === "button" ? field.url : field.placeholder,
-                type: field.type,
-                order_place: index,
-                event_id: eventId,
-              })
-              .execute();
-          }
-        }
-
-        const additional_info = z.string().url().safeParse(eventData).success
-          ? "Online"
-          : opts.input.eventData.location;
-
-        const eventDraft: TonSocietyRegisterActivityT = {
-          title: eventData.title,
-          subtitle: eventData.subtitle,
-          description: eventData.description,
-          hub_id: parseInt(eventData.society_hub.id),
-          start_date: timestampToIsoString(eventData.start_date),
-          end_date: timestampToIsoString(eventData.end_date!),
-          additional_info,
-          cta_button: {
-            link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`,
-            label: "Enter Event",
-          },
-        };
-
-        const oldChanges = getObjectDifference(updatedEvent[0], oldEvent[0]);
-
-        const updateChanges = getObjectDifference(oldEvent[0], updatedEvent[0]);
-
-        const message = `
+          const message = `
 @${opts.ctx.user.username} <b>Updated</b> an event <code>${eventUuid}</code> successfully
 
 Before:
@@ -537,12 +540,21 @@ After:
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
 `;
 
-        await sendLogNotification({ message });
+          await updateActivity(
+            eventDraft,
+            opts.ctx.event.activity_id as number
+          );
+          await sendLogNotification({ message });
 
-        await updateActivity(eventDraft, opts.ctx.event.activity_id as number);
-
-        return { success: true, eventId: opts.ctx.event.event_uuid };
-      });
+          return { success: true, eventId: opts.ctx.event.event_uuid } as const;
+        });
+      } catch (err) {
+        console.info(`event id: ${opts.ctx.event.event_uuid}, error: `, err);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to update event ${opts.ctx.event.event_uuid}`,
+        });
+      }
     }),
 
   // private

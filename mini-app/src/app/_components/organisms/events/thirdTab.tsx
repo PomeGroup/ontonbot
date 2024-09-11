@@ -32,6 +32,9 @@ export const ThirdStep = () => {
       });
       router.push(`/events/${data.eventId}/edit`);
     },
+    onError(error) {
+      toast.error(error.message);
+    },
   });
   const updateEvent = trpc.events.updateEvent.useMutation({
     onSuccess(data) {
@@ -41,6 +44,9 @@ export const ThirdStep = () => {
         duration: 1500,
       });
       router.push(`/events/${data.eventId}`);
+    },
+    onError(error) {
+      toast.error(error.message);
     },
   });
   const webApp = useWebApp();
