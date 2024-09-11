@@ -66,6 +66,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     data,
     hasNextPage,
     isFetchingNextPage,
+    isLoading : isLoadingVisitors,
     refetch: refetchVisitors,
   } = trpc.visitors.getAll.useInfiniteQuery(
     {
@@ -80,6 +81,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
       initialCursor: 0,
       enabled:   Boolean(event_uuid),
       retry: false,
+      cacheTime: 20,
     }
   );
 
@@ -110,7 +112,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     const handler = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
       setIsTyping(false); // User has stopped typing
-    }, 300); // 300ms delay to stabilize typing
+    }, 700); // 300ms delay to stabilize typing
     setIsTyping(true); // User is typing
     return () => {
       clearTimeout(handler);
@@ -163,7 +165,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
 
       if (
         debouncedSearchQuery.length === 0 ||
-        (debouncedSearchQuery.length > 0 && filteredVisitors.length === 0)
+        (debouncedSearchQuery.length > 0 && filteredVisitors.length === 0 && !isFetchingNextPage && !isLoadingVisitors)
       ) {
         setShowNoResults(true); // Show message immediately if no results and not loading
       }
@@ -235,7 +237,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
               )}
             </div>
           </div>
-          {showNoResults ? (
+          {showNoResults  ? (
             <div className="flex flex-col  animate-fade items-center justify-center  mt-12 text-center space-y-4  ">
               <div>
                 <Image
@@ -250,7 +252,15 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
                 Try to enter other keywords
               </div>
             </div>
-          ) : (
+          ) :
+              (isLoadingVisitors || isFetchingNextPage) ? (
+            <div className="flex flex-col animate-pulse items-center justify-center mt-12 text-center space-y-4">
+                <div className="text-gray-500 max-w-md">
+                    Loading...
+                </div>
+            </div>
+            ) :
+              (
             filteredVisitors.map((visitor, index) => {
               if (!visitor) {
                 return null;
