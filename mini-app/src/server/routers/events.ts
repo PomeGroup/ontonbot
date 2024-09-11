@@ -132,121 +132,129 @@ export const eventsRouter = router({
       })
     )
     .mutation(async (opts) => {
-      const result = await db.transaction(async (trx) => {
-        const inputSecretPhrase = opts.input.eventData.secret_phrase
-          .trim()
-          .toLowerCase();
+      try {
+        const result = await db.transaction(async (trx) => {
+          const inputSecretPhrase = opts.input.eventData.secret_phrase
+            .trim()
+            .toLowerCase();
 
-        const hashedSecretPhrase = Boolean(inputSecretPhrase)
-          ? await hashPassword(inputSecretPhrase)
-          : undefined;
+          const hashedSecretPhrase = Boolean(inputSecretPhrase)
+            ? await hashPassword(inputSecretPhrase)
+            : undefined;
 
-        if (!hashedSecretPhrase) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Invalid secret phrase",
-          });
-        }
+          if (!hashedSecretPhrase) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Invalid secret phrase",
+            });
+          }
 
-        const newEvent = await trx
-          .insert(events)
-          .values({
-            type: opts.input.eventData.type,
-            event_uuid: uuidv4(),
+          const newEvent = await trx
+            .insert(events)
+            .values({
+              type: opts.input.eventData.type,
+              event_uuid: uuidv4(),
+              title: opts.input.eventData.title,
+              subtitle: opts.input.eventData.subtitle,
+              description: opts.input.eventData.description,
+              image_url: opts.input.eventData.image_url,
+              society_hub: opts.input.eventData.society_hub.name,
+              society_hub_id: opts.input.eventData.society_hub.id,
+              secret_phrase: hashedSecretPhrase,
+              start_date: opts.input.eventData.start_date,
+              end_date: opts.input.eventData.end_date,
+              timezone: opts.input.eventData.timezone,
+              location: opts.input.eventData.location,
+              owner: opts.ctx.user.user_id,
+              participationType: opts.input.eventData.eventLocationType,
+              countryId: opts.input.eventData.countryId,
+              cityId: opts.input.eventData.cityId,
+            })
+            .returning();
+
+          for (let i = 0; i < opts.input.eventData.dynamic_fields.length; i++) {
+            const field = opts.input.eventData.dynamic_fields[i];
+            await trx.insert(eventFields).values({
+              emoji: field.emoji,
+              title: field.title,
+              description: field.description,
+              placeholder:
+                field.type === "button" ? field.url : field.placeholder,
+              type: field.type,
+              order_place: i,
+              event_id: newEvent[0].event_id,
+              updatedBy: opts.ctx.user.user_id.toString(),
+            });
+          }
+
+          if (inputSecretPhrase) {
+            await trx
+              .insert(eventFields)
+              .values({
+                emoji: "🔒",
+                title: "secret_phrase_onton_input",
+                description: "Enter the event password",
+                placeholder: "Enter the event password",
+                type: "input",
+                order_place: opts.input.eventData.dynamic_fields.length,
+                event_id: newEvent[0].event_id,
+                updatedBy: opts.ctx.user.user_id.toString(),
+              })
+              .execute();
+          }
+
+          const additional_info = z
+            .string()
+            .url()
+            .safeParse(opts.input.eventData.location).success
+            ? "Online"
+            : opts.input.eventData.location;
+
+          const eventDraft: TonSocietyRegisterActivityT = {
             title: opts.input.eventData.title,
             subtitle: opts.input.eventData.subtitle,
             description: opts.input.eventData.description,
-            image_url: opts.input.eventData.image_url,
-            society_hub: opts.input.eventData.society_hub.name,
-            society_hub_id: opts.input.eventData.society_hub.id,
-            secret_phrase: hashedSecretPhrase,
-            start_date: opts.input.eventData.start_date,
-            end_date: opts.input.eventData.end_date,
-            timezone: opts.input.eventData.timezone,
-            location: opts.input.eventData.location,
-            owner: opts.ctx.user.user_id,
-            participationType: opts.input.eventData.eventLocationType,
-            countryId: opts.input.eventData.countryId,
-            cityId: opts.input.eventData.cityId,
-          })
-          .returning();
+            hub_id: parseInt(opts.input.eventData.society_hub.id),
+            start_date: timestampToIsoString(opts.input.eventData.start_date),
+            end_date: timestampToIsoString(opts.input.eventData.end_date!),
+            additional_info,
+            cta_button: {
+              link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}`,
+              label: "Enter Event",
+            },
+          };
 
-        for (let i = 0; i < opts.input.eventData.dynamic_fields.length; i++) {
-          const field = opts.input.eventData.dynamic_fields[i];
-          await trx.insert(eventFields).values({
-            emoji: field.emoji,
-            title: field.title,
-            description: field.description,
-            placeholder:
-              field.type === "button" ? field.url : field.placeholder,
-            type: field.type,
-            order_place: i,
-            event_id: newEvent[0].event_id,
-            updatedBy: opts.ctx.user.user_id.toString(),
-          });
-        }
-
-        if (inputSecretPhrase) {
-          await trx
-            .insert(eventFields)
-            .values({
-              emoji: "🔒",
-              title: "secret_phrase_onton_input",
-              description: "Enter the event password",
-              placeholder: "Enter the event password",
-              type: "input",
-              order_place: opts.input.eventData.dynamic_fields.length,
-              event_id: newEvent[0].event_id,
-              updatedBy: opts.ctx.user.user_id.toString(),
-            })
-            .execute();
-        }
-
-        const additional_info = z
-          .string()
-          .url()
-          .safeParse(opts.input.eventData.location).success
-          ? "Online"
-          : opts.input.eventData.location;
-
-        const eventDraft: TonSocietyRegisterActivityT = {
-          title: opts.input.eventData.title,
-          subtitle: opts.input.eventData.subtitle,
-          description: opts.input.eventData.description,
-          hub_id: parseInt(opts.input.eventData.society_hub.id),
-          start_date: timestampToIsoString(opts.input.eventData.start_date),
-          end_date: timestampToIsoString(opts.input.eventData.end_date!),
-          additional_info,
-          cta_button: {
-            link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}`,
-            label: "Enter Event",
-          },
-        };
-
-        await sendLogNotification({
-          message: `
+          await sendLogNotification({
+            message: `
 @${opts.ctx.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
 
 <pre><code>${formatChanges(newEvent[0])}</code></pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
             `,
+          });
+
+          const res = await registerActivity(eventDraft);
+          await trx
+            .update(events)
+            .set({
+              activity_id: res.data.activity_id,
+              updatedBy: opts.ctx.user.user_id.toString(),
+            })
+            .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
+            .execute();
+
+          return newEvent;
         });
 
-        const res = await registerActivity(eventDraft);
-        await trx
-          .update(events)
-          .set({
-            activity_id: res.data.activity_id,
-            updatedBy: opts.ctx.user.user_id.toString(),
-          })
-          .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
-          .execute();
-
-        return newEvent;
-      });
-
-      return { success: true, eventId: result[0].event_id };
+        return { success: true, eventId: result[0].event_id };
+      } catch (error) {
+        console.error("Error while adding event: ", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Internal Error while adding event",
+        });
+      }
     }),
 
   // private
