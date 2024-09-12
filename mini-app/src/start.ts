@@ -10,34 +10,11 @@ import { AxiosError } from "axios";
 import { CronJob } from "cron";
 import "dotenv/config";
 import { eq, sql } from "drizzle-orm";
-import { createServer } from "http";
-import next from "next";
 import pLimit from "p-limit";
 import { db } from "./db/db";
 import { wait } from "./lib/utils";
 
-const dev = process.env.NODE_ENV === "development";
-const app = next({ dev, isNodeDebugging: dev });
-const handle = app.getRequestHandler();
-
-app.prepare().then(() => {
-  const server = createServer((req, res) => {
-    handle(req, res);
-  });
-
-  // Start the server on port 3000
-  // @ts-expect-error
-  server.listen(3000, (err: any) => {
-    if (err) throw err;
-    if (dev) {
-      console.log("Dev mode enabled");
-    }
-    console.log("> Ready on http://localhost:3000");
-  });
-
-  // Example Cron Job
-  new CronJob("0 */2 * * *", cronJobFunction, null, true);
-});
+new CronJob("0 */2 * * *", cronJobFunction, null, true);
 
 process.on("unhandledRejection", (err) => {
   console.error("START", err);
