@@ -127,6 +127,13 @@
       "when": 1725806115983,
       "tag": "0017_colossal_prism",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1726128838135,
+      "tag": "0018_smart_pet_avengers",
+      "breakpoints": true
     }
   ]
 }

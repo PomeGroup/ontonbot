@@ -13,6 +13,7 @@ export const rewardStatus = pgEnum("reward_status", [
   "notified_by_ui",
   "notification_failed",
   "failed",
+  "fixed_failed",
 ]);
 export const ticketStatus = pgEnum("event_ticket_status", [
   "MINTING",
