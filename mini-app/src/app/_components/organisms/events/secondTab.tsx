@@ -276,6 +276,7 @@ const SelectLocation = (props: {
         errors={props.countryErrors}
         className="w-full"
         defaultValue={eventData?.countryId?.toString()}
+        placeholder="Select a Country"
       />
 
       <Combobox
@@ -291,6 +292,7 @@ const SelectLocation = (props: {
         }}
         errors={props.cityErrors}
         className="w-full"
+        placeholder="Select a City"
       />
     </div>
   );
