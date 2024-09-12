@@ -1,14 +1,8 @@
 {
 	"dependencies": {
-		"@tailwindcss/line-clamp": "^0.4.4",
-		"add": "^2.0.6",
-		"compression": "^1.7.4",
-		"crypto-js": "^4.2.0",
 		"form-data": "^4.0.0",
 		"fs": "0.0.1-security",
-		"lodash": "^4.17.21",
 		"net": "^1.0.2",
-		"next-client-cookies": "^1.1.1",
 		"perf_hooks": "^0.0.1"
 	}
 }

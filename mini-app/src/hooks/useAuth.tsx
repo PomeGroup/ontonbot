@@ -34,7 +34,7 @@ const useAuth = () => {
       return;
     }
 
-    setAuthorized(!!validateUserInitDataQuery.data?.valid);
+    setAuthorized(validateUserInitDataQuery.data!);
     setIsLoading(false);
   }, [
     initData,
@@ -43,16 +43,7 @@ const useAuth = () => {
     validateUserInitDataQuery.isError,
   ]);
 
-  return {
-    authorized,
-    isLoading,
-    role: validateUserInitDataQuery.data?.valid
-      ? validateUserInitDataQuery.data?.role
-      : undefined,
-    user: validateUserInitDataQuery.data?.valid
-      ? validateUserInitDataQuery.data?.user
-      : undefined,
-  };
+  return { authorized, isLoading };
 };
 
 export default useAuth;

@@ -6,7 +6,7 @@ const startKeyboard = () => {
             {
                 text: "Open Event",
                 web_app: {
-                    url: `${process.env.APP_BASE_URL}/`,
+                    url: `${process.env.APP_BASE_URL}/events`,
                     display_name: "Open",
                 },
             },
@@ -41,7 +41,7 @@ const shareKeyboard = (url: string) => {
             {
                 text: "All Events",
                 web_app: {
-                    url: `${process.env.APP_BASE_URL}/`,
+                    url: `${process.env.APP_BASE_URL}/events`,
                     display_name: "Open",
                 },
             },

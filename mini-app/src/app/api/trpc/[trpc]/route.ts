@@ -1,31 +1,13 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+
 import { appRouter } from "@/server";
-import { NextResponse } from "next/server";
-import { compressResponse } from "@/lib/compressionHelper";
 
-const handler = async (req: Request) => {
-  const acceptEncoding = req.headers.get("accept-encoding") || "";
-
-  const response = await fetchRequestHandler({
+const handler = (req: Request) =>
+  fetchRequestHandler({
     endpoint: "/api/trpc",
     req,
     router: appRouter,
     createContext: () => ({}),
   });
 
-  const text = await response.text();
-  const { compressedBody, encoding } = await compressResponse(
-    text,
-    acceptEncoding
-  );
-
-  return new NextResponse(compressedBody, {
-    headers: {
-      "Content-Encoding": encoding,
-      "Content-Type": "application/json",
-    },
-    status: response.status,
-  });
-};
-
-export { handler as GET, handler as POST, handler as PUT, handler as DELETE };
+export { handler as GET, handler as POST };

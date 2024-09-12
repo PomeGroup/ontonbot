@@ -1,5 +1,4 @@
 import { db } from "@/db/db";
-import crypto from 'crypto';
 import {
   event_details_search_list,
   eventFields,
@@ -14,6 +13,7 @@ import { removeKey } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import crypto from "crypto";
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
@@ -200,9 +200,15 @@ export const getEventsWithFilters = async (
     useCache = false,
   } = params;
   //console.log("*****params search: ", params);
-  const stringToHash = JSON.stringify({ limit, offset, search, filter, sortBy });
+  const stringToHash = JSON.stringify({
+    limit,
+    offset,
+    search,
+    filter,
+    sortBy,
+  });
   // Create MD5 hash
-  const hash =  crypto.createHash('md5').update(stringToHash).digest('hex');
+  const hash = crypto.createHash("md5").update(stringToHash).digest("hex");
   const cacheKey = cacheKeys.getEventsWithFilters + hash;
 
   const cachedResult = getCache(cacheKey);
@@ -240,7 +246,6 @@ export const getEventsWithFilters = async (
     } else {
       return [];
     }
-
   }
   // Apply date filters
   if (filter?.startDate && filter?.startDateOperator) {
@@ -297,9 +302,9 @@ export const getEventsWithFilters = async (
     );
 
     let orderByClause;
-    if (sortBy === "start_date_asc" ) {
+    if (sortBy === "start_date_asc") {
       orderByClause = sql`start_date ASC`;
-    } else if (sortBy === "start_date_desc"|| sortBy === "default") {
+    } else if (sortBy === "start_date_desc" || sortBy === "default") {
       orderByClause = sql`start_date DESC`;
     } else if (sortBy === "most_people_reached") {
       orderByClause = sql`visitor_count DESC`;
@@ -307,7 +312,7 @@ export const getEventsWithFilters = async (
 
     // @ts-expect-error
     query = query.orderBy(
-        sql`${orderByClause ? sql`${orderByClause},` : sql``}
+      sql`${orderByClause ? sql`${orderByClause},` : sql``}
       greatest(
           similarity(${event_details_search_list.title}, ${search}),
           similarity(${event_details_search_list.location}, ${search})
@@ -342,7 +347,7 @@ export const getEventsWithFilters = async (
     query = query.limit(limit).offset(offset);
   }
   //console.log("query eee " );
-   logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
   setCache(cacheKey, eventsData, 60);
