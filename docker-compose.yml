@@ -14,7 +14,21 @@ services:
       - golang-worker
     volumes:
       - drizzle:/app/drizzle
-
+  mini-app-cron:
+    build: ./mini-app
+    ports:
+      - "4000:3000"
+    restart: "unless-stopped"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      - postgres
+      - golang-server
+      - golang-worker
+    volumes:
+      - drizzle:/app/drizzle
+    command:
+      - "pnpm run start-cron"
   telegram-bot:
     build: ./telegram-bot
     ports:

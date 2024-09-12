@@ -5,7 +5,9 @@
     "scripts": {
         "dev": "node --inspect ./node_modules/next/dist/bin/next dev",
         "build": "next build",
-        "start": "tsx ./src/start.ts",
+        "start-cron": "tsx ./src/start.ts",
+        "start": "next start",
+        "build-ts": "tsc",
         "lint": "next lint",
         "test": "jest",
         "db:gen": "drizzle-kit generate",
