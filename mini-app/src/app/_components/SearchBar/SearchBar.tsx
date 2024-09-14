@@ -124,7 +124,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
-
       const participationType =
         searchParams.get("participationType")?.split(",") ||
         allParticipationTypes;
@@ -138,8 +137,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
       storeSetSearchInput({ search: searchTerm });
       //@ts-ignore
       setParticipationType(participationType);
+      //@ts-ignore
       storeSetParticipationType(participationType);
-       //@ts-ignore
+      //@ts-ignore
       setSortBy(sortBy);
 
       if (selectedHubsFromParams.length === 0) {
@@ -307,7 +307,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
       ? participationType.filter((t) => t !== type)
       : [...participationType, type];
 
-
     if (
       updated.length === 0 &&
       participationType.includes("online") &&
@@ -325,7 +324,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setParticipationType(updated);
   };
 
-
   const toggleHubSelection = (hubId: string) => {
     setSelectedHubs((prev) => {
       return prev.includes(hubId)
@@ -337,7 +335,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const setSelectedHubsArray = (hubs: string[]) => {
     if (hubs.length === 0) {
       //@ts-ignore
-      setSelectedHubs(hubs.map(hub => hub.id));
+      setSelectedHubs(hubs.map((hub) => hub.id));
     } else {
       setSelectedHubs(hubs);
     }
@@ -392,8 +390,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
     // ].filter(Boolean); // Filter out falsy values
     filters = [
       ...(participationType.length > 0
-          ? participationType // Use the selected participation type(s)
-          : ["in_person", "online"]), // If empty, default to both
+        ? participationType // Use the selected participation type(s)
+        : ["in_person", "online"]), // If empty, default to both
       sortBy !== "start_date_desc" ? "Most People Reached" : null,
     ].filter(Boolean); // Filter out falsy values
     console.log("filtersfiltersfiltersfilters", filters);
@@ -428,7 +426,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
 
     return filterButtons;
-  }, [renderedFilterTags,participationType]); // Dependencies
+  }, [renderedFilterTags, participationType]); // Dependencies
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const scrollArea = scrollAreaRef.current;
@@ -604,11 +602,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
         isOpen={isHubDrawerOpen}
         onOpenChange={setIsHubDrawerOpen}
         selectedHubs={selectedHubs}
-
         setSelectedHubs={setSelectedHubsArray}
         hubs={hubs}
-
-
       />
     </div>
   );
