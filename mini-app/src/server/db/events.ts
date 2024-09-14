@@ -343,7 +343,7 @@ export const getEventsWithFilters = async (
   }
   //console.log("query eee " );
    //logSQLQuery(query.toSQL().sql, query.toSQL().params);
-  logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
   setCache(cacheKey, eventsData, 60);
