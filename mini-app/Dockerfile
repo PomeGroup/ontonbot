@@ -25,6 +25,7 @@ RUN pnpm run build
 # Stage 2: Production Stage
 FROM node:20.13.1-alpine3.20 AS production
 
+
 # Install pnpm
 RUN npm install -g pnpm
 
