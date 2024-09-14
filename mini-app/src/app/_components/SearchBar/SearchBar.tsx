@@ -21,7 +21,6 @@ import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
 import { usePathname } from "next/navigation";
-import useAuth from "@/hooks/useAuth";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
@@ -35,7 +34,7 @@ interface SearchBarProps {
   setFinalSearchInput?: (value: any) => void;
   tabValue?: string;
   applyTabFilter?: (tabValue: string, userId: any) => void;
-  userRole?: 'admin' | 'user' | 'organizer';
+  userRole?: "admin" | "user" | "organizer";
 }
 
 interface Hub {
@@ -230,9 +229,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setApplyingFilters(false);
       storeSetSearchInput({ search: searchInput.search });
 
-      handleFilterApply().then(() => {
-
-      });
+      handleFilterApply().then(() => {});
     }
   }, [applyingFilters]);
 
@@ -287,33 +284,42 @@ const SearchBar: React.FC<SearchBarProps> = ({
     });
     hapticFeedback?.selectionChanged();
   };
+  const setParticipationTypes = (types: ParticipationType) => {
+    hapticFeedback?.selectionChanged();
 
+    if (types.length === 0) {
+      setParticipationType(["online", "in_person"]);
+      return;
+    }
+
+    setParticipationType(types);
+  };
   const toggleParticipationType = (type: string, triggerFrom = "filter") => {
     hapticFeedback?.selectionChanged();
-    // @ts-ignore
+
+    //@ts-ignore
     const updated = participationType.includes(type)
       ? participationType.filter((t) => t !== type)
       : [...participationType, type];
 
-    // Display error message using showAlert if no option is selected
+
+    if (
+      updated.length === 0 &&
+      participationType.includes("online") &&
+      participationType.includes("in_person")
+    ) {
+      setParticipationType(["online", "in_person"]);
+      return;
+    }
+
     if (updated.length === 0 && triggerFrom === "filter") {
       setShowDialogParticipantError(true);
       return;
-    } else if (updated.length === 0 && triggerFrom === "tag") {
-      setTimeout(() => {
-        setShowDialogParticipantError(true);
-        return false;
-        // setParticipationType(allParticipationTypes);
-        // console.log("***toggleParticipationType", participationType , triggerFrom);
-        // handleFilterApply().then((r) => {
-        //   console.log(r);
-        // });
-      });
     }
-
     //@ts-ignore
     setParticipationType(updated);
   };
+
 
   const toggleHubSelection = (hubId: string) => {
     setSelectedHubs((prev) => {
@@ -323,7 +329,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
     });
     hapticFeedback?.selectionChanged();
   };
-
+  const setSelectedHubsArray = (hubs: string[]) => {
+    if (hubs.length === 0) {
+      //@ts-ignore
+      setSelectedHubs(hubs.map(hub => hub.id));
+    } else {
+      setSelectedHubs(hubs);
+    }
+    //setApplyingFilters(true);
+  };
   const selectAllHubs = () => {
     const allHubs = hubs.map((hub: Hub) => hub.id);
     setSelectedHubs(allHubs);
@@ -349,8 +363,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   useEffect(() => {
-
-    if ( (userRole === "admin" || userRole === "organizer" ) && pathname === "/") {
+    if (
+      (userRole === "admin" || userRole === "organizer") &&
+      pathname === "/"
+    ) {
       if (HideMainButton) {
         WebApp?.MainButton.hide();
         setTimeout(() => {}, 500);
@@ -363,11 +379,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const renderFilterButtons = useCallback(() => {
     let filters;
 
-
-      filters = [
-      ...(participationType?.length === 0 || participationType.length === 2 ? participationType : ["in_person", "online"]),
-        sortBy !== "start_date_desc" ? "Most People Reached" : null,
-      ].filter(Boolean); // Filter out falsy values
+    filters = [
+      ...(participationType?.length === 0 || participationType.length === 2
+        ? participationType
+        : ["in_person", "online"]),
+      sortBy !== "start_date_desc" ? "Most People Reached" : null,
+    ].filter(Boolean); // Filter out falsy values
 
     const filterButtons = filters.map((filter, index) => (
       <Button
@@ -569,17 +586,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
         isOpen={isEventTypeDrawerOpen}
         onOpenChange={setIsEventTypeDrawerOpen}
         participationType={participationType}
-        toggleParticipationType={toggleParticipationType}
+        setParticipationTypes={setParticipationTypes}
       />
 
       <HubSelectorDrawer
         isOpen={isHubDrawerOpen}
         onOpenChange={setIsHubDrawerOpen}
         selectedHubs={selectedHubs}
-        toggleHubSelection={toggleHubSelection}
+
+        setSelectedHubs={setSelectedHubsArray}
         hubs={hubs}
-        selectAllHubs={selectAllHubs}
-        deselectAllHubs={deselectAllHubs}
+
+
       />
     </div>
   );
