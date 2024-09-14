@@ -3,14 +3,15 @@ import { Title3 } from "@/app/_components/atoms/typography/Titles";
 import Datetimepicker from "@/app/_components/molecules/pickers/Datetimepicker";
 import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
-import { Combobox } from "@/components/ui/combobox";
+import { ComboboxDrawer } from "@/components/ui/combobox-drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
+import { cn } from "@/utils";
 
 export const SecondStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -152,7 +153,7 @@ export const SecondStep = () => {
               <span className="text-md font-semibold text-white">
                 {eventData?.end_date &&
                   eventData?.start_date &&
-                  // duraton in hours between 2 dates
+                  // duration in hours between 2 dates
                   Math.floor(
                     ((eventData?.end_date - eventData?.start_date) / 60 / 60) *
                       10
@@ -251,49 +252,95 @@ const SelectLocation = (props: {
 }) => {
   const eventData = useCreateEventStore((state) => state.eventData);
   const setEventData = useCreateEventStore((state) => state.setEventData);
+
+  // Fetch countries without search parameter
   const countries = trpc.location.getCountries.useQuery({});
+
+  // State to store search input for cities
+  const [citySearch, setCitySearch] = useState<string>("");
+
+  // Fetch cities dynamically based on search input
   const cities = trpc.location.getCities.useQuery(
     {
       countryId: eventData?.countryId!,
+      search: citySearch,
     },
     {
-      enabled: Boolean(eventData?.countryId),
+      enabled: Boolean(eventData?.countryId) && citySearch.length > 0,
     }
   );
 
+  // Fetch city details by cityId when editing
+  const { data: cityData } = trpc.location.getCityById.useQuery(
+    {
+      cityId: eventData?.cityId!,
+    },
+    {
+      enabled: Boolean(eventData?.cityId) && !citySearch.length, // Fetch only if cityId exists and no search term is provided
+    }
+  );
+
+  // Determine if the city combobox should be disabled
+  const isCityDisabled = !eventData?.countryId;
+
+  useEffect(() => {
+    // Prepopulate city data when editing
+    if (cityData && !citySearch) {
+      setCitySearch(cityData.title); // Set the city title if we fetched the city
+    }
+  }, [cityData, citySearch]);
+
   return (
-    <div className="flex w-full flex-col gap-4">
-      <Combobox
+    <div className="flex w-full flex-col gap-4 pb-0">
+      {/* Combobox for selecting a country */}
+      <ComboboxDrawer
         options={countries.data?.map((country) => ({
           label: country.title,
           value: country.id.toString(),
         }))}
         onSelect={(data) => {
           if (data) {
-            setEventData({ countryId: Number(data) });
+            setEventData({
+              countryId: Number(data),
+              cityId: undefined, // Reset the city when a new country is selected
+            });
+            setCitySearch("");
           }
         }}
         errors={props.countryErrors}
         className="w-full"
         defaultValue={eventData?.countryId?.toString()}
-        placeholder="Select a Country"
       />
 
-      <Combobox
-        options={cities.data?.map((city) => ({
-          label: city.title,
-          value: city.id.toString(),
-        }))}
-        defaultValue={eventData?.cityId?.toString()}
-        onSelect={(data) => {
-          if (data) {
-            setEventData({ cityId: Number(data) });
+      {/* Combobox for selecting a city */}
+      <div>
+        <ComboboxDrawer
+          options={cities.data?.map((city) => ({
+            label: city.title,
+            value: city.id.toString(),
+          }))}
+          onInputChange={(inputValue) =>
+            !isCityDisabled && setCitySearch(inputValue)
+          } // Disable input change if no country is selected
+          defaultValue={eventData?.cityId?.toString()}
+          onSelect={(data) => {
+            if (data && !isCityDisabled) {
+              setEventData({ cityId: Number(data) });
+            }
+          }}
+          errors={props.cityErrors}
+          className={cn(
+            "w-full",
+            isCityDisabled && "opacity-50 cursor-not-allowed" // Add disabled style
+          )}
+          searchPlaceholder={
+            isCityDisabled
+              ? "Select a country first..."
+              : "Type to search for cities..."
           }
-        }}
-        errors={props.cityErrors}
-        className="w-full"
-        placeholder="Select a City"
-      />
+          disabled={isCityDisabled}
+        />
+      </div>
     </div>
   );
 };
