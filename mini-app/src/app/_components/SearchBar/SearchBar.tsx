@@ -224,7 +224,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
         .filter((id) => !isNaN(id)); // Ensure only valid numbers are included
       // @ts-ignore
       storeSetSelectedHubs({ society_hub_id: society_hub_id });
-      console.log("-----participationTypeStore", participationTypeStore);
       storeSetParticipationType(participationTypeStore);
       setParticipationType(participationTypeStore);
       // Ensure sortBy is a valid value
@@ -301,12 +300,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
   const toggleParticipationType = (type: string, triggerFrom = "filter") => {
     hapticFeedback?.selectionChanged();
-
+    console.log("-----***", participationType);
     //@ts-ignore
     const updated = participationType.includes(type)
       ? participationType.filter((t) => t !== type)
       : [...participationType, type];
-
+    console.log("---updatedupdatedupdated", updated);
     if (
       updated.length === 0 &&
       participationType.includes("online") &&
@@ -381,8 +380,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [HideMainButton]);
   const renderFilterButtons = useCallback(() => {
     let filters;
-    console.log("participationTypeparticipationType----", participationType);
-    // filters = [
+     // filters = [
     //   ...(participationType?.length === 0 || participationType.length === 2
     //     ? participationType
     //     : ["in_person", "online"]),
@@ -394,7 +392,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
         : ["in_person", "online"]), // If empty, default to both
       sortBy !== "start_date_desc" ? "Most People Reached" : null,
     ].filter(Boolean); // Filter out falsy values
-    console.log("filtersfiltersfiltersfilters", filters);
     const filterButtons = filters.map((filter, index) => (
       <Button
         key={index}
