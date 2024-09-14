@@ -253,7 +253,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
               </div>
             </div>
           ) :
-              (isLoadingVisitors || isFetchingNextPage) ? (
+              (isLoadingVisitors ) ? (
             <div className="flex flex-col animate-pulse items-center justify-center mt-12 text-center space-y-4">
                 <div className="text-gray-500 max-w-md">
                     Loading...

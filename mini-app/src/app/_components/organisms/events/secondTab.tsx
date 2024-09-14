@@ -298,6 +298,7 @@ const SelectLocation = (props: {
           label: country.title,
           value: country.id.toString(),
         }))}
+        placeholder="Select a country"
         onSelect={(data) => {
           if (data) {
             setEventData({
@@ -310,6 +311,7 @@ const SelectLocation = (props: {
         errors={props.countryErrors}
         className="w-full"
         defaultValue={eventData?.countryId?.toString()}
+        searchPlaceholder="Type to search for countries..."
       />
 
       {/* Combobox for selecting a city */}
@@ -319,6 +321,8 @@ const SelectLocation = (props: {
             label: city.title,
             value: city.id.toString(),
           }))}
+          placeholder="Select a city"
+
           onInputChange={(inputValue) =>
             !isCityDisabled && setCitySearch(inputValue)
           } // Disable input change if no country is selected

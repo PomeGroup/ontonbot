@@ -65,6 +65,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   // get pathname
+
   const webApp = useWebApp();
 
   const UserId = webApp?.initDataUnsafe?.user?.id || 0;
@@ -349,7 +350,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   useEffect(() => {
 
-    if ( userRole === "admin" || userRole === "organizer" ) {
+    if ( (userRole === "admin" || userRole === "organizer" ) && pathname === "/") {
       if (HideMainButton) {
         WebApp?.MainButton.hide();
         setTimeout(() => {}, 500);
