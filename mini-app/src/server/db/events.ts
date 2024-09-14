@@ -1,8 +1,22 @@
 import { db } from "@/db/db";
-import { eventFields, events, users } from "@/db/schema";
+import crypto from 'crypto';
+import {
+  event_details_search_list,
+  eventFields,
+  events,
+  rewards,
+  users,
+  visitors,
+} from "@/db/schema";
+import { cacheKeys, getCache, setCache } from "@/lib/cache";
+import { logSQLQuery } from "@/lib/logSQLQuery";
 import { removeKey } from "@/lib/utils";
+import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
-import { and, eq } from "drizzle-orm";
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { unionAll } from "drizzle-orm/pg-core";
+import { z } from "zod";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -46,7 +60,23 @@ export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
 
   return { role: role[0].role, ...data };
 };
-
+export const checkEventTicketToCheckIn = async (eventUuid: string) => {
+  const event = await db
+    .select({
+      event_uuid: events.event_uuid,
+      ticketToCheckIn: events.ticketToCheckIn,
+    })
+    .from(events)
+    .where(eq(events.event_uuid, eventUuid))
+    .execute();
+  if (!event) {
+    return { event_uuid: null, ticketToCheckIn: null };
+  }
+  return {
+    event_uuid: event[0]?.event_uuid,
+    ticketToCheckIn: event[0].ticketToCheckIn,
+  };
+};
 export const selectEventByUuid = async (eventUuid: string) => {
   if (eventUuid.length !== 36) {
     return null;
@@ -73,7 +103,19 @@ export const selectEventByUuid = async (eventUuid: string) => {
     .select()
     .from(eventFields)
     .where(eq(eventFields.event_id, eventData.event_id))
-    .execute();
+    .execute()
+    // remove the place holder from dynamic fields
+    .then((fields) =>
+      fields.map((field) => {
+        if (field.title === "secret_phrase_onton_input") {
+          return {
+            ...field,
+            placeholder: "",
+          };
+        }
+        return field;
+      })
+    );
 
   dynamicFields.sort((a, b) => a.order_place! - b.order_place!);
 
@@ -86,4 +128,224 @@ export const selectEventByUuid = async (eventUuid: string) => {
     dynamic_fields: dynamicFields,
     activity_id: restEventData.activity_id,
   };
+};
+
+export const getUserEvents = async (
+  userId: number | null,
+  limit: number | 100,
+  offset: number | 0
+) => {
+  if (userId === null) {
+    return [];
+  }
+  const userInfo = await selectUserById(userId);
+  if (!userInfo) {
+    return [];
+  }
+  // return all events for admin
+  if (userInfo && userInfo.role === "admin") {
+    const eventQuery = db
+      .select({
+        event_uuid: events.event_uuid,
+        user_id: users.user_id,
+        role: users.role,
+        created_at: events.created_at,
+      })
+      .from(events)
+      .innerJoin(users, eq(events.owner, users.user_id));
+
+    return await eventQuery.execute();
+  }
+  const rewardQuery = db
+    .select({
+      event_uuid: visitors.event_uuid,
+      user_id: visitors.user_id,
+      role: sql<string>`'participant'`.as("role"),
+      created_at: visitors.created_at,
+    })
+    .from(rewards)
+    .innerJoin(visitors, eq(visitors.id, rewards.visitor_id))
+    .where(eq(visitors.user_id, userId!));
+
+  const eventQuery = db
+    .select({
+      event_uuid: events.event_uuid,
+      user_id: users.user_id,
+      role: users.role,
+      created_at: events.created_at,
+    })
+    .from(events)
+    .innerJoin(users, eq(events.owner, users.user_id))
+    .where(and(eq(users.user_id, userId!), eq(users.role, "organizer")));
+
+  // Use unionAll to combine the results, apply orderBy, limit, and offset
+  const combinedResultsQuery = unionAll(rewardQuery, eventQuery)
+    .orderBy((row) => row.created_at)
+    .limit(limit !== null ? limit : 100)
+    .offset(offset !== null ? offset : 0);
+
+  // Execute the query and return the results
+  return await combinedResultsQuery.execute();
+};
+
+export const getEventsWithFilters = async (
+  params: z.infer<typeof searchEventsInputZod>
+): Promise<any[]> => {
+  const {
+    limit = 10,
+    offset = 0,
+    search,
+    filter,
+    sortBy = "default",
+    useCache = false,
+  } = params;
+  //console.log("*****params search: ", params);
+  const stringToHash = JSON.stringify({ limit, offset, search, filter, sortBy });
+  // Create MD5 hash
+  const hash =  crypto.createHash('md5').update(stringToHash).digest('hex');
+  const cacheKey = cacheKeys.getEventsWithFilters + hash;
+
+  const cachedResult = getCache(cacheKey);
+  if (cachedResult && useCache)  {
+    /// show return from cache and time
+    console.log("👙👙 cachedResult 👙👙" + Date.now());
+    return cachedResult;
+  }
+
+  let query = db.select().from(event_details_search_list);
+  let userEventUuids = [];
+  // Initialize an array to hold the conditions
+  let conditions = [];
+
+  // Apply event type filters
+  if (filter?.participationType?.length) {
+    conditions.push(
+      or(
+        filter.participationType.includes("online")
+          ? eq(event_details_search_list.participationType, "online")
+          : sql`false`,
+        filter.participationType.includes("in_person")
+          ? eq(event_details_search_list.participationType, "in_person")
+          : sql`false`
+      )
+    );
+  }
+  // Apply user_id filter
+
+  if (filter?.user_id) {
+    const userEvents = await getUserEvents(filter.user_id, 1000, 0);
+    userEventUuids = userEvents.map((event) => event.event_uuid);
+    if (userEventUuids.length) {
+      filter.event_uuids = userEventUuids;
+    } else {
+      return [];
+    }
+
+  }
+  // Apply date filters
+  if (filter?.startDate && filter?.startDateOperator) {
+    conditions.push(
+      sql`${event_details_search_list.startDate} ${sql.raw(filter.startDateOperator)} ${filter.startDate}`
+    );
+  }
+
+  if (filter?.endDate && filter?.endDateOperator) {
+    conditions.push(
+      sql`${event_details_search_list.endDate} ${sql.raw(filter.endDateOperator)} ${filter.endDate}`
+    );
+  }
+
+  // Apply hidden condition
+  conditions.push(sql`${event_details_search_list.hidden} = ${false}`);
+
+  // Apply organizer_user_id filter
+  if (filter?.organizer_user_id) {
+    conditions.push(
+      eq(event_details_search_list.organizerUserId, filter.organizer_user_id)
+    );
+  }
+
+  // Apply event_ids filter
+  if (filter?.event_ids && filter.event_ids.length) {
+    conditions.push(
+      sql`${event_details_search_list.eventId} = any(${filter.event_ids})`
+    );
+  }
+  // Apply society_hub_id filter
+  if (filter?.society_hub_id && filter.society_hub_id.length) {
+    conditions.push(
+      inArray(event_details_search_list.societyHubID, filter.society_hub_id)
+    );
+  }
+  // Apply event_uuids filter
+  if (filter?.event_uuids && filter.event_uuids.length) {
+    conditions.push(
+      inArray(event_details_search_list.eventUuid, filter.event_uuids)
+    );
+  }
+
+  // Apply search filters
+  if (search) {
+    const searchPattern = `%${search}%`;
+    conditions.push(
+      or(
+        sql`${event_details_search_list.title} ILIKE ${searchPattern}`,
+        sql`${event_details_search_list.organizerFirstName} ILIKE ${searchPattern}`,
+        sql`${event_details_search_list.organizerLastName} ILIKE ${searchPattern}`,
+        sql`${event_details_search_list.location} ILIKE ${searchPattern}`
+      )
+    );
+
+    let orderByClause;
+    if (sortBy === "start_date_asc" ) {
+      orderByClause = sql`start_date ASC`;
+    } else if (sortBy === "start_date_desc"|| sortBy === "default") {
+      orderByClause = sql`start_date DESC`;
+    } else if (sortBy === "most_people_reached") {
+      orderByClause = sql`visitor_count DESC`;
+    }
+
+    // @ts-expect-error
+    query = query.orderBy(
+        sql`${orderByClause ? sql`${orderByClause},` : sql``}
+      greatest(
+          similarity(${event_details_search_list.title}, ${search}),
+          similarity(${event_details_search_list.location}, ${search})
+      ) DESC`
+    );
+  }
+
+  // Apply all conditions with AND
+  if (conditions.length) {
+    // @ts-expect-error
+    query = query.where(and(...conditions));
+  }
+
+  // Apply sorting if no search is specified
+  if (!search) {
+    if (sortBy === "start_date_asc") {
+      // @ts-expect-error
+      query = query.orderBy(asc(event_details_search_list.startDate));
+    } else if (sortBy === "start_date_desc") {
+      // @ts-expect-error
+      query = query.orderBy(desc(event_details_search_list.startDate));
+    } else if (sortBy === "most_people_reached" || sortBy === "default") {
+      // @ts-expect-error
+      query = query.orderBy(desc(event_details_search_list.visitorCount));
+    }
+  }
+
+  // Apply pagination
+
+  if (limit) {
+    // @ts-expect-error
+    query = query.limit(limit).offset(offset);
+  }
+  //console.log("query eee " );
+   logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  const eventsData = await query.execute();
+  // console.log(eventsData);
+  setCache(cacheKey, eventsData, 60);
+  return eventsData;
 };

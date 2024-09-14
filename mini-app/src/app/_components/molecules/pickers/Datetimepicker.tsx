@@ -1,14 +1,12 @@
-import { useState, FC, useEffect } from "react";
-import { ZodErrors } from "@/types";
+import { Input } from "@/components/ui/input";
 import { getDateFromUnix, getTimeFromUnix } from "@/utils";
-import Card from "../../atoms/cards";
-import Labels from "../../atoms/labels";
+import { FC, useEffect, useState } from "react";
 
 interface DatetimepickerProps {
   title: string;
   value: number | null;
   setTimestamp: (timestamp: number) => void;
-  errors: ZodErrors;
+  errors?: (string | undefined)[];
 }
 
 const Datetimepicker: FC<DatetimepickerProps> = ({
@@ -68,31 +66,24 @@ const Datetimepicker: FC<DatetimepickerProps> = ({
   }, []);
 
   return (
-    <Card className="flex flex-col items-start pt-1 w-full">
-      <div className="flex justify-between w-full">
-        <Labels.Label>{title}</Labels.Label>
-        <Labels.Label>
-          {errors?.end_date && (
-            <div className="text-red-500 text-end">{errors.end_date}</div>
-          )}
-        </Labels.Label>
-      </div>
-
-      <div className="w-full flex flex-row justify-around text-muted-foreground border-separator bg-separator rounded-lg p-2">
-        <input
+    <div>
+      <div className="w-full flex flex-wrap gap-2 items-center justify-between">
+        <label>{title}</label>
+        <Input
           type="time"
           value={time}
           onChange={handleTimeChange}
-          className="bg-transparent text-foreground"
         />
-        <input
+        <Input
           type="date"
           value={date}
           onChange={handleDateChange}
-          className="bg-transparent text-foreground"
         />
       </div>
-    </Card>
+      <div className="text-red-500">
+        {errors?.map((error) => <p key={error}>{error}</p>)}
+      </div>
+    </div>
   );
 };
 

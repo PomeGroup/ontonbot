@@ -72,6 +72,7 @@ export const validateMiniAppData = (rawInitData: string) => {
     initDataJson[key] = value;
   }
   try {
+   // console.log("initData", initData , "BOT_TOKEN", BOT_TOKEN);
     validate(initData, BOT_TOKEN);
     return {
       valid: true,

@@ -43,3 +43,4 @@ node_modules
 .env
 .vscode/settings.json
 mini-app/onton.code-workspace
+mini-app/Onton.session.sql

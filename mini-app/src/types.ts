@@ -142,6 +142,59 @@ export const EventDataSchema = z.object({
   activity_id: z.number().optional(),
   timezone: z.string(),
   dynamic_fields: DynamicFieldsSchema,
+  eventLocationType: z.enum(["online", "in_person"]).optional(),
+  countryId: z.number().optional(),
+  cityId: z.number().optional(),
+});
+
+export const UpdateEventDataSchema = z.object({
+  event_id: z.number().optional(),
+  event_uuid: z.string().optional(),
+  type: z.number(),
+  title: z.string(),
+  subtitle: z.string(),
+  description: z.string(),
+  location: z.string(),
+  image_url: z.string(),
+  society_hub: z.object({
+    id: z.string(),
+    name: z.string(),
+  }),
+  secret_phrase: z.string().optional(),
+  start_date: z.number(),
+  end_date: z.number().nullable(),
+  owner: z.number(),
+  activity_id: z.number().optional(),
+  timezone: z.string(),
+  dynamic_fields: DynamicFieldsSchema,
+  eventLocationType: z.enum(["online", "in_person"]).optional(),
+  countryId: z.number().optional(),
+  cityId: z.number().optional(),
+});
+
+export const EventDataSchemaAllOptional = z.object({
+  title: z.string().optional(),
+  subtitle: z.string().optional(),
+  description: z.string().optional(),
+  location: z.string().optional(),
+  image_url: z.string().optional(),
+  type: z.number().optional(),
+  society_hub: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+    })
+    .optional(),
+  secret_phrase: z.string().optional(),
+  start_date: z.number().optional(),
+  end_date: z.number().nullable().optional(),
+  owner: z.number().optional(),
+  activity_id: z.number().optional(),
+  timezone: z.string().optional(),
+  dynamic_fields: DynamicFieldsSchema.optional(),
+  eventLocationType: z.enum(["online", "in_person"]).optional(),
+  countryId: z.number().optional(),
+  cityId: z.number().optional(),
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;

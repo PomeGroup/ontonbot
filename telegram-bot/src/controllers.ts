@@ -34,7 +34,7 @@ export const handleSendQRCode = async (req, res) => {
     // Determine the base layer image path
     let baseImagePath = `./img/${hub === "Hong Kong" ? "SEA" : hub}.png`;
     if (!fs.existsSync(baseImagePath)) {
-      baseImagePath = "./img/society.png";
+      baseImagePath = "./img/onton.png";
     }
 
     // Read the base layer image into a buffer
@@ -64,7 +64,11 @@ export const handleSendQRCode = async (req, res) => {
 
 export const handleFileSend = async (req: Request, res: Response) => {
   const { id } = req.query;
-
+  const { message , fileName } = req.body; // Assuming the custom message is sent in the request body
+  // Custom function to sanitize the file name
+  const sanitizeFileName = (name: string) => {
+    return name.replace(/[^a-zA-Z0-9._-]/g, "_"); // Replace invalid characters with underscore
+  };
   if (!id || typeof id !== "string") {
     return res.status(400).send("User ID is required");
   }
@@ -76,13 +80,18 @@ export const handleFileSend = async (req: Request, res: Response) => {
   // Ensure the file is correctly typed as UploadedFile (not an array of files)
   const file = req.files.file as UploadedFile; // Adjust if supporting multiple files
 
+  // Set the default caption if none is provided
+  const caption = message || "📄 Here is your file.";
+  // Sanitize the file name
+  const sanitizedFileName = sanitizeFileName(fileName || "visitors");
+
   try {
     // Ensure 'file.data' is used, which is a Buffer
     // @ts-expect-error fix express.d.ts
     await req.bot.telegram.sendDocument(
-      id,
-      { source: file.data, filename: "visitors.csv" }, // 'file.data' is the Buffer you need
-      { caption: "📄 Here is your file." },
+        id,
+        { source: file.data, filename: `${sanitizedFileName}.csv` }, // 'file.data' is the Buffer you need
+        { caption: caption }, // Use the provided caption or the default
     );
 
     return res.status(200).send("Success");

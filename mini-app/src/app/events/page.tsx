@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
@@ -14,12 +16,14 @@ import Labels from "../_components/atoms/labels";
 import { ComingSoon } from "../_components/ComingSoon";
 import Skeletons from "../_components/molecules/skeletons";
 import { trpc } from "../_trpc/client";
+import {redirectTo} from "@/lib/utils";
 
 const EventsAdminPage = () => {
   noStore();
 
   const WebApp = useWebApp();
-  const hapticfeedback = WebApp?.HapticFeedback;
+  const router = useRouter();
+  const hapticFeedback = WebApp?.HapticFeedback;
   const { authorized, isLoading } = useAuth();
   const initData = WebApp?.initData;
   const validatedData = trpc.users.validateUserInitData.useQuery(
@@ -29,20 +33,29 @@ const EventsAdminPage = () => {
     }
   );
   const eventsData = trpc.events.getEvents.useQuery(
-    { initData },
+    { init_data: initData || "" },
     {
-      queryKey: ["events.getEvents", { initData }],
+      enabled: Boolean(initData),
+      queryKey: ["events.getEvents", { init_data: initData || "" }],
     }
   );
+  useEffect(() => {
+    console.log("document.referrer ",document.referrer);
+    if (typeof window !== "undefined" && ( document.referrer ==="" || document.referrer==="https://web.telegram.org/") ) {
+      redirectTo("/");
+     }
+    }, [router,document.referrer]);
 
   if (
     eventsData.isLoading ||
     isLoading ||
     validatedData.isLoading ||
-    !initData
+    !initData ||
+    document?.referrer ===""
   ) {
     return <Skeletons.Events />;
   }
+
 
   if (!authorized || eventsData.isError) {
     return <ComingSoon />;
@@ -53,6 +66,9 @@ const EventsAdminPage = () => {
       <Link
         href={`/events/create`}
         className="w-full"
+        onClick={() => {
+          hapticFeedback?.impactOccurred("medium");
+        }}
       >
         <Button
           className="w-full"
@@ -108,8 +124,8 @@ const EventsAdminPage = () => {
           <div className="flex gap-2 mt-2">
             <Link
               className="flex-1"
-              href={`events/${event.event_uuid}/edit`}
-              onClick={() => hapticfeedback?.impactOccurred("medium")}
+              href={`/events/${event.event_uuid}/edit`}
+              onClick={() => hapticFeedback?.impactOccurred("medium")}
             >
               <Button
                 className="w-full"
@@ -122,6 +138,7 @@ const EventsAdminPage = () => {
               <QrCodeButton
                 url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event.event_uuid}`}
                 hub={event.society_hub!}
+                event_uuid={event.event_uuid}
               />
             </div>
           </div>
@@ -164,7 +181,7 @@ const TimeRow = ({
         startDate
       )} ${timeZone}`;
     }
-    // If there's an end date and it differs from the start date
+    // If there's an end date, and it differs from the start date
     else if (endDate && startDate) {
       displayString += `${formatDate(startDate)} - ${formatTime(
         endTime!

@@ -69,10 +69,10 @@ const startHandler = async (ctx: Context) => {
 
     await editOrSend(
       ctx,
-      `<b>Welcome to ONTON - TON Society Event Bot</b>
-
-Please click the link below to discover current future events.`,
+      `<b>Please click the link below to ‘Discover the App’</b>`,
       startKeyboard(),
+      undefined,
+      false
     );
   } catch (error) {
     console.log(error);

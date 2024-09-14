@@ -7,6 +7,7 @@ import {
   CreateUserRewardLinkReturnType,
   type CreateUserRewardLinkInputType,
 } from "@/types/user.types";
+import { TRPCError } from "@trpc/server";
 import axios, { AxiosError } from "axios";
 
 // ton society client to send http requests to https://ton-society.github.io/sbt-platform
@@ -65,6 +66,11 @@ export async function updateActivity(
   activityDetails: TonSocietyRegisterActivityT,
   activity_id: string | number
 ) {
+  if (!activity_id)
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "event does not have a valid activity id",
+    });
   const response = await tonSocietyClient.patch(
     `/activities/${activity_id}`,
     activityDetails

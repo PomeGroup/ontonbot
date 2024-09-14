@@ -1,6 +1,6 @@
 {
-  "id": "b194f9ec-9d87-4d3f-b52c-7e1dfb11e2f4",
-  "prevId": "dc2c5974-58f6-4071-bbaf-7833fd02b21d",
+  "id": "71e01b33-ef4a-4396-a4d2-95e12ffc7c99",
+  "prevId": "eefda9c9-e54b-4bf6-9970-1d0830b7913d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -38,13 +38,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
-        },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
         },
         "updated_at": {
           "name": "updated_at",
@@ -111,21 +104,6 @@
           "columns": [
             {
               "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "airdrop_update_counter_idx": {
-          "name": "airdrop_update_counter_idx",
-          "columns": [
-            {
-              "expression": "update_counter",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -235,13 +213,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
-        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp (3)",
@@ -302,21 +273,6 @@
           "method": "btree",
           "with": {}
         },
-        "eventf_update_counter_idx": {
-          "name": "eventf_update_counter_idx",
-          "columns": [
-            {
-              "expression": "update_counter",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "eventf_updated_at_idx": {
           "name": "eventf_updated_at_idx",
           "columns": [
@@ -363,7 +319,7 @@
         },
         "event_uuid": {
           "name": "event_uuid",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -409,13 +365,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
-        },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
         },
         "updated_at": {
           "name": "updated_at",
@@ -497,21 +446,6 @@
           "columns": [
             {
               "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "eventt_update_counter_idx": {
-          "name": "eventt_update_counter_idx",
-          "columns": [
-            {
-              "expression": "update_counter",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -696,19 +630,32 @@
           "notNull": false,
           "default": false
         },
+        "participation_type": {
+          "name": "participation_type",
+          "type": "event_participation_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'online'"
+        },
+        "city_id": {
+          "name": "city_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
-        },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
         },
         "updated_at": {
           "name": "updated_at",
@@ -890,11 +837,11 @@
           "method": "btree",
           "with": {}
         },
-        "events_update_counter_idx": {
-          "name": "events_update_counter_idx",
+        "events_participation_type_idx": {
+          "name": "events_participation_type_idx",
           "columns": [
             {
-              "expression": "update_counter",
+              "expression": "participation_type",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -919,9 +866,208 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "events_city_id_giata_city_id_fk": {
+          "name": "events_city_id_giata_city_id_fk",
+          "tableFrom": "events",
+          "tableTo": "giata_city",
+          "columnsFrom": [
+            "city_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "events_country_id_giata_city_id_fk": {
+          "name": "events_country_id_giata_city_id_fk",
+          "tableFrom": "events",
+          "tableTo": "giata_city",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.giata_city": {
+      "name": "giata_city",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "insert_date": {
+          "name": "insert_date",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "abbreviated_code": {
+          "name": "abbreviated_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "giata_code": {
+          "name": "giata_code",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "giata_city_title_idx": {
+          "name": "giata_city_title_idx",
+          "columns": [
+            {
+              "expression": "title",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "giata_city_parent_id_idx": {
+          "name": "giata_city_parent_id_idx",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "giata_city_insert_date_idx": {
+          "name": "giata_city_insert_date_idx",
+          "columns": [
+            {
+              "expression": "insert_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "giata_city_abbreviated_code_idx": {
+          "name": "giata_city_abbreviated_code_idx",
+          "columns": [
+            {
+              "expression": "abbreviated_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "giata_city_giata_code_idx": {
+          "name": "giata_city_giata_code_idx",
+          "columns": [
+            {
+              "expression": "giata_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.onton_setting": {
+      "name": "onton_setting",
+      "schema": "",
+      "columns": {
+        "env": {
+          "name": "env",
+          "type": "development_environment",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "var": {
+          "name": "var",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protected": {
+          "name": "protected",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "onton_setting_env_var_pk": {
+          "name": "onton_setting_env_var_pk",
+          "columns": [
+            "env",
+            "var"
+          ]
+        },
+        "onto_setting_pk": {
+          "name": "onto_setting_pk",
+          "columns": [
+            "env",
+            "var"
+          ]
+        }
+      },
       "uniqueConstraints": {}
     },
     "public.orders": {
@@ -937,7 +1083,7 @@
         },
         "event_uuid": {
           "name": "event_uuid",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -1020,13 +1166,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
-        },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1193,21 +1332,6 @@
           "method": "btree",
           "with": {}
         },
-        "orders_update_counter_idx": {
-          "name": "orders_update_counter_idx",
-          "columns": [
-            {
-              "expression": "update_counter",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "orders_updated_at_idx": {
           "name": "orders_updated_at_idx",
           "columns": [
@@ -1320,13 +1444,6 @@
           "notNull": false,
           "default": "now()"
         },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
-        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp (3)",
@@ -1392,21 +1509,6 @@
           "columns": [
             {
               "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "rewards_update_counter_idx": {
-          "name": "rewards_update_counter_idx",
-          "columns": [
-            {
-              "expression": "update_counter",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1506,7 +1608,7 @@
         },
         "event_uuid": {
           "name": "event_uuid",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -1528,13 +1630,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
-        },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
         },
         "updated_at": {
           "name": "updated_at",
@@ -1701,21 +1796,6 @@
           "method": "btree",
           "with": {}
         },
-        "tickets_update_counter_idx": {
-          "name": "tickets_update_counter_idx",
-          "columns": [
-            {
-              "expression": "update_counter",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "tickets_updated_at_idx": {
           "name": "tickets_updated_at_idx",
           "columns": [
@@ -1836,13 +1916,6 @@
           "notNull": false,
           "default": "now()"
         },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
-        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp (3)",
@@ -1923,21 +1996,6 @@
           "columns": [
             {
               "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "uef_update_counter_idx": {
-          "name": "uef_update_counter_idx",
-          "columns": [
-            {
-              "expression": "update_counter",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2070,13 +2128,6 @@
           "notNull": false,
           "default": "now()"
         },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
-        },
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp (3)",
@@ -2166,21 +2217,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "users_update_counter_idx": {
-          "name": "users_update_counter_idx",
-          "columns": [
-            {
-              "expression": "update_counter",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {},
@@ -2240,13 +2276,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "now()"
-        },
-        "update_counter": {
-          "name": "update_counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "1"
         },
         "updated_at": {
           "name": "updated_at",
@@ -2323,21 +2352,6 @@
           "method": "btree",
           "with": {}
         },
-        "visitors_update_counter_idx": {
-          "name": "visitors_update_counter_idx",
-          "columns": [
-            {
-              "expression": "update_counter",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "visitors_updated_at_idx": {
           "name": "visitors_updated_at_idx",
           "columns": [
@@ -2387,6 +2401,24 @@
     }
   },
   "enums": {
+    "public.development_environment": {
+      "name": "development_environment",
+      "schema": "public",
+      "values": [
+        "local",
+        "development",
+        "staging",
+        "production"
+      ]
+    },
+    "public.event_participation_type": {
+      "name": "event_participation_type",
+      "schema": "public",
+      "values": [
+        "in_person",
+        "online"
+      ]
+    },
     "public.order_state": {
       "name": "order_state",
       "schema": "public",
@@ -2406,8 +2438,10 @@
         "created",
         "received",
         "notified",
+        "notified_by_ui",
         "notification_failed",
-        "failed"
+        "failed",
+        "fixed_failed"
       ]
     },
     "public.reward_types": {

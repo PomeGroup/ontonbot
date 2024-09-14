@@ -7,7 +7,12 @@ import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { selectValidVisitorById } from "../db/visitors";
-import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
+import {
+  adminOrganizerProtectedProcedure,
+  initDataProtectedProcedure,
+  publicProcedure,
+  router,
+} from "../trpc";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure
@@ -17,39 +22,15 @@ export const usersRouter = router({
       return data;
     }),
 
-  haveAccessToEventAdministration: publicProcedure
-    .input(z.string())
-    .query(async (opts) => {
-      if (!opts.input) {
-        return undefined;
-      }
-
-      try {
-        const data = validateMiniAppData(opts.input);
-
-        if (!data.valid) {
-          return false;
-        }
-
-        const userRole = await db
-          .select({ role: users.role })
-          .from(users)
-          .where(eq(users.user_id, data.initDataJson.user.id))
-          .execute();
-
-        if (
-          !userRole ||
-          (userRole[0].role !== "admin" && userRole[0].role !== "organizer")
-        ) {
-          return false;
-        }
-
-        return true;
-      } catch (error) {
-        console.error(error);
-      }
-      return false;
-    }),
+  haveAccessToEventAdministration: adminOrganizerProtectedProcedure.query(
+    async (opts) => {
+      return {
+        valid: true,
+        role: opts.ctx.userRole,
+        user: opts.ctx.user,
+      } as const;
+    }
+  ),
 
   // private
   addUser: publicProcedure
@@ -71,6 +52,16 @@ export const usersRouter = router({
         });
       }
 
+      const tableName = "users"; // Ensure this matches your table name
+
+      const values = {
+        user_id: initDataJson.user.id,
+        username: initDataJson.user.username,
+        first_name: initDataJson.user.first_name,
+        last_name: initDataJson.user.last_name,
+        language_code: initDataJson.user.language_code,
+        role: "user",
+      };
       const data = await db
         .insert(users)
         .values({
@@ -83,7 +74,7 @@ export const usersRouter = router({
         })
         .onConflictDoNothing()
         .execute();
-
+      //console.log("data", data);
       if (!data.length) {
         throw new TRPCError({
           message: "user already exists",
@@ -397,6 +388,7 @@ async function createUserReward(props: {
           visitor_id: visitor.id,
           type: "ton_society_sbt",
           data: res.data.data,
+          status: "notified_by_ui",
           updatedBy: props.user_id.toString(),
         })
         .execute();

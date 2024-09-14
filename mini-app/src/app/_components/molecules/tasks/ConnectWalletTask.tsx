@@ -67,10 +67,9 @@ const ConnectWalletTask = () => {
   }, [isWalletConnected, tonConnectUI.account?.address]);
 
   const onConnectClick = async () => {
-    hapticFeedback?.impactOccurred("medium");
-
     if (!tonConnectUI.account) {
       await tonConnectUI.openModal();
+      hapticFeedback?.impactOccurred("medium");
     }
   };
 

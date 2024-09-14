@@ -132,8 +132,8 @@ const InputTypeCampaignTask: React.FC<{
       {!isEditing || isCompleted ? (
         <div
           onClick={() => {
-            hapticFeedback?.impactOccurred("medium");
             setIsEditing(true);
+            hapticFeedback?.impactOccurred("medium");
           }}
         >
           <GenericTask

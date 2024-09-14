@@ -1,13 +1,14 @@
 import { db } from "@/db/db";
 import {
-  eventFields,
-  events,
-  rewards,
-  userEventFields,
-  users,
-  visitors,
+    eventFields,
+    events,
+    rewards, tickets,
+    userEventFields,
+    users,
+    visitors,
 } from "@/db/schema";
-import { and, between, eq, isNotNull, sql } from "drizzle-orm";
+import {and, between, desc, eq, ilike, isNotNull, or, sql} from "drizzle-orm";
+import {checkEventTicketToCheckIn} from "@/server/db/events";
 
 const generateRandomVisitor = (userId: number) => ({
   user_id: userId,
@@ -43,7 +44,7 @@ export const selectVisitorsByEventUuidMock = async (
 };
 
 export const selectValidVisitorById = async (visitorId: number) => {
-  return await db
+  return  db
     .select({
       user_id: visitors.user_id,
       username: users.username,
@@ -89,35 +90,98 @@ export const selectValidVisitorById = async (visitorId: number) => {
 export const selectVisitorsByEventUuid = async (
   event_uuid: string,
   limit?: number,
-  cursor?: number
+  cursor?: number,
+  dynamic_fields: boolean = true,
+  search?: string
 ) => {
-  let visitorsQuery = db
-    .select({
-      user_id: visitors.user_id,
-      username: users.username,
-      first_name: users.first_name,
-      last_name: users.last_name,
-      wallet_address: users.wallet_address,
-      created_at: visitors.created_at,
-    })
-    .from(visitors)
-    .leftJoin(users, eq(visitors.user_id, users.user_id))
-    .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
-    .where(and(isNotNull(rewards.id), eq(visitors.event_uuid, event_uuid)));
+  const eventTicketToCheckIn = await checkEventTicketToCheckIn(event_uuid);
+    let userDataQuery ;
+    if(eventTicketToCheckIn.ticketToCheckIn === false) {
+       userDataQuery = db
+          .select({
+              user_id: visitors.user_id,
+              username: users.username,
+              first_name: users.first_name,
+              last_name: users.last_name,
+              wallet_address: users.wallet_address,
+              created_at: visitors.created_at,
+              has_ticket: sql<boolean>`false`.as("has_ticket"),
+              ticket_status: sql<string>`null`.as("ticket_status"),
+              ticket_id: sql<number>`null`.as("ticket_id"),
 
-  if (typeof limit === "number") {
-    // @ts-expect-error
-    visitorsQuery = visitorsQuery.limit(limit);
+          })
+          .from(visitors)
+          .leftJoin(users, eq(visitors.user_id, users.user_id))
+          .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
+           .where(
+               and(
+                   isNotNull(rewards.id),
+                   eq(visitors.event_uuid, event_uuid),
+                   search
+                       ? or(
+                           ilike(users.username, `%${search}%`),
+                           ilike(users.first_name, `%${search}%`),
+                           ilike(users.last_name, `%${search}%`)
+                       )
+                       : sql`true`
+               )
+           )
+           .orderBy(desc(visitors.created_at));
+  }
+  else {
+       userDataQuery = db
+          .select({
+              user_id: users.user_id,
+              username: users.username,
+              first_name: users.first_name,
+              last_name: users.last_name,
+              wallet_address: users.wallet_address,
+              created_at: tickets.created_at,
+              has_ticket: sql<boolean>`true`.as("has_ticket"),
+              ticket_status: tickets.status,
+              ticket_id: tickets.id,
+
+          })
+          .from(tickets)
+          .innerJoin(users, eq(tickets.user_id, users.user_id))
+           .where(
+               and(
+                   eq(tickets.event_uuid, event_uuid),
+                   search
+                       ? or(
+                           ilike(users.username, `%${search}%`),
+                           ilike(users.first_name, `%${search}%`),
+                           ilike(users.last_name, `%${search}%`)
+                       )
+                       : sql`true`
+               )
+           )
+
+           .orderBy(desc(tickets.created_at));
+  }
+
+  if (typeof limit === "number" && limit > 0) {
+    userDataQuery = userDataQuery.limit(limit);
   }
 
   if (typeof cursor === "number") {
-    // @ts-expect-error
-    visitorsQuery = visitorsQuery.offset(cursor);
+    userDataQuery = userDataQuery.offset(cursor);
   }
 
-  const visitorsData = await visitorsQuery.execute();
+  const visitorsData = await userDataQuery.execute();
 
-  console.log("visitorsData", visitorsData.length);
+  const moreRecordsAvailable =
+      typeof limit === "number" ? visitorsData.length === limit : false;
+  const nextCursor =
+      moreRecordsAvailable && typeof cursor === "number" ? cursor + limit! : null;
+    if(!dynamic_fields) {
+        return {
+            visitorsWithDynamicFields: null,
+            moreRecordsAvailable,
+            visitorsData,
+            nextCursor,
+        };
+    }
   let userEventFieldsData = await db
     .select({
       user_id: userEventFields.user_id,
@@ -130,35 +194,31 @@ export const selectVisitorsByEventUuid = async (
     .leftJoin(events, eq(eventFields.event_id, events.event_id))
     .where(eq(events.event_uuid, event_uuid));
 
-  const visitorsWithDynamicFields = visitorsData.map((visitor) => {
-    const dynamicFields = userEventFieldsData
-      .filter((field) => field.user_id === visitor.user_id)
-      .map((field) => ({
-        event_field_id: field.event_field_id,
-        data: field.data,
-      }));
+     const visitorsWithDynamicFields = visitorsData.map((visitor) => {
+         const dynamicFields = userEventFieldsData
+             .filter((field) => field.user_id === visitor.user_id)
+             .map((field) => ({
+                 event_field_id: field.event_field_id,
+                 data: field.data,
+             }));
+
+         return {
+             ...visitor,
+             dynamicFields,
+         };
+     });
 
     return {
-      ...visitor,
-      dynamicFields,
+        visitorsWithDynamicFields,
+        moreRecordsAvailable,
+        visitorsData,
+        nextCursor,
     };
-  });
 
-  const moreRecordsAvailable =
-    typeof limit === "number" ? visitorsData.length === limit : false;
-  const nextCursor =
-    moreRecordsAvailable && typeof cursor === "number" ? cursor + limit! : null;
-
-  return {
-    visitorsWithDynamicFields,
-    moreRecordsAvailable,
-    visitorsData,
-    nextCursor,
-  };
 };
 
 export async function updateVisitorLastVisit(id: number) {
-  return await db
+  return  db
     .update(visitors)
     .set({
       last_visit: sql`now()`,

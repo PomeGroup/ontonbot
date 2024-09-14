@@ -1,6 +1,7 @@
-import { validateWebAppData } from "@grammyjs/validator";
-import * as fs from "fs";
-import { Context, Markup } from "telegraf";
+import { validateWebAppData } from "@grammyjs/validator"
+import * as fs from "fs"
+import sharp from "sharp"
+import { Context } from "telegraf"
 
 export const validateMiniAppData = (rawInitData: any): boolean => {
   const initData = new URLSearchParams(rawInitData as string);
@@ -11,7 +12,7 @@ const editOrSend = async (
   ctx: Context,
   text: string,
   markup?: any,
-  imagePath: string = __dirname + "/img/main.jpeg",
+  imagePath: string = __dirname + "/img/onton-logo.png",
   edit: boolean = true
 ) => {
   // @ts-ignore
@@ -19,7 +20,16 @@ const editOrSend = async (
 
   if (edit) {
     try {
-      const photoStream = fs.createReadStream(imagePath);
+      const photoStream = fs.readFileSync(imagePath)
+      const ontonImage = await sharp(photoStream)
+        .resize(300,300)
+        .extend(
+          { top: 15, bottom: 15, left: 15, right: 15, background: {
+            r: 255,
+            g: 255,
+            b: 255
+          }
+        }).toBuffer();
 
       await ctx.telegram.editMessageMedia(
         ctx.chat!.id,
@@ -27,7 +37,7 @@ const editOrSend = async (
         undefined,
         {
           type: "photo",
-          media: { source: photoStream },
+          media: { source: ontonImage},
           caption: text,
         },
         {
@@ -37,10 +47,20 @@ const editOrSend = async (
         }
       );
     } catch (error) {
-      const photoStream = fs.createReadStream(imagePath);
+      const photoStream = fs.readFileSync(imagePath)
+      const ontonImage = await sharp(photoStream)
+        .resize(300,300)
+        .extend(
+          { top: 15, bottom: 15, left: 15, right: 15, background: {
+            r: 255,
+            g: 255,
+            b: 255
+          }
+        }).toBuffer();
+
       const sentMessage = await ctx.telegram.sendPhoto(
         ctx.chat!.id,
-        { source: photoStream },
+        { source: ontonImage },
         {
           caption: text,
           reply_markup: {
@@ -53,11 +73,20 @@ const editOrSend = async (
       messageId = sentMessage.message_id;
     }
   } else {
-    const photoStream = fs.createReadStream(imagePath);
+    const photoStream = fs.readFileSync(imagePath)
+    const ontonImage = await sharp(photoStream)
+      .resize(300,300)
+      .extend(
+        { top: 15, bottom: 15, left: 15, right: 15, background: {
+          r: 255,
+          g: 255,
+          b: 255
+        }
+      }).toBuffer();
 
     const sentMessage = await ctx.telegram.sendPhoto(
       ctx.chat!.id,
-      { source: photoStream },
+      { source: ontonImage },
       {
         caption: text,
         reply_markup: {
@@ -74,4 +103,5 @@ const editOrSend = async (
   return messageId;
 };
 
-export { editOrSend };
+export { editOrSend }
+

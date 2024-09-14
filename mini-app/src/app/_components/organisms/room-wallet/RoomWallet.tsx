@@ -51,16 +51,17 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
   const numberOfVisitors = trpc.events.getVisitorsWithWalletsNumber.useQuery(
     {
       event_uuid: hash,
-      initData: WebApp?.initData,
+      init_data: WebApp?.initData || "",
     },
     {
       queryKey: [
         "events.getVisitorsWithWalletsNumber",
         {
           event_uuid: hash,
-          initData: WebApp?.initData,
+          init_data: WebApp?.initData || "",
         },
       ],
+      enabled: Boolean(WebApp?.initData),
     }
   );
 
@@ -85,7 +86,9 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
   );
 
   const handleTopUpClick = async () => {
-    hapticFeedback?.impactOccurred("medium");
+    try {
+      hapticFeedback?.impactOccurred("medium");
+    } catch (err) {}
     if (!wallet) {
       open();
       return;
@@ -122,16 +125,19 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
   };
 
   const handleWithdrawClick = () => {
-    hapticFeedback?.impactOccurred("medium");
     if (!wallet) {
       open();
       return;
     }
 
     async function withdraw() {
+      if (!WebApp?.initData) {
+        return;
+      }
+
       await withdrawMutation.mutateAsync({
         event_uuid: hash,
-        initData: WebApp?.initData,
+        init_data: WebApp?.initData,
       });
     }
 
@@ -141,10 +147,15 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     setTimeout(() => {
       setWithdrawLoading(false);
     }, 1000 * 20);
+    try {
+      hapticFeedback?.impactOccurred("medium");
+    } catch (err) {}
   };
 
   const handleDistributeClick = () => {
-    hapticFeedback?.impactOccurred("medium");
+    try {
+      hapticFeedback?.impactOccurred("medium");
+    } catch (err) {}
 
     if (!wallet) {
       open();
@@ -152,10 +163,14 @@ const RoomWallet: React.FC<{ walletAddress: string; hash: string }> = ({
     }
 
     async function distribute() {
+      if (!WebApp?.initData) {
+        return;
+      }
+
       await distributeMutation.mutateAsync({
         event_uuid: hash,
         amount: distributeAmount,
-        initData: WebApp?.initData,
+        init_data: WebApp?.initData,
       });
     }
 

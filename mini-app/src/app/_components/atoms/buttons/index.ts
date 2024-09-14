@@ -1,13 +1,11 @@
 import Button from "./Button";
-import WebAppMain from "./web-app/MainButton";
-import WebAppBack from "./web-app/BackButton";
-import ThemeToggle from "./ThemeToggleButton";
 import Support from "./SupportButton";
+import ThemeToggle from "./ThemeToggleButton";
+import WebAppMain from "./web-app/MainButton";
 
 const buttons = {
   Button,
   WebAppMain,
-  WebAppBack,
   ThemeToggle,
   Support,
 };

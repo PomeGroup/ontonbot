@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom QR Scanner</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url('your-background-image-url.jpg') no-repeat center center;
+            background-size: cover;
+            color: white;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+        }
+        #scanner {
+            width: 300px;
+            height: 300px;
+            border: 2px solid white;
+            border-radius: 8px;
+            position: relative;
+        }
+        #scanner::after {
+            content: 'Scan QR Code';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div id="scanner"></div>
+<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<script>
+  const scanner = new Html5Qrcode("scanner");
+
+  // Start the scanner
+  scanner.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    qrCodeMessage => {
+      // Send QR code content back to the Telegram WebApp
+      if (window.Telegram.WebApp) {
+        window.Telegram.WebApp.sendData(qrCodeMessage);
+      } else {
+        alert(`QR Code detected: ${qrCodeMessage}`);
+      }
+      // Optionally stop the scanner after successful scan
+      scanner.stop().then(() => {
+        // Close the WebView
+        if (window.Telegram.WebApp) {
+          window.Telegram.WebApp.close();
+        }
+      }).catch(err => {
+        console.error(err);
+      });
+    },
+    errorMessage => {
+      // Handle scan error
+      console.error(`QR Code Scan Error: ${errorMessage}`);
+    }
+  ).catch(err => {
+    console.error(`QR Code Scanner Init Error: ${err}`);
+  });
+</script>
+</body>
+</html>

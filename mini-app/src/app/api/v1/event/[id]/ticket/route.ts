@@ -51,6 +51,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     // ticket not found error
     return Response.json({ error: "Ticket data not found" }, { status: 400 });
   }
+
   const data = {
     ...ticket,
     ticketData: eventTicketData,

@@ -1,0 +1,1 @@
+ALTER TYPE "reward_status" ADD VALUE 'notified_by_ui';

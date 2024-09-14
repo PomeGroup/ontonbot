@@ -18,9 +18,10 @@ COPY . .
 
 # Expose the port the app runs on
 EXPOSE 3000
-
+# Build TypeScript into JavaScript
+RUN pnpm run build-ts
+# Build Next.js application
 RUN pnpm run build
 
-RUN pnpm db:up
 # Command to run the application
 CMD ["pnpm", "run", "start"]
