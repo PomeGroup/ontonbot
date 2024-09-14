@@ -124,9 +124,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
+
       const participationType =
         searchParams.get("participationType")?.split(",") ||
         allParticipationTypes;
+
       const selectedHubsFromParams =
         searchParams.get("selectedHubs")?.split(",") || [];
       const sortBy = searchParams.get("sortBy") || "start_date_desc";
@@ -136,7 +138,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
       storeSetSearchInput({ search: searchTerm });
       //@ts-ignore
       setParticipationType(participationType);
-      //@ts-ignore
+      storeSetParticipationType(participationType);
+       //@ts-ignore
       setSortBy(sortBy);
 
       if (selectedHubsFromParams.length === 0) {
@@ -221,7 +224,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
         .filter((id) => !isNaN(id)); // Ensure only valid numbers are included
       // @ts-ignore
       storeSetSelectedHubs({ society_hub_id: society_hub_id });
+      console.log("-----participationTypeStore", participationTypeStore);
       storeSetParticipationType(participationTypeStore);
+      setParticipationType(participationTypeStore);
       // Ensure sortBy is a valid value
 
       storeSetSortBy(sortBy);
@@ -378,14 +383,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [HideMainButton]);
   const renderFilterButtons = useCallback(() => {
     let filters;
-
+    console.log("participationTypeparticipationType----", participationType);
+    // filters = [
+    //   ...(participationType?.length === 0 || participationType.length === 2
+    //     ? participationType
+    //     : ["in_person", "online"]),
+    //   sortBy !== "start_date_desc" ? "Most People Reached" : null,
+    // ].filter(Boolean); // Filter out falsy values
     filters = [
-      ...(participationType?.length === 0 || participationType.length === 2
-        ? participationType
-        : ["in_person", "online"]),
+      ...(participationType.length > 0
+          ? participationType // Use the selected participation type(s)
+          : ["in_person", "online"]), // If empty, default to both
       sortBy !== "start_date_desc" ? "Most People Reached" : null,
     ].filter(Boolean); // Filter out falsy values
-
+    console.log("filtersfiltersfiltersfilters", filters);
     const filterButtons = filters.map((filter, index) => (
       <Button
         key={index}
@@ -417,7 +428,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
 
     return filterButtons;
-  }, [renderedFilterTags]); // Dependencies
+  }, [renderedFilterTags,participationType]); // Dependencies
 
   const handleMouseDown = (e: React.MouseEvent) => {
     const scrollArea = scrollAreaRef.current;
