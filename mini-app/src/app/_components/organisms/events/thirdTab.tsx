@@ -28,7 +28,7 @@ export const ThirdStep = () => {
       setEventData({});
       toast("Event created successfully", {
         icon: <IoInformationCircle />,
-        duration: 1500,
+        duration: 4000,
       });
       router.push(`/events/${data.eventId}/edit`);
     },
@@ -41,7 +41,7 @@ export const ThirdStep = () => {
       setEventData({});
       toast("Event updated successfully", {
         icon: <IoInformationCircle />,
-        duration: 1500,
+        duration: 4000,
       });
       router.push(`/events/${data.eventId}`);
     },
