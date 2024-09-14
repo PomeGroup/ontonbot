@@ -1,4 +1,4 @@
-import { Markup } from "telegraf"
+import {Markup} from "telegraf"
 
 const startKeyboard = () => {
     const data = [
@@ -6,7 +6,7 @@ const startKeyboard = () => {
             {
                 text: "Open Event",
                 web_app: {
-                    url: `${process.env.APP_BASE_URL}/events`,
+                    url: `${process.env.APP_BASE_URL}/`,
                     display_name: "Open",
                 },
             },
@@ -16,7 +16,6 @@ const startKeyboard = () => {
 
     return data
 }
-
 
 
 const shareKeyboard = (url: string) => {
@@ -41,7 +40,7 @@ const shareKeyboard = (url: string) => {
             {
                 text: "All Events",
                 web_app: {
-                    url: `${process.env.APP_BASE_URL}/events`,
+                    url: `${process.env.APP_BASE_URL}/`,
                     display_name: "Open",
                 },
             },
@@ -52,10 +51,9 @@ const shareKeyboard = (url: string) => {
 }
 
 
-const backKeyboard = [[{ text: "Back", callback_data: "back" }]];
+const backKeyboard = [[{text: "Back", callback_data: "back"}]];
 const inlineSendKeyboard = () => {
-    return [[{ text: "Refresh", callback_data: "refresh" }]];
+    return [[{text: "Refresh", callback_data: "refresh"}]];
 };
 
-export { backKeyboard, inlineSendKeyboard, shareKeyboard, startKeyboard }
-
+export {backKeyboard, inlineSendKeyboard, shareKeyboard, startKeyboard}
