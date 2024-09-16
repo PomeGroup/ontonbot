@@ -9,6 +9,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { IoIosArrowForward } from "react-icons/io";
 import { IoOptionsOutline } from "react-icons/io5";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { Separator } from "@/components/ui/separator";
@@ -56,42 +57,56 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
         <DrawerHeader>
           <DrawerTitle>Filter List</DrawerTitle>
         </DrawerHeader>
-        <div className="p-4 space-y-6 cursor-pointer">
+        <div className="p-4 py-2 space-y-2 cursor-pointer ">
           <div
-            className="space-y-4"
+            className="space-y-3 border-b-[1px] border-b-zinc-700 pb-1"
             onClick={() => setIsEventTypeDrawerOpen(true)}
           >
-            <p className="text-sm font-medium text-zinc-100">EVENT TYPE</p>
-            <div className="cursor-pointer text-blue-500">
+            <p className=" font-medium text-zinc-100">EVENT TYPE</p>
+            <div className="cursor-pointer text-sm  text-zinc-400 flex items-center">
               {participationType.length === 0 ||
               participationType.length == allParticipationTypes.length
                 ? "All"
                 : participationType.join(", ").replace("_", " ")}
+              <IoIosArrowForward className="ml-auto" />
             </div>
           </div>
           <div
-            className="space-y-4"
+            className="flex items-center cursor-pointer  border-b-[1px] border-b-zinc-700 pb-1"
             onClick={() => setIsHubDrawerOpen(true)}
           >
-            <p className="text-sm font-medium text-zinc-100">Ton hub</p>
-            <div className="cursor-pointer text-blue-500">{hubText}</div>
+            <div className="flex-1 space-y-3">
+              <p className="font-medium text-zinc-100">Ton hub</p>
+              <div className="text-zinc-400 text-sm line-clamp-1 w-11/12 overflow-hidden">
+                {hubText}
+              </div>
+            </div>
+
+            <IoIosArrowForward className="text-sm text-zinc-400 ml-2 mt-8" />
           </div>
+
           <div className="space-y-4">
-            <p className="text-sm font-medium text-zinc-100">SORT BY</p>
+            <p className="text-sm font-medium text-zinc-100 pt-2">SORT BY</p>
             <RadioGroup
               orientation="vertical"
               value={sortBy}
               onValueChange={(value) => setSortBy(value)}
             >
-              <Separator className="my-0" />
-              <label className="flex justify-between items-center">
-                <span className="text-zinc-400">Time</span>
-                <RadioGroupItem value="start_date_desc" className="h-5 w-5" />
+
+              <label className="flex justify-between items-center  border-b-[1px] border-b-zinc-700 pb-2">
+                <span className="text-zinc-400 text-sm ">Time</span>
+                <RadioGroupItem
+                  value="start_date_desc"
+                  className="h-4 w-4"
+                />
               </label>
-              <Separator className="my-0" />
+
               <label className="flex justify-between items-center">
-                <span className="text-zinc-400">Most People Reached</span>
-                <RadioGroupItem value="most_people_reached" className="h-5 w-5" />
+                <span className="text-zinc-400 text-sm ">Most People Reached</span>
+                <RadioGroupItem
+                  value="most_people_reached"
+                  className="h-4 w-4"
+                />
               </label>
             </RadioGroup>
           </div>
@@ -110,7 +125,11 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           </DrawerClose>
           <button
             className="text-blue-600 hover:underline px-4 py-2 rounded-full"
-            onClick={resetFilters}
+            onClick={() => {
+              resetFilters();
+              // close the drawer
+              onOpenChange(false);
+            }}
           >
             Reset filters
           </button>

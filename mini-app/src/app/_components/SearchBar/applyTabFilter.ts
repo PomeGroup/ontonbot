@@ -23,7 +23,7 @@ const applyTabFilter = (tabValue: string, userId: number | undefined) => {
       setStartDate(Math.floor(Date.now() / 1000)); // Start date is current timestamp
       setStartDateOperator(">="); // Start date operator
       setUserId(undefined); // Remove any specific user ID filter
-      if (!searchInput.sortBy) setSortBy("start_date_asc"); // Default sort order for upcoming events
+      if (!searchInput.sortBy || searchInput.sortBy==="start_date_desc") setSortBy("start_date_asc"); // Default sort order for upcoming events
       break;
 
     case "Past":

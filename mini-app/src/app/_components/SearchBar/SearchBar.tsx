@@ -279,7 +279,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const resetFilters = () => {
     const allHubs = hubs.map((hub: Hub) => hub.id);
-    setParticipationType(allParticipationTypes);
+    setParticipationType([]);
     setSelectedHubs(allHubs);
     setSortBy("start_date_desc");
     setRenderedFilterTags(!renderedFilterTags);
@@ -305,13 +305,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
     const updated = participationType.includes(type)
       ? participationType.filter((t) => t !== type)
       : [...participationType, type];
-    console.log("---updatedupdatedupdated", updated);
+    setParticipationType(["online", "in_person"]);
     if (
       updated.length === 0 &&
       participationType.includes("online") &&
       participationType.includes("in_person")
     ) {
-      setParticipationType(["online", "in_person"]);
+
       return;
     }
 
@@ -386,16 +386,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [HideMainButton,WebApp?.MainButton?.isVisible]);
   const renderFilterButtons = useCallback(() => {
     let filters;
-    // filters = [
-    //   ...(participationType?.length === 0 || participationType.length === 2
-    //     ? participationType
-    //     : ["in_person", "online"]),
-    //   sortBy !== "start_date_desc" ? "Most People Reached" : null,
-    // ].filter(Boolean); // Filter out falsy values
+
     filters = [
       ...(participationType.length > 0
         ? participationType // Use the selected participation type(s)
-        : ["in_person", "online"]), // If empty, default to both
+        : []), // If empty, default to both
       sortBy !== "start_date_desc" ? "Most People Reached" : null,
     ].filter(Boolean); // Filter out falsy values
     const filterButtons = filters.map((filter, index) => (
