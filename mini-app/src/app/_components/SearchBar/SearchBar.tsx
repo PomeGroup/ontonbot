@@ -369,18 +369,24 @@ const SearchBar: React.FC<SearchBarProps> = ({
       (userRole === "admin" || userRole === "organizer") &&
       pathname === "/"
     ) {
-      if (HideMainButton) {
+      if (HideMainButton  ) {
+        setTimeout(() => {}, 100);
+        console.log("+++++HideMainButton isVisible", WebApp?.MainButton.isVisible);
         WebApp?.MainButton.hide();
-        setTimeout(() => {}, 500);
-      } else {
-        setTimeout(() => {}, 500);
+        WebApp?.MainButton.hide();
+
+      } else if (!HideMainButton  ) {
+        setTimeout(() => {}, 100);
+        console.log("++++ShowMainButton isVisible", WebApp?.MainButton.isVisible);
         WebApp?.MainButton.show();
+        WebApp?.MainButton.show();
+
       }
     }
-  }, [HideMainButton]);
+  }, [HideMainButton,WebApp?.MainButton?.isVisible]);
   const renderFilterButtons = useCallback(() => {
     let filters;
-     // filters = [
+    // filters = [
     //   ...(participationType?.length === 0 || participationType.length === 2
     //     ? participationType
     //     : ["in_person", "online"]),
