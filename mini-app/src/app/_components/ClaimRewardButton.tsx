@@ -3,8 +3,8 @@
 import useWebApp from "@/hooks/useWebApp";
 import { useMemo, useState } from "react";
 import { trpc } from "../_trpc/client";
-import MainButton from "./atoms/buttons/web-app/MainButton";
 import ModalDialog from "./SecretSavedModal";
+import MainButton from "./atoms/buttons/web-app/MainButton";
 
 // Child component
 function ClaimRewardButtonChild(props: {
@@ -28,7 +28,7 @@ function ClaimRewardButtonChild(props: {
         <MainButton
           text={props.isNotified ? "Reward claimed!" : "Claim Reward"}
           onClick={openRewardLink}
-          color={props.isNotified ? "#747480" : "#2ea6ff"}
+          color={props.isNotified ? "secondary" : "primary"}
         />
       )}
 
@@ -74,7 +74,7 @@ export function ClaimRewardButton(props: { eventId: string }) {
   ) : (
     <MainButton
       text="Claim Reward"
-      color={"#747480"}
+      color={"secondary"}
     />
   );
 }

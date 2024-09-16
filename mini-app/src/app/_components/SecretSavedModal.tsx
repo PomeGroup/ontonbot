@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import { Title } from "@radix-ui/react-toast";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import MainButton from "./atoms/buttons/web-app/MainButton";
-import PopupFooterWrapper from "./PopupFooterWrapper";
 interface ModalDialogProps {
   isVisible: boolean;
   onClose: () => void;
@@ -131,7 +129,7 @@ const ModalDialog: React.FC<ModalDialogProps> = ({
           <MainButton
             onClick={onClose}
             text={closeButtonText}
-            color={"#2ea6ff"}
+            color={"primary"}
           />
         )}
       </div>
