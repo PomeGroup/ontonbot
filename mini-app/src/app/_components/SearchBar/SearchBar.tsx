@@ -124,9 +124,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
-      const participationType =
-        searchParams.get("participationType")?.split(",") ||
-        allParticipationTypes;
+      const participantFromQuery = searchParams.get("participationType")?.split(",") || [];
+      const participationType = (participantFromQuery.length > 0 && participantFromQuery.length !== 2) ? participantFromQuery : []
+
 
       const selectedHubsFromParams =
         searchParams.get("selectedHubs")?.split(",") || [];
