@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { UploadImageFile } from "@/components/ui/upload-file";
 import useWebApp from "@/hooks/useWebApp";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
@@ -33,7 +34,7 @@ export const ThirdStep = () => {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
-      router.push(`/events/${data.eventId}/edit`);
+      router.push(`/events/${data.eventHash}/edit`);
     },
     onError(error) {
       toast.error(error.message);
@@ -136,18 +137,36 @@ export const ThirdStep = () => {
         <div className="space-y-2">
           <label htmlFor="reward_image">Reward Image</label>
           <AlertGeneric variant="info">
-            Event&#39;s reward badge, visible on TON society
+            Event&#39;s reward badge, visible on TON society. It can not be
+            changed after event creation.
           </AlertGeneric>
-          <UploadImageFile
-            changeText="Upload Reward Image"
-            infoText="Image must be in 1:1 ratio"
-            triggerText="Upload"
-            onDone={(url) => {
-              setEventData({ ...eventData, ts_reward_url: url });
-            }}
-            isError={Boolean(errors?.ts_reward_url)}
-            defaultImage={eventData?.ts_reward_url}
-          />
+          {
+            // if it was update we show the image and say it's not editable
+            editOptions?.eventHash ? (
+              eventData?.ts_reward_url ? (
+                <div className="flex gap-4 items-center justify-start w-full">
+                  <Image
+                    src={eventData?.ts_reward_url}
+                    alt="reward image"
+                    width={80}
+                    height={80}
+                    className="rounded-xl"
+                  />
+                </div>
+              ) : null
+            ) : (
+              <UploadImageFile
+                changeText="Upload Reward Image"
+                infoText="Image must be in 1:1 ratio"
+                triggerText="Upload"
+                onDone={(url) => {
+                  setEventData({ ...eventData, ts_reward_url: url });
+                }}
+                isError={Boolean(errors?.ts_reward_url)}
+                defaultImage={eventData?.ts_reward_url}
+              />
+            )
+          }
         </div>
       </form>
       {editOptions?.eventHash ? (

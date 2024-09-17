@@ -15,7 +15,7 @@ import {
   SocietyHub,
   UpdateEventDataSchema,
 } from "@/types";
-import { TonSocietyRegisterActivityT } from "@/types/event.types";
+import { TSAPIoperations } from "@/types/ton-society-api-types";
 import { fetchBalance } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
@@ -163,6 +163,7 @@ export const eventsRouter = router({
               owner: opts.ctx.user.user_id,
               participationType: opts.input.eventData.eventLocationType,
               countryId: opts.input.eventData.countryId,
+              tsRewardImage: opts.input.eventData.ts_reward_url,
               cityId: opts.input.eventData.cityId,
             })
             .returning();
@@ -215,11 +216,14 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             `,
           });
 
-          const country = await db.query.giataCity.findFirst({
-            where: (fields, { eq }) => {
-              return eq(fields.id, opts.input.eventData.countryId as number);
-            },
-          });
+          let country;
+          if (opts.input.eventData.eventLocationType === "in_person") {
+            country = await db.query.giataCity.findFirst({
+              where: (fields, { eq }) => {
+                return eq(fields.id, opts.input.eventData.countryId as number);
+              },
+            });
+          }
 
           const eventDraft: CreateActivityRequestBody = {
             title: opts.input.eventData.title,
@@ -278,9 +282,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           return newEvent;
         });
 
-        return { success: true, eventId: result[0].event_id };
+        return {
+          success: true,
+          eventId: result[0].event_id,
+          eventHash: result[0].event_uuid,
+        } as const;
       } catch (error) {
-        console.error("Error while adding event: ", error);
+        console.error(`Error while adding event: ${Date.now()}`, error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Internal Error while adding event",
@@ -460,19 +468,20 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             ? "Online"
             : opts.input.eventData.location;
 
-          const eventDraft: TonSocietyRegisterActivityT = {
-            title: eventData.title,
-            subtitle: eventData.subtitle,
-            description: eventData.description,
-            hub_id: parseInt(eventData.society_hub.id),
-            start_date: timestampToIsoString(eventData.start_date),
-            end_date: timestampToIsoString(eventData.end_date!),
-            additional_info,
-            cta_button: {
-              link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`,
-              label: "Enter Event",
-            },
-          };
+          const eventDraft: TSAPIoperations["updateEvent"]["requestBody"]["content"]["application/json"] =
+            {
+              title: eventData.title,
+              subtitle: eventData.subtitle,
+              description: eventData.description,
+              hub_id: parseInt(eventData.society_hub.id),
+              start_date: timestampToIsoString(eventData.start_date),
+              end_date: timestampToIsoString(eventData.end_date!),
+              additional_info,
+              cta_button: {
+                link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`,
+                label: "Enter Event",
+              },
+            };
 
           const oldChanges = getObjectDifference(updatedEvent[0], oldEvent[0]);
 

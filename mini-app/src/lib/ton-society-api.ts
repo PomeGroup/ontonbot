@@ -1,8 +1,5 @@
 // The integration with ton society apis will be here
-import {
-  TonSocietyRegisterActivityResponse,
-  TonSocietyRegisterActivityT,
-} from "@/types/event.types";
+import { TonSocietyRegisterActivityResponse } from "@/types/event.types";
 import { TSAPIoperations } from "@/types/ton-society-api-types";
 import {
   CreateUserRewardLinkReturnType,
@@ -67,7 +64,7 @@ export type CreateActivityRequestBody =
  * more: https://ton-society.github.io/sbt-platform/#/Activities/updateEvent
  */
 export async function updateActivity(
-  activityDetails: TonSocietyRegisterActivityT,
+  activityDetails: TSAPIoperations["updateEvent"]["requestBody"]["content"]["application/json"],
   activity_id: string | number
 ) {
   if (!activity_id)

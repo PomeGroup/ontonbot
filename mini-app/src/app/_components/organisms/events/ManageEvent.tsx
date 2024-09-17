@@ -17,6 +17,7 @@ const ManageEvent = (props: ManageEventProps) => {
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEdit = useCreateEventStore((state) => state.setEdit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
+  const editOptions = useCreateEventStore((state) => state.edit);
   const resetState = useCreateEventStore((state) => state.resetState);
   const webApp = useWebApp();
   const router = useRouter();
@@ -74,6 +75,10 @@ const ManageEvent = (props: ManageEventProps) => {
       webApp?.BackButton.hide();
     };
   }, [webApp, currentStep, setCurrentStep, router]);
+
+  useEffect(() => {
+    editOptions?.eventHash && resetState();
+  }, [editOptions?.eventHash]);
 
   return (
     <>
