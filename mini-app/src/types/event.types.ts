@@ -1,5 +1,6 @@
 import { events, rewards, visitors } from "@/db/schema";
 import { InferSelectModel } from "drizzle-orm";
+import { TONSOcietyAPISchemaT } from "./ton-society-api-types";
 
 export type TonSocietyRegisterActivityT = {
   title: string;
@@ -13,6 +14,7 @@ export type TonSocietyRegisterActivityT = {
     label: string;
     link: string;
   };
+  rewards?: TONSOcietyAPISchemaT["RewardsManualMint"];
 };
 
 export type TonSocietyRegisterActivityResponse = {

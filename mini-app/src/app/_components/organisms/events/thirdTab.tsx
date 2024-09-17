@@ -2,6 +2,7 @@ import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
+import { UploadImageFile } from "@/components/ui/upload-file";
 import useWebApp from "@/hooks/useWebApp";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { useRouter } from "next/navigation";
@@ -9,19 +10,21 @@ import { useCallback, useRef, useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
 import { z } from "zod";
-import TgsFilePlayer from "../../atoms/TgsFilePlayer";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
 
 export const ThirdStep = () => {
+  const webApp = useWebApp();
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
   const editOptions = useCreateEventStore((state) => state.edit);
-  const [errors, setErrors] = useState<{
-    secret_phrase?: string[] | undefined;
-  }>();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+
+  const [errors, setErrors] = useState<{
+    secret_phrase?: string[] | undefined;
+    ts_reward_url?: string[] | undefined;
+  }>();
 
   const addEvent = trpc.events.addEvent.useMutation({
     onSuccess(data) {
@@ -49,12 +52,12 @@ export const ThirdStep = () => {
       toast.error(error.message);
     },
   });
-  const webApp = useWebApp();
 
   const thirdStepDataSchema = z.object({
     secret_phrase: editOptions
       ? z.string().min(4).max(20).optional()
       : z.string().min(4).max(20),
+    ts_reward_url: z.string().url({ message: "Please select an image" }),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,7 +69,11 @@ export const ThirdStep = () => {
 
     const formData = new FormData(formRef.current);
     const formDataObject = Object.fromEntries(formData.entries());
-    const formDataParsed = thirdStepDataSchema.safeParse(formDataObject);
+    const stepInputsObject = {
+      ...formDataObject,
+      ts_reward_url: eventData?.ts_reward_url,
+    };
+    const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
 
     if (formDataParsed.success) {
       setErrors({});
@@ -107,45 +114,57 @@ export const ThirdStep = () => {
   }, [formRef]);
 
   return (
-    <StepLayout title="Event's password">
-      <TgsFilePlayer
-        src="/pass_lock.tgs"
-        autoplay
-        loop
-        className="w-40 h-40 mx-auto"
-      />
+    <StepLayout>
       <form
         ref={formRef}
         onSubmit={handleSubmit}
-        className="space-y-2"
+        className="space-y-8"
       >
-        <Input
-          placeholder="Enter your chosen password"
-          name="secret_phrase"
-          errors={errors?.secret_phrase}
-        />
-
-        <AlertGeneric variant="info">
-          By setting a password for the event, you can prevent checking-in
-          unexpectedly and receiving reward without attending the event.
-        </AlertGeneric>
-
-        {editOptions?.eventHash ? (
-          <MainButton
-            onClick={handleButtonClick}
-            text="Update event"
-            disabled={updateEvent.isLoading}
-            progress={updateEvent.isLoading}
+        <div className="space-y-2">
+          <label htmlFor="secret_phrase">Event&#39;s password</label>
+          <Input
+            placeholder="Enter your chosen password"
+            name="secret_phrase"
+            errors={errors?.secret_phrase}
           />
-        ) : (
-          <MainButton
-            onClick={handleButtonClick}
-            text="Create event"
-            disabled={addEvent.isLoading}
-            progress={addEvent.isLoading}
+
+          <AlertGeneric variant="info">
+            By setting a password for the event, you can prevent checking-in
+            unexpectedly and receiving reward without attending the event.
+          </AlertGeneric>
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="reward_image">Reward Image</label>
+          <AlertGeneric variant="info">
+            Event&#39;s reward badge, visible on TON society
+          </AlertGeneric>
+          <UploadImageFile
+            changeText="Upload Reward Image"
+            infoText="Image must be in 1:1 ratio"
+            triggerText="Upload"
+            onDone={(url) => {
+              setEventData({ ...eventData, ts_reward_url: url });
+            }}
+            isError={Boolean(errors?.ts_reward_url)}
+            defaultImage={eventData?.ts_reward_url}
           />
-        )}
+        </div>
       </form>
+      {editOptions?.eventHash ? (
+        <MainButton
+          onClick={handleButtonClick}
+          text="Update event"
+          disabled={updateEvent.isLoading}
+          progress={updateEvent.isLoading}
+        />
+      ) : (
+        <MainButton
+          onClick={handleButtonClick}
+          text="Create event"
+          disabled={addEvent.isLoading}
+          progress={addEvent.isLoading}
+        />
+      )}
     </StepLayout>
   );
 };

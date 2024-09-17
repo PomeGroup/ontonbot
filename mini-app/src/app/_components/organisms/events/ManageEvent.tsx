@@ -81,7 +81,7 @@ const ManageEvent = (props: ManageEventProps) => {
         steps={[
           { icon: <span>1</span>, label: "General info" },
           { icon: <span>2</span>, label: "Time and place" },
-          { icon: <span>3</span>, label: "Event’s Password" },
+          { icon: <span>3</span>, label: "Reward Setting" },
         ]}
         currentStep={currentStep}
       />

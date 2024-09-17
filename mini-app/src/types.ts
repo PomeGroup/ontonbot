@@ -130,7 +130,8 @@ export const EventDataSchema = z.object({
   subtitle: z.string(),
   description: z.string(),
   location: z.string(),
-  image_url: z.string(),
+  image_url: z.string().url(),
+  ts_reward_url: z.string().url(),
   society_hub: z.object({
     id: z.string(),
     name: z.string(),
@@ -155,7 +156,8 @@ export const UpdateEventDataSchema = z.object({
   subtitle: z.string(),
   description: z.string(),
   location: z.string(),
-  image_url: z.string(),
+  image_url: z.string().url(),
+  ts_reward_url: z.string().url(),
   society_hub: z.object({
     id: z.string(),
     name: z.string(),
@@ -177,7 +179,8 @@ export const EventDataSchemaAllOptional = z.object({
   subtitle: z.string().optional(),
   description: z.string().optional(),
   location: z.string().optional(),
-  image_url: z.string().optional(),
+  image_url: z.string().url().optional(),
+  ts_reward_url: z.string().url().optional(),
   type: z.number().optional(),
   society_hub: z
     .object({

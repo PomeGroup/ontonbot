@@ -3,6 +3,7 @@ import {
   TonSocietyRegisterActivityResponse,
   TonSocietyRegisterActivityT,
 } from "@/types/event.types";
+import { TSAPIoperations } from "@/types/ton-society-api-types";
 import {
   CreateUserRewardLinkReturnType,
   type CreateUserRewardLinkInputType,
@@ -52,11 +53,14 @@ export async function createUserRewardLink(
  * more: https://ton-society.github.io/sbt-platform/#/Activities/createEvent
  */
 export async function registerActivity(
-  activityDetails: TonSocietyRegisterActivityT
+  activityDetails: TSAPIoperations["createEvent"]["requestBody"]["content"]["application/json"]
 ) {
   const response = await tonSocietyClient.post("/activities", activityDetails);
   return response.data as TonSocietyRegisterActivityResponse;
 }
+
+export type CreateActivityRequestBody =
+  TSAPIoperations["createEvent"]["requestBody"]["content"]["application/json"];
 
 /**
  * An endpoint that allows to create a new activity of the "Events" activity group.
