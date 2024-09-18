@@ -8,6 +8,26 @@ import { z } from "zod";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
 
+const ImageUpload = ({ isError }: { isError: boolean }) => {
+  const eventData = useCreateEventStore((state) => state.eventData);
+  const setEventData = useCreateEventStore((state) => state.setEventData);
+
+  const handleImageChange = (img_url: string) => {
+    setEventData({ ...eventData, image_url: img_url });
+  };
+
+  return (
+    <UploadImageFile
+      triggerText="Upload Event Image"
+      infoText="Image must be in 1:1 ratio"
+      changeText="Change Image"
+      isError={isError}
+      onDone={handleImageChange}
+      defaultImage={eventData?.image_url}
+    />
+  );
+};
+
 const firstStepDataSchema = z.object({
   title: z.string().min(1),
   subtitle: z.string().min(1),
@@ -101,12 +121,7 @@ export const FirstStep = () => {
           value={eventData?.society_hub}
           errors={errors?.hub}
         />
-        <UploadImageFile
-          triggerText="Upload Event Image"
-          infoText="Image must be in 1:1 ratio(same height and width)"
-          changeText="Change Image"
-          isError={Boolean(errors?.image_url)}
-        />
+        <ImageUpload isError={Boolean(errors?.image_url)} />
       </StepLayout>
       <MainButton
         text="Next Step"
