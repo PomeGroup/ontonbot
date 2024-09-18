@@ -47,6 +47,7 @@ const ManageEvent = (props: ManageEventProps) => {
           eventLocationType: props.event.participationType,
           countryId: props.event.countryId || undefined,
           cityId: props.event.cityId || undefined,
+          ts_reward_url: props.event.tsRewardImage || undefined,
         });
       }
     }
@@ -77,8 +78,8 @@ const ManageEvent = (props: ManageEventProps) => {
   }, [webApp, currentStep, setCurrentStep, router]);
 
   useEffect(() => {
-    editOptions?.eventHash && resetState();
-  }, [editOptions?.eventHash]);
+    document.location.pathname.endsWith("create") && resetState();
+  }, []);
 
   return (
     <>

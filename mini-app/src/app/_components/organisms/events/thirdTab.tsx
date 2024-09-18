@@ -80,6 +80,7 @@ export const ThirdStep = () => {
       setErrors({});
       setEventData({
         secret_phrase: formDataParsed.data.secret_phrase,
+        ts_reward_url: formDataParsed.data.ts_reward_url,
       });
 
       const dataToSubmit = { ...formDataParsed.data, ...eventData };
@@ -144,12 +145,12 @@ export const ThirdStep = () => {
             // if it was update we show the image and say it's not editable
             editOptions?.eventHash ? (
               eventData?.ts_reward_url ? (
-                <div className="flex gap-4 items-center justify-start w-full">
+                <div className="flex justify-center gap-4 items-center pt-2 w-full">
                   <Image
                     src={eventData?.ts_reward_url}
                     alt="reward image"
-                    width={80}
-                    height={80}
+                    width={300}
+                    height={300}
                     className="rounded-xl"
                   />
                 </div>
