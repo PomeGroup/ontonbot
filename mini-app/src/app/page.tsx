@@ -16,8 +16,20 @@ import MemoizedMainButton from "@/app/_components/Memoized/MemoizedMainButton";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
+import { CreateNewEventButton } from "@/components/event/CreateNewEventButton";
 // Define types for events
 type EventData = any[];
+
+{
+  /**
+   * FIXME :
+   *  1.  expect to see CreateNewEventButton as first comonent that load.
+   *  2.  user if user scroll to top it can see lots of empty space.
+   *  3.  loading should not effect on the structure of the page.
+   *  4.  first load the texts and create structure and last add the images.
+   *  5.  should be able to see the banner upside of the searchbar.
+   */
+}
 
 export default function Home() {
   const { config } = useConfig();
@@ -227,7 +239,7 @@ export default function Home() {
                   activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
                 }`}
               >
-                All events
+                All events asdfasfd
               </TabsTrigger>
               <TabsTrigger
                 value="my-events"
@@ -240,12 +252,8 @@ export default function Home() {
             </TabsList>
           </Tabs>
         </div>
-
         {/* Scrollable Content */}
-        <div
-
-          className=" flex-grow"
-        >
+        <div className=" flex-grow">
           <Swiper
             onSlideChange={handleSlideChange}
             slidesPerView={1}
@@ -363,7 +371,8 @@ export default function Home() {
                 )}
               </div>
             </SwiperSlide>
-
+            {/* nuber is not visible */}
+            <p>1</p>
             {/* My Events Slide */}
             <SwiperSlide>
               <div className="pt-2 flex-grow overflow-y-auto h-screen pb-[120px]">
@@ -387,20 +396,28 @@ export default function Home() {
                   myEventsData?.data?.map((event) => (
                     <>
                       <EventCard
-                          key={event.event_uuid}
-                          event={event}
-                          currentUserId={UserId}
+                        key={event.event_uuid}
+                        event={event}
+                        currentUserId={UserId}
                       />
-
                     </>
                   ))
                 )}
               </div>
+              {/* nuber is not visible */}
+              <p>2</p>
             </SwiperSlide>
+            {/* nuber is not visible */}
+            <p>2</p>
+            {/* nuber is not visible */}
           </Swiper>
+          {/* nuber is not visible */}
+          <p>3</p>
         </div>
+        {/* nuber is not visible */}
+        <p>4</p>
       </div>
-
+      <CreateNewEventButton />
       {!useAuthLoading &&
         (userRole === "admin" || userRole === "organizer") &&
         authorized && (
