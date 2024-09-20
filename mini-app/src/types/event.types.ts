@@ -26,3 +26,4 @@ export type TonSocietyRegisterActivityResponse = {
 export type RewardType = InferSelectModel<typeof rewards>;
 export type VisitorsType = InferSelectModel<typeof visitors>;
 export type EventType = InferSelectModel<typeof events>;
+export type EventTypeSecure = Omit<EventType, 'wallet_address' | 'wallet_seed_phrase' | 'secret_phrase'>;

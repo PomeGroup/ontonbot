@@ -43,29 +43,6 @@ export const visitorsRouter = router({
       if (!valid) {
         return;
       }
-    // @todo: Add cache for this
-      const existingVisitor = await db
-        .select()
-        .from(visitors)
-        .where(
-          and(
-            eq(visitors.user_id, initDataJson.user.id),
-            eq(visitors.event_uuid, opts.input.event_uuid)
-          )
-        )
-        .execute();
 
-      if (existingVisitor.length !== 0) {
-        return;
-      }
-
-      await db
-        .insert(visitors)
-        .values({
-          user_id: initDataJson.user.id,
-          event_uuid: opts.input.event_uuid,
-          updatedBy: initDataJson.user.id.toString(),
-        })
-        .execute();
     }),
 });

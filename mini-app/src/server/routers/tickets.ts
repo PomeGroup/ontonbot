@@ -1,7 +1,9 @@
 import { publicProcedure, router } from "../trpc";
 import { z } from "zod";
-import { getTicketByUuid, checkInTicket } from "@/server/db/tickets";
+import ticketDB from "@/server/db/ticket.db";
 import { TRPCError } from "@trpc/server";
+import rewardsService from "@/server/routers/services/rewardsService";
+import telegramService from "@/server/routers/services/telegramService";
 
 // Type guard to check if result is alreadyCheckedIn type
 function isAlreadyCheckedIn(
@@ -18,7 +20,7 @@ export const ticketRouter = router({
       })
     )
     .query(async (opts) => {
-      const ticket = await getTicketByUuid(opts.input.ticketUuid);
+      const ticket = await ticketDB.getTicketByUuid(opts.input.ticketUuid);
 
       if (!ticket) {
         throw new TRPCError({
@@ -37,20 +39,45 @@ export const ticketRouter = router({
       })
     )
     .mutation(async (opts) => {
-      const result = await checkInTicket(opts.input.ticketUuid);
-
+      const result = await ticketDB.checkInTicket(opts.input.ticketUuid);
+      console.log("result", result);
       if (!result) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to check in the ticket",
-
         });
       }
-
+     // console.log("isAlreadyCheckedIn(result)", isAlreadyCheckedIn(result));
       if (isAlreadyCheckedIn(result)) {
-        return { alreadyCheckedIn: true , result: result };
+        return { alreadyCheckedIn: true, result: result };
       }
+      const ticketData = await ticketDB.getTicketByUuid(opts.input.ticketUuid);
+      console.log("ticketData", ticketData);
+      if (ticketData && ticketData?.user_id && ticketData?.event_uuid) {
+        {
+          // Create a reward for the
+          const result = await rewardsService.createUserRewardSBT({
+            user_id: ticketData.user_id,
+            event_uuid: ticketData.event_uuid,
+            ticketOrderUuid: ticketData.order_uuid,
+          });
+          console.log("result", result);
+          if (result) {
+            const { reward, visitor, event } = result;
+            if (reward && visitor && event) {
+              {
+                await telegramService.sendRewardNotification(
+                  reward,
+                  visitor,
+                  //@ts-ignore
+                  event
+                );
+              }
+            }
+          }
+        }
 
-      return { checkInSuccess: true , result: result };
-      }),
+        return { checkInSuccess: true, result: result };
+      }
+    }),
 });

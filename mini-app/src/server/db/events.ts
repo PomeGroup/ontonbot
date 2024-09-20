@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import crypto from 'crypto';
+import crypto from "crypto";
 import {
   event_details_search_list,
   eventFields,
@@ -17,6 +17,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -104,7 +105,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
     .from(eventFields)
     .where(eq(eventFields.event_id, eventData.event_id))
     .execute()
-    // remove the place holder from dynamic fields
+    // remove the placeholder from dynamic fields
     .then((fields) =>
       fields.map((field) => {
         if (field.title === "secret_phrase_onton_input") {
@@ -200,13 +201,19 @@ export const getEventsWithFilters = async (
     useCache = false,
   } = params;
   //console.log("*****params search: ", params);
-  const stringToHash = JSON.stringify({ limit, offset, search, filter, sortBy });
+  const stringToHash = JSON.stringify({
+    limit,
+    offset,
+    search,
+    filter,
+    sortBy,
+  });
   // Create MD5 hash
-  const hash =  crypto.createHash('md5').update(stringToHash).digest('hex');
+  const hash = crypto.createHash("md5").update(stringToHash).digest("hex");
   const cacheKey = cacheKeys.getEventsWithFilters + hash;
 
   const cachedResult = getCache(cacheKey);
-  if (cachedResult && useCache)  {
+  if (cachedResult && useCache) {
     /// show return from cache and time
     console.log("👙👙 cachedResult 👙👙" + Date.now());
     return cachedResult;
@@ -240,7 +247,6 @@ export const getEventsWithFilters = async (
     } else {
       return [];
     }
-
   }
   // Apply date filters
   if (filter?.startDate && filter?.startDateOperator) {
@@ -297,9 +303,9 @@ export const getEventsWithFilters = async (
     );
 
     let orderByClause;
-    if (sortBy === "start_date_asc" ) {
+    if (sortBy === "start_date_asc") {
       orderByClause = sql`start_date ASC`;
-    } else if (sortBy === "start_date_desc"|| sortBy === "default") {
+    } else if (sortBy === "start_date_desc" || sortBy === "default") {
       orderByClause = sql`start_date DESC`;
     } else if (sortBy === "most_people_reached") {
       orderByClause = sql`visitor_count DESC`;
@@ -307,7 +313,7 @@ export const getEventsWithFilters = async (
 
     // @ts-expect-error
     query = query.orderBy(
-        sql`${orderByClause ? sql`${orderByClause},` : sql``}
+      sql`${orderByClause ? sql`${orderByClause},` : sql``}
       greatest(
           similarity(${event_details_search_list.title}, ${search}),
           similarity(${event_details_search_list.location}, ${search})
@@ -342,10 +348,27 @@ export const getEventsWithFilters = async (
     query = query.limit(limit).offset(offset);
   }
   //console.log("query eee " );
-   logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  logSQLQuery(query.toSQL().sql, query.toSQL().params);
   //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
   setCache(cacheKey, eventsData, 60);
   return eventsData;
+};
+
+export const getEventByUuid = async (eventUuid: string , removeSecret : boolean = true) => {
+  const event = await db
+    .select()
+    .from(events)
+    .where(eq(events.event_uuid, eventUuid))
+    .execute();
+  if (event === undefined || event.length === 0) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: `Event not found  ${eventUuid}`,
+    });
+  }
+  // remove the secret_phrase from the response
+  const { secret_phrase, ...restEvent } = event[0];
+  return removeSecret ? restEvent : event[0];
 };
