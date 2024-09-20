@@ -223,12 +223,16 @@ export const eventsRouter = router({
               label: "Enter Event",
             },
           };
+            // Ensure eventDataUpdated is accessed correctly as an object
+          const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
 
+          // Remove the description key
+          const { description, ...eventDataWithoutDescription } = eventData;
           await sendLogNotification({
             message: `
 @${opts.ctx.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
 
-<pre><code>${formatChanges(newEvent[0])}</code></pre>
+<pre><code>${formatChanges(eventDataWithoutDescription)}</code></pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
             `,
@@ -528,12 +532,15 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               label: "Enter Event",
             },
           };
-
-          const oldChanges = getObjectDifference(updatedEvent[0], oldEvent[0]);
+          // Remove the description key from updatedEvent
+          const { description: updatedDescription, ...updatedEventWithoutDescription } = updatedEvent[0];
+          // Remove the description key from oldEvent
+          const { description: oldDescription, ...oldEventWithoutDescription } = oldEvent[0];
+          const oldChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
 
           const updateChanges = getObjectDifference(
-            oldEvent[0],
-            updatedEvent[0]
+              updatedEventWithoutDescription,
+              oldEventWithoutDescription
           );
 
           const message = `
