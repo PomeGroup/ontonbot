@@ -228,12 +228,11 @@ export const eventsRouter = router({
 
           // Remove the description key
           const { description, ...eventDataWithoutDescription } = eventData;
-          //<pre><code>${formatChanges(eventDataWithoutDescription)}</code></pre>
           await sendLogNotification({
             message: `
 @${opts.ctx.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
 
-
+<pre><code>${formatChanges(eventDataWithoutDescription)}</code></pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
             `,
