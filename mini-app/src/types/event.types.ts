@@ -28,3 +28,26 @@ export type TonSocietyRegisterActivityResponse = {
 export type RewardType = InferSelectModel<typeof rewards>;
 export type VisitorsType = InferSelectModel<typeof visitors>;
 export type EventType = InferSelectModel<typeof events>;
+
+export type OntonEvent = {
+  eventUuid: string;
+  title?: string;
+  startDate: number;
+  endDate: number;
+  location?: string;
+  imageUrl?: string;
+  subtitle?: string;
+  organizerFirstName?: string;
+  organizerLastName?: string;
+  organizerUsername?: string;
+  organizerUserId?: number;
+  ticketToCheckIn?: boolean;
+  timezone?: string;
+  website?: string | null;
+  reservedCount?: number;
+  visitorCount?: number;
+  ticketPrice?: number;
+  city?: string;
+  country?: string;
+  participationType?: string;
+};
