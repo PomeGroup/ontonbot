@@ -17,11 +17,14 @@ RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the application, including Next.js and TypeScript configs
 COPY . .
-
-# Build the Next.js application
-RUN pnpm run build
 # Build TypeScript files for the app and cron
+RUN npm install -g typescript
 RUN pnpm run build-ts
+# Build the Next.js application
+
+RUN pnpm i
+RUN pnpm run build
+
 
 # Stage 2: Production Stage for `mini-app` and `mini-app-cron`
 FROM node:20.13.1-alpine3.20 AS production-stage
