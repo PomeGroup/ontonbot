@@ -11,7 +11,7 @@ WORKDIR /app
 # Copy the necessary files for installing dependencies
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm and dependencies
+# Install pnpm globally and install dependencies
 RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile
 
@@ -28,13 +28,16 @@ FROM node:20.13.1-alpine3.20 AS production-stage
 ARG NODE_ENV
 ENV NODE_ENV=${NODE_ENV}
 
-# Copy .env file for runtime variables
-COPY .env /app/.env
+# Install pnpm in the production stage to ensure it's available
+RUN npm install -g pnpm
 
 # Set working directory
 WORKDIR /app
 
-# Copy build output and node_modules from the build stage
+# Copy .env file for runtime variables
+COPY .env /app/.env
+
+# Copy the build output, public files, and node_modules from the build stage
 COPY --from=build-stage /app/.next ./.next
 COPY --from=build-stage /app/node_modules ./node_modules
 COPY --from=build-stage /app/public ./public
