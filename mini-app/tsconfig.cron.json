@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,              // Allow TypeScript to generate JavaScript files
+    "outDir": "./dist",           // Output directory for compiled files
+    "rootDir": "./src",           // Specify where the source files are located
+    "incremental": true           // Enable incremental compilation for faster builds
+  },
+  "include": ["./src/start.ts"],  // Include only the start.ts file and its dependencies
+  "exclude": ["node_modules"]     // Exclude node_modules
+}
