@@ -1,27 +1,51 @@
-# mini-app/Dockerfile
-FROM node:20.13.1-alpine3.20
+# Stage 1: Build Stage
+FROM node:20.13.1-alpine3.20 AS build-stage
 
-# Install pnpm
-RUN npm install -g pnpm
+# ARG for build-time variables
+ARG NODE_ENV
 
-# Set the working directory inside the container
+# Set environment variable for build stage
+ENV NODE_ENV=${NODE_ENV}
+
+# Set working directory
 WORKDIR /app
 
-# Copy dependencies list
+# Copy package.json and pnpm-lock.yaml to install dependencies
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install
+# Install pnpm globally
+RUN npm install -g pnpm
 
-# Copy the rest of your application source code
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy the rest of the application files
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 3000
-# Build TypeScript into JavaScript
-RUN pnpm run build-ts
-# Build Next.js application
+# Build the application
 RUN pnpm run build
 
-# Command to run the application
-CMD ["pnpm", "run", "start"]
+# Stage 2: Production Stage for mini-app and mini-app-cron
+FROM node:20.13.1-alpine3.20 AS production-stage
+
+# ARG for build-time environment variables
+ARG NODE_ENV
+
+# Set environment variable for production
+ENV NODE_ENV=${NODE_ENV}
+
+# Copy the .env file for runtime environment variables
+#COPY .env /app/.env
+
+# Set working directory
+WORKDIR /app
+
+# Copy the build output and node_modules from the build stage
+COPY --from=build-stage /app/dist ./dist
+COPY --from=build-stage /app/node_modules ./node_modules
+
+# Expose necessary port (for mini-app)
+EXPOSE 3000
+
+# Default command (mini-app and mini-app-cron will use different commands)
+CMD ["node", "dist/main.js"]
