@@ -20,6 +20,8 @@ COPY . .
 
 # Build the Next.js application
 RUN pnpm run build
+# Build TypeScript files for the app and cron
+RUN pnpm run build-ts
 
 # Stage 2: Production Stage for `mini-app` and `mini-app-cron`
 FROM node:20.13.1-alpine3.20 AS production-stage
@@ -34,8 +36,7 @@ RUN npm install -g pnpm
 # Set working directory
 WORKDIR /app
 
-# Copy .env file for runtime variables
-COPY  start.js  ./start.js
+
 
 # Copy Next.js configuration, TypeScript, and Tailwind configurations
 COPY next.config.js ./next.config.js
@@ -47,6 +48,10 @@ COPY --from=build-stage /app/.next ./.next
 COPY --from=build-stage /app/node_modules ./node_modules
 COPY --from=build-stage /app/public ./public
 COPY --from=build-stage /app/package.json ./package.json
+
+# Also copy the compiled TypeScript files
+COPY --from=build-stage /app/dist ./dist
+COPY --from=build-stage /app/src/start.ts ./src/start.ts
 
 # Expose the necessary port for mini-app (Next.js)
 EXPOSE 3000
