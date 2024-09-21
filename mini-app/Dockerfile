@@ -35,7 +35,7 @@ RUN npm install -g pnpm
 WORKDIR /app
 
 # Copy .env file for runtime variables
-COPY .env /app/.env
+COPY  start.js  ./start.js
 
 # Copy Next.js configuration, TypeScript, and Tailwind configurations
 COPY next.config.js ./next.config.js
