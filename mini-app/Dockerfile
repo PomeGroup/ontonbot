@@ -18,6 +18,7 @@ FROM node:20.13.1-alpine3.20 AS build-stage
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
+RUN npm install -g pnpm
 # Set working directory
 WORKDIR /app
 
