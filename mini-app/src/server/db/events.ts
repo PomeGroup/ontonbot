@@ -8,7 +8,7 @@ import {
   users,
   visitors,
 } from "@/db/schema";
-import { cacheKeys, getCache, setCache } from "@/lib/cache";
+import { redisTools } from "@/lib/redisTools";
 import { logSQLQuery } from "@/lib/logSQLQuery";
 import { removeKey } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
@@ -210,9 +210,9 @@ export const getEventsWithFilters = async (
   });
   // Create MD5 hash
   const hash = crypto.createHash("md5").update(stringToHash).digest("hex");
-  const cacheKey = cacheKeys.getEventsWithFilters + hash;
+  const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
 
-  const cachedResult = getCache(cacheKey);
+  const cachedResult = await redisTools.getCache(cacheKey);
   if (cachedResult && useCache) {
     /// show return from cache and time
     console.log("👙👙 cachedResult 👙👙" + Date.now());
@@ -352,7 +352,7 @@ export const getEventsWithFilters = async (
   //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
-  setCache(cacheKey, eventsData, 60);
+  await redisTools.setCache(cacheKey, eventsData, 60);
   return eventsData;
 };
 

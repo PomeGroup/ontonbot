@@ -1,5 +1,5 @@
 import { rewards } from "@/db/schema";
-import { cacheKeys, deleteCache, getCache, setCache } from "@/lib/cache";
+import { redisTools } from "@/lib/redisTools";
 import { getErrorMessages } from "@/lib/error";
 import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
 import { createUserRewardLink } from "@/lib/ton-society-api";
@@ -25,14 +25,14 @@ cronJobFunction();
 async function cronJobFunction() {
   const startTime = Date.now();
 
-  const cronLock = getCache(cacheKeys.cronJobLock);
+  const cronLock = await redisTools.getCache(redisTools.cacheKeys.cronJobLock);
 
   if (cronLock) {
     console.log("Cron job is already running");
     return;
   }
   // 8h ttl
-  setCache(cacheKeys.cronJobLock, true, 28_800_000);
+  await redisTools.setCache(redisTools.cacheKeys.cronJobLock, true, 28_800_000);
   void Promise.allSettled([createRewards(), notifyUsersForRewards()])
     .then(([createdRewards, notifiedUsers]) => {
       const endTime = Date.now();
@@ -62,7 +62,7 @@ ${getErrorMessages(err).join("\n\n")}
         })
     )
     .finally(() => {
-      deleteCache(cacheKeys.cronJobLock);
+      redisTools.deleteCache(redisTools.cacheKeys.cronJobLock);
     });
 }
 
