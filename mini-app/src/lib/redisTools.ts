@@ -43,6 +43,7 @@ export const getCache = async (key: string): Promise<any | undefined> => {
   try {
     const redisClient = await getRedisClient();
     const result = await redisClient.get(hashedKey);
+    console.log(`Cache for key ${key}:`, result);
     return result ? JSON.parse(result) : undefined;  // Deserialize the value from Redis
   } catch (err) {
     console.error(`Error getting cache for key ${key}:`, err);

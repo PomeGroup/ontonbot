@@ -213,7 +213,7 @@ export const getEventsWithFilters = async (
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
 
   const cachedResult = await redisTools.getCache(cacheKey);
-  if (cachedResult && useCache) {
+  if (cachedResult ) {
     /// show return from cache and time
     console.log("👙👙 cachedResult 👙👙" + Date.now());
     return cachedResult;
