@@ -13,7 +13,7 @@ import { eq, sql } from "drizzle-orm";
 import pLimit from "p-limit";
 import { db } from "./db/db";
 import { wait } from "./lib/utils";
-
+import telegramService from "@/server/routers/services/telegramService";
 new CronJob("0 */2 * * *", cronJobFunction, null, true);
 
 process.on("unhandledRejection", (err) => {
@@ -242,7 +242,7 @@ async function processReward(createdReward: RewardType) {
       throw new Error("Event not found");
     }
 
-    await sendRewardNotification(createdReward, visitor, event);
+    await telegramService.sendRewardNotification(createdReward, visitor, event);
     await updateRewardStatus(createdReward.id, "notified");
   } catch (error) {
     console.error("BOT_API_ERROR", error);
@@ -250,17 +250,7 @@ async function processReward(createdReward: RewardType) {
   }
 }
 
-async function sendRewardNotification(
-  reward: RewardType,
-  visitor: VisitorsType,
-  event: EventType
-) {
-  await sendTelegramMessage({
-    link: rewardLinkZod.parse(reward.data).reward_link,
-    chat_id: visitor.user_id as number,
-    message: `Hey there, you just received your reward for ${event.title} event. Please click on the link below to claim it`,
-  });
-}
+
 
 async function updateRewardStatus(
   rewardId: string,
