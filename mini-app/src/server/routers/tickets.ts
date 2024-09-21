@@ -33,51 +33,37 @@ export const ticketRouter = router({
     }),
 
   checkInTicket: publicProcedure
-    .input(
-      z.object({
-        ticketUuid: z.string(),
-      })
-    )
-    .mutation(async (opts) => {
-      const result = await ticketDB.checkInTicket(opts.input.ticketUuid);
-      console.log("result", result);
-      if (!result) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to check in the ticket",
-        });
-      }
-     // console.log("isAlreadyCheckedIn(result)", isAlreadyCheckedIn(result));
-      if (isAlreadyCheckedIn(result)) {
-        return { alreadyCheckedIn: true, result: result };
-      }
-      const ticketData = await ticketDB.getTicketByUuid(opts.input.ticketUuid);
-      console.log("ticketData", ticketData);
-      if (ticketData && ticketData?.user_id && ticketData?.event_uuid) {
-        {
-          // Create a reward for the
-          const result = await rewardsService.createUserRewardSBT({
+      .input(
+          z.object({
+            ticketUuid: z.string(),
+          })
+      )
+      .mutation(async (opts) => {
+        const result = await ticketDB.checkInTicket(opts.input.ticketUuid);
+        console.log("result", result);
+        if (!result) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to check in the ticket",
+          });
+        }
+
+        const ticketData = await ticketDB.getTicketByUuid(opts.input.ticketUuid);
+
+        if (ticketData && ticketData?.user_id && ticketData?.event_uuid) {
+          // Create a reward for the user
+          const rewardResult = await rewardsService.createUserRewardSBT({
             user_id: ticketData.user_id,
             event_uuid: ticketData.event_uuid,
             ticketOrderUuid: ticketData.order_uuid,
           });
-          console.log("result", result);
-          if (result) {
-            const { reward, visitor, event } = result;
-            if (reward && visitor && event) {
-              {
-                await telegramService.sendRewardNotification(
-                  reward,
-                  visitor,
-                  //@ts-ignore
-                  event
-                );
-              }
-            }
+          if (isAlreadyCheckedIn(result)) {
+            return { alreadyCheckedIn: true, result: result };
           }
-        }
 
-        return { checkInSuccess: true, result: result };
-      }
-    }),
+
+
+          return { checkInSuccess: true, result: result ,rewardResult: rewardResult};
+        }
+      })
 });
