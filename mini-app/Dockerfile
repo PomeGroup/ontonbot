@@ -8,14 +8,14 @@ ENV NODE_ENV=${NODE_ENV}
 # Set working directory
 WORKDIR /app
 
-# Copy the necessary files for installing dependencies
+# Copy necessary files for installing dependencies
 COPY package.json pnpm-lock.yaml ./
 
-# Install pnpm globally and install dependencies
+# Install pnpm and dependencies
 RUN npm install -g pnpm
 RUN pnpm install --frozen-lockfile
 
-# Copy the rest of the application
+# Copy the rest of the application, including Next.js and TypeScript configs
 COPY . .
 
 # Build the Next.js application
@@ -36,6 +36,11 @@ WORKDIR /app
 
 # Copy .env file for runtime variables
 COPY .env /app/.env
+
+# Copy Next.js configuration, TypeScript, and Tailwind configurations
+COPY next.config.js ./next.config.js
+COPY tsconfig.json ./tsconfig.json
+COPY tailwind.config.js ./tailwind.config.js
 
 # Copy the build output, public files, and node_modules from the build stage
 COPY --from=build-stage /app/.next ./.next
