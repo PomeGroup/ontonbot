@@ -1,6 +1,6 @@
 {
-  "id": "e381d7e5-667b-4721-86e2-5f46f659536c",
-  "prevId": "50941c27-f694-4eec-822c-bec066704aea",
+  "id": "7b29c4f8-5415-4f88-a024-82d28ceda34a",
+  "prevId": "e381d7e5-667b-4721-86e2-5f46f659536c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -319,7 +319,7 @@
         },
         "event_uuid": {
           "name": "event_uuid",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -630,6 +630,26 @@
           "notNull": false,
           "default": false
         },
+        "participation_type": {
+          "name": "participation_type",
+          "type": "event_participation_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'online'"
+        },
+        "city_id": {
+          "name": "city_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country_id": {
+          "name": "country_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -816,6 +836,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "events_participation_type_idx": {
+          "name": "events_participation_type_idx",
+          "columns": [
+            {
+              "expression": "participation_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -831,9 +866,208 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "events_city_id_giata_city_id_fk": {
+          "name": "events_city_id_giata_city_id_fk",
+          "tableFrom": "events",
+          "tableTo": "giata_city",
+          "columnsFrom": [
+            "city_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "events_country_id_giata_city_id_fk": {
+          "name": "events_country_id_giata_city_id_fk",
+          "tableFrom": "events",
+          "tableTo": "giata_city",
+          "columnsFrom": [
+            "country_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.giata_city": {
+      "name": "giata_city",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "insert_date": {
+          "name": "insert_date",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "abbreviated_code": {
+          "name": "abbreviated_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "giata_code": {
+          "name": "giata_code",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "giata_city_title_idx": {
+          "name": "giata_city_title_idx",
+          "columns": [
+            {
+              "expression": "title",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "giata_city_parent_id_idx": {
+          "name": "giata_city_parent_id_idx",
+          "columns": [
+            {
+              "expression": "parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "giata_city_insert_date_idx": {
+          "name": "giata_city_insert_date_idx",
+          "columns": [
+            {
+              "expression": "insert_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "giata_city_abbreviated_code_idx": {
+          "name": "giata_city_abbreviated_code_idx",
+          "columns": [
+            {
+              "expression": "abbreviated_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "giata_city_giata_code_idx": {
+          "name": "giata_city_giata_code_idx",
+          "columns": [
+            {
+              "expression": "giata_code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.onton_setting": {
+      "name": "onton_setting",
+      "schema": "",
+      "columns": {
+        "env": {
+          "name": "env",
+          "type": "development_environment",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "var": {
+          "name": "var",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "protected": {
+          "name": "protected",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "onton_setting_env_var_pk": {
+          "name": "onton_setting_env_var_pk",
+          "columns": [
+            "env",
+            "var"
+          ]
+        },
+        "onto_setting_pk": {
+          "name": "onto_setting_pk",
+          "columns": [
+            "env",
+            "var"
+          ]
+        }
+      },
       "uniqueConstraints": {}
     },
     "public.orders": {
@@ -849,7 +1083,7 @@
         },
         "event_uuid": {
           "name": "event_uuid",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -1195,12 +1429,6 @@
           "notNull": true,
           "default": 0
         },
-        "failed_reason": {
-          "name": "failed_reason",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
         "status": {
           "name": "status",
           "type": "reward_status",
@@ -1380,7 +1608,7 @@
         },
         "event_uuid": {
           "name": "event_uuid",
-          "type": "text",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -2173,6 +2401,24 @@
     }
   },
   "enums": {
+    "public.development_environment": {
+      "name": "development_environment",
+      "schema": "public",
+      "values": [
+        "local",
+        "development",
+        "staging",
+        "production"
+      ]
+    },
+    "public.event_participation_type": {
+      "name": "event_participation_type",
+      "schema": "public",
+      "values": [
+        "in_person",
+        "online"
+      ]
+    },
     "public.order_state": {
       "name": "order_state",
       "schema": "public",
@@ -2190,10 +2436,13 @@
       "values": [
         "pending_creation",
         "created",
+        "created_by_ui",
         "received",
         "notified",
+        "notified_by_ui",
         "notification_failed",
-        "failed"
+        "failed",
+        "fixed_failed"
       ]
     },
     "public.reward_types": {

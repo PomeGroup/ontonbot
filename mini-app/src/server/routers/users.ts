@@ -420,5 +420,3 @@ async function createUserReward(props: {
   }
 }
 
-
-/*************  Re-implementation   *************/

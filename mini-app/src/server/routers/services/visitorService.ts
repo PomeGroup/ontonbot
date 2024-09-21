@@ -5,7 +5,6 @@ import {
   selectValidVisitorById,
 } from "@/server/db/visitors";
 
-
 export const getAndValidateVisitor = async (
   user_id: number,
   event_uuid: string,
@@ -42,7 +41,8 @@ export const getAndValidateVisitor = async (
     return { success: true, data: visitor };
   } catch (error) {
     // Catch any unexpected errors and return them
-    const errorMsg = error instanceof Error ? error.message : "An unexpected error occurred";
+    const errorMsg =
+      error instanceof Error ? error.message : "An unexpected error occurred";
     console.error(`getAndValidateVisitor Unexpected Error:`, error);
     return {
       success: false,

@@ -9,11 +9,11 @@ export const sendRewardNotification = async (
 ) => {
   try {
     // Validate reward link and send Telegram message
-   // const rewardLink = rewardLinkZod.parse(reward.data).reward_link;
+    const rewardLink = rewardLinkZod.parse(reward.data).reward_link;
 
     // Send the message and return success if no error occurs
     const response = await sendTelegramMessage({
-      link: "https://ton-society.github.io/sbt-platform/#/Rewards",
+      link: rewardLink,
       chat_id: visitor.user_id as number,
       message: `Hey there, you just received your reward for the ${event.title} event. Please click on the link below to claim it.`,
     });

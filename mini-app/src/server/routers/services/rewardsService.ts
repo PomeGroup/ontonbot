@@ -1,9 +1,12 @@
 import rewardDB from "@/server/db/rewards.db";
 
 import { getAndValidateVisitor } from "@/server/routers/services/visitorService";
-import {createUserRewardLink} from "@/lib/ton-society-api";
+import { createUserRewardLink } from "@/lib/ton-society-api";
 
-import { validateEventData } from "@/server/routers/services/eventService";
+import {
+  validateEventData,
+  validateEventDates,
+} from "@/server/routers/services/eventService";
 import { sendRewardNotification } from "@/server/routers/services/telegramService";
 
 // Main function to create a reward for a user
@@ -18,10 +21,21 @@ export const createUserRewardSBT = async (props: {
   try {
     // Validate event data
     const eventValidationResult = await validateEventData(event_uuid);
-    if (!eventValidationResult.success || !eventValidationResult.data) {
+    const eventData = eventValidationResult?.data;
+    if (
+      !eventValidationResult.success ||
+      !eventData ||
+      !eventData.start_date ||
+      !eventData.end_date
+    ) {
       return eventValidationResult; // Return the error in JSON format
     }
-    const eventData = eventValidationResult.data;
+
+    // validate event date
+    const validateEventDateResult = validateEventDates(eventData.start_date, eventData.end_date);
+    if (!validateEventDateResult.success) {
+      return validateEventDateResult;
+    }
 
     // Validate visitor
     const visitorValidationResult = await getAndValidateVisitor(
@@ -29,44 +43,35 @@ export const createUserRewardSBT = async (props: {
       event_uuid,
       ticketOrderUuid
     );
+    console.log("visitorValidationResult", visitorValidationResult);
     if (!visitorValidationResult.success || !visitorValidationResult.data) {
       return visitorValidationResult; // Return the error in JSON format
     }
     const visitor = visitorValidationResult.data;
-
     // Check if reward already exists
-    if (!ticketOrderUuid) {
-      reward = await rewardDB.checkExistingReward(visitor.id);
-      if (reward) {
-        return {
-          success: false,
-          error: `User with ID ${user_id} already received reward for event ${event_uuid}.`,
-          errorCode: "CONFLICT",
-          data: null,
-        };
-      }
-    } else {
-      reward = await rewardDB.insert(
-        visitor.id,
-        null,
-        user_id,
-        "ton_society_sbt",
-        "pending_creation"
-      );
+
+    reward = await rewardDB.checkExistingReward(visitor.id);
+    if (reward) {
+      return {
+        success: false,
+        error: `User with ID ${user_id} already received reward for event ${event_uuid}.`,
+        errorCode: "CONFLICT",
+        data: null,
+      };
     }
 
     // Process reward creation
     const createRewardResult = await processRewardCreation(
       eventData,
       user_id,
-      reward
+      visitor
     );
     console.log("createRewardResult", createRewardResult);
     // If reward creation was successful
-    if (createRewardResult?.success ) {
+    if (createRewardResult?.success) {
       reward = createRewardResult.data;
       // Send notification to the user
-      if (reward?.status === "created" || 1) {
+      if (reward?.status === "created") {
         const notificationResult = await sendRewardNotification(
           createRewardResult.data,
           visitor,
@@ -108,17 +113,27 @@ export const createUserRewardSBT = async (props: {
 
 // Function to process reward creation
 export const processRewardCreation = async (
-    eventData: any,
-    user_id: number,
-    reward: any
+  eventData: any,
+  user_id: number,
+  visitor: any
 ) => {
+  let reward;
+  reward = await rewardDB.insert(
+    visitor.id,
+    null,
+    user_id,
+    "ton_society_sbt",
+    "pending_creation"
+  );
+
   try {
     // Call the function to create a user reward link
+
     const res = await createUserRewardLink(eventData.activity_id, {
       telegram_user_id: user_id,
       attributes: eventData.society_hub
-          ? [{ trait_type: "Organizer", value: eventData.society_hub }]
-          : undefined,
+        ? [{ trait_type: "Organizer", value: eventData.society_hub }]
+        : undefined,
     });
 
     // Ensure the result is successful and has the expected data structure
@@ -134,12 +149,19 @@ export const processRewardCreation = async (
     }
 
     // If it fails, return an appropriate failure response
-    return { success: false, data: reward, error: "Reward link creation failed." };
-
+    return {
+      success: false,
+      data: reward,
+      error: "Reward link creation failed.",
+    };
   } catch (error) {
     // Catch any unexpected errors and return a failure response
     console.error("Error in processRewardCreation:", error);
-    return { success: false, data: reward, error: error instanceof Error ? error.message : "Unknown error" };
+    return {
+      success: false,
+      data: reward,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 };
 

@@ -1,11 +1,7 @@
-import { db } from "@/db/db";
-import { visitors } from "@/db/schema";
 import { validateMiniAppData } from "@/utils";
-import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { checkIsAdminOrOrganizer } from "../db/events";
 import { selectVisitorsByEventUuid } from "../db/visitors";
-import {adminOrganizerProtectedProcedure, eventManagementProtectedProcedure, publicProcedure, router} from "../trpc";
+import { eventManagementProtectedProcedure, publicProcedure, router} from "../trpc";
 
 export const visitorsRouter = router({
   // protect

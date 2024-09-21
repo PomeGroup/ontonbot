@@ -10,32 +10,33 @@ import {
 } from "@/db/schema";
 import { and, between, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { checkEventTicketToCheckIn } from "@/server/db/events";
+
 const findVisitorByUserAndEvent = async (
-    user_id: number,
-    event_uuid: string
+  user_id: number,
+  event_uuid: string
 ) => {
-    const visitorsFound = await db
-        .select()
-        .from(visitors)
-        .where(
-            and(eq(visitors.user_id, user_id), eq(visitors.event_uuid, event_uuid))
-        )
-        .execute();
-    console.log("visitorsFound", visitorsFound);
-    return visitorsFound?.[0] ?? null;
+  const visitorsFound = await db
+    .select()
+    .from(visitors)
+    .where(
+      and(eq(visitors.user_id, user_id), eq(visitors.event_uuid, event_uuid))
+    )
+    .execute();
+  console.log("visitorsFound", visitorsFound);
+  return visitorsFound?.[0] ?? null;
 };
 const insertNewVisitor = async (user_id: number, event_uuid: string) => {
-    const insertedVisitor = await db
-        .insert(visitors)
-        .values({
-            user_id: user_id,
-            event_uuid: event_uuid,
-            updatedBy: "system",
-        })
-        .returning() // This ensures the inserted record is returned
-        .execute();
+  const insertedVisitor = await db
+    .insert(visitors)
+    .values({
+      user_id: user_id,
+      event_uuid: event_uuid,
+      updatedBy: "system",
+    })
+    .returning() // This ensures the inserted record is returned
+    .execute();
 
-    return insertedVisitor?.[0] ?? null;
+  return insertedVisitor?.[0] ?? null;
 };
 
 const generateRandomVisitor = (userId: number) => ({
@@ -253,7 +254,7 @@ export const updateVisitorLastVisit = async (id: number) => {
 
 // Function to get visitor by user_id and event_uuid
 export const getVisitor = async (user_id: number, event_uuid: string) => {
-   db.query.visitors.findFirst({
+  db.query.visitors.findFirst({
     where(fields, { eq, and }) {
       return and(
         eq(fields.user_id, user_id),
@@ -271,8 +272,8 @@ export const addVisitor = async (user_id: number, event_uuid: string) => {
       event_uuid
     );
     if (existingVisitor) {
-        console.log("existingVisitor", existingVisitor);
-      return  existingVisitor; // Visitor already exists, no need to add
+      console.log("existingVisitor", existingVisitor);
+      return existingVisitor; // Visitor already exists, no need to add
     }
     // Insert new visitor
     return await insertNewVisitor(user_id, event_uuid);
