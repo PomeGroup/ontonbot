@@ -6,7 +6,8 @@ import { validateMiniAppData } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { selectValidVisitorById } from "../db/visitors";
+import { selectValidVisitorById  } from "../db/visitors";
+
 import {
   adminOrganizerProtectedProcedure,
   initDataProtectedProcedure,
@@ -418,3 +419,4 @@ async function createUserReward(props: {
     }
   }
 }
+

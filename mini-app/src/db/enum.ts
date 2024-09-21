@@ -8,6 +8,7 @@ export const rewardType = pgEnum("reward_types", ["ton_society_sbt"]);
 export const rewardStatus = pgEnum("reward_status", [
   "pending_creation",
   "created",
+  "created_by_ui",
   "received",
   "notified",
   "notified_by_ui",

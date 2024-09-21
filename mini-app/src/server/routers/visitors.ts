@@ -1,11 +1,7 @@
-import { db } from "@/db/db";
-import { visitors } from "@/db/schema";
 import { validateMiniAppData } from "@/utils";
-import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { checkIsAdminOrOrganizer } from "../db/events";
 import { selectVisitorsByEventUuid } from "../db/visitors";
-import {adminOrganizerProtectedProcedure, eventManagementProtectedProcedure, publicProcedure, router} from "../trpc";
+import { eventManagementProtectedProcedure, publicProcedure, router} from "../trpc";
 
 export const visitorsRouter = router({
   // protect
@@ -43,29 +39,6 @@ export const visitorsRouter = router({
       if (!valid) {
         return;
       }
-    // @todo: Add cache for this
-      const existingVisitor = await db
-        .select()
-        .from(visitors)
-        .where(
-          and(
-            eq(visitors.user_id, initDataJson.user.id),
-            eq(visitors.event_uuid, opts.input.event_uuid)
-          )
-        )
-        .execute();
 
-      if (existingVisitor.length !== 0) {
-        return;
-      }
-
-      await db
-        .insert(visitors)
-        .values({
-          user_id: initDataJson.user.id,
-          event_uuid: opts.input.event_uuid,
-          updatedBy: initDataJson.user.id.toString(),
-        })
-        .execute();
     }),
 });
