@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: '.next', // Specify the output directory for builds
   compress: true,
   images: {
     remotePatterns: [
@@ -34,6 +35,7 @@ const nextConfig = {
         url: require.resolve("url/"),
         buffer: require.resolve("buffer/"),
         process: require.resolve("process/browser"),
+
       };
 
       config.plugins.push(

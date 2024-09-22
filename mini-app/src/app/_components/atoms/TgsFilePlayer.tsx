@@ -7,12 +7,13 @@ type TgsFilePlayerProps = {
 
 function TgsFilePlayer(props: TgsFilePlayerProps) {
   return (
-    <tgs-player
-      class={props.className}
-      src={props.src}
-      autoplay={Boolean(props.autoplay)}
-      loop={Boolean(props.loop)}
-    />
+    // <tgs-player
+    //   class={props.className}
+    //   src={props.src}
+    //   autoplay={Boolean(props.autoplay)}
+    //   loop={Boolean(props.loop)}
+    // />
+      <></>
   );
 }
 
