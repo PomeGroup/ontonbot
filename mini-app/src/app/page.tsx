@@ -31,7 +31,7 @@ export default function Home() {
     username: "radio", // Replace with the username
     email: "user@example.com" // Optional: add email
   });
-throw  new Error("Sentry Frontend Error: Cannot read property 'user' of undeafined");
+
   const UserId = webApp?.initDataUnsafe?.user?.id;
 
   const router = useRouter();
