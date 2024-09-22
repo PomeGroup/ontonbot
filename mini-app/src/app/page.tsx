@@ -16,6 +16,7 @@ import MemoizedMainButton from "@/app/_components/Memoized/MemoizedMainButton";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
+import * as Sentry from '@sentry/nextjs';
 // Define types for events
 type EventData = any[];
 
@@ -25,6 +26,12 @@ export default function Home() {
   const webApp = useWebApp();
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
 
+  Sentry.setUser({
+    id: "user-id",        // Replace with the user's ID
+    username: "radio", // Replace with the username
+    email: "user@example.com" // Optional: add email
+  });
+throw  new Error("Sentry Frontend Error: Cannot read property 'user' of undeafined");
   const UserId = webApp?.initDataUnsafe?.user?.id;
 
   const router = useRouter();

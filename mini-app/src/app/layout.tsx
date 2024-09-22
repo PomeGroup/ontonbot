@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-
+import * as Sentry from '@sentry/nextjs';
 import { cn } from "@/lib/utils";
 import Script from "next/script";
 import React from "react";
@@ -37,6 +37,7 @@ export default async function RootLayout({
       )}
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
       <body className={cn(inter.className)}>
+      <Sentry.ErrorBoundary>
         <Provider>
           <Providers>
             <UserSaver>
@@ -52,6 +53,7 @@ export default async function RootLayout({
             </UserSaver>
           </Providers>
         </Provider>
+      </Sentry.ErrorBoundary>
       </body>
     </html>
   );
