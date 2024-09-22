@@ -36,7 +36,7 @@ interface EventCardProps {
     organizerUserId?: number;
     ticketToCheckIn?: boolean;
     timezone?: string;
-    website?: string | null;
+
     reservedCount?: number;
     visitorCount?: number;
     ticketPrice?: number;
@@ -65,7 +65,7 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
     organizerUserId = null,
     ticketToCheckIn = false,
     timezone = "GMT",
-    website = null,
+
     ticketPrice = 0,
     city = null,
     country = null,

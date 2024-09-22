@@ -34,7 +34,7 @@ export const visitorsRouter = router({
         return;
       }
 
-      const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
+      const { valid } = validateMiniAppData(opts.input.initData);
 
       if (!valid) {
         return;

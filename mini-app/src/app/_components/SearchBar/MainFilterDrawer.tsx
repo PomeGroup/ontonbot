@@ -12,23 +12,21 @@ import {
 import { IoIosArrowForward } from "react-icons/io";
 import { IoOptionsOutline } from "react-icons/io5";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
-import { Separator } from "@/components/ui/separator";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import {z} from "zod";
-import useWebApp from "@/hooks/useWebApp"; // Import your Zustand store
 export type SortByType = z.infer<typeof searchEventsInputZod>["sortBy"];
-export type setSortByType = (value: string) => void;
+export type setSortByType = (_value: string) => void;
 interface MainFilterDrawerProps {
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (_open: boolean) => void;
   participationType: string[];
   hubText: string;
   sortBy: SortByType;
   setSortBy: setSortByType;
-  setIsEventTypeDrawerOpen: (open: boolean) => void;
-  setIsHubDrawerOpen: (open: boolean) => void;
+  setIsEventTypeDrawerOpen: (_open: boolean) => void;
+  setIsHubDrawerOpen: (_open: boolean) => void;
   resetFilters: () => void;
   applyingFilters: boolean;
-  setApplyingFilters: (value: boolean) => void;
+  setApplyingFilters: (_value: boolean) => void;
   allParticipationTypes: string[];
 }
 

@@ -25,15 +25,15 @@ import { usePathname } from "next/navigation";
 interface SearchBarProps {
   includeQueryParam?: boolean;
   showFilterTags?: boolean;
-  onUpdateResults: (data: any) => void;
+  onUpdateResults: (_data: any) => void;
   offset?: number;
-  setOffset?: (offset: number) => void;
+  setOffset?: (_offset: number) => void;
   searchParamsParsed?: any;
-  setSearchParamsParsed?: (value: any) => void;
+  setSearchParamsParsed?: (_value: any) => void;
   refetch?: () => void;
-  setFinalSearchInput?: (value: any) => void;
+  setFinalSearchInput?: (_value: any) => void;
   tabValue?: string;
-  applyTabFilter?: (tabValue: string, userId: any) => void;
+  applyTabFilter?: (_tabValue: string, _userId: any) => void;
   userRole?: "admin" | "user" | "organizer";
 }
 
@@ -49,7 +49,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   setOffset = () => {},
   setFinalSearchInput = () => {},
   tabValue = "All",
-  applyTabFilter = (tabValue: string, userId: number) => {},
+  applyTabFilter = (_tabValue: string, _userId: number) => {},
   userRole = "user",
 }) => {
   const {
@@ -120,7 +120,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     useSearchEvents();
 
   const [initialHubsSet, setInitialHubsSet] = useState(false);
-  const [pageInit, setPageInit] = useState(false);
+  // const [pageInit, setPageInit] = useState(false);
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
@@ -149,15 +149,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
       }
 
       setInitialHubsSet(true);
-      setTimeout(() => {
-        setPageInit(true);
-      }, 0);
+      // setTimeout(() => {
+      //   setPageInit(true);
+      // }, 0);
     } else if (hubs.length > 0 && !includeQueryParam && !initialHubsSet) {
       setSelectedHubs(hubs.map((hub: Hub) => hub.id));
       setInitialHubsSet(true);
-      setTimeout(() => {
-        setPageInit(true);
-      });
+      // setTimeout(() => {
+      //   setPageInit(true);
+      // });
     }
   }, [searchParams, hubs, includeQueryParam, initialHubsSet]);
 
@@ -340,16 +340,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
     //setApplyingFilters(true);
   };
-  const selectAllHubs = () => {
-    const allHubs = hubs.map((hub: Hub) => hub.id);
-    setSelectedHubs(allHubs);
-    hapticFeedback?.selectionChanged();
-  };
-
-  const deselectAllHubs = () => {
-    setSelectedHubs([]);
-    hapticFeedback?.selectionChanged();
-  };
+  // const selectAllHubs = () => {
+  //   const allHubs = hubs.map((hub: Hub) => hub.id);
+  //   setSelectedHubs(allHubs);
+  //   hapticFeedback?.selectionChanged();
+  // };
+  //
+  // const deselectAllHubs = () => {
+  //   setSelectedHubs([]);
+  //   hapticFeedback?.selectionChanged();
+  // };
 
   const clearFilter = (filter: string) => {
     // @ts-ignore

@@ -1,7 +1,7 @@
 declare global {
-  interface Window {
-    Telegram: Telegram;
-  }
+  // interface Window {
+  //   Telegram: Telegram;
+  // }
 
   interface WebAppUser {
     id: number;
@@ -50,10 +50,10 @@ declare global {
 
   interface HapticFeedback {
     impactOccurred: (
-      style: "light" | "medium" | "heavy" | "rigid" | "soft"
+      _style: "light" | "medium" | "heavy" | "rigid" | "soft"
     ) => HapticFeedback;
     notificationOccurred: (
-      type: "error" | "success" | "warning"
+      _type: "error" | "success" | "warning"
     ) => HapticFeedback;
     selectionChanged: () => HapticFeedback;
   }
@@ -67,28 +67,28 @@ declare global {
 
   interface CloudStorage {
     setItem: (
-      key: CloudStorageKey,
-      value: CloudStorageValue,
-      callback?: (error: string | null, result?: boolean) => void
+      _key: CloudStorageKey,
+      _value: CloudStorageValue,
+      _callback?: (_error: string | null, _result?: boolean) => void
     ) => void;
     getItem: (
-      key: CloudStorageKey,
-      callback?: (error: string | null, result?: CloudStorageValue) => void
+      _key: CloudStorageKey,
+      _callback?: (_error: string | null, _result?: CloudStorageValue) => void
     ) => void;
     getItems: (
-      keys: Array<CloudStorageKey>,
-      callback?: (error: string | null, result?: CloudStorageItems) => void
+      _keys: Array<CloudStorageKey>,
+      _callback?: (_error: string | null, _result?: CloudStorageItems) => void
     ) => void;
     getKeys: (
-      callback?: (error: string | null, result?: Array<CloudStorageKey>) => void
+      _callback?: (_error: string | null, _result?: Array<CloudStorageKey>) => void
     ) => void;
     removeItem: (
-      key: CloudStorageKey,
-      callback?: (error: string | null, result?: boolean) => void
+      _key: CloudStorageKey,
+      _callback?: (_error: string | null, _result?: boolean) => void
     ) => void;
     removeItems: (
-      key: Array<CloudStorageKey>,
-      callback?: (error: string | null, result?: boolean) => void
+      _key: Array<CloudStorageKey>,
+      _callback?: (_error: string | null, _result?: boolean) => void
     ) => void;
   }
 
@@ -96,8 +96,8 @@ declare global {
     isVisible: boolean;
     show: VoidFunction;
     hide: VoidFunction;
-    onClick: (cb: VoidFunction) => void;
-    offClick: (cb: VoidFunction) => void;
+    onClick: (_cb: VoidFunction) => void;
+    offClick: (_cb: VoidFunction) => void;
   }
 
   interface MainButton {
@@ -112,11 +112,11 @@ declare global {
     enable: VoidFunction;
     disable: VoidFunction;
     hideProgress: VoidFunction;
-    showProgress: (leaveActive?: boolean) => void;
-    onClick: (callback: VoidFunction) => void;
-    offClick: (callback: VoidFunction) => void;
-    setText: (text: string) => void;
-    setParams: (params: {
+    showProgress: (_leaveActive?: boolean) => void;
+    onClick: (_callback: VoidFunction) => void;
+    offClick: (_callback: VoidFunction) => void;
+    setText: (_text: string) => void;
+    setParams: (_params: {
       color?: string;
       text?: string;
       text_color?: string;
@@ -200,63 +200,63 @@ declare global {
     initData: string;
     colorScheme: "light" | "dark";
     onEvent: <T extends EventNames>(
-      eventName: T,
-      callback: (params: EventParams[T]) => unknown
+      _eventName: T,
+      _callback: (_params: EventParams[T]) => unknown
     ) => void;
     offEvent: <T extends EventNames>(
-      eventName: T,
-      callback: (params: EventParams[T]) => unknown
+      _eventName: T,
+      _callback: (_params: EventParams[T]) => unknown
     ) => void;
-    sendData: (data: unknown) => void;
+    sendData: (_data: unknown) => void;
     close: VoidFunction;
     expand: VoidFunction;
     MainButton: MainButton;
     HapticFeedback: HapticFeedback;
     CloudStorage: CloudStorage;
-    openLink: (link: string, options?: { try_instant_view: boolean }) => void;
-    openTelegramLink: (link: string) => void;
+    openLink: (_link: string, _options?: { try_instant_view: boolean }) => void;
+    openTelegramLink: (_link: string) => void;
     BackButton: BackButton;
     version: string;
-    isVersionAtLeast: (version: string) => boolean;
+    isVersionAtLeast: (_version: string) => boolean;
     openInvoice: (
-      url: string,
-      callback?: (status: InvoiceStatuses) => unknown
+      _url: string,
+      _callback?: (_status: InvoiceStatuses) => unknown
     ) => void;
     setHeaderColor: (
-      color: "bg_color" | "secondary_bg_color" | `#${string}`
+      _color: "bg_color" | "secondary_bg_color" | `#${string}`
     ) => void;
     setBackgroundColor: (
-      color: "bg_color" | "secondary_bg_color" | `#${string}`
+      _color: "bg_color" | "secondary_bg_color" | `#${string}`
     ) => void;
     showConfirm: (
-      message: string,
-      callback?: (confirmed: boolean) => void
+      _message: string,
+      _callback?: (_confirmed: boolean) => void
     ) => void;
     showPopup: (
-      params: PopupParams,
-      callback?: (id?: string) => unknown
+      _params: PopupParams,
+      _callback?: (_id?: string) => unknown
     ) => void;
-    showAlert: (message: string, callback?: () => unknown) => void;
+    showAlert: (_message: string, _callback?: () => unknown) => void;
     enableClosingConfirmation: VoidFunction;
     disableClosingConfirmation: VoidFunction;
     showScanQrPopup: (
-      params: ScanQrPopupParams,
-      callback?: (text: string) => void | true
+      _params: ScanQrPopupParams,
+      _callback?: (_text: string) => void | true
     ) => void;
     closeScanQrPopup: () => void;
-    readTextFromClipboard: (callback?: (text: string) => unknown) => void;
+    readTextFromClipboard: (_callback?: (_text: string) => unknown) => void;
     ready: VoidFunction;
     switchInlineQuery: (
-      query: string,
-      chooseChatTypes?: Array<"users" | "bots" | "groups" | "channels">
+      _query: string,
+      _chooseChatTypes?: Array<"users" | "bots" | "groups" | "channels">
     ) => void;
-    requestWriteAccess: (callback?: (access: boolean) => unknown) => void;
-    requestContact: (callback?: (access: boolean) => unknown) => void;
+    requestWriteAccess: (_callback?: (_access: boolean) => unknown) => void;
+    requestContact: (_callback?: (_access: boolean) => unknown) => void;
   }
 
-  export interface Telegram {
-    WebApp: WebApp;
-  }
+  // export interface Telegram {
+  //   WebApp: WebApp;
+  // }
 }
 
 export {};

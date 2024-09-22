@@ -266,7 +266,7 @@ export const quitRedis = async (): Promise<void> => {
 export const connectRedis = async (): Promise<void> => {
   if (!CACHE_ENABLED) return;
   try {
-    const redisClient = await getRedisClient();
+    await getRedisClient();
     console.log("Connected to Redis");
   } catch (err) {
     console.error("Error connecting to Redis:", err);

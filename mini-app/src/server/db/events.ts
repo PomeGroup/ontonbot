@@ -9,7 +9,6 @@ import {
   visitors,
 } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { logSQLQuery } from "@/lib/logSQLQuery";
 import { removeKey } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
@@ -213,7 +212,7 @@ export const getEventsWithFilters = async (
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
 
   const cachedResult = await redisTools.getCache(cacheKey);
-  if (cachedResult ) {
+  if (cachedResult && useCache) {
     /// show return from cache and time
     console.log("👙👙 cachedResult 👙👙" + Date.now());
     return cachedResult;

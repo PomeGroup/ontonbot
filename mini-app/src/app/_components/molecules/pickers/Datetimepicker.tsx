@@ -5,7 +5,7 @@ import { FC, useEffect, useState } from "react";
 interface DatetimepickerProps {
   title: string;
   value: number | null;
-  setTimestamp: (timestamp: number) => void;
+  setTimestamp: (_timestamp: number) => void;
   errors?: (string | undefined)[];
 }
 

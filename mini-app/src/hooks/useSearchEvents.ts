@@ -39,7 +39,7 @@ export const useSearchEvents = () => {
   );
 
   const debouncedFetchSearchResults = useCallback(
-      debounce((value: string) => {
+      debounce((_value: string) => {
         refetch();
       }, 300),
       [refetch]

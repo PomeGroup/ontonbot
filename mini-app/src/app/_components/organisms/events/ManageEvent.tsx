@@ -17,7 +17,7 @@ const ManageEvent = (props: ManageEventProps) => {
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEdit = useCreateEventStore((state) => state.setEdit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
-  const editOptions = useCreateEventStore((state) => state.edit);
+  // const editOptions = useCreateEventStore((state) => state.edit);
   const resetState = useCreateEventStore((state) => state.resetState);
   const webApp = useWebApp();
   const router = useRouter();

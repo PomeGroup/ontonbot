@@ -60,21 +60,7 @@ const descriptionStyle: React.CSSProperties = {
   color: "#fff",
 };
 
-const footerStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "20px",
-  backgroundColor: "#18222d",
-  height: "15vh",
-  verticalAlign: "bottom",
-};
 
-const buttonStyle: React.CSSProperties = {
-  width: "100%",
-  backgroundColor: "#2ea6ff",
-  color: "#fafafa",
-  padding: "10px",
-  borderRadius: "10px",
-};
 
 const ModalDialog: React.FC<ModalDialogProps> = ({
   isVisible,

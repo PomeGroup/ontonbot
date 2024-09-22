@@ -16,7 +16,7 @@ import { FC, useEffect, useState } from "react";
 
 const TonHubPicker: FC<{
   value?: SocietyHub;
-  onValueChange: (value: SocietyHub) => void;
+  onValueChange: (_value: SocietyHub) => void;
   errors?: (string | undefined)[];
 }> = ({ value, onValueChange, errors }) => {
   const [hubs, setHubs] = useState<Array<SocietyHub>>([]);

@@ -27,23 +27,12 @@ export type Visitor = {
   ticket_id: number | null;
 };
 
-type VisitorsDataResponse = {
-  visitorsWithDynamicFields: any;
-  moreRecordsAvailable: boolean;
-  visitorsData: Visitor[];
-  nextCursor: number | null;
-  event: {
-    event_id: number;
-    event_uuid: string;
-    ticketToCheckIn: boolean;
-    title: string;
-  };
-};
+
 
 interface VisitorsTableProps {
   event_uuid: string;
   handleVisitorsExport: () => void;
-  setNeedRefresh: (data: any) => void;
+  setNeedRefresh: (_data: any) => void;
   needRefresh: boolean;
 }
 
@@ -57,10 +46,8 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [waitingFoeDebaunce, setWaitingForDebaunc] = useState(false);
   const [showNoResults, setShowNoResults] = useState(false); // State to control the delay message
   const [isTyping, setIsTyping] = useState(false);
-  const [firstLoad, setFirstLoad] = useState(false);
   const {
     fetchNextPage,
     data,
@@ -95,7 +82,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     if (needRefresh) {
       refetchVisitors().then(() => {
         setNeedRefresh(false);
-        setFirstLoad(true);
+
       });
     }
   }, [needRefresh]);
@@ -145,12 +132,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
       return matchesSearch && matchesStatus;
     });
   }, [flatData, debouncedSearchQuery, statusFilter]);
-  // Check if there are no events after filtering
-  const noEvents =
-    !isFetchingNextPage &&
-    debouncedSearchQuery.length > 0 &&
-    filteredVisitors.length === 0 &&
-    waitingFoeDebaunce;
+
   // Check if there are no events after filtering and display immediately if there are no results on load
   useEffect(() => {
 

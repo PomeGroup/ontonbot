@@ -5,13 +5,13 @@ import { devtools } from "zustand/middleware";
 
 type CreateEventStoreType = {
   currentStep: number;
-  setCurrentStep: (step: number) => void;
+  setCurrentStep: (_step: number) => void;
   eventData?: z.infer<typeof EventDataSchemaAllOptional>;
-  setEventData: (data: z.infer<typeof EventDataSchemaAllOptional>) => void;
+  setEventData: (_data: z.infer<typeof EventDataSchemaAllOptional>) => void;
   edit?: {
     eventHash?: string;
   };
-  setEdit: (edit: { eventHash?: string }) => void;
+  setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
 };
 
