@@ -282,3 +282,33 @@ export const addVisitor = async (user_id: number, event_uuid: string) => {
     throw new Error("Failed to add visitor.");
   }
 };
+
+export const selectVisitorsWithWalletAddress = async (event_uuid: string) => {
+  return await db
+    .select()
+    .from(visitors)
+    .fullJoin(users, eq(visitors.user_id, users.user_id))
+    .where(
+      and(eq(visitors.event_uuid, event_uuid), isNotNull(users.wallet_address))
+    )
+    .execute();
+};
+
+export const findVisitorByUserAndEventUuid = async (user_id: number, event_uuid: string) => {
+    return  db.query.visitors.findFirst({
+        where(fields, { eq, and }) {
+            return and(
+                eq(fields.user_id, user_id),
+                eq(fields.event_uuid, event_uuid)
+            );
+        },
+    });
+};
+
+export const findVisitorById = async (visitor_id: number) => {
+    return db.query.visitors.findFirst({
+        where: (fields, { eq }) => {
+            return eq(fields.id, visitor_id);
+        },
+    });
+};

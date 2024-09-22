@@ -4,6 +4,7 @@ import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import { and, asc, eq, or, sql } from "drizzle-orm";
 import { type NextRequest } from "next/server";
+import {usersDB} from "@/server/db/users";
 
 export async function GET(
   req: NextRequest,
@@ -26,11 +27,7 @@ export async function GET(
 
     const event = removeKey(unsafeEvent, "secret_phrase");
 
-    const organizer = await db.query.users.findFirst({
-      where(fields, { eq }) {
-        return eq(fields.user_id, event.owner as number);
-      },
-    });
+    const organizer = await usersDB.selectUserById(event.owner as number);
 
     if (!organizer) {
       console.error(`Organizer not found for event ID: ${eventId}`);

@@ -22,3 +22,56 @@ export const selectUserById = async (userId: number) => {
         .execute();
     return userInfo[0];
 };
+
+const insertUser = async (initDataJson: {
+    user: {
+        id: number;
+        username: string;
+        first_name: string;
+        last_name: string;
+        language_code: string;
+    };
+}) => {
+    return await db
+        .insert(users)
+        .values({
+            user_id: initDataJson.user.id,
+            username: initDataJson.user.username,
+            first_name: initDataJson.user.first_name,
+            last_name: initDataJson.user.last_name,
+            language_code: initDataJson.user.language_code,
+            role: "user", // Default role as "user"
+        })
+        .onConflictDoNothing() // Avoid conflict on duplicate entries
+        .execute();
+};
+
+const selectWalletById = async (user_id: number) => {
+    return await db
+        .select({ wallet: users.wallet_address })
+        .from(users)
+        .where(eq(users.user_id, user_id))
+        .execute();
+};
+const updateWallet = async (
+    user_id: number,
+    wallet_address: string,
+    updatedBy: string
+) => {
+    return await db
+        .update(users)
+        .set({
+            wallet_address: wallet_address,
+            updatedBy: updatedBy, // String value of the user who updated
+        })
+        .where(eq(users.user_id, user_id))
+        .execute();
+};
+
+
+export const usersDB = {
+    selectUserById,
+    insertUser,
+    selectWalletById,
+    updateWallet,
+};

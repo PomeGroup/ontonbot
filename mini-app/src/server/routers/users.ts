@@ -1,12 +1,14 @@
 import { db } from "@/db/db";
-import { rewards, users } from "@/db/schema";
+
 import { createUserRewardLink } from "@/lib/ton-society-api";
 import { rewardLinkZod } from "@/types/user.types";
 import { validateMiniAppData } from "@/utils";
 import { TRPCError } from "@trpc/server";
-import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { selectValidVisitorById  } from "../db/visitors";
+import {
+  findVisitorByUserAndEventUuid,
+  selectValidVisitorById,
+} from "../db/visitors";
 
 import {
   adminOrganizerProtectedProcedure,
@@ -14,13 +16,15 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
+import rewardDB from "@/server/db/rewards.db";
+import rewardsDb from "@/server/db/rewards.db";
+import { usersDB } from "@/server/db/users";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure
     .input(z.string())
     .query(async (opts) => {
-      const data = validateMiniAppData(opts.input);
-      return data;
+      return validateMiniAppData(opts.input);
     }),
 
   haveAccessToEventAdministration: adminOrganizerProtectedProcedure.query(
@@ -53,28 +57,7 @@ export const usersRouter = router({
         });
       }
 
-      const tableName = "users"; // Ensure this matches your table name
-
-      const values = {
-        user_id: initDataJson.user.id,
-        username: initDataJson.user.username,
-        first_name: initDataJson.user.first_name,
-        last_name: initDataJson.user.last_name,
-        language_code: initDataJson.user.language_code,
-        role: "user",
-      };
-      const data = await db
-        .insert(users)
-        .values({
-          user_id: initDataJson.user.id,
-          username: initDataJson.user.username,
-          first_name: initDataJson.user.first_name,
-          last_name: initDataJson.user.last_name,
-          language_code: initDataJson.user.language_code,
-          role: "user",
-        })
-        .onConflictDoNothing()
-        .execute();
+      const data = await usersDB.insertUser(initDataJson);
       //console.log("data", data);
       if (!data.length) {
         throw new TRPCError({
@@ -100,12 +83,7 @@ export const usersRouter = router({
         return;
       }
 
-      const res = await db
-        .select({ wallet: users.wallet_address })
-        .from(users)
-        .where(eq(users.user_id, initDataJson.user.id))
-        .execute();
-
+      const res = await usersDB.selectWalletById(initDataJson.user.id);
       return res[0]?.wallet;
     }),
 
@@ -128,13 +106,11 @@ export const usersRouter = router({
         return;
       }
 
-      db.update(users)
-        .set({
-          wallet_address: opts.input.wallet,
-          updatedBy: initDataJson.user.id.toString(),
-        })
-        .where(eq(users.user_id, initDataJson.user.id))
-        .execute();
+      await usersDB.updateWallet(
+        initDataJson.user.id,
+        opts.input.wallet,
+        initDataJson.user.id.toString()
+      );
     }),
 
   // private
@@ -155,13 +131,11 @@ export const usersRouter = router({
         return;
       }
 
-      db.update(users)
-        .set({
-          wallet_address: null,
-          updatedBy: initDataJson.user.id.toString(),
-        })
-        .where(eq(users.user_id, initDataJson.user.id))
-        .execute();
+      await usersDB.updateWallet(
+        initDataJson.user.id,
+           "",
+        initDataJson.user.id.toString()
+      );
     }),
 
   createUserReward: initDataProtectedProcedure
@@ -187,14 +161,10 @@ export const usersRouter = router({
     .query(async (opts) => {
       try {
         // Fetch the visitor from the database
-        const visitor = await db.query.visitors.findFirst({
-          where(fields, { eq, and }) {
-            return and(
-              eq(fields.user_id, opts.ctx.parsedInitData.user.id),
-              eq(fields.event_uuid, opts.input.event_uuid)
-            );
-          },
-        });
+        const visitor = await findVisitorByUserAndEventUuid(
+          opts.ctx.user.user_id,
+          opts.input.event_uuid
+        );
 
         // Check if visitor exists
         if (!visitor) {
@@ -214,15 +184,12 @@ export const usersRouter = router({
         } catch (error) {
           if (error instanceof TRPCError) {
             if (error.code === "CONFLICT") {
-              await db
-                .insert(rewards)
-                .values({
-                  status: "pending_creation",
-                  type: "ton_society_sbt",
-                  visitor_id: visitor.id,
-                  updatedBy: opts.ctx.user.user_id.toString(),
-                })
-                .execute();
+              await rewardDB.insertReward(
+                visitor.id,
+                opts.ctx.user.user_id.toString(),
+                "pending_creation",
+                "ton_society_sbt"
+              );
               return {
                 type: "wait_for_reward",
                 message:
@@ -236,11 +203,7 @@ export const usersRouter = router({
         }
 
         // Fetch the reward from the database
-        const reward = await db.query.rewards.findFirst({
-          where(fields, { eq }) {
-            return eq(fields.visitor_id, visitor.id);
-          },
-        });
+        const reward = await rewardDB.findRewardByVisitorId(visitor.id);
 
         // Check if reward exists
         if (!reward) {
@@ -295,14 +258,10 @@ async function createUserReward(props: {
 }) {
   try {
     // Fetch the visitor from the database
-    const visitor = await db.query.visitors.findFirst({
-      where(fields, { eq, and }) {
-        return and(
-          eq(fields.user_id, props.user_id),
-          eq(fields.event_uuid, props.event_uuid)
-        );
-      },
-    });
+    const visitor = await findVisitorByUserAndEventUuid(
+      props.user_id,
+      props.event_uuid
+    );
 
     // Check if visitor exists
     if (!visitor) {
@@ -322,11 +281,7 @@ async function createUserReward(props: {
     }
 
     // check if the user already does not own the reward
-    const reward = await db.query.rewards.findFirst({
-      where(fields, { eq, and }) {
-        return and(eq(fields.visitor_id, visitor.id));
-      },
-    });
+    const reward = await rewardDB.findRewardByVisitorId(visitor.id);
 
     if (reward) {
       const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${props.event_uuid}`;
@@ -383,16 +338,13 @@ async function createUserReward(props: {
       }
 
       // Insert the reward into the database
-      await db
-        .insert(rewards)
-        .values({
-          visitor_id: visitor.id,
-          type: "ton_society_sbt",
-          data: res.data.data,
-          status: "notified_by_ui",
-          updatedBy: props.user_id.toString(),
-        })
-        .execute();
+      await rewardsDb.insertRewardWithData(
+        visitor.id,
+        props.user_id.toString(),
+        "ton_society_sbt",
+        res.data.data,
+        "notified_by_ui"
+      );
 
       return res.data.data;
     } catch (error) {
@@ -419,4 +371,3 @@ async function createUserReward(props: {
     }
   }
 }
-
