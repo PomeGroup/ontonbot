@@ -3,11 +3,21 @@ import { giataCity } from "@/db/schema";
 import { and, eq, ilike, sql, SQLWrapper } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 
+interface Country {
+  id: number;
+  title: string;
+}
+
+interface City {
+  id: number;
+  title: string;
+  parentId: number; // or any other relevant fields
+}
+
 // Function to get countries
-export async function fetchCountries(search?: string) {
+export async function fetchCountries(search?: string): Promise<Country[]> {
   const cacheKey = `countries:${search || 'all'}`;
 
-  // Try to get the cached result
   const cachedResult = await redisTools.getCache(cacheKey);
   if (cachedResult) {
     return cachedResult;
@@ -24,17 +34,15 @@ export async function fetchCountries(search?: string) {
       .where(and(...whereOptions))
       .execute();
 
-  // Cache the result
   await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.long);
 
-  return result;
+  return result as Country[];
 }
 
 // Function to get cities
-export async function fetchCities(countryId: number, search?: string) {
+export async function fetchCities(countryId: number, search?: string): Promise<City[]> {
   const cacheKey = `cities:${countryId}:${search || 'all'}`;
 
-  // Try to get the cached result
   const cachedResult = await redisTools.getCache(cacheKey);
   if (cachedResult) {
     return cachedResult;
@@ -57,17 +65,15 @@ export async function fetchCities(countryId: number, search?: string) {
 
   const result = await query.limit(7).execute();
 
-  // Cache the result
   await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.long);
 
-  return result;
+  return result as City[];
 }
 
 // Function to get city by ID
-export async function fetchCityById(cityId: number) {
+export async function fetchCityById(cityId: number): Promise<City | undefined> {
   const cacheKey = `city:${cityId}`;
 
-  // Try to get the cached result
   const cachedResult = await redisTools.getCache(cacheKey);
   if (cachedResult) {
     return cachedResult;
@@ -81,10 +87,9 @@ export async function fetchCityById(cityId: number) {
       .execute()
       .then((results) => results[0]);
 
-  // Cache the result if found
   if (result) {
     await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.long);
   }
 
-  return result;
+  return result as City | undefined;
 }

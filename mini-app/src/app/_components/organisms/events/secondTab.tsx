@@ -294,7 +294,6 @@ const SelectLocation = (props: {
     <div className="flex w-full flex-col gap-4 pb-0">
       {/* Combobox for selecting a country */}
       <ComboboxDrawer
-         // @ts-expect-error
         options={countries.data?.map((country) => ({
           label: country.title,
           value: country.id.toString(),
@@ -318,7 +317,6 @@ const SelectLocation = (props: {
       {/* Combobox for selecting a city */}
       <div>
         <ComboboxDrawer
-            // @ts-expect-error
           options={cities.data?.map((city) => ({
             label: city.title,
             value: city.id.toString(),
