@@ -1,64 +1,95 @@
 import { db } from "@/db/db";
 import { giataCity } from "@/db/schema";
 import { and, eq, ilike, sql, SQLWrapper } from "drizzle-orm";
-import { z } from "zod";
-import { publicProcedure, router } from "../trpc";
+import { redisTools } from "@/lib/redisTools";
 
-export const locationRouter = router({
-  getCountries: publicProcedure
-    .input(
-      z.object({
-        search: z.string().optional(),
-      })
-    )
-    .query(async (opts) => {
-      const whereOptions: SQLWrapper[] = [eq(giataCity.parentId, 0)];
+interface Country {
+    id: number;
+    title: string;
+}
 
-      if (opts.input.search) {
-        whereOptions.push(ilike(giataCity.title, `%${opts.input.search}%`));
-      }
+interface City {
+    id: number;
+    title: string;
+    parentId: number; // or any other relevant fields
+}
 
-      return await db
+// Function to get countries
+export async function fetchCountries(search?: string): Promise<Country[]> {
+    const cacheKey = `countries:${search || 'all'}`;
+
+    const cachedResult = await redisTools.getCache(cacheKey);
+    if (cachedResult) {
+        return cachedResult;
+    }
+
+    const whereOptions: SQLWrapper[] = [eq(giataCity.parentId, 0)];
+    if (search) {
+        whereOptions.push(ilike(giataCity.title, `%${search}%`));
+    }
+
+    const result = await db
         .select()
         .from(giataCity)
         .where(and(...whereOptions))
         .execute();
-    }),
 
-  getCities: publicProcedure
-    .input(z.object({ countryId: z.number(), search: z.string().optional() }))
-    .query(async (opts) => {
-      const whereOptions: SQLWrapper[] = [
-        eq(giataCity.parentId, opts.input.countryId),
-      ];
+    await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.long);
 
-      if (opts.input.search) {
-        whereOptions.push(ilike(giataCity.title, `%${opts.input.search}%`));
-      }
+    return result as Country[];
+}
 
-      let query = db
+// Function to get cities
+export async function fetchCities(countryId: number, search?: string): Promise<City[]> {
+    const cacheKey = `cities:${countryId}:${search || 'all'}`;
+
+    const cachedResult = await redisTools.getCache(cacheKey);
+    if (cachedResult) {
+        return cachedResult;
+    }
+
+    const whereOptions: SQLWrapper[] = [eq(giataCity.parentId, countryId)];
+    if (search) {
+        whereOptions.push(ilike(giataCity.title, `%${search}%`));
+    }
+
+    let query = db
         .select()
         .from(giataCity)
         .where(and(...whereOptions));
 
-      if (opts.input.search) {
+    if (search) {
         // @ts-expect-error
-        query = query.orderBy(
-          sql`similarity(${giataCity.title}, ${opts.input.search}) DESC`
-        );
-      }
+        query = query.orderBy(sql`similarity(${giataCity.title}, ${search}) DESC`);
+    }
 
-      return await query.limit(7).execute();
-    }),
-  getCityById: publicProcedure
-    .input(z.object({ cityId: z.number() }))
-    .query(async (opts) => {
-      return await db
+    const result = await query.limit(7).execute();
+
+    await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.long);
+
+    return result as City[];
+}
+
+// Function to get city by ID
+export async function fetchCityById(cityId: number): Promise<City | undefined> {
+    const cacheKey = `city:${cityId}`;
+
+    const cachedResult = await redisTools.getCache(cacheKey);
+    if (cachedResult) {
+        return cachedResult;
+    }
+
+    const result = await db
         .select()
         .from(giataCity)
-        .where(eq(giataCity.id, opts.input.cityId))
+        .where(eq(giataCity.id, cityId))
         .limit(1)
         .execute()
         .then((results) => results[0]);
-    }),
-});
+
+    if (result) {
+        await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.long);
+    }
+
+    return result as City | undefined;
+}
