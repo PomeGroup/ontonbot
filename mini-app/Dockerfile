@@ -36,7 +36,9 @@ FROM node:20.13.1-alpine3.20 AS production-stage
 
 # ARG for build-time environment variables
 ARG NODE_ENV=production
+ARG ENV=production
 ENV NODE_ENV=${NODE_ENV}
+ENV ENV=${ENV}
 
 # Install pnpm in the production stage to ensure it's available
 RUN npm install -g pnpm
