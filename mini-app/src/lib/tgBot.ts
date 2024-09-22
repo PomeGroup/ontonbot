@@ -12,7 +12,7 @@ export const sendTelegramMessage = async (props: {
   link?: string;
 }) => {
   try {
-    const response = await tgClient.post("http://127.0.0.1:3333/send-message", {
+    const response = await tgClient.post("http://telegram-bot:3333/send-message", {
       chat_id: props.chat_id,
       custom_message: props.message,
       link: props.link,
