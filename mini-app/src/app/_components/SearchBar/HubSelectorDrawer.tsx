@@ -18,9 +18,9 @@ interface Hub {
 
 interface HubSelectorDrawerProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (_open: boolean) => void;
   selectedHubs: string[];
-  setSelectedHubs: (hubs: string[]) => void;
+  setSelectedHubs: (_hubs: string[]) => void;
   hubs: Hub[];
 }
 

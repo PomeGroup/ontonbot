@@ -8,17 +8,6 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
 
-interface UserEventField {
-  id: number;
-  event_field_id: number;
-  user_id: number;
-  data: string;
-  completed: boolean;
-  created_at: Date;
-}
-
-type GetUserEventFieldsReturnType = Record<number, UserEventField>;
-
 export const userEventFieldsRouter = router({
   // protect
   upsertUserEventField: initDataProtectedProcedure

@@ -3,7 +3,6 @@
 import { FC, useCallback } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Drawer,
   DrawerContent,
@@ -18,7 +17,7 @@ import VariantBadge from "@/app/_components/checkInGuest/VariantBadge";
 
 interface TicketDrawerProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (_open: boolean) => void;
   drawerTitle: string | null;
   checkInState: CheckInState;
   ticketData: any;

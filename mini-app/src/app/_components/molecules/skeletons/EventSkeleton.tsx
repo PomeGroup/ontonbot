@@ -1,66 +1,26 @@
-import React from "react";
-import { Skeleton } from "@mui/material";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const EventSkeleton = () => {
-  return (
-    <div>
-      <div className="flex justify-between">
-        <Skeleton
-          className="rounded-[14px]"
-          variant="rectangular"
-          width={131}
-          height={40}
-        />
+    return (
+        <div>
+            <div className="flex justify-between">
+                <Skeleton className="rounded-[14px] h-10 w-[131px]" />
+                <Skeleton className="rounded-full mb-4 h-10 w-10" />
+            </div>
 
-        <Skeleton
-          className="text-end mb-4 "
-          variant="circular"
-          width={40}
-          height={40}
-        />
-      </div>
+            <Skeleton className="rounded-[14px] h-[220px] w-full" />
+            <Skeleton className="my-4 rounded-[14px] h-[87.5px] w-full" />
+            <Skeleton className="mt-6 mb-3 rounded-[6px] h-8 w-full" />
 
-      <Skeleton
-        className="rounded-[14px]"
-        variant="rectangular"
-        width={"100%"}
-        height={220}
-      />
+            {[...Array(5)].map((_, index) => (
+                <Skeleton className="h-4 w-full" key={index} />
+            ))}
 
-      <Skeleton
-        className="my-4 rounded-[14px]"
-        variant="rectangular"
-        width={"100%"}
-        height={87.5}
-      />
-
-      <Skeleton
-        className="mt-6 mb-3 rounded-[6px]"
-        variant="rectangular"
-        width={"100%"}
-        height={32}
-      />
-
-      {[...Array(5)].map((_, index) => (
-        <Skeleton
-          className=""
-          variant="text"
-          sx={{ fontSize: "1rem" }}
-          key={index}
-        />
-      ))}
-
-      {[...Array(2)].map((_, index) => (
-        <Skeleton
-          className="my-4 rounded-[14px]"
-          variant="rectangular"
-          width={"100%"}
-          height={84}
-          key={index}
-        />
-      ))}
-    </div>
-  );
+            {[...Array(2)].map((_, index) => (
+                <Skeleton className="my-4 rounded-[14px] h-[84px] w-full" key={index} />
+            ))}
+        </div>
+    );
 };
 
 export default EventSkeleton;

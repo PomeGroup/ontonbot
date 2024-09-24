@@ -4,7 +4,6 @@ import React, {
   useRef,
   useState,
   useCallback,
-  Suspense,
 } from "react";
 import Image from "next/image";
 import EventCard from "@/app/_components/EventCard/EventCard";
@@ -41,7 +40,7 @@ const Search: React.FC = () => {
     searchEventsInputZod.parse(searchInput)
   );
   const webApp = useWebApp();
-  const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
+  const { authorized, role: userRole } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
 
   const [results, setResults] = useState<any[]>([]);
@@ -50,7 +49,6 @@ const Search: React.FC = () => {
   const [currentTabIndex, setCurrentTabIndex] = useState(0);
   const [observingTab, setObservingTab] = useState(0);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const lastElementRef = useRef<HTMLDivElement | null>(null);
   const tabParam = searchParams.get("tab") || "All";
   const [tabValue, setTabValue] = useState(tabParam);
   const swiperRef = useRef<any>(null);

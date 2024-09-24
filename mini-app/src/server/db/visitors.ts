@@ -10,11 +10,23 @@ import {
 } from "@/db/schema";
 import { and, between, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { checkEventTicketToCheckIn } from "@/server/db/events";
+import { redisTools } from "@/lib/redisTools";
+
+const getVisitorCacheKey = (user_id: number, event_uuid: string) =>
+  `visitor:${user_id}:${event_uuid}`;
 
 const findVisitorByUserAndEvent = async (
   user_id: number,
   event_uuid: string
 ) => {
+  const cacheKey = getVisitorCacheKey(user_id, event_uuid);
+  const cachedVisitor = await redisTools.getCache(cacheKey);
+
+  if (cachedVisitor) {
+    console.log("Cache hit for:", cacheKey);
+    return JSON.parse(cachedVisitor);
+  }
+
   const visitorsFound = await db
     .select()
     .from(visitors)
@@ -22,8 +34,19 @@ const findVisitorByUserAndEvent = async (
       and(eq(visitors.user_id, user_id), eq(visitors.event_uuid, event_uuid))
     )
     .execute();
-  console.log("visitorsFound", visitorsFound);
-  return visitorsFound?.[0] ?? null;
+
+  const visitor = visitorsFound?.[0] ?? null;
+
+  // Cache the result
+  if (visitor) {
+    await redisTools.setCache(
+      cacheKey,
+      JSON.stringify(visitor),
+      redisTools.cacheLvl.medium
+    );
+  }
+
+  return visitor;
 };
 const insertNewVisitor = async (user_id: number, event_uuid: string) => {
   const insertedVisitor = await db
@@ -33,10 +56,22 @@ const insertNewVisitor = async (user_id: number, event_uuid: string) => {
       event_uuid: event_uuid,
       updatedBy: "system",
     })
-    .returning() // This ensures the inserted record is returned
+    .returning()
     .execute();
 
-  return insertedVisitor?.[0] ?? null;
+  const visitor = insertedVisitor?.[0] ?? null;
+
+  // Cache the newly inserted visitor
+  if (visitor) {
+    const cacheKey = getVisitorCacheKey(user_id, event_uuid);
+    await redisTools.setCache(
+      cacheKey,
+      JSON.stringify(visitor),
+      redisTools.cacheLvl.medium
+    );
+  }
+
+  return visitor;
 };
 
 const generateRandomVisitor = (userId: number) => ({
@@ -254,23 +289,12 @@ export const updateVisitorLastVisit = async (id: number) => {
 
 // Function to get visitor by user_id and event_uuid
 export const getVisitor = async (user_id: number, event_uuid: string) => {
-  db.query.visitors.findFirst({
-    where(fields, { eq, and }) {
-      return and(
-        eq(fields.user_id, user_id),
-        eq(fields.event_uuid, event_uuid)
-      );
-    },
-  });
+  return await findVisitorByUserAndEvent(user_id, event_uuid);
 };
 // Function to add a new visitor
 export const addVisitor = async (user_id: number, event_uuid: string) => {
   try {
-    // Check if the visitor already exists
-    const existingVisitor = await findVisitorByUserAndEvent(
-      user_id,
-      event_uuid
-    );
+    const existingVisitor = await getVisitor(user_id, event_uuid);
     if (existingVisitor) {
       console.log("existingVisitor", existingVisitor);
       return existingVisitor; // Visitor already exists, no need to add
@@ -281,4 +305,56 @@ export const addVisitor = async (user_id: number, event_uuid: string) => {
     console.error("Error adding visitor:", error);
     throw new Error("Failed to add visitor.");
   }
+};
+
+export const selectVisitorsWithWalletAddress = async (event_uuid: string) => {
+  return await db
+    .select()
+    .from(visitors)
+    .fullJoin(users, eq(visitors.user_id, users.user_id))
+    .where(
+      and(eq(visitors.event_uuid, event_uuid), isNotNull(users.wallet_address))
+    )
+    .execute();
+};
+
+export const findVisitorByUserAndEventUuid = async (
+  user_id: number,
+  event_uuid: string
+) => {
+  const cacheKey = getVisitorCacheKey(user_id, event_uuid);
+  const cachedVisitor = await redisTools.getCache(cacheKey);
+
+  if (cachedVisitor) {
+    console.log("Cache hit for:", cacheKey);
+    return JSON.parse(cachedVisitor);
+  }
+
+  const visitor = await db.query.visitors.findFirst({
+    where(fields, { eq, and }) {
+      return and(
+        eq(fields.user_id, user_id),
+        eq(fields.event_uuid, event_uuid)
+      );
+    },
+  });
+
+  // Cache the result if it exists
+  if (visitor) {
+    await redisTools.setCache(
+      cacheKey,
+      JSON.stringify(visitor),
+      redisTools.cacheLvl.medium
+    );
+  }
+
+  return visitor;
+};
+
+export const findVisitorById = async (visitor_id: number) => {
+  return db.query.visitors.findFirst({
+    where: (fields, { eq }) => {
+      return eq(fields.id, visitor_id);
+    },
+  });
 };

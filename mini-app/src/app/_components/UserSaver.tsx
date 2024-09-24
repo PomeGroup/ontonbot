@@ -3,8 +3,6 @@
 import useWebApp from "@/hooks/useWebApp";
 import { FC, ReactNode, useEffect } from "react";
 import { trpc } from "../_trpc/client";
-import { type InferSelectModel } from "drizzle-orm";
-import { users } from "@/db/schema";
 import EventSkeleton from "./molecules/skeletons/EventSkeleton";
 
 const UserSaver: FC<{

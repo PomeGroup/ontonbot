@@ -1,18 +1,16 @@
 "use client";
 
 import { FC, useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { trpc } from "@/app/_trpc/client";
-import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import TicketDrawer from "./TicketDrawer"; // Import the TicketDrawer component
 import { Button } from "@/components/ui/button";
 import { CheckInState } from "./CheckInState";
 import { RiQrScan2Line } from "react-icons/ri";
 
-const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (data: any) => void , needRefresh : boolean } }> = ({ params }) => {
+const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (_data: any) => void , needRefresh : boolean } }> = ({ params }) => {
   const WebApp = useWebApp();
-  const { authorized, isLoading } = useAuth();
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [ticketUuid, setTicketUuid] = useState<string | null>(null);
   const [drawerTitle, setDrawerTitle] = useState<string | null>(null);

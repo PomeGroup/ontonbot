@@ -1,5 +1,9 @@
 import { db } from "@/db/db";
-import { eventFields, events, users, visitors } from "@/db/schema";
+import { eventFields, events } from "@/db/schema";
+import {
+  findVisitorByUserAndEventUuid,
+  selectVisitorsWithWalletAddress,
+} from "@/server/db/visitors";
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import {
@@ -21,7 +25,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
-import { and, desc, eq, isNotNull } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -37,6 +41,7 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
+
 dotenv.config();
 
 export const eventsRouter = router({
@@ -44,19 +49,8 @@ export const eventsRouter = router({
   getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
     async (opts) => {
       return (
-        (
-          await db
-            .select()
-            .from(visitors)
-            .fullJoin(users, eq(visitors.user_id, users.user_id))
-            .where(
-              and(
-                eq(visitors.event_uuid, opts.input.event_uuid),
-                isNotNull(users.wallet_address)
-              )
-            )
-            .execute()
-        ).length || 0
+        (await selectVisitorsWithWalletAddress(opts.ctx.event.event_uuid))
+          .length || 0
       );
     }
   ),
@@ -69,14 +63,10 @@ export const eventsRouter = router({
     .input(z.object({ event_uuid: z.string() }))
     .query(async (opts) => {
       try {
-        const eventVisitor = await db.query.visitors.findFirst({
-          where: (fields, { eq, and }) => {
-            return and(
-              eq(fields.user_id, opts.ctx.user.user_id),
-              eq(fields.event_uuid, opts.input.event_uuid)
-            );
-          },
-        });
+        const eventVisitor = await findVisitorByUserAndEventUuid(
+          opts.ctx.user.user_id,
+          opts.input.event_uuid
+        );
         if (eventVisitor) {
           await updateVisitorLastVisit(eventVisitor.id);
         }

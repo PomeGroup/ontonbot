@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 interface NavigationHistoryContextType {
     history: string[];
@@ -23,7 +23,6 @@ interface NavigationHistoryProviderProps {
 export const NavigationHistoryProvider: React.FC<NavigationHistoryProviderProps> = ({ children }) => {
     const [history, setHistory] = useState<string[]>([]);
     const pathname = usePathname(); // Get the current route path
-    const router = useRouter();
 
     useEffect(() => {
         if (pathname) {

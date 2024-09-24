@@ -22,9 +22,9 @@ interface ComboboxDrawerProps {
   searchPlaceholder?: string;
   className?: string;
   defaultValue?: string;
-  onSelect?: (value: string) => void;
+  onSelect?: (_value: string) => void;
   errors?: (string | undefined)[];
-  onInputChange?: (inputValue: string) => void;
+  onInputChange?: (_inputValue: string) => void;
   disabled?: boolean;
 }
 

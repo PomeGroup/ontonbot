@@ -42,7 +42,7 @@ const EventCard: React.FC<EventCardProps> = memo(
       organizerUserId = null,
       ticketToCheckIn = false,
       timezone = "GMT",
-      website = null,
+
       ticketPrice = 0,
       city = null,
       country = null,

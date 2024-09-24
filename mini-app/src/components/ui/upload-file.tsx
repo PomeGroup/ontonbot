@@ -39,7 +39,7 @@ type UploadFileProps = {
   /**
    * An optional callback function called when an image is uploaded, passing the uploaded image URL as an argument.
    */
-  onImageChange?: (img_url: string) => void;
+  onImageChange?: (_img_url: string) => void;
 
   /**
    * An optional boolean indicating whether an error has occurred.
@@ -49,7 +49,7 @@ type UploadFileProps = {
   /**
    * An optional callback function called when the upload is complete, passing the uploaded image URL as an argument.
    */
-  onDone?: (img_url: string) => void;
+  onDone?: (_img_url: string) => void;
 
   /**
    * An optional default image URL to display before an image is uploaded.

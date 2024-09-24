@@ -20,12 +20,22 @@ import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { CreateNewEventButton } from "@/components/event/CreateNewEventButton";
 import { OntonEvent } from "@/types/event.types";
 import EventSection from "@/components/event/EventSection";
+import * as Sentry from "@sentry/nextjs";
+// Define types for events
+type EventData = any[];
 
 export default function Home() {
   const { config } = useConfig();
   const SliderEventUUID = config?.homeSliderEventUUID || "";
   const webApp = useWebApp();
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
+
+  Sentry.setUser({
+    id: "user-id", // Replace with the user's ID
+    username: "radio", // Replace with the username
+    email: "user@example.com", // Optional: add email
+  });
+
   const UserId = webApp?.initDataUnsafe?.user?.id;
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("all-events");
