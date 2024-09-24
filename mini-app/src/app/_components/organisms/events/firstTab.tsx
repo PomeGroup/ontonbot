@@ -2,11 +2,12 @@ import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import TonHubPicker from "@/app/_components/molecules/pickers/TonHubpicker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { UploadImageFile } from "@/components/ui/upload-file";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
+import { UploadSquareImage } from "@/components/ui/upload-square-image";
+
 
 const ImageUpload = ({ isError }: { isError: boolean }) => {
   const eventData = useCreateEventStore((state) => state.eventData);
@@ -17,12 +18,12 @@ const ImageUpload = ({ isError }: { isError: boolean }) => {
   };
 
   return (
-    <UploadImageFile
+    <UploadSquareImage
       triggerText="Upload Event Image"
       infoText="Image must be in 1:1 ratio"
       changeText="Change Image"
       isError={isError}
-      onDone={handleImageChange}
+      onImageChange={handleImageChange}
       defaultImage={eventData?.image_url}
     />
   );
@@ -47,7 +48,8 @@ const firstStepDataSchema = z.object({
       message: "Please select a hub",
     }),
 });
-export const FirstStep = () => {
+
+export function FirstStep() {
   const formRef = useRef<HTMLFormElement>(null);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEventData = useCreateEventStore((state) => state.setEventData);
@@ -59,6 +61,7 @@ export const FirstStep = () => {
     image_url?: string[] | undefined;
     hub?: string[] | undefined;
   }>();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -115,7 +118,7 @@ export const FirstStep = () => {
         <TonHubPicker
           onValueChange={(data) => {
             if (data) {
-              setEventData({ society_hub: data });
+              setEventData({ ...eventData, society_hub: data });
             }
           }}
           value={eventData?.society_hub}
@@ -129,4 +132,4 @@ export const FirstStep = () => {
       />
     </form>
   );
-};
+}
