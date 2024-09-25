@@ -1,4 +1,5 @@
-import { validate } from "@tma.js/init-data-node";
+
+import { validate } from "@telegram-apps/init-data-node";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { TelegramInitDataJson, TelegramUser } from "./types";
@@ -10,6 +11,7 @@ const TONAPI_BEARER = "Bearer " + process.env.TONAPI_API_KEY;
 const TON_API_AUTH_HEADER = {
   Authorization: TONAPI_BEARER,
 };
+
 
 export async function fetchBalance(address: string) {
   const url = `https://tonapi.io/v2/accounts/${address}`;
