@@ -12,7 +12,6 @@ const nextConfig = {
         hostname: "localhost",
       },
     ],
-    minimumCacheTTL: 60, // Cache image results for a minimum of 60 seconds
   },
   webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
@@ -42,19 +41,6 @@ const nextConfig = {
       );
     }
     return config;
-  },
-  async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=604800, immutable", // Set cache control headers
-          },
-        ],
-      },
-    ];
   },
   env: {
     UNDICI_CONNECT_TIMEOUT: "10000", // Set timeout for image fetch requests as a string
