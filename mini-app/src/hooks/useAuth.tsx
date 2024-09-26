@@ -4,54 +4,35 @@ import useWebApp from "./useWebApp";
 
 const useAuth = () => {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
 
   const validateUserInitDataQuery =
-      trpc.users.haveAccessToEventAdministration.useQuery(
-          { init_data: initData },
-          {
-            queryKey: [
-              "users.haveAccessToEventAdministration",
-              { init_data: initData },
-            ],
-            enabled: !!initData,
-          }
-      );
+    trpc.users.haveAccessToEventAdministration.useQuery(
+      { init_data: initData },
+      {
+        enabled: !!initData,
+      }
+    );
 
   useEffect(() => {
-    if (!initData) {
-      setIsLoading(false);
-      return;
+    if (validateUserInitDataQuery.data) {
+      setAuthorized(!!validateUserInitDataQuery.data?.valid);
     }
-
-    if (
-        validateUserInitDataQuery.isLoading ||
-        validateUserInitDataQuery.isError
-    ) {
-      setIsLoading(true);
-      return;
-    }
-
-    setAuthorized(!!validateUserInitDataQuery.data?.valid);
-    setIsLoading(false);
-  }, [
-    initData,
-    validateUserInitDataQuery.data,
-    validateUserInitDataQuery.isLoading,
-    validateUserInitDataQuery.isError,
-  ]);
+  }, [validateUserInitDataQuery.data]);
 
   return {
     authorized,
-    isLoading,
+    isLoading: validateUserInitDataQuery.isLoading,
     role: validateUserInitDataQuery.data?.valid
-        ? validateUserInitDataQuery.data?.role
-        : undefined,
+      ? validateUserInitDataQuery.data?.role
+      : undefined,
     user: validateUserInitDataQuery.data?.valid
-        ? validateUserInitDataQuery.data?.user
-        : undefined,
+      ? validateUserInitDataQuery.data?.user
+      : undefined,
+    error: validateUserInitDataQuery.isError
+      ? validateUserInitDataQuery.error
+      : null,
   };
 };
 
