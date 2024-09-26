@@ -94,6 +94,7 @@
         "swiper": "^11.1.12",
         "tailwind-merge": "^2.1.0",
         "tailwindcss-animate": "^1.0.7",
+        "@tailwindcss/typography": "^0.5.13",
         "tsx": "^4.6.2",
         "url": "^0.11.3",
         "uuid": "^9.0.1",
