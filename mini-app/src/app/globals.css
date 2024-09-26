@@ -1,3 +1,7 @@
+body {
+  background: var(--tg-theme-secondary-bg-color, white);
+}
+
 html,
 body,
 div,
