@@ -106,6 +106,7 @@ const ModalDialog: React.FC<ModalDialogProps> = ({
             alt="Icon"
             width={48}
             height={48}
+            unoptimized // This disables Next.js's image optimization
           />
         </div>
         <div style={descriptionStyle}>

@@ -22,10 +22,19 @@ const SectionCoverImage: React.FC<SectionCoverImageProps> = ({
       <div
         className={twMerge(
           "border-wallet-separator-color relative min-h-[328px] overflow-hidden rounded-lg border-[0.33px]",
-          className,
+          className
         )}
       >
-        {src ? <Image src={src} alt={alt} className={imgClassName} /> : children}
+        {src ? (
+          <Image
+            src={src}
+            alt={alt}
+            className={imgClassName}
+            unoptimized
+          />
+        ) : (
+          children
+        )}
       </div>
     );
   return children;

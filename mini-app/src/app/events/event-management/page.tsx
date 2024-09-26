@@ -104,6 +104,7 @@ const EventList = ({ filter = "all" }) => {
             src={eventData.image_url}
             alt="Event banner"
             className="w-full h-48 object-cover"
+            unoptimized
           />
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent text-white">
             <h2 className="text-2xl font-bold">{eventData.title}</h2>

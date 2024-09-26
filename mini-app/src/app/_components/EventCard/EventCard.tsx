@@ -1,5 +1,4 @@
 import { memo } from "react";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +20,7 @@ import {
   IoSettingsOutline,
 } from "react-icons/io5";
 import { OntonEvent } from "@/types/event.types";
+import { Badge } from "@telegram-apps/telegram-ui/dist/components";
 
 interface EventCardProps {
   event: OntonEvent;
@@ -107,27 +107,36 @@ const EventCard: React.FC<EventCardProps> = memo(
                 onError={(e) => (e.currentTarget.src = defaultImage)}
                 onLoad={() => setImageLoaded(true)}
                 loading="lazy"
+                unoptimized
               />
             </div>
             <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
               <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
                 <div className="flex items-center self-stretch flex-nowrap relative">
-                  <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
+                  <span className="grow font-sans  text-left whitespace-nowrap text-sm leading-3">
                     {mode === "ongoing" ? (
                       <div className="flex items-center text-green-500 animate-pulse">
                         <IoIosPlayCircle className="mr-1" /> Now
                       </div>
                     ) : (
-                      <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
+                      <span className="grow font-sans text-left whitespace-nowrap text-sm leading-3">
                         {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
                         {isOnline}
                       </span>
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
-                    <Badge variant="ontonDark">hosted</Badge>
+                    <Badge
+                      mode="primary"
+                      type="number"
+                    >
+                      hosted
+                    </Badge>
                   ) : (
-                    <Badge variant="ontonDark">
+                    <Badge
+                      mode="primary"
+                      type="number"
+                    >
                       {ticketPrice > 0 ? ticketPrice : "free"}
                     </Badge>
                   )}
@@ -194,6 +203,7 @@ const EventCard: React.FC<EventCardProps> = memo(
                 onError={(e) => (e.currentTarget.src = defaultImage)}
                 onLoad={() => setImageLoaded(true)}
                 loading="lazy"
+                unoptimized
               />
             </div>
             <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
@@ -212,9 +222,17 @@ const EventCard: React.FC<EventCardProps> = memo(
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
-                    <Badge variant="ontonDark">hosted</Badge>
+                    <Badge
+                      mode="primary"
+                      type="number"
+                    >
+                      hosted
+                    </Badge>
                   ) : (
-                    <Badge variant="ontonDark">
+                    <Badge
+                      mode="primary"
+                      type="number"
+                    >
                       {ticketPrice > 0 ? ticketPrice : "free"}
                     </Badge>
                   )}
@@ -253,6 +271,7 @@ const EventCard: React.FC<EventCardProps> = memo(
           }`}
           onError={(e) => (e.currentTarget.src = defaultImage)}
           onLoad={() => setImageLoaded(true)}
+          unoptimized
         />
       </div>
     );
@@ -277,6 +296,7 @@ const EventCard: React.FC<EventCardProps> = memo(
               loading="lazy"
               onError={(e) => (e.currentTarget.src = defaultImage)}
               onLoad={() => setImageLoaded(true)}
+              unoptimized
             />
           </div>
           <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
