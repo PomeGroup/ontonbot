@@ -41,6 +41,9 @@ http {
 run nginx.exe with admin
 
 ngrok http --domain=merry-jackal-closely.ngrok-free.app 8000 --response-header-add='Content-Security-Policy: upgrade-insecure-requests'
+ngrok http 8000 --response-header-add='Content-Security-Policy: upgrade-insecure-requests'
+
+send app URL to botfather.
 
 making sure redis and postgress container are running.
 
