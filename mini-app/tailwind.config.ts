@@ -37,29 +37,30 @@ const config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        "main-button-color": "#007AFF",
-        "disabled-font": "#B9B9BA",
-        confirm: "#34C759",
-        "wallet-tertiary_fill_background": "#747480",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--primary-hover))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
+          hover: "hsl(var(--secondary-hover))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+          hover: "hsl(var(--destructive-hover))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
+          hover: "hsl(var(--muted-hover))",
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+          hover: "hsl(var(--accent-hover))",
         },
         popover: {
           DEFAULT: "hsl(var(--popover))",
@@ -69,54 +70,6 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        separator: "var(--color-separator)",
-        tertiary: "var(--color-bg-tertiary)",
-        separatorwo: "var( --color-separator-without-opacity)",
-        "telegram-bg-color": "var(--telegram-bg-color)",
-        "telegram-text-color": "var(--telegram-text-color)",
-        "telegram-hint-color": "var(--telegram-hint-color)",
-        "telegram-link-color": "var(--telegram-link-color)",
-        "telegram-button-text-color": "var(--telegram-button-text-color)",
-        "telegram-button-color": "var(--telegram-button-color)",
-        "telegram-secondary-bg-color": "var(--telegram-secondary-bg-color)",
-        "telegram-6-10-header-bg-color": "var(--telegram-6-10-header-bg-color)",
-        "telegram-6-10-section-bg-color":
-          "var(--telegram-6-10-section-bg-color)",
-        "telegram-6-10-accent-text-color":
-          "var(--telegram-6-10-accent-text-color)",
-        "telegram-6-10-subtitle-text-color":
-          "var(--telegram-6-10-subtitle-text-color)",
-        "telegram-6-10-section-header-text-color":
-          "var(--telegram-6-10-section-header-text-color)",
-        "telegram-6-10-destructive-text-color":
-          "var(--telegram-6-10-destructive-text-color)",
-        "wallet-separator-color": "var(--wallet-separator-color)",
-        "wallet-second-button-color": "var(--wallet-second-button-color)",
-        "wallet-button-confirm-color": "var(--wallet-button-confirm-color)",
-        "wallet-text-confirm-color": "var(--wallet-text-confirm-color)",
-        "wallet-button-main-disabled-color":
-          "var(--wallet-button-main-disabled-color)",
-        "wallet-text-main-disabled-color":
-          "var(--wallet-text-main-disabled-color)",
-        "wallet-D-text-destructive-color":
-          "var(--wallet-D-text-destructive-color)",
-        "wallet-button-destructive-color":
-          "var(--wallet-button-destructive-color)",
-        "wallet-highlight-default": "var(--wallet-highlight-default)",
-        "wallet-quick-menu-background": "var(--wallet-quick-menu-background)",
-        "wallet-quick-menu-foreground": "var(--wallet-quick-menu-foreground)",
-        "wallet-toast-background": "var(--wallet-toast-background)",
-        "wallet-text-overlay": "var(--wallet-text-overlay)",
-        "wallet-toast-link": "var(--wallet-toast-link)",
-        "wallet-tertiary-fill-background":
-          "var(--wallet-tertiary-fill-background)",
-        "wallet-quaternary-fill-background":
-          "var(--wallet-quaternary-fill-background)",
-        "wallet-separator-non-opaque-color":
-          "var(--wallet-separator-non-opaque-color)",
-        "wallet-accent-orange": "var(--wallet-accent-orange)",
-        "wallet-segmented-control-active-background":
-          "var(--wallet-segmented-control-active-background)",
       },
       borderRadius: {
         xl: "calc(var(--radius) + 2px)",

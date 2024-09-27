@@ -149,14 +149,19 @@ table {
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
     --primary: 222.2 47.4% 11.2%;
+    --primary-hover: 222.2 47.4% 20%; /* Darker for hover */
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
+    --secondary-hover: 210 40% 90%; /* Lighter for hover */
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
+    --muted-hover: 210 40% 90%; /* Slight hover change */
     --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 210 40% 96.1%;
+    --accent-hover: 210 40% 85%; /* Hover color */
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
+    --destructive-hover: 0 84.2% 70%; /* More intense on hover */
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
@@ -172,20 +177,47 @@ table {
     --popover: 240, 5%, 24%;
     --popover-foreground: 255, 4%, 79%;
     --primary: 211 100% 50%;
+    --primary-hover: 211 100% 40%; /* Darker for hover */
     --primary-foreground: 0 0% 100%;
     --secondary: 201 11% 98%;
+    --secondary-hover: 201 11% 88%; /* Lighter on hover */
     --secondary-foreground: 201, 100%, 46%;
     --muted: 240, 5%, 24%;
+    --muted-hover: 240, 5%, 30%; /* Slight hover change */
     --muted-foreground: 255, 4%, 79%;
     --accent: 240, 4%, 16%;
+    --accent-hover: 240, 4%, 25%; /* Hover color */
     --accent-foreground: 212.7 26.8% 83.9%;
-    --destructive: 3, 100%, 59%, 1;
+    --destructive: 3, 100%, 59%;
+    --destructive-hover: 3, 100%, 69%; /* More intense on hover */
     --destructive-foreground: 210 40% 98%;
     --border: 240, 1%, 73%;
     --input: 240, 1%, 73%;
     --ring: 217.2 32.6% 17.5%;
   }
 
+  /* Hover styles */
+  .btn-primary:hover {
+    background-color: hsl(var(--primary-hover));
+    color: hsl(var(--primary-foreground));
+  }
+
+  .btn-secondary:hover {
+    background-color: hsl(var(--secondary-hover));
+    color: hsl(var(--secondary-foreground));
+  }
+
+  .btn-accent:hover {
+    background-color: hsl(var(--accent-hover));
+    color: hsl(var(--accent-foreground));
+  }
+
+  .btn-destructive:hover {
+    background-color: hsl(var(--destructive-hover));
+    color: hsl(var(--destructive-foreground));
+  }
+
+  /* Add similar rules for other components/elements where hover is needed */
   body {
     @apply dark:bg-[#1C1C1E] bg-white;
     @apply box-border;
@@ -209,7 +241,12 @@ table {
 
 @layer utilities {
   .text-gradient {
-    background: linear-gradient(90deg, #624dad 6.9%, #8f7dd5 51.72%, #b3daf9 96.55%);
+    background: linear-gradient(
+      90deg,
+      #624dad 6.9%,
+      #8f7dd5 51.72%,
+      #b3daf9 96.55%
+    );
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
