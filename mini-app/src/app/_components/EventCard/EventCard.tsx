@@ -110,6 +110,7 @@ const EventCard: React.FC<EventCardProps> = memo(
                 unoptimized
               />
             </div>
+
             <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
               <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
                 <div className="flex items-center self-stretch flex-nowrap relative">
@@ -239,22 +240,21 @@ const EventCard: React.FC<EventCardProps> = memo(
 
     const renderDetailedMode = () => (
       <div
-        className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
+        className="relative w-full h-[100vw] overflow-hidden shadow-lg cursor-pointer"
         onClick={handleEventClick}
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
           src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
           alt={title}
-          width={400}
-          height={400}
-          objectFit="cover"
-          className={`rounded-lg transition-opacity duration-500 bg-red-600 ${
+          fill
+          sizes="100vh"
+          objectFit="contain"
+          className={`rounded-lg transition-opacity duration-500 ${
             imageLoaded ? "opacity-100" : "opacity-0"
           }`}
           onError={(e) => (e.currentTarget.src = defaultImage)}
           onLoad={() => setImageLoaded(true)}
-          unoptimized
         />
       </div>
     );
