@@ -124,9 +124,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
-      const participantFromQuery = searchParams.get("participationType")?.split(",") || [];
-      const participationType = (participantFromQuery.length > 0 && participantFromQuery.length !== 2) ? participantFromQuery : []
-
+      const participantFromQuery =
+        searchParams.get("participationType")?.split(",") || [];
+      const participationType =
+        participantFromQuery.length > 0 && participantFromQuery.length !== 2
+          ? participantFromQuery
+          : [];
 
       const selectedHubsFromParams =
         searchParams.get("selectedHubs")?.split(",") || [];
@@ -311,7 +314,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
       participationType.includes("online") &&
       participationType.includes("in_person")
     ) {
-
       return;
     }
 
@@ -369,21 +371,25 @@ const SearchBar: React.FC<SearchBarProps> = ({
       (userRole === "admin" || userRole === "organizer") &&
       pathname === "/"
     ) {
-      if (HideMainButton  ) {
+      if (HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log("+++++HideMainButton isVisible", WebApp?.MainButton.isVisible);
+        console.log(
+          "+++++HideMainButton isVisible",
+          WebApp?.MainButton.isVisible
+        );
         WebApp?.MainButton.hide();
         WebApp?.MainButton.hide();
-
-      } else if (!HideMainButton  ) {
+      } else if (!HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log("++++ShowMainButton isVisible", WebApp?.MainButton.isVisible);
+        console.log(
+          "++++ShowMainButton isVisible",
+          WebApp?.MainButton.isVisible
+        );
         WebApp?.MainButton.show();
         WebApp?.MainButton.show();
-
       }
     }
-  }, [HideMainButton,WebApp?.MainButton?.isVisible]);
+  }, [HideMainButton, WebApp?.MainButton?.isVisible]);
   const renderFilterButtons = useCallback(() => {
     let filters;
 
@@ -481,7 +487,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             placeholder={
               tabValue === "" ? "Search All Events" : `Search ${tabValue} `
             }
-            className="w-full pl-10 pr-10 p-2 rounded-2xl bg-gray-800 text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-blue-600 focus:outline-none transition-width duration-300"
+            className="w-full pl-10 pr-10 p-2 rounded-2xl bg-secondary text-primary placeholder-gray-500 focus:ring-2 focus:ring-gray-300 focus:outline-none transition-width duration-300"
             onChange={handleSearchInputChange}
             onKeyDown={handleKeyDown}
             value={searchTerm}
@@ -498,7 +504,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           />
           {!showFilterButton && (
             <IoCloseOutline
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-white w-4 h-4 p-1 rounded-full bg-gray-600"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-primary w-4 h-4 p-1 rounded-full bg-gray-600"
               onClick={handleCloseSuggestions}
             />
           )}

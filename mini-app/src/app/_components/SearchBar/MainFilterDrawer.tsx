@@ -13,7 +13,7 @@ import { IoIosArrowForward } from "react-icons/io";
 import { IoOptionsOutline } from "react-icons/io5";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import {z} from "zod";
+import { z } from "zod";
 export type SortByType = z.infer<typeof searchEventsInputZod>["sortBy"];
 export type setSortByType = (_value: string) => void;
 interface MainFilterDrawerProps {
@@ -41,9 +41,8 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
   resetFilters,
   applyingFilters,
   setApplyingFilters,
-  allParticipationTypes
+  allParticipationTypes,
 }) => {
-
   return (
     <Drawer onOpenChange={onOpenChange}>
       <DrawerTrigger>
@@ -60,8 +59,8 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             className="space-y-3 border-b-[1px] border-b-zinc-700 pb-1"
             onClick={() => setIsEventTypeDrawerOpen(true)}
           >
-            <p className=" font-medium text-zinc-100">EVENT TYPE</p>
-            <div className="cursor-pointer text-sm  text-zinc-400 flex items-center">
+            <p className=" font-medium text-primary">EVENT TYPE</p>
+            <div className="cursor-pointer text-sm  text-secondary flex items-center">
               {participationType.length === 0 ||
               participationType.length == allParticipationTypes.length
                 ? "All"
@@ -74,25 +73,24 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             onClick={() => setIsHubDrawerOpen(true)}
           >
             <div className="flex-1 space-y-3">
-              <p className="font-medium text-zinc-100">Ton hub</p>
-              <div className="text-zinc-400 text-sm line-clamp-1 w-11/12 overflow-hidden">
+              <p className="font-medium text-primary">Ton hub</p>
+              <div className="text-secondary text-sm line-clamp-1 w-11/12 overflow-hidden">
                 {hubText}
               </div>
             </div>
 
-            <IoIosArrowForward className="text-sm text-zinc-400 ml-2 mt-8" />
+            <IoIosArrowForward className="text-sm text-secondary ml-2 mt-8" />
           </div>
 
           <div className="space-y-4">
-            <p className="text-sm font-medium text-zinc-100 pt-2">SORT BY</p>
+            <p className="text-sm font-medium text-primary pt-2">SORT BY</p>
             <RadioGroup
               orientation="vertical"
               value={sortBy}
               onValueChange={(value) => setSortBy(value)}
             >
-
               <label className="flex justify-between items-center  border-b-[1px] border-b-zinc-700 pb-2">
-                <span className="text-zinc-400 text-sm ">Time</span>
+                <span className="text-secondary text-sm ">Time</span>
                 <RadioGroupItem
                   value="start_date_desc"
                   className="h-4 w-4"
@@ -100,7 +98,9 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               </label>
 
               <label className="flex justify-between items-center">
-                <span className="text-zinc-400 text-sm ">Most People Reached</span>
+                <span className="text-secondary text-sm ">
+                  Most People Reached
+                </span>
                 <RadioGroupItem
                   value="most_people_reached"
                   className="h-4 w-4"
