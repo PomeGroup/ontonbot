@@ -1,9 +1,9 @@
 import { memo } from "react";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
@@ -20,7 +20,6 @@ import {
   IoSettingsOutline,
 } from "react-icons/io5";
 import { OntonEvent } from "@/types/event.types";
-import { Badge } from "@telegram-apps/telegram-ui/dist/components";
 
 interface EventCardProps {
   event: OntonEvent;
@@ -70,14 +69,15 @@ const EventCard: React.FC<EventCardProps> = memo(
           : "unknown";
 
     const handleEventClick = () => {
-      if (ticketToCheckIn) {
-        webApp?.openTelegramLink(
-          `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
-        );
-      } else {
-        window.location.href = `/events/${eventUuid}`;
-        return false;
-      }
+      // if (ticketToCheckIn) {
+      //   webApp?.openTelegramLink(
+      //     `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
+      //   );
+      // } else {
+      //   window.location.href = `/events/${eventUuid}`;
+      //   return false;
+      // }
+      window.location.href = `/events/${eventUuid}`; // FIXME paid event not opening
     };
     // Skeleton Loader for Image
     const renderImageSkeleton = () => (
@@ -100,7 +100,7 @@ const EventCard: React.FC<EventCardProps> = memo(
                 src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
                 alt={title}
                 layout="fill"
-                style={{ objectFit: "cover" }}
+                objectFit="cover"
                 className={`rounded-lg transition-opacity duration-500 ${
                   imageLoaded ? "opacity-100" : "opacity-0"
                 }`}
@@ -113,30 +113,22 @@ const EventCard: React.FC<EventCardProps> = memo(
             <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
               <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
                 <div className="flex items-center self-stretch flex-nowrap relative">
-                  <span className="grow font-sans  text-left whitespace-nowrap text-sm leading-3">
+                  <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
                     {mode === "ongoing" ? (
                       <div className="flex items-center text-green-500 animate-pulse">
                         <IoIosPlayCircle className="mr-1" /> Now
                       </div>
                     ) : (
-                      <span className="grow font-sans text-left whitespace-nowrap text-sm leading-3">
+                      <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
                         {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
                         {isOnline}
                       </span>
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
-                    <Badge
-                      mode="primary"
-                      type="number"
-                    >
-                      hosted
-                    </Badge>
+                    <Badge variant="secondary">hosted</Badge>
                   ) : (
-                    <Badge
-                      mode="primary"
-                      type="number"
-                    >
+                    <Badge variant="secondary">
                       {ticketPrice > 0 ? ticketPrice : "free"}
                     </Badge>
                   )}
@@ -165,7 +157,6 @@ const EventCard: React.FC<EventCardProps> = memo(
             <IoReorderFour className="mr-1" /> Show Event{" "}
             <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuItem
             key={`dropdown-manage-${eventUuid}`}
             className="text-lg  px-2 rounded-none "
@@ -196,7 +187,7 @@ const EventCard: React.FC<EventCardProps> = memo(
                 src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
                 alt={title}
                 layout="fill"
-                style={{ objectFit: "cover" }}
+                objectFit="cover"
                 className={`rounded-lg transition-opacity duration-500 ${
                   imageLoaded ? "opacity-100" : "opacity-0"
                 }`}
@@ -222,17 +213,9 @@ const EventCard: React.FC<EventCardProps> = memo(
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
-                    <Badge
-                      mode="primary"
-                      type="number"
-                    >
-                      hosted
-                    </Badge>
+                    <Badge variant="secondary">hosted</Badge>
                   ) : (
-                    <Badge
-                      mode="primary"
-                      type="number"
-                    >
+                    <Badge variant="secondary">
                       {ticketPrice > 0 ? ticketPrice : "free"}
                     </Badge>
                   )}
@@ -250,7 +233,7 @@ const EventCard: React.FC<EventCardProps> = memo(
             </div>
           </div>
         )}
-        <Separator className="my-4 bg-[#545458]" />
+        <Separator className="my-4 bg-secondary" />
       </>
     );
 
@@ -263,10 +246,10 @@ const EventCard: React.FC<EventCardProps> = memo(
         <Image
           src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
           alt={title}
-          width={window?.innerWidth || 400}
+          width={400}
           height={400}
-          style={{ objectFit: "cover" }}
-          className={`rounded-lg transition-opacity duration-500 ${
+          objectFit="cover"
+          className={`rounded-lg transition-opacity duration-500 bg-red-600 ${
             imageLoaded ? "opacity-100" : "opacity-0"
           }`}
           onError={(e) => (e.currentTarget.src = defaultImage)}
@@ -318,7 +301,6 @@ const EventCard: React.FC<EventCardProps> = memo(
             </div>
           </div>
         </div>
-        <Separator className="my-0 bg-[#545458]" />
       </>
     );
 
