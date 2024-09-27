@@ -5,9 +5,10 @@ import { useUtils } from "@telegram-apps/sdk-react";
 import ButtonTma from "@/components/Button";
 import { RiLoader4Line } from "react-icons/ri";
 
-import { env } from "../../../env.mjs";
+import { env } from "../../env";
 import { useShareEvent } from "@/hooks/useShareEvent";
 import { useUserStore } from "@/store/user.store";
+import ShareIcon from "../../../public/share-icon.svg";
 
 type EventHeaderProps = {
   title: string;
@@ -45,7 +46,7 @@ const EventHeader = (props: EventHeaderProps) => {
           <RiLoader4Line className="animate-spin" />
         ) : (
           <Image
-            src={"/ptma/share-icon.svg"}
+            src={ShareIcon}
             alt={"share"}
             width={24}
             height={24}

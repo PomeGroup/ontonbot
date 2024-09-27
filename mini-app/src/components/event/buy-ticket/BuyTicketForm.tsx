@@ -18,6 +18,7 @@ import { isRequestingTicketAtom } from "@/store/atoms/event.atoms";
 import { useUserStore } from "@/store/user.store";
 import BuyTicketTxQueryState from "./BuyTicketTxQueryState";
 import { Input } from "@/components/ui/input";
+import InfoIcon from "../../../../public/info-icon.svg";
 
 type BuyTicketFormProps = {
   id: string;
@@ -115,7 +116,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         toast.error(`Please fill in the information about yourself`, {
           icon: (
             <Image
-              src={"/ptma/info-icon.svg"}
+              src={InfoIcon}
               alt={"info"}
               width={24}
               height={24}

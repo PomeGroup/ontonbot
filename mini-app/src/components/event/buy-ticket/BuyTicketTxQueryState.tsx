@@ -7,6 +7,8 @@ import { useAtom } from "jotai";
 import { useGetOrder } from "@/hooks/useGetOrderQuery";
 import { isRequestingTicketAtom } from "@/store/atoms/event.atoms";
 import { toast } from "sonner";
+import DuckNotSllowed from "../../../../public/duck-not-allowed.gif";
+import Success from "../../../../public/success.gif";
 
 type BuyTicketTxQueryStateProps = {};
 
@@ -60,7 +62,7 @@ const BuyTicketTxQueryState = (_props: BuyTicketTxQueryStateProps) => {
           className="h-28 w-28"
           width={112}
           height={112}
-          src={"/ptma/duck-thinking.gif"}
+          src={DuckNotSllowed}
           alt="Processing Payment"
         />
         <div className="space-y-2">
@@ -84,7 +86,7 @@ const BuyTicketTxQueryState = (_props: BuyTicketTxQueryStateProps) => {
           className="h-28 w-28"
           width={112}
           height={112}
-          src={"/ptma/duck-not-allowed.gif"}
+          src={DuckNotSllowed}
           alt="event image"
         />
         <div>
@@ -117,7 +119,7 @@ const BuyTicketTxQueryState = (_props: BuyTicketTxQueryStateProps) => {
         className="h-28 w-28"
         width={112}
         height={112}
-        src={"/ptma/success.gif"}
+        src={Success}
         alt="event image"
       />
       <div className="space-y-2">
