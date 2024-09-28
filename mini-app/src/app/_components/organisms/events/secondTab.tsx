@@ -7,17 +7,18 @@ import { ComboboxDrawer } from "@/components/ui/combobox-drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/utils";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useCreateEventStore } from "./createEventStore";
 import { StepLayout } from "./stepLayout";
-import { cn } from "@/utils";
 
 export const SecondStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
+  const editOptions = useCreateEventStore((state) => state.edit);
   const [errors, setErrors] = useState<{
     start_date?: string[] | undefined;
     end_date?: string[] | undefined;
@@ -35,12 +36,24 @@ export const SecondStep = () => {
 
     const secondStepDataSchema = z
       .object({
-        start_date: z.number().refine((data) => data > Date.now() / 1000, {
-          message: "Start date must be in the future",
-        }),
-        end_date: z.number().refine((data) => data > eventData?.start_date!, {
-          message: "End date must be after start date",
-        }),
+        start_date: z
+          .number()
+          .refine(
+            (data) =>
+              Boolean(editOptions?.eventHash) || data > Date.now() / 1000,
+            {
+              message: "Start date must be in the future",
+            }
+          ),
+        end_date: z
+          .number()
+          .refine(
+            (data) =>
+              Boolean(editOptions?.eventHash) || data > eventData?.start_date!,
+            {
+              message: "End date must be after start date",
+            }
+          ),
         timezone: z.string().min(1),
         duration: z.number().refine((data) => data > 0, {
           message: "Duration must be greater than 0",
@@ -322,7 +335,6 @@ const SelectLocation = (props: {
             value: city.id.toString(),
           }))}
           placeholder="Select a city"
-
           onInputChange={(inputValue) =>
             !isCityDisabled && setCitySearch(inputValue)
           } // Disable input change if no country is selected
