@@ -36,24 +36,8 @@ export const SecondStep = () => {
 
     const secondStepDataSchema = z
       .object({
-        start_date: z
-          .number()
-          .refine(
-            (data) =>
-              Boolean(editOptions?.eventHash) || data > Date.now() / 1000,
-            {
-              message: "Start date must be in the future",
-            }
-          ),
-        end_date: z
-          .number()
-          .refine(
-            (data) =>
-              Boolean(editOptions?.eventHash) || data > eventData?.start_date!,
-            {
-              message: "End date must be after start date",
-            }
-          ),
+        start_date: z.number(),
+        end_date: z.number(),
         timezone: z.string().min(1),
         duration: z.number().refine((data) => data > 0, {
           message: "Duration must be greater than 0",
