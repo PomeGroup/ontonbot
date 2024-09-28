@@ -12,7 +12,7 @@ import {
 
 type EventMainButtonProps = {
   eventId: string;
-  requiresTicketToChekin: boolean;
+  requiresTicketToCheckin: boolean;
   orderAlreadyPlace: boolean;
   userHasTicket: boolean;
   isSoldOut: boolean;
@@ -21,7 +21,7 @@ type EventMainButtonProps = {
 
 const EventTmaSettings = ({
   eventId,
-  requiresTicketToChekin,
+  requiresTicketToCheckin: requiresTicketToCheckin,
   isSoldOut,
   orderAlreadyPlace,
   userHasTicket,
@@ -96,7 +96,7 @@ const EventTmaSettings = ({
       };
     }
 
-    if (!requiresTicketToChekin) {
+    if (!requiresTicketToCheckin) {
       mainButton?.hideLoader();
 
       return () => {

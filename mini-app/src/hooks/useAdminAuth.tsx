@@ -2,7 +2,8 @@ import { trpc } from "@/app/_trpc/client";
 import { useEffect, useState } from "react";
 import useWebApp from "./useWebApp";
 
-const useAuth = () => {
+const useAdminAuth = () => {
+  // FIXME change it to useIsAdmin
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
@@ -36,4 +37,4 @@ const useAuth = () => {
   };
 };
 
-export default useAuth;
+export default useAdminAuth;

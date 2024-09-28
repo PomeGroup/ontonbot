@@ -3,7 +3,7 @@
 import { Address } from "@ton/ton";
 import { z } from "zod";
 
-import { env } from "../../../env.mjs";
+import { env } from "../../env";
 
 const buyTicketSchema = z.object({
   owner_address: z.string().refine((v) => Address.isAddress(Address.parse(v))),

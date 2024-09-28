@@ -11,7 +11,7 @@ import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
 import Tasks from "@/app/_components/molecules/tasks";
 import { trpc } from "@/app/_trpc/client";
-import useAuth from "@/hooks/useAuth";
+import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
@@ -23,7 +23,7 @@ export const EventDataPage = ({ eventUUID }: { eventUUID: string }) => {
     whereTo: "/",
   });
   const webApp = useWebApp();
-  const { role, authorized, user } = useAuth();
+  const { role, authorized, user } = useAdminAuth();
   const eventData = trpc.events.getEvent.useQuery(
     {
       event_uuid: eventUUID,

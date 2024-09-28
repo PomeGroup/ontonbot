@@ -5,7 +5,7 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import { trpc } from "@/app/_trpc/client";
-import useAuth from "@/hooks/useAuth";
+import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
 import TabTriggers from "@/app/_components/organisms/TabTriggers";
 import useSearchEventsStore from "@/zustand/searchEventsInputZod";
@@ -16,9 +16,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import { useWithBackButton } from "@/hooks/useWithBackButton";
 import { Separator } from "@/components/ui/separator";
-
+import { useWithBackButton } from "../_components/atoms/buttons/web-app/useWithBackButton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const LIMIT = 5;
@@ -35,7 +34,7 @@ const Search: React.FC = () => {
     searchEventsInputZod.parse(searchInput)
   );
   const webApp = useWebApp();
-  const { authorized, role: userRole } = useAuth();
+  const { authorized, role: userRole } = useAdminAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
 
   const [results, setResults] = useState<any[]>([]);

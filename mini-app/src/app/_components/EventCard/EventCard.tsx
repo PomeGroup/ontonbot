@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import useAuth from "@/hooks/useAuth";
+import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
@@ -51,7 +51,7 @@ const EventCard: React.FC<EventCardProps> = memo(
     const defaultImage = "/template-images/default.webp";
     const [imageLoaded, setImageLoaded] = useState(false);
     const webApp = useWebApp();
-    const { user } = useAuth();
+    const { user } = useAdminAuth();
     const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
     const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
     const geoLocation =

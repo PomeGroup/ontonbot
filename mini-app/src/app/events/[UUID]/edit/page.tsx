@@ -5,7 +5,7 @@ import { ManageEvent } from "@/app/_components/organisms/events";
 import GuestList from "@/app/_components/organisms/events/GuestList";
 import { trpc } from "@/app/_trpc/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import useAuth from "@/hooks/useAuth";
+import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { FC } from "react";
 import { BsFillPersonLinesFill } from "react-icons/bs";
@@ -27,7 +27,7 @@ const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
   );
   const hapticFeedback = WebApp?.HapticFeedback;
 
-  const { authorized, isLoading } = useAuth();
+  const { authorized, isLoading } = useAdminAuth();
 
   if (isLoading || event.status === "loading") {
     return null;

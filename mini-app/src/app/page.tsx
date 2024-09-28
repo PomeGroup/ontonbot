@@ -5,7 +5,7 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import useAuth from "@/hooks/useAuth";
+import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useRouter } from "next/navigation";
@@ -25,7 +25,11 @@ export default function Home() {
   const { config } = useConfig();
   const SliderEventUUID = config?.homeSliderEventUUID || "";
   const webApp = useWebApp();
-  const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
+  const {
+    authorized,
+    isLoading: useAuthLoading,
+    role: userRole,
+  } = useAdminAuth();
 
   Sentry.setUser({
     id: "user-id", // Replace with the user's ID
@@ -179,7 +183,9 @@ export default function Home() {
 
     // Fetch data when switching tabs
     if (value === "my-events") {
-      refetchMyEvents();
+      setTimeout(() => {
+        refetchMyEvents();
+      }, 300); // Debounce the refetch
     }
   };
 
@@ -200,7 +206,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen">
-      <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+      <div className="sticky top-0 z-50 w-full pb-1">
         <SearchBar
           includeQueryParam={false}
           onUpdateResults={() => {}}
@@ -212,20 +218,16 @@ export default function Home() {
           className="pt-2 flex-shrink-0"
           onValueChange={handleTabClick}
         >
-          <TabsList className="flex bg-gray-600 h-33 rounded-lg p-1">
+          <TabsList className="flex h-33 rounded-lg p-1">
             <TabsTrigger
               value="all-events"
-              className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
-                activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
-              }`}
+              className={`flex-1 p-2 rounded-lg text-center font-medium  focus:outline-none`}
             >
               All events
             </TabsTrigger>
             <TabsTrigger
               value="my-events"
-              className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
-                activeTab === "my-events" ? "bg-blue-600" : "bg-transparent"
-              }`}
+              className={`flex-1 p-2 rounded-lg text-center font-medium focus:outline-none`}
             >
               My events
             </TabsTrigger>
@@ -255,8 +257,8 @@ export default function Home() {
                 renderEvent={(event: OntonEvent) => (
                   <EventCard
                     event={event}
-                    mode="detailed"
                     currentUserId={UserId}
+                    mode="detailed"
                   />
                 )}
               />

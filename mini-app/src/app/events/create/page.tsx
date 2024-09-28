@@ -2,10 +2,10 @@
 
 import Alerts from "@/app/_components/molecules/alerts";
 import { ManageEvent } from "@/app/_components/organisms/events";
-import useAuth from "@/hooks/useAuth";
+import useAdminAuth from "@/hooks/useAdminAuth";
 
 const CreateEventAdminPage = () => {
-  const { authorized, isLoading } = useAuth();
+  const { authorized, isLoading } = useAdminAuth();
 
   if (isLoading) {
     return null;

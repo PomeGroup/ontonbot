@@ -1,7 +1,7 @@
 "use client";
 
-import withPlatform from "@tma/hoc/withPlatform";
-import PageIos from "@ui/components/Page/Page.ios";
+import withPlatform from "../tma/hoc/withPlatform";
+import PageIos from "./Page.ios";
 
 const PageTma = withPlatform(PageIos, PageIos);
 
