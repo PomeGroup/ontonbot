@@ -4,7 +4,9 @@ import {
   event_details_search_list,
   eventFields,
   events,
+  orders,
   rewards,
+  tickets,
   users,
   visitors,
 } from "@/db/schema";
@@ -77,7 +79,10 @@ export const checkEventTicketToCheckIn = async (eventUuid: string) => {
     ticketToCheckIn: event[0].ticketToCheckIn,
   };
 };
-export const selectEventByUuid = async (eventUuid: string) => {
+export const selectEventByUuid = async (
+  eventUuid: string,
+  user_id?: number
+) => {
   if (eventUuid.length !== 36) {
     return null;
   }
@@ -93,6 +98,74 @@ export const selectEventByUuid = async (eventUuid: string) => {
   if (!eventData) {
     return null;
   }
+  // this only works for events with one ticket
+  const eventTicket = eventData.ticketToCheckIn
+    ? await db.query.eventTicket.findFirst({
+        where(fields, ops) {
+          return ops.eq(fields.event_uuid, eventData.event_uuid);
+        },
+      })
+    : null;
+  const soldTicketsCount = await db
+    .select({ count: sql`count(*)`.mapWith(Number) })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.event_uuid, eventData.event_uuid as string),
+        or(
+          eq(orders.state, "minted"),
+          eq(orders.state, "created"),
+          eq(orders.state, "mint_request")
+        )
+      )
+    )
+    .execute();
+
+  const isSoldOut =
+    (soldTicketsCount[0].count as unknown as number) >=
+    (eventTicket?.count as unknown as number);
+
+  const organizer = await db.query.users.findFirst({
+    where(fields, ops) {
+      return ops.eq(fields.user_id, eventData.owner!);
+    },
+  });
+
+  const userOrder = user_id
+    ? (
+        await db
+          .select()
+          .from(orders)
+          .where(
+            and(
+              eq(orders.user_id, user_id),
+              eq(orders.event_ticket_id, eventTicket?.id as number),
+              or(
+                eq(orders.state, "created"),
+                eq(orders.state, "minted"),
+                eq(orders.state, "mint_request")
+              )
+            )
+          )
+          .execute()
+      ).pop()
+    : null;
+
+  const userTicket = user_id
+    ? (
+        await db
+          .select()
+          .from(tickets)
+          .where(
+            and(
+              eq(tickets.event_uuid, eventData.event_uuid as string),
+              eq(tickets.user_id, user_id)
+            )
+          )
+          .orderBy(asc(tickets.created_at))
+          .execute()
+      ).pop()
+    : null;
 
   const { wallet_seed_phrase, ...restEventData } = removeKey(
     eventData,
@@ -127,6 +200,11 @@ export const selectEventByUuid = async (eventUuid: string) => {
     },
     dynamic_fields: dynamicFields,
     activity_id: restEventData.activity_id,
+    eventTicket,
+    organizer,
+    isSoldOut,
+    userOrder,
+    userTicket,
   };
 };
 
@@ -355,7 +433,10 @@ export const getEventsWithFilters = async (
   return eventsData;
 };
 
-export const getEventByUuid = async (eventUuid: string , removeSecret : boolean = true) => {
+export const getEventByUuid = async (
+  eventUuid: string,
+  removeSecret: boolean = true
+) => {
   const event = await db
     .select()
     .from(events)

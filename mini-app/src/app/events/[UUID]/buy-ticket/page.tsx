@@ -9,12 +9,12 @@ import PageTma from "@/components/Page";
 import { Section } from "@/components/base/section";
 
 type BuyTicketProps = {
-  params: { eventId: string };
+  params: { UUID: string };
 };
 
 const BuyTicket = async ({ params }: BuyTicketProps) => {
   noStore();
-  const event = await getEventData(params.eventId);
+  const event = await getEventData(params.UUID);
 
   if (!event) {
     return <div>Event not found</div>;
@@ -91,7 +91,7 @@ const BuyTicket = async ({ params }: BuyTicketProps) => {
         isSoldOut={event.isSoldOut}
         userHasTicket={!!event.userTicket}
         orderAlreadyPlace={event.orderAlreadyPlace}
-        id={params.eventId}
+        id={params.UUID}
         sendTo={event.wallet_address}
         eventTicketId={event.eventTicket.id}
         price={event.eventTicket.price}

@@ -74,7 +74,7 @@ export const eventsRouter = router({
         console.error("Error at updating visitor", error);
       }
 
-      return selectEventByUuid(opts.input.event_uuid);
+      return selectEventByUuid(opts.input.event_uuid, opts.ctx.user.user_id);
     }),
 
   // private

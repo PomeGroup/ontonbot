@@ -1,13 +1,8 @@
-import { type Metadata } from "next/types";
-import { db } from "@/db/db";
-import { EventDataPage } from "./EventPage";
-
-type Props = { params: { hash: string } };
-
+// Metadata generation
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const eventData = await db.query.events.findFirst({
     where: (fields, { eq }) => {
-      return eq(fields.event_uuid, params.hash);
+      return eq(fields.event_uuid, params.UUID);
     },
   });
 
@@ -29,19 +24,3 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   };
 }
-
-async function EventPage({ params }: Props) {
-  if (params.hash.length !== 36) {
-    return (
-      <div>
-        Incorrect event link. Startapp param should be 36 characters long
-      </div>
-    );
-  }
-
-  return <EventDataPage eventHash={params.hash}  />;
-}
-
-export default EventPage;
-
-export const dynamic = "force-dynamic";

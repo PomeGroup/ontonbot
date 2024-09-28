@@ -11,17 +11,17 @@ import { FC } from "react";
 import { BsFillPersonLinesFill } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 
-const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
+const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
   const WebApp = useWebApp();
 
   const event = trpc.events.getEvent.useQuery(
-    { event_uuid: params.hash, init_data: WebApp?.initData || "" },
+    { event_uuid: params.UUID, init_data: WebApp?.initData || "" },
     {
       cacheTime: 0,
       enabled: Boolean(WebApp?.initData),
       queryKey: [
         "events.getEvent",
-        { event_uuid: params.hash, init_data: WebApp?.initData || "" },
+        { event_uuid: params.UUID, init_data: WebApp?.initData || "" },
       ],
     }
   );
@@ -76,7 +76,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           <ManageEvent
             /* @ts-ignore  */
             event={event.data}
-            eventHash={params.hash}
+            eventUUID={params.UUID}
           />
         </TabsContent>
       </Tabs>

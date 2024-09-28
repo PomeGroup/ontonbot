@@ -22,6 +22,16 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "src/env.ts",
+    "next-env.d.ts",
+    "env.mjs",
+    "next.config.js",
+    "postcss.config.cjs"
+  ],
   "exclude": ["node_modules"]
 }

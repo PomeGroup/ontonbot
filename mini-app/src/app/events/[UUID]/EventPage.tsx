@@ -16,9 +16,9 @@ import useWebApp from "@/hooks/useWebApp";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import zod from "zod";
-import EventPageLoadingSkeleton from "./loading";
+import EventPageLoadingSkeleton from "./EventPageLoadingSkeleton";
 
-export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
+export const EventDataPage = ({ eventUUID }: { eventUUID: string }) => {
   useWithBackButton({
     whereTo: "/",
   });
@@ -26,13 +26,13 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   const { role, authorized, user } = useAuth();
   const eventData = trpc.events.getEvent.useQuery(
     {
-      event_uuid: eventHash,
+      event_uuid: eventUUID,
       init_data: webApp?.initData || "",
     },
     {
       queryKey: [
         "events.getEvent",
-        { event_uuid: eventHash, init_data: webApp?.initData || "" },
+        { event_uuid: eventUUID, init_data: webApp?.initData || "" },
       ],
       enabled: Boolean(webApp?.initData),
     }
@@ -78,7 +78,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   ) : eventData.data === null ? (
     <div>Event Not Found</div>
   ) : (
-    <AddVisitorWrapper hash={eventHash}>
+    <AddVisitorWrapper UUID={eventUUID}>
       <Images.Event url={eventData.data?.image_url!} />
       <Labels.CampaignTitle
         title={eventData.data?.title!}
@@ -106,7 +106,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
             <AllTasks
               // @ts-expect-error
               tasks={eventData.data.dynamic_fields}
-              eventHash={eventHash}
+              eventUUID={eventUUID}
             />
             <ClaimRewardButton eventId={eventData.data?.event_uuid as string} />
           </>
@@ -131,7 +131,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
           <MainButton
             text="Manage Event"
             onClick={() => {
-              router.push(`/events/${eventHash}/edit`);
+              router.push(`/events/${eventUUID}/edit`);
             }}
           />
         )}

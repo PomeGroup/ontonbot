@@ -4,28 +4,28 @@ import useWebApp from "@/hooks/useWebApp";
 import React, { FC, useLayoutEffect } from "react";
 import { trpc } from "../_trpc/client";
 
-const AddVisitorWrapper: FC<{ children: React.ReactNode; hash: string }> = ({
+const AddVisitorWrapper: FC<{ children: React.ReactNode; UUID: string }> = ({
   children,
-  hash,
+  UUID,
 }) => {
   const addVisitorMutation = trpc.visitors.add.useMutation();
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
 
   useLayoutEffect(() => {
-    if (!hash) {
+    if (!UUID) {
       return;
     }
 
     async function addVisitor() {
       await addVisitorMutation.mutateAsync({
         initData,
-        event_uuid: hash,
+        event_uuid: UUID,
       });
     }
 
     addVisitor();
-  }, [hash, initData]);
+  }, [UUID, initData]);
 
   return <>{children}</>;
 };

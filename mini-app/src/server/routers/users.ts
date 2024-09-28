@@ -11,14 +11,16 @@ import {
 } from "../db/visitors";
 
 import {
+  default as rewardDB,
+  default as rewardsDb,
+} from "@/server/db/rewards.db";
+import { usersDB } from "@/server/db/users";
+import {
   adminOrganizerProtectedProcedure,
   initDataProtectedProcedure,
   publicProcedure,
   router,
 } from "../trpc";
-import rewardDB from "@/server/db/rewards.db";
-import rewardsDb from "@/server/db/rewards.db";
-import { usersDB } from "@/server/db/users";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure
@@ -37,6 +39,9 @@ export const usersRouter = router({
     }
   ),
 
+  getUser: initDataProtectedProcedure.query(async (opts) => {
+    return opts.ctx.user;
+  }),
   // private
   addUser: publicProcedure
     .input(z.object({ initData: z.string() }))
@@ -59,7 +64,7 @@ export const usersRouter = router({
 
       const data = await usersDB.insertUser(initDataJson);
       //console.log("data", data);
-      if (!data.length) {
+      if (!data) {
         throw new TRPCError({
           message: "user already exists",
           code: "CONFLICT",
@@ -133,7 +138,7 @@ export const usersRouter = router({
 
       await usersDB.updateWallet(
         initDataJson.user.id,
-           "",
+        "",
         initDataJson.user.id.toString()
       );
     }),
