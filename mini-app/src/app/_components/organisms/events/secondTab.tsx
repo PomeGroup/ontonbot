@@ -41,7 +41,8 @@ export const SecondStep = () => {
           .number()
           .refine(
             (data) =>
-              Boolean(editOptions?.eventHash) || data > Date.now() / 1000,
+              Boolean(editOptions?.eventHash) ||
+              data > (Date.now() - 1000 * 3600 * 4) / 1000,
             {
               message: "Start date must be in the future",
             }

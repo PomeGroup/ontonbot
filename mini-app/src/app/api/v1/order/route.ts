@@ -133,6 +133,7 @@ export async function PATCH() {
     .set({
       state: "failed",
       updatedBy: "system",
+      updatedAt: new Date(),
     })
     .where(
       and(

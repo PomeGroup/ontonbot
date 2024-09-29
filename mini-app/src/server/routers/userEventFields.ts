@@ -97,6 +97,7 @@ export const userEventFieldsRouter = router({
           set: {
             data: opts.input.data,
             completed: true,
+            updatedAt: new Date(),
           },
         })
         .returning()

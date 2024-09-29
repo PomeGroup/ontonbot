@@ -223,7 +223,7 @@ export const eventsRouter = router({
               label: "Enter Event",
             },
           };
-            // Ensure eventDataUpdated is accessed correctly as an object
+          // Ensure eventDataUpdated is accessed correctly as an object
           const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
 
           // Remove the description key
@@ -244,6 +244,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             .set({
               activity_id: res.data.activity_id,
               updatedBy: opts.ctx.user.user_id.toString(),
+              updatedAt: new Date(),
             })
             .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
             .execute();
@@ -251,7 +252,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           return newEvent;
         });
 
-        return { success: true, eventId: result[0].event_id };
+        return { success: true, eventId: result[0].event_uuid };
       } catch (error) {
         console.error("Error while adding event: ", error);
         throw new TRPCError({
@@ -267,7 +268,11 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       return await db.transaction(async (trx) => {
         const deletedEvent = await trx
           .update(events)
-          .set({ hidden: true }) // Set the 'hidden' field to true
+          .set({
+            hidden: true,
+            updatedBy: "system-delete",
+            updatedAt: new Date(),
+          }) // Set the 'hidden' field to true
           .where(eq(events.event_uuid, opts.input.event_uuid))
           .returning();
 
@@ -419,6 +424,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               countryId: eventData.countryId,
               cityId: eventData.cityId,
               updatedBy: opts.ctx.user.user_id.toString(),
+              updatedAt: new Date(),
             })
             .where(eq(events.event_uuid, eventUuid))
             .returning()
@@ -461,6 +467,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
                 .update(eventFields)
                 .set({
                   updatedBy: opts.ctx.user.user_id.toString(),
+                  updatedAt: new Date(),
                 })
                 .where(eq(eventFields.id, secretPhraseTask[0].id))
                 .execute();
@@ -475,6 +482,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
                   type: "input",
                   order_place: eventData.dynamic_fields.length,
                   event_id: eventId,
+                  updatedAt: new Date(),
                 })
                 .execute();
             }
@@ -495,6 +503,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
                   type: field.type,
                   order_place: index,
                   updatedBy: opts.ctx.user.user_id.toString(),
+                  updatedAt: new Date(),
                 })
                 .where(eq(eventFields.id, field.id))
                 .execute();
@@ -533,14 +542,21 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             },
           };
           // Remove the description key from updatedEvent
-          const { description: updatedDescription, ...updatedEventWithoutDescription } = updatedEvent[0];
+          const {
+            description: updatedDescription,
+            ...updatedEventWithoutDescription
+          } = updatedEvent[0];
           // Remove the description key from oldEvent
-          const { description: oldDescription, ...oldEventWithoutDescription } = oldEvent[0];
-          const oldChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
+          const { description: oldDescription, ...oldEventWithoutDescription } =
+            oldEvent[0];
+          const oldChanges = getObjectDifference(
+            updatedEventWithoutDescription,
+            oldEventWithoutDescription
+          );
 
           const updateChanges = getObjectDifference(
-              updatedEventWithoutDescription,
-              oldEventWithoutDescription
+            updatedEventWithoutDescription,
+            oldEventWithoutDescription
           );
 
           const message = `

@@ -52,7 +52,7 @@ export const ThirdStep = () => {
   const webApp = useWebApp();
 
   const thirdStepDataSchema = z.object({
-    secret_phrase: editOptions
+    secret_phrase: editOptions?.eventHash
       ? z.string().min(4).max(20).optional()
       : z.string().min(4).max(20),
   });

@@ -131,6 +131,7 @@ export const usersRouter = router({
         .set({
           wallet_address: opts.input.wallet,
           updatedBy: initDataJson.user.id.toString(),
+          updatedAt: new Date(),
         })
         .where(eq(users.user_id, initDataJson.user.id))
         .execute();
@@ -158,6 +159,7 @@ export const usersRouter = router({
         .set({
           wallet_address: null,
           updatedBy: initDataJson.user.id.toString(),
+          updatedAt: new Date(),
         })
         .where(eq(users.user_id, initDataJson.user.id))
         .execute();
