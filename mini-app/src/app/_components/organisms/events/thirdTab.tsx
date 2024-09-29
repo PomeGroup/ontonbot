@@ -65,7 +65,9 @@ export const ThirdStep = () => {
     }
 
     const formData = new FormData(formRef.current);
-    const formDataObject = Object.fromEntries(formData.entries());
+    const formDataObject = Object.fromEntries(
+      Array.from(formData.entries()).filter(([_, value]) => value !== "")
+    );
     const formDataParsed = thirdStepDataSchema.safeParse(formDataObject);
 
     if (formDataParsed.success) {
