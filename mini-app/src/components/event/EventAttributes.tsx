@@ -8,8 +8,22 @@ type Props = {
 const EventAttributes: FC<Props> = ({ data }) => {
   return (
     <div className="-mt-2 grid">
-      {data.map((data) => {
-        return <AttributeItem key={data[0]} label={data[0]} value={data[1]} />;
+      {data.map(([key, value]) => {
+        return key === "Date" ? (
+          <AttributeItem
+            key={key}
+            label={key}
+            value={value}
+            isDate
+          />
+        ) : (
+          <AttributeItem
+            key={key}
+            label={key}
+            value={value}
+            isDate={false}
+          />
+        );
       })}
     </div>
   );

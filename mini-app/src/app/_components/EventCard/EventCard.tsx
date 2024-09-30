@@ -135,7 +135,7 @@ const EventCard: React.FC<EventCardProps> = memo(
                   )}
                 </div>
                 <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-                  <span className="font-sans whitespace-normal text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+                  <span className="font-sans whitespace-normal text-primary dark:text-secondary text-left line-clamp-2 text-lg font-semibold leading-5.5">
                     {title}
                   </span>
                 </div>
@@ -149,7 +149,7 @@ const EventCard: React.FC<EventCardProps> = memo(
         <DropdownMenuContent
           key={`dropdown-show-${eventUuid}`}
           align="center"
-          className="mt-[-10px] w-[220px]  bg-black px-3 rounded-none border-spacing-1 border-2 border-gray-600"
+          className="mt-[-10px] w-[220px]  bg-background px-3 rounded-none border-spacing-1 border-2 border-gray-500"
         >
           <DropdownMenuItem
             className="text-lg px-2 rounded-none "
@@ -166,7 +166,7 @@ const EventCard: React.FC<EventCardProps> = memo(
               return false;
             }}
           >
-            <IoSettingsOutline className="mr-1" /> Manage Event{" "}
+            <IoSettingsOutline className="mr-1" /> Manage Event
             <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -222,7 +222,7 @@ const EventCard: React.FC<EventCardProps> = memo(
                   )}
                 </div>
                 <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-                  <span className="font-sans  whitespace-normal text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+                  <span className="font-sans  whitespace-normal bg-background text-left line-clamp-2 text-lg font-semibold leading-5.5">
                     {title}
                   </span>
                 </div>

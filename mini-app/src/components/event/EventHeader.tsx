@@ -23,7 +23,7 @@ const EventHeader = (props: EventHeaderProps) => {
 
   return (
     <div className="grid grid-cols-7 items-start justify-start gap-y-1.5 pt-4">
-      <h1 className="type-title-1 type-headline-5 col-span-6">{props.title}</h1>
+      <h1 className="type-title-1 type-headline-1 text-xl font-bold col-span-6">{props.title}</h1>
       <ButtonTma
         variant="icon"
         buttonColor="tinted"

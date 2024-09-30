@@ -15,7 +15,16 @@ import { removeKey } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  inArray,
+  InferSelectModel,
+  or,
+  sql,
+} from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -99,73 +108,12 @@ export const selectEventByUuid = async (
     return null;
   }
   // this only works for events with one ticket
-  const eventTicket = eventData.ticketToCheckIn
-    ? await db.query.eventTicket.findFirst({
-        where(fields, ops) {
-          return ops.eq(fields.event_uuid, eventData.event_uuid);
-        },
-      })
-    : null;
-  const soldTicketsCount = await db
-    .select({ count: sql`count(*)`.mapWith(Number) })
-    .from(orders)
-    .where(
-      and(
-        eq(orders.event_uuid, eventData.event_uuid as string),
-        or(
-          eq(orders.state, "minted"),
-          eq(orders.state, "created"),
-          eq(orders.state, "mint_request")
-        )
-      )
-    )
-    .execute();
-
-  const isSoldOut =
-    (soldTicketsCount[0].count as unknown as number) >=
-    (eventTicket?.count as unknown as number);
 
   const organizer = await db.query.users.findFirst({
     where(fields, ops) {
       return ops.eq(fields.user_id, eventData.owner!);
     },
   });
-
-  const userOrder = user_id
-    ? (
-        await db
-          .select()
-          .from(orders)
-          .where(
-            and(
-              eq(orders.user_id, user_id),
-              eq(orders.event_ticket_id, eventTicket?.id as number),
-              or(
-                eq(orders.state, "created"),
-                eq(orders.state, "minted"),
-                eq(orders.state, "mint_request")
-              )
-            )
-          )
-          .execute()
-      ).pop()
-    : null;
-
-  const userTicket = user_id
-    ? (
-        await db
-          .select()
-          .from(tickets)
-          .where(
-            and(
-              eq(tickets.event_uuid, eventData.event_uuid as string),
-              eq(tickets.user_id, user_id)
-            )
-          )
-          .orderBy(asc(tickets.created_at))
-          .execute()
-      ).pop()
-    : null;
 
   const { wallet_seed_phrase, ...restEventData } = removeKey(
     eventData,
@@ -191,6 +139,20 @@ export const selectEventByUuid = async (
     );
 
   dynamicFields.sort((a, b) => a.order_place! - b.order_place!);
+  let paidEventData = {};
+  if (eventData.ticketToCheckIn) {
+    if (!user_id) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        cause: "no user_id was provided to fetch paid event data",
+        message: "no user_id was provided to fetch paid event data",
+      });
+    }
+    paidEventData = await getPaidEventData({
+      eventData,
+      user_id,
+    });
+  }
 
   return {
     ...restEventData, // Spread the rest of eventData properties
@@ -200,11 +162,8 @@ export const selectEventByUuid = async (
     },
     dynamic_fields: dynamicFields,
     activity_id: restEventData.activity_id,
-    eventTicket,
     organizer,
-    isSoldOut,
-    userOrder,
-    userTicket,
+    ...paidEventData
   };
 };
 
@@ -451,4 +410,81 @@ export const getEventByUuid = async (
   // remove the secret_phrase from the response
   const { secret_phrase, ...restEvent } = event[0];
   return removeSecret ? restEvent : event[0];
+};
+
+const getPaidEventData = async ({
+  eventData,
+  user_id,
+}: {
+  eventData: InferSelectModel<typeof events>;
+  user_id: number;
+}) => {
+  const eventTicket = eventData.ticketToCheckIn
+    ? await db.query.eventTicket.findFirst({
+        where(fields, ops) {
+          return ops.eq(fields.event_uuid, eventData.event_uuid);
+        },
+      })
+    : null;
+  const soldTicketsCount = await db
+    .select({ count: sql`count(*)`.mapWith(Number) })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.event_uuid, eventData.event_uuid as string),
+        or(
+          eq(orders.state, "minted"),
+          eq(orders.state, "created"),
+          eq(orders.state, "mint_request")
+        )
+      )
+    )
+    .execute();
+
+  const isSoldOut =
+    (soldTicketsCount[0].count as unknown as number) >=
+    (eventTicket?.count as unknown as number);
+
+  const userOrder = user_id
+    ? (
+        await db
+          .select()
+          .from(orders)
+          .where(
+            and(
+              eq(orders.user_id, user_id),
+              eq(orders.event_ticket_id, eventTicket?.id as number),
+              or(
+                eq(orders.state, "created"),
+                eq(orders.state, "minted"),
+                eq(orders.state, "mint_request")
+              )
+            )
+          )
+          .execute()
+      ).pop()
+    : null;
+
+  const userTicket = user_id
+    ? (
+        await db
+          .select()
+          .from(tickets)
+          .where(
+            and(
+              eq(tickets.event_uuid, eventData.event_uuid as string),
+              eq(tickets.user_id, user_id)
+            )
+          )
+          .orderBy(asc(tickets.created_at))
+          .execute()
+      ).pop()
+    : null;
+
+  return {
+    eventTicket,
+    isSoldOut,
+    userOrder,
+    userTicket,
+  };
 };

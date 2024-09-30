@@ -52,7 +52,7 @@ const EventTmaSettings = ({
     // if the user had manager access we will show the manage event button
     if (eventManagerRole) {
       mainButton?.setBgColor("#007AFF");
-      mainButton?.setTextColor("#ffffff").setText("Manage Event");
+      mainButton?.setTextColor("#ffffff").setText("Manage Event"); //FIXME
       mainButton?.enable().show();
       mainButton?.hideLoader();
       mainButton?.on("click", manageEventBtnOnClick);

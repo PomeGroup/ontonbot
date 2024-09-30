@@ -41,6 +41,7 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
+import { getErrorMessages } from "@/lib/error";
 
 dotenv.config();
 
@@ -74,7 +75,24 @@ export const eventsRouter = router({
         console.error("Error at updating visitor", error);
       }
 
-      return selectEventByUuid(opts.input.event_uuid, opts.ctx.user.user_id);
+      try {
+        const event = await selectEventByUuid(
+          opts.input.event_uuid,
+          opts.ctx.user.user_id
+        );
+        return event;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        const messsages = getErrorMessages(error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          cause: error,
+          message: messsages?.join(", "),
+        });
+      }
     }),
 
   // private
