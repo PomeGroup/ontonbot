@@ -55,7 +55,7 @@ export const ThirdStep = () => {
   });
 
   const thirdStepDataSchema = z.object({
-    secret_phrase: editOptions
+    secret_phrase: editOptions?.eventHash
       ? z.string().min(4).max(20).optional()
       : z.string().min(4).max(20),
     ts_reward_url: z.string().url({ message: "Please select an image" }),

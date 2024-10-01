@@ -90,7 +90,7 @@ async function createRewards() {
       where: (fields, { eq }) => {
         return eq(fields.status, "pending_creation");
       },
-      limit: 100,
+      limit: 30,
     });
 
     const createRewardPromises = pendingRewards.map(async (pendingReward) => {
@@ -169,6 +169,7 @@ async function createRewards() {
       }
     });
     await Promise.allSettled(createRewardPromises);
+    await sleep(100);
   }
 
   return pendingRewardCount[0].count;
@@ -237,7 +238,12 @@ async function updateRewardStatus(
 ) {
   await db
     .update(rewards)
-    .set({ status, ...(data && { data }), updatedBy: "system" })
+    .set({
+      status,
+      ...(data && { data }),
+      updatedBy: "system",
+      updatedAt: new Date(),
+    })
     .where(eq(rewards.id, rewardId));
 }
 
