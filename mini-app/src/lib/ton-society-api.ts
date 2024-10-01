@@ -46,7 +46,11 @@ export async function createUserRewardLink(
       );
     }
 
-    console.error("CREATE_REWARD_ERROR", error);
+    console.error(`CREATE_REWARD_ERROR_${Date.now()}`, error);
+    console.error(
+      `CREATE_REWARD_ERROR_REQUEST_${Date.now()}`,
+      `/activities/${activityId}/rewards/${data.telegram_user_id}`
+    );
     await sleep(10_000);
 
     throw error;
