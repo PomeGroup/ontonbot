@@ -90,7 +90,7 @@ async function createRewards() {
       where: (fields, { eq }) => {
         return eq(fields.status, "pending_creation");
       },
-      limit: 10,
+      limit: 30,
     });
 
     const createRewardPromises = pendingRewards.map(async (pendingReward) => {
