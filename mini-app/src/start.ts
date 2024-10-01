@@ -13,6 +13,7 @@ import { eq, sql } from "drizzle-orm";
 import pLimit from "p-limit";
 import { db } from "./db/db";
 import { wait } from "./lib/utils";
+import { sleep } from "./utils";
 
 new CronJob("0 */2 * * *", cronJobFunction, null, true);
 
@@ -89,7 +90,7 @@ async function createRewards() {
       where: (fields, { eq }) => {
         return eq(fields.status, "pending_creation");
       },
-      limit: 100,
+      limit: 10,
     });
 
     const createRewardPromises = pendingRewards.map(async (pendingReward) => {
@@ -191,6 +192,7 @@ async function createRewards() {
       }
     });
     await Promise.allSettled(createRewardPromises);
+    await sleep(100);
   }
 
   return pendingRewardCount[0].count;
