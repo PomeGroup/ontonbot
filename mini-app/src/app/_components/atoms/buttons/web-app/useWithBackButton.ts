@@ -1,63 +1,60 @@
 "use client";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useBackButtonRaw } from "@telegram-apps/sdk-react"; // Import the correct hook
+import { useEffect, useState, useCallback } from "react";
+import { useBackButtonRaw } from "@telegram-apps/sdk-react";
 
-// Props interface to accept a custom 'whereTo' path
 export interface BackButtonProps {
   whereTo?: string; // Optional specific path to navigate to
 }
 
-// Custom Hook for Back Button Handling with optional 'whereTo'
 export const useWithBackButton = ({ whereTo }: BackButtonProps) => {
   const router = useRouter();
   const pathname = usePathname();
-  const [history, setHistory] = useState<string[]>([]); // Store navigation history
-  const { cleanup, error, result } = useBackButtonRaw(); // Using useBackButtonRaw
+  const [history, setHistory] = useState<string[]>([]); // Track navigation history
+  const { cleanup, error, result } = useBackButtonRaw(); // Hook from Telegram SDK
+
+  // Memoize the back button click handler
+  const handleBackButtonClick = useCallback(() => {
+    if (whereTo) {
+      router.push(whereTo); // Navigate to the specific path if provided
+    } else if (history.length > 1) {
+      router.back(); // Go back to the previous screen
+    } else {
+      router.push("/"); // Default to home if no history
+    }
+  }, [whereTo, history, router]);
 
   useEffect(() => {
     if (error) {
-      console.error("Back button error:", error); // Log or handle errors
+      console.error("Back button error:", error); // Handle errors
       return;
     }
 
-    // Check if back button result exists and works
-    if (!result) {
-      return;
-    }
+    if (!result) return; // Exit if result is not ready
 
-    // Show the back button if not on the root page, otherwise hide it
+    // Show or hide the back button based on the current path
     if (pathname !== "/") {
       result.show?.();
     } else {
       result.hide?.();
     }
 
-    // Track navigation history
-    setHistory((prevHistory) => [...prevHistory, pathname]);
-
-    // Define the back button click handler
-    const handleBackButtonClick = () => {
-      if (whereTo) {
-        // Navigate to the specific path if 'whereTo' is provided
-        router.push(whereTo);
-      } else if (history.length > 1) {
-        // Go back to the previous screen
-        router.back();
-      } else {
-        // Default to home if no history
-        router.push("/");
+    // Only push the current pathname to history if it's new
+    setHistory((prevHistory) => {
+      if (prevHistory[prevHistory.length - 1] !== pathname) {
+        return [...prevHistory, pathname];
       }
-    };
+      return prevHistory;
+    });
 
-    // Register the back button event listener
+    // Register the back button click handler
     result.on?.("click", handleBackButtonClick);
 
-    // Cleanup the event listener when the component unmounts
+    // Cleanup the event listener on unmount
     return () => {
-      cleanup?.(); // Ensure cleanup is defined before calling
+      cleanup?.();
     };
-  }, [pathname, history.length, whereTo, router, result, error, cleanup]);
+  }, [pathname, result, error, handleBackButtonClick, cleanup]);
 
   return null; // This hook doesn't render anything
 };
