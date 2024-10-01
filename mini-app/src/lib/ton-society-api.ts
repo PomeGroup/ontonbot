@@ -51,7 +51,7 @@ export async function createUserRewardLink(
       `CREATE_REWARD_ERROR_REQUEST_${Date.now()}`,
       `/activities/${activityId}/rewards/${data.telegram_user_id}`
     );
-    await sleep(10_000);
+    await sleep(500);
 
     throw error;
   }
