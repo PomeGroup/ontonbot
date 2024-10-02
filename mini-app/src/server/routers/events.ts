@@ -1,5 +1,6 @@
 import { db } from "@/db/db";
 import { eventFields, events } from "@/db/schema";
+import { fetchCountryById } from "@/server/db/giataCity.db";
 import {
   findVisitorByUserAndEventUuid,
   selectVisitorsWithWalletAddress,
@@ -41,6 +42,7 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
+import {TonSocietyRegisterActivityT} from "@/types/event.types";
 
 dotenv.config();
 
@@ -119,6 +121,9 @@ export const eventsRouter = router({
     .mutation(async (opts) => {
       try {
         const result = await db.transaction(async (trx) => {
+          const countryId = opts.input.eventData.countryId;
+          const country = countryId ? await fetchCountryById(countryId) : undefined;
+
           const inputSecretPhrase = opts.input.eventData.secret_phrase
             .trim()
             .toLowerCase();
@@ -231,9 +236,14 @@ export const eventsRouter = router({
                       opts.input.eventData.eventLocationType === "online"
                         ? "Online"
                         : "Offline",
-                    // if the type is online, the coordinates will be null
-                    country_code_iso: country?.abbreviatedCode,
-                    venue_name: opts.input.eventData.location,
+                      ...(country && country?.abbreviatedCode
+                          ? {
+                              country_code_iso: country.abbreviatedCode,
+                              venue_name: opts.input.eventData.location,
+                          }
+                          : {
+                              venue_name: opts.input.eventData.location, // Use location regardless of country
+                          }),
                   },
                 },
               },

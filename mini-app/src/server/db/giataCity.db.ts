@@ -72,7 +72,7 @@ export async function fetchCities(countryId: number, search?: string): Promise<C
 
 // Function to get city by ID
 export async function fetchCityById(cityId: number): Promise<City | undefined> {
-  const cacheKey = `city:${cityId}`;
+  const cacheKey = redisTools.cacheKeys.city + cityId;
 
   const cachedResult = await redisTools.getCache(cacheKey);
   if (cachedResult) {
@@ -93,3 +93,28 @@ export async function fetchCityById(cityId: number): Promise<City | undefined> {
 
   return result as City | undefined;
 }
+
+// Function to get country by ID
+export async function fetchCountryById(countryId: number): Promise<Country | undefined> {
+  const cacheKey = redisTools.cacheKeys.country + countryId;
+
+  const cachedResult = await redisTools.getCache(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
+  const result = await db
+      .select()
+      .from(giataCity)
+      .where(and(eq(giataCity.id, countryId), eq(giataCity.parentId, 0))) // Ensure it's a country
+      .limit(1)
+      .execute()
+      .then((results) => results[0]);
+
+  if (result) {
+    await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.long);
+  }
+
+  return result as Country | undefined;
+}
+

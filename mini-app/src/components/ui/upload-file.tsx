@@ -88,10 +88,13 @@ export const UploadImageFile = (props: UploadFileProps) => {
     }
 
     const file = fileInput.files[0];
+
     const image = (await fileToBase64(file)) as string;
+
     uploadImage.mutate({
       init_data: webApp?.initData || "",
       image,
+      subfolder: "event",
     });
   };
 

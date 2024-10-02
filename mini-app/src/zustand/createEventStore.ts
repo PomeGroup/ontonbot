@@ -38,7 +38,7 @@ export const useCreateEventStore = create(
         currentStep: 1,
         eventData: { dynamic_fields: [], type: 0, owner: 0 },
         edit: {},
-      });
+      }));
     },
   }))
 );

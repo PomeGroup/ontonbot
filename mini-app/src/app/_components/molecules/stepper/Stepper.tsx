@@ -1,4 +1,4 @@
-import { useCreateEventStore } from "@/app/_components/organisms/events/createEventStore";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { IoIosCheckmark } from "react-icons/io";
