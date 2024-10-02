@@ -15,6 +15,7 @@ import { wait } from "./lib/utils";
 import telegramService from "@/server/routers/services/telegramService";
 import {findVisitorById} from "@/server/db/visitors";
 import rewardDB from "@/server/db/rewards.db";
+import {sleep} from "@/utils";
 new CronJob("0 */2 * * *", cronJobFunction, null, true);
 
 process.on("unhandledRejection", (err) => {

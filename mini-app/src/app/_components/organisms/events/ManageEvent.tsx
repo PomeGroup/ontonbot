@@ -1,3 +1,4 @@
+"use client";
 import useWebApp from "@/hooks/useWebApp";
 import { type RouterOutput } from "@/server";
 import { useRouter } from "next/navigation";
