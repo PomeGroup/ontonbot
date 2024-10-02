@@ -1,10 +1,12 @@
+import React, { useRef, useState } from "react";
+import { z } from "zod";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css"; // import Quill CSS
+import "./react-quill.css";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import TonHubPicker from "@/app/_components/molecules/pickers/TonHubpicker";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { UploadImageFile } from "@/components/ui/upload-file";
-import React, { useRef, useState } from "react";
-import { z } from "zod";
 import { useCreateEventStore } from "../../../../zustand/createEventStore";
 import { StepLayout } from "./stepLayout";
 
@@ -29,24 +31,25 @@ const ImageUpload = ({ isError }: { isError: boolean }) => {
 };
 
 const firstStepDataSchema = z.object({
-  title: z.string().min(1),
-  subtitle: z.string().min(1),
-  description: z.string().min(1),
+  title: z
+    .string()
+    .min(2, { message: "Title must be at least 2 characters" })
+    .max(40, { message: "Title must be less than 40 characters" }),
+  subtitle: z
+    .string()
+    .min(2, { message: "Subtitle must be at least 2 characters" })
+    .max(100),
+  // description: z
+  //   .string()
+  //   .min(1, { message: "Description must be at least 1 character" }),
   image_url: z
-    .string({
-      required_error: "Please select an image",
-    })
-    .url({
-      message: "Please select an image",
-    }),
+    .string({ required_error: "Please select an image" })
+    .url({ message: "Please select an image" }),
   hub: z
-    .string({
-      required_error: "Please select a hub",
-    })
-    .min(1, {
-      message: "Please select a hub",
-    }),
+    .string({ required_error: "Please select a hub" })
+    .min(1, { message: "Please select a hub" }),
 });
+
 export const FirstStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
@@ -59,6 +62,7 @@ export const FirstStep = () => {
     image_url?: string[] | undefined;
     hub?: string[] | undefined;
   }>();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -91,7 +95,7 @@ export const FirstStep = () => {
       ref={formRef}
       onSubmit={handleSubmit}
     >
-      <StepLayout title="General Info">
+      <StepLayout >
         <div className="space-y-4">
           <Input
             placeholder="Event Title"
@@ -105,12 +109,7 @@ export const FirstStep = () => {
             errors={errors?.subtitle}
             defaultValue={eventData?.subtitle}
           />
-          <Textarea
-            placeholder="Description"
-            name="description"
-            errors={errors?.description}
-            defaultValue={eventData?.description}
-          />
+
         </div>
         <TonHubPicker
           onValueChange={(data) => {
@@ -122,6 +121,14 @@ export const FirstStep = () => {
           errors={errors?.hub}
         />
         <ImageUpload isError={Boolean(errors?.image_url)} />
+        <ReactQuill
+            value={eventData?.description || ""}
+            onChange={(value) =>
+                setEventData({ ...eventData, description: value })
+            }
+            placeholder="Enter the event description here..."
+
+        />
       </StepLayout>
       <MainButton
         text="Next Step"
