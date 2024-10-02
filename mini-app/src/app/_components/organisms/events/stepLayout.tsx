@@ -1,4 +1,6 @@
+"use client";
 import { Title3 } from "@/app/_components/atoms/typography/Titles";
+import React from "react";
 
 export const StepLayout = (props: {
   children: React.ReactNode;

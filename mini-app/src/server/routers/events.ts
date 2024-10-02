@@ -219,15 +219,15 @@ export const eventsRouter = router({
                 title: opts.input.eventData.title,
                 description: opts.input.eventData.description,
                 image: {
-                  url:  opts.input.eventData.image_url,
+                  url:  "https://tonsociety.s3.eu-central-2.amazonaws.com/e508ec26-2b3a-456f-b53b-55b9f4de1e4e.png" , //  opts.input.eventData.image_url,
                 },
                 cover: {
-                  url: opts.input.eventData.image_url,
+                  url: "https://tonsociety.s3.eu-central-2.amazonaws.com/e508ec26-2b3a-456f-b53b-55b9f4de1e4e.png" , // opts.input.eventData.image_url,
                 },
                 item_title: opts.input.eventData.title,
                 item_description: "Reward for participation",
                 item_image: {
-                  url: opts.input.eventData.ts_reward_url,
+                  url: "https://tonsociety.s3.eu-central-2.amazonaws.com/e508ec26-2b3a-456f-b53b-55b9f4de1e4e.png" , //opts.input.eventData.ts_reward_url,
                 },
                 item_metadata: {
                   activity_type: "event",

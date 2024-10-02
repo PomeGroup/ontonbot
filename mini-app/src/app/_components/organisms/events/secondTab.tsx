@@ -1,3 +1,4 @@
+"use client";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { Title3 } from "@/app/_components/atoms/typography/Titles";
 import Datetimepicker from "@/app/_components/molecules/pickers/Datetimepicker";
@@ -37,26 +38,27 @@ export const SecondStep = () => {
     const secondStepDataSchema = z
       .object({
         // if it was an update we let users enter whenever time they want
-          start_date: z
-              .number()
-              .positive("Start date must be a valid positive timestamp")
-              .refine(
-                  (data) =>
-                      Boolean(editOptions?.eventHash) ||
-                      data > (Date.now() - 1000 * 3600 * 4) / 1000,
-                  {
-                      message: "Start date must be in the future",
-                  }
-              ),
-          end_date: z
-              .number()
-              .positive("End date must be a valid positive timestamp")
-              .refine(
-                  (data) => Boolean(editOptions?.eventHash) || data > eventData?.start_date!,
-                  {
-                      message: "End date must be after start date",
-                  }
-              ),
+        start_date: z
+          .number()
+          .positive("Start date must be a valid positive timestamp")
+          .refine(
+            (data) =>
+              Boolean(editOptions?.eventHash) ||
+              data > (Date.now() - 1000 * 3600 * 4) / 1000,
+            {
+              message: "Start date must be in the future",
+            }
+          ),
+        end_date: z
+          .number()
+          .positive("End date must be a valid positive timestamp")
+          .refine(
+            (data) =>
+              Boolean(editOptions?.eventHash) || data > eventData?.start_date!,
+            {
+              message: "End date must be after start date",
+            }
+          ),
         timezone: z.string().min(1),
         duration: z.number().refine((data) => data > 0, {
           message: "Duration must be greater than 0",

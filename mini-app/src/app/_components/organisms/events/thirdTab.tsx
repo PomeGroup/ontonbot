@@ -1,3 +1,4 @@
+"use client";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
@@ -60,8 +61,8 @@ export const ThirdStep = () => {
   // Zod schema for validation
   const thirdStepDataSchema = z.object({
     secret_phrase: editOptions?.eventHash
-        ? z.string().min(4).max(20).optional()
-        : z.string().min(4).max(20),
+      ? z.string().min(4).max(20).optional()
+      : z.string().min(4).max(20),
     ts_reward_url: z.string().url({ message: "Please select an image" }),
   });
 
@@ -131,74 +132,78 @@ export const ThirdStep = () => {
   };
 
   return (
-      <StepLayout>
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
-          {/* Secret Phrase Field */}
-          <div className="space-y-2">
-            <label htmlFor="secret_phrase">Event&#39;s password</label>
-            <Input
-                placeholder="Enter your chosen password"
-                name="secret_phrase"
-                errors={errors?.secret_phrase}
-            />
-            <AlertGeneric variant="info">
-              By setting a password for the event, you can prevent checking-in
-              unexpectedly and receiving a reward without attending the event.
-            </AlertGeneric>
-          </div>
+    <StepLayout>
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        className="space-y-8"
+      >
+        {/* Secret Phrase Field */}
+        <div className="space-y-2">
+          <label htmlFor="secret_phrase">Event&#39;s password</label>
+          <Input
+            placeholder="Enter your chosen password"
+            name="secret_phrase"
+            errors={errors?.secret_phrase}
+          />
+          <AlertGeneric variant="info">
+            By setting a password for the event, you can prevent checking-in
+            unexpectedly and receiving a reward without attending the event.
+          </AlertGeneric>
+        </div>
 
-          {/* Reward Image Upload */}
-          <div className="space-y-2">
-            <label htmlFor="reward_image">Reward Image</label>
-            <AlertGeneric variant="info">
-              Event&#39;s reward badge, visible on TON society. It cannot be
-              changed after event creation.
-            </AlertGeneric>
+        {/* Reward Image Upload */}
+        <div className="space-y-2">
+          <label htmlFor="reward_image">Reward Image</label>
+          <AlertGeneric variant="info">
+            Event&#39;s reward badge, visible on TON society. It cannot be
+            changed after event creation.
+          </AlertGeneric>
 
-            {editOptions?.eventHash ? (
-                eventData?.ts_reward_url ? (
-                    <div className="flex justify-center gap-4 items-center pt-2 w-full">
-                      <Image
-                          src={eventData?.ts_reward_url}
-                          alt="reward image"
-                          width={300}
-                          height={300}
-                          className="rounded-xl"
-                      />
-                    </div>
-                ) : null
-            ) : (
-                <UploadImageFile
-                    changeText="Upload Reward Image"
-                    infoText="Image must be in 1:1 ratio"
-                    triggerText="Upload"
-                    onDone={(url) => {
-                      setEventData({ ...eventData, ts_reward_url: url });
-                      clearImageError(); // Clear error when a valid image is uploaded
-                    }}
-                    isError={Boolean(errors?.ts_reward_url)}
-                    defaultImage={eventData?.ts_reward_url}
+          {editOptions?.eventHash ? (
+            eventData?.ts_reward_url ? (
+              <div className="flex justify-center gap-4 items-center pt-2 w-full">
+                <Image
+                  src={eventData?.ts_reward_url}
+                  alt="reward image"
+                  width={300}
+                  height={300}
+                  className="rounded-xl"
                 />
-            )}
-          </div>
-        </form>
+              </div>
+            ) : null
+          ) : (
+            <UploadImageFile
+              changeText="Upload Reward Image"
+              infoText="Image must be in 1:1 ratio"
+              triggerText="Upload"
+              onDone={(url) => {
+                setEventData({ ...eventData, ts_reward_url: url });
+                clearImageError(); // Clear error when a valid image is uploaded
+              }}
+              isError={Boolean(errors?.ts_reward_url)}
+              defaultImage={eventData?.ts_reward_url}
+            />
+          )}
+        </div>
+      </form>
 
-        {/* Submit Button */}
-        {editOptions?.eventHash ? (
-            <MainButton
-                onClick={handleButtonClick}
-                text="Update event"
-                disabled={updateEvent.isLoading}
-                progress={updateEvent.isLoading}
-            />
-        ) : (
-            <MainButton
-                onClick={handleButtonClick}
-                text="Create event"
-                disabled={addEvent.isLoading}
-                progress={addEvent.isLoading}
-            />
-        )}
-      </StepLayout>
+      {/* Submit Button */}
+      {editOptions?.eventHash ? (
+        <MainButton
+          onClick={handleButtonClick}
+          text="Update event"
+          disabled={updateEvent.isLoading}
+          progress={updateEvent.isLoading}
+        />
+      ) : (
+        <MainButton
+          onClick={handleButtonClick}
+          text="Create event"
+          disabled={addEvent.isLoading}
+          progress={addEvent.isLoading}
+        />
+      )}
+    </StepLayout>
   );
 };
