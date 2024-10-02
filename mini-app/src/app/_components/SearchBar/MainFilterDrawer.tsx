@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import {
   Drawer,
   DrawerClose,
@@ -9,11 +8,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { IoIosArrowForward } from "react-icons/io";
-import { IoOptionsOutline } from "react-icons/io5";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import {z} from "zod";
+import React from "react";
+import { IoIosArrowForward } from "react-icons/io";
+import { IoOptionsOutline } from "react-icons/io5";
+import { z } from "zod";
 export type SortByType = z.infer<typeof searchEventsInputZod>["sortBy"];
 export type setSortByType = (_value: string) => void;
 interface MainFilterDrawerProps {
@@ -41,9 +41,8 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
   resetFilters,
   applyingFilters,
   setApplyingFilters,
-  allParticipationTypes
+  allParticipationTypes,
 }) => {
-
   return (
     <Drawer onOpenChange={onOpenChange}>
       <DrawerTrigger>
@@ -90,7 +89,6 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               value={sortBy}
               onValueChange={(value) => setSortBy(value)}
             >
-
               <label className="flex justify-between items-center  border-b-[1px] border-b-zinc-700 pb-2">
                 <span className="text-zinc-400 text-sm ">Time</span>
                 <RadioGroupItem
@@ -100,7 +98,9 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               </label>
 
               <label className="flex justify-between items-center">
-                <span className="text-zinc-400 text-sm ">Most People Reached</span>
+                <span className="text-zinc-400 text-sm ">
+                  Most People Reached
+                </span>
                 <RadioGroupItem
                   value="most_people_reached"
                   className="h-4 w-4"
