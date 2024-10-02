@@ -3,10 +3,12 @@ import { giataCity } from "@/db/schema";
 import { and, eq, ilike, sql, SQLWrapper } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 
-interface Country {
+type Country = {
   id: number;
   title: string;
-}
+  giataCode: number;
+  abbreviatedCode: string;
+};
 
 interface City {
   id: number;

@@ -219,7 +219,7 @@ export const eventsRouter = router({
                 title: opts.input.eventData.title,
                 description: opts.input.eventData.description,
                 image: {
-                  url: opts.input.eventData.image_url,
+                  url:  opts.input.eventData.image_url,
                 },
                 cover: {
                   url: opts.input.eventData.image_url,
@@ -249,6 +249,8 @@ export const eventsRouter = router({
               },
             },
           };
+
+          console.log(eventDraft)
           // Ensure eventDataUpdated is accessed correctly as an object
           const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
 
