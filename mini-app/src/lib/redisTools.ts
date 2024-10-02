@@ -277,16 +277,18 @@ export const connectRedis = async (): Promise<void> => {
  * Cache keys
  */
 export const cacheKeys = {
-  getEventsWithFilters: `getEventsWithFilters_`,
-  cronJobLock: "cronJobLock",
-  ontonSettings: "ontonSettings",
-  ontonSettingsProtected: "ontonSettingsProtected",
-  user: "user",
-  userWallet: "userWallet",
-  visitor: "visitor",
-  visitorWithWallet: "visitorWithWallet",
-  visitorUserAndEventUuid: "visitorUserAndEventUuid",
-  reward: "reward",
+  getEventsWithFilters: `getEventsWithFilters:`,
+  cronJobLock: "cronJobLock:",
+  ontonSettings: "ontonSettings:",
+  ontonSettingsProtected: "ontonSettingsProtected:",
+  city: "city:",
+  country: "country:",
+  user: "user:",
+  userWallet: "userWallet:",
+  visitor: "visitor:",
+  visitorWithWallet: "visitorWithWallet:",
+  visitorUserAndEventUuid: "visitorUserAndEventUuid:",
+  reward: "reward:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes

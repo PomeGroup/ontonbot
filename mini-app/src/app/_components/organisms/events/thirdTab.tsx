@@ -11,7 +11,7 @@ import { useCallback, useRef, useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useCreateEventStore } from "./createEventStore";
+import { useCreateEventStore } from "../../../../zustand/createEventStore";
 import { StepLayout } from "./stepLayout";
 
 export const ThirdStep = () => {

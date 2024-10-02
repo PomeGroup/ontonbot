@@ -104,6 +104,9 @@ importers:
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
+      clamav.js:
+        specifier: ^0.12.0
+        version: 0.12.0
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -128,6 +131,9 @@ importers:
       drizzle-orm:
         specifier: ^0.33.0
         version: 0.33.0(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.8)(@types/pg@8.6.1)(@types/react@18.2.45)(pg@8.11.3)(postgres@3.4.3)(react@18.2.0)
+      form-data:
+        specifier: ^4.0.0
+        version: 4.0.0
       https-browserify:
         specifier: ^1.0.0
         version: 1.0.0
@@ -246,6 +252,9 @@ importers:
       '@types/better-sqlite3':
         specifier: ^7.6.8
         version: 7.6.8
+      '@types/clamav.js':
+        specifier: ^0.12.4
+        version: 0.12.4
       '@types/jest':
         specifier: ^29.5.11
         version: 29.5.11
@@ -2384,6 +2393,9 @@ packages:
   '@types/better-sqlite3@7.6.8':
     resolution: {integrity: sha512-ASndM4rdGrzk7iXXqyNC4fbwt4UEjpK0i3j4q4FyeQrLAthfB6s7EF135ZJE0qQxtKIMFwmyT6x0switET7uIw==}
 
+  '@types/clamav.js@0.12.4':
+    resolution: {integrity: sha512-EfXpbCPoAmUKSX1kRX8LEGH8HMgT9Y3tUWx7s85bhjCtoVnTVNewqsNil5Lm2D29MlWYs1MDUoXvnx0lv/7B4w==}
+
   '@types/connect@3.4.36':
     resolution: {integrity: sha512-P63Zd/JUGq+PdrM1lv0Wv5SBYeA2+CORvbrXbngriYY0jzLUWfQMQQxOhjONEz/wlHOAxOdY7CY65rgQdTjq2w==}
 
@@ -2932,6 +2944,9 @@ packages:
 
   cjs-module-lexer@1.2.3:
     resolution: {integrity: sha512-0TNiGstbQmCFwt4akjjBg5pLRTSyj/PkWQ1ZoO2zntmg9yLqSRxwEa4iCfQLGjqhiqBfOJa7W/E8wfGrTDmlZQ==}
+
+  clamav.js@0.12.0:
+    resolution: {integrity: sha512-IoPwy6rzivi9PGtRR9GvnXmfCLbMi+WX46j5S/SFG3tniIqesxq6976su7jGmhSu8FLp8TUC/ZE604KxELacWg==}
 
   class-variance-authority@0.7.0:
     resolution: {integrity: sha512-jFI8IQw4hczaL4ALINxqLEXQbWcNjoSkloa4IaufXCJr6QawJyw7tuRysRsrE8w2p/4gGaxKIt/hX3qz/IbD1A==}
@@ -8006,6 +8021,10 @@ snapshots:
     dependencies:
       '@types/node': 20.10.4
 
+  '@types/clamav.js@0.12.4':
+    dependencies:
+      '@types/node': 20.10.4
+
   '@types/connect@3.4.36':
     dependencies:
       '@types/node': 20.10.4
@@ -8693,6 +8712,8 @@ snapshots:
       safe-buffer: 5.2.1
 
   cjs-module-lexer@1.2.3: {}
+
+  clamav.js@0.12.0: {}
 
   class-variance-authority@0.7.0:
     dependencies:

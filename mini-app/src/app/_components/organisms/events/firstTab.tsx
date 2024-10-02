@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UploadImageFile } from "@/components/ui/upload-file";
 import React, { useRef, useState } from "react";
 import { z } from "zod";
-import { useCreateEventStore } from "./createEventStore";
+import { useCreateEventStore } from "../../../../zustand/createEventStore";
 import { StepLayout } from "./stepLayout";
 
 const ImageUpload = ({ isError }: { isError: boolean }) => {
