@@ -28,6 +28,13 @@ export const ThirdStep = () => {
     ts_reward_url?: string[] | undefined;
   }>();
 
+  const [passwordDisabled, setPasswordDisabled] = useState(
+    !!editOptions?.eventHash
+  );
+  const [passwordValue, setPasswordValue] = useState(
+    editOptions?.eventHash ? "{** click to change password **}" : ""
+  );
+
   // Add Event Mutation
   const addEvent = trpc.events.addEvent.useMutation({
     onSuccess(data) {
@@ -60,8 +67,8 @@ export const ThirdStep = () => {
 
   // Zod schema for validation
   const thirdStepDataSchema = z.object({
-    secret_phrase: editOptions?.eventHash
-      ? z.string().min(4).max(20).optional()
+    secret_phrase: passwordDisabled
+      ? z.string().optional()
       : z.string().min(4).max(20),
     ts_reward_url: z.string().url({ message: "Please select an image" }),
   });
@@ -78,6 +85,9 @@ export const ThirdStep = () => {
     const stepInputsObject = {
       ...formDataObject,
       ts_reward_url: eventData?.ts_reward_url,
+      secret_phrase: passwordDisabled
+        ? undefined
+        : formDataObject.secret_phrase,
     };
 
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
@@ -116,6 +126,11 @@ export const ThirdStep = () => {
     setErrors(formDataParsed.error.flatten().fieldErrors);
   };
 
+  const handlePasswordClick = () => {
+    setPasswordDisabled(false);
+    setPasswordValue(""); // Clear the placeholder text
+  };
+
   // Handle form submission on button click
   const handleButtonClick = useCallback(() => {
     if (formRef.current) {
@@ -141,11 +156,22 @@ export const ThirdStep = () => {
         {/* Secret Phrase Field */}
         <div className="space-y-2">
           <label htmlFor="secret_phrase">Event&#39;s password</label>
-          <Input
-            placeholder="Enter your chosen password"
-            name="secret_phrase"
-            errors={errors?.secret_phrase}
-          />
+          <div
+            onClick={handlePasswordClick}
+            className="relative"
+          >
+            <Input
+              placeholder="Enter your chosen password"
+              name="secret_phrase"
+              value={passwordValue}
+              disabled={passwordDisabled}
+              onChange={(e) => setPasswordValue(e.target.value)}
+              errors={errors?.secret_phrase}
+            />
+            {passwordDisabled && (
+              <div className="absolute inset-0 bg-transparent cursor-pointer"></div>
+            )}
+          </div>
           <AlertGeneric variant="info">
             By setting a password for the event, you can prevent checking-in
             unexpectedly and receiving a reward without attending the event.
