@@ -6,6 +6,7 @@ import { useEventStore } from "@/zustand/store/eventStore";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import EventPageLoadingSkeleton from "../../EventPageLoadingSkeleton";
+import EventTypesLayout from "../layout";
 
 function PaidOnlineEventPage() {
     const params = useParams<{ UUID: string; }>()
@@ -34,9 +35,9 @@ function PaidOnlineEventPage() {
     }
 
     return (
-        <div>
+        <EventTypesLayout>
             <h1>This is paid-online-event page</h1>
-        </div>
+        </EventTypesLayout>
     );
 }
 

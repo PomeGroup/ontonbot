@@ -2,11 +2,11 @@
 
 import { ReactNode } from "react";
 
-type EventLayoutProps = {
+type EventTypesLayoutProps = {
   children: ReactNode; // This will be the specific content for each event type
 };
 
-const EventLayout = ({ children }: EventLayoutProps) => {
+const EventTypesLayout = ({ children }: EventTypesLayoutProps) => {
   return (
     <div>
       layout chield
@@ -16,4 +16,4 @@ const EventLayout = ({ children }: EventLayoutProps) => {
   );
 };
 
-export default EventLayout;
+export default EventTypesLayout;

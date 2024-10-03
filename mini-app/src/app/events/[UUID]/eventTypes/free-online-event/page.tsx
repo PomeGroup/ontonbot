@@ -5,7 +5,9 @@ import useWebApp from "@/hooks/useWebApp";
 import { useEventStore } from "@/zustand/store/eventStore";
 import { useParams } from "next/navigation";
 import { useEffect, ReactNode } from "react";
-import EventPageLoadingSkeleton from "../../EventPageLoadingSkeleton"; // Import the loading skeleton
+import EventPageLoadingSkeleton from "../../EventPageLoadingSkeleton";
+import EventTypesLayout from "../layout";
+
 
 const FreeOnlineEventPage = () => {
   const params = useParams<{ UUID: string }>();
@@ -38,9 +40,9 @@ const FreeOnlineEventPage = () => {
   }
 
   return (
-    <div>
+    <EventTypesLayout>
       <p>This is a free online event. You can join using the Zoom link provided after registration.</p>
-    </div>
+    </EventTypesLayout>
   );
 };
 

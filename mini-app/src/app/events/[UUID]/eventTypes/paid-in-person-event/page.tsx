@@ -5,7 +5,8 @@ import useWebApp from "@/hooks/useWebApp";
 import { useEventStore } from "@/zustand/store/eventStore";
 import { useParams } from "next/navigation";
 import { useEffect, ReactNode } from "react";
-import EventPageLoadingSkeleton from "../../EventPageLoadingSkeleton"; // Import the loading skeleton
+import EventPageLoadingSkeleton from "../../EventPageLoadingSkeleton";
+import EventTypesLayout from "../layout";
 
 const PaidInPersonEventPage = () => {
   const params = useParams<{ UUID: string }>();
@@ -28,7 +29,7 @@ const PaidInPersonEventPage = () => {
   }, [event, setEventAttributes]);
 
   // Handle loading state
-  if (eventLoading || userLoading) {
+  if (eventLoading) {
     return <EventPageLoadingSkeleton />; // Display loading skeleton while data is being fetched
   }
 
@@ -38,11 +39,11 @@ const PaidInPersonEventPage = () => {
   }
 
   return (
-    <div>
+    <EventTypesLayout>
       <h1>Paid In-Person Event - {event.title}</h1>
       <p>{event.description}</p>
       {/* Additional content or features specific to paid in-person events */}
-    </div>
+    </EventTypesLayout>
   );
 };
 
