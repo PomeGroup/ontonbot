@@ -9,7 +9,6 @@ import EventAttributes from "@/components/event/EventAttributes";
 import EventContent from "@/components/event/EventContent";
 import EventHeader from "@/components/event/EventHeader";
 import EventTmaSettings from "@/components/event/EventTmaSettings";
-import WalletButton from "@/components/event/WalletButton";
 import { formatDateRange, formatTimeRange } from "@/utils/date";
 import { Section } from "@/components/base/section";
 import useWebApp from "@/hooks/useWebApp";
@@ -18,13 +17,43 @@ import { useEventStore } from "@/zustand/store/eventStore"; // Zustand store
 import { useParams } from "next/navigation";
 import EventPageLoadingSkeleton from "./EventPageLoadingSkeleton";
 import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
+import { Card, CardContent } from "@/components/base/card";
+import QrCodeButton from "@/app/_components/atoms/buttons/QrCodeButton";
+import { ChevronLeft } from "lucide-react";
 
 type EventLayoutProps = {
   children: ReactNode; // This will be the specific content for each event type
 };
 
+export function SBT_Award() {
+  return (
+    <Card>
+      <CardContent className="items-center justify-between">
+        <h2 className={"type-title-3 font-bold"}>SBT Award</h2>
+        <div className="flex items-center bg-secondary rounded-md p-2 gap-2">
+          <Image
+            src="/placeholder.svg"
+            width={40}
+            height={40}
+            alt="SBT Award"
+            className="w-10 h-10 mr-2"
+          />
+          <div>
+            <h3 className="font-semibold">Gateway Participants 2024</h3>
+            <p className="text-sm text-gray-500">
+              {/* FIXME how to get this contents */}
+              The Open Network Conference ho... 
+            </p>
+          </div>
+          <ChevronLeft className="h-5 w-5 transform rotate-180" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 const EventLayout = ({ children }: EventLayoutProps) => {
-  useWithBackButton({})
+  useWithBackButton({});
   const params = useParams<{ UUID: string }>();
   const webApp = useWebApp();
 
@@ -59,7 +88,7 @@ const EventLayout = ({ children }: EventLayoutProps) => {
   // Add event attributes dynamically
   attributes.push(
     ["Date", date],
-    ["time",  time],
+    ["Time", time]
   );
 
   // Ensure childAttributes is not empty and merge it if it exists
@@ -75,7 +104,6 @@ const EventLayout = ({ children }: EventLayoutProps) => {
   }
 
   console.log(attributes);
-  
 
   return (
     <PageTma variant={"withSections"}>
@@ -100,9 +128,22 @@ const EventLayout = ({ children }: EventLayoutProps) => {
       </Section>
 
       {/* Free or Paid Event Wallet Button */}
-      <Section variant={"rounded"} className={"py-6"}>
+      {/* <Section variant={"rounded"} className={"py-6"}>
         <WalletButton />
-      </Section>
+      </Section> */}
+
+      {/* Conditional QR Code or SBT Award */}
+      {eventManagerRole ? (
+        <Section variant={"rounded"} className={"py-6"}>
+          {/* Show QR code for organizers */}
+          <QrCodeButton event_uuid={event.event_uuid} url={`/events/${event.event_uuid}`} />
+        </Section>
+      ) : (
+        <Section variant={"rounded"} className={"py-6"}>
+          {/* Show SBT Award for regular users */}
+          <SBT_Award />
+        </Section>
+      )}
 
       <Section variant={"topRounded"} className={"py-6"}>
         <EventContent content={event.description ?? ""} />
