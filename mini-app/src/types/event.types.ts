@@ -1,6 +1,7 @@
 import { rewards, visitors } from "@/db/schema";
 import { InferSelectModel } from "drizzle-orm";
 import { TONSOcietyAPISchemaT } from "./ton-society-api-types";
+import { ReactNode } from "react";
 
 export type TonSocietyRegisterActivityT = {
   title: string;
@@ -118,3 +119,9 @@ export interface EventDataOnlyType {
   ticketToCheckIn: boolean;
   created_at: string;
 }
+
+
+
+
+
+
