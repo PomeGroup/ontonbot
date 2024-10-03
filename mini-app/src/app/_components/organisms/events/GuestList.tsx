@@ -4,7 +4,6 @@ import useWebApp from "@/hooks/useWebApp";
 import { RouterOutput } from "@/server";
 import { useState } from "react";
 import QrCodeButton from "../../atoms/buttons/QrCodeButton";
-import { useWithBackButton } from "../../atoms/buttons/web-app/useWithBackButton";
 import CheckInGuest from "../../checkInGuest/CheckInGuest";
 
 interface Props {
@@ -15,9 +14,6 @@ interface Props {
 }
 
 const GuestList = (props: Props) => {
-  useWithBackButton({
-    whereTo: "/",
-  });
   const [needRefresh, setNeedRefresh] = useState(false);
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;

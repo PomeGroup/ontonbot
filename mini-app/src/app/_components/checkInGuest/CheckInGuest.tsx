@@ -119,7 +119,6 @@ const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (_data: any) =
         setCheckInState("checkInError");
       } finally {
         WebApp?.closeScanQrPopup?.();
-        WebApp.BackButton.show();
       }
     });
   };

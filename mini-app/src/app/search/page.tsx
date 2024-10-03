@@ -17,16 +17,11 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { Separator } from "@/components/ui/separator";
-import { useWithBackButton } from "../_components/atoms/buttons/web-app/useWithBackButton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 const LIMIT = 5;
 
 const Search: React.FC = () => {
-  useWithBackButton({
-    whereTo: "/",
-  });
-
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();
   const { searchInput, setSearchInput, setFilter, setOffset } = searchStore;

@@ -7,12 +7,14 @@ import { useCreateEventStore } from "./createEventStore";
 import { FirstStep } from "./firstTab";
 import { SecondStep } from "./secondTab";
 import { ThirdStep } from "./thirdTab";
+import { useWithBackButton } from "../../atoms/buttons/web-app/useWithBackButton";
 
 type ManageEventProps = {
   eventHash?: string;
   event?: RouterOutput["events"]["getEvent"];
 };
 const ManageEvent = (props: ManageEventProps) => {
+  useWithBackButton({})
   const currentStep = useCreateEventStore((state) => state.currentStep);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEdit = useCreateEventStore((state) => state.setEdit);
@@ -66,15 +68,6 @@ const ManageEvent = (props: ManageEventProps) => {
         }
       });
     }
-  }, [webApp, currentStep, setCurrentStep, router]);
-
-  useEffect(() => {
-    webApp?.BackButton.show();
-    webApp?.BackButton.onClick(handleBack);
-    return () => {
-      webApp?.BackButton.offClick(handleBack);
-      webApp?.BackButton.hide();
-    };
   }, [webApp, currentStep, setCurrentStep, router]);
 
   useEffect(() => {

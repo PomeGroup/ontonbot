@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  useBackButton,
   useMainButton,
   useMiniApp,
 } from "@telegram-apps/sdk-react";
@@ -20,7 +19,6 @@ const TicketTmaSettings = ({
   eventId,
 }: EventMainButtonProps) => {
   const mainButton = useMainButton(true);
-  const backButton = useBackButton(true);
   const tma = useMiniApp(true);
   const router = useRouter();
 
@@ -40,18 +38,6 @@ const TicketTmaSettings = ({
       mainButton?.hide().disable();
     };
   }, [mainButton?.isVisible]);
-
-  useEffect(() => {
-    backButton?.on("click", () => {
-      router.push(`/event/${eventId}`);
-    });
-
-    backButton?.show();
-
-    return () => {
-      backButton?.hide();
-    };
-  }, [backButton?.isVisible]);
 
   useEffect(() => {
     tma?.setBgColor("#ffffff");

@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  useBackButton,
   useMainButton,
   useMiniApp,
 } from "@telegram-apps/sdk-react";
@@ -32,7 +31,6 @@ const BuyTicketTmaSettings = ({
   validateForm,
 }: BuyTicketTmaSettingsProps) => {
   const mainButton = useMainButton(true);
-  const backButton = useBackButton(true);
   const tma = useMiniApp(true);
   const [tonconnectUI] = useTonConnectUI();
   const isRequestingTicket = useAtomValue(isRequestingTicketAtom);
@@ -89,19 +87,6 @@ const BuyTicketTmaSettings = ({
       mainButton?.hide().disable();
     };
   }, [mainButton]);
-
-  // back button
-  useEffect(() => {
-    backButton?.on("click", () => {
-      router.push(`/event/${eventId}`);
-    });
-
-    backButton?.show();
-
-    return () => {
-      backButton?.hide();
-    };
-  }, [backButton?.isVisible]);
 
   useEffect(() => {
     tma?.setBgColor("#EFEFF4");

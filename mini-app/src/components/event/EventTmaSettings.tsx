@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  useBackButton,
   useClosingBehavior,
   useMainButton,
   useMiniApp,
@@ -28,7 +27,6 @@ const EventTmaSettings = ({
   eventManagerRole,
 }: EventMainButtonProps) => {
   const mainButton = useMainButton(true);
-  const backButton = useBackButton(true);
   const closeBehavior = useClosingBehavior(true);
   const tma = useMiniApp(true);
   const tmaUtils = useUtils(true);
@@ -43,16 +41,15 @@ const EventTmaSettings = ({
   }
 
   function manageEventBtnOnClick() {
-    tmaUtils?.openTelegramLink(
-      `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=edit_${eventId}`
-    );
+    router.push(`/event/${eventId}/event-management`);
   }
 
+  // if user is admin or organizer show manage event. else show noting!
   useEffect(() => {
     // if the user had manager access we will show the manage event button
     if (eventManagerRole) {
       mainButton?.setBgColor("#007AFF");
-      mainButton?.setTextColor("#ffffff").setText("Manage Event"); //FIXME
+      mainButton?.setTextColor("#ffffff").setText("Manage Event EventTmaSetting");
       mainButton?.enable().show();
       mainButton?.hideLoader();
       mainButton?.on("click", manageEventBtnOnClick);
@@ -135,11 +132,6 @@ const EventTmaSettings = ({
     };
   }, [mainButton?.isVisible]);
 
-  useEffect(() => {
-    backButton?.hide();
-    closeBehavior?.enableConfirmation();
-    return () => {};
-  }, [backButton?.isVisible]);
 
   useEffect(() => {
     tma?.setBgColor("#ffffff");

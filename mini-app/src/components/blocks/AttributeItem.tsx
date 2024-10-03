@@ -26,7 +26,7 @@ const AttributeItem = ({
       </span>
       <span
         className={cn(
-          "text-telegram-text-color type-body type-body-1 flex-1 text-right",
+          "text-foreground type-body type-body-1 flex-1 text-right",
           "overflow-hidden text-ellipsis"
         )}
         style={{ wordWrap: "break-word" }}
