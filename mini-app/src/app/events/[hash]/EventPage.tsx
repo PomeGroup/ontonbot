@@ -17,7 +17,6 @@ import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import zod from "zod";
 import EventPageLoadingSkeleton from "./loading";
-import DOMPurify from 'dompurify';
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   useWithBackButton({
     whereTo: "/",
