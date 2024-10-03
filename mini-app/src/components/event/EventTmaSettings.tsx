@@ -44,12 +44,12 @@ const EventTmaSettings = ({
     router.push(`/event/${eventId}/event-management`);
   }
 
-  // if user is admin or organizer show manage event. else show noting!
+  // if user is admin or organizer show Edit event. else show noting!
   useEffect(() => {
-    // if the user had manager access we will show the manage event button
+    // if the user had manager access we will show the Edit event button
     if (eventManagerRole) {
       mainButton?.setBgColor("#007AFF");
-      mainButton?.setTextColor("#ffffff").setText("Manage Event EventTmaSetting");
+      mainButton?.setTextColor("#ffffff").setText(`Edit Event ${process.env.ENV === "development" && " on EventTmaSetting"}`);
       mainButton?.enable().show();
       mainButton?.hideLoader();
       mainButton?.on("click", manageEventBtnOnClick);

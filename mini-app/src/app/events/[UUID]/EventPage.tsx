@@ -122,15 +122,15 @@ export const EventDataPage = ({ eventUUID }: { eventUUID: string }) => {
         />
       )}
 
-      {/* {authorized &&
+      {authorized &&
         (role === "admin" || user?.user_id === eventData.data.owner) && (
           <MainButton
-            text="Manage Event EvantPage"
+            text="Edit Event EvantPage"
             onClick={() => {
               router.push(`/events/${eventUUID}/edit`);
             }}
           />
-        )} */}
+        )}
       <Buttons.Support />
     </AddVisitorWrapper>
   );

@@ -166,7 +166,7 @@ const EventCard: React.FC<EventCardProps> = memo(
               return false;
             }}
           >
-            <IoSettingsOutline className="mr-1" /> Manage Event {process.env.ENV === "development" && " on menu"}
+            <IoSettingsOutline className="mr-1" /> Edit Event {process.env.ENV === "development" && " on menu"}
             <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
         </DropdownMenuContent>
