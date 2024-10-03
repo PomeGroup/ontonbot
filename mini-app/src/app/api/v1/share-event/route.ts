@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest): Promise<Response> {
   const [, err] = getAuthenticatedUser();
-  if (err && process.env.NODE_ENV === "production") {
+  if (err && process.env.ENV === "production") {
     return err;
   }
 

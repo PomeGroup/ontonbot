@@ -10,7 +10,7 @@ export function TmaSDKLoader({ children }: PropsWithChildren) {
   return (
     <SDKProvider
       acceptCustomStyles
-      debug={process.env.NODE_ENV === "development"}
+      debug={process.env.ENV === "development"}
     >
       {children}
       <TMAInitSettings />

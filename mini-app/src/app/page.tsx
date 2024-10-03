@@ -336,12 +336,14 @@ export default function Home() {
 
       {!useAuthLoading &&
         (userRole === "admin" || userRole === "organizer") &&
+        // authorized && <button className="absolute bottom-0 w-full bg-blue-500 z-50 rounded-md py-2 border-background border-2" onClick={handleCreateEvent}>Create new event</button>
         authorized && (
           <MemoizedMainButton
             text="Create new event"
             onClick={handleCreateEvent}
           />
-        )}
+        )
+        }
     </div>
   );
 }

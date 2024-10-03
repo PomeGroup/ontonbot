@@ -57,7 +57,7 @@ const nextConfig = {
 };
 
 // Determine if the current environment is production
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = process.env.ENV === "production";
 
 // Injected content via Sentry wizard below
 

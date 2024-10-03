@@ -37,7 +37,7 @@ export default async function RootLayout({
       lang="en"
       className="overflow-x-hidden w-full"
     >
-      {process.env.NODE_ENV === "production" && (
+      {process.env.ENV === "production" && (
         <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
       )}
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
@@ -47,7 +47,7 @@ export default async function RootLayout({
             <Providers>
               <UserSaver>
                 <Root>
-                  {process.env.NODE_ENV === "development" && <DeveloperGuid/>}                  
+                  {process.env.ENV === "development" && <DeveloperGuid/>}                  
                   <main className="px-4 py-1">
                     {process.env.ENV === "staging" && (
                       <div className="flex justify-center py-2 text-xs">
