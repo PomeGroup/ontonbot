@@ -84,6 +84,10 @@ const EventLayout = ({ children }: EventLayoutProps) => {
 
   // Initialize attributes array and ensure it starts with valid data
   const attributes: [string, ReactNode][] = [];
+  
+  const isInPersonEvent = event.participationType === "in_person";
+  const isOnlineEvent = event.participationType === "online";
+  const isFree = !event.ticketToCheckIn;
 
   // Add event attributes dynamically
   attributes.push(
@@ -158,8 +162,10 @@ const EventLayout = ({ children }: EventLayoutProps) => {
         userHasTicket={!!event?.userTicket}
         requiresTicketToCheckin={!!event?.ticketToCheckIn}
         orderAlreadyPlace={!!event?.userOrder}
-        eventId={params.UUID}
-      />
+        eventId={params.UUID} 
+        isFreeEvent={isFree} 
+        userRole={user.role}      
+        />
     </PageTma>
   );
 };
