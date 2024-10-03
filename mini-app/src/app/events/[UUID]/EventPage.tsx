@@ -6,7 +6,6 @@ import EventNotStarted from "@/app/_components/EventNotStarted";
 import AllTasks from "@/app/_components/Tasks";
 import Buttons from "@/app/_components/atoms/buttons";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
-import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
 import Tasks from "@/app/_components/molecules/tasks";
@@ -19,9 +18,6 @@ import zod from "zod";
 import EventPageLoadingSkeleton from "./EventPageLoadingSkeleton";
 
 export const EventDataPage = ({ eventUUID }: { eventUUID: string }) => {
-  useWithBackButton({
-    whereTo: "/",
-  });
   const webApp = useWebApp();
   const { role, authorized, user } = useAdminAuth();
   const eventData = trpc.events.getEvent.useQuery(
@@ -126,15 +122,15 @@ export const EventDataPage = ({ eventUUID }: { eventUUID: string }) => {
         />
       )}
 
-      {authorized &&
+      {/* {authorized &&
         (role === "admin" || user?.user_id === eventData.data.owner) && (
           <MainButton
-            text="Manage Event"
+            text="Manage Event EvantPage"
             onClick={() => {
               router.push(`/events/${eventUUID}/edit`);
             }}
           />
-        )}
+        )} */}
       <Buttons.Support />
     </AddVisitorWrapper>
   );

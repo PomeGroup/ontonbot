@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useAdminAuth from "@/hooks/useAdminAuth";
@@ -17,6 +17,14 @@ import { ComingSoon } from "../_components/ComingSoon";
 import Skeletons from "../_components/molecules/skeletons";
 import { trpc } from "../_trpc/client";
 import { redirectTo } from "@/lib/utils";
+
+export type EventPageCommonAttributeType = {
+  UUID: string;
+  title: string;
+  subtitle: string;
+  image_url: string;
+  attributes: [string, ReactNode][];
+};
 
 const EventsAdminPage = () => {
   noStore();

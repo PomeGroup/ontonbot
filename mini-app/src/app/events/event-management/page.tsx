@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { trpc } from "@/app/_trpc/client";
-import { useRouter } from "next/navigation";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -14,7 +12,6 @@ import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ChevronLeft,
-  MoreHorizontal,
   Globe,
   Calendar,
   Clock,
@@ -22,19 +19,11 @@ import {
   DollarSign,
 } from "lucide-react";
 
+// eslint-disable-next-line react/prop-types
 const EventList = ({ filter = "all" }) => {
-  const router = useRouter();
   const [searchResults, setSearchResults] = useState<OntonEvent[]>([]);
   const webApp = useWebApp();
   const UserId = webApp?.initDataUnsafe?.user?.id;
-
-  const { data: eventsData, isLoading } = trpc.events.getEvents.useQuery(
-    { init_data: webApp?.initData || "" },
-    {
-      enabled: Boolean(webApp?.initData),
-      onSuccess: (data: OntonEvent[]) => setSearchResults(data || []), // Correct type
-    }
-  );
 
   // Mock data - replace with actual data fetching logic
   const eventData = useMemo(
@@ -202,7 +191,7 @@ const EventList = ({ filter = "all" }) => {
       </div>
 
       <footer className="bg-white p-4">
-        <Button className="w-full">Manage event</Button>
+        <Button className="w-full">Manage event test</Button>
       </footer>
     </div>
   );
