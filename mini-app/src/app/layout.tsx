@@ -14,6 +14,7 @@ import { Root } from "@/components/Root/Root";
 import "@telegram-apps/telegram-ui/dist/styles.css";
 import "normalize.css/normalize.css";
 import "./_assets/globals.css";
+import DeveloperGuid from "./_components/developerGuid";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -46,6 +47,7 @@ export default async function RootLayout({
             <Providers>
               <UserSaver>
                 <Root>
+                  {process.env.NODE_ENV === "development" && <DeveloperGuid/>}                  
                   <main className="px-4 py-1">
                     {process.env.ENV === "staging" && (
                       <div className="flex justify-center py-2 text-xs">
