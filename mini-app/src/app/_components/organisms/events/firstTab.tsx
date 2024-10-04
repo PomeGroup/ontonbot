@@ -1,17 +1,18 @@
-"use client";
 import React, { useRef, useState } from "react";
-import dynamic from 'next/dynamic';
-import { z } from "zod";
 
-import "react-quill/dist/quill.snow.css"; // Import Quill CSS
-import "./react-quill.css"; // Custom CSS
+import { z } from "zod";
+import { toast } from "sonner";
+import { FiAlertCircle } from "react-icons/fi"; // React icon for errors
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import TonHubPicker from "@/app/_components/molecules/pickers/TonHubpicker";
 import { Input } from "@/components/ui/input";
 import { UploadImageFile } from "@/components/ui/upload-file";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { StepLayout } from "./stepLayout";
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+import { Textarea } from "@/components/ui/textarea";
+
+let lastToastId: string | number | null = null; // Store the ID of the last toast
+
 // Image Upload Component
 const ImageUpload = ({
   isError,
@@ -50,16 +51,17 @@ const firstStepDataSchema = z.object({
     .string()
     .min(2, { message: "Subtitle must be at least 2 characters" })
     .max(100),
-  // description: z.string().min(1, { message: "Description must be at least 1 character" }),
+  description: z
+    .string()
+    .min(1, { message: "Description must be at least 1 character" }), // Add validation for description
   image_url: z
     .string({ required_error: "Please select an image" })
-    .url({ message: "Please select an image" }),
+    .url({ message: "Please select a valid image" }),
   hub: z
     .string({ required_error: "Please select a hub" })
     .min(1, { message: "Please select a hub" }),
 });
 
-// Main Component
 export const FirstStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
@@ -73,17 +75,8 @@ export const FirstStep = () => {
     image_url?: string[] | undefined;
     hub?: string[] | undefined;
   }>();
-// Define the Quill toolbar modules
-  const modules = {
-    toolbar: [
-      ['bold', 'italic', 'underline'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'align': [] }],
-      [{ 'color': [] },'link', 'image','clean'],
-    ]
-  };
-  // Function to handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formRef.current) {
@@ -93,12 +86,68 @@ export const FirstStep = () => {
     const formData = new FormData(formRef.current);
     formData.append("hub", eventData?.society_hub?.id || "");
     formData.append("image_url", eventData?.image_url || "");
-
+    formData.append("description", eventData?.description || "");
     const formDataObject = Object.fromEntries(formData.entries());
     const formDataParsed = firstStepDataSchema.safeParse(formDataObject);
 
     if (!formDataParsed.success) {
       setErrors(formDataParsed.error.flatten().fieldErrors);
+      const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
+
+      // Prepare error messages with icons
+      const errorMessages = [
+        flattenedErrors.title ? (
+          <div
+            key="title"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.title[0]}
+          </div>
+        ) : null,
+        flattenedErrors.subtitle ? (
+          <div
+            key="subtitle"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.subtitle[0]}
+          </div>
+        ) : null,
+        flattenedErrors.description ? (
+          <div
+            key="description"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.description[0]}
+          </div>
+        ) : null,
+        flattenedErrors.image_url ? (
+          <div
+            key="image_url"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.image_url[0]}
+          </div>
+        ) : null,
+        flattenedErrors.hub ? (
+          <div
+            key="hub"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.hub[0]}
+          </div>
+        ) : null,
+      ].filter(Boolean);
+
+      // Dismiss the previous error toast, if any
+      if (lastToastId) {
+        toast.dismiss(lastToastId);
+      }
+
+      // Show the new toast with multiline error messages and store the toast ID
+      lastToastId = toast.error(
+        <div>{errorMessages}</div>,
+        { duration: 3000 } // Set duration to 5 seconds
+      );
       return;
     }
 
@@ -108,14 +157,13 @@ export const FirstStep = () => {
       ...data,
     });
 
-    setCurrentStep(2); // Move to the next step on success
+    setCurrentStep(2);
   };
 
-  // Function to clear image URL error
   const clearImageError = () => {
     setErrors((prevErrors) => ({
       ...prevErrors,
-      image_url: undefined, // Clear the image URL error when valid image is uploaded
+      image_url: undefined,
     }));
   };
 
@@ -126,15 +174,12 @@ export const FirstStep = () => {
     >
       <StepLayout>
         <div className="space-y-4">
-          {/* Title Input */}
           <Input
             placeholder="Event Title"
             name="title"
             errors={errors?.title}
             defaultValue={eventData?.title}
           />
-
-          {/* Subtitle Input */}
           <Input
             placeholder="Subtitle"
             name="subtitle"
@@ -143,7 +188,6 @@ export const FirstStep = () => {
           />
         </div>
 
-        {/* Hub Picker */}
         <TonHubPicker
           onValueChange={(data) => {
             if (data) {
@@ -154,23 +198,22 @@ export const FirstStep = () => {
           errors={errors?.hub}
         />
 
-        {/* Image Upload */}
         <ImageUpload
           isError={Boolean(errors?.image_url)}
           clearError={clearImageError}
         />
 
-        {/* Description Editor */}
-        <ReactQuill
-          value={eventData?.description || ""}
-          onChange={(value) =>
-            setEventData({ ...eventData, description: value })
-          }
-          placeholder="Enter the event description here..."
-          modules={modules}
+        <Textarea
+          placeholder="Description"
+          name="description"
+          errors={errors?.description}
+          defaultValue={eventData?.description}
         />
-
-        {/* Submit Button */}
+        {errors?.description && (
+          <div className="text-red-300 pl-3 pt-1 text-sm  flex items-center">
+            <FiAlertCircle className="mr-2" /> {errors.description[0]}
+          </div>
+        )}
         <MainButton
           text="Next Step"
           onClick={() => formRef.current?.requestSubmit()}

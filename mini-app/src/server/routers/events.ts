@@ -8,7 +8,6 @@ import {
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import {
-  CreateActivityRequestBody,
   registerActivity,
   updateActivity,
 } from "@/lib/ton-society-api";
@@ -20,7 +19,7 @@ import {
   SocietyHub,
   UpdateEventDataSchema,
 } from "@/types";
-import { TSAPIoperations } from "@/types/ton-society-api-types";
+
 import { fetchBalance } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
@@ -42,7 +41,7 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
-import {TonSocietyRegisterActivityT} from "@/types/event.types";
+import { TonSocietyRegisterActivityT } from "@/types/event.types";
 
 dotenv.config();
 
@@ -122,7 +121,9 @@ export const eventsRouter = router({
       try {
         const result = await db.transaction(async (trx) => {
           const countryId = opts.input.eventData.countryId;
-          const country = countryId ? await fetchCountryById(countryId) : undefined;
+          const country = countryId
+            ? await fetchCountryById(countryId)
+            : undefined;
 
           const inputSecretPhrase = opts.input.eventData.secret_phrase
             .trim()
@@ -219,15 +220,15 @@ export const eventsRouter = router({
                 title: opts.input.eventData.title,
                 description: opts.input.eventData.description,
                 image: {
-                  url:  "https://tonsociety.s3.eu-central-2.amazonaws.com/e508ec26-2b3a-456f-b53b-55b9f4de1e4e.png" , //  opts.input.eventData.image_url,
+                  url: opts.input.eventData.image_url,
                 },
                 cover: {
-                  url: "https://tonsociety.s3.eu-central-2.amazonaws.com/e508ec26-2b3a-456f-b53b-55b9f4de1e4e.png" , // opts.input.eventData.image_url,
+                  url: opts.input.eventData.image_url,
                 },
                 item_title: opts.input.eventData.title,
                 item_description: "Reward for participation",
                 item_image: {
-                  url: "https://tonsociety.s3.eu-central-2.amazonaws.com/e508ec26-2b3a-456f-b53b-55b9f4de1e4e.png" , //opts.input.eventData.ts_reward_url,
+                  url: opts.input.eventData.ts_reward_url,
                 },
                 item_metadata: {
                   activity_type: "event",
@@ -236,21 +237,21 @@ export const eventsRouter = router({
                       opts.input.eventData.eventLocationType === "online"
                         ? "Online"
                         : "Offline",
-                      ...(country && country?.abbreviatedCode
-                          ? {
-                              country_code_iso: country.abbreviatedCode,
-                              venue_name: opts.input.eventData.location,
-                          }
-                          : {
-                              venue_name: opts.input.eventData.location, // Use location regardless of country
-                          }),
+                    ...(country && country?.abbreviatedCode
+                      ? {
+                          country_code_iso: country.abbreviatedCode,
+                          venue_name: opts.input.eventData.location,
+                        }
+                      : {
+                          venue_name: opts.input.eventData.location, // Use location regardless of country
+                        }),
                   },
                 },
               },
             },
           };
 
-          console.log(eventDraft)
+          console.log(eventDraft);
           // Ensure eventDataUpdated is accessed correctly as an object
           const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
 

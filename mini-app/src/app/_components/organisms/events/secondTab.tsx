@@ -11,8 +11,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import { cn } from "@/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { z } from "zod";
-import { useCreateEventStore } from "../../../../zustand/createEventStore";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 import { StepLayout } from "./stepLayout";
+import { toast } from "sonner";
+import { FiAlertCircle } from "react-icons/fi";
+import * as React from "react"; // Import icon for errors
 
 export const SecondStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -20,6 +23,8 @@ export const SecondStep = () => {
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const editOptions = useCreateEventStore((state) => state.edit);
   const eventData = useCreateEventStore((state) => state.eventData);
+
+
   const [errors, setErrors] = useState<{
     start_date?: string[] | undefined;
     end_date?: string[] | undefined;
@@ -29,7 +34,14 @@ export const SecondStep = () => {
     cityId?: string[] | undefined;
     countryId?: string[] | undefined;
   }>();
+  const startDateLimit = (Date.now() - 1000 * 3600 * 4) / 1000; // 4 hours before now
 
+
+
+  let lastToastIdRef = useRef<string | number | null>(null); // Store the ID of the last toast using a ref
+  const currentTime = Date.now() / 1000;
+
+  const hasEventEnded = !!(editOptions?.eventHash && eventData?.end_date && eventData.end_date < currentTime);
   const handleSubmit = useCallback(() => {
     if (!formRef.current) {
       return;
@@ -44,7 +56,7 @@ export const SecondStep = () => {
           .refine(
             (data) =>
               Boolean(editOptions?.eventHash) ||
-              data > (Date.now() - 1000 * 3600 * 4) / 1000,
+              data > startDateLimit,
             {
               message: "Start date must be in the future",
             }
@@ -52,6 +64,8 @@ export const SecondStep = () => {
         end_date: z
           .number()
           .positive("End date must be a valid positive timestamp")
+          // End date must be greater than now
+          .min( (Date.now() + 1000 * 60 * 4) / 1000, { message: "End date must be in the future" })
           .refine(
             (data) =>
               Boolean(editOptions?.eventHash) || data > eventData?.start_date!,
@@ -64,7 +78,7 @@ export const SecondStep = () => {
           message: "Duration must be greater than 0",
         }),
         eventLocationType: z.enum(["online", "in_person"]),
-        location: z.string().min(1),
+        location: z.string().optional(),
         cityId: z.number().optional(),
         countryId: z.number().optional(),
       })
@@ -115,6 +129,70 @@ export const SecondStep = () => {
 
     if (!formDataParsed.success) {
       setErrors(formDataParsed.error.flatten().fieldErrors);
+
+      const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
+
+      const errorMessages = [
+        flattenedErrors.start_date && (
+          <div
+            key="start_date"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.start_date[0]}
+          </div>
+        ),
+        flattenedErrors.end_date && (
+          <div
+            key="end_date"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.end_date[0]}
+          </div>
+        ),
+        flattenedErrors.timezone && (
+          <div
+            key="timezone"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.timezone[0]}
+          </div>
+        ),
+        flattenedErrors.location && (
+          <div
+            key="location"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.location[0]}
+          </div>
+        ),
+        flattenedErrors.cityId && (
+          <div
+            key="cityId"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.cityId[0]}
+          </div>
+        ),
+        flattenedErrors.countryId && (
+          <div
+            key="countryId"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.countryId[0]}
+          </div>
+        ),
+      ].filter(Boolean); // Filter out undefined messages
+
+      // Dismiss the previous error toast, if any
+      if (lastToastIdRef.current) {
+        toast.dismiss(lastToastIdRef.current); // Correctly dismissing the last toast using ref
+      }
+
+      // Show new toast with errors
+      lastToastIdRef.current = toast.error(<div>{errorMessages}</div>, {
+        duration: 3000, // Set duration for 5 seconds
+      });
+
       return;
     }
 
@@ -134,23 +212,25 @@ export const SecondStep = () => {
       eventLocationType: eventData?.eventLocationType || "online",
     });
   }, []);
-
   return (
     <>
       <form
         onSubmit={(e) => e.preventDefault()}
         ref={formRef}
       >
-        <StepLayout title="Ticket Info">
+        <StepLayout title="">
           <Datetimepicker
             title="Starts at"
             errors={errors?.start_date}
+            greaterThan={startDateLimit}
+            lowerThan={ (editOptions?.eventHash && eventData?.end_date) ? eventData?.end_date : undefined}
             setTimestamp={(time) =>
               setEventData({
                 start_date: time,
               })
             }
             value={eventData?.start_date || null}
+            disabled={hasEventEnded}
           />
           <Datetimepicker
             title="Ends at"
@@ -160,8 +240,20 @@ export const SecondStep = () => {
                 end_date: time,
               })
             }
-            value={eventData?.end_date || null}
+            value={eventData?.end_date ||  currentTime +  3600 * 2}
+
+            disabled={hasEventEnded}
+            greaterThan={eventData?.start_date}
           />
+          {hasEventEnded && (
+
+            <div
+            className="text-red-300 pl-3 pt-1 text-sm flex items-center"
+
+        >
+          <FiAlertCircle className="mr-2" /> This event has ended and can no longer be edited.
+        </div>
+          )}
           <div className="flex justify-between items-between">
             <label
               htmlFor="duration"
@@ -190,7 +282,9 @@ export const SecondStep = () => {
             </label>
           </div>
           {errors?.duration && (
-            <span className="text-red-500">{errors?.duration[0]}</span>
+            <div className="text-red-300 pl-3   text-sm flex items-center">
+              <FiAlertCircle className="mr-2" /> {errors?.duration[0]}
+            </div>
           )}
           <AlertGeneric
             className="!mt-4"
@@ -235,6 +329,11 @@ export const SecondStep = () => {
                 cityErrors={errors?.cityId}
                 countryErrors={errors?.countryId}
               />
+            </div>
+          )}
+
+          {eventData?.eventLocationType === "in_person" && (
+            <div className="space-y-4">
               <Input
                 type="text"
                 name="location"

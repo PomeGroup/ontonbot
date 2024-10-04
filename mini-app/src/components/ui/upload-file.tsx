@@ -115,7 +115,7 @@ export const UploadImageFile = (props: UploadFileProps) => {
         <Button
           className={cn(
             "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
-            props.isError ? "border-red-500 bg-red-400/10" : "border-primary"
+            props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
           )}
           variant={props.isError ? "destructive" : "outline"}
         >

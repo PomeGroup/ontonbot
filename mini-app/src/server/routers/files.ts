@@ -5,7 +5,6 @@ import { adminOrganizerProtectedProcedure, router } from "../trpc";
 import { validateMimeType } from "@/lib/validateMimeType";
 import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
 import FormData from "form-data";
-import { convertBase64ToBlob } from "@/lib/convertBase64ToBlob";
 
 export const fieldsRouter = router({
     uploadImage: adminOrganizerProtectedProcedure
@@ -94,6 +93,7 @@ export const fieldsRouter = router({
 
             // Append the bucket name to the form data
             formData.append('bucketName', bucketName);
+            console.log("---Bucket Name: ", bucketName); // Log the bucket name for debugging
 
             // Send the image data to the upload service (MinIO)
             const res = await axios.post(

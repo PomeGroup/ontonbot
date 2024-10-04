@@ -15,6 +15,10 @@ import { z } from "zod";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { StepLayout } from "./stepLayout";
 
+import { FiAlertCircle } from "react-icons/fi"; // React icon for errors
+
+let lastToastId: string | number | null = null; // Store the ID of the last toast
+
 export const ThirdStep = () => {
   const webApp = useWebApp();
   const setEventData = useCreateEventStore((state) => state.setEventData);
@@ -69,8 +73,13 @@ export const ThirdStep = () => {
   const thirdStepDataSchema = z.object({
     secret_phrase: passwordDisabled
       ? z.string().optional()
-      : z.string().min(4).max(20),
-    ts_reward_url: z.string().url({ message: "Please select an image" }),
+      : z
+          .string()
+          .min(4, { message: "Password must be at least 4 characters" })
+          .max(20, { message: "Password must be less than 20 characters" }),
+    ts_reward_url: z
+      .string({ required_error: "Please upload a reward image" })
+      .url({ message: "Please upload a valid reward image URL" }),
   });
 
   // Handle form submission
@@ -124,6 +133,39 @@ export const ThirdStep = () => {
 
     // Set errors if validation fails
     setErrors(formDataParsed.error.flatten().fieldErrors);
+    const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
+
+    // Prepare error messages with icons
+    const errorMessages = [
+      flattenedErrors.secret_phrase ? (
+        <div
+          key="secret_phrase"
+          className="flex items-center"
+        >
+          <FiAlertCircle className="mr-2" /> {flattenedErrors.secret_phrase[0]}
+        </div>
+      ) : null,
+      flattenedErrors.ts_reward_url ? (
+        <div
+          key="ts_reward_url"
+          className="flex items-center"
+        >
+          <FiAlertCircle className="mr-2" />{" "}
+          {flattenedErrors.ts_reward_url[0] || "Please upload a reward image"}
+        </div>
+      ) : null,
+    ].filter(Boolean);
+
+    // Dismiss the previous error toast, if any
+    if (lastToastId) {
+      toast.dismiss(lastToastId);
+    }
+
+    // Show the new toast with multiline error messages and store the toast ID
+    lastToastId = toast.error(
+      <div>{errorMessages}</div>,
+      { duration: 5000 } // Set duration to 5 seconds
+    );
   };
 
   const handlePasswordClick = () => {
@@ -155,7 +197,7 @@ export const ThirdStep = () => {
       >
         {/* Secret Phrase Field */}
         <div className="space-y-2">
-          <label htmlFor="secret_phrase">Event&#39;s password</label>
+          <label htmlFor="secret_phrase">Events password</label>
           <div
             onClick={handlePasswordClick}
             className="relative"
@@ -182,8 +224,8 @@ export const ThirdStep = () => {
         <div className="space-y-2">
           <label htmlFor="reward_image">Reward Image</label>
           <AlertGeneric variant="info">
-            Event&#39;s reward badge, visible on TON society. It cannot be
-            changed after event creation.
+            Events reward badge, visible on TON society. It cannot be changed
+            after event creation.
           </AlertGeneric>
 
           {editOptions?.eventHash ? (
