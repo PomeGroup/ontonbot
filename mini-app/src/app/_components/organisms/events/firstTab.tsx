@@ -209,11 +209,7 @@ export const FirstStep = () => {
           errors={errors?.description}
           defaultValue={eventData?.description}
         />
-        {errors?.description && (
-          <div className="text-red-300 pl-3 pt-1 text-sm  flex items-center">
-            <FiAlertCircle className="mr-2" /> {errors.description[0]}
-          </div>
-        )}
+
         <MainButton
           text="Next Step"
           onClick={() => formRef.current?.requestSubmit()}

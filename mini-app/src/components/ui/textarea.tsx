@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { FiAlertCircle } from "react-icons/fi";
 
 export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -23,7 +24,14 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         <div className="text-red-500">
-          {props.errors?.map((error) => <p key={error}>{error}</p>)}
+          {props.errors?.map((error) => (
+            <div
+              key={error}
+              className="text-red-300 pl-3 pt-1 text-sm  flex items-center"
+            >
+              <FiAlertCircle className="mr-2" /> {error}
+            </div>
+          ))}
         </div>
       </>
     );
