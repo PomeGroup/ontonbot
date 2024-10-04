@@ -6,11 +6,13 @@ import { Address } from "@ton/core";
 
 export function useTonMainButton({
   defaultMessage = "Connect TON Wallet",
-  customConnectedMessage,
-  retryLimit = 3, // Add a retry limit to avoid infinite loops
+  customConnectedMessage, // This prop is optional, used for a custom message when connected
+  onConnectedClick, // New prop for action after wallet connection
+  retryLimit = 3,
 }: {
   defaultMessage?: string;
   customConnectedMessage?: (address: string) => string;
+  onConnectedClick?: () => void; // Optional function to call after wallet is connected
   retryLimit?: number;
 }) {
   const mainButton = useMainButton(true); // Initialize the main button
@@ -22,7 +24,7 @@ export function useTonMainButton({
   const [isWalletConnected, setIsWalletConnected] = useState<
     boolean | undefined
   >(undefined);
-  const [retryCount, setRetryCount] = useState<number>(0); // Track the retry attempts
+  const [retryCount, setRetryCount] = useState<number>(0);
 
   // User's wallet-friendly address
   const friendlyAddress = useMemo(() => {
@@ -40,6 +42,13 @@ export function useTonMainButton({
       hapticFeedback?.impactOccurred("medium");
     }
   }, [tonConnectUI, hapticFeedback]);
+
+  // Function to handle click after wallet is connected
+  const handleConnectedClick = useCallback(() => {
+    if (onConnectedClick) {
+      onConnectedClick(); // Execute the custom action after connection
+    }
+  }, [onConnectedClick]);
 
   // Retry connection if wallet address is undefined
   useEffect(() => {
@@ -62,13 +71,14 @@ export function useTonMainButton({
     if (!mainButton) return;
 
     if (isWalletConnected && friendlyAddress) {
-      // Show custom message if connected
+      // Use custom message if provided, else fallback to default connected message
       const message = customConnectedMessage
         ? customConnectedMessage(friendlyAddress)
         : `Wallet Connected: ${friendlyAddress}`;
 
       mainButton.setText(message);
-      mainButton.disable();
+      mainButton.enable(); // Enable the button for the next action
+      mainButton.on("click", handleConnectedClick); // On click after connection, run the custom action
       mainButton.hideLoader();
     } else {
       // Show default connect message if not connected
@@ -80,7 +90,8 @@ export function useTonMainButton({
 
     // Cleanup function to remove the event listener
     return () => {
-      mainButton.off("click", handleConnectClick); // Properly remove the click listener
+      mainButton.off("click", handleConnectClick);
+      mainButton.off("click", handleConnectedClick);
     };
   }, [
     mainButton,
@@ -89,6 +100,7 @@ export function useTonMainButton({
     defaultMessage,
     customConnectedMessage,
     handleConnectClick,
+    handleConnectedClick,
   ]);
 
   return { isWalletConnected, friendlyAddress };
