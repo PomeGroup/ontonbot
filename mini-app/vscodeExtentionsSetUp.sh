@@ -13,7 +13,6 @@ code --profile mini-app --install-extension orta.vscode-jest
 code --profile mini-app --install-extension redhat.vscode-yaml
 code --profile mini-app --install-extension ms-vscode.atom-keybindings
 
-code --profile mini-app --install-extension ms-vscode.atom-keybindings
 code --profile mini-app --install-extension bmalehorn.vscode-fish
 code --profile mini-app --install-extension eamodio.gitlens
 code --profile mini-app --install-extension ecmel.vscode-html-css
@@ -21,6 +20,4 @@ code --profile mini-app --install-extension github.vscode-github-actions
 code --profile mini-app --install-extension gruntfuggly.todo-tree
 code --profile mini-app --install-extension ms-azuretools.vscode-docker
 code --profile mini-app --install-extension donjayamanne.githistory
-
-
-
+code --profile mini-app --install-extension bradlc.vscode-tailwindcss
