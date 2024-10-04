@@ -16,7 +16,7 @@ function ClaimRewardButtonChild(props: {
 
   function openRewardLink() {
     if (props.link) {
-      webApp?.openLink(props.link);
+      webApp?.openTelegramLink(props.link);
     } else {
       setIsRewardModalOpen(true);
     }

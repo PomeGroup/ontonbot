@@ -29,6 +29,7 @@ export async function POST(req: Request) {
         status: "UNUSED",
         nftAddress: parsedData.data.nft_address,
         updatedBy: "system",
+        updatedAt: new Date(),
       })
       .where(eq(tickets.id, parsedData.data.ticket_id))
       .execute();

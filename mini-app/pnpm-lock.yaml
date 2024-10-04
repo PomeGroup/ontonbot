@@ -104,6 +104,9 @@ importers:
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
+      clamav.js:
+        specifier: ^0.12.0
+        version: 0.12.0
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -119,6 +122,9 @@ importers:
       crypto-browserify:
         specifier: ^3.12.0
         version: 3.12.0
+      dompurify:
+        specifier: ^3.1.7
+        version: 3.1.7
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
@@ -128,6 +134,9 @@ importers:
       drizzle-orm:
         specifier: ^0.33.0
         version: 0.33.0(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.8)(@types/pg@8.6.1)(@types/react@18.2.45)(pg@8.11.3)(postgres@3.4.3)(react@18.2.0)
+      form-data:
+        specifier: ^4.0.0
+        version: 4.0.0
       https-browserify:
         specifier: ^1.0.0
         version: 1.0.0
@@ -246,6 +255,12 @@ importers:
       '@types/better-sqlite3':
         specifier: ^7.6.8
         version: 7.6.8
+      '@types/clamav.js':
+        specifier: ^0.12.4
+        version: 0.12.4
+      '@types/dompurify':
+        specifier: ^3.0.5
+        version: 3.0.5
       '@types/jest':
         specifier: ^29.5.11
         version: 29.5.11
@@ -264,6 +279,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.18
         version: 18.2.18
+      '@types/turndown':
+        specifier: ^5.0.5
+        version: 5.0.5
       '@types/uuid':
         specifier: ^9.0.7
         version: 9.0.7
@@ -2384,8 +2402,14 @@ packages:
   '@types/better-sqlite3@7.6.8':
     resolution: {integrity: sha512-ASndM4rdGrzk7iXXqyNC4fbwt4UEjpK0i3j4q4FyeQrLAthfB6s7EF135ZJE0qQxtKIMFwmyT6x0switET7uIw==}
 
+  '@types/clamav.js@0.12.4':
+    resolution: {integrity: sha512-EfXpbCPoAmUKSX1kRX8LEGH8HMgT9Y3tUWx7s85bhjCtoVnTVNewqsNil5Lm2D29MlWYs1MDUoXvnx0lv/7B4w==}
+
   '@types/connect@3.4.36':
     resolution: {integrity: sha512-P63Zd/JUGq+PdrM1lv0Wv5SBYeA2+CORvbrXbngriYY0jzLUWfQMQQxOhjONEz/wlHOAxOdY7CY65rgQdTjq2w==}
+
+  '@types/dompurify@3.0.5':
+    resolution: {integrity: sha512-1Wg0g3BtQF7sSb27fJQAKck1HECM6zV1EB66j8JH9i3LCjYabJa0FSdiSgsD5K/RbrsR0SiraKacLB+T8ZVYAg==}
 
   '@types/estree@1.0.6':
     resolution: {integrity: sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==}
@@ -2464,6 +2488,12 @@ packages:
 
   '@types/tough-cookie@4.0.5':
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
+
+  '@types/trusted-types@2.0.7':
+    resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
+
+  '@types/turndown@5.0.5':
+    resolution: {integrity: sha512-TL2IgGgc7B5j78rIccBtlYAnkuv8nUQqhQc+DSYV5j9Be9XOcm/SKOVRuA47xAVI3680Tk9B1d8flK2GWT2+4w==}
 
   '@types/uuid@9.0.7':
     resolution: {integrity: sha512-WUtIVRUZ9i5dYXefDEAI7sh9/O7jGvHg7Df/5O/gtH3Yabe5odI3UWopVR1qbPXQtvOxWu3mM4XxlYeZtMWF4g==}
@@ -2933,6 +2963,9 @@ packages:
   cjs-module-lexer@1.2.3:
     resolution: {integrity: sha512-0TNiGstbQmCFwt4akjjBg5pLRTSyj/PkWQ1ZoO2zntmg9yLqSRxwEa4iCfQLGjqhiqBfOJa7W/E8wfGrTDmlZQ==}
 
+  clamav.js@0.12.0:
+    resolution: {integrity: sha512-IoPwy6rzivi9PGtRR9GvnXmfCLbMi+WX46j5S/SFG3tniIqesxq6976su7jGmhSu8FLp8TUC/ZE604KxELacWg==}
+
   class-variance-authority@0.7.0:
     resolution: {integrity: sha512-jFI8IQw4hczaL4ALINxqLEXQbWcNjoSkloa4IaufXCJr6QawJyw7tuRysRsrE8w2p/4gGaxKIt/hX3qz/IbD1A==}
 
@@ -3218,6 +3251,9 @@ packages:
     resolution: {integrity: sha512-A2is4PLG+eeSfoTMA95/s4pvAoSo2mKtiM5jlHkAVewmiO8ISFTFKZjH7UAM1Atli/OT/7JHOrJRJiMKUZKYBw==}
     engines: {node: '>=12'}
     deprecated: Use your platform's native DOMException instead
+
+  dompurify@3.1.7:
+    resolution: {integrity: sha512-VaTstWtsneJY8xzy7DekmYWEOZcmzIe3Qb3zPd4STve1OBTa+e+WmS1ITQec1fZYXI3HCsOZZiSMpG6oxoWMWQ==}
 
   dotenv@16.3.1:
     resolution: {integrity: sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==}
@@ -8006,9 +8042,17 @@ snapshots:
     dependencies:
       '@types/node': 20.10.4
 
+  '@types/clamav.js@0.12.4':
+    dependencies:
+      '@types/node': 20.10.4
+
   '@types/connect@3.4.36':
     dependencies:
       '@types/node': 20.10.4
+
+  '@types/dompurify@3.0.5':
+    dependencies:
+      '@types/trusted-types': 2.0.7
 
   '@types/estree@1.0.6': {}
 
@@ -8094,6 +8138,10 @@ snapshots:
   '@types/stack-utils@2.0.3': {}
 
   '@types/tough-cookie@4.0.5': {}
+
+  '@types/trusted-types@2.0.7': {}
+
+  '@types/turndown@5.0.5': {}
 
   '@types/uuid@9.0.7': {}
 
@@ -8694,6 +8742,8 @@ snapshots:
 
   cjs-module-lexer@1.2.3: {}
 
+  clamav.js@0.12.0: {}
+
   class-variance-authority@0.7.0:
     dependencies:
       clsx: 2.0.0
@@ -9013,6 +9063,8 @@ snapshots:
   domexception@4.0.0:
     dependencies:
       webidl-conversions: 7.0.0
+
+  dompurify@3.1.7: {}
 
   dotenv@16.3.1: {}
 
@@ -9909,7 +9961,7 @@ snapshots:
 
   is-finalizationregistry@1.0.2:
     dependencies:
-      call-bind: 1.0.5
+      call-bind: 1.0.7
 
   is-fullwidth-code-point@3.0.0: {}
 
@@ -9948,7 +10000,7 @@ snapshots:
 
   is-regex@1.1.4:
     dependencies:
-      call-bind: 1.0.5
+      call-bind: 1.0.7
       has-tostringtag: 1.0.0
 
   is-set@2.0.2: {}

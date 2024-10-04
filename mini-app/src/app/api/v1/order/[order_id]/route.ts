@@ -127,6 +127,7 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
           state: body.data.state,
           transaction_id: body.data.transaction_id,
           updatedBy: "system",
+          updatedAt: new Date(),
         })
         .where(eq(orders.uuid, order.uuid));
       return;

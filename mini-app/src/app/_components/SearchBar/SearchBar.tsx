@@ -1,26 +1,25 @@
 "use client";
+import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
+import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
+import { trpc } from "@/app/_trpc/client";
+import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useSearchEvents } from "@/hooks/useSearchEvents";
+import useWebApp from "@/hooks/useWebApp";
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import useSearchEventsStore from "@/zustand/searchEventsInputZod";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
   IoChevronBackOutline,
   IoChevronForwardOutline,
   IoCloseOutline,
   IoSearchOutline,
 } from "react-icons/io5";
-import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
-import { useSearchEvents } from "@/hooks/useSearchEvents";
-import { trpc } from "@/app/_trpc/client";
+import { z } from "zod";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
 import MainFilterDrawer from "./MainFilterDrawer";
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import useWebApp from "@/hooks/useWebApp";
-import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
-import useSearchEventsStore from "@/zustand/searchEventsInputZod";
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { z } from "zod";
-import { usePathname } from "next/navigation";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
@@ -124,9 +123,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
-      const participantFromQuery = searchParams.get("participationType")?.split(",") || [];
-      const participationType = (participantFromQuery.length > 0 && participantFromQuery.length !== 2) ? participantFromQuery : []
-
+      const participantFromQuery =
+        searchParams.get("participationType")?.split(",") || [];
+      const participationType =
+        participantFromQuery.length > 0 && participantFromQuery.length !== 2
+          ? participantFromQuery
+          : [];
 
       const selectedHubsFromParams =
         searchParams.get("selectedHubs")?.split(",") || [];
@@ -311,7 +313,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
       participationType.includes("online") &&
       participationType.includes("in_person")
     ) {
-
       return;
     }
 
@@ -369,21 +370,25 @@ const SearchBar: React.FC<SearchBarProps> = ({
       (userRole === "admin" || userRole === "organizer") &&
       pathname === "/"
     ) {
-      if (HideMainButton  ) {
+      if (HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log("+++++HideMainButton isVisible", WebApp?.MainButton.isVisible);
+        console.log(
+          "+++++HideMainButton isVisible",
+          WebApp?.MainButton.isVisible
+        );
         WebApp?.MainButton.hide();
         WebApp?.MainButton.hide();
-
-      } else if (!HideMainButton  ) {
+      } else if (!HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log("++++ShowMainButton isVisible", WebApp?.MainButton.isVisible);
+        console.log(
+          "++++ShowMainButton isVisible",
+          WebApp?.MainButton.isVisible
+        );
         WebApp?.MainButton.show();
         WebApp?.MainButton.show();
-
       }
     }
-  }, [HideMainButton,WebApp?.MainButton?.isVisible]);
+  }, [HideMainButton, WebApp?.MainButton?.isVisible]);
   const renderFilterButtons = useCallback(() => {
     let filters;
 
@@ -515,9 +520,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         </div>
         {showFilterButton && (
           <MainFilterDrawer
-            onOpenChange={() => {
-              setHideMainButton(!HideMainButton);
-            }}
+            onOpenChange={setHideMainButton}
             participationType={participationType}
             hubText={hubText}
             sortBy={sortBy}

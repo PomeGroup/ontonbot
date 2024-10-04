@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/select";
 import { SocietyHub } from "@/types";
 import { FC, useEffect, useState } from "react";
+import { FiAlertCircle } from "react-icons/fi";
+import * as React from "react";
 
 // https://society.ton.org/v1/society-hubs
 
@@ -70,9 +72,14 @@ const TonHubPicker: FC<{
         </SelectContent>
       </Select>
 
-      <div className="text-red-500">
-        {errors?.map((error) => <p key={error}>{error}</p>)}
-      </div>
+      {errors?.map((error) => (
+        <div
+          className="text-red-300 pl-3 pt-1 text-sm  flex items-center"
+          key={error}
+        >
+          <FiAlertCircle className="mr-2" /> {error}
+        </div>
+      ))}
     </div>
   );
 };

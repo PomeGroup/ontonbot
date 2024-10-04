@@ -5,6 +5,7 @@ import {
   CreateUserRewardLinkReturnType,
   type CreateUserRewardLinkInputType,
 } from "@/types/user.types";
+import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import axios, { AxiosError } from "axios";
 
@@ -33,13 +34,22 @@ export async function createUserRewardLink(
   } catch (error) {
     if (
       error instanceof AxiosError &&
-      error.response?.data?.message ===
-        "reward link with such activity id and wallet address already created"
+      (error.response?.data?.message ===
+        "reward link with such activity id and wallet address already created" ||
+        error.response?.data?.message ===
+          "reward link with such activity id and telegram user id already created")
     ) {
       return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
         `/activities/${activityId}/rewards/${data.telegram_user_id}`
       );
     }
+
+    console.error(`CREATE_REWARD_ERROR_${Date.now()}`, error);
+    console.error(
+      `CREATE_REWARD_ERROR_REQUEST_${Date.now()}`,
+      `/activities/${activityId}/rewards/${data.telegram_user_id}`
+    );
+    await sleep(500);
 
     throw error;
   }
