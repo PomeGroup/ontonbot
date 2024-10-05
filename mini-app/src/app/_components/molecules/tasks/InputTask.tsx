@@ -161,9 +161,10 @@ const InputTypeCampaignTask: React.FC<{
           {/* Error message */}
           <Button
             type="submit"
-            className="bg-blue-900"
+            variant="primary"
+            size="sm"
           >
-            Submit ✅
+            Submit
           </Button>
         </form>
       )}
