@@ -1,9 +1,9 @@
 import { trpc } from "@/app/_trpc/client";
+import { Button } from "@/components/ui/button";
 import useWebApp from "@/hooks/useWebApp";
 import React, { useEffect, useRef, useState } from "react";
-import GenericTask from "./GenericTask";
-import { Button } from "@/components/ui/button.tsx";
 import { z } from "zod";
+import GenericTask from "./GenericTask";
 
 const passwordSchema = z
   .string()
@@ -104,7 +104,7 @@ const InputTypeCampaignTask: React.FC<{
       upsertUserEventFieldMutation.mutate({
         init_data: WebApp.initData,
         field_id: fieldId,
-        data: value ?? inputText,
+        data: value ?? inputText!,
         event_id: eventId,
       });
     }
@@ -157,8 +157,12 @@ const InputTypeCampaignTask: React.FC<{
               }
             }}
           />
-          {error && <p className="text-red-500 mb-4">{error}</p>} {/* Error message */}
-          <Button type="submit" className="bg-blue-900">
+          {error && <p className="text-red-500 mb-4">{error}</p>}{" "}
+          {/* Error message */}
+          <Button
+            type="submit"
+            className="bg-blue-900"
+          >
             Submit ✅
           </Button>
         </form>
