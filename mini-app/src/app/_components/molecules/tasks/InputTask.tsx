@@ -7,8 +7,7 @@ import { z } from "zod";
 
 const passwordSchema = z
   .string()
-  .min(8, "Try again: Password must be at least 8 characters long")
-  .regex(/[A-Z]/, "Try again: Password must contain an uppercase letter");
+  .min(8, "Try again: Password must be at least 4 characters long");
 
 const InputTypeCampaignTask: React.FC<{
   title: string;
