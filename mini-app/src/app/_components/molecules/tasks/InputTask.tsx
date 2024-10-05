@@ -7,7 +7,7 @@ import { z } from "zod";
 
 const passwordSchema = z
   .string()
-  .min(8, "Try again: Password must be at least 4 characters long");
+  .min(4, "Try again: Password must be at least 4 characters long");
 
 const InputTypeCampaignTask: React.FC<{
   title: string;
