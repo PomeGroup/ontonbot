@@ -1,8 +1,13 @@
 import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
-import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import GenericTask from "./GenericTask";
+import { Button } from "@/components/ui/button.tsx";
+import { z } from "zod";
+
+const passwordSchema = z
+  .string()
+  .min(4, "Try again: Password must be at least 4 characters long");
 
 const InputTypeCampaignTask: React.FC<{
   title: string;
@@ -37,7 +42,6 @@ const InputTypeCampaignTask: React.FC<{
   const inputRef = useRef<HTMLInputElement>(null);
   const trpcUtils = trpc.useUtils();
   const isSecretPhrase = title === "secret_phrase_onton_input";
-  const autoSubmitTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   if (isSecretPhrase && isCompleted) {
     description = "Your event password is saved";
@@ -64,20 +68,6 @@ const InputTypeCampaignTask: React.FC<{
     setInputText(data);
   }, [data]);
 
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden" && isEditing) {
-        handleConfirm();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [isEditing]);
-
   const upsertUserEventFieldMutation =
     trpc.userEventFields.upsertUserEventField.useMutation({
       onError: (error) => {
@@ -94,16 +84,6 @@ const InputTypeCampaignTask: React.FC<{
       },
     });
 
-  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setInputText(e.target.value);
-    if (autoSubmitTimerRef.current) {
-      clearTimeout(autoSubmitTimerRef.current);
-    }
-    autoSubmitTimerRef.current = setTimeout(() => {
-      handleConfirm(e.target.value);
-    }, 3000);
-  }
-
   const handleConfirm = (value?: string) => {
     setIsEditing(false);
 
@@ -112,20 +92,28 @@ const InputTypeCampaignTask: React.FC<{
       return;
     }
 
+    try {
+      passwordSchema.parse(value ?? inputText); // Validate the password using Zod
+    } catch (validationError: any) {
+      setError(validationError.errors[0].message); // Display the first error message
+      hapticFeedback?.notificationOccurred("error");
+      return;
+    }
+
     if (inputText || value) {
       upsertUserEventFieldMutation.mutate({
         init_data: WebApp.initData,
         field_id: fieldId,
-        // @ts-expect-error
         data: value ?? inputText,
         event_id: eventId,
       });
     }
-
-    if (autoSubmitTimerRef.current) {
-      clearTimeout(autoSubmitTimerRef.current);
-    }
   };
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setInputText(e.target.value);
+    setError(null); // Clear the error when the user types
+  }
 
   return (
     <div>
@@ -147,7 +135,7 @@ const InputTypeCampaignTask: React.FC<{
         </div>
       ) : (
         <form
-          className="my-4 rounded-[14px] p-4 border border-separator flex items-center justify-start"
+          className="my-4 rounded-[14px] p-4 border border-separator flex flex-col"
           ref={editingRef}
           onSubmit={(e) => {
             e.preventDefault();
@@ -155,33 +143,24 @@ const InputTypeCampaignTask: React.FC<{
           }}
         >
           <input
-            className="w-full h-10 rounded-lg border border-separator p-2 mr-2"
+            className="w-full h-10 rounded-lg border border-separator p-2 mb-4"
             type="text"
             inputMode="text"
-            placeholder="Type something..."
+            placeholder="Enter password"
             value={inputText || ""}
             onChange={handleInputChange}
             autoFocus
             ref={inputRef}
             onBlur={() => {
-              // Check if the keyboard is closed (for mobile devices)
               if (window.innerHeight === window.outerHeight) {
                 handleConfirm();
               }
             }}
           />
-          <button
-            type="submit"
-            className={`rounded-lg min-w-[40px] min-h-[40px] flex items-center justify-center bg-tertiary`}
-          >
-            <Image
-              className="fill-tertiary"
-              src="/checkmark.svg"
-              alt="checkmark"
-              width={16}
-              height={16}
-            />
-          </button>
+          {error && <p className="text-red-500 mb-4">{error}</p>} {/* Error message */}
+          <Button type="submit" className="bg-blue-900">
+            Submit ✅
+          </Button>
         </form>
       )}
     </div>
