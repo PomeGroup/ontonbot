@@ -172,6 +172,8 @@ export const selectVisitorsByEventUuid = async (
         has_ticket: sql<boolean>`false`.as("has_ticket"),
         ticket_status: sql<string>`null`.as("ticket_status"),
         ticket_id: sql<number>`null`.as("ticket_id"),
+        ticket_created_at: sql`null`.as("ticket_created_at"),
+        ticket_order_id: sql`null`.as("ticket_order_id"),
       })
       .from(visitors)
       .leftJoin(users, eq(visitors.user_id, users.user_id))
@@ -202,6 +204,8 @@ export const selectVisitorsByEventUuid = async (
         has_ticket: sql<boolean>`true`.as("has_ticket"),
         ticket_status: tickets.status,
         ticket_id: tickets.id,
+        ticket_order_id: tickets.order_uuid,
+        ticket_created_at: tickets.created_at,
       })
       .from(tickets)
       .innerJoin(users, eq(tickets.user_id, users.user_id))

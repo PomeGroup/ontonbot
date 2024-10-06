@@ -289,12 +289,16 @@ export const cacheKeys = {
   visitorWithWallet: "visitorWithWallet:",
   visitorUserAndEventUuid: "visitorUserAndEventUuid:",
   reward: "reward:",
+  authApiOtp : "auth:api:otp:",
+  jwtBlacklist: "auth:jwt:blacklist:",
+
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
   short: 60 * 10, // 5 minutes
   medium: 60 * 60 * 2, // 2 hour
   long: 60 * 60 * 24, // 1 day
+  authApiOtpTimeout : 60 * 5, // 5 minutes
 };
 
 // Export all the functions in one object as well
