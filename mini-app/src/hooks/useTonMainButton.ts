@@ -11,7 +11,7 @@ export function useTonMainButton({
   retryLimit = 3,
 }: {
   defaultMessage?: string;
-  customConnectedMessage?: (address: string) => string;
+  customConnectedMessage: string;
   onConnectedClick?: () => void; // Optional function to call after wallet is connected
   retryLimit?: number;
 }) {
@@ -73,7 +73,7 @@ export function useTonMainButton({
     if (isWalletConnected && friendlyAddress) {
       // Use custom message if provided, else fallback to default connected message
       const message = customConnectedMessage
-        ? customConnectedMessage(friendlyAddress)
+        ? customConnectedMessage
         : `Wallet Connected: ${friendlyAddress}`;
 
       mainButton.setText(message);

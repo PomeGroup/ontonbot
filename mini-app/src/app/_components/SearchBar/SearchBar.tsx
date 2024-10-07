@@ -21,6 +21,7 @@ import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
 import { usePathname } from "next/navigation";
+import { UserType } from "@/types/user.types";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
@@ -34,7 +35,7 @@ interface SearchBarProps {
   setFinalSearchInput?: (_value: any) => void;
   tabValue?: string;
   applyTabFilter?: (_tabValue: string, _userId: any) => void;
-  userRole?: "admin" | "user" | "organizer";
+  userRole?: UserType['userRole'];
 }
 
 interface Hub {

@@ -28,6 +28,7 @@ export type CreateUserRewardLinkReturnType = z.infer<
 >;
 export type RewardLinkType = z.infer<typeof rewardLinkZod>;
 
+
 export type UserType = {
   user_id: number;
   username: string;
@@ -35,7 +36,7 @@ export type UserType = {
   last_name: string;
   wallet_address: string | null;
   language_code: string;
-  role: string;
+  userRole: "admin" | "user" | "organizer";
   created_at: string;
 };
 

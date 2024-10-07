@@ -8,7 +8,7 @@ import SeparatorTma from "@/components/Separator";
 import EventAttributes from "@/components/event/EventAttributes";
 import EventContent from "@/components/event/EventContent";
 import EventHeader from "@/components/event/EventHeader";
-import EventTmaSettings from "@/components/event/EventTmaSettings";
+import EventMainButton from "@/components/event/EventTmaSettings";
 import { formatDateRange, formatTimeRange } from "@/utils/date";
 import { Section } from "@/components/base/section";
 import useWebApp from "@/hooks/useWebApp";
@@ -20,6 +20,7 @@ import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWi
 import { Card, CardContent } from "@/components/base/card";
 import QrCodeButton from "@/app/_components/atoms/buttons/QrCodeButton";
 import { ChevronLeft } from "lucide-react";
+import { UserType } from "@/types/user.types";
 
 type EventLayoutProps = {
   children: ReactNode; // This will be the specific content for each event type
@@ -42,7 +43,7 @@ export function SBT_Award() {
             <h3 className="font-semibold">Gateway Participants 2024</h3>
             <p className="text-sm text-gray-500">
               {/* FIXME how to get this contents */}
-              The Open Network Conference ho... 
+              The Open Network Conference ho...
             </p>
           </div>
           <ChevronLeft className="h-5 w-5 transform rotate-180" />
@@ -84,7 +85,7 @@ const EventLayout = ({ children }: EventLayoutProps) => {
 
   // Initialize attributes array and ensure it starts with valid data
   const attributes: [string, ReactNode][] = [];
-  
+
   const isInPersonEvent = event.participationType === "in_person";
   const isOnlineEvent = event.participationType === "online";
   const isFree = !event.ticketToCheckIn;
@@ -107,7 +108,17 @@ const EventLayout = ({ children }: EventLayoutProps) => {
     attributes.push(["Ticket Price", "Free"]);
   }
 
-  console.log(attributes);
+  // console.log({
+  //   "UUID": params.UUID,
+  //   "eventManagerRole": eventManagerRole,
+  //   "isFree": isFree,
+  //   "isInPersonEvent": isInPersonEvent,
+  //   "isSoldOut": !!event?.isSoldOut,
+  //   "role": user.role,
+  //   "ticketToCheckIn": !!event?.ticketToCheckIn,
+  //   "userOrder": !!event?.userOrder,
+  //   "userTicket": !!event?.userTicket,
+  // });
 
   return (
     <PageTma variant={"withSections"}>
@@ -156,16 +167,20 @@ const EventLayout = ({ children }: EventLayoutProps) => {
       {children}
 
       {/* Event Manager Settings */}
-      <EventTmaSettings
+      <EventMainButton
         eventManagerRole={eventManagerRole}
-        isSoldOut={!!event?.isSoldOut}
-        userHasTicket={!!event?.userTicket}
-        requiresTicketToCheckin={!!event?.ticketToCheckIn}
-        orderAlreadyPlace={!!event?.userOrder}
-        eventId={params.UUID} 
-        isFreeEvent={isFree} 
-        userRole={user.role}      
-        />
+        isSoldOut={event?.isSoldOut}
+        userHasTicket={event?.userTicket}
+        requiresTicketToCheckin={event?.ticketToCheckIn}
+        orderAlreadyPlace={event?.userOrder}
+        eventId={params.UUID}
+        isFreeEvent={isFree}
+        userRole={user.role as UserType['userRole']}
+        isInPersonEvent={isInPersonEvent}
+        eventPrice={event?.eventTicket.price}
+        eventStartDate={!!event?.start_date}
+        eventEndDate={!!event?.end_date}
+      />
     </PageTma>
   );
 };
