@@ -9,7 +9,7 @@ import CheckInGuest from "../../checkInGuest/CheckInGuest";
 interface Props {
   event: RouterOutput["events"]["getEvent"];
   params: {
-    hash: string;
+    UUID: string;
   };
 }
 
@@ -20,7 +20,7 @@ const GuestList = (props: Props) => {
   const requestExportFileMutation = trpc.events.requestExportFile.useMutation();
   const handleVisitorsExport = () => {
     requestExportFileMutation.mutate({
-      event_uuid: props.params.hash,
+      event_uuid: props.params.UUID,
       init_data: webApp?.initData || "",
     });
     hapticFeedback?.impactOccurred("medium");
@@ -28,7 +28,7 @@ const GuestList = (props: Props) => {
     webApp?.close();
   };
   const guestCheckInParams = {
-    hash: props.params.hash,
+    UUID: props.params.UUID,
     setNeedRefresh,
     needRefresh,
   };
@@ -56,7 +56,7 @@ const GuestList = (props: Props) => {
       </div>
 
       <Tables.Visitors
-        event_uuid={props.params.hash}
+        event_uuid={props.params.UUID}
         handleVisitorsExport={handleVisitorsExport}
         setNeedRefresh={setNeedRefresh}
         needRefresh={needRefresh}

@@ -11,7 +11,7 @@ import { ThirdStep } from "./thirdTab";
 import { useWithBackButton } from "../../atoms/buttons/web-app/useWithBackButton";
 
 type ManageEventProps = {
-  eventHash?: string;
+  eventUUID?: string;
   event?: RouterOutput["events"]["getEvent"];
 };
 const ManageEvent = (props: ManageEventProps) => {
@@ -27,9 +27,9 @@ const ManageEvent = (props: ManageEventProps) => {
 
   useLayoutEffect(() => {
     resetState();
-    if (props.eventHash) {
+    if (props.eventUUID) {
       setEdit({
-        eventHash: props.eventHash,
+        eventHash: props.eventUUID,
       });
       if (props.event) {
         setEventData({
@@ -54,12 +54,12 @@ const ManageEvent = (props: ManageEventProps) => {
         });
       }
     }
-  }, [props.eventHash, props.event]);
+  }, [props.eventUUID, props.event]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-    } else if (props.eventHash) {
+    } else if (props.eventUUID) {
       router.push("/");
     } else {
       webApp?.showConfirm("Discard Changes?", (confirmed) => {

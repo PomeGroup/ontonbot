@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CheckInState } from "./CheckInState";
 import { RiQrScan2Line } from "react-icons/ri";
 
-const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (_data: any) => void , needRefresh : boolean } }> = ({ params }) => {
+const CheckInGuest: FC<{ params: { UUID: string ,setNeedRefresh : (_data: any) => void , needRefresh : boolean } }> = ({ params }) => {
   const WebApp = useWebApp();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
