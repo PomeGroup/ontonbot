@@ -1804,8 +1804,8 @@ packages:
     resolution: {integrity: sha512-Yhlar6v9WQgUp/He7BdgzOz8lqMQ8sU+jkCq7Wx8Myc5YFJLbEe7lgui/V7G1qB1DJykHSGwreceSaD60Y0PUQ==}
     hasBin: true
 
-  '@million/install@1.0.3':
-    resolution: {integrity: sha512-UGA5zQYLsCnQItmmh/yiaGcdS2TE3NeSqaFxWkQJSpB0ajsgWdzLU9+YR3imJ6HGXRqoOYNPr0WR83D7vwlnwg==}
+  '@million/install@1.0.8':
+    resolution: {integrity: sha512-v3hAMjE1BvPh4UMRTpwx2okj4XOsNTOIvX3MEyscP5mLKXwNiBjhS+aiHFhNU8BSTRBhlIrrX3sebrSVx/AywA==}
     hasBin: true
 
   '@million/lint@1.0.0':
@@ -8874,7 +8874,7 @@ snapshots:
       - encoding
       - supports-color
 
-  '@million/install@1.0.3':
+  '@million/install@1.0.8':
     dependencies:
       '@antfu/ni': 0.21.12
       '@axiomhq/js': 1.0.0-rc.3
@@ -8894,7 +8894,7 @@ snapshots:
       '@babel/core': 7.25.2
       '@babel/types': 7.25.2
       '@hono/node-server': 1.13.1(hono@4.6.3)
-      '@million/install': 1.0.3
+      '@million/install': 1.0.8
       '@rollup/pluginutils': 5.1.0(rollup@3.29.4)
       '@rrweb/types': 2.0.0-alpha.16
       babel-plugin-syntax-hermes-parser: 0.21.1
