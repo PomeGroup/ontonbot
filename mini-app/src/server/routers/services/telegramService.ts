@@ -45,7 +45,7 @@ export const sendRewardNotification = async (
 };
 
 // Send OTP Code via Telegram
-export const sendCode = async (telegramUserId: number , code: string) => {
+export const sendCode = async (telegramUserId: number, code: string) => {
   try {
     // Send the OTP code as a Telegram message
     const response = await sendTelegramMessage({
@@ -77,12 +77,42 @@ export const sendCode = async (telegramUserId: number , code: string) => {
     };
   }
 };
+// Send a simple Telegram message without a link
+export const sendTelegramMessageNoLink = async (
+  chat_id: string | number,
+  message: string
+) => {
+  try {
+    const response = await sendTelegramMessage({
+      chat_id,
+      message,
+    });
 
+    if (!response.success) {
+      console.error("Failed to send message:", response.error);
+      return {
+        success: false,
+        error: response.error || "Failed to send message",
+      };
+    }
+    return {
+      success: true,
+      message: "Message sent successfully",
+    };
+  } catch (error) {
+    console.error("Error sending Telegram message:", error);
+    return {
+      success: false,
+      error: (error as Error).message || "An unexpected error occurred",
+    };
+  }
+};
 /****** export telegramService ******/
 
 const tgService = {
-  sendRewardNotification,
-  sendCode, // Added the new sendCode function here
+  sendRewardNotification, // send reward notification to visitors
+  sendCode, // send OTP code
+  sendTelegramMessageNoLink, // send Telegram message without link
 };
 
 export default tgService;

@@ -154,7 +154,7 @@ export const selectValidVisitorById = async (visitorId: number) => {
 export const selectVisitorsByEventUuid = async (
   event_uuid: string,
   limit?: number,
-  cursor?: number,
+  cursor: number = 0,
   dynamic_fields: boolean = true,
   search?: string
 ) => {
@@ -172,7 +172,7 @@ export const selectVisitorsByEventUuid = async (
         has_ticket: sql<boolean>`false`.as("has_ticket"),
         ticket_status: sql<string>`null`.as("ticket_status"),
         ticket_id: sql<number>`null`.as("ticket_id"),
-        ticket_created_at: sql`null`.as("ticket_created_at"),
+        ticket_created_at: visitors.created_at,
         ticket_order_id: sql`null`.as("ticket_order_id"),
       })
       .from(visitors)

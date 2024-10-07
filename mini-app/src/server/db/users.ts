@@ -130,7 +130,7 @@ const updateWallet = async (
 // Function to get a user by username with caching
 export const selectUserByUsername = async (username: string) => {
 
-console.log("selectUserByUsername", username);
+
   // If not found in cache, query the database
   const userInfo = await db
     .select({
@@ -144,9 +144,10 @@ console.log("selectUserByUsername", username);
       created_at: users.created_at,
       updated_at: users.updatedAt,
       updated_by: users.updatedBy,
+
     })
     .from(users)
-    .where(eq(users.username, username))
+    .where(eq(users.username, username.replace(/^@/, '')))
     .execute();
     console.log("selectUserByUsername", userInfo);
   if (userInfo.length > 0) {

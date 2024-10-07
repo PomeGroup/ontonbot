@@ -17,6 +17,7 @@ import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import {sanitize} from "dompurify";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -187,6 +188,44 @@ export const getUserEvents = async (
   // Execute the query and return the results
   return await combinedResultsQuery.execute();
 };
+export const getOrganizerEvents = async (
+    organizerId: number,
+    limit?: number,  // Optional limit
+    offset?: number  // Optional offset
+) => {
+  // Set a high limit if none is provided to simulate "no limit"
+  const finalLimit = limit !== undefined ? limit : Number.MAX_SAFE_INTEGER;
+  const finalOffset = offset !== undefined ? offset : 0;
+
+  const eventsQuery = db
+      .select({
+        event_uuid: events.event_uuid,
+        title: events.title,
+        image_url: events.image_url,
+        location: events.location,
+        start_date: events.start_date,
+        end_date: events.end_date,
+        participation_type: events.participationType,
+        hidden: events.hidden,
+        society_hub_id: events.society_hub_id,
+        ticket_to_check_in: events.ticketToCheckIn,
+        timezone: events.timezone,
+          }
+      )
+      .from(events)
+      .where(eq(events.owner, organizerId))
+      .orderBy(desc(events.start_date))
+      .limit(finalLimit)
+      .offset(finalOffset);
+
+
+  // Return the result of the query
+  return await eventsQuery.execute();
+};
+
+
+
+
 
 export const getEventsWithFilters = async (
   params: z.infer<typeof searchEventsInputZod>

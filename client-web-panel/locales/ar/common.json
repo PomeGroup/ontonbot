@@ -1,0 +1,45 @@
+{
+  "locale": "ar",
+  "direction": "rtl",
+  "timezone": "UTC",
+  "welcome": "مرحبًا بكم في موقعنا!",
+
+  "common": {
+    "username": "اسم المستخدم",
+    "first_name": "الاسم الأول",
+    "wallet_address": "عنوان المحفظة",
+    "ticket_status": "حالة التذكرة",
+    "order_uuid": "معرف الطلب",
+    "undefined": "--",
+    "check_in_successful": "تم التحقق بنجاح",
+    "already_checked_in": "تم التحقق بالفعل",
+    "check_in_failed": "فشل التحقق",
+    "barcode": "الرمز الشريطي",
+    "scan_barcode": "مسح الرمز الشريطي",
+    "loading": "جار التحميل...",
+    "error_loading_guest_list": "خطأ في تحميل قائمة الضيوف",
+    "error_occurred": "حدث خطأ",
+    "organizer_id": "معرف المنظم",
+    "user_id": "معرف المستخدم",
+    "verification_code": "رمز التحقق",
+    "code_sent_to": "تم إرسال الرمز إلى",
+    "change_ids": "تغيير المعرفات",
+    "get_code": "احصل على الرمز",
+    "failed_to_send_verification_code": "فشل في إرسال رمز التحقق",
+    "verification_failed": "فشل التحقق",
+    "verification_code_sent": "تم إرسال رمز التحقق إلى {organizerId}",
+    "signIn": "تسجيل الدخول"
+  },
+  "act": {
+    "registered_at": "تاريخ التسجيل",
+    "search": "بحث"
+  },
+  "dashboard": {
+    "home": "الرئيسية"
+  },
+  "left_side_menu": {
+    "home": "الرئيسية",
+    "logout": "تسجيل الخروج",
+    "guests": "الضيوف"
+  }
+}

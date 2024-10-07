@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { redisTools } from "@/lib/redisTools"; // Assuming redisTools is available for Redis operations
+import { redisTools } from "@/lib/redisTools";
+import { selectUserById, selectUserByUsername } from "@/server/db/users"; // Assuming redisTools is available for Redis operations
 
 const JWT_SECRET = process.env.CLIENT_API_JWT_SECRET!;
 
@@ -63,11 +64,49 @@ export async function validateJwtFromRequest(req: Request) {
       };
     }
 
-    // Verify the JWT token
+    // Verify the JWT token and extract payload
     const payload = jwt.verify(token, JWT_SECRET);
 
-    return { success: true, payload }; // Return success and payload if JWT is valid
+    // Extract organizerId and userId from the payload
+
+    const { organizerId, userId } = payload as {
+      userId: number;
+      organizerId: string;
+    };
+
+    const organizer = await selectUserByUsername( organizerId);
+
+    const user = await selectUserById(userId);
+
+    if (!organizer?.user_id || !user?.user_id) {
+      return {
+        success: false,
+        error: {
+          code: ERROR_CODES.JWT_INVALID.code,
+          message: ERROR_CODES.JWT_INVALID.message,
+        },
+        response: NextResponse.json(
+          {
+            success: false,
+            error: ERROR_CODES.JWT_INVALID,
+          },
+          { status: 401 }
+        ),
+      };
+    }
+    return {
+      success: true,
+      payload: {
+        organizerTelegramId: organizer.username,
+        organizerId: organizer.user_id,
+        organizer,
+        userTelegramId: user.username,
+        userId: user.user_id,
+        user,
+      }, // Return organizerId and userId if token is valid
+    };
   } catch (err) {
+    console.error("JWT validation error: ", err);
     return {
       success: false,
       error: {
