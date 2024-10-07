@@ -6,6 +6,7 @@ import EventNotStarted from "@/app/_components/EventNotStarted";
 import AllTasks from "@/app/_components/Tasks";
 import Buttons from "@/app/_components/atoms/buttons";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
+import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
 import Tasks from "@/app/_components/molecules/tasks";
@@ -18,6 +19,9 @@ import zod from "zod";
 import EventPageLoadingSkeleton from "./EventPageLoadingSkeleton";
 
 export const EventDataPage = ({ eventUUID }: { eventUUID: string }) => {
+  useWithBackButton({
+    whereTo: "/",
+  });
   const webApp = useWebApp();
   const { role, authorized, user } = useAdminAuth();
   const eventData = trpc.events.getEvent.useQuery(
@@ -89,8 +93,8 @@ export const EventDataPage = ({ eventUUID }: { eventUUID: string }) => {
           <Labels.WebsiteLink location={location} />
         ) : (
           <Labels.CampaignDescription
-            description={location}
-            className="text-secondary text-[14px] mb-2"
+              description={eventData.data?.subtitle!}
+              className="text-secondary text-[14px] mb-2"
           />
         )
       ) : null}
@@ -125,7 +129,7 @@ export const EventDataPage = ({ eventUUID }: { eventUUID: string }) => {
       {authorized &&
         (role === "admin" || user?.user_id === eventData.data.owner) && (
           <MainButton
-            text="Edit Event EvantPage"
+            text="Manage Event"
             onClick={() => {
               router.push(`/events/${eventUUID}/edit`);
             }}

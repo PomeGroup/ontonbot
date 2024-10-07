@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
-import { tickets } from "@/db/schema";
 import { TicketStatus } from "@/db/enum";
+import { tickets } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 // Function to get a ticket by its UUID
@@ -16,17 +16,24 @@ const getTicketByUuid = async (ticketUuid: string) => {
 };
 
 type CheckInTicketResult =
-    | { status: TicketStatus | null }
-    | { alreadyCheckedIn: boolean };
+  | { status: TicketStatus | null }
+  | { alreadyCheckedIn: boolean };
 
 // Function to check in a ticket (update its status to "USED")
-const checkInTicket = async (ticketUuid: string): Promise<CheckInTicketResult | null> => {
+export const checkInTicket = async (
+  ticketUuid: string
+): Promise<CheckInTicketResult | null> => {
+  // First, fetch the current status of the ticket
   const ticket = await db
-      .select({ status: tickets.status, order_uuid: tickets.order_uuid, id: tickets.id })
-      .from(tickets)
-      .where(eq(tickets.order_uuid, ticketUuid))
-      .limit(1)
-      .execute();
+    .select({
+      status: tickets.status,
+      order_uuid: tickets.order_uuid,
+      id: tickets.id,
+    })
+    .from(tickets)
+    .where(eq(tickets.order_uuid, ticketUuid))
+    .limit(1)
+    .execute();
 
   if (ticket.length === 0) {
     return null;
@@ -37,11 +44,15 @@ const checkInTicket = async (ticketUuid: string): Promise<CheckInTicketResult | 
   }
 
   const result = await db
-      .update(tickets)
-      .set({ status: "USED" as TicketStatus })
-      .where(eq(tickets.order_uuid, ticketUuid))
-      .returning({ status: tickets.status })
-      .execute();
+    .update(tickets)
+    .set({
+      status: "USED" as TicketStatus,
+      updatedAt: new Date(),
+      updatedBy: "system_check-in",
+    })
+    .where(eq(tickets.order_uuid, ticketUuid))
+    .returning({ status: tickets.status })
+    .execute();
 
   return result.length > 0 ? ticket[0] : null;
 };

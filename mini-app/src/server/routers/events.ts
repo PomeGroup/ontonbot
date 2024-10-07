@@ -1,5 +1,6 @@
 import { db } from "@/db/db";
 import { eventFields, events } from "@/db/schema";
+import { fetchCountryById } from "@/server/db/giataCity.db";
 import {
   findVisitorByUserAndEventUuid,
   selectVisitorsWithWalletAddress,
@@ -7,7 +8,6 @@ import {
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import {
-  CreateActivityRequestBody,
   registerActivity,
   updateActivity,
 } from "@/lib/ton-society-api";
@@ -19,7 +19,7 @@ import {
   SocietyHub,
   UpdateEventDataSchema,
 } from "@/types";
-import { TSAPIoperations } from "@/types/ton-society-api-types";
+
 import { fetchBalance } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
@@ -41,6 +41,7 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
+import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import { getErrorMessages } from "@/lib/error";
 
 dotenv.config();
@@ -137,6 +138,11 @@ export const eventsRouter = router({
     .mutation(async (opts) => {
       try {
         const result = await db.transaction(async (trx) => {
+          const countryId = opts.input.eventData.countryId;
+          const country = countryId
+            ? await fetchCountryById(countryId)
+            : undefined;
+
           const inputSecretPhrase = opts.input.eventData.secret_phrase
             .trim()
             .toLowerCase();
@@ -214,26 +220,7 @@ export const eventsRouter = router({
             ? "Online"
             : opts.input.eventData.location;
 
-          await sendLogNotification({
-            message: `
-@${opts.ctx.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
-
-<pre><code>${formatChanges(newEvent[0])}</code></pre>
-
-Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
-            `,
-          });
-
-          let country;
-          if (opts.input.eventData.eventLocationType === "in_person") {
-            country = await db.query.giataCity.findFirst({
-              where: (fields, { eq }) => {
-                return eq(fields.id, opts.input.eventData.countryId as number);
-              },
-            });
-          }
-
-          const eventDraft: CreateActivityRequestBody = {
+          const eventDraft: TonSocietyRegisterActivityT = {
             title: opts.input.eventData.title,
             subtitle: opts.input.eventData.subtitle,
             description: opts.input.eventData.description,
@@ -268,14 +255,36 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
                       opts.input.eventData.eventLocationType === "online"
                         ? "Online"
                         : "Offline",
-                    // if the type is online, the coordinates will be null
-                    country_code_iso: country?.abbreviatedCode,
-                    venue_name: opts.input.eventData.location,
+                    ...(country && country?.abbreviatedCode
+                      ? {
+                          country_code_iso: country.abbreviatedCode,
+                          venue_name: opts.input.eventData.location,
+                        }
+                      : {
+                          venue_name: opts.input.eventData.location, // Use location regardless of country
+                        }),
                   },
                 },
               },
             },
           };
+
+          console.log(eventDraft);
+          // Ensure eventDataUpdated is accessed correctly as an object
+          const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
+
+          // Remove the description key
+          const { description, ...eventDataWithoutDescription } = eventData;
+          await sendLogNotification({
+            message: `
+@${opts.ctx.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
+
+<pre><code>${formatChanges(eventDataWithoutDescription)}</code></pre>
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
+            `,
+          });
+
           const res = await registerActivity(eventDraft);
 
           await trx
@@ -283,6 +292,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             .set({
               activity_id: res.data.activity_id,
               updatedBy: opts.ctx.user.user_id.toString(),
+              updatedAt: new Date(),
             })
             .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
             .execute();
@@ -310,7 +320,11 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       return await db.transaction(async (trx) => {
         const deletedEvent = await trx
           .update(events)
-          .set({ hidden: true }) // Set the 'hidden' field to true
+          .set({
+            hidden: true,
+            updatedBy: "system-delete",
+            updatedAt: new Date(),
+          }) // Set the 'hidden' field to true
           .where(eq(events.event_uuid, opts.input.event_uuid))
           .returning();
 
@@ -376,6 +390,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               countryId: eventData.countryId,
               cityId: eventData.cityId,
               updatedBy: opts.ctx.user.user_id.toString(),
+              updatedAt: new Date(),
             })
             .where(eq(events.event_uuid, eventUuid))
             .returning()
@@ -418,6 +433,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
                 .update(eventFields)
                 .set({
                   updatedBy: opts.ctx.user.user_id.toString(),
+                  updatedAt: new Date(),
                 })
                 .where(eq(eventFields.id, secretPhraseTask[0].id))
                 .execute();
@@ -432,6 +448,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
                   type: "input",
                   order_place: eventData.dynamic_fields.length,
                   event_id: eventId,
+                  updatedAt: new Date(),
                 })
                 .execute();
             }
@@ -452,6 +469,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
                   type: field.type,
                   order_place: index,
                   updatedBy: opts.ctx.user.user_id.toString(),
+                  updatedAt: new Date(),
                 })
                 .where(eq(eventFields.id, field.id))
                 .execute();
@@ -476,26 +494,35 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             ? "Online"
             : opts.input.eventData.location;
 
-          const eventDraft: TSAPIoperations["updateEvent"]["requestBody"]["content"]["application/json"] =
-            {
-              title: eventData.title,
-              subtitle: eventData.subtitle,
-              description: eventData.description,
-              hub_id: parseInt(eventData.society_hub.id),
-              start_date: timestampToIsoString(eventData.start_date),
-              end_date: timestampToIsoString(eventData.end_date!),
-              additional_info,
-              cta_button: {
-                link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`,
-                label: "Enter Event",
-              },
-            };
-
-          const oldChanges = getObjectDifference(updatedEvent[0], oldEvent[0]);
+          const eventDraft: TonSocietyRegisterActivityT = {
+            title: eventData.title,
+            subtitle: eventData.subtitle,
+            description: eventData.description,
+            hub_id: parseInt(eventData.society_hub.id),
+            start_date: timestampToIsoString(eventData.start_date),
+            end_date: timestampToIsoString(eventData.end_date!),
+            additional_info,
+            cta_button: {
+              link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`,
+              label: "Enter Event",
+            },
+          };
+          // Remove the description key from updatedEvent
+          const {
+            description: updatedDescription,
+            ...updatedEventWithoutDescription
+          } = updatedEvent[0];
+          // Remove the description key from oldEvent
+          const { description: oldDescription, ...oldEventWithoutDescription } =
+            oldEvent[0];
+          const oldChanges = getObjectDifference(
+            updatedEventWithoutDescription,
+            oldEventWithoutDescription
+          );
 
           const updateChanges = getObjectDifference(
-            oldEvent[0],
-            updatedEvent[0]
+            updatedEventWithoutDescription,
+            oldEventWithoutDescription
           );
 
           const message = `

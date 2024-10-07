@@ -65,7 +65,7 @@ export const userEventFieldsRouter = router({
 
       if (!correctSecretPhrase) {
         throw new TRPCError({
-          message: "Re-enter the password",
+          message: "Password incorrect, try again",
           code: TRPC_ERROR_CODES_BY_NUMBER["-32003"],
         });
       }
@@ -86,6 +86,7 @@ export const userEventFieldsRouter = router({
           set: {
             data: opts.input.data,
             completed: true,
+            updatedAt: new Date(),
           },
         })
         .returning()

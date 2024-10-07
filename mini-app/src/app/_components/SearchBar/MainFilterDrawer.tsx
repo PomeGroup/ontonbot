@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import {
   Drawer,
   DrawerClose,
@@ -9,10 +8,11 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { IoIosArrowForward } from "react-icons/io";
-import { IoOptionsOutline } from "react-icons/io5";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import React from "react";
+import { IoIosArrowForward } from "react-icons/io";
+import { IoOptionsOutline } from "react-icons/io5";
 import { z } from "zod";
 export type SortByType = z.infer<typeof searchEventsInputZod>["sortBy"];
 export type setSortByType = (_value: string) => void;

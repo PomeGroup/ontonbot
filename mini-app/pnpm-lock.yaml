@@ -128,6 +128,9 @@ importers:
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
+      clamav.js:
+        specifier: ^0.12.0
+        version: 0.12.0
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
@@ -143,6 +146,9 @@ importers:
       crypto-browserify:
         specifier: ^3.12.0
         version: 3.12.0
+      dompurify:
+        specifier: ^3.1.7
+        version: 3.1.7
       dotenv:
         specifier: ^16.3.1
         version: 16.3.1
@@ -152,9 +158,7 @@ importers:
       drizzle-orm:
         specifier: ^0.33.0
         version: 0.33.0(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.8)(@types/pg@8.6.1)(@types/react@18.2.45)(pg@8.11.3)(postgres@3.4.3)(react@18.2.0)
-      eruda:
-        specifier: ^3.0.1
-        version: 3.3.0
+
       https-browserify:
         specifier: ^1.0.0
         version: 1.0.0
@@ -300,6 +304,12 @@ importers:
       '@types/better-sqlite3':
         specifier: ^7.6.8
         version: 7.6.8
+      '@types/clamav.js':
+        specifier: ^0.12.4
+        version: 0.12.4
+      '@types/dompurify':
+        specifier: ^3.0.5
+        version: 3.0.5
       '@types/jest':
         specifier: ^29.5.11
         version: 29.5.11
@@ -318,6 +328,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.18
         version: 18.2.18
+      '@types/turndown':
+        specifier: ^5.0.5
+        version: 5.0.5
       '@types/uuid':
         specifier: ^9.0.7
         version: 9.0.7
@@ -4277,13 +4290,7 @@ packages:
     engines: {node: '>=12'}
     deprecated: Use your platform's native DOMException instead
 
-  dot-prop@5.3.0:
-    resolution: {integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==}
-    engines: {node: '>=8'}
 
-  dotenv@16.3.1:
-    resolution: {integrity: sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ==}
-    engines: {node: '>=12'}
 
   drizzle-kit@0.24.0:
     resolution: {integrity: sha512-rUl5Rf5HLOVkAwHEVEi8xgulIRWzoys0q77RHGCxv5e9v8AI3JGFg7Ug5K1kn513RwNZbuNJMUKOXo0j8kPRgg==}
@@ -4457,8 +4464,7 @@ packages:
     resolution: {integrity: sha512-zoMwbCcH5hwUkKJkT8kDIBZSz9I6mVG//+lDCinLCGov4+r7NIy0ld8o03M0cJxl2spVf6ESYVS6/gpIfq1FFw==}
     engines: {node: '>= 0.4'}
 
-  es-module-lexer@1.5.4:
-    resolution: {integrity: sha512-MVNK56NiMrOwitFB7cqDwq0CQutbw+0BvLshJSse0MUNU+y1FC3bUS/AQg7oUng+/wKrrki7JfmwtVHkVfPLlw==}
+
 
   es-object-atoms@1.0.0:
     resolution: {integrity: sha512-MZ4iQ6JwHOBQjahnjwaC1ZtIBH+2ohjamzAO3oaHcXYup7qxjF2fixyH+Q71voWHeOkI2q/TnJao/KfXYIZWbw==}
@@ -4909,8 +4915,7 @@ packages:
   graphemer@1.4.0:
     resolution: {integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag==}
 
-  has-bigints@1.0.2:
-    resolution: {integrity: sha512-tSvCKtBr9lkF0Ex0aQiP9N+OpV4zi2r/Nee5VkRDbaqv35RLYMzbwQfFSZZH0kR+Rd6302UJZ2p/bJCEoR3VoQ==}
+
 
   has-flag@3.0.0:
     resolution: {integrity: sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw==}
@@ -5159,9 +5164,7 @@ packages:
   is-map@2.0.2:
     resolution: {integrity: sha512-cOZFQQozTha1f4MxLFzlgKYPTyj26picdZTx82hbc/Xf4K/tZOOXSCkMvU4pKioRXGDLJRn0GM7Upe7kR721yg==}
 
-  is-nan@1.3.2:
-    resolution: {integrity: sha512-E+zBKpQ2t6MEo1VsonYmluk9NxGrbzpeeLC2xIViuO2EjU2xsXsBPwTr3Ykv9l08UYEVEdWeRZNouaZqF6RN0w==}
-    engines: {node: '>= 0.4'}
+
 
   is-negative-zero@2.0.2:
     resolution: {integrity: sha512-dqJvarLawXsFbNDeJW7zAz8ItJ9cd28YufuuFzh0G8pNHjJMnY08Dv7sYX2uF5UpQOwieAeOExEYAWWfu7ZZUA==}
@@ -10540,11 +10543,15 @@ snapshots:
     dependencies:
       '@types/node': 20.10.4
 
+  '@types/clamav.js@0.12.4':
+    dependencies:
+      '@types/node': 20.10.4
+
   '@types/connect@3.4.36':
     dependencies:
       '@types/node': 20.10.4
 
-  '@types/css-font-loading-module@0.0.7': {}
+
 
   '@types/estree@1.0.6': {}
 
@@ -10630,6 +10637,10 @@ snapshots:
   '@types/stack-utils@2.0.3': {}
 
   '@types/tough-cookie@4.0.5': {}
+
+  '@types/trusted-types@2.0.7': {}
+
+  '@types/turndown@5.0.5': {}
 
   '@types/uuid@9.0.7': {}
 
@@ -11353,6 +11364,8 @@ snapshots:
 
   cjs-module-lexer@1.2.3: {}
 
+  clamav.js@0.12.0: {}
+
   class-variance-authority@0.7.0:
     dependencies:
       clsx: 2.0.0
@@ -11724,9 +11737,7 @@ snapshots:
     dependencies:
       webidl-conversions: 7.0.0
 
-  dot-prop@5.3.0:
-    dependencies:
-      is-obj: 2.0.0
+
 
   dotenv@16.3.1: {}
 
@@ -12814,7 +12825,7 @@ snapshots:
 
   is-finalizationregistry@1.0.2:
     dependencies:
-      call-bind: 1.0.5
+      call-bind: 1.0.7
 
   is-fullwidth-code-point@3.0.0: {}
 
@@ -12864,7 +12875,7 @@ snapshots:
 
   is-regex@1.1.4:
     dependencies:
-      call-bind: 1.0.5
+      call-bind: 1.0.7
       has-tostringtag: 1.0.0
 
   is-set@2.0.2: {}
