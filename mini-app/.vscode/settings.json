@@ -8,5 +8,21 @@
       "connectString": "postgresql://postgres:xor@127.0.0.1:5432/ontondev"
     }
   ],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "files.exclude": {
+    "": true
+  },
+  "files.watcherExclude": {
+    "**/.next/**": true
+  },
+  "search.exclude": {
+    "**/.next/**": true
+  },
+  "tailwindCSS.files.exclude": [
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/.hg/**",
+    "**/.svn/**",
+    "**/.next/**"
+  ]
 }
