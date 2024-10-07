@@ -1,6 +1,5 @@
 declare namespace NodeJS {
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  interface process {
+  interface ProcessEnv {
     DATABASE_URL: string;
     BOT_TOKEN: string;
     TONAPI_API_KEY: string;
