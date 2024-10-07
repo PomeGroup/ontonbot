@@ -36,7 +36,7 @@ function PaidOnlineEventPage() {
 
     return (
         <EventTypesLayout>
-            <h1>This is paid-online-event page</h1>
+           {process.env.ENV === "development" &&  <h1>This is paid-online-event page</h1>}
         </EventTypesLayout>
     );
 }

@@ -41,7 +41,7 @@ const FreeOnlineEventPage = () => {
 
   return (
     <EventTypesLayout>
-      <p>This is a free online event. You can join using the Zoom link provided after registration.</p>
+      {process.env.ENV === "development" && <p>This is a free online event. You can join using the Zoom link provided after registration.</p>}
     </EventTypesLayout>
   );
 };

@@ -40,9 +40,11 @@ const PaidInPersonEventPage = () => {
 
   return (
     <EventTypesLayout>
-      <h1>Paid In-Person Event - {event.title}</h1>
-      <p>{event.description}</p>
-      {/* Additional content or features specific to paid in-person events */}
+      {process.env.ENV === "development" && (
+        <>
+          <h1>Paid In-Person Event - {event.title}</h1>
+          <p>{event.description}</p>
+        </>)}
     </EventTypesLayout>
   );
 };

@@ -36,7 +36,7 @@ const FreeInPersonEventPage = () => {
 
   return (
     <EventTypesLayout>
-      <p>This is a free event that will take place in person. Everyone is welcome!</p>
+      {process.env.ENV === "development" && <p>This is a free event that will take place in person. Everyone is welcome!</p>}
     </EventTypesLayout>
   );
 };
