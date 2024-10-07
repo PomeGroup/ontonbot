@@ -8,8 +8,8 @@ import {
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import {
-  registerActivity,
-  updateActivity,
+registerActivity,
+updateActivity,
 } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
@@ -63,6 +63,26 @@ export const eventsRouter = router({
 
   getEvent: initDataProtectedProcedure
     .input(z.object({ event_uuid: z.string() }))
+    .output(
+      z
+        .object({
+          type: z.number().nullable(),
+          event_uuid: z.string(),
+          event_id: z.number(),
+          title: z.string().nullable(),
+          subtitle: z.string().nullable(),
+          description: z.string().nullable(),
+          image_url: z.string().nullable(),
+          tsRewardImage: z.string().nullable(),
+          society_hub: z
+            .object({
+              id: z.union([z.string(), z.number(), z.null()]),
+              name: z.string().nullable(),
+            })
+            .nullable(),
+        })
+        .nullable()
+    )
     .query(async (opts) => {
       try {
         const eventVisitor = await findVisitorByUserAndEventUuid(
@@ -81,17 +101,23 @@ export const eventsRouter = router({
           opts.input.event_uuid,
           opts.ctx.user.user_id
         );
-        return event;
+
+        // Handle `society_hub`: If `society_hub` is null, default it to an empty object
+        if (event?.society_hub === null) {
+          event.society_hub = { id: null, name: null }; // Ensure both `id` and `name` are nullable
+        }
+
+        return event || null;
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;
         }
 
-        const messsages = getErrorMessages(error);
+        const messages = getErrorMessages(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           cause: error,
-          message: messsages?.join(", "),
+          message: messages?.join(", "),
         });
       }
     }),

@@ -29,6 +29,11 @@ import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
+interface SocietyHub {
+  id: string | number | null;
+  name: string | null;
+}
+
 export const checkIsEventOwner = async (
   rawInitData: string,
   eventUuid: string
@@ -95,7 +100,7 @@ export const selectEventByUuid = async (
   if (eventUuid.length !== 36) {
     return null;
   }
-
+  // Fetch the main event data
   const eventData = (
     await db
       .select()
@@ -105,7 +110,7 @@ export const selectEventByUuid = async (
   ).pop();
 
   if (!eventData) {
-    return null;
+    return null; // Return null if no event data is found
   }
   // this only works for events with one ticket
 
@@ -139,6 +144,16 @@ export const selectEventByUuid = async (
     );
 
   dynamicFields.sort((a, b) => a.order_place! - b.order_place!);
+
+  // Handle transformation of `society_hub` to the expected structure
+  const societyHub: SocietyHub | null = eventData.society_hub
+    ? {
+        id: eventData.society_hub_id || null, // Ensure `id` can be null if no id is present
+        name: eventData.society_hub || null, // Ensure `name` can be null
+      }
+    : null; // Return null if no society_hub exists
+
+  // Fetch additional paid event data if applicable
   let paidEventData = {};
   if (eventData.ticketToCheckIn) {
     if (!user_id) {
@@ -154,17 +169,23 @@ export const selectEventByUuid = async (
     });
   }
 
+  // Merge and return event data along with transformed society_hub and paid event data
   return {
-    ...restEventData, // Spread the rest of eventData properties
-    society_hub: {
-      id: restEventData.society_hub_id,
-      name: restEventData.society_hub,
-    },
-    dynamic_fields: dynamicFields,
-    activity_id: restEventData.activity_id,
-    organizer,
-    ...paidEventData
+    ...eventData, // Spread main event data
+    society_hub: societyHub, // Use transformed `society_hub`
+    ...paidEventData, // Spread the paid event data into the final response
   };
+
+  // return {
+  //   ...restEventData, // Spread the rest of eventData properties
+  //   dynamic_fields: dynamicFields,
+  //   organizer,
+  //   ...paidEventData,
+  //   ...eventData, // Spread main event data
+  //   activity_id: restEventData.activity_id,
+  //   society_hub: societyHub, // Use transformed `society_hub`
+  //   ...paidEventData, // Spread the paid event data into the final response
+  // };
 };
 
 export const getUserEvents = async (

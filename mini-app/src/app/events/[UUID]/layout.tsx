@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/base/card";
 import QrCodeButton from "@/app/_components/atoms/buttons/QrCodeButton";
 import { ChevronLeft } from "lucide-react";
 import { UserType } from "@/types/user.types";
+import { EventDataOnlyType } from "@/types/event.types";
 
 type EventLayoutProps = {
   children: ReactNode; // This will be the specific content for each event type
@@ -58,10 +59,11 @@ const EventLayout = ({ children }: EventLayoutProps) => {
   const params = useParams<{ UUID: string }>();
   const webApp = useWebApp();
 
-  const { data: event, isLoading: eventLoading } = trpc.events.getEvent.useQuery(
+  const { data, isLoading: eventLoading } = trpc.events.getEvent.useQuery(
     { event_uuid: params.UUID, init_data: webApp?.initData || "" },
     { enabled: Boolean(webApp?.initData) }
   );
+  const event = data as unknown as EventDataOnlyType;
 
   const { data: user, isLoading: userLoading } = trpc.users.getUser.useQuery(
     { init_data: webApp?.initData || "" },
@@ -80,19 +82,23 @@ const EventLayout = ({ children }: EventLayoutProps) => {
   }
 
   const eventManagerRole = user.role === "admin" || user.user_id === event.owner;
-  const date = formatDateRange(event.start_date!, event.end_date!);
-  const time = formatTimeRange(event.start_date!, event.end_date!);
-
+  
   // Initialize attributes array and ensure it starts with valid data
   const attributes: [string, ReactNode][] = [];
-
+  
   const isInPersonEvent = event.participationType === "in_person";
-  const isOnlineEvent = event.participationType === "online";
   const isFree = !event.ticketToCheckIn;
+  
+  const start_date = event.start_date && event.end_date
+    ? formatDateRange(event.start_date.getTime(), event.end_date.getTime())
+    : "Date not available";
 
-  // Add event attributes dynamically
+  const time = event.start_date && event.end_date
+    ? formatTimeRange(event.start_date.getTime(), event.end_date.getTime())
+    : "Time not available";
+
   attributes.push(
-    ["Date", date],
+    ["Date", start_date],
     ["Time", time]
   );
 
@@ -169,17 +175,16 @@ const EventLayout = ({ children }: EventLayoutProps) => {
       {/* Event Manager Settings */}
       <EventMainButton
         eventManagerRole={eventManagerRole}
-        isSoldOut={event?.isSoldOut}
-        userHasTicket={event?.userTicket}
-        requiresTicketToCheckin={event?.ticketToCheckIn}
-        orderAlreadyPlace={event?.userOrder}
+        isSoldOut={event.isSoldOut as boolean}
+        userHasTicket={event.userTicket}
+        orderAlreadyPlace={event.userOrder}
         eventId={params.UUID}
         isFreeEvent={isFree}
         userRole={user.role as UserType['userRole']}
         isInPersonEvent={isInPersonEvent}
-        eventPrice={event?.eventTicket.price}
-        eventStartDate={!!event?.start_date}
-        eventEndDate={!!event?.end_date}
+        eventPrice={event?.eventTicket?.price ?? 0}
+        eventStartDate={event?.start_date ? new Date(event.start_date) : null}  // Pass Date object directly
+        eventEndDate={event?.end_date ? new Date(event.end_date) : null}        // Pass Date object directly
       />
     </PageTma>
   );

@@ -1,7 +1,7 @@
 import { rewards, visitors } from "@/db/schema";
 import { InferSelectModel } from "drizzle-orm";
 import { TONSOcietyAPISchemaT } from "./ton-society-api-types";
-import { ReactNode } from "react";
+import { z } from "zod";
 
 export type TonSocietyRegisterActivityT = {
   title: string;
@@ -105,20 +105,49 @@ export interface EventDataOnlyType {
   image_url: string;
   wallet_address: string;
   wallet_seed_phrase: string;
-  society_hub: string;
   society_hub_id: string;
-  activity_id: number;
   collection_address: string;
   secret_phrase: string;
-  start_date: number;
-  end_date: number;
   timezone: string;
   location: string;
   owner: number;
   hidden: boolean;
-  ticketToCheckIn: boolean;
   created_at: string;
+  participationType?: "in_person" | "online"; // Add this field
+  society_hub: {
+    id: number | string | null;
+    name: string | null;
+  };
+  dynamic_fields: any[];
+  activity_id: number | null;
+  organizer: any;
+  eventTicket?: any;
+  isSoldOut?: boolean;
+  userOrder?: any;
+  userTicket?: any;
+  ticketToCheckIn?: boolean;
+  start_date?: Date | null;
+  end_date?: Date | null;
 }
+
+export const EventSchema = z.object({
+  type: z.number().nullable(),
+  event_uuid: z.string(),
+  event_id: z.number(),
+  title: z.string().nullable(),
+  subtitle: z.string().nullable(),
+  description: z.string().nullable(),
+  image_url: z.string().nullable(),
+  tsRewardImage: z.string().nullable(),
+  society_hub: z
+    .object({
+      id: z.union([z.string(), z.number(), z.null()]),
+      name: z.string().nullable(),  // Ensure `name` is nullable in the Zod schema
+    })
+    .nullable(),  // Allow `society_hub` to be nullable
+}).nullable(); // Allow entire event object to be nullable
+
+
 
 
 

@@ -12,6 +12,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { UserType } from "@/types/user.types";
 
 type EventMainButtonProps = {
+  eventManagerRole: boolean;
   eventId: string;
   orderAlreadyPlace: boolean;
   userHasTicket: boolean;
@@ -20,11 +21,12 @@ type EventMainButtonProps = {
   isInPersonEvent: boolean;
   userRole: UserType['userRole'];
   eventPrice: number;
-  eventStartDate: number;
-  eventEndDate: number;
+  eventStartDate: Date | null;
+  eventEndDate: Date | null;
 };
 
-const EventMainButton = ({
+const EventMainButton = ({ 
+  eventManagerRole,
   eventId,
   orderAlreadyPlace,
   userHasTicket,
@@ -102,15 +104,15 @@ const EventMainButton = ({
     router.push(`/event/${eventId}/edit`);
   }
 
-  // Convert timestamps to Date objects
-  const eventStart = new Date(eventStartDate); // Convert timestamp to Date
-  const eventEnd = new Date(eventEndDate); // Convert timestamp to Date
+  // Check if eventStartDate and eventEndDate are valid Date objects
+  const eventStart = eventStartDate ? new Date(eventStartDate) : null;
+  const eventEnd = eventEndDate ? new Date(eventEndDate) : null;
   const now = new Date();
 
   // Check event timing (ongoing, upcoming, past)
-  const isOngoingEvent = eventStart <= now && (!eventEndDate || eventEnd >= now);
-  const isUpcomingEvent = eventStart > now;
-  const isPastEvent = eventEnd < now;
+  const isOngoingEvent = eventStart && eventEnd ? eventStart <= now && eventEnd >= now : false;
+  const isUpcomingEvent = eventStart ? eventStart > now : false;
+  const isPastEvent = eventEnd ? eventEnd < now : false;
 
   const paidEvent = !isFreeEvent;
 
@@ -134,7 +136,7 @@ const EventMainButton = ({
       };
     }
 
-    
+
     // Conditions for regular users (userRole === "user")
     if (userRole === "user") {
       console.log("user");
@@ -164,7 +166,7 @@ const EventMainButton = ({
             mainButton?.on("click", handleWalletAction);
           }
         }
-        
+
       } else {
         // Free Past event
         console.log("Past");
@@ -174,61 +176,67 @@ const EventMainButton = ({
         mainButton?.on("click", handleWalletAction);
       }
     } else if (paidEvent) {
+      // Paid Ongoing user Has Ticket event
       if (isOngoingEvent && userHasTicket) {
         mainButton?.setBgColor("#007AFF");
-        mainButton?.setTextColor("#ffffff").setText("My Ticket");
+        mainButton?.setTextColor("#ffffff").setText("My Ticket for");
         mainButton?.enable().show();
         mainButton?.on("click", goToTicketPage);
+        // Paid Ongoing user Has not Ticket event
       } else if (isOngoingEvent && !userHasTicket) {
         mainButton?.setBgColor("#007AFF");
-        mainButton?.setTextColor("#ffffff").setText("Buy Ticket");
+        mainButton?.setTextColor("#ffffff").setText(`Buy Ticket for ${eventPrice}TON`);
         mainButton?.enable().show();
         mainButton?.on("click", goToTicketPage);
+        // Paid Upcomming user Has Ticket event
       } else if (isUpcomingEvent && userHasTicket) {
         mainButton?.setBgColor("#007AFF");
         mainButton?.setTextColor("#ffffff").setText("My Ticket");
         mainButton?.enable().show();
         mainButton?.on("click", goToTicketPage);
+        // Paid Upcomming Has not Ticket event
       } else if (isUpcomingEvent && !userHasTicket) {
         mainButton?.setBgColor("#007AFF");
-        mainButton?.setTextColor("#ffffff").setText("Buy Ticket");
+        mainButton?.setTextColor("#ffffff").setText(`Buy Ticket for ${eventPrice}TON`);
         mainButton?.enable().show();
         mainButton?.on("click", goToTicketPage);
+        // Paid Past user Has Ticket event
       } else if (isPastEvent && userHasTicket) {
         mainButton?.setBgColor("#007AFF");
         mainButton?.setTextColor("#ffffff").setText("My Ticket");
         mainButton?.enable().show();
         mainButton?.on("click", goToTicketPage);
+        // Paid Past user Has not Ticket event
       } else if (isPastEvent && !userHasTicket) {
         mainButton?.setBgColor("#007AFF");
-        mainButton?.setTextColor("#ffffff").setText("Buy Ticket");
+        mainButton?.setTextColor("#ffffff").setText(`Buy Ticket for ${eventPrice}TON`);
         mainButton?.enable().show();
         mainButton?.on("click", goToTicketPage);
       }
       mainButton?.setBgColor("#007AFF");
-      mainButton?.setTextColor("#ffffff").setText("Buy Ticket");
+      mainButton?.setTextColor("#ffffff").setText(`Buy Ticket for ${eventPrice}TON`);
       mainButton?.enable().show();
       router.prefetch(`/event/${eventId}/buy-ticket`);
       mainButton?.on("click", mainBtnOnClick);
     }
 
-    // if (orderAlreadyPlace) {
-    //   mainButton?.setBgColor("#007AFF");
-    //   mainButton?.setTextColor("#ffffff").setText("Pending...");
-    //   mainButton?.showLoader();
-    //   mainButton?.disable().show();
-    //   mainButton?.on("click", () => { });
-    //   setTimeout(() => {
-    //     // reload full application
-    //     window.location.reload();
-    //   }, 1000 * 60 * 5);
-    //   return () => {
-    //     mainButton?.hide().disable();
-    //     mainButton?.off("click", mainBtnOnClick);
-    //     mainButton?.off("click", goToTicketPage);
-    //     mainButton?.hideLoader();
-    //   };
-    // }
+    if (orderAlreadyPlace) {
+      mainButton?.setBgColor("#007AFF");
+      mainButton?.setTextColor("#ffffff").setText("Pending...");
+      mainButton?.showLoader();
+      mainButton?.disable().show();
+      mainButton?.on("click", () => { });
+      setTimeout(() => {
+        // reload full application
+        window.location.reload();
+      }, 1000 * 60 * 5);
+      return () => {
+        mainButton?.hide().disable();
+        mainButton?.off("click", mainBtnOnClick);
+        mainButton?.off("click", goToTicketPage);
+        mainButton?.hideLoader();
+      };
+    }
 
     // if (isFreeEvent) {
     //   mainButton?.hideLoader();
