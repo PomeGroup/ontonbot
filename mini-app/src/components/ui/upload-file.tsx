@@ -1,4 +1,3 @@
-import { useCreateEventStore } from "@/app/_components/organisms/events/createEventStore";
 import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { getErrorMessages } from "@/lib/error";
@@ -18,18 +17,54 @@ import {
   DrawerTrigger,
 } from "./drawer";
 
+/**
+ * Props for the UploadImageFile component.
+ */
 type UploadFileProps = {
+  /**
+   * The text to display on the trigger button.
+   */
   triggerText: React.ReactNode;
+
+  /**
+   * The text to display below the trigger button, providing additional information.
+   */
   infoText: React.ReactNode;
+
+  /**
+   * The text to display on the change button, shown after an image has been uploaded.
+   */
   changeText: React.ReactNode;
-  onImageChange?: (img_url: string) => void;
+
+  /**
+   * An optional callback function called when an image is uploaded, passing the uploaded image URL as an argument.
+   */
+  onImageChange?: (_img_url: string) => void;
+
+  /**
+   * An optional boolean indicating whether an error has occurred.
+   */
   isError?: boolean;
+
+  /**
+   * An optional callback function called when the upload is complete, passing the uploaded image URL as an argument.
+   */
+  onDone?: (_img_url: string) => void;
+
+  /**
+   * An optional default image URL to display before an image is uploaded.
+   */
+  defaultImage?: string;
 };
 
+/**
+ * A component for uploading an image file.
+ *
+ * @param {UploadFileProps} props - The component props.
+ * @return {JSX.Element} The JSX element representing the component.
+ */
 export const UploadImageFile = (props: UploadFileProps) => {
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
   const webApp = useWebApp();
   const [imagePreview, setImagePreview] = useState<string | undefined>(
     undefined
@@ -43,8 +78,8 @@ export const UploadImageFile = (props: UploadFileProps) => {
 
   useEffect(() => {
     // Set the initial image preview when the component mounts
-    setImagePreview(eventData?.image_url);
-  }, [eventData?.image_url]);
+    setImagePreview(props?.defaultImage);
+  }, [props?.defaultImage]);
 
   const handleSubmit = async () => {
     const fileInput = imageInputRef.current;
@@ -53,17 +88,13 @@ export const UploadImageFile = (props: UploadFileProps) => {
     }
 
     const file = fileInput.files[0];
+
     const image = (await fileToBase64(file)) as string;
+
     uploadImage.mutate({
       init_data: webApp?.initData || "",
       image,
-    });
-  };
-
-  const setImageAsEventImage = () => {
-    setEventData({
-      ...eventData,
-      image_url: imagePreview,
+      subfolder: "event",
     });
   };
 
@@ -84,7 +115,7 @@ export const UploadImageFile = (props: UploadFileProps) => {
         <Button
           className={cn(
             "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
-            props.isError ? "border-red-500 bg-red-400/10" : "border-primary"
+            props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
           )}
           variant={props.isError ? "destructive" : "outline"}
         >
@@ -175,7 +206,10 @@ export const UploadImageFile = (props: UploadFileProps) => {
               <Button
                 className="w-16 h-10 mx-auto rounded-full mt-4"
                 variant="secondary"
-                onClick={setImageAsEventImage}
+                onClick={() =>
+                  typeof props?.onDone === "function" &&
+                  props.onDone(imagePreview)
+                }
               >
                 Done
               </Button>

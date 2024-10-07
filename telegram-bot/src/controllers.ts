@@ -208,11 +208,22 @@ export async function sendMessage(
       message: "Message sent successfully",
     });
   } catch (error) {
-    // Log and return an error response if an error occurs
-    console.error("Error sending message:", error);
+    // Differentiate between Telegram API errors and other errors
+    if (error.response && error.response.statusCode) {
+      // Handle errors from the Telegram API (e.g., invalid chat_id, bot token issues)
+      const errorMessage = error.response.description || "An error occurred while sending the message.";
+      console.error(errorMessage);
+      return res.status(error.response.statusCode).json({
+        success: false,
+        error: errorMessage,
+      });
+    }
+
+    // Handle other unexpected errors
+    console.error("Unexpected error sending message:", error);
     return res.status(500).json({
       success: false,
-      error: "Internal server error",
+      error: "Unexpected server error. Please try again later.",
     });
   }
 }

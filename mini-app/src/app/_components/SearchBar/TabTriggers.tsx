@@ -1,6 +1,5 @@
 import React from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface TabItem {
@@ -12,7 +11,7 @@ interface TabItem {
 interface TabTriggersProps {
   tabs: TabItem[];
   tabValue: string;
-  setTabValue: (value: string) => void;
+  setTabValue: (_value: string) => void;
   swiperRef: React.MutableRefObject<any>;
 }
 

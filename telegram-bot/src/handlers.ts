@@ -1,26 +1,19 @@
 import { Context } from "telegraf"
-import { addVisitor, changeRole } from "./db/db"
+import { addVisitor, changeRole, isUserAdmin } from "./db/db"
 import { startKeyboard } from "./markups"
 import { TVisitor } from "./utils/types"
 import { editOrSend } from "./utils/utils"
 
-const BOT_ADMINS = process.env.BOT_ADMINS_LIST;
+export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
+  // get user from database
+  const {isAdmin} = await isUserAdmin(ctx.from.id.toString())
+  
+  if (!isAdmin) {
+    return await ctx.reply(`You are not authorized to perform this operation.`)
+  }
 
-if (!BOT_ADMINS) throw new Error("BOT_ADMINS_LIST env is required");
 
-const admins = BOT_ADMINS.split(",");
-
-export const orgHandler = async (ctx: Context) => {
   try {
-    if (!admins.map(Number).includes(ctx.from.id)) {
-      await editOrSend(
-        ctx,
-        `You are not authorized to perform this operation.`,
-        startKeyboard(),
-      );
-      return;
-    }
-
     // @ts-ignore
     const messageText = ctx.message?.text;
 
@@ -32,13 +25,45 @@ export const orgHandler = async (ctx: Context) => {
       const role = messageText.split(" ")[1];
       const username = messageText.split(" ")[2];
 
-      await changeRole(username, role);
+      // role should be user, admin, organizer otherwise throw a nice error
 
-      await editOrSend(
-        ctx,
-        `Role for ${username} changed to ${role}.`,
-        startKeyboard(),
-      );
+      if (!["user", "admin", "organizer"].includes(role)) {
+        await editOrSend(
+          ctx,
+          `Invalid role. Must be one of: user, admin, organizer.`,
+          startKeyboard(),
+        )
+
+        next()
+        return
+      }
+
+      await changeRole(role, username).then(async () => {
+        await editOrSend(
+          ctx,
+          `Role for ${username} changed to ${role}.`,
+          startKeyboard(),
+        );
+      }).catch(async (error) => {
+        if (error instanceof Error) {
+          if (error.message === 'user_not_found') {
+            await editOrSend(
+              ctx,
+              `User with username: ${username} does not exist.`,
+              startKeyboard(),
+            );
+          }
+
+          if (error.message === 'nothing_to_update') {
+            await editOrSend(
+              ctx,
+              `Nothing to update user already is an ${role}.`,
+              startKeyboard(),
+            );
+          }
+        }
+      })
+
     } else {
       await editOrSend(ctx, `Invalid command.`, startKeyboard());
     }

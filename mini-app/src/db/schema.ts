@@ -1,66 +1,60 @@
 import {
-  eventParticipationType,
-  EventParticipationType,
-  rewardType,
-  RewardType,
-  rewardStatus,
-  RewardStatus,
-  ticketStatus,
-  TicketStatus,
-  orderState,
-  OrderState,
   developmentEnvironment,
-  DevelopmentEnvironment,
+  eventParticipationType,
+  orderState,
+  rewardStatus,
+  rewardType,
+  ticketStatus,
 } from "@/db/enum";
 
 import {
-  airdropRoutines,
   airdropRoutineRelations,
+  airdropRoutines,
 } from "./schema/airdropRoutines";
-import { event_details_search_list } from "./schema/event_details_search_list";
-import { eventFields, eventFieldRelations } from "./schema/eventFields";
-import { events } from "./schema/events";
+import { eventFieldRelations, eventFields } from "./schema/eventFields";
 import { eventTicket } from "./schema/eventTicket";
+import { event_details_search_list } from "./schema/event_details_search_list";
+import { events } from "./schema/events";
 import { giataCity } from "./schema/giataCity";
+import { ontoSetting } from "./schema/ontoSetting";
 import { orders } from "./schema/orders";
 import { rewards } from "./schema/rewards";
 import { tickets, ticketsRelations } from "./schema/tickets";
-import { ontoSetting } from "./schema/ontoSetting";
 import {
-  userEventFields,
   userEventFieldRelations,
+  userEventFields,
 } from "./schema/userEventFields";
-import { users, userRelations } from "./schema/users";
+import { userRelations, users } from "./schema/users";
 import { visitors } from "./schema/visitors";
 
 // export all the enums
 export {
-  eventParticipationType,
-  rewardType,
-  rewardStatus,
-  ticketStatus,
-  orderState,
   developmentEnvironment,
+  eventParticipationType,
+  orderState,
+  rewardStatus,
+  rewardType,
+  ticketStatus,
 };
 
 // export all the tables and relations
 export {
-  airdropRoutines,
   airdropRoutineRelations,
-  event_details_search_list,
-  eventFields,
+  airdropRoutines,
   eventFieldRelations,
-  events,
+  eventFields,
   eventTicket,
+  event_details_search_list,
+  events,
   giataCity,
   ontoSetting,
   orders,
   rewards,
   tickets,
   ticketsRelations,
-  userEventFields,
   userEventFieldRelations,
-  users,
+  userEventFields,
   userRelations,
+  users,
   visitors,
 };

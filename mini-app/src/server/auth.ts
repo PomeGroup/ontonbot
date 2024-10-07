@@ -1,6 +1,5 @@
 import { verify } from "jsonwebtoken";
 import { cookies } from "next/headers";
-import { NextRequest } from "next/server";
 
 export function getAuthenticatedUser(): [number, null] | [null, Response] {
   const userToken = cookies().get("token");

@@ -52,33 +52,33 @@ const updateFilter = (
 // Zustand store for managing search events input
 const useSearchEventsStore = create<{
   searchInput: SearchEventsInput;
-  setSearchInput: (input: Partial<SearchEventsInput>) => void;
+  setSearchInput: (_input: Partial<SearchEventsInput>) => void;
   resetSearchInput: () => void;
 
   // Existing setters
-  setLimit: (limit: number) => void;
-  setOffset: (offset: number) => void;
-  setSearch: (search: string) => void;
-  setSortBy: (sortBy: SearchEventsInput["sortBy"]) => void;
-  setUseCache: (useCache: boolean) => void;
+  setLimit: (_limit: number) => void;
+  setOffset: (_offset: number) => void;
+  setSearch: (_search: string) => void;
+  setSortBy: (_sortBy: SearchEventsInput["sortBy"]) => void;
+  setUseCache: (_useCache: boolean) => void;
 
   // Filter setters
-  setFilter: (filter: Filter) => void;
+  setFilter: (_filter: Filter) => void;
   setParticipationType: (
-    participationType: Filter["participationType"]
+    _participationType: Filter["participationType"]
   ) => void;
-  setOrganizerUserId: (organizer_user_id: Filter["organizer_user_id"]) => void;
-  setStartDate: (startDate: Filter["startDate"]) => void;
+  setOrganizerUserId: (_organizer_user_id: Filter["organizer_user_id"]) => void;
+  setStartDate: (_startDate: Filter["startDate"]) => void;
   setStartDateOperator: (
-    startDateOperator: Filter["startDateOperator"]
+    _startDateOperator: Filter["startDateOperator"]
   ) => void;
-  setEndDate: (endDate: Filter["endDate"]) => void;
-  setEndDateOperator: (endDateOperator: Filter["endDateOperator"]) => void;
-  setEventIds: (event_ids: Filter["event_ids"]) => void;
-  setEventUuids: (event_uuids: Filter["event_uuids"]) => void;
-  setSocietyHubId: (society_hub_id: Filter["society_hub_id"]) => void;
-  setUserId: (user_id: Filter["user_id"]) => void;
-  setRole: (role: Filter["role"]) => void;
+  setEndDate: (_endDate: Filter["endDate"]) => void;
+  setEndDateOperator: (_endDateOperator: Filter["endDateOperator"]) => void;
+  setEventIds: (_event_ids: Filter["event_ids"]) => void;
+  setEventUuids: (_event_uuids: Filter["event_uuids"]) => void;
+  setSocietyHubId: (_society_hub_id: Filter["society_hub_id"]) => void;
+  setUserId: (_user_id: Filter["user_id"]) => void;
+  setRole: (_role: Filter["role"]) => void;
   resetFilters: () => void;
 }>((set) => ({
   searchInput: initialState,

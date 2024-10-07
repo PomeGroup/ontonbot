@@ -1,11 +1,6 @@
-import type { NextApiResponse } from "next";
-type ResponseData = {
-  initData?: string;
-  hash?: string;
-  error?: string;
-};
 
-const handler = async (req: Request, res: NextApiResponse<ResponseData>) => {
+
+const handler = async (req: Request) => {
   // Extract query parameters
 
   const url = new URL(req.url);

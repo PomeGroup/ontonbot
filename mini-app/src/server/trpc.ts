@@ -2,6 +2,7 @@ import { db } from "@/db/db";
 import { validateMiniAppData } from "@/utils";
 import { TRPCError, initTRPC } from "@trpc/server";
 import { z } from "zod";
+import {usersDB} from "@/server/db/users";
 
 const t = initTRPC.create();
 
@@ -31,11 +32,7 @@ export const initDataProtectedProcedure = t.procedure
       });
     }
 
-    const user = await db.query.users.findFirst({
-      where(fields, { eq }) {
-        return eq(fields.user_id, initDataJson.user.id);
-      },
-    });
+    const user = await usersDB.selectUserById(initDataJson.user.id);
 
     if (!user) {
       throw new TRPCError({

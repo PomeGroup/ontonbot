@@ -19,9 +19,9 @@ type ParticipationType = NonNullable<
 
 interface EventTypeDrawerProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (_open: boolean) => void;
   participationType: ParticipationType;
-  setParticipationTypes: (types: ParticipationType) => void;
+  setParticipationTypes: (_types: ParticipationType) => void;
 }
 
 const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({

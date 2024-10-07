@@ -1,6 +1,3 @@
-import { Query } from "drizzle-orm"; // Adjust the import based on your ORM
-import { sql } from "drizzle-orm";
-
 type SQLParams = unknown[];
 //usage of logSQLQuery
 //   // Get the SQL string and parameters

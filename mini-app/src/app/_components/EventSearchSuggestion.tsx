@@ -3,18 +3,17 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import { trpc } from "@/app/_trpc/client";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { debounce } from "lodash";
-import { FaTimes, FaArrowAltCircleRight } from "react-icons/fa";
+import { FaTimes } from "react-icons/fa";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
-import { useRouter } from "next/navigation";
 import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 
 interface EventSearchSuggestionProps {
   searchTerm: string;
   onClose: () => void;
   autoSuggestions: any[];
-  setAutoSuggestions: (value: any[]) => void;
-  handleFilterApply: (value: any[]) => void;
-  handleAutoSuggestionAllResults: (value: any[]) => void;
+  setAutoSuggestions: (_value: any[]) => void;
+  handleFilterApply: (_value: any[]) => void;
+  handleAutoSuggestionAllResults: (_value: any[]) => void;
 }
 
 const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
@@ -22,20 +21,15 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
   onClose,
   autoSuggestions,
   setAutoSuggestions,
-  handleFilterApply,
   handleAutoSuggestionAllResults,
 }) => {
-  const router = useRouter();
+
   const [searchLoading, setSearchLoading] = useState(false);
   const suggestionBoxRef = useRef<HTMLDivElement>(null);
   const {
     searchInput,
-    setSearchInput: storeSetSearchInput,
-    setParticipationType: storeSetParticipationType,
-    setFilter: storeSetSelectedHubs,
-    setSortBy: storeSetSortBy,
   } = useSearchEventsStore();
-  const { data: searchResults, refetch } =
+  const {  refetch } =
     trpc.events.getEventsWithFilters.useQuery(
       searchEventsInputZod.parse({
         limit: 4,
@@ -69,7 +63,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
     );
 
   const debouncedFetchSearchResults = useCallback(
-    debounce((value: string) => {
+    debounce(() => {
       setSearchLoading(true);
       refetch().then((r) => console.log(r));
     }, 300),
@@ -78,7 +72,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
 
   useEffect(() => {
     if (searchTerm.length > 2) {
-      debouncedFetchSearchResults(searchTerm);
+      debouncedFetchSearchResults();
     } else {
       setAutoSuggestions([]);
     }

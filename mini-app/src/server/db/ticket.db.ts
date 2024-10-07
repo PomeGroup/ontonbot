@@ -4,16 +4,14 @@ import { tickets } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 // Function to get a ticket by its UUID
-export const getTicketByUuid = async (ticketUuid: string) => {
-  // Execute the query to select the ticket by UUID
+const getTicketByUuid = async (ticketUuid: string) => {
   const ticket = await db
-    .select()
-    .from(tickets)
-    .where(eq(tickets.order_uuid, ticketUuid))
-    .limit(1)
-    .execute();
+      .select()
+      .from(tickets)
+      .where(eq(tickets.order_uuid, ticketUuid))
+      .limit(1)
+      .execute();
 
-  // Return the ticket or null if not found
   return ticket.length > 0 ? ticket[0] : null;
 };
 
@@ -37,17 +35,14 @@ export const checkInTicket = async (
     .limit(1)
     .execute();
 
-  // If the ticket is not found, return null
   if (ticket.length === 0) {
     return null;
   }
 
-  // If the ticket is already "USED", return a specific response
   if (ticket[0].status === "USED") {
     return { alreadyCheckedIn: true };
   }
 
-  // Otherwise, update the ticket status to "USED"
   const result = await db
     .update(tickets)
     .set({
@@ -59,6 +54,13 @@ export const checkInTicket = async (
     .returning({ status: tickets.status })
     .execute();
 
-  // Return the result of the update operation (whether it was successful)
   return result.length > 0 ? ticket[0] : null;
 };
+
+// Exporting the functions as part of ticketDB
+const ticketDB = {
+  getTicketByUuid,
+  checkInTicket,
+};
+
+export default ticketDB;

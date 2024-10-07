@@ -93,10 +93,10 @@ import { TVisitor } from "../utils/types"
 async function createDatabase() {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-  });
+  })
 
 
-  await client.connect();
+  await client.connect()
 
   try {
     await client.query(`
@@ -108,22 +108,22 @@ async function createDatabase() {
                 username TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-        `);
+        `)
   } finally {
-    await client.end();
+    await client.end()
   }
 }
 
 export async function getEvent(uuid: string) {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-  });
+  })
 
   await client.connect()
 
   let event: undefined | {
     title: string
-    description:string
+    description: string
     subtitle: string
     image_url: string
   }
@@ -144,45 +144,45 @@ export async function countReferrals(
 ): Promise<{ totalReferrals: number; todayReferrals: number }> {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-  });
+  })
 
-  await client.connect();
+  await client.connect()
 
   try {
     // Total referrals
     const totalReferralsQuery =
-      "SELECT COUNT(*) AS total FROM referrals WHERE referee = $1";
-    const totalRefResult = await client.query(totalReferralsQuery, [userId]);
-    const totalReferrals = totalRefResult.rows[0].total;
+      "SELECT COUNT(*) AS total FROM referrals WHERE referee = $1"
+    const totalRefResult = await client.query(totalReferralsQuery, [userId])
+    const totalReferrals = totalRefResult.rows[0].total
 
     // Today's referrals
     const todayReferralsQuery = `
             SELECT COUNT(*) AS today 
             FROM referrals 
-            WHERE referee = $1 AND DATE(created_at) = CURRENT_DATE`;
-    const todayRefResult = await client.query(todayReferralsQuery, [userId]);
-    const todayReferrals = todayRefResult.rows[0].today;
+            WHERE referee = $1 AND DATE(created_at) = CURRENT_DATE`
+    const todayRefResult = await client.query(todayReferralsQuery, [userId])
+    const todayReferrals = todayRefResult.rows[0].today
 
-    return { totalReferrals, todayReferrals };
+    return { totalReferrals, todayReferrals }
   } catch (error) {
-    console.error("Error in countReferrals:", error);
-    throw error;
+    console.error("Error in countReferrals:", error)
+    throw error
   } finally {
-    await client.end();
+    await client.end()
   }
 }
 
 export async function addVisitor(visitor: TVisitor) {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-  });
-  await client.connect();
+  })
+  await client.connect()
 
   try {
     const visitorExists = await client.query(
       "SELECT * FROM telegram_bot_visitors WHERE telegram_id = $1",
       [visitor.telegram_id]
-    );
+    )
 
     if (visitorExists.rowCount === 0) {
       await client.query(
@@ -193,27 +193,67 @@ export async function addVisitor(visitor: TVisitor) {
           visitor.last_name,
           visitor.username,
         ]
-      );
+      )
     }
   } finally {
-    await client.end();
+    await client.end()
   }
 }
 
-export async function changeRole(username: string, newRole: string) {
+export async function changeRole(newRole: string, username: string) {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-  });
-  await client.connect();
+  })
+  await client.connect()
 
   try {
-    await client.query("UPDATE users SET role = $1 WHERE username = $2", [
+    // Check if the user exists
+    const userExists = await client.query(
+      "SELECT * FROM users WHERE username = $1 or user_id::text = $1", [
+      username,
+    ])
+
+    if (userExists.rowCount === 0) {
+      throw new Error("user_not_found")
+    }
+
+    if (userExists.rows[0].role === newRole) {
+      throw new Error("nothing_to_update")
+    }
+
+    await client.query("UPDATE users SET role = $1 WHERE username = $2 or user_id::text = $2", [
       newRole,
       username,
-    ]);
-  } finally {
-    await client.end();
+    ])
+
+    await client.end()
+  } catch (error) {
+    console.error("Error in changeRole:", error)
+    await client.end()
+    throw error
   }
 }
 
-createDatabase(); // Call to initialize the database
+
+export async function getUser(usernameOrId: string) {
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+  })
+  await client.connect()
+
+  const user = await client.query(
+    `SELECT * FROM users WHERE username = $1 or user_id::text = $1`, [
+    usernameOrId
+  ])
+  await client.end()
+  return user.rows[0]
+}
+
+export async function isUserAdmin(usernameOrId: string) {
+  const user = await getUser(usernameOrId)
+  
+  return {isAdmin: user.role === "admin", user}
+}
+
+
+createDatabase() // Call to initialize the database

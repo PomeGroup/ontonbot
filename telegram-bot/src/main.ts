@@ -29,7 +29,7 @@ console.log(process.env.BOT_TOKEN || "");
 
 bot.start(startHandler);
 
-bot.command("org", orgHandler);
+bot.command("org", orgHandler)
 
 const app = express();
 

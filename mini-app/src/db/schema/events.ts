@@ -1,3 +1,5 @@
+import { eventParticipationType, giataCity } from "@/db/schema";
+import { users } from "@/db/schema/users";
 import {
   bigint,
   boolean,
@@ -10,8 +12,6 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { eventParticipationType, giataCity } from "@/db/schema";
-import { users } from "@/db/schema/users";
 
 export const events = pgTable(
   "events",
@@ -43,6 +43,8 @@ export const events = pgTable(
       .notNull(),
     cityId: integer("city_id").references(() => giataCity.id),
     countryId: integer("country_id").references(() => giataCity.id),
+    tsRewardImage: text("ts_reward_image"),
+
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
       mode: "date",

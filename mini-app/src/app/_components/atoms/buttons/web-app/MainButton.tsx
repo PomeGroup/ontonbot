@@ -4,7 +4,7 @@ import { FC, useCallback, useEffect, useMemo } from "react";
 
 export interface MainButtonProps {
   disabled?: boolean;
-  color?: string;
+  color?: "primary" | "secondary";
   textColor?: string;
   text?: string;
   onClick?: () => void;
@@ -23,7 +23,12 @@ const MainButton: FC<MainButtonProps> = ({
 
   const buttonParams = useMemo(
     () => ({
-      color,
+      color:
+        color === "primary"
+          ? "#2ea6ff"
+          : color === "secondary"
+            ? "#747480"
+            : undefined,
       text_color: textColor,
     }),
     [color, textColor]
@@ -96,3 +101,37 @@ const MainButton: FC<MainButtonProps> = ({
 };
 
 export default MainButton;
+
+// export interface MainButtonProps {
+//   disabled?: boolean;
+//   text?: string;
+//   color?: "primary" | "secondary";
+//   onClick?: () => void;
+//   progress?: boolean;
+// }
+
+// const MainButton: FC<MainButtonProps> = ({
+//   disabled = false,
+//   text,
+//   color,
+//   onClick,
+//   progress = false,
+// }) => (
+//   <>
+//     {createPortal(
+//       <h1 className="sticky bottom-0 py-2 px-4 bg-background border-t border-muted w-full">
+//         <Button
+//           variant={color || "primary"}
+//           className="w-full"
+//           onClick={onClick}
+//           disabled={progress || disabled}
+//         >
+//           {progress ? <LucideLoader2 className="animate-spin" /> : text}
+//         </Button>
+//       </h1>,
+//       window.document.body
+//     )}
+//   </>
+// );
+
+// export default MainButton;

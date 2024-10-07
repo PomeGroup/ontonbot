@@ -1,27 +1,98 @@
-# mini-app/Dockerfile
-FROM node:20.13.1-alpine3.20
+# Stage 1: Dependencies
+FROM node:20.13.1-alpine3.20 AS dependencies
 
-# Install pnpm
-RUN npm install -g pnpm
-
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy dependencies list
+# Copy only the package.json and pnpm-lock.yaml for dependency caching
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install
+# Install pnpm and dependencies
+RUN npm install -g pnpm \
+    && pnpm install --frozen-lockfile
 
-# Copy the rest of your application source code
+# Stage 2: Build Stage
+FROM node:20.13.1-alpine3.20 AS build-stage
+
+# ARG for build-time variables
+
+
+# Accept build arguments
+ARG NODE_ENV
+ARG ENV
+ARG DATABASE_URL_NFT_MANAGER
+ARG TON_CENTER_TOKEN
+ARG TONAPI_API_KEY
+ARG DATABASE_URL
+ARG POSTGRES_USER
+ARG POSTGRES_PASSWORD
+ARG BOT_TOKEN
+ARG NEXT_PUBLIC_APP_BASE_URL
+ARG NEXT_PUBLIC_BOT_USERNAME
+ARG CACHE_ENABLED
+ARG TG_NOTIFICATION_CHANELL
+ARG ONTON_API_SECRET
+ARG TON_SOCIETY_API_KEY
+ARG TON_SOCIETY_BASE_URL
+
+# Export arguments as environment variables
+ENV NODE_ENV=${NODE_ENV}
+ENV ENV=${ENV}
+ENV DATABASE_URL_NFT_MANAGER="nulled in docker-compose for security"
+ENV TON_CENTER_TOKEN="nulled in docker-compose for security"
+ENV TONAPI_API_KEY=${TONAPI_API_KEY}
+ENV DATABASE_URL=${DATABASE_URL}
+ENV POSTGRES_USER=${POSTGRES_USER}
+ENV POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+ENV BOT_TOKEN=${BOT_TOKEN}
+ENV NEXT_PUBLIC_APP_BASE_URL=${NEXT_PUBLIC_APP_BASE_URL}
+ENV NEXT_PUBLIC_BOT_USERNAME=${NEXT_PUBLIC_BOT_USERNAME}
+ENV CACHE_ENABLED=${CACHE_ENABLED}
+ENV TG_NOTIFICATION_CHANELL=${TG_NOTIFICATION_CHANELL}
+ENV ONTON_API_SECRET=${ONTON_API_SECRET}
+ENV TON_SOCIETY_API_KEY=${TON_SOCIETY_API_KEY}
+ENV TON_SOCIETY_BASE_URL=${TON_SOCIETY_BASE_URL}
+
+RUN npm install -g pnpm
+# Set working directory
+WORKDIR /app
+
+# Copy node_modules from the dependencies stage to reuse cached dependencies
+COPY --from=dependencies /app/node_modules ./node_modules
+
+# Copy the rest of the application (Next.js, TypeScript configs, and source code)
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 3000
-# Build TypeScript into JavaScript
-RUN pnpm run build-ts
-# Build Next.js application
+# Build the Next.js application
 RUN pnpm run build
 
-# Command to run the application
+# Stage 3: Production Stage
+FROM node:20.13.1-alpine3.20 AS production-stage
+
+# ARG for build-time environment variables
+ARG NODE_ENV=production
+ARG ENV=production
+ENV NODE_ENV=${NODE_ENV}
+ENV ENV=${ENV}
+
+# Install pnpm in the production stage to ensure it's available
+RUN npm install -g pnpm
+
+# Set working directory
+WORKDIR /app
+
+# Copy the built Next.js application, node_modules, and the entire source code
+COPY --from=build-stage /app/node_modules ./node_modules
+COPY --from=build-stage /app/.next ./.next
+COPY --from=build-stage /app/public ./public
+COPY --from=build-stage /app/package.json ./package.json
+COPY --from=build-stage /app/src ./src
+COPY --from=build-stage /app/next.config.js ./next.config.js
+COPY --from=build-stage /app/tsconfig.json ./tsconfig.json
+COPY --from=build-stage /app/tailwind.config.js ./tailwind.config.js
+
+# Expose the necessary port for mini-app (Next.js)
+EXPOSE 3000
+
+# Default command for the Next.js app
 CMD ["pnpm", "run", "start"]

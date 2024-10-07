@@ -22,7 +22,7 @@ const SelectTrigger = React.forwardRef<
       "flex h-11.5 w-full items-center justify-between rounded-xl text-muted-foreground border-none bg-muted px-3 py-2 text-sm ring-offset-background placeholder:text-disabled-font focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
       className,
       {
-        "ring-red-500 ring-1": props.isError,
+        "ring-red-300 ring-1": props.isError,
       }
     )}
     {...props}

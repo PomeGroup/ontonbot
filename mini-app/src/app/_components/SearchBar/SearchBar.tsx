@@ -1,39 +1,38 @@
 "use client";
+import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
+import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
+import { trpc } from "@/app/_trpc/client";
+import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useSearchEvents } from "@/hooks/useSearchEvents";
+import useWebApp from "@/hooks/useWebApp";
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import useSearchEventsStore from "@/zustand/searchEventsInputZod";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
   IoChevronBackOutline,
   IoChevronForwardOutline,
   IoCloseOutline,
   IoSearchOutline,
 } from "react-icons/io5";
-import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
-import { useSearchEvents } from "@/hooks/useSearchEvents";
-import { trpc } from "@/app/_trpc/client";
+import { z } from "zod";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
 import MainFilterDrawer from "./MainFilterDrawer";
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import useWebApp from "@/hooks/useWebApp";
-import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
-import useSearchEventsStore from "@/zustand/searchEventsInputZod";
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { z } from "zod";
-import { usePathname } from "next/navigation";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
   showFilterTags?: boolean;
-  onUpdateResults: (data: any) => void;
+  onUpdateResults: (_data: any) => void;
   offset?: number;
-  setOffset?: (offset: number) => void;
+  setOffset?: (_offset: number) => void;
   searchParamsParsed?: any;
-  setSearchParamsParsed?: (value: any) => void;
+  setSearchParamsParsed?: (_value: any) => void;
   refetch?: () => void;
-  setFinalSearchInput?: (value: any) => void;
+  setFinalSearchInput?: (_value: any) => void;
   tabValue?: string;
-  applyTabFilter?: (tabValue: string, userId: any) => void;
+  applyTabFilter?: (_tabValue: string, _userId: any) => void;
   userRole?: "admin" | "user" | "organizer";
 }
 
@@ -49,7 +48,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   setOffset = () => {},
   setFinalSearchInput = () => {},
   tabValue = "All",
-  applyTabFilter = (tabValue: string, userId: number) => {},
+  applyTabFilter = (_tabValue: string, _userId: number) => {},
   userRole = "user",
 }) => {
   const {
@@ -120,13 +119,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
     useSearchEvents();
 
   const [initialHubsSet, setInitialHubsSet] = useState(false);
-  const [pageInit, setPageInit] = useState(false);
+  // const [pageInit, setPageInit] = useState(false);
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
+      const participantFromQuery =
+        searchParams.get("participationType")?.split(",") || [];
       const participationType =
-        searchParams.get("participationType")?.split(",") ||
-        allParticipationTypes;
+        participantFromQuery.length > 0 && participantFromQuery.length !== 2
+          ? participantFromQuery
+          : [];
 
       const selectedHubsFromParams =
         searchParams.get("selectedHubs")?.split(",") || [];
@@ -149,15 +151,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
       }
 
       setInitialHubsSet(true);
-      setTimeout(() => {
-        setPageInit(true);
-      }, 0);
+      // setTimeout(() => {
+      //   setPageInit(true);
+      // }, 0);
     } else if (hubs.length > 0 && !includeQueryParam && !initialHubsSet) {
       setSelectedHubs(hubs.map((hub: Hub) => hub.id));
       setInitialHubsSet(true);
-      setTimeout(() => {
-        setPageInit(true);
-      });
+      // setTimeout(() => {
+      //   setPageInit(true);
+      // });
     }
   }, [searchParams, hubs, includeQueryParam, initialHubsSet]);
 
@@ -279,7 +281,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const resetFilters = () => {
     const allHubs = hubs.map((hub: Hub) => hub.id);
-    setParticipationType(allParticipationTypes);
+    setParticipationType([]);
     setSelectedHubs(allHubs);
     setSortBy("start_date_desc");
     setRenderedFilterTags(!renderedFilterTags);
@@ -305,13 +307,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
     const updated = participationType.includes(type)
       ? participationType.filter((t) => t !== type)
       : [...participationType, type];
-    console.log("---updatedupdatedupdated", updated);
+    setParticipationType(["online", "in_person"]);
     if (
       updated.length === 0 &&
       participationType.includes("online") &&
       participationType.includes("in_person")
     ) {
-      setParticipationType(["online", "in_person"]);
       return;
     }
 
@@ -340,16 +341,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
     //setApplyingFilters(true);
   };
-  const selectAllHubs = () => {
-    const allHubs = hubs.map((hub: Hub) => hub.id);
-    setSelectedHubs(allHubs);
-    hapticFeedback?.selectionChanged();
-  };
-
-  const deselectAllHubs = () => {
-    setSelectedHubs([]);
-    hapticFeedback?.selectionChanged();
-  };
+  // const selectAllHubs = () => {
+  //   const allHubs = hubs.map((hub: Hub) => hub.id);
+  //   setSelectedHubs(allHubs);
+  //   hapticFeedback?.selectionChanged();
+  // };
+  //
+  // const deselectAllHubs = () => {
+  //   setSelectedHubs([]);
+  //   hapticFeedback?.selectionChanged();
+  // };
 
   const clearFilter = (filter: string) => {
     // @ts-ignore
@@ -370,26 +371,31 @@ const SearchBar: React.FC<SearchBarProps> = ({
       pathname === "/"
     ) {
       if (HideMainButton) {
+        setTimeout(() => {}, 100);
+        console.log(
+          "+++++HideMainButton isVisible",
+          WebApp?.MainButton.isVisible
+        );
         WebApp?.MainButton.hide();
-        setTimeout(() => {}, 500);
-      } else {
-        setTimeout(() => {}, 500);
+        WebApp?.MainButton.hide();
+      } else if (!HideMainButton) {
+        setTimeout(() => {}, 100);
+        console.log(
+          "++++ShowMainButton isVisible",
+          WebApp?.MainButton.isVisible
+        );
+        WebApp?.MainButton.show();
         WebApp?.MainButton.show();
       }
     }
-  }, [HideMainButton]);
+  }, [HideMainButton, WebApp?.MainButton?.isVisible]);
   const renderFilterButtons = useCallback(() => {
     let filters;
-     // filters = [
-    //   ...(participationType?.length === 0 || participationType.length === 2
-    //     ? participationType
-    //     : ["in_person", "online"]),
-    //   sortBy !== "start_date_desc" ? "Most People Reached" : null,
-    // ].filter(Boolean); // Filter out falsy values
+
     filters = [
       ...(participationType.length > 0
         ? participationType // Use the selected participation type(s)
-        : ["in_person", "online"]), // If empty, default to both
+        : []), // If empty, default to both
       sortBy !== "start_date_desc" ? "Most People Reached" : null,
     ].filter(Boolean); // Filter out falsy values
     const filterButtons = filters.map((filter, index) => (
@@ -514,9 +520,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         </div>
         {showFilterButton && (
           <MainFilterDrawer
-            onOpenChange={() => {
-              setHideMainButton(!HideMainButton);
-            }}
+            onOpenChange={setHideMainButton}
             participationType={participationType}
             hubText={hubText}
             sortBy={sortBy}

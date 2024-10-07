@@ -18,9 +18,9 @@ interface Hub {
 
 interface HubSelectorDrawerProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (_open: boolean) => void;
   selectedHubs: string[];
-  setSelectedHubs: (hubs: string[]) => void;
+  setSelectedHubs: (_hubs: string[]) => void;
   hubs: Hub[];
 }
 
@@ -72,9 +72,9 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
           <DrawerTitle>Select Hubs</DrawerTitle>
         </DrawerHeader>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 py-1 space-y-2">
           <div
-            className="flex justify-between items-center cursor-pointer p-4 px-10"
+            className="flex justify-between items-center cursor-pointer p-0 px-10"
             onClick={allSelected ? deselectAllHubs : selectAllHubs}
           >
             <span className="text-zinc-400">Select All</span>
@@ -85,7 +85,7 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
             />
           </div>
           <Separator className="my-2" />
-          <ScrollArea className="h-[50vh] w-full rounded-md border-0 p-4">
+          <ScrollArea className="h-[50vh] w-full rounded-md border-0 p-4 py-0">
             {hubs.map((hub) => (
               <div
                 key={hub.id}
@@ -104,7 +104,7 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
           </ScrollArea>
         </div>
 
-        <DrawerFooter className="flex justify-end space-x-4 p-4">
+        <DrawerFooter className="flex justify-end space-x-4 p-4 py-1">
           <button
             className="bg-blue-100 w-20 m-auto text-blue-600 px-4 py-2 rounded-full hover:bg-blue-200"
             onClick={handleDoneClick}

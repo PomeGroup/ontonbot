@@ -1,9 +1,10 @@
+"use client";
 import useWebApp from "@/hooks/useWebApp";
 import { type RouterOutput } from "@/server";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import Stepper from "../../molecules/stepper";
-import { useCreateEventStore } from "./createEventStore";
+import { useCreateEventStore } from "../../../../zustand/createEventStore";
 import { FirstStep } from "./firstTab";
 import { SecondStep } from "./secondTab";
 import { ThirdStep } from "./thirdTab";
@@ -17,6 +18,7 @@ const ManageEvent = (props: ManageEventProps) => {
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEdit = useCreateEventStore((state) => state.setEdit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
+  // const editOptions = useCreateEventStore((state) => state.edit);
   const resetState = useCreateEventStore((state) => state.resetState);
   const webApp = useWebApp();
   const router = useRouter();
@@ -46,6 +48,7 @@ const ManageEvent = (props: ManageEventProps) => {
           eventLocationType: props.event.participationType,
           countryId: props.event.countryId || undefined,
           cityId: props.event.cityId || undefined,
+          ts_reward_url: props.event.tsRewardImage || undefined,
         });
       }
     }
@@ -75,13 +78,17 @@ const ManageEvent = (props: ManageEventProps) => {
     };
   }, [webApp, currentStep, setCurrentStep, router]);
 
+  useEffect(() => {
+    document.location.pathname.endsWith("create") && resetState();
+  }, []);
+
   return (
     <>
       <Stepper
         steps={[
           { icon: <span>1</span>, label: "General info" },
           { icon: <span>2</span>, label: "Time and place" },
-          { icon: <span>3</span>, label: "Event’s Password" },
+          { icon: <span>3</span>, label: "Reward Setting" },
         ]}
         currentStep={currentStep}
       />

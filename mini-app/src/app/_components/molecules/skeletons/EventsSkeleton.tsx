@@ -1,31 +1,13 @@
-import React from "react";
-import { Skeleton } from "@mui/material";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const EventsSkeleton = () => {
-  return (
-    <div>
-      <Skeleton
-        className="rounded-[6px] mb-4"
-        variant="rectangular"
-        width={"100%"}
-        height={40}
-      />
-
-      <Skeleton
-        className="rounded-[14px] mb-4"
-        variant="rectangular"
-        width={"100%"}
-        height={346}
-      />
-
-      <Skeleton
-        className="rounded-[14px]"
-        variant="rectangular"
-        width={"100%"}
-        height={346}
-      />
-    </div>
-  );
+    return (
+        <div>
+            <Skeleton className="rounded-[6px] mb-4 h-10 w-full" />
+            <Skeleton className="rounded-[14px] mb-4 h-[346px] w-full" />
+            <Skeleton className="rounded-[14px] h-[346px] w-full" />
+        </div>
+    );
 };
 
 export default EventsSkeleton;

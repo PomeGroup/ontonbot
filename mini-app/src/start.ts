@@ -1,11 +1,10 @@
 import { rewards } from "@/db/schema";
-import { cacheKeys, deleteCache, getCache, setCache } from "@/lib/cache";
+import { redisTools } from "@/lib/redisTools";
 import { getErrorMessages } from "@/lib/error";
-import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
+import { sendLogNotification } from "@/lib/tgBot";
 import { createUserRewardLink } from "@/lib/ton-society-api";
 import { msToTime } from "@/lib/utils";
-import { EventType, RewardType, VisitorsType } from "@/types/event.types";
-import { rewardLinkZod } from "@/types/user.types";
+import { RewardType,  } from "@/types/event.types";
 import { AxiosError } from "axios";
 import { CronJob } from "cron";
 import "dotenv/config";
@@ -13,8 +12,10 @@ import { eq, sql } from "drizzle-orm";
 import pLimit from "p-limit";
 import { db } from "./db/db";
 import { wait } from "./lib/utils";
-import { sleep } from "./utils";
-
+import telegramService from "@/server/routers/services/telegramService";
+import {findVisitorById} from "@/server/db/visitors";
+import rewardDB from "@/server/db/rewards.db";
+import {sleep} from "@/utils";
 new CronJob("0 */2 * * *", cronJobFunction, null, true);
 
 process.on("unhandledRejection", (err) => {
@@ -26,14 +27,14 @@ cronJobFunction();
 async function cronJobFunction() {
   const startTime = Date.now();
 
-  const cronLock = getCache(cacheKeys.cronJobLock);
+  const cronLock = await redisTools.getCache(redisTools.cacheKeys.cronJobLock);
 
   if (cronLock) {
     console.log("Cron job is already running");
     return;
   }
   // 8h ttl
-  setCache(cacheKeys.cronJobLock, true, 28_800_000);
+  await redisTools.setCache(redisTools.cacheKeys.cronJobLock, true, 28_800_000);
   void Promise.allSettled([createRewards(), notifyUsersForRewards()])
     .then(([createdRewards, notifiedUsers]) => {
       const endTime = Date.now();
@@ -63,13 +64,13 @@ ${getErrorMessages(err).join("\n\n")}
         })
     )
     .finally(() => {
-      deleteCache(cacheKeys.cronJobLock);
+      redisTools.deleteCache(redisTools.cacheKeys.cronJobLock);
     });
 }
 
 async function createRewards() {
   if (process.env.ENV === "staging") {
-    // on stage we simulate a 1hour delay
+    // on stage, we simulate a 1hour delay
     await wait(1000 * 60 * 60);
   }
 
@@ -95,11 +96,7 @@ async function createRewards() {
 
     const createRewardPromises = pendingRewards.map(async (pendingReward) => {
       try {
-        const visitor = await db.query.visitors.findFirst({
-          where: (fields, { eq }) => {
-            return eq(fields.id, pendingReward.visitor_id);
-          },
-        });
+        const visitor = await findVisitorById(pendingReward.visitor_id);
 
         const event = await db.query.events.findFirst({
           where: (fields, { eq }) => {
@@ -120,15 +117,7 @@ async function createRewards() {
           }
         );
 
-        await db
-          .update(rewards)
-          .set({
-            status: "created",
-            data: response.data.data,
-            updatedBy: "system",
-            updatedAt: new Date(),
-          })
-          .where(eq(rewards.id, pendingReward.id));
+        await  rewardDB.updateReward(pendingReward.id, response.data.data);
       } catch (error) {
         const isEventPublished =
           error instanceof AxiosError
@@ -136,11 +125,7 @@ async function createRewards() {
             : true;
         // if it was not published we will delete all the other rewards associated with this event from the loop
         if (!isEventPublished) {
-          const visitor = await db.query.visitors.findFirst({
-            where: (fields, { eq }) => {
-              return eq(fields.id, pendingReward.visitor_id);
-            },
-          });
+          const visitor = await findVisitorById(pendingReward.visitor_id);
 
           const unpublishedEvent = await db.query.events.findFirst({
             where: (fields, { eq }) => {
@@ -148,11 +133,7 @@ async function createRewards() {
             },
           });
           pendingRewards = pendingRewards.filter(async (r) => {
-            const visitor = await db.query.visitors.findFirst({
-              where: (fields, { eq }) => {
-                return eq(fields.id, r.visitor_id);
-              },
-            });
+            const visitor = await  findVisitorById(r.visitor_id);
 
             const event = await db.query.events.findFirst({
               where: (fields, { eq }) => {
@@ -168,18 +149,15 @@ async function createRewards() {
 
         if (isEventPublished || shouldFail) {
           try {
-            await db
-              .update(rewards)
-              .set({
-                tryCount: isEventPublished
-                  ? pendingReward.tryCount + 1
-                  : undefined,
-                status: shouldFail ? "failed" : undefined,
-                data: shouldFail ? { fail_reason: error } : undefined,
-                updatedBy: "system",
-                updatedAt: new Date(),
-              })
-              .where(eq(rewards.id, pendingReward.id));
+            // Call the function to handle the reward update with conditions
+            await rewardDB.updateRewardWithConditions(
+                pendingReward.id,
+                isEventPublished,
+                pendingReward,
+                shouldFail,
+                shouldFail ? (error as string) : undefined // Cast error to string
+            );
+
           } catch (error) {
             console.log("DB_ERROR_102", error);
           }
@@ -230,9 +208,7 @@ async function notifyUsersForRewards() {
 
 async function processReward(createdReward: RewardType) {
   try {
-    const visitor = await db.query.visitors.findFirst({
-      where: (fields, { eq }) => eq(fields.id, createdReward.visitor_id),
-    });
+    const visitor = await findVisitorById(createdReward.visitor_id);
 
     if (!visitor) {
       throw new Error("Visitor not found");
@@ -246,7 +222,7 @@ async function processReward(createdReward: RewardType) {
       throw new Error("Event not found");
     }
 
-    await sendRewardNotification(createdReward, visitor, event);
+    await telegramService.sendRewardNotification(createdReward, visitor, event);
     await updateRewardStatus(createdReward.id, "notified");
   } catch (error) {
     console.error("BOT_API_ERROR", error);
@@ -254,17 +230,7 @@ async function processReward(createdReward: RewardType) {
   }
 }
 
-async function sendRewardNotification(
-  reward: RewardType,
-  visitor: VisitorsType,
-  event: EventType
-) {
-  await sendTelegramMessage({
-    link: rewardLinkZod.parse(reward.data).reward_link,
-    chat_id: visitor.user_id as number,
-    message: `Hey there, you just received your reward for ${event.title} event. Please click on the link below to claim it`,
-  });
-}
+
 
 async function updateRewardStatus(
   rewardId: string,

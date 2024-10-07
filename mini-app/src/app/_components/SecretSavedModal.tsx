@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import { Title } from "@radix-ui/react-toast";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
 import MainButton from "./atoms/buttons/web-app/MainButton";
-import PopupFooterWrapper from "./PopupFooterWrapper";
 interface ModalDialogProps {
   isVisible: boolean;
   onClose: () => void;
@@ -62,21 +60,7 @@ const descriptionStyle: React.CSSProperties = {
   color: "#fff",
 };
 
-const footerStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "20px",
-  backgroundColor: "#18222d",
-  height: "15vh",
-  verticalAlign: "bottom",
-};
 
-const buttonStyle: React.CSSProperties = {
-  width: "100%",
-  backgroundColor: "#2ea6ff",
-  color: "#fafafa",
-  padding: "10px",
-  borderRadius: "10px",
-};
 
 const ModalDialog: React.FC<ModalDialogProps> = ({
   isVisible,
@@ -131,7 +115,7 @@ const ModalDialog: React.FC<ModalDialogProps> = ({
           <MainButton
             onClick={onClose}
             text={closeButtonText}
-            color={"#2ea6ff"}
+            color={"primary"}
           />
         )}
       </div>

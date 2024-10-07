@@ -14,7 +14,7 @@ const GenericTask: React.FC<{
   defaultEmoji: string;
   isError?: boolean;
   errorMessage?: string;
-  onClick?: (e: any) => void;
+  onClick?: (_e: any) => void;
   className?: string;
 }> = ({
   title,

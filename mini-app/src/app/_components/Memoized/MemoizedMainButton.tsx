@@ -8,7 +8,7 @@ interface MainButtonProps {
 
 // Memoize MainButton to prevent re-renders
 const MemoizedMainButton = memo(({ text, onClick }: MainButtonProps) => (
-    <MainButton text={text} onClick={onClick} />
+    <MainButton text={text} onClick={onClick}  />
 ));
 
 // Set display name for better debugging

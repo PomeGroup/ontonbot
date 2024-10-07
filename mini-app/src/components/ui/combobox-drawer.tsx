@@ -11,9 +11,10 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import useWebApp from "@/hooks/useWebApp";
+import {FiAlertCircle} from "react-icons/fi";
 
 interface ComboboxDrawerProps {
   options?: { value: string; label: string }[];
@@ -22,9 +23,9 @@ interface ComboboxDrawerProps {
   searchPlaceholder?: string;
   className?: string;
   defaultValue?: string;
-  onSelect?: (value: string) => void;
+  onSelect?: (_value: string) => void;
   errors?: (string | undefined)[];
-  onInputChange?: (inputValue: string) => void;
+  onInputChange?: (_inputValue: string) => void;
   disabled?: boolean;
 }
 
@@ -98,7 +99,7 @@ export function ComboboxDrawer({
             role="combobox"
             aria-expanded={open}
             className={cn(`${className} justify-between`, {
-              "border-red-500 border": Boolean(errors?.length),
+              "border-red-300 border": Boolean(errors?.length),
             })}
             disabled={disabled}
           >
@@ -163,7 +164,11 @@ export function ComboboxDrawer({
         </DrawerContent>
       </Drawer>
 
-      {errors && <p className="text-sm text-red-500">{errors}</p>}
+      {errors && (
+        <div className="text-red-300  pl-3 pt-1  text-sm flex items-center">
+          <FiAlertCircle className="mr-2" /> {errors}
+        </div>
+      )}
     </div>
   );
 }

@@ -11,11 +11,11 @@ interface StoreState {
   completedTaskIds: Set<string | number>; // Track IDs of completed tasks
   totalDynamicTasks: number; // The total number of dynamic tasks expected
   walletConnected: boolean;
-  addDynamicField: (field: DynamicField) => void;
-  markTaskCompleted: (taskId: string | number) => void;
-  markTaskUncompleted: (taskId: string | number) => void; // New method to uncomplete tasks
-  setTotalDynamicTasks: (total: number) => void;
-  setWalletConnected: (status: boolean) => void;
+  addDynamicField: (_field: DynamicField) => void;
+  markTaskCompleted: (_taskId: string | number) => void;
+  markTaskUncompleted: (_taskId: string | number) => void; // New method to uncomplete tasks
+  setTotalDynamicTasks: (_total: number) => void;
+  setWalletConnected: (_status: boolean) => void;
   allTasksCompleted: () => boolean;
 }
 

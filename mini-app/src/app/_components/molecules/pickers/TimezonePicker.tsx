@@ -14,9 +14,9 @@ import { ZodErrors } from "@/types";
 import Card from "../../atoms/cards";
 import Labels from "../../atoms/labels";
 
-const Timezonepicker: FC<{
+const TimezonePicker: FC<{
   value: string;
-  onValueChange: (value: string) => void;
+  onValueChange: (_value: string) => void;
   errors: ZodErrors;
 }> = ({ value, onValueChange, errors }) => {
   return (
@@ -62,4 +62,4 @@ const Timezonepicker: FC<{
   );
 };
 
-export default Timezonepicker;
+export default TimezonePicker;

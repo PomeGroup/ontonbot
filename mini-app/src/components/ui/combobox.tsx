@@ -24,7 +24,7 @@ interface ComboboxProps {
   searchPlaceholder?: string;
   className?: string;
   defaultValue?: string;
-  onSelect?: (value: string) => void;
+  onSelect?: (_value: string) => void;
   errors?: (string | undefined)[];
 }
 
