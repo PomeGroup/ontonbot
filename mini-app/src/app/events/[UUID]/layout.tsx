@@ -63,7 +63,7 @@ const EventLayout = ({ children }: EventLayoutProps) => {
     { event_uuid: params.UUID, init_data: webApp?.initData || "" },
     { enabled: Boolean(webApp?.initData) }
   );
-  const event = data as unknown as EventDataOnlyType;
+  const event = data;
 
   const { data: user, isLoading: userLoading } = trpc.users.getUser.useQuery(
     { init_data: webApp?.initData || "" },
@@ -90,11 +90,11 @@ const EventLayout = ({ children }: EventLayoutProps) => {
   const isFree = !event.ticketToCheckIn;
   
   const start_date = event.start_date && event.end_date
-    ? formatDateRange(event.start_date.getTime(), event.end_date.getTime())
+    ? formatDateRange(event.start_date, event.end_date)
     : "Date not available";
 
   const time = event.start_date && event.end_date
-    ? formatTimeRange(event.start_date.getTime(), event.end_date.getTime())
+    ? formatTimeRange(event.start_date, event.end_date)
     : "Time not available";
 
   attributes.push(
@@ -182,7 +182,7 @@ const EventLayout = ({ children }: EventLayoutProps) => {
         isFreeEvent={isFree}
         userRole={user.role as UserType['userRole']}
         isInPersonEvent={isInPersonEvent}
-        eventPrice={event?.eventTicket?.price ?? 0}
+        eventPrice={event?.eventTicket?.price ? +event.eventTicket.price: 0 }
         eventStartDate={event?.start_date ? new Date(event.start_date) : null}  // Pass Date object directly
         eventEndDate={event?.end_date ? new Date(event.end_date) : null}        // Pass Date object directly
       />
