@@ -222,15 +222,15 @@ export const getEventsWithFilters = async (
 
   const hash =  crypto.createHash("md5").update(stringToHash).digest("hex");
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
-  console.log("string",stringToHash);
-  console.log("hash",hash);
+ // console.log("string",stringToHash);
+  //console.log("hash",hash);
   const cachedResult = await redisTools.getCache(cacheKey);
   if (cachedResult ) {
     /// show return from cache and time
-    console.log("👙👙 cachedResult 👙👙" + Date.now());
+  //  console.log("👙👙 cachedResult 👙👙" + Date.now());
     return cachedResult;
   }
-  console.log("no cache string",stringToHash);
+ // console.log("no cache string",stringToHash);
   // string {"limit":2,"offset":0,"search":"","filter":{"participationType":["online","in_person"],"startDateOperator":">=","endDate":1728402000,"endDateOperator":"<="},"sortBy":"start_date_desc"}
   // console.js:38hash e79a3504d48bb183ad70bb539f272a41
   let query = db.select().from(event_details_search_list);
