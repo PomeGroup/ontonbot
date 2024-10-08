@@ -116,15 +116,9 @@ const EventMainButton = ({
 
   const paidEvent = !isFreeEvent;
 
-  // if user is admin or organizer show Edit event. else show noting!
   useEffect(() => {
-    // if (!mainButton) {
-    //   console.error("Main button is not initialized");
-    //   return;
-    // }
-
     // Admin or organizer should see "Edit Event"
-    if (userRole === "admin" || userRole === "organizer") {
+    if (eventManagerRole) {
       mainButton?.setBgColor("#007AFF");
       mainButton?.setTextColor("#ffffff").setText(`Edit Event ${process.env.ENV === "development" ? " on EventTmaSetting" : ""}`);
       mainButton?.enable().show();
@@ -135,7 +129,6 @@ const EventMainButton = ({
         mainButton?.off("click", editBtnOnClick);
       };
     }
-
 
     // Conditions for regular users (userRole === "user")
     if (userRole === "user") {
