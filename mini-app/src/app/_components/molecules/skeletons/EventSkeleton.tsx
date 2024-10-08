@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const EventSkeleton = () => {
     return (
-        <div>
+        <div className="py-2">
             <div className="flex justify-between">
                 <Skeleton className="rounded-[14px] h-10 w-[131px]" />
                 <Skeleton className="rounded-full mb-4 h-10 w-10" />
