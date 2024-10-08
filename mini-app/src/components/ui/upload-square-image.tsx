@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -108,8 +108,11 @@ export const UploadSquareImage = ({
       return;
     }
     const file = fileInput.files[0];
+
+    // Convert file to base64 string for preview
     const imageData = (await fileToBase64(file)) as string;
-    setImage(imageData);
+    setImage(imageData); // Set this image data for cropping
+    setImagePreview(imageData); // Set the preview image so it's displayed immediately
     setIsDialogOpen(true);
   };
 
@@ -150,9 +153,14 @@ export const UploadSquareImage = ({
     );
 
     return new Promise<string>((resolve) => {
-      canvas.toBlob((blob) => {
+      canvas.toBlob(async (blob) => {
         if (blob) {
-          resolve(URL.createObjectURL(blob));
+          console.log("Blob:", blob);
+          const buffer = Buffer.from(await blob.arrayBuffer());
+          const base64 =
+            `data:${blob.type};base64,${buffer.toString("base64")}`;
+
+          resolve(base64);
         }
       }, "image/jpeg");
     });
@@ -161,14 +169,43 @@ export const UploadSquareImage = ({
   const handleCropSave = async () => {
     if (image && croppedAreaPixels) {
       const croppedImage = await getCroppedImg(image, croppedAreaPixels);
+      console.log("croppedImage,", croppedImage);
+
       if (croppedImage) {
+        setImagePreview(croppedImage); // Set the cropped image preview
         uploadImage.mutate({
           init_data: webApp?.initData || "",
           image: croppedImage,
+          subfolder: "event"
         });
         setIsDialogOpen(false);
       }
     }
+  };
+
+  const isValidUrl = (string: string) => {
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const getImageSource = (src: string) => {
+    if (isValidUrl(src)) {
+      return src;
+    }
+    // If it's a relative path, prepend the base URL
+    if (src.startsWith('/')) {
+      return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000'}${src}`;
+    }
+    // If it's a base64 string, return as is
+    if (src.startsWith('data:image')) {
+      return src;
+    }
+    // If it's just a filename, construct the full URL
+    return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000'}/data/${src}`;
   };
 
   return (
@@ -192,7 +229,7 @@ export const UploadSquareImage = ({
               <Image
                 alt="Uploaded image"
                 className="rounded-xl"
-                src={imagePreview}
+                src={getImageSource(imagePreview)}
                 width={80}
                 height={80}
               />
@@ -227,10 +264,10 @@ export const UploadSquareImage = ({
         </DrawerHeader>
         {imagePreview && (
           <Image
-            src={imagePreview}
+            src={getImageSource(imagePreview)}
             width={400}
             height={400}
-            alt="Uploaded Images"
+            alt={`Uploaded Images ${imagePreview}`}
             className="w-full h-auto"
           />
         )}

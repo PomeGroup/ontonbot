@@ -20,6 +20,12 @@ const nextConfig = {
         protocol: "http",
         hostname: "localhost",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
+        pathname: "/data/**", // Adjust the pathname if needed
+      },
     ],
   },
   webpack: (config, { isServer, webpack }) => {
