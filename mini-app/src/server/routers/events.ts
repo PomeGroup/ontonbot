@@ -1,15 +1,15 @@
 import { db } from "@/db/db";
 import { eventFields, events } from "@/db/schema";
-import { fetchCountryById } from "@/server/db/giataCity.db";
-import {
-  findVisitorByUserAndEventUuid,
-  selectVisitorsWithWalletAddress,
-} from "@/server/db/visitors";
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
+import { fetchCountryById } from "@/server/db/giataCity.db";
+import {
+  findVisitorByUserAndEventUuid,
+  selectVisitorsWithWalletAddress,
+} from "@/server/db/visitors";
 import {
   EventDataSchema,
   HubsResponse,
@@ -17,6 +17,8 @@ import {
   UpdateEventDataSchema,
 } from "@/types";
 
+import { getErrorMessages } from "@/lib/error";
+import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import { fetchBalance } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
@@ -38,8 +40,6 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
-import { TonSocietyRegisterActivityT } from "@/types/event.types";
-import { getErrorMessages } from "@/lib/error";
 
 dotenv.config();
 
@@ -60,26 +60,6 @@ export const eventsRouter = router({
 
   getEvent: initDataProtectedProcedure
     .input(z.object({ event_uuid: z.string() }))
-    .output(
-      z
-        .object({
-          type: z.number().nullable(),
-          event_uuid: z.string(),
-          event_id: z.number(),
-          title: z.string().nullable(),
-          subtitle: z.string().nullable(),
-          description: z.string().nullable(),
-          image_url: z.string().nullable(),
-          tsRewardImage: z.string().nullable(),
-          society_hub: z
-            .object({
-              id: z.union([z.string(), z.number(), z.null()]),
-              name: z.string().nullable(),
-            })
-            .nullable(),
-        })
-        .nullable()
-    )
     .query(async (opts) => {
       try {
         const eventVisitor = await findVisitorByUserAndEventUuid(
@@ -104,7 +84,7 @@ export const eventsRouter = router({
           event.society_hub = { id: null, name: null }; // Ensure both `id` and `name` are nullable
         }
 
-        return event || null;
+        return event;
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;
@@ -174,8 +154,8 @@ export const eventsRouter = router({
           const hashedSecretPhrase = inputSecretPhrase
             ? await hashPassword(inputSecretPhrase)
             : undefined;
-          
-            if (!hashedSecretPhrase) {
+
+          if (!hashedSecretPhrase) {
             throw new TRPCError({
               code: "BAD_REQUEST",
               message: "Invalid secret phrase",
