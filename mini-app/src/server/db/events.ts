@@ -202,7 +202,7 @@ export const getEventsWithFilters = async (
   if(filter?.startDate ){
     const tenMinutesInMs = 10000  ; // 10 minutes in milliseconds
     filter.startDate  =  Math.floor(filter.startDate / tenMinutesInMs) * tenMinutesInMs;
-    console.log("sssssssssssssssssss " , filter.startDate);
+    //console.log("sssssssssssssssssss " , filter.startDate);
   }
   if(filter?.endDate ){
     const tenMinutesInMs = 10000  ; // 10 minutes in milliseconds
@@ -370,7 +370,7 @@ export const getEventsWithFilters = async (
   //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
-  await redisTools.setCache(cacheKey, eventsData, 600);
+  await redisTools.setCache(cacheKey, eventsData, 60);
   return eventsData;
 };
 
