@@ -13,15 +13,16 @@ import { trpc } from "./_trpc/client";
 import "./page.css";
 import { useConfig } from "@/context/ConfigContext";
 import Image from "next/image";
-import MemoizedMainButton from "@/app/_components/Memoized/MemoizedMainButton";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { OntonEvent } from "@/types/event.types";
 import EventSection from "@/components/event/EventSection";
 import * as Sentry from "@sentry/nextjs";
+import { useMainButton } from "@telegram-apps/sdk-react";
 
 export default function Home() {
+  const mainButton = useMainButton(true);
   const { config } = useConfig();
   const SliderEventUUID = config?.homeSliderEventUUID || "";
   const webApp = useWebApp();
@@ -146,7 +147,15 @@ export default function Home() {
   const seeAllPastEventsLink = "/search/?tab=Past";
   const seeAllOngoingEventsLink = "/search/?tab=OnGoing";
 
-  // Set local state when data is fetched
+  useEffect(() => {
+    if (userRole === "admin" || userRole === "organizer") {
+      mainButton?.setBgColor("#007AFF");
+      mainButton?.setTextColor("#ffffff").setText("Create Event");
+      mainButton?.enable().show();
+      mainButton?.on("click", handleCreateEvent);
+    }
+  }, [userRole, mainButton ])
+
   useEffect(() => {
     if (sliderEventData?.data && sliderEventData?.data?.length > 0)
       setSliderEventsState(sliderEventData.data);
@@ -200,16 +209,16 @@ export default function Home() {
     [refetchMyEvents]
   );
 
-  const handleCreateEvent = useCallback(() => {
+  const handleCreateEvent = () => {
     router.push("/events/create");
-  }, [router]);
+  }
 
   return (
     <div className="flex flex-col h-screen">
       <div className="sticky top-0 z-50 w-full pb-1">
         <SearchBar
           includeQueryParam={false}
-          onUpdateResults={() => {}}
+          onUpdateResults={() => { }}
           tabValue={tabValueForSearchBar}
           userRole={authorized ? userRole : "user"}
         />
@@ -333,17 +342,6 @@ export default function Home() {
           </SwiperSlide>
         </Swiper>
       </div>
-
-      {!useAuthLoading &&
-        (userRole === "admin" || userRole === "organizer") &&
-        // authorized && <button className="absolute bottom-0 w-full bg-blue-500 z-50 rounded-md py-2 border-background border-2" onClick={handleCreateEvent}>Create new event</button>
-        authorized && (
-          <MemoizedMainButton
-            text="Create new event"
-            onClick={handleCreateEvent}
-          />
-        )
-        }
     </div>
   );
 }
