@@ -1,5 +1,4 @@
 import { db } from "@/db/db";
-import crypto from "crypto";
 import {
   event_details_search_list,
   eventFields,
@@ -15,6 +14,8 @@ import { removeKey } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import { TRPCError } from "@trpc/server";
+import crypto from "crypto";
 import {
   and,
   asc,
@@ -27,7 +28,6 @@ import {
 } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 
 interface SocietyHub {
   id: string | number | null;
@@ -154,7 +154,7 @@ export const selectEventByUuid = async (
     : null; // Return null if no society_hub exists
 
   // Fetch additional paid event data if applicable
-  let paidEventData = {};
+  let paidEventData: Awaited<ReturnType<typeof getPaidEventData>> | undefined;
   if (eventData.ticketToCheckIn) {
     if (!user_id) {
       throw new TRPCError({
@@ -169,23 +169,16 @@ export const selectEventByUuid = async (
     });
   }
 
-  // Merge and return event data along with transformed society_hub and paid event data
   return {
+    ...restEventData, // Spread the rest of eventData properties
+    dynamic_fields: dynamicFields,
+    organizer,
+    ...paidEventData,
     ...eventData, // Spread main event data
+    activity_id: restEventData.activity_id,
     society_hub: societyHub, // Use transformed `society_hub`
     ...paidEventData, // Spread the paid event data into the final response
   };
-
-  // return {
-  //   ...restEventData, // Spread the rest of eventData properties
-  //   dynamic_fields: dynamicFields,
-  //   organizer,
-  //   ...paidEventData,
-  //   ...eventData, // Spread main event data
-  //   activity_id: restEventData.activity_id,
-  //   society_hub: societyHub, // Use transformed `society_hub`
-  //   ...paidEventData, // Spread the paid event data into the final response
-  // };
 };
 
 export const getUserEvents = async (
