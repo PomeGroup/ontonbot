@@ -1,27 +1,26 @@
 "use client";
 
-import { ReactNode } from "react";
-import Image from "next/image";
+import QrCodeButton from "@/app/_components/atoms/buttons/QrCodeButton";
+import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
+import { trpc } from "@/app/_trpc/client";
+import { Card, CardContent } from "@/components/base/card";
+import { Section } from "@/components/base/section";
 import SectionCoverImage from "@/components/blocks/SectionCoverImage";
-import PageTma from "@/components/Page";
-import SeparatorTma from "@/components/Separator";
 import EventAttributes from "@/components/event/EventAttributes";
 import EventContent from "@/components/event/EventContent";
 import EventHeader from "@/components/event/EventHeader";
 import EventMainButton from "@/components/event/EventTmaSettings";
-import { formatDateRange, formatTimeRange } from "@/utils/date";
-import { Section } from "@/components/base/section";
+import PageTma from "@/components/Page";
+import SeparatorTma from "@/components/Separator";
 import useWebApp from "@/hooks/useWebApp";
-import { trpc } from "@/app/_trpc/client";
-import { useEventStore } from "@/zustand/store/eventStore"; // Zustand store
-import { useParams } from "next/navigation";
-import EventPageLoadingSkeleton from "./EventPageLoadingSkeleton";
-import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
-import { Card, CardContent } from "@/components/base/card";
-import QrCodeButton from "@/app/_components/atoms/buttons/QrCodeButton";
-import { ChevronLeft } from "lucide-react";
 import { UserType } from "@/types/user.types";
-import { EventDataOnlyType } from "@/types/event.types";
+import { formatDateRange, formatTimeRange } from "@/utils/date";
+import { useEventStore } from "@/zustand/store/eventStore"; // Zustand store
+import { ChevronLeft } from "lucide-react";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import { ReactNode } from "react";
+import EventPageLoadingSkeleton from "./EventPageLoadingSkeleton";
 
 type EventLayoutProps = {
   children: ReactNode; // This will be the specific content for each event type
@@ -81,26 +80,26 @@ const EventLayout = ({ children }: EventLayoutProps) => {
     return <div>Error loading event or user data</div>;
   }
 
-  const eventManagerRole = user.role === "admin" || user.user_id === event.owner;
-  
+  const eventManagerRole =
+    user.role === "admin" || user.user_id === event.owner;
+
   // Initialize attributes array and ensure it starts with valid data
   const attributes: [string, ReactNode][] = [];
-  
+
   const isInPersonEvent = event.participationType === "in_person";
   const isFree = !event.ticketToCheckIn;
-  
-  const start_date = event.start_date && event.end_date
-    ? formatDateRange(event.start_date, event.end_date)
-    : "Date not available";
 
-  const time = event.start_date && event.end_date
-    ? formatTimeRange(event.start_date, event.end_date)
-    : "Time not available";
+  const start_date =
+    event.start_date && event.end_date
+      ? formatDateRange(event.start_date, event.end_date)
+      : "Date not available";
 
-  attributes.push(
-    ["Date", start_date],
-    ["Time", time]
-  );
+  const time =
+    event.start_date && event.end_date
+      ? formatTimeRange(event.start_date, event.end_date)
+      : "Time not available";
+
+  attributes.push(["Date", start_date], ["Time", time]);
 
   // Ensure childAttributes is not empty and merge it if it exists
   if (childAttributes && childAttributes.length > 0) {
@@ -128,8 +127,14 @@ const EventLayout = ({ children }: EventLayoutProps) => {
 
   return (
     <PageTma variant={"withSections"}>
-      <Section variant={"bottomRounded"} className={"pb-2"}>
-        <SectionCoverImage src={""} alt={""}>
+      <Section
+        variant={"bottomRounded"}
+        className={"pb-2"}
+      >
+        <SectionCoverImage
+          src={""}
+          alt={""}
+        >
           <Image
             priority
             width={352}
@@ -155,18 +160,30 @@ const EventLayout = ({ children }: EventLayoutProps) => {
 
       {/* Conditional QR Code or SBT Award */}
       {eventManagerRole ? (
-        <Section variant={"rounded"} className={"py-6"}>
+        <Section
+          variant={"rounded"}
+          className={"py-6"}
+        >
           {/* Show QR code for organizers */}
-          <QrCodeButton event_uuid={event.event_uuid} url={`/events/${event.event_uuid}`} />
+          <QrCodeButton
+            event_uuid={event.event_uuid}
+            url={`/events/${event.event_uuid}`}
+          />
         </Section>
       ) : (
-        <Section variant={"rounded"} className={"py-6"}>
+        <Section
+          variant={"rounded"}
+          className={"py-6"}
+        >
           {/* Show SBT Award for regular users */}
           <SBT_Award />
         </Section>
       )}
 
-      <Section variant={"topRounded"} className={"py-6"}>
+      <Section
+        variant={"topRounded"}
+        className={"py-6"}
+      >
         <EventContent content={event.description ?? ""} />
       </Section>
 
@@ -175,16 +192,16 @@ const EventLayout = ({ children }: EventLayoutProps) => {
       {/* Event Manager Settings */}
       <EventMainButton
         eventManagerRole={eventManagerRole}
-        isSoldOut={event.isSoldOut as boolean}
-        userHasTicket={event.userTicket}
-        orderAlreadyPlace={event.userOrder}
+        isSoldOut={Boolean(event.isSoldOut)}
+        userHasTicket={Boolean(event.userTicket)}
+        orderAlreadyPlace={Boolean(event.userOrder)}
         eventId={params.UUID}
         isFreeEvent={isFree}
-        userRole={user.role as UserType['userRole']}
+        userRole={user.role as UserType["userRole"]}
         isInPersonEvent={isInPersonEvent}
-        eventPrice={event?.eventTicket?.price ? +event.eventTicket.price: 0 }
-        eventStartDate={event?.start_date ? new Date(event.start_date) : null}  // Pass Date object directly
-        eventEndDate={event?.end_date ? new Date(event.end_date) : null}        // Pass Date object directly
+        eventPrice={event?.eventTicket?.price ? +event.eventTicket.price : 0}
+        eventStartDate={event?.start_date ? new Date(event.start_date) : null} // Pass Date object directly
+        eventEndDate={event?.end_date ? new Date(event.end_date) : null} // Pass Date object directly
       />
     </PageTma>
   );
