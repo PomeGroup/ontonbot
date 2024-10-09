@@ -19,7 +19,7 @@ const AddVisitorWrapper: FC<{ children: React.ReactNode; hash: string }> = ({
 
     async function addVisitor() {
       await addVisitorMutation.mutateAsync({
-        initData,
+        init_data: initData,
         event_uuid: hash,
       });
     }
