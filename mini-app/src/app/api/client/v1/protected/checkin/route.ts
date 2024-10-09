@@ -2,7 +2,8 @@ import { z } from "zod";
 import { NextResponse } from "next/server";
 import ticketDB from "@/server/db/ticket.db";
 import rewardsService from "@/server/routers/services/rewardsService";
-import { validateJwtFromRequest } from "@/app/api/client/v1/authService"; // Import the JWT validation function
+import { validateJwtFromRequest } from "@/app/api/client/v1/authService";
+import {selectUserById} from "@/server/db/users"; // Import the JWT validation function
 
 // Zod schema to validate the request body
 const checkInTicketSchema = z.object({
@@ -46,7 +47,7 @@ function isAlreadyCheckedIn(
  * /checkin:
  *   post:
  *     summary: Check in a ticket for an event (JWT protected)
- *     description: Checks in a ticket for an event using the order UUID. If the user is successfully checked in, it returns the check-in status and embeds the reward creation result in `rewardResult`. Requires a valid JWT token.
+ *     description: Checks in a ticket for an event using the order UUID. If the user is successfully checked in, it returns the check-in status, user information, and embeds the reward creation result in `rewardResult`. Requires a valid JWT token.
  *     requestBody:
  *       required: true
  *       content:
@@ -62,7 +63,7 @@ function isAlreadyCheckedIn(
  *       - BearerAuth: []
  *     responses:
  *       200:
- *         description: Ticket checked in successfully and returns reward creation status.
+ *         description: Ticket checked in successfully and returns user information and reward creation status.
  *         content:
  *           application/json:
  *             schema:
@@ -79,6 +80,19 @@ function isAlreadyCheckedIn(
  *                 result:
  *                   type: object
  *                   description: The result of the check-in process, containing details of the ticket.
+ *                 userInfo:
+ *                   type: object
+ *                   description: User information related to the ticket.
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       description: User ID.
+ *                     name:
+ *                       type: string
+ *                       description: Name of the user.
+ *                     email:
+ *                       type: string
+ *                       description: Email of the user.
  *                 rewardResult:
  *                   type: object
  *                   description: The result of the reward creation process.
@@ -119,6 +133,7 @@ export async function POST(req: Request) {
   try {
     // Check in the ticket
     const result = await ticketDB.checkInTicket(order_uuid);
+
     if (!result) {
       return NextResponse.json(
         {
@@ -128,7 +143,18 @@ export async function POST(req: Request) {
         { status: 500 }
       );
     }
+    const ticketInfo = await ticketDB.getTicketByUuid(order_uuid);
 
+    if (!ticketInfo?.user_id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: ERROR_CODES.TICKET_NOT_FOUND,
+        },
+        { status: 404 }
+      );
+    }
+    const userInfo = await selectUserById(ticketInfo.user_id);
     // If already checked in, return result with no reward processing
     if (isAlreadyCheckedIn(result)) {
       return NextResponse.json(
@@ -136,6 +162,8 @@ export async function POST(req: Request) {
           success: true,
           state: "USED",
           result: result,
+          ticketInfo: ticketInfo,
+          userInfo: userInfo,
           rewardResult: null, // No reward processing
         },
         { status: 200 }
@@ -177,6 +205,8 @@ export async function POST(req: Request) {
         success: true,
         state: "CHECKED_IN",
         result: result,
+        ticketInfo: ticketInfo,
+        userInfo: userInfo,
         rewardResult: rewardResult || {
           success: false,
           error: ERROR_CODES.REWARD_CREATION_FAILED,
