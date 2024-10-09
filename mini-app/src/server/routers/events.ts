@@ -253,6 +253,7 @@ export const eventsRouter = router({
                       },
                   }
                   : {}),
+
           };
 
           console.log(eventDraft);
