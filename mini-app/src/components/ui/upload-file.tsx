@@ -55,6 +55,10 @@ type UploadFileProps = {
    * An optional default image URL to display before an image is uploaded.
    */
   defaultImage?: string;
+  /**
+   * The text to display in the drawer description.
+   */
+  drawerDescriptionText?: string;
 };
 
 /**
@@ -153,7 +157,7 @@ export const UploadImageFile = (props: UploadFileProps) => {
           <DrawerTitle>Upload Image</DrawerTitle>
           {!imagePreview && (
             <DrawerDescription>
-              Upload your event’s poster from your device
+              {props.drawerDescriptionText || "Upload an image from your device"}
             </DrawerDescription>
           )}
         </DrawerHeader>

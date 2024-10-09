@@ -78,13 +78,18 @@ export const ThirdStep = () => {
           .min(4, { message: "Password must be at least 4 characters" })
           .max(20, { message: "Password must be less than 20 characters" }),
     ts_reward_url: z
-      .string({ required_error: "Please upload a reward image" })
-      .url({ message: "Please upload a valid reward image URL" }),
+        .string()
+        .optional() // This allows the field to be undefined
+        .refine(
+            (url) => url === undefined || url === "" || z.string().url().safeParse(url).success,
+            { message: "Please upload a valid reward image URL" }
+        ),
   });
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!formRef.current) {
       return;
     }
@@ -100,6 +105,7 @@ export const ThirdStep = () => {
     };
 
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
+
     if (formDataParsed.success) {
       setErrors({}); // Clear all errors
       setEventData({
@@ -117,16 +123,21 @@ export const ThirdStep = () => {
             init_data: webApp?.initData || "",
             eventData: updateParsedData.data,
           });
+
           return;
         }
       }
 
       const parsedEventData = EventDataSchema.safeParse(dataToSubmit);
+      console.log("dataToSubmit", dataToSubmit);
+      console.log("parsedEventData", parsedEventData);
       if (parsedEventData.success) {
+
         addEvent.mutate({
           eventData: parsedEventData.data,
           init_data: webApp?.initData || "",
         });
+
       }
       return;
     }
@@ -245,6 +256,7 @@ export const ThirdStep = () => {
               changeText="Upload Reward Image"
               infoText="Image must be in 1:1 ratio"
               triggerText="Upload"
+              drawerDescriptionText="Upload your SBT reward image"
               onDone={(url) => {
                 setEventData({ ...eventData, ts_reward_url: url });
                 clearImageError(); // Clear error when a valid image is uploaded
