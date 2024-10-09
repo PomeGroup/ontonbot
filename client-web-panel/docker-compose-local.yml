@@ -5,20 +5,20 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-      target: local
+      target: production
       args:
-        - ENV_TYPE=local
+        - ENV_TYPE=produc
         - NEXT_PUBLIC_BACKEND_URL_CLIENT='https:///'
     restart: always
-    volumes:
-      - ./:/usr/src/app:delegated
+#    volumes:
+#      - ./:/usr/src/app:delegated
 #      - /usr/src/app/node_modules
 #      - /usr/src/app/.next
     ports:
       - '3002:3000'
     env_file:
       - .env
-    command: npm run dev  #tail -f /dev/null
+#    command: npm run dev  #tail -f /dev/null
     networks:
       - onton-client-network
 

@@ -28,7 +28,7 @@ CMD ["npm", "run", "dev"]
 FROM base AS build
 ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
 ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
-
+RUN npm install
 # Build the application
 RUN npm run build
 
@@ -42,7 +42,7 @@ WORKDIR /usr/src/app
 COPY --from=build /usr/src/app ./
 
 # Install only production dependencies
-RUN npm install --production
+RUN npm install
 
 # Expose the port the app runs on
 EXPOSE 3000
