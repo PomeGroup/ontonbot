@@ -10,27 +10,30 @@ import {
 } from '@mui/material';
 import useTranslation from 'next-translate/useTranslation';
 
-const TicketCheckInDialog = ({ open, onClose, ticketData }) => {
+const TicketCheckInDialog = ({ open, onClose, ticketData, guestInfo }) => {
   const { t } = useTranslation('common');
 
-  if (!ticketData) return null;
+  if (!ticketData || !guestInfo) return null;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{t('common.ticket_details')}</DialogTitle>
       <DialogContent>
         <Box sx={{ mb: 2 }}>
+          {/* Display user information */}
           <Typography variant="body1">
-            {t('common.username')}: {ticketData.username || t('common.undefined')}
+            {t('common.username')}: {guestInfo.username || t('common.undefined')}
           </Typography>
           <Typography variant="body1">
-            {t('common.first_name')}: {ticketData.first_name || t('common.undefined')}
+            {t('common.first_name')}: {guestInfo.first_name  ? guestInfo.first_name.toString() : t('common.undefined')}
           </Typography>
           <Typography variant="body1">
-            {t('common.wallet_address')}: {ticketData.wallet_address || t('common.undefined')}
+            {t('common.wallet_address')}: {guestInfo.wallet_address  ? guestInfo.wallet_address.toString() : t('common.undefined')}
           </Typography>
+
+          {/* Display ticket information */}
           <Typography variant="body1">
-            {t('common.ticket_status')}: {ticketData.ticket_status || t('common.undefined')}
+            {t('common.ticket_status')}: {ticketData.ticket_status  ? ticketData.ticket_status.toString() : t('common.undefined')}
           </Typography>
           <Typography variant="body1">
             {t('common.order_uuid')}: {ticketData.order_uuid || t('common.undefined')}
@@ -38,7 +41,7 @@ const TicketCheckInDialog = ({ open, onClose, ticketData }) => {
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose}  color="secondary">
           {t('common.close')}
         </Button>
       </DialogActions>

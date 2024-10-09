@@ -27,7 +27,11 @@
     "failed_to_send_verification_code": "Failed to send verification code",
     "verification_failed": "Verification failed",
     "verification_code_sent": "Verification code sent to {organizerId}",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "ticket_details": "Ticket Details",
+     "ticket_already_used": "Ticket already used",
+     "want_to_print_again": "Do you want to print the ticket again?",
+    "close": "Close"
   },
   "act": {
     "registered_at": "Registered At",

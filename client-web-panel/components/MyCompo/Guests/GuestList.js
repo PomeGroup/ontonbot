@@ -1,19 +1,17 @@
 import * as React from "react";
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/router";
-import {
-  Card,
-  TextField,
-} from "@mui/material";
+import { Card, TextField } from "@mui/material";
 import { SnackbarProvider, useSnackbar } from "notistack";
 import DisplayLoading from "@/components/MyCompo/DisplayLoading";
 import { useGetGuestListQuery } from '@/redux/slices/eventsApiSlice';
 import { useCheckInTicketMutation } from "@/redux/slices/ticketApiSlice";
 import useTranslation from "next-translate/useTranslation";
-import GuestTable from "./GuestTable"; // Import the new GuestTable component
-import TicketCheckInDialog from './TicketCheckInDialog'; // Import the dialog
+import GuestTable from "./GuestTable";
 import SearchBar from "@/components/MyCompo/SearchBar";
-import PrintTicket from "@/components/MyCompo/PrintTicket"; // Import the PrintTicket component
+import PrintTicket from "@/components/MyCompo/PrintTicket";
+import { useRouter } from "next/router";
+import {Box} from "@mui/system";
+import Grid from "@mui/material/Grid";
 
 const GuestListComponent = () => {
   const { t } = useTranslation("common");
@@ -29,11 +27,11 @@ const GuestListComponent = () => {
   const [moreRecordsAvailable, setMoreRecordsAvailable] = useState(false);
   const [barcode, setBarcode] = useState("");
   const barcodeInputRef = useRef(null);
-  const [openDialog, setOpenDialog] = useState(false); // Dialog open state
-  const [ticketData, setTicketData] = useState(null); // Store ticket data for the dialog
-  const printRef = useRef(); // Ref for the PrintTicket component
+  const [openDialog, setOpenDialog] = useState(false);
+  const [ticketData, setTicketData] = useState(null);
+  const [ticketInfo, setTicketInfo] = useState(null);
+  const [guestInfo, setGuestInfo] = useState(null);
 
-  // Fetch the guest list with the current cursor
   const { data, error, isLoading, refetch } = useGetGuestListQuery(
     {
       eventUuid: uuid,
@@ -47,6 +45,18 @@ const GuestListComponent = () => {
   );
 
   const [checkInTicket] = useCheckInTicketMutation();
+  // Focus the barcode input on page load
+  useEffect(() => {
+    if (barcodeInputRef.current) {
+      barcodeInputRef.current.focus();
+    }
+  }, []);
+  useEffect(() => {
+    // Focus the barcode input on page load
+    if (barcodeInputRef.current) {
+      barcodeInputRef.current.focus();
+    }
+  }, []);
 
   useEffect(() => {
     if (data) {
@@ -62,13 +72,6 @@ const GuestListComponent = () => {
       enqueueSnackbar(t("common.error_loading_guest_list"), { variant: "error" });
     }
   }, [data, error, cursor, prevCursorStack, enqueueSnackbar, t]);
-
-  useEffect(() => {
-    // Focus the barcode input on component mount
-    if (barcodeInputRef.current) {
-      barcodeInputRef.current.focus();
-    }
-  }, []);
 
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
@@ -102,47 +105,81 @@ const GuestListComponent = () => {
     const value = e.target.value;
     setBarcode(value);
 
-    if (value.length === 36) { // Check if the input is UUID length
+    if (value.length === 36) {
       try {
         const result = await checkInTicket({ order_uuid: value }).unwrap();
 
         if (result.state === "CHECKED_IN") {
           enqueueSnackbar(t("common.check_in_successful"), { variant: "success" });
-          setTicketData(result.result); // Set ticket data for the dialog
-          setOpenDialog(true); // Open the dialog
-          refetch(); // Refetch the table data after a successful check-in
-
-          handlePrintTicket(); // Trigger the print functionality
-        } else if (result.state === "USED") {
-          enqueueSnackbar(t("common.already_checked_in"), { variant: "info" });
+          setTicketData(result.result);
+          setTicketInfo(result.ticketInfo);
+          setGuestInfo(result.userInfo);
+          setOpenDialog(true);
+          refetch();
+        }
+        else if (result.state === "USED") {
+          // Show confirmation dialog before reprinting
+          const confirmReprint = window.confirm(t("common.ticket_already_used") + " \n " + t("common.want_to_print_again"));
+          if (confirmReprint) {
+            setTicketData(result.result);
+            setTicketInfo(result.ticketInfo);
+            setGuestInfo(result.userInfo);
+            handlePrint(); // Proceed to print if confirmed
+          }
+          setBarcode("");  // Reset the barcode field
         } else {
           enqueueSnackbar(result.error?.message || t("common.check_in_failed"), { variant: "error" });
+          setBarcode("");  // Reset the barcode field on failure
         }
-
-        setBarcode(""); // Clear the input after submission
       } catch (err) {
-        const errorMessage = err?.data?.error?.message || t("common.check_in_failed");
-        enqueueSnackbar(errorMessage, { variant: "error" });
-        setBarcode(""); // Clear the input in case of failure
+        console.error(err);
+        enqueueSnackbar(t("common.check_in_error"), { variant: "error" });
       }
     }
   };
 
-  const handlePrintTicket = () => {
-    if (printRef.current) {
-      const printWindow = window.open('', '', 'width=800,height=600');
-      printWindow.document.write(printRef.current.outerHTML);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-      printWindow.close();
-      alert("Ticket printed successfully!");
+  // Automatically trigger print when ticketData and guestInfo are available
+  useEffect(() => {
+    if (ticketData && guestInfo) {
+      handlePrint();
     }
+  }, [ticketData, guestInfo]);
+
+  const handlePrint = () => {
+    if (!guestInfo || !ticketData || !ticketInfo) {
+     // alert("No data to print");
+      return;
+    }
+
+    // Open the print window and print the ticket
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>Print Ticket</title></head><body>');
+    printWindow.document.write(`
+      <div>
+        <h4>Event Ticket</h4>
+        <p>Username: ${guestInfo.username}</p>
+        <p>First Name: ${guestInfo.first_name}</p>
+  
+        
+        <p>Order UUID: ${ticketInfo.order_uuid}</p>
+        <p>Thank you for attending!</p>
+      </div>
+    `);
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+
+    // Clear the barcode field and refocus after print
+    setBarcode("");
+    barcodeInputRef.current.focus();
   };
 
   const handleCloseDialog = () => {
-    setOpenDialog(false); // Close the dialog
-    setTicketData(null);  // Clear the ticket data
+    setOpenDialog(false);
+    setTicketData(null);
+    setTicketInfo(null);
   };
 
   if (isLoading) {
@@ -166,16 +203,23 @@ const GuestListComponent = () => {
         }}
       >
         {/* Material-UI TextField for barcode input */}
-        <TextField
-          fullWidth
-          value={barcode}
-          onChange={handleBarcodeChange}
-          placeholder={t("common.scan_barcode")}
-          inputRef={barcodeInputRef}
-          variant="outlined"
-          label={t("common.barcode")}
-          margin="normal"
-        />
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={4} lg={4}>
+            <TextField
+              fullWidth
+              value={barcode}
+              onChange={handleBarcodeChange}
+              placeholder={t("common.scan_barcode")}
+              inputRef={barcodeInputRef} // Ref for focusing the input
+              variant="outlined"
+              label={t("common.barcode")}
+              sx={{ mb: "20px" , fontWeight: "500" }}
+              margin="normal"
+              size="small"
+            />
+          </Grid>
+        </Grid>
+
 
         <SearchBar handleSearchChange={handleSearchChange} searchTerm={searchTerm} t={t} />
 
@@ -190,16 +234,6 @@ const GuestListComponent = () => {
           t={t}
         />
       </Card>
-
-      {/* Ticket check-in dialog */}
-      <TicketCheckInDialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        ticketData={ticketData}
-      />
-
-      {/* Hidden PrintTicket component for printing */}
-      <PrintTicket ref={printRef} ticketData={ticketData} />
     </>
   );
 };

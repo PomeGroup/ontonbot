@@ -8,7 +8,7 @@ const SearchBar = ({ searchTerm, handleSearchChange ,t ,button }) => (
     <Grid container alignItems="center" spacing={2}>
 
 
-        <Grid item xs={12} md={4} lg={2}  alignItems="flex-end"   style={{ marginLeft: 'auto' }}>
+        <Grid item xs={12} md={4} lg={4}  alignItems="flex-start"   style={{ marginRight: 'auto' }}>
 
             <TextField
                 name="search"
@@ -19,9 +19,6 @@ const SearchBar = ({ searchTerm, handleSearchChange ,t ,button }) => (
                 size="small"
                 label={t('act.search')}
 
-                InputProps={{
-                    style: { borderRadius: 8 },
-                }}
             />
         </Grid>
 

@@ -18,7 +18,7 @@ const EventDashboard = () => {
         <Grid container spacing={2}>
           {/* Map through the events array and display each event */}
           {events?.map((event) => (
-            <Grid item xs={12} sm={3} md={2} key={event.event_uuid}>
+            <Grid item xs={12} sm={4} md={2} key={event.event_uuid}>
               <EventCard event={event} />
             </Grid>
           ))}

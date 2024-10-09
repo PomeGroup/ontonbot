@@ -28,7 +28,11 @@
     "failed_to_send_verification_code": "فشل في إرسال رمز التحقق",
     "verification_failed": "فشل التحقق",
     "verification_code_sent": "تم إرسال رمز التحقق إلى {organizerId}",
-    "signIn": "تسجيل الدخول"
+    "signIn": "تسجيل الدخول",
+    "ticket_details": "تفاصيل التذكرة",
+    "ticket_already_used": "تم استخدام التذكرة بالفعل",
+    "want_to_print_again": "هل تريد طباعة التذكرة مرة أخرى؟",
+    "close": "إغلاق"
   },
   "act": {
     "registered_at": "تاريخ التسجيل",

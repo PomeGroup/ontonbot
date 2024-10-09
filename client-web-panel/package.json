@@ -3,9 +3,9 @@
   "version": "1.6.0",
   "private": true,
   "scripts": {
-    "dev": "node dev.js -p 4000",
+    "dev": "cross-env PORT=3003 next dev",
     "build": "next build",
-    "start": "next start ",
+    "start": "cross-env PORT=3003  next start ",
     "lint": "next lint"
   },
   "dependencies": {
@@ -64,12 +64,14 @@
     "react-router-dom": "^6.4.3",
     "react-simple-maps": "^3.0.0",
     "react-tabs": "^6.0.0",
+    "react-to-print": "^3.0.1",
     "redux-persist": "^6.0.0",
     "style-loader": "^4.0.0",
     "swiper": "^8.4.5",
     "yup": "^1.4.0"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "next-translate-plugin": "^2.6.2",
     "sass": "^1.57.1"
   }
