@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { validateMiniAppData } from "@/utils";
 import { TRPCError, initTRPC } from "@trpc/server";
 import { z } from "zod";
-import {usersDB} from "@/server/db/users";
+import { usersDB } from "@/server/db/users";
 
 const t = initTRPC.create();
 

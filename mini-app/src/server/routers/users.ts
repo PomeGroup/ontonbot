@@ -133,7 +133,7 @@ export const usersRouter = router({
 
       await usersDB.updateWallet(
         initDataJson.user.id,
-           "",
+        "",
         initDataJson.user.id.toString()
       );
     }),

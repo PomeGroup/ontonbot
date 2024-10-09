@@ -36,32 +36,32 @@ const DrawerOverlay = React.forwardRef<
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
 const DrawerContent = React.forwardRef<
-    React.ElementRef<typeof DrawerPrimitive.Content>,
-    React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
-  showCloseButton?: boolean; // New prop to control the display of the close button
-}
+  React.ElementRef<typeof DrawerPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
+    showCloseButton?: boolean; // New prop to control the display of the close button
+  }
 >(({ className, children, showCloseButton = true, ...props }, ref) => (
-    <DrawerPortal>
-      <DrawerOverlay />
-      <DrawerPrimitive.Content
-          ref={ref}
-          className={cn(
-              "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-background p-4",
-              className
-          )}
-          {...props}
-      >
-        {/* Conditionally render the DrawerClose button */}
-        {showCloseButton && (
-            <DrawerClose asChild>
-              <button className="ms-auto mr-2 flex items-center justify-center h-6 w-6 rounded-full bg-muted">
-                <X className="h-4 w-4" />
-              </button>
-            </DrawerClose>
-        )}
-        {children}
-      </DrawerPrimitive.Content>
-    </DrawerPortal>
+  <DrawerPortal>
+    <DrawerOverlay />
+    <DrawerPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-background p-4",
+        className
+      )}
+      {...props}
+    >
+      {/* Conditionally render the DrawerClose button */}
+      {showCloseButton && (
+        <DrawerClose asChild>
+          <button className="ms-auto mr-2 flex items-center justify-center h-6 w-6 rounded-full bg-muted">
+            <X className="h-4 w-4" />
+          </button>
+        </DrawerClose>
+      )}
+      {children}
+    </DrawerPrimitive.Content>
+  </DrawerPortal>
 ));
 DrawerContent.displayName = "DrawerContent";
 

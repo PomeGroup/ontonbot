@@ -16,10 +16,10 @@ export const formatDate = (date: number): string => {
   });
 };
 
-export  const formatDateRange = (
-    start: number,
-    end: number,
-    _timezone: string
+export const formatDateRange = (
+  start: number,
+  end: number,
+  _timezone: string
 ): string => {
   if (!start || !end) return "Date not available";
 
@@ -33,6 +33,6 @@ export  const formatDateRange = (
   const sameDay = startDate.toDateString() === endDate.toDateString();
   const endOptions = sameDay ? {} : startOptions;
   return `${startDate.toLocaleDateString("en-US", startOptions)}${
-      sameDay ? "" : ` - ${endDate.toLocaleDateString("en-US", endOptions)}`
+    sameDay ? "" : ` - ${endDate.toLocaleDateString("en-US", endOptions)}`
   } `;
 };

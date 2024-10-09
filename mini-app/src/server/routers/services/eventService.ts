@@ -1,6 +1,5 @@
 import { getEventByUuid } from "@/server/db/events";
 
-
 // Validate event dates
 export const validateEventDates = (start_date: number, end_date: number) => {
   const currentTime = Date.now();
@@ -39,10 +38,10 @@ export const validateEventData = async (event_uuid: string) => {
 
     // Return success with event data
     return { success: true, data: eventData };
-
   } catch (error) {
     // Log unexpected errors
-    const errorMsg = error instanceof Error ? error.message : "An unexpected error occurred";
+    const errorMsg =
+      error instanceof Error ? error.message : "An unexpected error occurred";
     console.error(`validateEventData Unexpected Error:`, error);
     return {
       success: false,
@@ -50,9 +49,9 @@ export const validateEventData = async (event_uuid: string) => {
     };
   }
 };
-const  eventService = {
-    validateEventDates,
-    validateEventData,
-    };
+const eventService = {
+  validateEventDates,
+  validateEventData,
+};
 
 export default eventService;

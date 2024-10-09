@@ -157,7 +157,8 @@ export const UploadImageFile = (props: UploadFileProps) => {
           <DrawerTitle>Upload Image</DrawerTitle>
           {!imagePreview && (
             <DrawerDescription>
-              {props.drawerDescriptionText || "Upload an image from your device"}
+              {props.drawerDescriptionText ||
+                "Upload an image from your device"}
             </DrawerDescription>
           )}
         </DrawerHeader>

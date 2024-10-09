@@ -16,7 +16,7 @@ import Labels from "../_components/atoms/labels";
 import { ComingSoon } from "../_components/ComingSoon";
 import Skeletons from "../_components/molecules/skeletons";
 import { trpc } from "../_trpc/client";
-import {redirectTo} from "@/lib/utils";
+import { redirectTo } from "@/lib/utils";
 
 const EventsAdminPage = () => {
   noStore();
@@ -40,22 +40,25 @@ const EventsAdminPage = () => {
     }
   );
   useEffect(() => {
-    console.log("document.referrer ",document.referrer);
-    if (typeof window !== "undefined" && ( document.referrer ==="" || document.referrer==="https://web.telegram.org/") ) {
+    console.log("document.referrer ", document.referrer);
+    if (
+      typeof window !== "undefined" &&
+      (document.referrer === "" ||
+        document.referrer === "https://web.telegram.org/")
+    ) {
       redirectTo("/");
-     }
-    }, [router,document.referrer]);
+    }
+  }, [router, document.referrer]);
 
   if (
     eventsData.isLoading ||
     isLoading ||
     validatedData.isLoading ||
     !initData ||
-    document?.referrer ===""
+    document?.referrer === ""
   ) {
     return <Skeletons.Events />;
   }
-
 
   if (!authorized || eventsData.isError) {
     return <ComingSoon />;

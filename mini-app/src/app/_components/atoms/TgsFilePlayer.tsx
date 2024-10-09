@@ -13,7 +13,7 @@ function TgsFilePlayer(props: TgsFilePlayerProps) {
     //   autoplay={Boolean(props.autoplay)}
     //   loop={Boolean(props.loop)}
     // />
-      <></>
+    <></>
   );
 }
 

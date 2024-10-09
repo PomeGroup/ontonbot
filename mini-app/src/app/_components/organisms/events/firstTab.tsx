@@ -53,7 +53,7 @@ const firstStepDataSchema = z.object({
     .min(2, { message: "Subtitle must be at least 2 characters" })
     .max(100),
   description: z
-    .string( { required_error: "Please enter a description" })
+    .string({ required_error: "Please enter a description" })
     .min(1, { message: "Description must be at least 1 character" }),
   image_url: z
     .string({ required_error: "Please select an image" })
@@ -93,7 +93,7 @@ export const FirstStep = () => {
     const formDataParsed = firstStepDataSchema.safeParse(formDataObject);
 
     if (!formDataParsed.success) {
-      console.log("eventData?.description", eventData?.description)
+      console.log("eventData?.description", eventData?.description);
       setErrors(formDataParsed.error.flatten().fieldErrors);
       const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
 
@@ -207,11 +207,11 @@ export const FirstStep = () => {
         />
 
         <Textarea
-            placeholder="Description"
-            name="description"
-            errors={errors?.description}
-            defaultValue={eventData?.description}
-            onChange={(e) => setEventData({ description: e.target.value })}
+          placeholder="Description"
+          name="description"
+          errors={errors?.description}
+          defaultValue={eventData?.description}
+          onChange={(e) => setEventData({ description: e.target.value })}
         />
 
         <MainButton
