@@ -78,8 +78,12 @@ export const ThirdStep = () => {
           .min(4, { message: "Password must be at least 4 characters" })
           .max(20, { message: "Password must be less than 20 characters" }),
     ts_reward_url: z
-      .string({ required_error: "Please upload a reward image" })
-      .url({ message: "Please upload a valid reward image URL" }),
+        .string()
+        .optional() // This allows the field to be undefined
+        .refine(
+            (url) => url === undefined || url === "" || z.string().url().safeParse(url).success,
+            { message: "Please upload a valid reward image URL" }
+        ),
   });
 
   // Handle form submission
@@ -122,7 +126,10 @@ export const ThirdStep = () => {
       }
 
       const parsedEventData = EventDataSchema.safeParse(dataToSubmit);
+      console.log("dataToSubmit", dataToSubmit);
+      console.log("parsedEventData", parsedEventData);
       if (parsedEventData.success) {
+
         addEvent.mutate({
           eventData: parsedEventData.data,
           init_data: webApp?.initData || "",
@@ -173,6 +180,7 @@ export const ThirdStep = () => {
     setPasswordValue(""); // Clear the placeholder text
   };
 
+
   // Handle form submission on button click
   const handleButtonClick = useCallback(() => {
     if (formRef.current) {
@@ -219,7 +227,6 @@ export const ThirdStep = () => {
             unexpectedly and receiving a reward without attending the event.
           </AlertGeneric>
         </div>
-
         {/* Reward Image Upload */}
         <div className="space-y-2">
           <label htmlFor="reward_image">Reward Image</label>
@@ -227,7 +234,6 @@ export const ThirdStep = () => {
             Events reward badge, visible on TON society. It cannot be changed
             after event creation.
           </AlertGeneric>
-
           {editOptions?.eventHash ? (
             eventData?.ts_reward_url ? (
               <div className="flex justify-center gap-4 items-center pt-2 w-full">
@@ -245,6 +251,7 @@ export const ThirdStep = () => {
               changeText="Upload Reward Image"
               infoText="Image must be in 1:1 ratio"
               triggerText="Upload"
+              drawerDescriptionText="Upload your SBT reward image"
               onDone={(url) => {
                 setEventData({ ...eventData, ts_reward_url: url });
                 clearImageError(); // Clear error when a valid image is uploaded

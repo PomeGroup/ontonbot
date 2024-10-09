@@ -65,6 +65,7 @@ export const getCache = async (key: string): Promise<any | undefined> => {
  */
 export const deleteCache = async (key: string): Promise<void> => {
   if (!CACHE_ENABLED) return;
+
   //const hashedKey = generateHash(key);
   try {
     const redisClient = await getRedisClient();
@@ -128,6 +129,7 @@ export const getRedisKeyJson = async (
   key: string
 ): Promise<any | undefined> => {
   if (!CACHE_ENABLED) return;
+
   //const hashedKey = generateHash(key);
   try {
     const redisClient = await getRedisClient();
@@ -148,6 +150,7 @@ export const getRedisKeyType = async (
   key: string
 ): Promise<string | undefined> => {
   if (!CACHE_ENABLED) return undefined;
+
   //const hashedKey = generateHash(key);
   try {
     const redisClient = await getRedisClient();
@@ -165,6 +168,7 @@ export const getRedisKeyType = async (
  */
 export const incrementKey = async (key: string): Promise<void> => {
   if (!CACHE_ENABLED) return;
+
   //const hashedKey = generateHash(key);
   try {
     const redisClient = await getRedisClient();
@@ -200,6 +204,7 @@ export const getRedisKeyTTL = async (
   key: string
 ): Promise<number | undefined> => {
   if (!CACHE_ENABLED) return undefined;
+
   //const hashedKey = generateHash(key);
   try {
     const redisClient = await getRedisClient();
@@ -221,6 +226,7 @@ export const setRedisKeyTTL = async (
   ttl: number
 ): Promise<void> => {
   if (!CACHE_ENABLED) return undefined;
+
   //const hashedKey = generateHash(key);
   try {
     const redisClient = await getRedisClient();

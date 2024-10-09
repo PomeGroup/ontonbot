@@ -32,6 +32,7 @@ const ImageUpload = ({
   return (
     <UploadImageFile
       triggerText="Upload Event Image"
+      drawerDescriptionText="Upload your event’s poster from your device"
       infoText="Image must be in 1:1 ratio"
       changeText="Change Image"
       isError={isError}

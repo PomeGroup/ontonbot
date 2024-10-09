@@ -17,6 +17,7 @@ import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import { logSQLQuery } from "@/lib/logSQLQuery";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -218,8 +219,6 @@ export const getEventsWithFilters = async (
   });
   // Create MD5 hash
   // every 2 minutes
-
-
   const hash =  crypto.createHash("md5").update(stringToHash).digest("hex");
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
  // console.log("string",stringToHash);
@@ -230,9 +229,7 @@ export const getEventsWithFilters = async (
   //  console.log("👙👙 cachedResult 👙👙" + Date.now());
     return cachedResult;
   }
- // console.log("no cache string",stringToHash);
-  // string {"limit":2,"offset":0,"search":"","filter":{"participationType":["online","in_person"],"startDateOperator":">=","endDate":1728402000,"endDateOperator":"<="},"sortBy":"start_date_desc"}
-  // console.js:38hash e79a3504d48bb183ad70bb539f272a41
+
   let query = db.select().from(event_details_search_list);
   let userEventUuids = [];
   // Initialize an array to hold the conditions
@@ -331,7 +328,7 @@ export const getEventsWithFilters = async (
 
     // @ts-expect-error
     query = query.orderBy(
-        sql`${orderByClause ? sql`${orderByClause},` : sql``}
+      sql`${orderByClause ? sql`${orderByClause},` : sql``}
       greatest(
           similarity(${event_details_search_list.title}, ${search}),
           similarity(${event_details_search_list.location}, ${search})
@@ -365,11 +362,11 @@ export const getEventsWithFilters = async (
     // @ts-expect-error
     query = query.limit(limit).offset(offset);
   }
-  //console.log("query eee " );
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  //logSQLQuery(query.toSQL().sql, query.toSQL().params);//logSQLQuery(query.toSQL().sql, query.toSQL().params);
+   //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
+
   await redisTools.setCache(cacheKey, eventsData, 60);
   return eventsData;
 };
