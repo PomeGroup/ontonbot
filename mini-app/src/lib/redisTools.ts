@@ -82,7 +82,7 @@ export const deleteCache = async (key: string): Promise<void> => {
  * @returns A boolean indicating whether the key exists.
  */
 export const keyExists = async (key: string): Promise<boolean> => {
-  if (!CACHE_ENABLED) return false;s
+  if (!CACHE_ENABLED) return false;
   //const hashedKey = generateHash(key);
   try {
     const redisClient = await getRedisClient();
