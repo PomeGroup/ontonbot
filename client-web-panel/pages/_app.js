@@ -15,14 +15,14 @@ import '@/styles/globals.css'
 import '@/styles/rtl.css'
 // Dark Mode Styles
 import '@/styles/dark.css'
-import "@/public/fonts/Yekan-Bakh-Pro/Font-Family/Webfonts/fontface.css";
+
 // Theme Styles
 import theme from '@/styles/theme'
 
 import {ThemeProvider, CssBaseline} from "@mui/material";
 import Layout from "@/components/_App/Layout";
 import {Provider} from 'react-redux';
-import {store, Persistor} from '../redux/store'; // import store and persistor from your store file
+import {store, Persistor} from '@/redux/store'; // import store and persistor from your store file
 import {PersistGate} from 'redux-persist/integration/react';
 import I18nProvider from 'next-translate/I18nProvider';
 import loadNamespaces from 'next-translate/loadNamespaces';
