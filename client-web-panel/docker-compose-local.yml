@@ -8,7 +8,7 @@ services:
       target: local
       args:
         - ENV_TYPE=local
-        - NEXT_PUBLIC_BACKEND_URL='https:///'
+        - NEXT_PUBLIC_BACKEND_URL_CLIENT='https:///'
     restart: always
     volumes:
       - ./:/usr/src/app:delegated

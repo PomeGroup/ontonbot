@@ -29,7 +29,7 @@ import loadNamespaces from 'next-translate/loadNamespaces';
 // import useInvalidateTags from '@/hooks/useInvalidateTags';
 const MyApp = ({Component, pageProps}) => {
   // useInvalidateTags();
-// console.log(process.env.NEXT_PUBLIC_BACKEND_URL)
+// console.log(process.env.NEXT_PUBLIC_BACKEND_URL_CLIENT)
   return (
     <>
       {/* Redux Provider */}

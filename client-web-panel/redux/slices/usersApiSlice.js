@@ -5,7 +5,7 @@ export const customBaseQuery = async ({url, method, body}) => {
   const state = store.getState();  // access the Redux state
   const token = state.auth.token;  // access the token from the state
 
-  const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + url, {
+  const response = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL_CLIENT + url, {
     method,
     headers: {
       'Content-Type': 'application/json',

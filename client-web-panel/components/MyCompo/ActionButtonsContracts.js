@@ -31,7 +31,7 @@ const ActionButtonsContracts = ({ pdfUrl, onDelete, isCancelled, invoiceDetails,
             )}
             {invoiceDetails?.invoiceLink && (
                 <Link
-                    href={invoiceDetails?.invoiceLink && `${process.env.NEXT_PUBLIC_BACKEND_URL.replace('/api/v1', '')}${invoiceDetails?.invoiceLink.replace(/\\/g, '/')}`}
+                    href={invoiceDetails?.invoiceLink && `${process.env.NEXT_PUBLIC_BACKEND_URL_CLIENT.replace('/api/v1', '')}${invoiceDetails?.invoiceLink.replace(/\\/g, '/')}`}
                     passHref
                     target="_blank"
                 >

@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const authApi = createApi({
   reducerPath: 'authApi',
-  baseQuery: fetchBaseQuery({ baseUrl: process.env.NEXT_PUBLIC_BACKEND_URL + 'public/' }),
+  baseQuery: fetchBaseQuery({ baseUrl: process.env.NEXT_PUBLIC_BACKEND_URL_CLIENT + 'public/' }),
   endpoints: (builder) => ({
     sendOtpCode: builder.mutation({
       query: ({ organizerId, userId }) => ({

@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const eventsApiSlice = createApi({
   reducerPath: 'eventsApi', // The key for this slice in the store
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_BACKEND_URL, // Set your backend URL from environment variable
+    baseUrl: process.env.NEXT_PUBLIC_BACKEND_URL_CLIENT, // Set your backend URL from environment variable
     prepareHeaders: (headers, { getState }) => {
       const token = getState().auth.token; // Assuming the JWT token is stored in the auth slice
       if (token) {
