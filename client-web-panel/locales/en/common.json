@@ -1,0 +1,50 @@
+{
+  "locale": "en",
+  "direction": "ltr",
+  "timezone": "UTC",
+  "welcome": "Welcome to our website!",
+   "common": {
+    "username": "Username",
+    "first_name": "First Name",
+    "wallet_address": "Wallet Address",
+    "ticket_status": "Ticket Status",
+    "order_uuid": "Order UUID",
+    "undefined": "--",
+    "check_in_successful": "Check-in successful",
+    "already_checked_in": "Already checked in",
+    "check_in_failed": "Check-in failed",
+    "barcode": "Barcode",
+    "scan_barcode": "Scan Barcode",
+    "loading": "Loading...",
+    "error_loading_guest_list": "Error loading guest list",
+    "error_occurred": "An error occurred",
+    "organizer_id": "Organizer ID",
+    "user_id": "User ID",
+    "verification_code": "Verification Code",
+    "code_sent_to": "Code sent to",
+    "change_ids": "Change IDs",
+    "get_code": "Get Code",
+    "failed_to_send_verification_code": "Failed to send verification code",
+    "verification_failed": "Verification failed",
+    "verification_code_sent": "Verification code sent to {organizerId}",
+    "signIn": "Sign In",
+    "ticket_details": "Ticket Details",
+     "ticket_already_used": "Ticket already used",
+     "want_to_print_again": "Do you want to print the ticket again?",
+    "close": "Close"
+  },
+  "act": {
+    "registered_at": "Registered At",
+    "search": "Search"
+  },
+  "dashboard": {
+    "home": "Home"
+  },
+  "left_side_menu": {
+    "home": "Home",
+    "logout": "Logout",
+    "guests":  "Guests"
+
+
+  }
+}

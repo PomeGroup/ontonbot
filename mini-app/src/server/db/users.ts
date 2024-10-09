@@ -127,10 +127,39 @@ const updateWallet = async (
   await redisTools.deleteCache(getUserCacheKey(user_id));
   await redisTools.deleteCache(getWalletCacheKey(user_id));
 };
+// Function to get a user by username with caching
+export const selectUserByUsername = async (username: string) => {
 
+
+  // If not found in cache, query the database
+  const userInfo = await db
+    .select({
+      user_id: users.user_id,
+      username: users.username,
+      first_name: users.first_name,
+      last_name: users.last_name,
+      wallet_address: users.wallet_address,
+      language_code: users.language_code,
+      role: users.role,
+      created_at: users.created_at,
+      updated_at: users.updatedAt,
+      updated_by: users.updatedBy,
+
+    })
+    .from(users)
+    .where(eq(users.username, username.replace(/^@/, '')))
+    .execute();
+    console.log("selectUserByUsername", userInfo);
+  if (userInfo.length > 0) {
+    return userInfo[0];
+  }
+
+  return null; // Return null if user not found
+};
 export const usersDB = {
   selectUserById,
   insertUser,
   selectWalletById,
   updateWallet,
+  selectUserByUsername,
 };

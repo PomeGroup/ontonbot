@@ -1,0 +1,46 @@
+node_modules
+# next.js
+.next
+build
+_admash
+# Logs
+logs
+# JetBrains IDE
+.idea/
+*.iml
+# Eclipse
+.buildpath
+.project
+.settings
+# VI
+*.swp
+#vscode
+.vscode/
+# Mac
+.DS_Store
+# windows
+Thumbs.db
+# Linux
+*.pyc
+*.pyo
+*.log
+*.tmp
+*.bak
+*.cache
+*.out
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+*.pot
+#env file
+.env
+
+
