@@ -21,15 +21,16 @@ const ConnectWalletTask = () => {
 
   const userAddress = trpc.users.getWallet.useQuery(
     {
-      initData: WebApp?.initData,
+      init_data: WebApp?.initData!,
     },
     {
       queryKey: [
         "users.getWallet",
         {
-          initData: WebApp?.initData,
+          init_data: WebApp?.initData!,
         },
       ],
+      enabled: Boolean(WebApp?.initData),
     }
   ).data;
   const webApp = useWebApp();

@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
+import { InferSelectModel, eq } from "drizzle-orm";
 
 // Cache key prefix
 
@@ -14,7 +14,9 @@ const getWalletCacheKey = (userId: number) =>
   `${redisTools.cacheKeys.userWallet}${userId}`;
 
 // Function to get a user by user ID with caching
-export const selectUserById = async (userId: number) => {
+export const selectUserById = async (
+  userId: number
+): Promise<InferSelectModel<typeof users> | null> => {
   const cacheKey = getUserCacheKey(userId);
 
   // Try to get the user from cache
@@ -34,8 +36,8 @@ export const selectUserById = async (userId: number) => {
       language_code: users.language_code,
       role: users.role,
       created_at: users.created_at,
-      updated_at: users.updatedAt,
-      updated_by: users.updatedBy,
+      updatedAt: users.updatedAt,
+      updatedBy: users.updatedBy,
     })
     .from(users)
     .where(eq(users.user_id, userId))

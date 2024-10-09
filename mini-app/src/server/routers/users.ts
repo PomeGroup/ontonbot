@@ -11,14 +11,16 @@ import {
 } from "../db/visitors";
 
 import {
+  default as rewardDB,
+  default as rewardsDb,
+} from "@/server/db/rewards.db";
+import { usersDB } from "@/server/db/users";
+import {
   adminOrganizerProtectedProcedure,
   initDataProtectedProcedure,
   publicProcedure,
   router,
 } from "../trpc";
-import rewardDB from "@/server/db/rewards.db";
-import rewardsDb from "@/server/db/rewards.db";
-import { usersDB } from "@/server/db/users";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure
@@ -59,7 +61,7 @@ export const usersRouter = router({
 
       const data = await usersDB.insertUser(initDataJson);
       //console.log("data", data);
-      if (!data.length) {
+      if (!data) {
         throw new TRPCError({
           message: "user already exists",
           code: "CONFLICT",
@@ -70,22 +72,10 @@ export const usersRouter = router({
     }),
 
   // private
-  getWallet: publicProcedure
-    .input(z.object({ initData: z.string().optional() }))
-    .query(async (opts) => {
-      if (!opts.input.initData) {
-        return;
-      }
-
-      const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
-
-      if (!valid) {
-        return;
-      }
-
-      const res = await usersDB.selectWalletById(initDataJson.user.id);
-      return res[0]?.wallet;
-    }),
+  getWallet: initDataProtectedProcedure.query(async (opts) => {
+    const res = await usersDB.selectWalletById(opts.ctx.user.user_id);
+    return res[0]?.wallet;
+  }),
 
   // private
   addWallet: publicProcedure
