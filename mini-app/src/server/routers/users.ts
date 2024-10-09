@@ -78,28 +78,17 @@ export const usersRouter = router({
   }),
 
   // private
-  addWallet: publicProcedure
+  addWallet: initDataProtectedProcedure
     .input(
       z.object({
-        initData: z.string().optional(),
         wallet: z.string(),
       })
     )
     .mutation(async (opts) => {
-      if (!opts.input.initData) {
-        return;
-      }
-
-      const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
-
-      if (!valid) {
-        return;
-      }
-
       await usersDB.updateWallet(
-        initDataJson.user.id,
+        opts.ctx.user.user_id,
         opts.input.wallet,
-        initDataJson.user.id.toString()
+        opts.ctx.user.user_id.toString()
       );
     }),
 

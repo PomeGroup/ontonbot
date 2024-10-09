@@ -47,25 +47,27 @@ const ConnectWalletTask = () => {
   >(undefined);
 
   useEffect(() => {
-    setIsWalletConnected(
-      wallet !== null ||
-        (userAddress !== "" &&
-          userAddress !== null &&
-          userAddress !== undefined)
-    );
+    try {
+      setIsWalletConnected(Boolean(Address.parse(userAddress)));
+    } catch {
+      /* Does not need any error handling */
+    }
   }, [wallet, userAddress]);
 
   useEffect(() => {
     try {
-      if (isWalletConnected && tonConnectUI.account?.address) {
+      if (
+        isWalletConnected &&
+        tonConnectUI.account?.address &&
+        webApp?.initData
+      ) {
         addWalletMutation.mutate({
-          initData: WebApp?.initData,
+          init_data: webApp.initData,
           wallet: Address.parse(tonConnectUI.account.address).toString(),
         });
-        return;
       }
     } catch {}
-  }, [isWalletConnected, tonConnectUI.account?.address]);
+  }, [isWalletConnected, tonConnectUI.account?.address, webApp?.initData]);
 
   const onConnectClick = async () => {
     if (!tonConnectUI.account) {
@@ -75,7 +77,7 @@ const ConnectWalletTask = () => {
   };
 
   const connectedWallet = useMemo(() => {
-    return friendlyAddress?.slice(0, 4) + "..." + friendlyAddress?.slice(-4);
+    return `${friendlyAddress?.slice(0, 4)}...${friendlyAddress?.slice(-4)}`;
   }, [friendlyAddress]);
 
   return (
