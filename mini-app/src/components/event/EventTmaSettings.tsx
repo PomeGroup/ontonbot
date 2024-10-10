@@ -1,14 +1,12 @@
 "use client";
 
 import {
-  useClosingBehavior,
   useMainButton,
   useMiniApp,
-  useUtils,
 } from "@telegram-apps/sdk-react";
 import { useState, useEffect, useCallback } from "react";
 import { useTonConnectUI } from "@tonconnect/ui-react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { UserType } from "@/types/user.types";
 
 type EventMainButtonProps = {
@@ -39,11 +37,8 @@ const EventMainButton = ({
   eventEndDate
 }: EventMainButtonProps) => {
   const mainButton = useMainButton(true);
-  const closeBehavior = useClosingBehavior(true);
   const tma = useMiniApp(true);
-  const tmaUtils = useUtils(true);
   const router = useRouter();
-  const pathname = usePathname();
 
   const [tonConnectUI] = useTonConnectUI();
   const [tonWalletAddress, setTonWalletAddress] = useState<string | null>(null);
@@ -93,15 +88,15 @@ const EventMainButton = ({
   };
 
   function goToTicketPage() {
-    router.push(`/event/${eventId}/my-ticket`);
+    router.push(`/events/${eventId}/my-ticket`);
   }
 
   function mainBtnOnClick() {
-    router.push(`/event/${eventId}/buy-ticket`);
+    router.push(`/events/${eventId}/buy-ticket`);
   }
 
   function editBtnOnClick() {
-    router.push(`/event/${eventId}/edit`);
+    router.push(`/events/${eventId}/edit`);
   }
 
   // Check if eventStartDate and eventEndDate are valid Date objects
@@ -209,7 +204,7 @@ const EventMainButton = ({
       mainButton?.setBgColor("#007AFF");
       mainButton?.setTextColor("#ffffff").setText(`Buy Ticket for ${eventPrice}TON`);
       mainButton?.enable().show();
-      router.prefetch(`/event/${eventId}/buy-ticket`);
+      router.prefetch(`/events/${eventId}/buy-ticket`);
       mainButton?.on("click", mainBtnOnClick);
     }
 

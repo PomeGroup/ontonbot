@@ -21,15 +21,6 @@ const PaidOnlineEvent = lazy(
 
 type EventParams = { params: { UUID: string } };
 
-// Common type for all event components
-interface EventProps {
-  UUID: string;
-  eventType: string;
-  location?: string;
-  platform?: string;
-  ticketPrice?: number;
-}
-
 const EventPage = ({ params }: EventParams) => {
   const webApp = useWebApp();
 
@@ -42,14 +33,13 @@ const EventPage = ({ params }: EventParams) => {
   );
 
   const event = eventData.data;
-  if (!event) return <EventPageLoadingSkeleton />; // Handle loading state
+  if (!event) return <EventPageLoadingSkeleton />;
 
-  // Constants to simplify the logic
   const isInPersonEvent = event.participationType === "in_person";
   const isOnlineEvent = event.participationType === "online";
   const isFree = !event.ticketToCheckIn;
 
-  // Determine which event page to render based on event type
+  // eslint-disable-next-line no-undef
   let EventComponent: LazyExoticComponent<() => JSX.Element> | undefined;
 
   if (!isFree && isInPersonEvent) {
@@ -62,13 +52,12 @@ const EventPage = ({ params }: EventParams) => {
     EventComponent = PaidOnlineEvent;
   }
 
-  // Render the determined event component
   return (
     <Suspense fallback={<EventPageLoadingSkeleton />}>
       {EventComponent ? (
         <EventComponent/>
       ) : (
-        <div>No event component available</div> // Handle the case where no component matches
+        <div>No event component available</div>
       )}
     </Suspense>
   );
