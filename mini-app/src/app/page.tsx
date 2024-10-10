@@ -214,7 +214,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <main className="flex flex-col h-screen">
       <div className="sticky top-0 z-50 w-full pb-1">
         <SearchBar
           includeQueryParam={false}
@@ -342,7 +342,7 @@ export default function Home() {
           </SwiperSlide>
         </Swiper>
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -6,7 +6,6 @@ import { FiAlertCircle } from "react-icons/fi"; // React icon for errors
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import TonHubPicker from "@/app/_components/molecules/pickers/TonHubpicker";
 import { Input } from "@/components/ui/input";
-import { UploadImageFile } from "@/components/ui/upload-file";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { StepLayout } from "./stepLayout";
 import { Textarea } from "@/components/ui/textarea";

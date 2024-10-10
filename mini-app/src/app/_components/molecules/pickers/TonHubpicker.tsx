@@ -74,7 +74,7 @@ const TonHubPicker: FC<{
 
       {errors?.map((error) => (
         <div
-          className="text-red-300 pl-3 pt-1 text-sm  flex items-center"
+          className="text-foreground pl-3 pt-1 text-sm  flex items-center"
           key={error}
         >
           <FiAlertCircle className="mr-2" /> {error}

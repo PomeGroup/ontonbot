@@ -43,9 +43,9 @@ const ManageEvent = (props: ManageEventProps) => {
           society_hub:
             props.event.society_hub?.id && props.event.society_hub?.name
               ? {
-                  id: props.event.society_hub.id,
-                  name: props.event.society_hub.name,
-                }
+                id: String(props.event.society_hub.id), // Convert id to string
+                name: props.event.society_hub.name,
+              }
               : undefined,
           eventLocationType: props.event.participationType,
           countryId: props.event.countryId || undefined,
@@ -55,6 +55,7 @@ const ManageEvent = (props: ManageEventProps) => {
       }
     }
   }, [props.eventUUID, props.event]);
+
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) {
