@@ -31,7 +31,7 @@ const TicketTmaSettings = ({
 
     router.prefetch(`/ticket/${ticketId}/qrcode`);
     mainButton?.on("click", () => {
-      router.push(`/ticket/${ticketId}/qrcode?orderUuid=${orderUuid}`);
+      router.push(`/ticket/${ticketId}/qrcode?orderUuid=${orderUuid}`);//FIXME
     });
 
     return () => {

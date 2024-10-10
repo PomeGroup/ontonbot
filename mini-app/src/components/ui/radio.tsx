@@ -12,7 +12,7 @@ const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
   {
     orientation?: typeof ORIENTATION_VERTICAL | typeof ORIENTATION_HORIZONTAL;
-  } & React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
+  } & React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root> & { className?: string }
 >(({ className, orientation = ORIENTATION_HORIZONTAL, ...props }, ref) => {
   const orientationClass =
     orientation === ORIENTATION_VERTICAL ? "flex flex-col" : "flex";
@@ -29,7 +29,7 @@ RadioGroup.displayName = RadioGroupPrimitive.Root.displayName;
 
 const RadioGroupItem = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
+  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item> & { className?: string }
 >(({ className, ...props }, ref) => {
   return (
     <RadioGroupPrimitive.Item

@@ -16,6 +16,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "./drawer";
+import React from "react"
 
 /**
  * Props for the UploadImageFile component.
@@ -108,7 +109,7 @@ export const UploadImageFile = (props: UploadFileProps) => {
         }
         try {
           webApp?.HapticFeedback.impactOccurred("medium");
-        } catch (error) {}
+        } catch (error) { /* empty */ }
       }}
     >
       <DrawerTrigger asChild>
