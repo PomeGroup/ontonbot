@@ -50,7 +50,7 @@ const ConnectWalletTask = () => {
     try {
       setIsWalletConnected(Boolean(Address.parse(userAddress)));
     } catch {
-      /* Does not need any error handling */
+      setIsWalletConnected(false);
     }
   }, [wallet, userAddress]);
 
