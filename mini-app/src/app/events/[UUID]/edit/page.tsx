@@ -42,7 +42,7 @@ const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
   }
 
   return (
-    <div>
+    <main>
       <Tabs
         defaultValue="manage"
         className="mb-4"
@@ -79,8 +79,18 @@ const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
             eventUUID={params.UUID}
           />
         </TabsContent>
+        <TabsContent
+          value="edit"
+          className="pt-4"
+        >
+          <ManageEvent
+            /* @ts-ignore  */
+            event={event.data}
+            eventUUID={params.UUID}
+          />
+        </TabsContent>
       </Tabs>
-    </div>
+    </main>
   );
 };
 

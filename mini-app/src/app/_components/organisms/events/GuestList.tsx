@@ -35,20 +35,19 @@ const GuestList = (props: Props) => {
 
   return (
     <>
-      {props.event?.event_uuid && (
+      {props.event?.event_uuid && props.event.society_hub?.name && (
         <QrCodeButton
           event_uuid={props.event.event_uuid}
           url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event.event_uuid}`}
-          hub={props.event.society_hub.name!}
+          hub={props.event.society_hub.name}
         />
       )}
 
-      <div className="mt-0 flex items-center space-x-2 px-2  ">
-        <span className=" text-2xl font-extrabold tracking-tight text-gray-300 mr-auto">
-          {" "}
-          Guests List{" "}
+      <div className="mt-0 flex items-center space-x-2 px-2">
+        <span className="text-2xl font-extrabold tracking-tight text-foreground mr-auto">
+          Guests List
         </span>
-        {props.event && props.event.ticketToCheckIn === true && (
+        {props.event?.ticketToCheckIn === true && (
           <span>
             <CheckInGuest params={guestCheckInParams} />
           </span>
@@ -63,6 +62,7 @@ const GuestList = (props: Props) => {
       />
     </>
   );
+
 };
 
 export default GuestList;

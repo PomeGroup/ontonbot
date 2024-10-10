@@ -29,11 +29,11 @@ const VisitorRow: FC<VisitorRowProps> = ({
   return (
     <Fragment key={(visitor.user_id || index) + Math.random()}>
       <div
-        className="flex w-full p-4 text-sm border-b border-gray-700"
+        className="flex w-full p-4 text-sm border-b border-secondary"
         ref={isLast ? refProp : null}
       >
-        <div className="flex-1 truncate text-gray-100">
-          <div className="inline-flex items-center">
+        <div className="flex-1 truncate">
+          <div className="inline-flex items-center text-foreground font-bold">
             <FaUserCircle className="mr-2" />
             {`${visitor?.first_name} ${visitor?.last_name}`}
           </div>
@@ -46,7 +46,7 @@ const VisitorRow: FC<VisitorRowProps> = ({
               }
             }}
           >
-            <div className="inline-flex items-center py-0 text-gray-400">
+            <div className="inline-flex items-center py-0 hover:text-foreground">
               <FiAtSign className="ml-5 mr-0" />
               {visitor?.username ? `${visitor?.username}` : "No Username"}
             </div>
@@ -66,12 +66,12 @@ const VisitorRow: FC<VisitorRowProps> = ({
               }}
             >
               {visitor?.wallet_address ? (
-                <div className="inline-flex items-center py-0 text-gray-300">
+                <div className="inline-flex items-center py-0 hover:text-foreground">
                   <Wallet2
                     className="mr-2"
                     width={12}
                     height={12}
-                  />{" "}
+                  />
                   open wallet
                 </div>
               ) : (

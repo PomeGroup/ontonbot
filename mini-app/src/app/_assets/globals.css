@@ -224,6 +224,10 @@ table {
     @apply bg-background text-foreground;
   }
 
+  main {
+    @apply p-2
+  }
+
   * {
     @apply border-border;
   }
