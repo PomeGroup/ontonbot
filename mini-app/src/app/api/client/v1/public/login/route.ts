@@ -5,9 +5,9 @@ import { usersDB } from "@/server/db/users";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.CLIENT_API_JWT_SECRET!;
-const FIXED_API_KEY = process.env.CLIENT_API_FIXED_KEY!; // Add your fixed API key here
-const FIXED_USER = process.env.CLIENT_API_FIXED_USER!; // Add your fixed API key here
-const FIXED_ORGANIZER = process.env.CLIENT_API_FIXED_ORGANIZER!; // Add your fixed API key here
+const FIXED_API_KEY = process.env.CLIENT_API_FIXED_KEY!;
+const FIXED_USER = process.env.CLIENT_API_FIXED_USER!;
+const FIXED_ORGANIZER = process.env.CLIENT_API_FIXED_ORGANIZER!;
 
 // Define error codes for consistent error responses
 const ERROR_CODES = {
