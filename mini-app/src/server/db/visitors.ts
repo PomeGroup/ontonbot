@@ -174,6 +174,12 @@ export const selectVisitorsByEventUuid = async (
         ticket_id: sql<number>`null`.as("ticket_id"),
         ticket_created_at: visitors.created_at,
         ticket_order_id: sql`null`.as("ticket_order_id"),
+        ticket_qr_code: sql`null`.as("ticket_qr_code"),
+        ticket_position: sql`null`.as("ticket_position"),
+        ticket_company: sql`null`.as("ticket_company"),
+        ticket_nft_address: sql`null`.as("ticket_nft_address"),
+
+
       })
       .from(visitors)
       .leftJoin(users, eq(visitors.user_id, users.user_id))
@@ -205,6 +211,10 @@ export const selectVisitorsByEventUuid = async (
         ticket_status: tickets.status,
         ticket_id: tickets.id,
         ticket_order_id: tickets.order_uuid,
+        ticket_qr_code: tickets.order_uuid,
+        ticket_position: tickets.position,
+        ticket_company: tickets.company,
+        ticket_nft_address: tickets.nftAddress,
         ticket_created_at: tickets.created_at,
       })
       .from(tickets)
