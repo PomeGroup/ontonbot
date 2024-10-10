@@ -2,6 +2,10 @@
 const nextConfig = {
   distDir: ".next", // Specify the output directory for builds
   compress: true,
+  experimental: {
+    appDir: true,
+    typedRoutes: true,
+  },
   images: {
     remotePatterns: [
       {
