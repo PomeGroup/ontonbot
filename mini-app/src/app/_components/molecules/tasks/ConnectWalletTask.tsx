@@ -32,15 +32,16 @@ const ConnectWalletTask = () => {
       ],
       enabled: Boolean(WebApp?.initData),
     }
-  ).data;
+  );
+
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
 
   const friendlyAddress = useMemo(() => {
-    if (userAddress) {
-      return Address.parse(userAddress).toString({ bounceable: false });
+    if (userAddress.data) {
+      return Address.parse(userAddress.data).toString({ bounceable: false });
     }
-  }, [userAddress]);
+  }, [userAddress.data]);
 
   const [isWalletConnected, setIsWalletConnected] = useState<
     boolean | undefined
@@ -48,11 +49,11 @@ const ConnectWalletTask = () => {
 
   useEffect(() => {
     try {
-      setIsWalletConnected(Boolean(Address.parse(userAddress)));
+      setIsWalletConnected(Boolean(Address.parse(userAddress.data)));
     } catch {
       setIsWalletConnected(false);
     }
-  }, [wallet, userAddress]);
+  }, [wallet, userAddress.data]);
 
   useEffect(() => {
     try {
