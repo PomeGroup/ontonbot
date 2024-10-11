@@ -1,5 +1,6 @@
 "use client";
 
+import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import Alerts from "@/app/_components/molecules/alerts";
 import { ManageEvent } from "@/app/_components/organisms/events";
 import GuestList from "@/app/_components/organisms/events/GuestList";
@@ -8,10 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { FC } from "react";
-import { BsFillPersonLinesFill } from "react-icons/bs";
-import { FaRegEdit } from "react-icons/fa";
 
 const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
+  useWithBackButton({});
   const WebApp = useWebApp();
 
   const event = trpc.events.getEvent.useQuery(
@@ -29,17 +29,9 @@ const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
 
   const { authorized, isLoading } = useAdminAuth();
 
-  if (isLoading || event.status === "loading") {
-    return null;
-  }
-
-  if (authorized === false) {
-    return <Alerts.NotAuthorized />;
-  }
-
-  if (event.error) {
-    return <div>{event.error.message}</div>;
-  }
+  if (isLoading || event.status === "loading") return null;
+  if (authorized === false) return <Alerts.NotAuthorized />;
+  if (event.error) return <div>{event.error.message}</div>;
 
   return (
     <main>
@@ -48,31 +40,15 @@ const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
         className="mb-4"
       >
         <TabsList className="grid w-full py-0  grid-cols-2">
-          <TabsTrigger
-            onClick={() => hapticFeedback?.impactOccurred("medium")}
-            value="manage"
-          >
-            <BsFillPersonLinesFill className="mr-2" />
-            Guests List
-          </TabsTrigger>
-          <TabsTrigger
-            onClick={() => hapticFeedback?.impactOccurred("medium")}
-            value="edit"
-          >
-            <FaRegEdit className="mr-2" /> Edit
-          </TabsTrigger>
+          <TabsTrigger onClick={() => hapticFeedback?.impactOccurred("medium")} value="overview">Overview</TabsTrigger>
+          <TabsTrigger onClick={() => hapticFeedback?.impactOccurred("medium")} value="registeration">Registeration</TabsTrigger>
+          <TabsTrigger onClick={() => hapticFeedback?.impactOccurred("medium")} value="more">More</TabsTrigger>
         </TabsList>
         <TabsContent value="manage">
-          <GuestList
-            event={event.data}
-            params={params}
-          />
+          <GuestList event={event.data} params={params} />
         </TabsContent>
 
-        <TabsContent
-          value="edit"
-          className="pt-4"
-        >
+        <TabsContent value="edit" className="pt-4">
           <ManageEvent
             /* @ts-ignore  */
             event={event.data}
