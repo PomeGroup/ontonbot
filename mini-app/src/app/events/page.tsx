@@ -16,7 +16,8 @@ import Labels from "../_components/atoms/labels";
 import { ComingSoon } from "../_components/ComingSoon";
 import Skeletons from "../_components/molecules/skeletons";
 import { trpc } from "../_trpc/client";
-import { redirectTo } from "@/lib/utils";
+import {redirectTo} from "@/lib/utils";
+import {isValidImageUrl} from "@/lib/isValidImageUrl";
 
 const EventsAdminPage = () => {
   noStore();
@@ -26,6 +27,7 @@ const EventsAdminPage = () => {
   const hapticFeedback = WebApp?.HapticFeedback;
   const { authorized, isLoading } = useAuth();
   const initData = WebApp?.initData;
+  const defaultImage = "/template-images/default.webp";
   const validatedData = trpc.users.validateUserInitData.useQuery(
     initData || "",
     {
@@ -95,10 +97,12 @@ const EventsAdminPage = () => {
             <div className="relative h-[200px] w-full overflow-hidden">
               <Image
                 className="rounded-t-xl w-full h-full object-contain"
-                src={event.image_url!}
+                src={isValidImageUrl(event.image_url) ? event.image_url : defaultImage}
                 alt="event image"
                 layout="fill"
                 objectFit="cover"
+                onError={(e) => (e.currentTarget.src = defaultImage)}
+                unoptimized={true}
               />
             </div>
 

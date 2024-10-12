@@ -25,7 +25,7 @@ export default function Home() {
   const SliderEventUUID = config?.homeSliderEventUUID || "";
   const webApp = useWebApp();
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
-
+  const currentDateTime = Math.floor(Date.now() / 1000);
   Sentry.setUser({
     id: "user-id", // Replace with the user's ID
     username: "radio", // Replace with the username
@@ -59,7 +59,7 @@ export default function Home() {
     offset: 0,
     filter: {
       participationType: ["online", "in_person"],
-      startDate: Math.floor(Date.now() / 1000),
+      startDate: currentDateTime,
     },
     sortBy: "start_date_asc",
   });
@@ -69,9 +69,9 @@ export default function Home() {
     offset: 0,
     filter: {
       participationType: ["online", "in_person"],
-      startDate: Math.floor(Date.now() / 1000),
+      startDate: currentDateTime,
       startDateOperator: "<=",
-      endDate: Math.floor(Date.now() / 1000),
+      endDate: currentDateTime,
       endDateOperator: ">=",
     },
     sortBy: "start_date_asc",
@@ -82,8 +82,7 @@ export default function Home() {
     offset: 0,
     filter: {
       participationType: ["online", "in_person"],
-      endDate:
-        Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+      endDate: currentDateTime - (currentDateTime % 600),
     },
     sortBy: "start_date_desc",
   });
@@ -122,6 +121,7 @@ export default function Home() {
   const { data: pastEventsData, isLoading: isLoadingPast } =
     trpc.events.getEventsWithFilters.useQuery(pastEventsParams, {
       cacheTime: 10000,
+      retryDelay: 5000,
       enabled: pastEventsState.length === 0,
     });
   const {
@@ -394,6 +394,12 @@ export default function Home() {
                         key={event.event_uuid}
                         event={event}
                         currentUserId={UserId}
+                        mode={
+                          currentDateTime > event.startDate &&
+                          currentDateTime < event.endDate
+                            ? "ongoing"
+                            : "normal"
+                        }
                       />
                     </>
                   ))

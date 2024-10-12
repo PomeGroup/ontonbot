@@ -88,64 +88,56 @@ const EventCard: React.FC<EventCardProps> = memo(
         : participationType === "in_person"
           ? geoLocation
           : "unknown";
-
-    const handleEventClick = () => {
-      if (ticketToCheckIn) {
-        webApp?.openTelegramLink(
-          `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
-        );
-      } else {
-        window.location.href = `/events/${eventUuid}`;
-        return false;
-      }
-    };
-    // Skeleton Loader for Image
-    const renderImageSkeleton = () => (
-      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
-    );
-    const renderDropdownMenu = () => (
-      <DropdownMenu
-        open={isDropdownMenuOpen}
-        onOpenChange={setIsDropdownMenuOpen}
-        key={`dropdown-${eventUuid}`}
-      >
-        <DropdownMenuTrigger asChild>
-          <div
-            onClick={() => setIsDropdownMenuOpen(!isDropdownMenuOpen)}
-            className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer"
-          >
-            <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
-              {!imageLoaded && renderImageSkeleton()}
-              <Image
-                src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-                alt={title}
-                layout="fill"
-                style={{ objectFit: "cover" }}
-                className={`rounded-lg transition-opacity duration-500 ${
-                  imageLoaded ? "opacity-100" : "opacity-0"
-                }`}
-                onError={(e) => (e.currentTarget.src = defaultImage)}
-                onLoad={() => setImageLoaded(true)}
-                loading="lazy"
-              />
-            </div>
-            <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
-              <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
-                <div className="flex items-center self-stretch flex-nowrap relative">
-                  <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
-                    {mode === "ongoing" ? (
-                      <div className="flex items-center text-green-500 animate-pulse">
-                        <IoIosPlayCircle className="mr-1" /> Now
-                      </div>
-                    ) : (
-                      <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
-                        {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
-                        {isOnline}
-                      </span>
-                    )}
-                  </span>
-                  {currentUserId === organizerUserId ? (
-                    <Badge variant="ontonDark">hosted</Badge>
+    
+  const handleEventClick = () => {
+    if (ticketToCheckIn) {
+      webApp?.openTelegramLink(
+        `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
+      );
+    } else {
+      window.location.href = `/events/${eventUuid}`;
+      return false;
+    }
+  };
+  // Skeleton Loader for Image
+  const renderImageSkeleton = () => (
+    <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
+  );
+  const renderDropdownMenu = () => (
+    <DropdownMenu
+      open={isDropdownMenuOpen}
+      onOpenChange={setIsDropdownMenuOpen}
+      key={`dropdown-${eventUuid}`}
+    >
+      <DropdownMenuTrigger asChild>
+        <div
+          onClick={() => setIsDropdownMenuOpen(!isDropdownMenuOpen)}
+          className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+        >
+          <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
+            {!imageLoaded && renderImageSkeleton()}
+            <Image
+              src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+              alt={title}
+              layout="fill"
+              style={{ objectFit: "cover" }}
+              className={`rounded-lg transition-opacity duration-500 ${
+                imageLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              onError={(e) => (e.currentTarget.src = defaultImage)}
+              onLoad={() => setImageLoaded(true)}
+              loading="lazy"
+              unoptimized={true}
+            />
+          </div>
+          <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
+            <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
+              <div className="flex items-center self-stretch flex-nowrap relative">
+                <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
+                  {mode === "ongoing" ? (
+                    <div className="flex items-center text-green-500 animate-pulse">
+                      <IoIosPlayCircle className="mr-1" /> Now
+                    </div>
                   ) : (
                     <Badge variant="ontonDark">
                       {ticketPrice > 0 ? ticketPrice : "free"}
@@ -297,6 +289,8 @@ const EventCard: React.FC<EventCardProps> = memo(
               loading="lazy"
               onError={(e) => (e.currentTarget.src = defaultImage)}
               onLoad={() => setImageLoaded(true)}
+              loading="lazy"
+              unoptimized={true}
             />
           </div>
           <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
@@ -322,17 +316,80 @@ const EventCard: React.FC<EventCardProps> = memo(
       </>
     );
 
-    if (mode === "detailed") {
-      return renderDetailedMode();
-    } else if (mode === "small") {
-      return renderSmallMode();
-    } else {
-      return renderNormalMode();
-    }
-  },
-  (prevProps, nextProps) => {
-    // Customize comparison to avoid unnecessary re-renders
-    return prevProps.event.eventUuid === nextProps.event.eventUuid;
+  const renderDetailedMode = () => (
+    <div
+      className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
+      onClick={handleEventClick}
+    >
+      {!imageLoaded && renderImageSkeleton()}
+      <Image
+        src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+        alt={title}
+        width={window?.innerWidth || 400}
+        height={400}
+        style={{ objectFit: "cover" }}
+        className={`rounded-lg transition-opacity duration-500 ${
+          imageLoaded ? "opacity-100" : "opacity-0"
+        }`}
+        onError={(e) => (e.currentTarget.src = defaultImage)}
+        onLoad={() => setImageLoaded(true)}
+        unoptimized={true}
+      />
+    </div>
+  );
+
+  const renderSmallMode = () => (
+    <>
+      <div
+        onClick={handleEventClick}
+        className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+      >
+        <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
+          {!imageLoaded && renderImageSkeleton()}
+          <Image
+            src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+            alt={title}
+            layout="fill"
+            objectFit="cover"
+            style={{ objectFit: "cover" }}
+            className={`rounded-lg transition-opacity duration-500 ${
+              imageLoaded ? "opacity-100" : "opacity-0"
+            }`}
+            loading="lazy"
+            onError={(e) => (e.currentTarget.src = defaultImage)}
+            onLoad={() => setImageLoaded(true)}
+            unoptimized={true}
+          />
+        </div>
+        <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
+          <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
+            <div className="flex items-center self-stretch flex-nowrap relative">
+              <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-3">
+                {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
+                {isOnline}
+              </span>
+            </div>
+            <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
+              <span className="grow font-sans whitespace-normal text-black dark:text-white text-left line-clamp-1 text-sm font-medium leading-2">
+                {title}
+              </span>
+            </div>
+            <span className="grow font-sans text-left line-clamp-1 text-xs leading-2 text-gray-600 dark:text-gray-400">
+              by {organizerFirstName} {organizerLastName}
+            </span>
+          </div>
+        </div>
+      </div>
+      <Separator className="my-0 bg-[#545458]" />
+    </>
+  );
+
+  if (mode === "detailed") {
+    return renderDetailedMode();
+  } else if (mode === "small") {
+    return renderSmallMode();
+  } else {
+    return renderNormalMode();
   }
 );
 EventCard.displayName = "EventCard";
