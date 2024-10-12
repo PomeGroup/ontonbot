@@ -16,7 +16,8 @@ const useAuth = () => {
           "users.haveAccessToEventAdministration",
           { init_data: initData },
         ],
-        enabled: !!initData,
+        enabled: Boolean(initData),
+        retry: false,
       }
     );
 

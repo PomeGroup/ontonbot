@@ -22,15 +22,17 @@ const ConnectWalletTask = () => {
   const userAddress = trpc.users.getWallet.useQuery(
     {
       init_data: WebApp?.initData!,
+      wallet_address: wallet?.account.address!,
     },
     {
       queryKey: [
         "users.getWallet",
         {
           init_data: WebApp?.initData!,
+          wallet_address: wallet?.account.address!,
         },
       ],
-      enabled: Boolean(WebApp?.initData),
+      enabled: Boolean(WebApp?.initData) && Boolean(wallet?.account.address),
     }
   );
 
@@ -49,7 +51,9 @@ const ConnectWalletTask = () => {
 
   useEffect(() => {
     try {
-      setIsWalletConnected(Boolean(Address.parse(userAddress.data)));
+      if (userAddress.data) {
+        setIsWalletConnected(Boolean(Address.parse(userAddress.data)));
+      }
     } catch {
       setIsWalletConnected(false);
     }
@@ -57,11 +61,7 @@ const ConnectWalletTask = () => {
 
   useEffect(() => {
     try {
-      if (
-        isWalletConnected &&
-        tonConnectUI.account?.address &&
-        webApp?.initData
-      ) {
+      if (tonConnectUI.account?.address && webApp?.initData) {
         addWalletMutation.mutate({
           init_data: webApp.initData,
           wallet: Address.parse(tonConnectUI.account.address).toString(),

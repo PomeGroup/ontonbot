@@ -72,10 +72,14 @@ export const usersRouter = router({
     }),
 
   // private
-  getWallet: initDataProtectedProcedure.query(async (opts) => {
-    const res = await usersDB.selectWalletById(opts.ctx.user.user_id);
-    return res[0]?.wallet;
-  }),
+  getWallet: initDataProtectedProcedure
+    .input(z.object({ wallet_address: z.string().optional() }))
+    .query(async (opts) => {
+      const res = await usersDB.selectWalletById(opts.ctx.user.user_id);
+      console.log(res);
+
+      return res?.wallet;
+    }),
 
   // private
   addWallet: initDataProtectedProcedure
