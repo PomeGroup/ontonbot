@@ -14,7 +14,6 @@ mini-app/coverage
 
 # next.js
 mini-app/.next/
-client-web-panel/.next/
 mini-app/out/
 client-web-panel/out/
 # production
@@ -32,7 +31,6 @@ mini-app/yarn-error.log*
 
 # local env files
 mini-app/.env*.local
-client-web-panel/.env
 # vercel
 mini-app/.vercel
 
