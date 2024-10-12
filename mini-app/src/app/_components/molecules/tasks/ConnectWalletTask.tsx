@@ -12,6 +12,7 @@ const ConnectWalletTask = () => {
   const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
   const trpcUtils = trpc.useUtils();
+
   const addWalletMutation = trpc.users.addWallet.useMutation({
     onSuccess: () => {
       trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
@@ -33,6 +34,7 @@ const ConnectWalletTask = () => {
         },
       ],
       enabled: Boolean(WebApp?.initData) && Boolean(wallet?.account.address),
+      retry: false,
     }
   );
 
