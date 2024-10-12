@@ -31,8 +31,6 @@ const TabTriggers: React.FC<TabTriggersProps> = ({
       className="bg-transparent px-0 py-0 "
       onValueChange={(value) => setTabValue(value)}
     >
-
-
       <ScrollArea className="w-full whitespace-nowrap border-0 h-12">
         <TabsList className="bg-transparent px-0">
           {tabs.map((tab, index) => (

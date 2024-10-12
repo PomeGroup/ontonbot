@@ -8,7 +8,13 @@ import { Button } from "@/components/ui/button";
 import { CheckInState } from "./CheckInState";
 import { RiQrScan2Line } from "react-icons/ri";
 
-const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (_data: any) => void , needRefresh : boolean } }> = ({ params }) => {
+const CheckInGuest: FC<{
+  params: {
+    hash: string;
+    setNeedRefresh: (_data: any) => void;
+    needRefresh: boolean;
+  };
+}> = ({ params }) => {
   const WebApp = useWebApp();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -50,10 +56,9 @@ const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (_data: any) =
       setDrawerOpen(true); // Ensure the drawer opens after successful data fetch
     } else if (ticketQuery.isError) {
       console.error(ticketQuery.error);
-      if(ticketQuery.error?.data?.httpStatus === 404 ) {
+      if (ticketQuery.error?.data?.httpStatus === 404) {
         setCheckInState("NoTicketData");
-      }
-      else {
+      } else {
         setCheckInState("checkInError");
       }
       setDrawerOpen(true); // Ensure the drawer opens on error as well
@@ -79,19 +84,21 @@ const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (_data: any) =
         if (result && result.checkInSuccess) {
           setCheckInState("checkedInSuccess");
           // @ts-ignore
-            console.log("Check-in successful, ID:", result.result.id);
-            // @ts-ignore
-            params.setNeedRefresh(result.result.id);
-
-        }
-        else if (result && "alreadyCheckedIn" in result) {
+          console.log("Check-in successful, ID:", result.result.id);
+          // @ts-ignore
+          params.setNeedRefresh(result.result.id);
+        } else if (result && "alreadyCheckedIn" in result) {
           setCheckInState("alreadyCheckedIn");
         }
       });
     } else if (checkInMutation.isError) {
       setCheckInState("checkInError");
     }
-  }, [checkInMutation.isSuccess, checkInMutation.isError, checkInMutation.data]);
+  }, [
+    checkInMutation.isSuccess,
+    checkInMutation.isError,
+    checkInMutation.data,
+  ]);
 
   const handleCheckIn = useCallback(() => {
     if (ticketData && ticketData.order_uuid) {
@@ -103,7 +110,6 @@ const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (_data: any) =
   }, [ticketData, checkInMutation]);
 
   const handleScanQr = () => {
-
     if (!WebApp?.isVersionAtLeast("6.0")) {
       setCheckInState("checkInError");
       return;
@@ -127,9 +133,9 @@ const CheckInGuest: FC<{ params: { hash: string ,setNeedRefresh : (_data: any) =
   return (
     <>
       <Button
-          onClick={handleScanQr}
-          variant="link" // Use the link variant
-          className="ml-auto flex items-center text-sm text-gray-300 px-0 no-underline hover:no-underline"
+        onClick={handleScanQr}
+        variant="link" // Use the link variant
+        className="ml-auto flex items-center text-sm text-gray-300 px-0 no-underline hover:no-underline"
       >
         <RiQrScan2Line className="mr-2" /> Scan QR
       </Button>

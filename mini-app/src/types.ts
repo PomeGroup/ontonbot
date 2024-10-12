@@ -167,15 +167,15 @@ export const UpdateEventDataSchema = z.object({
   location: z.string(),
   image_url: z.string().url(),
   ts_reward_url: z
-      .string()
-      .optional() // This allows the field to be undefined
-      .refine(
-          (url) =>
-              url === undefined ||
-              url === "" ||
-              z.string().url().safeParse(url).success,
-          { message: "Please upload a valid reward image URL" }
-      ),
+    .string()
+    .optional() // This allows the field to be undefined
+    .refine(
+      (url) =>
+        url === undefined ||
+        url === "" ||
+        z.string().url().safeParse(url).success,
+      { message: "Please upload a valid reward image URL" }
+    ),
   society_hub: z.object({
     id: z.string(),
     name: z.string(),

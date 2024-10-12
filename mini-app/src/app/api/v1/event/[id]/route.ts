@@ -4,7 +4,7 @@ import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import { and, asc, eq, or, sql } from "drizzle-orm";
 import { type NextRequest } from "next/server";
-import {usersDB} from "@/server/db/users";
+import { usersDB } from "@/server/db/users";
 
 export async function GET(
   req: NextRequest,

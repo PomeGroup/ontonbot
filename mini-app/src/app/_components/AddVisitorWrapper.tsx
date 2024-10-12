@@ -13,7 +13,7 @@ const AddVisitorWrapper: FC<{ children: React.ReactNode; hash: string }> = ({
   const initData = WebApp?.initData || "";
 
   useLayoutEffect(() => {
-    if (!hash) {
+    if (!hash || !initData) {
       return;
     }
 

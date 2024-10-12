@@ -78,12 +78,15 @@ export const ThirdStep = () => {
           .min(4, { message: "Password must be at least 4 characters" })
           .max(20, { message: "Password must be less than 20 characters" }),
     ts_reward_url: z
-        .string()
-        .optional() // This allows the field to be undefined
-        .refine(
-            (url) => url === undefined || url === "" || z.string().url().safeParse(url).success,
-            { message: "Please upload a valid reward image URL" }
-        ),
+      .string()
+      .optional() // This allows the field to be undefined
+      .refine(
+        (url) =>
+          url === undefined ||
+          url === "" ||
+          z.string().url().safeParse(url).success,
+        { message: "Please upload a valid reward image URL" }
+      ),
   });
 
   // Handle form submission
@@ -129,7 +132,6 @@ export const ThirdStep = () => {
       console.log("dataToSubmit", dataToSubmit);
       console.log("parsedEventData", parsedEventData);
       if (parsedEventData.success) {
-
         addEvent.mutate({
           eventData: parsedEventData.data,
           init_data: webApp?.initData || "",
@@ -179,7 +181,6 @@ export const ThirdStep = () => {
     setPasswordDisabled(false);
     setPasswordValue(""); // Clear the placeholder text
   };
-
 
   // Handle form submission on button click
   const handleButtonClick = useCallback(() => {

@@ -41,11 +41,11 @@ const updateFilter = (
   filter: state.filter
     ? {
         ...state.filter,
-        ...updates
+        ...updates,
       }
     : {
         ...initialState.filter,
-        ...updates
+        ...updates,
       },
 });
 

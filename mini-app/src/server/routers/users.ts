@@ -11,14 +11,16 @@ import {
 } from "../db/visitors";
 
 import {
+  default as rewardDB,
+  default as rewardsDb,
+} from "@/server/db/rewards.db";
+import { usersDB } from "@/server/db/users";
+import {
   adminOrganizerProtectedProcedure,
   initDataProtectedProcedure,
   publicProcedure,
   router,
 } from "../trpc";
-import rewardDB from "@/server/db/rewards.db";
-import rewardsDb from "@/server/db/rewards.db";
-import { usersDB } from "@/server/db/users";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure
@@ -59,7 +61,7 @@ export const usersRouter = router({
 
       const data = await usersDB.insertUser(initDataJson);
       //console.log("data", data);
-      if (!data.length) {
+      if (!data) {
         throw new TRPCError({
           message: "user already exists",
           code: "CONFLICT",
@@ -70,46 +72,27 @@ export const usersRouter = router({
     }),
 
   // private
-  getWallet: publicProcedure
-    .input(z.object({ initData: z.string().optional() }))
+  getWallet: initDataProtectedProcedure
+    .input(z.object({ wallet_address: z.string().optional() }))
     .query(async (opts) => {
-      if (!opts.input.initData) {
-        return;
-      }
+      const res = await usersDB.selectWalletById(opts.ctx.user.user_id);
+      console.log(res);
 
-      const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
-
-      if (!valid) {
-        return;
-      }
-
-      const res = await usersDB.selectWalletById(initDataJson.user.id);
-      return res[0]?.wallet;
+      return res?.wallet;
     }),
 
   // private
-  addWallet: publicProcedure
+  addWallet: initDataProtectedProcedure
     .input(
       z.object({
-        initData: z.string().optional(),
         wallet: z.string(),
       })
     )
     .mutation(async (opts) => {
-      if (!opts.input.initData) {
-        return;
-      }
-
-      const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
-
-      if (!valid) {
-        return;
-      }
-
       await usersDB.updateWallet(
-        initDataJson.user.id,
+        opts.ctx.user.user_id,
         opts.input.wallet,
-        initDataJson.user.id.toString()
+        opts.ctx.user.user_id.toString()
       );
     }),
 
@@ -133,7 +116,7 @@ export const usersRouter = router({
 
       await usersDB.updateWallet(
         initDataJson.user.id,
-           "",
+        "",
         initDataJson.user.id.toString()
       );
     }),
