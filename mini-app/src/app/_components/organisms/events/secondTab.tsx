@@ -214,6 +214,7 @@ export const SecondStep = () => {
       eventLocationType: eventData?.eventLocationType || "online",
     });
   }, []);
+
   return (
     <>
       <form
@@ -437,6 +438,7 @@ const SelectLocation = (props: {
             value: city.id.toString(),
           }))}
           placeholder="Select a city"
+
           onInputChange={(inputValue) =>
             !isCityDisabled && setCitySearch(inputValue)
           } // Disable input change if no country is selected

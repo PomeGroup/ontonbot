@@ -53,8 +53,10 @@ const ConnectWalletTask = () => {
 
   useEffect(() => {
     try {
-      if (userAddress.data) {
+      if (tonConnectUI.account?.address && userAddress.data) {
         setIsWalletConnected(Boolean(Address.parse(userAddress.data)));
+      } else {
+        setIsWalletConnected(false);
       }
     } catch {
       setIsWalletConnected(false);

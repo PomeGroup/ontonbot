@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  next-js:
+    container_name: onton-client-web-panel
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - ENV_TYPE=produc
+        - NEXT_PUBLIC_BACKEND_URL_CLIENT='https:///'
+    restart: always
+#    volumes:
+#      - ./:/usr/src/app:delegated
+#      - /usr/src/app/node_modules
+#      - /usr/src/app/.next
+    ports:
+      - '3002:3000'
+    env_file:
+      - .env
+#    command: npm run dev  #tail -f /dev/null
+    networks:
+      - onton-client-network
+
+networks:
+  onton-client-network:
+    driver: bridge

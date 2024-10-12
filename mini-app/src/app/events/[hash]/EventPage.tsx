@@ -21,8 +21,10 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   useWithBackButton({
     whereTo: "/",
   });
+
   const webApp = useWebApp();
   const { role, authorized, user } = useAuth();
+  const router = useRouter();
   const eventData = trpc.events.getEvent.useQuery(
     {
       event_uuid: eventHash,
@@ -36,7 +38,6 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       enabled: Boolean(webApp?.initData),
     }
   );
-  const router = useRouter();
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {
