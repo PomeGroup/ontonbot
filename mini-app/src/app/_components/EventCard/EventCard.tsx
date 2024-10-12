@@ -130,6 +130,7 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
               onError={(e) => (e.currentTarget.src = defaultImage)}
               onLoad={() => setImageLoaded(true)}
               loading="lazy"
+              unoptimized={true}
             />
           </div>
           <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
@@ -217,6 +218,7 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
               onError={(e) => (e.currentTarget.src = defaultImage)}
               onLoad={() => setImageLoaded(true)}
               loading="lazy"
+              unoptimized={true}
             />
           </div>
           <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
@@ -276,6 +278,7 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
         }`}
         onError={(e) => (e.currentTarget.src = defaultImage)}
         onLoad={() => setImageLoaded(true)}
+        unoptimized={true}
       />
     </div>
   );
@@ -300,6 +303,7 @@ const EventCard: React.FC<EventCardProps> =  memo( ({
             loading="lazy"
             onError={(e) => (e.currentTarget.src = defaultImage)}
             onLoad={() => setImageLoaded(true)}
+            unoptimized={true}
           />
         </div>
         <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">

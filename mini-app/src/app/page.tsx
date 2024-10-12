@@ -122,6 +122,7 @@ export default function Home() {
   const { data: pastEventsData, isLoading: isLoadingPast } =
     trpc.events.getEventsWithFilters.useQuery(pastEventsParams, {
       cacheTime: 10000,
+      retryDelay: 5000,
       enabled: pastEventsState.length === 0,
     });
   const {

@@ -6,7 +6,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "*.onton.live",
+        hostname: "*",
       },
       {
         protocol: "https",
