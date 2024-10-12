@@ -6,9 +6,9 @@ import { userEventFieldsRouter } from "./routers/userEventFields";
 import { usersRouter } from "./routers/users";
 import { visitorsRouter } from "./routers/visitors";
 import { router } from "./trpc";
-import {configRouter} from "@/server/routers/OntonSetting";
-import {ticketRouter} from "@/server/routers/tickets";
-import {eventTicketRouter} from "@/server/routers/eventTicket";
+import { configRouter } from "@/server/routers/OntonSetting";
+import { ticketRouter } from "@/server/routers/tickets";
+import { eventTicketRouter } from "@/server/routers/eventTicket";
 
 export const appRouter = router({
   users: usersRouter,
@@ -17,7 +17,7 @@ export const appRouter = router({
   files: fieldsRouter,
   userEventFields: userEventFieldsRouter,
   location: locationRouter,
-  config : configRouter,
+  config: configRouter,
   ticket: ticketRouter,
   eventTicket: eventTicketRouter,
 });

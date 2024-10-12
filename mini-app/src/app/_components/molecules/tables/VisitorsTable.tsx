@@ -1,19 +1,13 @@
 import { trpc } from "@/app/_trpc/client";
-import useWebApp from "@/hooks/useWebApp";
-import { useIntersection } from "@mantine/hooks";
-import React, {
-  FC,
-  useEffect,
-  useRef,
-  useState,
-  useMemo,
-} from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import useWebApp from "@/hooks/useWebApp";
+import { useIntersection } from "@mantine/hooks";
+import Image from "next/image";
+import { FC, useEffect, useMemo, useRef, useState } from "react";
 import { FaCloudDownloadAlt } from "react-icons/fa";
 import VisitorRow from "./VisitorRow";
-import Image from "next/image";
 
 export type Visitor = {
   user_id: number | null;
@@ -26,8 +20,6 @@ export type Visitor = {
   ticket_status: string | null;
   ticket_id: number | null;
 };
-
-
 
 interface VisitorsTableProps {
   event_uuid: string;
@@ -53,7 +45,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     data,
     hasNextPage,
     isFetchingNextPage,
-    isLoading : isLoadingVisitors,
+    isLoading: isLoadingVisitors,
     refetch: refetchVisitors,
   } = trpc.visitors.getAll.useInfiniteQuery(
     {
@@ -66,7 +58,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     {
       getNextPageParam: (lastPage) => lastPage?.nextCursor || null,
       initialCursor: 0,
-      enabled:   Boolean(event_uuid),
+      enabled: Boolean(event_uuid),
       retry: false,
       cacheTime: 20,
     }
@@ -82,7 +74,6 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     if (needRefresh) {
       refetchVisitors().then(() => {
         setNeedRefresh(false);
-
       });
     }
   }, [needRefresh]);
@@ -106,8 +97,9 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     };
   }, [searchQuery]);
   // Flatten all pages to include newly fetched data
-  // @ts-ignore
-  const flatData: Visitor[] = data?.pages.flatMap((page) => page?.visitorsData) || [];
+  const flatData: Visitor[] =
+    // @ts-expect-error
+    data?.pages.flatMap((page) => page?.visitorsData) || [];
 
   // Check the visitor count on the first page
   const firstPageVisitorCount = data?.pages[0]?.visitorsData.length || 0;
@@ -135,8 +127,6 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
 
   // Check if there are no events after filtering and display immediately if there are no results on load
   useEffect(() => {
-
-
     if (!isFetchingNextPage && !isTyping && filteredVisitors.length === 0) {
       // console.log("isFetchingNextPage:", isFetchingNextPage);
       // console.log("debouncedSearchQuery:", debouncedSearchQuery);
@@ -147,7 +137,10 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
 
       if (
         debouncedSearchQuery.length === 0 ||
-        (debouncedSearchQuery.length > 0 && filteredVisitors.length === 0 && !isFetchingNextPage && !isLoadingVisitors)
+        (debouncedSearchQuery.length > 0 &&
+          filteredVisitors.length === 0 &&
+          !isFetchingNextPage &&
+          !isLoadingVisitors)
       ) {
         setShowNoResults(true); // Show message immediately if no results and not loading
       }
@@ -219,7 +212,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
               )}
             </div>
           </div>
-          {showNoResults  ? (
+          {showNoResults ? (
             <div className="flex flex-col  animate-fade items-center justify-center  mt-12 text-center space-y-4  ">
               <div>
                 <Image
@@ -234,15 +227,11 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
                 Try to enter other keywords
               </div>
             </div>
-          ) :
-              (isLoadingVisitors ) ? (
+          ) : isLoadingVisitors ? (
             <div className="flex flex-col animate-pulse items-center justify-center mt-12 text-center space-y-4">
-                <div className="text-gray-500 max-w-md">
-                    Loading...
-                </div>
+              <div className="text-gray-500 max-w-md">Loading...</div>
             </div>
-            ) :
-              (
+          ) : (
             filteredVisitors.map((visitor, index) => {
               if (!visitor) {
                 return null;
@@ -250,7 +239,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
 
               return (
                 <VisitorRow
-                  key={(visitor.user_id ) }
+                  key={visitor.user_id}
                   visitor={visitor}
                   refProp={index === filteredVisitors.length - 1 ? ref : null}
                   webApp={webApp}

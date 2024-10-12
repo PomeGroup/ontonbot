@@ -12,17 +12,18 @@ export const useSearchEvents = () => {
     sortBy: "default",
     society_hub_id: [],
   });
-  const {
-    setSearchInput : storeSetSearchInput,
-  } = useSearchEventsStore();
-  const { data: searchResults, refetch } = trpc.events.getEventsWithFilters.useQuery(
+  const { setSearchInput: storeSetSearchInput } = useSearchEventsStore();
+  const { data: searchResults, refetch } =
+    trpc.events.getEventsWithFilters.useQuery(
       searchEventsInputZod.parse({
         limit: 3,
         offset: 0,
         search: searchTerm,
         filter: {
           participationType: filters.participationType,
-          startDate: Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 600),
+          startDate:
+            Math.floor(Date.now() / 1000) -
+            (Math.floor(Date.now() / 1000) % 600),
           society_hub_id: filters.society_hub_id,
         },
         sortBy: filters.sortBy,
@@ -36,13 +37,13 @@ export const useSearchEvents = () => {
           setAutoSuggestions([]);
         },
       }
-  );
+    );
 
   const debouncedFetchSearchResults = useCallback(
-      debounce((_value: string) => {
-        refetch();
-      }, 300),
-      [refetch]
+    debounce((_value: string) => {
+      refetch();
+    }, 300),
+    [refetch]
   );
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

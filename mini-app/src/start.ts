@@ -4,7 +4,7 @@ import { getErrorMessages } from "@/lib/error";
 import { sendLogNotification } from "@/lib/tgBot";
 import { createUserRewardLink } from "@/lib/ton-society-api";
 import { msToTime } from "@/lib/utils";
-import { RewardType,  } from "@/types/event.types";
+import { RewardType } from "@/types/event.types";
 import { AxiosError } from "axios";
 import { CronJob } from "cron";
 import "dotenv/config";
@@ -13,9 +13,9 @@ import pLimit from "p-limit";
 import { db } from "./db/db";
 import { wait } from "./lib/utils";
 import telegramService from "@/server/routers/services/telegramService";
-import {findVisitorById} from "@/server/db/visitors";
+import { findVisitorById } from "@/server/db/visitors";
 import rewardDB from "@/server/db/rewards.db";
-import {sleep} from "@/utils";
+import { sleep } from "@/utils";
 new CronJob("0 */2 * * *", cronJobFunction, null, true);
 
 process.on("unhandledRejection", (err) => {
@@ -117,7 +117,7 @@ async function createRewards() {
           }
         );
 
-        await  rewardDB.updateReward(pendingReward.id, response.data.data);
+        await rewardDB.updateReward(pendingReward.id, response.data.data);
       } catch (error) {
         const isEventPublished =
           error instanceof AxiosError
@@ -133,7 +133,7 @@ async function createRewards() {
             },
           });
           pendingRewards = pendingRewards.filter(async (r) => {
-            const visitor = await  findVisitorById(r.visitor_id);
+            const visitor = await findVisitorById(r.visitor_id);
 
             const event = await db.query.events.findFirst({
               where: (fields, { eq }) => {
@@ -151,13 +151,12 @@ async function createRewards() {
           try {
             // Call the function to handle the reward update with conditions
             await rewardDB.updateRewardWithConditions(
-                pendingReward.id,
-                isEventPublished,
-                pendingReward,
-                shouldFail,
-                shouldFail ? (error as string) : undefined // Cast error to string
+              pendingReward.id,
+              isEventPublished,
+              pendingReward,
+              shouldFail,
+              shouldFail ? (error as string) : undefined // Cast error to string
             );
-
           } catch (error) {
             console.log("DB_ERROR_102", error);
           }
@@ -229,8 +228,6 @@ async function processReward(createdReward: RewardType) {
     await handleRewardError(createdReward, error);
   }
 }
-
-
 
 async function updateRewardStatus(
   rewardId: string,

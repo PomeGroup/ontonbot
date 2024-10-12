@@ -14,7 +14,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import useWebApp from "@/hooks/useWebApp";
-import {FiAlertCircle} from "react-icons/fi";
+import { FiAlertCircle } from "react-icons/fi";
 
 interface ComboboxDrawerProps {
   options?: { value: string; label: string }[];

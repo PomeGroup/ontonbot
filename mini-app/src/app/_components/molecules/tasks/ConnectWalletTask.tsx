@@ -12,6 +12,7 @@ const ConnectWalletTask = () => {
   const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
   const trpcUtils = trpc.useUtils();
+
   const addWalletMutation = trpc.users.addWallet.useMutation({
     onSuccess: () => {
       trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
@@ -21,50 +22,55 @@ const ConnectWalletTask = () => {
 
   const userAddress = trpc.users.getWallet.useQuery(
     {
-      initData: WebApp?.initData,
+      init_data: WebApp?.initData!,
+      wallet_address: wallet?.account.address!,
     },
     {
       queryKey: [
         "users.getWallet",
         {
-          initData: WebApp?.initData,
+          init_data: WebApp?.initData!,
+          wallet_address: wallet?.account.address!,
         },
       ],
+      enabled: Boolean(WebApp?.initData) && Boolean(wallet?.account.address),
+      retry: false,
     }
-  ).data;
+  );
+
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
 
   const friendlyAddress = useMemo(() => {
-    if (userAddress) {
-      return Address.parse(userAddress).toString({ bounceable: false });
+    if (userAddress.data) {
+      return Address.parse(userAddress.data).toString({ bounceable: false });
     }
-  }, [userAddress]);
+  }, [userAddress.data]);
 
   const [isWalletConnected, setIsWalletConnected] = useState<
     boolean | undefined
   >(undefined);
 
   useEffect(() => {
-    setIsWalletConnected(
-      wallet !== null ||
-        (userAddress !== "" &&
-          userAddress !== null &&
-          userAddress !== undefined)
-    );
-  }, [wallet, userAddress]);
+    try {
+      if (userAddress.data) {
+        setIsWalletConnected(Boolean(Address.parse(userAddress.data)));
+      }
+    } catch {
+      setIsWalletConnected(false);
+    }
+  }, [wallet, userAddress.data]);
 
   useEffect(() => {
     try {
-      if (isWalletConnected && tonConnectUI.account?.address) {
+      if (tonConnectUI.account?.address && webApp?.initData) {
         addWalletMutation.mutate({
-          initData: WebApp?.initData,
+          init_data: webApp.initData,
           wallet: Address.parse(tonConnectUI.account.address).toString(),
         });
-        return;
       }
     } catch {}
-  }, [isWalletConnected, tonConnectUI.account?.address]);
+  }, [isWalletConnected, tonConnectUI.account?.address, webApp?.initData]);
 
   const onConnectClick = async () => {
     if (!tonConnectUI.account) {
@@ -74,7 +80,7 @@ const ConnectWalletTask = () => {
   };
 
   const connectedWallet = useMemo(() => {
-    return friendlyAddress?.slice(0, 4) + "..." + friendlyAddress?.slice(-4);
+    return `${friendlyAddress?.slice(0, 4)}...${friendlyAddress?.slice(-4)}`;
   }, [friendlyAddress]);
 
   return (

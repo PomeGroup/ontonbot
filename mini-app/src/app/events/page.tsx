@@ -42,22 +42,25 @@ const EventsAdminPage = () => {
     }
   );
   useEffect(() => {
-    console.log("document.referrer ",document.referrer);
-    if (typeof window !== "undefined" && ( document.referrer ==="" || document.referrer==="https://web.telegram.org/") ) {
+    console.log("document.referrer ", document.referrer);
+    if (
+      typeof window !== "undefined" &&
+      (document.referrer === "" ||
+        document.referrer === "https://web.telegram.org/")
+    ) {
       redirectTo("/");
-     }
-    }, [router,document.referrer]);
+    }
+  }, [router, document.referrer]);
 
   if (
     eventsData.isLoading ||
     isLoading ||
     validatedData.isLoading ||
     !initData ||
-    document?.referrer ===""
+    document?.referrer === ""
   ) {
     return <Skeletons.Events />;
   }
-
 
   if (!authorized || eventsData.isError) {
     return <ComingSoon />;

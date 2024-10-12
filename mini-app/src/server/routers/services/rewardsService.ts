@@ -32,7 +32,10 @@ export const createUserRewardSBT = async (props: {
     }
 
     // validate event date
-    const validateEventDateResult = validateEventDates(eventData.start_date, eventData.end_date);
+    const validateEventDateResult = validateEventDates(
+      eventData.start_date,
+      eventData.end_date
+    );
     if (!validateEventDateResult.success) {
       return validateEventDateResult;
     }

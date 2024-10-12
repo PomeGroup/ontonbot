@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import clsx from "clsx";
 
 interface VariantBadgeProps {
-    status: "USED" | "UNUSED" | string; // Expecting "USED", "UNUSED", or any other string for the default case
+  status: "USED" | "UNUSED" | string; // Expecting "USED", "UNUSED", or any other string for the default case
 }
 
 const VariantBadge: FC<VariantBadgeProps> = ({ status = "" }) => {
@@ -33,7 +33,7 @@ const VariantBadge: FC<VariantBadgeProps> = ({ status = "" }) => {
     <Badge
       variant="outline"
       className={clsx(getBadgeStyles())}
-     >
+    >
       {getStatusText()}
     </Badge>
   );
