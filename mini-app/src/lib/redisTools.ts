@@ -1,7 +1,9 @@
 import crypto from "crypto";
 import { getRedisClient } from "./redisClient"; // Use getRedisClient to ensure a valid Redis client
 
-const CACHE_ENABLED = process.env.CACHE_ENABLED || true;
+const CACHE_ENABLED = process.env.CACHE_ENABLED
+    ? process.env.CACHE_ENABLED.toLowerCase() === 'true'
+    : true;
 /**
  * Generates an MD5 hash for a given key.
  *
@@ -24,14 +26,14 @@ export const setCache = async (
   value: any,
   ttl?: number
 ): Promise<void> => {
-  if (CACHE_ENABLED !== true) return;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return;
+
   try {
     const redisClient = await getRedisClient();
     const serializedValue = JSON.stringify(value); // Redis stores as string, so we serialize
-    await redisClient.set(hashedKey, serializedValue);
+    await redisClient.set(key, serializedValue);
     if (ttl !== undefined) {
-      await redisClient.expire(hashedKey, ttl);
+      await redisClient.expire(key, ttl);
     }
   } catch (err) {
     console.error(`Error setting cache for key ${key}:`, err);
@@ -45,11 +47,11 @@ export const setCache = async (
  * @returns The cached value or undefined if not found.
  */
 export const getCache = async (key: string): Promise<any | undefined> => {
-  if (CACHE_ENABLED !== true) return;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return;
+
   try {
     const redisClient = await getRedisClient();
-    const result = await redisClient.get(hashedKey);
+    const result = await redisClient.get(key);
    // console.log(`Cache for key ${key}`);
     return result ? JSON.parse(result) : undefined; // Deserialize the value from Redis
   } catch (err) {
@@ -64,11 +66,11 @@ export const getCache = async (key: string): Promise<any | undefined> => {
  * @param key - The cache key.
  */
 export const deleteCache = async (key: string): Promise<void> => {
-  if (CACHE_ENABLED !== true) return;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return;
+
   try {
     const redisClient = await getRedisClient();
-    await redisClient.del(hashedKey);
+    await redisClient.del(key);
   } catch (err) {
     console.error(`Error deleting cache for key ${key}:`, err);
   }
@@ -81,11 +83,11 @@ export const deleteCache = async (key: string): Promise<void> => {
  * @returns A boolean indicating whether the key exists.
  */
 export const keyExists = async (key: string): Promise<boolean> => {
-  if (CACHE_ENABLED !== true) return false;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return false;
+
   try {
     const redisClient = await getRedisClient();
-    const exists = await redisClient.exists(hashedKey);
+    const exists = await redisClient.exists(key);
     return exists === 1;
   } catch (err) {
     console.error(`Error checking if key ${key} exists:`, err);
@@ -105,13 +107,13 @@ export const setRedisKeyJson = async (
   value: any,
   ttl?: number
 ): Promise<void> => {
-  if (CACHE_ENABLED !== true) return;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return;
+
   try {
     const redisClient = await getRedisClient();
-    await redisClient.json.set(hashedKey, "$", value);
+    await redisClient.json.set(key, "$", value);
     if (ttl !== undefined) {
-      await redisClient.expire(hashedKey, ttl);
+      await redisClient.expire(key, ttl);
     }
   } catch (err) {
     console.error(`Error setting JSON value for key ${key}:`, err);
@@ -127,11 +129,11 @@ export const setRedisKeyJson = async (
 export const getRedisKeyJson = async (
   key: string
 ): Promise<any | undefined> => {
-  if (CACHE_ENABLED !== true) return;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return;
+
   try {
     const redisClient = await getRedisClient();
-    return await redisClient.json.get(hashedKey);
+    return await redisClient.json.get(key);
   } catch (err) {
     console.error(`Error getting JSON value for key ${key}:`, err);
     return undefined;
@@ -147,11 +149,11 @@ export const getRedisKeyJson = async (
 export const getRedisKeyType = async (
   key: string
 ): Promise<string | undefined> => {
-  if (CACHE_ENABLED !== true) return undefined;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return undefined;
+
   try {
     const redisClient = await getRedisClient();
-    return await redisClient.type(hashedKey);
+    return await redisClient.type(key);
   } catch (err) {
     console.error(`Error getting type for key ${key}:`, err);
     return undefined;
@@ -164,11 +166,11 @@ export const getRedisKeyType = async (
  * @param key - The cache key.
  */
 export const incrementKey = async (key: string): Promise<void> => {
-  if (CACHE_ENABLED !== true) return;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return;
+
   try {
     const redisClient = await getRedisClient();
-    await redisClient.incr(hashedKey);
+    await redisClient.incr(key);
   } catch (err) {
     console.error(`Error incrementing key ${key}:`, err);
   }
@@ -180,11 +182,11 @@ export const incrementKey = async (key: string): Promise<void> => {
  * @param key - The cache key.
  */
 export const decrementKey = async (key: string): Promise<void> => {
-  if (CACHE_ENABLED !== true) return;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return;
+
   try {
     const redisClient = await getRedisClient();
-    await redisClient.decr(hashedKey);
+    await redisClient.decr(key);
   } catch (err) {
     console.error(`Error decrementing key ${key}:`, err);
   }
@@ -199,11 +201,11 @@ export const decrementKey = async (key: string): Promise<void> => {
 export const getRedisKeyTTL = async (
   key: string
 ): Promise<number | undefined> => {
-  if (CACHE_ENABLED !== true) return undefined;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return undefined;
+
   try {
     const redisClient = await getRedisClient();
-    return await redisClient.ttl(hashedKey);
+    return await redisClient.ttl(key);
   } catch (err) {
     console.error(`Error getting TTL for key ${key}:`, err);
     return undefined;
@@ -220,11 +222,11 @@ export const setRedisKeyTTL = async (
   key: string,
   ttl: number
 ): Promise<void> => {
-  if (CACHE_ENABLED !== true) return undefined;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return undefined;
+
   try {
     const redisClient = await getRedisClient();
-    await redisClient.expire(hashedKey, ttl);
+    await redisClient.expire(key, ttl);
   } catch (err) {
     console.error(`Error setting TTL for key ${key}:`, err);
   }
@@ -236,11 +238,11 @@ export const setRedisKeyTTL = async (
  * @param key - The cache key.
  */
 export const persistKey = async (key: string): Promise<void> => {
-  if (CACHE_ENABLED !== true) return;
-  const hashedKey = generateHash(key);
+  if (!CACHE_ENABLED) return;
+
   try {
     const redisClient = await getRedisClient();
-    await redisClient.persist(hashedKey);
+    await redisClient.persist(key);
   } catch (err) {
     console.error(`Error persisting key ${key}:`, err);
   }
@@ -250,7 +252,7 @@ export const persistKey = async (key: string): Promise<void> => {
  * Quit the Redis connection.
  */
 export const quitRedis = async (): Promise<void> => {
-  if (CACHE_ENABLED !== true) return;
+  if (!CACHE_ENABLED) return;
   try {
     const redisClient = await getRedisClient();
     await redisClient.quit();
@@ -264,7 +266,7 @@ export const quitRedis = async (): Promise<void> => {
  * Connect to Redis.
  */
 export const connectRedis = async (): Promise<void> => {
-  if (CACHE_ENABLED !== true) return;
+  if (!CACHE_ENABLED) return;
   try {
     await getRedisClient();
     console.log("Connected to Redis");

@@ -43,6 +43,7 @@ export const SecondStep = () => {
     eventData?.end_date &&
     eventData.end_date < currentTime
   );
+
   const handleSubmit = useCallback(() => {
     if (!formRef.current) {
       return;

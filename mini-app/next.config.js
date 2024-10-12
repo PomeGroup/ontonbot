@@ -3,6 +3,7 @@ const nextConfig = {
   distDir: '.next', // Specify the output directory for builds
   compress: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

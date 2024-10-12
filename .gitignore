@@ -4,8 +4,10 @@
 mini-app/node_modules
 mini-app/.pnp
 mini-app/.pnp.js
-client-web-panel/node_modules
 
+client-web-panel/node_modules
+client-web-panel/.next
+client-web-panel/.env
 
 # testing
 mini-app/coverage

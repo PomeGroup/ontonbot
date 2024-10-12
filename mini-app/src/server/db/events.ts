@@ -190,7 +190,7 @@ export const getUserEvents = async (
 };
 
 export const getEventsWithFilters = async (
-  params: z.infer<typeof searchEventsInputZod>
+    params: z.infer<typeof searchEventsInputZod>
 ): Promise<any[]> => {
   const {
     limit = 10,
@@ -203,7 +203,7 @@ export const getEventsWithFilters = async (
   if(filter?.startDate ){
     const tenMinutesInMs = 10000  ; // 10 minutes in milliseconds
     filter.startDate  =  Math.floor(filter.startDate / tenMinutesInMs) * tenMinutesInMs;
-    console.log("sssssssssssssssssss " , filter.startDate);
+    //console.log("sssssssssssssssssss " , filter.startDate);
   }
   if(filter?.endDate ){
     const tenMinutesInMs = 10000  ; // 10 minutes in milliseconds
@@ -219,21 +219,17 @@ export const getEventsWithFilters = async (
   });
   // Create MD5 hash
   // every 2 minutes
-
-
   const hash =  crypto.createHash("md5").update(stringToHash).digest("hex");
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
-  console.log("string",stringToHash);
-  console.log("hash",hash);
+ // console.log("string",stringToHash);
+  //console.log("hash",hash);
   const cachedResult = await redisTools.getCache(cacheKey);
   if (cachedResult ) {
     /// show return from cache and time
-    console.log("👙👙 cachedResult 👙👙" + Date.now());
+  //  console.log("👙👙 cachedResult 👙👙" + Date.now());
     return cachedResult;
   }
-  console.log("no cache string",stringToHash);
- // string {"limit":2,"offset":0,"search":"","filter":{"participationType":["online","in_person"],"startDateOperator":">=","endDate":1728402000,"endDateOperator":"<="},"sortBy":"start_date_desc"}
- // console.js:38hash e79a3504d48bb183ad70bb539f272a41
+
   let query = db.select().from(event_details_search_list);
   let userEventUuids = [];
   // Initialize an array to hold the conditions
@@ -242,14 +238,14 @@ export const getEventsWithFilters = async (
   // Apply event type filters
   if (filter?.participationType?.length) {
     conditions.push(
-      or(
-        filter.participationType.includes("online")
-          ? eq(event_details_search_list.participationType, "online")
-          : sql`false`,
-        filter.participationType.includes("in_person")
-          ? eq(event_details_search_list.participationType, "in_person")
-          : sql`false`
-      )
+        or(
+            filter.participationType.includes("online")
+                ? eq(event_details_search_list.participationType, "online")
+                : sql`false`,
+            filter.participationType.includes("in_person")
+                ? eq(event_details_search_list.participationType, "in_person")
+                : sql`false`
+        )
     );
   }
   // Apply user_id filter
@@ -266,13 +262,13 @@ export const getEventsWithFilters = async (
   // Apply date filters
   if (filter?.startDate && filter?.startDateOperator) {
     conditions.push(
-      sql`${event_details_search_list.startDate} ${sql.raw(filter.startDateOperator)} ${filter.startDate}`
+        sql`${event_details_search_list.startDate} ${sql.raw(filter.startDateOperator)} ${filter.startDate}`
     );
   }
 
   if (filter?.endDate && filter?.endDateOperator) {
     conditions.push(
-      sql`${event_details_search_list.endDate} ${sql.raw(filter.endDateOperator)} ${filter.endDate}`
+        sql`${event_details_search_list.endDate} ${sql.raw(filter.endDateOperator)} ${filter.endDate}`
     );
   }
 
@@ -282,20 +278,20 @@ export const getEventsWithFilters = async (
   // Apply organizer_user_id filter
   if (filter?.organizer_user_id) {
     conditions.push(
-      eq(event_details_search_list.organizerUserId, filter.organizer_user_id)
+        eq(event_details_search_list.organizerUserId, filter.organizer_user_id)
     );
   }
 
   // Apply event_ids filter
   if (filter?.event_ids && filter.event_ids.length) {
     conditions.push(
-      sql`${event_details_search_list.eventId} = any(${filter.event_ids})`
+        sql`${event_details_search_list.eventId} = any(${filter.event_ids})`
     );
   }
   // Apply society_hub_id filter
   if (filter?.society_hub_id && filter.society_hub_id.length) {
     conditions.push(
-      inArray(event_details_search_list.societyHubID, filter.society_hub_id)
+        inArray(event_details_search_list.societyHubID, filter.society_hub_id)
     );
   }
   // Apply event_uuids filter
@@ -313,12 +309,12 @@ export const getEventsWithFilters = async (
   if (search) {
     const searchPattern = `%${search}%`;
     conditions.push(
-      or(
-        sql`${event_details_search_list.title} ILIKE ${searchPattern}`,
-        sql`${event_details_search_list.organizerFirstName} ILIKE ${searchPattern}`,
-        sql`${event_details_search_list.organizerLastName} ILIKE ${searchPattern}`,
-        sql`${event_details_search_list.location} ILIKE ${searchPattern}`
-      )
+        or(
+            sql`${event_details_search_list.title} ILIKE ${searchPattern}`,
+            sql`${event_details_search_list.organizerFirstName} ILIKE ${searchPattern}`,
+            sql`${event_details_search_list.organizerLastName} ILIKE ${searchPattern}`,
+            sql`${event_details_search_list.location} ILIKE ${searchPattern}`
+        )
     );
 
     let orderByClause;
@@ -366,12 +362,12 @@ export const getEventsWithFilters = async (
     // @ts-expect-error
     query = query.limit(limit).offset(offset);
   }
-  //console.log("query eee " );
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
-   logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  //logSQLQuery(query.toSQL().sql, query.toSQL().params);//logSQLQuery(query.toSQL().sql, query.toSQL().params);
+   //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
-  await redisTools.setCache(cacheKey, eventsData, 600);
+
+  await redisTools.setCache(cacheKey, eventsData, 60);
   return eventsData;
 };
 

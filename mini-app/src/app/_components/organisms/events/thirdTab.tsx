@@ -89,7 +89,6 @@ export const ThirdStep = () => {
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!formRef.current) {
       return;
     }
@@ -105,7 +104,6 @@ export const ThirdStep = () => {
     };
 
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
-
     if (formDataParsed.success) {
       setErrors({}); // Clear all errors
       setEventData({
@@ -123,7 +121,6 @@ export const ThirdStep = () => {
             init_data: webApp?.initData || "",
             eventData: updateParsedData.data,
           });
-
           return;
         }
       }
@@ -137,7 +134,6 @@ export const ThirdStep = () => {
           eventData: parsedEventData.data,
           init_data: webApp?.initData || "",
         });
-
       }
       return;
     }
@@ -183,6 +179,7 @@ export const ThirdStep = () => {
     setPasswordDisabled(false);
     setPasswordValue(""); // Clear the placeholder text
   };
+
 
   // Handle form submission on button click
   const handleButtonClick = useCallback(() => {
@@ -230,7 +227,6 @@ export const ThirdStep = () => {
             unexpectedly and receiving a reward without attending the event.
           </AlertGeneric>
         </div>
-
         {/* Reward Image Upload */}
         <div className="space-y-2">
           <label htmlFor="reward_image">Reward Image</label>
@@ -238,7 +234,6 @@ export const ThirdStep = () => {
             Events reward badge, visible on TON society. It cannot be changed
             after event creation.
           </AlertGeneric>
-
           {editOptions?.eventHash ? (
             eventData?.ts_reward_url ? (
               <div className="flex justify-center gap-4 items-center pt-2 w-full">
