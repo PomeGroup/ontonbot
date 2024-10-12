@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
+import { InferSelectModel, eq } from "drizzle-orm";
 
 // Cache key prefix
 
@@ -14,7 +14,9 @@ const getWalletCacheKey = (userId: number) =>
   `${redisTools.cacheKeys.userWallet}${userId}`;
 
 // Function to get a user by user ID with caching
-export const selectUserById = async (userId: number) => {
+export const selectUserById = async (
+  userId: number
+): Promise<InferSelectModel<typeof users> | null> => {
   const cacheKey = getUserCacheKey(userId);
 
   // Try to get the user from cache
@@ -34,8 +36,8 @@ export const selectUserById = async (userId: number) => {
       language_code: users.language_code,
       role: users.role,
       created_at: users.created_at,
-      updated_at: users.updatedAt,
-      updated_by: users.updatedBy,
+      updatedAt: users.updatedAt,
+      updatedBy: users.updatedBy,
     })
     .from(users)
     .where(eq(users.user_id, userId))
@@ -80,13 +82,15 @@ const insertUser = async (initDataJson: {
 };
 
 // Function to select wallet by user ID with caching
-const selectWalletById = async (user_id: number) => {
+const selectWalletById: (
+  user_id: number
+) => Promise<{ wallet: string | null }> = async (user_id: number) => {
   const cacheKey = getWalletCacheKey(user_id);
 
   // Try to get the wallet from cache
   const cachedWallet = await redisTools.getCache(cacheKey);
   if (cachedWallet) {
-    return cachedWallet; // Return cached wallet if found
+    return cachedWallet as Promise<{ wallet: string }>; // Return cached wallet if found
   }
 
   // If not found in cache, query the database
@@ -105,7 +109,7 @@ const selectWalletById = async (user_id: number) => {
     return walletInfo[0];
   }
 
-  return null; // Return null if wallet not found
+  return { wallet: null }; // Return null if wallet not found
 };
 
 // Update wallet and clear cache

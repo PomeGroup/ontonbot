@@ -12,11 +12,14 @@ export const sendTelegramMessage = async (props: {
   link?: string;
 }) => {
   try {
-    const response = await tgClient.post("http://telegram-bot:3333/send-message", {
-      chat_id: props.chat_id,
-      custom_message: props.message,
-      link: props.link,
-    });
+    const response = await tgClient.post(
+      "http://telegram-bot:3333/send-message",
+      {
+        chat_id: props.chat_id,
+        custom_message: props.message,
+        link: props.link,
+      }
+    );
 
     // If the response indicates success, return the response data
     if (response.data.success) {

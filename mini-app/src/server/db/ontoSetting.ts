@@ -9,7 +9,9 @@ type Environment = "development" | "production" | "staging" | "local";
 export async function fetchOntonSettings() {
   // Try to fetch non-protected settings from cache
   const cachedConfig = await getCache(cacheKeys.ontonSettings);
-  const cachedConfigProtected = await getCache(cacheKeys.ontonSettingsProtected);
+  const cachedConfigProtected = await getCache(
+    cacheKeys.ontonSettingsProtected
+  );
 
   // If both configurations are cached, return them immediately
   if (cachedConfig && cachedConfigProtected) {

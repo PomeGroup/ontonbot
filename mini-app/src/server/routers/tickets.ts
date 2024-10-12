@@ -4,7 +4,6 @@ import ticketDB from "@/server/db/ticket.db";
 import { TRPCError } from "@trpc/server";
 import rewardsService from "@/server/routers/services/rewardsService";
 
-
 // Type guard to check if result is alreadyCheckedIn type
 function isAlreadyCheckedIn(
   result: any

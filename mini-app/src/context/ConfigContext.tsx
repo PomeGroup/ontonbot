@@ -19,7 +19,6 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (data) {
       setConfig(data.config);
-
     }
   }, [data]);
 
