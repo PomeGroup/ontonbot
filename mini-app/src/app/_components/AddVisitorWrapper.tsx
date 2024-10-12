@@ -13,13 +13,13 @@ const AddVisitorWrapper: FC<{ children: React.ReactNode; hash: string }> = ({
   const initData = WebApp?.initData || "";
 
   useLayoutEffect(() => {
-    if (!hash) {
+    if (!hash || !initData) {
       return;
     }
 
     async function addVisitor() {
       await addVisitorMutation.mutateAsync({
-        initData,
+        init_data: initData,
         event_uuid: hash,
       });
     }

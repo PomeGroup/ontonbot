@@ -80,7 +80,10 @@ declare global {
       _callback?: (_error: string | null, _result?: CloudStorageItems) => void
     ) => void;
     getKeys: (
-      _callback?: (_error: string | null, _result?: Array<CloudStorageKey>) => void
+      _callback?: (
+        _error: string | null,
+        _result?: Array<CloudStorageKey>
+      ) => void
     ) => void;
     removeItem: (
       _key: CloudStorageKey,

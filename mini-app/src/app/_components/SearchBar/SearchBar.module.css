@@ -3,20 +3,28 @@
 @tailwind utilities;
 
 @layer utilities {
-    @keyframes grow {
-        from { width: auto; }
-        to { width: 100%; }
+  @keyframes grow {
+    from {
+      width: auto;
     }
-    @keyframes shrink {
-        from { width: 100%; }
-        to { width: auto; }
+    to {
+      width: 100%;
     }
+  }
+  @keyframes shrink {
+    from {
+      width: 100%;
+    }
+    to {
+      width: auto;
+    }
+  }
 
-    .animate-grow {
-        animation: grow 0.3s forwards;
-    }
+  .animate-grow {
+    animation: grow 0.3s forwards;
+  }
 
-    .animate-shrink {
-        animation: shrink 0.3s forwards;
-    }
+  .animate-shrink {
+    animation: shrink 0.3s forwards;
+  }
 }

@@ -17,7 +17,7 @@ import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {sanitize} from "dompurify";
+import { logSQLQuery } from "@/lib/logSQLQuery";
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -238,6 +238,17 @@ export const getEventsWithFilters = async (
     sortBy = "default",
     useCache = false,
   } = params;
+  if (filter?.startDate) {
+    const tenMinutesInMs = 10000; // 10 minutes in milliseconds
+    filter.startDate =
+      Math.floor(filter.startDate / tenMinutesInMs) * tenMinutesInMs;
+    //console.log("sssssssssssssssssss " , filter.startDate);
+  }
+  if (filter?.endDate) {
+    const tenMinutesInMs = 10000; // 10 minutes in milliseconds
+    filter.endDate =
+      Math.round(filter.endDate / tenMinutesInMs) * tenMinutesInMs;
+  }
   //console.log("*****params search: ", params);
   const stringToHash = JSON.stringify({
     limit,
@@ -247,13 +258,15 @@ export const getEventsWithFilters = async (
     sortBy,
   });
   // Create MD5 hash
+  // every 2 minutes
   const hash = crypto.createHash("md5").update(stringToHash).digest("hex");
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
-
+  // console.log("string",stringToHash);
+  //console.log("hash",hash);
   const cachedResult = await redisTools.getCache(cacheKey);
-  if (cachedResult && useCache) {
+  if (cachedResult) {
     /// show return from cache and time
-    console.log("👙👙 cachedResult 👙👙" + Date.now());
+    //  console.log("👙👙 cachedResult 👙👙" + Date.now());
     return cachedResult;
   }
 
@@ -323,9 +336,15 @@ export const getEventsWithFilters = async (
   }
   // Apply event_uuids filter
   if (filter?.event_uuids && filter.event_uuids.length) {
-    conditions.push(
-      inArray(event_details_search_list.eventUuid, filter.event_uuids)
+    const validEventUuids = filter.event_uuids.filter(
+      (uuid) => uuid !== null && uuid !== undefined
     );
+
+    if (validEventUuids.length) {
+      conditions.push(
+        inArray(event_details_search_list.eventUuid, validEventUuids)
+      );
+    }
   }
 
   // Apply search filters
@@ -385,16 +404,19 @@ export const getEventsWithFilters = async (
     // @ts-expect-error
     query = query.limit(limit).offset(offset);
   }
-  //console.log("query eee " );
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  //logSQLQuery(query.toSQL().sql, query.toSQL().params);//logSQLQuery(query.toSQL().sql, query.toSQL().params);
   //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
   // console.log(eventsData);
+
   await redisTools.setCache(cacheKey, eventsData, 60);
   return eventsData;
 };
 
-export const getEventByUuid = async (eventUuid: string , removeSecret : boolean = true) => {
+export const getEventByUuid = async (
+  eventUuid: string,
+  removeSecret: boolean = true
+) => {
   const event = await db
     .select()
     .from(events)

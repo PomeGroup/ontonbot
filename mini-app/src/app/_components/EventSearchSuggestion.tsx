@@ -23,44 +23,40 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
   setAutoSuggestions,
   handleAutoSuggestionAllResults,
 }) => {
-
   const [searchLoading, setSearchLoading] = useState(false);
   const suggestionBoxRef = useRef<HTMLDivElement>(null);
-  const {
-    searchInput,
-  } = useSearchEventsStore();
-  const {  refetch } =
-    trpc.events.getEventsWithFilters.useQuery(
-      searchEventsInputZod.parse({
-        limit: 4,
-        offset: 0,
-        search: searchTerm,
-        filter: {
-          startDate: searchInput?.filter?.startDate || undefined,
-          startDateOperator: searchInput?.filter?.startDateOperator || ">=",
-          endDate: searchInput?.filter?.endDate || undefined,
-          endDateOperator: searchInput?.filter?.endDateOperator || "<=",
-          participationType: searchInput?.filter?.participationType || [
-            "online",
-            "in_person",
-          ],
-          society_hub_id: searchInput?.filter?.society_hub_id || [],
-          user_id: searchInput?.filter?.user_id || undefined,
-        },
-        sortBy: searchInput?.sortBy || "default",
-      }),
-      {
-        enabled: false,
-        onSuccess: (data) => {
-          setAutoSuggestions(data?.data || []);
-          setSearchLoading(false);
-        },
-        onError: () => {
-          setAutoSuggestions([]);
-          setSearchLoading(false);
-        },
-      }
-    );
+  const { searchInput } = useSearchEventsStore();
+  const { refetch } = trpc.events.getEventsWithFilters.useQuery(
+    searchEventsInputZod.parse({
+      limit: 4,
+      offset: 0,
+      search: searchTerm,
+      filter: {
+        startDate: searchInput?.filter?.startDate || undefined,
+        startDateOperator: searchInput?.filter?.startDateOperator || ">=",
+        endDate: searchInput?.filter?.endDate || undefined,
+        endDateOperator: searchInput?.filter?.endDateOperator || "<=",
+        participationType: searchInput?.filter?.participationType || [
+          "online",
+          "in_person",
+        ],
+        society_hub_id: searchInput?.filter?.society_hub_id || [],
+        user_id: searchInput?.filter?.user_id || undefined,
+      },
+      sortBy: searchInput?.sortBy || "default",
+    }),
+    {
+      enabled: false,
+      onSuccess: (data) => {
+        setAutoSuggestions(data?.data || []);
+        setSearchLoading(false);
+      },
+      onError: () => {
+        setAutoSuggestions([]);
+        setSearchLoading(false);
+      },
+    }
+  );
 
   const debouncedFetchSearchResults = useCallback(
     debounce(() => {

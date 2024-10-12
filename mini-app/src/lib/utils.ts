@@ -11,7 +11,8 @@ export const removeKey = <T extends object, K extends keyof T>(
   return rest;
 };
 
-export const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+export const wait = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 export const getObjectDifference = <T extends object>(
   obj1: T,

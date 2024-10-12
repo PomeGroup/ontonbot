@@ -1,5 +1,13 @@
-import {index, integer, pgTable, serial, text, timestamp, uuid} from "drizzle-orm/pg-core";
-import {events} from "@/db/schema/events";
+import {
+  index,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
+import { events } from "@/db/schema/events";
 
 export const eventTicket = pgTable(
   "event_tickets",

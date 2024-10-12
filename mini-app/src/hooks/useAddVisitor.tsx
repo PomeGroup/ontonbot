@@ -2,8 +2,8 @@
 
 import { useLayoutEffect } from "react";
 
-import useWebApp from "@/hooks/useWebApp";
 import { trpc } from "@/app/_trpc/client";
+import useWebApp from "@/hooks/useWebApp";
 
 const useAddVisitor = (hash: string) => {
   const addVisitorMutation = trpc.visitors.add.useMutation();
@@ -11,10 +11,12 @@ const useAddVisitor = (hash: string) => {
 
   useLayoutEffect(() => {
     const addVisitor = async () => {
-      await addVisitorMutation.mutateAsync({
-        initData: WebApp?.initData,
-        event_uuid: hash,
-      });
+      if (WebApp?.initData) {
+        await addVisitorMutation.mutateAsync({
+          init_data: WebApp.initData,
+          event_uuid: hash,
+        });
+      }
     };
 
     addVisitor();

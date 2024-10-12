@@ -4,19 +4,22 @@
 mini-app/node_modules
 mini-app/.pnp
 mini-app/.pnp.js
+
 client-web-panel/node_modules
+client-web-panel/.next
+client-web-panel/.env
+
 # testing
 mini-app/coverage
 
 # next.js
 mini-app/.next/
-client-web-panel/.next/
 mini-app/out/
 client-web-panel/out/
-
 # production
 mini-app/build
 client-web-panel/build
+
 # misc
 mini-app/.DS_Store
 mini-app/*.pem
@@ -28,7 +31,6 @@ mini-app/yarn-error.log*
 
 # local env files
 mini-app/.env*.local
-
 # vercel
 mini-app/.vercel
 

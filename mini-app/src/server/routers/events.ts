@@ -7,10 +7,7 @@ import {
 } from "@/server/db/visitors";
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
-import {
-  registerActivity,
-  updateActivity,
-} from "@/lib/ton-society-api";
+import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import {
@@ -214,41 +211,45 @@ export const eventsRouter = router({
               link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}`,
               label: "Enter Event",
             },
-            rewards: {
-              mint_type: "manual",
-              collection: {
-                title: opts.input.eventData.title,
-                description: opts.input.eventData.description,
-                image: {
-                  url: opts.input.eventData.image_url,
-                },
-                cover: {
-                  url: opts.input.eventData.image_url,
-                },
-                item_title: opts.input.eventData.title,
-                item_description: "Reward for participation",
-                item_image: {
-                  url: opts.input.eventData.ts_reward_url,
-                },
-                item_metadata: {
-                  activity_type: "event",
-                  place: {
-                    type:
-                      opts.input.eventData.eventLocationType === "online"
-                        ? "Online"
-                        : "Offline",
-                    ...(country && country?.abbreviatedCode
-                      ? {
-                          country_code_iso: country.abbreviatedCode,
-                          venue_name: opts.input.eventData.location,
-                        }
-                      : {
-                          venue_name: opts.input.eventData.location, // Use location regardless of country
-                        }),
+            ...(opts.input.eventData.ts_reward_url
+              ? {
+                  rewards: {
+                    mint_type: "manual",
+                    collection: {
+                      title: opts.input.eventData.title,
+                      description: opts.input.eventData.description,
+                      image: {
+                        url: opts.input.eventData.image_url,
+                      },
+                      cover: {
+                        url: opts.input.eventData.image_url,
+                      },
+                      item_title: opts.input.eventData.title,
+                      item_description: "Reward for participation",
+                      item_image: {
+                        url: opts.input.eventData.ts_reward_url,
+                      },
+                      item_metadata: {
+                        activity_type: "event",
+                        place: {
+                          type:
+                            opts.input.eventData.eventLocationType === "online"
+                              ? "Online"
+                              : "Offline",
+                          ...(country && country?.abbreviatedCode
+                            ? {
+                                country_code_iso: country.abbreviatedCode,
+                                venue_name: opts.input.eventData.location,
+                              }
+                            : {
+                                venue_name: opts.input.eventData.location, // Use location regardless of country
+                              }),
+                        },
+                      },
+                    },
                   },
-                },
-              },
-            },
+                }
+              : {}),
           };
 
           console.log(eventDraft);

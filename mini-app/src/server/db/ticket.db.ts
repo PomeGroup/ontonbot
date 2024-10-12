@@ -6,11 +6,11 @@ import { eq } from "drizzle-orm";
 // Function to get a ticket by its UUID
 const getTicketByUuid = async (ticketUuid: string) => {
   const ticket = await db
-      .select()
-      .from(tickets)
-      .where(eq(tickets.order_uuid, ticketUuid))
-      .limit(1)
-      .execute();
+    .select()
+    .from(tickets)
+    .where(eq(tickets.order_uuid, ticketUuid))
+    .limit(1)
+    .execute();
 
   return ticket.length > 0 ? ticket[0] : null;
 };

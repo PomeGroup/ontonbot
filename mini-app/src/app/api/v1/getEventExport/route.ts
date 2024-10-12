@@ -1,5 +1,3 @@
-
-
 const handler = async (req: Request) => {
   // Extract query parameters
 
