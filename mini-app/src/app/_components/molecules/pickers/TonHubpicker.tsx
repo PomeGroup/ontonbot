@@ -50,12 +50,12 @@ const TonHubPicker: FC<{
           <SelectValue placeholder="Select TON Hub" />
         </SelectTrigger>
         <SelectContent
-          ref={(ref) => {
-            if (!ref) return;
-            ref.ontouchstart = (e) => {
-              e.preventDefault();
-            };
-          }}
+          // ref={(ref) => {
+          //   if (!ref) return;
+          //   ref.ontouchstart = (e) => {
+          //     e.preventDefault();
+          //   };
+          // }}
           className="max-h-[250px]"
         >
           <SelectGroup className="max-h-[250px]">
