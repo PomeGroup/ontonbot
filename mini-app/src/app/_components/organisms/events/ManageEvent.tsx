@@ -13,6 +13,7 @@ import { useWithBackButton } from "../../atoms/buttons/web-app/useWithBackButton
 type ManageEventProps = {
   eventUUID?: string;
   event?: RouterOutput["events"]["getEvent"];
+  edit?: boolean;
 };
 const ManageEvent = (props: ManageEventProps) => {
   useWithBackButton({})
@@ -87,7 +88,7 @@ const ManageEvent = (props: ManageEventProps) => {
         currentStep={currentStep}
       />
 
-      {currentStep === 1 && <FirstStep />}
+      {currentStep === 1 && <FirstStep edit={props.edit}/>}
       {currentStep === 2 && <SecondStep />}
       {currentStep === 3 && <ThirdStep />}
     </>

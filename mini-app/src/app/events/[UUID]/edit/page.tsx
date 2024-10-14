@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { FC } from "react";
+import { BsFillPersonLinesFill } from "react-icons/bs";
+import { FaRegEdit } from "react-icons/fa";
 
 const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
   useWithBackButton({});
@@ -36,21 +38,24 @@ const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
   return (
     <main>
       <Tabs
-        defaultValue="manage"
+        defaultValue="edit" // Set the default tab to "edit"
         className="mb-4"
       >
-        <TabsList className="grid w-full py-0  grid-cols-2">
-          <TabsTrigger onClick={() => hapticFeedback?.impactOccurred("medium")} value="overview">Overview</TabsTrigger>
-          <TabsTrigger onClick={() => hapticFeedback?.impactOccurred("medium")} value="registeration">Registeration</TabsTrigger>
-          <TabsTrigger onClick={() => hapticFeedback?.impactOccurred("medium")} value="more">More</TabsTrigger>
+        <TabsList className="grid w-full py-0 grid-cols-2">
+          <TabsTrigger onClick={() => hapticFeedback?.impactOccurred("medium")} value="edit">
+            <FaRegEdit className="mr-2" /> Edit
+          </TabsTrigger>
+          <TabsTrigger onClick={() => hapticFeedback?.impactOccurred("medium")} value="manage">
+            <BsFillPersonLinesFill className="mr-2" /> Guests List
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="manage">
           <GuestList event={event.data} params={params} />
         </TabsContent>
-
         <TabsContent value="edit" className="pt-4">
           <ManageEvent
-            /* @ts-ignore  */
+            /* @ts-ignore */
+            edit={true}
             event={event.data}
             eventUUID={params.UUID}
           />
