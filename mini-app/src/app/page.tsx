@@ -19,16 +19,15 @@ import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { OntonEvent } from "@/types/event.types";
 import EventSection from "@/components/event/EventSection";
 import * as Sentry from "@sentry/nextjs";
-import { useMainButton } from "@telegram-apps/sdk-react";
+import MainButton from "./_components/atoms/buttons/web-app/MainButton";
 
 export default function Home() {
-  const mainButton = useMainButton(true);
   const { config } = useConfig();
   const SliderEventUUID = config?.homeSliderEventUUID || "";
   const webApp = useWebApp();
   const {
     authorized,
-    isLoading: useAuthLoading,
+    isLoading: isAdminAuthLoading,
     role: userRole,
   } = useAdminAuth();
 
@@ -147,14 +146,8 @@ export default function Home() {
   const seeAllPastEventsLink = "/search/?tab=Past";
   const seeAllOngoingEventsLink = "/search/?tab=OnGoing";
 
-  useEffect(() => {
-    if (userRole === "admin" || userRole === "organizer") {
-      mainButton?.setBgColor("#007AFF");
-      mainButton?.setTextColor("#ffffff").setText("Create Event");
-      mainButton?.enable().show();
-      mainButton?.on("click", handleCreateEvent);
-    }
-  }, [userRole, mainButton ])
+  const eventCreatorRole =
+    userRole === "admin" || userRole === "organizer"
 
   useEffect(() => {
     if (sliderEventData?.data && sliderEventData?.data?.length > 0)
@@ -209,12 +202,9 @@ export default function Home() {
     [refetchMyEvents]
   );
 
-  const handleCreateEvent = () => {
-    router.push("/events/create");
-  }
-
   return (
     <main className="flex flex-col h-screen">
+      {isAdminAuthLoading && "Auth is loading ..."}
       <div className="sticky top-0 z-50 w-full pb-1">
         <SearchBar
           includeQueryParam={false}
@@ -342,6 +332,7 @@ export default function Home() {
           </SwiperSlide>
         </Swiper>
       </div>
+      {eventCreatorRole && <MainButton text="Create Event" onClick={() => router.push("/events/create")} />}
     </main>
   );
 }
