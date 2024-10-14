@@ -15,7 +15,7 @@ const CreateEventAdminPage = () => {
     return <Alerts.NotAuthorized />;
   }
 
-  return <ManageEvent />;
+  return <main><ManageEvent /></main>;
 };
 
 export default CreateEventAdminPage;

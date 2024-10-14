@@ -60,7 +60,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             onClick={() => setIsEventTypeDrawerOpen(true)}
           >
             <p className=" font-medium text-primary">EVENT TYPE</p>
-            <div className="cursor-pointer text-sm  text-secondary flex items-center">
+            <div className="cursor-pointer text-sm  text-gray-500 flex items-center">
               {participationType.length === 0 ||
               participationType.length == allParticipationTypes.length
                 ? "All"
@@ -74,12 +74,12 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           >
             <div className="flex-1 space-y-3">
               <p className="font-medium text-primary">Ton hub</p>
-              <div className="text-secondary text-sm line-clamp-1 w-11/12 overflow-hidden">
+              <div className="text-gray-500 text-sm line-clamp-1 w-11/12 overflow-hidden">
                 {hubText}
               </div>
             </div>
 
-            <IoIosArrowForward className="text-sm text-secondary ml-2 mt-8" />
+            <IoIosArrowForward className="text-sm text-gray-500 ml-2 mt-8" />
           </div>
 
           <div className="space-y-4">
@@ -90,7 +90,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               onValueChange={(value) => setSortBy(value)}
             >
               <label className="flex justify-between items-center  border-b-[1px] border-b-zinc-700 pb-2">
-                <span className="text-secondary text-sm ">Time</span>
+                <span className="text-gray-500 text-sm ">Time</span>
                 <RadioGroupItem
                   value="start_date_desc"
                   className="h-4 w-4"
@@ -98,7 +98,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               </label>
 
               <label className="flex justify-between items-center">
-                <span className="text-secondary text-sm ">
+                <span className="text-gray-500 text-sm ">
                   Most People Reached
                 </span>
                 <RadioGroupItem
