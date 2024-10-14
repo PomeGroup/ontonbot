@@ -7,9 +7,10 @@ type RouterPushArgument = Parameters<ReturnType<typeof useRouter>["push"]>[0];
 
 export interface BackButtonProps {
   whereTo?: RouterPushArgument; // Dynamically type `whereTo`
+  handleBack?: () => void; // Allow custom back handler
 }
 
-export const useWithBackButton = ({ whereTo }: BackButtonProps) => {
+export const useWithBackButton = ({ whereTo, handleBack }: BackButtonProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const [history, setHistory] = useState<string[]>([]); // Track navigation history
@@ -17,14 +18,17 @@ export const useWithBackButton = ({ whereTo }: BackButtonProps) => {
 
   // Memoize the back button click handler
   const handleBackButtonClick = useCallback(() => {
-    if (whereTo) {
+    if (handleBack) {
+      handleBack(); // Use custom back handler if provided
+    } 
+    else if (whereTo) {
       router.push(whereTo); // Navigate to the specific path if provided
     } else if (history.length > 1) {
       router.back(); // Go back to the previous screen
     } else {
       router.push("/"); // Default to home if no history
     }
-  }, [whereTo, history, router]);
+  }, [whereTo, handleBack, history, router]);
 
   useEffect(() => {
     if (error) {
@@ -41,6 +45,11 @@ export const useWithBackButton = ({ whereTo }: BackButtonProps) => {
       result.hide?.();
     }
 
+    // Register the back button click handler directly
+    result.on?.("click", () => {
+      handleBackButtonClick(); // Execute our custom handler
+    });
+
     // Only push the current pathname to history if it's new
     setHistory((prevHistory) => {
       if (prevHistory[prevHistory.length - 1] !== pathname) {
@@ -48,9 +57,6 @@ export const useWithBackButton = ({ whereTo }: BackButtonProps) => {
       }
       return prevHistory;
     });
-
-    // Register the back button click handler
-    result.on?.("click", handleBackButtonClick);
 
     // Cleanup the event listener on unmount
     return () => {

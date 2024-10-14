@@ -16,7 +16,7 @@ type ManageEventProps = {
   edit?: boolean;
 };
 const ManageEvent = (props: ManageEventProps) => {
-  useWithBackButton({})
+
   const currentStep = useCreateEventStore((state) => state.currentStep);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEdit = useCreateEventStore((state) => state.setEdit);
@@ -57,7 +57,6 @@ const ManageEvent = (props: ManageEventProps) => {
     }
   }, [props.eventUUID, props.event]);
 
-
   const handleBack = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
@@ -72,6 +71,7 @@ const ManageEvent = (props: ManageEventProps) => {
       });
     }
   }, [webApp, currentStep, setCurrentStep, router]);
+  useWithBackButton({ handleBack })
 
   useEffect(() => {
     document.location.pathname.endsWith("create") && resetState();
@@ -88,7 +88,7 @@ const ManageEvent = (props: ManageEventProps) => {
         currentStep={currentStep}
       />
 
-      {currentStep === 1 && <FirstStep edit={props.edit}/>}
+      {currentStep === 1 && <FirstStep edit={props.edit} />}
       {currentStep === 2 && <SecondStep />}
       {currentStep === 3 && <ThirdStep />}
     </>
