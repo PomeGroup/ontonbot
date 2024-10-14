@@ -3,8 +3,10 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { useBackButtonRaw } from "@telegram-apps/sdk-react";
 
+type RouterPushArgument = Parameters<ReturnType<typeof useRouter>["push"]>[0];
+
 export interface BackButtonProps {
-  whereTo?: string; // Optional specific path to navigate to
+  whereTo?: RouterPushArgument; // Dynamically type `whereTo`
 }
 
 export const useWithBackButton = ({ whereTo }: BackButtonProps) => {
