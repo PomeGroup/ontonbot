@@ -8,6 +8,10 @@ import {
   validateEventDates,
 } from "@/server/routers/services/eventService";
 import { sendRewardNotification } from "@/server/routers/services/telegramService";
+import {findVisitorByUserAndEventUuid, selectValidVisitorById} from "@/server/db/visitors";
+import {TRPCError} from "@trpc/server";
+import {db} from "@/db/db";
+import rewardsDb from "@/server/db/rewards.db";
 
 // Main function to create a reward for a user
 export const createUserRewardSBT = async (props: {
@@ -144,7 +148,7 @@ export const processRewardCreation = async (
       // Update reward in the database with status "created"
       reward = await rewardDB.updateRewardById(reward.id, {
         status: "created",
-        data: res.data,
+        data: res.data.data,
         updatedBy: "system",
       });
 
@@ -168,9 +172,132 @@ export const processRewardCreation = async (
   }
 };
 
+
+export const  createUserReward = async (props: {
+  wallet_address: string;
+  user_id: number;
+  event_uuid: string;
+})=> {
+  try {
+    // Fetch the visitor from the database
+    const visitor = await findVisitorByUserAndEventUuid(
+        props.user_id,
+        props.event_uuid
+    );
+
+    // Check if visitor exists
+    if (!visitor) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Visitor not found with the provided user ID and event UUID.",
+      });
+    }
+
+    // Validate the visitor
+    const isValidVisitor = await selectValidVisitorById(visitor.id);
+    if (!isValidVisitor.length) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Invalid visitor: please complete the tasks.",
+      });
+    }
+
+    // check if the user already does not own the reward
+    const reward = await rewardDB.findRewardByVisitorId(visitor.id);
+
+    if (reward) {
+      const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${props.event_uuid}`;
+      console.log(err_msg);
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: err_msg,
+      });
+    }
+
+    const eventData = await db.query.events.findFirst({
+      where(fields, { eq }) {
+        return eq(fields.event_uuid, props.event_uuid);
+      },
+    });
+
+    if (!eventData?.activity_id || eventData.activity_id < 0) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: `this event does not have an activity id ${eventData?.activity_id}`,
+      });
+    }
+
+    const startDate = Number(eventData.start_date) * 1000;
+    const endDate = Number(eventData.end_date) * 1000;
+
+    if (Date.now() < startDate || Date.now() > endDate) {
+      throw new TRPCError({
+        message: "Eather event is not started or ended",
+        code: "FORBIDDEN",
+      });
+    }
+
+    try {
+      // Create the user reward link
+      const res = await createUserRewardLink(eventData.activity_id, {
+        telegram_user_id: props.user_id,
+        attributes: eventData.society_hub
+            ? [
+              {
+                trait_type: "Organizer",
+                value: eventData.society_hub,
+              },
+            ]
+            : undefined,
+      });
+
+      // Ensure the response contains data
+      if (!res || !res.data || !res.data.data) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Failed to create user reward link.",
+        });
+      }
+
+      // Insert the reward into the database
+      await rewardsDb.insertRewardWithData(
+          visitor.id,
+          props.user_id.toString(),
+          "ton_society_sbt",
+          res.data.data,
+          "notified_by_ui"
+      );
+
+      return res.data.data;
+    } catch (error) {
+      console.error("error ehile creating reward link", error);
+      if (error instanceof TRPCError) {
+        throw error;
+      }
+      // Ensure the response contains data
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: "Failed to create user reward link.",
+        cause: error,
+      });
+    }
+  } catch (error) {
+    console.error("Error in createUserReward mutation:", error);
+    if (error instanceof TRPCError) {
+      throw error;
+    } else {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "An unexpected error occurred while creating user reward.",
+      });
+    }
+  }
+}
+
 const rewardService = {
   createUserRewardSBT,
   processRewardCreation,
+  createUserReward
 };
 
 export default rewardService;

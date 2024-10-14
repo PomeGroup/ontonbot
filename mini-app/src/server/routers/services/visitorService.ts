@@ -1,9 +1,8 @@
 // Helper function to validate and retrieve visitor
-import {
-  addVisitor,
-  getVisitor,
-  selectValidVisitorById,
-} from "@/server/db/visitors";
+import visitorsDB  from "@/server/db/visitors";
+import {selectEventByUuid} from "@/server/db/events";
+import {TRPCError} from "@trpc/server";
+import userEventFieldsDB from "@/server/db/userEventFields.db";
 
 export const getAndValidateVisitor = async (
   user_id: number,
@@ -13,8 +12,8 @@ export const getAndValidateVisitor = async (
   try {
     // Check if the visitor exists, depending on the ticketOrderUuid
     const visitor = ticketOrderUuid
-      ? await addVisitor(user_id, event_uuid)
-      : await getVisitor(user_id, event_uuid);
+      ? await visitorsDB.addVisitor(user_id, event_uuid)
+      : await visitorsDB.getVisitor(user_id, event_uuid);
 
     // If visitor not found, return a failure response
     if (!visitor || !visitor?.id) {
@@ -26,7 +25,7 @@ export const getAndValidateVisitor = async (
 
     // If no ticketOrderUuid, validate if the visitor is valid
     if (!ticketOrderUuid) {
-      const isValidVisitor = await selectValidVisitorById(visitor.id);
+      const isValidVisitor = await visitorsDB.selectValidVisitorById(visitor.id);
 
       // If the visitor is invalid, return a failure response
       if (!isValidVisitor.length) {
@@ -50,8 +49,56 @@ export const getAndValidateVisitor = async (
     };
   }
 };
+
+export const addVisitor = async (opts : any) => {
+  const { event_uuid } = opts.input;
+  const { user_id } = opts.ctx.user;
+  const { id: parsedUserId } = opts.ctx.parsedInitData.user;
+
+  // Fetch the event by UUID
+  const event = await selectEventByUuid(event_uuid);
+  if (!event) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Event not found",
+    });
+  }
+  console.log(`Event: `,event);
+  if (event.ticketToCheckIn ) {
+    console.error(`Event requires ticket to check in: ${event_uuid}`);
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message:
+          "This event requires a ticket to add user as visitor to the event",
+    });
+  }
+
+  // Check if the user has already completed the task
+  const taskCompleted = await userEventFieldsDB.checkPasswordTask(
+      user_id,
+      event.event_id
+  );
+
+  if (!taskCompleted) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "You have not completed the task",
+    });
+
+  }
+  console.log(`Task  completed: `,taskCompleted);
+  // Add a visitor if the task is not completed
+  const visitor = await visitorsDB.addVisitor(parsedUserId, event_uuid);
+  return {
+    code: "OK",
+    message: "Visitor added",
+    data: visitor,
+  };
+}
 const visitorService = {
   getAndValidateVisitor,
+    addVisitor,
 };
+
 
 export default visitorService;
