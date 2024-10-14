@@ -189,43 +189,37 @@ export const getUserEvents = async (
   return await combinedResultsQuery.execute();
 };
 export const getOrganizerEvents = async (
-    organizerId: number,
-    limit?: number,  // Optional limit
-    offset?: number  // Optional offset
+  organizerId: number,
+  limit?: number, // Optional limit
+  offset?: number // Optional offset
 ) => {
   // Set a high limit if none is provided to simulate "no limit"
   const finalLimit = limit !== undefined ? limit : Number.MAX_SAFE_INTEGER;
   const finalOffset = offset !== undefined ? offset : 0;
 
   const eventsQuery = db
-      .select({
-        event_uuid: events.event_uuid,
-        title: events.title,
-        image_url: events.image_url,
-        location: events.location,
-        start_date: events.start_date,
-        end_date: events.end_date,
-        participation_type: events.participationType,
-        hidden: events.hidden,
-        society_hub_id: events.society_hub_id,
-        ticket_to_check_in: events.ticketToCheckIn,
-        timezone: events.timezone,
-          }
-      )
-      .from(events)
-      .where(eq(events.owner, organizerId))
-      .orderBy(desc(events.start_date))
-      .limit(finalLimit)
-      .offset(finalOffset);
-
+    .select({
+      event_uuid: events.event_uuid,
+      title: events.title,
+      image_url: events.image_url,
+      location: events.location,
+      start_date: events.start_date,
+      end_date: events.end_date,
+      participation_type: events.participationType,
+      hidden: events.hidden,
+      society_hub_id: events.society_hub_id,
+      ticket_to_check_in: events.ticketToCheckIn,
+      timezone: events.timezone,
+    })
+    .from(events)
+    .where(eq(events.owner, organizerId))
+    .orderBy(desc(events.start_date))
+    .limit(finalLimit)
+    .offset(finalOffset);
 
   // Return the result of the query
   return await eventsQuery.execute();
 };
-
-
-
-
 
 export const getEventsWithFilters = async (
   params: z.infer<typeof searchEventsInputZod>
@@ -431,4 +425,14 @@ export const getEventByUuid = async (
   // remove the secret_phrase from the response
   const { secret_phrase, ...restEvent } = event[0];
   return removeSecret ? restEvent : event[0];
+};
+
+export const getEventById = async (eventId: number) => {
+  const event = await db
+    .select()
+    .from(events)
+    .where(eq(events.event_id, eventId))
+    .execute();
+
+  return event === undefined || event.length === 0 ? null : event[0];
 };

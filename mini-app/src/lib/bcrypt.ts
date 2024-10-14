@@ -28,3 +28,9 @@ export function comparePassword(text: string, hash: string): Promise<boolean> {
 }
 
 type SaltRoundsT = 10;
+
+const bcryptLib = {
+    hashPassword,
+    comparePassword,
+    };
+export default bcryptLib;
