@@ -28,14 +28,14 @@ const MainButton: FC<MainButtonProps> = ({
   const clickListenerRef = useRef<() => void>();
 
   useEffect(() => {
-    // Set button background color and text color based on the passed props or theme parameters
+    mainButton?.setBgColor(
+      color === "primary" ? "#2ea6ff" : color === "secondary" ? "#747480" : WebApp?.themeParams.button_color || "#007AFF"
+    );
+    mainButton?.setTextColor(textColor || WebApp?.themeParams.button_text_color || "#ffffff")
+      .setText(text);
+    mainButton?.enable().show();
+
     mainButton?.setParams({
-      bgColor:
-        color === "primary"
-          ? "#2ea6ff"
-          : color === "secondary"
-            ? "#747480"
-            : WebApp?.themeParams.button_color || "#007AFF", // Fallback to WebApp theme or default blue
       textColor: textColor || WebApp?.themeParams.button_text_color || "#ffffff", // Fallback to WebApp theme or white
     });
 
