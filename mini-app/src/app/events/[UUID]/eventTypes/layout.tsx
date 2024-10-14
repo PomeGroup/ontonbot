@@ -21,6 +21,8 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { ReactNode } from "react";
 import EventPageLoadingSkeleton from "./../EventPageLoadingSkeleton";
+import NewRegisterationCard from "../NewRegisterationCard";
+import CancelEventCard from "../CancelEventCard";
 
 type EventLayoutProps = {
   children: ReactNode; // This will be the specific content for each event type
@@ -119,16 +121,9 @@ const EventTypesLayout = ({ children }: EventLayoutProps) => {
         variant={"bottomRounded"}
         className={"pb-2"}
       >
-        <SectionCoverImage
-          src={""}
-          alt={""}
-        >
+        <SectionCoverImage src={""} alt={""}>
           <Image
-            priority
-            width={352}
-            height={352}
-            src={event.image_url ?? ""}
-            alt={`event-${params.UUID}`}
+            priority width={352} height={352} src={event.image_url ?? ""} alt={`event-${params.UUID}`}
             className="border-wallet-separator-color w-full rounded-lg border-[0.33px] object-contain"
           />
         </SectionCoverImage>
@@ -148,16 +143,21 @@ const EventTypesLayout = ({ children }: EventLayoutProps) => {
 
       {/* Conditional QR Code or SBT Award */}
       {eventManagerRole ? (
-        <Section
-          variant={"rounded"}
-          className={"py-6"}
-        >
-          {/* Show QR code for organizers */}
-          <QrCodeButton
-            event_uuid={event.event_uuid}
-            url={`/events/${event.event_uuid}`}
-          />
-        </Section>
+        <>
+          <Section variant={"rounded"} className={"py-6"}>
+            {/* Show QR code for organizers */}
+            <QrCodeButton
+              event_uuid={event.event_uuid}
+              url={`/events/${event.event_uuid}`}
+            />
+          </Section>
+          <Section variant={"rounded"} className={"py-6"}>
+            <NewRegisterationCard />
+          </Section>
+          <Section variant={"rounded"} className={"py-6"}>
+            <CancelEventCard />
+          </Section>
+        </>
       ) : (
         <Section
           variant={"rounded"}
