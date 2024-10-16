@@ -189,9 +189,9 @@ export const getUserEvents = async (
   return await combinedResultsQuery.execute();
 };
 export const getOrganizerEvents = async (
-    organizerId: number,
-    limit?: number,  // Optional limit
-    offset?: number  // Optional offset
+  organizerId: number,
+  limit?: number, // Optional limit
+  offset?: number // Optional offset
 ) => {
   // Set a high limit if none is provided to simulate "no limit"
   const finalLimit = limit !== undefined ? limit : Number.MAX_SAFE_INTEGER;
@@ -431,4 +431,14 @@ export const getEventByUuid = async (
   // remove the secret_phrase from the response
   const { secret_phrase, ...restEvent } = event[0];
   return removeSecret ? restEvent : event[0];
+};
+
+export const getEventById = async (eventId: number) => {
+  const event = await db
+    .select()
+    .from(events)
+    .where(eq(events.event_id, eventId))
+    .execute();
+
+  return event === undefined || event.length === 0 ? null : event[0];
 };

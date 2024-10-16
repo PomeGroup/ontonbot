@@ -1,7 +1,7 @@
 "use client";
 
 import useWebApp from "@/hooks/useWebApp";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { trpc } from "../_trpc/client";
 import ModalDialog from "./SecretSavedModal";
 import MainButton from "./atoms/buttons/web-app/MainButton";
@@ -46,17 +46,18 @@ function ClaimRewardButtonChild(props: {
 // Parent component
 export function ClaimRewardButton(props: { eventId: string }) {
   const WebApp = useWebApp();
-  const initData = useMemo(() => WebApp?.initData || "", [WebApp?.initData]);
+  const initData = WebApp?.initData;
 
   const visitorReward = trpc.users.getVisitorReward.useQuery(
-    { init_data: initData, event_uuid: props.eventId },
+    { init_data: initData!, event_uuid: props.eventId },
     {
       enabled: Boolean(initData) && Boolean(props.eventId),
       retry: false,
       queryKey: [
         "users.getVisitorReward",
         {
-          init_data: initData,
+          init_data: initData!,
+
           event_uuid: props.eventId,
         },
       ],

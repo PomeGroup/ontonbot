@@ -1,6 +1,5 @@
 "use client";
 
-import AddVisitorWrapper from "@/app/_components/AddVisitorWrapper";
 import { ClaimRewardButton } from "@/app/_components/ClaimRewardButton";
 import EventNotStarted from "@/app/_components/EventNotStarted";
 import AllTasks from "@/app/_components/Tasks";
@@ -17,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import zod from "zod";
 import EventPageLoadingSkeleton from "./loading";
+
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   useWithBackButton({
     whereTo: "/",
@@ -78,7 +78,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   ) : eventData.data === null ? (
     <div>Event Not Found</div>
   ) : (
-    <AddVisitorWrapper hash={eventHash}>
+    <>
       <Images.Event url={eventData.data?.image_url!} />
       <Labels.CampaignTitle
         title={eventData.data?.title!}
@@ -137,6 +137,6 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
           />
         )}
       <Buttons.Support />
-    </AddVisitorWrapper>
+    </>
   );
 };

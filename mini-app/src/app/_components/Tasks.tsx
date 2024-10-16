@@ -16,15 +16,15 @@ const AllTasks: FC<{
   const { data: userEventFields, isLoading } =
     trpc.userEventFields.getUserEventFields.useQuery(
       {
-        initData,
         event_hash: eventHash,
+        init_data: initData,
       },
       {
         queryKey: [
           "userEventFields.getUserEventFields",
           {
             event_hash: eventHash,
-            initData,
+            init_data: initData,
           },
         ],
       }
