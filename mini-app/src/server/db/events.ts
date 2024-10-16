@@ -198,28 +198,34 @@ export const getOrganizerEvents = async (
   const finalOffset = offset !== undefined ? offset : 0;
 
   const eventsQuery = db
-    .select({
-      event_uuid: events.event_uuid,
-      title: events.title,
-      image_url: events.image_url,
-      location: events.location,
-      start_date: events.start_date,
-      end_date: events.end_date,
-      participation_type: events.participationType,
-      hidden: events.hidden,
-      society_hub_id: events.society_hub_id,
-      ticket_to_check_in: events.ticketToCheckIn,
-      timezone: events.timezone,
-    })
-    .from(events)
-    .where(eq(events.owner, organizerId))
-    .orderBy(desc(events.start_date))
-    .limit(finalLimit)
-    .offset(finalOffset);
+      .select({
+        event_uuid: events.event_uuid,
+        title: events.title,
+        image_url: events.image_url,
+        location: events.location,
+        start_date: events.start_date,
+        end_date: events.end_date,
+        participation_type: events.participationType,
+        hidden: events.hidden,
+        society_hub_id: events.society_hub_id,
+        ticket_to_check_in: events.ticketToCheckIn,
+        timezone: events.timezone,
+          }
+      )
+      .from(events)
+      .where(eq(events.owner, organizerId))
+      .orderBy(desc(events.start_date))
+      .limit(finalLimit)
+      .offset(finalOffset);
+
 
   // Return the result of the query
   return await eventsQuery.execute();
 };
+
+
+
+
 
 export const getEventsWithFilters = async (
   params: z.infer<typeof searchEventsInputZod>
