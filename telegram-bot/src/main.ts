@@ -45,6 +45,7 @@ app.use((req, res, next) => {
 app.post("/send-file", handleFileSend);
 app.get("/generate-qr", handleSendQRCode);
 app.post("/share-event", handleShareEvent);
+// @ts-expect-error
 app.post("/send-message", sendMessage);
 
 bot.catch((err) => console.error(err));

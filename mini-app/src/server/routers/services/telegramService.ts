@@ -1,5 +1,5 @@
-import { EventTypeSecure, RewardType, VisitorsType } from "@/types/event.types";
 import { sendTelegramMessage } from "@/lib/tgBot";
+import { EventTypeSecure, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
 
 // Send reward notification to visitors

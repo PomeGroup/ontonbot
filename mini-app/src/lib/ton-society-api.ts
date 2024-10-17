@@ -25,33 +25,40 @@ export const tonSocietyClient = axios.create({
 export async function createUserRewardLink(
   activityId: number,
   data: CreateUserRewardLinkInputType
-) {
+): Promise<{ data: CreateUserRewardLinkReturnType }> {
   try {
-    return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(
-      `/activities/${activityId}/rewards`,
-      data
-    );
-  } catch (error) {
-    if (
-      error instanceof AxiosError &&
-      (error.response?.data?.message ===
-        "reward link with such activity id and wallet address already created" ||
-        error.response?.data?.message ===
-          "reward link with such activity id and telegram user id already created")
-    ) {
-      return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
-        `/activities/${activityId}/rewards/${data.telegram_user_id}`
-      );
-    }
-
-    console.error(`CREATE_REWARD_ERROR_${Date.now()}`, error);
-    console.error(
-      `CREATE_REWARD_ERROR_REQUEST_${Date.now()}`,
+    return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
       `/activities/${activityId}/rewards/${data.telegram_user_id}`
     );
-    await sleep(500);
+  } catch (error) {
+    try {
+      return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(
+        `/activities/${activityId}/rewards`,
+        data
+      );
+    } catch (error) {
+      if (
+        error instanceof AxiosError &&
+        (error.response?.data?.message ===
+          "reward link with such activity id and wallet address already created" ||
+          error.response?.data?.message ===
+            "reward link with such activity id and telegram user id already created")
+      ) {
+        return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
+          `/activities/${activityId}/rewards/${data.telegram_user_id}`
+        );
+      }
 
-    throw error;
+      console.error(`CREATE_REWARD_ERROR_${Date.now()}`, error);
+      console.error(
+        `CREATE_REWARD_ERROR_REQUEST_${Date.now()}`,
+        `/activities/${activityId}/rewards/${data.telegram_user_id}`
+      );
+
+      await sleep(50);
+
+      throw error;
+    }
   }
 }
 
