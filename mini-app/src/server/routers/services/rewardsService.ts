@@ -1,17 +1,20 @@
 import rewardDB from "@/server/db/rewards.db";
 
-import { getAndValidateVisitor } from "@/server/routers/services/visitorService";
 import { createUserRewardLink } from "@/lib/ton-society-api";
+import { getAndValidateVisitor } from "@/server/routers/services/visitorService";
 
+import { db } from "@/db/db";
+import rewardsDb from "@/server/db/rewards.db";
+import {
+  findVisitorByUserAndEventUuid,
+  selectValidVisitorById,
+} from "@/server/db/visitors";
 import {
   validateEventData,
   validateEventDates,
 } from "@/server/routers/services/eventService";
 import { sendRewardNotification } from "@/server/routers/services/telegramService";
-import {findVisitorByUserAndEventUuid, selectValidVisitorById} from "@/server/db/visitors";
-import {TRPCError} from "@trpc/server";
-import {db} from "@/db/db";
-import rewardsDb from "@/server/db/rewards.db";
+import { TRPCError } from "@trpc/server";
 
 // Main function to create a reward for a user
 export const createUserRewardSBT = async (props: {
@@ -144,7 +147,7 @@ export const processRewardCreation = async (
     });
 
     // Ensure the result is successful and has the expected data structure
-    if (res.status && res.data && res.data.data?.reward_link) {
+    if (res.data?.data?.reward_link) {
       // Update reward in the database with status "created"
       reward = await rewardDB.updateRewardById(reward.id, {
         status: "created",
@@ -172,17 +175,16 @@ export const processRewardCreation = async (
   }
 };
 
-
-export const  createUserReward = async (props: {
+export const createUserReward = async (props: {
   wallet_address: string;
   user_id: number;
   event_uuid: string;
-})=> {
+}) => {
   try {
     // Fetch the visitor from the database
     const visitor = await findVisitorByUserAndEventUuid(
-        props.user_id,
-        props.event_uuid
+      props.user_id,
+      props.event_uuid
     );
 
     // Check if visitor exists
@@ -242,13 +244,13 @@ export const  createUserReward = async (props: {
       const res = await createUserRewardLink(eventData.activity_id, {
         telegram_user_id: props.user_id,
         attributes: eventData.society_hub
-            ? [
+          ? [
               {
                 trait_type: "Organizer",
                 value: eventData.society_hub,
               },
             ]
-            : undefined,
+          : undefined,
       });
 
       // Ensure the response contains data
@@ -261,11 +263,11 @@ export const  createUserReward = async (props: {
 
       // Insert the reward into the database
       await rewardsDb.insertRewardWithData(
-          visitor.id,
-          props.user_id.toString(),
-          "ton_society_sbt",
-          res.data.data,
-          "notified_by_ui"
+        visitor.id,
+        props.user_id.toString(),
+        "ton_society_sbt",
+        res.data.data,
+        "notified_by_ui"
       );
 
       return res.data.data;
@@ -292,12 +294,12 @@ export const  createUserReward = async (props: {
       });
     }
   }
-}
+};
 
 const rewardService = {
   createUserRewardSBT,
   processRewardCreation,
-  createUserReward
+  createUserReward,
 };
 
 export default rewardService;

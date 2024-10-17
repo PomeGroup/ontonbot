@@ -3,7 +3,7 @@ import { UploadedFile } from "express-fileupload"
 import fs from "fs"
 import QRCode from "qrcode"
 import sharp from "sharp"
-import { Context, Telegraf } from "telegraf"
+import { Context, Telegraf, TelegramError } from "telegraf"
 import { Update } from "telegraf/typings/core/types/typegram"
 import { getEvent } from "./db/db"
 import { shareKeyboard } from "./markups"
@@ -168,6 +168,7 @@ interface SendRewardLinkBody {
 export async function sendMessage(
   req: Request & { bot: Telegraf<Context<Update>> },
   res: Response,
+  tryCount?: number
 ): Promise<Response> {
   try {
     // Destructure the request body
@@ -208,11 +209,19 @@ export async function sendMessage(
       message: "Message sent successfully",
     });
   } catch (error) {
+    if (error instanceof TelegramError && error.code === 429 && tryCount < 10) {
+      console.error("TELEGRAF_ERROR: 429", error);
+      
+      // wait 1000
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await sendMessage(req, res, tryCount ? tryCount + 1 : 1);
+    }
+
     // Differentiate between Telegram API errors and other errors
-    if (error.response && error.response.statusCode) {
+    if (error.response?.statusCode) {
       // Handle errors from the Telegram API (e.g., invalid chat_id, bot token issues)
       const errorMessage = error.response.description || "An error occurred while sending the message.";
-      console.error(errorMessage);
+      console.error('TELEGRAM_ERROR:', errorMessage);
       return res.status(error.response.statusCode).json({
         success: false,
         error: errorMessage,
