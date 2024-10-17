@@ -128,7 +128,7 @@ const CheckInGuest: FC<{ params: { UUID: string ,setNeedRefresh : (_data: any) =
       <Button
           onClick={handleScanQr}
           variant="link" // Use the link variant
-          className="ml-auto flex items-center text-sm text-gray-300 px-0 no-underline hover:no-underline"
+          className="ml-auto flex items-center text-sm px-0 no-underline hover:no-underline"
       >
         <RiQrScan2Line className="mr-2" /> Scan QR
       </Button>

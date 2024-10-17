@@ -18,10 +18,12 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useWithBackButton } from "../_components/atoms/buttons/web-app/useWithBackButton";
 
 const LIMIT = 5;
 
 const Search: React.FC = () => {
+  useWithBackButton({}) //FIXME should hanlde taps
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();
   const { searchInput, setSearchInput, setFilter, setOffset } = searchStore;
@@ -166,8 +168,8 @@ const Search: React.FC = () => {
     }
   };
   return (
-    <div className="flex flex-col h-screen">
-      <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+    <main className="flex flex-col h-screen">
+      <div className="sticky top-0 z-50 w-full pb-1">
         <SearchBar
           includeQueryParam={true}
           showFilterTags={true}
@@ -183,7 +185,7 @@ const Search: React.FC = () => {
           userRole={authorized ? userRole : "user"}
         />
       </div>
-      <Separator className="my-0 bg-gray-700" />
+      <Separator className="my-0 bg-gray-500" />
       <TabTriggers
         tabs={tabItems}
         setTabValue={setTabValue}
@@ -276,7 +278,7 @@ const Search: React.FC = () => {
           ))}
         </Swiper>
       </div>
-    </div>
+    </main>
   );
 };
 

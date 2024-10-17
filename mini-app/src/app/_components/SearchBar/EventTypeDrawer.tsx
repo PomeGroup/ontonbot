@@ -84,7 +84,7 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
               }`}
               onClick={() => handleToggleType("online")}
             >
-              <span className="text-zinc-400">Online</span>
+              <span className="text-primary">Online</span>
               <Checkbox
                 checked={localParticipationType.includes("online")}
                 className="h-6 w-6"
@@ -100,7 +100,7 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
               }`}
               onClick={() => handleToggleType("in_person")}
             >
-              <span className="text-zinc-400">In-person</span>
+              <span className="text-primary">In-person</span>
               <Checkbox
                 checked={localParticipationType.includes("in_person")}
                 className="h-6 w-6"

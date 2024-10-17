@@ -15,14 +15,14 @@ interface DatetimepickerProps {
 }
 
 const Datetimepicker: FC<DatetimepickerProps> = ({
-                                                   title,
-                                                   value,
-                                                   setTimestamp,
-                                                   errors,
-                                                   disabled = false,
-                                                   greaterThan,
-                                                   lowerThan, // Destructure the new prop
-                                                 }) => {
+  title,
+  value,
+  setTimestamp,
+  errors,
+  disabled = false,
+  greaterThan,
+  lowerThan, // Destructure the new prop
+}) => {
   const formDate = getDateFromUnix(value || 0);
   const formTime = getTimeFromUnix(value || 0);
 
@@ -33,14 +33,14 @@ const Datetimepicker: FC<DatetimepickerProps> = ({
   const currentDate = getDateFromUnix(currentTimestamp);
 
   const [date, setDate] = useState(
-      value && formDate
-          ? `${formDate.year}-${formDate.month}-${formDate.day}`
-          : `${currentDate!.year}-${currentDate!.month}-${currentDate!.day}`
+    value && formDate
+      ? `${formDate.year}-${formDate.month}-${formDate.day}`
+      : `${currentDate!.year}-${currentDate!.month}-${currentDate!.day}`
   );
   const [time, setTime] = useState(
-      value
-          ? `${formTime.hours}:${formTime.minutes}`
-          : `${currentTime.hours}:${currentTime.minutes}`
+    value
+      ? `${formTime.hours}:${formTime.minutes}`
+      : `${currentTime.hours}:${currentTime.minutes}`
   );
 
   // Calculate minDate and minTime for greaterThan, and maxDate and maxTime for lowerThan
@@ -128,38 +128,43 @@ const Datetimepicker: FC<DatetimepickerProps> = ({
   }, []);
 
   return (
-      <div>
-        <div className="w-full flex flex-wrap gap-2 items-center justify-between">
-          <label>{title}</label>
-
+    <div>
+      <div className="grid grid-cols-10 gap-2">
+        <div className="col-span-2 flex items-center">
+          <label >{title}</label>
+        </div>
+        <div className="col-span-4">
           <Input
-              type="time"
-              value={time}
-              onChange={handleTimeChange}
-              disabled={disabled}
-              min={date === minDate ? minTime : undefined}
-              max={date === maxDate ? maxTime : undefined} // Set the maximum time for the date
-          />
+            type="time"
+            value={time}
+            onChange={handleTimeChange}
+            disabled={disabled}
+            min={date === minDate ? minTime : undefined}
+            max={date === maxDate ? maxTime : undefined} // Set the maximum time for the date
 
-          <Input
-              type="date"
-              value={date}
-              onChange={handleDateChange}
-              disabled={disabled}
-              min={minDate} // Set the minimum date
-              max={maxDate} // Set the maximum date
           />
         </div>
-
-        {errors?.map((error) => (
-            <div
-                className="text-red-300 pt-1 text-sm flex items-center"
-                key={error}
-            >
-              <FiAlertCircle className="mr-2" /> {error}
-            </div>
-        ))}
+        <div className="col-span-4">
+          <Input
+            type="date"
+            value={date}
+            onChange={handleDateChange}
+            disabled={disabled}
+            min={minDate} // Set the minimum date
+            max={maxDate} // Set the maximum date
+          />
+        </div>
       </div>
+
+      {errors?.map((error) => (
+        <div
+          className="text-red-300 pt-1 text-sm flex items-center"
+          key={error}
+        >
+          <FiAlertCircle className="mr-2" /> {error}
+        </div>
+      ))}
+    </div>
   );
 };
 

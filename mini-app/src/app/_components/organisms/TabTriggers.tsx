@@ -31,8 +31,6 @@ const TabTriggers: React.FC<TabTriggersProps> = ({
       className="bg-transparent px-0 py-0 "
       onValueChange={(value) => setTabValue(value)}
     >
-
-
       <ScrollArea className="w-full whitespace-nowrap border-0 h-12">
         <TabsList className="bg-transparent px-0">
           {tabs.map((tab, index) => (
@@ -40,7 +38,7 @@ const TabTriggers: React.FC<TabTriggersProps> = ({
               key={tab.value}
               value={tab.value}
               onClick={() => handleTabClick(tab.value, index)}
-              className={`px-3 py-2    text-gray-500 text-sm data-[state=active]:text-gray-100 data-[state=active]:font-bold data-[state=active]:border-b-indigo-50 data-[state=active]:border-b-2   rounded-none `}
+              className={`px-3 py-2 text-gray-500 text-sm  data-[state=active]:text-foreground data-[state=active]:bg-secondary data-[state=active]:font-bold data-[state=active]:border-b-foreground data-[state=active]:border-b-2 `}
             >
               {tab.label}
             </TabsTrigger>

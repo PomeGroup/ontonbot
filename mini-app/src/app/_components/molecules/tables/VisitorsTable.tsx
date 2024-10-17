@@ -185,19 +185,19 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
                 >
                   <TabsList className="bg-transparent px-0">
                     <TabsTrigger
-                      className="px-4 py-0 text-foreground data-[state=active]:text-gray-100 data-[state=active]:font-bold"
+                      className="px-4 py-0 data-[state=active]:text-foreground data-[state=active]:font-bold"
                       value="All"
                     >
                       All
                     </TabsTrigger>
                     <TabsTrigger
-                      className="px-4 py-0 border-x-2 border-x-gray-600 rounded-none text-foreground data-[state=active]:text-gray-100 data-[state=active]:font-bold"
+                      className="px-4 py-0 border-x-2 border-x-gray-600 rounded-none data-[state=active]:text-foreground data-[state=active]:font-bold"
                       value="Waiting"
                     >
                       Waiting
                     </TabsTrigger>
                     <TabsTrigger
-                      className="px-4 py-0 text-foreground data-[state=active]:text-gray-100 data-[state=active]:font-bold"
+                      className="px-4 py-0 data-[state=active]:text-foreground data-[state=active]:font-bold"
                       value="Checked-In"
                     >
                       Checked-In

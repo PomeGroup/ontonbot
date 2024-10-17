@@ -1,6 +1,5 @@
 "use client";
 
-import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import Alerts from "@/app/_components/molecules/alerts";
 import { ManageEvent } from "@/app/_components/organisms/events";
 import GuestList from "@/app/_components/organisms/events/GuestList";
@@ -13,7 +12,6 @@ import { BsFillPersonLinesFill } from "react-icons/bs";
 import { FaRegEdit } from "react-icons/fa";
 
 const CreateEventAdminPage: FC<{ params: { UUID: string } }> = ({ params }) => {
-  useWithBackButton({});
   const WebApp = useWebApp();
 
   const event = trpc.events.getEvent.useQuery(

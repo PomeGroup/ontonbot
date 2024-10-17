@@ -2,7 +2,7 @@
 
 import useWebApp from "@/hooks/useWebApp";
 import { useTheme } from "next-themes";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
 export default function ThemeSetter({
   children,

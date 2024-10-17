@@ -61,7 +61,7 @@ const TonHubPicker: FC<{
           <SelectGroup className="max-h-[250px]">
             {hubs.map((societyHub) => (
               <SelectItem
-                className="dark:hover:bg-separator"
+                className="text-gray-500 dark:hover:bg-separator"
                 key={societyHub.id}
                 value={societyHub.id}
               >
