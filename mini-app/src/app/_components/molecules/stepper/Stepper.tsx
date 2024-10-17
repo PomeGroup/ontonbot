@@ -24,7 +24,7 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
   };
 
   return (
-    <ol className="flex items-stretch w-full text-xs text-secondary font-medium sm:text-base">
+    <ol className="flex items-stretch w-full text-xs text-slate-500 font-medium sm:text-base">
       {steps.map((step, index) => {
         const stepState = getStepState(index);
 
@@ -40,9 +40,9 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
                     "in-progress",
                     "in-progress-last",
                   ].includes(stepState),
-                  "text-secondary after:bg-muted-foreground":
+                  "text-slate-500 after:bg-muted-foreground":
                     stepState === "not-active",
-                  "text-secondary": stepState === "last",
+                  "text-slate-500": stepState === "last",
                 },
                 stepState === "last" || stepState === "in-progress-last"
                   ? "after:hidden"

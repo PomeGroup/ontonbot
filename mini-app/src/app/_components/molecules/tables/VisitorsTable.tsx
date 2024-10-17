@@ -169,7 +169,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
 
         <div className="flex flex-col py-0">
           <div className="flex w-full p-0 border-b-gray-800 border-b-2">
-            <div className="inline-flex py-0 items-center text-lg w-full">
+            <div className="inline-flex py-0 items-center text-lg w-full ">
               {data?.pages[0]?.event.ticketToCheckIn ? (
                 <Tabs
                   defaultValue="All"
@@ -178,19 +178,19 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
                 >
                   <TabsList className="bg-transparent px-0">
                     <TabsTrigger
-                      className="px-4 py-0 text-gray-500 data-[state=active]:text-gray-100 data-[state=active]:font-bold"
+                      className="px-4 py-0 data-[state=active]:text-foreground data-[state=active]:font-bold"
                       value="All"
                     >
                       All
                     </TabsTrigger>
                     <TabsTrigger
-                      className="px-4 py-0 border-x-2 border-x-gray-600 rounded-none text-gray-500 data-[state=active]:text-gray-100 data-[state=active]:font-bold"
+                      className="px-4 py-0 border-x-2 border-x-gray-600 rounded-none data-[state=active]:text-foreground data-[state=active]:font-bold"
                       value="Waiting"
                     >
                       Waiting
                     </TabsTrigger>
                     <TabsTrigger
-                      className="px-4 py-0 text-gray-500 data-[state=active]:text-gray-100 data-[state=active]:font-bold"
+                      className="px-4 py-0 data-[state=active]:text-foreground data-[state=active]:font-bold"
                       value="Checked-In"
                     >
                       Checked-In
@@ -198,13 +198,14 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
                   </TabsList>
                 </Tabs>
               ) : (
-                "Guests"
+                <p className="text-foreground">Guests</p>
+                
               )}
               {/* Conditionally render the Download All button */}
               {firstPageVisitorCount > 1 && (
                 <Button
                   variant="link"
-                  className="ml-auto flex items-center text-xs py-0 text-gray-300 px-0 no-underline hover:no-underline"
+                  className="ml-auto flex items-center text-xs py-0 text-muted-foreground hover:text-foreground px-0 no-underline hover:no-underline"
                   onClick={handleVisitorsExport}
                 >
                   <FaCloudDownloadAlt className="mr-2" /> Download All
@@ -222,14 +223,16 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
                   height={180}
                 />
               </div>
-              <div className="text-gray-500 max-w-md">
+              <div className="text-foreground max-w-md">
                 Nothing Was Found <br />
                 Try to enter other keywords
               </div>
             </div>
           ) : isLoadingVisitors ? (
             <div className="flex flex-col animate-pulse items-center justify-center mt-12 text-center space-y-4">
-              <div className="text-gray-500 max-w-md">Loading...</div>
+                <div className="text-foreground max-w-md">
+                    Loading...
+                </div>
             </div>
           ) : (
             filteredVisitors.map((visitor, index) => {

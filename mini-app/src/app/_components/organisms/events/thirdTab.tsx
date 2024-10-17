@@ -1,4 +1,6 @@
 "use client";
+
+import React from "react";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";

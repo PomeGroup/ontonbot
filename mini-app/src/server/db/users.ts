@@ -1,9 +1,7 @@
 import { db } from "@/db/db";
 import { users } from "@/db/schema";
-import { redisTools } from "@/lib/redisTools";
-import { InferSelectModel, eq } from "drizzle-orm";
-
-// Cache key prefix
+import { redisTools } from "@/lib/redisTools"; // Already importing redisTools, no need to redeclare
+import { eq } from "drizzle-orm";
 
 // Function to generate cache key for user
 const getUserCacheKey = (userId: number) =>
@@ -13,10 +11,23 @@ const getUserCacheKey = (userId: number) =>
 const getWalletCacheKey = (userId: number) =>
   `${redisTools.cacheKeys.userWallet}${userId}`;
 
+type userType = {
+  user_id: number;
+  username: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  wallet_address: string | null;
+  language_code: string | null;
+  role: string;
+  created_at: Date | null;
+  updated_at: Date | null;
+  updated_by: string;
+};
+
 // Function to get a user by user ID with caching
 export const selectUserById = async (
   userId: number
-): Promise<InferSelectModel<typeof users> | null> => {
+): Promise<userType | null> => {
   const cacheKey = getUserCacheKey(userId);
 
   // Try to get the user from cache
@@ -61,7 +72,7 @@ const insertUser = async (initDataJson: {
     language_code: string;
   };
 }) => {
-  const user = selectUserById(initDataJson.user.id);
+  const user = await selectUserById(initDataJson.user.id);
   if (!user) {
     await db
       .insert(users)
@@ -76,7 +87,7 @@ const insertUser = async (initDataJson: {
       .onConflictDoNothing() // Avoid conflict on duplicate entries
       .execute();
   } else {
-    console.log("User already exists0");
+    console.log("User already exists");
     return user;
   }
 };

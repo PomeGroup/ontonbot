@@ -1,10 +1,11 @@
 import { db } from "@/db/db";
-import crypto from "crypto";
 import {
   event_details_search_list,
   eventFields,
   events,
+  orders,
   rewards,
+  tickets,
   users,
   visitors,
 } from "@/db/schema";
@@ -13,11 +14,25 @@ import { removeKey } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
+import crypto from "crypto";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  inArray,
+  InferSelectModel,
+  or,
+  sql,
+} from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
-import { logSQLQuery } from "@/lib/logSQLQuery";
+
+interface SocietyHub {
+  id: string | number | null;
+  name: string | null;
+}
 
 export const checkIsEventOwner = async (
   rawInitData: string,
@@ -78,11 +93,14 @@ export const checkEventTicketToCheckIn = async (eventUuid: string) => {
     ticketToCheckIn: event[0].ticketToCheckIn,
   };
 };
-export const selectEventByUuid = async (eventUuid: string) => {
+export const selectEventByUuid = async (
+  eventUuid: string,
+  user_id?: number
+) => {
   if (eventUuid.length !== 36) {
     return null;
   }
-
+  // Fetch the main event data
   const eventData = (
     await db
       .select()
@@ -92,8 +110,15 @@ export const selectEventByUuid = async (eventUuid: string) => {
   ).pop();
 
   if (!eventData) {
-    return null;
+    return null; // Return null if no event data is found
   }
+  // this only works for events with one ticket
+
+  const organizer = await db.query.users.findFirst({
+    where(fields, ops) {
+      return ops.eq(fields.user_id, eventData.owner!);
+    },
+  });
 
   const { wallet_seed_phrase, ...restEventData } = removeKey(
     eventData,
@@ -120,14 +145,39 @@ export const selectEventByUuid = async (eventUuid: string) => {
 
   dynamicFields.sort((a, b) => a.order_place! - b.order_place!);
 
+  // Handle transformation of `society_hub` to the expected structure
+  const societyHub: SocietyHub | null = eventData.society_hub
+    ? {
+        id: eventData.society_hub_id || null, // Ensure `id` can be null if no id is present
+        name: eventData.society_hub || null, // Ensure `name` can be null
+      }
+    : null; // Return null if no society_hub exists
+
+  // Fetch additional paid event data if applicable
+  let paidEventData: Awaited<ReturnType<typeof getPaidEventData>> | undefined;
+  if (eventData.ticketToCheckIn) {
+    if (!user_id) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        cause: "no user_id was provided to fetch paid event data",
+        message: "no user_id was provided to fetch paid event data",
+      });
+    }
+    paidEventData = await getPaidEventData({
+      eventData,
+      user_id,
+    });
+  }
+
   return {
     ...restEventData, // Spread the rest of eventData properties
-    society_hub: {
-      id: restEventData.society_hub_id,
-      name: restEventData.society_hub,
-    },
     dynamic_fields: dynamicFields,
+    organizer,
+    ...paidEventData,
+    ...eventData, // Spread main event data
     activity_id: restEventData.activity_id,
+    society_hub: societyHub, // Use transformed `society_hub`
+    ...paidEventData, // Spread the paid event data into the final response
   };
 };
 
@@ -433,12 +483,79 @@ export const getEventByUuid = async (
   return removeSecret ? restEvent : event[0];
 };
 
-export const getEventById = async (eventId: number) => {
-  const event = await db
-    .select()
-    .from(events)
-    .where(eq(events.event_id, eventId))
+const getPaidEventData = async ({
+  eventData,
+  user_id,
+}: {
+  eventData: InferSelectModel<typeof events>;
+  user_id: number;
+}) => {
+  const eventTicket = eventData.ticketToCheckIn
+    ? await db.query.eventTicket.findFirst({
+        where(fields, ops) {
+          return ops.eq(fields.event_uuid, eventData.event_uuid);
+        },
+      })
+    : null;
+  const soldTicketsCount = await db
+    .select({ count: sql`count(*)`.mapWith(Number) })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.event_uuid, eventData.event_uuid as string),
+        or(
+          eq(orders.state, "minted"),
+          eq(orders.state, "created"),
+          eq(orders.state, "mint_request")
+        )
+      )
+    )
     .execute();
 
-  return event === undefined || event.length === 0 ? null : event[0];
+  const isSoldOut =
+    (soldTicketsCount[0].count as unknown as number) >=
+    (eventTicket?.count as unknown as number);
+
+  const userOrder = user_id
+    ? (
+        await db
+          .select()
+          .from(orders)
+          .where(
+            and(
+              eq(orders.user_id, user_id),
+              eq(orders.event_ticket_id, eventTicket?.id as number),
+              or(
+                eq(orders.state, "created"),
+                eq(orders.state, "minted"),
+                eq(orders.state, "mint_request")
+              )
+            )
+          )
+          .execute()
+      ).pop()
+    : null;
+
+  const userTicket = user_id
+    ? (
+        await db
+          .select()
+          .from(tickets)
+          .where(
+            and(
+              eq(tickets.event_uuid, eventData.event_uuid as string),
+              eq(tickets.user_id, user_id)
+            )
+          )
+          .orderBy(asc(tickets.created_at))
+          .execute()
+      ).pop()
+    : null;
+
+  return {
+    eventTicket,
+    isSoldOut,
+    userOrder,
+    userTicket,
+  };
 };

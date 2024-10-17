@@ -8,13 +8,7 @@ import { Button } from "@/components/ui/button";
 import { CheckInState } from "./CheckInState";
 import { RiQrScan2Line } from "react-icons/ri";
 
-const CheckInGuest: FC<{
-  params: {
-    hash: string;
-    setNeedRefresh: (_data: any) => void;
-    needRefresh: boolean;
-  };
-}> = ({ params }) => {
+const CheckInGuest: FC<{ params: { UUID: string ,setNeedRefresh : (_data: any) => void , needRefresh : boolean } }> = ({ params }) => {
   const WebApp = useWebApp();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -125,7 +119,6 @@ const CheckInGuest: FC<{
         setCheckInState("checkInError");
       } finally {
         WebApp?.closeScanQrPopup?.();
-        WebApp.BackButton.show();
       }
     });
   };
@@ -133,9 +126,9 @@ const CheckInGuest: FC<{
   return (
     <>
       <Button
-        onClick={handleScanQr}
-        variant="link" // Use the link variant
-        className="ml-auto flex items-center text-sm text-gray-300 px-0 no-underline hover:no-underline"
+          onClick={handleScanQr}
+          variant="link" // Use the link variant
+          className="ml-auto flex items-center text-sm px-0 no-underline hover:no-underline"
       >
         <RiQrScan2Line className="mr-2" /> Scan QR
       </Button>

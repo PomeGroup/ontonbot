@@ -12,8 +12,7 @@ const EventImage: React.FC<{ url: string }> = ({ url }) => {
         alt="Event Image. If you see this, something went wrong. Ensure that the image URL is correct and you have not copied the article link instead."
         layout="fill"
         objectFit="cover"
-        onError={(e) => (e.currentTarget.src = defaultImage)}
-        unoptimized={true}
+        unoptimized
       />
     </div>
   );

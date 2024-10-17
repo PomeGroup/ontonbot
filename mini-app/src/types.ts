@@ -123,39 +123,33 @@ export const DynamicFieldsSchema = z.array(
 );
 
 export const EventDataSchema = z.object({
-  event_id: z.number().optional(),
-  event_uuid: z.string().optional(),
-  type: z.number(),
-  title: z.string(),
-  subtitle: z.string(),
-  description: z.string(),
-  location: z.string(),
-  image_url: z.string().url(),
-  ts_reward_url: z
-    .string()
-    .optional() // This allows the field to be undefined
-    .refine(
-      (url) =>
-        url === undefined ||
-        url === "" ||
-        z.string().url().safeParse(url).success,
-      { message: "Please upload a valid reward image URL" }
-    ),
-  society_hub: z.object({
-    id: z.string(),
-    name: z.string(),
-  }),
-  secret_phrase: z.string(),
-  start_date: z.number(),
-  end_date: z.number().nullable(),
-  owner: z.number(),
-  activity_id: z.number().optional(),
-  timezone: z.string(),
-  dynamic_fields: DynamicFieldsSchema,
-  eventLocationType: z.enum(["online", "in_person"]).optional(),
-  countryId: z.number().optional(),
-  cityId: z.number().optional(),
+  event_id: z.number().optional(), // Optional field
+  event_uuid: z.string().optional(), // Optional field
+  type: z.number(), // Required field, assuming it's always provided
+  title: z.string(), // Required field
+  subtitle: z.string().optional(), // Subtitle can be optional
+  description: z.string().optional(), // Optional description
+  location: z.string().optional(), // Optional location field
+  image_url: z.string().url(), // Required, must be a valid URL
+  ts_reward_url: z.string().url(), // Required, must be a valid URL
+  society_hub: z
+    .object({
+      id: z.string(), // Required field, must be string
+      name: z.string(), // Required field, must be string
+    })
+    .optional(), // Assuming society_hub can be optional
+  secret_phrase: z.string().optional(), // Optional field for secret phrase
+  start_date: z.number(), // Required field, assuming it's a timestamp
+  end_date: z.number().nullable(), // Nullable field for end date
+  owner: z.number(), // Required field for the owner
+  activity_id: z.number().optional(), // Optional field for activity ID
+  timezone: z.string(), // Required timezone field
+  dynamic_fields: DynamicFieldsSchema, // Schema for dynamic fields
+  eventLocationType: z.enum(["online", "in_person"]).optional(), // Optional field for event location type
+  countryId: z.number().optional(), // Optional country ID
+  cityId: z.number().optional(), // Optional city ID
 });
+
 
 export const UpdateEventDataSchema = z.object({
   event_id: z.number().optional(),

@@ -44,6 +44,7 @@ const EventNotStarted = ({
         src={gifSrc}
         width={100}
         height={100}
+        unoptimized
       />
 
       <h1 className="font-semibold text-2xl">{title}</h1>

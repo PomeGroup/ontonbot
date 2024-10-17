@@ -3,11 +3,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import useAuth from "@/hooks/useAuth";
+import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
@@ -19,30 +18,10 @@ import {
   IoReorderFour,
   IoSettingsOutline,
 } from "react-icons/io5";
+import { OntonEvent } from "@/types/event.types";
 
 interface EventCardProps {
-  event: {
-    eventUuid: string;
-    title?: string;
-    startDate: number;
-    endDate: number;
-    location?: string;
-    imageUrl?: string;
-    subtitle?: string;
-    organizerFirstName?: string;
-    organizerLastName?: string;
-    organizerUsername?: string;
-    organizerUserId?: number;
-    ticketToCheckIn?: boolean;
-    timezone?: string;
-
-    reservedCount?: number;
-    visitorCount?: number;
-    ticketPrice?: number;
-    city?: string;
-    country?: string;
-    participationType?: string;
-  };
+  event: OntonEvent;
   mode?: "normal" | "small" | "detailed" | "ongoing";
   currentUserId?: number;
 }
@@ -71,7 +50,7 @@ const EventCard: React.FC<EventCardProps> = memo(
     const defaultImage = "/template-images/default.webp";
     const [imageLoaded, setImageLoaded] = useState(false);
     const webApp = useWebApp();
-    const { user } = useAuth();
+    const { user } = useAdminAuth();
     const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
     const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
     const geoLocation =
@@ -89,14 +68,15 @@ const EventCard: React.FC<EventCardProps> = memo(
           : "unknown";
 
     const handleEventClick = () => {
-      if (ticketToCheckIn) {
-        webApp?.openTelegramLink(
-          `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
-        );
-      } else {
-        window.location.href = `/events/${eventUuid}`;
-        return false;
-      }
+      // if (ticketToCheckIn) {
+      //   webApp?.openTelegramLink(
+      //     `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
+      //   );
+      // } else {
+      //   window.location.href = `/events/${eventUuid}`;
+      //   return false;
+      // }
+      window.location.href = `/events/${eventUuid}`; // FIXME paid event not opening
     };
     // Skeleton Loader for Image
     const renderImageSkeleton = () => (
@@ -119,16 +99,17 @@ const EventCard: React.FC<EventCardProps> = memo(
                 src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
                 alt={title}
                 layout="fill"
-                style={{ objectFit: "cover" }}
+                objectFit="cover"
                 className={`rounded-lg transition-opacity duration-500 ${
                   imageLoaded ? "opacity-100" : "opacity-0"
                 }`}
                 onError={(e) => (e.currentTarget.src = defaultImage)}
                 onLoad={() => setImageLoaded(true)}
                 loading="lazy"
-                unoptimized={true}
+                unoptimized
               />
             </div>
+
             <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
               <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
                 <div className="flex items-center self-stretch flex-nowrap relative">
@@ -145,15 +126,15 @@ const EventCard: React.FC<EventCardProps> = memo(
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
-                    <Badge variant="ontonDark">hosted</Badge>
+                    <Badge variant="secondary">hosted</Badge>
                   ) : (
-                    <Badge variant="ontonDark">
+                    <Badge variant="secondary">
                       {ticketPrice > 0 ? ticketPrice : "free"}
                     </Badge>
                   )}
                 </div>
                 <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-                  <span className="font-sans whitespace-normal text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+                  <span className="font-sans whitespace-normal text-primary dark:text-secondary text-left line-clamp-2 text-lg font-semibold leading-5.5">
                     {title}
                   </span>
                 </div>
@@ -167,7 +148,7 @@ const EventCard: React.FC<EventCardProps> = memo(
         <DropdownMenuContent
           key={`dropdown-show-${eventUuid}`}
           align="center"
-          className="mt-[-10px] w-[220px]  bg-black px-3 rounded-none border-spacing-1 border-2 border-gray-600"
+          className="mt-[-10px] w-[220px]  bg-background px-3 rounded-none border-spacing-1 border-2 border-gray-500"
         >
           <DropdownMenuItem
             className="text-lg px-2 rounded-none "
@@ -176,7 +157,6 @@ const EventCard: React.FC<EventCardProps> = memo(
             <IoReorderFour className="mr-1" /> Show Event{" "}
             <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuItem
             key={`dropdown-manage-${eventUuid}`}
             className="text-lg  px-2 rounded-none "
@@ -185,7 +165,7 @@ const EventCard: React.FC<EventCardProps> = memo(
               return false;
             }}
           >
-            <IoSettingsOutline className="mr-1" /> Manage Event{" "}
+            <IoSettingsOutline className="mr-1" /> Edit Event {process.env.ENV === "development" && " on menu"}
             <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -207,14 +187,14 @@ const EventCard: React.FC<EventCardProps> = memo(
                 src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
                 alt={title}
                 layout="fill"
-                style={{ objectFit: "cover" }}
+                objectFit="cover"
                 className={`rounded-lg transition-opacity duration-500 ${
                   imageLoaded ? "opacity-100" : "opacity-0"
                 }`}
                 onError={(e) => (e.currentTarget.src = defaultImage)}
                 onLoad={() => setImageLoaded(true)}
                 loading="lazy"
-                unoptimized={true}
+                unoptimized
               />
             </div>
             <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
@@ -233,15 +213,15 @@ const EventCard: React.FC<EventCardProps> = memo(
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
-                    <Badge variant="ontonDark">hosted</Badge>
+                    <Badge variant="secondary">hosted</Badge>
                   ) : (
-                    <Badge variant="ontonDark">
+                    <Badge variant="secondary">
                       {ticketPrice > 0 ? ticketPrice : "free"}
                     </Badge>
                   )}
                 </div>
                 <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-                  <span className="font-sans  whitespace-normal text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
+                  <span className="font-sans  whitespace-normal bg-background text-left line-clamp-2 text-lg font-semibold leading-5.5">
                     {title}
                   </span>
                 </div>
@@ -253,28 +233,27 @@ const EventCard: React.FC<EventCardProps> = memo(
             </div>
           </div>
         )}
-        <Separator className="my-4 bg-[#545458]" />
+        <Separator className="my-4 bg-secondary" />
       </>
     );
 
     const renderDetailedMode = () => (
       <div
-        className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
+        className="relative w-full h-[100vw] overflow-hidden shadow-lg cursor-pointer"
         onClick={handleEventClick}
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
           src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
           alt={title}
-          width={window?.innerWidth || 400}
-          height={400}
-          style={{ objectFit: "cover" }}
+          fill
+          sizes="100vh"
+          objectFit="contain"
           className={`rounded-lg transition-opacity duration-500 ${
             imageLoaded ? "opacity-100" : "opacity-0"
           }`}
           onError={(e) => (e.currentTarget.src = defaultImage)}
           onLoad={() => setImageLoaded(true)}
-          unoptimized={true}
         />
       </div>
     );
@@ -299,7 +278,7 @@ const EventCard: React.FC<EventCardProps> = memo(
               loading="lazy"
               onError={(e) => (e.currentTarget.src = defaultImage)}
               onLoad={() => setImageLoaded(true)}
-              unoptimized={true}
+              unoptimized
             />
           </div>
           <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
@@ -321,7 +300,6 @@ const EventCard: React.FC<EventCardProps> = memo(
             </div>
           </div>
         </div>
-        <Separator className="my-0 bg-[#545458]" />
       </>
     );
 

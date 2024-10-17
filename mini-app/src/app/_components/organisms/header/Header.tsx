@@ -29,6 +29,7 @@ const Header = () => {
           alt="society logo"
           width={120}
           height={120}
+          unoptimized
         />
       </div>
     </header>

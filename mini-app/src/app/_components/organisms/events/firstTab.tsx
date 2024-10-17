@@ -6,10 +6,13 @@ import { FiAlertCircle } from "react-icons/fi"; // React icon for errors
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import TonHubPicker from "@/app/_components/molecules/pickers/TonHubpicker";
 import { Input } from "@/components/ui/input";
-import { UploadImageFile } from "@/components/ui/upload-file";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { StepLayout } from "./stepLayout";
 import { Textarea } from "@/components/ui/textarea";
+import { UploadSquareImage } from "@/components/ui/upload-square-image";
+import { Section } from "@telegram-apps/telegram-ui";
+import CancelEventCard from "@/app/events/[UUID]/CancelEventCard";
+import NewRegisterationCard from "@/app/events/[UUID]/NewRegisterationCard";
 
 let lastToastId: string | number | null = null; // Store the ID of the last toast
 
@@ -30,13 +33,13 @@ const ImageUpload = ({
   };
 
   return (
-    <UploadImageFile
+    <UploadSquareImage
       triggerText="Upload Event Image"
       drawerDescriptionText="Upload your event’s poster from your device"
       infoText="Image must be in 1:1 ratio"
       changeText="Change Image"
       isError={isError}
-      onDone={handleImageChange}
+      onImageChange={handleImageChange}
       defaultImage={eventData?.image_url}
     />
   );
@@ -63,7 +66,7 @@ const firstStepDataSchema = z.object({
     .min(1, { message: "Please select a hub" }),
 });
 
-export const FirstStep = () => {
+export const FirstStep = ({edit = false}: {edit?: boolean}) => {
   const formRef = useRef<HTMLFormElement>(null);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEventData = useCreateEventStore((state) => state.setEventData);
@@ -98,48 +101,47 @@ export const FirstStep = () => {
       const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
 
       // Prepare error messages with icons
-      const errorMessages = [
-        flattenedErrors.title ? (
-          <div
-            key="title"
-            className="flex items-center"
-          >
-            <FiAlertCircle className="mr-2" /> {flattenedErrors.title[0]}
-          </div>
-        ) : null,
-        flattenedErrors.subtitle ? (
-          <div
-            key="subtitle"
-            className="flex items-center"
-          >
-            <FiAlertCircle className="mr-2" /> {flattenedErrors.subtitle[0]}
-          </div>
-        ) : null,
-        flattenedErrors.description ? (
-          <div
-            key="description"
-            className="flex items-center"
-          >
-            <FiAlertCircle className="mr-2" /> {flattenedErrors.description[0]}
-          </div>
-        ) : null,
-        flattenedErrors.image_url ? (
-          <div
-            key="image_url"
-            className="flex items-center"
-          >
-            <FiAlertCircle className="mr-2" /> {flattenedErrors.image_url[0]}
-          </div>
-        ) : null,
-        flattenedErrors.hub ? (
-          <div
-            key="hub"
-            className="flex items-center"
-          >
-            <FiAlertCircle className="mr-2" /> {flattenedErrors.hub[0]}
-          </div>
-        ) : null,
-      ].filter(Boolean);
+      const errorMessages = Object.keys(flattenedErrors).map((field) => {
+        const error = flattenedErrors[field as keyof typeof flattenedErrors];
+
+        if (!error) return null;
+
+        switch (field) {
+          case "title":
+            return (
+              <div key="title" className="flex items-center">
+                <FiAlertCircle className="mr-2" /> {error[0]}
+              </div>
+            );
+          case "subtitle":
+            return (
+              <div key="subtitle" className="flex items-center">
+                <FiAlertCircle className="mr-2" /> {error[0]}
+              </div>
+            );
+          case "description":
+            return (
+              <div key="description" className="flex items-center">
+                <FiAlertCircle className="mr-2" /> {error[0]}
+              </div>
+            );
+          case "image_url":
+            return (
+              <div key="image_url" className="flex items-center">
+                <FiAlertCircle className="mr-2" /> {error[0]}
+              </div>
+            );
+          case "hub":
+            return (
+              <div key="hub" className="flex items-center">
+                <FiAlertCircle className="mr-2" /> {error[0]}
+              </div>
+            );
+          default:
+            return null;
+        }
+      }).filter(Boolean);
+
 
       // Dismiss the previous error toast, if any
       if (lastToastId) {
@@ -155,11 +157,7 @@ export const FirstStep = () => {
     }
 
     const data = formDataParsed.data;
-    setEventData({
-      ...eventData,
-      ...data,
-    });
-
+    setEventData({ ...eventData, ...data, });
     setCurrentStep(2);
   };
 
@@ -169,56 +167,40 @@ export const FirstStep = () => {
       image_url: undefined,
     }));
   };
-
   return (
-    <form
-      ref={formRef}
-      onSubmit={handleSubmit}
-    >
-      <StepLayout>
-        <div className="space-y-4">
-          <Input
-            placeholder="Event Title"
-            name="title"
-            errors={errors?.title}
-            defaultValue={eventData?.title}
+    <main>
+      { edit &&
+      <Section className={"py-6"}>
+        <CancelEventCard />
+        <NewRegisterationCard />
+      </Section>}
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+      >
+        <StepLayout>
+          <div className="space-y-4">
+            <Input placeholder="Event Title" name="title" errors={errors?.title} defaultValue={eventData?.title} />
+            <Input placeholder="Subtitle" name="subtitle" errors={errors?.subtitle} defaultValue={eventData?.subtitle} />
+          </div>
+
+          <TonHubPicker
+            onValueChange={(data) => { data && setEventData({ ...eventData, society_hub: data }); }}
+            value={eventData?.society_hub}
+            errors={errors?.hub}
           />
-          <Input
-            placeholder="Subtitle"
-            name="subtitle"
-            errors={errors?.subtitle}
-            defaultValue={eventData?.subtitle}
+
+          <ImageUpload
+            isError={Boolean(errors?.image_url)}
+            clearError={clearImageError}
           />
-        </div>
 
-        <TonHubPicker
-          onValueChange={(data) => {
-            if (data) {
-              setEventData({ society_hub: data });
-            }
-          }}
-          value={eventData?.society_hub}
-          errors={errors?.hub}
-        />
-
-        <ImageUpload
-          isError={Boolean(errors?.image_url)}
-          clearError={clearImageError}
-        />
-
-        <Textarea
-          placeholder="Description"
-          name="description"
-          errors={errors?.description}
-          defaultValue={eventData?.description}
-          onChange={(e) => setEventData({ description: e.target.value })}
-        />
-
-        <MainButton
-          text="Next Step"
-          onClick={() => formRef.current?.requestSubmit()}
-        />
-      </StepLayout>
-    </form>
+          <Textarea
+            placeholder="Description" name="description" errors={errors?.description} defaultValue={eventData?.description}
+            onChange={(e) => setEventData({ description: e.target.value })}
+          />
+          <MainButton text="Next Step" onClick={() => formRef.current?.requestSubmit()} />
+        </StepLayout>
+      </form></main>
   );
-};
+}

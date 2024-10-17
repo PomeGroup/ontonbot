@@ -1,17 +1,36 @@
 {
-  "extends": "next/core-web-vitals",
-  "plugins": ["unused-imports"],
+  "extends": [
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "plugin:react/recommended"
+  ],
+  "plugins": [
+    "react",
+    "unused-imports"
+  ],
   "rules": {
     "react-hooks/exhaustive-deps": "off",
+    "react/prop-types": "off",
     "unused-imports/no-unused-imports": "warn",
+    "no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
     "unused-imports/no-unused-vars": [
       "warn",
       {
-        "vars": "all",
-        "varsIgnorePattern": "^_",
-        "args": "after-used",
-        "argsIgnorePattern": "^_"
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
       }
-    ]
+    ],
+    "react/react-in-jsx-scope": "off" // Disable the rule for React in JSX scope
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
   }
 }

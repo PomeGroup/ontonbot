@@ -6,10 +6,20 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 
+// Define props for the Drawer component manually
+interface DrawerProps {
+  shouldScaleBackground?: boolean;
+  // Add any other props that DrawerPrimitive.Root accepts
+  open?: boolean;
+  onOpenChange?: (_open: boolean) => void;
+  children?: React.ReactNode;
+  // Other props...
+}
+
 const Drawer = ({
-  shouldScaleBackground = true,
+  shouldScaleBackground = true, // Default value
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
+}: DrawerProps) => (
   <DrawerPrimitive.Root
     shouldScaleBackground={shouldScaleBackground}
     {...props}
@@ -25,7 +35,7 @@ const DrawerClose = DrawerPrimitive.Close;
 
 const DrawerOverlay = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay> & { className?: string }
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
@@ -36,10 +46,10 @@ const DrawerOverlay = React.forwardRef<
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
 const DrawerContent = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
-    showCloseButton?: boolean; // New prop to control the display of the close button
-  }
+    React.ElementRef<typeof DrawerPrimitive.Content> ,
+    React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
+  showCloseButton?: boolean; // New prop to control the display of the close button
+    } & { className?: string }
 >(({ className, children, showCloseButton = true, ...props }, ref) => (
   <DrawerPortal>
     <DrawerOverlay />
@@ -92,7 +102,7 @@ DrawerFooter.displayName = "DrawerFooter";
 
 const DrawerTitle = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Title>
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Title> & { className?: string }
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Title
     ref={ref}
@@ -104,7 +114,7 @@ DrawerTitle.displayName = DrawerPrimitive.Title.displayName;
 
 const DrawerDescription = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Description>
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Description> & { className?: string }
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Description
     ref={ref}

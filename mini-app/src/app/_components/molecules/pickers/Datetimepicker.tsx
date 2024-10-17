@@ -139,26 +139,31 @@ const Datetimepicker: FC<DatetimepickerProps> = ({
 
   return (
     <div>
-      <div className="w-full flex flex-wrap gap-2 items-center justify-between">
-        <label>{title}</label>
+      <div className="grid grid-cols-10 gap-2">
+        <div className="col-span-2 flex items-center">
+          <label >{title}</label>
+        </div>
+        <div className="col-span-4">
+          <Input
+            type="time"
+            value={time}
+            onChange={handleTimeChange}
+            disabled={disabled}
+            min={date === minDate ? minTime : undefined}
+            max={date === maxDate ? maxTime : undefined} // Set the maximum time for the date
 
-        <Input
-          type="time"
-          value={time}
-          onChange={handleTimeChange}
-          disabled={disabled}
-          min={date === minDate ? minTime : undefined}
-          max={date === maxDate ? maxTime : undefined} // Set the maximum time for the date
-        />
-
-        <Input
-          type="date"
-          value={date}
-          onChange={handleDateChange}
-          disabled={disabled}
-          min={minDate} // Set the minimum date
-          max={maxDate} // Set the maximum date
-        />
+          />
+        </div>
+        <div className="col-span-4">
+          <Input
+            type="date"
+            value={date}
+            onChange={handleDateChange}
+            disabled={disabled}
+            min={minDate} // Set the minimum date
+            max={maxDate} // Set the maximum date
+          />
+        </div>
       </div>
 
       {errors?.map((error) => (

@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest): Promise<Response> {
   const [, err] = getAuthenticatedUser();
-  if (err && process.env.NODE_ENV === "production") {
+  if (err && process.env.ENV === "production") {
     return err;
   }
 
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   await axios.post(`http://telegram-bot:3333/share-event`, {
     user_id,
     id: event_uuid,
-    url: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/ptma/event/${event_uuid}`,
+    url: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/event/${event_uuid}`,
   });
 
   return Response.json({ message: "share message sent successfully" });

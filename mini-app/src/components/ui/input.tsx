@@ -15,7 +15,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            "flex h-11.5 bn b w-full rounded-xl bg-muted p-1 xxs:px-3 xxs:py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border-none text-white",
+            "flex h-11.5 bn b w-full rounded-xl bg-muted p-1 xxs:px-3 xxs:py-2 text-foreground text-sm ring-offset-background file:border-0",
+            "file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2",
+            "focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 border-none",
             className,
             {
               "ring-red-300 ring-1": props.errors?.length,
@@ -26,7 +28,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         />
         {props.errors?.map((error) => (
           <div
-            className="text-red-300 pl-3 pt-1 text-sm flex items-center"
+            className="text-foreground pl-3 pt-1 text-sm flex items-center"
             key={error}
           >
             <FiAlertCircle className="mr-2" /> {error}

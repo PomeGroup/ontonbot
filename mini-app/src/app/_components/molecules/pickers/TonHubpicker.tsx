@@ -61,7 +61,7 @@ const TonHubPicker: FC<{
           <SelectGroup className="max-h-[250px]">
             {hubs.map((societyHub) => (
               <SelectItem
-                className="dark:hover:bg-separator"
+                className="text-gray-500 dark:hover:bg-separator"
                 key={societyHub.id}
                 value={societyHub.id}
               >
@@ -74,7 +74,7 @@ const TonHubPicker: FC<{
 
       {errors?.map((error) => (
         <div
-          className="text-red-300 pl-3 pt-1 text-sm  flex items-center"
+          className="text-foreground pl-3 pt-1 text-sm  flex items-center"
           key={error}
         >
           <FiAlertCircle className="mr-2" /> {error}

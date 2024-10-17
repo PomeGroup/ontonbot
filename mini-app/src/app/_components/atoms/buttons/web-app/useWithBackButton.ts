@@ -1,46 +1,68 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect, useState, useCallback } from "react";
+import { useBackButtonRaw } from "@telegram-apps/sdk-react";
+
+type RouterPushArgument = Parameters<ReturnType<typeof useRouter>["push"]>[0];
 
 export interface BackButtonProps {
-  whereTo: string;
+  whereTo?: RouterPushArgument; // Dynamically type `whereTo`
+  handleBack?: () => void; // Allow custom back handler
 }
 
-let isButtonShown = false;
-
-const useWithBackButton = ({ whereTo }: BackButtonProps) => {
+export const useWithBackButton = ({ whereTo, handleBack }: BackButtonProps) => {
   const router = useRouter();
-  const goBack = () => {
-    router.push(whereTo);
-  };
+  const pathname = usePathname();
+  const [history, setHistory] = useState<string[]>([]); // Track navigation history
+  const { cleanup, error, result } = useBackButtonRaw(); // Hook from Telegram SDK
+
+  // Memoize the back button click handler
+  const handleBackButtonClick = useCallback(() => {
+    if (handleBack) {
+      handleBack(); // Use custom back handler if provided
+    } 
+    else if (whereTo) {
+      router.push(whereTo); // Navigate to the specific path if provided
+    } else if (history.length > 1) {
+      router.back(); // Go back to the previous screen
+    } else {
+      router.push("/"); // Default to home if no history
+    }
+  }, [whereTo, handleBack, history, router]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const WebApp = window.Telegram.WebApp;
-    const backButton = WebApp.BackButton;
-    backButton.show();
-    isButtonShown = true;
+    if (error) {
+      console.error("Back button error:", error); // Handle errors
+      return;
+    }
 
+    if (!result) return; // Exit if result is not ready
+
+    // Show or hide the back button based on the current path
+    if (pathname !== "/") {
+      result.show?.();
+    } else {
+      result.hide?.();
+    }
+
+    // Register the back button click handler directly
+    result.on?.("click", () => {
+      handleBackButtonClick(); // Execute our custom handler
+    });
+
+    // Only push the current pathname to history if it's new
+    setHistory((prevHistory) => {
+      if (prevHistory[prevHistory.length - 1] !== pathname) {
+        return [...prevHistory, pathname];
+      }
+      return prevHistory;
+    });
+
+    // Cleanup the event listener on unmount
     return () => {
-      isButtonShown = false;
-      setTimeout(() => {
-        if (!isButtonShown) {
-          backButton.hide();
-        }
-      }, 10);
+      cleanup?.();
     };
-  }, []);
+  }, [pathname, result, error, handleBackButtonClick, cleanup]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const WebApp = window.Telegram.WebApp;
-    WebApp.onEvent("backButtonClicked", goBack);
-
-    return () => {
-      WebApp.offEvent("backButtonClicked", goBack);
-    };
-  }, [whereTo]);
+  return null; // This hook doesn't render anything
 };
-
-export { useWithBackButton };

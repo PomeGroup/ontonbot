@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import useAuth from "@/hooks/useAuth";
+import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { getDateFromUnix, getTimeFromUnix } from "@/utils";
 import { BadgePlus } from "lucide-react";
@@ -17,7 +17,14 @@ import { ComingSoon } from "../_components/ComingSoon";
 import Skeletons from "../_components/molecules/skeletons";
 import { trpc } from "../_trpc/client";
 import { redirectTo } from "@/lib/utils";
-import { isValidImageUrl } from "@/lib/isValidImageUrl";
+
+export type EventPageCommonAttributeType = {
+  UUID: string;
+  title: string;
+  subtitle: string;
+  image_url: string;
+  attributes: [string, ReactNode][];
+};
 
 const EventsAdminPage = () => {
   noStore();
@@ -25,7 +32,7 @@ const EventsAdminPage = () => {
   const WebApp = useWebApp();
   const router = useRouter();
   const hapticFeedback = WebApp?.HapticFeedback;
-  const { authorized, isLoading } = useAuth();
+  const { authorized, isLoading } = useAdminAuth();
   const initData = WebApp?.initData;
   const defaultImage = "/template-images/default.webp";
   const validatedData = trpc.users.validateUserInitData.useQuery(

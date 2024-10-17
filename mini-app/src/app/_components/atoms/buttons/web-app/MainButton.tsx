@@ -1,11 +1,13 @@
 "use client";
+
+import { FC, useEffect, useRef } from "react";
 import useWebApp from "@/hooks/useWebApp";
-import { FC, useCallback, useEffect, useMemo } from "react";
+import { useMainButton } from "@telegram-apps/sdk-react";
 
 export interface MainButtonProps {
   disabled?: boolean;
   color?: "primary" | "secondary";
-  textColor?: string;
+  textColor?: `#${string}`;
   text?: string;
   onClick?: () => void;
   progress?: boolean;
@@ -15,83 +17,60 @@ const MainButton: FC<MainButtonProps> = ({
   disabled = false,
   color,
   textColor,
-  text,
+  text = "Next Step",
   onClick,
-  progress = false,
+  progress = false, // Default to false
 }) => {
   const WebApp = useWebApp();
+  const mainButton = useMainButton(true);
 
-  const buttonParams = useMemo(
-    () => ({
-      color:
-        color === "primary"
-          ? "#2ea6ff"
-          : color === "secondary"
-            ? "#747480"
-            : undefined,
-      text_color: textColor,
-    }),
-    [color, textColor]
-  );
-
-  const updateButton = useCallback(() => {
-    if (!WebApp) return;
-
-    const { button_color, button_text_color } = WebApp.themeParams;
-
-    if (text) {
-      WebApp.MainButton.setText(text);
-      WebApp.MainButton.show();
-    } else {
-      WebApp.MainButton.hide();
-    }
-
-    WebApp.MainButton.setParams({
-      color: buttonParams.color || button_color,
-      text_color: buttonParams.text_color || button_text_color,
-    });
-
-    if (progress) {
-      WebApp.MainButton.showProgress();
-    } else {
-      WebApp.MainButton.hideProgress();
-    }
-
-    if (disabled || progress) {
-      WebApp.MainButton.disable();
-    } else {
-      WebApp.MainButton.enable();
-    }
-  }, [WebApp, text, buttonParams, disabled, progress, color]);
+  // Use a ref to store the click listener so we can clean it up properly
+  const clickListenerRef = useRef<() => void>();
 
   useEffect(() => {
-    if (!WebApp) return;
+    mainButton?.setBgColor(
+      color === "primary" ? "#2ea6ff" : color === "secondary" ? "#747480" : WebApp?.themeParams.button_color || "#007AFF"
+    );
+    mainButton?.setTextColor(textColor || WebApp?.themeParams.button_text_color || "#ffffff")
+      .setText(text);
+    mainButton?.enable().show();
 
-    updateButton();
+    mainButton?.setParams({
+      textColor: textColor || WebApp?.themeParams.button_text_color || "#ffffff", // Fallback to WebApp theme or white
+    });
 
-    if (onClick) {
-      WebApp.MainButton.onClick(onClick);
+    // Set button text and disable/enable based on the progress state
+    if (progress) {
+      mainButton?.setText("Loading...").disable(); // Disable button during progress
+    } else {
+      mainButton?.setText(text).enable(); // Re-enable button if not in progress
     }
 
+    // Define the click listener function
+    const clickListener = () => {
+      if (!progress && !disabled && onClick) {
+        onClick();
+      }
+    };
+
+    // Store the listener in the ref
+    clickListenerRef.current = clickListener;
+
+    // Attach the click listener
+    mainButton?.on("click", clickListener);
+
+    // Clean up the event listener on component unmount
     return () => {
-      WebApp.MainButton.hide();
-      WebApp.MainButton.enable();
-      WebApp.MainButton.hideProgress();
-      WebApp.MainButton.setParams({
-        color: WebApp.themeParams.button_color,
-        text_color: WebApp.themeParams.button_text_color,
-      });
-      if (onClick) {
-        WebApp.MainButton.offClick(onClick);
+      if (clickListenerRef.current) {
+        mainButton?.off("click", clickListenerRef.current);
       }
     };
   }, [
+    mainButton,
     WebApp,
-    updateButton,
     onClick,
-    progress,
+    progress, // Trigger re-render when progress state changes
     disabled,
-    buttonParams,
     text,
     color,
     textColor,
@@ -101,37 +80,3 @@ const MainButton: FC<MainButtonProps> = ({
 };
 
 export default MainButton;
-
-// export interface MainButtonProps {
-//   disabled?: boolean;
-//   text?: string;
-//   color?: "primary" | "secondary";
-//   onClick?: () => void;
-//   progress?: boolean;
-// }
-
-// const MainButton: FC<MainButtonProps> = ({
-//   disabled = false,
-//   text,
-//   color,
-//   onClick,
-//   progress = false,
-// }) => (
-//   <>
-//     {createPortal(
-//       <h1 className="sticky bottom-0 py-2 px-4 bg-background border-t border-muted w-full">
-//         <Button
-//           variant={color || "primary"}
-//           className="w-full"
-//           onClick={onClick}
-//           disabled={progress || disabled}
-//         >
-//           {progress ? <LucideLoader2 className="animate-spin" /> : text}
-//         </Button>
-//       </h1>,
-//       window.document.body
-//     )}
-//   </>
-// );
-
-// export default MainButton;

@@ -5,9 +5,9 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import { trpc } from "@/app/_trpc/client";
-import useAuth from "@/hooks/useAuth";
+import useAdminAuth from "@/hooks/useAdminAuth";
 import useWebApp from "@/hooks/useWebApp";
-import TabTriggers from "@/app/_components/SearchBar/TabTriggers";
+import TabTriggers from "@/app/_components/organisms/TabTriggers";
 import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useSearchParams } from "next/navigation";
@@ -16,18 +16,14 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import { Separator } from "@/components/ui/separator";
-
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useWithBackButton } from "../_components/atoms/buttons/web-app/useWithBackButton";
 
 const LIMIT = 5;
 
 const Search: React.FC = () => {
-  useWithBackButton({
-    whereTo: "/",
-  });
-
+  useWithBackButton({}) //FIXME should hanlde taps
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();
   const { searchInput, setSearchInput, setFilter, setOffset } = searchStore;
@@ -35,7 +31,7 @@ const Search: React.FC = () => {
     searchEventsInputZod.parse(searchInput)
   );
   const webApp = useWebApp();
-  const { authorized, role: userRole } = useAuth();
+  const { authorized, role: userRole } = useAdminAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
 
   const [results, setResults] = useState<any[]>([]);
@@ -172,8 +168,8 @@ const Search: React.FC = () => {
     }
   };
   return (
-    <div className="flex flex-col h-screen">
-      <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+    <main className="flex flex-col h-screen">
+      <div className="sticky top-0 z-50 w-full pb-1">
         <SearchBar
           includeQueryParam={true}
           showFilterTags={true}
@@ -189,7 +185,7 @@ const Search: React.FC = () => {
           userRole={authorized ? userRole : "user"}
         />
       </div>
-      <Separator className="my-0 bg-gray-700" />
+      <Separator className="my-0 bg-gray-500" />
       <TabTriggers
         tabs={tabItems}
         setTabValue={setTabValue}
@@ -282,7 +278,7 @@ const Search: React.FC = () => {
           ))}
         </Swiper>
       </div>
-    </div>
+    </main>
   );
 };
 

@@ -20,6 +20,7 @@ import { z } from "zod";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
 import MainFilterDrawer from "./MainFilterDrawer";
+import { UserType } from "@/types/user.types";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
@@ -33,7 +34,7 @@ interface SearchBarProps {
   setFinalSearchInput?: (_value: any) => void;
   tabValue?: string;
   applyTabFilter?: (_tabValue: string, _userId: any) => void;
-  userRole?: "admin" | "user" | "organizer";
+  userRole?: UserType['userRole'];
 }
 
 interface Hub {
@@ -402,7 +403,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       <Button
         key={index}
         variant="outline"
-        className="flex items-center text-gray-300 p-2 h-4 py-0 text-xs whitespace-nowrap"
+        className="flex items-center text-primary p-2 h-4 py-0 text-xs whitespace-nowrap"
         onClick={() => clearFilter(filter!)}
       >
         <span className="text-sm">{filter}</span>
@@ -418,7 +419,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           <Button
             key={`hub-${index}`}
             variant="outline"
-            className="flex items-center text-gray-300 p-2 h-4 py-0 text-xs  whitespace-nowrap"
+            className="flex items-center text-primary p-2 h-4 py-0 text-xs  whitespace-nowrap"
             onClick={() => clearFilter(hubId)}
           >
             <span className="text-sm">{hubName}</span>
@@ -486,7 +487,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             placeholder={
               tabValue === "" ? "Search All Events" : `Search ${tabValue} `
             }
-            className="w-full pl-10 pr-10 p-2 rounded-2xl bg-gray-800 text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-blue-600 focus:outline-none transition-width duration-300"
+            className="w-full pl-10 pr-10 p-2 rounded-2xl bg-secondary text-primary placeholder-secondary focus:ring-2 focus:ring-primary focus:outline-none transition-width duration-300"
             onChange={handleSearchInputChange}
             onKeyDown={handleKeyDown}
             value={searchTerm}
@@ -503,7 +504,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           />
           {!showFilterButton && (
             <IoCloseOutline
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-white w-4 h-4 p-1 rounded-full bg-gray-600"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-primary w-4 h-4 p-1 rounded-full"
               onClick={handleCloseSuggestions}
             />
           )}

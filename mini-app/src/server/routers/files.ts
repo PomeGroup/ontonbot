@@ -75,6 +75,7 @@ export const fieldsRouter = router({
       })
     )
     .mutation(async (opts) => {
+      console.log("mutation state");
       // Set the bucket name from environment variable or default to 'onton'
       const bucketName = process.env.MINIO_IMAGE_BUCKET || "onton";
 
@@ -86,7 +87,8 @@ export const fieldsRouter = router({
 
       // Create the full file path including the subfolder
       const fullFilename = `${subfolder}/event_image.${mimeType.split("/")[1]}`; // Ensure mimeType is split correctly
-
+      console.log("fullFilename", fullFilename);
+      
       // Create form data for the upload
       const formData = new FormData();
       formData.append("image", buffer, {

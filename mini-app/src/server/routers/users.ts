@@ -8,6 +8,7 @@ import {
 
 import {
   default as rewardDB,
+  default as rewardsDb,
 } from "@/server/db/rewards.db";
 import { usersDB } from "@/server/db/users";
 import {
@@ -16,9 +17,6 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
-
-import visitorService from "@/server/routers/services/visitorService";
-import rewardService from "@/server/routers/services/rewardsService";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure
@@ -37,6 +35,9 @@ export const usersRouter = router({
     }
   ),
 
+  getUser: initDataProtectedProcedure.query(async (opts) => {
+    return opts.ctx.user;
+  }),
   // private
   addUser: publicProcedure
     .input(z.object({ initData: z.string() }))

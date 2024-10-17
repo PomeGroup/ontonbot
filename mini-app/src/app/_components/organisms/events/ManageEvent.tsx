@@ -8,12 +8,15 @@ import { useCreateEventStore } from "../../../../zustand/createEventStore";
 import { FirstStep } from "./firstTab";
 import { SecondStep } from "./secondTab";
 import { ThirdStep } from "./thirdTab";
+import { useWithBackButton } from "../../atoms/buttons/web-app/useWithBackButton";
 
 type ManageEventProps = {
-  eventHash?: string;
+  eventUUID?: string;
   event?: RouterOutput["events"]["getEvent"];
+  edit?: boolean;
 };
 const ManageEvent = (props: ManageEventProps) => {
+
   const currentStep = useCreateEventStore((state) => state.currentStep);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEdit = useCreateEventStore((state) => state.setEdit);
@@ -25,9 +28,9 @@ const ManageEvent = (props: ManageEventProps) => {
 
   useLayoutEffect(() => {
     resetState();
-    if (props.eventHash) {
+    if (props.eventUUID) {
       setEdit({
-        eventHash: props.eventHash,
+        eventHash: props.eventUUID,
       });
       if (props.event) {
         setEventData({
@@ -41,9 +44,9 @@ const ManageEvent = (props: ManageEventProps) => {
           society_hub:
             props.event.society_hub?.id && props.event.society_hub?.name
               ? {
-                  id: props.event.society_hub.id,
-                  name: props.event.society_hub.name,
-                }
+                id: String(props.event.society_hub.id), // Convert id to string
+                name: props.event.society_hub.name,
+              }
               : undefined,
           eventLocationType: props.event.participationType,
           countryId: props.event.countryId || undefined,
@@ -52,12 +55,12 @@ const ManageEvent = (props: ManageEventProps) => {
         });
       }
     }
-  }, [props.eventHash, props.event]);
+  }, [props.eventUUID, props.event]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-    } else if (props.eventHash) {
+    } else if (props.eventUUID) {
       router.push("/");
     } else {
       webApp?.showConfirm("Discard Changes?", (confirmed) => {
@@ -68,15 +71,7 @@ const ManageEvent = (props: ManageEventProps) => {
       });
     }
   }, [webApp, currentStep, setCurrentStep, router]);
-
-  useEffect(() => {
-    webApp?.BackButton.show();
-    webApp?.BackButton.onClick(handleBack);
-    return () => {
-      webApp?.BackButton.offClick(handleBack);
-      webApp?.BackButton.hide();
-    };
-  }, [webApp, currentStep, setCurrentStep, router]);
+  useWithBackButton({ handleBack })
 
   useEffect(() => {
     document.location.pathname.endsWith("create") && resetState();
@@ -93,7 +88,7 @@ const ManageEvent = (props: ManageEventProps) => {
         currentStep={currentStep}
       />
 
-      {currentStep === 1 && <FirstStep />}
+      {currentStep === 1 && <FirstStep edit={props.edit} />}
       {currentStep === 2 && <SecondStep />}
       {currentStep === 3 && <ThirdStep />}
     </>

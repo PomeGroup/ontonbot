@@ -1,12 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 const EventSkeleton = () => {
-  return (
-    <div>
-      <div className="flex justify-between">
-        <Skeleton className="rounded-[14px] h-10 w-[131px]" />
-        <Skeleton className="rounded-full mb-4 h-10 w-10" />
-      </div>
+    return (
+        <div className="py-2">
+            <div className="flex justify-between">
+                <Skeleton className="rounded-[14px] h-10 w-[131px]" />
+                <Skeleton className="rounded-full mb-4 h-10 w-10" />
+            </div>
 
       <Skeleton className="rounded-[14px] h-[220px] w-full" />
       <Skeleton className="my-4 rounded-[14px] h-[87.5px] w-full" />

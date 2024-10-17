@@ -1,4 +1,5 @@
-import { validate } from "@tma.js/init-data-node";
+
+import { validate } from "@telegram-apps/init-data-node";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { TelegramInitDataJson, TelegramUser } from "./types";
@@ -6,9 +7,54 @@ import { TelegramInitDataJson, TelegramUser } from "./types";
 const BOT_TOKEN = process.env.BOT_TOKEN || "";
 
 const TONAPI_BEARER = "Bearer " + process.env.TONAPI_API_KEY;
+const EXPIRATION_TIME = 86400; // 24 hours in seconds
 
 const TON_API_AUTH_HEADER = {
   Authorization: TONAPI_BEARER,
+};
+
+export const validateMiniAppData = (rawInitData: string) => {
+  const initData = new URLSearchParams(rawInitData);
+
+  const initDataJson: TelegramInitDataJson = {} as TelegramInitDataJson;
+  for (const [key, value] of initData) {
+    if (key === "user") {
+      initDataJson[key] = JSON.parse(value) as TelegramUser;
+      continue;
+    }
+    initDataJson[key] = value;
+  }
+
+  try {
+    // Validate the init data using Telegram's validation method
+    validate(initData, BOT_TOKEN);
+
+    // Extract the auth_date from the init data
+    const authDate = parseInt(initData.get("auth_date") || "0", 10);
+
+    // Check if auth_date is within the allowed timeframe (24 hours)
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+    if (currentTime - authDate > EXPIRATION_TIME) {
+      console.error("Init data expired");
+      return {
+        valid: false,
+        message: "Init data expired",
+        initDataJson,
+      };
+    }
+
+    return {
+      valid: true,
+      initDataJson,
+    };
+  } catch (error) {
+    console.error("Init data validation failed:", error);
+    return {
+      valid: false,
+      message: "Init data validation failed",
+      initDataJson,
+    };
+  }
 };
 
 export async function fetchBalance(address: string) {
@@ -57,35 +103,6 @@ export const dateToUtime = (date: Date | undefined) => {
   }
 
   return Math.round(date.getTime() / 1000);
-};
-
-export const validateMiniAppData = (rawInitData: string) => {
-  const initData = new URLSearchParams(rawInitData);
-
-  const initDataJson: TelegramInitDataJson = {} as TelegramInitDataJson;
-  for (const [key, value] of initData) {
-    if (key === "user") {
-      initDataJson[key] = JSON.parse(value) as TelegramUser;
-      continue;
-    }
-
-    initDataJson[key] = value;
-  }
-  try {
-    // console.log("initData", initData , "BOT_TOKEN", BOT_TOKEN);
-    validate(initData, BOT_TOKEN);
-    return {
-      valid: true,
-      initDataJson,
-    };
-  } catch (error) {
-    console.error(error);
-
-    return {
-      valid: false,
-      initDataJson,
-    };
-  }
 };
 
 export const getTimeFromUnix = (
