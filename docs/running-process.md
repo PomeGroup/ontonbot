@@ -40,19 +40,20 @@ http {
 
 run nginx.exe with admin
 
-ngrok http --domain=merry-jackal-closely.ngrok-free.app 8000 --response-header-add='Content-Security-Policy: upgrade-insecure-requests'
-ngrok http 8000 --response-header-add='Content-Security-Policy: upgrade-insecure-requests'
+ngrok http --domain=merry-jackal-closely.ngrok-free.app 3000 --response-header-add='Content-Security-Policy: upgrade-insecure-requests'
+ngrok http 3000 --response-header-add='Content-Security-Policy: upgrade-insecure-requests'
 
 send app URL to botfather.
 
 making sure redis and postgress container are running.
 
+
+`cd ../../onton/apps/nft-manager/`
 run minio docker compose on onton/app/nft-manager/docker-compose.minio.yml
 `docker compose -f "docker-compose.minio.yml" up -d --build --remove-orphans`
 
 restart redis on same directory
 `docker compose -f "docker-compose.redis.yml" up -d --build --remove-orphans`
-
 run nft-manager app with `pnpm run dev` 
 
 run 
