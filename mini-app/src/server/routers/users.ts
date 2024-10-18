@@ -19,6 +19,7 @@ import {
 
 import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
+import {cookies} from "next/headers";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure
@@ -58,7 +59,7 @@ export const usersRouter = router({
       }
 
       const data = await usersDB.insertUser(initDataJson);
-      //console.log("data", data);
+
       if (!data) {
         throw new TRPCError({
           message: "user already exists",

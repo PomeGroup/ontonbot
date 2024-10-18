@@ -34,6 +34,7 @@ interface SearchBarProps {
   tabValue?: string;
   applyTabFilter?: (_tabValue: string, _userId: any) => void;
   userRole?: "admin" | "user" | "organizer";
+  refetchEvents?: () => void;
 }
 
 interface Hub {
@@ -50,6 +51,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   tabValue = "All",
   applyTabFilter = (_tabValue: string, _userId: number) => {},
   userRole = "user",
+  refetchEvents = () => {},
 }) => {
   const {
     searchInput,
@@ -235,7 +237,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setApplyingFilters(false);
       storeSetSearchInput({ search: searchInput.search });
 
-      handleFilterApply().then(() => {});
+      handleFilterApply().then(() => {refetchEvents()});
     }
   }, [applyingFilters]);
 
@@ -276,6 +278,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       onUpdateResults([]);
 
       setFinalSearchInput && setFinalSearchInput(searchInput);
+
     }
   };
 
@@ -287,6 +290,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setRenderedFilterTags(!renderedFilterTags);
     handleFilterApply().then((r) => {
       console.log(r);
+      refetchEvents();
     });
     hapticFeedback?.selectionChanged();
   };
