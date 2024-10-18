@@ -79,7 +79,9 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.location,
     ]);
 
-
+  if (eventData.isError || !eventData.isSuccess){
+      console.error("Something_went_wrong" , eventData.isError , eventData.isSuccess , eventData.error , initData , eventData?.data)
+  }
 
   return eventData.isLoading || !initData ? (
     <EventPageLoadingSkeleton />
