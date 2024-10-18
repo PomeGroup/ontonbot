@@ -53,7 +53,7 @@ export const adminOrganizerProtectedProcedure = initDataProtectedProcedure.use(
   (opts) => {
     if (opts.ctx.user.role !== "admin" && opts.ctx.user.role !== "organizer") {
       throw new TRPCError({
-        code: "UNAUTHORIZED",
+        code: "FORBIDDEN",
         message: "Unauthorized access, invalid role",
       });
     }

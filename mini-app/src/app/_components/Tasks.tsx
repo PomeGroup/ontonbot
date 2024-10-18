@@ -18,6 +18,7 @@ const AllTasks: FC<{
       {
         event_hash: eventHash,
         init_data: initData,
+
       },
       {
         queryKey: [
@@ -27,7 +28,12 @@ const AllTasks: FC<{
             init_data: initData,
           },
         ],
-      }
+        enabled: Boolean(initData)  && Boolean(eventHash), // Run the query only if initData is present and initialized
+      },
+
+
+
+
     );
 
   if (isLoading) {

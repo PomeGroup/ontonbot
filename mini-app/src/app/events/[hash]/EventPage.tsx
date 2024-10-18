@@ -13,7 +13,7 @@ import { trpc } from "@/app/_trpc/client";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import zod from "zod";
 import EventPageLoadingSkeleton from "./loading";
 
@@ -25,17 +25,25 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   const webApp = useWebApp();
   const { role, authorized, user } = useAuth();
   const router = useRouter();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initData, setInitData] = useState<string>("");
+  useEffect(() => {
+    if (webApp?.initData && !isInitialized) {
+      setInitData(webApp.initData);
+      setIsInitialized(true);
+    }
+  }, [webApp?.initData, isInitialized]);
   const eventData = trpc.events.getEvent.useQuery(
     {
       event_uuid: eventHash,
-      init_data: webApp?.initData || "",
+      init_data: initData,
     },
     {
       queryKey: [
         "events.getEvent",
-        { event_uuid: eventHash, init_data: webApp?.initData || "" },
+        { event_uuid: eventHash, init_data: initData },
       ],
-      enabled: Boolean(webApp?.initData),
+      enabled: Boolean(initData),
     }
   );
 
@@ -71,7 +79,38 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.location,
     ]);
 
-  return eventData.isLoading ? (
+  const taskComponents = useMemo(() => {
+    if (isStarted && isNotEnded && eventData.data?.dynamic_fields && initData) {
+      if (role !== "admin" || user?.user_id !== eventData.data.owner) {
+        return (
+          <>
+            <Tasks.Wallet initData={initData} />
+            <AllTasks
+              // @ts-expect-error
+              tasks={eventData.data.dynamic_fields}
+              eventHash={eventHash}
+            />
+            <ClaimRewardButton
+              initData={initData}
+              eventId={eventData.data?.event_uuid as string}
+            />
+          </>
+        );
+      }
+    }
+    return null;
+  }, [
+    isStarted,
+    isNotEnded,
+    eventData.data?.dynamic_fields,
+    initData,
+    role,
+    user?.user_id,
+    eventData.data?.owner,
+    eventHash,
+  ]);
+
+  return eventData.isLoading || !initData ? (
     <EventPageLoadingSkeleton />
   ) : eventData.isError || !eventData.isSuccess ? (
     <div>Something went wrong...</div>
@@ -100,16 +139,19 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       ) : null}
       <Labels.CampaignDescription description={eventData.data?.description!} />
 
-      {isStarted && isNotEnded && eventData.data?.dynamic_fields ? (
+      {isStarted && isNotEnded && eventData.data?.dynamic_fields && initData ? (
         (role !== "admin" || user?.user_id !== eventData.data.owner) && (
           <>
-            <Tasks.Wallet />
+            <Tasks.Wallet initData={initData as string} />
             <AllTasks
               // @ts-expect-error
               tasks={eventData.data.dynamic_fields}
               eventHash={eventHash}
             />
-            <ClaimRewardButton eventId={eventData.data?.event_uuid as string} />
+            <ClaimRewardButton
+              initData={initData as string}
+              eventId={eventData.data?.event_uuid as string}
+            />
           </>
         )
       ) : // if it was not ended than it means the event is not started yet

@@ -6,9 +6,10 @@ import { Address } from "@ton/core";
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { useEffect, useMemo, useState } from "react";
 import Tasks from ".";
+import {boolean} from "drizzle-orm/pg-core";
 
-const ConnectWalletTask = () => {
-  const WebApp = useWebApp();
+const ConnectWalletTask = (props: {  initData: string }) => {
+
   const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
   const trpcUtils = trpc.useUtils();
@@ -22,18 +23,18 @@ const ConnectWalletTask = () => {
 
   const userAddress = trpc.users.getWallet.useQuery(
     {
-      init_data: WebApp?.initData!,
+      init_data: props.initData,
       wallet_address: wallet?.account.address!,
     },
     {
       queryKey: [
         "users.getWallet",
         {
-          init_data: WebApp?.initData!,
+          init_data: props.initData!,
           wallet_address: wallet?.account.address!,
         },
       ],
-      enabled: Boolean(WebApp?.initData) && Boolean(wallet?.account.address),
+      enabled: !!boolean(props.initData)  && Boolean(wallet?.account.address),
       retry: false,
     }
   );

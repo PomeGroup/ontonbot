@@ -47,15 +47,15 @@ const EventNotStarted = ({
       />
 
       <h1 className="font-semibold text-2xl">{title}</h1>
-      <p className="text-xs text-center text-muted-foreground">
-        <p>
+      <div className="text-xs text-center text-muted-foreground">
+        <div>
           Event starts at <time className="font-medium">{startDate}</time>
-        </p>
+        </div>
         and
-        <p>
+        <div>
           Ends at <time className="font-medium">{endDate}</time>
-        </p>
-      </p>
+        </div>
+      </div>
     </div>
   );
 };
