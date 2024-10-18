@@ -79,36 +79,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.location,
     ]);
 
-  const taskComponents = useMemo(() => {
-    if (isStarted && isNotEnded && eventData.data?.dynamic_fields && initData) {
-      if (role !== "admin" || user?.user_id !== eventData.data.owner) {
-        return (
-          <>
-            <Tasks.Wallet initData={initData} />
-            <AllTasks
-              // @ts-expect-error
-              tasks={eventData.data.dynamic_fields}
-              eventHash={eventHash}
-            />
-            <ClaimRewardButton
-              initData={initData}
-              eventId={eventData.data?.event_uuid as string}
-            />
-          </>
-        );
-      }
-    }
-    return null;
-  }, [
-    isStarted,
-    isNotEnded,
-    eventData.data?.dynamic_fields,
-    initData,
-    role,
-    user?.user_id,
-    eventData.data?.owner,
-    eventHash,
-  ]);
+
 
   return eventData.isLoading || !initData ? (
     <EventPageLoadingSkeleton />

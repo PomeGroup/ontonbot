@@ -67,11 +67,15 @@ const Search: React.FC = () => {
   const {
     isLoading: isLoadingSearchResults,
     isFetching: isFetchingSearchResults,
+    isRefetching: isRefetchingSearchResults,
     refetch,
   } = trpc.events.getEventsWithFilters.useQuery(finalSearchInput, {
-    enabled: initialFetchDone,
-    // enabled: false,
+   enabled: initialFetchDone,
+  //   enabled: true,
     keepPreviousData: true,
+    retry: 2,
+    queryKey: ["events.getEventsWithFilters", finalSearchInput],
+
     onSuccess: (data) => {
       if (!initialFetchDone || searchInput.offset === 0) {
         setResults([]);
@@ -80,6 +84,8 @@ const Search: React.FC = () => {
       setHasMore(data?.data?.length === LIMIT);
     },
   });
+
+
 
   const loadMoreResults = useCallback(() => {
     if (hasMore && !isFetchingSearchResults) {
@@ -121,17 +127,22 @@ const Search: React.FC = () => {
 
   useEffect(() => {
     //resetFilters();
-    setOffset(0);
+
 
     // applyTabFilter(tabValue , searchInput.sortBy);
     applyTabFilter(tabValue, UserId);
-
     setResults([]);
+    setOffset(0);
+    console.log("tabValue", tabValue);
+    setTimeout(() => {
+      refetch();
+    }, 200);
   }, [tabValue, setFilter, UserId]);
 
   useEffect(() => {
     setFinalSearchInput(searchEventsInputZod.parse(searchInput));
-  }, [searchStore]);
+  }, [searchInput,  searchStore]);
+
   useEffect(() => {
     const handleScroll = () => {
       if (scrollableDivRef.current) {
@@ -157,7 +168,9 @@ const Search: React.FC = () => {
       }
     };
   }, [loadMoreResults]);
-  const handleSlideChange = (swiper: any) => {
+
+
+    const handleSlideChange = (swiper: any) => {
     const activeIndex = swiper.activeIndex;
     const newTab = tabItems[activeIndex]?.value || "All";
     setTabValue(newTab);
@@ -187,6 +200,7 @@ const Search: React.FC = () => {
           applyTabFilter={applyTabFilter}
           tabValue={tabValue}
           userRole={authorized ? userRole : "user"}
+          refetchEvents={refetch}
         />
       </div>
       <Separator className="my-0 bg-gray-700" />
@@ -218,6 +232,9 @@ const Search: React.FC = () => {
               >
                 {!isLoadingSearchResults &&
                   !isFetchingSearchResults &&
+                    !isRefetchingSearchResults &&
+                    !initialFetchDone &&
+
                   results.length === 0 && (
                     <div className="flex flex-col items-center justify-center min-h-screen  text-center space-y-4">
                       <div>

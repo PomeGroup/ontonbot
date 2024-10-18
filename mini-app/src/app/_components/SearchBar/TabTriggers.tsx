@@ -23,6 +23,7 @@ const TabTriggers: React.FC<TabTriggersProps> = ({
 }) => {
   const handleTabClick = (value: string, index: number) => {
     setTabValue(value);
+
     swiperRef.current?.slideTo(index); // Change the slide to match the clicked tab
   };
   return (
