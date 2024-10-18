@@ -6,6 +6,7 @@ import { trpc } from "../_trpc/client";
 import EventSkeleton from "./molecules/skeletons/EventSkeleton";
 import { parseInitData } from "@tma.js/sdk";
 
+
 const UserSaver: FC<{
   children: ReactNode;
 }> = ({ children }) => {
