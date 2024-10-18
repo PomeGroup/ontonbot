@@ -22,6 +22,11 @@ const initDataExpirationAlert = () => {
   sessionStorage.removeItem("telegram:initParams");
 
   if (window.Telegram?.WebApp) {
+    if (!window.Telegram.WebApp?.isVersionAtLeast("6.0") ) {
+        console.error("Telegram WebApp version is lower than 6.0");
+        alert("Your Telegram version is too old. Please update the app.");
+        window.Telegram.WebApp.close();
+    }
     window.Telegram.WebApp.showPopup(
       {
         message: "Your session has expired. Please restart the app.",
