@@ -4,7 +4,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { FC, ReactNode, useEffect, useState } from "react";
 import { trpc } from "../_trpc/client";
 import EventSkeleton from "./molecules/skeletons/EventSkeleton";
-import { parseInitData } from "@tma.js/sdk";
+
 
 
 const UserSaver: FC<{
