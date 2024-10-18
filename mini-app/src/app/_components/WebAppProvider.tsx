@@ -1,9 +1,25 @@
 "use client";
 import useWebApp from "@/hooks/useWebApp";
 import EventsSkeleton from "./molecules/skeletons/EventsSkeleton";
+import * as Sentry from "@sentry/nextjs";
+import React, {useEffect, useState} from "react";
 
 const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
   const webApp = useWebApp();
+
+  const [isInitialized, setIsInitialized] = useState(false);
+  useEffect(() => {
+    if (webApp?.initData && webApp?.initDataUnsafe && !isInitialized) {
+      Sentry.init({
+        environment: process.env.ENV,
+      });
+      Sentry.setUser({
+        id: webApp.initDataUnsafe.user?.id ,
+        username: webApp.initDataUnsafe.user?.username,
+      });
+      setIsInitialized(true);
+    }
+  }, [webApp?.initData, isInitialized]);
 
   if (!webApp) {
     return <EventsSkeleton />;
