@@ -1,7 +1,7 @@
 "use client";
 
 import useWebApp from "@/hooks/useWebApp";
-import {  useState } from "react";
+import {   useState } from "react";
 import { trpc } from "../_trpc/client";
 import ModalDialog from "./SecretSavedModal";
 import MainButton from "./atoms/buttons/web-app/MainButton";
