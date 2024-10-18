@@ -6,7 +6,6 @@ import { trpc } from "../_trpc/client";
 import EventSkeleton from "./molecules/skeletons/EventSkeleton";
 
 
-
 const UserSaver: FC<{
   children: ReactNode;
 }> = ({ children }) => {

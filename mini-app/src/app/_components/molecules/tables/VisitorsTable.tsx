@@ -50,15 +50,17 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
   } = trpc.visitors.getAll.useInfiniteQuery(
     {
       event_uuid,
-      init_data: webApp?.initData || "",
+      // @ts-expect-error
+      init_data: webApp?.initData  ,
       limit: 50,
       dynamic_fields: false,
+
       search: debouncedSearchQuery,
     },
     {
       getNextPageParam: (lastPage) => lastPage?.nextCursor || null,
       initialCursor: 0,
-      enabled: Boolean(event_uuid),
+      enabled: Boolean(event_uuid) && Boolean(webApp?.initData),
       retry: false,
       cacheTime: 20,
     }
