@@ -10,20 +10,29 @@ import { RewardType } from "@/types/event.types";
 import { CronJob } from "cron";
 import "dotenv/config";
 import { asc, eq } from "drizzle-orm";
-import pLimit from "p-limit";
 import { db } from "./db/db";
 import { sleep } from "./utils";
-
-new CronJob("*/30 * * * *", cronJobRunner(createRewards), null, true);
-
-new CronJob("*/5 * * * *", cronJobRunner(notifyUsersForRewards), null, true);
 
 process.on("unhandledRejection", (err) => {
   console.error("START", err);
 });
 
-function cronJobRunner(fn: () => any) {
+async function cronJobRunner() {
+  if (process.env.ENV?.toLocaleLowerCase() !== "production") {
+    await createRewards();
+    await notifyUsersForRewards();
+  }
+
+  // Create Rewards Cron Job
+  new CronJob("*/30 * * * *", cronJob(createRewards), null, true);
+
+  // Notify Users Cron Job
+  new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
+}
+
+function cronJob(fn: () => any) {
   const name = fn.name; // Get function name automatically
+
   return async () => {
     const cronLock = await redisTools.getCache(
       redisTools.cacheKeys.cronJobLock + name
@@ -34,11 +43,10 @@ function cronJobRunner(fn: () => any) {
       return;
     }
 
-    // 8h ttl
     await redisTools.setCache(
       redisTools.cacheKeys.cronJobLock + name,
       true,
-      28_800_000
+      28_800_000 // 8h
     );
 
     try {
@@ -68,7 +76,6 @@ async function createRewards() {
     offset += pendingRewards.length;
 
     await processRewardChunk(pendingRewards);
-    await sleep(100);
   } while (pendingRewards.length > 0);
 
   return offset;
@@ -101,8 +108,7 @@ async function processRewardChunk(pendingRewards: RewardType[]) {
 }
 
 async function notifyUsersForRewards() {
-  const chunkSize = 100;
-  const limit = pLimit(25);
+  const chunkSize = 15;
   let offset = 0;
   let createdRewards: RewardType[] = [];
 
@@ -115,17 +121,18 @@ async function notifyUsersForRewards() {
 
     offset += createdRewards.length;
 
-    const notificationPromises = createdRewards.map((createdReward) =>
-      limit(() => processReward(createdReward))
+    const notificationPromises = createdRewards.map(
+      (createdReward) => () => sendRewardNotification(createdReward)
     );
 
     await Promise.allSettled(notificationPromises);
+    await sleep(1000);
   } while (createdRewards.length > 0);
 
   return offset;
 }
 
-async function processReward(createdReward: RewardType) {
+async function sendRewardNotification(createdReward: RewardType) {
   try {
     const visitor = await findVisitorById(createdReward.visitor_id);
     if (!visitor) throw new Error("Visitor not found");
@@ -179,6 +186,15 @@ async function handleRewardError(reward: RewardType, error: any) {
   const newStatus = shouldFail ? "notification_failed" : undefined;
   const newData = shouldFail ? { fail_reason: error.message } : undefined;
 
+  console.error(
+    "handleRewardError",
+    reward,
+    error,
+    shouldFail,
+    newStatus,
+    newData
+  );
+
   try {
     await updateRewardStatus(reward.id, newStatus, {
       tryCount: reward.tryCount + 1,
@@ -188,3 +204,6 @@ async function handleRewardError(reward: RewardType, error: any) {
     console.error("DB_ERROR", dbError);
   }
 }
+
+// Run the Cron Jobs
+cronJobRunner();
