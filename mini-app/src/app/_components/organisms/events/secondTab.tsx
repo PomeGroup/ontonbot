@@ -15,7 +15,8 @@ import { useCreateEventStore } from "@/zustand/createEventStore";
 import { StepLayout } from "./stepLayout";
 import { toast } from "sonner";
 import { FiAlertCircle } from "react-icons/fi";
-import * as React from "react"; // Import icon for errors
+import * as React from "react";
+import {dataValidationSchema} from "@/zodSchema/dataValidationSchema"; // Import icon for errors
 
 export const SecondStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -85,16 +86,16 @@ export const SecondStep = () => {
         countryId: z.number().optional(),
       })
       .refine(
-        (data) => {
-          if (data.eventLocationType === "online") {
-            return z.string().url().safeParse(data.location).success;
+          (data) => {
+            if (data.eventLocationType === "online") {
+              return dataValidationSchema.urlSchema.safeParse(data.location).success;
+            }
+            return true;
+          },
+          {
+            message: "Please enter a valid URL for online events",
+            path: ["location"],
           }
-          return true;
-        },
-        {
-          message: "Please enter a valid URL for online events",
-          path: ["location"],
-        }
       )
       .refine(
         (data) => {

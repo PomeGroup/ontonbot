@@ -86,7 +86,7 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
             >
               <span className="text-zinc-400">Online</span>
               <Checkbox
-                checked={localParticipationType.includes("online")}
+                checked={localParticipationType.includes("online") || localParticipationType.length === 0}
                 className="h-6 w-6"
               />
             </div>
@@ -102,7 +102,7 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
             >
               <span className="text-zinc-400">In-person</span>
               <Checkbox
-                checked={localParticipationType.includes("in_person")}
+                checked={localParticipationType.includes("in_person")  || localParticipationType.length === 0}
                 className="h-6 w-6"
               />
             </div>
