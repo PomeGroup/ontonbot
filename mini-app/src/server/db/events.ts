@@ -414,7 +414,7 @@ export const getEventsWithFilters = async (
     query = query.limit(limit).offset(offset);
   }
 
-   logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
 
   await redisTools.setCache(cacheKey, eventsData, redisTools.cacheLvl.guard);
