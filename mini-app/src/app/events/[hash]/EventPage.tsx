@@ -33,6 +33,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       setIsInitialized(true);
     }
   }, [webApp?.initData, isInitialized]);
+
   const eventData = trpc.events.getEvent.useQuery(
     {
       event_uuid: eventHash,
@@ -46,6 +47,10 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       enabled: Boolean(initData),
     }
   );
+    useEffect(() => {
+    if (eventData.data) {
+        console.log("eventHash", eventData);
+    }}, [eventData]);
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {
