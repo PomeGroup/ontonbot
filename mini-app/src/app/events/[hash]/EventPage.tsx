@@ -86,8 +86,15 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.start_date,
       eventData.data?.end_date,
       eventData.data?.location,
-    ]);
 
+    ]);
+    useEffect(() => {
+        console.log("************eventData", eventData)
+        console.log("initData", initData)
+        console.log("isStarted", isStarted)
+        console.log("isNotEnded", isNotEnded)
+        console.log("eventData.data?.dynamic_fields", eventData.data?.dynamic_fields)
+    }, [isStarted, isNotEnded, eventData.data?.dynamic_fields, initData]);
 
   if (eventData.isError || !eventData.isSuccess){
       console.error("Something_went_wrong" , eventData.isError , eventData.isSuccess , eventData.error , initData , eventData?.data)
@@ -124,7 +131,7 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       <Labels.CampaignDescription description={eventData.data?.description!} />
 
       {isStarted && isNotEnded && eventData.data?.dynamic_fields && initData ? (
-        (role !== "admin" || user?.user_id !== eventData.data.owner) && (
+        (role !== "admin" || user?.user_id !== eventData.data.owner) ? (
           <>
             <Tasks.Wallet
               initData={initData as string}
@@ -146,6 +153,8 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
               )}
 
           </>
+        ): (
+            <div>Organizer can't participate in the event</div>
         )
       ) : // if it was not ended than it means the event is not started yet
       isNotEnded ? (

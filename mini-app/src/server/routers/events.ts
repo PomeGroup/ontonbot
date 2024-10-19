@@ -384,12 +384,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             eventId!
           );
 
-          const fieldsToDelete = currentFields.filter(
-            (field) =>
-              !eventData.dynamic_fields.some(
-                (newField) => newField.id === field.id
-              )
-          );
+            const fieldsToDelete = currentFields.filter(
+                (field) =>
+                    !eventData.dynamic_fields.some(
+                        (newField) =>
+                            newField.id === field.id
+                    ) && field.title !== 'secret_phrase_onton_input'
+            );
 
           for (const field of fieldsToDelete) {
             await eventFieldsDB.deleteEventFieldById(trx, field.id, eventId!);
