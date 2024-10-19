@@ -27,6 +27,9 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   const router = useRouter();
   const [isInitialized, setIsInitialized] = useState(false);
   const [initData, setInitData] = useState<string>("");
+  const [isWalletConnected, setIsWalletConnected] = useState<
+    boolean | undefined
+  >(undefined);
   useEffect(() => {
     if (webApp?.initData && !isInitialized) {
       setInitData(webApp.initData);
@@ -47,10 +50,11 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       enabled: Boolean(initData),
     }
   );
-    useEffect(() => {
+  useEffect(() => {
     if (eventData.data) {
-        console.log("eventHash", eventData);
-    }}, [eventData]);
+      console.log("eventHash", eventData);
+    }
+  }, [eventData]);
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {
@@ -84,8 +88,6 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.location,
     ]);
 
-
-
   return eventData.isLoading || !initData ? (
     <EventPageLoadingSkeleton />
   ) : eventData.isError || !eventData.isSuccess ? (
@@ -118,16 +120,25 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       {isStarted && isNotEnded && eventData.data?.dynamic_fields && initData ? (
         (role !== "admin" || user?.user_id !== eventData.data.owner) && (
           <>
-            <Tasks.Wallet initData={initData as string} />
+            <Tasks.Wallet
+              initData={initData as string}
+              isWalletConnected={isWalletConnected}
+              setIsWalletConnected={setIsWalletConnected}
+            />
             <AllTasks
               // @ts-expect-error
               tasks={eventData.data.dynamic_fields}
               eventHash={eventHash}
             />
-            <ClaimRewardButton
-              initData={initData as string}
-              eventId={eventData.data?.event_uuid as string}
-            />
+              {isWalletConnected && (
+                <ClaimRewardButton
+                  initData={initData as string}
+                  eventId={eventData.data?.event_uuid as string}
+                  isWalletConnected={isWalletConnected}
+
+                />
+              )}
+
           </>
         )
       ) : // if it was not ended than it means the event is not started yet
