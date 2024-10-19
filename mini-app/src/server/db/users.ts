@@ -21,34 +21,43 @@ export const selectUserById = async (
 
   // Try to get the user from cache
   const cachedUser = await redisTools.getCache(cacheKey);
+
   if (cachedUser) {
     return cachedUser; // Return cached user if found
   }
 
   // If not found in cache, query the database
-  const userInfo = await db
-    .select({
-      user_id: users.user_id,
-      username: users.username,
-      first_name: users.first_name,
-      last_name: users.last_name,
-      wallet_address: users.wallet_address,
-      language_code: users.language_code,
-      role: users.role,
-      created_at: users.created_at,
-      updatedAt: users.updatedAt,
-      updatedBy: users.updatedBy,
-    })
-    .from(users)
-    .where(eq(users.user_id, userId))
-    .execute();
+  try {
+    const userInfo = await db
+      .select({
+        user_id: users.user_id,
+        username: users.username,
+        first_name: users.first_name,
+        last_name: users.last_name,
+        wallet_address: users.wallet_address,
+        language_code: users.language_code,
+        role: users.role,
+        created_at: users.created_at,
+        updatedAt: users.updatedAt,
+        updatedBy: users.updatedBy,
+      })
+      .from(users)
+      .where(eq(users.user_id, userId))
+      .execute();
 
-  if (userInfo.length > 0) {
-    await redisTools.setCache(cacheKey, userInfo[0], redisTools.cacheLvl.short); // Cache the user
-    return userInfo[0];
+    if (userInfo.length > 0) {
+      await redisTools.setCache(
+        cacheKey,
+        userInfo[0],
+        redisTools.cacheLvl.short
+      ); // Cache the user
+      return userInfo[0];
+    }
+    return null;
+  } catch (e) {
+    console.log("get user error: ", e);
+    return null;
   }
-
-  return null; // Return null if user not found
 };
 
 // Insert a user and clear cache
@@ -61,22 +70,31 @@ const insertUser = async (initDataJson: {
     language_code: string;
   };
 }) => {
-  const user = selectUserById(initDataJson.user.id);
+  const user = await selectUserById(initDataJson.user.id);
+
   if (!user) {
-    await db
-      .insert(users)
-      .values({
-        user_id: initDataJson.user.id,
-        username: initDataJson.user.username,
-        first_name: initDataJson.user.first_name,
-        last_name: initDataJson.user.last_name,
-        language_code: initDataJson.user.language_code,
-        role: "user", // Default role as "user"
-      })
-      .onConflictDoNothing() // Avoid conflict on duplicate entries
-      .execute();
+    try {
+      await db
+        .insert(users)
+        .values({
+          user_id: initDataJson.user.id,
+          username: initDataJson.user.username,
+          first_name: initDataJson.user.first_name,
+          last_name: initDataJson.user.last_name,
+          language_code: initDataJson.user.language_code,
+          role: "user", // Default role as "user"
+        })
+        .onConflictDoNothing() // Avoid conflict on duplicate entries
+        .execute();
+
+      console.log(
+        `User ${initDataJson.user.username} ${initDataJson.user.id} added`
+      );
+       return await selectUserById(initDataJson.user.id);
+    } catch (e) {
+      console.log("add user error: ", e);
+    }
   } else {
-    console.log("User already exists0");
     return user;
   }
 };

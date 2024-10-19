@@ -27,12 +27,16 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   const router = useRouter();
   const [isInitialized, setIsInitialized] = useState(false);
   const [initData, setInitData] = useState<string>("");
+  const [isWalletConnected, setIsWalletConnected] = useState<
+    boolean | undefined
+  >(undefined);
   useEffect(() => {
     if (webApp?.initData && !isInitialized) {
       setInitData(webApp.initData);
       setIsInitialized(true);
     }
   }, [webApp?.initData, isInitialized]);
+
   const eventData = trpc.events.getEvent.useQuery(
     {
       event_uuid: eventHash,
@@ -46,6 +50,11 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       enabled: Boolean(initData),
     }
   );
+  useEffect(() => {
+    if (eventData.data) {
+      console.log("eventHash", eventData);
+    }
+  }, [eventData]);
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {
@@ -79,9 +88,11 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.location,
     ]);
 
+
   if (eventData.isError || !eventData.isSuccess){
       console.error("Something_went_wrong" , eventData.isError , eventData.isSuccess , eventData.error , initData , eventData?.data)
   }
+
 
   return eventData.isLoading || !initData ? (
     <EventPageLoadingSkeleton />
@@ -115,16 +126,25 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       {isStarted && isNotEnded && eventData.data?.dynamic_fields && initData ? (
         (role !== "admin" || user?.user_id !== eventData.data.owner) && (
           <>
-            <Tasks.Wallet initData={initData as string} />
+            <Tasks.Wallet
+              initData={initData as string}
+              isWalletConnected={isWalletConnected}
+              setIsWalletConnected={setIsWalletConnected}
+            />
             <AllTasks
               // @ts-expect-error
               tasks={eventData.data.dynamic_fields}
               eventHash={eventHash}
             />
-            <ClaimRewardButton
-              initData={initData as string}
-              eventId={eventData.data?.event_uuid as string}
-            />
+              {isWalletConnected && (
+                <ClaimRewardButton
+                  initData={initData as string}
+                  eventId={eventData.data?.event_uuid as string}
+                  isWalletConnected={isWalletConnected}
+
+                />
+              )}
+
           </>
         )
       ) : // if it was not ended than it means the event is not started yet
