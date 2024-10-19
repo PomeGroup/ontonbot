@@ -124,7 +124,9 @@ export const handleShareEvent = async (
         {
           caption: `
 <b>${event.title}</b>
-${event.subtitle}`,
+${event.subtitle}
+Link: ${url}
+`,
           parse_mode: "HTML",
           reply_markup: {
             inline_keyboard: [
