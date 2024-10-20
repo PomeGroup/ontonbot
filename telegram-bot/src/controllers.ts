@@ -144,7 +144,7 @@ export const handleShareEvent = async (
       const defaultButton = { text: "Buy Ticket", web_app: { url } };
       const customButton = custom_button || defaultButton;
 
-      await req.bot.telegram.sendPhoto(
+        await req.bot.telegram.sendPhoto(
           parseInt(user_id),
           {
             url: event.image_url,
@@ -165,6 +165,7 @@ export const handleShareEvent = async (
             },
           }
       );
+
 
       res.json(event);
     } catch (error) {

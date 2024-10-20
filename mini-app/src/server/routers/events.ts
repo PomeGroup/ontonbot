@@ -410,11 +410,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               )
             )
             .execute();
+
           if (
             hashedSecretPhrase ||
             (hashedSecretPhrase === undefined &&
               oldEvent[0].ticketToCheckIn === false)
           ) {
+
             if (secretPhraseTask.length > 0) {
               // Update the existing secret phrase task
               await eventFieldsDB.updateEventFieldLog(
@@ -505,10 +507,12 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
         });
       } catch (err) {
+
         console.info(
           `update event id: ${opts.ctx.event.event_uuid}, error: `,
           err
         );
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to update event ${opts.ctx.event.event_uuid}`,
