@@ -200,7 +200,7 @@ async function updateRewardStatus(
 }
 
 async function handleRewardError(reward: RewardType, error: any) {
-  const shouldFail = reward.tryCount >= 4;
+  const shouldFail = reward.tryCount >= 10;
   const newStatus = shouldFail ? "notification_failed" : undefined;
   const newData = shouldFail ? { fail_reason: error.message } : undefined;
 
