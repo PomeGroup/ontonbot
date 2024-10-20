@@ -109,7 +109,12 @@ export const handleShareEvent = async (
 ) => {
   const { id, user_id, url, share_link, custom_button } = req.body;
 
-  if (typeof id === "string" && typeof user_id === "string" && typeof url === "string" && typeof share_link === "string") {
+  if (
+      typeof id === "string" &&
+      typeof user_id === "string" &&
+      typeof url === "string" &&
+      typeof share_link === "string"
+  ) {
     try {
       const event = await getEvent(id);
       console.log("event", event.title);
@@ -144,13 +149,15 @@ export const handleShareEvent = async (
       const defaultButton = { text: "Buy Ticket", web_app: { url } };
       const customButton = custom_button || defaultButton;
 
+      try {
+        // Attempt to send the event image
         await req.bot.telegram.sendPhoto(
-          parseInt(user_id),
-          {
-            url: event.image_url,
-          },
-          {
-            caption: `
+            parseInt(user_id),
+            {
+              url: event.image_url,
+            },
+            {
+              caption: `
 📄 <b>${event.title}</b>
 ▫️ <i>${event.subtitle}</i>
 
@@ -159,13 +166,46 @@ export const handleShareEvent = async (
 
 🔗 Link: ${share_link}
 `,
-            parse_mode: "HTML",
-            reply_markup: {
-              inline_keyboard: [[customButton]], // Use the custom button or default
-            },
-          }
-      );
+              parse_mode: "HTML",
+              reply_markup: {
+                inline_keyboard: [[customButton]], // Use the custom button or default
+              },
+            }
+        );
+      } catch (error) {
+        if (
+            error.response &&
+            error.response.error_code === 400 &&
+            error.response.description === 'Bad Request: IMAGE_PROCESS_FAILED'
+        ) {
+          // Retry with the default fallback image if the original image fails
+          console.log('Image processing failed. Retrying with fallback image.');
 
+          await req.bot.telegram.sendPhoto(
+              parseInt(user_id),
+              {
+                url: 'https://onton.live/template-images/default.webp', // Fallback image
+              },
+              {
+                caption: `
+📄 <b>${event.title}</b>
+▫️ <i>${event.subtitle}</i>
+
+🗓 Starts at: ${startDate}
+🗓 Ends at: ${endDate}
+
+🔗 Link: ${share_link}
+`,
+                parse_mode: "HTML",
+                reply_markup: {
+                  inline_keyboard: [[customButton]], // Use the custom button or default
+                },
+              }
+          );
+        } else {
+          throw error; // Rethrow the error if it's not the IMAGE_PROCESS_FAILED error
+        }
+      }
 
       res.json(event);
     } catch (error) {
@@ -176,8 +216,6 @@ export const handleShareEvent = async (
     res.status(400).json({ message: "Invalid query id" });
   }
 };
-
-
 
 
 
