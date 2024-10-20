@@ -216,9 +216,6 @@ export const handleShareEvent = async (
     res.status(400).json({ message: "Invalid query id" });
   }
 };
-
-
-
 interface SendRewardLinkBody {
   chat_id: number;
   link: string;
