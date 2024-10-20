@@ -1,11 +1,16 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 
 const Label: React.FC<{
   children: React.ReactNode;
-}> = ({ children }) => {
+  className?: string; // Allow passing custom class names
+}> = ({ children, className }) => {
   return (
-    <div className="text-[12px] font-medium text-secondary">{children}</div>
+      <div className={cn("text-[12px] font-medium text-secondary", className)}>
+        {children}
+      </div>
   );
 };
 
 export default Label;
+

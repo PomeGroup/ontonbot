@@ -16,6 +16,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import zod from "zod";
 import EventPageLoadingSkeleton from "./loading";
+import EventDates from "@/app/_components/EventDates";
+import { Separator } from "@/components/ui/separator";
+import AddToCalendar from "@/app/_components/AddToCalendar";
+import ShareEventButton from "@/app/_components/ShareEventButton";
 
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   useWithBackButton({
@@ -86,20 +90,28 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.start_date,
       eventData.data?.end_date,
       eventData.data?.location,
-
     ]);
-    useEffect(() => {
-        console.log("************eventData", eventData)
-        console.log("initData", initData)
-        console.log("isStarted", isStarted)
-        console.log("isNotEnded", isNotEnded)
-        console.log("eventData.data?.dynamic_fields", eventData.data?.dynamic_fields)
-    }, [isStarted, isNotEnded, eventData.data?.dynamic_fields, initData]);
+  // useEffect(() => {
+  //   console.log("************eventData", eventData);
+  //   console.log("initData", initData);
+  //   console.log("isStarted", isStarted);
+  //   console.log("isNotEnded", isNotEnded);
+  //   console.log(
+  //     "eventData.data?.dynamic_fields",
+  //     eventData.data?.dynamic_fields
+  //   );
+  // }, [isStarted, isNotEnded, eventData.data?.dynamic_fields, initData]);
 
-  if (eventData.isError || !eventData.isSuccess){
-      console.error("Something_went_wrong" , eventData.isError , eventData.isSuccess , eventData.error , initData , eventData?.data)
+  if (eventData.isError || !eventData.isSuccess) {
+    console.error(
+      "Something_went_wrong",
+      eventData.isError,
+      eventData.isSuccess,
+      eventData.error,
+      initData,
+      eventData?.data
+    );
   }
-
 
   return eventData.isLoading || !initData ? (
     <EventPageLoadingSkeleton />
@@ -110,77 +122,100 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   ) : (
     <>
       <Images.Event url={eventData.data?.image_url!} />
-      <Labels.CampaignTitle
-        title={eventData.data?.title!}
-        className="mt-6"
-      />
-      <Labels.CampaignDescription
-        description={eventData.data?.subtitle!}
-        className="text-secondary text-[14px] mb-2"
-      />
-      {location ? (
-        success ? (
-          <Labels.WebsiteLink location={location} />
-        ) : (
-          <Labels.CampaignDescription
-            description={location}
-            className="text-secondary text-[14px] mb-2"
+      <div className={"p-2 "}>
+        <Labels.CampaignTitle
+          title={eventData.data?.title!}
+          className="my-2"
+        />
+        <Labels.CampaignDescription
+          description={eventData.data?.subtitle!}
+          className="text-secondary text-gray-400 my-2 "
+        />
+        <Separator className="bg-gray-700 my-2" />
+        {location && !success && (
+          <Labels.LocationPin
+            location={location}
+            className="text-secondary text-[14px] my-2"
           />
-        )
-      ) : null}
-      <Labels.CampaignDescription description={eventData.data?.description!} />
+        )}
+        <EventDates
+          startDate={startUTC}
+          endDate={endUTC}
+        />
+        <Separator className="bg-gray-700 my-2" />
+        <div className={"space-y-2 "}>
+          {location && success && <Labels.WebsiteLink location={location} />}
+          <div className="flex space-x-2">
+            <ShareEventButton event_uuid={eventHash} />
+            { isNotEnded && (
+            <AddToCalendar
+              startDate={startUTC}
+              endDate={endUTC}
+              title={eventData.data?.title!}
+              description={eventData.data?.subtitle!}
+            />
+            )}
+          </div>
+        </div>
 
-      {isStarted && isNotEnded && eventData.data?.dynamic_fields && initData ? (
-        (role !== "admin" || user?.user_id !== eventData.data.owner) ? (
-          <>
-            <Tasks.Wallet
-              initData={initData as string}
-              isWalletConnected={isWalletConnected}
-              setIsWalletConnected={setIsWalletConnected}
-            />
-            <AllTasks
-              // @ts-expect-error
-              tasks={eventData.data.dynamic_fields}
-              eventHash={eventHash}
-            />
+        <Separator className="bg-gray-700 my-2" />
+        <Labels.CampaignDescription
+          description={eventData.data?.description!}
+        />
+        <Separator className="bg-gray-700 my-2" />
+        {isStarted &&
+        isNotEnded &&
+        eventData.data?.dynamic_fields &&
+        initData ? (
+          role !== "admin" || user?.user_id !== eventData.data.owner ? (
+            <>
+              <Tasks.Wallet
+                initData={initData as string}
+                isWalletConnected={isWalletConnected}
+                setIsWalletConnected={setIsWalletConnected}
+              />
+              <AllTasks
+                // @ts-expect-error
+                tasks={eventData.data.dynamic_fields}
+                eventHash={eventHash}
+              />
               {isWalletConnected && (
                 <ClaimRewardButton
                   initData={initData as string}
                   eventId={eventData.data?.event_uuid as string}
                   isWalletConnected={isWalletConnected}
-
                 />
               )}
-
-          </>
-        ): (
-            <div>Organizer can't participate in the event</div>
-        )
-      ) : // if it was not ended than it means the event is not started yet
-      isNotEnded ? (
-        <EventNotStarted
-          title="Event is not started yet"
-          end_date={endUTC}
-          start_date={startUTC}
-        />
-      ) : (
-        <EventNotStarted
-          title="Event is ended already"
-          end_date={endUTC}
-          start_date={startUTC}
-        />
-      )}
-
-      {authorized &&
-        (role === "admin" || user?.user_id === eventData.data.owner) && (
-          <MainButton
-            text="Manage Event"
-            onClick={() => {
-              router.push(`/events/${eventHash}/edit`);
-            }}
+            </>
+          ) : (
+            <div>Organizer can&#39;t participate in the event</div>
+          )
+        ) : // if it was not ended than it means the event is not started yet
+        isNotEnded ? (
+          <EventNotStarted
+            title="Event is not started yet"
+            end_date={endUTC}
+            start_date={startUTC}
+          />
+        ) : (
+          <EventNotStarted
+            title="Event is ended already"
+            end_date={endUTC}
+            start_date={startUTC}
           />
         )}
-      <Buttons.Support />
+
+        {authorized &&
+          (role === "admin" || user?.user_id === eventData.data.owner) && (
+            <MainButton
+              text="Manage Event"
+              onClick={() => {
+                router.push(`/events/${eventHash}/edit`);
+              }}
+            />
+          )}
+        <Buttons.Support />
+      </div>
     </>
   );
 };

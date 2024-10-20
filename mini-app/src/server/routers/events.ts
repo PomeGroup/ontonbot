@@ -6,7 +6,7 @@ import {
   selectVisitorsWithWalletAddress,
 } from "@/server/db/visitors";
 import { hashPassword } from "@/lib/bcrypt";
-import { sendLogNotification } from "@/lib/tgBot";
+import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
@@ -26,7 +26,11 @@ import { and, desc, eq } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { getEventsWithFilters, selectEventByUuid } from "../db/events";
+import {
+  getEventByUuid,
+  getEventsWithFilters,
+  selectEventByUuid,
+} from "../db/events";
 import {
   selectVisitorsByEventUuid,
   updateVisitorLastVisit,
@@ -40,6 +44,7 @@ import {
 } from "../trpc";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import eventFieldsDB from "@/server/db/eventFields.db";
+import telegramService from "@/server/routers/services/telegramService";
 
 dotenv.config();
 
@@ -384,13 +389,12 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             eventId!
           );
 
-            const fieldsToDelete = currentFields.filter(
-                (field) =>
-                    !eventData.dynamic_fields.some(
-                        (newField) =>
-                            newField.id === field.id
-                    ) && field.title !== 'secret_phrase_onton_input'
-            );
+          const fieldsToDelete = currentFields.filter(
+            (field) =>
+              !eventData.dynamic_fields.some(
+                (newField) => newField.id === field.id
+              ) && field.title !== "secret_phrase_onton_input"
+          );
 
           for (const field of fieldsToDelete) {
             await eventFieldsDB.deleteEventFieldById(trx, field.id, eventId!);
@@ -406,7 +410,11 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               )
             )
             .execute();
-          if (hashedSecretPhrase  || (hashedSecretPhrase === undefined && oldEvent[0].ticketToCheckIn === false)) {
+          if (
+            hashedSecretPhrase ||
+            (hashedSecretPhrase === undefined &&
+              oldEvent[0].ticketToCheckIn === false)
+          ) {
             if (secretPhraseTask.length > 0) {
               // Update the existing secret phrase task
               await eventFieldsDB.updateEventFieldLog(
@@ -432,7 +440,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           for (const [index, field] of eventData.dynamic_fields
             .filter((f) => f.title !== "secret_phrase_onton_input")
             .entries()) {
-
             await eventFieldsDB.upsertEventField(
               trx,
               field,
@@ -498,7 +505,10 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
         });
       } catch (err) {
-        console.info(`update event id: ${opts.ctx.event.event_uuid}, error: `, err);
+        console.info(
+          `update event id: ${opts.ctx.event.event_uuid}, error: `,
+          err
+        );
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to update event ${opts.ctx.event.event_uuid}`,
@@ -553,6 +563,52 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       }
     }
   ),
+  // private
+  requestShareEvent: initDataProtectedProcedure
+    .input(
+      z.object({
+        eventUuid: z.string(), // Accept only the event UUID
+        platform: z.string().optional(), // Optional platform (e.g., "telegram", "twitter")
+      })
+    )
+    .mutation(async (opts) => {
+      try {
+        const { eventUuid } = opts.input;
+
+        // Step 1: Fetch the event data by UUID
+        const event = await getEventByUuid(eventUuid);
+
+        if (!event) {
+          return { status: "fail", data: "Event not found" };
+        }
+
+        const { event_uuid } = event;
+        // Step 2: Make the request to share the event
+        const result = await telegramService.shareEventRequest(
+          opts.ctx.user.user_id.toString(),
+          event_uuid.toString()
+        );
+
+        if (result.success) {
+          console.log("Event shared successfully:", result.data);
+           return { status: "success", data: null };
+        } else {
+          console.error("Failed to share the event:", result.error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to share the event",
+            cause: result.error,
+          });
+          }
+      } catch (error) {
+        console.error("Error while sharing event: ", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to share the event",
+          cause: error,
+        });
+      }
+    }),
 
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(
