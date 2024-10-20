@@ -16,7 +16,7 @@ const SupportButton = () => {
         webApp?.openTelegramLink("https://t.me/ontonsupport");
       }}
     >
-      Support
+      Open Support Chat
       <MessageSquare className="w-[14px] text-secondary ml-1" />
     </div>
   );

@@ -28,6 +28,7 @@ const EventNotStarted = ({
         setGifSrc("/eyes_last.png");
       }, 4000);
     }
+
     setTimeout(() => {
       setGifSrc("/eyes_last.png");
     }, 4000);
@@ -38,6 +39,7 @@ const EventNotStarted = ({
 
   return (
     <div className="w-full flex items-center flex-col text-center py-6 space-y-4">
+      <h1 className="font-semibold text-2xl">{title}</h1>
       <Image
         ref={gifRef}
         alt="eyes"
@@ -45,17 +47,6 @@ const EventNotStarted = ({
         width={100}
         height={100}
       />
-
-      <h1 className="font-semibold text-2xl">{title}</h1>
-      <div className="text-xs text-center text-muted-foreground">
-        <div>
-          Event starts at <time className="font-medium">{startDate}</time>
-        </div>
-        and
-        <div>
-          Ends at <time className="font-medium">{endDate}</time>
-        </div>
-      </div>
     </div>
   );
 };

@@ -102,57 +102,84 @@ export const handleFileSend = async (req: Request, res: Response) => {
 };
 
 export const handleShareEvent = async (
-  req: Request & {
-    bot: Telegraf<Context<Update>>;
-  },
-  res: Response,
+    req: Request & {
+      bot: Telegraf<Context<Update>>;
+    },
+    res: Response
 ) => {
-  const { id, user_id, url } = req.body;
+  const { id, user_id, url, share_link, custom_button } = req.body;
 
-  if (
-    typeof id === "string" &&
-    typeof user_id === "string" &&
-    typeof url === "string"
-  ) {
+  if (typeof id === "string" && typeof user_id === "string" && typeof url === "string" && typeof share_link === "string") {
     try {
       const event = await getEvent(id);
-      await req.bot.telegram.sendPhoto(
-        parseInt(user_id),
-        {
-          url: event.image_url,
-        },
-        {
-          caption: `
-<b>${event.title}</b>
-${event.subtitle}
-Link: ${url}
-`,
-          parse_mode: "HTML",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "Buy Ticket",
-                  web_app: { url },
-                },
-              ],
-            ],
+      console.log("event", event.title);
+      console.log("id", id, "user_id", user_id, "url", url, event.image_url);
+
+      // Ensure that start_date and end_date are numbers
+      const startDateInSeconds = Number(event.start_date);
+      const endDateInSeconds = Number(event.end_date);
+
+      if (isNaN(startDateInSeconds) || isNaN(endDateInSeconds)) {
+        throw new Error("Invalid date values.");
+      }
+
+      // Convert start and end dates from seconds to Date format
+      const startDate = new Date(startDateInSeconds * 1000).toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      const endDate = new Date(endDateInSeconds * 1000).toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      // Determine the custom button, default to "Buy Ticket" button if none is provided
+      const defaultButton = { text: "Buy Ticket", web_app: { url } };
+      const customButton = custom_button || defaultButton;
+
+        await req.bot.telegram.sendPhoto(
+          parseInt(user_id),
+          {
+            url: event.image_url,
           },
-        },
+          {
+            caption: `
+📄 <b>${event.title}</b>
+▫️ <i>${event.subtitle}</i>
+
+🗓 Starts at: ${startDate}
+🗓 Ends at: ${endDate}
+
+🔗 Link: ${share_link}
+`,
+            parse_mode: "HTML",
+            reply_markup: {
+              inline_keyboard: [[customButton]], // Use the custom button or default
+            },
+          }
       );
+
 
       res.json(event);
     } catch (error) {
       console.log(error);
-
-      res.status(404);
-      res.json({ message: "event not found" });
+      res.status(404).json({ message: "Event not found" });
     }
   } else {
-    res.status(400);
-    res.json({ message: "invalid query id" });
+    res.status(400).json({ message: "Invalid query id" });
   }
 };
+
+
+
+
 
 interface SendRewardLinkBody {
   chat_id: number;
@@ -213,7 +240,7 @@ export async function sendMessage(
   } catch (error) {
     if (error instanceof TelegramError && error.code === 429 && tryCount < 10) {
       console.error("TELEGRAF_ERROR: 429", error);
-      
+
       // wait 1000
       await new Promise((resolve) => setTimeout(resolve, 1000));
       await sendMessage(req, res, tryCount ? tryCount + 1 : 1);
