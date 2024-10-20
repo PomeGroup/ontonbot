@@ -22,8 +22,11 @@ const CACHE_TTL = 40_000;
 
 async function cronJobRunner() {
   if (process.env.ENV?.toLocaleLowerCase() !== "production") {
+    console.info("RUNNING Cron jobs on", process.env.ENV);
     await createRewards(() => null);
+    console.info("RUNNING Cron jobs: createRewards done");
     await notifyUsersForRewards(() => null);
+    console.info("RUNNING Cron jobs: notifyUsersForRewards done");
   }
 
   // Create Rewards Cron Job
