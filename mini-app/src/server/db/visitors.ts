@@ -239,16 +239,14 @@ export const selectVisitorsByEventUuid = async (
     userDataQuery = userDataQuery.limit(limit);
   }
 
-  if (typeof cursor === "number") {
     userDataQuery = userDataQuery.offset(cursor);
-  }
 
   const visitorsData = await userDataQuery.execute();
 
   const moreRecordsAvailable =
     typeof limit === "number" ? visitorsData.length === limit : false;
   const nextCursor =
-    moreRecordsAvailable && typeof cursor === "number" ? cursor + limit! : null;
+    moreRecordsAvailable && true ? cursor + limit! : null;
   if (!dynamic_fields) {
     return {
       visitorsWithDynamicFields: null,
@@ -372,3 +370,17 @@ export const findVisitorById = async (visitor_id: number) => {
     },
   });
 };
+
+export const visitorsDB = {
+    findVisitorByUserAndEvent,
+    findVisitorByUserAndEventUuid,
+    findVisitorById,
+    selectVisitorsByEventUuid,
+    selectVisitorsByEventUuidMock,
+    selectValidVisitorById,
+    selectVisitorsWithWalletAddress,
+    updateVisitorLastVisit,
+    getVisitor,
+    addVisitor,
+    };
+export default visitorsDB;

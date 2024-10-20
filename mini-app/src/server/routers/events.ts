@@ -6,7 +6,7 @@ import {
   selectVisitorsWithWalletAddress,
 } from "@/server/db/visitors";
 import { hashPassword } from "@/lib/bcrypt";
-import { sendLogNotification } from "@/lib/tgBot";
+import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
@@ -26,7 +26,11 @@ import { and, desc, eq } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { getEventsWithFilters, selectEventByUuid } from "../db/events";
+import {
+  getEventByUuid,
+  getEventsWithFilters,
+  selectEventByUuid,
+} from "../db/events";
 import {
   selectVisitorsByEventUuid,
   updateVisitorLastVisit,
@@ -39,6 +43,8 @@ import {
   router,
 } from "../trpc";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
+import eventFieldsDB from "@/server/db/eventFields.db";
+import telegramService from "@/server/routers/services/telegramService";
 
 dotenv.config();
 
@@ -71,7 +77,7 @@ export const eventsRouter = router({
       } catch (error) {
         console.error("Error at updating visitor", error);
       }
-
+      console.log("event_uuid", opts.input.event_uuid);
       return selectEventByUuid(opts.input.event_uuid);
     }),
 
@@ -161,9 +167,10 @@ export const eventsRouter = router({
             })
             .returning();
 
+          // Insert dynamic fields
           for (let i = 0; i < opts.input.eventData.dynamic_fields.length; i++) {
             const field = opts.input.eventData.dynamic_fields[i];
-            await trx.insert(eventFields).values({
+            await eventFieldsDB.insertEventField(trx, {
               emoji: field.emoji,
               title: field.title,
               description: field.description,
@@ -176,20 +183,18 @@ export const eventsRouter = router({
             });
           }
 
+          // Insert secret phrase field if applicable
           if (inputSecretPhrase) {
-            await trx
-              .insert(eventFields)
-              .values({
-                emoji: "🔒",
-                title: "secret_phrase_onton_input",
-                description: "Enter the event password",
-                placeholder: "Enter the event password",
-                type: "input",
-                order_place: opts.input.eventData.dynamic_fields.length,
-                event_id: newEvent[0].event_id,
-                updatedBy: opts.ctx.user.user_id.toString(),
-              })
-              .execute();
+            await eventFieldsDB.insertEventField(trx, {
+              emoji: "🔒",
+              title: "secret_phrase_onton_input",
+              description: "Enter the event password",
+              placeholder: "Enter the event password",
+              type: "input",
+              order_place: opts.input.eventData.dynamic_fields.length,
+              event_id: newEvent[0].event_id,
+              updatedBy: opts.ctx.user.user_id.toString(),
+            });
           }
 
           const additional_info = z
@@ -379,24 +384,20 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             .returning()
             .execute();
 
-          const currentFields = await trx
-            .select()
-            .from(eventFields)
-            .where(eq(eventFields.event_id, eventId!))
-            .execute();
+          const currentFields = await eventFieldsDB.selectEventFieldsByEventId(
+            trx,
+            eventId!
+          );
 
           const fieldsToDelete = currentFields.filter(
             (field) =>
               !eventData.dynamic_fields.some(
                 (newField) => newField.id === field.id
-              )
+              ) && field.title !== "secret_phrase_onton_input"
           );
 
           for (const field of fieldsToDelete) {
-            await trx
-              .delete(eventFields)
-              .where(eq(eventFields.id, field.id))
-              .execute();
+            await eventFieldsDB.deleteEventFieldById(trx, field.id, eventId!);
           }
 
           const secretPhraseTask = await trx
@@ -410,67 +411,44 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             )
             .execute();
 
-          if (hashedSecretPhrase) {
-            if (secretPhraseTask.length) {
-              await trx
-                .update(eventFields)
-                .set({
-                  updatedBy: opts.ctx.user.user_id.toString(),
-                  updatedAt: new Date(),
-                })
-                .where(eq(eventFields.id, secretPhraseTask[0].id))
-                .execute();
+          if (
+            hashedSecretPhrase ||
+            (hashedSecretPhrase === undefined &&
+              oldEvent[0].ticketToCheckIn === false)
+          ) {
+
+            if (secretPhraseTask.length > 0) {
+              // Update the existing secret phrase task
+              await eventFieldsDB.updateEventFieldLog(
+                trx,
+                secretPhraseTask[0].id,
+                opts.ctx.user.user_id.toString()
+              );
             } else {
-              await trx
-                .insert(eventFields)
-                .values({
-                  emoji: "🔒",
-                  title: "secret_phrase_onton_input",
-                  description: "Enter the event password",
-                  placeholder: "Enter the event password",
-                  type: "input",
-                  order_place: eventData.dynamic_fields.length,
-                  event_id: eventId,
-                  updatedAt: new Date(),
-                })
-                .execute();
+              // Insert a new secret phrase task
+              await eventFieldsDB.insertEventField(trx, {
+                emoji: "🔒",
+                title: "secret_phrase_onton_input",
+                description: "Enter the event password",
+                placeholder: "Enter the event password",
+                type: "input",
+                order_place: eventData.dynamic_fields.length,
+                event_id: eventId,
+                updatedBy: opts.ctx.user.user_id.toString(),
+              });
             }
           }
 
           for (const [index, field] of eventData.dynamic_fields
             .filter((f) => f.title !== "secret_phrase_onton_input")
             .entries()) {
-            if (field.id) {
-              await trx
-                .update(eventFields)
-                .set({
-                  emoji: field.emoji,
-                  title: field.title,
-                  description: field.description,
-                  placeholder:
-                    field.type === "button" ? field.url : field.placeholder,
-                  type: field.type,
-                  order_place: index,
-                  updatedBy: opts.ctx.user.user_id.toString(),
-                  updatedAt: new Date(),
-                })
-                .where(eq(eventFields.id, field.id))
-                .execute();
-            } else {
-              await trx
-                .insert(eventFields)
-                .values({
-                  emoji: field.emoji,
-                  title: field.title,
-                  description: field.description,
-                  placeholder:
-                    field.type === "button" ? field.url : field.placeholder,
-                  type: field.type,
-                  order_place: index,
-                  event_id: eventId,
-                })
-                .execute();
-            }
+            await eventFieldsDB.upsertEventField(
+              trx,
+              field,
+              index,
+              opts.ctx.user.user_id.toString(),
+              eventId
+            );
           }
 
           const additional_info = z.string().url().safeParse(eventData).success
@@ -529,7 +507,12 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
         });
       } catch (err) {
-        console.info(`event id: ${opts.ctx.event.event_uuid}, error: `, err);
+
+        console.info(
+          `update event id: ${opts.ctx.event.event_uuid}, error: `,
+          err
+        );
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to update event ${opts.ctx.event.event_uuid}`,
@@ -584,6 +567,52 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       }
     }
   ),
+  // private
+  requestShareEvent: initDataProtectedProcedure
+    .input(
+      z.object({
+        eventUuid: z.string(), // Accept only the event UUID
+        platform: z.string().optional(), // Optional platform (e.g., "telegram", "twitter")
+      })
+    )
+    .mutation(async (opts) => {
+      try {
+        const { eventUuid } = opts.input;
+
+        // Step 1: Fetch the event data by UUID
+        const event = await getEventByUuid(eventUuid);
+
+        if (!event) {
+          return { status: "fail", data: "Event not found" };
+        }
+
+        const { event_uuid } = event;
+        // Step 2: Make the request to share the event
+        const result = await telegramService.shareEventRequest(
+          opts.ctx.user.user_id.toString(),
+          event_uuid.toString()
+        );
+
+        if (result.success) {
+          console.log("Event shared successfully:", result.data);
+           return { status: "success", data: null };
+        } else {
+          console.error("Failed to share the event:", result.error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to share the event",
+            cause: result.error,
+          });
+          }
+      } catch (error) {
+        console.error("Error while sharing event: ", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to share the event",
+          cause: error,
+        });
+      }
+    }),
 
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(

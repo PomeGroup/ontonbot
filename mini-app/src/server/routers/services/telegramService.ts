@@ -1,6 +1,7 @@
-import { EventTypeSecure, RewardType, VisitorsType } from "@/types/event.types";
 import { sendTelegramMessage } from "@/lib/tgBot";
+import { EventTypeSecure, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
+import axios from "axios";
 
 // Send reward notification to visitors
 export const sendRewardNotification = async (
@@ -107,12 +108,51 @@ export const sendTelegramMessageNoLink = async (
     };
   }
 };
+
+export const shareEventRequest = async (
+  user_id: string,
+  event_uuid: string
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+  const share_link = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`;
+  const event_url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/events/${event_uuid}`;
+
+  try {
+    const response = await axios.post("http://telegram-bot:3333/share-event", {
+      user_id: user_id,
+      id: event_uuid,
+      share_link: share_link,
+      url: event_url,
+      custom_button: {
+        text: "Open the Event",
+        web_app: {
+          url: event_url, // Ensure web_app is an object
+        },
+      },
+    });
+
+    // Return success response
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error("Error sharing event: ", error);
+
+    // Return error response with appropriate message
+    return {
+      success: false,
+      error: (error as Error).message || "An unexpected error occurred",
+    };
+  }
+};
+
 /****** export telegramService ******/
 
 const tgService = {
   sendRewardNotification, // send reward notification to visitors
   sendCode, // send OTP code
   sendTelegramMessageNoLink, // send Telegram message without link
+  shareEventRequest, // share event request
 };
 
 export default tgService;

@@ -126,6 +126,8 @@ export async function getEvent(uuid: string) {
     description: string
     subtitle: string
     image_url: string
+    start_date: string
+    end_date: string
   }
 
   try {

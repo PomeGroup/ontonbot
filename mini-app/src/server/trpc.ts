@@ -10,7 +10,7 @@ export const router = t.router;
 
 export const publicProcedure = t.procedure;
 
-// protected using initdata
+// protected using initData
 export const initDataProtectedProcedure = t.procedure
   .input(z.object({ init_data: z.string() }))
   .use(async (opts) => {
@@ -32,12 +32,11 @@ export const initDataProtectedProcedure = t.procedure
       });
     }
 
-    const user = await usersDB.selectUserById(initDataJson.user.id);
-
+    const user = await usersDB.insertUser(initDataJson);
     if (!user) {
       throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "user not found while authentication",
+        code: "UNPROCESSABLE_CONTENT",
+        message: "could not create or get user",
       });
     }
 
@@ -53,7 +52,7 @@ export const adminOrganizerProtectedProcedure = initDataProtectedProcedure.use(
   (opts) => {
     if (opts.ctx.user.role !== "admin" && opts.ctx.user.role !== "organizer") {
       throw new TRPCError({
-        code: "UNAUTHORIZED",
+        code: "FORBIDDEN",
         message: "Unauthorized access, invalid role",
       });
     }

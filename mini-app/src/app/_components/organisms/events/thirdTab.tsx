@@ -224,6 +224,9 @@ export const ThirdStep = () => {
             )}
           </div>
           <AlertGeneric variant="info">
+            Password is in-case sensitive and must be at least 4 characters
+          </AlertGeneric>
+          <AlertGeneric variant="info">
             By setting a password for the event, you can prevent checking-in
             unexpectedly and receiving a reward without attending the event.
           </AlertGeneric>

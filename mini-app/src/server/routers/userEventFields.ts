@@ -1,12 +1,11 @@
-import { db } from "@/db/db";
-import { eventFields, events, userEventFields } from "@/db/schema";
-import { comparePassword } from "@/lib/bcrypt";
-import { validateMiniAppData } from "@/utils";
+import bcryptLib from "@/lib/bcrypt";
 import { TRPCError } from "@trpc/server";
 import { TRPC_ERROR_CODES_BY_NUMBER } from "@trpc/server/http";
-import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
+import { initDataProtectedProcedure,  router } from "../trpc";
+import userEventFieldsDB from "@/server/db/userEventFields.db";
+import { getEventById } from "@/server/db/events";
+import eventFieldsDB from "@/server/db/eventFields.db";
 
 export const userEventFieldsRouter = router({
   // protect
@@ -19,20 +18,16 @@ export const userEventFieldsRouter = router({
       })
     )
     .mutation(async (opts) => {
-      const eventData = await db
-        .select()
-        .from(events)
-        .where(and(eq(events.event_id, opts.input.event_id)))
-        .execute();
+      const eventData = await getEventById(opts.input.event_id);
 
-      if (eventData.length === 0) {
+      if (eventData === null) {
         throw new TRPCError({
           message: "Event not found",
           code: "BAD_REQUEST",
         });
       }
-      const startDate = Number(eventData[0].start_date) * 1000;
-      const endDate = Number(eventData[0].end_date) * 1000;
+      const startDate = Number(eventData.start_date) * 1000;
+      const endDate = Number(eventData.end_date) * 1000;
 
       if (Date.now() < startDate || Date.now() > endDate) {
         throw new TRPCError({
@@ -41,11 +36,9 @@ export const userEventFieldsRouter = router({
         });
       }
 
-      const inputField = await db
-        .select()
-        .from(eventFields)
-        .where(and(eq(eventFields.id, opts.input.field_id)))
-        .execute();
+      const inputField = await eventFieldsDB.getEventFields(
+        opts.input.field_id
+      );
 
       if (inputField.length === 0) {
         throw new TRPCError({
@@ -53,13 +46,13 @@ export const userEventFieldsRouter = router({
           code: "BAD_REQUEST",
         });
       }
-
+      // @todo: What will happen if there was more than one field with the same id?
       const correctSecretPhrase =
         inputField[0].title === "secret_phrase_onton_input" &&
-        eventData[0].secret_phrase
-          ? await comparePassword(
+        eventData.secret_phrase
+          ? await bcryptLib.comparePassword(
               opts.input.data.trim().toLowerCase(),
-              eventData[0].secret_phrase
+              eventData.secret_phrase
             )
           : true;
 
@@ -69,79 +62,33 @@ export const userEventFieldsRouter = router({
           code: TRPC_ERROR_CODES_BY_NUMBER["-32003"],
         });
       }
+      bcryptLib
+        .hashPassword(opts.input.data.trim().toLowerCase())
+        .then((hash) => {
 
-      const res = await db
-        .insert(userEventFields)
-        .values({
-          user_id: opts.ctx.user.user_id,
-          event_id: opts.input.event_id,
-          event_field_id: opts.input.field_id,
-          data: opts.input.data,
-          completed: true,
-          created_at: new Date(),
-          updatedBy: opts.ctx.user.user_id.toString(),
-        })
-        .onConflictDoUpdate({
-          target: [userEventFields.user_id, userEventFields.event_field_id],
-          set: {
-            data: opts.input.data,
-            completed: true,
-            updatedAt: new Date(),
-          },
-        })
-        .returning()
-        .execute();
-
-      return res;
+          return userEventFieldsDB.upsertUserEventFields(
+            opts.ctx.user.user_id,
+            opts.input.event_id,
+            opts.input.field_id,
+            hash
+          );
+        });
     }),
 
   // protect
-  getUserEventFields: publicProcedure
+  getUserEventFields: initDataProtectedProcedure
     .input(
       z.object({
-        initData: z.string().optional(),
         event_hash: z.string(),
       })
     )
     .query(async (opts) => {
-      try {
-        if (!opts.input.initData) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "initData is required",
-          });
-        }
 
-        const { valid, initDataJson } = validateMiniAppData(
-          opts.input.initData
-        );
-
-        if (!valid) {
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Unauthorized access or invalid role",
-          });
-        }
-
-        const userEventFieldsResult = await db
-          .select({
-            eventFieldId: userEventFields.event_field_id,
-            userData: userEventFields.data,
-            completed: userEventFields.completed,
-            createdAt: userEventFields.created_at,
-            // Add other fields from userEventFields as necessary
-          })
-          .from(events)
-          .innerJoin(eventFields, eq(eventFields.event_id, events.event_id))
-          .leftJoin(
-            userEventFields,
-            and(
-              eq(userEventFields.event_field_id, eventFields.id),
-              eq(userEventFields.user_id, initDataJson.user.id)
-            )
-          )
-          .where(eq(events.event_uuid, opts.input.event_hash))
-          .execute();
+        try {
+        const userEventFieldsResult = await userEventFieldsDB.getSecureUserEventFields(
+            opts.ctx.user.user_id,
+            opts.input.event_hash
+            );
 
         if (!userEventFieldsResult || userEventFieldsResult.length === 0) {
           return {};
@@ -153,7 +100,7 @@ export const userEventFieldsRouter = router({
           data[field.eventFieldId ?? "unknown"] = {
             id: field.eventFieldId ?? "unknown",
             event_field_id: field.eventFieldId ?? "unknown",
-            user_id: initDataJson.user.id,
+            user_id: opts.ctx.user.user_id,
             data: field.userData ?? null,
             completed: field.completed ?? false,
             created_at: field.createdAt ?? null,

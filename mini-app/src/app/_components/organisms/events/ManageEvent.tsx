@@ -4,7 +4,7 @@ import { type RouterOutput } from "@/server";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import Stepper from "../../molecules/stepper";
-import { useCreateEventStore } from "../../../../zustand/createEventStore";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 import { FirstStep } from "./firstTab";
 import { SecondStep } from "./secondTab";
 import { ThirdStep } from "./thirdTab";

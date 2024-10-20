@@ -4,7 +4,7 @@ import {
   event_details_search_list,
   eventFields,
   events,
-  rewards,
+  rewards, tickets,
   users,
   visitors,
 } from "@/db/schema";
@@ -178,9 +178,20 @@ export const getUserEvents = async (
     .from(events)
     .innerJoin(users, eq(events.owner, users.user_id))
     .where(and(eq(users.user_id, userId!), eq(users.role, "organizer")));
-
+  // add paid event to the user events as guest
+  const ticketsQuery = db
+    .select({
+      event_uuid: tickets.event_uuid,
+      user_id: tickets.user_id,
+      role: sql<string>`'participant'`.as("role"),
+      created_at: tickets.created_at,
+    })
+    .from(tickets)
+    .where(eq(tickets.user_id, userId!));
+console.log("rewardQuery",ticketsQuery.toSQL().sql);
   // Use unionAll to combine the results, apply orderBy, limit, and offset
-  const combinedResultsQuery = unionAll(rewardQuery, eventQuery)
+  //@ts-ignore
+  const combinedResultsQuery = unionAll(rewardQuery, eventQuery,ticketsQuery)
     .orderBy((row) => row.created_at)
     .limit(limit !== null ? limit : 100)
     .offset(offset !== null ? offset : 0);
@@ -189,9 +200,9 @@ export const getUserEvents = async (
   return await combinedResultsQuery.execute();
 };
 export const getOrganizerEvents = async (
-    organizerId: number,
-    limit?: number,  // Optional limit
-    offset?: number  // Optional offset
+  organizerId: number,
+  limit?: number, // Optional limit
+  offset?: number // Optional offset
 ) => {
   // Set a high limit if none is provided to simulate "no limit"
   const finalLimit = limit !== undefined ? limit : Number.MAX_SAFE_INTEGER;
@@ -242,14 +253,12 @@ export const getEventsWithFilters = async (
     const tenMinutesInMs = 10000; // 10 minutes in milliseconds
     filter.startDate =
       Math.floor(filter.startDate / tenMinutesInMs) * tenMinutesInMs;
-    //console.log("sssssssssssssssssss " , filter.startDate);
   }
   if (filter?.endDate) {
     const tenMinutesInMs = 10000; // 10 minutes in milliseconds
     filter.endDate =
       Math.round(filter.endDate / tenMinutesInMs) * tenMinutesInMs;
   }
-  //console.log("*****params search: ", params);
   const stringToHash = JSON.stringify({
     limit,
     offset,
@@ -264,11 +273,11 @@ export const getEventsWithFilters = async (
   // console.log("string",stringToHash);
   //console.log("hash",hash);
   const cachedResult = await redisTools.getCache(cacheKey);
-  if (cachedResult) {
-    /// show return from cache and time
-    //  console.log("👙👙 cachedResult 👙👙" + Date.now());
-    return cachedResult;
-  }
+  // if (cachedResult) {
+  //   /// show return from cache and time
+  //   //  console.log("👙👙 cachedResult 👙👙" + Date.now());
+  //   return cachedResult;
+  // }
 
   let query = db.select().from(event_details_search_list);
   let userEventUuids = [];
@@ -337,9 +346,9 @@ export const getEventsWithFilters = async (
   // Apply event_uuids filter
   if (filter?.event_uuids && filter.event_uuids.length) {
     const validEventUuids = filter.event_uuids.filter(
-      (uuid) => uuid !== null && uuid !== undefined
+      (uuid) => uuid !== null && uuid !== undefined && uuid.length === 36
     );
-
+    console.log("validEventUuids", validEventUuids);
     if (validEventUuids.length) {
       conditions.push(
         inArray(event_details_search_list.eventUuid, validEventUuids)
@@ -404,12 +413,11 @@ export const getEventsWithFilters = async (
     // @ts-expect-error
     query = query.limit(limit).offset(offset);
   }
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);//logSQLQuery(query.toSQL().sql, query.toSQL().params);
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
-  const eventsData = await query.execute();
-  // console.log(eventsData);
 
-  await redisTools.setCache(cacheKey, eventsData, 60);
+  logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  const eventsData = await query.execute();
+
+  await redisTools.setCache(cacheKey, eventsData, redisTools.cacheLvl.guard);
   return eventsData;
 };
 
@@ -431,4 +439,14 @@ export const getEventByUuid = async (
   // remove the secret_phrase from the response
   const { secret_phrase, ...restEvent } = event[0];
   return removeSecret ? restEvent : event[0];
+};
+
+export const getEventById = async (eventId: number) => {
+  const event = await db
+    .select()
+    .from(events)
+    .where(eq(events.event_id, eventId))
+    .execute();
+
+  return event === undefined || event.length === 0 ? null : event[0];
 };

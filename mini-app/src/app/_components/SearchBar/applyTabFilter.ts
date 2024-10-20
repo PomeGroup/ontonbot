@@ -13,7 +13,8 @@ const applyTabFilter = (tabValue: string, userId: number | undefined) => {
     setUserId,
     setSortBy,
   } = useSearchEventsStore.getState(); // Access Zustand store methods
-
+  // const store = useSearchEventsStore.getState();
+  // let newState = { ...store.searchInput };
   // Apply filter logic based on the tab value
   switch (tabValue) {
     case "Upcoming":
@@ -57,6 +58,9 @@ const applyTabFilter = (tabValue: string, userId: number | undefined) => {
       if (!searchInput.sortBy) setSortBy("start_date_desc"); // Default sort order for all events
       break;
   }
+  // store.setSearchInput(newState);
+
+  // return newState;
 };
 
 export default applyTabFilter;

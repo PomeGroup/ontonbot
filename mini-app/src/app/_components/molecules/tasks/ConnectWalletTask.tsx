@@ -4,11 +4,16 @@ import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { Address } from "@ton/core";
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import Tasks from ".";
+import { boolean } from "drizzle-orm/pg-core";
 
-const ConnectWalletTask = () => {
-  const WebApp = useWebApp();
+const ConnectWalletTask = (props: {
+  initData: string;
+  isWalletConnected: boolean | undefined;
+  setIsWalletConnected: (_isWalletConnected: boolean) => void;
+}) => {
+  const { isWalletConnected, setIsWalletConnected } = props;
   const wallet = useTonWallet();
   const [tonConnectUI] = useTonConnectUI();
   const trpcUtils = trpc.useUtils();
@@ -22,18 +27,18 @@ const ConnectWalletTask = () => {
 
   const userAddress = trpc.users.getWallet.useQuery(
     {
-      init_data: WebApp?.initData!,
+      init_data: props.initData,
       wallet_address: wallet?.account.address!,
     },
     {
       queryKey: [
         "users.getWallet",
         {
-          init_data: WebApp?.initData!,
+          init_data: props.initData!,
           wallet_address: wallet?.account.address!,
         },
       ],
-      enabled: Boolean(WebApp?.initData) && Boolean(wallet?.account.address),
+      enabled: !!boolean(props.initData) && Boolean(wallet?.account.address),
       retry: false,
     }
   );
@@ -46,10 +51,6 @@ const ConnectWalletTask = () => {
       return Address.parse(userAddress.data).toString({ bounceable: false });
     }
   }, [userAddress.data]);
-
-  const [isWalletConnected, setIsWalletConnected] = useState<
-    boolean | undefined
-  >(undefined);
 
   useEffect(() => {
     try {

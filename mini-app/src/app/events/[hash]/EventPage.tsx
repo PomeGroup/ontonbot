@@ -1,6 +1,5 @@
 "use client";
 
-import AddVisitorWrapper from "@/app/_components/AddVisitorWrapper";
 import { ClaimRewardButton } from "@/app/_components/ClaimRewardButton";
 import EventNotStarted from "@/app/_components/EventNotStarted";
 import AllTasks from "@/app/_components/Tasks";
@@ -14,9 +13,14 @@ import { trpc } from "@/app/_trpc/client";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import zod from "zod";
 import EventPageLoadingSkeleton from "./loading";
+import EventDates from "@/app/_components/EventDates";
+import { Separator } from "@/components/ui/separator";
+import AddToCalendar from "@/app/_components/AddToCalendar";
+import ShareEventButton from "@/app/_components/ShareEventButton";
+
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   useWithBackButton({
     whereTo: "/",
@@ -25,19 +29,36 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   const webApp = useWebApp();
   const { role, authorized, user } = useAuth();
   const router = useRouter();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initData, setInitData] = useState<string>("");
+  const [isWalletConnected, setIsWalletConnected] = useState<
+    boolean | undefined
+  >(undefined);
+  useEffect(() => {
+    if (webApp?.initData && !isInitialized) {
+      setInitData(webApp.initData);
+      setIsInitialized(true);
+    }
+  }, [webApp?.initData, isInitialized]);
+
   const eventData = trpc.events.getEvent.useQuery(
     {
       event_uuid: eventHash,
-      init_data: webApp?.initData || "",
+      init_data: initData,
     },
     {
       queryKey: [
         "events.getEvent",
-        { event_uuid: eventHash, init_data: webApp?.initData || "" },
+        { event_uuid: eventHash, init_data: initData },
       ],
-      enabled: Boolean(webApp?.initData),
+      enabled: Boolean(initData),
     }
   );
+  useEffect(() => {
+    if (eventData.data) {
+      console.log("eventHash", eventData);
+    }
+  }, [eventData]);
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {
@@ -70,73 +91,131 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
       eventData.data?.end_date,
       eventData.data?.location,
     ]);
+  // useEffect(() => {
+  //   console.log("************eventData", eventData);
+  //   console.log("initData", initData);
+  //   console.log("isStarted", isStarted);
+  //   console.log("isNotEnded", isNotEnded);
+  //   console.log(
+  //     "eventData.data?.dynamic_fields",
+  //     eventData.data?.dynamic_fields
+  //   );
+  // }, [isStarted, isNotEnded, eventData.data?.dynamic_fields, initData]);
 
-  return eventData.isLoading ? (
+  if (eventData.isError || !eventData.isSuccess) {
+    console.error(
+      "Something_went_wrong",
+      eventData.isError,
+      eventData.isSuccess,
+      eventData.error,
+      initData,
+      eventData?.data
+    );
+  }
+
+  return eventData.isLoading || !initData ? (
     <EventPageLoadingSkeleton />
   ) : eventData.isError || !eventData.isSuccess ? (
     <div>Something went wrong...</div>
   ) : eventData.data === null ? (
     <div>Event Not Found</div>
   ) : (
-    <AddVisitorWrapper hash={eventHash}>
+    <>
       <Images.Event url={eventData.data?.image_url!} />
-      <Labels.CampaignTitle
-        title={eventData.data?.title!}
-        className="mt-6"
-      />
-      <Labels.CampaignDescription
-        description={eventData.data?.subtitle!}
-        className="text-secondary text-[14px] mb-2"
-      />
-      {location ? (
-        success ? (
-          <Labels.WebsiteLink location={location} />
-        ) : (
-          <Labels.CampaignDescription
-            description={location}
-            className="text-secondary text-[14px] mb-2"
-          />
-        )
-      ) : null}
-      <Labels.CampaignDescription description={eventData.data?.description!} />
-
-      {isStarted && isNotEnded && eventData.data?.dynamic_fields ? (
-        (role !== "admin" || user?.user_id !== eventData.data.owner) && (
-          <>
-            <Tasks.Wallet />
-            <AllTasks
-              // @ts-expect-error
-              tasks={eventData.data.dynamic_fields}
-              eventHash={eventHash}
-            />
-            <ClaimRewardButton eventId={eventData.data?.event_uuid as string} />
-          </>
-        )
-      ) : // if it was not ended than it means the event is not started yet
-      isNotEnded ? (
-        <EventNotStarted
-          title="Event is not started yet"
-          end_date={endUTC}
-          start_date={startUTC}
+      <div className={"p-2 "}>
+        <Labels.CampaignTitle
+          title={eventData.data?.title!}
+          className="my-2"
         />
-      ) : (
-        <EventNotStarted
-          title="Event is ended already"
-          end_date={endUTC}
-          start_date={startUTC}
+        <Labels.CampaignDescription
+          description={eventData.data?.subtitle!}
+          className="text-secondary text-gray-400 my-2 "
         />
-      )}
-
-      {authorized &&
-        (role === "admin" || user?.user_id === eventData.data.owner) && (
-          <MainButton
-            text="Manage Event"
-            onClick={() => {
-              router.push(`/events/${eventHash}/edit`);
-            }}
+        <Separator className="bg-gray-700 my-2" />
+        {location && !success && (
+          <Labels.LocationPin
+            location={location}
+            className="text-secondary text-[14px] my-2"
           />
         )}
-      <Buttons.Support />
-    </AddVisitorWrapper>
+        <EventDates
+          startDate={startUTC}
+          endDate={endUTC}
+        />
+        <Separator className="bg-gray-700 my-2" />
+        <div className={"space-y-2 "}>
+          {location && success && <Labels.WebsiteLink location={location} />}
+          <div className="flex space-x-2">
+            <ShareEventButton event_uuid={eventHash} />
+            { isNotEnded && (
+            <AddToCalendar
+              startDate={startUTC}
+              endDate={endUTC}
+              title={eventData.data?.title!}
+              description={eventData.data?.subtitle!}
+            />
+            )}
+          </div>
+        </div>
+
+        <Separator className="bg-gray-700 my-2" />
+        <Labels.CampaignDescription
+          description={eventData.data?.description!}
+        />
+        <Separator className="bg-gray-700 my-2" />
+        {isStarted &&
+        isNotEnded &&
+        eventData.data?.dynamic_fields &&
+        initData ? (
+          role !== "admin" || user?.user_id !== eventData.data.owner ? (
+            <>
+              <Tasks.Wallet
+                initData={initData as string}
+                isWalletConnected={isWalletConnected}
+                setIsWalletConnected={setIsWalletConnected}
+              />
+              <AllTasks
+                // @ts-expect-error
+                tasks={eventData.data.dynamic_fields}
+                eventHash={eventHash}
+              />
+              {isWalletConnected && (
+                <ClaimRewardButton
+                  initData={initData as string}
+                  eventId={eventData.data?.event_uuid as string}
+                  isWalletConnected={isWalletConnected}
+                />
+              )}
+            </>
+          ) : (
+            <div>Organizer can&#39;t participate in the event</div>
+          )
+        ) : // if it was not ended than it means the event is not started yet
+        isNotEnded ? (
+          <EventNotStarted
+            title="Event is not started yet"
+            end_date={endUTC}
+            start_date={startUTC}
+          />
+        ) : (
+          <EventNotStarted
+            title="Event is ended already"
+            end_date={endUTC}
+            start_date={startUTC}
+          />
+        )}
+
+        {authorized &&
+          (role === "admin" || user?.user_id === eventData.data.owner) && (
+            <MainButton
+              text="Manage Event"
+              onClick={() => {
+                router.push(`/events/${eventHash}/edit`);
+              }}
+            />
+          )}
+        <Buttons.Support />
+      </div>
+    </>
   );
 };
