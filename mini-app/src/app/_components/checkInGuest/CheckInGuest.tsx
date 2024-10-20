@@ -117,10 +117,11 @@ const CheckInGuest: FC<{
 
     WebApp?.showScanQrPopup?.({}, (qrText) => {
       try {
-        const uuidMatch = qrText.match(/order_uuid=([\w-]+)/);
-        if (uuidMatch && uuidMatch[1]) {
-          setTicketUuid(uuidMatch[1]);
-        }
+        // const uuidMatch = qrText.match(/order_uuid=([\w-]+)/);
+        // if (uuidMatch && uuidMatch[1]) {
+        //   setTicketUuid(uuidMatch[1]);
+        // }
+        setTicketUuid(qrText);
       } catch (error) {
         setCheckInState("checkInError");
       } finally {
