@@ -58,7 +58,9 @@ function cronJob(fn: (pushLockTTl: () => any) => any) {
     }
 
     try {
+      console.time(`Cron job ${name} - ${cacheLockKey} duration`);
       await fn(pushLockTTl);
+      console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
       await sendLogNotification({
         message: `Cron job ${name} error: ${getErrorMessages(err)}`,
