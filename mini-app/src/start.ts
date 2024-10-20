@@ -14,7 +14,8 @@ import { db } from "./db/db";
 import { sleep } from "./utils";
 
 process.on("unhandledRejection", (err) => {
-  console.error("START", err);
+  const messages = getErrorMessages(err);
+  console.error("UNHANDLED ERROR", messages);
 });
 
 async function cronJobRunner() {
@@ -177,7 +178,7 @@ async function sendRewardNotification(createdReward: RewardType) {
 
     await updateRewardStatus(createdReward.id, "notified");
   } catch (error) {
-    console.error("BOT_API_ERROR", error);
+    console.error("BOT_API_ERROR", getErrorMessages(error));
     await handleRewardError(createdReward, error);
   }
 }
@@ -199,14 +200,14 @@ async function updateRewardStatus(
 }
 
 async function handleRewardError(reward: RewardType, error: any) {
-  const shouldFail = reward.tryCount >= 4;
+  const shouldFail = reward.tryCount >= 10;
   const newStatus = shouldFail ? "notification_failed" : undefined;
   const newData = shouldFail ? { fail_reason: error.message } : undefined;
 
   console.error(
     "handleRewardError",
+    getErrorMessages(error),
     reward,
-    error,
     shouldFail,
     newStatus,
     newData
