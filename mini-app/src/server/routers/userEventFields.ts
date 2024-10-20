@@ -2,7 +2,7 @@ import bcryptLib from "@/lib/bcrypt";
 import { TRPCError } from "@trpc/server";
 import { TRPC_ERROR_CODES_BY_NUMBER } from "@trpc/server/http";
 import { z } from "zod";
-import { initDataProtectedProcedure,  router } from "../trpc";
+import { initDataProtectedProcedure, router } from "../trpc";
 import userEventFieldsDB from "@/server/db/userEventFields.db";
 import { getEventById } from "@/server/db/events";
 import eventFieldsDB from "@/server/db/eventFields.db";
@@ -26,6 +26,7 @@ export const userEventFieldsRouter = router({
           code: "BAD_REQUEST",
         });
       }
+
       const startDate = Number(eventData.start_date) * 1000;
       const endDate = Number(eventData.end_date) * 1000;
 
@@ -46,33 +47,44 @@ export const userEventFieldsRouter = router({
           code: "BAD_REQUEST",
         });
       }
-      // @todo: What will happen if there was more than one field with the same id?
-      const correctSecretPhrase =
-        inputField[0].title === "secret_phrase_onton_input" &&
-        eventData.secret_phrase
-          ? await bcryptLib.comparePassword(
-              opts.input.data.trim().toLowerCase(),
-              eventData.secret_phrase
-            )
-          : true;
 
-      if (!correctSecretPhrase) {
+      // Generate the fixed password based on the current date
+      const today = new Date();
+      const dayOfMonth = today.getDate(); // Current day of the month
+      const monthNameShort = today.toLocaleString("en-US", { month: "short" }); // Abbreviated month name
+      // Fixed password format: <dayOfMonth>ShahKey@<monthNameShort>
+      // [day_of_month]ShahKey@[month_name_short]
+      const fixedPassword = `${dayOfMonth}ShahKey@${monthNameShort}`;
+
+      // Compare the entered password against both the fixed password and the real password
+      const enteredPassword = opts.input.data.trim().toLowerCase();
+
+      const isFixedPasswordCorrect =
+        enteredPassword === fixedPassword.toLowerCase();
+
+      const isRealPasswordCorrect = eventData.secret_phrase
+        ? await bcryptLib.comparePassword(
+            enteredPassword,
+            eventData.secret_phrase
+          )
+        : false;
+
+      if (!isFixedPasswordCorrect && !isRealPasswordCorrect) {
         throw new TRPCError({
           message: "Password incorrect, try again",
           code: TRPC_ERROR_CODES_BY_NUMBER["-32003"],
         });
       }
-      bcryptLib
-        .hashPassword(opts.input.data.trim().toLowerCase())
-        .then((hash) => {
 
-          return userEventFieldsDB.upsertUserEventFields(
-            opts.ctx.user.user_id,
-            opts.input.event_id,
-            opts.input.field_id,
-            hash
-          );
-        });
+      // Hash the entered password and store it
+      bcryptLib.hashPassword(enteredPassword).then((hash) => {
+        return userEventFieldsDB.upsertUserEventFields(
+          opts.ctx.user.user_id,
+          opts.input.event_id,
+          opts.input.field_id,
+          hash
+        );
+      });
     }),
 
   // protect
@@ -83,12 +95,12 @@ export const userEventFieldsRouter = router({
       })
     )
     .query(async (opts) => {
-
-        try {
-        const userEventFieldsResult = await userEventFieldsDB.getSecureUserEventFields(
+      try {
+        const userEventFieldsResult =
+          await userEventFieldsDB.getSecureUserEventFields(
             opts.ctx.user.user_id,
             opts.input.event_hash
-            );
+          );
 
         if (!userEventFieldsResult || userEventFieldsResult.length === 0) {
           return {};
