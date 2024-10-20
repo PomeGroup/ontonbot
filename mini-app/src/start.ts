@@ -18,6 +18,8 @@ process.on("unhandledRejection", (err) => {
   console.error("UNHANDLED ERROR", messages);
 });
 
+const CACHE_TTL = 40_000;
+
 async function cronJobRunner() {
   if (process.env.ENV?.toLocaleLowerCase() !== "production") {
     await createRewards(() => null);
@@ -48,14 +50,15 @@ function cronJob(fn: (pushLockTTl: () => any) => any) {
     await redisTools.setCache(
       redisTools.cacheKeys.cronJobLock + name,
       true,
-      30_000 // 30
+      CACHE_TTL
     );
 
-    function pushLockTTl() {
-      return redisTools.setRedisKeyTTL(
-        cacheLockKey,
-        30_000 // 30
-      );
+    async function pushLockTTl() {
+      try {
+        return await redisTools.setRedisKeyTTL(cacheLockKey, CACHE_TTL);
+      } catch (error) {
+        console.error("REDIS_ERROR", getErrorMessages(error));
+      }
     }
 
     try {
@@ -86,16 +89,14 @@ async function createRewards(pushLockTTl: () => any) {
 
     offset += pendingRewards.length;
 
-    await processRewardChunk(pendingRewards, pushLockTTl);
+    await processRewardChunk(pendingRewards);
+    await pushLockTTl();
   } while (pendingRewards.length > 0);
 
   return offset;
 }
 
-async function processRewardChunk(
-  pendingRewards: RewardType[],
-  pushLockTTl: () => any
-) {
+async function processRewardChunk(pendingRewards: RewardType[]) {
   for (const pendingReward of pendingRewards) {
     try {
       const visitor = await findVisitorById(pendingReward.visitor_id);
@@ -113,8 +114,7 @@ async function processRewardChunk(
           ],
         }
       );
-
-      await pushLockTTl();
+      await sleep(100);
       await rewardDB.updateReward(pendingReward.id, response.data.data);
     } catch (error) {
       await handleRewardError(pendingReward, error);
@@ -139,12 +139,12 @@ async function notifyUsersForRewards(pushLockTTl: () => any) {
     const notificationPromises = createdRewards.map(
       (createdReward) => async () => {
         await sendRewardNotification(createdReward);
-        await pushLockTTl();
       }
     );
 
     await Promise.allSettled(notificationPromises);
-    await sleep(1000);
+    await pushLockTTl();
+    await sleep(1500);
   } while (createdRewards.length > 0);
 
   return offset;
@@ -186,13 +186,17 @@ async function sendRewardNotification(createdReward: RewardType) {
 async function updateRewardStatus(
   rewardId: string,
   status?: string,
-  data?: any
+  options?: {
+    tryCount: number;
+    data: any;
+  }
 ) {
   await db
     .update(rewards)
     .set({
       status,
-      ...(data && { data }),
+      ...(options?.data && { data: options.data }),
+      tryCount: options?.tryCount,
       updatedBy: "system",
       updatedAt: new Date(),
     })
@@ -216,7 +220,7 @@ async function handleRewardError(reward: RewardType, error: any) {
   try {
     await updateRewardStatus(reward.id, newStatus, {
       tryCount: reward.tryCount + 1,
-      ...newData,
+      data: newData,
     });
   } catch (dbError) {
     console.error("DB_ERROR", dbError);
