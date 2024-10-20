@@ -7,7 +7,7 @@ import { Context, Telegraf, TelegramError } from "telegraf"
 import { Update } from "telegraf/typings/core/types/typegram"
 import { getEvent } from "./db/db"
 import { shareKeyboard } from "./markups"
-
+import axios from 'axios';
 export const handleSendQRCode = async (req, res) => {
   const { url, hub, id } = req.query;
 
@@ -101,6 +101,101 @@ export const handleFileSend = async (req: Request, res: Response) => {
   }
 };
 
+const processAndSendImage = async (
+    event: any,
+    userId: string,
+    bot: any,
+    startDate: string,
+    endDate: string,
+    shareLink: string,
+    customButton: any
+) => {
+  try {
+    // Download the image with proper headers
+    const imageResponse = await axios.get(event.image_url, {
+      responseType: 'arraybuffer',
+      headers: {
+        'Accept': 'image/*'
+      }
+    });
+
+    // Create a sharp instance with the downloaded image
+    let imageProcess = sharp(Buffer.from(imageResponse.data));
+
+    try {
+      // Get image metadata
+      const metadata = await imageProcess.metadata();
+
+      // Process the image if width > 1920
+      if (metadata.width && metadata.width > 1920) {
+        imageProcess = imageProcess.resize(1920, null, {
+          fit: 'inside',
+          withoutEnlargement: true
+        });
+      }
+
+      // Convert to JPEG format to ensure compatibility
+      const processedBuffer = await imageProcess
+          .jpeg({
+            quality: 85,
+            force: false
+          })
+          .toBuffer();
+
+      // Send the processed image
+      await bot.telegram.sendPhoto(
+          parseInt(userId),
+          {
+            source: processedBuffer
+          },
+          {
+            caption: `
+📄 <b>${event.title}</b>
+▫️ <i>${event.subtitle}</i>
+
+🗓 Starts at: ${startDate}
+🗓 Ends at: ${endDate}
+
+🔗 Link: ${shareLink}
+`,
+            parse_mode: "HTML",
+            reply_markup: {
+              inline_keyboard: [[customButton]],
+            },
+          }
+      );
+    } catch (sharpError) {
+      console.error('Sharp processing error:', sharpError);
+      throw new Error('Image processing failed');
+    }
+  } catch (error) {
+    console.error('Image processing/sending error:', error);
+
+    // Fall back to sending the original URL if processing fails
+    await bot.telegram.sendPhoto(
+        parseInt(userId),
+        {
+          url: event.image_url,
+        },
+        {
+          caption: `
+📄 <b>${event.title}</b>
+▫️ <i>${event.subtitle}</i>
+
+🗓 Starts at: ${startDate}
+🗓 Ends at: ${endDate}
+
+🔗 Link: ${shareLink}
+`,
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [[customButton]],
+          },
+        }
+    );
+  }
+};
+
 export const handleShareEvent = async (
     req: Request & {
       bot: Telegraf<Context<Update>>;
@@ -120,7 +215,6 @@ export const handleShareEvent = async (
       console.log("event", event.title);
       console.log("id", id, "user_id", user_id, "url", url, event.image_url);
 
-      // Ensure that start_date and end_date are numbers
       const startDateInSeconds = Number(event.start_date);
       const endDateInSeconds = Number(event.end_date);
 
@@ -128,7 +222,6 @@ export const handleShareEvent = async (
         throw new Error("Invalid date values.");
       }
 
-      // Convert start and end dates from seconds to Date format
       const startDate = new Date(startDateInSeconds * 1000).toLocaleString("en-US", {
         year: "numeric",
         month: "long",
@@ -145,16 +238,27 @@ export const handleShareEvent = async (
         minute: "2-digit",
       });
 
-      // Determine the custom button, default to "Buy Ticket" button if none is provided
       const defaultButton = { text: "Buy Ticket", web_app: { url } };
       const customButton = custom_button || defaultButton;
 
+      // Try to process and send the image
       try {
-        // Attempt to send the event image
+        await processAndSendImage(
+            event,
+            user_id,
+            req.bot,
+            startDate,
+            endDate,
+            share_link,
+            customButton
+        );
+      } catch (error) {
+        console.error('Final fallback - using default image');
+        // Final fallback - use default image
         await req.bot.telegram.sendPhoto(
             parseInt(user_id),
             {
-              url: event.image_url,
+              url: 'https://onton.live/template-images/default.webp',
             },
             {
               caption: `
@@ -168,43 +272,10 @@ export const handleShareEvent = async (
 `,
               parse_mode: "HTML",
               reply_markup: {
-                inline_keyboard: [[customButton]], // Use the custom button or default
+                inline_keyboard: [[customButton]],
               },
             }
         );
-      } catch (error) {
-        if (
-            error.response &&
-            error.response.error_code === 400 &&
-            error.response.description === 'Bad Request: IMAGE_PROCESS_FAILED'
-        ) {
-          // Retry with the default fallback image if the original image fails
-          console.log('Image processing failed. Retrying with fallback image.');
-
-          await req.bot.telegram.sendPhoto(
-              parseInt(user_id),
-              {
-                url: 'https://onton.live/template-images/default.webp', // Fallback image
-              },
-              {
-                caption: `
-📄 <b>${event.title}</b>
-▫️ <i>${event.subtitle}</i>
-
-🗓 Starts at: ${startDate}
-🗓 Ends at: ${endDate}
-
-🔗 Link: ${share_link}
-`,
-                parse_mode: "HTML",
-                reply_markup: {
-                  inline_keyboard: [[customButton]], // Use the custom button or default
-                },
-              }
-          );
-        } else {
-          throw error; // Rethrow the error if it's not the IMAGE_PROCESS_FAILED error
-        }
       }
 
       res.json(event);
