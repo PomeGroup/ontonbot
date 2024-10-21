@@ -5,13 +5,68 @@ import { getAuthenticatedUser } from "@/server/auth";
 import { and, asc, eq, or, sql } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { usersDB } from "@/server/db/users";
+import tonCenter from "@/server/routers/services/tonCenter";
+import { NFTItem } from "@/server/routers/services/tonCenter";
+
+// Helper function for retrying the HTTP request
+async function getRequestWithRetry(
+  uri: string,
+  retries: number = 3
+): Promise<any> {
+  let attempt = 0;
+  while (attempt < retries) {
+    try {
+      const response = await fetch(uri);
+      if (!response.ok) {
+        throw new Error(`Request failed with status: ${response.status}`);
+      }
+      return await response.json();
+    } catch (error) {
+      attempt++;
+      if (attempt >= retries) {
+        throw error;
+      }
+    }
+  }
+}
+
+async function getValidNfts(
+  ownerAddress: string,
+  collectionAddress: string
+): Promise<NFTItem[]> {
+  const wallet_nfts = await tonCenter.fetchNFTItemsWithRetry(
+    ownerAddress,
+    collectionAddress
+  );
+  const valid_nfts: NFTItem[] = [];
+
+  if (wallet_nfts?.nft_items) {
+    for (const nft of wallet_nfts.nft_items) {
+      try {
+        const nft_data = await getRequestWithRetry(nft.content.uri);
+        const name: string = nft_data.name;
+        // TODO : add used here
+        const used = false;
+        if (!name.toLowerCase().includes("revoked") && !used) {
+          valid_nfts.push(nft);
+        }
+      } catch (error) {
+        console.error(`Error fetching NFT data: ${error}`);
+      }
+    }
+  }
+
+  return valid_nfts;
+}
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string  , owner_address : string } }
 ) {
   try {
     const eventId = params.id;
+    const ownerAddress = params.owner_address;
+
     const searchParams = req.nextUrl.searchParams;
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
 
@@ -89,19 +144,21 @@ export async function GET(
       return unauthorized;
     }
 
-    const userTicket = (
-      await db
-        .select()
-        .from(tickets)
-        .where(
-          and(
-            eq(tickets.event_uuid, event.event_uuid as string),
-            eq(tickets.user_id, userId)
-          )
-        )
-        .orderBy(asc(tickets.created_at))
-        .execute()
-    ).pop();
+    const validNfts = await getValidNfts(ownerAddress, event.collection_address! );
+    const userHasTicket = !!validNfts.length;
+    // const userHasTicket = (
+    //   await db
+    //     .select()
+    //     .from(tickets)
+    //     .where(
+    //       and(
+    //         eq(tickets.event_uuid, event.event_uuid as string),
+    //         eq(tickets.user_id, userId)
+    //       )
+    //     )
+    //     .orderBy(asc(tickets.created_at))
+    //     .execute()
+    // ).pop();
 
     const userOrder = (
       await db
@@ -123,7 +180,7 @@ export async function GET(
 
     const data = {
       ...event,
-      userTicket,
+      userHasTicket: userHasTicket,
       orderAlreadyPlace: !!userOrder,
       organizer,
       eventTicket: ticket,
