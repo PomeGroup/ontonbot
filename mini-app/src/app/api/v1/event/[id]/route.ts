@@ -39,6 +39,7 @@ async function getValidNfts(
     ownerAddress,
     collectionAddress
   );
+
   const valid_nfts_no_info: NFTItem[] = [];
   const valid_nfts_with_info: NFTItem[] = [];
 
@@ -173,9 +174,10 @@ export async function GET(
     const ownerAddress = searchParams.get('owner_address')
     if (!ownerAddress) {
       return Response.json({
-        message: 'owner address is required'
+        message: 'Uer wallet address is required',
+        code: 'owner_address_required'
       }, {
-        status: 401
+        status: 400
       })
     }
 
@@ -218,7 +220,7 @@ export async function GET(
         .execute()
     ).pop();
 
-    const needToUpdateTicket = !valid_nfts_with_info.length;
+    const needToUpdateTicket = valid_nfts_with_info.length;
 
     let chosenNFTaddress = '';
     if (userHasTicket && needToUpdateTicket) {
