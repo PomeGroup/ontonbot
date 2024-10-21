@@ -32,36 +32,63 @@ async function getRequestWithRetry(
 
 async function getValidNfts(
   ownerAddress: string,
-  collectionAddress: string
-): Promise<NFTItem[]> {
+  collectionAddress: string,
+  userId: number
+): Promise<{ valid_nfts_no_info: NFTItem[]; valid_nfts_with_info: NFTItem[] }> {
   const wallet_nfts = await tonCenter.fetchNFTItemsWithRetry(
     ownerAddress,
     collectionAddress
   );
-  const valid_nfts: NFTItem[] = [];
+  const valid_nfts_no_info: NFTItem[] = [];
+  const valid_nfts_with_info: NFTItem[] = [];
 
   if (wallet_nfts?.nft_items) {
     for (const nft of wallet_nfts.nft_items) {
       try {
         const nft_data = await getRequestWithRetry(nft.content.uri);
         const name: string = nft_data.name;
-        // TODO : add used here
-        const used = false;
-        if (!name.toLowerCase().includes("revoked") && !used) {
-          valid_nfts.push(nft);
+
+        // Query the tickets database for this NFT address
+        const ticketsResult = await db
+          .select()
+          .from(tickets)
+          .where(eq(tickets.nftAddress, nft.address))
+          .execute();
+
+        // Check if there's exactly one ticket for this NFT
+        if (ticketsResult.length !== 1) {
+          console.error(
+            `Unexpected number of tickets found for NFT ${nft.address}`
+          );
+          continue;
+        }
+
+        const ticket = ticketsResult[0];
+
+        // Ensure the ticket is UNUSED and the NFT is not revoked
+        if (
+          ticket &&
+          ticket.status === "UNUSED" &&
+          !name.toLowerCase().includes("revoked")
+        ) {
+          if (ticket.user_id === userId) {
+            valid_nfts_with_info.push(nft);
+          } else {
+            valid_nfts_no_info.push(nft);
+          }
         }
       } catch (error) {
-        console.error(`Error fetching NFT data: ${error}`);
+        console.error(`Error fetching NFT data or querying database: ${error}`);
       }
     }
   }
 
-  return valid_nfts;
+  return { valid_nfts_no_info, valid_nfts_with_info };
 }
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string  , owner_address : string } }
+  { params }: { params: { id: string; owner_address: string } }
 ) {
   try {
     const eventId = params.id;
@@ -144,8 +171,13 @@ export async function GET(
       return unauthorized;
     }
 
-    const validNfts = await getValidNfts(ownerAddress, event.collection_address! );
-    const userHasTicket = !!validNfts.length;
+    const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
+      ownerAddress,
+      event.collection_address!,
+      userId
+    );
+    const userHasTicket =
+      !!valid_nfts_no_info.length || !!valid_nfts_with_info.length;
     // const userHasTicket = (
     //   await db
     //     .select()
@@ -178,9 +210,20 @@ export async function GET(
         .execute()
     ).pop();
 
+    const needToUpdateTicket = !valid_nfts_with_info.length;
+
+    let chosenNFTaddress;
+    if (userHasTicket && needToUpdateTicket) {
+      chosenNFTaddress = valid_nfts_no_info[0];
+    } else if (userHasTicket) {
+      chosenNFTaddress = valid_nfts_with_info[0];
+    }
+
     const data = {
       ...event,
       userHasTicket: userHasTicket,
+      needToUpdateTicket: needToUpdateTicket,
+      chosenNFTaddress,
       orderAlreadyPlace: !!userOrder,
       organizer,
       eventTicket: ticket,
