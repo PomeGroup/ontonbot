@@ -220,7 +220,7 @@ export async function GET(
 
     const needToUpdateTicket = !valid_nfts_with_info.length;
 
-    let chosenNFTaddress;
+    let chosenNFTaddress = '';
     if (userHasTicket && needToUpdateTicket) {
       chosenNFTaddress = valid_nfts_no_info[0].address;
     } else if (userHasTicket) {
