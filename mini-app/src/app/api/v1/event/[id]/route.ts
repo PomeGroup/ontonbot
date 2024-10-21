@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { orders, tickets } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
-import { and, asc, eq, or, sql } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { usersDB } from "@/server/db/users";
 import tonCenter from "@/server/routers/services/tonCenter";
@@ -88,13 +88,12 @@ async function getValidNfts(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string; owner_address: string } }
+  { params }: { params: { id: string; } }
 ) {
   try {
     const eventId = params.id;
-    const ownerAddress = params.owner_address;
-
     const searchParams = req.nextUrl.searchParams;
+
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
 
     const unsafeEvent = await db.query.events.findFirst({
@@ -171,6 +170,15 @@ export async function GET(
       return unauthorized;
     }
 
+    const ownerAddress = searchParams.get('owner_address')
+    if (!ownerAddress) {
+      return Response.json({
+        message: 'owner address is required'
+      }, {
+        status: 401
+      })
+    }
+
     const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
       ownerAddress,
       event.collection_address!,
@@ -214,9 +222,9 @@ export async function GET(
 
     let chosenNFTaddress;
     if (userHasTicket && needToUpdateTicket) {
-      chosenNFTaddress = valid_nfts_no_info[0];
+      chosenNFTaddress = valid_nfts_no_info[0].address;
     } else if (userHasTicket) {
-      chosenNFTaddress = valid_nfts_with_info[0];
+      chosenNFTaddress = valid_nfts_with_info[0].address;
     }
 
     const data = {
