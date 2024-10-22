@@ -1,6 +1,5 @@
 import { db } from "@/db/db";
 import { tickets } from "@/db/schema";
-import { Address } from "@ton/core";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { type NextRequest } from "next/server";
