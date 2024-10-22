@@ -94,7 +94,6 @@ export async function GET(
   try {
     const eventId = params.id;
     const searchParams = req.nextUrl.searchParams;
-
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
 
     const unsafeEvent = await db.query.events.findFirst({
@@ -186,6 +185,7 @@ export async function GET(
       event.collection_address!,
       userId
     );
+
     const userHasTicket =
       !!valid_nfts_no_info.length || !!valid_nfts_with_info.length;
     // const userHasTicket = (
@@ -212,7 +212,6 @@ export async function GET(
             eq(orders.event_ticket_id, ticket?.id as number),
             or(
               eq(orders.state, "created"),
-              eq(orders.state, "minted"),
               eq(orders.state, "mint_request")
             )
           )
@@ -220,7 +219,7 @@ export async function GET(
         .execute()
     ).pop();
 
-    const needToUpdateTicket = valid_nfts_with_info.length;
+    const needToUpdateTicket = !valid_nfts_with_info.length;
 
     let chosenNFTaddress = '';
     if (userHasTicket && needToUpdateTicket) {
@@ -232,7 +231,7 @@ export async function GET(
     const data = {
       ...event,
       userHasTicket: userHasTicket,
-      needToUpdateTicket: needToUpdateTicket,
+      needToUpdateTicket: userHasTicket && needToUpdateTicket,
       chosenNFTaddress,
       orderAlreadyPlace: !!userOrder,
       organizer,
