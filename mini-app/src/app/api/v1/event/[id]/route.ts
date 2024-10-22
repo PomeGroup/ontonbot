@@ -237,6 +237,9 @@ export async function GET(
       organizer,
       eventTicket: ticket,
       isSoldOut,
+
+      usedCollectionAddress : ticket?.collectionAddress!,
+      valid_nfts_no_info, valid_nfts_with_info
     };
 
     return Response.json(data, {
