@@ -56,7 +56,7 @@ export async function PUT(
       .where(eq(tickets.nftAddress, nftaddress))
       .execute();
 
-    return Response.json({ message: "user ticked updated" });
+    return Response.json({ message: "user ticket info updated" });
   } catch (error) {
     if (error instanceof SyntaxError)
       return Response.json(
