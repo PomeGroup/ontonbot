@@ -182,7 +182,7 @@ export async function GET(
 
     const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
       ownerAddress,
-      event.collection_address!,
+      ticket?.collectionAddress!,
       userId
     );
 
