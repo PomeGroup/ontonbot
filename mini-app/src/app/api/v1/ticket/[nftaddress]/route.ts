@@ -41,7 +41,8 @@ export async function PUT(
       return unauthorized;
     }
 
-    const result = await db
+
+    await db
       .update(tickets)
       .set({
         telegram: parsedData.data.telegram,
@@ -61,6 +62,7 @@ export async function PUT(
       )
       .execute();
     
+
 
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
