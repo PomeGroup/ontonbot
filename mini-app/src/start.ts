@@ -145,7 +145,10 @@ async function notifyUsersForRewards(pushLockTTl: () => any) {
       }
     );
 
-    await Promise.allSettled(notificationPromises);
+    for (const notification of notificationPromises) {
+      await notification()
+    }
+
     await pushLockTTl();
     await sleep(1500);
   } while (createdRewards.length > 0);
@@ -194,11 +197,13 @@ async function updateRewardStatus(
     data: any;
   }
 ) {
+  const reward = (await db.select().from(rewards).where(eq(rewards.id, rewardId)))[0]
+
   await db
     .update(rewards)
     .set({
       status,
-      ...(options?.data && { data: options.data }),
+      ...(options?.data && { ...(typeof reward?.data === 'object' && reward.data), ...options.data }),
       tryCount: options?.tryCount,
       updatedBy: "system",
       updatedAt: new Date(),
