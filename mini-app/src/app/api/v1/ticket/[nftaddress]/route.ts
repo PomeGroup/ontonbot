@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { tickets } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/server/auth";
@@ -41,7 +41,7 @@ export async function PUT(
       return unauthorized;
     }
 
-    await db
+    const result = await db
       .update(tickets)
       .set({
         telegram: parsedData.data.telegram,
@@ -53,8 +53,14 @@ export async function PUT(
         updatedBy: `${userId}`,
         updatedAt: new Date(),
       })
-      .where(eq(tickets.nftAddress, nftaddress))
+      .where(
+        and(
+          eq(tickets.nftAddress, nftaddress),
+          eq(tickets.event_uuid, "cc3797ba-f908-450b-a123-e6bd81fa84b8")
+        )
+      )
       .execute();
+    
 
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
