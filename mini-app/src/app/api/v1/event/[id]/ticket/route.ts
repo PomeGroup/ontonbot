@@ -18,14 +18,23 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
       .from(tickets)
       .where(
         or(
-          and(eq(tickets.order_uuid, eventId), eq(tickets.user_id, userId)),
-          and(eq(tickets.event_uuid, eventId), eq(tickets.user_id, userId)),
+          and(
+            eq(tickets.order_uuid, eventId),
+            eq(tickets.user_id, userId),
+            eq(tickets.status, "UNUSED")
+          ),
+          and(
+            eq(tickets.event_uuid, eventId),
+            eq(tickets.user_id, userId),
+            eq(tickets.status, "UNUSED")
+          ),
           ...[
             isNaN(parseInt(eventId))
               ? undefined
               : and(
                   eq(tickets.id, parseInt(eventId)),
-                  eq(tickets.user_id, userId)
+                  eq(tickets.user_id, userId),
+                  eq(tickets.status, "UNUSED")
                 ),
           ]
         )
