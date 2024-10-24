@@ -1,1 +1,0 @@
-ALTER TABLE "events" ADD COLUMN "ts_reward_image" text;
