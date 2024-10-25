@@ -13,9 +13,6 @@ export const POST = async (req: Request) => {
   try {
     const body = CheckProofRequest.parse(await req.json());
 
-    console.log(body);
-
-
     const client = TonApiService.create(body.network);
     const service = new TonProofService();
 
