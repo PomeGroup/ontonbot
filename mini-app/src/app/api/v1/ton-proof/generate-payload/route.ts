@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const service = new TonProofService();
     const payload = service.generatePayload();
-    const payloadToken = await createPayloadToken({ payload });
+    const payloadToken = await createPayloadToken({ address: payload });
 
     // Return the payload in JSON response
     return NextResponse.json({ payload: payloadToken });
