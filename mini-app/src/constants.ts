@@ -590,3 +590,7 @@ export const SHARED_SECRET = process.env.ONTON_API_SECRET!
 export const DOMAINS = ["t.me", 'localhost:3001', 'localhost:3000'];
 export const PAYLOAD_TTL = 3600; // 1 hour
 export const PROOF_TTL = 3600; // 1 hour
+export const CHAIN = {
+  MAINNET: '-239',
+  TESTNET: '-3'
+} as const

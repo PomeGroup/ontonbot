@@ -1,5 +1,3 @@
-
-import { CHAIN } from "@tonconnect/ui-react";
 import { z } from "zod";
 
 const TonAddress = z.string();
@@ -52,7 +50,7 @@ export const WalletAddress = z.object({
 
 export const CheckProofRequest = z.object({
   address: z.string(),
-  network: z.enum([CHAIN.MAINNET, CHAIN.TESTNET]),
+  network: z.enum(['-239', '-3']),
   public_key: z.string(),
   proof: z.object({
     timestamp: z.number(),

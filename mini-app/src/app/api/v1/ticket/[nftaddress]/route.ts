@@ -4,9 +4,8 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/server/auth";
-import { SHARED_SECRET } from "@/constants";
 import tonCenter from "@/server/routers/services/tonCenter";
-import jwt from "jsonwebtoken";
+import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 
 const updateTicketSchema = z.object({
   data: z.object({
@@ -64,7 +63,24 @@ export async function PUT(
 
     let decoded;
     try {
-      decoded = jwt.verify(proof_token, SHARED_SECRET);
+      if (
+        !await verifyToken(proof_token)
+      ) {
+        return Response.json(
+          {
+            message: "invalid token",
+            code: "invalid_proof_token",
+          },
+          {
+            status: 401,
+          }
+        );
+      }
+
+      decoded = {
+        address: decodePayloadToken(proof_token)?.address
+      }
+
     } catch {
       return Response.json(
         {

@@ -8,9 +8,7 @@ import { usersDB } from "@/server/db/users";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { NFTItem } from "@/server/routers/services/tonCenter";
 
-import jwt, { JwtPayload } from "jsonwebtoken";
-
-import { SHARED_SECRET } from "@/constants";
+import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(
@@ -190,7 +188,24 @@ export async function GET(
 
     let decoded;
     try {
-      decoded = jwt.verify(proof_token, SHARED_SECRET);
+      if (
+        !await verifyToken(proof_token)
+      ) {
+        return Response.json(
+          {
+            message: "invalid token",
+            code: "invalid_proof_token",
+          },
+          {
+            status: 401,
+          }
+        );
+      }
+
+      decoded = {
+        address: decodePayloadToken(proof_token)?.address
+      }
+
     } catch {
       return Response.json(
         {

@@ -1,10 +1,10 @@
+import { CHAIN } from "@/constants";
 import { Address, TonClient4 } from "@ton/ton";
-import { CHAIN } from "@tonconnect/ui-react";
 import { Buffer } from "buffer";
 
 export class TonApiService {
 
-  public static create(client: TonClient4 | CHAIN): TonApiService {
+  public static create(client: TonClient4 | typeof CHAIN['MAINNET'] | typeof CHAIN['TESTNET']): TonApiService {
     if (client === CHAIN.MAINNET) {
       client = new TonClient4({
         endpoint: 'https://mainnet-v4.tonhubapi.com'

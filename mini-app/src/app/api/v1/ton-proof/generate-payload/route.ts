@@ -1,26 +1,22 @@
+// app/api/ton-auth/generate-payload/route.ts
 import { TonProofService } from "@/server/routers/services/ton-proof-service";
 import { createPayloadToken } from "@/server/utils/jwt";
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from "next/server";
+// Ensure you have these constants properly set up in a constants file or environment variables
 
-/**
- * Generates a payload for ton proof.
- *
- * POST /api/generate_payload
- */
-const generatePayload = async (req: NextApiRequest, res: NextApiResponse) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
-
+export async function GET() {
   try {
     const service = new TonProofService();
     const payload = service.generatePayload();
     const payloadToken = await createPayloadToken({ payload });
 
-    return res.status(200).json({ payload: payloadToken });
-  } catch (e) {
-    return res.status(400).json({ error: "Invalid request", trace: e });
+    // Return the payload in JSON response
+    return NextResponse.json({ payload: payloadToken });
+  } catch (error) {
+    // Handle any errors
+    return NextResponse.json(
+      { error: "Failed to generate payload" },
+      { status: 500 }
+    );
   }
-};
-
-export default generatePayload;
+}

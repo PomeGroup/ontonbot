@@ -1,21 +1,23 @@
-import { CHAIN } from "@tonconnect/ui-react";
-import jwt, { JwtPayload, SignOptions, VerifyOptions } from "jsonwebtoken";
+import { SHARED_SECRET } from "@/constants";
+import { decodeJwt, JWTPayload, jwtVerify, SignJWT } from 'jose';
+import { CHAIN } from "@/constants";
+import { ValueOf } from "@/types";
 
 /**
  * Secret key for the token.
  */
-const JWT_SECRET_KEY = 'your_secret_key';
+const JWT_SECRET_KEY = SHARED_SECRET;
 
 /**
  * Payload of the token.
  */
 export type AuthToken = {
   address: string;
-  network: CHAIN;
+  network: ValueOf<typeof CHAIN>;
 };
 
 export type PayloadToken = {
-  payload: string;
+  address: string
 };
 
 /**
@@ -45,7 +47,7 @@ export async function verifyToken(token: string): Promise<JwtPayload | null> {
 /**
  * Decode the given token.
  */
-function buildDecodeToken<T extends JwtPayload>(): (token: string) => T | null {
+function buildDecodeToken<T extends JWTPayload>(): (token: string) => T | null {
   return (token: string) => {
     try {
       return jwt.decode(token) as T;
