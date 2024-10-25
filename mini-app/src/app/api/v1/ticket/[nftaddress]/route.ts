@@ -6,10 +6,13 @@ import { type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/server/auth";
 
 const updateTicketSchema = z.object({
-  full_name: z.string(),
-  telegram: z.string(),
-  company: z.string(),
-  position: z.string(),
+  data: z.object({
+    full_name: z.string(),
+    telegram: z.string(),
+    company: z.string(),
+    position: z.string()
+  }),
+  proof_token: z.string()
 });
 
 export async function PUT(
@@ -45,10 +48,10 @@ export async function PUT(
     await db
       .update(tickets)
       .set({
-        telegram: parsedData.data.telegram,
-        name: parsedData.data.full_name,
-        company: parsedData.data.company,
-        position: parsedData.data.position,
+        telegram: parsedData.data.data.telegram,
+        name: parsedData.data.data.full_name,
+        company: parsedData.data.data.company,
+        position: parsedData.data.data.position,
 
         user_id: userId,
         updatedBy: `${userId}`,
@@ -61,7 +64,7 @@ export async function PUT(
         )
       )
       .execute();
-    
+
 
 
     return Response.json({ message: "user ticket info updated" });
