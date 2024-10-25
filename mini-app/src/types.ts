@@ -311,3 +311,5 @@ export type TelegramUser = {
   is_premium: boolean;
   allows_write_to_pm: boolean;
 };
+
+export type ValueOf<T> = T[keyof T];
