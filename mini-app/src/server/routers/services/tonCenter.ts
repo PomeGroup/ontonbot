@@ -62,10 +62,16 @@ interface TonCenterResponse {
 async function fetchNFTItems(
   ownerAddress: string,
   collectionAddress: string,
+  nft_address: string = "",
   limit: number = 100,
   offset: number = 0
 ): Promise<TonCenterResponse> {
-  const url = `https://toncenter.com/api/v3/nft/items?owner_address=${ownerAddress}&collection_address=${collectionAddress}&limit=${limit}&offset=${offset}`;
+  let url: string = "";
+  if (!nft_address) {
+    url = `https://toncenter.com/api/v3/nft/items?owner_address=${ownerAddress}&collection_address=${collectionAddress}&limit=${limit}&offset=${offset}`;
+  } else {
+    url = `https://toncenter.com/api/v3/nft/items?address=${nft_address}&owner_address=${ownerAddress}`;
+  }
 
   const apiKey = getApiKey();
   const response = await fetch(url, {
@@ -90,11 +96,12 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 async function fetchNFTItemsWithRetry(
   ownerAddress: string,
   collectionAddress: string,
+  nft_address: string = "",
   limit: number = 100,
   offset: number = 0,
   retries: number = 3, // Number of retries
   delayMs: number = 1000 // Delay between retries (in milliseconds)
-): Promise<TonCenterResponse | undefined>  {
+): Promise<TonCenterResponse | undefined> {
   let attempt = 0;
 
   while (attempt < retries) {
@@ -103,6 +110,7 @@ async function fetchNFTItemsWithRetry(
       const result = await fetchNFTItems(
         ownerAddress,
         collectionAddress,
+        nft_address,
         limit,
         offset
       );
@@ -122,11 +130,8 @@ async function fetchNFTItemsWithRetry(
 /*                                     END                                    */
 /* -------------------------------------------------------------------------- */
 
-
 const tonCenter = {
-    fetchNFTItemsWithRetry
+  fetchNFTItemsWithRetry,
 };
 
-
 export default tonCenter;
-

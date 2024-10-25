@@ -1,1 +1,0 @@
-ALTER TYPE "reward_status" ADD VALUE 'fixed_failed';
