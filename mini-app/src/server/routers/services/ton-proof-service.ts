@@ -5,16 +5,11 @@ import { Buffer } from "buffer";
 import { randomBytes, sign } from "tweetnacl";
 import { CheckProofRequestDto } from "@/types/ton-proof";
 import { tryParsePublicKey } from "@/server/utils/wallets-data";
-import { PAYLOAD_TTL } from "@/constants";
+import { DOMAINS, PAYLOAD_TTL } from "@/constants";
 
 const tonProofPrefix = 'ton-proof-item-v2/';
 const tonConnectPrefix = 'ton-connect';
-const allowedDomains = [
-  'onton.live',
-  'localhost:3000',
-  'localhost:3001',
-  't.me'
-];
+const allowedDomains = DOMAINS
 const validAuthTime = PAYLOAD_TTL; // 15 minute
 
 export class TonProofService {
