@@ -1,6 +1,6 @@
+import { TonProofService } from "@/server/routers/services/ton-proof-service";
+import { createPayloadToken } from "@/server/utils/jwt";
 import { NextApiRequest, NextApiResponse } from "next";
-import { TonProofService } from "../services/ton-proof-service";
-import { createPayloadToken } from "../utils/jwt";
 
 /**
  * Generates a payload for ton proof.

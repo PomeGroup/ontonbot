@@ -2,9 +2,10 @@
 /*                                   API KEY                                  */
 /* -------------------------------------------------------------------------- */
 const apiKeys = [
-  "e4ae62d46c2e4e9267ce0cc085bccad46225aacef8f8085d90dea06784207d08",
-  "d4619c64c2f499e71f0c1585b6855abaa5b86e06191c993a870a37be88e9bc55",
-  "51a79c3e82d6fb3a97360a6406f955e25bd787c75a0fa37ab5383291b20c825c",
+  // "e4ae62d46c2e4e9267ce0cc085bccad46225aacef8f8085d90dea06784207d08",
+  // "d4619c64c2f499e71f0c1585b6855abaa5b86e06191c993a870a37be88e9bc55",
+  // "51a79c3e82d6fb3a97360a6406f955e25bd787c75a0fa37ab5383291b20c825c",
+  'AGMEMDFPO5WW7FAAAAAFQY66ASUQRHBWANRBGTKUXVFPRU4TX46WWZRGVOODJ6464ZEOL7I'
 ];
 
 // Function to cycle through API keys
@@ -68,9 +69,9 @@ async function fetchNFTItems(
 ): Promise<TonCenterResponse> {
   let url: string = "";
   if (!nft_address) {
-    url = `https://toncenter.com/api/v3/nft/items?owner_address=${ownerAddress}&collection_address=${collectionAddress}&limit=${limit}&offset=${offset}`;
+    url = `https://testnet.toncenter.com/api/v3/nft/items?owner_address=${ownerAddress}&collection_address=${collectionAddress}&limit=${limit}&offset=${offset}`;
   } else {
-    url = `https://toncenter.com/api/v3/nft/items?address=${nft_address}&owner_address=${ownerAddress}`;
+    url = `https://testnet.toncenter.com/api/v3/nft/items?address=${nft_address}&owner_address=${ownerAddress}`;
   }
 
   const apiKey = getApiKey();

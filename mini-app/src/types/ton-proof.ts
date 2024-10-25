@@ -1,4 +1,5 @@
 
+import { CHAIN } from "@tonconnect/ui-react";
 import { z } from "zod";
 
 const TonAddress = z.string();
@@ -47,6 +48,25 @@ export const CheckTonProof = z.union([
 export const WalletAddress = z.object({
   address: z.string(),
 });
+
+
+export const CheckProofRequest = z.object({
+  address: z.string(),
+  network: z.enum([CHAIN.MAINNET, CHAIN.TESTNET]),
+  public_key: z.string(),
+  proof: z.object({
+    timestamp: z.number(),
+    domain: z.object({
+      lengthBytes: z.number(),
+      value: z.string(),
+    }),
+    payload: z.string(),
+    signature: z.string(),
+    state_init: z.string(),
+  }),
+});
+
+export type CheckProofRequestDto = z.infer<typeof CheckProofRequest>;
 
 export type GenerateTonProofPayload = z.infer<typeof GenerateTonProofPayload>;
 export type TonDomain = z.infer<typeof TonDomain>;
