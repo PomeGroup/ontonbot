@@ -1,10 +1,9 @@
 // app/api/ton-auth/generate-payload/route.ts
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-
+import {SHARED_SECRET} from "@/constants"
 // Ensure you have these constants properly set up in a constants file or environment variables
 const PAYLOAD_TTL = parseInt(process.env.PAYLOAD_TTL || "300", 10); // Time-to-live in seconds
-const SHARED_SECRET = process.env.SHARED_SECRET || "default_ton_jwt_secret";
 
 export async function GET() {
   try {
