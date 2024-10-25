@@ -34,8 +34,8 @@ function buildCreateToken<T extends JWTPayload>(expirationTime: string): (payloa
   };
 }
 
-export const createAuthToken = buildCreateToken<AuthToken>('1Y');
-export const createPayloadToken = buildCreateToken<PayloadToken>('15m');
+export const createAuthToken = buildCreateToken<AuthToken>('2w');
+export const createPayloadToken = buildCreateToken<PayloadToken>('2w');
 
 /**
  * Verify the given token.

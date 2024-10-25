@@ -587,9 +587,13 @@ export const gmtTimeZones = [
 ];
 
 export const SHARED_SECRET = process.env.ONTON_API_SECRET!
-export const DOMAINS = ["t.me", 'localhost:3001', 'localhost:3000'];
-export const PAYLOAD_TTL = 1000 * 3600 * 24 * 7; // 1 hour
-export const PROOF_TTL = 1000 * 3600 * 24 * 7; // 1 hour
+export const DOMAINS = [
+  'onton.live',
+  'localhost:3000',
+  'localhost:3001',
+  't.me'
+];
+export const PAYLOAD_TTL = 3600 * 24 * 7; // 7 days
 export const CHAIN = {
   MAINNET: '-239',
   TESTNET: '-3'
