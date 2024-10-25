@@ -1,36 +1,26 @@
-// app/api/ton-auth/generate-payload/route.ts
-import { NextResponse } from "next/server";
-import crypto from "crypto";
-import { PAYLOAD_TTL, SHARED_SECRET } from "@/constants"
-// Ensure you have these constants properly set up in a constants file or environment variables
+import { NextApiRequest, NextApiResponse } from "next";
+import { TonProofService } from "../services/ton-proof-service";
+import { createPayloadToken } from "../utils/jwt";
 
-export async function GET() {
-  try {
-    // Generate random bits
-    const randomBits = crypto.randomBytes(8);
-
-    // Get current time and calculate expiration time
-    const currentTime = Math.floor(Date.now() / 1000);
-    const expirationTime = Buffer.alloc(8);
-    expirationTime.writeBigUint64BE(BigInt(currentTime + PAYLOAD_TTL));
-    const payload = Buffer.concat([randomBits, expirationTime]);
-
-    // Generate signature using HMAC
-    const hmac = crypto.createHmac("sha256", SHARED_SECRET);
-    hmac.update(payload);
-    const signature = hmac.digest();
-
-    // Create the final payload and convert it to hex
-    const finalPayload = Buffer.concat([payload, signature]);
-    const payloadHex = finalPayload.subarray(0, 32).toString("hex");
-
-    // Return the payload in JSON response
-    return NextResponse.json({ payload: payloadHex });
-  } catch (error) {
-    // Handle any errors
-    return NextResponse.json(
-      { error: "Failed to generate payload" },
-      { status: 500 }
-    );
+/**
+ * Generates a payload for ton proof.
+ *
+ * POST /api/generate_payload
+ */
+const generatePayload = async (req: NextApiRequest, res: NextApiResponse) => {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
-}
+
+  try {
+    const service = new TonProofService();
+    const payload = service.generatePayload();
+    const payloadToken = await createPayloadToken({ payload });
+
+    return res.status(200).json({ payload: payloadToken });
+  } catch (e) {
+    return res.status(400).json({ error: "Invalid request", trace: e });
+  }
+};
+
+export default generatePayload;
