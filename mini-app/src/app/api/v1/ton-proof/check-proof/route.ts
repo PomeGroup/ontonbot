@@ -6,7 +6,7 @@ import { TonClient } from "@ton/ton";
 import BN from "bn.js";
 import nacl from "tweetnacl";
 import jwt from "jsonwebtoken";
-import { CheckProofPayload, CheckTonProof } from "@/types/ton-proof"; // adjust the import path
+import { CheckProofPayload, } from "@/types/ton-proof"; // adjust the import path
 import { DOMAINS, PAYLOAD_TTL, PROOF_TTL, SHARED_SECRET } from "@/constants"; // adjust the import path
 
 export async function POST(req: NextRequest) {
