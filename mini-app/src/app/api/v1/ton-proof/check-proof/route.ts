@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { CheckProofRequest } from '../dto/check-proof-request-dto';
-import { TonApiService } from '../services/ton-api-service';
-import { TonProofService } from '../services/ton-proof-service';
-import { createAuthToken, verifyToken } from '../utils/jwt';
+import { CheckProofRequest } from '@/types/ton-proof';
+import { TonApiService } from '@/server/routers/services/ton-api-service';
+import { TonProofService } from '@/server/routers/services/ton-proof-service';
+import { createAuthToken, verifyToken } from '@/server/utils/jwt';
 
 /**
  * Checks the proof and returns an access token.
