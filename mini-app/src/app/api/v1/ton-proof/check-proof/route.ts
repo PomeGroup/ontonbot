@@ -143,6 +143,8 @@ export async function POST(req: NextRequest) {
         case "V3R2":
         case "V4R1":
         case "V4R2":
+        case "V5R1":
+        case "V5R2":
           pubkey = data.asSlice().skip(64).loadBuffer(32);
           break;
         default:
