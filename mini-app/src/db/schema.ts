@@ -26,6 +26,7 @@ import {
 } from "./schema/userEventFields";
 import { userRelations, users } from "./schema/users";
 import { visitors } from "./schema/visitors";
+import { sideEvents } from "./schema/sideEvents";
 
 // export all the enums
 export {
@@ -52,6 +53,7 @@ export {
   rewards,
   tickets,
   ticketsRelations,
+  sideEvents,
   userEventFieldRelations,
   userEventFields,
   userRelations,

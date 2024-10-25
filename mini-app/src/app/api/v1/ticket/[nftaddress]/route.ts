@@ -1,15 +1,20 @@
 import { db } from "@/db/db";
 import { tickets } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/server/auth";
+import tonCenter from "@/server/routers/services/tonCenter";
+import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 
 const updateTicketSchema = z.object({
-  full_name: z.string(),
-  telegram: z.string(),
-  company: z.string(),
-  position: z.string(),
+  data: z.object({
+    full_name: z.string(),
+    telegram: z.string(),
+    company: z.string(),
+    position: z.string(),
+  }),
+  proof_token: z.string(),
 });
 
 export async function PUT(
@@ -17,7 +22,8 @@ export async function PUT(
   { params }: { params: { nftaddress: string } }
 ) {
   try {
-    const nftaddress = params.nftaddress;
+    const nft_address = params.nftaddress;
+
     /* -------------------------------------------------------------------------- */
     const body = await req.json();
     const parsedData = updateTicketSchema.safeParse(body);
@@ -36,33 +42,100 @@ export async function PUT(
 
     if (unauthorized) {
       console.warn(
-        `Unauthorized access attempt for ticket update: ${nftaddress}`
+        `Unauthorized access attempt for ticket update: ${nft_address}`
       );
       return unauthorized;
     }
 
+    const proof_token = parsedData.data.proof_token;
+
+    if (!proof_token) {
+      return Response.json(
+        {
+          message: "Uer wallet ton proof is missing",
+          code: "proof_token_required",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    let decoded;
+    try {
+      if (
+        !await verifyToken(proof_token)
+      ) {
+        return Response.json(
+          {
+            message: "invalid token",
+            code: "invalid_proof_token",
+          },
+          {
+            status: 401,
+          }
+        );
+      }
+
+      decoded = {
+        address: decodePayloadToken(proof_token)?.address
+      }
+
+    } catch {
+      return Response.json(
+        {
+          message: "invalid token",
+          code: "invalid_proof_token",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    if (!decoded.address) {
+      return Response.json(
+        {
+          message: "address is missing in token",
+          code: "token_address_missing",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const walletAddress = decoded.address;
+    const nftItem = await tonCenter.fetchNFTItemsWithRetry(
+      walletAddress,
+      "",
+      nft_address
+    );
+    // Check if nftItem is valid and contains nft_items
+    if (!nftItem || !nftItem.nft_items || nftItem.nft_items.length === 0) {
+      return Response.json(
+        {
+          message: "NFT not found or does not belong to wallet",
+          code: "nft_item_update_fail",
+        },
+        { status: 401 }
+      );
+    }
 
     await db
       .update(tickets)
       .set({
-        telegram: parsedData.data.telegram,
-        name: parsedData.data.full_name,
-        company: parsedData.data.company,
-        position: parsedData.data.position,
+        telegram: parsedData.data.data.telegram,
+        name: parsedData.data.data.full_name,
+        company: parsedData.data.data.company,
+        position: parsedData.data.data.position,
 
         user_id: userId,
         updatedBy: `${userId}`,
         updatedAt: new Date(),
       })
-      .where(
-        and(
-          eq(tickets.nftAddress, nftaddress),
-          eq(tickets.event_uuid, "cc3797ba-f908-450b-a123-e6bd81fa84b8")
-        )
-      )
+      .where(eq(tickets.nftAddress, nft_address))
       .execute();
-    
-
 
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
