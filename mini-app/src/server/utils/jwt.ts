@@ -1,6 +1,5 @@
 import { CHAIN } from "@tonconnect/ui-react";
-import { JwtPayload } from "jsonwebtoken";
-import { decodeJwt, JWTPayload, jwtVerify, SignJWT } from 'jose';
+import jwt, { JwtPayload, SignOptions, VerifyOptions } from "jsonwebtoken";
 
 /**
  * Secret key for the token.
@@ -22,35 +21,26 @@ export type PayloadToken = {
 /**
  * Create a token with the given payload.
  */
-function buildCreateToken<T extends JWTPayload>(expirationTime: string): (payload: T) => Promise<string> {
-  return async (payload: T) => {
-    const encoder = new TextEncoder();
-    const key = encoder.encode(JWT_SECRET_KEY);
-    return new SignJWT(payload)
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime(expirationTime)
-      .sign(key);
+function buildCreateToken<T extends JwtPayload>(expiresIn: string): (payload: T) => string {
+  return (payload: T) => {
+    return jwt.sign(payload, JWT_SECRET_KEY, { expiresIn });
   };
 }
 
-export const createAuthToken = buildCreateToken<AuthToken>('1Y');
+export const createAuthToken = buildCreateToken<AuthToken>('1y');
 export const createPayloadToken = buildCreateToken<PayloadToken>('15m');
 
 /**
  * Verify the given token.
  */
-export async function verifyToken(token: string): Promise<JWTPayload | null> {
-  const encoder = new TextEncoder();
-  const key = encoder.encode(JWT_SECRET_KEY);
+export async function verifyToken(token: string): Promise<JwtPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, key);
-    return payload;
+    const decoded = jwt.verify(token, JWT_SECRET_KEY) as JwtPayload;
+    return decoded;
   } catch (e) {
     return null;
   }
 }
-
 
 /**
  * Decode the given token.
@@ -58,7 +48,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 function buildDecodeToken<T extends JwtPayload>(): (token: string) => T | null {
   return (token: string) => {
     try {
-      return decodeJwt(token) as T;
+      return jwt.decode(token) as T;
     } catch (e) {
       return null;
     }

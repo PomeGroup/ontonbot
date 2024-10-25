@@ -95,9 +95,6 @@ importers:
       '@types/bn.js':
         specifier: ^5.1.6
         version: 5.1.6
-      '@types/jsonwebtoken':
-        specifier: ^9.0.6
-        version: 9.0.7
       assert:
         specifier: ^2.1.0
         version: 2.1.0
@@ -282,6 +279,9 @@ importers:
       '@types/jest':
         specifier: ^29.5.11
         version: 29.5.13
+      '@types/jsonwebtoken':
+        specifier: ^9.0.7
+        version: 9.0.7
       '@types/lodash':
         specifier: ^4.17.7
         version: 4.17.10
@@ -10906,6 +10906,8 @@ snapshots:
       - ts-node
 
   jiti@1.21.6: {}
+
+  jose@5.9.6: {}
 
   js-tokens@4.0.0: {}
 
