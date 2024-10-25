@@ -6,7 +6,7 @@ import { TonClient } from "@ton/ton";
 import BN from "bn.js";
 import nacl from "tweetnacl";
 import jwt from "jsonwebtoken";
-import { CheckProofPayload, } from "@/types/ton-proof"; // adjust the import path
+import { CheckProofPayload } from "@/types/ton-proof"; // adjust the import path
 import { DOMAINS, PAYLOAD_TTL, PROOF_TTL, SHARED_SECRET } from "@/constants"; // adjust the import path
 
 export async function POST(req: NextRequest) {
@@ -58,7 +58,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!DOMAINS.includes(proof.domain.value) && !proof.domain.value.endsWith('onton.live')) {
+    if (
+      !DOMAINS.includes(proof.domain.value) &&
+      !proof.domain.value.endsWith("onton.live")
+    ) {
       return NextResponse.json(
         {
           error: `Wrong domain, got ${proof.domain.value}, expected ${DOMAINS.toString()}`,
@@ -143,17 +146,21 @@ export async function POST(req: NextRequest) {
         case "V3R2":
         case "V4R1":
         case "V4R2":
-        case "V5R1":
-        case "V5R2":
           pubkey = data.asSlice().skip(64).loadBuffer(32);
           break;
+        // case "V5R1": // Assuming V5R1 as a sample version for v5
+        //   pubkey = data.asSlice().skip(256).loadBuffer(32);
+        //   break;
         default:
           return NextResponse.json(
-            { error: "Unsupported wallet version" },
+            { error: "Unsupported wallet version" , version:version   },
             { status: 400 }
           );
       }
     }
+
+    //int is_extensions_not_empty = data_slice.skip_bits(size::seqno + size::wallet_id + size::public_key).preload_int(1);
+    //var cs = get_data().begin_parse().skip_bits(64);
 
     const proofSignatureBytes = Buffer.from(proof.signature, "base64");
     const verified = nacl.sign.detached.verify(
