@@ -8,6 +8,10 @@ import { usersDB } from "@/server/db/users";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { NFTItem } from "@/server/routers/services/tonCenter";
 
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+import { SHARED_SECRET } from "@/constants";
+
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(
   uri: string,
@@ -89,7 +93,7 @@ async function getValidNfts(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string; } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const eventId = params.id;
@@ -170,15 +174,48 @@ export async function GET(
       return unauthorized;
     }
 
-    const ownerAddress = searchParams.get('owner_address')
-    if (!ownerAddress) {
-      return Response.json({
-        message: 'Uer wallet address is required',
-        code: 'owner_address_required'
-      }, {
-        status: 400
-      })
+    const proof_token = searchParams.get("proof_token");
+
+    if (!proof_token) {
+      return Response.json(
+        {
+          message: "Uer wallet ton proof is missing",
+          code: "proof_token_required",
+        },
+        {
+          status: 400,
+        }
+      );
     }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(proof_token, SHARED_SECRET);
+    } catch {
+      return Response.json(
+        {
+          message: "invalid token",
+          code: "invalid_proof_token",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
+
+    if (!decoded.address) {
+      return Response.json(
+        {
+          message: "address is missing in token",
+          code: "token_address_missing",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const ownerAddress = decoded.address;
 
     const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
       ownerAddress,
@@ -210,10 +247,7 @@ export async function GET(
           and(
             eq(orders.user_id, userId),
             eq(orders.event_ticket_id, ticket?.id as number),
-            or(
-              eq(orders.state, "created"),
-              eq(orders.state, "mint_request")
-            )
+            or(eq(orders.state, "created"), eq(orders.state, "mint_request"))
           )
         )
         .execute()
@@ -221,7 +255,7 @@ export async function GET(
 
     const needToUpdateTicket = !valid_nfts_with_info.length;
 
-    let chosenNFTaddress = '';
+    let chosenNFTaddress = "";
     if (userHasTicket && needToUpdateTicket) {
       chosenNFTaddress = valid_nfts_no_info[0].address;
     } else if (userHasTicket) {
@@ -238,8 +272,10 @@ export async function GET(
       eventTicket: ticket,
       isSoldOut,
 
-      usedCollectionAddress : ticket?.collectionAddress!,
-      valid_nfts_no_info, valid_nfts_with_info
+      ownerAddress,
+      usedCollectionAddress: ticket?.collectionAddress!,
+      valid_nfts_no_info,
+      valid_nfts_with_info,
     };
 
     return Response.json(data, {
