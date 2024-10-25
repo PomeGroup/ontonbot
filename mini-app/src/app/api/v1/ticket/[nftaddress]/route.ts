@@ -1,12 +1,12 @@
 import { db } from "@/db/db";
 import { tickets } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/server/auth";
 import { SHARED_SECRET } from "@/constants";
 import tonCenter from "@/server/routers/services/tonCenter";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 const updateTicketSchema = z.object({
   data: z.object({

@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!DOMAINS.includes(proof.domain.value)) {
+    if (!DOMAINS.includes(proof.domain.value) && !proof.domain.value.endsWith('onton.live')) {
       return NextResponse.json(
         {
           error: `Wrong domain, got ${proof.domain.value}, expected ${DOMAINS.toString()}`,
