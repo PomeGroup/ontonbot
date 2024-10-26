@@ -112,7 +112,7 @@ export default function Home() {
                   <EventCard
                     key={event.event_uuid}
                     event={event}
-                    mode={"ongoing"}
+                    mode={"normal"}
                   />
                 ))}
               </>
