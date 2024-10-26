@@ -45,6 +45,29 @@ export const UploadVideoFile = (props: UploadFileProps) => {
     },
   });
 
+// Function to check if the video is square
+  const checkIfSquareVideo = async (file: File): Promise<boolean> => {
+    console.log("File metadata loaded: ", File);
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      console.log("Video metadata loaded: ", video);
+      // Set up event listeners
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(video.src); // Free up memory
+
+        resolve(video.videoWidth === video.videoHeight);
+      };
+
+      video.onerror = () => {
+        URL.revokeObjectURL(video.src); // Free up memory
+        reject(new Error("Failed to load video metadata. Please ensure the video is a valid MP4 file."));
+      };
+
+      // Assign the video source
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleSubmit = async () => {
     const fileInput = videoInputRef.current;
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
@@ -52,23 +75,40 @@ export const UploadVideoFile = (props: UploadFileProps) => {
     }
 
     const file = fileInput.files[0];
+
+    // Validate file size
     if (file.size > 5 * 1024 * 1024) {
       alert("File size must be under 5 MB");
       return;
     }
 
+    // Validate file type
     if (file.type !== "video/mp4") {
       alert("Only MP4 format is allowed");
       return;
     }
 
-    const video = (await fileToBase64(file)) as string;
+    try {
+      // Check if the video is square
+      const isSquare = await checkIfSquareVideo(file);
+      if (!isSquare) {
+        alert("Only square videos are allowed");
+        return;
+      }
 
-    uploadVideo.mutate({
-      init_data: webApp?.initData || "",
-      video,
-      subfolder: "event",
-    });
+      // Convert file to base64 for upload
+      const video = (await fileToBase64(file)) as string;
+
+      // Proceed with upload
+      uploadVideo.mutate({
+        init_data: webApp?.initData || "",
+        video,
+        subfolder: "event",
+      });
+    } catch (error) {
+        console.error(error);
+        alert("Failed to upload video. Please try again.");
+    }
   };
 
   return (
@@ -94,7 +134,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
           >
             {videoPreview ? (
                 <div className="flex gap-4 items-center justify-start w-full">
-                  <video key={videoPreview} width="40" height="40" controls>
+                  <video key={videoPreview} width="80" height="80" controls={true}   className="rounded-xl" >
                     <source src={videoPreview} type="video/mp4" />
                   </video>
                   <p className="font-semibold flex items-center gap-2 text-lg">

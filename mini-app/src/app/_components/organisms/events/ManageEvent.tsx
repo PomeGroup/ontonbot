@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import Stepper from "../../molecules/stepper";
 import { useCreateEventStore } from "@/zustand/createEventStore";
-import { FirstStep } from "./firstTab";
-import { SecondStep } from "./secondTab";
-import { ThirdStep } from "./thirdTab";
+import { GeneralStep } from "./GeneralStep";
+import { TimePlaceStep } from "./TimePlaceStep";
+import { RewardStep } from "./RewardStep";
+import {AgendaStep} from "@/app/_components/organisms/events/AgendaStep";
 
 type ManageEventProps = {
   eventHash?: string;
@@ -86,16 +87,18 @@ const ManageEvent = (props: ManageEventProps) => {
     <>
       <Stepper
         steps={[
-          { icon: <span>1</span>, label: "General info" },
-          { icon: <span>2</span>, label: "Time and place" },
-          { icon: <span>3</span>, label: "Reward Setting" },
+          { icon: <span>1</span>, label: "General" },
+          { icon: <span>2</span>, label: "Time/place" },
+          { icon: <span>3</span>, label: "Reward" },
+          // { icon: <span>4</span>, label: "Reward" },
         ]}
         currentStep={currentStep}
       />
 
-      {currentStep === 1 && <FirstStep />}
-      {currentStep === 2 && <SecondStep />}
-      {currentStep === 3 && <ThirdStep />}
+      {currentStep === 1 && <GeneralStep />}
+      {currentStep === 2 && <TimePlaceStep />}
+      {currentStep === 3 && <RewardStep />}
+      {/*{currentStep === 4 && <ThirdStep />}*/}
     </>
   );
 };

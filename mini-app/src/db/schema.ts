@@ -19,6 +19,7 @@ import { giataCity } from "./schema/giataCity";
 import { ontoSetting } from "./schema/ontoSetting";
 import { orders } from "./schema/orders";
 import { rewards } from "./schema/rewards";
+import { sbtRewardCollections } from "./schema/sbtRewardCollections";
 import { tickets, ticketsRelations } from "./schema/tickets";
 import {
   userEventFieldRelations,
@@ -59,4 +60,5 @@ export {
   userRelations,
   users,
   visitors,
+  sbtRewardCollections,
 };

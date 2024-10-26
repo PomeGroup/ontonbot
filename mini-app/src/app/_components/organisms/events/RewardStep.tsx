@@ -20,7 +20,7 @@ import { FiAlertCircle } from "react-icons/fi"; // React icon for errors
 
 let lastToastId: string | number | null = null; // Store the ID of the last toast
 
-export const ThirdStep = () => {
+export const RewardStep = () => {
   const webApp = useWebApp();
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
