@@ -43,7 +43,7 @@ interface EventCardProps {
     country?: string;
     participationType?: string;
   };
-  mode?: "normal" | "small" | "detailed" | "ongoing";
+  mode?: "normal" | "small" | "detailed" | "ongoing" | "normal_without_dropdown";
   currentUserId?: number;
 }
 
@@ -200,8 +200,8 @@ const EventCard: React.FC<EventCardProps> = memo(
 
     const renderNormalMode = () => (
       <>
-        {currentUserId === organizerUserId || user?.role === "admin" ? (
-          renderDropdownMenu()
+        {(currentUserId === organizerUserId || user?.role === "admin") && mode!== "normal_without_dropdown" ? (
+            renderDropdownMenu()
         ) : (
           <div
             onClick={handleEventClick}

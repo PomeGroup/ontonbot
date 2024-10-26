@@ -91,7 +91,7 @@ export default function Home() {
                 </div>
                 <EventCard
                   event={sliderEventsState[0]}
-                  mode={"normal"}
+                  mode={"normal_without_dropdown"}
                 />
               </>
             )
@@ -112,7 +112,7 @@ export default function Home() {
                   <EventCard
                     key={event.event_uuid}
                     event={event}
-                    mode={"normal"}
+                    mode={"normal_without_dropdown"}
                   />
                 ))}
               </>
