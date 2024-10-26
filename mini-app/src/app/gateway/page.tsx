@@ -9,13 +9,16 @@ import { trpc } from "../_trpc/client";
 import "../page.css";
 import { useConfig } from "@/context/ConfigContext";
 import "swiper/css";
+import {useWithBackButton} from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 
 // Define types for events
 type EventData = any[];
 
 export default function Home() {
   const { config } = useConfig();
-  //
+  useWithBackButton({
+    whereTo: "/",
+  });
   const eventUUID = "6acf01ed-3122-498a-a937-329766b459aa";
   const sideEventUUIDs = config?.gatewaySideEvents?.split(",");
   console.log(config?.gatewaySideEvents);
