@@ -98,6 +98,12 @@ const EventCard: React.FC<EventCardProps> = memo(
         return false;
       }
     };
+    const sideEventClick = () => {
+
+          window.location.href = `/gateway/`;
+          return false;
+
+    };
     // Skeleton Loader for Image
     const renderImageSkeleton = () => (
       <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
@@ -260,7 +266,7 @@ const EventCard: React.FC<EventCardProps> = memo(
     const renderDetailedMode = () => (
       <div
         className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
-        onClick={handleEventClick}
+        onClick={sideEventClick}
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
