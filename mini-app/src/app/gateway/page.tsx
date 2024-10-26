@@ -72,11 +72,11 @@ export default function Home() {
       <div className="flex flex-col h-screen">
         {/* Fixed Search Bar */}
         <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
-          <SearchBar
-            includeQueryParam={false}
-            onUpdateResults={() => {}}
-            userRole={authorized ? userRole : "user"}
-          />
+          {/*<SearchBar*/}
+          {/*  includeQueryParam={false}*/}
+          {/*  onUpdateResults={() => {}}*/}
+          {/*  userRole={authorized ? userRole : "user"}*/}
+          {/*/>*/}
           {/* Slider Event */}
           {isLoadingSlider && sliderEventsState.length === 0 ? (
             <>
