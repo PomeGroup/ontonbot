@@ -113,4 +113,78 @@ export const fieldsRouter = router({
       // Return the public URL of the uploaded image
       return res.data as { imageUrl: string };
     }),
+  uploadVideo: adminOrganizerProtectedProcedure
+    .input(
+      z.object({
+        video: z
+          .string()
+          .refine(
+            (file) => {
+              // Remove base64 header and get the video data
+              const base64Data = file.replace(/^data:video\/\w+;base64,/, "");
+
+              // Limit the size of the file
+              const MAX_BASE64_SIZE = 5 * 1024 * 1024; // 5 MB
+              if (base64Data.length > MAX_BASE64_SIZE) {
+                throw new Error("File is too large");
+              }
+
+              return true;
+            },
+            {
+              message: "Invalid video data",
+            }
+          )
+          .transform(async (data) => {
+            if (!data || typeof data !== "string") {
+              throw new Error("Invalid base64 data");
+            }
+            const mimeTypeMatch = data.match(/^data:(.*?);base64,/);
+            if (!mimeTypeMatch || mimeTypeMatch[1] !== "video/mp4") {
+              throw new Error("Only MP4 format is allowed");
+            }
+
+            const mimeType = mimeTypeMatch[1];
+            const base64Data = data.replace(/^data:video\/\w+;base64,/, "");
+            const buffer = Buffer.from(base64Data, "base64");
+
+            // Scan the file for malware
+            const isClean = await scanFileWithClamAV(buffer);
+            if (!isClean) {
+              throw new Error("Malicious file detected");
+            }
+
+            return { buffer, mimeType };
+          }),
+
+        subfolder: z.enum(["event", "sbt"]),
+      })
+    )
+    .mutation(async (opts) => {
+      const bucketName = process.env.MINIO_VIDEO_BUCKET || "onton-videos";
+      const subfolder = opts.input.subfolder;
+
+      const { buffer, mimeType } = opts.input.video;
+      const fullFilename = `${subfolder}/event_video.${mimeType.split("/")[1]}`;
+
+      const formData = new FormData();
+      formData.append("video", buffer, {
+        filename: fullFilename,
+        contentType: mimeType,
+      });
+
+      formData.append("bucketName", bucketName);
+
+      const res = await axios.post(
+        process.env.VIDEO_UPLOAD_URL || "http://127.0.0.1:7863/files/upload-video",
+        formData,
+        { headers: formData.getHeaders() }
+      );
+
+      if (!res.data || !res.data.videoUrl) {
+        throw new Error("File upload failed");
+      }
+
+      return res.data as { videoUrl: string };
+    }),
 });

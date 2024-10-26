@@ -4,6 +4,7 @@ import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { UploadImageFile } from "@/components/ui/upload-file";
+import { UploadVideoFile } from "@/components/ui/upload-video-file";
 import useWebApp from "@/hooks/useWebApp";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import Image from "next/image";
@@ -30,6 +31,7 @@ export const ThirdStep = () => {
   const [errors, setErrors] = useState<{
     secret_phrase?: string[] | undefined;
     ts_reward_url?: string[] | undefined;
+    video_url?: string[] | undefined;
   }>();
 
   const [passwordDisabled, setPasswordDisabled] = useState(
@@ -87,6 +89,16 @@ export const ThirdStep = () => {
           z.string().url().safeParse(url).success,
         { message: "Please upload a valid reward image URL" }
       ),
+    event_video_url: z
+      .string()
+      .optional()
+      .refine(
+        (url) =>
+          url === undefined ||
+          url === "" ||
+          z.string().url().safeParse(url).success,
+        { message: "Please upload a valid video URL" }
+      ),
   });
 
   // Handle form submission
@@ -101,6 +113,7 @@ export const ThirdStep = () => {
     const stepInputsObject = {
       ...formDataObject,
       ts_reward_url: eventData?.ts_reward_url,
+      video_url: eventData?.video_url,
       secret_phrase: passwordDisabled
         ? undefined
         : formDataObject.secret_phrase,
@@ -139,6 +152,7 @@ export const ThirdStep = () => {
       }
       return;
     }
+
 
     // Set errors if validation fails
     setErrors(formDataParsed.error.flatten().fieldErrors);
@@ -182,6 +196,12 @@ export const ThirdStep = () => {
     setPasswordValue(""); // Clear the placeholder text
   };
 
+  const clearVideoError = () => {
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      event_video_url: undefined,
+    }));
+  };
   // Handle form submission on button click
   const handleButtonClick = useCallback(() => {
     if (formRef.current) {
@@ -264,6 +284,27 @@ export const ThirdStep = () => {
               defaultImage={eventData?.ts_reward_url}
             />
           )}
+        </div>
+
+        {/* Video Upload */}
+        <div className="space-y-2">
+          <label htmlFor="event_video">Event Video</label>
+          <AlertGeneric variant="info">
+            Upload a video related to your event. Only MP4 format is allowed,
+            and the file size must be under 5 MB.
+          </AlertGeneric>
+          <UploadVideoFile
+            changeText="Upload Event Video"
+            infoText="Only MP4 files under 5 MB"
+            triggerText="Upload Video"
+            drawerDescriptionText="Upload a promotional video for your event"
+            onDone={(url) => {
+              setEventData({ ...eventData, video_url: url });
+              clearVideoError();
+            }}
+            isError={Boolean(errors?.video_url)}
+            defaultVideo={eventData?.video_url}
+          />
         </div>
       </form>
 

@@ -15,6 +15,13 @@
       "when": 1729778020101,
       "tag": "0001_loving_morbius",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1729895869714,
+      "tag": "0002_large_squirrel_girl",
+      "breakpoints": true
     }
   ]
 }

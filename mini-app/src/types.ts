@@ -131,6 +131,7 @@ export const EventDataSchema = z.object({
   description: z.string(),
   location: z.string(),
   image_url: z.string().url(),
+  video_url: z.string().url().optional(),
   ts_reward_url: z
     .string()
     .optional() // This allows the field to be undefined
@@ -166,6 +167,7 @@ export const UpdateEventDataSchema = z.object({
   description: z.string(),
   location: z.string(),
   image_url: z.string().url(),
+  video_url: z.string().url().optional(),
   ts_reward_url: z
     .string()
     .optional() // This allows the field to be undefined
@@ -198,6 +200,7 @@ export const EventDataSchemaAllOptional = z.object({
   description: z.string().optional(),
   location: z.string().optional(),
   image_url: z.string().url().optional(),
+  video_url: z.string().url().optional(),
   ts_reward_url: z.string().url().optional(),
   type: z.number().optional(),
   society_hub: z

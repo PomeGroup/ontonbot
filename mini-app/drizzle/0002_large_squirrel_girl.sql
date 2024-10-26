@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "ts_reward_video" text;
