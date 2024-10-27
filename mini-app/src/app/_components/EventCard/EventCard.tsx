@@ -43,7 +43,7 @@ interface EventCardProps {
     country?: string;
     participationType?: string;
   };
-  mode?: "normal" | "small" | "detailed" | "ongoing";
+  mode?: "normal" | "small" | "detailed" | "ongoing" | "normal_without_dropdown";
   currentUserId?: number;
 }
 
@@ -97,6 +97,12 @@ const EventCard: React.FC<EventCardProps> = memo(
         window.location.href = `/events/${eventUuid}`;
         return false;
       }
+    };
+    const sideEventClick = () => {
+
+          window.location.href = `/gateway/`;
+          return false;
+
     };
     // Skeleton Loader for Image
     const renderImageSkeleton = () => (
@@ -194,8 +200,8 @@ const EventCard: React.FC<EventCardProps> = memo(
 
     const renderNormalMode = () => (
       <>
-        {currentUserId === organizerUserId || user?.role === "admin" ? (
-          renderDropdownMenu()
+        {(currentUserId === organizerUserId || user?.role === "admin") && mode!== "normal_without_dropdown" ? (
+            renderDropdownMenu()
         ) : (
           <div
             onClick={handleEventClick}
@@ -260,7 +266,7 @@ const EventCard: React.FC<EventCardProps> = memo(
     const renderDetailedMode = () => (
       <div
         className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
-        onClick={handleEventClick}
+        onClick={sideEventClick}
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
