@@ -176,7 +176,8 @@ export const fieldsRouter = router({
       formData.append("bucketName", bucketName);
 
       const res = await axios.post(
-        process.env.VIDEO_UPLOAD_URL || "http://127.0.0.1:7863/files/upload-video",
+        process.env.VIDEO_UPLOAD_URL ||
+          "http://127.0.0.1:7863/files/upload-video",
         formData,
         { headers: formData.getHeaders() }
       );

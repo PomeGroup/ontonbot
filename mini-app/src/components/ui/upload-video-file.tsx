@@ -31,7 +31,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const webApp = useWebApp();
   const [videoPreview, setVideoPreview] = useState<string | undefined>(
-      props.defaultVideo
+    props.defaultVideo
   );
 
   const uploadVideo = trpc.files.uploadVideo.useMutation({
@@ -45,7 +45,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
     },
   });
 
-// Function to check if the video is square
+  // Function to check if the video is square
   const checkIfSquareVideo = async (file: File): Promise<boolean> => {
     console.log("File metadata loaded: ", File);
     return new Promise((resolve, reject) => {
@@ -60,7 +60,11 @@ export const UploadVideoFile = (props: UploadFileProps) => {
 
       video.onerror = () => {
         URL.revokeObjectURL(video.src); // Free up memory
-        reject(new Error("Failed to load video metadata. Please ensure the video is a valid MP4 file."));
+        reject(
+          new Error(
+            "Failed to load video metadata. Please ensure the video is a valid MP4 file."
+          )
+        );
       };
 
       // Assign the video source
@@ -106,121 +110,143 @@ export const UploadVideoFile = (props: UploadFileProps) => {
         subfolder: "event",
       });
     } catch (error) {
-        console.error(error);
-        alert("Failed to upload video. Please try again.");
+      console.error(error);
+      alert("Failed to upload video. Please try again.");
     }
   };
 
   return (
-      <Drawer
-          onOpenChange={(open) => {
-            if (open) {
-              webApp?.MainButton.hide();
-            } else {
-              webApp?.MainButton.show();
-            }
-            try {
-              webApp?.HapticFeedback.impactOccurred("medium");
-            } catch (error) {}
-          }}
-      >
-        <DrawerTrigger asChild>
-          <Button
-              className={cn(
-                  "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
-                  props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
-              )}
-              variant={props.isError ? "destructive" : "outline"}
-          >
-            {videoPreview ? (
-                <div className="flex gap-4 items-center justify-start w-full">
-                  <video key={videoPreview} width="80" height="80" controls={true}   className="rounded-xl" >
-                    <source src={videoPreview} type="video/mp4" />
-                  </video>
-                  <p className="font-semibold flex items-center gap-2 text-lg">
-                    <CircleArrowUp className="w-5" />
-                    {props.changeText}
-                  </p>
-                </div>
-            ) : (
-                <>
-                  <p className="font-semibold flex items-center gap-2 text-lg">
-                    <CircleArrowUp className="w-5" />
-                    {props.triggerText}
-                  </p>
-                  {props.infoText && (
-                      <p className="text-muted-foreground text-sm w-full text-balance">
-                        {props.infoText}
-                      </p>
-                  )}
-                </>
-            )}
-          </Button>
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Upload Video</DrawerTitle>
-            {!videoPreview && (
-                <DrawerDescription>
-                  {props.drawerDescriptionText || "Upload an MP4 video from your device (max 5 MB)"}
-                </DrawerDescription>
-            )}
-          </DrawerHeader>
-          {videoPreview && (
-              <video key={videoPreview} controls width="100" height="100" className="w-full h-auto">
-                <source src={videoPreview} type="video/mp4" />
+    <Drawer
+      onOpenChange={(open) => {
+        if (open) {
+          webApp?.MainButton.hide();
+        } else {
+          webApp?.MainButton.show();
+        }
+        try {
+          webApp?.HapticFeedback.impactOccurred("medium");
+        } catch (error) {}
+      }}
+    >
+      <DrawerTrigger asChild>
+        <Button
+          className={cn(
+            "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
+            props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
+          )}
+          variant={props.isError ? "destructive" : "outline"}
+        >
+          {videoPreview ? (
+            <div className="flex gap-4 items-center justify-start w-full">
+              <video
+                key={videoPreview}
+                width="80"
+                height="80"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="rounded-xl"
+              >
+                <source
+                  src={videoPreview}
+                  type="video/mp4"
+                />
               </video>
+              <p className="font-semibold flex items-center gap-2 text-lg">
+                <CircleArrowUp className="w-5" />
+                {props.changeText}
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="font-semibold flex items-center gap-2 text-lg">
+                <CircleArrowUp className="w-5" />
+                {props.triggerText}
+              </p>
+              {props.infoText && (
+                <p className="text-muted-foreground text-sm w-full text-balance">
+                  {props.infoText}
+                </p>
+              )}
+            </>
           )}
-          {uploadVideo.error && (
-              <div className="text-red-500 text-sm w-full text-balance mt-2">
-                {getErrorMessages(uploadVideo.error.message).map(
-                    (errMessage, idx: number) => (
-                        <p key={idx}>{errMessage}</p>
-                    )
-                )}
-              </div>
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Upload Video</DrawerTitle>
+          {!videoPreview && (
+            <DrawerDescription>
+              {props.drawerDescriptionText ||
+                "Upload an MP4 video from your device (max 5 MB)"}
+            </DrawerDescription>
           )}
-          <DrawerFooter>
-            <input
-                ref={videoInputRef}
-                type="file"
-                name="video"
-                accept="video/mp4"
-                onChange={(e) => {
-                  e.preventDefault();
-                  handleSubmit();
-                }}
-                id="event_video_input"
-                className="hidden"
+        </DrawerHeader>
+        {videoPreview && (
+          <video
+            key={videoPreview}
+            controls
+            width="100"
+            height="100"
+            className="w-full h-auto"
+          >
+            <source
+              src={videoPreview}
+              type="video/mp4"
             />
-            <Button
-                type="button"
-                className="w-full h-12.5 flex items-center gap-2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  videoInputRef.current?.click();
-                }}
-                isLoading={uploadVideo.isLoading}
-            >
-              <CircleArrowUp className="w-5" />
-              <span>{videoPreview ? "Change Video" : "Upload Video"}</span>
-            </Button>
-            {videoPreview && (
-                <DrawerClose asChild>
-                  <Button
-                      className="w-16 h-10 mx-auto rounded-full mt-4"
-                      variant="secondary"
-                      onClick={() =>
-                          typeof props?.onDone === "function" &&
-                          props.onDone(videoPreview)
-                      }
-                  >
-                    Done
-                  </Button>
-                </DrawerClose>
+          </video>
+        )}
+        {uploadVideo.error && (
+          <div className="text-red-500 text-sm w-full text-balance mt-2">
+            {getErrorMessages(uploadVideo.error.message).map(
+              (errMessage, idx: number) => (
+                <p key={idx}>{errMessage}</p>
+              )
             )}
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+          </div>
+        )}
+        <DrawerFooter>
+          <input
+            ref={videoInputRef}
+            type="file"
+            name="video"
+            accept="video/mp4"
+            onChange={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+            id="event_video_input"
+            className="hidden"
+          />
+          <Button
+            type="button"
+            className="w-full h-12.5 flex items-center gap-2"
+            onClick={(e) => {
+              e.preventDefault();
+              videoInputRef.current?.click();
+            }}
+            isLoading={uploadVideo.isLoading}
+          >
+            <CircleArrowUp className="w-5" />
+            <span>{videoPreview ? "Change Video" : "Upload Video"}</span>
+          </Button>
+          {videoPreview && (
+            <DrawerClose asChild>
+              <Button
+                className="w-16 h-10 mx-auto rounded-full mt-4"
+                variant="secondary"
+                onClick={() =>
+                  typeof props?.onDone === "function" &&
+                  props.onDone(videoPreview)
+                }
+              >
+                Done
+              </Button>
+            </DrawerClose>
+          )}
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 };

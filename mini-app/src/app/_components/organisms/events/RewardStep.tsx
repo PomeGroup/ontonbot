@@ -3,21 +3,20 @@ import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { UploadImageFile } from "@/components/ui/upload-file";
-import { UploadVideoFile } from "@/components/ui/upload-video-file";
 import useWebApp from "@/hooks/useWebApp";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useCreateEventStore } from "@/zustand/createEventStore";
+import "swiper/css";
 import { StepLayout } from "./stepLayout";
-
 import { FiAlertCircle } from "react-icons/fi"; // React icon for errors
-
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { SbtOptionContent } from "./SbtOptionContent";
 let lastToastId: string | number | null = null; // Store the ID of the last toast
 
 export const RewardStep = () => {
@@ -33,7 +32,7 @@ export const RewardStep = () => {
     ts_reward_url?: string[] | undefined;
     video_url?: string[] | undefined;
   }>();
-
+  const [selectedSbtId, setSelectedSbtId] = useState<number | null>(null);
   const [passwordDisabled, setPasswordDisabled] = useState(
     !!editOptions?.eventHash
   );
@@ -41,6 +40,36 @@ export const RewardStep = () => {
     editOptions?.eventHash ? "{** click to change password **}" : ""
   );
 
+  const {
+    data: rewardCollections,
+    isLoading: sbtCollectionIsLoading,
+    refetch,
+  } = trpc.sbtRewardCollection.getRewardCollectionsByHubID.useQuery(
+    { hubID: Number(eventData?.society_hub?.id) || 0 },
+    {
+      enabled: false,
+      cacheTime: 1000 * 60,
+    }
+  );
+  const [sbtOption, setSbtOption] = useState<"custom" | "default">(
+      rewardCollections && rewardCollections.length > 0 ? "default" : "custom"
+  );
+  useEffect(() => {
+    if (eventData?.society_hub?.id) {
+      refetch().then(() => {
+        console.log("Refetched SBT Videos");
+        console.log("Reward Collections", rewardCollections);
+      });
+    }
+
+    // Automatically set the sbtOption to "custom" if rewardCollections is empty
+    if (rewardCollections && rewardCollections.length === 0) {
+      setSbtOption("custom");
+    }
+    else {
+      setSbtOption("default");
+    }
+  }, [eventData?.society_hub?.id, rewardCollections]);
   // Add Event Mutation
   const addEvent = trpc.events.addEvent.useMutation({
     onSuccess(data) {
@@ -70,7 +99,10 @@ export const RewardStep = () => {
       toast.error(error.message);
     },
   });
-
+  const handleSbtSelection = (id: number) => {
+    setSelectedSbtId(id);
+    console.log("Selected SBT Collection ID:", id);
+  };
   // Zod schema for validation
   const thirdStepDataSchema = z.object({
     secret_phrase: passwordDisabled
@@ -153,7 +185,6 @@ export const RewardStep = () => {
       return;
     }
 
-
     // Set errors if validation fails
     setErrors(formDataParsed.error.flatten().fieldErrors);
     const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
@@ -190,7 +221,9 @@ export const RewardStep = () => {
       { duration: 5000 } // Set duration to 5 seconds
     );
   };
-
+  useEffect(() => {
+   console.log("eventData", eventData);
+  }, [eventData]);
   const handlePasswordClick = () => {
     setPasswordDisabled(false);
     setPasswordValue(""); // Clear the placeholder text
@@ -217,6 +250,23 @@ export const RewardStep = () => {
     }));
   };
 
+
+  const handleSlideChange = (swiper: any) => {
+    if (!rewardCollections || rewardCollections.length === 0) return;
+
+    const currentIndex = swiper.activeIndex;
+    const currentSlide = rewardCollections[currentIndex];
+
+    if (currentSlide) {
+      setSelectedSbtId(currentSlide.id);
+      setEventData({
+        ...eventData,
+        ts_reward_url: currentSlide.imageLink,
+        video_url: currentSlide.videoLink,
+      });
+    }
+  };
+
   return (
     <StepLayout>
       <form
@@ -226,7 +276,12 @@ export const RewardStep = () => {
       >
         {/* Secret Phrase Field */}
         <div className="space-y-2">
-          <label htmlFor="secret_phrase">Events password</label>
+          <Label
+            htmlFor="secret_phrase"
+            className="font-bold text-lg"
+          >
+            Events password
+          </Label>
           <div
             onClick={handlePasswordClick}
             className="relative"
@@ -251,60 +306,48 @@ export const RewardStep = () => {
             unexpectedly and receiving a reward without attending the event.
           </AlertGeneric>
         </div>
-        {/* Reward Image Upload */}
+        {/* SBT Option Selection */}
         <div className="space-y-2">
-          <label htmlFor="reward_image">Reward Image</label>
-          <AlertGeneric variant="info">
-            Events reward badge, visible on TON society. It cannot be changed
-            after event creation.
-          </AlertGeneric>
-          {editOptions?.eventHash ? (
-            eventData?.ts_reward_url ? (
-              <div className="flex justify-center gap-4 items-center pt-2 w-full">
-                <Image
-                  src={eventData?.ts_reward_url}
-                  alt="reward image"
-                  width={300}
-                  height={300}
-                  className="rounded-xl"
-                />
-              </div>
-            ) : null
-          ) : (
-            <UploadImageFile
-              changeText="Upload Reward Image"
-              infoText="Image must be in 1:1 ratio"
-              triggerText="Upload"
-              drawerDescriptionText="Upload your SBT reward image"
-              onDone={(url) => {
-                setEventData({ ...eventData, ts_reward_url: url });
-                clearImageError(); // Clear error when a valid image is uploaded
-              }}
-              isError={Boolean(errors?.ts_reward_url)}
-              defaultImage={eventData?.ts_reward_url}
-            />
-          )}
+          <Label className="font-bold text-lg mb-2">Choose SBT Option</Label>
+
+          <RadioGroup
+            onValueChange={(value: "custom" | "default") => setSbtOption(value)}
+            value={sbtOption}
+          >
+            <div className="flex space-x-4">
+              {rewardCollections && rewardCollections.length > 0 && (
+                  <>
+                    <RadioGroupItem value="default" id="default" className="w-4 h-4"  />
+                    <Label htmlFor="default"> Default Collections</Label>
+                  </>
+              )}
+
+              <RadioGroupItem
+                value="custom"
+                id="custom"
+                className={"w-4 h-4 color-white"}
+              />
+              <Label htmlFor="custom"  > Customized SBT</Label>
+            </div>
+          </RadioGroup>
         </div>
 
-        {/* Video Upload */}
+        {/* Conditionally Render SBT Content */}
         <div className="space-y-2">
-          <label htmlFor="event_video">Event Video</label>
-          <AlertGeneric variant="info">
-            Upload a video related to your event. Only MP4 format is allowed,
-            and the file size must be under 5 MB.
-          </AlertGeneric>
-          <UploadVideoFile
-            changeText="Upload Event Video"
-            infoText="Only MP4 files under 5 MB"
-            triggerText="Upload Video"
-            drawerDescriptionText="Upload a promotional video for your event"
-            onDone={(url) => {
-              setEventData({ ...eventData, video_url: url });
-              clearVideoError();
-            }}
-            isError={Boolean(errors?.video_url)}
-            defaultVideo={eventData?.video_url}
+          <SbtOptionContent
+              sbtOption={sbtOption}
+              rewardCollections={rewardCollections || []}
+              sbtCollectionIsLoading={sbtCollectionIsLoading}
+              selectedSbtId={selectedSbtId}
+              handleSbtSelection={handleSbtSelection}
+              handleSlideChange={handleSlideChange}
+              setEventData={setEventData}
+
+              errors={errors || {}}
+              clearImageError={clearImageError}
+              clearVideoError={clearVideoError}
           />
+
         </div>
       </form>
 
