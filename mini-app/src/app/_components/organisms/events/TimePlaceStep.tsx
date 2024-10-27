@@ -18,7 +18,7 @@ import { FiAlertCircle } from "react-icons/fi";
 import * as React from "react";
 import {dataValidationSchema} from "@/zodSchema/dataValidationSchema"; // Import icon for errors
 
-export const SecondStep = () => {
+export const TimePlaceStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEventData = useCreateEventStore((state) => state.setEventData);

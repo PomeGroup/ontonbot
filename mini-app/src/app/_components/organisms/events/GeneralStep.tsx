@@ -63,7 +63,7 @@ const firstStepDataSchema = z.object({
     .min(1, { message: "Please select a hub" }),
 });
 
-export const FirstStep = () => {
+export const GeneralStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEventData = useCreateEventStore((state) => state.setEventData);

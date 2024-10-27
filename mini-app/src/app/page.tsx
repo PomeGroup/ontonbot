@@ -70,7 +70,7 @@ export default function Home() {
       endDate: currentDateTime,
       endDateOperator: ">=",
     },
-    sortBy: "start_date_asc",
+    sortBy: "random",
   });
 
   const pastEventsParams = searchEventsInputZod.parse({

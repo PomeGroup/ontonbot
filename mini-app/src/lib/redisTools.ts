@@ -293,6 +293,8 @@ export const cacheKeys = {
   reward: "reward:",
   authApiOtp : "auth:api:otp:",
   jwtBlacklist: "auth:jwt:blacklist:",
+  SBTRewardCollections: "SBTRewardCollections:",
+  SBTRewardCollectionByHubID: "SBTRewardCollections:hubID:",
 
 };
 export const cacheLvl = {

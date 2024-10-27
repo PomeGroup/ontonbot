@@ -70,8 +70,8 @@ const Search: React.FC = () => {
     isRefetching: isRefetchingSearchResults,
     refetch,
   } = trpc.events.getEventsWithFilters.useQuery(finalSearchInput, {
-   enabled: initialFetchDone,
-  //   enabled: true,
+    enabled: initialFetchDone,
+    //   enabled: true,
     keepPreviousData: true,
     retry: 2,
     queryKey: ["events.getEventsWithFilters", finalSearchInput],
@@ -84,8 +84,6 @@ const Search: React.FC = () => {
       setHasMore(data?.data?.length === LIMIT);
     },
   });
-
-
 
   const loadMoreResults = useCallback(() => {
     if (hasMore && !isFetchingSearchResults) {
@@ -128,7 +126,6 @@ const Search: React.FC = () => {
   useEffect(() => {
     //resetFilters();
 
-
     // applyTabFilter(tabValue , searchInput.sortBy);
     applyTabFilter(tabValue, UserId);
     setResults([]);
@@ -141,7 +138,7 @@ const Search: React.FC = () => {
 
   useEffect(() => {
     setFinalSearchInput(searchEventsInputZod.parse(searchInput));
-  }, [searchInput,  searchStore]);
+  }, [searchInput, searchStore]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -169,8 +166,7 @@ const Search: React.FC = () => {
     };
   }, [loadMoreResults]);
 
-
-    const handleSlideChange = (swiper: any) => {
+  const handleSlideChange = (swiper: any) => {
     const activeIndex = swiper.activeIndex;
     const newTab = tabItems[activeIndex]?.value || "All";
     setTabValue(newTab);
@@ -232,9 +228,8 @@ const Search: React.FC = () => {
               >
                 {!isLoadingSearchResults &&
                   !isFetchingSearchResults &&
-                    !isRefetchingSearchResults &&
-                    !initialFetchDone &&
-
+                  !isRefetchingSearchResults &&
+                  !initialFetchDone &&
                   results.length === 0 && (
                     <div className="flex flex-col items-center justify-center min-h-screen  text-center space-y-4">
                       <div>

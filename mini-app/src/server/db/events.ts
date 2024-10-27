@@ -405,6 +405,10 @@ export const getEventsWithFilters = async (
       // @ts-expect-error
       query = query.orderBy(desc(event_details_search_list.visitorCount));
     }
+    else if (sortBy === "random") {
+        // @ts-expect-error
+        query = query.orderBy(sql`random()`);
+    }
   }
 
   // Apply pagination
