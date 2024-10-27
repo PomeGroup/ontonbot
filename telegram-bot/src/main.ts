@@ -1,7 +1,7 @@
 import "dotenv/config"
 
 import express from "express"
-import { Bot } from "grammy";
+import { Bot, session } from "grammy";
 
 import bodyParser from "body-parser"
 import fileUpload from "express-fileupload"
@@ -12,13 +12,18 @@ import {
   sendMessage,
 } from "./controllers"
 import { orgHandler, startHandler } from "./handlers"
+import { mainComposer } from "./composers";
 // parse application/json
 
+
 const bot = new Bot(process.env.BOT_TOKEN || "");
+bot.use(session({ initial: () => ({}) }));
 console.log("Starting bot... v2");
 
 bot.command("org", orgHandler)
 bot.command("start", startHandler)
+
+bot.use(mainComposer)
 
 bot.start();
 bot.catch((err) => {
