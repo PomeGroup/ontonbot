@@ -225,10 +225,10 @@ export const eventsRouter = router({
                       title: opts.input.eventData.title,
                       description: opts.input.eventData.description,
                       image: {
-                        url: opts.input.eventData.image_url,
+                        url:  opts.input.eventData.image_url  ,
                       },
                       cover: {
-                        url: opts.input.eventData.image_url,
+                        url:  opts.input.eventData.image_url,
                       },
                       item_title: opts.input.eventData.title,
                       item_description: "Reward for participation",

@@ -306,49 +306,54 @@ export const RewardStep = () => {
             unexpectedly and receiving a reward without attending the event.
           </AlertGeneric>
         </div>
-        {/* SBT Option Selection */}
-        <div className="space-y-2">
-          <Label className="font-bold text-lg mb-2">Choose SBT Option</Label>
+        {!editOptions?.eventHash && (
+            <>
+              {/* SBT Option Selection */}
+              <div className="space-y-2">
+                <Label className="font-bold text-lg mb-2">Choose SBT Option</Label>
 
-          <RadioGroup
-            onValueChange={(value: "custom" | "default") => setSbtOption(value)}
-            value={sbtOption}
-          >
-            <div className="flex space-x-4">
-              {rewardCollections && rewardCollections.length > 0 && (
-                  <>
-                    <RadioGroupItem value="default" id="default" className="w-4 h-4"  />
-                    <Label htmlFor="default"> Default Collections</Label>
-                  </>
-              )}
+                <RadioGroup
+                    onValueChange={(value: "custom" | "default") => setSbtOption(value)}
+                    value={sbtOption}
+                >
+                  <div className="flex space-x-4">
+                    {rewardCollections && rewardCollections.length > 0 && (
+                        <>
+                          <RadioGroupItem value="default" id="default" className="w-4 h-4"  />
+                          <Label htmlFor="default"> Default Collections</Label>
+                        </>
+                    )}
 
-              <RadioGroupItem
-                value="custom"
-                id="custom"
-                className={"w-4 h-4 color-white"}
-              />
-              <Label htmlFor="custom"  > Customized SBT</Label>
-            </div>
-          </RadioGroup>
-        </div>
+                    <RadioGroupItem
+                        value="custom"
+                        id="custom"
+                        className={"w-4 h-4 color-white"}
+                    />
+                    <Label htmlFor="custom"  > Customized SBT</Label>
+                  </div>
+                </RadioGroup>
+              </div>
 
-        {/* Conditionally Render SBT Content */}
-        <div className="space-y-2">
-          <SbtOptionContent
-              sbtOption={sbtOption}
-              rewardCollections={rewardCollections || []}
-              sbtCollectionIsLoading={sbtCollectionIsLoading}
-              selectedSbtId={selectedSbtId}
-              handleSbtSelection={handleSbtSelection}
-              handleSlideChange={handleSlideChange}
-              setEventData={setEventData}
+              {/* Conditionally Render SBT Content */}
+              <div className="space-y-2">
+                <SbtOptionContent
+                    sbtOption={sbtOption}
+                    rewardCollections={rewardCollections || []}
+                    sbtCollectionIsLoading={sbtCollectionIsLoading}
+                    selectedSbtId={selectedSbtId}
+                    handleSbtSelection={handleSbtSelection}
+                    handleSlideChange={handleSlideChange}
+                    setEventData={setEventData}
 
-              errors={errors || {}}
-              clearImageError={clearImageError}
-              clearVideoError={clearVideoError}
-          />
+                    errors={errors || {}}
+                    clearImageError={clearImageError}
+                    clearVideoError={clearVideoError}
+                />
 
-        </div>
+              </div>
+            </>
+        )}
+
       </form>
 
       {/* Submit Button */}
