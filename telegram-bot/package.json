@@ -23,7 +23,8 @@
     "sharp": "^0.33.2",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "zod": "^3.23.8"
   },
   "scripts": {
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts",
