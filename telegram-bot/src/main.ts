@@ -1,7 +1,7 @@
 import "dotenv/config"
 
 import express from "express"
-import { Telegraf } from "telegraf"
+import { Bot } from "grammy";
 
 import bodyParser from "body-parser"
 import fileUpload from "express-fileupload"
@@ -13,30 +13,27 @@ import {
 } from "./controllers"
 import { orgHandler, startHandler } from "./handlers"
 // parse application/json
-import { HttpsProxyAgent } from 'https-proxy-agent'
 
-console.log(process.env.TG_PROXY);
-
-const agent = process.env.TG_PROXY && new HttpsProxyAgent(process.env.TG_PROXY);
-const port = 3333;
-
-const bot = new Telegraf(process.env.BOT_TOKEN || "", {
-  telegram: {
-    agent
-  }});
+const bot = new Bot(process.env.BOT_TOKEN || "");
 console.log("Starting bot... v2");
-console.log(process.env.BOT_TOKEN || "");
-
-bot.start(startHandler);
 
 bot.command("org", orgHandler)
+bot.command("start", startHandler)
 
+bot.start();
+bot.catch((err) => {
+  console.log('BOT_ERROR_HANDLER', err);
+})
+
+// -------- EXPRESS APP --------- 👇
+
+const port = 3333;
 const app = express();
 
 app.use(bodyParser.json());
 
 app.use(fileUpload());
-app.use((req, res, next) => {
+app.use((req, _, next) => {
   // @ts-expect-error fix express.d.ts
   req.bot = bot;
   next();
@@ -48,14 +45,12 @@ app.post("/share-event", handleShareEvent);
 // @ts-expect-error
 app.post("/send-message", sendMessage);
 
-bot.catch((err) => console.error(err));
-
-bot.launch();
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+process.once("SIGINT", () => bot.stop());
+process.once("SIGTERM", () => bot.stop());
 
 app.listen(port, () => console.log(`Example app listening on port ${port}`));
 
 process.on("unhandledRejection", (reason, promise) => {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
+
