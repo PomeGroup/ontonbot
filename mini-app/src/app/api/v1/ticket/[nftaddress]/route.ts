@@ -136,7 +136,8 @@ export async function PUT(
       })
       .where(eq(tickets.nftAddress, nft_address))
       .execute();
-
+    // log user id ticket id and other info
+    console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
     if (error instanceof SyntaxError)
