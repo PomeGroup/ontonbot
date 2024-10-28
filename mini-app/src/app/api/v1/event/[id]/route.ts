@@ -51,6 +51,9 @@ async function getValidNfts(
         const nft_data = await getRequestWithRetry(nft.content.uri);
         const name: string = nft_data.name;
 
+        if (name.toLowerCase().includes("revoked")) {
+          continue;
+        }
         // Query the tickets database for this NFT address
         const ticketsResult = await db
           .select()
@@ -188,9 +191,7 @@ export async function GET(
 
     let decoded;
     try {
-      if (
-        !await verifyToken(proof_token)
-      ) {
+      if (!(await verifyToken(proof_token))) {
         return Response.json(
           {
             message: "invalid token",
@@ -203,9 +204,8 @@ export async function GET(
       }
 
       decoded = {
-        address: decodePayloadToken(proof_token)?.address
-      }
-
+        address: decodePayloadToken(proof_token)?.address,
+      };
     } catch {
       return Response.json(
         {
@@ -273,6 +273,7 @@ export async function GET(
     let chosenNFTaddress = "";
     if (userHasTicket && needToUpdateTicket) {
       chosenNFTaddress = valid_nfts_no_info[0].address;
+      console.log(`User ${userId} can claim ${chosenNFTaddress} `);
     } else if (userHasTicket) {
       chosenNFTaddress = valid_nfts_with_info[0].address;
     }
