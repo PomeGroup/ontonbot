@@ -178,8 +178,12 @@ export const selectVisitorsByEventUuid = async (
         ticket_position: sql`null`.as("ticket_position"),
         ticket_company: sql`null`.as("ticket_company"),
         ticket_nft_address: sql`null`.as("ticket_nft_address"),
-
-
+        badge_info: sql<string>`
+          CASE 
+            WHEN ${tickets.telegram} = 'null' THEN 'https://t.me/theontonbot'
+            ELSE CONCAT('https://t.me/', REPLACE(${tickets.telegram}, '@', ''))
+          END
+        `.as("badge"),
       })
       .from(visitors)
       .leftJoin(users, eq(visitors.user_id, users.user_id))
@@ -201,11 +205,18 @@ export const selectVisitorsByEventUuid = async (
   } else {
     userDataQuery = db
       .select({
-        user_id: users.user_id,
-        username: users.username,
-        first_name: users.first_name,
-        last_name: users.last_name,
-        wallet_address: users.wallet_address,
+        user_id: tickets.user_id,
+        username: sql<string>`
+          CASE 
+            WHEN ${tickets.telegram} = '@null' THEN CAST(${users.user_id} AS VARCHAR)
+            ELSE REPLACE(${tickets.telegram}, '@', '')
+          END
+        `.as("username"),
+        first_name: tickets.name,
+        last_name: sql<string>`COALESCE(${users.last_name}, '')`.as(
+          "last_name"
+        ),
+        wallet_address: sql`null`.as("wallet_address"),
         created_at: tickets.created_at,
         has_ticket: sql<boolean>`true`.as("has_ticket"),
         ticket_status: tickets.status,
@@ -216,6 +227,12 @@ export const selectVisitorsByEventUuid = async (
         ticket_company: tickets.company,
         ticket_nft_address: tickets.nftAddress,
         ticket_created_at: tickets.created_at,
+        badge_info: sql<string>`
+          CASE 
+            WHEN ${tickets.telegram} = '@null' THEN 'https://t.me/theontonbot'
+            ELSE CONCAT('https://t.me/', REPLACE(${tickets.telegram}, '@', ''))
+          END
+        `.as("badge"),
       })
       .from(tickets)
       .innerJoin(users, eq(tickets.user_id, users.user_id))
@@ -239,14 +256,13 @@ export const selectVisitorsByEventUuid = async (
     userDataQuery = userDataQuery.limit(limit);
   }
 
-    userDataQuery = userDataQuery.offset(cursor);
+  userDataQuery = userDataQuery.offset(cursor);
 
   const visitorsData = await userDataQuery.execute();
 
   const moreRecordsAvailable =
     typeof limit === "number" ? visitorsData.length === limit : false;
-  const nextCursor =
-    moreRecordsAvailable && true ? cursor + limit! : null;
+  const nextCursor = moreRecordsAvailable && true ? cursor + limit! : null;
   if (!dynamic_fields) {
     return {
       visitorsWithDynamicFields: null,
@@ -372,15 +388,15 @@ export const findVisitorById = async (visitor_id: number) => {
 };
 
 export const visitorsDB = {
-    findVisitorByUserAndEvent,
-    findVisitorByUserAndEventUuid,
-    findVisitorById,
-    selectVisitorsByEventUuid,
-    selectVisitorsByEventUuidMock,
-    selectValidVisitorById,
-    selectVisitorsWithWalletAddress,
-    updateVisitorLastVisit,
-    getVisitor,
-    addVisitor,
-    };
+  findVisitorByUserAndEvent,
+  findVisitorByUserAndEventUuid,
+  findVisitorById,
+  selectVisitorsByEventUuid,
+  selectVisitorsByEventUuidMock,
+  selectValidVisitorById,
+  selectVisitorsWithWalletAddress,
+  updateVisitorLastVisit,
+  getVisitor,
+  addVisitor,
+};
 export default visitorsDB;
