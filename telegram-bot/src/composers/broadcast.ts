@@ -22,10 +22,15 @@ broadcastComposer.command('broadcast', async (ctx) => {
 })
 
 async function broadcastMessageConvo(conversation: BroadcastConversation, ctx: BroadcastContext) {
-  await ctx.reply('📣 Send the event id to broadcast')
+  await ctx.reply('📣 Send the event id to broadcast, (/cancel)')
 
   const eventIdAnswerMessage = await conversation.waitFor('message')
   const eventResult = z.string().uuid().safeParse(eventIdAnswerMessage.message.text)
+
+  if (eventIdAnswerMessage.message.text === '/cancel') {
+    await ctx.reply('❌ Broadcast canceled')
+    return await ctx.conversation.exit()
+  }
 
   if (!eventResult.success) {
     await ctx.reply('❌ Invalid event id')
@@ -39,8 +44,14 @@ async function broadcastMessageConvo(conversation: BroadcastConversation, ctx: B
     return await ctx.conversation.exit()
   }
 
-  await ctx.reply("Send the message you want to broadcast to users who bought the ticket")
+  await ctx.reply("Send the message you want to broadcast to users who bought the ticket (/cancel)")
   const messageAnswer = await conversation.waitFor('message')
+
+  if (messageAnswer.message.text === '/cancel') {
+    await ctx.reply('❌ Broadcast canceled')
+    return await ctx.conversation.exit()
+  }
+
   const tickets = await getEventTickets(eventResult.data)
   await ctx.reply(`
 Do you want to broadcast this message:
@@ -62,24 +73,27 @@ User Count: ${tickets.length} users will receive this message
   if (confirmResult) {
     for (let index = 0; index < tickets.length; index++) {
       const ticket = tickets[index]
-      sendMessage(ticket.user_id, messageAnswer.message.text, ctx)
+      await sendMessage(ticket.user_id, messageAnswer.message.text, ctx)
+      if (index % 100 === 0) {
+        await sendMessage(ctx.from.id, `ℹ️  ${index} users have received the rewards`, ctx)
+      }
+      await sleep(50)
     }
+    await sendMessage(ctx.from.id, `✅ ${tickets.length} users have received the rewards, Done`, ctx)
   } else {
     await ctx.reply('❌ Broadcast canceled')
     return await ctx.conversation.exit()
   }
-
 }
 
 async function sendMessage(user_id: number | string, msg: string, ctx: Context) {
   try {
-
     await ctx.api.sendMessage(user_id, msg)
   } catch (error) {
     if (error instanceof GrammyError) {
       if (error.error_code === 429) {
-        await sleep(200)
         await sendMessage(user_id, msg, ctx)
+        await sleep(100)
       }
     }
   }
