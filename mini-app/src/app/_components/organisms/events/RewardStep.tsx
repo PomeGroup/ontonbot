@@ -150,7 +150,25 @@ export const RewardStep = () => {
         ? undefined
         : formDataObject.secret_phrase,
     };
+    if (sbtOption === "custom" && (!eventData?.ts_reward_url || !eventData?.video_url)) {
+      // Set errors if the image or video URL is missing
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
+        video_url: !eventData?.video_url ? ["Please upload a video."] : undefined,
+      }));
 
+      toast.error(
+          <div>
+            <div className="flex items-center">
+              <FiAlertCircle className="mr-2" />
+              {"Please upload both an image and a video for your custom SBT reward."}
+            </div>
+          </div>,
+          { duration: 5000 }
+      );
+      return;
+    }
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
     if (formDataParsed.success) {
       setErrors({}); // Clear all errors

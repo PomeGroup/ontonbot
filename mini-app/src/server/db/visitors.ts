@@ -180,7 +180,7 @@ export const selectVisitorsByEventUuid = async (
         ticket_nft_address: sql`null`.as("ticket_nft_address"),
         badge_info: sql<string>`
           CASE 
-            WHEN ${tickets.telegram} = 'null' THEN 'https://t.me/theontonbot'
+            WHEN ${users.username} = 'null' THEN 'https://t.me/theontonbot'
             ELSE CONCAT('https://t.me/', REPLACE(${tickets.telegram}, '@', ''))
           END
         `.as("badge"),
