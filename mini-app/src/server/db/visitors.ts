@@ -181,7 +181,7 @@ export const selectVisitorsByEventUuid = async (
         badge_info: sql<string>`
           CASE 
             WHEN ${users.username} = 'null' THEN 'https://t.me/theontonbot'
-            ELSE CONCAT('https://t.me/', REPLACE(${tickets.telegram}, '@', ''))
+            ELSE CONCAT('https://t.me/', REPLACE(${users.username}, '@', ''))
           END
         `.as("badge"),
       })
