@@ -1,4 +1,4 @@
-import { Composer, Context } from "grammy";
+import { Composer, Context, GrammyError } from "grammy";
 import {
   type Conversation,
   type ConversationFlavor,
@@ -25,7 +25,7 @@ async function broadcastMessageConvo(conversation: BroadcastConversation, ctx: B
   await ctx.reply('📣 Send the event id to broadcast')
 
   const eventIdAnswerMessage = await conversation.waitFor('message')
-  const eventResult = z.string().uuid().safeParse(eventIdAnswerMessage.message)
+  const eventResult = z.string().uuid().safeParse(eventIdAnswerMessage.message.text)
 
   if (!eventResult.success) {
     await ctx.reply('❌ Invalid event id')
@@ -46,27 +46,41 @@ async function broadcastMessageConvo(conversation: BroadcastConversation, ctx: B
 Do you want to broadcast this message:
 👇👇👇👇👇
 
-${messageAnswer.message}
+${messageAnswer.message.text}
 
 👆👆👆👆👆
 
 User Count: ${tickets.length} users will receive this message 
 
-<b>React with "👍" to confirm the action and "👎" to cancel.</b>
+<b>Send with "Yes" to confirm the action and "No" or anything else to cancel.</b>
 `, { parse_mode: "HTML" })
 
-  const reaction = await conversation.waitForReaction('👍')
-  const confirmResult = reaction.hasReaction('👍')
+  const reaction = await conversation.waitFor('message')
+
+  const confirmResult = reaction.message.text === 'Yes'
 
   if (confirmResult) {
     for (let index = 0; index < tickets.length; index++) {
-      const ticket = tickets[index];
-      await ctx.api.sendMessage(ticket.user_id, messageAnswer.message.text)
-      await sleep(100)
+      const ticket = tickets[index]
+      sendMessage(ticket.user_id, messageAnswer.message.text, ctx)
     }
   } else {
     await ctx.reply('❌ Broadcast canceled')
     return await ctx.conversation.exit()
   }
 
+}
+
+async function sendMessage(user_id: number | string, msg: string, ctx: Context) {
+  try {
+
+    await ctx.api.sendMessage(user_id, msg)
+  } catch (error) {
+    if (error instanceof GrammyError) {
+      if (error.error_code === 429) {
+        await sleep(200)
+        await sendMessage(user_id, msg, ctx)
+      }
+    }
+  }
 }
