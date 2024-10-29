@@ -161,7 +161,7 @@ export const fieldsRouter = router({
       })
     )
     .mutation(async (opts) => {
-      const bucketName = process.env.MINIO_VIDEO_BUCKET || "ontonvideos";
+      const bucketName = process.env.MINIO_VIDEO_BUCKET || "ontonvideo";
       const subfolder = opts.input.subfolder;
 
       const { buffer, mimeType } = opts.input.video;
