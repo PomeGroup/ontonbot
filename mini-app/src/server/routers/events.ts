@@ -238,7 +238,7 @@ export const eventsRouter = router({
                       ...(opts.input.eventData.video_url
                         ? {
                             item_video: {
-                              url: opts.input.eventData.video_url,
+                              url:  new URL(opts.input.eventData.video_url).origin + new URL(opts.input.eventData.video_url).pathname,
                             },
                           }
                         : {}),
