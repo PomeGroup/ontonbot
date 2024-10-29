@@ -69,6 +69,7 @@ const EventCard: React.FC<EventCardProps> = memo(
     } = event;
 
     const defaultImage = "/template-images/default.webp";
+    const sliderImageSpecial = "https://storage.onton.live/ontonimage/GateWaySlider.png";
     const [imageLoaded, setImageLoaded] = useState(false);
     const webApp = useWebApp();
     const { user } = useAuth();
@@ -270,7 +271,8 @@ const EventCard: React.FC<EventCardProps> = memo(
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
-          src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+            // if date now before 5 november 2024 show special image
+          src={isValidImageUrl(imageUrl) ? ( Date.now() < 1730754000000 ? sliderImageSpecial : imageUrl) : defaultImage}
           alt={title}
           width={window?.innerWidth || 400}
           height={400}
