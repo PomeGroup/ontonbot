@@ -100,7 +100,7 @@ export const fieldsRouter = router({
 
       // Send the image data to the upload service (MinIO)
       const res = await axios.post(
-        process.env.FILE_UPLOAD_URL || "http://nft-manager:7863/files/upload",
+        process.env.FILE_UPLOAD_URL || "http://nft-microcervise:7863/files/upload",
         formData,
         { headers: formData.getHeaders() }
       );
@@ -161,7 +161,7 @@ export const fieldsRouter = router({
       })
     )
     .mutation(async (opts) => {
-      const bucketName = process.env.MINIO_VIDEO_BUCKET || "onton-videos";
+      const bucketName = process.env.MINIO_VIDEO_BUCKET || "ontonvideos";
       const subfolder = opts.input.subfolder;
 
       const { buffer, mimeType } = opts.input.video;
@@ -177,7 +177,7 @@ export const fieldsRouter = router({
 
       const res = await axios.post(
         process.env.VIDEO_UPLOAD_URL ||
-          "http://nft-manager:7863/files/upload-video",
+          "http://nft-microcervise:7863/files/upload-video",
         formData,
         { headers: formData.getHeaders() }
       );
