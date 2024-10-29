@@ -11,8 +11,6 @@ export async function GET(req: NextRequest): Promise<Response> {
   const event_uuid = req.nextUrl.searchParams.get("event_uuid");
   const user_id = req.nextUrl.searchParams.get("user_id");
 
-
-
   await axios.post(`http://telegram-bot:3333/share-event`, {
     user_id,
     id: event_uuid,

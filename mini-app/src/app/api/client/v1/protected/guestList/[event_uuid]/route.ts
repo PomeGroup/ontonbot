@@ -81,8 +81,8 @@ export async function GET(
     return NextResponse.json(
       {
         error: parsed.error.errors.map((err) => ({
-          path: err.path,
-          message: err.message,
+          path: err.path ,
+          message: err.message ,
         })),
       },
       { status: 400 }
@@ -98,7 +98,7 @@ export async function GET(
       false, // Always set dynamic_fields to false
       search || undefined
     );
-
+    console.log(data);
     return NextResponse.json(data, { status: 200 });
   } catch (error: unknown) {
     const errorMessage =

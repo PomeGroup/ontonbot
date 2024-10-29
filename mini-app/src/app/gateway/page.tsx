@@ -87,10 +87,9 @@ export default function Home() {
             sliderEventsState.length > 0 && (
               <>
                 <div className="pt-4 w-full pb-4 flex justify-between items-center">
- 
+
                   <h2 className="font-bold text-lg">Gateway Main Events</h2>
- 
- 
+
                 </div>
                 <EventCard
                   event={sliderEventsState[0]}

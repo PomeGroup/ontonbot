@@ -44,6 +44,7 @@ export const events = pgTable(
     cityId: integer("city_id").references(() => giataCity.id),
     countryId: integer("country_id").references(() => giataCity.id),
     tsRewardImage: text("ts_reward_image"),
+    tsRewardVideo: text("ts_reward_video"),
 
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {

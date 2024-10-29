@@ -163,6 +163,7 @@ export const eventsRouter = router({
               participationType: opts.input.eventData.eventLocationType,
               countryId: opts.input.eventData.countryId,
               tsRewardImage: opts.input.eventData.ts_reward_url,
+              tsRewardVideo: opts.input.eventData.video_url,
               cityId: opts.input.eventData.cityId,
             })
             .returning();
@@ -224,16 +225,23 @@ export const eventsRouter = router({
                       title: opts.input.eventData.title,
                       description: opts.input.eventData.description,
                       image: {
-                        url: opts.input.eventData.image_url,
+                        url:  opts.input.eventData.image_url  ,
                       },
                       cover: {
-                        url: opts.input.eventData.image_url,
+                        url:  opts.input.eventData.image_url,
                       },
                       item_title: opts.input.eventData.title,
                       item_description: "Reward for participation",
                       item_image: {
                         url: opts.input.eventData.ts_reward_url,
                       },
+                      ...(opts.input.eventData.video_url
+                        ? {
+                            item_video: {
+                              url:  new URL(opts.input.eventData.video_url).origin + new URL(opts.input.eventData.video_url).pathname,
+                            },
+                          }
+                        : {}),
                       item_metadata: {
                         activity_type: "event",
                         place: {
@@ -416,7 +424,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             (hashedSecretPhrase === undefined &&
               oldEvent[0].ticketToCheckIn === false)
           ) {
-
             if (secretPhraseTask.length > 0) {
               // Update the existing secret phrase task
               await eventFieldsDB.updateEventFieldLog(
@@ -507,7 +514,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
         });
       } catch (err) {
-
         console.info(
           `update event id: ${opts.ctx.event.event_uuid}, error: `,
           err
@@ -595,7 +601,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
         if (result.success) {
           console.log("Event shared successfully:", result.data);
-           return { status: "success", data: null };
+          return { status: "success", data: null };
         } else {
           console.error("Failed to share the event:", result.error);
           throw new TRPCError({
@@ -603,7 +609,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             message: "Failed to share the event",
             cause: result.error,
           });
-          }
+        }
       } catch (error) {
         console.error("Error while sharing event: ", error);
         throw new TRPCError({
@@ -620,9 +626,16 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid);
       const eventData = await selectEventByUuid(opts.input.event_uuid);
       // Map the data and conditionally remove fields
-      const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+        const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+            // Explicitly define wallet_address type and handle other optional fields
+            const visitorData: Partial<VisitorsWithDynamicFields> = {
+                ...visitor,
+                ticket_status: "ticket_status" in visitor ? visitor.ticket_status ?? undefined : undefined,
+                wallet_address: visitor.wallet_address as string | null | undefined,
+                username: visitor.username === "null" ? null : visitor.username,
+            };
         // Copy the visitor object without modifying dynamicFields directly
-        const visitorData: Partial<VisitorsWithDynamicFields> = { ...visitor };
+
 
         // If ticketToCheckIn is false, remove specific fields
         if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {

@@ -10,6 +10,7 @@ import { userEventFieldsRouter } from "./routers/userEventFields";
 import { usersRouter } from "./routers/users";
 import { visitorsRouter } from "./routers/visitors";
 import { router } from "./trpc";
+import {sbtRewardCollectionRouter} from "@/server/routers/sbtRewardCollectionRouter";
 
 export const appRouter = router({
   users: usersRouter,
@@ -22,6 +23,7 @@ export const appRouter = router({
   ticket: ticketRouter,
   eventTicket: eventTicketRouter,
   orders: ordersRouter,
+  sbtRewardCollection: sbtRewardCollectionRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -131,6 +131,7 @@ export const EventDataSchema = z.object({
   description: z.string(),
   location: z.string(),
   image_url: z.string().url(),
+  video_url: z.string().url().optional(),
   ts_reward_url: z
     .string()
     .optional() // This allows the field to be undefined
@@ -166,6 +167,7 @@ export const UpdateEventDataSchema = z.object({
   description: z.string(),
   location: z.string(),
   image_url: z.string().url(),
+  video_url: z.string().url().optional(),
   ts_reward_url: z
     .string()
     .optional() // This allows the field to be undefined
@@ -192,12 +194,23 @@ export const UpdateEventDataSchema = z.object({
   cityId: z.number().optional(),
 });
 
+export const AgendaItemSchema = z.object({
+  time: z.string(), // assuming time is a string, e.g., "10:00 AM"
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+});
+
+export const AgendaHeaderSchema = z.object({
+  header: z.string().min(1, "Header is required"),
+  items: z.array(AgendaItemSchema), // each header can have multiple items
+});
 export const EventDataSchemaAllOptional = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   description: z.string().optional(),
   location: z.string().optional(),
   image_url: z.string().url().optional(),
+  video_url: z.string().url().optional(),
   ts_reward_url: z.string().url().optional(),
   type: z.number().optional(),
   society_hub: z
@@ -216,6 +229,7 @@ export const EventDataSchemaAllOptional = z.object({
   eventLocationType: z.enum(["online", "in_person"]).optional(),
   countryId: z.number().optional(),
   cityId: z.number().optional(),
+  agenda: z.array(AgendaHeaderSchema).optional(),
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;

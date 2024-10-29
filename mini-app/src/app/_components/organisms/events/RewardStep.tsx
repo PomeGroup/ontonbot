@@ -3,23 +3,23 @@ import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { UploadImageFile } from "@/components/ui/upload-file";
 import useWebApp from "@/hooks/useWebApp";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useCreateEventStore } from "@/zustand/createEventStore";
+import "swiper/css";
 import { StepLayout } from "./stepLayout";
-
 import { FiAlertCircle } from "react-icons/fi"; // React icon for errors
-
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { SbtOptionContent } from "./SbtOptionContent";
 let lastToastId: string | number | null = null; // Store the ID of the last toast
 
-export const ThirdStep = () => {
+export const RewardStep = () => {
   const webApp = useWebApp();
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
@@ -30,8 +30,9 @@ export const ThirdStep = () => {
   const [errors, setErrors] = useState<{
     secret_phrase?: string[] | undefined;
     ts_reward_url?: string[] | undefined;
+    video_url?: string[] | undefined;
   }>();
-
+  const [selectedSbtId, setSelectedSbtId] = useState<number | null>(null);
   const [passwordDisabled, setPasswordDisabled] = useState(
     !!editOptions?.eventHash
   );
@@ -39,6 +40,36 @@ export const ThirdStep = () => {
     editOptions?.eventHash ? "{** click to change password **}" : ""
   );
 
+  const {
+    data: rewardCollections,
+    isLoading: sbtCollectionIsLoading,
+    refetch,
+  } = trpc.sbtRewardCollection.getRewardCollectionsByHubID.useQuery(
+    { hubID: Number(eventData?.society_hub?.id) || 0 },
+    {
+      enabled: false,
+      cacheTime: 1000 * 60,
+    }
+  );
+  const [sbtOption, setSbtOption] = useState<"custom" | "default">(
+      rewardCollections && rewardCollections.length > 0 ? "default" : "custom"
+  );
+  useEffect(() => {
+    if (eventData?.society_hub?.id) {
+      refetch().then(() => {
+        console.log("Refetched SBT Videos");
+        console.log("Reward Collections", rewardCollections);
+      });
+    }
+
+    // Automatically set the sbtOption to "custom" if rewardCollections is empty
+    if (rewardCollections && rewardCollections.length === 0) {
+      setSbtOption("custom");
+    }
+    else {
+      setSbtOption("default");
+    }
+  }, [eventData?.society_hub?.id, rewardCollections]);
   // Add Event Mutation
   const addEvent = trpc.events.addEvent.useMutation({
     onSuccess(data) {
@@ -68,7 +99,10 @@ export const ThirdStep = () => {
       toast.error(error.message);
     },
   });
-
+  const handleSbtSelection = (id: number) => {
+    setSelectedSbtId(id);
+    console.log("Selected SBT Collection ID:", id);
+  };
   // Zod schema for validation
   const thirdStepDataSchema = z.object({
     secret_phrase: passwordDisabled
@@ -87,6 +121,16 @@ export const ThirdStep = () => {
           z.string().url().safeParse(url).success,
         { message: "Please upload a valid reward image URL" }
       ),
+    event_video_url: z
+      .string()
+      .optional()
+      .refine(
+        (url) =>
+          url === undefined ||
+          url === "" ||
+          z.string().url().safeParse(url).success,
+        { message: "Please upload a valid video URL" }
+      ),
   });
 
   // Handle form submission
@@ -101,10 +145,31 @@ export const ThirdStep = () => {
     const stepInputsObject = {
       ...formDataObject,
       ts_reward_url: eventData?.ts_reward_url,
+      video_url: eventData?.video_url,
       secret_phrase: passwordDisabled
         ? undefined
         : formDataObject.secret_phrase,
     };
+
+    if (sbtOption === "custom" && (!eventData?.ts_reward_url || !eventData?.video_url)) {
+      // Set errors if the image or video URL is missing
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
+        video_url: !eventData?.video_url ? ["Please upload a video."] : undefined,
+      }));
+
+      toast.error(
+          <div>
+            <div className="flex items-center">
+              <FiAlertCircle className="mr-2" />
+              {"Please upload both an image and a video for your custom SBT reward."}
+            </div>
+          </div>,
+          { duration: 5000 }
+      );
+      return;
+    }
 
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
     if (formDataParsed.success) {
@@ -176,12 +241,20 @@ export const ThirdStep = () => {
       { duration: 5000 } // Set duration to 5 seconds
     );
   };
-
+  useEffect(() => {
+   console.log("eventData", eventData);
+  }, [eventData]);
   const handlePasswordClick = () => {
     setPasswordDisabled(false);
     setPasswordValue(""); // Clear the placeholder text
   };
 
+  const clearVideoError = () => {
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      event_video_url: undefined,
+    }));
+  };
   // Handle form submission on button click
   const handleButtonClick = useCallback(() => {
     if (formRef.current) {
@@ -197,6 +270,23 @@ export const ThirdStep = () => {
     }));
   };
 
+
+  const handleSlideChange = (swiper: any) => {
+    if (!rewardCollections || rewardCollections.length === 0) return;
+
+    const currentIndex = swiper.activeIndex;
+    const currentSlide = rewardCollections[currentIndex];
+
+    if (currentSlide) {
+      setSelectedSbtId(currentSlide.id);
+      setEventData({
+        ...eventData,
+        ts_reward_url: currentSlide.imageLink,
+        video_url: currentSlide.videoLink,
+      });
+    }
+  };
+
   return (
     <StepLayout>
       <form
@@ -206,7 +296,12 @@ export const ThirdStep = () => {
       >
         {/* Secret Phrase Field */}
         <div className="space-y-2">
-          <label htmlFor="secret_phrase">Events password</label>
+          <Label
+            htmlFor="secret_phrase"
+            className="font-bold text-lg"
+          >
+            Events password
+          </Label>
           <div
             onClick={handlePasswordClick}
             className="relative"
@@ -231,40 +326,54 @@ export const ThirdStep = () => {
             unexpectedly and receiving a reward without attending the event.
           </AlertGeneric>
         </div>
-        {/* Reward Image Upload */}
-        <div className="space-y-2">
-          <label htmlFor="reward_image">Reward Image</label>
-          <AlertGeneric variant="info">
-            Events reward badge, visible on TON society. It cannot be changed
-            after event creation.
-          </AlertGeneric>
-          {editOptions?.eventHash ? (
-            eventData?.ts_reward_url ? (
-              <div className="flex justify-center gap-4 items-center pt-2 w-full">
-                <Image
-                  src={eventData?.ts_reward_url}
-                  alt="reward image"
-                  width={300}
-                  height={300}
-                  className="rounded-xl"
-                />
+        {!editOptions?.eventHash && (
+            <>
+              {/* SBT Option Selection */}
+              <div className="space-y-2">
+                <Label className="font-bold text-lg mb-2">Choose SBT Option</Label>
+
+                <RadioGroup
+                    onValueChange={(value: "custom" | "default") => setSbtOption(value)}
+                    value={sbtOption}
+                >
+                  <div className="flex space-x-4">
+                    {rewardCollections && rewardCollections.length > 0 && (
+                        <>
+                          <RadioGroupItem value="default" id="default" className="w-4 h-4"  />
+                          <Label htmlFor="default"> Default Collections</Label>
+                        </>
+                    )}
+
+                    <RadioGroupItem
+                        value="custom"
+                        id="custom"
+                        className={"w-4 h-4 color-white"}
+                    />
+                    <Label htmlFor="custom"  > Customized SBT</Label>
+                  </div>
+                </RadioGroup>
               </div>
-            ) : null
-          ) : (
-            <UploadImageFile
-              changeText="Upload Reward Image"
-              infoText="Image must be in 1:1 ratio"
-              triggerText="Upload"
-              drawerDescriptionText="Upload your SBT reward image"
-              onDone={(url) => {
-                setEventData({ ...eventData, ts_reward_url: url });
-                clearImageError(); // Clear error when a valid image is uploaded
-              }}
-              isError={Boolean(errors?.ts_reward_url)}
-              defaultImage={eventData?.ts_reward_url}
-            />
-          )}
-        </div>
+
+              {/* Conditionally Render SBT Content */}
+              <div className="space-y-2">
+                <SbtOptionContent
+                    sbtOption={sbtOption}
+                    rewardCollections={rewardCollections || []}
+                    sbtCollectionIsLoading={sbtCollectionIsLoading}
+                    selectedSbtId={selectedSbtId}
+                    handleSbtSelection={handleSbtSelection}
+                    handleSlideChange={handleSlideChange}
+                    setEventData={setEventData}
+
+                    errors={errors || {}}
+                    clearImageError={clearImageError}
+                    clearVideoError={clearVideoError}
+                />
+
+              </div>
+            </>
+        )}
+
       </form>
 
       {/* Submit Button */}

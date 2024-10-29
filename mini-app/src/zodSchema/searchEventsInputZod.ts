@@ -29,6 +29,7 @@ const searchEventsInputZod = z.object({
       "most_people_reached",
       "start_date_asc",
       "start_date_desc",
+      "random",
     ])
     .default("start_date_desc"),
   useCache: z.boolean().optional().default(true),
