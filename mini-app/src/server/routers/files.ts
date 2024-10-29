@@ -100,7 +100,7 @@ export const fieldsRouter = router({
 
       // Send the image data to the upload service (MinIO)
       const res = await axios.post(
-        process.env.FILE_UPLOAD_URL || "http://127.0.0.1:7863/files/upload",
+        process.env.FILE_UPLOAD_URL || "http://nft-manager:7863/files/upload",
         formData,
         { headers: formData.getHeaders() }
       );
@@ -177,7 +177,7 @@ export const fieldsRouter = router({
 
       const res = await axios.post(
         process.env.VIDEO_UPLOAD_URL ||
-          "http://127.0.0.1:7863/files/upload-video",
+          "http://nft-manager:7863/files/upload-video",
         formData,
         { headers: formData.getHeaders() }
       );
