@@ -7,7 +7,7 @@ import { UploadImageFile } from "@/components/ui/upload-file";
 import { UploadVideoFile } from "@/components/ui/upload-video-file";
 import LazyLoadVideo from "./LazyLoadVideo";
 
-import React from "react";
+import React, {useMemo} from "react";
 
 interface SbtOptionContentProps {
     sbtOption: "custom" | "default";
@@ -36,6 +36,8 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
                                                                       clearImageError,
                                                                       clearVideoError,
                                                                   }) => {
+    const initialSlideIndex =  Math.floor(Math.random() * rewardCollections.length) ;
+
     if (sbtOption === "default" && rewardCollections && rewardCollections?.length > 0) {
         return sbtCollectionIsLoading ? (
             <div>Loading SBT Videos...</div>
@@ -52,6 +54,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
                 <Swiper
                     spaceBetween={20}
                     slidesPerView={1.5}
+                    initialSlide={initialSlideIndex}
                     centeredSlides={true}
                     className="sbt-video-swiper"
                     onSlideChange={handleSlideChange}
