@@ -34,12 +34,26 @@ const insert = async (
   type: RewardType,
   status: RewardStatus
 ) => {
+  const visitor = await db.query.visitors.findFirst({
+    where: (fields, ops) => {
+      return ops.eq(fields.id, visitor_id)
+    }
+  })
+
+  const event = await db.query.events.findFirst({
+    where: (fields, ops) => {
+      return ops.eq(fields.event_uuid, visitor?.event_uuid!)
+    }
+  })
+
   const result = await db
     .insert(rewards)
     .values({
       visitor_id,
       type: type,
       data: data,
+      event_end_date: event?.end_date!,
+      event_start_date: event?.start_date!,
       status: status,
       updatedBy: user_id.toString(),
     })
@@ -132,11 +146,25 @@ const insertReward = async (
   status: RewardStatus,
   type: RewardType
 ) => {
+  const visitor = await db.query.visitors.findFirst({
+    where: (fields, ops) => {
+      return ops.eq(fields.id, visitor_id)
+    }
+  })
+
+  const event = await db.query.events.findFirst({
+    where: (fields, ops) => {
+      return ops.eq(fields.event_uuid, visitor?.event_uuid!)
+    }
+  })
+
   return await db
     .insert(rewards)
     .values({
       status: status, // Status as a parameter
       type: type, // Type as a parameter
+      event_end_date: event?.end_date!,
+      event_start_date: event?.start_date!,
       visitor_id: visitor_id, // Visitor ID as a parameter
       updatedBy: user_id, // Updated by user ID as a parameter
     })
