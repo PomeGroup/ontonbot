@@ -150,6 +150,7 @@ export const RewardStep = () => {
         ? undefined
         : formDataObject.secret_phrase,
     };
+
     if (sbtOption === "custom" && (!eventData?.ts_reward_url || !eventData?.video_url)) {
       // Set errors if the image or video URL is missing
       setErrors((prevErrors) => ({
@@ -169,6 +170,7 @@ export const RewardStep = () => {
       );
       return;
     }
+
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
     if (formDataParsed.success) {
       setErrors({}); // Clear all errors
