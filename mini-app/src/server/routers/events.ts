@@ -626,9 +626,16 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid);
       const eventData = await selectEventByUuid(opts.input.event_uuid);
       // Map the data and conditionally remove fields
-      const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+        const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+            // Explicitly define wallet_address type and handle other optional fields
+            const visitorData: Partial<VisitorsWithDynamicFields> = {
+                ...visitor,
+                ticket_status: "ticket_status" in visitor ? visitor.ticket_status ?? undefined : undefined,
+                wallet_address: visitor.wallet_address as string | null | undefined,
+                username: visitor.username === "null" ? null : visitor.username,
+            };
         // Copy the visitor object without modifying dynamicFields directly
-        const visitorData: Partial<VisitorsWithDynamicFields> = { ...visitor };
+
 
         // If ticketToCheckIn is false, remove specific fields
         if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
