@@ -13,6 +13,8 @@ const VariantBadge: FC<VariantBadgeProps> = ({ status = "" }) => {
         return "text-[#3E88F7] bg-[#ebf5ff] border-0 rounded-sm text-xs ";
       case "UNUSED":
         return "text-[#FF9F0A] bg-[#fff7eb] border-0 rounded-sm text-xs ";
+      case "VIP":
+        return "text-[#2D2D2D] bg-[#ccccee] border-0 rounded-sm text-xs";
       default:
         return "text-[#2D2D2D] bg-[#cccccc] border-0 rounded-sm text-xs";
     }
@@ -24,8 +26,11 @@ const VariantBadge: FC<VariantBadgeProps> = ({ status = "" }) => {
         return "checked-In";
       case "UNUSED":
         return "waiting";
+      case "":
+        return "--";
       default:
-        return "processing";
+        return status;
+
     }
   };
 
