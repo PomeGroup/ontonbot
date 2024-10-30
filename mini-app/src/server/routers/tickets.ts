@@ -44,7 +44,7 @@ export const ticketRouter = router({
 
 
       console.log("result", result);
-      if (!result || result ) {
+      if (!result ) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to check in the ticket",
