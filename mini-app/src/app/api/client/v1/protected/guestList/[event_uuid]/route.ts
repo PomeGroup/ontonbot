@@ -93,7 +93,7 @@ export async function GET(
     // Fetch guest list from the database
     const data = await selectVisitorsByEventUuid(
       parsed.data.event_uuid,
-      limit ? parseInt(limit, 10) : undefined,
+      limit ? parseInt(limit, 10) : 10000,
       cursor ? parseInt(cursor, 10) : undefined,
       false, // Always set dynamic_fields to false
       search || undefined

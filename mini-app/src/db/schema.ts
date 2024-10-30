@@ -21,6 +21,7 @@ import { orders } from "./schema/orders";
 import { rewards } from "./schema/rewards";
 import { sbtRewardCollections } from "./schema/sbtRewardCollections";
 import { tickets, ticketsRelations } from "./schema/tickets";
+import { specialGuests } from "@/db/schema/specialGuest";
 import {
   userEventFieldRelations,
   userEventFields,
@@ -55,6 +56,7 @@ export {
   tickets,
   ticketsRelations,
   sideEvents,
+  specialGuests,
   userEventFieldRelations,
   userEventFields,
   userRelations,

@@ -87,7 +87,7 @@ const VisitorRow: FC<VisitorRowProps> = ({
           ) : (
             <VariantBadge
               key={visitor?.created_at?.toString()}
-              status={"USED"}
+              status={visitor?.ticket_status || ""}
             />
           )}
         </div>

@@ -1,5 +1,5 @@
 {
-  "id": "dd161fb5-9520-4401-9313-e216144e21ce",
+  "id": "46c3a497-a9d0-438d-b4cc-497da47f1194",
   "prevId": "bcd12e71-da36-46c7-a2f5-ea4eee51540d",
   "version": "7",
   "dialect": "postgresql",
@@ -656,6 +656,14 @@
           "primaryKey": false,
           "notNull": false
         },
+
+        "ts_reward_video": {
+          "name": "ts_reward_video",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -1450,18 +1458,7 @@
           "notNull": false,
           "default": "now()"
         },
-        "event_start_date": {
-          "name": "event_start_date",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "event_end_date": {
-          "name": "event_end_date",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
+
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp (3)",
@@ -1571,6 +1568,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+
     "public.side_events": {
       "name": "side_events",
       "schema": "",
@@ -1635,6 +1633,7 @@
         }
       }
     },
+
     "public.tickets": {
       "name": "tickets",
       "schema": "",
