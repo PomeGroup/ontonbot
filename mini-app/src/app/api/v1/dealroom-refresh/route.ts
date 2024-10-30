@@ -1,7 +1,7 @@
 import { getAuthenticatedUser } from "@/server/auth";
-import axios from "axios";
 import { NextRequest } from "next/server";
 import dealRoomService from "@/server/routers/services/DealRoomService";
+import {configProtected} from "@/server/config";
 
 export async function GET(req: NextRequest): Promise<Response> {
   try {
@@ -13,11 +13,9 @@ export async function GET(req: NextRequest): Promise<Response> {
     // Extract code from query or set default
     const url = new URL(req.url);
     const code =
-      url.searchParams.get("code") || "2742f5902ad54152a969f5dac15d716d";
-
+      url.searchParams.get("code") || configProtected?.dealRoomRefreshCode || "";
     // Call the separate fetch function
     const result = await dealRoomService.RefreshGuestList(code);
-
     return Response.json(result);
   } catch (error) {
     console.error("Error fetching URL:", error);
