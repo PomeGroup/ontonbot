@@ -623,11 +623,12 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(
     async (opts) => {
-      const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid);
+      const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid , -1, 0, true, "");
       const eventData = await selectEventByUuid(opts.input.event_uuid);
       // Map the data and conditionally remove fields
         const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
             // Explicitly define wallet_address type and handle other optional fields
+            //@ts-ignore
             const visitorData: Partial<VisitorsWithDynamicFields> = {
                 ...visitor,
                 ticket_status: "ticket_status" in visitor ? visitor.ticket_status ?? undefined : undefined,
