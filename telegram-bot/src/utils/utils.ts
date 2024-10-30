@@ -1,7 +1,8 @@
 import { validateWebAppData } from "@grammyjs/validator"
 import * as fs from "fs"
+import { Context, InputFile } from "grammy";
+import { InlineKeyboardMarkup } from "grammy/types";
 import sharp from "sharp"
-import { Context } from "telegraf"
 
 export const validateMiniAppData = (rawInitData: any): boolean => {
   const initData = new URLSearchParams(rawInitData as string);
@@ -11,7 +12,7 @@ export const validateMiniAppData = (rawInitData: any): boolean => {
 const editOrSend = async (
   ctx: Context,
   text: string,
-  markup?: any,
+  markup?: InlineKeyboardMarkup,
   imagePath: string = __dirname + "/img/onton-logo.png",
   edit: boolean = true
 ) => {
@@ -22,50 +23,50 @@ const editOrSend = async (
     try {
       const photoStream = fs.readFileSync(imagePath)
       const ontonImage = await sharp(photoStream)
-        .resize(300,300)
+        .resize(300, 300)
         .extend(
-          { top: 15, bottom: 15, left: 15, right: 15, background: {
-            r: 255,
-            g: 255,
-            b: 255
-          }
-        }).toBuffer();
+          {
+            top: 15, bottom: 15, left: 15, right: 15, background: {
+              r: 255,
+              g: 255,
+              b: 255
+            }
+          }).toBuffer();
 
-      await ctx.telegram.editMessageMedia(
+      const imageFile = new InputFile(ontonImage)
+      await ctx.api.editMessageMedia(
         ctx.chat!.id,
         messageId,
-        undefined,
         {
+
           type: "photo",
-          media: { source: ontonImage},
+          media: imageFile,
           caption: text,
         },
         {
-          reply_markup: {
-            inline_keyboard: markup,
-          },
+          reply_markup: markup,
         }
       );
     } catch (error) {
       const photoStream = fs.readFileSync(imagePath)
       const ontonImage = await sharp(photoStream)
-        .resize(300,300)
+        .resize(300, 300)
         .extend(
-          { top: 15, bottom: 15, left: 15, right: 15, background: {
-            r: 255,
-            g: 255,
-            b: 255
-          }
-        }).toBuffer();
+          {
+            top: 15, bottom: 15, left: 15, right: 15, background: {
+              r: 255,
+              g: 255,
+              b: 255
+            }
+          }).toBuffer();
 
-      const sentMessage = await ctx.telegram.sendPhoto(
+      const ontonImageFile = new InputFile(ontonImage)
+      const sentMessage = await ctx.api.sendPhoto(
         ctx.chat!.id,
-        { source: ontonImage },
+        ontonImageFile,
         {
           caption: text,
-          reply_markup: {
-            inline_keyboard: markup,
-          },
+          reply_markup: markup,
           parse_mode: "HTML",
         }
       );
@@ -75,24 +76,24 @@ const editOrSend = async (
   } else {
     const photoStream = fs.readFileSync(imagePath)
     const ontonImage = await sharp(photoStream)
-      .resize(300,300)
+      .resize(300, 300)
       .extend(
-        { top: 15, bottom: 15, left: 15, right: 15, background: {
-          r: 255,
-          g: 255,
-          b: 255
-        }
-      }).toBuffer();
+        {
+          top: 15, bottom: 15, left: 15, right: 15, background: {
+            r: 255,
+            g: 255,
+            b: 255
+          }
+        }).toBuffer();
 
-    const sentMessage = await ctx.telegram.sendPhoto(
+
+    const ontonImageFile = new InputFile(ontonImage)
+    const sentMessage = await ctx.api.sendPhoto(
       ctx.chat!.id,
-      { source: ontonImage },
+      ontonImageFile,
       {
         caption: text,
-        reply_markup: {
-          inline_keyboard: markup,
-        },
-
+        reply_markup: markup,
         parse_mode: "HTML",
       }
     );
@@ -105,3 +106,6 @@ const editOrSend = async (
 
 export { editOrSend }
 
+export function sleep(time: number) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}

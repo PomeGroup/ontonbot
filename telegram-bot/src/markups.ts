@@ -1,59 +1,24 @@
-import {Markup} from "telegraf"
+import { InlineKeyboard } from "grammy";
 
 const startKeyboard = () => {
-    const data = [
-        [
-            {
-                text: "Open Event",
-                web_app: {
-                    url: `${process.env.APP_BASE_URL}/`,
-                    display_name: "Open",
-                },
-            },
-
-        ],
-    ];
-
-    return data
+  return new InlineKeyboard()
+    .webApp('Open Event', `${process.env.APP_BASE_URL}/`)
 }
 
 
 const shareKeyboard = (url: string) => {
-    const id = url.split('/').pop().replace('event?startapp=', "") || '';
+  const id = url.split('/').pop().replace('event?startapp=', "") || '';
 
-
-    const data = [
-        [
-            Markup.button.switchToChat('Share Link', url)
-
-        ],
-        [
-            {
-                text: "Manage Event",
-                web_app: {
-                    url: `${process.env.APP_BASE_URL}/events/${id}/edit`,
-                    display_name: "Open",
-                },
-            },
-        ],
-        [
-            {
-                text: "All Events",
-                web_app: {
-                    url: `${process.env.APP_BASE_URL}/`,
-                    display_name: "Open",
-                },
-            },
-        ]
-    ];
-
-    return data
+  return new InlineKeyboard()
+    .switchInline('Share Event', url).row()
+    .webApp('Manage Event', `${process.env.APP_BASE_URL}/events/${id}/edit`).row()
+    .webApp('All Events', `${process.env.APP_BASE_URL}/`)
 }
 
 
-const backKeyboard = [[{text: "Back", callback_data: "back"}]];
+const backKeyboard = new InlineKeyboard().text('Back', 'back')
 const inlineSendKeyboard = () => {
-    return [[{text: "Refresh", callback_data: "refresh"}]];
+  return new InlineKeyboard().text("Refresh", 'refresh')
 };
 
-export {backKeyboard, inlineSendKeyboard, shareKeyboard, startKeyboard}
+export { backKeyboard, inlineSendKeyboard, shareKeyboard, startKeyboard }

@@ -1,13 +1,12 @@
-import { Context } from "telegraf"
-import { addVisitor, changeRole, isUserAdmin } from "./db/db"
-import { startKeyboard } from "./markups"
-import { TVisitor } from "./utils/types"
+import { Context } from "grammy";
+import { changeRole, isUserAdmin } from "./db/db"
 import { editOrSend } from "./utils/utils"
+import { startKeyboard } from "./markups";
 
 export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
   // get user from database
-  const {isAdmin} = await isUserAdmin(ctx.from.id.toString())
-  
+  const { isAdmin } = await isUserAdmin(ctx.from.id.toString())
+
   if (!isAdmin) {
     return await ctx.reply(`You are not authorized to perform this operation.`)
   }
@@ -67,20 +66,12 @@ export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
     } else {
       await editOrSend(ctx, `Invalid command.`, startKeyboard());
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
-const startHandler = async (ctx: Context) => {
-  try {
-    addVisitor({
-      telegram_id: ctx.from!.id.toString(),
-      first_name: ctx.from?.first_name || "",
-      last_name: ctx.from?.last_name || "",
-      username: ctx.from!.username || "",
-      created_at: new Date().toISOString(),
-    } as TVisitor);
 
-    // @ts-ignore
+export const startHandler = async (ctx: Context) => {
+  try {
     const messageText = ctx.message?.text;
     let path = undefined;
 
@@ -103,6 +94,3 @@ const startHandler = async (ctx: Context) => {
     console.log(error);
   }
 };
-
-export { startHandler }
-

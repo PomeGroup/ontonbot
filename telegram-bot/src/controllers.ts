@@ -3,12 +3,12 @@ import { UploadedFile } from "express-fileupload"
 import fs from "fs"
 import QRCode from "qrcode"
 import sharp from "sharp"
-import { Context, Telegraf, TelegramError } from "telegraf"
-import { Update } from "telegraf/typings/core/types/typegram"
 import { getEvent } from "./db/db"
 import { shareKeyboard } from "./markups"
 import axios from 'axios';
-export const handleSendQRCode = async (req, res) => {
+import { Bot, GrammyError, InputFile } from "grammy"
+
+export const handleSendQRCode = async (req: Request & { bot: Bot }, res: Response) => {
   const { url, hub, id } = req.query;
 
   if (!url || typeof url !== "string" || !id || typeof id !== "string") {
@@ -45,13 +45,14 @@ export const handleSendQRCode = async (req, res) => {
       .composite([{ input: resizedQRBuffer, gravity: "center" }])
       .toBuffer();
 
+    const imageFile = new InputFile(imageToSend)
     // Send the combined image
-    await req.bot.telegram.sendPhoto(
+    await req.bot.api.sendPhoto(
       id,
-      { source: imageToSend },
+      imageFile,
       {
         caption: `🔗 Scan QR code or share the link:\n\n${url.replace("https://", "")}`,
-        reply_markup: { inline_keyboard: shareKeyboard(url) },
+        reply_markup: shareKeyboard(url)
       },
     );
 
@@ -62,9 +63,9 @@ export const handleSendQRCode = async (req, res) => {
   }
 };
 
-export const handleFileSend = async (req: Request, res: Response) => {
+export const handleFileSend = async (req: Request & { bot: Bot }, res: Response) => {
   const { id } = req.query;
-  const { message , fileName } = req.body; // Assuming the custom message is sent in the request body
+  const { message, fileName } = req.body; // Assuming the custom message is sent in the request body
   // Custom function to sanitize the file name
   const sanitizeFileName = (name: string) => {
     return name.replace(/[^a-zA-Z0-9._-]/g, "_"); // Replace invalid characters with underscore
@@ -87,11 +88,11 @@ export const handleFileSend = async (req: Request, res: Response) => {
 
   try {
     // Ensure 'file.data' is used, which is a Buffer
-    // @ts-expect-error fix express.d.ts
-    await req.bot.telegram.sendDocument(
-        id,
-        { source: file.data, filename: `${sanitizedFileName}.csv` }, // 'file.data' is the Buffer you need
-        { caption: caption }, // Use the provided caption or the default
+    const dataFile = new InputFile(file.data, `${sanitizedFileName}.csv`)
+    await req.bot.api.sendDocument(
+      id,
+      dataFile,
+      { caption: caption }, // Use the provided caption or the default
     );
 
     return res.status(200).send("Success");
@@ -102,13 +103,13 @@ export const handleFileSend = async (req: Request, res: Response) => {
 };
 
 const processAndSendImage = async (
-    event: any,
-    userId: string,
-    bot: any,
-    startDate: string,
-    endDate: string,
-    shareLink: string,
-    customButton: any
+  event: any,
+  userId: string,
+  bot: Bot,
+  startDate: string,
+  endDate: string,
+  shareLink: string,
+  customButton: any
 ) => {
   try {
     // Download the image with proper headers
@@ -136,47 +137,17 @@ const processAndSendImage = async (
 
       // Convert to JPEG format to ensure compatibility
       const processedBuffer = await imageProcess
-          .jpeg({
-            quality: 85,
-            force: false
-          })
-          .toBuffer();
+        .jpeg({
+          quality: 85,
+          force: false
+        })
+        .toBuffer();
 
+      const imageFile = new InputFile(processedBuffer)
       // Send the processed image
-      await bot.telegram.sendPhoto(
-          parseInt(userId),
-          {
-            source: processedBuffer
-          },
-          {
-            caption: `
-📄 <b>${event.title}</b>
-▫️ <i>${event.subtitle}</i>
-
-🗓 Starts at: ${startDate}
-🗓 Ends at: ${endDate}
-
-🔗 Link: ${shareLink}
-`,
-            parse_mode: "HTML",
-            reply_markup: {
-              inline_keyboard: [[customButton]],
-            },
-          }
-      );
-    } catch (sharpError) {
-      console.error('Sharp processing error:', sharpError);
-      throw new Error('Image processing failed');
-    }
-  } catch (error) {
-    console.error('Image processing/sending error:', error);
-
-    // Fall back to sending the original URL if processing fails
-    await bot.telegram.sendPhoto(
+      await bot.api.sendPhoto(
         parseInt(userId),
-        {
-          url: event.image_url,
-        },
+        imageFile,
         {
           caption: `
 📄 <b>${event.title}</b>
@@ -192,23 +163,50 @@ const processAndSendImage = async (
             inline_keyboard: [[customButton]],
           },
         }
+      );
+    } catch (sharpError) {
+      console.error('Sharp processing error:', sharpError);
+      throw new Error('Image processing failed');
+    }
+  } catch (error) {
+    console.error('Image processing/sending error:', error);
+
+    // Fall back to sending the original URL if processing fails
+    await bot.api.sendPhoto(
+      parseInt(userId),
+      event.image_url,
+      {
+        caption: `
+📄 <b>${event.title}</b>
+▫️ <i>${event.subtitle}</i>
+
+🗓 Starts at: ${startDate}
+🗓 Ends at: ${endDate}
+
+🔗 Link: ${shareLink}
+`,
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [[customButton]],
+        },
+      }
     );
   }
 };
 
 export const handleShareEvent = async (
-    req: Request & {
-      bot: Telegraf<Context<Update>>;
-    },
-    res: Response
+  req: Request & {
+    bot: Bot
+  },
+  res: Response
 ) => {
   const { id, user_id, url, share_link, custom_button } = req.body;
 
   if (
-      typeof id === "string" &&
-      typeof user_id === "string" &&
-      typeof url === "string" &&
-      typeof share_link === "string"
+    typeof id === "string" &&
+    typeof user_id === "string" &&
+    typeof url === "string" &&
+    typeof share_link === "string"
   ) {
     try {
       const event = await getEvent(id);
@@ -244,24 +242,22 @@ export const handleShareEvent = async (
       // Try to process and send the image
       try {
         await processAndSendImage(
-            event,
-            user_id,
-            req.bot,
-            startDate,
-            endDate,
-            share_link,
-            customButton
+          event,
+          user_id,
+          req.bot,
+          startDate,
+          endDate,
+          share_link,
+          customButton
         );
       } catch (error) {
         console.error('Final fallback - using default image');
         // Final fallback - use default image
-        await req.bot.telegram.sendPhoto(
-            parseInt(user_id),
-            {
-              url: 'https://onton.live/template-images/default.webp',
-            },
-            {
-              caption: `
+        await req.bot.api.sendPhoto(
+          parseInt(user_id),
+          'https://onton.live/template-images/default.webp',
+          {
+            caption: `
 📄 <b>${event.title}</b>
 ▫️ <i>${event.subtitle}</i>
 
@@ -270,11 +266,11 @@ export const handleShareEvent = async (
 
 🔗 Link: ${share_link}
 `,
-              parse_mode: "HTML",
-              reply_markup: {
-                inline_keyboard: [[customButton]],
-              },
-            }
+            parse_mode: "HTML",
+            reply_markup: {
+              inline_keyboard: [[customButton]],
+            },
+          }
         );
       }
 
@@ -299,12 +295,12 @@ interface SendRewardLinkBody {
 /**
  * Sends a message to a Telegram chat.
  *
- * @param {Request & { bot: Telegraf<Context<Update>> }} req - The request object.
+ * @param {Request & { bot: Bot }} req - The request object.
  * @param {Response} res - The response object.
  * @return {Promise<Response>} The response object.
  */
 export async function sendMessage(
-  req: Request & { bot: Telegraf<Context<Update>> },
+  req: Request & { bot: Bot },
   res: Response,
   tryCount?: number
 ): Promise<Response> {
@@ -339,7 +335,7 @@ export async function sendMessage(
     } : undefined;
 
     // Send the message to the chat
-    await req.bot.telegram.sendMessage(chat_id, custom_message.trim(), { reply_markup, parse_mode: "HTML"});
+    await req.bot.api.sendMessage(chat_id, custom_message.trim(), { reply_markup, parse_mode: "HTML" });
 
     // Return a success response
     return res.status(200).json({
@@ -347,8 +343,8 @@ export async function sendMessage(
       message: "Message sent successfully",
     });
   } catch (error) {
-    if (error instanceof TelegramError && error.code === 429 && tryCount < 10) {
-      console.error("TELEGRAF_ERROR: 429", error);
+    if (error instanceof GrammyError && error.error_code === 429 && tryCount < 10) {
+      console.error("BOT_ERROR: 429", error);
 
       // wait 1000
       await new Promise((resolve) => setTimeout(resolve, 1000));
