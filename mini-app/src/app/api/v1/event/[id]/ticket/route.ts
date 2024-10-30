@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { eventTicket, tickets } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, or, desc, asc } from "drizzle-orm";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   const eventId = params.id;
@@ -17,28 +17,13 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
       .select()
       .from(tickets)
       .where(
-        or(
-          and(
-            eq(tickets.order_uuid, eventId),
-            eq(tickets.user_id, userId),
-            eq(tickets.status, "UNUSED")
-          ),
-          and(
-            eq(tickets.event_uuid, eventId),
-            eq(tickets.user_id, userId),
-            eq(tickets.status, "UNUSED")
-          ),
-          ...[
-            isNaN(parseInt(eventId))
-              ? undefined
-              : and(
-                  eq(tickets.id, parseInt(eventId)),
-                  eq(tickets.user_id, userId),
-                  eq(tickets.status, "UNUSED")
-                ),
-          ]
+        and(
+          eq(tickets.event_uuid, eventId),
+          eq(tickets.user_id, userId),
+          eq(tickets.status, "UNUSED")
         )
       )
+      .orderBy(desc(tickets.updatedAt))
 
       .execute()
   ).pop();
