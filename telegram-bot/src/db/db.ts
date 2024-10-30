@@ -253,9 +253,30 @@ export async function getUser(usernameOrId: string) {
 
 export async function isUserAdmin(usernameOrId: string) {
   const user = await getUser(usernameOrId)
-  
-  return {isAdmin: user.role === "admin", user}
+
+  return { isAdmin: user.role === "admin", user }
 }
 
+export async function getEventTickets(uuid: string) {
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+  })
+
+  await client.connect()
+
+  let event: {
+    user_id: number
+  }[]
+
+  try {
+    event = (await client.query(`
+        SELECT * FROM tickets WHERE event_uuid = $1;
+      `, [uuid])).rows
+  } finally {
+    client.end()
+  }
+
+  return event
+}
 
 createDatabase() // Call to initialize the database
