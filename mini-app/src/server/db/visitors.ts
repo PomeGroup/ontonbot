@@ -271,7 +271,6 @@ export const selectVisitorsByEventUuid = async (
                     username: sql<string>`
       CASE 
         WHEN ${specialGuests.telegram} IS NULL THEN CONCAT('VIP ', ${specialGuests.id})
-  
         ELSE REPLACE(${specialGuests.telegram}, '@', '')
       END
     `.as("username"),
@@ -292,7 +291,7 @@ export const selectVisitorsByEventUuid = async (
             )
           `.as("ticket_order_id"),
                     ticket_qr_code: sql`null`.as("ticket_qr_code"),
-                    ticket_position: sql`null`.as("ticket_position"),
+                    ticket_position: sql`COALESCE(${specialGuests.position}, '' )`.as("ticket_position"),
                     ticket_company: specialGuests.company,
                     ticket_nft_address: sql`null`.as("ticket_nft_address"),
                     ticket_created_at: sql`NOW()`.as("ticket_created_at"),
