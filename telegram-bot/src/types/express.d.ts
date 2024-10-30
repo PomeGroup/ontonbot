@@ -1,9 +1,10 @@
 import 'express';
-import { Telegraf } from "telegraf";
+import { Bot } from 'grammy';
 
 // express.d.ts
 declare namespace Express {
   export interface Request {
-    bot?: Telegraf
+    bot?: Bot
   }
 }
+

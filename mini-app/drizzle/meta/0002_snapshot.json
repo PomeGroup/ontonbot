@@ -656,12 +656,14 @@
           "primaryKey": false,
           "notNull": false
         },
+
         "ts_reward_video": {
           "name": "ts_reward_video",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
+
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -1456,6 +1458,7 @@
           "notNull": false,
           "default": "now()"
         },
+
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp (3)",
@@ -1565,46 +1568,7 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.sbt_reward_collections": {
-      "name": "sbt_reward_collections",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "hubID": {
-          "name": "hubID",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "hubName": {
-          "name": "hubName",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "videoLink": {
-          "name": "videoLink",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "imageLink": {
-          "name": "imageLink",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
+
     "public.side_events": {
       "name": "side_events",
       "schema": "",
@@ -1669,70 +1633,7 @@
         }
       }
     },
-    "public.special_guests": {
-      "name": "special_guests",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "surname": {
-          "name": "surname",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "company": {
-          "name": "company",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "position": {
-          "name": "position",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "telegram": {
-          "name": "telegram",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "type": {
-          "name": "type",
-          "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "event_uuid": {
-          "name": "event_uuid",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
+
     "public.tickets": {
       "name": "tickets",
       "schema": "",

@@ -2,6 +2,9 @@
     "compilerOptions": {
         "esModuleInterop": true,
         "baseUrl": "./",
+        "paths": {
+            "src/*": ["./src/*"]
+        },
         "typeRoots": [
             "./node_modules/@types",
             "./src/types"
@@ -9,6 +12,7 @@
     },
     "include": [
         "src/**/*",
-        "src/types/**/*.d.ts"
+        "src/types/**/*.d.ts",
+
     ]
 }
