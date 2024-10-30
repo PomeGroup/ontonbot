@@ -6,7 +6,7 @@ import {
   createConversation,
 } from "@grammyjs/conversations";
 import { z } from "zod";
-import { getEvent, getEventTickets } from "../db/db";
+import { getEvent, getEventTickets, isUserAdmin } from "../db/db";
 import { sleep } from "../utils/utils";
 
 type BroadcastContext = Context & ConversationFlavor;
@@ -18,7 +18,10 @@ broadcastComposer.use(conversations())
 broadcastComposer.use(createConversation(broadcastMessageConvo))
 
 broadcastComposer.command('broadcast', async (ctx) => {
-  await ctx.conversation.enter('broadcastMessageConvo')
+  const { isAdmin } = await isUserAdmin(ctx.from.id.toString())
+  if (isAdmin) {
+    await ctx.conversation.enter('broadcastMessageConvo')
+  }
 })
 
 async function broadcastMessageConvo(conversation: BroadcastConversation, ctx: BroadcastContext) {
