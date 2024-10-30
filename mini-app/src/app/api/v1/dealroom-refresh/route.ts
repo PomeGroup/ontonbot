@@ -1,6 +1,7 @@
 import { getAuthenticatedUser } from "@/server/auth";
 import axios from "axios";
 import { NextRequest } from "next/server";
+import dealRoomService from "@/server/routers/services/DealRoomService";
 
 export async function GET(req: NextRequest): Promise<Response> {
   try {
@@ -14,19 +15,10 @@ export async function GET(req: NextRequest): Promise<Response> {
     const code =
       url.searchParams.get("code") || "2742f5902ad54152a969f5dac15d716d";
 
-    // Fetch data using the code
-    const response = await axios.get(
-      `https://letsgo.dealroomevents.com/v1/url/action?code=${code}`
-    );
+    // Call the separate fetch function
+    const result = await dealRoomService.RefreshGuestList(code);
 
-    if (response.status === 200 && response.data.success === true) {
-      return Response.json({
-        success: true,
-        message: "share message sent successfully",
-      });
-    }
-
-    return Response.json({ success: false, message: "share message failed" });
+    return Response.json(result);
   } catch (error) {
     console.error("Error fetching URL:", error);
     return Response.json({
@@ -35,3 +27,5 @@ export async function GET(req: NextRequest): Promise<Response> {
     });
   }
 }
+
+export const dynamic = "force-dynamic";
