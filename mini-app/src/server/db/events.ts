@@ -9,7 +9,7 @@ import {
   visitors,
 } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { removeKey } from "@/lib/utils";
+import {removeKey, roundDateToInterval} from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
@@ -249,15 +249,13 @@ export const getEventsWithFilters = async (
     sortBy = "default",
     useCache = false,
   } = params;
+  const roundMinutesInMs = 2000; // 10 minutes in milliseconds
+
   if (filter?.startDate) {
-    const tenMinutesInMs = 10000; // 10 minutes in milliseconds
-    filter.startDate =
-      Math.floor(filter.startDate / tenMinutesInMs) * tenMinutesInMs;
+    filter.startDate = roundDateToInterval(filter?.startDate, roundMinutesInMs);
   }
   if (filter?.endDate) {
-    const tenMinutesInMs = 10000; // 10 minutes in milliseconds
-    filter.endDate =
-      Math.round(filter.endDate / tenMinutesInMs) * tenMinutesInMs;
+    filter.endDate =roundDateToInterval(filter?.endDate, roundMinutesInMs);
   }
   const stringToHash = JSON.stringify({
     limit,
@@ -267,17 +265,15 @@ export const getEventsWithFilters = async (
     sortBy,
   });
   // Create MD5 hash
-  // every 2 minutes
+
   const hash = crypto.createHash("md5").update(stringToHash).digest("hex");
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
-  // console.log("string",stringToHash);
-  //console.log("hash",hash);
   const cachedResult = await redisTools.getCache(cacheKey);
-  // if (cachedResult) {
-  //   /// show return from cache and time
-  //   //  console.log("👙👙 cachedResult 👙👙" + Date.now());
-  //   return cachedResult;
-  // }
+  if (cachedResult && useCache) {
+    /// show return from cache and time
+    //console.log("👙👙 cachedResult 👙👙" + Date.now());
+    return cachedResult;
+  }
 
   let query = db.select().from(event_details_search_list);
   let userEventUuids = [];

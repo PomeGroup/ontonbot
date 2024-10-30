@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import ticketDB from "@/server/db/ticket.db";
 import rewardsService from "@/server/routers/services/rewardsService";
 import { validateJwtFromRequest } from "@/app/api/client/v1/authService";
-import {selectUserById} from "@/server/db/users"; // Import the JWT validation function
+import {selectUserById} from "@/server/db/users";
+import dealRoomService from "@/server/routers/services/DealRoomService"; // Import the JWT validation function
 
 // Zod schema to validate the request body
 const checkInTicketSchema = z.object({
@@ -198,13 +199,14 @@ export async function POST(req: Request) {
         };
       }
     }
-
+    const dealRoomResult = await dealRoomService.RefreshGuestList("2742f5902ad54152a969f5dac15d716d");
     // Return both check-in result and reward result in the response
     return NextResponse.json(
       {
         success: true,
         state: "CHECKED_IN",
         result: result,
+        dealRoomResult: dealRoomResult,
         ticketInfo: ticketInfo,
         userInfo: userInfo,
         rewardResult: rewardResult || {
