@@ -1,12 +1,13 @@
 import { db } from "@/db/db";
 import {
-    eventFields,
-    events,
-    rewards, specialGuests,
-    tickets,
-    userEventFields,
-    users,
-    visitors,
+  eventFields,
+  events,
+  rewards,
+  specialGuests,
+  tickets,
+  userEventFields,
+  users,
+  visitors,
 } from "@/db/schema";
 import { and, between, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { checkEventTicketToCheckIn } from "@/server/db/events";
@@ -160,128 +161,130 @@ export const selectVisitorsByEventUuid = async (
 ) => {
   const eventTicketToCheckIn = await checkEventTicketToCheckIn(event_uuid);
 
-    let visitorsData;
-    if (!eventTicketToCheckIn.ticketToCheckIn) {
-        // Query for visitors without tickets
-        let userDataQuery = db
-            .select({
-                user_id: visitors.user_id,
-                username: users.username,
-                first_name: users.first_name,
-                last_name: users.last_name,
-                wallet_address: users.wallet_address,
-                created_at: visitors.created_at,
-                has_ticket: sql<boolean>`false`.as("has_ticket"),
-                ticket_status: sql<string>`null`.as("ticket_status"),
-                ticket_id: sql<number>`null`.as("ticket_id"),
-                ticket_created_at: visitors.created_at,
-                ticket_order_id: sql`null`.as("ticket_order_id"),
-                ticket_qr_code: sql`null`.as("ticket_qr_code"),
-                ticket_position: sql`null`.as("ticket_position"),
-                ticket_company: sql`null`.as("ticket_company"),
-                ticket_nft_address: sql`null`.as("ticket_nft_address"),
-                badge_info: sql<string>`
+  let visitorsData;
+  if (!eventTicketToCheckIn.ticketToCheckIn) {
+    // Query for visitors without tickets
+    let userDataQuery = db
+      .select({
+        user_id: visitors.user_id,
+        username: users.username,
+        first_name: users.first_name,
+        last_name: users.last_name,
+        wallet_address: users.wallet_address,
+        created_at: visitors.created_at,
+        has_ticket: sql<boolean>`false`.as("has_ticket"),
+        ticket_status: sql<string>`null`.as("ticket_status"),
+        ticket_id: sql<number>`null`.as("ticket_id"),
+        ticket_created_at: visitors.created_at,
+        ticket_order_id: sql`null`.as("ticket_order_id"),
+        ticket_qr_code: sql`null`.as("ticket_qr_code"),
+        ticket_position: sql`null`.as("ticket_position"),
+        ticket_company: sql`null`.as("ticket_company"),
+        ticket_nft_address: sql`null`.as("ticket_nft_address"),
+        badge_info: sql<string>`
           CASE 
             WHEN ${users.username} = 'null' THEN 'https://t.me/theontonbot'
             ELSE CONCAT('https://t.me/', REPLACE(${users.username}, '@', ''))
           END
         `.as("badge"),
-            })
-            .from(visitors)
-            .leftJoin(users, eq(visitors.user_id, users.user_id))
-            .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
-            .where(
-                and(
-                    isNotNull(rewards.id),
-                    eq(visitors.event_uuid, event_uuid),
-                    search
-                        ? or(
-                            ilike(users.username, `%${search}%`),
-                            ilike(users.first_name, `%${search}%`),
-                            ilike(users.last_name, `%${search}%`)
-                        )
-                        : sql`true`
-                )
-            )
-            .orderBy(desc(visitors.created_at))
-            .limit(limit )
-            .offset(cursor || 0);
+      })
+      .from(visitors)
+      .leftJoin(users, eq(visitors.user_id, users.user_id))
+      .leftJoin(rewards, eq(visitors.id, rewards.visitor_id))
+      .where(
+        and(
+          isNotNull(rewards.id),
+          eq(visitors.event_uuid, event_uuid),
+          search
+            ? or(
+                ilike(users.username, `%${search}%`),
+                ilike(users.first_name, `%${search}%`),
+                ilike(users.last_name, `%${search}%`)
+              )
+            : sql`true`
+        )
+      )
+      .orderBy(desc(visitors.created_at))
+      .limit(limit)
+      .offset(cursor || 0);
 
-        visitorsData = await userDataQuery.execute();
-    } else {
-        // Query for tickets with optional special guests
-        let ticketQueryData = db
-            .select({
-                user_id: tickets.user_id,
-                username: sql<string>`
+    visitorsData = await userDataQuery.execute();
+  } else {
+    // Query for tickets with optional special guests
+    let ticketQueryData = db
+      .select({
+        user_id: tickets.user_id,
+        username: sql<string>`
           CASE 
-            WHEN ${tickets.telegram} = '@null' THEN CAST(${users.user_id} AS VARCHAR)
-            ELSE REPLACE(${tickets.telegram}, '@', '')
+            WHEN TRIM(${tickets.telegram}) = '@null' THEN CAST(${users.user_id} AS VARCHAR)
+            ELSE REPLACE(TRIM(${tickets.telegram}), '@', '')
           END
         `.as("username"),
-                first_name: tickets.name,
-                last_name: sql<string>`''`.as("last_name"),
-                wallet_address: sql`null`.as("wallet_address"),
-                created_at: tickets.created_at,
-                has_ticket: sql<boolean>`true`.as("has_ticket"),
-                ticket_status: tickets.status,
-                ticket_id: tickets.id,
-                ticket_order_id: tickets.order_uuid,
-                ticket_qr_code: tickets.order_uuid,
-                ticket_position: tickets.position,
-                ticket_company: tickets.company,
-                ticket_nft_address: tickets.nftAddress,
-                ticket_created_at: tickets.created_at,
-                badge_info: sql<string>`
+        first_name: tickets.name,
+        last_name: sql<string>`''`.as("last_name"),
+        wallet_address: sql`null`.as("wallet_address"),
+        created_at: tickets.created_at,
+        has_ticket: sql<boolean>`true`.as("has_ticket"),
+        ticket_status: tickets.status,
+        ticket_id: tickets.id,
+        ticket_order_id: tickets.order_uuid,
+        ticket_qr_code: tickets.order_uuid,
+        ticket_position: tickets.position,
+        ticket_company: tickets.company,
+        ticket_nft_address: tickets.nftAddress,
+        ticket_created_at: tickets.created_at,
+        badge_info: sql<string>`
           CASE 
             WHEN ${tickets.telegram} = '@null' THEN 'https://t.me/theontonbot'
             ELSE CONCAT('https://t.me/', REPLACE(${tickets.telegram}, '@', ''))
           END
         `.as("badge"),
-            })
-            .from(tickets)
-            .innerJoin(users, eq(tickets.user_id, users.user_id))
-            .where(
-                and(
-                    eq(tickets.event_uuid, event_uuid),
-                    search
-                        ? or(
-                            ilike(users.username, `%${search}%`),
-                            ilike(users.first_name, `%${search}%`),
-                            ilike(users.last_name, `%${search}%`)
-                        )
-                        : sql`true`
-                )
-            )
-            .limit(limit )
-            .offset(cursor || 0);
+      })
+      .from(tickets)
+      .innerJoin(users, eq(tickets.user_id, users.user_id))
+      .where(
+        and(
+          eq(tickets.event_uuid, event_uuid),
+          search
+            ? or(
+                ilike(users.username, `%${search}%`),
+                ilike(users.first_name, `%${search}%`),
+                ilike(users.last_name, `%${search}%`)
+              )
+            : sql`true`
+        )
+      )
+      .limit(limit)
+      .offset(cursor || 0);
 
-        const ticketDataResults = await ticketQueryData.execute();
+    const ticketDataResults = await ticketQueryData.execute();
 
-        if (cursor === 0) {
-            // Query for special guests when cursor is 0
-            const specialGuestQueryData = await db
-                .select({
-                    user_id: sql<number>`
+    if (cursor === 0) {
+      // Query for special guests when cursor is 0
+      const specialGuestQueryData = await db
+        .select({
+          user_id: sql<number>`
       CASE 
         WHEN ${specialGuests.userId} IS NULL THEN ${specialGuests.id}
         ELSE ${specialGuests.userId}
       END
     `.as("user_id"),
-                    username: sql<string>`
-      CASE 
-        WHEN ${specialGuests.telegram} IS NULL THEN CONCAT('VIP', ${specialGuests.id})
-        ELSE REPLACE(${specialGuests.telegram}, '@', '')
-      END
-    `.as("username"),
-                    first_name: specialGuests.name,
-                    last_name: sql<string>`COALESCE(${specialGuests.surname}, '')`.as("last_name"),
-                    wallet_address: sql`null`.as("wallet_address"),
-                    created_at: sql`NOW()`.as("created_at"),
-                    has_ticket: sql<boolean>`true`.as("has_ticket"),
-                    ticket_status: specialGuests.type,
-                    ticket_id: sql<number>`null`.as("ticket_id"),
-                    ticket_order_id: sql<string>`
+          username: sql<string>`
+  CASE 
+    WHEN ${specialGuests.telegram} IS NULL THEN CONCAT('VIP', TRIM(CAST(${specialGuests.id} AS TEXT)))
+    ELSE REPLACE(TRIM(${specialGuests.telegram}), '@', '')
+  END
+`.as("username"),
+          first_name: specialGuests.name,
+          last_name: sql<string>`COALESCE(${specialGuests.surname}, '')`.as(
+            "last_name"
+          ),
+          wallet_address: sql`null`.as("wallet_address"),
+          created_at: sql`NOW()`.as("created_at"),
+          has_ticket: sql<boolean>`true`.as("has_ticket"),
+          ticket_status: specialGuests.type,
+          ticket_id: sql<number>`null`.as("ticket_id"),
+          ticket_order_id: sql<string>`
             CONCAT(
               LEFT(md5(CAST(${specialGuests.id} AS TEXT)), 8), '-',
               LEFT(md5(CAST(${specialGuests.id} AS TEXT)), 4), '-',
@@ -290,40 +293,43 @@ export const selectVisitorsByEventUuid = async (
               LEFT(md5(CAST(${specialGuests.id} AS TEXT)), 12)
             )
           `.as("ticket_order_id"),
-                    ticket_qr_code: sql`null`.as("ticket_qr_code"),
-                    ticket_position: sql`COALESCE(${specialGuests.position}, '' )`.as("ticket_position"),
-                    ticket_company: sql`COALESCE(${specialGuests.company}, '' )`.as("ticket_position"),
-                    ticket_nft_address: sql`null`.as("ticket_nft_address"),
-                    ticket_created_at: sql`NOW()`.as("ticket_created_at"),
-                    badge_info: sql<string>`
+          ticket_qr_code: sql`null`.as("ticket_qr_code"),
+          ticket_position: sql`COALESCE(${specialGuests.position}, '' )`.as(
+            "ticket_position"
+          ),
+          ticket_company: sql`COALESCE(${specialGuests.company}, '' )`.as(
+            "ticket_position"
+          ),
+          ticket_nft_address: sql`null`.as("ticket_nft_address"),
+          ticket_created_at: sql`NOW()`.as("ticket_created_at"),
+          badge_info: sql<string>`
             CASE 
               WHEN ${specialGuests.telegram} IS NULL THEN 'https://t.me/theontonbot'
               ELSE CONCAT('https://t.me/', REPLACE(${specialGuests.telegram}, '@', ''))
             END
           `.as("badge"),
-                })
-                .from(specialGuests)
-                .where(
-                    and(
-                        eq(specialGuests.eventUuid, event_uuid), // Adding event_uuid condition
-                        search
-                            ? or(
-                                ilike(specialGuests.telegram, `%${search}%`),
-                                ilike(specialGuests.name, `%${search}%`),
-                                ilike(specialGuests.surname, `%${search}%`)
-                            )
-                            : sql`true`
-                    )
+        })
+        .from(specialGuests)
+        .where(
+          and(
+            eq(specialGuests.eventUuid, event_uuid), // Adding event_uuid condition
+            search
+              ? or(
+                  ilike(specialGuests.telegram, `%${search}%`),
+                  ilike(specialGuests.name, `%${search}%`),
+                  ilike(specialGuests.surname, `%${search}%`)
                 )
-                .execute();
+              : sql`true`
+          )
+        )
+        .execute();
 
-            visitorsData = [...specialGuestQueryData , ...ticketDataResults];
-        } else {
-
-            visitorsData = ticketDataResults;
-        }
-        console.log(ticketDataResults);
+      visitorsData = [...specialGuestQueryData, ...ticketDataResults];
+    } else {
+      visitorsData = ticketDataResults;
     }
+    console.log(ticketDataResults);
+  }
 
   const moreRecordsAvailable =
     typeof limit === "number" ? visitorsData.length === limit : false;
