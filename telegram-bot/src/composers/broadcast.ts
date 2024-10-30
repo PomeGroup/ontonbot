@@ -6,8 +6,8 @@ import {
   createConversation,
 } from "@grammyjs/conversations";
 import { z } from "zod";
-import { getEvent, getEventTickets } from "src/db/db";
-import { sleep } from "src/utils/utils";
+import { getEvent, getEventTickets } from "../db/db";
+import { sleep } from "../utils/utils";
 
 type BroadcastContext = Context & ConversationFlavor;
 type BroadcastConversation = Conversation<BroadcastContext>;
