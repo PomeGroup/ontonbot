@@ -69,7 +69,6 @@ const EventCard: React.FC<EventCardProps> = memo(
     } = event;
 
     const defaultImage = "/template-images/default.webp";
-    const sliderImageSpecial = "https://storage.onton.live/ontonimage/GateWaySlider.png";
     const [imageLoaded, setImageLoaded] = useState(false);
     const webApp = useWebApp();
     const { user } = useAuth();
@@ -98,12 +97,6 @@ const EventCard: React.FC<EventCardProps> = memo(
         window.location.href = `/events/${eventUuid}`;
         return false;
       }
-    };
-    const sideEventClick = () => {
-
-          window.location.href = `/gateway/`;
-          return false;
-
     };
     // Skeleton Loader for Image
     const renderImageSkeleton = () => (
@@ -267,12 +260,12 @@ const EventCard: React.FC<EventCardProps> = memo(
     const renderDetailedMode = () => (
       <div
         className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
-        onClick={sideEventClick}
+        onClick={handleEventClick}
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
             // if date now before 5 november 2024 show special image
-          src={isValidImageUrl(imageUrl) ? ( Date.now() < 1730754000000 ? sliderImageSpecial : imageUrl) : defaultImage}
+          src={isValidImageUrl(imageUrl) ?  imageUrl : defaultImage}
           alt={title}
           width={window?.innerWidth || 400}
           height={400}
