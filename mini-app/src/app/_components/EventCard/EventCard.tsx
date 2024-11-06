@@ -99,12 +99,7 @@ const EventCard: React.FC<EventCardProps> = memo(
         return false;
       }
     };
-    const sideEventClick = () => {
 
-          window.location.href = `/gateway/`;
-          return false;
-
-    };
     // Skeleton Loader for Image
     const renderImageSkeleton = () => (
       <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
@@ -127,9 +122,8 @@ const EventCard: React.FC<EventCardProps> = memo(
                 alt={title}
                 layout="fill"
                 style={{ objectFit: "cover" }}
-                className={`rounded-lg transition-opacity duration-500 ${
-                  imageLoaded ? "opacity-100" : "opacity-0"
-                }`}
+                className={`rounded-lg transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
                 onError={(e) => (e.currentTarget.src = defaultImage)}
                 onLoad={() => setImageLoaded(true)}
                 loading="lazy"
@@ -201,8 +195,7 @@ const EventCard: React.FC<EventCardProps> = memo(
 
     const renderNormalMode = () => (
       <>
-        {(currentUserId === organizerUserId || user?.role === "admin") && mode!== "normal_without_dropdown" ? (
-            renderDropdownMenu()
+        {(currentUserId === organizerUserId || user?.role === "admin") && mode !== "normal_without_dropdown" ? (renderDropdownMenu()
         ) : (
           <div
             onClick={handleEventClick}
@@ -215,9 +208,8 @@ const EventCard: React.FC<EventCardProps> = memo(
                 alt={title}
                 layout="fill"
                 style={{ objectFit: "cover" }}
-                className={`rounded-lg transition-opacity duration-500 ${
-                  imageLoaded ? "opacity-100" : "opacity-0"
-                }`}
+                className={`rounded-lg transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
                 onError={(e) => (e.currentTarget.src = defaultImage)}
                 onLoad={() => setImageLoaded(true)}
                 loading="lazy"
@@ -267,19 +259,18 @@ const EventCard: React.FC<EventCardProps> = memo(
     const renderDetailedMode = () => (
       <div
         className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
-        onClick={sideEventClick}
+        onClick={handleEventClick}
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
-            // if date now before 5 november 2024 show special image
-          src={isValidImageUrl(imageUrl) ? ( Date.now() < 1730754000000 ? sliderImageSpecial : imageUrl) : defaultImage}
+          // if date now before 5 november 2024 show special image
+          src={isValidImageUrl(imageUrl) ? (Date.now() < 1730754000000 ? sliderImageSpecial : imageUrl) : defaultImage}
           alt={title}
           width={window?.innerWidth || 400}
           height={400}
           style={{ objectFit: "cover" }}
-          className={`rounded-lg transition-opacity duration-500 ${
-            imageLoaded ? "opacity-100" : "opacity-0"
-          }`}
+          className={`rounded-lg transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"
+            }`}
           onError={(e) => (e.currentTarget.src = defaultImage)}
           onLoad={() => setImageLoaded(true)}
           unoptimized={true}
@@ -301,9 +292,8 @@ const EventCard: React.FC<EventCardProps> = memo(
               layout="fill"
               objectFit="cover"
               style={{ objectFit: "cover" }}
-              className={`rounded-lg transition-opacity duration-500 ${
-                imageLoaded ? "opacity-100" : "opacity-0"
-              }`}
+              className={`rounded-lg transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"
+                }`}
               loading="lazy"
               onError={(e) => (e.currentTarget.src = defaultImage)}
               onLoad={() => setImageLoaded(true)}
