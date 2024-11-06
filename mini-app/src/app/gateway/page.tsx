@@ -2,14 +2,13 @@
 import React, { useEffect, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
-import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import useAuth from "@/hooks/useAuth";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { trpc } from "../_trpc/client";
 import "../page.css";
 import { useConfig } from "@/context/ConfigContext";
 import "swiper/css";
-import {useWithBackButton} from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
+import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 
 
 // Define types for events
