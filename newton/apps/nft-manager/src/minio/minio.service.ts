@@ -67,7 +67,7 @@ export class MinioClientService {
 
     // Upload the file to the specified bucket and path (bucket/subfolder/file or bucket/file)
     console.log(bucketName, fullFilename, fileData, size, metaData);
-    await this.client.putObject(
+    const uploadResult = await this.client.putObject(
       bucketName,
       fullFilename,
       fileData,

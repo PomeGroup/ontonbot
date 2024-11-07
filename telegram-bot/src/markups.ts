@@ -2,7 +2,7 @@ import { InlineKeyboard } from "grammy";
 
 const startKeyboard = () => {
   return new InlineKeyboard()
-    .webApp('Open Event', `${process.env.APP_BASE_URL}/`)
+    .webApp('Open Event', `${process.env.NEXT_PUBLIC_APP_BASE_URL}/`)
 }
 
 
@@ -11,8 +11,8 @@ const shareKeyboard = (url: string) => {
 
   return new InlineKeyboard()
     .switchInline('Share Event', url).row()
-    .webApp('Manage Event', `${process.env.APP_BASE_URL}/events/${id}/edit`).row()
-    .webApp('All Events', `${process.env.APP_BASE_URL}/`)
+    .webApp('Manage Event', `${process.env.NEXT_PUBLIC_APP_BASE_URL}/events/${id}/edit`).row()
+    .webApp('All Events', `${process.env.NEXT_PUBLIC_APP_BASE_URL}/`)
 }
 
 

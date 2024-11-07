@@ -6,7 +6,7 @@ export async function getEventWithUserData(id: string, params: { proof_token: st
   const searchParams = new URLSearchParams(params)
 
   const eventResponse = await fetch(
-    `${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/event/${id}?${searchParams.toString()}`,
+    `${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}?${searchParams.toString()}`,
     {
       method: "GET",
     },

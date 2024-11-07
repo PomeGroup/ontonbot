@@ -1,0 +1,245 @@
+openapi: 3.0.0
+info:
+  title: Onton API
+  version: v1
+  description: API documentation for the Onton system.
+servers:
+  - url: https://dev.onton.live/api/client/v1
+tags:
+  - name: Authentication
+    description: Endpoints related to authentication.
+
+paths:
+  /sendCode:
+    post:
+      tags:
+        - Authentication
+      summary: Send OTP via Telegram to organizer and inform the user
+      description: Sends an OTP to the organizer's Telegram handle and informs the user to request the OTP from the organizer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organizerId:
+                  type: string
+                  description: The Telegram handle of the organizer (including the @ symbol).
+                  example: "@OrganizerUsername"
+                userId:
+                  type: string
+                  description: The Telegram handle of the user (including the @ symbol).
+                  example: "@UserUsername"
+      responses:
+        200:
+          description: OTP successfully sent to the organizer and message sent to the user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the OTP was successfully sent to the organizer and message sent to the user.
+                  code:
+                    type: string
+                    description: Success code.
+                  message:
+                    type: string
+                    description: Success message.
+        400:
+          description: Validation error for invalid input.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Error code.
+                      message:
+                        type: string
+                        description: Error message.
+        500:
+          description: Server error while sending OTP or saving OTP to cache.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Error code.
+                      message:
+                        type: string
+                        description: Error message.
+
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Login using OTP and get JWT
+      description: Authenticates the user using OTP and provides a JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                organizerId:
+                  type: string
+                  description: Organizer's Telegram username (with @).
+                  example: "@OrganizerUsername"
+                userId:
+                  type: string
+                  description: User's Telegram username (with @).
+                  example: "@UserUsername"
+                loginCode:
+                  type: string
+                  description: OTP code sent to Telegram.
+      responses:
+        200:
+          description: JWT Token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Whether the login was successful.
+                  token:
+                    type: string
+                    description: The generated JWT token.
+                  code:
+                    type: string
+                    description: Success code.
+                  message:
+                    type: string
+                    description: Success message.
+        400:
+          description: Validation error or user not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Error code.
+                      message:
+                        type: string
+                        description: Error message.
+        500:
+          description: Server error or OTP deletion failure.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Error code.
+                      message:
+                        type: string
+                        description: Error message.
+
+  /organizer/events:
+    get:
+      tags:
+        - Events
+      summary: Fetch the list of events for an organizer (JWT protected)
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: number
+          required: false
+          description: Limit the number of results.
+        - in: query
+          name: offset
+          schema:
+            type: number
+          required: false
+          description: Pagination offset.
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: A list of events.
+        401:
+          description: Unauthorized (Invalid or missing JWT).
+
+  /checkin:
+    post:
+      tags:
+        - Events
+      summary: Check in a ticket for an event (JWT protected)
+      description: Checks in a ticket for an event using the order UUID. If the user is successfully checked in, it returns the check-in status, user information, and embeds the reward creation result in `rewardResult`. Requires a valid JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                order_uuid:
+                  type: string
+                  description: The UUID of the ticket order to check in.
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Ticket checked in successfully and returns user information and reward creation status.
+        401:
+          description: Unauthorized (Invalid or missing JWT token).
+        400:
+          description: Invalid request body or missing parameters.
+        404:
+          description: Ticket not found.
+        500:
+          description: Internal server error.
+
+  /logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout the user (JWT protected)
+      description: Logs out the user by removing session-related data from Redis and blacklisting the JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                telegramUserId:
+                  type: string
+                  description: The Telegram handle of the user (with @).
+                  example: "@UserUsername"
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: User successfully logged out.
+        400:
+          description: Validation error or invalid parameters.
+        401:
+          description: Unauthorized (Invalid or missing JWT token).
+        500:
+          description: Server error during logout process.

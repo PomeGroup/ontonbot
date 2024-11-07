@@ -27,9 +27,11 @@
     "zod": "^3.23.8"
   },
   "scripts": {
-    "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts",
+    "dev": "dotenv -e ../.env -- nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts",
     "build": "tsc",
-    "start": "ts-node src/main.ts"
+    "build:local" : "dotenv -e ../.env -- tsc",
+    "start": "ts-node src/main.ts",
+    "start:local": "dotenv -e ../.env -- ts-node src/main.ts"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
@@ -37,6 +39,7 @@
     "@types/express-fileupload": "^1.4.4",
     "@types/node": "^18.19.8",
     "@types/pg": "^8.11.2",
+    "dotenv-cli": "^7.4.2",
     "nodemon": "^2.0.22",
     "ts-node": "^10.9.2"
   }

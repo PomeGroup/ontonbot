@@ -97,10 +97,10 @@ export const fieldsRouter = router({
       // Append the bucket name to the form data
       formData.append("bucketName", bucketName);
       console.log("---Bucket Name: ", bucketName); // Log the bucket name for debugging
-
+        console.log("process.env.FILE_UPLOAD_URL", process.env.FILE_UPLOAD_URL)
       // Send the image data to the upload service (MinIO)
       const res = await axios.post(
-        process.env.FILE_UPLOAD_URL || "http://nft-microcervise:7863/files/upload",
+          ( process.env.UPLOADER_ADDRESS && process.env.FILE_UPLOAD_URL ) ? process.env.UPLOADER_ADDRESS + process.env.FILE_UPLOAD_URL :  "http://nft-microcervise:7863/files/upload",
         formData,
         { headers: formData.getHeaders() }
       );
@@ -176,7 +176,7 @@ export const fieldsRouter = router({
       formData.append("bucketName", bucketName);
 
       const res = await axios.post(
-        process.env.VIDEO_UPLOAD_URL ||
+          ( process.env.UPLOADER_ADDRESS && process.env.VIDEO_UPLOAD_URL ) ? process.env.UPLOADER_ADDRESS + process.env.VIDEO_UPLOAD_URL :
           "http://nft-microcervise:7863/files/upload-video",
         formData,
         { headers: formData.getHeaders() }

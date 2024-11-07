@@ -1,7 +1,7 @@
 import { env } from "~/env.mjs";
 import { CheckProofPayload, CheckTonProofSuccess } from "~/types/proof.types";
 
-const tonProofBaseApi = env.NEXT_PUBLIC_API_BASE_URL_ONTON
+const tonProofBaseApi = env.NEXT_PUBLIC_API_BASE_URL
 
 export const generatePayload = async () => {
   const res = await fetch(`${tonProofBaseApi}/ton-proof/generate-payload`)

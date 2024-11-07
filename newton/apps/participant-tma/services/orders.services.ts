@@ -9,7 +9,7 @@ export async function addOrder(body: {
   owner_address: string;
   event_ticket_id: number;
 }) {
-  const eventResponse = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/order`, {
+  const eventResponse = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/order`, {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -35,7 +35,7 @@ export async function getOrder({ order_id }: { order_id: string }) {
   }
 
   const eventResponse = await fetch(
-    `${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/order/${order_id}`,
+    `${env.NEXT_PUBLIC_API_BASE_URL}/order/${order_id}`,
     {
       method: "GET",
     },

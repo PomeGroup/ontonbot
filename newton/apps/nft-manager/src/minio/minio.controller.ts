@@ -32,7 +32,7 @@ export class MinioController {
       image.originalname,
       image.buffer,
       image.size,
-      { mimetype: image.mimetype }, // Metadata
+      { mimetype: image.mimetype ,'Content-Type': image.mimetype}, // Metadata
       subfolder || '', // Subfolder if provided
     );
 

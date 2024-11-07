@@ -12,7 +12,7 @@ type UpdateTicketInfoProps = {
 }
 
 export const updateTicketInfo = async (nftaddress: string, newInfo: UpdateTicketInfoProps) => {
-  const response = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/ticket/${nftaddress}`, {
+  const response = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/ticket/${nftaddress}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
