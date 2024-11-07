@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/.env.example" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/docker-compose.clamav.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.clamav.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/docker-compose.db.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.db.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/docker-compose.minio.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.minio.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/docker-compose.redis.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.redis.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/nft-manager/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/src/minio/minio.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/nft-manager/src/minio/minio.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/newton/pnpm-lock.yaml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="dev" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="PackageJsonUpdateNotifier">
+    <dismissed value="$PROJECT_DIR$/telegram-bot/package.json" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="2jVEwg5Qw65sHIfnZXqFFJrKiXD" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Attach to Node.js/Chrome.Unnamed.executor": "Debug",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "dev",
+    "js.last.introduce.type": "CONST",
+    "last_opened_file_path": "/home/inanloo/MyProject/ontonBotProjects/ontonDevops",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "pnpm",
+    "prettierjs.PrettierConfiguration.Package": "/home/inanloo/MyProject/ontonBotProjects/ontonbot/mini-app/node_modules/prettier",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "preferences.fileTypes",
+    "ts.external.directory.path": "/home/inanloo/MyProject/ontonBotProjects/ontonbot/mini-app/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="ReactDesignerToolWindowState">
+    <option name="myId2Visible">
+      <map>
+        <entry key="com.intellij.reactbuddy.reactComponents" value="false" />
+        <entry key="com.intellij.reactbuddy.reactInspector" value="false" />
+        <entry key="com.intellij.reactbuddy.storybook" value="false" />
+      </map>
+    </option>
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/mini-app/src/app/api/v1/dealroom-refresh-data" />
+      <recent name="$PROJECT_DIR$/mini-app/src/app" />
+      <recent name="$PROJECT_DIR$/client-web-panel" />
+      <recent name="$PROJECT_DIR$/client-web-panel/public/images" />
+      <recent name="$PROJECT_DIR$/mini-app/src/app/api/client" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/mini-app/src/app/gateway" />
+      <recent name="$PROJECT_DIR$/mini-app/src/app/api/client/v1/public" />
+      <recent name="$PROJECT_DIR$/mini-app/src/app/api/client/v1/portected" />
+      <recent name="$PROJECT_DIR$/mini-app/src/app/api/client/v1/guestList/[event_uuid]" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="Unnamed" type="ChromiumRemoteDebugType" factoryName="Chromium Remote" nameIsGenerated="true" port="9230">
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-WS-242.23726.96" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="" />
+      <created>1721464083904</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1721464083904</updated>
+      <workItem from="1721464084918" duration="13107000" />
+      <workItem from="1721552400436" duration="2415000" />
+      <workItem from="1721644594077" duration="5168000" />
+      <workItem from="1721696950124" duration="86000" />
+      <workItem from="1721993495771" duration="34943000" />
+      <workItem from="1722103625759" duration="11044000" />
+      <workItem from="1722162637695" duration="1246000" />
+      <workItem from="1722175562169" duration="14020000" />
+      <workItem from="1722238958579" duration="8177000" />
+      <workItem from="1722594162674" duration="2694000" />
+      <workItem from="1722856470510" duration="42581000" />
+      <workItem from="1722949801670" duration="35806000" />
+      <workItem from="1723007520600" duration="20024000" />
+      <workItem from="1723132838571" duration="3614000" />
+      <workItem from="1723276470708" duration="7000" />
+      <workItem from="1723278814556" duration="431000" />
+      <workItem from="1723343279303" duration="15255000" />
+      <workItem from="1723361449129" duration="27388000" />
+      <workItem from="1723420328296" duration="52968000" />
+      <workItem from="1723518362862" duration="23626000" />
+      <workItem from="1723620581600" duration="15269000" />
+      <workItem from="1723695308961" duration="9748000" />
+      <workItem from="1723887681080" duration="10000" />
+      <workItem from="1723887804545" duration="22588000" />
+      <workItem from="1724007366955" duration="22388000" />
+      <workItem from="1724117970830" duration="199000" />
+      <workItem from="1724134394554" duration="1182000" />
+      <workItem from="1724135586267" duration="122002000" />
+      <workItem from="1724553589378" duration="57613000" />
+      <workItem from="1724741657111" duration="57947000" />
+      <workItem from="1724901757995" duration="25812000" />
+      <workItem from="1724987861801" duration="16582000" />
+      <workItem from="1725017644993" duration="1434000" />
+      <workItem from="1725099041798" duration="42654000" />
+      <workItem from="1725191674072" duration="7232000" />
+      <workItem from="1725213073306" duration="49125000" />
+      <workItem from="1725382595637" duration="6000" />
+      <workItem from="1725388506120" duration="61075000" />
+      <workItem from="1725537274959" duration="79354000" />
+      <workItem from="1725808428689" duration="97466000" />
+      <workItem from="1726224150903" duration="30153000" />
+      <workItem from="1726282414493" duration="32477000" />
+      <workItem from="1726524209911" duration="141371000" />
+      <workItem from="1726943304959" duration="71532000" />
+      <workItem from="1727190488292" duration="9161000" />
+      <workItem from="1727461396319" duration="53000" />
+      <workItem from="1727461495741" duration="224000" />
+      <workItem from="1727461734071" duration="50000" />
+      <workItem from="1727461791127" duration="6619000" />
+      <workItem from="1727570000538" duration="28202000" />
+      <workItem from="1727838837485" duration="15737000" />
+      <workItem from="1727860718347" duration="8120000" />
+      <workItem from="1727870606525" duration="14113000" />
+      <workItem from="1727947431225" duration="91790000" />
+      <workItem from="1728149726568" duration="21747000" />
+      <workItem from="1728172362430" duration="20356000" />
+      <workItem from="1728203440548" duration="61373000" />
+      <workItem from="1728402386407" duration="8980000" />
+      <workItem from="1728413087484" duration="89837000" />
+      <workItem from="1728838152898" duration="32294000" />
+      <workItem from="1728928324129" duration="83594000" />
+      <workItem from="1729224072943" duration="11675000" />
+      <workItem from="1729242723781" duration="25249000" />
+      <workItem from="1729298061834" duration="13498000" />
+      <workItem from="1729365228265" duration="12790000" />
+      <workItem from="1729383981708" duration="21563000" />
+      <workItem from="1729407314888" duration="12132000" />
+      <workItem from="1729486217185" duration="28128000" />
+      <workItem from="1729676909378" duration="56037000" />
+      <workItem from="1729975987461" duration="32457000" />
+      <workItem from="1730106184822" duration="4581000" />
+      <workItem from="1730189187426" duration="21928000" />
+      <workItem from="1730256008069" duration="33145000" />
+      <workItem from="1730988936387" duration="71000" />
+      <workItem from="1730989014939" duration="7509000" />
+    </task>
+    <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
+      <option name="closed" value="true" />
+      <created>1726904206182</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1726904206182</updated>
+    </task>
+    <task id="LOCAL-00002" summary="env example">
+      <option name="closed" value="true" />
+      <created>1728578913395</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1728578913395</updated>
+    </task>
+    <task id="LOCAL-00003" summary="env example">
+      <option name="closed" value="true" />
+      <created>1728715701908</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1728715701908</updated>
+    </task>
+    <task id="LOCAL-00004" summary="env example">
+      <option name="closed" value="true" />
+      <created>1729420575819</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1729420575819</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Pull request merge (I dont have idea)">
+      <option name="closed" value="true" />
+      <created>1730029708743</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1730029708743</updated>
+    </task>
+    <task id="LOCAL-00006" summary="edit package json of participant-tma to run with base env - update env.example">
+      <option name="closed" value="true" />
+      <created>1730994071539</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1730994071539</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="GitHub.CommitStatus" />
+      </list>
+    </option>
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fix: issue #85 filter chip participant type" />
+    <MESSAGE value="checkou" />
+    <MESSAGE value="Merge SBT Checkin Offline To Dev" />
+    <MESSAGE value="env example" />
+    <MESSAGE value="Pull request merge (I dont have idea)" />
+    <MESSAGE value="edit package json of participant-tma to run with base env - update env.example" />
+    <option name="LAST_COMMIT_MESSAGE" value="edit package json of participant-tma to run with base env - update env.example" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/mini-app/src/app/events/page.tsx</url>
+          <line>6</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/mini-app/src/app/api/openapi.json.ts/[trpc]/[...trpc].ts</url>
+          <line>12</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="javascript">
+          <url>file://$PROJECT_DIR$/mini-app/node_modules/.pnpm/@trpc+server@10.45.2/node_modules/@trpc/server/src/adapters/fetch/fetchRequestHandler.ts</url>
+          <line>45</line>
+          <option name="timeStamp" value="18" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>

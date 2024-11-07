@@ -28,10 +28,14 @@ export class MinioClientService {
   private readonly premitedMimes: string[];
 
   public get client(): Client {
+    const endpoint = process.env.MINIO_ENDPOINT;
+    const port = Number(process.env.MINIO_PORT);
+    this.logger.log(`Connecting to MinIO at ${endpoint}:${port}`);
+
     return new Client({
-      endPoint: process.env.MINIO_ENDPOINT,
-      port: Number(process.env.MINIO_PORT),
-      useSSL: false,
+      endPoint: endpoint,
+      port: port,
+      useSSL: false, // Set to true if using SSL
       accessKey: process.env.MINIO_ROOT_USER,
       secretKey: process.env.MINIO_ROOT_PASSWORD,
     });
