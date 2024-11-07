@@ -1,0 +1,18 @@
+{
+  "extends": "@repo/typescript-config/react-library.json",
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@tma/*": [
+        "./tma/*"
+      ]
+    }
+  },
+  "include": [
+    "tma"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

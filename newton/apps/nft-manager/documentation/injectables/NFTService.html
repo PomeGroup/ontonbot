@@ -1,0 +1,1332 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>nft-service documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">nft-service documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content injectable">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Injectables</li>
+  <li class="breadcrumb-item" >NFTService</li>
+</ol>
+
+<ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a href="#info" 
+                class="nav-link"
+                class="nav-link active"
+                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" 
+                class="nav-link"
+                
+                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
+        </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade active in" id="info">
+        <p class="comment">
+            <h3>File</h3>
+        </p>
+        <p class="comment">
+            <code>src/nft/nft.service.ts</code>
+        </p>
+
+
+
+
+
+            <section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Methods</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#deployCollection" >deployCollection</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#finishMinting" >finishMinting</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#generateItemMetaData" >generateItemMetaData</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getItemsOfCollection" >getItemsOfCollection</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#getNftItem" >getNftItem</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#mintItems" >mintItems</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#revokeInValidNfts" >revokeInValidNfts</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#revokeNftItem" >revokeNftItem</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+</section>
+
+            <section data-compodoc="block-constructor">
+    <h3 id="constructor">Constructor</h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+<code>constructor(metadataService: <a href="../injectables/MetaDataService.html" target="_self">MetaDataService</a>, prisma: <a href="../injectables/PrismaService.html" target="_self">PrismaService</a>, minio: <a href="../injectables/MinioClientService.html" target="_self">MinioClientService</a>)</code>
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="23" class="link-to-prism">src/nft/nft.service.ts:23</a></div>
+                            </td>
+                        </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                            <div>
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>metadataService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/MetaDataService.html" target="_self" >MetaDataService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>prisma</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/PrismaService.html" target="_self" >PrismaService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>minio</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/MinioClientService.html" target="_self" >MinioClientService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</section>
+
+            <section data-compodoc="block-methods">
+    
+    <h3 id="methods">
+        Methods
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="deployCollection"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>deployCollection</b></span>
+                        <a href="#deployCollection"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>deployCollection(collectionDTO: <a href="../interfaces/CollectionDTO.html" target="_self">CollectionDTO</a>, files: <a href="../interfaces/CollectionFiles.html" target="_self">CollectionFiles</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="36"
+                                    class="link-to-prism">src/nft/nft.service.ts:36</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>collectionDTO</td>
+                                            <td>
+                                                            <code><a href="../interfaces/CollectionDTO.html" target="_self" >CollectionDTO</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>files</td>
+                                            <td>
+                                                            <code><a href="../interfaces/CollectionFiles.html" target="_self" >CollectionFiles</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;Record&lt;string, string&gt;&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="finishMinting"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>finishMinting</b></span>
+                        <a href="#finishMinting"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>finishMinting(collection_address: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="224"
+                                    class="link-to-prism">src/nft/nft.service.ts:224</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>collection_address</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="generateItemMetaData"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>generateItemMetaData</b></span>
+                        <a href="#generateItemMetaData"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>generateItemMetaData(collection_address: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, itemDTO: <a href="../interfaces/ItemDTO.html" target="_self">ItemDTO</a>, file: Express.Multer.File)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="97"
+                                    class="link-to-prism">src/nft/nft.service.ts:97</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>collection_address</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>itemDTO</td>
+                                            <td>
+                                                            <code><a href="../interfaces/ItemDTO.html" target="_self" >ItemDTO</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>file</td>
+                                            <td>
+                                                        <code>Express.Multer.File</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getItemsOfCollection"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getItemsOfCollection</b></span>
+                        <a href="#getItemsOfCollection"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getItemsOfCollection(collection_address: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, skip: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, take: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="192"
+                                    class="link-to-prism">src/nft/nft.service.ts:192</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Default value</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>collection_address</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                                <td>skip</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                                    <code>0</code>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                                <td>take</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                                    <code>10</code>
+                                            </td>
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getNftItem"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>getNftItem</b></span>
+                        <a href="#getNftItem"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getNftItem(collection_address: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, nft_owner_address: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="211"
+                                    class="link-to-prism">src/nft/nft.service.ts:211</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>collection_address</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>nft_owner_address</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="mintItems"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>mintItems</b></span>
+                        <a href="#mintItems"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>mintItems(participantData: <a href="../interfaces/participantData.html" target="_self">participantData[]</a>, collectionAddress: Address, metadata: <a href="../interfaces/ItemMetaData.html" target="_self">ItemMetaData</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="127"
+                                    class="link-to-prism">src/nft/nft.service.ts:127</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>participantData</td>
+                                            <td>
+                                                            <code><a href="../interfaces/participantData.html" target="_self" >participantData[]</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>collectionAddress</td>
+                                            <td>
+                                                        <code>Address</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>metadata</td>
+                                            <td>
+                                                            <code><a href="../interfaces/ItemMetaData.html" target="_self" >ItemMetaData</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;Record&lt;string, BigInt&gt;&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="revokeInValidNfts"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>revokeInValidNfts</b></span>
+                        <a href="#revokeInValidNfts"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>revokeInValidNfts(start_index: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, end_index: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, collection_address: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="235"
+                                    class="link-to-prism">src/nft/nft.service.ts:235</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>start_index</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>end_index</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>collection_address</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="revokeNftItem"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>revokeNftItem</b></span>
+                        <a href="#revokeNftItem"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>revokeNftItem(index: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, collection_address: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="258"
+                                    class="link-to-prism">src/nft/nft.service.ts:258</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>index</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>collection_address</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+    </div>
+
+
+    <div class="tab-pane fade  tab-source-code" id="source">
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable } from &quot;@nestjs/common&quot;;
+import { Address, toNano } from &quot;@ton/core&quot;;
+import { PrismaService } from &quot;nestjs-prisma&quot;;
+import { MinioClientService } from &quot;src/minio/minio.service&quot;;
+import { OnTon } from &quot;src/OnTon&quot;;
+import { NftMintItemParams } from &quot;./contracts/NftBatchMintMessage&quot;;
+import { NftCollection } from &quot;./contracts/NftCollection&quot;;
+import { NftItemParams } from &quot;./contracts/NftItemParams&quot;;
+import {
+  CollectionDTO,
+  CollectionFiles,
+  ItemDTO,
+  ItemMetaData,
+  participantData,
+} from &quot;./dto&quot;;
+import { MetaDataService } from &quot;./metadata.service&quot;;
+import { callForSuccess, sleep } from &quot;./utils/delay&quot;;
+import axios, { AxiosError } from &quot;axios&quot;;
+import { MetadataParserZ } from &quot;src/types/nft.types&quot;;
+import { start } from &quot;repl&quot;;
+
+@Injectable()
+export class NFTService {
+  constructor(
+    private readonly metadataService: MetaDataService,
+    private readonly prisma: PrismaService,
+    private readonly minio: MinioClientService,
+  ) { }
+
+  /**
+   *
+   * @param collectionDTO
+   * @param files
+   * @returns
+   */
+  async deployCollection(
+    collectionDTO: CollectionDTO,
+    files: CollectionFiles,
+  ): Promise&lt;Record&lt;string, string&gt;&gt; {
+    const { walletContract, wallet, secretKey } &#x3D; await OnTon.getOnTonWallet();
+    const {
+      name,
+      description,
+      numerator,
+      denominator,
+      recipient,
+      commonContentUrl,
+    } &#x3D; collectionDTO;
+    const { collectionContent } &#x3D;
+      await this.metadataService.createCollectionMetadata({
+        name,
+        description,
+        cover: files?.cover &amp;&amp; Array.isArray(files?.cover) &amp;&amp; files.cover[0],
+        image: files?.image &amp;&amp; Array.isArray(files?.image) &amp;&amp; files.image[0],
+      });
+
+    const royalty &#x3D; {
+      numerator: BigInt(numerator),
+      denominator: BigInt(denominator),
+      recipient: Address.parse(recipient),
+    };
+
+    const collection &#x3D; new NftCollection(
+      {
+        collectionContentUrl: collectionContent.url,
+        commonContentUrl,
+        ownerAddress: wallet.address,
+        nextItemIndex: 0,
+        royalty,
+      },
+      walletContract,
+      OnTon.tonClient(),
+      secretKey,
+    );
+
+    const { collectionAddress, seqno } &#x3D; await callForSuccess(
+      async () &#x3D;&gt; await collection.deploy(),
+    );
+    await OnTon.waitSeqno(seqno, walletContract);
+
+    const savedCollection &#x3D; await this.prisma.nFTCollection.create({
+      data: {
+        address: Address.parse(collectionAddress).toString(),
+        metadata_url: collectionContent.url,
+      },
+    });
+
+    return {
+      id: savedCollection.id,
+      collectionAddress,
+      metadata_url: savedCollection.metadata_url,
+      image_url: collectionContent.image,
+      cover_url: collectionContent.cover,
+    };
+  }
+
+  async generateItemMetaData(
+    collection_address: string,
+    itemDTO: ItemDTO,
+    file: Express.Multer.File,
+  ) {
+    const imageUrl &#x3D; await this.minio.uploadFile(
+      process.env.MINIO_ITEM_BUCKET,
+      file.originalname,
+      file.buffer,
+      file.size,
+      {
+        mimetype: file.mimetype,
+        collection_address: collection_address,
+      },
+    );
+    const { name, description } &#x3D; itemDTO;
+    return this.prisma.nFTCollection.update({
+      where: {
+        address: Address.parse(collection_address).toString(),
+      },
+      data: {
+        item_meta_data: {
+          name,
+          description,
+          image: imageUrl,
+        },
+      },
+    });
+  }
+
+  async mintItems(
+    participantData: participantData[],
+    collectionAddress: Address,
+    metadata: ItemMetaData,
+  ): Promise&lt;Record&lt;string, BigInt&gt;&gt; {
+    const { walletContract, secretKey } &#x3D; await OnTon.getOnTonWallet();
+
+    const items: NftMintItemParams&lt;NftItemParams&gt;[] &#x3D; [];
+
+    for (const { address, attributes, index } of participantData) {
+      console.log(&quot;mintinf for address &quot; + address);
+      console.log(&quot;metadata generating&quot;);
+      const item_metadata_url &#x3D; await this.metadataService.createItemMetadata({
+        ...metadata,
+        attributes,
+      });
+
+      console.log({ item_metadata_url });
+
+      items.push({
+        index,
+        value: toNano(&quot;0.05&quot;),
+        owner: address,
+        individualContent: item_metadata_url,
+      });
+    }
+
+    const chunks &#x3D; [];
+
+    for (let i &#x3D; 0; i &lt; participantData.length; i +&#x3D; 100) {
+      const chunk &#x3D; items.slice(i, i + 100);
+
+      chunks.push(chunk);
+    }
+
+    for (const chunk of chunks) {
+      let isBatchDeployed &#x3D; false;
+      while (!isBatchDeployed) {
+        try {
+          const seqno &#x3D; await NftCollection.deployItemsBatch(
+            chunk,
+            collectionAddress,
+            walletContract,
+            secretKey,
+          );
+          console.log(&quot;my sequence number &#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&#x3D;&gt;&quot;, seqno);
+          await OnTon.waitSeqno(seqno, walletContract);
+          isBatchDeployed &#x3D; true;
+        } catch (e) {
+          if (e instanceof AxiosError) {
+            console.error(e.message, e.response.data);
+          } else {
+            console.error(e)
+          }
+          await sleep(2000);
+        }
+      }
+    }
+
+    return items.reduce((result, item) &#x3D;&gt; {
+      result[item.owner.toString()] &#x3D; Number(item.index);
+      return result;
+    }, {});
+  }
+
+  async getItemsOfCollection(
+    collection_address: string,
+    skip: number &#x3D; 0,
+    take: number &#x3D; 10,
+  ) {
+    return this.prisma.nFTItem.findMany({
+      skip,
+      take,
+      where: {
+        collection: {
+          address: collection_address,
+        },
+      },
+      orderBy: {
+        create_at: &quot;desc&quot;,
+      },
+    });
+  }
+
+  async getNftItem(collection_address: string, nft_owner_address: string) {
+    return this.prisma.nFTItem.findMany({
+      where: {
+        AND: {
+          owner_address: Address.parse(nft_owner_address).toString(),
+          collection: {
+            address: collection_address,
+          },
+        },
+      },
+    });
+  }
+
+  async finishMinting(collection_address: string) {
+    return this.prisma.nFTCollection.update({
+      where: {
+        address: collection_address,
+      },
+      data: {
+        in_process: false,
+      },
+    });
+  }
+
+  async revokeInValidNfts(start_index: number, end_index: number,
+    collection_address: string) {
+    const failed_items &#x3D; []
+    const successfully_revoked &#x3D; []
+
+    for (let i &#x3D; start_index; start_index &lt;&#x3D; end_index; i++) {
+      try {
+        await this.revokeNftItem(i, collection_address)
+        successfully_revoked.push(i)
+        await sleep(1000)
+      } catch (e) {
+        console.error(&#x60;Error Occured while revoking item ${i}&#x60;, e)
+        failed_items.push(i)
+      }
+    }
+
+    return {
+      failed_items,
+      successfully_revoked
+    }
+
+  }
+
+  async revokeNftItem(index: number, collection_address: string) {
+    // get the item
+    const nftItem &#x3D; await OnTon.getNftItem(collection_address, index)
+    console.log(&#x60;!! nftItem will be revoked ${index} from collection : ${collection_address}&#x60;, nftItem)
+
+    // throw if no nft item found
+    if (!nftItem.nft_items) {
+      throw new Error(&#x60;Nft item not found with the following index ${index} from collection ${collection_address}&#x60;)
+    }
+
+    // extract nft metadata url
+    const metadata_url &#x3D; nftItem.nft_items[0].content.uri
+    const metadata_raw &#x3D; await axios.get(metadata_url)
+    const metadata &#x3D; MetadataParserZ.parse(metadata_raw)
+
+    // update metadata url
+    metadata.image &#x3D; &quot;https://storage.onton.live/onton/ticket_revoked.gif&quot;
+    metadata.name &#x3D; &quot;Revoked Ticket&quot;
+    metadata.description &#x3D; &quot;This nft has been revoked and is no longer valid&quot;
+
+    // put the item with the same id to minio to overwrite it with new data
+    const metadata_file_name &#x3D; metadata.image.replace(&quot;https://storage.onton.live/onton/&quot;, &quot;&quot;)
+    const metadata_buffer &#x3D; Buffer.from(JSON.stringify(metadata))
+    await this.minio.client.putObject(&quot;onton&quot;, metadata_file_name, metadata_buffer)
+
+    return { updated_content: metadata_url }
+  }
+}
+</code></pre>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'injectable';
+            var COMPODOC_CURRENT_PAGE_URL = 'NFTService.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+       <script src="../js/libs/zepto.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

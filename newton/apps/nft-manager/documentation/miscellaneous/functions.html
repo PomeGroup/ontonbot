@@ -1,0 +1,1686 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>nft-service documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">nft-service documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content miscellaneous-functions">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Miscellaneous</li>
+  <li class="breadcrumb-item">Functions</li>
+</ol>
+
+<section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <ul class="index-list">
+                        <li>
+                            <a href="#bootstrap" title="src/main.ts" ><b>bootstrap</b>&nbsp;&nbsp;&nbsp;(src/.../main.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#bufferToChunks" title="src/nft/utils/metadata.ts" ><b>bufferToChunks</b>&nbsp;&nbsp;&nbsp;(src/.../metadata.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#callForSuccess" title="src/nft/utils/delay.ts" ><b>callForSuccess</b>&nbsp;&nbsp;&nbsp;(src/.../delay.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#createNftItemParamsValue" title="src/nft/contracts/NftItemParams.ts" ><b>createNftItemParamsValue</b>&nbsp;&nbsp;&nbsp;(src/.../NftItemParams.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#createNftMintItemValue" title="src/nft/contracts/NftBatchMintMessage.ts" ><b>createNftMintItemValue</b>&nbsp;&nbsp;&nbsp;(src/.../NftBatchMintMessage.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#encodeOffChainContent" title="src/nft/utils/metadata.ts" ><b>encodeOffChainContent</b>&nbsp;&nbsp;&nbsp;(src/.../metadata.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#getAxiosErrorMessage" title="src/helper/error.ts" ><b>getAxiosErrorMessage</b>&nbsp;&nbsp;&nbsp;(src/.../error.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#getErrorMessage" title="src/helper/error.ts" ><b>getErrorMessage</b>&nbsp;&nbsp;&nbsp;(src/.../error.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#getUnknownData" title="src/helper/error.ts" ><b>getUnknownData</b>&nbsp;&nbsp;&nbsp;(src/.../error.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#loadNftBatchMintItem" title="src/nft/contracts/NftBatchMintMessage.ts" ><b>loadNftBatchMintItem</b>&nbsp;&nbsp;&nbsp;(src/.../NftBatchMintMessage.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#loadNftBatchMintMessage" title="src/nft/contracts/NftBatchMintMessage.ts" ><b>loadNftBatchMintMessage</b>&nbsp;&nbsp;&nbsp;(src/.../NftBatchMintMessage.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#loadNftItemParams" title="src/nft/contracts/NftItemParams.ts" ><b>loadNftItemParams</b>&nbsp;&nbsp;&nbsp;(src/.../NftItemParams.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#loadNftRoyaltyParams" title="src/nft/contracts/NftRoyaltyParams.ts" ><b>loadNftRoyaltyParams</b>&nbsp;&nbsp;&nbsp;(src/.../NftRoyaltyParams.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#makeSnakeCell" title="src/nft/utils/metadata.ts" ><b>makeSnakeCell</b>&nbsp;&nbsp;&nbsp;(src/.../metadata.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#nameof" title="src/helper/common.ts" ><b>nameof</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#nameof" title="src/helper/common.ts" ><b>nameof</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#nameof" title="src/helper/common.ts" ><b>nameof</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#sleep" title="src/nft/utils/delay.ts" ><b>sleep</b>&nbsp;&nbsp;&nbsp;(src/.../delay.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#storeNftBatchMintItem" title="src/nft/contracts/NftBatchMintMessage.ts" ><b>storeNftBatchMintItem</b>&nbsp;&nbsp;&nbsp;(src/.../NftBatchMintMessage.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#storeNftBatchMintMessage" title="src/nft/contracts/NftBatchMintMessage.ts" ><b>storeNftBatchMintMessage</b>&nbsp;&nbsp;&nbsp;(src/.../NftBatchMintMessage.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#storeNftItemParams" title="src/nft/contracts/NftItemParams.ts" ><b>storeNftItemParams</b>&nbsp;&nbsp;&nbsp;(src/.../NftItemParams.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#storeNftRoyaltyParams" title="src/nft/contracts/NftRoyaltyParams.ts" ><b>storeNftRoyaltyParams</b>&nbsp;&nbsp;&nbsp;(src/.../NftRoyaltyParams.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#stream2buffer" title="src/helper/common.ts" ><b>stream2buffer</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+    <h3>src/main.ts</h3>
+    <section data-compodoc="block-methods">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="bootstrap"></a>
+                    <span class="name">
+                        <span ><b>bootstrap</b></span>
+                        <a href="#bootstrap"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>bootstrap()</code>
+                </td>
+            </tr>
+
+
+
+
+        </tbody>
+    </table>
+</section>    <h3>src/nft/utils/metadata.ts</h3>
+    <section data-compodoc="block-methods">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="bufferToChunks"></a>
+                    <span class="name">
+                        <span ><b>bufferToChunks</b></span>
+                        <a href="#bufferToChunks"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>bufferToChunks(buff: Buffer, chunkSize: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>buff</td>
+                                            <td>
+                                                        <code>Buffer</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>chunkSize</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="encodeOffChainContent"></a>
+                    <span class="name">
+                        <span ><b>encodeOffChainContent</b></span>
+                        <a href="#encodeOffChainContent"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>encodeOffChainContent(content: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, usePrefix?: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/boolean" target="_blank">boolean</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>content</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>usePrefix</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/boolean" target="_blank" >boolean</a></code>
+                                            </td>
+
+                                            <td>
+                                                    Yes
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="makeSnakeCell"></a>
+                    <span class="name">
+                        <span ><b>makeSnakeCell</b></span>
+                        <a href="#makeSnakeCell"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>makeSnakeCell(data: Buffer)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>data</td>
+                                            <td>
+                                                        <code>Buffer</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Cell</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>    <h3>src/nft/utils/delay.ts</h3>
+    <section data-compodoc="block-methods">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="callForSuccess"></a>
+                    <span class="name">
+                        <span ><b>callForSuccess</b></span>
+                        <a href="#callForSuccess"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>callForSuccess(toCall: T, attempts: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>, delayMs: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                                <td>Default value</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>toCall</td>
+                                            <td>
+                                                        <code>T</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                                <td>attempts</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                                    <code>20</code>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                                <td>delayMs</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+                                            <td>
+                                                    <code>100</code>
+                                            </td>
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;ReturnType&lt;T&gt;&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="sleep"></a>
+                    <span class="name">
+                        <span ><b>sleep</b></span>
+                        <a href="#sleep"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>sleep(ms: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank">number</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>ms</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;void&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>    <h3>src/nft/contracts/NftItemParams.ts</h3>
+    <section data-compodoc="block-methods">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createNftItemParamsValue"></a>
+                    <span class="name">
+                        <span ><b>createNftItemParamsValue</b></span>
+                        <a href="#createNftItemParamsValue"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>createNftItemParamsValue()</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../miscellaneous/typealiases.html#NftItemParamsValue" target="_self" >NftItemParamsValue</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="loadNftItemParams"></a>
+                    <span class="name">
+                        <span ><b>loadNftItemParams</b></span>
+                        <a href="#loadNftItemParams"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>loadNftItemParams(slice: Slice)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>slice</td>
+                                            <td>
+                                                        <code>Slice</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="storeNftItemParams"></a>
+                    <span class="name">
+                        <span ><b>storeNftItemParams</b></span>
+                        <a href="#storeNftItemParams"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>storeNftItemParams(src: <a href="../undefineds/NftItemParams.html" target="_self">NftItemParams</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>src</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#NftItemParams" target="_self" >NftItemParams</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>    <h3>src/nft/contracts/NftBatchMintMessage.ts</h3>
+    <section data-compodoc="block-methods">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createNftMintItemValue"></a>
+                    <span class="name">
+                        <span ><b>createNftMintItemValue</b></span>
+                        <a href="#createNftMintItemValue"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>createNftMintItemValue(storeParams?, loadParams?)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>storeParams</td>
+
+                                            <td>
+                                                    Yes
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>loadParams</td>
+
+                                            <td>
+                                                    Yes
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../miscellaneous/typealiases.html#NftMintItem" target="_self" >DictionaryValue&lt;NftMintItem&lt;T&gt;&gt;</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="loadNftBatchMintItem"></a>
+                    <span class="name">
+                        <span ><b>loadNftBatchMintItem</b></span>
+                        <a href="#loadNftBatchMintItem"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>loadNftBatchMintItem(slice: Slice, loadParams: <a href="../undefineds/LoadParams.html" target="_self">LoadParams</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>slice</td>
+                                            <td>
+                                                        <code>Slice</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>loadParams</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#LoadParams" target="_self" >LoadParams</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../miscellaneous/typealiases.html#NftMintItem" target="_self" >NftMintItem&lt;T&gt;</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="loadNftBatchMintMessage"></a>
+                    <span class="name">
+                        <span ><b>loadNftBatchMintMessage</b></span>
+                        <a href="#loadNftBatchMintMessage"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>loadNftBatchMintMessage(slice: Slice, loadParams: <a href="../undefineds/LoadParams.html" target="_self">LoadParams</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>slice</td>
+                                            <td>
+                                                        <code>Slice</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>loadParams</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#LoadParams" target="_self" >LoadParams</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../miscellaneous/typealiases.html#NftBatchMintMessage" target="_self" >NftBatchMintMessage&lt;T&gt;</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="storeNftBatchMintItem"></a>
+                    <span class="name">
+                        <span ><b>storeNftBatchMintItem</b></span>
+                        <a href="#storeNftBatchMintItem"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>storeNftBatchMintItem(request: <a href="../undefineds/NftMintItem.html" target="_self">NftMintItem</a>, storeParams: <a href="../undefineds/StoreParams.html" target="_self">StoreParams</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>request</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#NftMintItem" target="_self" >NftMintItem</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>storeParams</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#StoreParams" target="_self" >StoreParams</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="storeNftBatchMintMessage"></a>
+                    <span class="name">
+                        <span ><b>storeNftBatchMintMessage</b></span>
+                        <a href="#storeNftBatchMintMessage"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>storeNftBatchMintMessage(src: <a href="../undefineds/NftBatchMintMessage.html" target="_self">NftBatchMintMessage</a>, storeParams: <a href="../undefineds/StoreParams.html" target="_self">StoreParams</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>src</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#NftBatchMintMessage" target="_self" >NftBatchMintMessage</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>storeParams</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#StoreParams" target="_self" >StoreParams</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >void</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>    <h3>src/helper/error.ts</h3>
+    <section data-compodoc="block-methods">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getAxiosErrorMessage"></a>
+                    <span class="name">
+                        <span ><b>getAxiosErrorMessage</b></span>
+                        <a href="#getAxiosErrorMessage"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>getAxiosErrorMessage(error: AxiosError)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>error</td>
+                                            <td>
+                                                        <code>AxiosError</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getErrorMessage"></a>
+                    <span class="name">
+                        <span ><b>getErrorMessage</b></span>
+                        <a href="#getErrorMessage"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>getErrorMessage(error)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>error</td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getUnknownData"></a>
+                    <span class="name">
+                        <span ><b>getUnknownData</b></span>
+                        <a href="#getUnknownData"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>getUnknownData(data)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>data</td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>    <h3>src/nft/contracts/NftRoyaltyParams.ts</h3>
+    <section data-compodoc="block-methods">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="loadNftRoyaltyParams"></a>
+                    <span class="name">
+                        <span ><b>loadNftRoyaltyParams</b></span>
+                        <a href="#loadNftRoyaltyParams"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>loadNftRoyaltyParams(slice: Slice)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>slice</td>
+                                            <td>
+                                                        <code>Slice</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="../miscellaneous/typealiases.html#NftRoyaltyParams" target="_self" >NftRoyaltyParams</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="storeNftRoyaltyParams"></a>
+                    <span class="name">
+                        <span ><b>storeNftRoyaltyParams</b></span>
+                        <a href="#storeNftRoyaltyParams"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>storeNftRoyaltyParams(src: <a href="../undefineds/NftRoyaltyParams.html" target="_self">NftRoyaltyParams</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>src</td>
+                                            <td>
+                                                            <code><a href="../miscellaneous/typealiases.html#NftRoyaltyParams" target="_self" >NftRoyaltyParams</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>    <h3>src/helper/common.ts</h3>
+    <section data-compodoc="block-methods">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="nameof"></a>
+                    <span class="name">
+                        <span ><b>nameof</b></span>
+                        <a href="#nameof"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>nameof(obj: TObject, key)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>obj</td>
+                                            <td>
+                                                        <code>TObject</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>key</td>
+                                            <td>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="nameof"></a>
+                    <span class="name">
+                        <span ><b>nameof</b></span>
+                        <a href="#nameof"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>nameof(key)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>key</td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="nameof"></a>
+                    <span class="name">
+                        <span ><b>nameof</b></span>
+                        <a href="#nameof"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>nameof(key1: <a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank">any</a>, key2?: <a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank">any</a>)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>key1</td>
+                                            <td>
+                                                            <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>key2</td>
+                                            <td>
+                                                            <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+                                            </td>
+
+                                            <td>
+                                                    Yes
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="stream2buffer"></a>
+                    <span class="name">
+                        <span ><b>stream2buffer</b></span>
+                        <a href="#stream2buffer"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>stream2buffer(stream: ReadStream)</code>
+                </td>
+            </tr>
+
+
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>stream</td>
+                                            <td>
+                                                        <code>ReadStream</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;Buffer&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'miscellaneous-functions';
+            var COMPODOC_CURRENT_PAGE_URL = 'functions.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+       <script src="../js/libs/zepto.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

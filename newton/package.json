@@ -1,0 +1,30 @@
+{
+  "name": "onton",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "keywords": [],
+  "scripts": {
+    "build": "pnpm -r --filter='./packages/*' run build",
+    "dev": "pnpm -r run dev",
+    "lint": "pnpm -r --parallel run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "ui:add": "pnpm --filter @repo/ui ui:add"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "prettier": "^3.2.5"
+  },
+  "author": "",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "^4.2.1",
+    "@prettier/sync": "^0.5.2",
+    "prettier-plugin-tailwindcss": "^0.5.14"
+  }
+}

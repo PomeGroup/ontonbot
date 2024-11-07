@@ -1,0 +1,968 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>nft-service documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">nft-service documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content miscellaneous-variables">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Miscellaneous</li>
+  <li class="breadcrumb-item">Variables</li>
+</ol>
+
+<section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <ul class="index-list">
+                        <li>
+                            <a href="#debounce" title="src/helper/common.ts" ><b>debounce</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#excludeFromArr" title="src/helper/common.ts" ><b>excludeFromArr</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#generateQRCode" title="src/nft/utils/qr.ts" ><b>generateQRCode</b>&nbsp;&nbsp;&nbsp;(src/.../qr.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#getFileExtension" title="src/helper/common.ts" ><b>getFileExtension</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#getFileNameFromPath" title="src/helper/common.ts" ><b>getFileNameFromPath</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#groupBy" title="src/helper/common.ts" ><b>groupBy</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#isPlainObj" title="src/helper/common.ts" ><b>isPlainObj</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#MetadataParserZ" title="src/types/nft.types.ts" ><b>MetadataParserZ</b>&nbsp;&nbsp;&nbsp;(src/.../nft.types.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#midOrder" title="src/helper/common.ts" ><b>midOrder</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#NFT_BATCH_MINT_OPCODE" title="src/nft/contracts/opcodes.ts" ><b>NFT_BATCH_MINT_OPCODE</b>&nbsp;&nbsp;&nbsp;(src/.../opcodes.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#NFT_CHANGE_ADMIN_OPCODE" title="src/nft/contracts/opcodes.ts" ><b>NFT_CHANGE_ADMIN_OPCODE</b>&nbsp;&nbsp;&nbsp;(src/.../opcodes.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#NFT_CHANGE_CONTENT_OPCODE" title="src/nft/contracts/opcodes.ts" ><b>NFT_CHANGE_CONTENT_OPCODE</b>&nbsp;&nbsp;&nbsp;(src/.../opcodes.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#NFT_EXCESSES_OPCODE" title="src/nft/contracts/opcodes.ts" ><b>NFT_EXCESSES_OPCODE</b>&nbsp;&nbsp;&nbsp;(src/.../opcodes.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#NFT_GET_STATIC_DATA_OPCODE" title="src/nft/contracts/opcodes.ts" ><b>NFT_GET_STATIC_DATA_OPCODE</b>&nbsp;&nbsp;&nbsp;(src/.../opcodes.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#NFT_MINT_OPCODE" title="src/nft/contracts/opcodes.ts" ><b>NFT_MINT_OPCODE</b>&nbsp;&nbsp;&nbsp;(src/.../opcodes.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#NFT_OWNER_ASSIGNED_OPCODE" title="src/nft/contracts/opcodes.ts" ><b>NFT_OWNER_ASSIGNED_OPCODE</b>&nbsp;&nbsp;&nbsp;(src/.../opcodes.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#NFT_REPORT_STATIC_DATA_OPCODE" title="src/nft/contracts/opcodes.ts" ><b>NFT_REPORT_STATIC_DATA_OPCODE</b>&nbsp;&nbsp;&nbsp;(src/.../opcodes.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#NFT_TRANSFER_OPCODE" title="src/nft/contracts/opcodes.ts" ><b>NFT_TRANSFER_OPCODE</b>&nbsp;&nbsp;&nbsp;(src/.../opcodes.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#omit" title="src/helper/common.ts" ><b>omit</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#prefixFile" title="src/helper/common.ts" ><b>prefixFile</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#randomChars" title="src/helper/common.ts" ><b>randomChars</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#randomString" title="src/helper/common.ts" ><b>randomString</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#resolveVariables" title="src/helper/common.ts" ><b>resolveVariables</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#textToSlug" title="src/helper/common.ts" ><b>textToSlug</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                        <li>
+                            <a href="#uniqueBy" title="src/helper/common.ts" ><b>uniqueBy</b>&nbsp;&nbsp;&nbsp;(src/.../common.ts)</a>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+    <h3>src/helper/common.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="debounce"></a>
+                    <span class="name">
+                        <span ><b>debounce</b></span>
+                        <a href="#debounce"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(
+  callback: (...args: number[]) &#x3D;&gt; void,
+  wait: number,
+): ((...args: number[]) &#x3D;&gt; void) &#x3D;&gt; {
+  let timeoutId: number;
+
+  return (...args) &#x3D;&gt; {
+    window.clearTimeout(timeoutId);
+    timeoutId &#x3D; window.setTimeout(() &#x3D;&gt; {
+      callback.apply(null, args); // eslint-disable-line prefer-spread
+    }, wait);
+  };
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="excludeFromArr"></a>
+                    <span class="name">
+                        <span ><b>excludeFromArr</b></span>
+                        <a href="#excludeFromArr"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(arr: string[], exclude: string[]): string[] &#x3D;&gt; {
+  const excludeMap &#x3D; exclude.reduce&lt;Record&lt;string, boolean&gt;&gt;(
+    (all, item) &#x3D;&gt; ({ ...all, [item]: true }),
+    {},
+  );
+
+  return arr.filter((item) &#x3D;&gt; !excludeMap?.[item]);
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getFileExtension"></a>
+                    <span class="name">
+                        <span ><b>getFileExtension</b></span>
+                        <a href="#getFileExtension"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(filename: string): string &#x3D;&gt;
+  filename.slice(((filename.lastIndexOf(&quot;.&quot;) - 1) &gt;&gt;&gt; 0) + 2)</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getFileNameFromPath"></a>
+                    <span class="name">
+                        <span ><b>getFileNameFromPath</b></span>
+                        <a href="#getFileNameFromPath"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(pathName: string): string &#x3D;&gt;
+  pathName.slice(((pathName.lastIndexOf(&quot;/&quot;) - 1) &gt;&gt;&gt; 0) + 2)</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="groupBy"></a>
+                    <span class="name">
+                        <span ><b>groupBy</b></span>
+                        <a href="#groupBy"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&lt;T&gt;(items: T[], key: string): Record&lt;string, T[]&gt; &#x3D;&gt;
+  items.reduce(
+    (result, item) &#x3D;&gt; ({
+      ...result,
+      [item[key]]: [...(result[item[key]] || []), item],
+    }),
+    {},
+  )</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="isPlainObj"></a>
+                    <span class="name">
+                        <span ><b>isPlainObj</b></span>
+                        <a href="#isPlainObj"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(o): boolean &#x3D;&gt;
+  typeof o &#x3D;&#x3D;&#x3D; &quot;object&quot; &amp;&amp; o.constructor &#x3D;&#x3D;&#x3D; Object</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="midOrder"></a>
+                    <span class="name">
+                        <span ><b>midOrder</b></span>
+                        <a href="#midOrder"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(prev: string, next: string): string &#x3D;&gt; {
+  let p!: number, n!: number, pos!: number, str;
+
+  for (pos &#x3D; 0; p &#x3D;&#x3D;&#x3D; n; pos++) {
+    // find leftmost non-matching character
+    p &#x3D; pos &lt; prev.length ? prev.charCodeAt(pos) : 96;
+    n &#x3D; pos &lt; next.length ? next.charCodeAt(pos) : 123;
+  }
+
+  str &#x3D; prev.slice(0, pos - 1); // copy identical part of string
+
+  if (p &#x3D;&#x3D;&#x3D; 96) {
+    // prev string equals beginning of next
+    while (n &#x3D;&#x3D;&#x3D; 97) {
+      // next character is &#x27;a&#x27;
+      n &#x3D; pos &lt; next.length ? next.charCodeAt(pos++) : 123; // get char from next
+      str +&#x3D; &quot;a&quot;; // insert an &#x27;a&#x27; to match the &#x27;a&#x27;
+    }
+
+    if (n &#x3D;&#x3D;&#x3D; 98) {
+      // next character is &#x27;b&#x27;
+      str +&#x3D; &quot;a&quot;; // insert an &#x27;a&#x27; to match the &#x27;b&#x27;
+      n &#x3D; 123; // set to end of alphabet
+    }
+  } else if (p + 1 &#x3D;&#x3D;&#x3D; n) {
+    // found consecutive characters
+    str +&#x3D; String.fromCharCode(p); // insert character from prev
+    n &#x3D; 123; // set to end of alphabet
+
+    while ((p &#x3D; pos &lt; prev.length ? prev.charCodeAt(pos++) : 96) &#x3D;&#x3D;&#x3D; 122) {
+      // p&#x3D;&#x27;z&#x27;
+      str +&#x3D; &quot;z&quot;; // insert &#x27;z&#x27; to match &#x27;z&#x27;
+    }
+  }
+
+  return &#x60;${str}${String.fromCharCode(Math.ceil((p + n) / 2))}&#x60;; // append middle character
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="omit"></a>
+                    <span class="name">
+                        <span ><b>omit</b></span>
+                        <a href="#omit"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&lt;T&gt;(
+  obj: Record&lt;string, T&gt;,
+  keys: string[],
+): Record&lt;string, T&gt; &#x3D;&gt; {
+  const output: Array&lt;[string, T]&gt; &#x3D; [];
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (!keys.includes(key)) {
+      output.push([key, value]);
+    }
+  }
+
+  return Object.fromEntries(output);
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="prefixFile"></a>
+                    <span class="name">
+                        <span ><b>prefixFile</b></span>
+                        <a href="#prefixFile"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(filename: string): string &#x3D;&gt;
+  &#x60;${process.env.MINIO_PUBLIC_URL}/${filename}&#x60;</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="randomChars"></a>
+                    <span class="name">
+                        <span ><b>randomChars</b></span>
+                        <a href="#randomChars"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(length: number): string &#x3D;&gt; {
+  let result &#x3D; &quot;&quot;;
+  const characters &#x3D;
+    &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;
+  const charactersLength &#x3D; characters.length;
+  let counter &#x3D; 0;
+  while (counter &lt; length) {
+    result +&#x3D; characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter +&#x3D; 1;
+  }
+  return result;
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="randomString"></a>
+                    <span class="name">
+                        <span ><b>randomString</b></span>
+                        <a href="#randomString"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>() &#x3D;&gt; {
+  return Math.random().toString(36).substring(2, 8);
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="resolveVariables"></a>
+                    <span class="name">
+                        <span ><b>resolveVariables</b></span>
+                        <a href="#resolveVariables"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(
+  text: string,
+  variables: Record&lt;string, string&gt; &#x3D; {},
+): string &#x3D;&gt;
+  text.replace(/{{(\s*\w*\s*)}}/g, function (currentText, variable) {
+    const escapedVariable &#x3D; variable.trim();
+
+    return variables?.[escapedVariable]
+      ? variables?.[escapedVariable]
+      : currentText;
+  })</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="textToSlug"></a>
+                    <span class="name">
+                        <span ><b>textToSlug</b></span>
+                        <a href="#textToSlug"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>(text: string): string &#x3D;&gt;
+  text
+    .toLowerCase()
+    .replace(/ /g, &quot;-&quot;)
+    .replace(/-+/g, &quot;-&quot;)
+    .replace(/[^\w-]+/g, &quot;&quot;)</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="uniqueBy"></a>
+                    <span class="name">
+                        <span ><b>uniqueBy</b></span>
+                        <a href="#uniqueBy"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>&lt;T&gt;(uniqueKey: string, objects: T[]): T[] &#x3D;&gt; {
+  const ids &#x3D; objects.map((object) &#x3D;&gt; object[uniqueKey]);
+
+  return objects.filter(
+    (object, index) &#x3D;&gt; !ids.includes(object[uniqueKey], index + 1),
+  );
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/nft/utils/qr.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="generateQRCode"></a>
+                    <span class="name">
+                        <span ><b>generateQRCode</b></span>
+                        <a href="#generateQRCode"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>async (url: string) &#x3D;&gt; {
+  const qrCode &#x3D; QRCode.toBuffer(url, {
+    errorCorrectionLevel: &quot;H&quot;,
+    type: &quot;png&quot;,
+    color: {
+      dark: &quot;#000&quot;,
+      light: &quot;#fff&quot;,
+    },
+  });
+
+  return qrCode;
+}</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/types/nft.types.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="MetadataParserZ"></a>
+                    <span class="name">
+                        <span ><b>MetadataParserZ</b></span>
+                        <a href="#MetadataParserZ"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>z.object({
+  name: z.string(),
+  image: z.string().url(),
+  attributes: z.any(),
+  description: z.string()
+}).required({
+  name: true,
+  image: true,
+})</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+    <h3>src/nft/contracts/opcodes.ts</h3>
+    <section data-compodoc="block-properties">
+    <h3></h3>    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="NFT_BATCH_MINT_OPCODE"></a>
+                    <span class="name">
+                        <span ><b>NFT_BATCH_MINT_OPCODE</b></span>
+                        <a href="#NFT_BATCH_MINT_OPCODE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>2</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="NFT_CHANGE_ADMIN_OPCODE"></a>
+                    <span class="name">
+                        <span ><b>NFT_CHANGE_ADMIN_OPCODE</b></span>
+                        <a href="#NFT_CHANGE_ADMIN_OPCODE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>3</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="NFT_CHANGE_CONTENT_OPCODE"></a>
+                    <span class="name">
+                        <span ><b>NFT_CHANGE_CONTENT_OPCODE</b></span>
+                        <a href="#NFT_CHANGE_CONTENT_OPCODE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>4</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="NFT_EXCESSES_OPCODE"></a>
+                    <span class="name">
+                        <span ><b>NFT_EXCESSES_OPCODE</b></span>
+                        <a href="#NFT_EXCESSES_OPCODE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>0xd53276db</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="NFT_GET_STATIC_DATA_OPCODE"></a>
+                    <span class="name">
+                        <span ><b>NFT_GET_STATIC_DATA_OPCODE</b></span>
+                        <a href="#NFT_GET_STATIC_DATA_OPCODE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>0x2fcb26a2</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="NFT_MINT_OPCODE"></a>
+                    <span class="name">
+                        <span ><b>NFT_MINT_OPCODE</b></span>
+                        <a href="#NFT_MINT_OPCODE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>1</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="NFT_OWNER_ASSIGNED_OPCODE"></a>
+                    <span class="name">
+                        <span ><b>NFT_OWNER_ASSIGNED_OPCODE</b></span>
+                        <a href="#NFT_OWNER_ASSIGNED_OPCODE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>0x05138d91</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="NFT_REPORT_STATIC_DATA_OPCODE"></a>
+                    <span class="name">
+                        <span ><b>NFT_REPORT_STATIC_DATA_OPCODE</b></span>
+                        <a href="#NFT_REPORT_STATIC_DATA_OPCODE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>0x8b771735</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="NFT_TRANSFER_OPCODE"></a>
+                    <span class="name">
+                        <span ><b>NFT_TRANSFER_OPCODE</b></span>
+                        <a href="#NFT_TRANSFER_OPCODE"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Type : </i>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/number" target="_blank" >number</a></code>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <i>Default value : </i><code>0x5fcc3d14</code>
+                    </td>
+                </tr>
+
+
+        </tbody>
+    </table>
+</section>
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'miscellaneous-variables';
+            var COMPODOC_CURRENT_PAGE_URL = 'variables.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+       <script src="../js/libs/zepto.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

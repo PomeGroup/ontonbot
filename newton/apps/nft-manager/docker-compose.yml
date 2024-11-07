@@ -1,0 +1,20 @@
+version: "3.8"
+
+# networks:
+#   default:
+#     external:
+#       name: ${NETWORK_NAME}
+
+services:
+  nft-microservice:
+    container_name: ${CONTAINER_NAME}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      PORT: ${PORT}

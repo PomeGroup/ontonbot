@@ -1,0 +1,21 @@
+{
+  "extends": "@repo/typescript-config/react-library.json",
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ui/*": [
+        "./src/*"
+      ],
+      "@tma/*": [
+        "../tma/tma/*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

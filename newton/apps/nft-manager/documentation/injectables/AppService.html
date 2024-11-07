@@ -1,0 +1,1579 @@
+<!doctype html>
+<html class="no-js" lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>nft-service documentation</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
+	   <link rel="stylesheet" href="../styles/style.css">
+        <link rel="stylesheet" href="../styles/dark.css">
+    </head>
+    <body>
+          <script>
+               // Blocking script to avoid flickering dark mode
+               // Dark mode toggle button
+               var useDark = window.matchMedia('(prefers-color-scheme: dark)');
+               var darkModeState = useDark.matches;
+               var $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               var $darkModeToggles = document.querySelectorAll('.dark-mode-switch');
+               var darkModeStateLocal = localStorage.getItem('compodoc_darkmode-state');
+
+               function checkToggle(check) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].checked = check;
+                    }
+               }
+
+               function toggleDarkMode(state) {
+                    if (window.localStorage) {
+                         localStorage.setItem('compodoc_darkmode-state', state);
+                    }
+
+                    checkToggle(state);
+
+                    const hasClass = document.body.classList.contains('dark');
+
+                    if (state) {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.add('dark');
+                         }
+                         if (!hasClass) {
+                              document.body.classList.add('dark');
+                         }
+                    } else {
+                         for (var i = 0; i < $darkModeToggles.length; i++) {
+                              $darkModeToggles[i].classList.remove('dark');
+                         }
+                         if (hasClass) {
+                              document.body.classList.remove('dark');
+                         }
+                    }
+               }
+
+               useDark.addEventListener('change', function (evt) {
+                    toggleDarkMode(evt.matches);
+               });
+               if (darkModeStateLocal) {
+                    darkModeState = darkModeStateLocal === 'true';
+               }
+               toggleDarkMode(darkModeState);
+          </script>
+
+        <div class="navbar navbar-default navbar-fixed-top d-md-none p-0">
+               <div class="d-flex">
+                    <a href="../" class="navbar-brand">nft-service documentation</a>
+                    <button type="button" class="btn btn-default btn-menu ion-ios-menu" id="btn-menu"></button>
+               </div>
+        </div>
+
+        <div class="xs-menu menu" id="mobile-menu">
+                <div id="book-search-input" role="search"><input type="text" placeholder="Type to search"></div>            <compodoc-menu></compodoc-menu>
+        </div>
+
+        <div class="container-fluid main">
+           <div class="row main">
+               <div class="d-none d-md-block menu">
+                   <compodoc-menu mode="normal"></compodoc-menu>
+               </div>
+               <!-- START CONTENT -->
+               <div class="content injectable">
+                   <div class="content-data">
+
+
+
+
+
+
+
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Injectables</li>
+  <li class="breadcrumb-item" >AppService</li>
+</ol>
+
+<ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a href="#info" 
+                class="nav-link"
+                class="nav-link active"
+                role="tab" id="info-tab" data-bs-toggle="tab" data-link="info">Info</a>
+        </li>
+        <li class="nav-item">
+            <a href="#source" 
+                class="nav-link"
+                
+                role="tab" id="source-tab" data-bs-toggle="tab" data-link="source">Source</a>
+        </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade active in" id="info">
+        <p class="comment">
+            <h3>File</h3>
+        </p>
+        <p class="comment">
+            <code>src/app.service.ts</code>
+        </p>
+
+
+
+
+
+            <section data-compodoc="block-index">
+    <h3 id="index">Index</h3>
+    <table class="table table-sm table-bordered index-table">
+        <tbody>
+
+                <tr>
+                    <td class="col-md-4">
+                        <h6><b>Methods</b></h6>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="col-md-4">
+                        <ul class="index-list">
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#checkMintRequestStatus" >checkMintRequestStatus</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#checkWalletTransactionsJob" >checkWalletTransactionsJob</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#getOrder" >getOrder</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#miniAppJobs" >miniAppJobs</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#retry" >retry</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#saveFailedTransaction" >saveFailedTransaction</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Async</span>
+                                <a href="#saveSuccessfulTransaction" >saveSuccessfulTransaction</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#sendMintRequest" >sendMintRequest</a>
+                            </li>
+                            <li>
+                                    <span class="modifier">Private</span>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateOrder" >updateOrder</a>
+                            </li>
+                            <li>
+                                    <span class="modifier"></span>
+                                    <span class="modifier">Async</span>
+                                <a href="#updateOrdersAndCreateNftMintRequests" >updateOrdersAndCreateNftMintRequests</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+
+
+
+
+        </tbody>
+    </table>
+</section>
+
+            <section data-compodoc="block-constructor">
+    <h3 id="constructor">Constructor</h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+<code>constructor(prisma: <a href="../injectables/PrismaService.html" target="_self">PrismaService</a>, nftService: <a href="../injectables/NFTService.html" target="_self">NFTService</a>)</code>
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="21" class="link-to-prism">src/app.service.ts:21</a></div>
+                            </td>
+                        </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                            <div>
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>prisma</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/PrismaService.html" target="_self" >PrismaService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                                <tr>
+                                                        <td>nftService</td>
+                                                  
+                                                        <td>
+                                                                        <code><a href="../injectables/NFTService.html" target="_self" >NFTService</a></code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</section>
+
+            <section data-compodoc="block-methods">
+    
+    <h3 id="methods">
+        Methods
+    </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="checkMintRequestStatus"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>checkMintRequestStatus</b></span>
+                        <a href="#checkMintRequestStatus"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>checkMintRequestStatus()</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Interval(20000)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="330"
+                                    class="link-to-prism">src/app.service.ts:330</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="checkWalletTransactionsJob"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>checkWalletTransactionsJob</b></span>
+                        <a href="#checkWalletTransactionsJob"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>checkWalletTransactionsJob()</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Interval(20000)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="55"
+                                    class="link-to-prism">src/app.service.ts:55</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+                        <div class="io-description"><p>1- Get incoming transactions to the wallets
+2- Proccess Transactions</p>
+</div>
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="getOrder"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>getOrder</b></span>
+                        <a href="#getOrder"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>getOrder(orderId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, txId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="491"
+                                    class="link-to-prism">src/app.service.ts:491</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>orderId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>txId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>unknown</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="miniAppJobs"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>miniAppJobs</b></span>
+                        <a href="#miniAppJobs"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>miniAppJobs()</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Interval(60000)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="418"
+                                    class="link-to-prism">src/app.service.ts:418</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="retry"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>retry</b></span>
+                        <a href="#retry"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>retry(fn: () => void, options: literal type)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="29"
+                                    class="link-to-prism">src/app.service.ts:29</a></div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <b>Type parameters :</b>
+                            <ul class="type-parameters">
+                                    <li>T</li>
+                            </ul>
+                        </td>
+                    </tr>
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>fn</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/function" target="_blank" >function</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>options</td>
+                                            <td>
+                                                        <code>literal type</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>    <code>Promise&lt;T&gt;</code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="saveFailedTransaction"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>saveFailedTransaction</b></span>
+                        <a href="#saveFailedTransaction"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>saveFailedTransaction(transaction: <a href="../interfaces/Transaction.html" target="_self">Transaction</a>, order: <a href="../interfaces/GetOrderResponse.html" target="_self">GetOrderResponse | null</a>, comment: string | null, failedReason: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="463"
+                                    class="link-to-prism">src/app.service.ts:463</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>transaction</td>
+                                            <td>
+                                                            <code><a href="../interfaces/Transaction.html" target="_self" >Transaction</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>order</td>
+                                            <td>
+                                                            <code><a href="../interfaces/GetOrderResponse.html" target="_self" >GetOrderResponse | null</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>comment</td>
+                                            <td>
+                                                        <code>string | null</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>failedReason</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="saveSuccessfulTransaction"></a>
+                    <span class="name">
+                            <span class="modifier">Async</span>
+                        <span ><b>saveSuccessfulTransaction</b></span>
+                        <a href="#saveSuccessfulTransaction"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>saveSuccessfulTransaction(transaction: <a href="../interfaces/Transaction.html" target="_self">Transaction</a>, order: <a href="../interfaces/GetOrderResponse.html" target="_self">GetOrderResponse</a>, comment: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="436"
+                                    class="link-to-prism">src/app.service.ts:436</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>transaction</td>
+                                            <td>
+                                                            <code><a href="../interfaces/Transaction.html" target="_self" >Transaction</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>order</td>
+                                            <td>
+                                                            <code><a href="../interfaces/GetOrderResponse.html" target="_self" >GetOrderResponse</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>comment</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="sendMintRequest"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>sendMintRequest</b></span>
+                        <a href="#sendMintRequest"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>sendMintRequest()</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Interval(20000)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="228"
+                                    class="link-to-prism">src/app.service.ts:228</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateOrder"></a>
+                    <span class="name">
+                            <span class="modifier">Private</span>
+                            <span class="modifier">Async</span>
+                        <span ><b>updateOrder</b></span>
+                        <a href="#updateOrder"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateOrder(orderId: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, data: literal type)</code>
+                </td>
+            </tr>
+
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="515"
+                                    class="link-to-prism">src/app.service.ts:515</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                            <div class="io-description">
+                                <b>Parameters :</b>
+                                
+                                <table class="params">
+                                    <thead>
+                                        <tr>
+                                            <td>Name</td>
+                                                <td>Type</td>
+                                            <td>Optional</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                                <td>orderId</td>
+                                            <td>
+                                                            <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                        <tr>
+                                                <td>data</td>
+                                            <td>
+                                                        <code>literal type</code>
+                                            </td>
+
+                                            <td>
+                                                    No
+                                            </td>
+
+
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                            <div class="io-description">
+                                
+                            </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="updateOrdersAndCreateNftMintRequests"></a>
+                    <span class="name">
+                            <span class="modifier"></span>
+                            <span class="modifier">Async</span>
+                        <span ><b>updateOrdersAndCreateNftMintRequests</b></span>
+                        <a href="#updateOrdersAndCreateNftMintRequests"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+                        <span class="modifier-icon icon ion-ios-reset"></span>
+                    <code>updateOrdersAndCreateNftMintRequests()</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Interval(30000)<br /></code>
+                </td>
+            </tr>
+
+                    <tr>
+                        <td class="col-md-4">
+                            <div class="io-line">Defined in <a href="" data-line="158"
+                                    class="link-to-prism">src/app.service.ts:158</a></div>
+                        </td>
+                    </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                        <div class="io-description">
+                            <b>Returns : </b>        <code><a href="https://www.typescriptlang.org/docs/handbook/basic-types.html" target="_blank" >any</a></code>
+
+                        </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
+    </div>
+
+
+    <div class="tab-pane fade  tab-source-code" id="source">
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable } from &quot;@nestjs/common&quot;;
+import { Interval } from &quot;@nestjs/schedule&quot;;
+import { Prisma } from &quot;@prisma/client&quot;;
+import { DefaultArgs } from &quot;@prisma/client/runtime/library&quot;;
+import { Address } from &quot;@ton/ton&quot;;
+import axios, { AxiosError } from &quot;axios&quot;;
+import { PrismaService } from &quot;nestjs-prisma&quot;;
+import { getErrorMessage } from &quot;./helper/error&quot;;
+import { NftCollection } from &quot;./nft/contracts/NftCollection&quot;;
+import {
+  ErrorWithData,
+  GetOrderResponse,
+  participantData,
+  Transaction,
+  UpdateOrderState,
+} from &quot;./nft/dto&quot;;
+import { NFTService } from &quot;./nft/nft.service&quot;;
+import { OnTon } from &quot;./OnTon&quot;;
+
+@Injectable()
+export class AppService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly nftService: NFTService,
+  ) {
+    console.log(Number(process.env.NFT_INTERVAL_TIME));
+  }
+
+  async retry&lt;T&gt;(
+    fn: () &#x3D;&gt; Promise&lt;T&gt;,
+    options: { retries: number; delay: number },
+  ): Promise&lt;T&gt; {
+    let lastError: Error | undefined;
+    for (let i &#x3D; 0; i &lt; options.retries; i++) {
+      try {
+        return await fn();
+      } catch (e) {
+        console.info(e);
+
+        if (e instanceof Error) {
+          lastError &#x3D; e;
+        }
+        await new Promise((resolve) &#x3D;&gt; setTimeout(resolve, options.delay));
+        // break;
+      }
+    }
+    throw lastError;
+  }
+
+  /**
+   * 1- Get incoming transactions to the wallets
+   * 2- Proccess Transactions
+   */
+  @Interval(20_000)
+  async checkWalletTransactionsJob() {
+    const wallets &#x3D; await this.prisma.watchWallet.findMany({
+      orderBy: {
+        updated_at: &quot;desc&quot;,
+      },
+    });
+
+    for (const wallet of wallets) {
+      try {
+        const { transactions } &#x3D; await OnTon.getAccountTransactions({
+          address: wallet.address,
+          start_lt:
+            parseInt(wallet.last_checked_lt) &#x3D;&#x3D;&#x3D; 0
+              ? undefined
+              : wallet.last_checked_lt,
+        });
+
+        // remove the last checked lt
+        const newTransactions &#x3D; transactions.filter(
+          (t) &#x3D;&gt; t.lt !&#x3D;&#x3D; wallet.last_checked_lt,
+        );
+
+        for (const transaction of newTransactions) {
+          const inMsg &#x3D; transaction.in_msg;
+          if (inMsg?.message_content?.decoded?.type &#x3D;&#x3D;&#x3D; &quot;text_comment&quot;) {
+            const comment &#x3D; inMsg.message_content.decoded.comment;
+            if (comment.startsWith(&quot;order&#x3D;&quot;)) {
+              const orderId &#x3D; comment.split(&quot;&#x3D;&quot;)[1];
+
+              try {
+                const order &#x3D; await this.getOrder(orderId, transaction.hash);
+
+                const trxValue &#x3D; BigInt(inMsg.value);
+                if (BigInt(order.total_price) &#x3D;&#x3D;&#x3D; trxValue) {
+                  if (
+                    ([&quot;failed&quot;, &quot;created&quot;] as UpdateOrderState[]).includes(
+                      order.state,
+                    )
+                  ) {
+                    await this.saveSuccessfulTransaction(
+                      transaction,
+                      order,
+                      comment,
+                    );
+                  } else {
+                    await this.saveFailedTransaction(
+                      transaction,
+                      order,
+                      comment,
+                      &#x60;order has been processed before with state ${order.state}&#x60;,
+                    );
+                  }
+                } else {
+                  await this.saveFailedTransaction(
+                    transaction,
+                    order,
+                    comment,
+                    &#x60;insufficient value ${trxValue}&#x60;,
+                  );
+                }
+              } catch (error) {
+                if (error instanceof AxiosError) {
+                  console.error(error.response.data.message);
+                } else if (error instanceof Error) {
+                  console.error(error.message);
+                }
+
+                await this.saveFailedTransaction(
+                  transaction,
+                  null,
+                  comment,
+                  &#x60;order not found ${comment}&#x60;,
+                );
+              }
+            }
+          }
+        }
+
+        await this.prisma.watchWallet.update({
+          where: {
+            id: wallet.id,
+          },
+          data: {
+            last_checked_lt: transactions[transactions.length - 1].lt,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+
+        // todo: add alert for here
+        console.error(&#x60;watch wallet ${wallet.address} is out of sync&#x60;);
+      }
+    }
+  }
+
+  @Interval(30_000)
+  /**
+   * Get transactions and create mint requests
+   * - get all unprocessed transactions (valid transactions but not processed yet)
+   * - for each transaction
+   *   - get order
+   *   - create mint request
+   */
+  async updateOrdersAndCreateNftMintRequests() {
+    // valid transactions but not processed yet
+    const unProcessedTransactions &#x3D; await this.prisma.transactions.findMany({
+      where: {
+        is_processed: false,
+      },
+    });
+
+    for (const unProcessedTransaction of unProcessedTransactions) {
+      try {
+        await this.prisma.$transaction(async (db) &#x3D;&gt; {
+          await db.transactions.update({
+            where: {
+              id: unProcessedTransaction.id,
+            },
+            data: {
+              is_processed: true,
+              type: &quot;paid&quot;,
+            },
+          });
+          const orderId &#x3D; unProcessedTransaction.tx_comment.split(&quot;&#x3D;&quot;)[1];
+
+          const order &#x3D; await this.getOrder(
+            orderId,
+            unProcessedTransaction.hash,
+          );
+
+          const nftCollection &#x3D; await db.nFTCollection.findUnique({
+            where: {
+              address: order.nft_collection_address,
+            },
+          });
+
+          // create nft in queue
+          await db.nFTItem.create({
+            data: {
+              collection_id: nftCollection.id,
+              owner_address: unProcessedTransaction.src,
+              state: &quot;created&quot;,
+              order_id: orderId,
+              metadata_url: &quot;empty&quot;,
+            },
+          });
+
+          await this.updateOrder(orderId, {
+            state: &quot;mint_request&quot;,
+            transaction_id: unProcessedTransaction.id,
+          });
+        });
+      } catch (e) {
+        try {
+          const message &#x3D; getErrorMessage(e);
+          await this.prisma.transactions.update({
+            data: {
+              failed_reason: message,
+              error_type: &quot;internal_error&quot;,
+              type: &quot;failed&quot;,
+            },
+            where: {
+              id: unProcessedTransaction.id,
+            },
+          });
+        } catch (error) {
+          console.error(&quot;INTERNAL_ERROR: &quot;, e);
+        }
+      }
+    }
+  }
+
+  @Interval(20_000)
+  async sendMintRequest() {
+    try {
+      const collectionAddressToNftItems &#x3D;
+        await this.prisma.nFTCollection.findMany({
+          where: {
+            items: {
+              some: {
+                state: {
+                  in: [&quot;mint_request&quot;, &quot;created&quot;],
+                },
+              },
+            },
+          },
+          include: {
+            items: {
+              where: {
+                state: { in: [&quot;mint_request&quot;, &quot;created&quot;] },
+              },
+            },
+          },
+        });
+
+      // for each collection
+      for (const {
+        address: collectionAddress,
+        items: collectionNftItems,
+      } of collectionAddressToNftItems) {
+        const isMintRequestExists &#x3D; collectionNftItems.some(
+          (nftItem) &#x3D;&gt; nftItem.state &#x3D;&#x3D; &quot;mint_request&quot;,
+        );
+
+        if (!isMintRequestExists) {
+          // TODO: better error handling for async
+          const lastNftIndex &#x3D; await NftCollection.getLastNftIndex(
+            Address.parse(collectionAddress),
+            OnTon.tonClient(),
+          );
+          const nftCollection &#x3D; await this.prisma.nFTCollection.findUnique({
+            where: {
+              address: collectionAddress,
+            },
+            select: {
+              item_meta_data: true,
+            },
+          });
+
+          console.log(&quot;CONTRACT ADDRESS: &quot;, collectionAddress, {
+            lastNftIndex,
+          });
+
+          if (collectionAddress &#x3D;&#x3D;&#x3D; null) continue;
+          const metadata &#x3D; {
+            //@ts-ignore
+            name: nftCollection.item_meta_data.name,
+            //@ts-ignore
+            description: nftCollection.item_meta_data.description,
+            //@ts-ignore
+            image_url: nftCollection.item_meta_data.image,
+          };
+
+          const participantsData: participantData[] &#x3D; collectionNftItems.map(
+            (nftItem, idx) &#x3D;&gt; ({
+              address: Address.parse(nftItem.owner_address),
+              index: BigInt(lastNftIndex + 1 + idx),
+              nft_id: nftItem.id,
+              attributes: {
+                order_id: nftItem.order_id,
+              },
+            }),
+          );
+
+          // update to mint_request
+          // mint_request means the mint request has been sent but the nft is not yet verified
+          const updateData &#x3D; participantsData.map((item) &#x3D;&gt; {
+            return {
+              where: {
+                id: item.nft_id,
+              },
+              data: {
+                index: Number(item.index),
+                state: &quot;mint_request&quot;,
+              },
+            } as Prisma.NFTItemUpdateArgs&lt;DefaultArgs&gt;;
+          });
+
+          for (const query of updateData) {
+            await this.prisma.nFTItem.update(query);
+          }
+
+          await this.nftService.mintItems(
+            participantsData,
+            Address.parse(collectionAddress),
+            metadata,
+          );
+        }
+      }
+    } catch (e) {
+      console.info(&quot;SEND_MINT_REQUEST_ERROR&quot;, e);
+    }
+  }
+
+  @Interval(20_000)
+  async checkMintRequestStatus() {
+    const collectionAddressToNftItems &#x3D;
+      await this.prisma.nFTCollection.findMany({
+        where: {
+          items: {
+            some: {
+              state: &quot;mint_request&quot;,
+            },
+          },
+        },
+        include: {
+          items: {
+            where: {
+              state: &quot;mint_request&quot;,
+            },
+          },
+        },
+      });
+
+    for (const collection of collectionAddressToNftItems) {
+      const { items: nftItems, address: collectionAddress } &#x3D; collection;
+
+      const updateDate &#x3D; nftItems.map(async (item) &#x3D;&gt; {
+        const nftResponse &#x3D; await OnTon.getNftItem(
+          collectionAddress,
+          item.index,
+        );
+
+        if (nftResponse.nft_items.length) {
+          const nftOnchainData &#x3D; nftResponse.nft_items[0];
+          return {
+            where: {
+              id: item.id,
+            },
+            data: {
+              address: nftOnchainData.address,
+              metadata_url: nftOnchainData.content.uri,
+              state: &quot;minted&quot;,
+              order_id: item.order_id,
+            },
+          } as Prisma.NFTItemUpdateArgs&lt;DefaultArgs&gt;;
+        } else {
+          const shouldFail &#x3D; item.try_count &gt;&#x3D; 5;
+          if (shouldFail) {
+            return {
+              where: {
+                id: item.id,
+              },
+              data: {
+                state: &quot;failed&quot;,
+                fail_reason: &#x60;nft_not_found: ${item.index} collection: ${collectionAddress}
+                nft_response: ${JSON.stringify(nftResponse)}&#x60;,
+              },
+            } as Prisma.NFTItemUpdateArgs&lt;DefaultArgs&gt;;
+          } else {
+            return {
+              where: {
+                id: item.id,
+              },
+              data: {
+                state: &quot;mint_request&quot;,
+                try_count: {
+                  increment: 1,
+                },
+              },
+            } as Prisma.NFTItemUpdateArgs&lt;DefaultArgs&gt;;
+          }
+        }
+      });
+
+      for (const data of updateDate) {
+        console.log(&#x60;data to updated_update: ${JSON.stringify(data)}&#x60;);
+        await this.prisma.$transaction(async (db) &#x3D;&gt; {
+          const awaitedData &#x3D; await data;
+          const nftData &#x3D; await db.nFTItem.update(awaitedData);
+
+          if (nftData.state &#x3D;&#x3D;&#x3D; &quot;minted&quot;) {
+            await this.updateOrder(nftData.order_id, {
+              state: &quot;minted&quot;,
+              nft_address: nftData.address,
+            });
+          }
+        });
+      }
+    }
+  }
+
+  @Interval(60_000)
+  async miniAppJobs() {
+    // this api will trigger a check on all order to update their satates
+    axios
+      .patch(
+        &#x60;${process.env.PTMA_API_BASE_URL}/order&#x60;,
+        {},
+        {
+          headers: {
+            &quot;x-api-key&quot;: process.env.ONTON_API_KEY,
+          },
+        },
+      )
+      .then(() &#x3D;&gt; {})
+      .catch(() &#x3D;&gt; {
+        console.error(&quot;updating dodders failed&quot;);
+      });
+  }
+
+  async saveSuccessfulTransaction(
+    transaction: Transaction,
+    order: GetOrderResponse,
+    comment: string,
+  ) {
+    const existedTransaction &#x3D; await this.prisma.transactions.findFirst({
+      where: {
+        hash: transaction.hash,
+      },
+    });
+
+    if (!existedTransaction) {
+      await this.prisma.transactions.create({
+        data: {
+          hash: transaction.hash,
+          logical_time: BigInt(transaction.lt),
+          src: transaction.in_msg.source,
+          ticket_value: parseInt(order.total_price),
+          value: parseInt(transaction.in_msg.value),
+          type: &quot;paid&quot;,
+          tx_comment: comment,
+          is_processed: false,
+        },
+      });
+    }
+  }
+
+  async saveFailedTransaction(
+    transaction: Transaction,
+    order: GetOrderResponse | null,
+    comment: string | null,
+    failedReason: string,
+  ) {
+    let existedTransaction &#x3D; await this.prisma.transactions.findFirst({
+      where: {
+        hash: transaction.hash,
+      },
+    });
+    if (!existedTransaction) {
+      await this.prisma.transactions.create({
+        data: {
+          hash: transaction.hash,
+          logical_time: BigInt(transaction.lt),
+          src: transaction.in_msg.source,
+          ticket_value: order ? parseInt(order.total_price) : 0,
+          value: parseInt(transaction.in_msg.value),
+          type: &quot;failed&quot;,
+          tx_comment: comment ? comment : &quot;&quot;,
+          failed_reason: failedReason,
+          is_processed: true,
+        },
+      });
+    }
+  }
+
+  private async getOrder(orderId: string, txId: string) {
+    try {
+      const order &#x3D; await axios.get&lt;GetOrderResponse&gt;(
+        &#x60;${process.env.PTMA_API_BASE_URL}/order/${orderId}&#x60;,
+        {
+          headers: {
+            &quot;x-api-key&quot;: process.env.ONTON_API_KEY,
+          },
+        },
+      );
+
+      return order.data;
+    } catch (error) {
+      if (error instanceof AxiosError &amp;&amp; error.status &#x3D;&#x3D;&#x3D; 404) {
+        throw new ErrorWithData(
+          &#x60;Order does not exist with uuid ${orderId} with txId: ${txId}&#x60;,
+          &quot;order_does_not_exist&quot;,
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  private async updateOrder(
+    orderId: string,
+    data: {
+      state: UpdateOrderState;
+      transaction_id?: string;
+      nft_address?: string;
+    },
+  ) {
+    await axios.patch(
+      &#x60;${process.env.PTMA_API_BASE_URL}/order/${orderId}&#x60;,
+      data,
+      {
+        headers: {
+          &quot;x-api-key&quot;: process.env.ONTON_API_KEY,
+        },
+      },
+    );
+  }
+}
+</code></pre>
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                   </div><div class="search-results">
+    <div class="has-results">
+        <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+        <ul class="search-results-list"></ul>
+    </div>
+    <div class="no-results">
+        <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+    </div>
+</div>
+</div>
+               <!-- END CONTENT -->
+           </div>
+       </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
+
+       <script>
+            var COMPODOC_CURRENT_PAGE_DEPTH = 1;
+            var COMPODOC_CURRENT_PAGE_CONTEXT = 'injectable';
+            var COMPODOC_CURRENT_PAGE_URL = 'AppService.html';
+            var MAX_SEARCH_RESULTS = 15;
+       </script>
+
+       <script>
+               $darkModeToggleSwitchers = document.querySelectorAll('.dark-mode-switch input');
+               checkToggle(darkModeState);
+               if ($darkModeToggleSwitchers.length > 0) {
+                    for (var i = 0; i < $darkModeToggleSwitchers.length; i++) {
+                         $darkModeToggleSwitchers[i].addEventListener('change', function (event) {
+                              darkModeState = !darkModeState;
+                              toggleDarkMode(darkModeState);
+                         });
+                    }
+               }
+          </script>
+
+       <script src="../js/libs/custom-elements.min.js"></script>
+       <script src="../js/libs/lit-html.js"></script>
+
+       <script src="../js/menu-wc.js" defer></script>
+       <script nomodule src="../js/menu-wc_es5.js" defer></script>
+
+       <script src="../js/libs/bootstrap-native.js"></script>
+
+       <script src="../js/libs/es6-shim.min.js"></script>
+       <script src="../js/libs/EventDispatcher.js"></script>
+       <script src="../js/libs/promise.min.js"></script>
+       <script src="../js/libs/zepto.min.js"></script>
+
+       <script src="../js/compodoc.js"></script>
+
+       <script src="../js/tabs.js"></script>
+       <script src="../js/menu.js"></script>
+       <script src="../js/libs/clipboard.min.js"></script>
+       <script src="../js/libs/prism.js"></script>
+       <script src="../js/sourceCode.js"></script>
+          <script src="../js/search/search.js"></script>
+          <script src="../js/search/lunr.min.js"></script>
+          <script src="../js/search/search-lunr.js"></script>
+          <script src="../js/search/search_index.js"></script>
+       <script src="../js/lazy-load-graphs.js"></script>
+
+
+    </body>
+</html>

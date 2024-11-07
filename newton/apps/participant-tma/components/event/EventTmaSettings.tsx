@@ -1,0 +1,150 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  useBackButton,
+  useClosingBehavior,
+  useMainButton,
+  useMiniApp,
+  useUtils,
+} from "@tma.js/sdk-react";
+import { env } from "~/env.mjs";
+import { useEventData } from "~/hooks/queries/useEventData";
+import { useTonConnectModal, useTonWallet } from "@tonconnect/ui-react";
+
+type EventMainButtonProps = {
+  eventId: string;
+  requiresTicketToChekin: boolean;
+  eventManagerRole: boolean;
+};
+
+const EventTmaSettings = ({
+  eventId,
+  requiresTicketToChekin,
+  eventManagerRole,
+}: EventMainButtonProps) => {
+  const mainButton = useMainButton(true);
+  const backButton = useBackButton(true);
+  const closeBehavior = useClosingBehavior(true);
+  const tma = useMiniApp(true);
+  const tmaUtils = useUtils(true);
+  const router = useRouter();
+  const wallet = useTonWallet()
+  const tonConnectModal = useTonConnectModal()
+
+  const { data: event, isLoading, isError, isSuccess } = useEventData(eventId);
+  const needsInfoUpdate = event?.needToUpdateTicket
+
+  useEffect(() => {
+    if (isLoading || isError) return;
+
+    const manageEventBtnOnClick = () => {
+      tmaUtils?.openTelegramLink(
+        `https://t.me/${env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=edit_${eventId}`
+      );
+    };
+
+    const goToTicketPage = () => router.push(`/ticket/${eventId}`);
+    const goToUpdateInfoPage = () => router.push(`/event/${eventId}/claim-ticket`);
+    const mainBtnOnClick = () => router.push(`/event/${eventId}/buy-ticket`);
+    const openTonConnectModal = () => tonConnectModal.open();
+
+    const setupMainButton = (
+      bgColor: `#${string}`,
+      textColor: `#${string}`,
+      text: string,
+      onClick: () => void
+    ) => {
+      mainButton
+        ?.setBgColor(bgColor)
+        .setTextColor(textColor)
+        .setText(text)
+        .enable()
+        .show()
+        .on("click", onClick);
+    };
+
+    if (!wallet?.account.address) {
+      setupMainButton("#e1efff", "#007aff", "Connect Your Wallet", openTonConnectModal);
+      return () => { mainButton?.hide().off("click", openTonConnectModal) }
+    }
+
+    if (!event) return;
+
+    const { userHasTicket, orderAlreadyPlace, isSoldOut } = event;
+
+    if (eventManagerRole) {
+      setupMainButton("#007AFF", "#ffffff", "Manage Event", manageEventBtnOnClick);
+      return () => { mainButton?.hide().off("click", manageEventBtnOnClick); }
+    }
+
+    if (userHasTicket && needsInfoUpdate) {
+      setupMainButton("#007AFF", "#ffffff", "Update Ticket Info", goToUpdateInfoPage);
+      return () => { mainButton?.hide().off("click", goToUpdateInfoPage); }
+    }
+
+    if (userHasTicket) {
+      setupMainButton("#e1efff", "#007aff", "My Ticket", goToTicketPage);
+      return () => { mainButton?.hide().off("click", goToTicketPage); }
+    }
+
+    if (orderAlreadyPlace) {
+      mainButton
+        ?.setBgColor("#007AFF")
+        .setTextColor("#ffffff")
+        .setText("Pending...")
+        .showLoader()
+        .disable()
+        .show()
+        .on("click", () => { });
+
+      setTimeout(() => window.location.reload(), 1000 * 60 * 5);
+
+      return () => { mainButton?.hide().off("click", () => { }); }
+    }
+
+    if (!requiresTicketToChekin) {
+      mainButton?.hide();
+      return () => { mainButton?.hide(); }
+    }
+
+    if (isSoldOut) {
+      setupMainButton("#E9E8E8", "#BABABA", "SOLD OUT", () => { });
+      return () => { mainButton?.hide(); }
+    }
+
+    // Buy Ticket if none of above conditions were true
+    setupMainButton("#007AFF", "#ffffff", "Purchase Ticket", mainBtnOnClick);
+    router.prefetch(`/event/${eventId}/buy-ticket`);
+
+    return () => { mainButton?.hide().off("click", mainBtnOnClick); }
+  }, [
+    mainButton,
+    event,
+    eventManagerRole,
+    needsInfoUpdate,
+    requiresTicketToChekin,
+    router,
+    tmaUtils,
+    isLoading,
+    isError,
+    wallet?.account.address,
+    isSuccess
+  ]);
+
+  useEffect(() => {
+    backButton?.hide();
+    closeBehavior?.enableConfirmation();
+    return () => { closeBehavior?.disableConfirmation(); }
+  }, [backButton, closeBehavior]);
+
+  useEffect(() => {
+    tma?.setBgColor("#ffffff");
+    tma?.setHeaderColor("#ffffff");
+  }, [tma]);
+
+  return <></>;
+};
+
+export default EventTmaSettings;
