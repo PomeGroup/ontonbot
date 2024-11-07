@@ -1,0 +1,568 @@
+services:
+  minio:
+    hostname: minio
+    image: minio/minio
+    restart: unless-stopped
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.10
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_REGION_NAME: ${MINIO_REGION_NAME}
+      MINIO_COLLECTION_BUCKET: ${MINIO_COLLECTION_BUCKET}
+      MINIO_ITEM_BUCKET: ${MINIO_ITEM_BUCKET}
+      MINIO_DASHBOARD_PORT: ${MINIO_DASHBOARD_PORT}
+      MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
+      MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
+      MINIO_DOC_BUCKET: ${MINIO_DOC_BUCKET}
+      MINIO_DOC_DEFAULT_BUCKET: ${MINIO_DOC_DEFAULT_BUCKET}
+  minio-client:
+    image: minio/mc
+    entrypoint: ["/bin/sh", "-c"]
+    depends_on:
+      - minio
+    environment:
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_REGION_NAME: ${MINIO_REGION_NAME}
+      MINIO_COLLECTION_BUCKET: ${MINIO_COLLECTION_BUCKET}
+      MINIO_ITEM_BUCKET: ${MINIO_ITEM_BUCKET}
+      MINIO_DASHBOARD_PORT: ${MINIO_DASHBOARD_PORT}
+      MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
+      MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
+      MINIO_DOC_BUCKET: ${MINIO_DOC_BUCKET}
+      MINIO_DOC_DEFAULT_BUCKET: ${MINIO_DOC_DEFAULT_BUCKET}
+    command:
+      - |
+        mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
+        mc mb --ignore-existing local/${MINIO_COLLECTION_BUCKET}
+        mc mb --ignore-existing local/${MINIO_ITEM_BUCKET}
+        mc mb --ignore-existing local/${MINIO_IMAGE_BUCKET}
+        mc mb --ignore-existing local/${MINIO_VIDEO_BUCKET}
+        mc mb --ignore-existing local/${MINIO_DOC_BUCKET}
+        mc mb --ignore-existing local/${MINIO_DOC_DEFAULT_BUCKET}
+        mc anonymous set download local/${MINIO_COLLECTION_BUCKET}
+        mc anonymous set download local/${MINIO_ITEM_BUCKET}
+        mc anonymous set download local/${MINIO_IMAGE_BUCKET}
+        mc anonymous set download local/${MINIO_VIDEO_BUCKET}
+        mc anonymous set download local/${MINIO_DOC_BUCKET}
+        mc anonymous set download local/${MINIO_DOC_DEFAULT_BUCKET}
+    env_file:
+      - .env
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.11
+ 
+  clamav:
+    image: mkodockx/docker-clamav
+    hostname: clamav
+    # ports:
+    #   - "3310:3310"  
+    environment:
+      - CLAMD_SETTINGS_MAXQUEUE=200
+      - CLAMD_SETTINGS_LOGTIME=1
+    volumes:
+      - clamav_db:/var/lib/clamav  # Persist virus definition database
+    restart: unless-stopped
+  
+  participant-tma:
+    hostname: participant-tma
+    ports:
+      - "3001:3000"
+    build: 
+      context: ./newton/
+      target: participant-tma
+      args:
+        NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
+        NEXT_PUBLIC_API_BASE_URL_ONTON: ${NEXT_PUBLIC_API_BASE_URL_ONTON}
+        NEXT_PUBLIC_APP_BASE_URL_ONTON: ${NEXT_PUBLIC_APP_BASE_URL_ONTON}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+        PTMA_API_BASE_URL : ${PTMA_API_BASE_URL}
+        ONTON_API_KEY: ${ONTON_API_KEY}
+        BOT_TOKEN: ${BOT_TOKEN}
+        NEXT_PUBLIC_GTM: ${NEXT_PUBLIC_GTM}
+    restart: "unless-stopped"
+    environment:
+      ENV: ${ENV}
+      NODE_ENV: ${NODE_ENV}
+      ONTON_API_KEY: ${ONTON_API_KEY}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL_NFT_MANAGER: ${DATABASE_URL_NFT_MANAGER}
+      NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
+      NEXT_PUBLIC_API_BASE_URL_ONTON: ${NEXT_PUBLIC_API_BASE_URL_ONTON}}
+      NEXT_PUBLIC_APP_BASE_URL_ONTON: ${NEXT_PUBLIC_APP_BASE_URL_ONTON}
+      NEXT_PUBLIC_GTM: ${NEXT_PUBLIC_GTM}
+      NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
+      PTMA_API_BASE_URL: ${PTMA_API_BASE_URL}
+      TONAPI_API_KEY: ${TONAPI_API_KEY}
+      TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
+      TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+      ONTON_API_SECRET: ${ONTON_API_SECRET}
+      BOT_TOKEN: ${BOT_TOKEN}
+      BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
+      TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_REGION_NAME: ${MINIO_REGION_NAME}
+      MINIO_COLLECTION_BUCKET: ${MINIO_COLLECTION_BUCKET}
+      MINIO_ITEM_BUCKET: ${MINIO_ITEM_BUCKET}
+      MINIO_DASHBOARD_PORT: ${MINIO_DASHBOARD_PORT}
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.12
+
+  nft-microservice:
+    hostname: nft-service
+    build:
+      context: ./newton/apps/nft-manager
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      ENV: ${ENV}
+      NODE_ENV: ${NODE_ENV}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL_NFT_MANAGER: ${DATABASE_URL_NFT_MANAGER}
+      NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
+      NEXT_PUBLIC_APP_BASE_URL_ONTON: ${NEXT_PUBLIC_APP_BASE_URL_ONTON}
+      NEXT_PUBLIC_GTM: ${NEXT_PUBLIC_GTM}
+      NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
+      PTMA_API_BASE_URL: ${PTMA_API_BASE_URL}
+      TONAPI_API_KEY: ${TONAPI_API_KEY}
+      TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
+      TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+      ONTON_API_KEY: ${ONTON_API_KEY}
+      MNEMONIC: ${MNEMONIC}
+      BOT_TOKEN: ${BOT_TOKEN}
+      BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
+      TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_REGION_NAME: ${MINIO_REGION_NAME}
+      MINIO_COLLECTION_BUCKET: ${MINIO_COLLECTION_BUCKET}
+      MINIO_ITEM_BUCKET: ${MINIO_ITEM_BUCKET}
+      MINIO_DASHBOARD_PORT: ${MINIO_DASHBOARD_PORT}
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.13
+
+  postgres:
+    hostname: postgres
+    image: postgres:16.3-alpine3.20
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.14
+
+  redis:
+    image: redis:7.4.1-bookworm
+    hostname: redis
+    restart: unless-stopped
+    # volumes:
+    #   - redis_data:/data
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.15
+
+  giveaway-checker:
+    build:
+      context: ./giveaway-checker
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TONAPI_API_KEY: ${TONAPI_API_KEY}
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.16
+
+  telegram-bot:
+    build: ./telegram-bot
+    restart: "unless-stopped"
+    ports:
+      - "3333:3333"
+    environment:
+      DATABASE_URL_NFT_MANAGER: "nulled in docker-compose for security"
+      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      BOT_TOKEN: ${BOT_TOKEN}
+      BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
+      TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
+      APP_BASE_URL: ${APP_BASE_URL}
+    depends_on:
+      - postgres
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.17
+
+  # caddy:
+  #   build:
+  #     context: ./caddy
+  #     dockerfile: caddy.dockerfile
+  #   restart: unless-stopped
+  #   environment:
+  #     CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
+  #     CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+  #     ACME_AGREE: ${ACME_AGREE}
+  #   ports:
+  #     - "65.109.243.230:80:80"
+  #     - "65.109.243.230:443:443"
+  #     - "65.109.243.230:443:443/udp"
+  #   volumes:
+  #     - ./caddy_conf/Caddyfile:/etc/caddy/Caddyfile
+  #     # - caddy_data:/data
+  #     # - caddy_config:/config
+  #   networks:
+  #     onton-dev:
+  #       ipv4_address: 172.20.0.18
+
+#  caddy:
+#    build:
+#      context: ./caddy
+#      dockerfile: Dockerfile
+#    restart: unless-stopped
+##   environment:
+##     CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
+##     CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+##     ACME_AGREE: ${ACME_AGREE}
+#    ports:
+#      - "  65.109.243.230:80:80"
+#      - "65.109.243.230:443:443"
+#      - "65.109.243.230:443:443/udp"
+##   volumes:
+##     - ./caddy_conf/Caddyfile:/etc/caddy/Caddyfile
+##     # - caddy_data:/data
+##     # - caddy_config:/config
+#    networks:
+#      onton-dev:
+#        ipv4_address: 172.20.0.18
+
+  mini-app:
+    hostname: mini-app
+    ports:
+      - "3000:3000"
+    build:
+      context: ./mini-app
+      target: production-stage
+      args:
+        DATABASE_URL_NFT_MANAGER: "nulled in docker-compose for security"
+        TON_CENTER_TOKEN: "nulled in docker-compose for security"
+        TONAPI_API_KEY: ${TONAPI_API_KEY}
+        DATABASE_URL: ${DATABASE_URL}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        BOT_TOKEN: ${BOT_TOKEN}
+        NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
+        NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
+        CACHE_ENABLED: ${CACHE_ENABLED}
+        TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
+        ONTON_API_SECRET: ${ONTON_API_SECRET}
+        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+        FILE_UPLOAD_URL: ${FILE_UPLOAD_URL}
+        CLAMAV_HOST: ${CLAMAV_HOST}
+        CLAMAV_PORT: ${CLAMAV_PORT}
+        MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
+        MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+        REDIS_DATABASES: ${REDIS_DATABASES}
+        NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+        CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
+        CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
+        CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
+        CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+    restart: "unless-stopped"
+    environment:
+      DATABASE_URL_NFT_MANAGER: "nulled in docker-compose for security"
+      TON_CENTER_TOKEN: "nulled in docker-compose for security"
+      TONAPI_API_KEY: ${TONAPI_API_KEY}
+      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      BOT_TOKEN: ${BOT_TOKEN}
+      NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
+      NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
+      CACHE_ENABLED: ${CACHE_ENABLED}
+      TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
+      ONTON_API_SECRET: ${ONTON_API_SECRET}
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+      FILE_UPLOAD_URL: ${FILE_UPLOAD_URL}
+      CLAMAV_HOST: ${CLAMAV_HOST}
+      CLAMAV_PORT: ${CLAMAV_PORT}
+      MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
+      MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+      NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+      CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
+      CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
+      CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
+      CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+    depends_on:
+      - postgres
+      - golang-server
+      - golang-worker
+      - redis
+    volumes:
+      - drizzle:/app/drizzle
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.19
+
+  mini-app-cron:
+    hostname: mini-app
+    build:
+      context: ./mini-app
+      target: production-stage
+      args:
+        DATABASE_URL_NFT_MANAGER: "nulled in docker-compose for security"
+        TON_CENTER_TOKEN: "nulled in docker-compose for security"
+        TONAPI_API_KEY: ${TONAPI_API_KEY}
+        DATABASE_URL: ${DATABASE_URL}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        BOT_TOKEN: ${BOT_TOKEN}
+        NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
+        NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
+        CACHE_ENABLED: ${CACHE_ENABLED}
+        TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
+        ONTON_API_SECRET: ${ONTON_API_SECRET}
+        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+        FILE_UPLOAD_URL: ${FILE_UPLOAD_URL}
+        CLAMAV_HOST: ${CLAMAV_HOST}
+        CLAMAV_PORT: ${CLAMAV_PORT}
+        MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
+        MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
+        REDIS_HOST: ${REDIS_HOST}
+        REDIS_PORT: ${REDIS_PORT}
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+        REDIS_DATABASES: ${REDIS_DATABASES}
+        NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+        CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
+        CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
+        CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
+        CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+    restart: "unless-stopped"
+    environment:
+      DATABASE_URL_NFT_MANAGER: "nulled in docker-compose for security"
+      TON_CENTER_TOKEN: "nulled in docker-compose for security"
+      TONAPI_API_KEY: ${TONAPI_API_KEY}
+      DATABASE_URL: ${DATABASE_URL}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      BOT_TOKEN: ${BOT_TOKEN}
+      NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
+      NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
+      CACHE_ENABLED: ${CACHE_ENABLED}
+      TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
+      ONTON_API_SECRET: ${ONTON_API_SECRET}
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+      FILE_UPLOAD_URL: ${FILE_UPLOAD_URL}
+      CLAMAV_HOST: ${CLAMAV_HOST}
+      CLAMAV_PORT: ${CLAMAV_PORT}
+      MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
+      MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+      NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+      CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
+      CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
+      CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
+      CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+    depends_on:
+      - postgres
+      - golang-server
+      - golang-worker
+      - redis
+    volumes:
+      - drizzle:/app/drizzle
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.20
+    command: ["pnpm","run", "start-cron"]
+
+  website:
+    hostname: website
+    build: ./website
+    restart: "unless-stopped"
+#    depends_on:
+#     - caddy
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.21
+
+  golang-server:
+    build:
+      context: ./golang-server
+      dockerfile: ./server/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "9999:9999"
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.22
+
+  golang-worker:
+    build:
+      context: ./golang-server
+      dockerfile: ./worker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASES: ${REDIS_DATABASES}
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.23
+
+  metabase:
+    image: metabase/metabase:v0.50.18.3
+    hostname: metabase
+    restart: unless-stopped
+    ports:
+      - "3554:3000"
+    volumes:
+      - /dev/urandom:/dev/random:ro
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${POSTGRES_DB}
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER}
+      MB_DB_PASS: ${POSTGRES_PASSWORD}
+      MB_LOG_LEVEL: error
+      MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
+      MB_REDIRECT_ALL_REQUESTS_TO_HTTPS: ${MB_REDIRECT_ALL_REQUESTS_TO_HTTPS}
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.24
+    depends_on:
+      - postgres
+    healthcheck:
+      test: curl --fail -I http://localhost:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  client-web:
+    hostname: client-web
+    build:
+      context: ./client-web-panel
+      dockerfile: Dockerfile
+      target: production
+      args:
+        ENV_TYPE : production
+        NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+        CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
+        CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
+        CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
+        CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+    restart: "unless-stopped"
+    environment:
+      NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+      CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
+      CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
+      CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
+      CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+#    depends_on:
+#      - caddy
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.25
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    environment:
+      SWAGGER_JSON: /swagger.yaml
+    volumes:
+      - ./swagger/swagger.yaml:/swagger.yaml
+#    depends_on:
+#      - caddy
+    networks:
+      onton-dev:
+        ipv4_address: 172.20.0.26
+networks:
+  onton-dev:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.20.0.0/26"
+
+volumes:
+  pgdata:
+  drizzle:
+  caddy_data:
+  caddy_config:
+  redis_data:
+  minio-data: 
+  clamav_db:
