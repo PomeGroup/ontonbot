@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+}
+
+@layer utilities {
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-primary {
+    color: #007AFF;
+  }
+
+  .bg-primary {
+    background-color: #007AFF;
+  }
+
+  .border-primary {
+    border-color: #007AFF;
+  }
+
+  .container {
+    @apply px-4 max-w-screen-xl mx-auto;
+  }
+
+  .container-xl {
+    @apply px-4 mx-auto;
+    max-width: 1380px;
+  }
+
+  .btn {
+    @apply px-4 py-3 rounded-[10px] font-semibold text-[17px] text-center transition-colors;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-[#007bffb4];
+  }
+
+  .btn-light {
+    @apply text-primary bg-[#007AFF1A] hover:bg-[#007bff44];
+
+  }
+
+}
