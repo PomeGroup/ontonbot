@@ -9,6 +9,8 @@ import { useEventData } from "./eventPageContext";
 import { EventTasks } from "./EventTasks";
 import { ManageEventButton } from "./ManageEventButton";
 import { EventActions } from "./EventActions";
+import { useLayoutEffect } from "react";
+import { useTheme } from "next-themes";
 
 const EventImage = () => {
   const { eventData } = useEventData();
@@ -64,6 +66,12 @@ const EventDescriptionFull = () => {
 
 export const EventSections = () => {
   const { eventHash } = useEventData()
+
+  const { setTheme } = useTheme()
+
+  useLayoutEffect(() => {
+    setTheme('light')
+  }, [])
 
   return <div className="p-2">
     <EventImage />
