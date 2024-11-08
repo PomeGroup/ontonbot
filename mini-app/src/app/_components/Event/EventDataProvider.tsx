@@ -15,6 +15,24 @@ export const EventDataProvider = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const [initData, setInitData] = useState<string>("");
 
+  const userEventFields =
+    trpc.userEventFields.getUserEventFields.useQuery(
+      {
+        event_hash: eventHash,
+        init_data: initData,
+      },
+      {
+        queryKey: [
+          "userEventFields.getUserEventFields",
+          {
+            event_hash: eventHash,
+            init_data: initData,
+          },
+        ],
+        enabled: Boolean(initData) && Boolean(eventHash), // Run the query only if initData is present and initialized
+      }
+    );
+
   useEffect(() => {
     if (webApp?.initData && !isInitialized) {
       setInitData(webApp.initData);
@@ -41,6 +59,10 @@ export const EventDataProvider = ({
       console.log("eventHash", eventData);
     }
   }, [eventData]);
+
+  const eventPasswordField = useMemo(() => {
+    return eventData.data?.dynamic_fields.find(v => v.title === 'secret_phrase_onton_input')
+  }, [eventData.data?.dynamic_fields.length])
 
   const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {
@@ -74,6 +96,13 @@ export const EventDataProvider = ({
       eventData.data?.location,
     ]);
 
+  const userEventPasswordField = useMemo(() => {
+    console.log(userEventFields.data)
+    if (eventPasswordField?.id) {
+      return userEventFields.data?.[eventPasswordField.id]
+    }
+  }, [eventPasswordField?.id, userEventFields.isFetching, userEventFields.isSuccess])
+
   return (
     <EventDataContext.Provider
       value={{
@@ -86,6 +115,9 @@ export const EventDataProvider = ({
         success,
         initData,
         eventHash,
+        userEventFields,
+        eventPasswordField,
+        userEventPasswordField
       }}
     >
       {children}

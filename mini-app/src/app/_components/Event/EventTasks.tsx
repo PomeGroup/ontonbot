@@ -1,9 +1,9 @@
 import useAuth from "@/hooks/useAuth";
-import { ClaimRewardButton } from "@/app/_components/ClaimRewardButton";
 import AllTasks from "@/app/_components/Tasks";
 import Tasks from "@/app/_components/molecules/tasks";
 import { useState } from "react";
 import { useEventData } from "./eventPageContext";
+import { ClaimRewardButton } from "./ClaimRewardButton";
 
 export const EventTasks = ({ eventHash }: { eventHash: string }) => {
   const { eventData, isStarted, isNotEnded, initData } = useEventData();
