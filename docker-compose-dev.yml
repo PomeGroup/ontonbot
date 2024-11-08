@@ -6,6 +6,7 @@ services:
     profiles:
       - essential
       - expecting-mini-app
+      - full
     networks:
       onton-dev:
         ipv4_address: "${IP_RANGE_BASE}.0.10"
@@ -40,6 +41,7 @@ services:
     profiles:
       - essential
       - expecting-mini-app
+      - full
     environment:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
@@ -56,12 +58,14 @@ services:
       - "3001:3000"
     profiles:
       - expecting-mini-app
+      - full
     build: 
       context: ./newton/
       target: participant-tma
       args:
         NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+
         PTMA_API_BASE_URL : ${PTMA_API_BASE_URL}
         ONTON_API_KEY: ${ONTON_API_KEY}
         BOT_TOKEN: ${BOT_TOKEN}
@@ -74,6 +78,7 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       DATABASE_URL_NFT_MANAGER: ${DATABASE_URL_NFT_MANAGER}
       NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
       NEXT_PUBLIC_GTM: ${NEXT_PUBLIC_GTM}
       NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
       PTMA_API_BASE_URL: ${PTMA_API_BASE_URL}
@@ -113,6 +118,7 @@ services:
       - "127.0.0.0:${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"
     profiles:
       - expecting-mini-app
+      - full
     environment:
       ENV: ${ENV}
       NODE_ENV: ${NODE_ENV}
@@ -159,6 +165,7 @@ services:
     profiles:
       - essential
       - expecting-mini-app
+      - full
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -180,6 +187,7 @@ services:
     profiles:
       - essential
       - expecting-mini-app
+      - full
     command: redis-server --appendonly yes
     environment:
       REDIS_HOST: "${IP_RANGE_BASE}.0.15"
@@ -197,6 +205,7 @@ services:
     restart: unless-stopped
     profiles:
       - expecting-mini-app
+      - full
     depends_on:
       - postgres
     environment:
@@ -215,6 +224,7 @@ services:
       - "3333:3333"
     profiles:
       - expecting-mini-app
+      - full
     environment:
       DATABASE_URL_NFT_MANAGER: "nulled in docker-compose for security"
       DATABASE_URL: ${DATABASE_URL}
@@ -223,53 +233,37 @@ services:
       BOT_TOKEN: ${BOT_TOKEN}
       BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
       TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
+      NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
     depends_on:
       - postgres
     networks:
       onton-dev:
         ipv4_address: "${IP_RANGE_BASE}.0.17"
 
-  # caddy:
-  #   build:
-  #     context: ./caddy
-  #     dockerfile: caddy.dockerfile
-  #   restart: unless-stopped
-  #   environment:
-  #     CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
-  #     CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
-  #     ACME_AGREE: ${ACME_AGREE}
-  #   ports:
-  #     - "65.109.243.230:80:80"
-  #     - "65.109.243.230:443:443"
-  #     - "65.109.243.230:443:443/udp"
-  #   volumes:
-  #     - ./caddy_conf/Caddyfile:/etc/caddy/Caddyfile
-  #     # - caddy_data:/data
-  #     # - caddy_config:/config
-  #   networks:
-  #     onton-dev:
-  #       ipv4_address: "${IP_RANGE_BASE}.0.18"
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    profiles:
+      - essential
+      - expecting-mini-app
+      - full
+    ports:
+#      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data/caddy_data:/data
+      - ./data/caddy_config:/config
+      - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
+    networks:
+      onton-dev:
+        ipv4_address: "${IP_RANGE_BASE}.0.18"
+    environment:
+      - ACME_AGREE=true
+      - LOCAL_DOMAIN=${LOCAL_DOMAIN}
+      - IP_RANGE_BASE=${IP_RANGE_BASE}
+    entrypoint: /usr/bin/envsh/generate-caddyfile.sh
 
-#  caddy:
-#    build:
-#      context: ./caddy
-#      dockerfile: Dockerfile
-#    restart: unless-stopped
-##   environment:
-##     CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
-##     CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
-##     ACME_AGREE: ${ACME_AGREE}
-#    ports:
-#      - "  65.109.243.230:80:80"
-#      - "65.109.243.230:443:443"
-#      - "65.109.243.230:443:443/udp"
-##   volumes:
-##     - ./caddy_conf/Caddyfile:/etc/caddy/Caddyfile
-##     # - caddy_data:/data
-##     # - caddy_config:/config
-#    networks:
-#      onton-dev:
-#        ipv4_address: "${IP_RANGE_BASE}.0.18"
 
   mini-app:
     hostname: mini-app
@@ -434,6 +428,7 @@ services:
     restart: "unless-stopped"
     profiles:
       - expecting-mini-app
+      - full
 #    depends_on:
 #     - caddy
     networks:
@@ -449,6 +444,7 @@ services:
       - "9999:9999"
     profiles:
       - expecting-mini-app
+      - full
     depends_on:
       - redis
     environment:
@@ -467,6 +463,7 @@ services:
     restart: unless-stopped
     profiles:
       - expecting-mini-app
+      - full
     depends_on:
       - redis
     environment:
@@ -484,6 +481,8 @@ services:
     restart: unless-stopped
     ports:
       - "3554:3000"
+    profiles:
+      - full
     volumes:
       - /dev/urandom:/dev/random:ro
     environment:
@@ -509,6 +508,7 @@ services:
     hostname: client-web
     profiles:
       - expecting-mini-app
+      - full
     build:
       context: ./client-web-panel
       dockerfile: Dockerfile
