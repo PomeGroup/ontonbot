@@ -5,15 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
-      <change afterPath="$PROJECT_DIR$/swagger/swagger.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose-dev.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose-dev.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose-local.yml" beforeDir="false" afterPath="$PROJECT_DIR$/devops/docker-compose-local.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.clamav.yml" beforeDir="false" afterPath="$PROJECT_DIR$/devops/docker-compose.clamav.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.db.yml" beforeDir="false" afterPath="$PROJECT_DIR$/devops/docker-compose.db.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.minio.yml" beforeDir="false" afterPath="$PROJECT_DIR$/devops/docker-compose.minio.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.redis.yml" beforeDir="false" afterPath="$PROJECT_DIR$/devops/docker-compose.redis.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/next.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/next.config.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -182,7 +175,7 @@
       <workItem from="1730988936387" duration="71000" />
       <workItem from="1730989014939" duration="11826000" />
       <workItem from="1731001776278" duration="289000" />
-      <workItem from="1731002920533" duration="2143000" />
+      <workItem from="1731002920533" duration="3530000" />
     </task>
     <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
       <option name="closed" value="true" />
