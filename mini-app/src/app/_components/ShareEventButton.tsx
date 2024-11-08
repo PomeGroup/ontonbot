@@ -4,8 +4,9 @@ import { trpc } from "@/app/_trpc/client";
 import { Button } from "@/components/ui/button";
 import useWebApp from "@/hooks/useWebApp";
 import { cn, wait } from "@/lib/utils";
-import { Share2, LoaderIcon } from "lucide-react";
+import { LoaderIcon } from "lucide-react";
 import { FaShare } from "react-icons/fa";
+
 const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
