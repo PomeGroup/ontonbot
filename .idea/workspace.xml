@@ -5,8 +5,37 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
+      <change afterPath="$PROJECT_DIR$/devops/minio-init.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose-dev.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose-dev.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/.env.example" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/drizzle/0002_sloppy_metal_master.sql" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/drizzle/0002_sloppy_metal_master.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mini-app/next.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/next.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/server/routers/files.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/routers/files.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/newton/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/nft-manager/src/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/src/minio/minio.controller.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/nft-manager/src/minio/minio.controller.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/nft-manager/src/minio/minio.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/nft-manager/src/minio/minio.service.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/.env.example" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/components/TonProvider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/components/TonProvider.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/env.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/env.mjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/hooks/useShareEvent.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/hooks/useShareEvent.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/services/actions/event.actions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/services/actions/event.actions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/services/event.services.ssr.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/services/event.services.ssr.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/services/event.services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/services/event.services.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/services/orders.services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/services/orders.services.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/services/ticket.services.ssr.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/services/ticket.services.ssr.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/services/tickets.services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/services/tickets.services.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/services/ton-proof.services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/services/ton-proof.services.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/newton/apps/participant-tma/services/user.services.ts" beforeDir="false" afterPath="$PROJECT_DIR$/newton/apps/participant-tma/services/user.services.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/telegram-bot/.env.example" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/telegram-bot/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/telegram-bot/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/telegram-bot/pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/telegram-bot/pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/telegram-bot/src/markups.ts" beforeDir="false" afterPath="$PROJECT_DIR$/telegram-bot/src/markups.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,7 +54,7 @@
     <dismissed value="$PROJECT_DIR$/telegram-bot/package.json" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
@@ -41,7 +70,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "dev",
     "js.last.introduce.type": "CONST",
-    "last_opened_file_path": "/home/inanloo/MyProject/ontonBotProjects/ontonbot/swagger",
+    "last_opened_file_path": "/home/inanloo/MyProject/ontonBotProjects/ontonbot/data/redis_data",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -65,11 +94,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/swagger" />
-      <recent name="$PROJECT_DIR$/telegram-bot" />
-      <recent name="$PROJECT_DIR$/newton/apps/nft-manager" />
+      <recent name="$PROJECT_DIR$/data/redis_data" />
+      <recent name="$PROJECT_DIR$/data/minio_data" />
+      <recent name="$PROJECT_DIR$/data/drizzle_data" />
+      <recent name="$PROJECT_DIR$/data/db_data" />
       <recent name="$PROJECT_DIR$" />
-      <recent name="$PROJECT_DIR$/mini-app/src/app/api/v1/dealroom-refresh-data" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/devops" />
@@ -175,7 +204,8 @@
       <workItem from="1730988936387" duration="71000" />
       <workItem from="1730989014939" duration="11826000" />
       <workItem from="1731001776278" duration="289000" />
-      <workItem from="1731002920533" duration="3530000" />
+      <workItem from="1731002920533" duration="16855000" />
+      <workItem from="1731065440661" duration="21950000" />
     </task>
     <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
       <option name="closed" value="true" />

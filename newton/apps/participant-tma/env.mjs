@@ -19,7 +19,7 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_BOT_USERNAME: z.string().min(1),
     NEXT_PUBLIC_GTM: z.string().min(1).optional(),
-    NEXT_PUBLIC_API_BASE_URL_ONTON: z.string().min(1),
+    NEXT_PUBLIC_API_BASE_URL: z.string().min(1),
     NEXT_PUBLIC_TON_NETWROK: z.enum(['testnet', 'mainnet']).optional(),
   },
   /*
@@ -30,7 +30,7 @@ export const env = createEnv({
    */
   runtimeEnv: {
     NEXT_PUBLIC_BOT_USERNAME: process.env.NEXT_PUBLIC_BOT_USERNAME,
-    NEXT_PUBLIC_API_BASE_URL_ONTON: process.env.NEXT_PUBLIC_API_BASE_URL_ONTON,
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
     NEXT_PUBLIC_TON_NETWROK: process.env.NEXT_PUBLIC_TON_NETWROK,
     NEXT_PUBLIC_GTM: process.env.NEXT_PUBLIC_GTM,
     BOT_TOKEN: process.env.BOT_TOKEN,

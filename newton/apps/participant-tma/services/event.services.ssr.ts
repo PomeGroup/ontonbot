@@ -7,7 +7,7 @@ export async function getEventDataOnly(
   id: string,
 ): Promise<EventDataOnlyType | null> {
   const eventResponse = await fetch(
-    `${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/event/${id}?data_only=true`,
+    `${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}?data_only=true`,
     {
       method: "GET",
       headers: {
@@ -35,7 +35,7 @@ export async function getEventWithUserDataSSRAuth(id: string) {
   }
 
   const eventResponse = await fetch(
-    `${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/event/${id}`,
+    `${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}`,
     {
       method: "GET",
       headers: {

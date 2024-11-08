@@ -15,7 +15,7 @@ type User = {
 
 export async function getUser(userId: number) {
   const response = await fetch(
-    `${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/user/${userId}`,
+    `${env.NEXT_PUBLIC_API_BASE_URL}/user/${userId}`,
     {
       headers: {
         "x-api-key": env.ONTON_API_KEY,

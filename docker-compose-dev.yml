@@ -3,15 +3,22 @@ services:
     hostname: minio
     image: minio/minio
     restart: unless-stopped
+    profiles:
+      - essential
+      - expecting-mini-app
     networks:
       onton-dev:
         ipv4_address: "${IP_RANGE_BASE}.0.10"
+    ports:
+      - "${MINIO_PORT}:${MINIO_PORT}"
+      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
-      - minio-data:/data
-    command: server /data --console-address ":9001"
+      - ./data/minio_data:/data
+      - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
+    entrypoint: ["/usr/bin/entrypoint.sh"]  # Use the custom entrypoint script
     environment:
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_ENDPOINT: "${MINIO_ENDPOINT}:${MINIO_PORT}"
       MINIO_PORT: ${MINIO_PORT}
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -23,69 +30,37 @@ services:
       MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
       MINIO_DOC_BUCKET: ${MINIO_DOC_BUCKET}
       MINIO_DOC_DEFAULT_BUCKET: ${MINIO_DOC_DEFAULT_BUCKET}
-  minio-client:
-    image: minio/mc
-    entrypoint: ["/bin/sh", "-c"]
-    depends_on:
-      - minio
-    environment:
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_PORT: ${MINIO_PORT}
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_REGION_NAME: ${MINIO_REGION_NAME}
-      MINIO_COLLECTION_BUCKET: ${MINIO_COLLECTION_BUCKET}
-      MINIO_ITEM_BUCKET: ${MINIO_ITEM_BUCKET}
-      MINIO_DASHBOARD_PORT: ${MINIO_DASHBOARD_PORT}
-      MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
-      MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
-      MINIO_DOC_BUCKET: ${MINIO_DOC_BUCKET}
-      MINIO_DOC_DEFAULT_BUCKET: ${MINIO_DOC_DEFAULT_BUCKET}
-    command:
-      - |
-        mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
-        mc mb --ignore-existing local/${MINIO_COLLECTION_BUCKET}
-        mc mb --ignore-existing local/${MINIO_ITEM_BUCKET}
-        mc mb --ignore-existing local/${MINIO_IMAGE_BUCKET}
-        mc mb --ignore-existing local/${MINIO_VIDEO_BUCKET}
-        mc mb --ignore-existing local/${MINIO_DOC_BUCKET}
-        mc mb --ignore-existing local/${MINIO_DOC_DEFAULT_BUCKET}
-        mc anonymous set download local/${MINIO_COLLECTION_BUCKET}
-        mc anonymous set download local/${MINIO_ITEM_BUCKET}
-        mc anonymous set download local/${MINIO_IMAGE_BUCKET}
-        mc anonymous set download local/${MINIO_VIDEO_BUCKET}
-        mc anonymous set download local/${MINIO_DOC_BUCKET}
-        mc anonymous set download local/${MINIO_DOC_DEFAULT_BUCKET}
-    env_file:
-      - .env
-    networks:
-      onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.11"
- 
+      MINIO_SBT_COLLECTIONS_BUCKET: ${MINIO_SBT_COLLECTIONS_BUCKET}
+
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
-    # ports:
-    #   - "3310:3310"  
+    ports:
+      - "3310:3310"
+    profiles:
+      - essential
+      - expecting-mini-app
     environment:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
     volumes:
-      - clamav_db:/var/lib/clamav  # Persist virus definition database
+      - ./data/clamav_data:/var/lib/clamav  # Persist virus definition database
     restart: unless-stopped
+    networks:
+        onton-dev:
+            ipv4_address: "${IP_RANGE_BASE}.0.26"
   
   participant-tma:
     hostname: participant-tma
     ports:
       - "3001:3000"
+    profiles:
+      - expecting-mini-app
     build: 
       context: ./newton/
       target: participant-tma
       args:
         NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
-        NEXT_PUBLIC_API_BASE_URL_ONTON: ${NEXT_PUBLIC_API_BASE_URL_ONTON}
-        NEXT_PUBLIC_APP_BASE_URL_ONTON: ${NEXT_PUBLIC_APP_BASE_URL_ONTON}
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
         PTMA_API_BASE_URL : ${PTMA_API_BASE_URL}
         ONTON_API_KEY: ${ONTON_API_KEY}
@@ -96,14 +71,9 @@ services:
       ENV: ${ENV}
       NODE_ENV: ${NODE_ENV}
       ONTON_API_KEY: ${ONTON_API_KEY}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_URL: ${DATABASE_URL}
       DATABASE_URL_NFT_MANAGER: ${DATABASE_URL_NFT_MANAGER}
       NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
-      NEXT_PUBLIC_API_BASE_URL_ONTON: ${NEXT_PUBLIC_API_BASE_URL_ONTON}}
-      NEXT_PUBLIC_APP_BASE_URL_ONTON: ${NEXT_PUBLIC_APP_BASE_URL_ONTON}
       NEXT_PUBLIC_GTM: ${NEXT_PUBLIC_GTM}
       NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
       PTMA_API_BASE_URL: ${PTMA_API_BASE_URL}
@@ -116,7 +86,7 @@ services:
       BOT_TOKEN: ${BOT_TOKEN}
       BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
       TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
-      REDIS_HOST: ${REDIS_HOST}
+      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -139,16 +109,16 @@ services:
       context: ./newton/apps/nft-manager
       dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "127.0.0.0:${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"
+    profiles:
+      - expecting-mini-app
     environment:
       ENV: ${ENV}
       NODE_ENV: ${NODE_ENV}
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_URL: ${DATABASE_URL}
       DATABASE_URL_NFT_MANAGER: ${DATABASE_URL_NFT_MANAGER}
       NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
-      NEXT_PUBLIC_APP_BASE_URL_ONTON: ${NEXT_PUBLIC_APP_BASE_URL_ONTON}
       NEXT_PUBLIC_GTM: ${NEXT_PUBLIC_GTM}
       NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
       PTMA_API_BASE_URL: ${PTMA_API_BASE_URL}
@@ -162,7 +132,7 @@ services:
       BOT_TOKEN: ${BOT_TOKEN}
       BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
       TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
-      REDIS_HOST: ${REDIS_HOST}
+      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -175,6 +145,7 @@ services:
       MINIO_COLLECTION_BUCKET: ${MINIO_COLLECTION_BUCKET}
       MINIO_ITEM_BUCKET: ${MINIO_ITEM_BUCKET}
       MINIO_DASHBOARD_PORT: ${MINIO_DASHBOARD_PORT}
+      NFT_MANAGER_PORT: ${NFT_MANAGER_PORT}
     networks:
       onton-dev:
         ipv4_address: "${IP_RANGE_BASE}.0.13"
@@ -184,13 +155,16 @@ services:
     image: postgres:16.3-alpine3.20
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    profiles:
+      - essential
+      - expecting-mini-app
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - ./data/db_data:/var/lib/postgresql/data
     networks:
       onton-dev:
         ipv4_address: "${IP_RANGE_BASE}.0.14"
@@ -199,13 +173,16 @@ services:
     image: redis:7.4.1-bookworm
     hostname: redis
     restart: unless-stopped
-    # volumes:
-    #   - redis_data:/data
+    volumes:
+      - ./data/redis_data:/data
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    profiles:
+      - essential
+      - expecting-mini-app
     command: redis-server --appendonly yes
     environment:
-      REDIS_HOST: ${REDIS_HOST}
+      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -218,6 +195,8 @@ services:
       context: ./giveaway-checker
       dockerfile: Dockerfile
     restart: unless-stopped
+    profiles:
+      - expecting-mini-app
     depends_on:
       - postgres
     environment:
@@ -234,6 +213,8 @@ services:
     restart: "unless-stopped"
     ports:
       - "3333:3333"
+    profiles:
+      - expecting-mini-app
     environment:
       DATABASE_URL_NFT_MANAGER: "nulled in docker-compose for security"
       DATABASE_URL: ${DATABASE_URL}
@@ -242,7 +223,6 @@ services:
       BOT_TOKEN: ${BOT_TOKEN}
       BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
       TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
-      APP_BASE_URL: ${APP_BASE_URL}
     depends_on:
       - postgres
     networks:
@@ -295,6 +275,8 @@ services:
     hostname: mini-app
     ports:
       - "3000:3000"
+    profiles:
+      - full
     build:
       context: ./mini-app
       target: production-stage
@@ -313,12 +295,13 @@ services:
         ONTON_API_SECRET: ${ONTON_API_SECRET}
         TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
         TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
-        FILE_UPLOAD_URL: ${FILE_UPLOAD_URL}
-        CLAMAV_HOST: ${CLAMAV_HOST}
+        FILE_UPLOAD_URL: "${UPLOADER_ADDRESS}${FILE_UPLOAD_URL}"
+        VIDEO_UPLOAD_URL: "${UPLOADER_ADDRESS}${VIDEO_UPLOAD_URL}"
+        CLAMAV_HOST: "${IP_RANGE_BASE}.0.26"
         CLAMAV_PORT: ${CLAMAV_PORT}
         MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
         MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
-        REDIS_HOST: ${REDIS_HOST}
+        REDIS_HOST: "${IP_RANGE_BASE}.0.15"
         REDIS_PORT: ${REDIS_PORT}
         REDIS_PASSWORD: ${REDIS_PASSWORD}
         REDIS_DATABASES: ${REDIS_DATABASES}
@@ -343,12 +326,13 @@ services:
       ONTON_API_SECRET: ${ONTON_API_SECRET}
       TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
       TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
-      FILE_UPLOAD_URL: ${FILE_UPLOAD_URL}
-      CLAMAV_HOST: ${CLAMAV_HOST}
+      FILE_UPLOAD_URL: "${UPLOADER_ADDRESS}${FILE_UPLOAD_URL}"
+      VIDEO_UPLOAD_URL: "${UPLOADER_ADDRESS}${VIDEO_UPLOAD_URL}"
+      CLAMAV_HOST: "${IP_RANGE_BASE}.0.26"
       CLAMAV_PORT: ${CLAMAV_PORT}
       MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
       MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
-      REDIS_HOST: ${REDIS_HOST}
+      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -359,11 +343,9 @@ services:
       CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
     depends_on:
       - postgres
-      - golang-server
-      - golang-worker
       - redis
     volumes:
-      - drizzle:/app/drizzle
+      - ./data/drizzle_data:/app/drizzle
     networks:
       onton-dev:
         ipv4_address: "${IP_RANGE_BASE}.0.19"
@@ -388,12 +370,13 @@ services:
         ONTON_API_SECRET: ${ONTON_API_SECRET}
         TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
         TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
-        FILE_UPLOAD_URL: ${FILE_UPLOAD_URL}
-        CLAMAV_HOST: ${CLAMAV_HOST}
+        FILE_UPLOAD_URL: "${UPLOADER_ADDRESS}${FILE_UPLOAD_URL}"
+        VIDEO_UPLOAD_URL: "${UPLOADER_ADDRESS}${VIDEO_UPLOAD_URL}"
+        CLAMAV_HOST: "${IP_RANGE_BASE}.0.26"
         CLAMAV_PORT: ${CLAMAV_PORT}
         MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
         MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
-        REDIS_HOST: ${REDIS_HOST}
+        REDIS_HOST: "${IP_RANGE_BASE}.0.15"
         REDIS_PORT: ${REDIS_PORT}
         REDIS_PASSWORD: ${REDIS_PASSWORD}
         REDIS_DATABASES: ${REDIS_DATABASES}
@@ -403,6 +386,8 @@ services:
         CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
         CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
     restart: "unless-stopped"
+    profiles:
+      - full
     environment:
       DATABASE_URL_NFT_MANAGER: "nulled in docker-compose for security"
       TON_CENTER_TOKEN: "nulled in docker-compose for security"
@@ -418,12 +403,13 @@ services:
       ONTON_API_SECRET: ${ONTON_API_SECRET}
       TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
       TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
-      FILE_UPLOAD_URL: ${FILE_UPLOAD_URL}
-      CLAMAV_HOST: ${CLAMAV_HOST}
+      FILE_UPLOAD_URL: "${UPLOADER_ADDRESS}${FILE_UPLOAD_URL}"
+      VIDEO_UPLOAD_URL: "${UPLOADER_ADDRESS}${VIDEO_UPLOAD_URL}"
+      CLAMAV_HOST: "${IP_RANGE_BASE}.0.26"
       CLAMAV_PORT: ${CLAMAV_PORT}
       MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
       MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
-      REDIS_HOST: ${REDIS_HOST}
+      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -434,11 +420,9 @@ services:
       CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
     depends_on:
       - postgres
-      - golang-server
-      - golang-worker
       - redis
     volumes:
-      - drizzle:/app/drizzle
+      - ./data/drizzle_data:/app/drizzle
     networks:
       onton-dev:
         ipv4_address: "${IP_RANGE_BASE}.0.20"
@@ -448,6 +432,8 @@ services:
     hostname: website
     build: ./website
     restart: "unless-stopped"
+    profiles:
+      - expecting-mini-app
 #    depends_on:
 #     - caddy
     networks:
@@ -461,10 +447,12 @@ services:
     restart: unless-stopped
     ports:
       - "9999:9999"
+    profiles:
+      - expecting-mini-app
     depends_on:
       - redis
     environment:
-      REDIS_HOST: ${REDIS_HOST}
+      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -477,10 +465,12 @@ services:
       context: ./golang-server
       dockerfile: ./worker/Dockerfile
     restart: unless-stopped
+    profiles:
+      - expecting-mini-app
     depends_on:
       - redis
     environment:
-      REDIS_HOST: ${REDIS_HOST}
+      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -498,7 +488,7 @@ services:
       - /dev/urandom:/dev/random:ro
     environment:
       MB_DB_TYPE: postgres
-      MB_DB_DBNAME: ${POSTGRES_DB}
+      MB_DB_DBNAME: ${POSTGRES_METABASE_DB}
       MB_DB_PORT: 5432
       MB_DB_USER: ${POSTGRES_USER}
       MB_DB_PASS: ${POSTGRES_PASSWORD}
@@ -517,6 +507,8 @@ services:
       retries: 5
   client-web:
     hostname: client-web
+    profiles:
+      - expecting-mini-app
     build:
       context: ./client-web-panel
       dockerfile: Dockerfile
@@ -559,10 +551,5 @@ networks:
         - subnet: "${IP_RANGE_BASE}.0.0/26"
 
 volumes:
-  pgdata:
-  drizzle:
   caddy_data:
   caddy_config:
-  redis_data:
-  minio-data: 
-  clamav_db:

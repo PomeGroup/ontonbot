@@ -44,7 +44,7 @@ export async function buyTicket(_: any, formData: FormData) {
   const body = JSON.stringify(data);
 
   const mintReq = await fetch(
-    `${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/ticket/mint-request`,
+    `${env.NEXT_PUBLIC_API_BASE_URL}/ticket/mint-request`,
     {
       method: "POST",
       body,

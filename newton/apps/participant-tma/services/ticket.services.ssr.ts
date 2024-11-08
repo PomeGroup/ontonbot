@@ -11,7 +11,7 @@ export async function getTicketData(id: string) {
   }
 
   const eventResponse = await fetch(
-    `${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/event/${id}/ticket`,
+    `${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}/ticket`,
     {
       method: "GET",
       headers: {

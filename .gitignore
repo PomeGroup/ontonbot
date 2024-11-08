@@ -38,7 +38,11 @@ mini-app/.vercel
 mini-app/*.tsbuildinfo
 mini-app/next-env.d.ts
 
-data/
+data/clamav_data/*
+data/db_data/*
+data/minio_data/*
+data/redis_data/*
+data/drizzle_data/*
 
 .DS_Store
 

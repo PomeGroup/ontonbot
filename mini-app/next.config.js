@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   distDir: '.next', // Specify the output directory for builds
-  productionBrowserSourceMaps: true,
+  // productionBrowserSourceMaps: true,
   compress: true,
   images: {
     unoptimized: true,

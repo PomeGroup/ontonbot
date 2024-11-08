@@ -32,7 +32,7 @@ const SyncWallet = () => {
       // user.addWallet
       if (connectedWallet?.account.address && lunchParams?.initDataRaw) {
         fetch(
-          `${env.NEXT_PUBLIC_API_BASE_URL_ONTON.replace("/v1", "")}/trpc/users.addWallet`,
+          `${env.NEXT_PUBLIC_API_BASE_URL.replace("/v1", "")}/trpc/users.addWallet`,
           {
             headers: {
               "content-type": "application/json",

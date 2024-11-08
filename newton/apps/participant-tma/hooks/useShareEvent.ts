@@ -12,7 +12,7 @@ export function useShareEvent() {
       event_uuid: string;
     }) => {
       const res = await fetch(
-        `${env.NEXT_PUBLIC_API_BASE_URL_ONTON}/share-event?user_id=${user_id}&event_uuid=${event_uuid}`,
+        `${env.NEXT_PUBLIC_API_BASE_URL}/share-event?user_id=${user_id}&event_uuid=${event_uuid}`,
       );
 
       if (!res.ok) {
