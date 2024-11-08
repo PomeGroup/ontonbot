@@ -12,6 +12,6 @@ services:
       - clamav_db:/var/lib/clamav  # Persist virus definition database
     restart: unless-stopped
     env_file:
-      - .env
+      - ../.env
 volumes:
   clamav_db:

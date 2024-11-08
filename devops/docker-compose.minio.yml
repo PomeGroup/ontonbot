@@ -41,7 +41,7 @@ services:
         mc anonymous set download local/${MINIO_DOC_BUCKET}
         mc anonymous set download local/${MINIO_DOC_DEFAULT_BUCKET}
     env_file:
-      - .env
+      - ../.env
 volumes:
   minio-data:
     driver: local
