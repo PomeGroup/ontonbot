@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
+    "os"
 	"github.com/hibiken/asynq"
 	"github.com/tonft-app/highload-wallet-server/highload"
 )
@@ -142,7 +142,10 @@ func main() {
 	mux.Handle("/send", isAuthorizedMiddleware(http.HandlerFunc(sendHandler)))
 	mux.Handle("/createHighloadWallet", isAuthorizedMiddleware(http.HandlerFunc(createHighloadWalletHandler)))
 
-	port := "9999"
+	port := os.Getenv("GOLANG_SERVER_PORT")
+	if port == "" {
+		port = "9999" // Fallback to the default port if not set
+	}
 	fmt.Printf("Server is starting at port %s...\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, mux))
 }

@@ -678,7 +678,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         formData.append("fileName", eventData?.title || "visitors");
         const userId = opts.ctx.user.user_id;
         const response = await axios.post(
-          `http://telegram-bot:3333/send-file?id=${userId}`,
+          `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-file?id=${userId}`,
           formData,
           {
             headers: {
@@ -707,7 +707,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     .mutation(async (opts) => {
       try {
         const response = await axios.get(
-          "http://telegram-bot:3333/generate-qr",
+          `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/generate-qr`,
           {
             params: {
               id: opts.ctx.user.user_id,

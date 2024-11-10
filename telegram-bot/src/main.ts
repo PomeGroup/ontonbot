@@ -32,7 +32,7 @@ bot.catch((err) => {
 
 // -------- EXPRESS APP --------- 👇
 
-const port = 3333;
+const port = process.env.TELEGRAM_BOT_PORT || 3333;
 const app = express();
 
 app.use(bodyParser.json());

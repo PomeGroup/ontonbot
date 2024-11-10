@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "dotenv -e ../../../.env -- next dev --port 3001",
-    "build-local": "dotenv -e ../../../.env -- next build",
+    "dev": "dotenv -e ../../../.env -- cross-var  next dev --port %PARTICIPANT_TMA_PORT%",
+    "build:local": "dotenv -e ../../../.env  -- cross-var next build",
     "build": "next build",
     "start": "next start",
-    "start-local": "dotenv -e ../../../.env -- next start --port 3001",
+    "start:local": "dotenv -e ../../../.env -- cross-var  next start --port %PARTICIPANT_TMA_PORT%",
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
@@ -45,6 +45,7 @@
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",
+    "cross-var": "^1.1.0",
     "dotenv-cli": "^7.4.2",
     "eslint": "^8.56.0",
     "postcss": "^8.4.38",

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const tgClient = axios.create({
-  baseURL: "http://telegram-bot:3333",
+  baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
 });
 
 import { AxiosError } from "axios";
@@ -13,7 +13,7 @@ export const sendTelegramMessage = async (props: {
 }) => {
   try {
     const response = await tgClient.post(
-      "http://telegram-bot:3333/send-message",
+      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-message`,
       {
         chat_id: props.chat_id,
         custom_message: props.message,

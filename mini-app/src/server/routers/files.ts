@@ -96,22 +96,26 @@ export const fieldsRouter = router({
 
       // Append the bucket name to the form data
       formData.append("bucketName", bucketName);
-      console.log("---Bucket Name: ", bucketName); // Log the bucket name for debugging
-        console.log("process.env.FILE_UPLOAD_URL", process.env.FILE_UPLOAD_URL)
       // Send the image data to the upload service (MinIO)
-      const res = await axios.post(
-          ( process.env.UPLOADER_ADDRESS && process.env.FILE_UPLOAD_URL ) ? process.env.UPLOADER_ADDRESS + process.env.FILE_UPLOAD_URL :  "http://nft-microcervise:7863/files/upload",
-        formData,
-        { headers: formData.getHeaders() }
-      );
+      const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload`;
+      console.log("URL: ", url);
+        try {
+            const res = await axios.post(
+                url,
+                formData,
+                { headers: formData.getHeaders() }
+            );
+            console.log("Response: ", res.data);
 
-      // Handle response and ensure the upload was successful
-      if (!res.data || !res.data.imageUrl) {
-        throw new Error("File upload failed");
-      }
+            if (!res.data || !res.data.imageUrl) {
+                throw new Error("File upload failed");
+            }
 
-      // Return the public URL of the uploaded image
-      return res.data as { imageUrl: string };
+            return res.data as { imageUrl: string };
+        } catch (error) {
+            console.error("Error during file upload:", error);
+            throw new Error("An error occurred during file upload");
+        }
     }),
   uploadVideo: adminOrganizerProtectedProcedure
     .input(
@@ -174,10 +178,9 @@ export const fieldsRouter = router({
       });
 
       formData.append("bucketName", bucketName);
-
-      const res = await axios.post(
-          ( process.env.UPLOADER_ADDRESS && process.env.VIDEO_UPLOAD_URL ) ? process.env.UPLOADER_ADDRESS + process.env.VIDEO_UPLOAD_URL :
-          "http://nft-microcervise:7863/files/upload-video",
+        const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-video`;
+        const res = await axios.post(
+            url,
         formData,
         { headers: formData.getHeaders() }
       );

@@ -5,7 +5,7 @@ let redisClient: RedisClientType | undefined;
 const connectToRedis = async (): Promise<void> => {
   if (!redisClient) {
     redisClient = createClient({
-      url: `redis://${process.env.REDIS_HOST || "redis"}:${process.env.REDIS_PORT || 6379}`,
+      url: `redis://${process.env.IP_REDIS || "redis"}:${process.env.REDIS_PORT || 6379}`,
     });
 
     redisClient.on("error", (err) => {

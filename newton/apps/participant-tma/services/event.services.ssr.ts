@@ -6,6 +6,7 @@ import { EventDataOnlyType, EventType } from "~/types/event.types"
 export async function getEventDataOnly(
   id: string,
 ): Promise<EventDataOnlyType | null> {
+  console.log("getEventDataOnly", id , env.NEXT_PUBLIC_API_BASE_URL);
   const eventResponse = await fetch(
     `${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}?data_only=true`,
     {
@@ -15,7 +16,7 @@ export async function getEventDataOnly(
       }
     },
   );
-
+  console.log(eventResponse);
   if (!eventResponse.ok) {
     return null;
   }

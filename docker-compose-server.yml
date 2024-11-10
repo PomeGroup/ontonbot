@@ -1,0 +1,495 @@
+x-common-extra-hosts: &default-extra-hosts
+  extra_hosts:
+    - "${MINI_APP_DOMAIN}:${IP_RANGE_BASE}"
+
+x-common-env: &common-env
+  ACME_AGREE: true
+  BOT_TOKEN: ${BOT_TOKEN}
+  CLIENT_WEB_DOMAIN: ${CLIENT_WEB_DOMAIN}
+  DATABASE_URL: ${DATABASE_URL}
+  DATABASE_URL_NFT_MANAGER: ${DATABASE_URL_NFT_MANAGER}
+  ENV: ${ENV}
+  GOLANG_SERVER_PORT: ${GOLANG_SERVER_PORT}
+  IP_CLAMAV: ${IP_CLAMAV}
+  IP_CLIENT_WEB: ${IP_CLIENT_WEB}
+  IP_METABASE: ${IP_METABASE}
+  IP_MINI_APP: ${IP_MINI_APP}
+  IP_MINIO: ${IP_MINIO}
+  IP_PARTICIPANT_TMA: ${IP_PARTICIPANT_TMA}
+  IP_PGADMIN: ${IP_PGADMIN}
+  IP_RANGE_BASE: ${IP_RANGE_BASE}
+  IP_SWAGGER_UI: ${IP_SWAGGER_UI}
+  IP_TELEGRAM_BOT: ${IP_TELEGRAM_BOT}
+  IP_WEBSITE: ${IP_WEBSITE}
+  IP_NFT_MANAGER: ${IP_NFT_MANAGER}
+  LOCAL_DOMAIN: ${LOCAL_DOMAIN}
+  METABASE_DOMAIN: ${METABASE_DOMAIN}
+  MINI_APP_DOMAIN: ${MINI_APP_DOMAIN}
+  MINI_APP_PORT: ${MINI_APP_PORT}
+  MINIO_COLLECTION_BUCKET: ${MINIO_COLLECTION_BUCKET}
+  MINIO_DASHBOARD_PORT: ${MINIO_DASHBOARD_PORT}
+  MINIO_DOC_BUCKET: ${MINIO_DOC_BUCKET}
+  MINIO_DOC_DEFAULT_BUCKET: ${MINIO_DOC_DEFAULT_BUCKET}
+  MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+  MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
+  MINIO_ITEM_BUCKET: ${MINIO_ITEM_BUCKET}
+  MINIO_PORT: ${MINIO_PORT}
+  MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+  MINIO_REGION_NAME: ${MINIO_REGION_NAME}
+  MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+  MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+  MINIO_SBT_COLLECTIONS_BUCKET: ${MINIO_SBT_COLLECTIONS_BUCKET}
+  MINIO_STORAGE_ADMIN_DOMAIN: ${MINIO_STORAGE_ADMIN_DOMAIN}
+  MINIO_STORAGE_DOMAIN: ${MINIO_STORAGE_DOMAIN}
+  MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
+  MONITORING_DOMAIN: ${MONITORING_DOMAIN}
+  NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
+  NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
+  NEXT_PUBLIC_GTM: ${NEXT_PUBLIC_GTM}
+  NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
+  NODE_ENV: ${NODE_ENV}
+  NODE_TLS_REJECT_UNAUTHORIZED: ${NODE_TLS_REJECT_UNAUTHORIZED}
+  ONTON_API_KEY: ${ONTON_API_KEY}
+  ONTON_DOMAIN: ${ONTON_DOMAIN}
+  PARTICIPANT_TMA_PORT: ${PARTICIPANT_TMA_PORT}
+  PGADMIN_DOMAIN: ${PGADMIN_DOMAIN}
+  PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
+  CLAMAV_PORT: ${CLAMAV_PORT}
+  PORT_METABASE: ${PORT_METABASE}
+  PORT_PGADMIN: ${PORT_PGADMIN}
+  PORT_WEB_SITE: ${PORT_WEB_SITE}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_PORT: ${POSTGRES_PORT}
+  POSTGRES_USER: ${POSTGRES_USER}
+  NFT_MANAGER_PORT: ${NFT_MANAGER_PORT}
+  REDIS_DATABASES: ${REDIS_DATABASES}
+  REDIS_HOST: ${IP_REDIS}
+  REDIS_PASSWORD: ${REDIS_PASSWORD}
+  REDIS_PORT: ${REDIS_PORT}
+  TELEGRAM_BOT_PORT: ${TELEGRAM_BOT_PORT}
+  TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
+  TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
+
+
+services:
+  caddy:
+    image: caddy:latest
+    build:
+      context: ./devops/caddy
+      dockerfile: Dockerfile
+    container_name: ${ENV}-caddy
+    restart: unless-stopped
+    profiles:
+      - front-end-development
+      - minimal
+      - expecting-mini-app
+      - full
+    ports:
+      - "${NETWORK_PUBLIC_IP}:80:80"
+      - "${NETWORK_PUBLIC_IP}:443:443"
+      - "${NETWORK_PUBLIC_IP}:443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
+      - ./devops/cert:/certs
+    networks:
+      onton-network:
+        ipv4_address: "${IP_CADDY}"
+    environment:
+      <<: *common-env
+      USE_CLOUDFLARE: ${USE_CLOUDFLARE}
+      CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+    entrypoint: /usr/bin/envsh/generate-caddyfile.sh
+
+  minio:
+    hostname: minio
+    container_name: ${STAGE_NAME}-minio
+    image: minio/minio
+    restart: unless-stopped
+    profiles:
+      - front-end-development
+      - expecting-mini-app
+      - minimal
+      - full
+    networks:
+      onton-network:
+        ipv4_address: "${IP_MINIO}"
+#    ports:
+#      - "${MINIO_PORT}:${MINIO_PORT}"
+#      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
+    volumes:
+      - minio_data:/data
+      - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
+    entrypoint: ["/usr/bin/entrypoint.sh"]  # Use the custom entrypoint script
+    environment:
+      <<: *common-env
+
+  postgres:
+    hostname: postgres
+    container_name : ${STAGE_NAME}-postgres
+    image: postgres:16.3-alpine3.20
+    restart: unless-stopped
+#    ports:
+#      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    profiles:
+      - front-end-development
+      - expecting-mini-app
+      - full
+      - minimal
+    environment:
+      <<: *common-env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      onton-network:
+        ipv4_address: "${IP_POSTGRES}"
+
+  redis:
+    image: redis:7.4.1-bookworm
+    hostname: redis
+    container_name: ${STAGE_NAME}-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+#    ports:
+#      - "${REDIS_PORT}:${REDIS_PORT}"
+    profiles:
+      - front-end-development
+      - expecting-mini-app
+      - minimal
+      - full
+    command: redis-server --save "" --appendonly no
+    environment:
+        <<: *common-env
+    networks:
+      onton-network:
+        ipv4_address: ${IP_REDIS}
+
+  clamav:
+    image: mkodockx/docker-clamav
+    hostname: clamav
+    container_name: ${STAGE_NAME}-clamav
+#    ports:
+#      - "${CLAMAV_PORT}:3310"
+    profiles:
+      - front-end-development
+      - manual-apps
+      - full
+    environment:
+      - CLAMD_SETTINGS_MAXQUEUE=200
+      - CLAMD_SETTINGS_LOGTIME=1
+    volumes:
+      - clamav_data:/var/lib/clamav  # Persist virus definition database
+    restart: unless-stopped
+    networks:
+        onton-network:
+            ipv4_address: "${IP_CLAMAV}"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ${STAGE_NAME}-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    profiles:
+      - full
+      - manual-apps
+      - minimal
+#    ports:
+#      - "${PORT_PGADMIN}:80"
+    depends_on:
+      - postgres
+    networks:
+      onton-network:
+        ipv4_address: ${IP_PGADMIN}
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+
+  telegram-bot:
+    container_name: ${STAGE_NAME}-telegram-bot
+    build: ./telegram-bot
+    restart: "unless-stopped"
+#    ports:
+#      - "${TELEGRAM_BOT_PORT}:${TELEGRAM_BOT_PORT}"
+    profiles:
+      - front-end-development
+      - manual-apps
+      - full
+    environment:
+      <<: *common-env
+    depends_on:
+      - postgres
+    networks:
+      onton-network:
+        ipv4_address: "${IP_TELEGRAM_BOT}"
+
+  mini-app:
+    hostname: mini-app
+    container_name: ${STAGE_NAME}-mini-app
+#    ports:
+#      - "${MINI_APP_PORT}:${MINI_APP_PORT}"
+    profiles:
+      - full
+    build:
+      context: ./mini-app
+      target: production-stage
+      args:
+        <<: *common-env
+    restart: "unless-stopped"
+    environment:
+        <<: *common-env
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - drizzle_data:/app/drizzle
+    networks:
+      onton-network:
+        ipv4_address: ${IP_MINI_APP}
+
+  mini-app-cron:
+    hostname: mini-app
+    container_name: ${STAGE_NAME}-mini-app-cron
+    build:
+      context: ./mini-app
+      target: production-stage
+      args:
+        <<: *common-env
+    restart: "unless-stopped"
+    profiles:
+      - full
+    environment:
+        <<: *common-env
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      onton-network:
+        ipv4_address: "${IP_MINI_APP_CRON}"
+    command: ["pnpm","run", "start-cron"]
+
+  participant-tma:
+    hostname: participant-tma
+    container_name: ${STAGE_NAME}-participant-tma
+    <<: *default-extra-hosts
+#    ports:
+#      - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
+    profiles:
+      - full
+    build: 
+      context: ./newton/
+      target: participant-tma
+      args:
+        <<: *common-env
+    restart: "unless-stopped"
+    environment:
+        <<: *common-env
+    networks:
+      onton-network:
+        ipv4_address: "${IP_PARTICIPANT_TMA}"
+
+  nft-microservice:
+    hostname: nft-service
+    container_name : ${STAGE_NAME}-nft-service
+    build:
+      context: ./newton/apps/nft-manager
+      dockerfile: Dockerfile
+    restart: unless-stopped
+#    ports:
+#      - "${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"
+    profiles:
+      - front-end-development
+      - manual-apps
+      - full
+    environment:
+      <<: *common-env
+      MNEMONIC: ${MNEMONIC}
+    networks:
+      onton-network:
+        ipv4_address: "${IP_NFT_MANAGER}"
+
+  giveaway-checker:
+    container_name: ${STAGE_NAME}-giveaway-checker
+    build:
+      context: ./giveaway-checker
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    profiles:
+      - full
+    depends_on:
+      - postgres
+    environment:
+        <<: *common-env
+    networks:
+      onton-network:
+        ipv4_address: "${IP_GIVEAWAY_CHECKER}"
+
+  website:
+    hostname: website
+    container_name: ${STAGE_NAME}-website
+    build:
+        context: ./website
+        args:
+            <<: *common-env
+    restart: "unless-stopped"
+    profiles:
+      - full
+#    depends_on:
+#     - caddy
+    ports:
+      - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
+    environment:
+        <<: *common-env
+    networks:
+      onton-network:
+        ipv4_address: ${IP_WEBSITE}
+
+  golang-server:
+    container_name: ${STAGE_NAME}-golang-server
+    build:
+      context: ./golang-server
+      dockerfile: ./server/Dockerfile
+    restart: unless-stopped
+#    ports:
+#      - "${GOLANG_SERVER_PORT}:${GOLANG_SERVER_PORT}"
+    profiles:
+      - expecting-mini-app
+      - full
+    depends_on:
+      - redis
+    environment:
+      <<: *common-env
+    networks:
+      onton-network:
+        ipv4_address: ${IP_GOLANG_SERVER}
+
+  golang-worker:
+    container_name: ${STAGE_NAME}-golang-worker
+    build:
+      context: ./golang-server
+      dockerfile: ./worker/Dockerfile
+    restart: unless-stopped
+    profiles:
+      - expecting-mini-app
+      - full
+    depends_on:
+      - redis
+    environment:
+        <<: *common-env
+    networks:
+      onton-network:
+        ipv4_address: ${IP_GOLANG_WORKER}
+
+  metabase:
+    image: metabase/metabase:v0.50.18.3
+    hostname: metabase
+    container_name: ${STAGE_NAME}-metabase
+    restart: unless-stopped
+#    ports:
+#      - "${PORT_METABASE}:3000"
+    profiles:
+      - full
+    volumes:
+      - /dev/urandom:/dev/random:ro
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${POSTGRES_METABASE_DB}
+      MB_DB_PORT: ${POSTGRES_PORT}
+      MB_DB_USER: ${POSTGRES_USER}
+      MB_DB_PASS: ${POSTGRES_PASSWORD}
+      MB_LOG_LEVEL: error
+      MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
+      MB_REDIRECT_ALL_REQUESTS_TO_HTTPS: ${MB_REDIRECT_ALL_REQUESTS_TO_HTTPS}
+    networks:
+      onton-network:
+        ipv4_address: ${IP_METABASE}
+    depends_on:
+      - postgres
+    healthcheck:
+      test: curl --fail -I http://localhost:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  client-web:
+    hostname: client-web
+    container_name: ${STAGE_NAME}-client-web
+    <<: *default-extra-hosts
+#    ports:
+#      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
+    profiles:
+      - full
+    build:
+      context: ./client-web-panel
+      dockerfile: Dockerfile
+      target: production
+      args:
+        ENV_TYPE : production
+        NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+        CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
+        CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
+        CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
+        CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+        PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
+    restart: "unless-stopped"
+    environment:
+      NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+      CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
+      CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
+      CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
+      CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
+#    depends_on:
+#      - caddy
+    networks:
+      onton-network:
+        ipv4_address: ${IP_CLIENT_WEB}
+
+#  swagger-ui:
+#    image: swaggerapi/swagger-ui
+#    environment:
+#      SWAGGER_JSON: /swagger.yaml
+#    volumes:
+#      - ./swagger/swagger.yaml:/swagger.yaml
+##    depends_on:
+##      - caddy
+#    networks:
+#      onton-network:
+#        ipv4_address: "${IP_SWAGGER_UI}"
+
+networks:
+  onton-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.host_binding_ipv4: ${NETWORK_PUBLIC_IP}
+    name: ${NETWORK_NAME}
+    ipam:
+      config:
+        - subnet: "${IP_RANGE_START}.0.0/${IP_RANGE_SUBNET}"
+
+volumes:
+    pgadmin:
+      name: "${STAGE_NAME}_pgadmin"
+    clamav_data:
+      name: "${STAGE_NAME}_clamav_data"
+    minio_data:
+      name: "${STAGE_NAME}_minio_data"
+    db_data:
+      name: "${STAGE_NAME}_db_data"
+    redis_data:
+      name: "${STAGE_NAME}_redis_data"
+    drizzle_data:
+        name: "${STAGE_NAME}_drizzle_data"
+    drizzle_data_cron:
+      name: "${STAGE_NAME}_drizzle_data_cron"
+    caddy_data:
+      name: "${STAGE_NAME}_caddy_data"
+    caddy_config:
+      name: "${STAGE_NAME}_caddy_config"
+
+

@@ -39,10 +39,12 @@ mini-app/*.tsbuildinfo
 mini-app/next-env.d.ts
 
 data/clamav_data/*
-data/db_data/*
+data/db_data
 data/minio_data/*
 data/redis_data/*
 data/drizzle_data/*
+devops/env_per_stages/.env.prod
+devops/env_per_stages/*
 
 .DS_Store
 
