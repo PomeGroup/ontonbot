@@ -17,24 +17,30 @@ COPY . .
 FROM base AS local
 
 ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
+ARG PORT_CLIENT_WEB
 ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
-
+ENV PORT_CLIENT_WEB=$PORT_CLIENT_WEB
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE $PORT_CLIENT_WEB
 # Command to run the application in development mode
 CMD ["npm", "run", "dev"]
 
 # Stage for production build
 FROM base AS build
 ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
+ARG PORT_CLIENT_WEB
 ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
+ENV PORT_CLIENT_WEB=$PORT_CLIENT_WEB
 RUN npm install
 # Build the application
 RUN npm run build
 
 # Final stage for production
 FROM node:21-alpine AS production
-
+ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
+ARG PORT_CLIENT_WEB
+ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
+ENV PORT_CLIENT_WEB=$PORT_CLIENT_WEB
 # Set the working directory
 WORKDIR /usr/src/app
 
@@ -45,10 +51,10 @@ COPY --from=build /usr/src/app ./
 RUN npm install
 
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE $PORT_CLIENT_WEB
 
 # Command to run the application in production mode
-CMD ["npm", "start"]
+CMD npm run start -- -p $PORT_CLIENT_WEB
 
 
 
@@ -71,11 +77,13 @@ RUN npm install
 COPY . .
 #NEXT_PUBLIC_BACKEND_URL_CLIENT
 ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
+ARG PORT_CLIENT_WEB
 ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
+ENV PORT_CLIENT_WEB=$PORT_CLIENT_WEB
 
 # Build the application
 RUN npm run build
 # Expose the application on port 3000
-EXPOSE 3000
+EXPOSE $PORT_CLIENT_WEB
 # Specify the command to run on container start
-CMD ["npm", "start" ]
+CMD npm run start -- -p $PORT_CLIENT_WEB

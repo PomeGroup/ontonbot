@@ -1,10 +1,12 @@
-#!/bin/sh
-echo "${LOCAL_DOMAIN} {
-    tls /certs/fullchain.pem /certs/privkey.pem {
-        protocols tls1.2 tls1.3
+{
+    admin :2019
+    log {
+        output stdout
+        format json
     }
-    reverse_proxy /ptma* http://${IP_RANGE_BASE}:${PARTICIPANT_TMA_PORT}
-    reverse_proxy  http://${IP_RANGE_BASE}:${MINI_APP_PORT}
+    servers {
+        metrics
+    }
 }
 
 app.toncloud.observer {
@@ -15,8 +17,8 @@ app.toncloud.observer {
         output stdout
         format json
     }
-    reverse_proxy /ptma* http://${IP_RANGE_BASE}:${PARTICIPANT_TMA_PORT}
-    reverse_proxy  http://${IP_RANGE_BASE}:${MINI_APP_PORT}
+    reverse_proxy /ptma* participant-tma:3000
+    reverse_proxy mini-app:3000
 }
 
 metabase.toncloud.observer {
@@ -27,7 +29,19 @@ metabase.toncloud.observer {
         output stdout
         format json
     }
-    reverse_proxy ${IP_RANGE_BASE}:${PORT_METABASE}
+    reverse_proxy metabase:3000
+}
+
+toncloud.observer {
+    tls /certs/fullchain.pem /certs/privkey.pem {
+        protocols tls1.2 tls1.3
+    }
+    log {
+        output stdout
+       format json
+    }
+    reverse_proxy /ptma* participant-tma:3000
+    reverse_proxy mini-app:3000
 }
 
 storage.toncloud.observer {
@@ -38,7 +52,7 @@ storage.toncloud.observer {
         output stdout
         format json
     }
-    reverse_proxy http://${IP_MINIO}:${MINIO_PORT}
+    reverse_proxy minio:9000
 }
 
 storage-admin.toncloud.observer {
@@ -49,7 +63,7 @@ storage-admin.toncloud.observer {
         output stdout
         format json
     }
-    reverse_proxy http://${IP_RANGE_BASE}:${MINIO_DASHBOARD_PORT}
+    reverse_proxy minio:9001
 }
 
 monitoring.toncloud.observer {
@@ -82,19 +96,12 @@ client-web.toncloud.observer {
         output stdout
         format json
     }
-    reverse_proxy ${IP_RANGE_BASE}:${PORT_CLIENT_WEB}
+    reverse_proxy client-web:3000
 }
 
 web.toncloud.observer {
     tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3
     }
-    reverse_proxy ${IP_RANGE_BASE}:${PORT_WEB_SITE}
+    reverse_proxy website:3000
 }
-
-
-
-
-" > /etc/caddy/Caddyfile
-
-exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile

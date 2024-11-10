@@ -34,6 +34,11 @@ ARG TG_NOTIFICATION_CHANELL
 ARG ONTON_API_SECRET
 ARG TON_SOCIETY_API_KEY
 ARG TON_SOCIETY_BASE_URL
+ARG REDIS_HOST
+ARG REDIS_PORT
+ARG REDIS_PASSWORD
+ARG REDIS_DATABASES
+ARG MINI_APP_PORT
 
 # Export arguments as environment variables
 ENV NODE_ENV=${NODE_ENV}
@@ -52,6 +57,11 @@ ENV TG_NOTIFICATION_CHANELL=${TG_NOTIFICATION_CHANELL}
 ENV ONTON_API_SECRET=${ONTON_API_SECRET}
 ENV TON_SOCIETY_API_KEY=${TON_SOCIETY_API_KEY}
 ENV TON_SOCIETY_BASE_URL=${TON_SOCIETY_BASE_URL}
+ENV REDIS_HOST=${REDIS_HOST}
+ENV REDIS_PORT=${REDIS_PORT}
+ENV REDIS_PASSWORD=${REDIS_PASSWORD}
+ENV REDIS_DATABASES=${REDIS_DATABASES}
+ENV MINI_APP_PORT=${MINI_APP_PORT}
 
 RUN npm install -g pnpm
 # Set working directory
@@ -72,8 +82,10 @@ FROM node:20.13.1-alpine3.20 AS production-stage
 # ARG for build-time environment variables
 ARG NODE_ENV=production
 ARG ENV=production
+ARG MINI_APP_PORT
 ENV NODE_ENV=${NODE_ENV}
 ENV ENV=${ENV}
+ENV MINI_APP_PORT=${MINI_APP_PORT}
 
 # Install pnpm in the production stage to ensure it's available
 RUN npm install -g pnpm
@@ -92,7 +104,7 @@ COPY --from=build-stage /app/tsconfig.json ./tsconfig.json
 COPY --from=build-stage /app/tailwind.config.js ./tailwind.config.js
 
 # Expose the necessary port for mini-app (Next.js)
-EXPOSE 3000
+EXPOSE $MINI_APP_PORT
 
 # Default command for the Next.js app
-CMD ["pnpm", "run", "start"]
+CMD node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT

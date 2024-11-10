@@ -3,13 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "dotenv -e ../.env -- cross-var   next dev --port %PORT_WEB_SITE% ",
     "build": "next build",
-    "start": "next start",
+    "build:local": "dotenv -e ../.env -- next build",
+    "start": "cross-env next start --port $PORT_WEB_SITE",
+    "start:local": "dotenv -e ../.env -- cross-var   next start --port %PORT_WEB_SITE%",
     "lint": "next lint"
   },
   "dependencies": {
     "@lottiefiles/dotlottie-react": "^0.8.12",
+    "cross-env": "^7.0.3",
     "next": "14.2.5",
     "react": "^18",
     "react-dom": "^18"
@@ -17,6 +20,8 @@
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",
     "autoprefixer": "^10.4.19",
+    "cross-var": "^1.1.0",
+    "dotenv-cli": "^7.4.2",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "postcss": "^8.4.40",

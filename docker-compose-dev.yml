@@ -1,3 +1,7 @@
+x-common-extra-hosts: &default-extra-hosts
+  extra_hosts:
+    - "${MINI_APP_DOMAIN}:${IP_RANGE_BASE}"
+
 services:
   minio:
     hostname: minio
@@ -9,9 +13,9 @@ services:
       - full
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.10"
+        ipv4_address: "${IP_MINIO}"
     ports:
-      - "${MINIO_PORT}:${MINIO_PORT}"
+#      - "${MINIO_PORT}:${MINIO_PORT}"
       - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
       - ./data/minio_data:/data
@@ -37,7 +41,7 @@ services:
     image: mkodockx/docker-clamav
     hostname: clamav
     ports:
-      - "3310:3310"
+      - "${CLAMAV_PORT}:3310"
     profiles:
       - essential
       - expecting-mini-app
@@ -50,12 +54,13 @@ services:
     restart: unless-stopped
     networks:
         onton-dev:
-            ipv4_address: "${IP_RANGE_BASE}.0.26"
+            ipv4_address: "${IP_CLAMAV}"
   
   participant-tma:
     hostname: participant-tma
+    <<: *default-extra-hosts
     ports:
-      - "3001:3000"
+      - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
     profiles:
       - expecting-mini-app
       - full
@@ -65,11 +70,15 @@ services:
       args:
         NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
-
+        MINI_APP_DOMAIN: ${MINI_APP_DOMAIN}
+        MINI_APP_PORT: ${MINI_APP_PORT}
+        PARTICIPANT_TMA_PORT: ${PARTICIPANT_TMA_PORT}
+        IP_PARTICIPANT_TMA: ${IP_PARTICIPANT_TMA}
         PTMA_API_BASE_URL : ${PTMA_API_BASE_URL}
         ONTON_API_KEY: ${ONTON_API_KEY}
         BOT_TOKEN: ${BOT_TOKEN}
         NEXT_PUBLIC_GTM: ${NEXT_PUBLIC_GTM}
+        NODE_TLS_REJECT_UNAUTHORIZED: ${NODE_TLS_REJECT_UNAUTHORIZED}
     restart: "unless-stopped"
     environment:
       ENV: ${ENV}
@@ -81,6 +90,10 @@ services:
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
       NEXT_PUBLIC_GTM: ${NEXT_PUBLIC_GTM}
       NEXT_PUBLIC_BOT_USERNAME: ${NEXT_PUBLIC_BOT_USERNAME}
+      MINI_APP_DOMAIN: ${MINI_APP_DOMAIN}
+      MINI_APP_PORT: ${MINI_APP_PORT}
+      PARTICIPANT_TMA_PORT: ${PARTICIPANT_TMA_PORT}
+      IP_PARTICIPANT_TMA: ${IP_PARTICIPANT_TMA}
       PTMA_API_BASE_URL: ${PTMA_API_BASE_URL}
       TONAPI_API_KEY: ${TONAPI_API_KEY}
       TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
@@ -91,7 +104,7 @@ services:
       BOT_TOKEN: ${BOT_TOKEN}
       BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
       TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
-      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
+      REDIS_HOST: "${IP_REDIS}"
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -104,9 +117,10 @@ services:
       MINIO_COLLECTION_BUCKET: ${MINIO_COLLECTION_BUCKET}
       MINIO_ITEM_BUCKET: ${MINIO_ITEM_BUCKET}
       MINIO_DASHBOARD_PORT: ${MINIO_DASHBOARD_PORT}
+      NODE_TLS_REJECT_UNAUTHORIZED: ${NODE_TLS_REJECT_UNAUTHORIZED}
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.12"
+        ipv4_address: "${IP_PARTICIPANT_TMA}"
 
   nft-microservice:
     hostname: nft-service
@@ -115,7 +129,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "127.0.0.0:${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"
+      - "${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"
     profiles:
       - expecting-mini-app
       - full
@@ -138,7 +152,7 @@ services:
       BOT_TOKEN: ${BOT_TOKEN}
       BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
       TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
-      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
+      REDIS_HOST: "${IP_REDIS}"
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -154,7 +168,7 @@ services:
       NFT_MANAGER_PORT: ${NFT_MANAGER_PORT}
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.13"
+        ipv4_address: "${IP_NFT_MANAGER}"
 
   postgres:
     hostname: postgres
@@ -174,7 +188,7 @@ services:
       - ./data/db_data:/var/lib/postgresql/data
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.14"
+        ipv4_address: "${IP_POSTGRES}"
 
   redis:
     image: redis:7.4.1-bookworm
@@ -188,15 +202,15 @@ services:
       - essential
       - expecting-mini-app
       - full
-    command: redis-server --appendonly yes
+    command: redis-server --save "" --appendonly no
     environment:
-      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
+      REDIS_HOST: ${IP_REDIS}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.15"
+        ipv4_address: ${IP_REDIS}
 
   giveaway-checker:
     build:
@@ -213,15 +227,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       TONAPI_API_KEY: ${TONAPI_API_KEY}
+      GOLANG_SERVER_PORT: ${GOLANG_SERVER_PORT}
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.16"
+        ipv4_address: "${IP_GIVEAWAY_CHECKER}"
 
   telegram-bot:
     build: ./telegram-bot
     restart: "unless-stopped"
     ports:
-      - "3333:3333"
+      - "${TELEGRAM_BOT_PORT}:${TELEGRAM_BOT_PORT}"
     profiles:
       - expecting-mini-app
       - full
@@ -234,11 +249,12 @@ services:
       BOT_ADMINS_LIST: ${BOT_ADMINS_LIST}
       TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
       NEXT_PUBLIC_APP_BASE_URL: ${NEXT_PUBLIC_APP_BASE_URL}
+      TELEGRAM_BOT_PORT: ${TELEGRAM_BOT_PORT}
     depends_on:
       - postgres
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.17"
+        ipv4_address: "${IP_TELEGRAM_BOT}"
 
   caddy:
     image: caddy:latest
@@ -249,26 +265,41 @@ services:
       - expecting-mini-app
       - full
     ports:
-#      - "80:80"
+      - "80:80"
       - "443:443"
     volumes:
       - ./data/caddy_data:/data
       - ./data/caddy_config:/config
       - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
+      - ./devops/cert:/certs
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.18"
+        ipv4_address: "${IP_CADDY}"
     environment:
       - ACME_AGREE=true
       - LOCAL_DOMAIN=${LOCAL_DOMAIN}
       - IP_RANGE_BASE=${IP_RANGE_BASE}
+      - IP_MINIO=${IP_MINIO}
+      - MINIO_PORT=${MINIO_PORT}
+      - IP_WEBSITE=${IP_WEBSITE}
+      - PORT_WEB_SITE=${PORT_WEB_SITE}
+      - IP_METABASE=${IP_METABASE}
+      - PORT_METABASE=${PORT_METABASE}
+      - IP_CLIENT_WEB=${IP_CLIENT_WEB}
+      - PORT_CLIENT_WEB=${PORT_CLIENT_WEB}
+      - IP_SWAGGER_UI=${IP_SWAGGER_UI}
+      - IP_MINI_APP=${IP_MINI_APP}
+      - MINI_APP_PORT=${MINI_APP_PORT}
+      - IP_PARTICIPANT_TMA=${IP_PARTICIPANT_TMA}
+      - PARTICIPANT_TMA_PORT=${PARTICIPANT_TMA_PORT}
+      - MINIO_DASHBOARD_PORT=${MINIO_DASHBOARD_PORT}
     entrypoint: /usr/bin/envsh/generate-caddyfile.sh
 
 
   mini-app:
     hostname: mini-app
     ports:
-      - "3000:3000"
+      - "${MINI_APP_PORT}:${MINI_APP_PORT}"
     profiles:
       - full
     build:
@@ -291,11 +322,11 @@ services:
         TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
         FILE_UPLOAD_URL: "${UPLOADER_ADDRESS}${FILE_UPLOAD_URL}"
         VIDEO_UPLOAD_URL: "${UPLOADER_ADDRESS}${VIDEO_UPLOAD_URL}"
-        CLAMAV_HOST: "${IP_RANGE_BASE}.0.26"
+        CLAMAV_HOST: ${IP_CLAMAV}
         CLAMAV_PORT: ${CLAMAV_PORT}
         MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
         MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
-        REDIS_HOST: "${IP_RANGE_BASE}.0.15"
+        REDIS_HOST: ${IP_REDIS}
         REDIS_PORT: ${REDIS_PORT}
         REDIS_PASSWORD: ${REDIS_PASSWORD}
         REDIS_DATABASES: ${REDIS_DATABASES}
@@ -304,6 +335,9 @@ services:
         CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
         CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
         CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+        IP_TELEGRAM_BOT: ${IP_TELEGRAM_BOT}
+        TELEGRAM_BOT_PORT: ${TELEGRAM_BOT_PORT}
+        MINI_APP_PORT: ${MINI_APP_PORT}
     restart: "unless-stopped"
     environment:
       DATABASE_URL_NFT_MANAGER: "nulled in docker-compose for security"
@@ -322,11 +356,11 @@ services:
       TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
       FILE_UPLOAD_URL: "${UPLOADER_ADDRESS}${FILE_UPLOAD_URL}"
       VIDEO_UPLOAD_URL: "${UPLOADER_ADDRESS}${VIDEO_UPLOAD_URL}"
-      CLAMAV_HOST: "${IP_RANGE_BASE}.0.26"
+      CLAMAV_HOST: ${IP_CLAMAV}
       CLAMAV_PORT: ${CLAMAV_PORT}
       MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
       MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
-      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
+      REDIS_HOST: ${IP_REDIS}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -335,6 +369,9 @@ services:
       CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
       CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
       CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+      IP_TELEGRAM_BOT: ${IP_TELEGRAM_BOT}
+      TELEGRAM_BOT_PORT: ${TELEGRAM_BOT_PORT}
+      MINI_APP_PORT: ${MINI_APP_PORT}
     depends_on:
       - postgres
       - redis
@@ -342,7 +379,7 @@ services:
       - ./data/drizzle_data:/app/drizzle
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.19"
+        ipv4_address: ${IP_MINI_APP}
 
   mini-app-cron:
     hostname: mini-app
@@ -366,11 +403,11 @@ services:
         TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
         FILE_UPLOAD_URL: "${UPLOADER_ADDRESS}${FILE_UPLOAD_URL}"
         VIDEO_UPLOAD_URL: "${UPLOADER_ADDRESS}${VIDEO_UPLOAD_URL}"
-        CLAMAV_HOST: "${IP_RANGE_BASE}.0.26"
+        CLAMAV_HOST: ${IP_CLAMAV}
         CLAMAV_PORT: ${CLAMAV_PORT}
         MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
         MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
-        REDIS_HOST: "${IP_RANGE_BASE}.0.15"
+        REDIS_HOST: ${IP_REDIS}
         REDIS_PORT: ${REDIS_PORT}
         REDIS_PASSWORD: ${REDIS_PASSWORD}
         REDIS_DATABASES: ${REDIS_DATABASES}
@@ -399,11 +436,11 @@ services:
       TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
       FILE_UPLOAD_URL: "${UPLOADER_ADDRESS}${FILE_UPLOAD_URL}"
       VIDEO_UPLOAD_URL: "${UPLOADER_ADDRESS}${VIDEO_UPLOAD_URL}"
-      CLAMAV_HOST: "${IP_RANGE_BASE}.0.26"
+      CLAMAV_HOST: ${IP_CLAMAV}
       CLAMAV_PORT: ${CLAMAV_PORT}
       MINIO_IMAGE_BUCKET: ${MINIO_IMAGE_BUCKET}
       MINIO_VIDEO_BUCKET: ${MINIO_VIDEO_BUCKET}
-      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
+      REDIS_HOST: ${IP_REDIS}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
@@ -419,21 +456,30 @@ services:
       - ./data/drizzle_data:/app/drizzle
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.20"
+        ipv4_address: "${IP_MINI_APP_CRON}"
     command: ["pnpm","run", "start-cron"]
 
   website:
     hostname: website
-    build: ./website
+    build:
+        context: ./website
+        args:
+          - PORT_WEB_SITE=${PORT_WEB_SITE}
+          - IP_WEBSITE=${IP_WEBSITE}
     restart: "unless-stopped"
     profiles:
       - expecting-mini-app
       - full
 #    depends_on:
 #     - caddy
+    ports:
+      - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
+    environment:
+      - PORT_WEB_SITE=${PORT_WEB_SITE}
+      - IP_WEBSITE=${IP_WEBSITE}
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.21"
+        ipv4_address: ${IP_WEBSITE}
 
   golang-server:
     build:
@@ -441,20 +487,21 @@ services:
       dockerfile: ./server/Dockerfile
     restart: unless-stopped
     ports:
-      - "9999:9999"
+      - "${GOLANG_SERVER_PORT}:${GOLANG_SERVER_PORT}"
     profiles:
       - expecting-mini-app
       - full
     depends_on:
       - redis
     environment:
-      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
+      REDIS_HOST: ${IP_REDIS}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
+      GOLANG_SERVER_PORT: ${GOLANG_SERVER_PORT}
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.22"
+        ipv4_address: ${IP_GOLANG_SERVER}
 
   golang-worker:
     build:
@@ -467,20 +514,20 @@ services:
     depends_on:
       - redis
     environment:
-      REDIS_HOST: "${IP_RANGE_BASE}.0.15"
+      REDIS_HOST: ${IP_REDIS}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASES: ${REDIS_DATABASES}
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.23"
+        ipv4_address: ${IP_GOLANG_WORKER}
 
   metabase:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
     restart: unless-stopped
     ports:
-      - "3554:3000"
+      - "${PORT_METABASE}:3000"
     profiles:
       - full
     volumes:
@@ -488,7 +535,7 @@ services:
     environment:
       MB_DB_TYPE: postgres
       MB_DB_DBNAME: ${POSTGRES_METABASE_DB}
-      MB_DB_PORT: 5432
+      MB_DB_PORT: ${POSTGRES_PORT}
       MB_DB_USER: ${POSTGRES_USER}
       MB_DB_PASS: ${POSTGRES_PASSWORD}
       MB_LOG_LEVEL: error
@@ -496,7 +543,7 @@ services:
       MB_REDIRECT_ALL_REQUESTS_TO_HTTPS: ${MB_REDIRECT_ALL_REQUESTS_TO_HTTPS}
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.24"
+        ipv4_address: ${IP_METABASE}
     depends_on:
       - postgres
     healthcheck:
@@ -506,6 +553,9 @@ services:
       retries: 5
   client-web:
     hostname: client-web
+    <<: *default-extra-hosts
+    ports:
+      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
     profiles:
       - expecting-mini-app
       - full
@@ -520,6 +570,7 @@ services:
         CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
         CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
         CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+        PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
     restart: "unless-stopped"
     environment:
       NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
@@ -527,11 +578,12 @@ services:
       CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
       CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
       CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
 #    depends_on:
 #      - caddy
     networks:
       onton-dev:
-        ipv4_address: "${IP_RANGE_BASE}.0.25"
+        ipv4_address: ${IP_CLIENT_WEB}
 #  swagger-ui:
 #    image: swaggerapi/swagger-ui
 #    environment:
@@ -542,7 +594,7 @@ services:
 ##      - caddy
 #    networks:
 #      onton-dev:
-#        ipv4_address: "${IP_RANGE_BASE}.0.26"
+#        ipv4_address: "${IP_SWAGGER_UI}"
 networks:
   onton-dev:
     driver: bridge
@@ -550,6 +602,4 @@ networks:
       config:
         - subnet: "${IP_RANGE_BASE}.0.0/26"
 
-volumes:
-  caddy_data:
-  caddy_config:
+

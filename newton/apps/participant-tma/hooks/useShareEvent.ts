@@ -11,6 +11,9 @@ export function useShareEvent() {
       user_id: string;
       event_uuid: string;
     }) => {
+      console.log("user_id", user_id);
+      console.log("share url ", `${env.NEXT_PUBLIC_API_BASE_URL}/share-event?user_id=${user_id}&event_uuid=${event_uuid}`);
+
       const res = await fetch(
         `${env.NEXT_PUBLIC_API_BASE_URL}/share-event?user_id=${user_id}&event_uuid=${event_uuid}`,
       );

@@ -21,8 +21,8 @@ export default {
   experimental: {
     serverActions: {
       allowedOrigins: [
-        "localhost:3001",
-        "localhost:3000",
+        `${process.env.IP_PARTICIPANT_TMA}:${process.env.PARTICIPANT_TMA_PORT}`,
+        `${process.env.IP_MINI_APP}:${process.env.MINI_APP_PORT}`,
         "test-samy-1.alaki.store",
         "test-keyhan-1.alaki.store",
         "onton.live",
