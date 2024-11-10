@@ -9,7 +9,7 @@ import { TonConnectButton, useTonAddress } from "@tonconnect/ui-react";
 import { useUserStore } from "@/context/store/user.store";
 
 export const EventPasswordInput = () => {
-  const { initData, eventPasswordField } = useEventData()
+  const { initData, eventPasswordField, eventHash } = useEventData()
   const trpcUtils = trpc.useUtils();
   const { user } = useUserStore()
   const formRef = useRef<HTMLFormElement>(null)
@@ -29,7 +29,7 @@ export const EventPasswordInput = () => {
         toast.error(error.message)
       },
       onSuccess: () => {
-        trpcUtils.userEventFields.invalidate(undefined, { refetchType: "all" });
+        trpcUtils.userEventFields.getUserEventFields.refetch({ event_hash: eventHash })
       },
     });
 
