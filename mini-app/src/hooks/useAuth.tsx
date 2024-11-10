@@ -1,32 +1,16 @@
 import { trpc } from "@/app/_trpc/client";
 import { useEffect, useState } from "react";
-import useWebApp from "./useWebApp";
+import { useUserStore } from "@/context/store/user.store";
 
 const useAuth = () => {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const WebApp = useWebApp();
-  const initData = WebApp?.initData || "";
+  const { initData } = useUserStore()
 
   const validateUserInitDataQuery =
-    trpc.users.haveAccessToEventAdministration.useQuery(
-      { init_data: initData },
-      {
-        queryKey: [
-          "users.haveAccessToEventAdministration",
-          { init_data: initData },
-        ],
-        enabled: Boolean(initData),
-        retry: false,
-      }
-    );
+    trpc.users.haveAccessToEventAdministration.useQuery();
 
   useEffect(() => {
-    if (!initData) {
-      setIsLoading(false);
-      return;
-    }
-
     if (
       validateUserInitDataQuery.isLoading ||
       validateUserInitDataQuery.isError

@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import Script from "next/script";
 import React from "react";
 import UserSaver from "./_components/UserSaver";
-import Provider from "./_trpc/Provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -38,21 +37,19 @@ export default async function RootLayout({
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
       <body className={cn(inter.className)}>
         <Sentry.ErrorBoundary>
-          <Provider>
-            <Providers>
-              <UserSaver>
-                <main className="px-4 py-1">
-                  {process.env.ENV === "staging" && (
-                    <div className="flex justify-center bg-yellow-100 text-gray-600 py-2 text-xs">
-                      ⚠️ you are On Staging App ⚠️
-                    </div>
-                  )}
+          <Providers>
+            <UserSaver>
+              <main className="px-4 py-1">
+                {process.env.ENV === "staging" && (
+                  <div className="flex justify-center bg-yellow-100 text-gray-600 py-2 text-xs">
+                    ⚠️ you are On Staging App ⚠️
+                  </div>
+                )}
 
-                  {children}
-                </main>
-              </UserSaver>
-            </Providers>
-          </Provider>
+                {children}
+              </main>
+            </UserSaver>
+          </Providers>
         </Sentry.ErrorBoundary>
       </body>
     </html>

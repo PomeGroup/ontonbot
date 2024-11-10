@@ -1,6 +1,5 @@
 "use client";
 
-import useWebApp from "@/hooks/useWebApp";
 import { FC, ReactNode, useEffect } from "react";
 import EventSkeleton from "./molecules/skeletons/EventSkeleton";
 import { trpc } from "../_trpc/client";
@@ -10,14 +9,9 @@ import { useUserStore } from "@/context/store/user.store";
 const UserSaver: FC<{
   children: ReactNode;
 }> = ({ children }) => {
-  const WebApp = useWebApp();
   const { setUser } = useUserStore()
 
-  const syncUser = trpc.users.syncUser.useQuery({
-    init_data: WebApp?.initData!
-  }, {
-    enabled: Boolean(WebApp?.initData)
-  })
+  const syncUser = trpc.users.syncUser.useQuery()
 
   // Second effect: Handle user saving after WebApp is ready
   useEffect(() => {

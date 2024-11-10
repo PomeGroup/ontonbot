@@ -5,7 +5,7 @@ import { useEventData } from "./eventPageContext";
 import PasscodeIcon from "@/components/icons/Passcode";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import { Input } from "@/components/ui/input";
-import { TonConnectButton, useTonConnectUI, useTonAddress } from "@tonconnect/ui-react";
+import { TonConnectButton, useTonAddress } from "@tonconnect/ui-react";
 import { useUserStore } from "@/context/store/user.store";
 
 export const EventPasswordInput = () => {
@@ -13,14 +13,13 @@ export const EventPasswordInput = () => {
   const trpcUtils = trpc.useUtils();
   const { user } = useUserStore()
   const formRef = useRef<HTMLFormElement>(null)
-  const [tonConnectUI] = useTonConnectUI()
   const tonWalletAddress = useTonAddress()
 
   const addWalletMutation = trpc.users.addWallet.useMutation({
     onSuccess: () => {
       trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
       trpcUtils.users.getWallet.invalidate({}, { refetchType: "all" });
-      trpcUtils.users.syncUser.invalidate({}, { refetchType: "all" });
+      trpcUtils.users.syncUser.invalidate(undefined, { refetchType: "all" });
     },
   });
 
@@ -30,17 +29,14 @@ export const EventPasswordInput = () => {
         toast.error(error.message)
       },
       onSuccess: () => {
-        trpcUtils.userEventFields.invalidate();
-        trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
+        trpcUtils.userEventFields.invalidate(undefined, { refetchType: "all" });
       },
     });
 
   useEffect(() => {
-    console.log(user?.wallet_address, tonConnectUI.account?.address, tonConnectUI.wallet?.account.address, tonConnectUI.connected, tonConnectUI);
     // if user had wallet we do not want to save it
     if (!user?.wallet_address && tonWalletAddress && initData) {
       addWalletMutation.mutate({
-        init_data: initData,
         wallet: tonWalletAddress,
       });
     }
@@ -56,7 +52,6 @@ export const EventPasswordInput = () => {
     if (initData && eventPasswordField && eventPasswordField.event_id) {
       if (password) {
         upsertUserEventFieldMutation.mutate({
-          init_data: initData,
           field_id: eventPasswordField.id,
           event_id: eventPasswordField.event_id,
           data: password
@@ -66,9 +61,6 @@ export const EventPasswordInput = () => {
       }
     }
   }
-
-  console.log({ user });
-
 
   return (
     !user?.wallet_address ?

@@ -2,7 +2,6 @@
 
 import useWebApp from "@/hooks/useWebApp";
 import { useState } from "react";
-import { boolean } from "drizzle-orm/pg-core";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import ModalDialog from "../SecretSavedModal";
 import { trpc } from "@/app/_trpc/client";
@@ -49,17 +48,16 @@ export function ClaimRewardButton(props: { eventId: string, initData: string, is
   const visitorReward = trpc.users.getVisitorReward.useQuery(
     {
       event_uuid: props.eventId,
-      init_data: props.initData,
     },
     {
-      enabled: !!boolean(props.initData), // Run the query only if initData is present and initialized
       queryKey: [
         "users.getVisitorReward",
-        { event_uuid: props.eventId, init_data: props.initData },
+        { event_uuid: props.eventId },
       ],
       retry: false,
     }
   );
+
   // Conditional rendering of the button or child component
   if (props.initData) {
     return visitorReward.isSuccess && props.isWalletConnected ? (
