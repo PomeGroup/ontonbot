@@ -14,24 +14,30 @@ export const EventDataProvider = ({
   const webApp = useWebApp();
   const [isInitialized, setIsInitialized] = useState(false);
   const [initData, setInitData] = useState<string>("");
+  const trpcUtils = trpc.useUtils()
 
   const userEventFields =
     trpc.userEventFields.getUserEventFields.useQuery(
       {
         event_hash: eventHash,
-        init_data: initData,
       },
       {
         queryKey: [
           "userEventFields.getUserEventFields",
           {
             event_hash: eventHash,
-            init_data: initData,
           },
         ],
-        enabled: Boolean(initData) && Boolean(eventHash), // Run the query only if initData is present and initialized
+        enabled: Boolean(eventHash), // Run the query only if initData is present and initialized
       }
     );
+
+  useEffect(() => {
+    if (userEventFields.isSuccess) {
+      trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
+    }
+
+  }, [userEventFields.isSuccess, userEventFields.data])
 
   useEffect(() => {
     if (webApp?.initData && !isInitialized) {
@@ -43,12 +49,11 @@ export const EventDataProvider = ({
   const eventData = trpc.events.getEvent.useQuery(
     {
       event_uuid: eventHash,
-      init_data: initData,
     },
     {
       queryKey: [
         "events.getEvent",
-        { event_uuid: eventHash, init_data: initData },
+        { event_uuid: eventHash },
       ],
       enabled: Boolean(initData),
     }

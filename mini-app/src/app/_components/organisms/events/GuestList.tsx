@@ -22,10 +22,9 @@ const GuestList = (props: Props) => {
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
   const requestExportFileMutation = trpc.events.requestExportFile.useMutation();
-  const handleVisitorsExport = async() => {
+  const handleVisitorsExport = async () => {
     await requestExportFileMutation.mutateAsync({
       event_uuid: props.params.hash,
-      init_data: webApp?.initData || "",
     });
     hapticFeedback?.impactOccurred("medium");
 

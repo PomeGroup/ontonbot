@@ -1,31 +1,20 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpLink } from "@trpc/react-query";
-import React, { useEffect, useRef, useState } from "react";
+import { httpLink, TRPCLink } from "@trpc/react-query";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, { useState } from "react";
 import { trpc } from "./client";
-import { type TRPCLink } from "@trpc/client";
+import { useUserStore } from "@/context/store/user.store";
 import { observable } from "@trpc/server/observable";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false, // Disable react-query retry since we handle it in our link
-      cacheTime: 60 * 1000,
-      staleTime: 2 * 60 * 1000,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 const initDataExpirationAlert = () => {
   sessionStorage.removeItem("telegram:initParams");
 
   if (window.Telegram?.WebApp) {
-    if (!window.Telegram.WebApp?.isVersionAtLeast("6.0") ) {
-        console.error("Telegram WebApp version is lower than 6.0");
-        alert("Your Telegram version is too old. Please update the app.");
-        window.Telegram.WebApp.close();
+    if (!window.Telegram.WebApp?.isVersionAtLeast("6.0")) {
+      console.error("Telegram WebApp version is lower than 6.0");
+      alert("Your Telegram version is too old. Please update the app.");
+      window.Telegram.WebApp.close();
     }
     window.Telegram.WebApp.showPopup(
       {
@@ -88,58 +77,41 @@ const createCombinedLink = (): TRPCLink<any> => {
   };
 };
 
-export default function Provider({ children }: { children: React.ReactNode }) {
-  const [isInitialized, setIsInitialized] = useState(false);
-  const trpcClientRef = useRef<ReturnType<typeof trpc.createClient> | null>(
-    null
-  );
-
-  useEffect(() => {
-    const initializeTrpcClient = () => {
-      if (
-        typeof window !== "undefined" &&
-        window.Telegram?.WebApp?.initData &&
-        !isInitialized
-      ) {
-        const webAppInitData = window.Telegram.WebApp.initData;
-
-        trpcClientRef.current = trpc.createClient({
-          links: [
-            createCombinedLink(),
-            httpLink({
-              url: "/api/trpc",
-              headers: {
-                Authorization: `Bearer ${webAppInitData}`,
-              },
-            }),
-          ],
-        });
-
-        setIsInitialized(true);
+export default function TRPCAPIProvider({ children }: { children: React.ReactNode }) {
+  const { initData } = useUserStore()
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false, // handling it manually in our customLink
+        retryOnMount: false,
+        refetchOnWindowFocus: false
       }
-    };
+    }
+  }));
 
-    initializeTrpcClient();
-
-    const intervalId = setInterval(() => {
-      if (!isInitialized) {
-        initializeTrpcClient();
-      }
-    }, 300);
-
-    return () => clearInterval(intervalId);
-  }, [isInitialized]);
-
-  if (!isInitialized || !trpcClientRef.current) {
-    return null;
-  }
+  const [trpcClient] = useState(trpc.createClient({
+    links: [
+      createCombinedLink(),// custom link to handlen retring
+      httpLink({
+        url: "/api/trpc",
+        headers: () => {
+          return {
+            Authorization: initData!
+          }
+        },
+      }),
+    ],
+  })
+  )
 
   return (
     <trpc.Provider
-      client={trpcClientRef.current}
+      client={trpcClient}
       queryClient={queryClient}
     >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
     </trpc.Provider>
   );
 }

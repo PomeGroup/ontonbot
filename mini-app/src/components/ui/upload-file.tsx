@@ -96,7 +96,6 @@ export const UploadImageFile = (props: UploadFileProps) => {
     const image = (await fileToBase64(file)) as string;
 
     uploadImage.mutate({
-      init_data: webApp?.initData || "",
       image,
       subfolder: "event",
     });
@@ -112,7 +111,7 @@ export const UploadImageFile = (props: UploadFileProps) => {
         }
         try {
           webApp?.HapticFeedback.impactOccurred("medium");
-        } catch (error) {}
+        } catch (error) { }
       }}
     >
       <DrawerTrigger asChild>

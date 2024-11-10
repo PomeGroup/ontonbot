@@ -3,7 +3,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { getErrorMessages } from "@/lib/error";
 import { cn, fileToBase64 } from "@/lib/utils";
 import { CircleArrowUp } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "./button";
 import {
   Drawer,
@@ -105,7 +105,6 @@ export const UploadVideoFile = (props: UploadFileProps) => {
 
       // Proceed with upload
       uploadVideo.mutate({
-        init_data: webApp?.initData || "",
         video,
         subfolder: "event",
       });
@@ -125,7 +124,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
         }
         try {
           webApp?.HapticFeedback.impactOccurred("medium");
-        } catch (error) {}
+        } catch (error) { }
       }}
     >
       <DrawerTrigger asChild>

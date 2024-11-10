@@ -1,7 +1,7 @@
 // Helper function to validate and retrieve visitor
-import visitorsDB  from "@/server/db/visitors";
-import {selectEventByUuid} from "@/server/db/events";
-import {TRPCError} from "@trpc/server";
+import visitorsDB from "@/server/db/visitors";
+import { selectEventByUuid } from "@/server/db/events";
+import { TRPCError } from "@trpc/server";
 import userEventFieldsDB from "@/server/db/userEventFields.db";
 
 export const getAndValidateVisitor = async (
@@ -50,10 +50,9 @@ export const getAndValidateVisitor = async (
   }
 };
 
-export const addVisitor = async (opts : any) => {
+export const addVisitor = async (opts: any) => {
   const { event_uuid } = opts.input;
   const { user_id } = opts.ctx.user;
-  const { id: parsedUserId } = opts.ctx.parsedInitData.user;
 
   // Fetch the event by UUID
   const event = await selectEventByUuid(event_uuid);
@@ -63,20 +62,20 @@ export const addVisitor = async (opts : any) => {
       message: "Event not found",
     });
   }
-  console.log(`Event: `,event);
-  if (event.ticketToCheckIn ) {
+  console.log(`Event: `, event);
+  if (event.ticketToCheckIn) {
     console.error(`Event requires ticket to check in: ${event_uuid}`);
     throw new TRPCError({
       code: "FORBIDDEN",
       message:
-          "This event requires a ticket to add user as visitor to the event",
+        "This event requires a ticket to add user as visitor to the event",
     });
   }
 
   // Check if the user has already completed the task
   const taskCompleted = await userEventFieldsDB.checkPasswordTask(
-      user_id,
-      event.event_id
+    user_id,
+    event.event_id
   );
 
   if (!taskCompleted) {
@@ -86,9 +85,9 @@ export const addVisitor = async (opts : any) => {
     });
 
   }
-  console.log(`Task  completed: `,taskCompleted);
+
   // Add a visitor if the task is not completed
-  const visitor = await visitorsDB.addVisitor(parsedUserId, event_uuid);
+  const visitor = await visitorsDB.addVisitor(user_id, event_uuid);
   return {
     code: "OK",
     message: "Visitor added",
@@ -97,7 +96,7 @@ export const addVisitor = async (opts : any) => {
 }
 const visitorService = {
   getAndValidateVisitor,
-    addVisitor,
+  addVisitor,
 };
 
 

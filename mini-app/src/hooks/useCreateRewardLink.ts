@@ -25,7 +25,6 @@ export function useCreateRewardLink(props: {
   useEffect(() => {
     if (!initData) return;
     createRewardLink.mutate({
-      init_data: initData,
       event_uuid: props.eventHash,
     });
   }, [initData, props.tasksCompleted]);
