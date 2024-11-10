@@ -1,7 +1,11 @@
 # Use an official Node.js image as the base image
 FROM node:18-alpine
 ARG PORT_WEB_SITE
+ARG NEXT_PUBLIC_APP_BASE_URL
+ARG MINI_APP_DOMAIN
 ENV PORT_WEB_SITE=$PORT_WEB_SITE
+ENV NEXT_PUBLIC_APP_BASE_URL=$NEXT_PUBLIC_APP_BASE_URL
+ENV MINI_APP_DOMAIN=$MINI_APP_DOMAIN
 # Set the working directory inside the container
 WORKDIR /app
 

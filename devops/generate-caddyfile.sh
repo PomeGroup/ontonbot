@@ -1,13 +1,7 @@
 #!/bin/sh
-echo "${LOCAL_DOMAIN} {
-    tls /certs/fullchain.pem /certs/privkey.pem {
-        protocols tls1.2 tls1.3
-    }
-    reverse_proxy /ptma* http://${IP_RANGE_BASE}:${PARTICIPANT_TMA_PORT}
-    reverse_proxy  http://${IP_RANGE_BASE}:${MINI_APP_PORT}
-}
+echo "
 
-app.toncloud.observer {
+${MINI_APP_DOMAIN} {
     tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3
     }
@@ -19,7 +13,7 @@ app.toncloud.observer {
     reverse_proxy  http://${IP_RANGE_BASE}:${MINI_APP_PORT}
 }
 
-metabase.toncloud.observer {
+${METABASE_DOMAIN} {
     tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3
     }
@@ -30,7 +24,7 @@ metabase.toncloud.observer {
     reverse_proxy ${IP_RANGE_BASE}:${PORT_METABASE}
 }
 
-storage.toncloud.observer {
+${MINIO_STORAGE_DOMAIN} {
     tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3
     }
@@ -41,7 +35,7 @@ storage.toncloud.observer {
     reverse_proxy http://${IP_MINIO}:${MINIO_PORT}
 }
 
-storage-admin.toncloud.observer {
+${MINIO_STORAGE_ADMIN_DOMAIN} {
     tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3
     }
@@ -52,7 +46,7 @@ storage-admin.toncloud.observer {
     reverse_proxy http://${IP_RANGE_BASE}:${MINIO_DASHBOARD_PORT}
 }
 
-monitoring.toncloud.observer {
+${MONITORING_DOMAIN} {
     tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3
     }
@@ -63,7 +57,7 @@ monitoring.toncloud.observer {
     reverse_proxy grafana:3000
 }
 
-adminer.toncloud.observer {
+${PGADMIN_DOMAIN} {
     tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3
     }
@@ -71,10 +65,10 @@ adminer.toncloud.observer {
         output stdout
         format json
     }
-    reverse_proxy adminer:8080
+    reverse_proxy http://${IP_PGADMIN}:${PORT_PGADMIN}
 }
 
-client-web.toncloud.observer {
+${CLIENT_WEB_DOMAIN} {
     tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3
     }
@@ -85,9 +79,13 @@ client-web.toncloud.observer {
     reverse_proxy ${IP_RANGE_BASE}:${PORT_CLIENT_WEB}
 }
 
-web.toncloud.observer {
+${ONTON_DOMAIN} {
     tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3
+    }
+    log {
+        output stdout
+        format json
     }
     reverse_proxy ${IP_RANGE_BASE}:${PORT_WEB_SITE}
 }

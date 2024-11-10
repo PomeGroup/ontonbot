@@ -6,7 +6,7 @@
     "dev": "dotenv -e ../.env -- cross-var   next dev --port %PORT_WEB_SITE% ",
     "build": "next build",
     "build:local": "dotenv -e ../.env -- next build",
-    "start": "cross-env next start --port $PORT_WEB_SITE",
+    "start": "next start",
     "start:local": "dotenv -e ../.env -- cross-var   next start --port %PORT_WEB_SITE%",
     "lint": "next lint"
   },
