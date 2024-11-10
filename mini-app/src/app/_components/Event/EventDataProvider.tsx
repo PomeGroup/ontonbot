@@ -64,11 +64,11 @@ export const EventDataProvider = ({
     return eventData.data?.dynamic_fields.find(v => v.title === 'secret_phrase_onton_input')
   }, [eventData.data?.dynamic_fields.length])
 
-  const { success, isNotEnded, isStarted, endUTC, startUTC, location } =
+  const { isLocationUrl, isNotEnded, isStarted, endUTC, startUTC, location } =
     useMemo(() => {
       if (!eventData.data) {
         return {
-          success: false,
+          isLocationUrl: false,
           endUTC: 0,
           startUTC: 0,
         };
@@ -85,8 +85,8 @@ export const EventDataProvider = ({
       return {
         isNotEnded,
         isStarted,
-        success,
         endUTC,
+        isLocationUrl: success,
         startUTC,
         location,
       };
@@ -112,10 +112,10 @@ export const EventDataProvider = ({
         endUTC,
         startUTC,
         location,
-        success,
         initData,
         eventHash,
         userEventFields,
+        isLocationUrl,
         eventPasswordField,
         userEventPasswordField
       }}
