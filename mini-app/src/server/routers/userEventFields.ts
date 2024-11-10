@@ -77,14 +77,14 @@ export const userEventFieldsRouter = router({
       }
 
       // Hash the entered password and store it
-      bcryptLib.hashPassword(enteredPassword).then((hash) => {
-        return userEventFieldsDB.upsertUserEventFields(
-          opts.ctx.user.user_id,
-          opts.input.event_id,
-          opts.input.field_id,
-          hash
-        );
-      });
+      const hashPassword = await bcryptLib.hashPassword(enteredPassword)
+
+      await userEventFieldsDB.upsertUserEventFields(
+        opts.ctx.user.user_id,
+        opts.input.event_id,
+        opts.input.field_id,
+        hashPassword
+      );
     }),
 
   // protect

@@ -21,7 +21,7 @@ export const ordersRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const userId = ctx.parsedInitData.user.id;
+      const userId = ctx.user.user_id;
 
       const body = input;
       const eventTicket = await db.query.eventTicket.findFirst({

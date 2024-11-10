@@ -33,7 +33,6 @@ const QrCodeButton = ({
         await requestSendQRcodeMutation.mutateAsync({
           url,
           hub,
-          init_data: initData,
           event_uuid,
         });
         WebApp?.openTelegramLink(

@@ -1,49 +1,27 @@
 import { db } from "@/db/db";
-import { usersDB } from "@/server/db/users";
-import { validateMiniAppData } from "@/utils";
 import { TRPCError, initTRPC } from "@trpc/server";
 import { z } from "zod";
+import { createContext } from "./context";
 
-const t = initTRPC.create();
+export const trpcApiInstance = initTRPC.context<typeof createContext>().create();
 
-export const router = t.router;
+export const router = trpcApiInstance.router;
 
-export const publicProcedure = t.procedure;
+export const publicProcedure = trpcApiInstance.procedure;
 
 // protected using initData
-export const initDataProtectedProcedure = t.procedure
-  .input(z.object({ init_data: z.string() }))
+export const initDataProtectedProcedure = trpcApiInstance.procedure
   .use(async (opts) => {
-    const initData = opts.input.init_data;
-
-    if (!initData) {
+    if (!opts.ctx.user) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
-        message: "No init_data provided",
-      });
-    }
-
-    const { valid, initDataJson } = validateMiniAppData(initData);
-
-    if (!valid) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "invalid init_data",
-      });
-    }
-
-    const user = await usersDB.insertUser(initDataJson);
-    if (!user) {
-      throw new TRPCError({
-        code: "UNPROCESSABLE_CONTENT",
-        message: "could not create or get user",
+        message: "No auth header found",
       });
     }
 
     return opts.next({
       ctx: {
-        parsedInitData: initDataJson,
-        user,
+        user: opts.ctx.user,
       },
     });
   });

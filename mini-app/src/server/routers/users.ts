@@ -115,6 +115,8 @@ export const usersRouter = router({
     )
     .query(async (opts) => {
       try {
+        console.log('context we found', opts.ctx);
+
         await visitorService.addVisitor(opts);
         // Fetch the visitor from the database
         const visitor = await findVisitorByUserAndEventUuid(

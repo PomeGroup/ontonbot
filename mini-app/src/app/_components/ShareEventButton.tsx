@@ -25,7 +25,6 @@ const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
 
         await shareEventMutation.mutateAsync({
           eventUuid: event_uuid,
-          init_data: initData,
         });
 
         // Add the logic for the platform or sharing link
