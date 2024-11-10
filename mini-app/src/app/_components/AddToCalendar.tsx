@@ -5,7 +5,7 @@ import { FaGoogle, FaYahoo, FaCalendarPlus } from "react-icons/fa";
 import { SiMicrosoftoutlook } from "react-icons/si";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { Separator } from "@/components/ui/separator"; // Assuming shadcn drawer is structured like this
+// Assuming shadcn drawer is structured like this
 
 type Props = {
   title: string;
@@ -62,35 +62,34 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
         <DrawerTrigger asChild>
           <Button
             variant="outline"
-            className="w-full flex items-center justify-center bg-gray-700 text-gray-200 hover:bg-gray-600 hover:text-gray-100 active:bg-gray-800 active:text-gray-300"
+            className="w-full"
+            size='sm'
           >
             <FaCalendarPlus className="mr-2" />
             Add to Calendar
           </Button>
         </DrawerTrigger>
-        <DrawerContent className="h-[60vh] flex flex-col justify-between text-gray-100">
-          <div className="space-y-2 p-4">
+        <DrawerContent className="h-[60vh] flex flex-col justify-between">
+          <div className="space-y-2 p-4 divide-black divide-y-2 w-full">
             <Button
               variant="link"
-              className="flex items-center"
+              className="flex rounded-none items-center w-full"
               onClick={() => openInOSBrowser(googleCalendarLink)}
             >
               <FaGoogle className="mr-2" />
               Add to Google Calendar
             </Button>
-            <Separator className="bg-gray-700 my-2" />
             <Button
               variant="link"
-              className="flex items-center"
+              className="flex rounded-none items-center w-full"
               onClick={() => openInOSBrowser(outlookLink)}
             >
               <SiMicrosoftoutlook className="mr-2" />
               Add to Outlook Calendar
             </Button>
-            <Separator className="bg-gray-700 my-2" />
             <Button
               variant="link"
-              className="flex items-center"
+              className="flex rounded-none items-center w-full"
               onClick={() => openInOSBrowser(yahooLink)}
             >
               <FaYahoo className="mr-2" />
@@ -100,8 +99,8 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
           {/* Close button at the bottom */}
           <div className="p-4">
             <Button
-              variant="outline"
-              className="w-full flex items-center justify-center bg-gray-700 text-gray-200 hover:bg-gray-600 hover:text-gray-100 active:bg-gray-800 active:text-gray-300"
+              variant="primary"
+              className='w-full'
               onClick={() => setIsOpen(false)}
             >
               Close

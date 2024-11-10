@@ -23,7 +23,6 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         async
       />
       <ThemeProvider
-        forcedTheme="dark"
         attribute="class"
       >
         <WebAppProvider>

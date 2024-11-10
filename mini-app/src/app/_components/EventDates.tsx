@@ -1,6 +1,5 @@
-import { FaHourglassStart } from "react-icons/fa";
-import { FaHourglassEnd } from "react-icons/fa6";
 import { useState } from "react";
+import EventKeyValue from "./organisms/events/EventKewValue";
 
 type Props = {
   startDate: number;
@@ -26,18 +25,20 @@ const EventDates = ({ startDate, endDate }: Props) => {
   const [endDateStr] = useState(formatDate(endDate));
 
   return (
-    <div className="text-sm text-center text-muted-foreground">
+    <div className="text-center space-y-1">
       {/* Start Date */}
-      <div className="flex items-start justify-start my-2">
-        <FaHourglassStart className="mr-2" />
-        <time className="font-medium">{startDateStr}</time>
-      </div>
+      <EventKeyValue
+        variant={'filled_value'}
+        label="Start Date"
+        value={<time className="font-medium">{startDateStr}</time>}
+      />
 
       {/* End Date */}
-      <div className="flex items-start justify-start my-2">
-        <FaHourglassEnd className="mr-2" />
-        <time className="font-medium">{endDateStr}</time>
-      </div>
+      <EventKeyValue
+        variant={'filled_value'}
+        label="End Date"
+        value={<time className="font-medium">{endDateStr}</time>}
+      />
     </div>
   );
 };

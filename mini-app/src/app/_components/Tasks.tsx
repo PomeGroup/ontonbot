@@ -41,21 +41,21 @@ const AllTasks: FC<{
         const userEventField = userEventFields
           ? userEventFields[task.id]
           : undefined;
-        console.log("-************-", task.title, userEventField?.completed);
-        if (task.type === "input") {
-          return (
-            <Tasks.Input
-              key={index}
-              title={task.title!}
-              description={task.description!}
-              completed={userEventField?.completed || false}
-              defaultEmoji={task.emoji!}
-              data={userEventField?.data || null}
-              fieldId={task.id}
-              eventId={task.event_id!}
-            />
-          );
-        }
+        // console.log("-************-", task.title, userEventField?.completed);
+        // if (task.type === "input") {
+        //   return (
+        //     <Tasks.Input
+        //       key={index}
+        //       title={task.title!}
+        //       description={task.description!}
+        //       completed={userEventField?.completed || false}
+        //       defaultEmoji={task.emoji!}
+        //       data={userEventField?.data || null}
+        //       fieldId={task.id}
+        //       eventId={task.event_id!}
+        //     />
+        //   );
+        // }
 
         if (task.type === "button") {
           return (

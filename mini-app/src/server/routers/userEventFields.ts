@@ -64,9 +64,9 @@ export const userEventFieldsRouter = router({
 
       const isRealPasswordCorrect = eventData.secret_phrase
         ? await bcryptLib.comparePassword(
-            enteredPassword,
-            eventData.secret_phrase
-          )
+          enteredPassword,
+          eventData.secret_phrase
+        )
         : false;
 
       if (!isFixedPasswordCorrect && !isRealPasswordCorrect) {
@@ -109,6 +109,8 @@ export const userEventFieldsRouter = router({
         const data: { [key: string]: EventFieldData } = {};
 
         for (const field of userEventFieldsResult) {
+          console.log(field);
+
           data[field.eventFieldId ?? "unknown"] = {
             id: field.eventFieldId ?? "unknown",
             event_field_id: field.eventFieldId ?? "unknown",
