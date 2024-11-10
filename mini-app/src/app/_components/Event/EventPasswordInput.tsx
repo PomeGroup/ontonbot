@@ -5,9 +5,8 @@ import { useEventData } from "./eventPageContext";
 import PasscodeIcon from "@/components/icons/Passcode";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import { Input } from "@/components/ui/input";
-import { TonConnectButton, useTonConnectUI } from "@tonconnect/ui-react";
+import { TonConnectButton, useTonConnectUI, useTonAddress } from "@tonconnect/ui-react";
 import { useUserStore } from "@/context/store/user.store";
-import { Address } from "@ton/core";
 
 export const EventPasswordInput = () => {
   const { initData, eventPasswordField } = useEventData()
@@ -15,6 +14,7 @@ export const EventPasswordInput = () => {
   const { user } = useUserStore()
   const formRef = useRef<HTMLFormElement>(null)
   const [tonConnectUI] = useTonConnectUI()
+  const tonWalletAddress = useTonAddress()
 
   const addWalletMutation = trpc.users.addWallet.useMutation({
     onSuccess: () => {
@@ -36,15 +36,15 @@ export const EventPasswordInput = () => {
     });
 
   useEffect(() => {
+    console.log(user?.wallet_address, tonConnectUI.account?.address, tonConnectUI.wallet?.account.address, tonConnectUI.connected, tonConnectUI);
     // if user had wallet we do not want to save it
-    if (!user?.wallet_address && tonConnectUI.account?.address && initData) {
+    if (!user?.wallet_address && tonWalletAddress && initData) {
       addWalletMutation.mutate({
         init_data: initData,
-        wallet: Address.parse(tonConnectUI.account.address).toString(),
+        wallet: tonWalletAddress,
       });
     }
-  }, [user?.wallet_address, tonConnectUI.account?.address, initData]);
-
+  }, [user?.wallet_address, tonWalletAddress, initData]);
 
   const submitPassword: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault()
@@ -66,6 +66,9 @@ export const EventPasswordInput = () => {
       }
     }
   }
+
+  console.log({ user });
+
 
   return (
     !user?.wallet_address ?
