@@ -10,14 +10,14 @@ const SupportButton = () => {
 
   return (
     <div
-      className="flex items-center justify-center text-[14px] text-secondary"
+      className="flex items-center justify-center text-xs text-muted-foreground"
       onClick={() => {
         hapticfeedback?.impactOccurred("medium");
         webApp?.openTelegramLink("https://t.me/ontonsupport");
       }}
     >
       Open Support Chat
-      <MessageSquare className="w-[14px] text-secondary ml-1" />
+      <MessageSquare className="w-3 ml-1" />
     </div>
   );
 };

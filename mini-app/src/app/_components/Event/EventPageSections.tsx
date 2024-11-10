@@ -8,10 +8,13 @@ import { useEventData } from "./eventPageContext";
 import { EventActions } from "./EventActions";
 import { useLayoutEffect } from "react";
 import { useTheme } from "next-themes";
-import useAuth from "@/hooks/useAuth";
 import ShareEventButton from "../ShareEventButton";
 import { EventPasswordInput } from "./EventPasswordInput";
 import EventKeyValue from "../organisms/events/EventKewValue";
+import { ClaimRewardButton } from "./ClaimRewardButton";
+import { ManageEventButton } from "./ManageEventButton";
+import { useUserStore } from "@/context/store/user.store";
+import MainButton from "../atoms/buttons/web-app/MainButton";
 
 const EventImage = () => {
   const { eventData } = useEventData();
@@ -94,29 +97,65 @@ const EventAttributes = () => {
 }
 
 export const EventSections = () => {
-  const { eventData, userEventPasswordField, isStarted, isNotEnded } = useEventData()
-  const { setTheme } = useTheme()
-  const { authorized, role, user } = useAuth();
+  const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } = useEventData();
+  const { setTheme } = useTheme();
+  const { user } = useUserStore();
+
+  const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
+  const isEventActive = isStarted && isNotEnded;
 
   useLayoutEffect(() => {
-    setTheme('light')
-  }, [])
+    setTheme('light');
+    return () => setTheme('dark');
+  }, [setTheme]);
 
   return (
     <div className="space-y-2">
       <EventImage />
       {
-        authorized &&
-        role !== "admin" || user?.user_id !== eventData.data?.owner &&
-        !userEventPasswordField?.completed && isStarted && isNotEnded &&
+        !isAdminOrOrganizer &&
+        isEventActive &&
+        !userEventPasswordField?.completed &&
         <EventPasswordInput />
       }
       <EventHead />
       <EventAttributes />
       <EventActions />
       <EventDescription />
-      {/* <ManageEventButton /> */}
+      {
+        !isAdminOrOrganizer &&
+        user?.wallet_address &&
+        userEventPasswordField?.completed && (
+          <ClaimRewardButton
+            initData={initData}
+            eventId={eventData.data?.event_uuid as string}
+            isWalletConnected={Boolean(user.wallet_address)}
+          />
+        )
+      }
+      {
+        !isAdminOrOrganizer &&
+        !isStarted &&
+        isNotEnded && (
+          <MainButton
+            text="Event Not Started Yet"
+            disabled
+            color="secondary" />
+        )
+      }
+      {
+        !isAdminOrOrganizer &&
+        !isNotEnded && (
+          <MainButton
+            text="Event Has Ended"
+            disabled color="secondary" />
+        )
+      }
+      {
+        isAdminOrOrganizer &&
+        <ManageEventButton />
+      }
       <Buttons.Support />
     </div>
-  )
-}
+  );
+};

@@ -20,6 +20,7 @@ export const EventPasswordInput = () => {
     onSuccess: () => {
       trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
       trpcUtils.users.getWallet.invalidate({}, { refetchType: "all" });
+      trpcUtils.users.syncUser.invalidate({}, { refetchType: "all" });
     },
   });
 
@@ -35,7 +36,8 @@ export const EventPasswordInput = () => {
     });
 
   useEffect(() => {
-    if (tonConnectUI.account?.address && initData) {
+    // if user had wallet we do not want to save it
+    if (!user?.wallet_address && tonConnectUI.account?.address && initData) {
       addWalletMutation.mutate({
         init_data: initData,
         wallet: Address.parse(tonConnectUI.account.address).toString(),
