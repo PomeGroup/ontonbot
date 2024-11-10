@@ -21,7 +21,6 @@ export default function ThemeSetter({
       return;
     }
 
-    setTheme("dark");
     webApp?.setHeaderColor(theme === "dark" ? "#1C1C1E" : "#ffffff");
     webApp?.setBackgroundColor(theme === "dark" ? "#1C1C1E" : "#ffffff");
     habticfeedback?.impactOccurred("light");

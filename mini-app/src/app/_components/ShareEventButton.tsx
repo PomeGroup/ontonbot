@@ -1,11 +1,11 @@
 "use client";
 
 import { trpc } from "@/app/_trpc/client";
-import { Button } from "@/components/ui/button";
 import useWebApp from "@/hooks/useWebApp";
 import { cn, wait } from "@/lib/utils";
-import { Share2, LoaderIcon } from "lucide-react";
-import { FaShare } from "react-icons/fa";
+import { LoaderIcon } from "lucide-react";
+import { PiShareFatBold } from "react-icons/pi";
+
 const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
@@ -14,13 +14,11 @@ const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
   const shareEventMutation = trpc.events.requestShareEvent.useMutation();
 
   return (
-    <Button
+    <button
       className={cn(
-        "w-full flex items-center justify-center bg-gray-700 text-gray-200 hover:bg-gray-600 hover:text-gray-100 active:bg-gray-800 active:text-gray-300",
-
+        "rounded-full bg-blue-100 p-2",
         shareEventMutation.isLoading && Boolean(initData) && "opacity-50"
       )}
-      variant={"outline"}
       disabled={!initData || shareEventMutation.isLoading}
       onClick={async () => {
         if (!initData) return;
@@ -39,13 +37,14 @@ const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
         WebApp?.close();
       }}
     >
-      <FaShare />
-      <span className="text-sm ml-2">Share Event</span>
-      {shareEventMutation.isLoading && (
-        <LoaderIcon className="h-5 animate-spin" />
-      )}
-    </Button>
+      {shareEventMutation.isLoading ? (
+        <LoaderIcon className="animate-spin text-blue-600" />
+      ) : <PiShareFatBold className="text-blue-600" />
+      }
+    </button>
   );
 };
 
 export default ShareEventButton;
+
+
