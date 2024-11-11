@@ -151,9 +151,10 @@ const processAndSendImage = async (
         {
           caption: `
 📄 <b>${event.title}</b>
-▫️ <i>${event.subtitle}</i>
+👉 <i>${event.subtitle}</i>
 
 🗓 Starts at: ${startDate}
+
 🗓 Ends at: ${endDate}
 
 🔗 Link: ${shareLink}
@@ -178,9 +179,10 @@ const processAndSendImage = async (
       {
         caption: `
 📄 <b>${event.title}</b>
-▫️ <i>${event.subtitle}</i>
+👉 <i>${event.subtitle}</i>
 
 🗓 Starts at: ${startDate}
+
 🗓 Ends at: ${endDate}
 
 🔗 Link: ${shareLink}
@@ -193,6 +195,59 @@ const processAndSendImage = async (
     );
   }
 };
+
+function parseTimezone(timeZone) {
+  // Check if the timezone is a standard IANA timezone or "UTC"
+  try {
+      Intl.DateTimeFormat(undefined, { timeZone }).format(new Date());
+      return timeZone; // Valid IANA timezone or "UTC"
+  } catch (e) {
+      // If invalid, continue to check for GMT offset
+  }
+
+  // Check for "GMT+X" or "GMT-X" format
+  const gmtOffsetMatch = timeZone.match(/^GMT([+-]\d{1,2})$/);
+  if (gmtOffsetMatch) {
+      // Parse the offset hours
+      const offsetHours = parseInt(gmtOffsetMatch[1], 10);
+      return { offsetHours, label: timeZone }; // Return the offset and label for display
+  }
+
+  throw new Error("Invalid timezone format");
+}
+
+function formatDateInTimezone(timestamp, timeZone) {
+  const parsedTimeZone = parseTimezone(timeZone);
+  const date = new Date(timestamp * 1000);
+  let formattedDate;
+
+  if (typeof parsedTimeZone === "string") {
+      // IANA timezone or UTC
+      formattedDate = date.toLocaleString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: parsedTimeZone,
+      });
+      return `${formattedDate} (${parsedTimeZone})`;
+  } else if (typeof parsedTimeZone === "object" && parsedTimeZone.offsetHours !== undefined) {
+      // GMT offset (e.g., GMT+5 or GMT-3)
+      const offsetMillis = parsedTimeZone.offsetHours * 60 * 60 * 1000;
+      const adjustedDate = new Date(date.getTime() + offsetMillis);
+      formattedDate = adjustedDate.toLocaleString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+      });
+      return `${formattedDate} (${parsedTimeZone.label})`;
+  }
+  throw new Error("Invalid timezone format");
+}
+
 
 export const handleShareEvent = async (
   req: Request & {
@@ -210,31 +265,20 @@ export const handleShareEvent = async (
   ) {
     try {
       const event = await getEvent(id);
-      console.log("event", event.title);
-      console.log("id", id, "user_id", user_id, "url", url, event.image_url);
 
       const startDateInSeconds = Number(event.start_date);
       const endDateInSeconds = Number(event.end_date);
 
+      // Specify your desired timezone here (e.g., "GMT+5" or "America/New_York")
+      const timeZone = event.timezone; 
+
       if (isNaN(startDateInSeconds) || isNaN(endDateInSeconds)) {
-        throw new Error("Invalid date values.");
+          throw new Error("Invalid date values.");
       }
 
-      const startDate = new Date(startDateInSeconds * 1000).toLocaleString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      const endDate = new Date(endDateInSeconds * 1000).toLocaleString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      // Format startDate and endDate with timezone
+      const startDate = formatDateInTimezone(startDateInSeconds, timeZone);
+      const endDate = formatDateInTimezone(endDateInSeconds, timeZone);
 
       const defaultButton = { text: "Buy Ticket", web_app: { url } };
       const customButton = custom_button || defaultButton;
@@ -259,9 +303,10 @@ export const handleShareEvent = async (
           {
             caption: `
 📄 <b>${event.title}</b>
-▫️ <i>${event.subtitle}</i>
+👉 <i>${event.subtitle}</i>
 
 🗓 Starts at: ${startDate}
+
 🗓 Ends at: ${endDate}
 
 🔗 Link: ${share_link}
