@@ -98,7 +98,7 @@ services:
 
   minio:
     hostname: minio
-    container_name: ${ENV}-minio
+    container_name: ${STAGE_NAME}-minio
     image: minio/minio
     restart: unless-stopped
     profiles:
@@ -121,7 +121,7 @@ services:
 
   postgres:
     hostname: postgres
-    container_name : ${ENV}-postgres
+    container_name : ${STAGE_NAME}-postgres
     image: postgres:16.3-alpine3.20
     restart: unless-stopped
 #    ports:
@@ -142,7 +142,7 @@ services:
   redis:
     image: redis:7.4.1-bookworm
     hostname: redis
-    container_name: ${ENV}-redis
+    container_name: ${STAGE_NAME}-redis
     restart: unless-stopped
     volumes:
       - ./data/redis_data:/data
@@ -163,7 +163,7 @@ services:
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
-    container_name: ${ENV}-clamav
+    container_name: ${STAGE_NAME}-clamav
 #    ports:
 #      - "${CLAMAV_PORT}:3310"
     profiles:
@@ -182,7 +182,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: ${ENV}-pgadmin
+    container_name: ${STAGE_NAME}-pgadmin
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
@@ -202,7 +202,7 @@ services:
       - pgadmin:/var/lib/pgadmin
 
   telegram-bot:
-    container_name: ${ENV}-telegram-bot
+    container_name: ${STAGE_NAME}-telegram-bot
     build: ./telegram-bot
     restart: "unless-stopped"
 #    ports:
@@ -221,7 +221,7 @@ services:
 
   mini-app:
     hostname: mini-app
-    container_name: ${ENV}-mini-app
+    container_name: ${STAGE_NAME}-mini-app
 #    ports:
 #      - "${MINI_APP_PORT}:${MINI_APP_PORT}"
     profiles:
@@ -245,7 +245,7 @@ services:
 
   mini-app-cron:
     hostname: mini-app
-    container_name: ${ENV}-mini-app-cron
+    container_name: ${STAGE_NAME}-mini-app-cron
     build:
       context: ./mini-app
       target: production-stage
@@ -268,7 +268,7 @@ services:
 
   participant-tma:
     hostname: participant-tma
-    container_name: ${ENV}-participant-tma
+    container_name: ${STAGE_NAME}-participant-tma
     <<: *default-extra-hosts
 #    ports:
 #      - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
@@ -288,7 +288,7 @@ services:
 
   nft-microservice:
     hostname: nft-service
-    container_name : ${ENV}-nft-service
+    container_name : ${STAGE_NAME}-nft-service
     build:
       context: ./newton/apps/nft-manager
       dockerfile: Dockerfile
@@ -307,7 +307,7 @@ services:
         ipv4_address: "${IP_NFT_MANAGER}"
 
   giveaway-checker:
-    container_name: ${ENV}-giveaway-checker
+    container_name: ${STAGE_NAME}-giveaway-checker
     build:
       context: ./giveaway-checker
       dockerfile: Dockerfile
@@ -324,7 +324,7 @@ services:
 
   website:
     hostname: website
-    container_name: ${ENV}-website
+    container_name: ${STAGE_NAME}-website
     build:
         context: ./website
         args:
@@ -343,7 +343,7 @@ services:
         ipv4_address: ${IP_WEBSITE}
 
   golang-server:
-    container_name: ${ENV}-golang-server
+    container_name: ${STAGE_NAME}-golang-server
     build:
       context: ./golang-server
       dockerfile: ./server/Dockerfile
@@ -362,7 +362,7 @@ services:
         ipv4_address: ${IP_GOLANG_SERVER}
 
   golang-worker:
-    container_name: ${ENV}-golang-worker
+    container_name: ${STAGE_NAME}-golang-worker
     build:
       context: ./golang-server
       dockerfile: ./worker/Dockerfile
@@ -381,7 +381,7 @@ services:
   metabase:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
-    container_name: ${ENV}-metabase
+    container_name: ${STAGE_NAME}-metabase
     restart: unless-stopped
 #    ports:
 #      - "${PORT_METABASE}:3000"
@@ -411,7 +411,7 @@ services:
 
   client-web:
     hostname: client-web
-    container_name: ${ENV}-client-web
+    container_name: ${STAGE_NAME}-client-web
     <<: *default-extra-hosts
 #    ports:
 #      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
