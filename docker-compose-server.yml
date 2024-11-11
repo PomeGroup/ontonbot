@@ -113,7 +113,7 @@ services:
 #      - "${MINIO_PORT}:${MINIO_PORT}"
 #      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
-      - ./data/minio_data:/data
+      - ${STAGE_NAME}_minio_data:/data
       - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
     entrypoint: ["/usr/bin/entrypoint.sh"]  # Use the custom entrypoint script
     environment:
@@ -134,7 +134,7 @@ services:
     environment:
       <<: *common-env
     volumes:
-      - ./data/db_data:/var/lib/postgresql/data
+      - ${STAGE_NAME}_db_data:/var/lib/postgresql/data
     networks:
       onton-network:
         ipv4_address: "${IP_POSTGRES}"
@@ -145,7 +145,7 @@ services:
     container_name: ${STAGE_NAME}-redis
     restart: unless-stopped
     volumes:
-      - ./data/redis_data:/data
+      - ${STAGE_NAME}_redis_data:/data
 #    ports:
 #      - "${REDIS_PORT}:${REDIS_PORT}"
     profiles:
@@ -174,7 +174,7 @@ services:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
     volumes:
-      - clamav_data:/var/lib/clamav  # Persist virus definition database
+      - ${STAGE_NAME}_clamav_data:/var/lib/clamav  # Persist virus definition database
     restart: unless-stopped
     networks:
         onton-network:
@@ -199,7 +199,7 @@ services:
       onton-network:
         ipv4_address: ${IP_PGADMIN}
     volumes:
-      - pgadmin:/var/lib/pgadmin
+      - ${STAGE_NAME}_pgadmin:/var/lib/pgadmin
 
   telegram-bot:
     container_name: ${STAGE_NAME}-telegram-bot
@@ -238,7 +238,7 @@ services:
       - postgres
       - redis
     volumes:
-      - ./data/drizzle_data:/app/drizzle
+      - ${STAGE_NAME}_drizzle_data:/app/drizzle
     networks:
       onton-network:
         ipv4_address: ${IP_MINI_APP}
@@ -260,7 +260,7 @@ services:
       - postgres
       - redis
     volumes:
-      - ./data/drizzle_data:/app/drizzle
+      - ${STAGE_NAME}_drizzle_data_cron:/app/drizzle
     networks:
       onton-network:
         ipv4_address: "${IP_MINI_APP_CRON}"
@@ -454,6 +454,7 @@ services:
 #    networks:
 #      onton-network:
 #        ipv4_address: "${IP_SWAGGER_UI}"
+
 networks:
   onton-network:
     driver: bridge
@@ -463,7 +464,12 @@ networks:
     ipam:
       config:
         - subnet: "${IP_RANGE_START}.0.0/${IP_RANGE_SUBNET}"
+
 volumes:
-    pgadmin:
-    clamav_data:
+    ${STAGE_NAME}_pgadmin:
+    ${STAGE_NAME}_clamav_data:
+    ${STAGE_NAME}_minio_data:
+    ${STAGE_NAME}_db_data:
+    ${STAGE_NAME}_redis_data:
+    ${STAGE_NAME}_drizzle_data_cron:
 
