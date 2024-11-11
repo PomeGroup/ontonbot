@@ -3,7 +3,7 @@
 echo "Generating Caddyfile... ${USE_CLOUDFLARE}"
 if [ -n "${USE_CLOUDFLARE}" ]; then
     TLS_CONFIG="tls {
-        dns cloudflare ${CLOUDFLARE_API_TOKEN}
+        dns cloudflare  {env.CLOUDFLARE_API_TOKEN}
         protocols tls1.2 tls1.3
     }"
 else
