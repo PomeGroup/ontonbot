@@ -85,8 +85,8 @@ services:
       - "${NETWORK_PUBLIC_IP}:443:443"
       - "${NETWORK_PUBLIC_IP}:443:443/udp"
     volumes:
-      - ./data/caddy_data:/data
-      - ./data/caddy_config:/config
+      - ${STAGE_NAME}_caddy_data:/data
+      - ${STAGE_NAME}_caddy_config:/config
       - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
       - ./devops/cert:/certs
     networks:
@@ -472,4 +472,6 @@ volumes:
     ${STAGE_NAME}_db_data:
     ${STAGE_NAME}_redis_data:
     ${STAGE_NAME}_drizzle_data_cron:
+    ${STAGE_NAME}_caddy_data:
+    ${STAGE_NAME}_caddy_config:
 
