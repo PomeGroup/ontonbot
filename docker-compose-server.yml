@@ -109,9 +109,9 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_MINIO}"
-    ports:
+#    ports:
 #      - "${MINIO_PORT}:${MINIO_PORT}"
-      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
+#      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
       - ./data/minio_data:/data
       - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
@@ -124,8 +124,8 @@ services:
     container_name : ${ENV}-postgres
     image: postgres:16.3-alpine3.20
     restart: unless-stopped
-    ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+#    ports:
+#      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     profiles:
       - front-end-development
       - expecting-mini-app
@@ -146,8 +146,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./data/redis_data:/data
-    ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
+#    ports:
+#      - "${REDIS_PORT}:${REDIS_PORT}"
     profiles:
       - front-end-development
       - expecting-mini-app
@@ -164,8 +164,8 @@ services:
     image: mkodockx/docker-clamav
     hostname: clamav
     container_name: ${ENV}-clamav
-    ports:
-      - "${CLAMAV_PORT}:3310"
+#    ports:
+#      - "${CLAMAV_PORT}:3310"
     profiles:
       - front-end-development
       - manual-apps
@@ -191,8 +191,8 @@ services:
       - full
       - manual-apps
       - minimal
-    ports:
-      - "${PORT_PGADMIN}:80"
+#    ports:
+#      - "${PORT_PGADMIN}:80"
     depends_on:
       - postgres
     networks:
@@ -205,8 +205,8 @@ services:
     container_name: ${ENV}-telegram-bot
     build: ./telegram-bot
     restart: "unless-stopped"
-    ports:
-      - "${TELEGRAM_BOT_PORT}:${TELEGRAM_BOT_PORT}"
+#    ports:
+#      - "${TELEGRAM_BOT_PORT}:${TELEGRAM_BOT_PORT}"
     profiles:
       - front-end-development
       - manual-apps
@@ -222,8 +222,8 @@ services:
   mini-app:
     hostname: mini-app
     container_name: ${ENV}-mini-app
-    ports:
-      - "${MINI_APP_PORT}:${MINI_APP_PORT}"
+#    ports:
+#      - "${MINI_APP_PORT}:${MINI_APP_PORT}"
     profiles:
       - full
     build:
@@ -270,8 +270,8 @@ services:
     hostname: participant-tma
     container_name: ${ENV}-participant-tma
     <<: *default-extra-hosts
-    ports:
-      - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
+#    ports:
+#      - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
     profiles:
       - full
     build: 
@@ -293,8 +293,8 @@ services:
       context: ./newton/apps/nft-manager
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"
+#    ports:
+#      - "${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"
     profiles:
       - front-end-development
       - manual-apps
@@ -348,8 +348,8 @@ services:
       context: ./golang-server
       dockerfile: ./server/Dockerfile
     restart: unless-stopped
-    ports:
-      - "${GOLANG_SERVER_PORT}:${GOLANG_SERVER_PORT}"
+#    ports:
+#      - "${GOLANG_SERVER_PORT}:${GOLANG_SERVER_PORT}"
     profiles:
       - expecting-mini-app
       - full
@@ -383,8 +383,8 @@ services:
     hostname: metabase
     container_name: ${ENV}-metabase
     restart: unless-stopped
-    ports:
-      - "${PORT_METABASE}:3000"
+#    ports:
+#      - "${PORT_METABASE}:3000"
     profiles:
       - full
     volumes:
@@ -413,8 +413,8 @@ services:
     hostname: client-web
     container_name: ${ENV}-client-web
     <<: *default-extra-hosts
-    ports:
-      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
+#    ports:
+#      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
     profiles:
       - full
     build:
