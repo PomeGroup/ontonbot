@@ -12,6 +12,25 @@ else
     }"
 fi
 
+# Set the IP for services based on the USE_MAIN_IP_TO_EXPOSE variable
+if [ "${USE_MAIN_IP_TO_EXPOSE}" = "true" ]; then
+    PROXY_MINI_APP=${IP_RANGE_BASE}
+    PROXY_PARTICIPANT_TMA=${IP_RANGE_BASE}
+    PROXY_METABASE=${IP_RANGE_BASE}
+    PROXY_MINIO=${IP_RANGE_BASE}
+    PROXY_PGADMIN=${IP_RANGE_BASE}
+    PROXY_CLIENT_WEB=${IP_RANGE_BASE}
+    PROXY_WEBSITE=${IP_RANGE_BASE}
+else
+    PROXY_MINI_APP=${IP_MINI_APP}
+    PROXY_PARTICIPANT_TMA=${IP_PARTICIPANT_TMA}
+    PROXY_METABASE=${IP_METABASE}
+    PROXY_MINIO=${IP_MINIO}
+    PROXY_PGADMIN=${IP_PGADMIN}
+    PROXY_CLIENT_WEB=${IP_CLIENT_WEB}
+    PROXY_WEBSITE=${IP_WEBSITE}
+fi
+
 # Define log configuration
 LOG_CONFIG="log {
     output stdout
@@ -24,14 +43,14 @@ echo "
 ${MINI_APP_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy /ptma* http://${IP_RANGE_BASE}:${PARTICIPANT_TMA_PORT}
-    reverse_proxy http://${IP_RANGE_BASE}:${MINI_APP_PORT}
+    reverse_proxy /ptma* http://${PROXY_PARTICIPANT_TMA}:${PARTICIPANT_TMA_PORT}
+    reverse_proxy http://${PROXY_MINI_APP}:${MINI_APP_PORT}
 }
 
 ${METABASE_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy ${IP_RANGE_BASE}:${PORT_METABASE}
+    reverse_proxy ${PROXY_METABASE}:${PORT_METABASE}
 }
 
 ${MINIO_STORAGE_DOMAIN} {
@@ -43,7 +62,7 @@ ${MINIO_STORAGE_DOMAIN} {
 ${MINIO_STORAGE_ADMIN_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy http://${IP_RANGE_BASE}:${MINIO_DASHBOARD_PORT}
+    reverse_proxy http://${PROXY_MINIO}:${MINIO_DASHBOARD_PORT}
 }
 
 ${MONITORING_DOMAIN} {
@@ -55,19 +74,19 @@ ${MONITORING_DOMAIN} {
 ${PGADMIN_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy http://${IP_PGADMIN}:${PORT_PGADMIN}
+    reverse_proxy http://${PROXY_PGADMIN}:${PORT_PGADMIN}
 }
 
 ${CLIENT_WEB_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy ${IP_RANGE_BASE}:${PORT_CLIENT_WEB}
+    reverse_proxy ${PROXY_CLIENT_WEB}:${PORT_CLIENT_WEB}
 }
 
 ${ONTON_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy ${IP_RANGE_BASE}:${PORT_WEB_SITE}
+    reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
 }
 
 " > /etc/caddy/Caddyfile
