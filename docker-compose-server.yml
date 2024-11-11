@@ -116,9 +116,9 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_MINIO}"
-#    ports:
-#      - "${MINIO_PORT}:${MINIO_PORT}"
-#      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
+    ports:
+      - "${IP_RANGE_BASE}:${MINIO_PORT}:${MINIO_PORT}"
+      - "${IP_RANGE_BASE}:${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
       - minio_data:/data
       - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
@@ -229,8 +229,8 @@ services:
   mini-app:
     hostname: mini-app
     container_name: ${STAGE_NAME}-mini-app
-#    ports:
-#      - "${MINI_APP_PORT}:${MINI_APP_PORT}"
+    ports:
+      - "${IP_RANGE_BASE}:${MINI_APP_PORT}:${MINI_APP_PORT}"
     profiles:
       - full
     build:
@@ -342,7 +342,7 @@ services:
 #    depends_on:
 #     - caddy
     ports:
-      - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
+      - "${IP_RANGE_BASE}:${PORT_WEB_SITE}:${PORT_WEB_SITE}"
     environment:
         <<: *common-env
     networks:
