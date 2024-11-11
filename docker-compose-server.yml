@@ -476,18 +476,20 @@ volumes:
     pgadmin:
       name: "${STAGE_NAME}_pgadmin"
     clamav_data:
-      name: "clamav_data"
+      name: "${STAGE_NAME}_clamav_data"
     minio_data:
-      name: "minio_data"
+      name: "${STAGE_NAME}_minio_data"
     db_data:
-      name: "db_data"
+      name: "${STAGE_NAME}_db_data"
     redis_data:
-      name: "redis_data"
+      name: "${STAGE_NAME}_redis_data"
+    drizzle_data:
+        name: "${STAGE_NAME}_drizzle_data"
     drizzle_data_cron:
-      name: "drizzle_data_cron"
+      name: "${STAGE_NAME}_drizzle_data_cron"
     caddy_data:
-      name: "caddy_data"
+      name: "${STAGE_NAME}_caddy_data"
     caddy_config:
-      name: "caddy_config"
+      name: "${STAGE_NAME}_caddy_config"
 
 
