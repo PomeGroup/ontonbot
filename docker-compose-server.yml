@@ -89,8 +89,8 @@ services:
       - "${NETWORK_PUBLIC_IP}:443:443"
       - "${NETWORK_PUBLIC_IP}:443:443/udp"
     volumes:
-      - ${STAGE_NAME}_caddy_data:/data
-      - ${STAGE_NAME}_caddy_config:/config
+      - caddy_data:/data
+      - caddy_config:/config
       - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
       - ./devops/cert:/certs
     networks:
@@ -120,7 +120,7 @@ services:
 #      - "${MINIO_PORT}:${MINIO_PORT}"
 #      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
-      - ${STAGE_NAME}_minio_data:/data
+      - minio_data:/data
       - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
     entrypoint: ["/usr/bin/entrypoint.sh"]  # Use the custom entrypoint script
     environment:
@@ -141,7 +141,7 @@ services:
     environment:
       <<: *common-env
     volumes:
-      - ${STAGE_NAME}_db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     networks:
       onton-network:
         ipv4_address: "${IP_POSTGRES}"
@@ -152,7 +152,7 @@ services:
     container_name: ${STAGE_NAME}-redis
     restart: unless-stopped
     volumes:
-      - ${STAGE_NAME}_redis_data:/data
+      - redis_data:/data
 #    ports:
 #      - "${REDIS_PORT}:${REDIS_PORT}"
     profiles:
@@ -181,7 +181,7 @@ services:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
     volumes:
-      - ${STAGE_NAME}_clamav_data:/var/lib/clamav  # Persist virus definition database
+      - clamav_data:/var/lib/clamav  # Persist virus definition database
     restart: unless-stopped
     networks:
         onton-network:
@@ -206,7 +206,7 @@ services:
       onton-network:
         ipv4_address: ${IP_PGADMIN}
     volumes:
-      - ${STAGE_NAME}_pgadmin:/var/lib/pgadmin
+      - pgadmin:/var/lib/pgadmin
 
   telegram-bot:
     container_name: ${STAGE_NAME}-telegram-bot
@@ -245,7 +245,7 @@ services:
       - postgres
       - redis
     volumes:
-      - ${STAGE_NAME}_drizzle_data:/app/drizzle
+      - drizzle_data:/app/drizzle
     networks:
       onton-network:
         ipv4_address: ${IP_MINI_APP}
@@ -267,7 +267,7 @@ services:
       - postgres
       - redis
     volumes:
-      - ${STAGE_NAME}_drizzle_data_cron:/app/drizzle
+      - drizzle_data_cron:/app/drizzle
     networks:
       onton-network:
         ipv4_address: "${IP_MINI_APP_CRON}"
@@ -473,12 +473,21 @@ networks:
         - subnet: "${IP_RANGE_START}.0.0/${IP_RANGE_SUBNET}"
 
 volumes:
-    "${STAGE_NAME}_pgadmin":
-    "${STAGE_NAME}_clamav_data":
-    "${STAGE_NAME}_minio_data":
-    "${STAGE_NAME}_db_data":
-    "${STAGE_NAME}_redis_data":
-    "${STAGE_NAME}_drizzle_data_cron":
-    "${STAGE_NAME}_caddy_data":
-    "${STAGE_NAME}_caddy_config":
+    pgadmin:
+      name: "${STAGE_NAME}_pgadmin"
+    clamav_data:
+      name: "${STAGE_NAME}_clamav_data"
+    minio_data:
+      name: "${STAGE_NAME}_minio_data"
+    db_data:
+      name: "${STAGE_NAME}_db_data"
+    redis_data:
+      name: "${STAGE_NAME}_redis_data"
+    drizzle_data_cron:
+      name: "${STAGE_NAME}_drizzle_data_cron"
+    caddy_data:
+      name: "${STAGE_NAME}_caddy_data"
+    caddy_config":
+      name: "${STAGE_NAME}_caddy_config"
+
 
