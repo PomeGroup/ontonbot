@@ -186,12 +186,15 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_LISTEN_PORT: ${PORT_PGADMIN}
     profiles:
       - full
       - manual-apps
       - minimal
     depends_on:
       - postgres
+    ports:
+      - "${PORT_PGADMIN}:${PORT_PGADMIN}"
     networks:
       onton-network:
         ipv4_address: ${IP_PGADMIN}
@@ -200,7 +203,8 @@ services:
 
   telegram-bot:
     container_name: ${STAGE_NAME}-telegram-bot
-    build: ./telegram-bot
+    image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
+    pull_policy: build
     restart: "unless-stopped"
     profiles:
       - front-end-development
@@ -217,15 +221,10 @@ services:
   mini-app:
     hostname: mini-app
     container_name: ${STAGE_NAME}-mini-app
+    pull_policy: build
+    image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     profiles:
       - full
-    build:
-      context: ./mini-app
-      target: production-stage
-      args:
-        <<: *common-env
-        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
-        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
     restart: "unless-stopped"
     environment:
         <<: *common-env
@@ -243,13 +242,8 @@ services:
   mini-app-cron:
     hostname: mini-app
     container_name: ${STAGE_NAME}-mini-app-cron
-    build:
-      context: ./mini-app
-      target: production-stage
-      args:
-        <<: *common-env
-        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
-        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    pull_policy: build
     restart: "unless-stopped"
     profiles:
       - full
@@ -270,14 +264,11 @@ services:
   participant-tma:
     hostname: participant-tma
     container_name: ${STAGE_NAME}-participant-tma
+    image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
+    pull_policy: build
     <<: *default-extra-hosts
     profiles:
       - full
-    build: 
-      context: ./newton/
-      target: participant-tma
-      args:
-        <<: *common-env
     restart: "unless-stopped"
     environment:
         <<: *common-env
@@ -288,9 +279,8 @@ services:
   nft-microservice:
     hostname: nft-service
     container_name : ${STAGE_NAME}-nft-service
-    build:
-      context: ./newton/apps/nft-manager
-      dockerfile: Dockerfile
+    image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
+    pull_policy: build
     restart: unless-stopped
     profiles:
       - front-end-development
@@ -305,9 +295,7 @@ services:
 
   giveaway-checker:
     container_name: ${STAGE_NAME}-giveaway-checker
-    build:
-      context: ./giveaway-checker
-      dockerfile: Dockerfile
+    image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
     restart: unless-stopped
     profiles:
       - full
@@ -322,10 +310,8 @@ services:
   website:
     hostname: website
     container_name: ${STAGE_NAME}-website
-    build:
-        context: ./website
-        args:
-            <<: *common-env
+    image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
+    pull_policy: build
     restart: "unless-stopped"
     profiles:
       - full
@@ -339,9 +325,7 @@ services:
 
   golang-server:
     container_name: ${STAGE_NAME}-golang-server
-    build:
-      context: ./golang-server
-      dockerfile: ./server/Dockerfile
+    image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
     restart: unless-stopped
     profiles:
       - expecting-mini-app
@@ -356,9 +340,7 @@ services:
 
   golang-worker:
     container_name: ${STAGE_NAME}-golang-worker
-    build:
-      context: ./golang-server
-      dockerfile: ./worker/Dockerfile
+    image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
     restart: unless-stopped
     profiles:
       - expecting-mini-app
@@ -406,18 +388,8 @@ services:
     <<: *default-extra-hosts
     profiles:
       - full
-    build:
-      context: ./client-web-panel
-      dockerfile: Dockerfile
-      target: production
-      args:
-        ENV_TYPE : production
-        NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
-        CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
-        CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
-        CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
-        CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
-        PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
+    image: ghcr.io/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
+    pull_policy: build
     restart: "unless-stopped"
     environment:
       NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}

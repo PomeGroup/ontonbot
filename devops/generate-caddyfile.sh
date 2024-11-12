@@ -74,12 +74,17 @@ ${MONITORING_DOMAIN} {
 ${PGADMIN_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy http://${PROXY_PGADMIN}:${PORT_PGADMIN}
+    reverse_proxy http://${PROXY_PGADMIN}:${PORT_PGADMIN} {
+       header_up X-Forwarded-Proto {scheme}
+       header_up Host {host}
+       header_down -X-Content-Type-Options
+    }
 }
 
 ${CLIENT_WEB_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
+
     reverse_proxy ${PROXY_CLIENT_WEB}:${PORT_CLIENT_WEB}
 }
 

@@ -5,7 +5,7 @@
     "scripts": {
         "dev": "dotenv -e ../.env -- cross-var node --inspect ./node_modules/next/dist/bin/next dev --port %MINI_APP_PORT%",
         "test-env": "dotenv -e ../.env -- cross-var  echo %MINI_APP_PORT%",
-	"dev:local": "next dev",
+	    "dev:local": "next dev",
         "build": "next build",
         "build:local": "dotenv -e ../.env -- cross-var next build",
         "start-cron": "tsx ./src/start.ts",
@@ -18,7 +18,7 @@
         "db:custom": "dotenv -e ../.env -- cross-var drizzle-kit  generate --custom",
         "test:watch": "jest --watch",
         "format": "prettier --write ./src",
-        "type:check": "dotenv -e ../.env -- tsc --noEmit",
+        "type:check": "dotenv -e  ../.env -- cross-var tsc --noEmit",
         "depcheck": "depcheck"
     },
     "dependencies": {

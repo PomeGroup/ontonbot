@@ -62,10 +62,10 @@ load_env_file() {
     # Read each line and classify as variable or secret
     while IFS='=' read -r key value; do
         if [[ -n "$key" && "$key" != \#* ]]; then
-            if [[ -z "$value" ]]; then
-                print_red "Error: $key has no value. Please assign a value or set it explicitly to \"\" if it should be empty."
-                exit 1
-            fi
+#            if [[ -z "$value" ]]; then
+#                print_red "Error: $key has no value. Please assign a value or set it explicitly to \"\" if it should be empty."
+#                exit 1
+#            fi
             if [[ "$key" == SECRET_* ]]; then
                 stripped_key="${key#SECRET_}"  # Remove "SECRET_" prefix for the secret name
                 secrets["$stripped_key"]="$value"
@@ -114,29 +114,29 @@ fi
 load_env_file
 
 # Iterate over repositories and delete old secrets and variables
-for repo in "${repos[@]}"; do
-    echo "Deleting old secrets with prefix '$env_prefix' in $repo"
-
-    # Delete old secrets in parallel
-    existing_secrets=$(gh secret list --repo "$repo" --app actions | awk '{print $1}')
-    for secret in $existing_secrets; do
-        if [[ "$secret" == ${env_prefix}_* ]]; then
-            echo "Deleting secret $secret from $repo"
-            printf 'y\n' | gh secret delete "$secret" --repo "$repo" --app actions &
-        fi
-    done
-
-    echo "Deleting old variables with prefix '$env_prefix' in $repo"
-
-    # Delete old variables in parallel
-    existing_vars=$(gh variable list --repo "$repo" | awk '{print $1}')
-    for var in $existing_vars; do
-        if [[ "$var" == ${env_prefix}_* ]]; then
-            echo "Deleting variable $var from $repo"
-            gh variable delete "$var" --repo "$repo" &
-        fi
-    done
-done
+#for repo in "${repos[@]}"; do
+#    echo "Deleting old secrets with prefix '$env_prefix' in $repo"
+#
+#    # Delete old secrets in parallel
+#    existing_secrets=$(gh secret list --repo "$repo" --app actions | awk '{print $1}')
+#    for secret in $existing_secrets; do
+#        if [[ "$secret" == ${env_prefix}_* ]]; then
+#            echo "Deleting secret $secret from $repo"
+#            printf 'y\n' | gh secret delete "$secret" --repo "$repo" --app actions &
+#        fi
+#    done
+#
+#    echo "Deleting old variables with prefix '$env_prefix' in $repo"
+#
+#    # Delete old variables in parallel
+#    existing_vars=$(gh variable list --repo "$repo" | awk '{print $1}')
+#    for var in $existing_vars; do
+#        if [[ "$var" == ${env_prefix}_* ]]; then
+#            echo "Deleting variable $var from $repo"
+#            gh variable delete "$var" --repo "$repo" &
+#        fi
+#    done
+#done
 
 # Wait for all background deletion jobs to finish
 wait
@@ -148,6 +148,7 @@ for repo in "${repos[@]}"; do
         for key in "${!secrets[@]}"; do
             secret_name="${env_prefix}_${key}"  # The secret name without "SECRET_"
             secret_value="${secrets[$key]}"
+            secret_value="${secret_value//\"/}"  # Remove double quotes
 
             echo "Setting secret $secret_name for $repo"
             gh secret set "$secret_name" --repo "$repo" --app actions --body "$secret_value" &
@@ -161,6 +162,7 @@ for repo in "${repos[@]}"; do
         for key in "${!env_vars[@]}"; do
             var_name="${env_prefix}_${key}"
             var_value="${env_vars[$key]}"
+            var_value="${var_value//\"/}"  # Remove double quotes
 
             echo "Setting variable $var_name for $repo"
             gh variable set "$var_name" --repo "$repo" --body "$var_value" &
@@ -169,6 +171,7 @@ for repo in "${repos[@]}"; do
         echo "No environment variables to set for $repo."
     fi
 done
+
 
 # Wait for all background setting jobs to finish
 wait

@@ -59,17 +59,11 @@ export const EventDataProvider = ({
     }
   );
 
-  useEffect(() => {
-    if (eventData.data) {
-      console.log("eventHash", eventData);
-    }
-  }, [eventData]);
-
   const eventPasswordField = useMemo(() => {
     return eventData.data?.dynamic_fields.find(v => v.title === 'secret_phrase_onton_input')
   }, [eventData.data?.dynamic_fields.length])
 
-  const { isLocationUrl, isNotEnded, isStarted, endUTC, startUTC, location } =
+  const { isLocationUrl, endUTC, startUTC, location } =
     useMemo(() => {
       if (!eventData.data) {
         return {
@@ -81,15 +75,10 @@ export const EventDataProvider = ({
       const startUTC = Number(eventData.data.start_date) * 1000;
       const endUTC = Number(eventData.data.end_date) * 1000;
 
-      const currentTime = Date.now();
-      const isNotEnded = currentTime < endUTC;
-      const isStarted = currentTime > startUTC;
       const location = eventData.data.location;
       const urlSchema = zod.string().url();
       const { success } = urlSchema.safeParse(location);
       return {
-        isNotEnded,
-        isStarted,
         endUTC,
         isLocationUrl: success,
         startUTC,
@@ -112,8 +101,8 @@ export const EventDataProvider = ({
     <EventDataContext.Provider
       value={{
         eventData,
-        isNotEnded: Boolean(isNotEnded),
-        isStarted: Boolean(isStarted),
+        isNotEnded: Boolean(eventData.data?.isNotEnded),
+        isStarted: Boolean(eventData.data?.isStarted),
         endUTC,
         startUTC,
         location,

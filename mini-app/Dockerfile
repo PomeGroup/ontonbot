@@ -7,12 +7,15 @@ WORKDIR /app
 # Copy only the package.json and pnpm-lock.yaml for dependency caching
 COPY package.json pnpm-lock.yaml ./
 
+
+
 # Install pnpm and dependencies
 RUN npm install -g pnpm \
     && pnpm install
 
 # Stage 2: Build Stage
 FROM node:20.13.1-alpine3.20 AS build-stage
+
 
 # ARG for build-time variables
 
@@ -41,7 +44,10 @@ ARG REDIS_DATABASES
 ARG MINI_APP_PORT
 ARG IP_NFT_MANAGER
 ARG NFT_MANAGER_PORT
-
+ARG CLIENT_API_JWT_SECRET
+ARG CLIENT_API_FIXED_KEY
+ARG CLIENT_API_FIXED_USER
+ARG CLIENT_API_FIXED_ORGANIZER
 # Export arguments as environment variables
 ENV NODE_ENV=${NODE_ENV}
 ENV ENV=${ENV}
@@ -66,6 +72,10 @@ ENV REDIS_DATABASES=${REDIS_DATABASES}
 ENV MINI_APP_PORT=${MINI_APP_PORT}
 ENV IP_NFT_MANAGER=${IP_NFT_MANAGER}
 ENV NFT_MANAGER_PORT=${NFT_MANAGER_PORT}
+ENV CLIENT_API_JWT_SECRET=${CLIENT_API_JWT_SECRET}
+ENV CLIENT_API_FIXED_KEY=${CLIENT_API_FIXED_KEY}
+ENV CLIENT_API_FIXED_USER=${CLIENT_API_FIXED_USER}
+ENV CLIENT_API_FIXED_ORGANIZER=${CLIENT_API_FIXED_ORGANIZER}
 
 RUN npm install -g pnpm
 # Set working directory

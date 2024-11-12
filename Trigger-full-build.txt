@@ -1,0 +1,5 @@
+### change this file if you want to trigger a full build ###
+final golgolin = "golgolin"
+goblins = "goblins"
+trigger full build with runners
+change all job

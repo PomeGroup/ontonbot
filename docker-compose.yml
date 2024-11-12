@@ -70,7 +70,6 @@ x-common-env: &common-env
   TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
 
-
 services:
   caddy:
     image: caddy:latest
@@ -94,9 +93,6 @@ services:
         ipv4_address: "${IP_CADDY}"
     environment:
       <<: *common-env
-      USE_CLOUDFLARE: ${USE_CLOUDFLARE}
-      CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
-      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
     entrypoint: /usr/bin/envsh/generate-caddyfile.sh
 
   minio:
@@ -279,7 +275,7 @@ services:
       - full
     build: 
       context: ./newton/
-      target: participant-tma
+      dockerfile: ./apps/participant-tma/Dockerfile
       args:
         <<: *common-env
     restart: "unless-stopped"
@@ -293,8 +289,8 @@ services:
     hostname: nft-service
     container_name : ${ENV}-nft-service
     build:
-      context: ./newton/apps/nft-manager
-      dockerfile: Dockerfile
+      context: ./newton/
+      dockerfile: ./apps/nft-manager/Dockerfile
     restart: unless-stopped
     ports:
       - "${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"

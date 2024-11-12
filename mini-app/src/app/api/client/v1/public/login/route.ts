@@ -9,6 +9,9 @@ const FIXED_API_KEY = process.env.CLIENT_API_FIXED_KEY!;
 const FIXED_USER = process.env.CLIENT_API_FIXED_USER!;
 const FIXED_ORGANIZER = process.env.CLIENT_API_FIXED_ORGANIZER!;
 
+
+
+
 // Define error codes for consistent error responses
 const ERROR_CODES = {
     METHOD_NOT_ALLOWED: {

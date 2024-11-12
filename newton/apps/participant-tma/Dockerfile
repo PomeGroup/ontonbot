@@ -30,26 +30,32 @@ RUN apk update && apk upgrade && \
   ca-certificates
 
 # Install pnpm globally
-RUN npm i -g pnpm
-COPY  ../../ /app/
-
-WORKDIR /app/
+WORKDIR /app
 RUN echo "Listing contents of /app:" && ls -la /app
-# Copy and install dependencies
+COPY ./ /app
+RUN echo "Listing contents of /app:" && ls -la /app
+RUN npm i -g pnpm
+# Set the working directory
+# Copy everything from the workspace root to the /app directory inside the container
 
 
+# Listing contents of /app to verify everything is copied
+RUN echo "Listing contents of /app:" && ls -la /app
+
+# Install all dependencies
 RUN pnpm install
 
-# Copy the entire codebase
 
-# Copy all necessary files from the workspace root
-
-WORKDIR /app/apps/nft-manager/
-RUN pnpm install
-
-
-
+# Change directory to participant-tma
+WORKDIR /app/apps/participant-tma
+RUN echo "Listing contents of /app:" && ls -la /app/apps/participant-tma/
+RUN echo "Listing ENV" && printenv
 # Build the application
 RUN pnpm build
-RUN echo "Listing contents of /app:" && ls -la /app/apps/nft-manager/
-CMD ["node", "dist/main"]
+
+# Expose the specified port for participant-tma
+ENV PORT=$PARTICIPANT_TMA_PORT
+EXPOSE $PORT
+
+
+CMD pnpm start --port $PARTICIPANT_TMA_PORT

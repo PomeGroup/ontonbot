@@ -9,7 +9,7 @@ import {
   visitors,
 } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import {removeKey, roundDateToInterval} from "@/lib/utils";
+import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
@@ -120,12 +120,21 @@ export const selectEventByUuid = async (eventUuid: string) => {
 
   dynamicFields.sort((a, b) => a.order_place! - b.order_place!);
 
+  const startUTC = Number(eventData.start_date) * 1000;
+  const endUTC = Number(eventData.end_date) * 1000;
+
+  const currentTime = Date.now();
+  const isNotEnded = currentTime < endUTC;
+  const isStarted = currentTime > startUTC;
+
   return {
     ...restEventData, // Spread the rest of eventData properties
     society_hub: {
       id: restEventData.society_hub_id,
       name: restEventData.society_hub,
     },
+    isStarted,
+    isNotEnded,
     dynamic_fields: dynamicFields,
     activity_id: restEventData.activity_id,
   };
@@ -188,10 +197,10 @@ export const getUserEvents = async (
     })
     .from(tickets)
     .where(eq(tickets.user_id, userId!));
-console.log("rewardQuery",ticketsQuery.toSQL().sql);
+  console.log("rewardQuery", ticketsQuery.toSQL().sql);
   // Use unionAll to combine the results, apply orderBy, limit, and offset
   //@ts-ignore
-  const combinedResultsQuery = unionAll(rewardQuery, eventQuery,ticketsQuery)
+  const combinedResultsQuery = unionAll(rewardQuery, eventQuery, ticketsQuery)
     .orderBy((row) => row.created_at)
     .limit(limit !== null ? limit : 100)
     .offset(offset !== null ? offset : 0);
@@ -209,25 +218,25 @@ export const getOrganizerEvents = async (
   const finalOffset = offset !== undefined ? offset : 0;
 
   const eventsQuery = db
-      .select({
-        event_uuid: events.event_uuid,
-        title: events.title,
-        image_url: events.image_url,
-        location: events.location,
-        start_date: events.start_date,
-        end_date: events.end_date,
-        participation_type: events.participationType,
-        hidden: events.hidden,
-        society_hub_id: events.society_hub_id,
-        ticket_to_check_in: events.ticketToCheckIn,
-        timezone: events.timezone,
-          }
-      )
-      .from(events)
-      .where(eq(events.owner, organizerId))
-      .orderBy(desc(events.start_date))
-      .limit(finalLimit)
-      .offset(finalOffset);
+    .select({
+      event_uuid: events.event_uuid,
+      title: events.title,
+      image_url: events.image_url,
+      location: events.location,
+      start_date: events.start_date,
+      end_date: events.end_date,
+      participation_type: events.participationType,
+      hidden: events.hidden,
+      society_hub_id: events.society_hub_id,
+      ticket_to_check_in: events.ticketToCheckIn,
+      timezone: events.timezone,
+    }
+    )
+    .from(events)
+    .where(eq(events.owner, organizerId))
+    .orderBy(desc(events.start_date))
+    .limit(finalLimit)
+    .offset(finalOffset);
 
 
   // Return the result of the query
@@ -255,7 +264,7 @@ export const getEventsWithFilters = async (
     filter.startDate = roundDateToInterval(filter?.startDate, roundMinutesInMs);
   }
   if (filter?.endDate) {
-    filter.endDate =roundDateToInterval(filter?.endDate, roundMinutesInMs);
+    filter.endDate = roundDateToInterval(filter?.endDate, roundMinutesInMs);
   }
   const stringToHash = JSON.stringify({
     limit,
@@ -402,8 +411,8 @@ export const getEventsWithFilters = async (
       query = query.orderBy(desc(event_details_search_list.visitorCount));
     }
     else if (sortBy === "random") {
-        // @ts-expect-error
-        query = query.orderBy(sql`random()`);
+      // @ts-expect-error
+      query = query.orderBy(sql`random()`);
     }
   }
 
