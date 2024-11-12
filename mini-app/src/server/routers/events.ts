@@ -564,7 +564,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           } as const;
         }
       } catch (error) {
-        console.error(error);
+        console.error('hub fetch failed', error);
 
         return {
           status: "error",

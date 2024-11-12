@@ -15,7 +15,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <div>
         <div
           className={cn(
-            "flex h-11.5 bn b w-full rounded-xl bg-muted p-1 xxs:px-3 xxs:py-2 text-sm ring-offset-background text-black items-center space-x-2",
+            "dark:text-white text-black flex h-10 bn b w-full rounded-xl bg-muted p-1 xxs:px-3 xxs:py-2 text-sm ring-offset-background items-center space-x-2",
             className,
             {
               "ring-red-400 ring-1": props.errors?.length,
