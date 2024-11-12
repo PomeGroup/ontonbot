@@ -70,7 +70,7 @@ export const EventPasswordInput = () => {
           placeholder="Event password"
           name='event_password'
           autoFocus type="text"
-          className="bg-muted"
+          className="bg-muted border-secondary-foreground/40 border"
           minLength={4}
           errors={upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined}
           prefix_icon={<PasscodeIcon />}
