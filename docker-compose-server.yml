@@ -68,7 +68,11 @@ x-common-env: &common-env
   REDIS_PORT: ${REDIS_PORT}
   TELEGRAM_BOT_PORT: ${TELEGRAM_BOT_PORT}
   TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
-  TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
+  TONAPI_API_KEY: ${TONAPI_API_KEY}
+  TON_CENTER_TOKEN: ${TONAPI_API_SECRET}
+  TON_CENTER_ENDPOINT: ${TONAPI_API_URL}
+
+
 
 
 services:
@@ -116,9 +120,6 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_MINIO}"
-    ports:
-      - "${IP_RANGE_BASE}:${MINIO_PORT}:${MINIO_PORT}"
-      - "${IP_RANGE_BASE}:${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
       - minio_data:/data
       - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
@@ -131,8 +132,6 @@ services:
     container_name : ${STAGE_NAME}-postgres
     image: postgres:16.3-alpine3.20
     restart: unless-stopped
-#    ports:
-#      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     profiles:
       - front-end-development
       - expecting-mini-app
@@ -153,8 +152,6 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-#    ports:
-#      - "${REDIS_PORT}:${REDIS_PORT}"
     profiles:
       - front-end-development
       - expecting-mini-app
@@ -171,8 +168,6 @@ services:
     image: mkodockx/docker-clamav
     hostname: clamav
     container_name: ${STAGE_NAME}-clamav
-#    ports:
-#      - "${CLAMAV_PORT}:3310"
     profiles:
       - front-end-development
       - manual-apps
@@ -198,8 +193,6 @@ services:
       - full
       - manual-apps
       - minimal
-#    ports:
-#      - "${PORT_PGADMIN}:80"
     depends_on:
       - postgres
     networks:
@@ -212,8 +205,6 @@ services:
     container_name: ${STAGE_NAME}-telegram-bot
     build: ./telegram-bot
     restart: "unless-stopped"
-#    ports:
-#      - "${TELEGRAM_BOT_PORT}:${TELEGRAM_BOT_PORT}"
     profiles:
       - front-end-development
       - manual-apps
@@ -229,8 +220,6 @@ services:
   mini-app:
     hostname: mini-app
     container_name: ${STAGE_NAME}-mini-app
-    ports:
-      - "${IP_RANGE_BASE}:${MINI_APP_PORT}:${MINI_APP_PORT}"
     profiles:
       - full
     build:
@@ -238,9 +227,13 @@ services:
       target: production-stage
       args:
         <<: *common-env
+        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
     restart: "unless-stopped"
     environment:
         <<: *common-env
+        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
     depends_on:
       - postgres
       - redis
@@ -258,11 +251,15 @@ services:
       target: production-stage
       args:
         <<: *common-env
+        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
     restart: "unless-stopped"
     profiles:
       - full
     environment:
         <<: *common-env
+        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
     depends_on:
       - postgres
       - redis
@@ -277,8 +274,6 @@ services:
     hostname: participant-tma
     container_name: ${STAGE_NAME}-participant-tma
     <<: *default-extra-hosts
-#    ports:
-#      - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
     profiles:
       - full
     build: 
@@ -300,8 +295,6 @@ services:
       context: ./newton/apps/nft-manager
       dockerfile: Dockerfile
     restart: unless-stopped
-#    ports:
-#      - "${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"
     profiles:
       - front-end-development
       - manual-apps
@@ -341,8 +334,6 @@ services:
       - full
 #    depends_on:
 #     - caddy
-    ports:
-      - "${IP_RANGE_BASE}:${PORT_WEB_SITE}:${PORT_WEB_SITE}"
     environment:
         <<: *common-env
     networks:
@@ -355,8 +346,6 @@ services:
       context: ./golang-server
       dockerfile: ./server/Dockerfile
     restart: unless-stopped
-#    ports:
-#      - "${GOLANG_SERVER_PORT}:${GOLANG_SERVER_PORT}"
     profiles:
       - expecting-mini-app
       - full
@@ -390,8 +379,6 @@ services:
     hostname: metabase
     container_name: ${STAGE_NAME}-metabase
     restart: unless-stopped
-#    ports:
-#      - "${PORT_METABASE}:3000"
     profiles:
       - full
     volumes:
@@ -420,8 +407,6 @@ services:
     hostname: client-web
     container_name: ${STAGE_NAME}-client-web
     <<: *default-extra-hosts
-#    ports:
-#      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
     profiles:
       - full
     build:
