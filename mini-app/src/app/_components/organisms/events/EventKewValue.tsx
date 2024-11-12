@@ -1,4 +1,5 @@
 import useWebApp from '@/hooks/useWebApp';
+import { isTelegramUrl } from '@tonconnect/ui-react';
 import { cva, VariantProps } from 'class-variance-authority'
 import React, { ReactNode } from 'react'
 
@@ -40,7 +41,7 @@ const EventKeyValue = (props: EventKeyValueProps) => {
         })}
         onClick={() => {
           if (props.variant === 'link' && typeof props.value === 'string') {
-            if (props.value.startsWith('https://t.me')) {
+            if (isTelegramUrl(props.value)) {
               webApp?.openTelegramLink(props.value)
             } else {
               webApp?.openLink(props.value)
