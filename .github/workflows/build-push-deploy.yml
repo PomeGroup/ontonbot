@@ -90,6 +90,26 @@ jobs:
       ALLMYSECRETS: ${{ toJSON(secrets) }}
       ALLMYVARS: ${{ toJSON(vars) }}
     steps:
+      - name: Send Telegram Message - Build Start
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build Started for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+          
+            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -225,10 +245,51 @@ jobs:
           else
             echo "Error: Dockerfile $dockerfile_path does not exist. Skipping $service."
           fi
+      - name: Send Telegram Message - Build Success
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
 
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build was successful for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+
+            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+      - name: Send Telegram Message - Build Failure
+        if: failure()
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build was successful for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+          
+            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [determine-services, build-and-push]
     if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
     permissions:
       contents: read
@@ -328,30 +389,26 @@ jobs:
         run: |
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
+          services_to_build=${{ needs.determine-services.outputs.services_to_build }}   
+          echo "changed services: $services_to_build"
           echo "Deploying services to branch: $branch_name"
           if [ -z "$ssh_ip" ]; then
             echo "Error: SSH IP not found."
             exit 1
           fi
 
-          echo "Connecting to server and deploying services..."
-          echo "Copying files to server..."
+          echo "Connecting to server and creating branch directory..."
           ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
             mkdir -p /home/onton/$branch_name
           EOF
           
-          echo "Authenticating to GitHub Container Registry..."
+          echo "Copying files to server..."
+          scp -r -o StrictHostKeyChecking=no docker-compose-server.yml  .dockerignore  devops root@$ssh_ip:/home/onton/$branch_name
 
-          for file in .env docker-compose-server.yml  .dockerignore  devops; do
-            if [ -e "$file" ]; then
-              echo "Copying $file to server..."
-              scp -r -o StrictHostKeyChecking=no $file root@$ssh_ip:/home/onton/$branch_name
-            else
-              echo "Warning: File $file does not exist in workspace. Skipping..."
-            fi
-          done
           
-          
+          # Remove brackets and convert to space-separated string
+          services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
+          echo "Formatted services to build: $services"  # Debug output        
           ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
             echo "Loading environment variables..."
             cd /home/onton/$branch_name
@@ -359,44 +416,38 @@ jobs:
             echo "******Logging into GitHub Container Registry..."
             echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             echo "Pulling latest images of changed services..."
-            services_to_build=${{ needs.determine-services.outputs.services_to_build }}
-            # Dump the value of services_to_build
-            echo "Services to build: $services_to_build"
-            for service in \$(echo \$services_to_build | jq -r '.[]'); do
-              echo "---------Pulling Docker image for service: \$service"
-              docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
+            echo "services to build: $services_to_build"
+            # Remove the square brackets and split by comma
+            echo "Pulling latest images of changed services..."
+            for service in $services; do
+              echo "Processing service: \$service"
+              if [ -z "\$service" ]; then
+                echo "Warning: Found an empty service name, skipping..."
+              else
+                echo "Pulling Docker image for service: \$service"
+                docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
+              fi
             done
-
-             
-            
           EOF
           echo "Exporting all environment variables with branch-specific prefix..."
           ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
-
-          echo "Listing files in branch directory..."
-          
-          cd /home/onton/$branch_name
-          ls -la 
- 
-          echo "Sourcing environment variables..."
-
-          echo "Exporting environment variables and deploying services..."
-          export \$(printenv | grep '^${branch_name^^}_' | xargs)
-          cd /home/onton/$branch_name
-          source /home/onton/$branch_name/.env
-          echo "Logging into GitHub Container Registry with GHCR_PAT..."
-          echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
-    
-          echo "Pulling latest Docker image..."
-          docker pull ghcr.io/pomegroup/ontonbot/participant-tma:${branch_name}-latest
-
-          echo "Printing environment variables..."
-          chmod +x devops/generate-caddyfile.sh
-          chmod +x devops/minio-init.sh
-          docker compose  -f docker-compose-server.yml --env-file .env --profile full up -d
-          docker system prune -f
+            echo "Listing files in branch directory..."        
+            cd /home/onton/$branch_name
+            ls -la 
+            echo "Sourcing environment variables..."
+            echo "Exporting environment variables and deploying services..."
+            export \$(printenv | grep '^${branch_name^^}_' | xargs)
+            cd /home/onton/$branch_name
+            source /home/onton/$branch_name/.env
+            echo "Logging into GitHub Container Registry with GHCR_PAT..."
+            echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+            echo "Printing environment variables..."
+            chmod +x devops/generate-caddyfile.sh
+            chmod +x devops/minio-init.sh
+            docker compose  -f docker-compose-server.yml --env-file .env --profile full up -d
+            docker system prune -f
           EOF
-          
+
           echo "Services deployed successfully."
       - name: Cleanup Environment Variables File
         if: always()
@@ -404,3 +455,47 @@ jobs:
           echo "Cleaning up environment variables script..."
           rm -f .env
           echo "Environment variables script deleted successfully."
+
+      - name: Send Telegram Message - Deployment Success
+        if: success()
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build Started for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+          
+            ✅ deployment completed successfully
+            "
+      - name: Send Telegram Message - Deployment Failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build Started for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+          
+            ❌ ❌ deployment failed ❌ ❌ 
+            "
