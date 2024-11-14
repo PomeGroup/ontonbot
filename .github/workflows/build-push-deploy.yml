@@ -199,7 +199,7 @@ jobs:
             DOCKER_CMD+=" -t \"$tag_commit\""
             DOCKER_CMD+=" -t \"$tag_latest\""
             DOCKER_CMD+=" \"$build_context\""
-
+            echo "here is the docker command::: $DOCKER_CMD"
             # Execute build
             echo "Starting docker build..."
             if ! eval "$DOCKER_CMD"; then

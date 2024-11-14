@@ -86,7 +86,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 
 # Copy the rest of the application (Next.js, TypeScript configs, and source code)
 COPY . .
-
+RUN echo "NEXT_PUBLIC_BOT_USERNAME before build "  && echo $NEXT_PUBLIC_BOT_USERNAME
 # Build the Next.js application
 RUN pnpm run build
 
@@ -165,7 +165,7 @@ COPY --from=build-stage /app/src ./src
 COPY --from=build-stage /app/next.config.js ./next.config.js
 COPY --from=build-stage /app/tsconfig.json ./tsconfig.json
 COPY --from=build-stage /app/tailwind.config.js ./tailwind.config.js
-
+RUN echo "NEXT_PUBLIC_BOT_USERNAME Deloy stage"  && echo $NEXT_PUBLIC_BOT_USERNAME
 # Expose the necessary port for mini-app (Next.js)
 EXPOSE $MINI_APP_PORT
 
