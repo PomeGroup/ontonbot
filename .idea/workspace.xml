@@ -8,8 +8,6 @@
       <change beforePath="$PROJECT_DIR$/.github/workflows/build-push-deploy.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/build-push-deploy.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mini-app/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/app/api/v1/share-event/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/app/api/v1/share-event/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/server/routers/OntonSetting.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/routers/OntonSetting.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

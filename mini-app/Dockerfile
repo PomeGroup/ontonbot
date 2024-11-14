@@ -77,6 +77,7 @@ WORKDIR /app
 # Copy node_modules from the dependencies stage to reuse cached dependencies
 COPY --from=dependencies /app/node_modules ./node_modules
 
+
 # Copy the rest of the application (Next.js, TypeScript configs, and source code)
 COPY . .
 RUN echo "-----------------NEXT_PUBLIC_BOT_USERNAME before build  ${NEXT_PUBLIC_BOT_USERNAME}"
