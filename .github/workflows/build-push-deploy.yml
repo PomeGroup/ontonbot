@@ -19,24 +19,24 @@ on:
 
 jobs:
   determine-services:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       services_to_build: ${{ steps.determine-services.outputs.services }}
     steps:
 
 
-      - name: send telegram message on push
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
-          message: |
-            ${{ github.actor }} created commit:
-            Commit message: ${{ github.event.commits[0].message }}
-            
-            Repository: ${{ github.repository }}
-            
-            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+
+      - name: Send Telegram Message - Build Start
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d text="🔄 Build Started for ${{ github.repository }}
+          
+            Actor: ${{ github.actor }}
+            Commit Message: ${{ github.event.commits[0].message }}
+            Changed Services: ${{ steps.determine-services.outputs.services }}
+            See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+
       
 
       - name: Checkout Code
