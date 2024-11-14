@@ -24,19 +24,19 @@ jobs:
       services_to_build: ${{ steps.determine-services.outputs.services }}
     steps:
 
-      - name: Send Telegram Message - Build Start
+
+      - name: send telegram message on push
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
           message: |
-            🔄 Build Started for ${{ github.repository }}
+            ${{ github.actor }} created commit:
+            Commit message: ${{ github.event.commits[0].message }}
             
-            Actor: ${{ github.actor }}
-            Commit Message: ${{ github.event.commits[0].message }}
-            Changed Services: 
-            ${{ needs.determine-services.outputs.services_to_build }}
-            See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+            Repository: ${{ github.repository }}
+            
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
       
 
       - name: Checkout Code
