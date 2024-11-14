@@ -352,7 +352,9 @@ jobs:
               echo "Warning: File $file does not exist in workspace. Skipping..."
             fi
           done
-          
+          # Remove brackets and convert to space-separated string
+          services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
+          echo "Formatted services to build: $services"  # Debug output
           
           ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
             echo "Loading environment variables..."
@@ -364,15 +366,15 @@ jobs:
 
             echo "services to build: $services_to_build"
             # Remove the square brackets and split by comma
-            services=$(echo "$services_to_build" | tr -d '[]' | tr ',' ' ')
+            echo "Pulling latest images of changed services..."
             for service in $services; do
-                echo "Processing service: $service"
-                if [ -z "$service" ]; then
-                  echo "Warning: Found an empty service name, skipping..."
-                else
-                  echo "Pulling Docker image for service: $service"
-                  echo "docker pull ghcr.io/pomegroup/ontonbot/${service}:${branch_name}-latest"
-                fi
+              echo "Processing service: \$service"
+              if [ -z "\$service" ]; then
+              echo "Warning: Found an empty service name, skipping..."
+              else
+              echo "Pulling Docker image for service: \$service"
+              docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
+              fi
             done
 
              
