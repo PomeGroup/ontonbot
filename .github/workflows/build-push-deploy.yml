@@ -247,12 +247,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-
-
       - name: List Workspace Files
         run: ls -la
-
       - name: Generate Environment Variables Script
         id: generate-env-script
         env:
