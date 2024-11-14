@@ -336,26 +336,18 @@ jobs:
             exit 1
           fi
 
-          echo "Connecting to server and deploying services..."
-          echo "Copying files to server..."
+          echo "Connecting to server and creating branch directory..."
           ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
             mkdir -p /home/onton/$branch_name
           EOF
           
-          echo "Authenticating to GitHub Container Registry..."
+          echo "Copying files to server..."
+          scp -r -o StrictHostKeyChecking=no docker-compose-server.yml  .dockerignore  devops root@$ssh_ip:/home/onton/$branch_name
 
-          for file in .env docker-compose-server.yml  .dockerignore  devops; do
-            if [ -e "$file" ]; then
-              echo "Copying $file to server..."
-              scp -r -o StrictHostKeyChecking=no $file root@$ssh_ip:/home/onton/$branch_name
-            else
-              echo "Warning: File $file does not exist in workspace. Skipping..."
-            fi
-          done
+          
           # Remove brackets and convert to space-separated string
           services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
-          echo "Formatted services to build: $services"  # Debug output
-          
+          echo "Formatted services to build: $services"  # Debug output        
           ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
             echo "Loading environment variables..."
             cd /home/onton/$branch_name
@@ -363,48 +355,38 @@ jobs:
             echo "******Logging into GitHub Container Registry..."
             echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             echo "Pulling latest images of changed services..."
-
             echo "services to build: $services_to_build"
             # Remove the square brackets and split by comma
             echo "Pulling latest images of changed services..."
             for service in $services; do
               echo "Processing service: \$service"
               if [ -z "\$service" ]; then
-              echo "Warning: Found an empty service name, skipping..."
+                echo "Warning: Found an empty service name, skipping..."
               else
-              echo "Pulling Docker image for service: \$service"
-              docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
+                echo "Pulling Docker image for service: \$service"
+                docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
               fi
             done
-
-             
-            
           EOF
           echo "Exporting all environment variables with branch-specific prefix..."
           ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
-
-          echo "Listing files in branch directory..."
-          
-          cd /home/onton/$branch_name
-          ls -la 
- 
-          echo "Sourcing environment variables..."
-
-          echo "Exporting environment variables and deploying services..."
-          export \$(printenv | grep '^${branch_name^^}_' | xargs)
-          cd /home/onton/$branch_name
-          source /home/onton/$branch_name/.env
-          echo "Logging into GitHub Container Registry with GHCR_PAT..."
-          echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
-    
-
-          echo "Printing environment variables..."
-          chmod +x devops/generate-caddyfile.sh
-          chmod +x devops/minio-init.sh
-          docker compose  -f docker-compose-server.yml --env-file .env --profile full up -d
-          docker system prune -f
+            echo "Listing files in branch directory..."        
+            cd /home/onton/$branch_name
+            ls -la 
+            echo "Sourcing environment variables..."
+            echo "Exporting environment variables and deploying services..."
+            export \$(printenv | grep '^${branch_name^^}_' | xargs)
+            cd /home/onton/$branch_name
+            source /home/onton/$branch_name/.env
+            echo "Logging into GitHub Container Registry with GHCR_PAT..."
+            echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+            echo "Printing environment variables..."
+            chmod +x devops/generate-caddyfile.sh
+            chmod +x devops/minio-init.sh
+            docker compose  -f docker-compose-server.yml --env-file .env --profile full up -d
+            docker system prune -f
           EOF
-          
+
           echo "Services deployed successfully."
       - name: Cleanup Environment Variables File
         if: always()

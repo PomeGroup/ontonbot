@@ -7,6 +7,7 @@
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
       <change beforePath="$PROJECT_DIR$/.github/workflows/build-push-deploy.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/build-push-deploy.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose-server.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose-server.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -183,7 +184,7 @@
       <workItem from="1731001776278" duration="289000" />
       <workItem from="1731002920533" duration="16855000" />
       <workItem from="1731065440661" duration="113589000" />
-      <workItem from="1731618826777" duration="6064000" />
+      <workItem from="1731618826777" duration="6557000" />
     </task>
     <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
       <option name="closed" value="true" />
