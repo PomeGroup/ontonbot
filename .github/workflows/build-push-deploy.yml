@@ -28,12 +28,17 @@ jobs:
 
       - name: Send Telegram Message - Build Start
         run: |
+          if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}" ] || [ -z "${{ secrets.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}" ]; then
+            echo "Error: Telegram secrets are not set or are empty."
+            exit 1
+          fi
+
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}/sendMessage" \
             -d chat_id="${{ secrets.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}" \
             -d text="🔄 Build Started for ${{ github.repository }}
-          
+
             Actor: ${{ github.actor }}
-            Commit Message: ${{ github.event.commits[0].message }}
+
             Changed Services: ${{ steps.determine-services.outputs.services }}
             See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
