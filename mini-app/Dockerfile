@@ -42,7 +42,6 @@ ARG CLIENT_API_FIXED_KEY
 ARG CLIENT_API_FIXED_USER
 ARG CLIENT_API_FIXED_ORGANIZER
 # Export arguments as environment variables
-# Export arguments as environment variables to ensure they're available
 ENV NODE_ENV=${NODE_ENV} \
     ENV=${ENV} \
     DATABASE_URL_NFT_MANAGER=${DATABASE_URL_NFT_MANAGER} \

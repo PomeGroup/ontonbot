@@ -7,7 +7,9 @@
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
       <change beforePath="$PROJECT_DIR$/.github/workflows/build-push-deploy.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/build-push-deploy.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/Dockerfile" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mini-app/src/app/api/v1/share-event/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/app/api/v1/share-event/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/server/routers/OntonSetting.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/routers/OntonSetting.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

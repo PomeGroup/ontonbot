@@ -143,7 +143,15 @@ jobs:
 
           if [ -f "$dockerfile_path" ]; then
             echo "Using Dockerfile at $dockerfile_path"
-
+            # Create commit details file
+            COMMIT_DETAILS_FILE=$(mktemp)
+            echo "Commit SHA: ${{ github.sha }}" > "$COMMIT_DETAILS_FILE"
+            echo "Commit Author: ${{ github.actor }}" >> "$COMMIT_DETAILS_FILE"
+            echo "Commit Message: ${{ github.event.head_commit.message }}" >> "$COMMIT_DETAILS_FILE"
+            echo "Commit Date: ${{ github.event.head_commit.timestamp }}" >> "$COMMIT_DETAILS_FILE"
+      
+            # Move the commit details file to the appropriate build context
+            mv "$COMMIT_DETAILS_FILE" "$build_context/commit_details.txt"
             # Create temporary build args file
             BUILD_ARGS_FILE=$(mktemp)
           
