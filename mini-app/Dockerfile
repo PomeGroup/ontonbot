@@ -164,4 +164,4 @@ RUN echo "NEXT_PUBLIC_BOT_USERNAME Deloy stage"  && echo $NEXT_PUBLIC_BOT_USERNA
 EXPOSE $MINI_APP_PORT
 
 # Default command for the Next.js app
-CMD node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT
+CMD dotenv -e  ../.env -- node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT
