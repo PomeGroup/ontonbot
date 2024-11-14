@@ -204,7 +204,7 @@ services:
   telegram-bot:
     container_name: ${STAGE_NAME}-telegram-bot
     image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
-    pull_policy: build
+    pull_policy: always
     restart: "unless-stopped"
     profiles:
       - front-end-development
@@ -221,7 +221,7 @@ services:
   mini-app:
     hostname: mini-app
     container_name: ${STAGE_NAME}-mini-app
-    pull_policy: build
+    pull_policy: always
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     profiles:
       - full
@@ -243,7 +243,7 @@ services:
     hostname: mini-app
     container_name: ${STAGE_NAME}-mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
-    pull_policy: build
+    pull_policy: always
     restart: "unless-stopped"
     profiles:
       - full
@@ -265,7 +265,7 @@ services:
     hostname: participant-tma
     container_name: ${STAGE_NAME}-participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
-    pull_policy: build
+    pull_policy: always
     <<: *default-extra-hosts
     profiles:
       - full
@@ -280,7 +280,7 @@ services:
     hostname: nft-service
     container_name : ${STAGE_NAME}-nft-service
     image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
-    pull_policy: build
+    pull_policy: always
     restart: unless-stopped
     profiles:
       - front-end-development
@@ -311,7 +311,7 @@ services:
     hostname: website
     container_name: ${STAGE_NAME}-website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
-    pull_policy: build
+    pull_policy: always
     restart: "unless-stopped"
     profiles:
       - full
@@ -389,7 +389,7 @@ services:
     profiles:
       - full
     image: ghcr.io/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
-    pull_policy: build
+    pull_policy: always
     restart: "unless-stopped"
     environment:
       NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}

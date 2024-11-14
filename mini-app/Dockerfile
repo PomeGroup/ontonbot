@@ -150,6 +150,7 @@ RUN printenv
 # Set working directory
 WORKDIR /app
 
+
 # Copy the built Next.js application, node_modules, and the entire source code
 COPY --from=build-stage /app/node_modules ./node_modules
 COPY --from=build-stage /app/.next ./.next
