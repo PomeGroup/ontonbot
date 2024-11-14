@@ -168,6 +168,7 @@ jobs:
             if [ -n "$ALLMYSECRETS" ]; then
               echo "Processing secrets..."
               process_env_vars "$ALLMYSECRETS" "$branch_prefix" "$BUILD_ARGS_FILE"
+          
             fi
 
             # Process vars with error handling
@@ -191,9 +192,9 @@ jobs:
             # Add build args from file
             while IFS='=' read -r key value; do
             if [ -n "$key" ]; then
-            export ${key}=${value}
-            echo "Adding build arg: $key=${value}"
-            DOCKER_CMD+=" --build-arg \"$key=${value}\""
+              export "${key}=${value}"
+              echo "Adding build arg: $key=\"$value\""
+              DOCKER_CMD+=" --build-arg $key=\"$value\""
             fi
             done < "$BUILD_ARGS_FILE"
             # Add remaining arguments
