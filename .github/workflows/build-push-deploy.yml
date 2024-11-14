@@ -361,8 +361,8 @@ jobs:
             echo "******Logging into GitHub Container Registry..."
             echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             echo "Pulling latest images of changed services..."
-          
-            for service in \$(echo $services_to_build | jq -r '.[]'); do
+            services_to_build=${services_to_build}  # Pass the JSON array to the remote shell
+            for service in \$(echo \$services_to_build | jq -r '.[]'); do
               echo "Pulling Docker image for service: \$service"
               docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
             done
