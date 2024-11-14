@@ -10,7 +10,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   const event_uuid = req.nextUrl.searchParams.get("event_uuid");
   const user_id = req.nextUrl.searchParams.get("user_id");
-
+  console.log("********************NEXT_PUBLIC_BOT_USERNAME", process.env.NEXT_PUBLIC_BOT_USERNAME);
   await axios.post(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/share-event`, {
     user_id,
     id: event_uuid,
