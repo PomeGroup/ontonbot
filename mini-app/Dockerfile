@@ -79,7 +79,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 
 # Copy the rest of the application (Next.js, TypeScript configs, and source code)
 COPY . .
-RUN echo "NEXT_PUBLIC_BOT_USERNAME before build "  && echo $NEXT_PUBLIC_BOT_USERNAME
+RUN echo "-----------------NEXT_PUBLIC_BOT_USERNAME before build  ${NEXT_PUBLIC_BOT_USERNAME}"
 # Build the Next.js application
 RUN pnpm run build
 
