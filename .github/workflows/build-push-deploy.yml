@@ -197,14 +197,11 @@ jobs:
             DOCKER_CMD="docker buildx build --push "
           
             # Add build args from file
-            # Add build args from file
             while IFS='=' read -r key value; do
-            if [ -n "$key" ]; then
-              export "${key}=${value}"
-              set "${key}=${value}"
-              echo "Adding build arg: $key=\"$value\""
-
-            fi
+              if [ -n "$key" ]; then
+                DOCKER_CMD+="--build-arg $key=\"$value\" "
+              fi
+            done < "$BUILD_ARGS_FILE"
             done < "$BUILD_ARGS_FILE"
             # Add remaining arguments
             DOCKER_CMD+=" -f \"$dockerfile_path\""
@@ -289,7 +286,7 @@ jobs:
           # Add the GitHub Container Registry PAT to the env file
           echo "CR_PAT=${CR_PAT}" >> $env_file
           echo "Generated environment variables script:"
-          cat $env_file
+
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
       - name: Set up SSH Environment Variables
