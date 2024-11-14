@@ -185,18 +185,15 @@ jobs:
             echo "Build context: $build_context"
             cat $BUILD_ARGS_FILE
             # Create Docker build command with proper escaping
-            DOCKER_CMD="docker buildx build --push"
+            DOCKER_CMD="docker buildx build --push "
           
             # Add build args from file
             # Add build args from file
             while IFS='=' read -r key value; do
             if [ -n "$key" ]; then
-            DOCKER_CMD+=" \\
-            --build-arg ${key}=${value}"
-            fi
+            export ${key}=${value}
+            echo "Adding build arg: $key=${value}"
             done < "$BUILD_ARGS_FILE"
-            DOCKER_CMD+=" \\
-             "
             # Add remaining arguments
             DOCKER_CMD+=" -f \"$dockerfile_path\""
             DOCKER_CMD+=" -t \"$tag_commit\""
