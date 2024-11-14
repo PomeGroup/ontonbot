@@ -183,7 +183,7 @@ jobs:
             echo "Generated build args file with $(wc -l < "$BUILD_ARGS_FILE") variables"
             echo "Dockerfile path: $dockerfile_path"
             echo "Build context: $build_context"
-
+            cat $BUILD_ARGS_FILE
             # Create Docker build command with proper escaping
             DOCKER_CMD="docker buildx build --push"
           
