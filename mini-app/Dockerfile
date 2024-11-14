@@ -15,11 +15,6 @@ RUN npm install -g pnpm \
 
 # Stage 2: Build Stage
 FROM node:20.13.1-alpine3.20 AS build-stage
-
-
-# ARG for build-time variables
-
-
 # Accept build arguments
 ARG NODE_ENV
 ARG ENV
