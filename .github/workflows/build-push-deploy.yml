@@ -328,6 +328,8 @@ jobs:
         run: |
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
+          services_to_build='${{ needs.determine-services.outputs.services_to_build }}'   
+          echo "changed services: $services_to_build"
           echo "Deploying services to branch: $branch_name"
           if [ -z "$ssh_ip" ]; then
             echo "Error: SSH IP not found."
@@ -385,8 +387,6 @@ jobs:
           echo "Logging into GitHub Container Registry with GHCR_PAT..."
           echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
     
-          echo "Pulling latest Docker image..."
-          docker pull ghcr.io/pomegroup/ontonbot/participant-tma:${branch_name}-latest
 
           echo "Printing environment variables..."
           chmod +x devops/generate-caddyfile.sh
