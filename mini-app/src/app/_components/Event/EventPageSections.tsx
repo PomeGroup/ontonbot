@@ -115,6 +115,8 @@ export const EventSections = () => {
       {
         !isAdminOrOrganizer &&
         isEventActive &&
+        isStarted &&
+        isNotEnded &&
         !userEventPasswordField?.completed &&
         <EventPasswordInput />
       }
