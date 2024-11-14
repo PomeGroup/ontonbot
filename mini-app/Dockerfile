@@ -81,6 +81,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 # Copy the rest of the application (Next.js, TypeScript configs, and source code)
 COPY . .
 RUN echo "-----------------NEXT_PUBLIC_BOT_USERNAME before build  ${NEXT_PUBLIC_BOT_USERNAME}"
+RUN printenv
 # Build the Next.js application
 RUN pnpm run build
 
@@ -144,6 +145,7 @@ ENV NODE_ENV=${NODE_ENV} \
     CLIENT_API_FIXED_ORGANIZER=${CLIENT_API_FIXED_ORGANIZER}
 # Install pnpm in the production stage to ensure it's available
 RUN npm install -g pnpm
+RUN printenv
 
 # Set working directory
 WORKDIR /app
