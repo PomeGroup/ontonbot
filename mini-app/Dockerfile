@@ -85,7 +85,6 @@ RUN pnpm run build
 
 # Stage 3: Production Stage
 FROM node:20.13.1-alpine3.20 AS production-stage
-
 # Accept build arguments
 ARG NODE_ENV
 ARG ENV

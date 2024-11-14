@@ -190,9 +190,10 @@ jobs:
             # Add build args from file
             # Add build args from file
             while IFS='=' read -r key value; do
-            if [ -n "$key" ]; then
-            export ${key}=${value}
-            echo "Adding build arg: $key=${value}"
+              if [ -n "$key" ]; then
+                export ${key}=${value}
+                echo "Adding build arg: $key=${value}"
+              fi
             done < "$BUILD_ARGS_FILE"
             # Add remaining arguments
             DOCKER_CMD+=" -f \"$dockerfile_path\""
