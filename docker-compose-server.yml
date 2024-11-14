@@ -221,7 +221,7 @@ services:
   mini-app:
     hostname: mini-app
     container_name: ${STAGE_NAME}-mini-app
-    pull_policy: build
+    pull_policy: always
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     profiles:
       - full

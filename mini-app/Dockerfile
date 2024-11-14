@@ -147,6 +147,7 @@ ENV CLIENT_API_FIXED_ORGANIZER=${CLIENT_API_FIXED_ORGANIZER}
 RUN npm install -g pnpm
 RUN printenv
 
+
 # Set working directory
 WORKDIR /app
 
