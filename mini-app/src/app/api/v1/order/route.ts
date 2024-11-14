@@ -34,6 +34,15 @@ export async function POST(request: Request) {
     });
   }
 
+  // Parse the URL
+  const url = new URL(request.url);
+  
+  // Access the `utm` parameter (e.g., utm_campaign, utm_source, etc.)
+  const utmCampaign = url.searchParams.get('utm_campaign') || null;
+  const utmSource = url.searchParams.get('utm_source') || null;
+
+  
+
   const eventTicket = await db.query.eventTicket.findFirst({
     where(fields, { eq }) {
       return eq(fields.id, body.data.event_ticket_id);
@@ -121,6 +130,8 @@ export async function POST(request: Request) {
   return Response.json({
     order_id: new_order?.uuid,
     message: "order created successfully",
+    utmSource,
+    utmCampaign
   });
 }
 

@@ -83,7 +83,7 @@ async function fetchNFTItems(
   });
 
   if (!response.ok) {
-    throw new Error(`Error fetching data: ${response.statusText}`);
+    throw new Error(`Error fetching data: ${response.statusText} , collection: ${collectionAddress} owner: ${ownerAddress} nft: ${nft_address} response: ${response.text} `  );
   }
 
   const data: TonCenterResponse = await response.json();

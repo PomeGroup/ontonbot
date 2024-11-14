@@ -265,7 +265,7 @@ export const eventsRouter = router({
               : {}),
           };
 
-          console.log(eventDraft);
+          console.log("eventDraft", JSON.stringify(eventDraft));
           // Ensure eventDataUpdated is accessed correctly as an object
           const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
 
