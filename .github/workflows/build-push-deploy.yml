@@ -228,7 +228,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-push
+    needs: [determine-services, build-and-push]
     if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
     permissions:
       contents: read
@@ -359,11 +359,9 @@ jobs:
             echo "******Logging into GitHub Container Registry..."
             echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             echo "Pulling latest images of changed services..."
-            services_to_build=${{ needs.determine-services.outputs.services_to_build }}
-            # Dump the value of services_to_build
-            echo "Services to build: $services_to_build"
-            for service in \$(echo \$services_to_build | jq -r '.[]'); do
-              echo "---------Pulling Docker image for service: \$service"
+          
+            for service in \$(echo $services_to_build | jq -r '.[]'); do
+              echo "Pulling Docker image for service: \$service"
               docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
             done
 
