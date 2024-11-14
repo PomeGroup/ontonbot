@@ -15,5 +15,5 @@ Welcome to **Onton** 🎉, the event management platform right within Telegram! 
 - **Proof of Attendance**: Optional feature to confirm who made it!
 
 ## ⚒ Project Status & Issues 📊
-- **Main Project**: [Onton Development Board](https://github.com/orgs/PomeGroup/projects/9/views/1)
+- **Main Project**: [Onton Development Board](https://github.com/orgs/PomeGroup/projects/5)
 - **Report or Track Issues**: [Onton Issues](https://github.com/PomeGroup/ontonbot/issues)
