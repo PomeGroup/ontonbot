@@ -28,21 +28,23 @@ jobs:
 
       - name: Send Telegram Message - Build Start
         run: |
-          if [ -z "${{ secrets.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}" ] || [ -z "${{ secrets.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}" ]; then
+          token=${{ secrets.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          chat_id=${{ secrets.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+          if [ -z "$token" ] || [ -z "chat_id" ]; then
             echo "Error: Telegram secrets are not set or are empty."
             exit 1
           fi
 
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}" \
+          curl -s -X POST "https://api.telegram.org/bot${token}/sendMessage" \
+            -d chat_id="${chat_id}" \
             -d text="🔄 Build Started for ${{ github.repository }}
 
             Actor: ${{ github.actor }}
 
             Changed Services: ${{ steps.determine-services.outputs.services }}
             See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
-
-      
+          
+          
 
       - name: Checkout Code
         uses: actions/checkout@v4
