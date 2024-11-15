@@ -87,7 +87,6 @@ export const GeneralStep = () => {
     const formData = new FormData(formRef.current);
     formData.append("hub", eventData?.society_hub?.id || "");
     formData.append("image_url", eventData?.image_url || "");
-    formData.append("description", eventData?.description || "");
 
     const formDataObject = Object.fromEntries(formData.entries());
     const formDataParsed = firstStepDataSchema.safeParse(formDataObject);
@@ -211,7 +210,6 @@ export const GeneralStep = () => {
           name="description"
           errors={errors?.description}
           defaultValue={eventData?.description}
-          onChange={(e) => setEventData({ description: e.target.value })}
         />
 
         <MainButton
