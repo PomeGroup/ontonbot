@@ -265,8 +265,7 @@ jobs:
             🔄 Build was successful for ${{ github.repository }}
           
             🧑 ‍💻Actor: ${{ github.actor }}
-          
-            ↔️ Changed Services: '${{ steps.determine-services.outputs.services_to_build }}'
+
           
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
       - name: Send Telegram Message - Build Failure
@@ -289,8 +288,6 @@ jobs:
             🔄 Build was successful for ${{ github.repository }}
           
             🧑 ‍💻Actor: ${{ github.actor }}
-          
-            ↔️ Changed Services: '${{ steps.determine-services.outputs.services_to_build }}'
           
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
   deploy:
@@ -482,7 +479,6 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
           
-            ↔️ Changed Services: ${{ steps.determine-services.outputs.services_to_build }}
             ✅ deployment completed successfully
             "
       - name: Send Telegram Message - Deployment Failure
@@ -503,8 +499,6 @@ jobs:
             🔄 Build Started for ${{ github.repository }}
           
             🧑 ‍💻Actor: ${{ github.actor }}
-          
-            ↔️ Changed Services: ${{ steps.determine-services.outputs.services_to_build }}
           
             ❌ ❌ deployment failed ❌ ❌ 
             "
