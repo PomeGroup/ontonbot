@@ -12,21 +12,15 @@ RUN apk update && apk upgrade && \
   ca-certificates
 # Install pnpm globally
 RUN npm i -g pnpm
-WORKDIR /usr/src/app
+WORKDIR /app
 
-FROM base AS dependencies
+FROM base AS with-files
 # Copy package.json and package-lock.json
-COPY package*.json ./
-# Install dependencies
-RUN pnpm install --prod
-
-FROM dependencies AS with-files
-# Copy the rest of the application
 COPY . .
 
 # Stage for local development
 FROM with-files AS development
-RUN  pnpm install
+RUN pnpm install
 # Expose the port the app runs on
 EXPOSE $PORT_CLIENT_WEB
 # Command to run the application in development mode
@@ -35,6 +29,7 @@ CMD node ./node_modules/next/dist/bin/next  dev --port  $PORT_CLIENT_WEB
 # Stage for production build
 FROM with-files AS build
 # Build the application
+RUN pnpm install
 RUN pnpm run build
 
 # Final stage for production

@@ -128,20 +128,8 @@ services:
     build:
       context: ./website  
       dockerfile: Dockerfile
-      target: production
+      target: development
       args:
         <<: *common-env  
 
-  golang-server:
-    build:
-      context: ./golang-server  
-      dockerfile: ./server/Dockerfile
-      args:
-        <<: *common-env  
 
-  golang-worker:
-    build:
-      context: ./golang-server  
-      dockerfile: ./worker/Dockerfile
-      args:
-        <<: *common-env  
