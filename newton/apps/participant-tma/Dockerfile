@@ -35,11 +35,8 @@ WORKDIR /app
 FROM base AS dependencies
 # Copy package files for dependency installation
 COPY ./ /app/
-
 # Install production dependencies only
 RUN pnpm install
-
-
 
 # Development stage (includes devDependencies)
 FROM dependencies AS development
@@ -72,7 +69,6 @@ RUN rm -rf /app/apps/nft-manager \
 
 # Production stage
 FROM build AS production
-
 # Port for participant-tma
 EXPOSE $PORT
 # Run the app in production mode with the original command style

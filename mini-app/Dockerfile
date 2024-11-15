@@ -104,4 +104,3 @@ RUN pnpm install
 EXPOSE $MINI_APP_PORT
 # Run the app in development mode
 CMD  node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
-

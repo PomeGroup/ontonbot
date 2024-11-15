@@ -30,6 +30,9 @@ jobs:
 
       - name: Determine Services to Build
         id: determine-services
+        env:
+          TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID_FOR_DEPLOYMENT: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
         run: |
           echo "Determining services that have changed..."
           changed_files=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")
@@ -74,6 +77,23 @@ jobs:
 
           echo "Services to build: $services_json"
           echo "services=$services_json" >> $GITHUB_OUTPUT
+          
+          if [ -z "TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT" ] || [ -z "$TELEGRAM_CHAT_ID_FOR_DEPLOYMENT" ]; then
+            echo "Error: Telegram  deployment bot vars  are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID_FOR_DEPLOYMENT" \
+            -d text="
+            Hi there! 
+            🔄 Build Started for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+            🧐 Changed services:  $services_json  
+            📝 branch: ${{ github.ref }}
+            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          
 
   build-and-push:
     runs-on: self-hosted
@@ -96,7 +116,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "Error: Telegram vars are not set or are empty."
+            echo "Error: Telegram deployment bot vars are not set or are empty."
             exit 1
           fi
 
@@ -105,7 +125,7 @@ jobs:
             -d text="
             Hi there! 
             🔄 Build Started for ${{ github.repository }}
-          
+            📝 branch: ${{ github.ref }}
             🧑 ‍💻Actor: ${{ github.actor }}
           
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
@@ -219,7 +239,14 @@ jobs:
             cat $BUILD_ARGS_FILE
             # Create Docker build command with proper escaping
             DOCKER_CMD="docker buildx build --push "
-          
+
+            # Check if branch name is dev or sandbox
+            if [ "$branch_name" == "dev" ] || [ "$branch_name" == "sandbox" ]; then
+              echo "Branch is $branch_name. Building with target development."
+              DOCKER_CMD+=" --target development "
+            else
+              echo "Branch is $branch_name. Building with default (production) target."
+            fi
             # Add build args from file
             while IFS='=' read -r key value; do
               if [ -n "$key" ]; then
@@ -233,6 +260,7 @@ jobs:
             DOCKER_CMD+=" -t \"$tag_latest\""
             DOCKER_CMD+=" \"$build_context\""
             echo "here is the docker command::: $DOCKER_CMD"
+          
             # Execute build
             echo "Starting docker build..."
             if ! eval "$DOCKER_CMD"; then
@@ -261,7 +289,7 @@ jobs:
             -d text="
             Hi there! 
             🔄 Build was successful for ${{ github.repository }}
-          
+            📝 branch: ${{ github.ref }}
             🧑 ‍💻Actor: ${{ github.actor }}
 
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
@@ -283,7 +311,7 @@ jobs:
             -d text="
             Hi there! 
             🔄 Build was successful for ${{ github.repository }}
-          
+            📝 branch: ${{ github.ref }}
             🧑 ‍💻Actor: ${{ github.actor }}
           
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
@@ -475,7 +503,7 @@ jobs:
             🔄 Build Started for ${{ github.repository }}
           
             🧑 ‍💻Actor: ${{ github.actor }}
-          
+            📝 branch: ${{ github.ref }}
             ✅ deployment completed successfully
             "
       - name: Send Telegram Message - Deployment Failure
@@ -496,6 +524,6 @@ jobs:
             🔄 Build Started for ${{ github.repository }}
           
             🧑 ‍💻Actor: ${{ github.actor }}
-          
+            📝 branch: ${{ github.ref }}
             ❌ ❌ deployment failed ❌ ❌ 
             "
