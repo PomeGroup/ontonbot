@@ -108,8 +108,6 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
           
-            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
-          
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
       - name: Checkout Code
@@ -266,7 +264,6 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
 
-          
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
       - name: Send Telegram Message - Build Failure
         if: failure()
