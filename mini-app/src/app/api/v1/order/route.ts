@@ -13,6 +13,7 @@ const addOrderSchema = z.object({
   telegram: z.string(),
   company: z.string(),
   position: z.string(),
+  utm: z.string().nullable(),
   owner_address: z
     .string()
     .refine((data) => Address.isAddress(Address.parse(data))),
@@ -33,6 +34,8 @@ export async function POST(request: Request) {
       status: 400,
     });
   }
+
+
 
   const eventTicket = await db.query.eventTicket.findFirst({
     where(fields, { eq }) {
@@ -121,6 +124,7 @@ export async function POST(request: Request) {
   return Response.json({
     order_id: new_order?.uuid,
     message: "order created successfully",
+    utm_tag : body.data.utm,
   });
 }
 
