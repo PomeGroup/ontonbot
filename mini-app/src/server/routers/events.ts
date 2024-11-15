@@ -7,7 +7,7 @@ import {
 } from "@/server/db/visitors";
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
-import { registerActivity, updateActivity } from "@/lib/ton-society-api";
+import { registerActivity, tonSocietyClient, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import {
@@ -533,8 +533,8 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       | { status: "error"; message: string }
     > => {
       try {
-        const response = await axios.get<HubsResponse>(
-          `${process.env.TON_SOCIETY_BASE_URL}/hubs`,
+        const response = await tonSocietyClient.get<HubsResponse>(
+          `/hubs`,
           {
             params: {
               _start: 0,

@@ -1,4 +1,5 @@
 "use client";
+
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
@@ -283,12 +284,11 @@ export const RewardStep = () => {
   };
 
   return (
-    <StepLayout>
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit}
-        className="space-y-8"
-      >
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+    >
+      <StepLayout>
         {/* Secret Phrase Field */}
         <div className="space-y-2">
           <Label
@@ -369,24 +369,23 @@ export const RewardStep = () => {
           </>
         )}
 
-      </form>
-
-      {/* Submit Button */}
-      {editOptions?.eventHash ? (
-        <MainButton
-          onClick={handleButtonClick}
-          text="Update event"
-          disabled={updateEvent.isLoading}
-          progress={updateEvent.isLoading}
-        />
-      ) : (
-        <MainButton
-          onClick={handleButtonClick}
-          text="Create event"
-          disabled={addEvent.isLoading}
-          progress={addEvent.isLoading}
-        />
-      )}
-    </StepLayout>
+        {/* Submit Button */}
+        {editOptions?.eventHash ? (
+          <MainButton
+            onClick={handleButtonClick}
+            text="Update event"
+            disabled={updateEvent.isLoading}
+            progress={updateEvent.isLoading}
+          />
+        ) : (
+          <MainButton
+            onClick={handleButtonClick}
+            text="Create event"
+            disabled={addEvent.isLoading}
+            progress={addEvent.isLoading}
+          />
+        )}
+      </StepLayout>
+    </form>
   );
 };
