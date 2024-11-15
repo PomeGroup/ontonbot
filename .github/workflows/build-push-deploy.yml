@@ -266,7 +266,7 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
           
-            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
+            ↔️ Changed Services: ${{ steps.determine-services.outputs.services_to_build }}
           
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
       - name: Send Telegram Message - Build Failure
@@ -276,6 +276,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
         run: |
+          
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
             echo "Error: Telegram vars are not set or are empty."
             exit 1
@@ -289,7 +290,7 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
           
-            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
+            ↔️ Changed Services: ${{ steps.determine-services.outputs.services_to_build }}
           
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
   deploy:
@@ -481,11 +482,11 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
           
-            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
+            ↔️ Changed Services: ${{ steps.determine-services.outputs.services_to_build }}
             ✅ deployment completed successfully
             "
       - name: Send Telegram Message - Deployment Failure
-        if: success()
+        if: failure()
         env:
           TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
@@ -503,7 +504,7 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
           
-            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
+            ↔️ Changed Services: ${{ steps.determine-services.outputs.services_to_build }}
           
             ❌ ❌ deployment failed ❌ ❌ 
             "
