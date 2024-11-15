@@ -23,34 +23,6 @@ jobs:
     outputs:
       services_to_build: ${{ steps.determine-services.outputs.services }}
     steps:
-
-
-
-      - name: Send Telegram Message - Build Start
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "Error: Telegram vars are not set or are empty."
-            exit 1
-          fi
-
-          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-            -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d text="
-            Hi there! 
-            🔄 Build Started for ${{ github.repository }}
-          
-            🧑‍💻Actor: ${{ github.actor }}
-          
-            ↔️Changed Services: ${{ steps.determine-services.outputs.services }}
-          
-            🔍See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
-
-          
-          
-
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
@@ -118,6 +90,28 @@ jobs:
       ALLMYSECRETS: ${{ toJSON(secrets) }}
       ALLMYVARS: ${{ toJSON(vars) }}
     steps:
+      - name: Send Telegram Message - Build Start
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build Started for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+          
+            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
+          
+            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -253,7 +247,51 @@ jobs:
           else
             echo "Error: Dockerfile $dockerfile_path does not exist. Skipping $service."
           fi
+      - name: Send Telegram Message - Build Success
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
 
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build was successful for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+          
+            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
+          
+            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+      - name: Send Telegram Message - Build Failure
+        if: failure()
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build was successful for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+          
+            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
+          
+            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
   deploy:
     runs-on: ubuntu-latest
     needs: [determine-services, build-and-push]
@@ -422,3 +460,50 @@ jobs:
           echo "Cleaning up environment variables script..."
           rm -f .env
           echo "Environment variables script deleted successfully."
+
+      - name: Send Telegram Message - Deployment Success
+        if: success()
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build Started for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+          
+            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
+            ✅ deployment completed successfully
+            "
+      - name: Send Telegram Message - Deployment Failure
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Error: Telegram vars are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            -d text="
+            Hi there! 
+            🔄 Build Started for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+          
+            ↔️ Changed Services: ${{ steps.determine-services.outputs.services }}
+          
+            ❌ ❌ deployment failed ❌ ❌ 
+            "
