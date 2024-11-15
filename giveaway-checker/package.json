@@ -4,7 +4,9 @@
   "description": "Checks for past due events in a PostgreSQL database.",
   "main": "main.js",
   "scripts": {
-    "start": "dotenv -e ../.env -- node main.js"
+    "dev": "dotenv -e ../.env -- node main.js",
+    "dev:server": "node main.js",
+    "start": "node main.js"
   },
   "dependencies": {
     "axios": "^1.6.8",

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "dotenv -e ../.env -- next dev --port $PORT_CLIENT_WEB ",
+    "dev:server": "next dev",
     "build": "next build",
     "build:local": "dotenv -e ../.env -- next build",
     "start": "next start ",

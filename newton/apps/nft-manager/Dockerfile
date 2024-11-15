@@ -10,7 +10,6 @@ ARG PARTICIPANT_TMA_PORT
 ARG MINI_APP_DOMAIN
 ARG MINI_APP_PORT
 ARG NODE_TLS_REJECT_UNAUTHORIZED
-
 # Export arguments as environment variables
 ENV BOT_TOKEN=${BOT_TOKEN}
 ENV ONTON_API_KEY=${ONTON_API_KEY}
@@ -21,35 +20,37 @@ ENV PARTICIPANT_TMA_PORT=${PARTICIPANT_TMA_PORT}
 ENV MINI_APP_DOMAIN=${MINI_APP_DOMAIN}
 ENV MINI_APP_PORT=${MINI_APP_PORT}
 ENV NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}
-# Install dependencies required for the application
+# Install necessary packages
 RUN apk update && apk upgrade && \
   apk add --no-cache \
-  openssh \
-  rsync \
+  bash \
   curl \
   ca-certificates
-
 # Install pnpm globally
 RUN npm i -g pnpm
-COPY  ../../ /app/
+# Set the working directory
 
-WORKDIR /app/
-RUN echo "Listing contents of /app:" && ls -la /app
-# Copy and install dependencies
-
-
-RUN pnpm install
-
-# Copy the entire codebase
-
+# Dependencies stage
+FROM base AS dependencies
 # Copy all necessary files from the workspace root
-
-WORKDIR /app/apps/nft-manager/
+COPY  ../../ /app/
+# Install production dependencies only
+WORKDIR /app/
+# Install production dependencies only
 RUN pnpm install
+WORKDIR /app/apps/nft-manager/
 
+# Development stage (includes devDependencies)
+FROM dependencies AS development
+CMD ["pnpm", "dev:server"]
 
-
+# Build stage
+FROM dependencies AS build
 # Build the application
 RUN pnpm build
-RUN echo "Listing contents of /app:" && ls -la /app/apps/nft-manager/
-CMD ["node", "dist/main"]
+RUN rm -rf /app/apps/participant-tma
+
+# Production stage
+FROM build AS production
+# Run the app in production mode
+CMD ["pnpm", "start:prod"]

@@ -28,6 +28,7 @@
   },
   "scripts": {
     "dev": "dotenv -e ../.env -- nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts",
+    "dev:server": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts",
     "build": "tsc",
     "build:local" : "dotenv -e ../.env -- tsc",
     "start": "ts-node src/main.ts",

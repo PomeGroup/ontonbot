@@ -1,6 +1,6 @@
-# Base image
-FROM node:21.1.0-alpine3.17 AS base
-# Build arguments to accept environment variables
+# Base stage
+FROM node:23.1-alpine3.19 AS base
+# ARGS
 ARG BOT_TOKEN
 ARG ONTON_API_KEY
 ARG NEXT_PUBLIC_BOT_USERNAME
@@ -10,7 +10,6 @@ ARG PARTICIPANT_TMA_PORT
 ARG MINI_APP_DOMAIN
 ARG MINI_APP_PORT
 ARG NODE_TLS_REJECT_UNAUTHORIZED
-
 # Export arguments as environment variables
 ENV BOT_TOKEN=${BOT_TOKEN}
 ENV ONTON_API_KEY=${ONTON_API_KEY}
@@ -21,41 +20,60 @@ ENV PARTICIPANT_TMA_PORT=${PARTICIPANT_TMA_PORT}
 ENV MINI_APP_DOMAIN=${MINI_APP_DOMAIN}
 ENV MINI_APP_PORT=${MINI_APP_PORT}
 ENV NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}
-# Install dependencies required for the application
+# Install necessary packages
 RUN apk update && apk upgrade && \
   apk add --no-cache \
-  openssh \
-  rsync \
+  bash \
   curl \
   ca-certificates
-
 # Install pnpm globally
-WORKDIR /app
-RUN echo "Listing contents of /app:" && ls -la /app
-COPY ./ /app
-RUN echo "Listing contents of /app:" && ls -la /app
 RUN npm i -g pnpm
 # Set the working directory
-# Copy everything from the workspace root to the /app directory inside the container
+WORKDIR /app
 
+# Dependencies stage
+FROM base AS dependencies
+# Copy package files for dependency installation
+COPY ./ /app/
 
-# Listing contents of /app to verify everything is copied
-RUN echo "Listing contents of /app:" && ls -la /app
-
-# Install all dependencies
+# Install production dependencies only
 RUN pnpm install
 
 
-# Change directory to participant-tma
+
+# Development stage (includes devDependencies)
+FROM dependencies AS development
+# Install all dependencies
+RUN pnpm install
+# Set the working directory for participant-tma
 WORKDIR /app/apps/participant-tma
-RUN echo "Listing contents of /app:" && ls -la /app/apps/participant-tma/
-RUN echo "Listing ENV" && printenv
-# Build the application
-RUN pnpm build
-
-# Expose the specified port for participant-tma
-ENV PORT=$PARTICIPANT_TMA_PORT
+# Expose the default port for development mode (e.g., 3000)
 EXPOSE $PORT
+# Run the app in development mode with the original command style
+CMD pnpm dev --port $PARTICIPANT_TMA_PORT
 
+# Build stage
+FROM dependencies AS build
+# Set the working directory for participant-tma
+WORKDIR /app/apps/participant-tma
+# Build the participant-tma app
+RUN pnpm build
+# Clean up unnecessary files to reduce image size
+RUN rm -rf /app/apps/nft-manager \
+          /app/apps/participant-tma/node_modules/env.mjs \
+          /app/apps/participant-tma/app \
+          /app/apps/participant-tma/store \
+          /app/apps/participant-tma/utils \
+          /app/apps/participant-tma/types \
+          /app/apps/participant-tma/services \
+          /app/apps/participant-tma/hooks \
+          /app/apps/participant-tma/middleware.ts \
+          /app/apps/participant-tma/components
 
+# Production stage
+FROM build AS production
+
+# Port for participant-tma
+EXPOSE $PORT
+# Run the app in production mode with the original command style
 CMD pnpm start --port $PARTICIPANT_TMA_PORT

@@ -1,5 +1,5 @@
 # Use the official Golang image as a parent image
-FROM golang:1.20.3-alpine
+FROM golang:1.23.3-alpine3.20
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -24,4 +24,3 @@ RUN go build -o worker .
 
 # Command to run the executable
  CMD ["./worker"]
-#CMD ["sleep", "infinity"]
