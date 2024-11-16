@@ -1,0 +1,30 @@
+
+services:
+  mini-app:
+    volumes:
+      - ./mini-app:/app
+
+  mini-app-cron:
+    volumes:
+      - ./mini-app-cron:/app
+
+  telegram-bot:
+    volumes:
+      - ./telegram-bot:/app
+
+  client-web:
+    volumes:
+      - ./client-web:/app
+
+  participant-tma:
+    volumes:
+      - ./participant-tma:/app
+
+  nft-microservice:
+    volumes:
+      - ./nft-microservice:/app
+  website:
+    volumes:
+      - ./website:/app
+
+

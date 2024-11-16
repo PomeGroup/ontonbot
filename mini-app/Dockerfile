@@ -95,14 +95,12 @@ FROM build-stage AS production
 EXPOSE $MINI_APP_PORT
 # Default command for the Next.js app
 CMD  node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT
-#stage : before Development
-FROM with-files AS before-development
-# Install pnpm to ensure it's available
-RUN pnpm install
 
 # Stage : Development Stage
-FROM before-development AS development
+FROM base AS development
+# Copy the entire project to be used in the build stages
+COPY . .
 # Expose the default port for development mode (e.g., 3000)
 EXPOSE $MINI_APP_PORT
 # Run the app in development mode
-CMD  node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
+CMD  pnpm install && node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
