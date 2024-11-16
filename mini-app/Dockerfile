@@ -106,5 +106,5 @@ EXPOSE $MINI_APP_PORT
 WORKDIR /app
 # Run the app in development mode
 RUN echo "Development stage files " && ls -la /app && ls -la /
-CMD  pnpm install  && node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
+CMD  pnpm install  && pnpm next dev  --port $MINI_APP_PORT
 
