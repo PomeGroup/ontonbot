@@ -10,6 +10,7 @@ import React from "react";
 import WebAppProvider from "./_components/WebAppProvider";
 import ThemeSetter from "./themeSetter";
 import TRPCAPIProvider from "./_trpc/Provider";
+import KonstaAppProvider from "./_components/KonstaAppProvider";
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -28,8 +29,10 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
           <TRPCAPIProvider>
             <NavigationHistoryProvider>
               <ConfigProvider>
-                <ThemeSetter>{children}</ThemeSetter>
-                <Toaster />
+                <KonstaAppProvider>
+                  <ThemeSetter>{children}</ThemeSetter>
+                  <Toaster />
+                </KonstaAppProvider>
               </ConfigProvider>
             </NavigationHistoryProvider>
           </TRPCAPIProvider>

@@ -72,6 +72,7 @@
     "image-size": "^1.1.1",
     "jose": "^5.9.6",
     "jsonwebtoken": "^9.0.2",
+    "konsta": "^4.0.1",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "lucide-react": "^0.427.0",
