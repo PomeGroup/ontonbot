@@ -52,6 +52,11 @@ import telegramService from "@/server/routers/services/telegramService";
 
 dotenv.config();
 
+const PLACEHOLDER_IMAGE =
+  "https://storage.onton.live/ontonimage/test_image.png";
+const PLACEHOLDER_VIDEO =
+  "https://storage.onton.live/ontonvideo/event/dCsiY_1731355946593_event_video.mp4";
+
 export const eventsRouter = router({
   // private
   getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
@@ -229,23 +234,35 @@ export const eventsRouter = router({
                       title: opts.input.eventData.title,
                       description: opts.input.eventData.description,
                       image: {
-                        url: opts.input.eventData.image_url,
+                        url:
+                          process.env.ENV !== "local"
+                            ? opts.input.eventData.image_url
+                            : PLACEHOLDER_IMAGE,
                       },
                       cover: {
-                        url: opts.input.eventData.image_url,
+                        url:
+                          process.env.ENV !== "local"
+                            ? opts.input.eventData.image_url
+                            : PLACEHOLDER_IMAGE,
                       },
                       item_title: opts.input.eventData.title,
                       item_description: "Reward for participation",
                       item_image: {
-                        url: opts.input.eventData.ts_reward_url,
+                        url:
+                          process.env.ENV !== "local"
+                            ? opts.input.eventData.ts_reward_url
+                            : PLACEHOLDER_IMAGE,
                       },
                       ...(opts.input.eventData.video_url
                         ? {
                             item_video: {
                               url:
-                                new URL(opts.input.eventData.video_url).origin +
-                                new URL(opts.input.eventData.video_url)
-                                  .pathname,
+                                process.env.ENV !== "local"
+                                  ? new URL(opts.input.eventData.video_url)
+                                      .origin +
+                                    new URL(opts.input.eventData.video_url)
+                                      .pathname
+                                  : PLACEHOLDER_VIDEO,
                             },
                           }
                         : {}),
