@@ -15,6 +15,7 @@ ARG PARTICIPANT_TMA_PORT
 ARG MINI_APP_DOMAIN
 ARG MINI_APP_PORT
 ARG NODE_TLS_REJECT_UNAUTHORIZED
+ARG NODE_ENV
 # Export arguments as environment variables
 ENV BOT_TOKEN=${BOT_TOKEN}
 ENV ONTON_API_KEY=${ONTON_API_KEY}
@@ -25,6 +26,7 @@ ENV PARTICIPANT_TMA_PORT=${PARTICIPANT_TMA_PORT}
 ENV MINI_APP_DOMAIN=${MINI_APP_DOMAIN}
 ENV MINI_APP_PORT=${MINI_APP_PORT}
 ENV NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}
+ENV NODE_ENV=${NODE_ENV}
 # Install necessary packages
 RUN apk add \
   bash \
@@ -42,13 +44,10 @@ RUN pnpm install
 
 # Development stage (includes devDependencies)
 FROM base AS development
-ARG NODE_ENV
-ENV NODE_ENV=development
-
-
+# Copy all necessary files from the workspace root
 COPY ./ /app/
+# Set the working directory for participant-tma
 WORKDIR /app/apps/participant-tma
-
 # Expose the default port for development mode (e.g., 3000)
 EXPOSE $PORT
 # Run the app in development mode with the original command style
