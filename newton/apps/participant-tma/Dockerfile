@@ -40,6 +40,7 @@ RUN pnpm install
 
 # Development stage (includes devDependencies)
 FROM base AS development
+WORKDIR /app/apps/participant-tma
 # Expose the default port for development mode (e.g., 3000)
 EXPOSE $PORT
 # Run the app in development mode with the original command style
