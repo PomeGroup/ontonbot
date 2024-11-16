@@ -38,12 +38,14 @@ COPY ./ /app/
 # Install production dependencies only
 RUN pnpm install
 
-# Development stage (includes devDependencies)
-FROM dependencies AS development
-# Install all dependencies
-RUN pnpm install
+# before the development stage
+FROM dependencies AS before-development
+RUN  pnpm install
 # Set the working directory for participant-tma
 WORKDIR /app/apps/participant-tma
+
+# Development stage (includes devDependencies)
+FROM before-development AS development
 # Expose the default port for development mode (e.g., 3000)
 EXPOSE $PORT
 # Run the app in development mode with the original command style

@@ -18,9 +18,12 @@ FROM base AS with-files
 # Copy package.json and package-lock.json
 COPY . .
 
-# Stage for local development
-FROM with-files AS development
+# Before the development stage
+FROM with-files AS before-development
 RUN pnpm install
+
+# Stage for local development
+FROM before-development AS development
 # Expose the port the app runs on
 EXPOSE $PORT_CLIENT_WEB
 # Command to run the application in development mode
