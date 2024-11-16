@@ -121,10 +121,12 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
           nftAddress: body.data.nft_address,
           updatedBy: "system",
         })
-
+        
+        const user_id_str = order.user_id ? order.user_id.toString() : "";
         await sendTicketLogNotification({
           event_uuid: order.event_uuid as string,
           username: order.telegram,
+          user_id:user_id_str,
           event_ticket_id: order.event_ticket_id,
         });
       }
@@ -154,6 +156,7 @@ export const dynamic = "force-dynamic";
 async function sendTicketLogNotification(props: {
   event_uuid: string;
   username: string;
+  user_id : string,
   event_ticket_id: number;
 }) {
   try {
@@ -175,6 +178,7 @@ async function sendTicketLogNotification(props: {
 <b>${event.title}</b> sold
 
 User: ${props.username}
+UserId : ${props.user_id}
 
 Ticket: ${eventTicket?.price} TON
 
@@ -183,8 +187,10 @@ Total sold count for this event: ${(
               .select({ count: sql`count(*)`.mapWith(Number) })
               .from(tickets)
               .where(eq(tickets.event_uuid, props.event_uuid))
-          )[0].count
+          )[0].count + 1
           }
+
+#ticket_sold
 `,
       });
     }
