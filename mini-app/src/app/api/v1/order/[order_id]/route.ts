@@ -100,12 +100,13 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
   await db.transaction(async (tx) => {
     try {
       if (body.data.state === "minted") {
-        const ticketExists = await tx.select()
+        const ticketExists = await tx
+          .select()
           .from(tickets)
-          .where(eq(tickets.nftAddress, body.data.nft_address!))
+          .where(eq(tickets.nftAddress, body.data.nft_address!));
 
         if (ticketExists.length) {
-          throw new Error("Ticket already exists")
+          throw new Error("Ticket already exists");
         }
 
         await tx.insert(tickets).values({
@@ -120,7 +121,7 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
           ticket_id: order.event_ticket_id,
           nftAddress: body.data.nft_address,
           updatedBy: "system",
-        })
+        });
 
         await sendTicketLogNotification({
           event_uuid: order.event_uuid as string,
@@ -178,13 +179,14 @@ User: ${props.username}
 
 Ticket: ${eventTicket?.price} TON
 
-Total sold count for this event: ${(
+Total sold count for this event: ${
+          (
             await db
               .select({ count: sql`count(*)`.mapWith(Number) })
               .from(tickets)
               .where(eq(tickets.event_uuid, props.event_uuid))
           )[0].count
-          }
+        }
 `,
       });
     }

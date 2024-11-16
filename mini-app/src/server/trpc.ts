@@ -3,15 +3,17 @@ import { TRPCError, initTRPC } from "@trpc/server";
 import { z } from "zod";
 import { createContext } from "./context";
 
-export const trpcApiInstance = initTRPC.context<typeof createContext>().create();
+export const trpcApiInstance = initTRPC
+  .context<typeof createContext>()
+  .create();
 
 export const router = trpcApiInstance.router;
 
 export const publicProcedure = trpcApiInstance.procedure;
 
 // protected using initData
-export const initDataProtectedProcedure = trpcApiInstance.procedure
-  .use(async (opts) => {
+export const initDataProtectedProcedure = trpcApiInstance.procedure.use(
+  async (opts) => {
     if (!opts.ctx.user) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
@@ -24,7 +26,8 @@ export const initDataProtectedProcedure = trpcApiInstance.procedure
         user: opts.ctx.user,
       },
     });
-  });
+  }
+);
 
 export const adminOrganizerProtectedProcedure = initDataProtectedProcedure.use(
   (opts) => {

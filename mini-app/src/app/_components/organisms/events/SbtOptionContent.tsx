@@ -21,8 +21,6 @@ interface SbtOptionContentProps {
   clearVideoError: () => void;
 }
 
-
-
 export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
   sbtOption,
   rewardCollections,
@@ -35,9 +33,15 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
   clearImageError,
   clearVideoError,
 }) => {
-  const initialSlideIndex = Math.floor(Math.random() * rewardCollections.length);
+  const initialSlideIndex = Math.floor(
+    Math.random() * rewardCollections.length
+  );
 
-  if (sbtOption === "default" && rewardCollections && rewardCollections?.length > 0) {
+  if (
+    sbtOption === "default" &&
+    rewardCollections &&
+    rewardCollections?.length > 0
+  ) {
     return sbtCollectionIsLoading ? (
       <div>Loading SBT Videos...</div>
     ) : (
@@ -79,7 +83,8 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
     <div className="space-y-4">
       <label htmlFor="reward_image">Reward Image</label>
       <AlertGeneric variant="info">
-        Events reward badge, visible on TON society. It cannot be changed after event creation.
+        Events reward badge, visible on TON society. It cannot be changed after
+        event creation.
       </AlertGeneric>
       <UploadImageFile
         changeText="Change SBT Image"
@@ -95,8 +100,12 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
 
       <div className="my-2">
         <label htmlFor="event_video">Event Video</label>
-        <AlertGeneric variant="info" className="my-4">
-          Upload a video related to your event. Only MP4 format is allowed, and the file size must be under 5 MB.
+        <AlertGeneric
+          variant="info"
+          className="my-4"
+        >
+          Upload a video related to your event. Only MP4 format is allowed, and
+          the file size must be under 5 MB.
         </AlertGeneric>
         <UploadVideoFile
           changeText="Change SBT Video"

@@ -105,7 +105,6 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
     <Drawer
       preventScrollRestoration
       disablePreventScroll
-
       onOpenChange={(open) => {
         if (open) {
           webApp?.MainButton.disable();
@@ -121,9 +120,9 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
             props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
           )}
           onClick={() => {
-            if (webApp?.platform === 'ios') {
+            if (webApp?.platform === "ios") {
               // fix for ios
-              window.scrollTo({ top: 0, behavior: "instant" })
+              window.scrollTo({ top: 0, behavior: "instant" });
             }
           }}
           variant={props.isError ? "destructive" : "outline"}

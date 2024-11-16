@@ -16,7 +16,7 @@ import { StepLayout } from "./stepLayout";
 import { toast } from "sonner";
 import { FiAlertCircle } from "react-icons/fi";
 import * as React from "react";
-import {dataValidationSchema} from "@/zodSchema/dataValidationSchema"; // Import icon for errors
+import { dataValidationSchema } from "@/zodSchema/dataValidationSchema"; // Import icon for errors
 
 export const TimePlaceStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -86,16 +86,17 @@ export const TimePlaceStep = () => {
         countryId: z.number().optional(),
       })
       .refine(
-          (data) => {
-            if (data.eventLocationType === "online") {
-              return dataValidationSchema.urlSchema.safeParse(data.location).success;
-            }
-            return true;
-          },
-          {
-            message: "Please enter a valid URL for online events",
-            path: ["location"],
+        (data) => {
+          if (data.eventLocationType === "online") {
+            return dataValidationSchema.urlSchema.safeParse(data.location)
+              .success;
           }
+          return true;
+        },
+        {
+          message: "Please enter a valid URL for online events",
+          path: ["location"],
+        }
       )
       .refine(
         (data) => {
@@ -439,7 +440,6 @@ const SelectLocation = (props: {
             value: city.id.toString(),
           }))}
           placeholder="Select a city"
-
           onInputChange={(inputValue) =>
             !isCityDisabled && setCitySearch(inputValue)
           } // Disable input change if no country is selected

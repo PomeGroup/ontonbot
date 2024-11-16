@@ -9,11 +9,11 @@ import { TonConnectButton, useTonAddress } from "@tonconnect/ui-react";
 import { useUserStore } from "@/context/store/user.store";
 
 export const EventPasswordInput = () => {
-  const { initData, eventPasswordField, eventHash } = useEventData()
+  const { initData, eventPasswordField, eventHash } = useEventData();
   const trpcUtils = trpc.useUtils();
-  const { user } = useUserStore()
-  const formRef = useRef<HTMLFormElement>(null)
-  const tonWalletAddress = useTonAddress()
+  const { user } = useUserStore();
+  const formRef = useRef<HTMLFormElement>(null);
+  const tonWalletAddress = useTonAddress();
 
   const addWalletMutation = trpc.users.addWallet.useMutation({
     onSuccess: () => {
@@ -26,10 +26,12 @@ export const EventPasswordInput = () => {
   const upsertUserEventFieldMutation =
     trpc.userEventFields.upsertUserEventField.useMutation({
       onError: (error) => {
-        toast.error(error.message)
+        toast.error(error.message);
       },
       onSuccess: () => {
-        trpcUtils.userEventFields.getUserEventFields.refetch({ event_hash: eventHash })
+        trpcUtils.userEventFields.getUserEventFields.refetch({
+          event_hash: eventHash,
+        });
       },
     });
 
@@ -43,47 +45,57 @@ export const EventPasswordInput = () => {
   }, [user?.wallet_address, tonWalletAddress, initData]);
 
   const submitPassword: FormEventHandler<HTMLFormElement> = (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Get password field in the form
     const formData = new FormData(e.currentTarget);
-    const password = formData.get('event_password') as string;
+    const password = formData.get("event_password") as string;
 
     if (initData && eventPasswordField && eventPasswordField.event_id) {
       if (password) {
         upsertUserEventFieldMutation.mutate({
           field_id: eventPasswordField.id,
           event_id: eventPasswordField.event_id,
-          data: password
-        })
+          data: password,
+        });
       } else {
-        toast.error('Enter the event password')
+        toast.error("Enter the event password");
       }
     }
-  }
+  };
 
-  return (
-    !user?.wallet_address ?
-      <TonConnectButton className="mx-auto" /> :
-      <form className="mt-2 space-y-1" ref={formRef} onSubmit={submitPassword}>
-        <Input
-          placeholder="Event password"
-          name='event_password'
-          autoFocus type="text"
-          className="bg-muted border-secondary-foreground/40 border"
-          minLength={4}
-          errors={upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined}
-          prefix_icon={<PasscodeIcon />}
-        />
-        <p className="text-muted-foreground text-xs">
-          Enter the Event Password that the organizer shared
-          to confirm your participation in the event.
-        </p>
-        <MainButton
-          progress={upsertUserEventFieldMutation.isLoading}
-          text="Enter Password" onClick={() => formRef.current?.requestSubmit()}
-          disabled={upsertUserEventFieldMutation.isLoading}
-        />
-      </form>
-  )
-}
+  return !user?.wallet_address ? (
+    <TonConnectButton className="mx-auto" />
+  ) : (
+    <form
+      className="mt-2 space-y-1"
+      ref={formRef}
+      onSubmit={submitPassword}
+    >
+      <Input
+        placeholder="Event password"
+        name="event_password"
+        autoFocus
+        type="text"
+        className="bg-muted border-secondary-foreground/40 border"
+        minLength={4}
+        errors={
+          upsertUserEventFieldMutation.error?.message
+            ? [upsertUserEventFieldMutation.error?.message]
+            : undefined
+        }
+        prefix_icon={<PasscodeIcon />}
+      />
+      <p className="text-muted-foreground text-xs">
+        Enter the Event Password that the organizer shared to confirm your
+        participation in the event.
+      </p>
+      <MainButton
+        progress={upsertUserEventFieldMutation.isLoading}
+        text="Enter Password"
+        onClick={() => formRef.current?.requestSubmit()}
+        disabled={upsertUserEventFieldMutation.isLoading}
+      />
+    </form>
+  );
+};

@@ -36,12 +36,10 @@ export async function POST(request: Request) {
 
   // Parse the URL
   const url = new URL(request.url);
-  
-  // Access the `utm` parameter (e.g., utm_campaign, utm_source, etc.)
-  const utmCampaign = url.searchParams.get('utm_campaign') || null;
-  const utmSource = url.searchParams.get('utm_source') || null;
 
-  
+  // Access the `utm` parameter (e.g., utm_campaign, utm_source, etc.)
+  const utmCampaign = url.searchParams.get("utm_campaign") || null;
+  const utmSource = url.searchParams.get("utm_source") || null;
 
   const eventTicket = await db.query.eventTicket.findFirst({
     where(fields, { eq }) {
@@ -131,7 +129,7 @@ export async function POST(request: Request) {
     order_id: new_order?.uuid,
     message: "order created successfully",
     utmSource,
-    utmCampaign
+    utmCampaign,
   });
 }
 

@@ -1,6 +1,6 @@
 import { GoogleTagManager } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import * as Sentry from "@sentry/nextjs";
@@ -9,7 +9,10 @@ import Script from "next/script";
 import React from "react";
 import UserSaver from "./_components/UserSaver";
 
-const inter = Inter({ subsets: ["latin"] });
+const mainFont = Roboto({
+  subsets: ["latin"],
+  weight: ["100", "300", "400", "500", "700", "900"],
+});
 
 export const metadata: Metadata = {
   title: "Onton",
@@ -35,7 +38,7 @@ export default async function RootLayout({
         <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
       )}
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
-      <body className={cn(inter.className)}>
+      <body className={cn(mainFont.className)}>
         <Sentry.ErrorBoundary>
           <Providers>
             <UserSaver>

@@ -9,8 +9,8 @@ export const validateEventDates = (start_date: number, end_date: number) => {
   const one_hour = 3600 * 1000;
   const four_hour = 6 * one_hour;
 
-  // Check-in Window 
-  if (currentTime < (startDate - four_hour) || currentTime > endDate ) {
+  // Check-in Window
+  if (currentTime < startDate - four_hour || currentTime > endDate) {
     return {
       success: false,
       error: "Either the event has not started or it has already ended.",

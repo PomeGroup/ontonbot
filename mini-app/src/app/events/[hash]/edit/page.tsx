@@ -18,10 +18,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
     { event_uuid: params.hash },
     {
       cacheTime: 0,
-      queryKey: [
-        "events.getEvent",
-        { event_uuid: params.hash, },
-      ],
+      queryKey: ["events.getEvent", { event_uuid: params.hash }],
     }
   );
   const hapticFeedback = WebApp?.HapticFeedback;
@@ -62,13 +59,12 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="manage">
-          {
-            event.data &&
+          {event.data && (
             <GuestList
               event={event.data}
               params={params}
             />
-          }
+          )}
         </TabsContent>
 
         <TabsContent

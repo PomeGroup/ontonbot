@@ -30,7 +30,6 @@ const VariantBadge: FC<VariantBadgeProps> = ({ status = "" }) => {
         return "--";
       default:
         return status;
-
     }
   };
 

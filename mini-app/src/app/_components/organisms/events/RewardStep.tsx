@@ -64,8 +64,7 @@ export const RewardStep = () => {
     // Automatically set the sbtOption to "custom" if rewardCollections is empty
     if (rewardCollections && rewardCollections.length === 0) {
       setSbtOption("custom");
-    }
-    else {
+    } else {
       setSbtOption("default");
     }
   }, [eventData?.society_hub?.id, rewardCollections]);
@@ -107,9 +106,9 @@ export const RewardStep = () => {
     secret_phrase: passwordDisabled
       ? z.string().optional()
       : z
-        .string()
-        .min(4, { message: "Password must be at least 4 characters" })
-        .max(20, { message: "Password must be less than 20 characters" }),
+          .string()
+          .min(4, { message: "Password must be at least 4 characters" })
+          .max(20, { message: "Password must be less than 20 characters" }),
     ts_reward_url: z
       .string()
       .optional() // This allows the field to be undefined
@@ -150,20 +149,29 @@ export const RewardStep = () => {
         : formDataObject.secret_phrase,
     };
 
-
-    if (sbtOption === "custom" && (!eventData?.ts_reward_url || !eventData?.video_url) && !editOptions?.eventHash) {
+    if (
+      sbtOption === "custom" &&
+      (!eventData?.ts_reward_url || !eventData?.video_url) &&
+      !editOptions?.eventHash
+    ) {
       // Set errors if the image or video URL is missing
       setErrors((prevErrors) => ({
         ...prevErrors,
-        ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
-        video_url: !eventData?.video_url ? ["Please upload a video."] : undefined,
+        ts_reward_url: !eventData?.ts_reward_url
+          ? ["Please upload a reward image."]
+          : undefined,
+        video_url: !eventData?.video_url
+          ? ["Please upload a video."]
+          : undefined,
       }));
 
       toast.error(
         <div>
           <div className="flex items-center">
             <FiAlertCircle className="mr-2" />
-            {"Please upload both an image and a video for your custom SBT reward."}
+            {
+              "Please upload both an image and a video for your custom SBT reward."
+            }
           </div>
         </div>,
         { duration: 5000 }
@@ -266,7 +274,6 @@ export const RewardStep = () => {
     }));
   };
 
-
   const handleSlideChange = (swiper: any) => {
     if (!rewardCollections || rewardCollections.length === 0) return;
 
@@ -325,16 +332,24 @@ export const RewardStep = () => {
           <>
             {/* SBT Option Selection */}
             <div className="space-y-2">
-              <Label className="font-bold text-lg mb-2">Choose SBT Option</Label>
+              <Label className="font-bold text-lg mb-2">
+                Choose SBT Option
+              </Label>
 
               <RadioGroup
-                onValueChange={(value: "custom" | "default") => setSbtOption(value)}
+                onValueChange={(value: "custom" | "default") =>
+                  setSbtOption(value)
+                }
                 value={sbtOption}
               >
                 <div className="flex space-x-4">
                   {rewardCollections && rewardCollections.length > 0 && (
                     <>
-                      <RadioGroupItem value="default" id="default" className="w-4 h-4" />
+                      <RadioGroupItem
+                        value="default"
+                        id="default"
+                        className="w-4 h-4"
+                      />
                       <Label htmlFor="default"> Default Collections</Label>
                     </>
                   )}
@@ -344,7 +359,7 @@ export const RewardStep = () => {
                     id="custom"
                     className={"w-4 h-4 color-white"}
                   />
-                  <Label htmlFor="custom"  > Customized SBT</Label>
+                  <Label htmlFor="custom"> Customized SBT</Label>
                 </div>
               </RadioGroup>
             </div>
@@ -359,12 +374,10 @@ export const RewardStep = () => {
                 handleSbtSelection={handleSbtSelection}
                 handleSlideChange={handleSlideChange}
                 setEventData={setEventData}
-
                 errors={errors || {}}
                 clearImageError={clearImageError}
                 clearVideoError={clearVideoError}
               />
-
             </div>
           </>
         )}

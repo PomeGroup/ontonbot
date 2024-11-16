@@ -1,4 +1,3 @@
-
 import { sha256 } from "@ton/crypto";
 import { Address, Cell, contractAddress, loadStateInit } from "@ton/ton";
 import { Buffer } from "buffer";
@@ -7,40 +6,46 @@ import { CheckProofRequestDto } from "@/types/ton-proof";
 import { tryParsePublicKey } from "@/server/utils/wallets-data";
 import { DOMAINS, PAYLOAD_TTL } from "@/constants";
 
-const tonProofPrefix = 'ton-proof-item-v2/';
-const tonConnectPrefix = 'ton-connect';
-const allowedDomains = DOMAINS
+const tonProofPrefix = "ton-proof-item-v2/";
+const tonConnectPrefix = "ton-connect";
+const allowedDomains = DOMAINS;
 const validAuthTime = PAYLOAD_TTL; // 15 minute
 
 export class TonProofService {
-
   /**
    * Generate a random payload.
    */
   public generatePayload(): string {
-    return Buffer.from(randomBytes(32)).toString('hex');
+    return Buffer.from(randomBytes(32)).toString("hex");
   }
 
   /**
    * Reference implementation of the checkProof method:
    * https://github.com/ton-blockchain/ton-connect/blob/main/requests-responses.md#address-proof-signature-ton_proof
    */
-  public async checkProof(payload: CheckProofRequestDto, getWalletPublicKey: (address: string) => Promise<Buffer | null>): Promise<boolean> {
+  public async checkProof(
+    payload: CheckProofRequestDto,
+    getWalletPublicKey: (address: string) => Promise<Buffer | null>
+  ): Promise<boolean> {
     try {
-      const stateInit = loadStateInit(Cell.fromBase64(payload.proof.state_init).beginParse());
+      const stateInit = loadStateInit(
+        Cell.fromBase64(payload.proof.state_init).beginParse()
+      );
 
       // 1. First, try to obtain public key via get_public_key get-method on smart contract deployed at Address.
       // 2. If the smart contract is not deployed yet, or the get-method is missing, you need:
       //  2.1. Parse TonAddressItemReply.walletStateInit and get public key from stateInit. You can compare the walletStateInit.code
       //  with the code of standard wallets contracts and parse the data according to the found wallet version.
-      let publicKey = tryParsePublicKey(stateInit) ?? await getWalletPublicKey(payload.address);
+      let publicKey =
+        tryParsePublicKey(stateInit) ??
+        (await getWalletPublicKey(payload.address));
       if (!publicKey) {
         return false;
       }
 
-      console.log('walletv11113445', payload)
+      console.log("walletv11113445", payload);
       // 2.2. Check that TonAddressItemReply.publicKey equals to obtained public key
-      const wantedPublicKey = Buffer.from(payload.public_key, 'hex');
+      const wantedPublicKey = Buffer.from(payload.public_key, "hex");
       if (!publicKey.equals(wantedPublicKey)) {
         return false;
       }
@@ -54,7 +59,7 @@ export class TonProofService {
 
       if (
         !allowedDomains.includes(payload.proof.domain.value) &&
-        !payload.proof.domain.value.endsWith('onton.live')
+        !payload.proof.domain.value.endsWith("onton.live")
       ) {
         return false;
       }
@@ -71,10 +76,10 @@ export class TonProofService {
           lengthBytes: payload.proof.domain.lengthBytes,
           value: payload.proof.domain.value,
         },
-        signature: Buffer.from(payload.proof.signature, 'base64'),
+        signature: Buffer.from(payload.proof.signature, "base64"),
         payload: payload.proof.payload,
         stateInit: payload.proof.state_init,
-        timestamp: payload.proof.timestamp
+        timestamp: payload.proof.timestamp,
       };
 
       const wc = Buffer.alloc(4);
@@ -117,5 +122,4 @@ export class TonProofService {
       return false;
     }
   }
-
 }

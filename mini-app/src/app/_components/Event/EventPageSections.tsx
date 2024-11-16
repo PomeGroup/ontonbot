@@ -1,5 +1,3 @@
-
-
 import Buttons from "@/app/_components/atoms/buttons";
 import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
@@ -18,14 +16,18 @@ import MainButton from "../atoms/buttons/web-app/MainButton";
 
 const EventImage = () => {
   const { eventData } = useEventData();
-  return <Images.Event width={300} height={300} url={eventData.data?.image_url!} />;
+  return (
+    <Images.Event
+      width={300}
+      height={300}
+      url={eventData.data?.image_url!}
+    />
+  );
 };
 
 const EventTitle = () => {
   const { eventData } = useEventData();
-  return (
-    <Labels.CampaignTitle title={eventData.data?.title!} />
-  );
+  return <Labels.CampaignTitle title={eventData.data?.title!} />;
 };
 
 const EventSubtitle = () => {
@@ -45,7 +47,8 @@ const EventLocation = () => {
       label="Location"
       value={location}
       className="text-primary text-[14px]"
-    />) : null
+    />
+  ) : null;
 };
 
 const EventWebsiteLink = () => {
@@ -53,8 +56,8 @@ const EventWebsiteLink = () => {
 
   return location && isLocationUrl ? (
     <EventKeyValue
-      variant={'link'}
-      label={'Event Link'}
+      variant={"link"}
+      label={"Event Link"}
       value={location}
     />
   ) : null;
@@ -62,7 +65,12 @@ const EventWebsiteLink = () => {
 
 const EventDatesComponent = () => {
   const { startUTC, endUTC } = useEventData();
-  return <EventDates startDate={startUTC} endDate={endUTC} />;
+  return (
+    <EventDates
+      startDate={startUTC}
+      endDate={endUTC}
+    />
+  );
 };
 
 const EventDescription = () => {
@@ -73,7 +81,7 @@ const EventDescription = () => {
 };
 
 const EventHead = () => {
-  const { eventHash } = useEventData()
+  const { eventHash } = useEventData();
 
   return (
     <div className="flex items-start justify-between">
@@ -83,8 +91,8 @@ const EventHead = () => {
       </div>
       <ShareEventButton event_uuid={eventHash} />
     </div>
-  )
-}
+  );
+};
 
 const EventAttributes = () => {
   return (
@@ -93,39 +101,37 @@ const EventAttributes = () => {
       <EventWebsiteLink />
       <EventDatesComponent />
     </div>
-  )
-}
+  );
+};
 
 export const EventSections = () => {
-  const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } = useEventData();
+  const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } =
+    useEventData();
   const { setTheme } = useTheme();
   const { user } = useUserStore();
 
-  const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
+  const isAdminOrOrganizer =
+    user?.role === "admin" || user?.user_id === eventData.data?.owner;
   const isEventActive = isStarted && isNotEnded;
 
   useLayoutEffect(() => {
-    setTheme('light');
-    return () => setTheme('dark');
+    setTheme("light");
+    return () => setTheme("dark");
   }, [setTheme]);
 
   return (
     <div className="space-y-2">
       <EventImage />
-      {
-        !isAdminOrOrganizer &&
+      {!isAdminOrOrganizer &&
         isEventActive &&
         isStarted &&
         isNotEnded &&
-        !userEventPasswordField?.completed &&
-        <EventPasswordInput />
-      }
+        !userEventPasswordField?.completed && <EventPasswordInput />}
       <EventHead />
       <EventAttributes />
       <EventActions />
       <EventDescription />
-      {
-        !isAdminOrOrganizer &&
+      {!isAdminOrOrganizer &&
         user?.wallet_address &&
         userEventPasswordField?.completed && (
           <ClaimRewardButton
@@ -133,30 +139,22 @@ export const EventSections = () => {
             eventId={eventData.data?.event_uuid as string}
             isWalletConnected={Boolean(user.wallet_address)}
           />
-        )
-      }
-      {
-        !isAdminOrOrganizer &&
-        !isStarted &&
-        isNotEnded && (
-          <MainButton
-            text="Event Not Started Yet"
-            disabled
-            color="secondary" />
-        )
-      }
-      {
-        !isAdminOrOrganizer &&
-        !isNotEnded && (
-          <MainButton
-            text="Event Has Ended"
-            disabled color="secondary" />
-        )
-      }
-      {
-        isAdminOrOrganizer &&
-        <ManageEventButton />
-      }
+        )}
+      {!isAdminOrOrganizer && !isStarted && isNotEnded && (
+        <MainButton
+          text="Event Not Started Yet"
+          disabled
+          color="secondary"
+        />
+      )}
+      {!isAdminOrOrganizer && !isNotEnded && (
+        <MainButton
+          text="Event Has Ended"
+          disabled
+          color="secondary"
+        />
+      )}
+      {isAdminOrOrganizer && <ManageEventButton />}
       <Buttons.Support />
     </div>
   );

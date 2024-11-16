@@ -6,7 +6,7 @@ import { FiAlertCircle } from "react-icons/fi";
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
   errors?: (string | undefined)[];
-  prefix_icon?: React.ReactNode
+  prefix_icon?: React.ReactNode;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(

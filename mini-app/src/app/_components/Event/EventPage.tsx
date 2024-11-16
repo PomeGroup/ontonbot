@@ -6,9 +6,8 @@ import { useEventData } from "./eventPageContext";
 import { EventDataProvider } from "./EventDataProvider";
 import { EventSections } from "./EventPageSections";
 
-
 const EventDataQueryState = () => {
-  const { eventData, initData } = useEventData()
+  const { eventData, initData } = useEventData();
 
   switch (true) {
     case eventData.isLoading || !initData:
@@ -20,7 +19,7 @@ const EventDataQueryState = () => {
     default:
       return <EventSections />;
   }
-}
+};
 
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   useWithBackButton({

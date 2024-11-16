@@ -23,9 +23,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/tgs-player.js"
         async
       />
-      <ThemeProvider
-        attribute="class"
-      >
+      <ThemeProvider attribute="class">
         <WebAppProvider>
           <TRPCAPIProvider>
             <NavigationHistoryProvider>
