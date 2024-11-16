@@ -2,24 +2,26 @@
 services:
   mini-app:
     volumes:
-      - mini-app:/app/node_modules
-    command: sh -c "pnpm i && ls -la /app/node_modules/ "
+      - mini-app-node-modules:/app/node_modules
+      - mini-app-next:/app/.next
+
 
   mini-app-cron:
     volumes:
-      - mini-app-cron:/app
-
+      - mini-app-cron-node-modules:/app/node_modules
+      - mini-app-cron-next:/app/.next
   telegram-bot:
     volumes:
-      - telegram-bot:/app
+      - telegram-bot-node-modules:/app/node_modules
 
   client-web:
     volumes:
-      - client-web:/app
+      - client-web-node-modules:/app/node_modules
 
   participant-tma:
     volumes:
-      - participant-tma:/app
+      - participant-tma-node-modules:/app/node_modules
+      - participant-tma-next:/app/.next
 
   nft-microservice:
     volumes:

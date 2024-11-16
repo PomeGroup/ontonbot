@@ -58,3 +58,4 @@ RUN rm -rf /app/apps/participant-tma
 FROM build AS production
 # Run the app in production mode
 CMD ["pnpm", "start:prod"]
+
