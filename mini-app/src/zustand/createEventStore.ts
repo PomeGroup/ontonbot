@@ -1,18 +1,24 @@
+import { GeneralFormErrors } from "@/app/_components/Event/steps/types";
 import { EventDataSchemaAllOptional } from "@/types";
 import { z } from "zod";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
-type CreateEventStoreType = {
+export type StoreEventData = z.infer<typeof EventDataSchemaAllOptional>;
+
+export type CreateEventStoreType = {
   currentStep: number;
   setCurrentStep: (_step: number) => void;
-  eventData?: z.infer<typeof EventDataSchemaAllOptional>;
+  eventData?: StoreEventData;
   setEventData: (_data: z.infer<typeof EventDataSchemaAllOptional>) => void;
   edit?: {
     eventHash?: string;
   };
   setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
+  generalStepErrors?: GeneralFormErrors;
+  clearImageError: () => void;
+  setGeneralStepErrors: (_: GeneralFormErrors) => void;
 };
 
 export const useCreateEventStore = create(
@@ -22,6 +28,18 @@ export const useCreateEventStore = create(
       dynamic_fields: [],
       owner: 0,
       type: 0,
+    },
+    clearImageError: () => {
+      set((state) => ({
+        ...state,
+        generalStepErrors: { ...state.generalStepErrors, image_url: undefined },
+      }));
+    },
+    setGeneralStepErrors: (errors: GeneralFormErrors) => {
+      set((state) => ({
+        ...state,
+        generalStepErrors: { ...state.generalStepErrors, errors },
+      }));
     },
     setCurrentStep: (step: number) =>
       set((state) => ({ ...state, currentStep: step })),
@@ -34,7 +52,7 @@ export const useCreateEventStore = create(
       set((state) => ({ ...state, edit })),
 
     resetState: () => {
-      set((state) => ({
+      set(() => ({
         currentStep: 1,
         eventData: { dynamic_fields: [], type: 0, owner: 0 },
         edit: {},
