@@ -40,14 +40,17 @@ RUN pnpm install
 
 # Development stage (includes devDependencies)
 FROM base AS development
-COPY ./ /app/
+ARG NODE_ENV
+ENV NODE_ENV=development
 
+
+COPY ./ /app/
 WORKDIR /app/apps/participant-tma
 
 # Expose the default port for development mode (e.g., 3000)
 EXPOSE $PORT
 # Run the app in development mode with the original command style
-CMD pnpm install && cd /app/apps/participant-tma && pnpm install && pnpm dev --port $PARTICIPANT_TMA_PORT
+CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/participant-tma && pnpm install && pnpm dev --port $PARTICIPANT_TMA_PORT
 
 # Build stage
 FROM dependencies AS build

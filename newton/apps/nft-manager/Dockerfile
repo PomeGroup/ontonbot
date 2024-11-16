@@ -20,18 +20,22 @@ ENV PARTICIPANT_TMA_PORT=${PARTICIPANT_TMA_PORT}
 ENV MINI_APP_DOMAIN=${MINI_APP_DOMAIN}
 ENV MINI_APP_PORT=${MINI_APP_PORT}
 ENV NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}
+
+# Install pnpm globally
+RUN npm i -g pnpm
+# Set the working directory
+
+# production base image
+FROM base AS base-prod
+# Install necessary packages
 # Install necessary packages
 RUN apk update && apk upgrade && \
   apk add --no-cache \
   bash \
   curl \
   ca-certificates
-# Install pnpm globally
-RUN npm i -g pnpm
-# Set the working directory
-
 # Dependencies stage
-FROM base AS dependencies
+FROM base-prod AS dependencies
 # Copy all necessary files from the workspace root
 COPY  ../../ /app/
 # Install production dependencies only
@@ -42,9 +46,11 @@ WORKDIR /app/apps/nft-manager/
 
 # Development stage (includes devDependencies)
 FROM base AS development
-# Copy all necessary files from the workspace root
 COPY  ../../ /app/
-# Install production dependencies only
+# Copy all necessary files from the workspace root
+WORKDIR /app/
+RUN echo "Development stage files " && ls -la
+RUN  pnpm install
 WORKDIR /app/apps/nft-manager/
 CMD pnpm install && pnpm run dev:server
 
@@ -52,6 +58,7 @@ CMD pnpm install && pnpm run dev:server
 FROM dependencies AS build
 # Build the application
 RUN pnpm build
+
 RUN rm -rf /app/apps/participant-tma
 
 # Production stage
