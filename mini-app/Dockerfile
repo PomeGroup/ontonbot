@@ -58,8 +58,7 @@ ENV CLIENT_API_JWT_SECRET=${CLIENT_API_JWT_SECRET}
 ENV CLIENT_API_FIXED_KEY=${CLIENT_API_FIXED_KEY}
 ENV CLIENT_API_FIXED_USER=${CLIENT_API_FIXED_USER}
 ENV CLIENT_API_FIXED_ORGANIZER=${CLIENT_API_FIXED_ORGANIZER}
-# Set the working directory
-WORKDIR /app
+
 
 # Base stage
 FROM minimum-image AS base
@@ -100,9 +99,12 @@ CMD  node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT
 
 # Stage : Development Stage
 FROM minimum-image AS development
-
+# Copy the entire project to be used in the build stages
 COPY . /app
 EXPOSE $MINI_APP_PORT
+# Set the working directory
+WORKDIR /app
 # Run the app in development mode
+RUN echo "Development stage files " && ls -la /app && ls -la /
 CMD  pnpm install  && node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
 
