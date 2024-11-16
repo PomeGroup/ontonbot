@@ -1,5 +1,5 @@
 # Description: Dockerfile for telegram-bot
-FROM node:21.1.0-alpine3.17 AS base
+FROM node:22-alpine3.19 AS base
 # Build arguments to accept environment variables
 ARG TELEGRAM_BOT_PORT
 # Export arguments as environment variables
@@ -29,10 +29,10 @@ EXPOSE $TELEGRAM_BOT_PORT
 CMD ["pnpm", "run", "start"]
 
 # stage: development
-FROM with-files AS development
+FROM base AS development
 # Expose the default port for development mode
 EXPOSE $TELEGRAM_BOT_PORT
 # Run the app in development mode
-CMD ["pnpm", "run", "dev:server"]
+CMD  pnpm install && pnpm run dev:server
 
 

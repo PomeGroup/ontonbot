@@ -1,5 +1,5 @@
 # Use an official Node runtime as the base image
-FROM node:21.1.0-alpine3.17 AS base
+FROM node:22-alpine3.19 AS base
 ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
 ARG PORT_CLIENT_WEB
 ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT

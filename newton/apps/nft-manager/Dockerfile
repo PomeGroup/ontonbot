@@ -1,5 +1,5 @@
 # Base image
-FROM node:21.1.0-alpine3.17 AS base
+FROM node:22-alpine3.19 AS base
 # Build arguments to accept environment variables
 ARG BOT_TOKEN
 ARG ONTON_API_KEY
@@ -41,8 +41,12 @@ RUN pnpm install
 WORKDIR /app/apps/nft-manager/
 
 # Development stage (includes devDependencies)
-FROM dependencies AS development
-CMD ["pnpm", "dev:server"]
+FROM base AS development
+# Copy all necessary files from the workspace root
+COPY  ../../ /app/
+# Install production dependencies only
+WORKDIR /app/apps/nft-manager/
+CMD pnpm install && pnpm run dev:server
 
 # Build stage
 FROM dependencies AS build

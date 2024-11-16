@@ -1,5 +1,33 @@
 # Base stage
-FROM node:23.1-alpine3.19 AS base
+FROM node:22-alpine3.19 AS base
+
+# Install necessary packages
+RUN apk update && apk upgrade && \
+  apk add \
+  bash \
+  curl \
+  ca-certificates
+# Install pnpm globally
+RUN npm i -g pnpm
+# Set the working directory
+WORKDIR /app
+
+# Stage : Dependencies
+FROM base AS dependencies
+# Copy package files for dependency installation
+COPY ./package.json  /app/
+# Install production dependencies only
+RUN pnpm install --pnpm
+# Set working directory
+WORKDIR /app
+
+# Stage : With Files
+FROM dependencies AS with-files
+# Copy the entire project to be used in the build stages
+COPY . /app
+
+# Stage : Build Stage
+FROM with-files AS build-stage
 # ARGS
 ARG NODE_ENV
 ARG ENV
@@ -56,38 +84,9 @@ ENV CLIENT_API_JWT_SECRET=${CLIENT_API_JWT_SECRET}
 ENV CLIENT_API_FIXED_KEY=${CLIENT_API_FIXED_KEY}
 ENV CLIENT_API_FIXED_USER=${CLIENT_API_FIXED_USER}
 ENV CLIENT_API_FIXED_ORGANIZER=${CLIENT_API_FIXED_ORGANIZER}
-# Install necessary packages
-RUN apk update && apk upgrade && \
-  apk add \
-  bash \
-  curl \
-  ca-certificates
-# Install pnpm globally
-RUN npm i -g pnpm
-# Set the working directory
-WORKDIR /app
-
-# Stage : Dependencies
-FROM base AS dependencies
-# Copy package files for dependency installation
-COPY ./package.json  /app/
-
-# Install production dependencies only
-RUN pnpm install --prod
-# Set working directory
-WORKDIR /app
-
-# Stage : With Files
-FROM dependencies AS with-files
-# Copy the entire project to be used in the build stages
-COPY . .
-
-# Stage : Build Stage
-FROM with-files AS build-stage
 # Build the Next.js application
 RUN pnpm run build
 # Clean up unnecessary files to reduce image size
-
 
 # Stage : Production Stage
 FROM build-stage AS production
@@ -99,8 +98,8 @@ CMD  node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT
 # Stage : Development Stage
 FROM base AS development
 # Copy the entire project to be used in the build stages
-COPY . .
 # Expose the default port for development mode (e.g., 3000)
 EXPOSE $MINI_APP_PORT
 # Run the app in development mode
-CMD  pnpm install && node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
+CMD  pnpn install && node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
+

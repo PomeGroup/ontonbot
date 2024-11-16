@@ -241,11 +241,13 @@ jobs:
             DOCKER_CMD="docker buildx build --push "
 
             # Check if branch name is dev or sandbox
-            if [ "$branch_name" == "dev" ] || [ "$branch_name" == "sandbox" ]; then
+            #
+            if  [ "$branch_name" == "dev" ] || [ "$branch_name" == "sandbox" ]; then
               echo "Branch is $branch_name. Building with target development."
               DOCKER_CMD+=" --target development "
             else
               echo "Branch is $branch_name. Building with default (production) target."
+              DOCKER_CMD+=" --target production "
             fi
             # Add build args from file
             while IFS='=' read -r key value; do
@@ -310,9 +312,11 @@ jobs:
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
             Hi there! 
-            🔄 Build was successful for ${{ github.repository }}
+            🔄 Build was NOT successful for ${{ github.repository }}
             📝 branch: ${{ github.ref }}
             🧑 ‍💻Actor: ${{ github.actor }}
+          
+            ❌ ❌ Build failed ❌ ❌ 
           
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
   deploy:
@@ -340,6 +344,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Authenticate to GitHub Container Registry
+        env:
+          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Generate Environment Variables Script
         id: generate-env-script
         env:
@@ -424,7 +432,8 @@ jobs:
           echo "Connecting to server and creating branch directory..."
 
           # Use case-insensitive prefix matching for branch name
-          if [[ "$branch_name" == "dev" ]] || [[ "$branch_name" == "sandbox" ]]; then
+          # [[ "$branch_name" == "dev" ]] ||
+          if [[ "$branch_name" == "sandbox" ]]; then
           ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
           mkdir -p /home/onton/$branch_name
           mkdir -p /home/onton/$branch_name/mini-app

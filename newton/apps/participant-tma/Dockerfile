@@ -1,5 +1,5 @@
 # Base stage
-FROM node:23.1-alpine3.19 AS base
+FROM node:22-alpine3.19 AS base
 # ARGS
 ARG BOT_TOKEN
 ARG ONTON_API_KEY
@@ -40,11 +40,14 @@ RUN pnpm install
 
 # Development stage (includes devDependencies)
 FROM base AS development
+COPY ./ /app/
+
 WORKDIR /app/apps/participant-tma
+
 # Expose the default port for development mode (e.g., 3000)
 EXPOSE $PORT
 # Run the app in development mode with the original command style
-CMD pnpm install && pnpm dev --port $PARTICIPANT_TMA_PORT
+CMD pnpm install && cd /app/apps/participant-tma && pnpm install && pnpm dev --port $PARTICIPANT_TMA_PORT
 
 # Build stage
 FROM dependencies AS build
@@ -70,3 +73,4 @@ FROM build AS production
 EXPOSE $PORT
 # Run the app in production mode with the original command style
 CMD pnpm start --port $PARTICIPANT_TMA_PORT
+
