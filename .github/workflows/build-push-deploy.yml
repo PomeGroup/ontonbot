@@ -126,7 +126,10 @@ jobs:
             Hi there! 
             🔄 Build Started for ${{ github.repository }}
             📝 branch: ${{ github.ref }}
+          
             🧑 ‍💻Actor: ${{ github.actor }}
+            
+            🖊   message: ${{ github.event.head_commit.message }}
           
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -292,9 +295,13 @@ jobs:
             -d text="
             Hi there! 
             🔄 Build was successful for ${{ github.repository }}
+            
             📝 branch: ${{ github.ref }}
+            
             🧑 ‍💻Actor: ${{ github.actor }}
-
+            
+            🖊   message: ${{ github.event.head_commit.message }}
+            
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
       - name: Send Telegram Message - Build Failure
         if: failure()
@@ -314,8 +321,12 @@ jobs:
             -d text="
             Hi there! 
             🔄 Build was NOT successful for ${{ github.repository }}
+          
             📝 branch: ${{ github.ref }}
+          
             🧑 ‍💻Actor: ${{ github.actor }}
+            
+            🖊   message: ${{ github.event.head_commit.message }}
           
             ❌ ❌ Build failed ❌ ❌ 
           
@@ -522,6 +533,9 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
             📝 branch: ${{ github.ref }}
+          
+            🖊   message: ${{ github.event.head_commit.message }}
+          
             ✅ deployment completed successfully
             "
       - name: Send Telegram Message - Deployment Failure
@@ -542,6 +556,10 @@ jobs:
             🔄 Build Started for ${{ github.repository }}
           
             🧑 ‍💻Actor: ${{ github.actor }}
+          
+            🖊   message: ${{ github.event.head_commit.message }}
+            
             📝 branch: ${{ github.ref }}
+            
             ❌ ❌ deployment failed ❌ ❌ 
             "

@@ -59,7 +59,6 @@ ENV CLIENT_API_FIXED_KEY=${CLIENT_API_FIXED_KEY}
 ENV CLIENT_API_FIXED_USER=${CLIENT_API_FIXED_USER}
 ENV CLIENT_API_FIXED_ORGANIZER=${CLIENT_API_FIXED_ORGANIZER}
 
-
 # Base stage
 FROM minimum-image AS base
 # Install necessary packages
@@ -67,7 +66,6 @@ RUN apk add \
   bash \
   curl \
   ca-certificates
-
 
 # Stage : Dependencies
 FROM base AS dependencies
