@@ -34,6 +34,6 @@ COPY . .
 # Expose the default port for development mode
 EXPOSE $TELEGRAM_BOT_PORT
 # Run the app in development mode
-CMD  pnpm install && pnpm run dev:server
+CMD  export NODE_ENV=development && pnpm install && pnpm run dev:server
 
 

@@ -40,7 +40,7 @@ FROM build AS production
 # Expose the port the app runs on
 EXPOSE $PORT_CLIENT_WEB
 # Command to run the application in production mode
-CMD node ./node_modules/next/dist/bin/next  start --port  $PORT_CLIENT_WEB
+CMD export NODE_ENV=development && node ./node_modules/next/dist/bin/next  start --port  $PORT_CLIENT_WEB
 
 
 

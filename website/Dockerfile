@@ -40,4 +40,4 @@ FROM with-files AS development
 # Expose the port on which the app runs
 EXPOSE $PORT_WEB_SITE
 # Start the application in development mode
-CMD node ./node_modules/next/dist/bin/next  dev    --port  $PORT_WEB_SITE
+CMD export NODE_ENV=development && node ./node_modules/next/dist/bin/next  dev    --port  $PORT_WEB_SITE

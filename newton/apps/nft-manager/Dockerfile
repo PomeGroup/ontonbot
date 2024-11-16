@@ -51,7 +51,7 @@ WORKDIR /app/
 RUN echo "Development stage files " && ls -la
 RUN  pnpm install
 WORKDIR /app/apps/nft-manager/
-CMD pnpm install && pnpm run dev:server
+CMD export NODE_ENV=development && pnpm install && pnpm run dev:server
 
 # Build stage
 FROM dependencies AS build

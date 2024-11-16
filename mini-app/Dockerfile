@@ -105,8 +105,5 @@ EXPOSE $MINI_APP_PORT
 # Set the working directory
 WORKDIR /app
 # Run the app in development mode
-RUN echo "Development stage files " && ls -la /app && ls -la /
-#CMD  pnpm install  && pnpm next dev  --port $MINI_APP_PORT
-# command to run infinith
-CMD dev > /dev/null 2>&1 & pnpm install && pnpm run dev --port $MINI_APP_PORT
+CMD export NODE_ENV=development && pnpm install  && node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
 
