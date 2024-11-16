@@ -30,6 +30,7 @@ CMD ["pnpm", "run", "start"]
 
 # stage: development
 FROM base AS development
+COPY . .
 # Expose the default port for development mode
 EXPOSE $TELEGRAM_BOT_PORT
 # Run the app in development mode

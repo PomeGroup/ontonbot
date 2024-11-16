@@ -142,6 +142,7 @@ jobs:
         run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and push image for ${{ matrix.service }}
+
         run: |
           declare -A services=(
             ["nft-microservice"]="newton/apps/nft-manager"
