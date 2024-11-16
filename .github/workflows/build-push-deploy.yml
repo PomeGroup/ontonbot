@@ -461,19 +461,15 @@ jobs:
           ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
             echo "Listing files in branch directory..."        
             cd /home/onton/$branch_name
-            ls -la 
-            echo "Sourcing environment variables..."
             echo "Exporting environment variables and deploying services..."
             export \$(printenv | grep '^${branch_name^^}_' | xargs)
             cd /home/onton/$branch_name
             source /home/onton/$branch_name/.env
-            echo "Logging into GitHub Container Registry with GHCR_PAT..."
-            echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
-            echo "Printing environment variables..."
+            #echo "Logging into GitHub Container Registry with GHCR_PAT..."
+            #echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
             chmod +x devops/generate-caddyfile.sh
             chmod +x devops/minio-init.sh
             docker compose  -f docker-compose-server.yml --env-file .env --profile full up -d
-            docker system prune -f
           EOF
 
           echo "Services deployed successfully."
