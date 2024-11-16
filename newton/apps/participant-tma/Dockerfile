@@ -1,5 +1,10 @@
+# minimum required version of Node.js
+FROM node:22-alpine3.19 AS minimum-image
+RUN apk update
+RUN npm i -g pnpm
+
 # Base stage
-FROM node:22-alpine3.19 AS base
+FROM minimum-image AS base
 # ARGS
 ARG BOT_TOKEN
 ARG ONTON_API_KEY
@@ -21,13 +26,10 @@ ENV MINI_APP_DOMAIN=${MINI_APP_DOMAIN}
 ENV MINI_APP_PORT=${MINI_APP_PORT}
 ENV NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}
 # Install necessary packages
-RUN apk update && apk upgrade && \
-  apk add --no-cache \
+RUN apk add \
   bash \
   curl \
   ca-certificates
-# Install pnpm globally
-RUN npm i -g pnpm
 # Set the working directory
 WORKDIR /app
 

@@ -1,5 +1,10 @@
+# minimum-image
+FROM node:22-alpine3.19 AS minimum-image
+RUN apk update
+RUN npm i -g pnpm
+
 # Base image
-FROM node:22-alpine3.19 AS base
+FROM minimum-image AS base
 # Build arguments to accept environment variables
 ARG BOT_TOKEN
 ARG ONTON_API_KEY
@@ -21,16 +26,10 @@ ENV MINI_APP_DOMAIN=${MINI_APP_DOMAIN}
 ENV MINI_APP_PORT=${MINI_APP_PORT}
 ENV NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}
 
-# Install pnpm globally
-RUN npm i -g pnpm
-# Set the working directory
-
 # production base image
 FROM base AS base-prod
 # Install necessary packages
-# Install necessary packages
-RUN apk update && apk upgrade && \
-  apk add --no-cache \
+RUN apk add  \
   bash \
   curl \
   ca-certificates
@@ -58,7 +57,7 @@ CMD pnpm install && pnpm run dev:server
 FROM dependencies AS build
 # Build the application
 RUN pnpm build
-
+# Remove the source code
 RUN rm -rf /app/apps/participant-tma
 
 # Production stage
