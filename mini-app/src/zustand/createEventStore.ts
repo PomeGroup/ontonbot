@@ -17,8 +17,9 @@ export type CreateEventStoreType = {
   setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
   generalStepErrors?: GeneralFormErrors;
-  clearImageError: () => void;
+  clearImageErrors: () => void;
   setGeneralStepErrors: (_: GeneralFormErrors) => void;
+  clearGeneralStepErrors: () => void;
 };
 
 export const useCreateEventStore = create(
@@ -29,7 +30,7 @@ export const useCreateEventStore = create(
       owner: 0,
       type: 0,
     },
-    clearImageError: () => {
+    clearImageErrors: () => {
       set((state) => ({
         ...state,
         generalStepErrors: { ...state.generalStepErrors, image_url: undefined },
@@ -38,8 +39,16 @@ export const useCreateEventStore = create(
     setGeneralStepErrors: (errors: GeneralFormErrors) => {
       set((state) => ({
         ...state,
-        generalStepErrors: { ...state.generalStepErrors, errors },
+        generalStepErrors: { ...errors },
       }));
+    },
+    clearGeneralStepErrors: () => {
+      set((state) => {
+        return {
+          ...state,
+          generalStepErrors: {},
+        };
+      });
     },
     setCurrentStep: (step: number) =>
       set((state) => ({ ...state, currentStep: step })),

@@ -13,13 +13,14 @@ import { SocietyHub } from "@/types";
 import { FC, useEffect, useState } from "react";
 import { FiAlertCircle } from "react-icons/fi";
 import * as React from "react";
+import { ListInput } from "konsta/react";
 
 // https://society.ton.org/v1/society-hubs
 
 const TonHubPicker: FC<{
   value?: SocietyHub;
   onValueChange: (_value: SocietyHub) => void;
-  errors?: (string | undefined)[];
+  errors?: string[];
 }> = ({ value, onValueChange, errors }) => {
   const [hubs, setHubs] = useState<Array<SocietyHub>>([]);
   const hubsResponse = trpc.events.getHubs.useQuery();
@@ -38,49 +39,32 @@ const TonHubPicker: FC<{
   }
 
   return (
-    <div>
-      <Select
-        value={value?.id}
-        onValueChange={onHubChange}
+    <ListInput
+      outline
+      placeholder="Select TON Hub"
+      dropdown
+      type="select"
+      value={value?.id}
+      onChange={onHubChange}
+      defaultValue={"select_option"}
+      error={errors?.length ? errors?.join(". ") : undefined}
+    >
+      <option
+        disabled
+        value="select_option"
       >
-        <SelectTrigger
-          className="w-full"
-          isError={Boolean(errors?.length)}
+        Select TON Hub
+      </option>
+      {hubs.map((societyHub) => (
+        <option
+          key={societyHub.id}
+          value={societyHub.id}
+          className="text-black"
         >
-          <SelectValue placeholder="Select TON Hub" />
-        </SelectTrigger>
-        <SelectContent
-          // ref={(ref) => {
-          //   if (!ref) return;
-          //   ref.ontouchstart = (e) => {
-          //     e.preventDefault();
-          //   };
-          // }}
-          className="max-h-[250px]"
-        >
-          <SelectGroup className="max-h-[250px]">
-            {hubs.map((societyHub) => (
-              <SelectItem
-                className="dark:hover:bg-separator"
-                key={societyHub.id}
-                value={societyHub.id}
-              >
-                {societyHub.name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-
-      {errors?.map((error) => (
-        <div
-          className="text-red-300 pl-3 pt-1 text-sm  flex items-center"
-          key={error}
-        >
-          <FiAlertCircle className="mr-2" /> {error}
-        </div>
+          {societyHub.name}
+        </option>
       ))}
-    </div>
+    </ListInput>
   );
 };
 

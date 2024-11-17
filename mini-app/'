@@ -8,7 +8,7 @@ import { useCreateEventStore } from "@/zustand/createEventStore";
 import { GeneralStep } from "./GeneralStep";
 import { TimePlaceStep } from "./TimePlaceStep";
 import { RewardStep } from "./RewardStep";
-import Stepper from "@/app/_components/molecules/stepper";
+import { Segmented, SegmentedButton } from "konsta/react";
 
 type ManageEventProps = {
   eventHash?: string;
@@ -87,18 +87,18 @@ const ManageEvent = (props: ManageEventProps) => {
 
   return (
     <div>
-      <Stepper
-        steps={[
-          { icon: <span>1</span>, label: "General" },
-          { icon: <span>2</span>, label: "Time/place" },
-          { icon: <span>3</span>, label: "Reward" },
-        ]}
-        currentStep={currentStep}
-      />
+      <Segmented rounded>
+        <SegmentedButton>Button</SegmentedButton>
+        <SegmentedButton>Button</SegmentedButton>
+        <SegmentedButton>Button</SegmentedButton>
+      </Segmented>
 
-      {currentStep === 1 && <GeneralStep />}
-      {currentStep === 2 && <TimePlaceStep />}
-      {currentStep === 3 && <RewardStep />}
+      <div>
+        {currentStep === 1 && <GeneralStep />}
+        {currentStep === 2 && <TimePlaceStep />}
+        {currentStep === 3 && <RewardStep />}
+        {/*{currentStep === 4 && <ThirdStep />}*/}
+      </div>
     </div>
   );
 };

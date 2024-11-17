@@ -2,7 +2,6 @@ import React, { useRef } from "react";
 import { toast } from "sonner";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { useCreateEventStore } from "@/zustand/createEventStore";
-import { StepLayout } from "./stepLayout";
 import { generalStepDataSchema } from "@/zodSchema/event/validation";
 import { ErrorMessage } from "@/app/_components/molecules/alerts/ErrorMessage";
 import { EventGeneralInfoFormFields } from "@/app/_components/Event/steps/GeneralInfoForm";
@@ -14,6 +13,9 @@ export const GeneralStep = () => {
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
+  const clearGeneralErrors = useCreateEventStore(
+    (state) => state.clearGeneralStepErrors
+  );
   const setGeneralStepErrors = useCreateEventStore(
     (state) => state.setGeneralStepErrors
   );
@@ -54,6 +56,7 @@ export const GeneralStep = () => {
       ...eventData,
       ...formDataParsed.data,
     });
+    clearGeneralErrors();
     setCurrentStep(2);
   };
 
@@ -62,13 +65,11 @@ export const GeneralStep = () => {
       ref={formRef}
       onSubmit={handleSubmit}
     >
-      <StepLayout>
-        <EventGeneralInfoFormFields />
-        <MainButton
-          text="Next Step"
-          onClick={() => formRef.current?.requestSubmit()}
-        />
-      </StepLayout>
+      <EventGeneralInfoFormFields />
+      <MainButton
+        text="Next Step"
+        onClick={() => formRef.current?.requestSubmit()}
+      />
     </form>
   );
 };

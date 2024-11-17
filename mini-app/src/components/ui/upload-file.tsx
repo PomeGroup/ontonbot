@@ -5,17 +5,8 @@ import { cn, fileToBase64 } from "@/lib/utils";
 import { CircleArrowUp } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "./button";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "./drawer";
+import { Button, KButton } from "./button";
+import { Block, BlockTitle, Card, Sheet } from "konsta/react";
 
 /**
  * Props for the UploadImageFile component.
@@ -73,12 +64,23 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
   const [imagePreview, setImagePreview] = useState<string | undefined>(
     undefined
   );
+
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
   const uploadImage = trpc.files.uploadImage.useMutation({
     onSuccess: (data) => {
       setImagePreview(data.imageUrl);
       props.onImageChange?.(data.imageUrl);
     },
   });
+
+  useEffect(() => {
+    if (isSheetOpen) {
+      webApp?.MainButton.hide();
+    } else {
+      webApp?.MainButton.show();
+    }
+  }, [isSheetOpen]);
 
   useEffect(() => {
     // Set the initial image preview when the component mounts
@@ -102,90 +104,76 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
   };
 
   return (
-    <Drawer
-      preventScrollRestoration
-      disablePreventScroll
-      onOpenChange={(open) => {
-        if (open) {
-          webApp?.MainButton.disable();
-        } else {
-          webApp?.MainButton.enable();
-        }
-      }}
-    >
-      <DrawerTrigger asChild>
-        <Button
-          className={cn(
-            "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
-            props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
-          )}
-          onClick={() => {
-            if (webApp?.platform === "ios") {
-              // fix for ios
-              window.scrollTo({ top: 0, behavior: "instant" });
-            }
-          }}
-          variant={props.isError ? "destructive" : "outline"}
-        >
-          {imagePreview ? (
-            <div className="flex gap-4 items-center justify-start w-full">
-              <Image
-                alt="upload file"
-                className="rounded-xl"
-                src={imagePreview}
-                width={80}
-                height={80}
-              />
-              <p className="font-semibold flex items-center gap-2 text-lg">
-                <CircleArrowUp className="w-5" />
-                {props.changeText}
+    <Card>
+      <Button
+        className={cn(
+          "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
+          props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
+        )}
+        onClick={() => setIsSheetOpen(true)}
+        type="button"
+        variant={props.isError ? "destructive" : "outline"}
+      >
+        {imagePreview ? (
+          <div className="flex gap-4 items-center justify-start w-full">
+            <Image
+              alt="upload file"
+              className="rounded-xl"
+              src={imagePreview}
+              width={80}
+              height={80}
+            />
+            <p className="font-semibold flex items-center gap-2 text-lg">
+              <CircleArrowUp className="w-5" />
+              {props.changeText}
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="font-semibold flex items-center gap-2 text-lg">
+              <CircleArrowUp className="w-5" />
+              {props.triggerText}
+            </p>
+            {props.infoText && (
+              <p className="text-muted-foreground text-sm w-full text-balance">
+                {props.infoText}
               </p>
-            </div>
-          ) : (
-            <>
-              <p className="font-semibold flex items-center gap-2 text-lg">
-                <CircleArrowUp className="w-5" />
-                {props.triggerText}
-              </p>
-              {props.infoText && (
-                <p className="text-muted-foreground text-sm w-full text-balance">
-                  {props.infoText}
-                </p>
-              )}
-            </>
-          )}
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Upload Image</DrawerTitle>
+            )}
+          </>
+        )}
+      </Button>
+      <Sheet
+        opened={isSheetOpen}
+        onBackdropClick={() => setIsSheetOpen(false)}
+        className="w-full"
+      >
+        <BlockTitle>Upload Image</BlockTitle>
+        <Block className="space-y-2">
           {!imagePreview && (
-            <DrawerDescription>
+            <p>
               {props.drawerDescriptionText ||
                 "Upload an image from your device"}
-            </DrawerDescription>
+            </p>
           )}
-        </DrawerHeader>
-        {imagePreview && (
-          <Image
-            src={imagePreview}
-            width={400}
-            height={400}
-            alt="event image"
-            draggable="false"
-            className="w-full h-auto"
-          />
-        )}
-        {uploadImage.error && (
-          <div className="text-red-500 text-sm w-full text-balance mt-2">
-            {getErrorMessages(uploadImage.error.message).map(
-              (errMessage, idx: number) => (
-                <p key={idx}>{errMessage}</p>
-              )
-            )}
-          </div>
-        )}
-        <DrawerFooter>
+          {imagePreview && (
+            <Image
+              src={imagePreview}
+              width={400}
+              height={400}
+              alt="event image"
+              draggable="false"
+              className="w-full rounded-xl h-auto"
+            />
+          )}
+          {uploadImage.error && (
+            <div className="text-red-500 text-sm w-full text-balance mt-2">
+              {getErrorMessages(uploadImage.error.message).map(
+                (errMessage, idx: number) => (
+                  <p key={idx}>{errMessage}</p>
+                )
+              )}
+            </div>
+          )}
           <input
             ref={imageInputRef}
             type="file"
@@ -198,34 +186,33 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
             id="event_image_input"
             className="hidden"
           />
-          <Button
-            type="button"
-            className="w-full h-12.5 flex items-center gap-2"
+          <KButton
+            itemType="button"
+            className="w-full flex items-center gap-2"
+            tonal
             onClick={(e) => {
               e.preventDefault();
               imageInputRef.current?.click();
             }}
-            isLoading={uploadImage.isLoading}
           >
             <CircleArrowUp className="w-5" />
             <span>{imagePreview ? "Change Image" : "Upload Image"}</span>
-          </Button>
+          </KButton>
           {imagePreview && (
-            <DrawerClose asChild>
-              <Button
-                className="w-16 h-10 mx-auto rounded-full mt-4"
-                variant="secondary"
-                onClick={() =>
-                  typeof props?.onDone === "function" &&
-                  props.onDone(imagePreview)
-                }
-              >
-                Done
-              </Button>
-            </DrawerClose>
+            <KButton
+              className="w-16 h-10 mx-auto rounded-full"
+              onClick={(e) => {
+                e.preventDefault();
+                setIsSheetOpen(false);
+                typeof props?.onDone === "function" &&
+                  props.onDone(imagePreview);
+              }}
+            >
+              Done
+            </KButton>
           )}
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        </Block>
+      </Sheet>
+    </Card>
   );
 };

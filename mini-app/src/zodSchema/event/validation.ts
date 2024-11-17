@@ -2,16 +2,14 @@ import { z } from "zod";
 
 export const generalStepDataSchema = z.object({
   title: z
-    .string()
-    .min(2, { message: "Title must be at least 2 characters" })
-    .max(40, { message: "Title must be less than 40 characters" }),
+    .string({ required_error: "Please enter a title" })
+    .min(10, { message: "Title must be at least 10 characters" }),
   subtitle: z
-    .string()
-    .min(2, { message: "Subtitle must be at least 2 characters" })
-    .max(100),
+    .string({ required_error: "Please enter a subtitle" })
+    .min(10, { message: "Subtitle must be at least 10 characters" }),
   description: z
     .string({ required_error: "Please enter a description" })
-    .min(1, { message: "Description must be at least 1 character" }),
+    .min(20, { message: "Description must be at least 20 character" }),
   image_url: z
     .string({ required_error: "Please select an image" })
     .url({ message: "Please select a valid image" }),
