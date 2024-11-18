@@ -15,13 +15,12 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const WebApp = useWebApp();
 
   const event = trpc.events.getEvent.useQuery(
-    { event_uuid: params.hash, init_data: WebApp?.initData || "" },
+    { event_uuid: params.hash },
     {
       cacheTime: 0,
-      enabled: Boolean(WebApp?.initData),
       queryKey: [
         "events.getEvent",
-        { event_uuid: params.hash, init_data: WebApp?.initData || "" },
+        { event_uuid: params.hash, },
       ],
     }
   );
@@ -29,7 +28,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
   const { authorized, isLoading } = useAuth();
 
-  if (isLoading || event.status === "loading") {
+  if (isLoading) {
     return null;
   }
 
@@ -63,10 +62,13 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="manage">
-          <GuestList
-            event={event.data}
-            params={params}
-          />
+          {
+            event.data &&
+            <GuestList
+              event={event.data}
+              params={params}
+            />
+          }
         </TabsContent>
 
         <TabsContent

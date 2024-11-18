@@ -586,8 +586,11 @@ export const gmtTimeZones = [
   "Zulu",
 ];
 
+
+
 export const SHARED_SECRET = process.env.ONTON_API_SECRET!
 export const DOMAINS = [
+   process.env.MINI_APP_DOMAIN!,
   'onton.live',
   'localhost:3000',
   'localhost:3001',

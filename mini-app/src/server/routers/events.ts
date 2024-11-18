@@ -6,8 +6,8 @@ import {
   selectVisitorsWithWalletAddress,
 } from "@/server/db/visitors";
 import { hashPassword } from "@/lib/bcrypt";
-import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
-import { registerActivity, updateActivity } from "@/lib/ton-society-api";
+import { sendLogNotification } from "@/lib/tgBot";
+import { registerActivity, tonSocietyClient, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import {
@@ -219,49 +219,49 @@ export const eventsRouter = router({
             },
             ...(opts.input.eventData.ts_reward_url
               ? {
-                  rewards: {
-                    mint_type: "manual",
-                    collection: {
-                      title: opts.input.eventData.title,
-                      description: opts.input.eventData.description,
-                      image: {
-                        url:  opts.input.eventData.image_url  ,
-                      },
-                      cover: {
-                        url:  opts.input.eventData.image_url,
-                      },
-                      item_title: opts.input.eventData.title,
-                      item_description: "Reward for participation",
-                      item_image: {
-                        url: opts.input.eventData.ts_reward_url,
-                      },
-                      ...(opts.input.eventData.video_url
-                        ? {
-                            item_video: {
-                              url:  new URL(opts.input.eventData.video_url).origin + new URL(opts.input.eventData.video_url).pathname,
-                            },
-                          }
-                        : {}),
-                      item_metadata: {
-                        activity_type: "event",
-                        place: {
-                          type:
-                            opts.input.eventData.eventLocationType === "online"
-                              ? "Online"
-                              : "Offline",
-                          ...(country && country?.abbreviatedCode
-                            ? {
-                                country_code_iso: country.abbreviatedCode,
-                                venue_name: opts.input.eventData.location,
-                              }
-                            : {
-                                venue_name: opts.input.eventData.location, // Use location regardless of country
-                              }),
+                rewards: {
+                  mint_type: "manual",
+                  collection: {
+                    title: opts.input.eventData.title,
+                    description: opts.input.eventData.description,
+                    image: {
+                      url: opts.input.eventData.image_url,
+                    },
+                    cover: {
+                      url: opts.input.eventData.image_url,
+                    },
+                    item_title: opts.input.eventData.title,
+                    item_description: "Reward for participation",
+                    item_image: {
+                      url: opts.input.eventData.ts_reward_url,
+                    },
+                    ...(opts.input.eventData.video_url
+                      ? {
+                        item_video: {
+                          url: new URL(opts.input.eventData.video_url).origin + new URL(opts.input.eventData.video_url).pathname,
                         },
+                      }
+                      : {}),
+                    item_metadata: {
+                      activity_type: "event",
+                      place: {
+                        type:
+                          opts.input.eventData.eventLocationType === "online"
+                            ? "Online"
+                            : "Offline",
+                        ...(country && country?.abbreviatedCode
+                          ? {
+                            country_code_iso: country.abbreviatedCode,
+                            venue_name: opts.input.eventData.location,
+                          }
+                          : {
+                            venue_name: opts.input.eventData.location, // Use location regardless of country
+                          }),
                       },
                     },
                   },
-                }
+                },
+              }
               : {}),
           };
 
@@ -533,8 +533,8 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       | { status: "error"; message: string }
     > => {
       try {
-        const response = await axios.get<HubsResponse>(
-          `${process.env.TON_SOCIETY_BASE_URL}/hubs`,
+        const response = await tonSocietyClient.get<HubsResponse>(
+          `/hubs`,
           {
             params: {
               _start: 0,
@@ -564,7 +564,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           } as const;
         }
       } catch (error) {
-        console.error(error);
+        console.error('hub fetch failed', error);
 
         return {
           status: "error",
@@ -623,18 +623,18 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(
     async (opts) => {
-      const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid , -1, 0, true, "");
+      const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, true, "");
       const eventData = await selectEventByUuid(opts.input.event_uuid);
       // Map the data and conditionally remove fields
-        const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
-            // Explicitly define wallet_address type and handle other optional fields
-            //@ts-ignore
-            const visitorData: Partial<VisitorsWithDynamicFields> = {
-                ...visitor,
-                ticket_status: "ticket_status" in visitor ? visitor.ticket_status ?? undefined : undefined,
-                wallet_address: visitor.wallet_address as string | null | undefined,
-                username: visitor.username === "null" ? null : visitor.username,
-            };
+      const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+        // Explicitly define wallet_address type and handle other optional fields
+        //@ts-ignore
+        const visitorData: Partial<VisitorsWithDynamicFields> = {
+          ...visitor,
+          ticket_status: "ticket_status" in visitor ? visitor.ticket_status ?? undefined : undefined,
+          wallet_address: visitor.wallet_address as string | null | undefined,
+          username: visitor.username === "null" ? null : visitor.username,
+        };
         // Copy the visitor object without modifying dynamicFields directly
 
 
@@ -678,7 +678,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         formData.append("fileName", eventData?.title || "visitors");
         const userId = opts.ctx.user.user_id;
         const response = await axios.post(
-          `http://telegram-bot:3333/send-file?id=${userId}`,
+          `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-file?id=${userId}`,
           formData,
           {
             headers: {
@@ -707,7 +707,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     .mutation(async (opts) => {
       try {
         const response = await axios.get(
-          "http://telegram-bot:3333/generate-qr",
+          `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/generate-qr`,
           {
             params: {
               id: opts.ctx.user.user_id,

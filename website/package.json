@@ -1,0 +1,32 @@
+{
+  "name": "onton-landing-page",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "dotenv -e ../.env -- cross-var   next dev --port %PORT_WEB_SITE% ",
+    "dev:server": "next dev",
+    "build": "next build",
+    "build:local": "dotenv -e ../.env -- next build",
+    "start": "next start",
+    "start:local": "dotenv -e ../.env -- cross-var   next start --port %PORT_WEB_SITE%",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@lottiefiles/dotlottie-react": "^0.8.12",
+    "cross-env": "^7.0.3",
+    "next": "14.2.5",
+    "react": "^18",
+    "react-dom": "^18",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15",
+    "autoprefixer": "^10.4.19",
+    "cross-var": "^1.1.0",
+    "dotenv-cli": "^7.4.2",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8.4.40",
+    "tailwindcss": "^3.4.7"
+  }
+}

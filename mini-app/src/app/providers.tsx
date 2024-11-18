@@ -9,6 +9,7 @@ import Script from "next/script";
 import React from "react";
 import WebAppProvider from "./_components/WebAppProvider";
 import ThemeSetter from "./themeSetter";
+import TRPCAPIProvider from "./_trpc/Provider";
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -23,16 +24,17 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         async
       />
       <ThemeProvider
-        forcedTheme="dark"
         attribute="class"
       >
         <WebAppProvider>
-          <NavigationHistoryProvider>
-            <ConfigProvider>
-              <ThemeSetter>{children}</ThemeSetter>
-              <Toaster />
-            </ConfigProvider>
-          </NavigationHistoryProvider>
+          <TRPCAPIProvider>
+            <NavigationHistoryProvider>
+              <ConfigProvider>
+                <ThemeSetter>{children}</ThemeSetter>
+                <Toaster />
+              </ConfigProvider>
+            </NavigationHistoryProvider>
+          </TRPCAPIProvider>
         </WebAppProvider>
       </ThemeProvider>
     </TonConnectUIProvider>

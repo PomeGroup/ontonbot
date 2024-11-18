@@ -117,7 +117,7 @@ export const shareEventRequest = async (
   const event_url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/events/${event_uuid}`;
 
   try {
-    const response = await axios.post("http://telegram-bot:3333/share-event", {
+    const response = await axios.post(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/share-event`, {
       user_id: user_id,
       id: event_uuid,
       share_link: share_link,

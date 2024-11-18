@@ -1,0 +1,20 @@
+{
+  "name": "@repo/tma",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20.12.12",
+    "@tma.js/sdk": "^2.2.7",
+    "@tma.js/sdk-react": "^2.2.7",
+    "@types/react": "^18.3.2",
+    "typescript": "^5.4.5"
+  },
+  "exports": {
+    "./*": "./tma/*.tsx"
+  }
+}

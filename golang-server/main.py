@@ -1,7 +1,12 @@
 import requests
+import os
+# Get the port from the environment variable or default to 9999 if not set
+port = os.getenv("GOLANG_SERVER_PORT", "9999")
 
+# Construct the URL with the port
+url = f"http://localhost:{port}/send"
 res = requests.get(
-    "http://localhost:9999/send",
+    url,
     headers={
         "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb29tX2hhc2giOiJiZWFyZXIiLCJ1c2VyX2lkIjoiMTIzNDU2Nzg5MCIsImV4cCI6MTYx"
     },

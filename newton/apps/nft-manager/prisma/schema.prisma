@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL_NFT_MANAGER")
+}
+
+model NFTCollection {
+  id                         String    @id @default(uuid()) @db.Uuid
+  address                    String    @unique @db.VarChar(255)
+  metadata_url               String    @db.VarChar(255)
+  item_meta_data             Json?
+  last_registered_item_index Int?      @default(-1)
+  in_process                 Boolean?  @default(true)
+  items                      NFTItem[]
+}
+
+model NFTItem {
+  id            String        @id @default(uuid()) @db.Uuid
+  address       String?       @db.VarChar(255)
+  metadata_url  String        @db.VarChar(255)
+  collection_id String        @db.Uuid
+  owner_address String        @db.VarChar(255)
+  create_at     DateTime      @default(now())
+  collection    NFTCollection @relation(fields: [collection_id], references: [id])
+  state         NftItemState  @default(created)
+  index         Int?
+  order_id      String?
+  try_count     Int           @default(0)
+  fail_reason   Json?
+
+  transaction    Transactions? @relation(fields: [transactionsId], references: [id])
+  transactionsId String?       @db.Uuid
+}
+
+model Transactions {
+  id            String                 @id @default(uuid()) @db.Uuid
+  src           String                 @db.VarChar(255)
+  logical_time  BigInt
+  hash          String                 @db.VarChar(255)
+  value         Float                  @db.Real
+  ticket_value  Float                  @db.Real
+  type          TransactionsType       @default(paid)
+  error_type    TransactionsErrorType?
+  failed_reason String?
+  is_processed  Boolean                @default(false)
+  tx_comment    String                 @default("empty") @db.VarChar(255)
+  create_at     DateTime               @default(now())
+  nft_item      NFTItem[]
+}
+
+enum TransactionsType {
+  failed
+  paid
+  pending
+}
+
+enum TransactionsErrorType {
+  order_does_not_exist
+  not_enough_ton
+  transaction_already_exists
+  internal_error
+  no_order_id
+  no_comment
+  internal_error_on_mint_request
+  invalid_order_update_data
+}
+
+enum NftItemState {
+  created
+  mint_request
+  minted
+  failed
+}
+
+model WatchWallet {
+  id              String   @id @default(uuid()) @db.Uuid
+  address         String   @unique @db.VarChar(255)
+  last_checked_lt String   @default("0")
+  updated_at      DateTime @updatedAt
+}

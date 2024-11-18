@@ -155,8 +155,10 @@ async function fetchBalance(address) {
 
 const distributionRequest = async (seedPhrase, receivers) => {
   try {
+    const port = process.env.GOLANG_SERVER_PORT || '9999';
+    const url = `http://golang-server:${port}/send`;
     const response = await axios.post(
-      "http://golang-server:9999/send",
+        url,
       { receivers: receivers.receivers },
       {
         headers: {

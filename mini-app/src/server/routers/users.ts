@@ -19,7 +19,6 @@ import {
 
 import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
-import {cookies} from "next/headers";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure
@@ -39,35 +38,9 @@ export const usersRouter = router({
   ),
 
   // private
-  addUser: publicProcedure
-    .input(z.object({ initData: z.string() }))
-    .mutation(async (opts) => {
-      if (!opts.input.initData) {
-        throw new TRPCError({
-          message: "initdata is required",
-          code: "BAD_REQUEST",
-        });
-      }
-
-      const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
-
-      if (!valid) {
-        throw new TRPCError({
-          message: "invalid initdata",
-          code: "UNPROCESSABLE_CONTENT",
-        });
-      }
-
-      const data = await usersDB.insertUser(initDataJson);
-
-      if (!data) {
-        throw new TRPCError({
-          message: "user already exists",
-          code: "CONFLICT",
-        });
-      }
-
-      return data;
+  syncUser: initDataProtectedProcedure
+    .query(async (opts) => {
+      return opts.ctx.user;
     }),
 
   // private
@@ -142,6 +115,8 @@ export const usersRouter = router({
     )
     .query(async (opts) => {
       try {
+        console.log('context we found', opts.ctx);
+
         await visitorService.addVisitor(opts);
         // Fetch the visitor from the database
         const visitor = await findVisitorByUserAndEventUuid(

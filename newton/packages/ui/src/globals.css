@@ -1,0 +1,265 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Shapes */
+  html.platform-ios {
+    --border-radius: 14px;
+  }
+
+  html.platform-android {
+    --border-radius: 0px;
+  }
+
+  html.use-system-font {
+    --font-family: -apple-system, system-ui, BlinkMacSystemFont !important;
+  }
+
+  /* Typography */
+  /* html.platform-ios {
+     --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+   }
+
+   html.platform-android {
+     --font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+   }*/
+  /* Palette */
+  html.platform-ios.theme-light {
+    /* Telegram */
+    --telegram-bg-color: hsla(0, 0%, 100%, 1);
+    --telegram-text-color: hsla(0, 0%, 0%, 1);
+    --telegram-hint-color: hsla(240, 2%, 57%, 1);
+    --telegram-link-color: hsla(211, 100%, 50%, 1);
+    --telegram-button-text-color: hsla(0, 0%, 100%, 1);
+    --telegram-button-color: hsla(211, 100%, 50%, 1);
+    --telegram-secondary-bg-color: hsla(240, 19%, 95%, 1);
+    /*  Available from 6.10 */
+    --telegram-6-10-header-bg-color: hsla(0, 0%, 97%, 1);
+    --telegram-6-10-section-bg-color: hsla(0, 0%, 100%, 1);
+    --telegram-6-10-accent-text-color: hsla(211, 100%, 50%, 1);
+    --telegram-6-10-subtitle-text-color: hsla(240, 2%, 57%, 1);
+    --telegram-6-10-section-header-text-color: hsla(240, 2%, 44%, 1);
+    --telegram-6-10-destructive-text-color: hsla(3, 100%, 59%, 1);
+    /* @Wallet */
+    --wallet-separator-color: hsla(255, 4%, 79%, 1);
+    --wallet-second-button-color: hsla(211, 100%, 50%, 0.1);
+    --wallet-button-confirm-color: hsla(135, 59%, 49%, 1);
+    --wallet-text-confirm-color: hsla(135, 59%, 49%, 1);
+    --wallet-button-main-disabled-color: hsla(240, 2%, 91%, 1);
+    --wallet-text-main-disabled-color: hsla(240, 1%, 73%, 1);
+    --wallet-D-text-destruсtive-color: hsla(3, 100%, 59%, 1); /* deprecated */
+    --wallet-button-destruсtive-color: hsla(3, 100%, 59%, 0.1);
+    --wallet-highlight-default: hsla(240, 2%, 56%, 0.24);
+    --wallet-quick-menu-background: hsla(0, 0%, 100%, 0.55);
+    --wallet-quick-menu-foreground: hsla(0, 0%, 0%, 1);
+    --wallet-toast-background: hsla(0, 0%, 18%, 0.8);
+    --wallet-text-overlay: hsla(0, 0%, 100%, 1);
+    --wallet-toast-link: hsla(199, 94%, 67%, 1);
+    --wallet-tertiary-fill-background: hsla(240, 5%, 48%, 0.12);
+    --wallet-quaternary-fill-background: hsla(240, 5%, 48%, 0.08);
+    --wallet-separator-non-opaque-color: hsla(240, 6%, 25%, 0.36);
+    --wallet-accent-orange: hsla(35, 100%, 50%, 1);
+    --wallet-segmented-control-active-background: hsla(0, 0%, 100%, 1);
+  }
+
+  html.platform-ios.theme-dark {
+    /* Telegram */
+    --telegram-bg-color: hsla(0, 0%, 0%, 1);
+    --telegram-text-color: hsla(0, 0%, 100%, 1);
+    --telegram-hint-color: hsla(240, 2%, 57%, 1);
+    --telegram-link-color: hsla(210, 100%, 52%, 1);
+    --telegram-button-text-color: hsla(0, 0%, 100%, 1);
+    --telegram-button-color: hsla(210, 100%, 52%, 1);
+    --telegram-secondary-bg-color: hsla(240, 3%, 11%, 1);
+    /*  Available from 6.10 */
+    --telegram-6-10-header-bg-color: hsla(0, 0%, 10%, 1);
+    --telegram-6-10-section-bg-color: hsla(240, 2%, 11%, 1);
+    --telegram-6-10-accent-text-color: hsla(216, 92%, 61%, 1);
+    --telegram-6-10-subtitle-text-color: hsla(240, 3%, 61%, 1);
+    --telegram-6-10-section-header-text-color: hsla(230, 3%, 56%, 1);
+    --telegram-6-10-destructive-text-color: hsla(6, 81%, 60%, 1);
+    /* @Wallet */
+    --wallet-separator-color: hsla(240, 2%, 24%, 1);
+    --wallet-second-button-color: hsla(210, 100%, 52%, 0.1);
+    --wallet-button-confirm-color: hsla(135, 64%, 50%, 1);
+    --wallet-text-confirm-color: hsla(135, 64%, 50%, 1);
+    --wallet-button-main-disabled-color: hsla(0, 0%, 18%, 1);
+    --wallet-text-main-disabled-color: hsla(0, 0%, 38%, 1);
+    --wallet-D-text-destruсtive-color: hsla(6, 100%, 59%, 1); /* deprecated */
+    --wallet-button-destruсtive-color: hsla(6, 100%, 59%, 0.1);
+    --wallet-highlight-default: hsla(240, 2%, 61%, 0.24);
+    --wallet-quick-menu-background: hsla(0, 0%, 0%, 0.78);
+    --wallet-quick-menu-foreground: hsla(0, 0%, 100%, 1);
+    --wallet-toast-background: hsla(0, 0%, 17%, 0.8);
+    --wallet-text-overlay: hsla(0, 0%, 100%, 1);
+    --wallet-toast-link: hsla(199, 94%, 67%, 1);
+    --wallet-tertiary-fill-background: hsla(240, 4%, 48%, 0.24);
+    --wallet-quaternary-fill-background: hsla(240, 5%, 48%, 0.18);
+    --wallet-separator-non-opaque-color: hsla(240, 2%, 34%, 0.65);
+    --wallet-accent-orange: hsla(36, 100%, 52%, 1);
+    --wallet-segmented-control-active-background: hsla(240, 1%, 39%, 1);
+  }
+
+  html.platform-android.theme-light {
+    /* Telegram */
+    --telegram-bg-color: hsla(0, 0%, 100%, 1);
+    --telegram-text-color: hsla(0, 0%, 13%, 1);
+    --telegram-hint-color: hsla(0, 0%, 66%, 1);
+    --telegram-link-color: hsla(206, 65%, 43%, 1);
+    --telegram-button-text-color: hsla(0, 0%, 100%, 1);
+    --telegram-button-color: hsla(206, 79%, 62%, 1);
+    --telegram-secondary-bg-color: hsla(0, 0%, 94%, 1);
+    /*  Available from 6.10 */
+    --telegram-6-10-header-bg-color: hsla(208, 33%, 48%, 1);
+    --telegram-6-10-section-bg-color: hsla(0, 0%, 100%, 1);
+    --telegram-6-10-accent-text-color: hsla(204, 78%, 50%, 1);
+    --telegram-6-10-subtitle-text-color: hsla(210, 3%, 53%, 1);
+    --telegram-6-10-section-header-text-color: hsla(205, 65%, 53%, 1);
+    --telegram-6-10-destructive-text-color: hsla(0, 67%, 48%, 1);
+    /* @Wallet */
+    --wallet-separator-color: hsla(0, 0%, 85%, 1);
+    --wallet-second-button-color: hsla(206, 79%, 62%, 0.1);
+    --wallet-button-confirm-color: hsla(128, 55%, 55%, 1);
+    --wallet-text-confirm-color: hsla(128, 55%, 55%, 1);
+    --wallet-button-main-disabled-color: hsla(0, 2%, 91%, 1);
+    --wallet-text-main-disabled-color: hsla(0, 0%, 73%, 1);
+    --wallet-D-text-destruсtive-color: hsla(0, 67%, 48%, 1); /* deprecated */
+    --wallet-button-destruсtive-color: hsla(0, 67%, 48%, 0.1);
+    --wallet-highlight-default: hsla(0, 0%, 0%, 0.05);
+    --wallet-quick-menu-background: hsla(0, 0%, 100%, 1);
+    --wallet-quick-menu-foreground: hsla(0, 0%, 13%, 1);
+    --wallet-toast-background: hsla(212, 18%, 19%, 0.92);
+    --wallet-text-overlay: hsla(0, 0%, 100%, 1);
+    --wallet-toast-link: hsla(206, 100%, 76%, 1);
+    --wallet-tertiary-fill-background: hsla(0, 0%, 48%, 0.12);
+    --wallet-quaternary-fill-background: hsla(0, 0%, 48%, 0.08);
+    --wallet-separator-non-opaque-color: hsla(0, 0%, 60%, 0.36);
+    --wallet-accent-orange: hsla(23, 91%, 59%, 1);
+    --wallet-segmented-control-active-background: hsla(0, 0%, 100%, 1);
+  }
+
+  html.platform-android.theme-dark {
+    /* Telegram */
+    --telegram-bg-color: hsla(0, 0%, 12%, 1);
+    --telegram-text-color: hsla(0, 0%, 100%, 1);
+    --telegram-hint-color: hsla(0, 0%, 53%, 1);
+    --telegram-link-color: hsla(209, 97%, 70%, 0.88);
+    --telegram-button-text-color: hsla(0, 0%, 100%, 1);
+    --telegram-button-color: hsla(206, 70%, 57%, 1);
+    --telegram-secondary-bg-color: hsla(0, 0%, 0%, 1);
+    /*  Available from 6.10 */
+    --telegram-6-10-header-bg-color: hsla(240, 4%, 14%, 1);
+    --telegram-6-10-section-bg-color: hsla(240, 2%, 10%, 1);
+    --telegram-6-10-accent-text-color: hsla(205, 81%, 66%, 1);
+    --telegram-6-10-subtitle-text-color: hsla(240, 0%, 50%, 1);
+    --telegram-6-10-section-header-text-color: hsla(208, 91%, 70%, 1);
+    --telegram-6-10-destructive-text-color: hsla(357, 80%, 67%, 1);
+    /* @Wallet */
+    --wallet-separator-color: hsla(0, 0%, 0%, 1);
+    --wallet-second-button-color: hsla(206, 70%, 57%, 0.1);
+    --wallet-button-confirm-color: hsla(124, 41%, 56%, 1);
+    --wallet-text-confirm-color: hsla(124, 41%, 56%, 1);
+    --wallet-button-main-disabled-color: hsla(240, 2%, 24%, 1);
+    --wallet-text-main-disabled-color: hsla(0, 0%, 38%, 1);
+    --wallet-D-text-destruсtive-color: hsla(357, 80%, 67%, 1); /* deprecated */
+    --wallet-button-destruсtive-color: hsla(357, 80%, 67%, 0.1);
+    --wallet-highlight-default: hsla(0, 0%, 100%, 0.05);
+    --wallet-quick-menu-background: hsla(240, 1%, 16%, 1);
+    --wallet-quick-menu-foreground: hsla(0, 0%, 100%, 1);
+    --wallet-toast-background: hsla(0, 0%, 16%, 0.96);
+    --wallet-text-overlay: hsla(0, 0%, 100%, 1);
+    --wallet-toast-link: hsla(209, 100%, 71%, 1);
+    --wallet-tertiary-fill-background: hsla(0, 0%, 48%, 0.24);
+    --wallet-quaternary-fill-background: hsla(0, 0%, 48%, 0.18);
+    --wallet-separator-non-opaque-color: hsla(0, 0%, 0%, 1);
+    --wallet-accent-orange: hsla(26, 76%, 58%, 1);
+    --wallet-segmented-control-active-ackground: hsla(240, 1%, 39%, 1);
+  }
+
+  /* ios */
+  html.platform-ios .type-title-1 {
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 34px;
+    letter-spacing: 0.38px;
+  }
+
+  html.platform-ios .type-title-2 {
+    font-size: 22px;
+    line-height: 28px;
+    letter-spacing: -0.26px;
+  }
+
+  html.platform-ios .type-title-3 {
+    font-size: 20px;
+    line-height: 24px;
+    letter-spacing: -0.45px;
+  }
+
+  html.platform-ios .type-headline {
+    font-weight: 590;
+    font-size: 17px;
+    line-height: 22px;
+    letter-spacing: -0.43px;
+  }
+
+  html.platform-ios .type-body {
+    font-weight: 400;
+    font-size: 17px;
+    line-height: 22px;
+    letter-spacing: -0.43px;
+  }
+
+  html.platform-ios .type-callout {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 22px;
+    letter-spacing: -0.31px;
+  }
+
+  html.platform-ios .type-subheadline-1 {
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 20px;
+    letter-spacing: -0.23px;
+  }
+
+  html.platform-ios .type-subheadline-2 {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 18px;
+    letter-spacing: -0.15px;
+  }
+
+  html.platform-ios .type-footnote {
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 18px;
+    letter-spacing: -0.08px;
+  }
+
+  html.platform-ios .type-caption-1 {
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    letter-spacing: 0;
+  }
+
+  html.platform-ios .type-caption-2 {
+    font-weight: 400;
+    font-size: 11px;
+    line-height: 13px;
+    letter-spacing: 0.06px;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-wallet-separator-color;
+  }
+
+  body {
+    @apply font-sans;
+  }
+}

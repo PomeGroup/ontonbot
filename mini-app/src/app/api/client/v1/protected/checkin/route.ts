@@ -6,6 +6,7 @@ import { validateJwtFromRequest } from "@/app/api/client/v1/authService";
 import {selectUserById} from "@/server/db/users";
 import dealRoomService from "@/server/routers/services/DealRoomService"; // Import the JWT validation function
 
+
 // Zod schema to validate the request body
 const checkInTicketSchema = z.object({
   order_uuid: z.string(),

@@ -1,9 +1,9 @@
 "use client";
+
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { trpc } from "@/app/_trpc/client";
 import { AlertGeneric } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import useWebApp from "@/hooks/useWebApp";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -20,7 +20,6 @@ import { SbtOptionContent } from "./SbtOptionContent";
 let lastToastId: string | number | null = null; // Store the ID of the last toast
 
 export const RewardStep = () => {
-  const webApp = useWebApp();
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
   const editOptions = useCreateEventStore((state) => state.edit);
@@ -52,7 +51,7 @@ export const RewardStep = () => {
     }
   );
   const [sbtOption, setSbtOption] = useState<"custom" | "default">(
-      rewardCollections && rewardCollections.length > 0 ? "default" : "custom"
+    rewardCollections && rewardCollections.length > 0 ? "default" : "custom"
   );
   useEffect(() => {
     if (eventData?.society_hub?.id) {
@@ -108,9 +107,9 @@ export const RewardStep = () => {
     secret_phrase: passwordDisabled
       ? z.string().optional()
       : z
-          .string()
-          .min(4, { message: "Password must be at least 4 characters" })
-          .max(20, { message: "Password must be less than 20 characters" }),
+        .string()
+        .min(4, { message: "Password must be at least 4 characters" })
+        .max(20, { message: "Password must be less than 20 characters" }),
     ts_reward_url: z
       .string()
       .optional() // This allows the field to be undefined
@@ -161,13 +160,13 @@ export const RewardStep = () => {
       }));
 
       toast.error(
-          <div>
-            <div className="flex items-center">
-              <FiAlertCircle className="mr-2" />
-              {"Please upload both an image and a video for your custom SBT reward."}
-            </div>
-          </div>,
-          { duration: 5000 }
+        <div>
+          <div className="flex items-center">
+            <FiAlertCircle className="mr-2" />
+            {"Please upload both an image and a video for your custom SBT reward."}
+          </div>
+        </div>,
+        { duration: 5000 }
       );
       return;
     }
@@ -187,7 +186,6 @@ export const RewardStep = () => {
         if (updateParsedData.success) {
           updateEvent.mutate({
             event_uuid: editOptions.eventHash,
-            init_data: webApp?.initData || "",
             eventData: updateParsedData.data,
           });
           return;
@@ -195,12 +193,9 @@ export const RewardStep = () => {
       }
 
       const parsedEventData = EventDataSchema.safeParse(dataToSubmit);
-      console.log("dataToSubmit", dataToSubmit);
-      console.log("parsedEventData", parsedEventData);
       if (parsedEventData.success) {
         addEvent.mutate({
           eventData: parsedEventData.data,
-          init_data: webApp?.initData || "",
         });
       }
       return;
@@ -243,7 +238,7 @@ export const RewardStep = () => {
     );
   };
   useEffect(() => {
-   console.log("eventData", eventData);
+    console.log("eventData", eventData);
   }, [eventData]);
   const handlePasswordClick = () => {
     setPasswordDisabled(false);
@@ -289,12 +284,11 @@ export const RewardStep = () => {
   };
 
   return (
-    <StepLayout>
-      <form
-        ref={formRef}
-        onSubmit={handleSubmit}
-        className="space-y-8"
-      >
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+    >
+      <StepLayout>
         {/* Secret Phrase Field */}
         <div className="space-y-2">
           <Label
@@ -328,71 +322,70 @@ export const RewardStep = () => {
           </AlertGeneric>
         </div>
         {!editOptions?.eventHash && (
-            <>
-              {/* SBT Option Selection */}
-              <div className="space-y-2">
-                <Label className="font-bold text-lg mb-2">Choose SBT Option</Label>
+          <>
+            {/* SBT Option Selection */}
+            <div className="space-y-2">
+              <Label className="font-bold text-lg mb-2">Choose SBT Option</Label>
 
-                <RadioGroup
-                    onValueChange={(value: "custom" | "default") => setSbtOption(value)}
-                    value={sbtOption}
-                >
-                  <div className="flex space-x-4">
-                    {rewardCollections && rewardCollections.length > 0 && (
-                        <>
-                          <RadioGroupItem value="default" id="default" className="w-4 h-4"  />
-                          <Label htmlFor="default"> Default Collections</Label>
-                        </>
-                    )}
+              <RadioGroup
+                onValueChange={(value: "custom" | "default") => setSbtOption(value)}
+                value={sbtOption}
+              >
+                <div className="flex space-x-4">
+                  {rewardCollections && rewardCollections.length > 0 && (
+                    <>
+                      <RadioGroupItem value="default" id="default" className="w-4 h-4" />
+                      <Label htmlFor="default"> Default Collections</Label>
+                    </>
+                  )}
 
-                    <RadioGroupItem
-                        value="custom"
-                        id="custom"
-                        className={"w-4 h-4 color-white"}
-                    />
-                    <Label htmlFor="custom"  > Customized SBT</Label>
-                  </div>
-                </RadioGroup>
-              </div>
+                  <RadioGroupItem
+                    value="custom"
+                    id="custom"
+                    className={"w-4 h-4 color-white"}
+                  />
+                  <Label htmlFor="custom"  > Customized SBT</Label>
+                </div>
+              </RadioGroup>
+            </div>
 
-              {/* Conditionally Render SBT Content */}
-              <div className="space-y-2">
-                <SbtOptionContent
-                    sbtOption={sbtOption}
-                    rewardCollections={rewardCollections || []}
-                    sbtCollectionIsLoading={sbtCollectionIsLoading}
-                    selectedSbtId={selectedSbtId}
-                    handleSbtSelection={handleSbtSelection}
-                    handleSlideChange={handleSlideChange}
-                    setEventData={setEventData}
+            {/* Conditionally Render SBT Content */}
+            <div className="space-y-2">
+              <SbtOptionContent
+                sbtOption={sbtOption}
+                rewardCollections={rewardCollections || []}
+                sbtCollectionIsLoading={sbtCollectionIsLoading}
+                selectedSbtId={selectedSbtId}
+                handleSbtSelection={handleSbtSelection}
+                handleSlideChange={handleSlideChange}
+                setEventData={setEventData}
 
-                    errors={errors || {}}
-                    clearImageError={clearImageError}
-                    clearVideoError={clearVideoError}
-                />
+                errors={errors || {}}
+                clearImageError={clearImageError}
+                clearVideoError={clearVideoError}
+              />
 
-              </div>
-            </>
+            </div>
+          </>
         )}
 
-      </form>
-
-      {/* Submit Button */}
-      {editOptions?.eventHash ? (
-        <MainButton
-          onClick={handleButtonClick}
-          text="Update event"
-          disabled={updateEvent.isLoading}
-          progress={updateEvent.isLoading}
-        />
-      ) : (
-        <MainButton
-          onClick={handleButtonClick}
-          text="Create event"
-          disabled={addEvent.isLoading}
-          progress={addEvent.isLoading}
-        />
-      )}
-    </StepLayout>
+        {/* Submit Button */}
+        {editOptions?.eventHash ? (
+          <MainButton
+            onClick={handleButtonClick}
+            text="Update event"
+            disabled={updateEvent.isLoading}
+            progress={updateEvent.isLoading}
+          />
+        ) : (
+          <MainButton
+            onClick={handleButtonClick}
+            text="Create event"
+            disabled={addEvent.isLoading}
+            progress={addEvent.isLoading}
+          />
+        )}
+      </StepLayout>
+    </form>
   );
 };

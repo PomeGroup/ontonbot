@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { serverClient } from "./app/_trpc/serverClient";
 
 export type InputField = {
   type: string;
@@ -233,14 +232,6 @@ export const EventDataSchemaAllOptional = z.object({
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;
-export type DynamicFields = GetEventResponseType["dynamic_fields"];
-export type GetEventResponseType = NonNullable<
-  Awaited<ReturnType<typeof serverClient.events.getEvent>>
->;
-
-export type GetVisitorsResponseType = NonNullable<
-  Awaited<ReturnType<typeof serverClient.visitors.getAll>>
->;
 
 export const RequiredEventFieldsSchema = z
   .object({

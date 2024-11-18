@@ -1,6 +1,6 @@
 import { type Metadata } from "next/types";
 import { db } from "@/db/db";
-import { EventDataPage } from "./EventPage";
+import { EventDataPage } from "@/app/_components/Event/EventPage";
 
 type Props = { params: { hash: string } };
 

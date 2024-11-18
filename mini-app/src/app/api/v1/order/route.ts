@@ -37,6 +37,7 @@ export async function POST(request: Request) {
 
 
 
+
   const eventTicket = await db.query.eventTicket.findFirst({
     where(fields, { eq }) {
       return eq(fields.id, body.data.event_ticket_id);
