@@ -247,13 +247,14 @@ jobs:
 
             # Check if branch name is dev or sandbox
             #
-            if  [ "$branch_name" == "dev" ] || [ "$branch_name" == "sandbox" ]; then
-              echo "Branch is $branch_name. Building with target development."
-              DOCKER_CMD+=" --target development "
-            else
-              echo "Branch is $branch_name. Building with default (production) target."
-              DOCKER_CMD+=" --target production "
-            fi
+            #            if  [ "$branch_name" == "dev" ] || [ "$branch_name" == "sandbox" ]; then
+            #              echo "Branch is $branch_name. Building with target development."
+            #              DOCKER_CMD+=" --target development "
+            #            else
+            #              echo "Branch is $branch_name. Building with default (production) target."
+            #              DOCKER_CMD+=" --target production "
+            #            fi
+            DOCKER_CMD+=" --target production "
             # Add build args from file
             while IFS='=' read -r key value; do
               if [ -n "$key" ]; then
