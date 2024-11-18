@@ -33,12 +33,14 @@ RUN apk add \
   curl \
   ca-certificates
 # Set the working directory
-WORKDIR /app
+
 
 # Dependencies stage
 FROM base AS dependencies
 # Copy package files for dependency installation
 COPY ./ /app/
+RUN echo "Building participant-tma " && ls -la && ls -la /app && ls -la /
+WORKDIR /app
 # Install production dependencies only
 RUN pnpm install
 
@@ -46,6 +48,7 @@ RUN pnpm install
 FROM base AS development
 # Copy all necessary files from the workspace root
 COPY ./ /app/
+
 # Set the working directory for participant-tma
 WORKDIR /app/apps/participant-tma
 # Expose the default port for development mode (e.g., 3000)
