@@ -71,10 +71,11 @@ RUN apk add \
 FROM base AS dependencies
 # Copy package files for dependency installation
 COPY ./package.json  /app/
-# Install production dependencies only
-RUN pnpm install --pnpm
 # Set working directory
 WORKDIR /app
+# Install production dependencies only
+RUN pnpm install --pnpm
+
 
 # Stage : With Files
 FROM dependencies AS with-files
