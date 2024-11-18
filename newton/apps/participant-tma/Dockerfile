@@ -58,9 +58,8 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 FROM dependencies AS build
 
 WORKDIR /app/apps/participant-tma
-RUN  pnpm install
-# Build the participant-tma app
-RUN pnpm build
+RUN pnpm run -r build
+
 # Clean up unnecessary files to reduce image size
 RUN rm -rf /app/apps/nft-manager \
           /app/apps/participant-tma/node_modules/env.mjs \
