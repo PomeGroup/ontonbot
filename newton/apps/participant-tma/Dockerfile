@@ -38,8 +38,9 @@ RUN apk add \
 # Dependencies stage
 FROM base AS dependencies
 # Copy package files for dependency installation
-COPY ./ /app/
-RUN echo "Building participant-tma " && ls -la && ls -la /app && ls -la /
+COPY ./ /app
+RUN rm -rf pnpm-lock.yaml
+RUN echo "Building participant-tma " && ls -la /app && ls -la
 WORKDIR /app
 # Install production dependencies only
 RUN pnpm install
