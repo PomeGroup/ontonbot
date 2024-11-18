@@ -41,9 +41,10 @@ RUN apk add \
 # Dependencies stage
 FROM base AS dependencies
 # Copy package files for dependency installation
-COPY ../../ /app
+COPY .  /app
 WORKDIR /app
-RUN pnpm install
+RUN echo "Dependencies stage files " && ls -la /app
+RUN pnpm install --prod
 
 # Development stage (includes devDependencies)
 FROM base AS development
