@@ -41,9 +41,13 @@ RUN apk add \
 # Dependencies stage
 FROM base AS dependencies
 # Copy package files for dependency installation
-COPY .  /app
-WORKDIR /app
-RUN echo "Dependencies stage files " && ls -la /app
+# Copy all necessary files from the workspace root
+COPY  ../../ /app/
+# Install production dependencies only
+WORKDIR /app/
+# Install production dependencies only
+RUN pnpm install
+
 
 
 # Development stage (includes devDependencies)
@@ -60,8 +64,7 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 
 # Build stage
 FROM dependencies AS build
-WORKDIR /app/apps/nft-manager
-RUN  pnpm install
+
 WORKDIR /app/apps/participant-tma
 RUN  pnpm install
 RUN pnpm run  build
