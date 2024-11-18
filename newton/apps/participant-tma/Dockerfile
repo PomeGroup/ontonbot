@@ -39,8 +39,6 @@ RUN apk add \
 FROM base AS dependencies
 # Copy package files for dependency installation
 COPY ./ /app
-RUN rm -rf pnpm-lock.yaml
-RUN echo "Building participant-tma " && ls -la /app && ls -la
 WORKDIR /app
 
 
@@ -58,15 +56,9 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 
 # Build stage
 FROM dependencies AS build
-# Set the working directory for participant-tma
-
-WORKDIR /app/
-RUN echo "Building participant-tma " && ls -la && ls -la /app && ls -la /app/apps/participant-tma
-RUN pnpm install
 
 WORKDIR /app/apps/participant-tma
-# Install production dependencies only
-RUN pnpm install
+
 # Build the participant-tma app
 RUN pnpm build
 # Clean up unnecessary files to reduce image size
