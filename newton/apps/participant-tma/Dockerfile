@@ -46,7 +46,7 @@ COPY  ./ /app
 # Install production dependencies only
 WORKDIR /app/
 # Install production dependencies only
-RUN pnpm install --filter ./apps/participant-tma... --prod
+RUN pnpm install
 
 
 
