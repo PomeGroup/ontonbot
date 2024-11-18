@@ -405,7 +405,7 @@ jobs:
           # Use case-insensitive prefix matching for branch name
           if [[ "$branch_name" == "dev" ]]; then
             echo "SSH_IP=${{ secrets.SSH_DEV_IP }}" >> $GITHUB_ENV
-          elif [[ "$branch_name" == "stage" ]]; then
+          elif [[ "$branch_name" == "staging" ]]; then
             echo "SSH_IP=${{ secrets.SSH_STAGE_IP }}" >> $GITHUB_ENV
           elif [[ "$branch_name" == "sandbox" ]]; then
             echo "SSH_IP=${{ secrets.SSH_SANDBOX_IP }}" >> $GITHUB_ENV
