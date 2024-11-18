@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - "dev"
-      - "stage"
+      - "staging"
     paths:
       - 'client-web-panel/**'
       - 'devops/**'
