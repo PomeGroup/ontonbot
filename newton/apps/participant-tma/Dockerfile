@@ -42,8 +42,7 @@ COPY ./ /app
 RUN rm -rf pnpm-lock.yaml
 RUN echo "Building participant-tma " && ls -la /app && ls -la
 WORKDIR /app
-# Install production dependencies only
-RUN pnpm install
+
 
 # Development stage (includes devDependencies)
 FROM base AS development
