@@ -41,7 +41,7 @@ RUN apk add \
 # Dependencies stage
 FROM base AS dependencies
 # Copy package files for dependency installation
-COPY ./ /app
+COPY ../../ /app
 WORKDIR /app
 RUN pnpm install
 
