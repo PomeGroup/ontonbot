@@ -89,6 +89,7 @@ const EventCard: React.FC<EventCardProps> = memo(
           : "unknown";
 
     const handleEventClick = () => {
+        console.log("TELEGRAM LINK",`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`)
       if (ticketToCheckIn) {
         webApp?.openTelegramLink(
           `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`

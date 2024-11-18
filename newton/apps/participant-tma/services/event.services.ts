@@ -1,5 +1,6 @@
 import { env } from "~/env.mjs"
 import { EventType } from "~/types/event.types"
+import { RequestError } from "~/utils/custom-error";
 
 // NOTE: use this inn client only
 export async function getEventWithUserData(id: string, params: { proof_token: string }) {
@@ -18,7 +19,10 @@ export async function getEventWithUserData(id: string, params: { proof_token: st
   });
 
   if (!eventResponse.ok) {
-    return null;
+    throw new RequestError({
+      message: "Wallet session expired, Reconnect.",
+      name: "REQUEST_401_ERROR"
+    })
   }
 
   const event: EventType = await eventResponse.json();

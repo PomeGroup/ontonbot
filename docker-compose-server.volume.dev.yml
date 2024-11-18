@@ -1,0 +1,40 @@
+
+services:
+  mini-app:
+    volumes:
+      - mini-app-node-modules:/app/node_modules
+      - mini-app-next:/app/.next
+
+
+  mini-app-cron:
+    volumes:
+      - mini-app-cron-node-modules:/app/node_modules
+      - mini-app-cron-next:/app/.next
+  telegram-bot:
+    volumes:
+      - telegram-bot-node-modules:/app/node_modules
+
+  client-web:
+    volumes:
+      - client-web-node-modules:/app/node_modules
+
+  participant-tma:
+    volumes:
+      - participant-tma-node-modules:/app/node_modules
+      - participant-tma-next:/app/.next
+
+  nft-microservice:
+    volumes:
+      - nft-microservice:/app
+  website:
+    volumes:
+      - website:/app
+
+volumes:
+    mini-app:
+    mini-app-cron:
+    telegram-bot:
+    client-web:
+    participant-tma:
+    nft-microservice:
+    website:

@@ -8,18 +8,18 @@ import { useCreateEventStore } from "@/zustand/createEventStore";
 import { GeneralStep } from "./GeneralStep";
 import { TimePlaceStep } from "./TimePlaceStep";
 import { RewardStep } from "./RewardStep";
-import {AgendaStep} from "@/app/_components/organisms/events/AgendaStep";
 
 type ManageEventProps = {
   eventHash?: string;
   event?: RouterOutput["events"]["getEvent"];
 };
+
 const ManageEvent = (props: ManageEventProps) => {
   const currentStep = useCreateEventStore((state) => state.currentStep);
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEdit = useCreateEventStore((state) => state.setEdit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
-  // const editOptions = useCreateEventStore((state) => state.edit);
+
   const resetState = useCreateEventStore((state) => state.resetState);
   const webApp = useWebApp();
   const router = useRouter();
@@ -42,9 +42,9 @@ const ManageEvent = (props: ManageEventProps) => {
           society_hub:
             props.event.society_hub?.id && props.event.society_hub?.name
               ? {
-                  id: props.event.society_hub.id,
-                  name: props.event.society_hub.name,
-                }
+                id: props.event.society_hub.id,
+                name: props.event.society_hub.name,
+              }
               : undefined,
           eventLocationType: props.event.participationType,
           countryId: props.event.countryId || undefined,
@@ -73,6 +73,7 @@ const ManageEvent = (props: ManageEventProps) => {
   useEffect(() => {
     webApp?.BackButton.show();
     webApp?.BackButton.onClick(handleBack);
+
     return () => {
       webApp?.BackButton.offClick(handleBack);
       webApp?.BackButton.hide();

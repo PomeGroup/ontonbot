@@ -67,7 +67,7 @@ type UploadFileProps = {
  * @param {UploadFileProps} props - The component props.
  * @return {JSX.Element} The JSX element representing the component.
  */
-export const UploadImageFile = (props: UploadFileProps) => {
+export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const webApp = useWebApp();
   const [imagePreview, setImagePreview] = useState<string | undefined>(
@@ -103,15 +103,15 @@ export const UploadImageFile = (props: UploadFileProps) => {
 
   return (
     <Drawer
+      preventScrollRestoration
+      disablePreventScroll
+
       onOpenChange={(open) => {
         if (open) {
-          webApp?.MainButton.hide();
+          webApp?.MainButton.disable();
         } else {
-          webApp?.MainButton.show();
+          webApp?.MainButton.enable();
         }
-        try {
-          webApp?.HapticFeedback.impactOccurred("medium");
-        } catch (error) { }
       }}
     >
       <DrawerTrigger asChild>
@@ -120,6 +120,12 @@ export const UploadImageFile = (props: UploadFileProps) => {
             "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
             props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
           )}
+          onClick={() => {
+            if (webApp?.platform === 'ios') {
+              // fix for ios
+              window.scrollTo({ top: 0, behavior: "instant" })
+            }
+          }}
           variant={props.isError ? "destructive" : "outline"}
         >
           {imagePreview ? (

@@ -133,6 +133,12 @@ export const UploadVideoFile = (props: UploadFileProps) => {
             "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
             props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
           )}
+          onClick={() => {
+            if (webApp?.platform === 'ios') {
+              // fix for ios
+              window.scrollTo({ top: 0, behavior: "instant" })
+            }
+          }}
           variant={props.isError ? "destructive" : "outline"}
         >
           {videoPreview ? (

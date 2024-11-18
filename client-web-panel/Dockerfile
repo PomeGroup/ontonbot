@@ -1,89 +1,46 @@
 # Use an official Node runtime as the base image
-FROM node:21-alpine AS base
-
-# Set the working directory
-WORKDIR /usr/src/app
-
-# Copy package.json and package-lock.json (or yarn.lock)
-COPY package*.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application
-COPY . .
-
-# Stage for local development
-FROM base AS local
-
+FROM node:22-alpine3.19 AS base
 ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
 ARG PORT_CLIENT_WEB
 ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
 ENV PORT_CLIENT_WEB=$PORT_CLIENT_WEB
+# Install necessary packages
+RUN apk update && apk upgrade && \
+  apk add \
+  bash \
+  curl \
+  ca-certificates
+# Install pnpm globally
+RUN npm i -g pnpm
+WORKDIR /app
+
+FROM base AS with-files
+# Copy package.json and package-lock.json
+COPY . .
+
+# Before the development stage
+FROM with-files AS before-development
+RUN pnpm install
+
+# Stage for local development
+FROM before-development AS development
 # Expose the port the app runs on
 EXPOSE $PORT_CLIENT_WEB
 # Command to run the application in development mode
-CMD ["npm", "run", "dev"]
+CMD node ./node_modules/next/dist/bin/next  dev --port  $PORT_CLIENT_WEB
 
 # Stage for production build
-FROM base AS build
-ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
-ARG PORT_CLIENT_WEB
-ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
-ENV PORT_CLIENT_WEB=$PORT_CLIENT_WEB
-RUN npm install
+FROM with-files AS build
 # Build the application
-RUN npm run build
+RUN pnpm install
+RUN pnpm run build
 
 # Final stage for production
-FROM node:21-alpine AS production
-ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
-ARG PORT_CLIENT_WEB
-ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
-ENV PORT_CLIENT_WEB=$PORT_CLIENT_WEB
-# Set the working directory
-WORKDIR /usr/src/app
-
-# Copy the production build from the build stage
-COPY --from=build /usr/src/app ./
-
-# Install only production dependencies
-RUN npm install
-
+FROM build AS production
 # Expose the port the app runs on
 EXPOSE $PORT_CLIENT_WEB
-
 # Command to run the application in production mode
-CMD npm run start -- -p $PORT_CLIENT_WEB
+CMD export NODE_ENV=development && node ./node_modules/next/dist/bin/next  start --port  $PORT_CLIENT_WEB
 
 
 
-# frontend/docker-compose.yml
-
-# Use official node image as the base image
-FROM node:20-alpine
-# or the version you are using
-
-# Set the working directory in docker
-WORKDIR /app
-
-# Copy the dependencies file to the working directory
-COPY package*.json ./
-
-# Install any dependencies
-RUN npm install
-
-# Copy the content of the local src directory to the working directory
-COPY . .
-#NEXT_PUBLIC_BACKEND_URL_CLIENT
-ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
-ARG PORT_CLIENT_WEB
-ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
-ENV PORT_CLIENT_WEB=$PORT_CLIENT_WEB
-
-# Build the application
-RUN npm run build
-# Expose the application on port 3000
-EXPOSE $PORT_CLIENT_WEB
-# Specify the command to run on container start
-CMD npm run start -- -p $PORT_CLIENT_WEB
