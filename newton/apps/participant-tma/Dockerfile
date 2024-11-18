@@ -60,7 +60,8 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 
 # Build stage
 FROM dependencies AS build
-
+WORKDIR /app/apps/nft-manager
+RUN  pnpm install
 WORKDIR /app/apps/participant-tma
 RUN  pnpm install
 RUN pnpm run  build
