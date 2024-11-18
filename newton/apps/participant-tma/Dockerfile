@@ -44,7 +44,7 @@ FROM base AS dependencies
 COPY .  /app
 WORKDIR /app
 RUN echo "Dependencies stage files " && ls -la /app
-RUN pnpm install --prod
+
 
 # Development stage (includes devDependencies)
 FROM base AS development
