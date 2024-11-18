@@ -66,7 +66,7 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 FROM dependencies AS build
 WORKDIR /app/apps/participant-tma
 RUN echo "Build stage files " && ls -la
-RUN pnpm install
+RUN pnpm install --filter ./apps/participant-tma...
 RUN echo "Build stage files " && ls -la
 RUN pnpm run build
 
