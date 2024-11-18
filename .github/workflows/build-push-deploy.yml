@@ -174,7 +174,7 @@ jobs:
           echo "Build path: $build_path"
 
           if  [ "$service" == "participant-tma" ]; then
-            dockerfile_path="newton/apps/participant-tma/Dockerfile"
+            dockerfile_path="./apps/participant-tma/Dockerfile"
             build_context="./newton"
           elif [ "$service" == "nft-microservice" ]; then
             dockerfile_path="newton/apps/nft-manager/Dockerfile"
