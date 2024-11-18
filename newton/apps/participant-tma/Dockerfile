@@ -56,6 +56,7 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 # Build stage
 FROM dependencies AS build
 # Set the working directory for participant-tma
+RUN pnpm install
 WORKDIR /app/apps/participant-tma
 # Install production dependencies only
 RUN pnpm install

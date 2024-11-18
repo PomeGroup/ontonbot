@@ -114,7 +114,7 @@ services:
     build:
       context: ./newton/
       dockerfile: ./apps/participant-tma/Dockerfile
-      target: development
+      target: production
       args:
         <<: *common-env
     volumes:
