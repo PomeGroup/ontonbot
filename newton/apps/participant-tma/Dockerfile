@@ -58,6 +58,7 @@ FROM dependencies AS build
 # Set the working directory for participant-tma
 
 WORKDIR /app/
+RUN echo "Building participant-tma " && ls -la && ls -la /app
 RUN pnpm install
 WORKDIR /app/apps/participant-tma
 # Install production dependencies only
