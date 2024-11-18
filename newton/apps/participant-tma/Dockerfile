@@ -43,7 +43,7 @@ FROM base AS dependencies
 # Copy package files for dependency installation
 COPY ./ /app
 WORKDIR /app
-
+RUN pnpm install
 
 # Development stage (includes devDependencies)
 FROM base AS development
@@ -61,7 +61,8 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 FROM dependencies AS build
 
 WORKDIR /app/apps/participant-tma
-RUN pnpm run -r build
+RUN  pnpm install
+RUN pnpm run  build
 
 # Clean up unnecessary files to reduce image size
 RUN rm -rf /app/apps/nft-manager \
