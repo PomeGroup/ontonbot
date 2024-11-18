@@ -62,6 +62,7 @@ FROM dependencies AS build
 
 WORKDIR /app/
 RUN echo "Building participant-tma " && ls -la && ls -la /app && ls -la /app/apps/participant-tma
+RUN pnpm install
 
 WORKDIR /app/apps/participant-tma
 # Install production dependencies only
