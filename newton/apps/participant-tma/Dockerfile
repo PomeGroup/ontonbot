@@ -57,6 +57,8 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 FROM dependencies AS build
 # Set the working directory for participant-tma
 WORKDIR /app/apps/participant-tma
+# Install production dependencies only
+RUN pnpm install
 # Build the participant-tma app
 RUN pnpm build
 # Clean up unnecessary files to reduce image size
