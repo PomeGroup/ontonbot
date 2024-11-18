@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Button, KButton } from "./button";
 import { Block, BlockTitle, Card, Sheet } from "konsta/react";
+import { createPortal } from "react-dom";
 
 /**
  * Props for the UploadImageFile component.
@@ -142,77 +143,80 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
           </>
         )}
       </Button>
-      <Sheet
-        opened={isSheetOpen}
-        onBackdropClick={() => setIsSheetOpen(false)}
-        className="w-full"
-      >
-        <BlockTitle>Upload Image</BlockTitle>
-        <Block className="space-y-2">
-          {!imagePreview && (
-            <p>
-              {props.drawerDescriptionText ||
-                "Upload an image from your device"}
-            </p>
-          )}
-          {imagePreview && (
-            <Image
-              src={imagePreview}
-              width={400}
-              height={400}
-              alt="event image"
-              draggable="false"
-              className="w-full rounded-xl h-auto"
+      {createPortal(
+        <Sheet
+          opened={isSheetOpen}
+          onBackdropClick={() => setIsSheetOpen(false)}
+          className="w-full"
+        >
+          <BlockTitle>Upload Image</BlockTitle>
+          <Block className="space-y-2">
+            {!imagePreview && (
+              <p>
+                {props.drawerDescriptionText ||
+                  "Upload an image from your device"}
+              </p>
+            )}
+            {imagePreview && (
+              <Image
+                src={imagePreview}
+                width={400}
+                height={400}
+                alt="event image"
+                draggable="false"
+                className="w-full rounded-xl h-auto"
+              />
+            )}
+            {uploadImage.error && (
+              <div className="text-red-500 text-sm w-full text-balance mt-2">
+                {getErrorMessages(uploadImage.error.message).map(
+                  (errMessage, idx: number) => (
+                    <p key={idx}>{errMessage}</p>
+                  )
+                )}
+              </div>
+            )}
+            <input
+              ref={imageInputRef}
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              id="event_image_input"
+              className="hidden"
             />
-          )}
-          {uploadImage.error && (
-            <div className="text-red-500 text-sm w-full text-balance mt-2">
-              {getErrorMessages(uploadImage.error.message).map(
-                (errMessage, idx: number) => (
-                  <p key={idx}>{errMessage}</p>
-                )
-              )}
-            </div>
-          )}
-          <input
-            ref={imageInputRef}
-            type="file"
-            name="image"
-            accept="image/*"
-            onChange={(e) => {
-              e.preventDefault();
-              handleSubmit();
-            }}
-            id="event_image_input"
-            className="hidden"
-          />
-          <KButton
-            itemType="button"
-            className="w-full flex items-center gap-2"
-            tonal
-            onClick={(e) => {
-              e.preventDefault();
-              imageInputRef.current?.click();
-            }}
-          >
-            <CircleArrowUp className="w-5" />
-            <span>{imagePreview ? "Change Image" : "Upload Image"}</span>
-          </KButton>
-          {imagePreview && (
             <KButton
-              className="w-16 h-10 mx-auto rounded-full"
+              itemType="button"
+              clear
+              className="flex items-center gap-2"
               onClick={(e) => {
                 e.preventDefault();
-                setIsSheetOpen(false);
-                typeof props?.onDone === "function" &&
-                  props.onDone(imagePreview);
+                imageInputRef.current?.click();
               }}
             >
-              Done
+              <CircleArrowUp className="w-5" />
+              <span>{imagePreview ? "Change Image" : "Upload Image"}</span>
             </KButton>
-          )}
-        </Block>
-      </Sheet>
+            {imagePreview && (
+              <KButton
+                className="w-16 h-10 mx-auto rounded-full"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsSheetOpen(false);
+                  typeof props?.onDone === "function" &&
+                    props.onDone(imagePreview);
+                }}
+              >
+                Done
+              </KButton>
+            )}
+          </Block>
+        </Sheet>,
+        document.body
+      )}
     </Card>
   );
 };

@@ -1,17 +1,9 @@
 "use client";
 
 import { trpc } from "@/app/_trpc/client";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { SocietyHub } from "@/types";
 import { FC, useEffect, useState } from "react";
-import { FiAlertCircle } from "react-icons/fi";
 import * as React from "react";
 import { ListInput } from "konsta/react";
 
@@ -42,6 +34,7 @@ const TonHubPicker: FC<{
     <ListInput
       outline
       placeholder="Select TON Hub"
+      label="TON Hub"
       dropdown
       type="select"
       value={value?.id}

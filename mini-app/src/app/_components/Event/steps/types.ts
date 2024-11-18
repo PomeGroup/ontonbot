@@ -1,7 +1,17 @@
 export type GeneralFormErrors = {
-  title?: string[] | undefined;
-  subtitle?: string[] | undefined;
-  description?: string[] | undefined;
-  image_url?: string[] | undefined;
-  hub?: string[] | undefined;
+  title?: string[];
+  subtitle?: string[];
+  description?: string[];
+  image_url?: string[];
+  hub?: string[];
+};
+
+export type TimePlaceFormErorrs = {
+  start_date?: string[];
+  end_date?: string[];
+  timezone?: string[];
+  location?: string[];
+  duration?: string[];
+  cityId?: string[];
+  countryId?: string[];
 };

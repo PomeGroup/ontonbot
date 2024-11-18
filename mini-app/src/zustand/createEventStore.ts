@@ -1,10 +1,15 @@
-import { GeneralFormErrors } from "@/app/_components/Event/steps/types";
+import {
+  GeneralFormErrors,
+  TimePlaceFormErorrs,
+} from "@/app/_components/Event/steps/types";
 import { EventDataSchemaAllOptional } from "@/types";
 import { z } from "zod";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
-export type StoreEventData = z.infer<typeof EventDataSchemaAllOptional>;
+export type StoreEventData = z.infer<typeof EventDataSchemaAllOptional> & {
+  hasEnded: boolean;
+};
 
 export type CreateEventStoreType = {
   currentStep: number;
@@ -17,9 +22,12 @@ export type CreateEventStoreType = {
   setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
   generalStepErrors?: GeneralFormErrors;
+  timeplaceStepErrors?: TimePlaceFormErorrs;
   clearImageErrors: () => void;
   setGeneralStepErrors: (_: GeneralFormErrors) => void;
+  setTimePlaceStepErrors: (_: TimePlaceFormErorrs) => void;
   clearGeneralStepErrors: () => void;
+  clearTimePlaceStepErrors: () => void;
 };
 
 export const useCreateEventStore = create(
@@ -29,6 +37,7 @@ export const useCreateEventStore = create(
       dynamic_fields: [],
       owner: 0,
       type: 0,
+      hasEnded: true,
     },
     clearImageErrors: () => {
       set((state) => ({
@@ -36,10 +45,16 @@ export const useCreateEventStore = create(
         generalStepErrors: { ...state.generalStepErrors, image_url: undefined },
       }));
     },
-    setGeneralStepErrors: (errors: GeneralFormErrors) => {
+    setGeneralStepErrors: (errors) => {
       set((state) => ({
         ...state,
-        generalStepErrors: { ...errors },
+        generalStepErrors: errors,
+      }));
+    },
+    setTimePlaceStepErrors(errors) {
+      set((state) => ({
+        ...state,
+        timeplaceStepErrors: errors,
       }));
     },
     clearGeneralStepErrors: () => {
@@ -50,20 +65,38 @@ export const useCreateEventStore = create(
         };
       });
     },
+    clearTimePlaceStepErrors() {
+      set((state) => {
+        return {
+          ...state,
+          timeplaceStepErrors: {},
+        };
+      });
+    },
     setCurrentStep: (step: number) =>
       set((state) => ({ ...state, currentStep: step })),
     setEventData: (data: z.infer<typeof EventDataSchemaAllOptional>) =>
       set((state) => {
-        return { ...state, eventData: { ...state.eventData, ...data } };
+        return {
+          ...state,
+          eventData: {
+            ...state.eventData,
+            hasEnded: !!(
+              state.edit?.eventHash &&
+              state?.eventData?.end_date &&
+              state.eventData.end_date < Date.now() / 1000
+            ),
+            ...data,
+          },
+        };
       }),
-
     setEdit: (edit: { eventHash?: string }) =>
       set((state) => ({ ...state, edit })),
 
     resetState: () => {
       set(() => ({
         currentStep: 1,
-        eventData: { dynamic_fields: [], type: 0, owner: 0 },
+        eventData: { dynamic_fields: [], type: 0, owner: 0, hasEnded: true },
         edit: {},
       }));
     },

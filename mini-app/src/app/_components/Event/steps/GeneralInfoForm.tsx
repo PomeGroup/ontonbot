@@ -3,22 +3,25 @@ import TonHubPicker from "@/app/_components/molecules/pickers/TonHubpicker";
 import { ImageUpload } from "@/app/_components/Event/steps/ImageUpload";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { Toggle } from "@/components/ui/switch";
-import { BlockTitle, List, ListInput, ListItem } from "konsta/react";
+import { ListInput, ListItem } from "konsta/react";
+import FormBlock from "../../atoms/cards/FormBlock";
 
 export const EventGeneralInfoFormFields = () => {
   const errors = useCreateEventStore((state) => state.generalStepErrors);
   const eventData = useCreateEventStore((state) => state.eventData);
   const setEventData = useCreateEventStore((state) => state.setEventData);
-  const clearImageError = useCreateEventStore((state) => state.clearImageError);
+  const clearImageError = useCreateEventStore(
+    (state) => state.clearImageErrors
+  );
 
   return (
-    <div>
-      <BlockTitle>Basic</BlockTitle>
-      <List>
+    <>
+      <FormBlock title="Basic">
         <ListInput
           outline
           placeholder="Event Title"
           name="title"
+          label="Event Title"
           defaultValue={eventData?.title}
           error={errors?.title?.join(". ")}
         />
@@ -26,6 +29,7 @@ export const EventGeneralInfoFormFields = () => {
           outline
           placeholder="Subtitle"
           name="subtitle"
+          label="Subtitle"
           defaultValue={eventData?.subtitle}
           error={errors?.subtitle?.join(". ")}
         />
@@ -46,14 +50,14 @@ export const EventGeneralInfoFormFields = () => {
           type="textarea"
           outline
           placeholder="Description"
+          label="Description"
           name="description"
           inputClassName="min-h-20"
           error={errors?.description?.join(". ")}
           defaultValue={eventData?.description}
         />
-      </List>
-      <BlockTitle>User Registration</BlockTitle>
-      <List>
+      </FormBlock>
+      <FormBlock title="Registration">
         <ListItem
           label
           title="Enable User Registration"
@@ -64,7 +68,7 @@ export const EventGeneralInfoFormFields = () => {
             />
           }
         />
-      </List>
-    </div>
+      </FormBlock>
+    </>
   );
 };

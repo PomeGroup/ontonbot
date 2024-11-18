@@ -9,6 +9,7 @@ import { GeneralStep } from "./GeneralStep";
 import { TimePlaceStep } from "./TimePlaceStep";
 import { RewardStep } from "./RewardStep";
 import Stepper from "@/app/_components/molecules/stepper";
+import { Block } from "konsta/react";
 
 type ManageEventProps = {
   eventHash?: string;
@@ -86,20 +87,24 @@ const ManageEvent = (props: ManageEventProps) => {
   }, []);
 
   return (
-    <div>
-      <Stepper
-        steps={[
-          { icon: <span>1</span>, label: "General" },
-          { icon: <span>2</span>, label: "Time/place" },
-          { icon: <span>3</span>, label: "Reward" },
-        ]}
-        currentStep={currentStep}
-      />
+    <>
+      <Block>
+        <Stepper
+          steps={[
+            { icon: <span>1</span>, label: "General" },
+            { icon: <span>2</span>, label: "Time/place" },
+            { icon: <span>3</span>, label: "Reward" },
+          ]}
+          currentStep={currentStep}
+        />
+      </Block>
 
-      {currentStep === 1 && <GeneralStep />}
-      {currentStep === 2 && <TimePlaceStep />}
-      {currentStep === 3 && <RewardStep />}
-    </div>
+      <Block className="!p-0">
+        {currentStep === 1 && <GeneralStep />}
+        {currentStep === 2 && <TimePlaceStep />}
+        {currentStep === 3 && <RewardStep />}
+      </Block>
+    </>
   );
 };
 

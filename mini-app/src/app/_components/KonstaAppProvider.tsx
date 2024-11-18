@@ -8,7 +8,7 @@ const KonstaAppProvider = ({ children }: { children: ReactNode }) => {
   const webApp = useWebApp();
 
   return (
-    <App theme={webApp?.platform === "ios" ? "ios" : "material"}>
+    <App theme={webApp?.platform !== "ios" ? "ios" : "material"}>
       {children}
     </App>
   );
