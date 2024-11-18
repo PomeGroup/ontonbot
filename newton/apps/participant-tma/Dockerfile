@@ -66,7 +66,7 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 FROM dependencies AS build
 
 WORKDIR /app/apps/participant-tma
-
+RUN pnpm install --prod
 RUN pnpm run  build
 
 # Clean up unnecessary files to reduce image size
