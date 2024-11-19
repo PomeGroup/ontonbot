@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { dataValidationSchema } from "../dataValidationSchema";
+import { StoreEventData } from "@/zustand/createEventStore";
 
 export const generalStepDataSchema = z.object({
   title: z
@@ -53,9 +54,7 @@ export function rewardStepValidation(passwordDisabled: boolean) {
 export function timeplaceStepValidation(
   editOptions: { eventHash?: string } | undefined,
   startDateLimit: number,
-  eventData:
-    | import("/home/samyar/pss/onton/ontonbot/mini-app/src/zustand/createEventStore").StoreEventData
-    | undefined,
+  eventData: StoreEventData | undefined,
   formDataObject: Record<string, any>
 ) {
   return z
