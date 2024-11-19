@@ -48,38 +48,80 @@ import telegramService from "@/server/routers/services/telegramService";
 
 dotenv.config();
 
-export const eventsRouter = router({
-  // private
-  getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
-    async (opts) => {
-      return (
-        (await selectVisitorsWithWalletAddress(opts.ctx.event.event_uuid))
-          .length || 0
-      );
-    }
-  ),
+/* -------------------------------------------------------------------------- */
+/*                                  FUNCTIONS                                 */
+/* -------------------------------------------------------------------------- */
+function timestampToIsoString(timestamp: number) {
+  const date = new Date(timestamp * 1000);
+  return date.toISOString();
+}
 
-  getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
-    return await fetchBalance(opts.input);
-  }),
+const formatChanges = (changes: any) =>
+  JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
+/* -------------------------------------------------------------------------- */
+
+/* -------------------------------------------------------------------------- */
+/*                                EVENT ROUTER                                */
+/* -------------------------------------------------------------------------- */
+
+export const eventsRouter = router({
+  // // private
+  // getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
+  //   async (opts) => {
+  //     return (
+  //       (await selectVisitorsWithWalletAddress(opts.ctx.event.event_uuid))
+  //         .length || 0
+  //     );
+  //   }
+  // ),
+
+  // getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
+  //   return await fetchBalance(opts.input);
+  // }),
 
   getEvent: initDataProtectedProcedure
     .input(z.object({ event_uuid: z.string() }))
     .query(async (opts) => {
-      try {
-        const eventVisitor = await findVisitorByUserAndEventUuid(
-          opts.ctx.user.user_id,
-          opts.input.event_uuid
-        );
-        if (eventVisitor) {
-          await updateVisitorLastVisit(eventVisitor.id);
+      // try {
+      //   const eventVisitor = await findVisitorByUserAndEventUuid(
+      //     opts.ctx.user.user_id,
+      //     opts.input.event_uuid
+      //   );
+      //   if (eventVisitor) {
+      //     await updateVisitorLastVisit(eventVisitor.id);
+      //   }
+      // } catch (error) {
+      //   console.error("Error at updating visitor", error);
+      // }
+      // console.log("event_uuid", opts.input.event_uuid);
+      const userId = opts.ctx.user.user_id;
+      const eventData = await selectEventByUuid(opts.input.event_uuid);
+      const userApproved = false; // TODO : Implement
+
+      if (userApproved) return eventData;
+
+      // const eventDataCleaned = removeKey(eventData , 'website');
+
+      // if pending or rejected :
+      //   return pending or rejected
+
+      // if no status
+
+      if (eventData?.capacity) {
+        const capacityFilled = false; // TODO : Implement
+        if (capacityFilled) {
+          // can't join por shode
+          return;
         }
-      } catch (error) {
-        console.error("Error at updating visitor", error);
       }
-      console.log("event_uuid", opts.input.event_uuid);
-      return selectEventByUuid(opts.input.event_uuid);
+      // NO Status
+
+      /* -------------------------------------------------------------------------- */
     }),
+
+  getUser: initDataProtectedProcedure
+    .input(z.object({ event_uuid: z.string() }))
+    .query(async (opts) => {}),
 
   // private
   getEvents: adminOrganizerProtectedProcedure.query(async (opts) => {
@@ -225,10 +267,10 @@ export const eventsRouter = router({
                       title: opts.input.eventData.title,
                       description: opts.input.eventData.description,
                       image: {
-                        url:  opts.input.eventData.image_url  ,
+                        url: opts.input.eventData.image_url,
                       },
                       cover: {
-                        url:  opts.input.eventData.image_url,
+                        url: opts.input.eventData.image_url,
                       },
                       item_title: opts.input.eventData.title,
                       item_description: "Reward for participation",
@@ -238,7 +280,10 @@ export const eventsRouter = router({
                       ...(opts.input.eventData.video_url
                         ? {
                             item_video: {
-                              url:  new URL(opts.input.eventData.video_url).origin + new URL(opts.input.eventData.video_url).pathname,
+                              url:
+                                new URL(opts.input.eventData.video_url).origin +
+                                new URL(opts.input.eventData.video_url)
+                                  .pathname,
                             },
                           }
                         : {}),
@@ -310,35 +355,35 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       }
     }),
 
-  // private
-  deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
-    try {
-      return await db.transaction(async (trx) => {
-        const deletedEvent = await trx
-          .update(events)
-          .set({
-            hidden: true,
-            updatedBy: "system-delete",
-            updatedAt: new Date(),
-          }) // Set the 'hidden' field to true
-          .where(eq(events.event_uuid, opts.input.event_uuid))
-          .returning();
+  //   // private
+  //   deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
+  //     try {
+  //       return await db.transaction(async (trx) => {
+  //         const deletedEvent = await trx
+  //           .update(events)
+  //           .set({
+  //             hidden: true,
+  //             updatedBy: "system-delete",
+  //             updatedAt: new Date(),
+  //           }) // Set the 'hidden' field to true
+  //           .where(eq(events.event_uuid, opts.input.event_uuid))
+  //           .returning();
 
-        await sendLogNotification({
-          message: `
-@${opts.ctx.user.username} <b>Deleted</b> an event <code>${deletedEvent[0].event_uuid}</code>.
+  //         await sendLogNotification({
+  //           message: `
+  // @${opts.ctx.user.username} <b>Deleted</b> an event <code>${deletedEvent[0].event_uuid}</code>.
 
-<pre><code>${JSON.stringify(deletedEvent[0], null, 2)}</code></pre>
-`,
-        });
+  // <pre><code>${JSON.stringify(deletedEvent[0], null, 2)}</code></pre>
+  // `,
+  //         });
 
-        return { success: true };
-      });
-    } catch (error) {
-      console.error(error);
-      return { success: false };
-    }
-  }),
+  //         return { success: true };
+  //       });
+  //     } catch (error) {
+  //       console.error(error);
+  //       return { success: false };
+  //     }
+  //   }),
 
   // private
   updateEvent: eventManagementProtectedProcedure
@@ -623,20 +668,28 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(
     async (opts) => {
-      const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid , -1, 0, true, "");
+      const visitors = await selectVisitorsByEventUuid(
+        opts.input.event_uuid,
+        -1,
+        0,
+        true,
+        ""
+      );
       const eventData = await selectEventByUuid(opts.input.event_uuid);
       // Map the data and conditionally remove fields
-        const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
-            // Explicitly define wallet_address type and handle other optional fields
-            //@ts-ignore
-            const visitorData: Partial<VisitorsWithDynamicFields> = {
-                ...visitor,
-                ticket_status: "ticket_status" in visitor ? visitor.ticket_status ?? undefined : undefined,
-                wallet_address: visitor.wallet_address as string | null | undefined,
-                username: visitor.username === "null" ? null : visitor.username,
-            };
+      const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+        // Explicitly define wallet_address type and handle other optional fields
+        //@ts-ignore
+        const visitorData: Partial<VisitorsWithDynamicFields> = {
+          ...visitor,
+          ticket_status:
+            "ticket_status" in visitor
+              ? (visitor.ticket_status ?? undefined)
+              : undefined,
+          wallet_address: visitor.wallet_address as string | null | undefined,
+          username: visitor.username === "null" ? null : visitor.username,
+        };
         // Copy the visitor object without modifying dynamicFields directly
-
 
         // If ticketToCheckIn is false, remove specific fields
         if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
@@ -738,11 +791,3 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       }
     }),
 });
-
-function timestampToIsoString(timestamp: number) {
-  const date = new Date(timestamp * 1000);
-  return date.toISOString();
-}
-
-const formatChanges = (changes: any) =>
-  JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);

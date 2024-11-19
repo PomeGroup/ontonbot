@@ -46,6 +46,13 @@ export const events = pgTable(
     tsRewardImage: text("ts_reward_image"),
     tsRewardVideo: text("ts_reward_video"),
 
+    // < Event Registration
+    has_registration : boolean("has_registration").default(false),
+    has_approval : boolean("has_approval").default(false),
+    capacity : integer("capacity"),
+    // Event Registration >
+
+
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
       mode: "date",
