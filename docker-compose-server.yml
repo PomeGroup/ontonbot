@@ -74,7 +74,8 @@ x-common-env: &common-env
 
 services:
   caddy:
-    image: ghcr.io/${GITHUB_REPOSITORY}/caddy:${GITHUB_SHA}
+    image: ghcr.io/${GITHUB_REPO}/caddy:${GITHUB_SHA}
+    network_mode: "host"
     ports:
       - "${NETWORK_PUBLIC_IP}:80:80"
       - "${NETWORK_PUBLIC_IP}:443:443"
@@ -109,7 +110,6 @@ services:
 
   postgres:
     hostname: postgres
-#    container_name : ${STAGE_NAME}-postgres
     image: postgres:16.3-alpine3.20
     environment:
       <<: *common-env
