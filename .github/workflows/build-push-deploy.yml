@@ -446,31 +446,31 @@ jobs:
           # [[ "$branch_name" == "dev" ]] ||
           if [[ "$branch_name" == "sandbox" ]]; then
             ssh -o StrictHostKeyChecking=no -p "$ssh_port" githubrunner@$ssh_ip  << EOF
-            mkdir -p /home/onton/$branch_name
-            mkdir -p /home/onton/$branch_name/mini-app
-            mkdir -p /home/onton/$branch_name/mini-app-cron
-            mkdir -p /home/onton/$branch_name/telegram-bot
-            mkdir -p /home/onton/$branch_name/client-web
-            mkdir -p /home/onton/$branch_name/participant-tma
-            mkdir -p /home/onton/$branch_name/nft-microservice
-            mkdir -p /home/onton/$branch_name/website
+            mkdir -p /home/tonont/$branch_name
+            mkdir -p /home/tonont/$branch_name/mini-app
+            mkdir -p /home/tonont/$branch_name/mini-app-cron
+            mkdir -p /home/tonont/$branch_name/telegram-bot
+            mkdir -p /home/tonont/$branch_name/client-web
+            mkdir -p /home/tonont/$branch_name/participant-tma
+            mkdir -p /home/tonont/$branch_name/nft-microservice
+            mkdir -p /home/tonont/$branch_name/website
             EOF
           else
             ssh -o StrictHostKeyChecking=no -p "$ssh_port" githubrunner@$ssh_ip << EOF
-            mkdir -p /home/onton/$branch_name
+            mkdir -p /home/tonont/$branch_name
           EOF
           fi
 
           
           echo "Copying files to server..."
-          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops githubrunner@$ssh_ip:/home/onton/$branch_name
+          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops githubrunner@$ssh_ip:/home/tonont/$branch_name
           
           # Remove brackets and convert to space-separated string
           services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
           echo "Formatted services to build: $services"  # Debug output        
           ssh -p "$ssh_port" -o StrictHostKeyChecking=no githubrunner@$ssh_ip << EOF
             echo "Loading environment variables..."
-            cd /home/onton/$branch_name
+            cd /home/tonont/$branch_name
             source .env
             #echo "******Logging into GitHub Container Registry..."
             #echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -491,11 +491,11 @@ jobs:
           echo "Exporting all environment variables with branch-specific prefix..."
           ssh -o StrictHostKeyChecking=no githubrunner@$ssh_ip << EOF
             echo "Listing files in branch directory..."        
-            cd /home/onton/$branch_name
+            cd /home/tonont/$branch_name
             echo "Exporting environment variables and deploying services..."
             export \$(printenv | grep '^${branch_name^^}_' | xargs)
-            cd /home/onton/$branch_name
-            source /home/onton/$branch_name/.env
+            cd /home/tonont/$branch_name
+            source /home/tonont/$branch_name/.env
             echo "Logging into GitHub Container Registry with GHCR_PAT..."
             echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
             chmod +x devops/generate-caddyfile.sh
