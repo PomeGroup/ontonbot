@@ -78,13 +78,7 @@ services:
     build:
       context: ./devops/caddy
       dockerfile: Dockerfile
-#    container_name: ${ENV}-caddy
     restart: unless-stopped
-    profiles:
-      - front-end-development
-      - minimal
-      - expecting-mini-app
-      - full
     ports:
       - "${NETWORK_PUBLIC_IP}:80:80"
       - "${NETWORK_PUBLIC_IP}:443:443"
@@ -109,11 +103,6 @@ services:
 #    container_name: ${STAGE_NAME}-minio
     image: minio/minio
     restart: unless-stopped
-    profiles:
-      - front-end-development
-      - expecting-mini-app
-      - minimal
-      - full
     networks:
       onton-network:
         ipv4_address: "${IP_MINIO}"
@@ -129,11 +118,6 @@ services:
 #    container_name : ${STAGE_NAME}-postgres
     image: postgres:16.3-alpine3.20
     restart: unless-stopped
-    profiles:
-      - front-end-development
-      - expecting-mini-app
-      - full
-      - minimal
     environment:
       <<: *common-env
     volumes:
@@ -149,11 +133,6 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-    profiles:
-      - front-end-development
-      - expecting-mini-app
-      - minimal
-      - full
     command: redis-server --save "" --appendonly no
     environment:
         <<: *common-env
@@ -164,11 +143,6 @@ services:
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
-#    container_name: ${STAGE_NAME}-clamav
-    profiles:
-      - front-end-development
-      - manual-apps
-      - full
     environment:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
@@ -187,10 +161,6 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
       PGADMIN_LISTEN_PORT: ${PORT_PGADMIN}
-    profiles:
-      - full
-      - manual-apps
-      - minimal
     depends_on:
       - postgres
     ports:
@@ -204,10 +174,6 @@ services:
   telegram-bot:
     image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
     restart: "unless-stopped"
-    profiles:
-      - front-end-development
-      - manual-apps
-      - full
     environment:
       <<: *common-env
     depends_on:
@@ -219,8 +185,6 @@ services:
   mini-app:
     hostname: mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
-    profiles:
-      - full
     restart: "unless-stopped"
     environment:
         <<: *common-env
@@ -242,8 +206,6 @@ services:
     hostname: mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     restart: "unless-stopped"
-    profiles:
-      - full
     environment:
         <<: *common-env
         TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -263,8 +225,6 @@ services:
     hostname: participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
     <<: *default-extra-hosts
-    profiles:
-      - full
     restart: "unless-stopped"
     depends_on:
       - mini-app
@@ -285,10 +245,6 @@ services:
       - minio
       - caddy
       - mini-app
-    profiles:
-      - front-end-development
-      - manual-apps
-      - full
     environment:
       <<: *common-env
       MNEMONIC: ${MNEMONIC}
@@ -299,8 +255,6 @@ services:
   giveaway-checker:
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
     restart: unless-stopped
-    profiles:
-      - full
     depends_on:
       - postgres
     environment:
@@ -313,8 +267,6 @@ services:
     hostname: website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
     restart: "unless-stopped"
-    profiles:
-      - full
     depends_on:
      - caddy
     environment:
@@ -326,9 +278,6 @@ services:
   golang-server:
     image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
     restart: unless-stopped
-    profiles:
-      - expecting-mini-app
-      - full
     depends_on:
       - redis
     environment:
@@ -340,9 +289,6 @@ services:
   golang-worker:
     image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
     restart: unless-stopped
-    profiles:
-      - expecting-mini-app
-      - full
     depends_on:
       - redis
       - golang-server
@@ -355,10 +301,7 @@ services:
   metabase:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
-#    container_name: ${STAGE_NAME}-metabase
     restart: unless-stopped
-    profiles:
-      - full
     volumes:
       - /dev/urandom:/dev/random:ro
     environment:
@@ -386,8 +329,6 @@ services:
   client-web:
     hostname: client-web
     <<: *default-extra-hosts
-    profiles:
-      - full
     image: ghcr.io/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
     restart: "unless-stopped"
     environment:
