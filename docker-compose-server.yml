@@ -3,7 +3,7 @@ x-common-extra-hosts: &default-extra-hosts
     - "${MINI_APP_DOMAIN}:${IP_CADDY}"
 
 x-common-env: &common-env
-  ACME_AGREE: true
+  ACME_AGREE: ${ACME_AGREE}
   BOT_TOKEN: ${BOT_TOKEN}
   CLIENT_WEB_DOMAIN: ${CLIENT_WEB_DOMAIN}
   DATABASE_URL: ${DATABASE_URL}

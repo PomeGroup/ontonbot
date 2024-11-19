@@ -515,7 +515,6 @@ jobs:
               echo "CR_PAT is not set or is empty"; exit 1;
             fi
           
-          
             echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             chmod +x devops/generate-caddyfile.sh
             chmod +x devops/minio-init.sh
