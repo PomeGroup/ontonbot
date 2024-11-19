@@ -482,8 +482,7 @@ jobs:
             if [ -z "$CR_PAT" ]; then
               echo "CR_PAT is not set or is empty"; exit 1;
             fi
-            
-            
+                        
             echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
              
             echo "services to build: $services_to_build"
