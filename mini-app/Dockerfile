@@ -74,7 +74,6 @@ COPY ./package.json  /app/
 # Set working directory
 WORKDIR /app
 # Install production dependencies only
-RUN pnpm install --pnpm
 RUN  pnpm install --prod
 
 # Stage : With Files
@@ -84,7 +83,7 @@ COPY . /app
 
 # Stage : Build Stage
 FROM with-files AS build-stage
-
+RUN echo "Build stage files " && ls -la /app && ls -la
 # Build the Next.js application
 RUN pnpm run build
 # Clean up unnecessary files to reduce image size
@@ -92,6 +91,7 @@ RUN pnpm run build
 # Stage : Production Stage
 FROM build-stage AS production
 # Expose the necessary port for mini-app (Next.js)
+
 EXPOSE $MINI_APP_PORT
 # Default command for the Next.js app
 CMD  node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT
