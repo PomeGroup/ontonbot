@@ -531,9 +531,10 @@ jobs:
 
             echo "Forcing update of services..."
             services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
-            for service in \$services; do
-              echo "Updating service: \$service in stack: $branch_name"
-              docker service update --force \$branch_name\_\$service || echo "Failed to update service \$service"
+            for service in $services; do
+              full_service_name="${branch_name}_${service}"
+              echo "Updating service: $service in stack: $branch_name"
+              docker service update --force "$full_service_name" || echo "Failed to update service $service"
             done
           
           EOF
