@@ -467,7 +467,6 @@ jobs:
           EOF
           fi
 
-          
           echo "Copying files to server..."
           scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml .env docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops tonont@$ssh_ip:/home/tonont/$branch_name
           
