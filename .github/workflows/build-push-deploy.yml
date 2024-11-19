@@ -335,8 +335,10 @@ jobs:
     needs: [determine-services, build-and-push]
     if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
     permissions:
-      contents: read
+      contents: write
       packages: read
+      actions: write
+      id-token: read
 
     env:
       ALLMYSECRETS: ${{ toJSON(secrets) }}
