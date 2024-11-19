@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events } from "@/db/schema";
+import { eventFields, events, eventRegistrants } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
 import {
   findVisitorByUserAndEventUuid,
@@ -15,6 +15,7 @@ import {
   HubsResponse,
   SocietyHub,
   UpdateEventDataSchema,
+  EventRegisterSchema,
 } from "@/types";
 
 import { fetchBalance } from "@/utils";
@@ -22,7 +23,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, ne } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -78,7 +79,9 @@ export const eventsRouter = router({
   // getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
   //   return await fetchBalance(opts.input);
   // }),
-
+  /* -------------------------------------------------------------------------- */
+  /*                            Get an Event By User                            */
+  /* -------------------------------------------------------------------------- */
   getEvent: initDataProtectedProcedure
     .input(z.object({ event_uuid: z.string() }))
     .query(async (opts) => {
@@ -119,10 +122,6 @@ export const eventsRouter = router({
       /* -------------------------------------------------------------------------- */
     }),
 
-  getUser: initDataProtectedProcedure
-    .input(z.object({ event_uuid: z.string() }))
-    .query(async (opts) => {}),
-
   // private
   getEvents: adminOrganizerProtectedProcedure.query(async (opts) => {
     let eventsData = [];
@@ -154,6 +153,134 @@ export const eventsRouter = router({
       ({ wallet_seed_phrase, ...restEventData }) => restEventData
     );
   }),
+
+  /* -------------------------------------------------------------------------- */
+  /*                           Event Register by user                           */
+  /* -------------------------------------------------------------------------- */
+  // private
+  eventRegister: initDataProtectedProcedure
+    .input(z.object({ input_data: EventRegisterSchema }))
+    .mutation(async (opts) => {
+      const userId = opts.ctx.user.user_id;
+      const event_uuid = opts.input.input_data.event_uuid;
+      const event = await selectEventByUuid(event_uuid);
+
+      if (!event) {
+        //todo event not found
+        return null;
+      }
+
+      if (!event.has_registration) {
+        //todo return event no registraion
+        return null;
+      }
+      const user_request = (
+        await db
+          .select()
+          .from(eventRegistrants)
+          .where(
+            and(
+              eq(eventRegistrants.event_uuid, event_uuid),
+              eq(eventRegistrants.user_id, userId)
+            )
+          )
+          .execute()
+      ).pop();
+
+      if (user_request) {
+        //todo return already registered
+        return null;
+      }
+      if (event.capacity) {
+        const approved_requests_count =
+          (
+            await db
+              .select({ count: count() })
+              .from(eventRegistrants)
+              .where(eq(eventRegistrants.status, "approved"))
+              .execute()
+          ).pop()?.count || 0;
+
+        if (approved_requests_count >= event.capacity) {
+          // todo return event capacity filled
+          return null;
+        }
+        const notrejected_requests_count =
+          (
+            await db
+              .select({ count: count() })
+              .from(eventRegistrants)
+              .where(ne(eventRegistrants.status, "rejected"))
+              .execute()
+          ).pop()?.count || 0;
+
+        if (
+          !event.has_waiting_list &&
+          notrejected_requests_count >= event.capacity
+        ) {
+          // todo return event capacity filled (no waiting list )
+          return null;
+        }
+      }
+
+      const request_status = !!event.has_approval ? "pending" : "approved"; // pending if approval is required otherwise auto approve them
+      await db.insert(eventRegistrants).values({
+        event_uuid: event_uuid,
+        user_id: userId,
+        status: request_status,
+      });
+
+      //todo add event registration details from user into some table
+      return { message: "success", code: 201 };
+    }),
+
+  /* -------------------------------------------------------------------------- */
+  /*                            Get Event Registrant                            */
+  /* -------------------------------------------------------------------------- */
+  getEventRegistrants: eventManagementProtectedProcedure
+    .input(z.object({ event_uuid: z.string() }))
+    .query(async (opts) => {
+      const event_uuid = opts.input.event_uuid;
+      const event = await selectEventByUuid(event_uuid);
+
+      if (!event) {
+        //todo fix here event not found
+        return null;
+      }
+
+      const registrants = await db
+        .select()
+        .from(eventRegistrants)
+        .where(eq(eventRegistrants.event_uuid, event_uuid))
+        .orderBy(desc(events.created_at))
+        .execute();
+
+      return registrants;
+    }),
+  
+  /* -------------------------------------------------------------------------- */
+  /*              Process Registrant Request (Approve✅ / Reject ❌)           */
+  /* -------------------------------------------------------------------------- */
+  processRegistrantRequest: eventManagementProtectedProcedure
+    .input(z.object({ event_uuid: z.string() }))
+    .query(async (opts) => {
+      const event_uuid = opts.input.event_uuid;
+      const event = await selectEventByUuid(event_uuid);
+
+      if (!event) {
+        //todo fix here event not found
+        return null;
+      }
+
+      const registrants = await db
+        .select()
+        .from(eventRegistrants)
+        .where(eq(eventRegistrants.event_uuid, event_uuid))
+        .orderBy(desc(events.created_at))
+        .execute();
+
+      return registrants;
+    }),
 
   // private
   addEvent: adminOrganizerProtectedProcedure
@@ -207,6 +334,13 @@ export const eventsRouter = router({
               tsRewardImage: opts.input.eventData.ts_reward_url,
               tsRewardVideo: opts.input.eventData.video_url,
               cityId: opts.input.eventData.cityId,
+
+              //Event Registration
+              has_registration: opts.input.eventData.has_registration,
+              has_approval: opts.input.eventData.has_approval,
+              capacity: opts.input.eventData.capacity,
+              has_waiting_list: opts.input.eventData.has_waiting_list,
+              //Event Registration
             })
             .returning();
 
@@ -355,7 +489,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       }
     }),
 
-  //   // private
+  // private
   //   deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
   //     try {
   //       return await db.transaction(async (trx) => {
@@ -432,6 +566,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               cityId: eventData.cityId,
               updatedBy: opts.ctx.user.user_id.toString(),
               updatedAt: new Date(),
+
+              /* ------------------------ Event Registration Update ----------------------- */
+              // Updating has_registraion is not allowed
+              has_approval: eventData.has_approval,
+              capacity: eventData.capacity,
+              has_waiting_list: eventData.has_waiting_list,
+              /* ------------------------ Event Registration Update ----------------------- */
             })
             .where(eq(events.event_uuid, eventUuid))
             .returning()
@@ -559,8 +700,8 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
         });
       } catch (err) {
-        console.info(
-          `update event id: ${opts.ctx.event.event_uuid}, error: `,
+        console.error(
+          `[eventRouter] update event failed id: ${opts.ctx.event.event_uuid}, error: `,
           err
         );
 
