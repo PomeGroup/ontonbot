@@ -391,7 +391,7 @@ jobs:
           # Add the GitHub Container Registry PAT to the env file
           echo "CR_PAT=${CR_PAT}" >> $env_file
           echo "Generated environment variables script:"
-
+            cat $env_file
       - name: Set up SSH Environment Variables
         id: set-env-vars
         run: |
