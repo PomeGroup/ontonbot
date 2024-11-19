@@ -84,6 +84,7 @@ COPY . /app
 # Stage : Build Stage
 FROM with-files AS build-stage
 RUN echo "Build stage files " && ls -la /app && ls -la
+RUN  pnpm install
 # Build the Next.js application
 RUN pnpm run build
 # Clean up unnecessary files to reduce image size
