@@ -46,6 +46,7 @@ export default async function RootLayout({
 
           {children}
         </Providers>
+        <script src="http://localhost:8097"></script>
       </body>
     </html>
   );

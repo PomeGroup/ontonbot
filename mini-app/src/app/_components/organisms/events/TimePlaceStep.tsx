@@ -18,6 +18,9 @@ export const TimePlaceStep = () => {
   const setErrors = useCreateEventStore(
     (state) => state.setTimePlaceStepErrors
   );
+  const clearErrors = useCreateEventStore(
+    (state) => state.clearTimePlaceStepErrors
+  );
 
   const startDateLimit = (Date.now() - 1000 * 3600 * 4) / 1000; // 4 hours before now
 
@@ -188,6 +191,7 @@ export const TimePlaceStep = () => {
       ...eventData,
       ...data,
     });
+    clearErrors();
     setCurrentStep(3);
   }, [Object.values(eventData || {})]);
 
