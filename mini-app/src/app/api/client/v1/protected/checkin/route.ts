@@ -107,123 +107,128 @@ function isAlreadyCheckedIn(
  *         description: Internal server error.
  */
 export async function POST(req: Request) {
-  // First, validate the JWT token
-  const jwtValidation = await validateJwtFromRequest(req);
-  if (!jwtValidation.success) {
-    return jwtValidation.response; // Return the JWT error response if invalid
-  }
+  /* ----------------------------- OUT OF SERVICE ----------------------------- */
+  return NextResponse.json({
+      success: false,
+      error: "out_of_service",}
+  )
+  // // First, validate the JWT token
+  // const jwtValidation = await validateJwtFromRequest(req);
+  // if (!jwtValidation.success) {
+  //   return jwtValidation.response; // Return the JWT error response if invalid
+  // }
 
-  // Parse and validate the request body
-  const body = await req.json();
-  const parsed = checkInTicketSchema.safeParse(body);
+  // // Parse and validate the request body
+  // const body = await req.json();
+  // const parsed = checkInTicketSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json(
-      {
-        error: parsed.error.errors.map((err) => ({
-          path: err.path,
-          message: err.message,
-        })),
-      },
-      { status: 400 }
-    );
-  }
+  // if (!parsed.success) {
+  //   return NextResponse.json(
+  //     {
+  //       error: parsed.error.errors.map((err) => ({
+  //         path: err.path,
+  //         message: err.message,
+  //       })),
+  //     },
+  //     { status: 400 }
+  //   );
+  // }
 
-  const { order_uuid } = parsed.data;
+  // const { order_uuid } = parsed.data;
 
-  try {
-    // Check in the ticket
-    const result = await ticketDB.checkInTicket(order_uuid);
+  // try {
+  //   // Check in the ticket
+  //   const result = await ticketDB.checkInTicket(order_uuid);
 
-    if (!result) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: ERROR_CODES.TICKET_UPDATE_FAILED,
-        },
-        { status: 500 }
-      );
-    }
-    const ticketInfo = await ticketDB.getTicketByUuid(order_uuid);
+  //   if (!result) {
+  //     return NextResponse.json(
+  //       {
+  //         success: false,
+  //         error: ERROR_CODES.TICKET_UPDATE_FAILED,
+  //       },
+  //       { status: 500 }
+  //     );
+  //   }
+  //   const ticketInfo = await ticketDB.getTicketByUuid(order_uuid);
 
-    if (!ticketInfo?.user_id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: ERROR_CODES.TICKET_NOT_FOUND,
-        },
-        { status: 404 }
-      );
-    }
-    const userInfo = await selectUserById(ticketInfo.user_id);
-    // If already checked in, return result with no reward processing
-    if (isAlreadyCheckedIn(result)) {
-      return NextResponse.json(
-        {
-          success: true,
-          state: "USED",
-          result: result,
-          ticketInfo: ticketInfo,
-          userInfo: userInfo,
-          rewardResult: null, // No reward processing
-        },
-        { status: 200 }
-      );
-    }
+  //   if (!ticketInfo?.user_id) {
+  //     return NextResponse.json(
+  //       {
+  //         success: false,
+  //         error: ERROR_CODES.TICKET_NOT_FOUND,
+  //       },
+  //       { status: 404 }
+  //     );
+  //   }
+  //   const userInfo = await selectUserById(ticketInfo.user_id);
+  //   // If already checked in, return result with no reward processing
+  //   if (isAlreadyCheckedIn(result)) {
+  //     return NextResponse.json(
+  //       {
+  //         success: true,
+  //         state: "USED",
+  //         result: result,
+  //         ticketInfo: ticketInfo,
+  //         userInfo: userInfo,
+  //         rewardResult: null, // No reward processing
+  //       },
+  //       { status: 200 }
+  //     );
+  //   }
 
-    // Proceed with reward creation after a successful check-in
-    const ticketData = await ticketDB.getTicketByUuid(order_uuid);
-    let rewardResult = null;
-    if (ticketData?.user_id && ticketData?.event_uuid) {
-      try {
-        const rewardCreation = await rewardsService.createUserRewardSBT({
-          user_id: ticketData.user_id,
-          event_uuid: ticketData.event_uuid,
-          ticketOrderUuid: order_uuid,
-        });
-        // Capture reward result in case of success or failure
-        if (rewardCreation.success) {
-          rewardResult = { success: true, rewardResult: rewardCreation };
-        } else {
-          rewardResult = {
-            success: false,
-            error: ERROR_CODES.REWARD_CREATION_FAILED,
-            rewardResult: rewardCreation,
-          };
-        }
-      } catch (rewardError: unknown) {
-        rewardResult = {
-          success: false,
-          error: ERROR_CODES.UNKNOWN_ERROR,
-          details: (rewardError as Error).message,
-        };
-      }
-    }
-    const dealRoomResult = await dealRoomService.RefreshGuestList("2742f5902ad54152a969f5dac15d716d");
-    // Return both check-in result and reward result in the response
-    return NextResponse.json(
-      {
-        success: true,
-        state: "CHECKED_IN",
-        result: result,
-        dealRoomResult: dealRoomResult,
-        ticketInfo: ticketInfo,
-        userInfo: userInfo,
-        rewardResult: rewardResult || {
-          success: false,
-          error: ERROR_CODES.REWARD_CREATION_FAILED,
-        },
-      },
-      { status: 200 }
-    );
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "An unknown error occurred";
-    return NextResponse.json(
-      { error: ERROR_CODES.UNKNOWN_ERROR, details: errorMessage },
-      { status: 500 }
-    );
-  }
+  //   // Proceed with reward creation after a successful check-in
+  //   const ticketData = await ticketDB.getTicketByUuid(order_uuid);
+  //   let rewardResult = null;
+  //   if (ticketData?.user_id && ticketData?.event_uuid) {
+  //     try {
+  //       const rewardCreation = await rewardsService.createUserRewardSBT({
+  //         user_id: ticketData.user_id,
+  //         event_uuid: ticketData.event_uuid,
+  //         ticketOrderUuid: order_uuid,
+  //       });
+  //       // Capture reward result in case of success or failure
+  //       if (rewardCreation.success) {
+  //         rewardResult = { success: true, rewardResult: rewardCreation };
+  //       } else {
+  //         rewardResult = {
+  //           success: false,
+  //           error: ERROR_CODES.REWARD_CREATION_FAILED,
+  //           rewardResult: rewardCreation,
+  //         };
+  //       }
+  //     } catch (rewardError: unknown) {
+  //       rewardResult = {
+  //         success: false,
+  //         error: ERROR_CODES.UNKNOWN_ERROR,
+  //         details: (rewardError as Error).message,
+  //       };
+  //     }
+  //   }
+  //   const dealRoomResult = await dealRoomService.RefreshGuestList("2742f5902ad54152a969f5dac15d716d");
+  //   // Return both check-in result and reward result in the response
+  //   return NextResponse.json(
+  //     {
+  //       success: true,
+  //       state: "CHECKED_IN",
+  //       result: result,
+  //       dealRoomResult: dealRoomResult,
+  //       ticketInfo: ticketInfo,
+  //       userInfo: userInfo,
+  //       rewardResult: rewardResult || {
+  //         success: false,
+  //         error: ERROR_CODES.REWARD_CREATION_FAILED,
+  //       },
+  //     },
+  //     { status: 200 }
+  //   );
+  // } catch (error: unknown) {
+  //   const errorMessage =
+  //     error instanceof Error ? error.message : "An unknown error occurred";
+  //   return NextResponse.json(
+  //     { error: ERROR_CODES.UNKNOWN_ERROR, details: errorMessage },
+  //     { status: 500 }
+  //   );
+  // }
 }
 
 // Export dynamic flag

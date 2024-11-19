@@ -44,95 +44,101 @@ const logoutSchema = z.object({
  * Logs out the user by removing session-related data from Redis and blacklisting the JWT token.
  */
 export async function POST(req: Request) {
-  // Validate the JWT token
-  const jwtValidation = await validateJwtFromRequest(req);
+    /* ----------------------------- OUT OF SERVICE ----------------------------- */
+    return NextResponse.json({
+      success: false,
+      error: "out_of_service",}
+    )
 
-  // Check if JWT validation failed
-  if (!jwtValidation.success) {
-    return jwtValidation.response; // Return the JWT error response
-  }
+  // // Validate the JWT token
+  // const jwtValidation = await validateJwtFromRequest(req);
 
-  const authorization = req.headers.get("Authorization");
+  // // Check if JWT validation failed
+  // if (!jwtValidation.success) {
+  //   return jwtValidation.response; // Return the JWT error response
+  // }
 
-  if (!authorization) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: ERROR_CODES.JWT_INVALID,
-      },
-      { status: 401 }
-    );
-  }
-  const token = authorization.split(" ")[1];
-  // Parse and validate the request body
-  const body = await req.json();
-  const parsedBody = logoutSchema.safeParse(body);
+  // const authorization = req.headers.get("Authorization");
 
-  if (!parsedBody.success) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: ERROR_CODES.VALIDATION_FAILED,
-        details: parsedBody.error.errors.map((err) => ({
-          path: err.path,
-          message: err.message,
-        })),
-      },
-      { status: 400 }
-    );
-  }
+  // if (!authorization) {
+  //   return NextResponse.json(
+  //     {
+  //       success: false,
+  //       error: ERROR_CODES.JWT_INVALID,
+  //     },
+  //     { status: 401 }
+  //   );
+  // }
+  // const token = authorization.split(" ")[1];
+  // // Parse and validate the request body
+  // const body = await req.json();
+  // const parsedBody = logoutSchema.safeParse(body);
 
-  const { telegramUserId } = parsedBody.data;
+  // if (!parsedBody.success) {
+  //   return NextResponse.json(
+  //     {
+  //       success: false,
+  //       error: ERROR_CODES.VALIDATION_FAILED,
+  //       details: parsedBody.error.errors.map((err) => ({
+  //         path: err.path,
+  //         message: err.message,
+  //       })),
+  //     },
+  //     { status: 400 }
+  //   );
+  // }
 
-  try {
-    // Add JWT token to the blacklist with the remaining expiration time
-    const decodedToken = jwt.decode(token) as { exp?: number };
-    const tokenExpiration = decodedToken?.exp
-      ? decodedToken.exp - Math.floor(Date.now() / 1000)
-      : null;
-    if (!tokenExpiration) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: ERROR_CODES.JWT_INVALID,
-        },
-        { status: 401 }
-      );
-    }
+  // const { telegramUserId } = parsedBody.data;
 
-    await redisTools.setCache(
-      `${redisTools.cacheKeys.jwtBlacklist}${token}`,
-      "blacklisted",
-      tokenExpiration // Set cache expiry to the remaining token lifetime
-    );
+  // try {
+  //   // Add JWT token to the blacklist with the remaining expiration time
+  //   const decodedToken = jwt.decode(token) as { exp?: number };
+  //   const tokenExpiration = decodedToken?.exp
+  //     ? decodedToken.exp - Math.floor(Date.now() / 1000)
+  //     : null;
+  //   if (!tokenExpiration) {
+  //     return NextResponse.json(
+  //       {
+  //         success: false,
+  //         error: ERROR_CODES.JWT_INVALID,
+  //       },
+  //       { status: 401 }
+  //     );
+  //   }
 
-    // Invalidate user session or JWT token
-    await redisTools.deleteCache(
-      `${redisTools.cacheKeys.authApiOtp}${telegramUserId}`
-    );
+  //   await redisTools.setCache(
+  //     `${redisTools.cacheKeys.jwtBlacklist}${token}`,
+  //     "blacklisted",
+  //     tokenExpiration // Set cache expiry to the remaining token lifetime
+  //   );
 
-    return NextResponse.json(
-      {
-        success: true,
-        code: SUCCESS_CODES.LOGOUT_SUCCESS.code,
-        message: SUCCESS_CODES.LOGOUT_SUCCESS.message,
-      },
-      { status: 200 }
-    );
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error
-        ? error.message
-        : ERROR_CODES.UNKNOWN_ERROR.message;
-    return NextResponse.json(
-      {
-        success: false,
-        error: ERROR_CODES.UNKNOWN_ERROR,
-        details: errorMessage,
-      },
-      { status: 500 }
-    );
-  }
+  //   // Invalidate user session or JWT token
+  //   await redisTools.deleteCache(
+  //     `${redisTools.cacheKeys.authApiOtp}${telegramUserId}`
+  //   );
+
+  //   return NextResponse.json(
+  //     {
+  //       success: true,
+  //       code: SUCCESS_CODES.LOGOUT_SUCCESS.code,
+  //       message: SUCCESS_CODES.LOGOUT_SUCCESS.message,
+  //     },
+  //     { status: 200 }
+  //   );
+  // } catch (error: unknown) {
+  //   const errorMessage =
+  //     error instanceof Error
+  //       ? error.message
+  //       : ERROR_CODES.UNKNOWN_ERROR.message;
+  //   return NextResponse.json(
+  //     {
+  //       success: false,
+  //       error: ERROR_CODES.UNKNOWN_ERROR,
+  //       details: errorMessage,
+  //     },
+  //     { status: 500 }
+  //   );
+  // }
 }
 
 export const dynamic = "force-dynamic";
