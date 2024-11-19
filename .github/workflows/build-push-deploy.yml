@@ -480,7 +480,6 @@ jobs:
             
             
             echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            # Check if the login succeeded and show the contents of the Docker config
              
             echo "services to build: $services_to_build"
             # Remove the square brackets and split by comma
@@ -503,8 +502,13 @@ jobs:
             export \$(printenv | grep '^${branch_name^^}_' | xargs)
             cd /home/tonont/$branch_name
             source /home/tonont/$branch_name/.env
-            echo "Logging into GitHub Container Registry with GHCR_PAT..."
-            echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+            echo "******Logging into GitHub Container Registry..."
+            if [ -z "$CR_PAT" ]; then
+              echo "CR_PAT is not set or is empty"; exit 1;
+            fi
+          
+          
+            echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             chmod +x devops/generate-caddyfile.sh
             chmod +x devops/minio-init.sh
             echo "Updating Docker node label for stage $branch_name..."
