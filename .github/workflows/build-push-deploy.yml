@@ -428,6 +428,8 @@ jobs:
           fi
 
       - name: Deploy Changed Services
+        env:
+          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
