@@ -97,7 +97,6 @@ services:
   minio:
     hostname: minio
     image: minio/minio
-    restart: unless-stopped
     networks:
       onton-network:
         ipv4_address: "${IP_MINIO}"
@@ -112,7 +111,6 @@ services:
     hostname: postgres
 #    container_name : ${STAGE_NAME}-postgres
     image: postgres:16.3-alpine3.20
-    restart: unless-stopped
     environment:
       <<: *common-env
     volumes:
@@ -124,8 +122,6 @@ services:
   redis:
     image: redis:7.4.1-bookworm
     hostname: redis
-#    container_name: ${STAGE_NAME}-redis
-    restart: unless-stopped
     volumes:
       - redis_data:/data
     command: redis-server --save "" --appendonly no
@@ -143,14 +139,12 @@ services:
       - CLAMD_SETTINGS_LOGTIME=1
     volumes:
       - clamav_data:/var/lib/clamav  # Persist virus definition database
-    restart: unless-stopped
     networks:
         onton-network:
             ipv4_address: "${IP_CLAMAV}"
 
   pgadmin:
     image: dpage/pgadmin4
-    restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
@@ -167,7 +161,6 @@ services:
 
   telegram-bot:
     image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
-    restart: "unless-stopped"
     environment:
       <<: *common-env
     depends_on:
@@ -179,7 +172,6 @@ services:
   mini-app:
     hostname: mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
-    restart: "unless-stopped"
     environment:
         <<: *common-env
         TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -198,7 +190,6 @@ services:
   mini-app-cron:
     hostname: mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
-    restart: "unless-stopped"
     environment:
         <<: *common-env
         TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -218,7 +209,6 @@ services:
     hostname: participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
     <<: *default-extra-hosts
-    restart: "unless-stopped"
     depends_on:
       - mini-app
       - caddy
@@ -231,7 +221,6 @@ services:
   nft-microservice:
     hostname: nft-service
     image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
-    restart: unless-stopped
     depends_on:
       - postgres
       - redis
@@ -247,7 +236,6 @@ services:
 
   giveaway-checker:
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
-    restart: unless-stopped
     depends_on:
       - postgres
     environment:
@@ -259,7 +247,6 @@ services:
   website:
     hostname: website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
-    restart: "unless-stopped"
     depends_on:
      - caddy
     environment:
@@ -270,7 +257,6 @@ services:
 
   golang-server:
     image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
-    restart: unless-stopped
     depends_on:
       - redis
     environment:
@@ -281,7 +267,6 @@ services:
 
   golang-worker:
     image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
-    restart: unless-stopped
     depends_on:
       - redis
       - golang-server
@@ -294,7 +279,6 @@ services:
   metabase:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
-    restart: unless-stopped
     volumes:
       - /dev/urandom:/dev/random:ro
     environment:
@@ -323,7 +307,6 @@ services:
     hostname: client-web
     <<: *default-extra-hosts
     image: ghcr.io/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
-    restart: "unless-stopped"
     environment:
       NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
       CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}

@@ -181,7 +181,7 @@ jobs:
             build_context="./newton"
           elif [ "$service" == "caddy" ]; then
             dockerfile_path="devops/caddy/Dockerfile"
-            build_context="./newton"
+            build_context="./devops/caddy/"
           elif [ "$service" == "golang-server" ]; then
             dockerfile_path="golang-server/server/Dockerfile"
             build_context="./golang-server"
