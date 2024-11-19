@@ -11,14 +11,22 @@ import { useEventData } from "~/hooks/queries/useEventData";
 import QueryState from "@ui/components/blocks/QueryState";
 
 type BuyTicketProps = {
-  params: { id: string };
+  params: {
+    id: string;
+  };
+  searchParams: { [key: string]: string | undefined };
 };
 
-const BuyTicket = ({ params }: BuyTicketProps) => {
+const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
   const { data: event, isError, isLoading } = useEventData(params.id)
+
+  const utm_tag = searchParams.utm_campaign || null ;
 
   if (isLoading) {
     return <QueryState />
+  }
+  if(utm_tag){
+    console.log("ptma_buy_ticket_page_utm" , `utm_campaign = ${utm_tag}`)
   }
 
   if (isError || !event) {
@@ -97,6 +105,7 @@ const BuyTicket = ({ params }: BuyTicketProps) => {
         sendTo={event.wallet_address}
         eventTicketId={event.eventTicket.id}
         price={event.eventTicket.price}
+        utm_tag={utm_tag}
       />
     </PageTma>
   );

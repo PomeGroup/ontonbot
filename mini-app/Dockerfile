@@ -1,20 +1,8 @@
-# Stage 1: Dependencies
-FROM node:20.13.1-alpine3.20 AS dependencies
-
-# Set working directory
-WORKDIR /app
-
-# Copy only the package.json and pnpm-lock.yaml for dependency caching
-COPY package.json pnpm-lock.yaml ./
-
-# Install pnpm and dependencies
-RUN npm install -g pnpm \
-    && pnpm install
-
-# Stage 2: Build Stage
-FROM node:20.13.1-alpine3.20 AS build-stage
-# Accept build arguments
-ARG NODE_ENV
+# minimum-image
+FROM node:22-alpine3.19 AS minimum-image
+RUN apk update
+RUN npm i -g pnpm
+# ARGS
 ARG ENV
 ARG DATABASE_URL_NFT_MANAGER
 ARG TON_CENTER_TOKEN
@@ -42,7 +30,6 @@ ARG CLIENT_API_FIXED_KEY
 ARG CLIENT_API_FIXED_USER
 ARG CLIENT_API_FIXED_ORGANIZER
 # Export arguments as environment variables
-ENV NODE_ENV=${NODE_ENV}
 ENV ENV=${ENV}
 ENV DATABASE_URL_NFT_MANAGER=${DATABASE_URL_NFT_MANAGER}
 ENV TON_CENTER_TOKEN=${TON_CENTER_TOKEN}
@@ -70,99 +57,51 @@ ENV CLIENT_API_FIXED_KEY=${CLIENT_API_FIXED_KEY}
 ENV CLIENT_API_FIXED_USER=${CLIENT_API_FIXED_USER}
 ENV CLIENT_API_FIXED_ORGANIZER=${CLIENT_API_FIXED_ORGANIZER}
 
-RUN npm install -g pnpm
+# Base stage
+FROM minimum-image AS base
+# Install necessary packages
+RUN apk add \
+  bash \
+  curl \
+  ca-certificates
+
+# Stage : Dependencies
+FROM base AS dependencies
+# Copy package files for dependency installation
+COPY ./package.json  /app/
 # Set working directory
 WORKDIR /app
+# Install production dependencies only
+RUN  pnpm install --prod
 
-# Copy node_modules from the dependencies stage to reuse cached dependencies
-COPY --from=dependencies /app/node_modules ./node_modules
+# Stage : With Files
+FROM dependencies AS with-files
+# Copy the entire project to be used in the build stages
+COPY . /app
 
-
-# Copy the rest of the application (Next.js, TypeScript configs, and source code)
-COPY . .
-RUN echo "-----------------NEXT_PUBLIC_BOT_USERNAME before build  ${NEXT_PUBLIC_BOT_USERNAME}"
-RUN printenv
+# Stage : Build Stage
+FROM with-files AS build-stage
+RUN echo "Build stage files " && ls -la /app && ls -la
+RUN  pnpm install
 # Build the Next.js application
 RUN pnpm run build
+# Clean up unnecessary files to reduce image size
 
-# Stage 3: Production Stage
-FROM node:20.13.1-alpine3.20 AS production-stage
-# Accept build arguments
-ARG NODE_ENV
-ARG ENV
-ARG DATABASE_URL_NFT_MANAGER
-ARG TON_CENTER_TOKEN
-ARG TONAPI_API_KEY
-ARG DATABASE_URL
-ARG POSTGRES_USER
-ARG POSTGRES_PASSWORD
-ARG BOT_TOKEN
-ARG NEXT_PUBLIC_APP_BASE_URL
-ARG NEXT_PUBLIC_BOT_USERNAME
-ARG CACHE_ENABLED
-ARG TG_NOTIFICATION_CHANELL
-ARG ONTON_API_SECRET
-ARG TON_SOCIETY_API_KEY
-ARG TON_SOCIETY_BASE_URL
-ARG REDIS_HOST
-ARG REDIS_PORT
-ARG REDIS_PASSWORD
-ARG REDIS_DATABASES
-ARG MINI_APP_PORT
-ARG IP_NFT_MANAGER
-ARG NFT_MANAGER_PORT
-ARG CLIENT_API_JWT_SECRET
-ARG CLIENT_API_FIXED_KEY
-ARG CLIENT_API_FIXED_USER
-ARG CLIENT_API_FIXED_ORGANIZER
-# Export arguments as environment variables
-ENV NODE_ENV=${NODE_ENV}
-ENV ENV=${ENV}
-ENV DATABASE_URL_NFT_MANAGER=${DATABASE_URL_NFT_MANAGER}
-ENV TON_CENTER_TOKEN=${TON_CENTER_TOKEN}
-ENV TONAPI_API_KEY=${TONAPI_API_KEY}
-ENV DATABASE_URL=${DATABASE_URL}
-ENV POSTGRES_USER=${POSTGRES_USER}
-ENV POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-ENV BOT_TOKEN=${BOT_TOKEN}
-ENV NEXT_PUBLIC_APP_BASE_URL=${NEXT_PUBLIC_APP_BASE_URL}
-ENV NEXT_PUBLIC_BOT_USERNAME=${NEXT_PUBLIC_BOT_USERNAME}
-ENV CACHE_ENABLED=${CACHE_ENABLED}
-ENV TG_NOTIFICATION_CHANELL=${TG_NOTIFICATION_CHANELL}
-ENV ONTON_API_SECRET=${ONTON_API_SECRET}
-ENV TON_SOCIETY_API_KEY=${TON_SOCIETY_API_KEY}
-ENV TON_SOCIETY_BASE_URL=${TON_SOCIETY_BASE_URL}
-ENV REDIS_HOST=${IP_REDIS}
-ENV REDIS_PORT=${REDIS_PORT}
-ENV REDIS_PASSWORD=${REDIS_PASSWORD}
-ENV REDIS_DATABASES=${REDIS_DATABASES}
-ENV MINI_APP_PORT=${MINI_APP_PORT}
-ENV IP_NFT_MANAGER=${IP_NFT_MANAGER}
-ENV NFT_MANAGER_PORT=${NFT_MANAGER_PORT}
-ENV CLIENT_API_JWT_SECRET=${CLIENT_API_JWT_SECRET}
-ENV CLIENT_API_FIXED_KEY=${CLIENT_API_FIXED_KEY}
-ENV CLIENT_API_FIXED_USER=${CLIENT_API_FIXED_USER}
-ENV CLIENT_API_FIXED_ORGANIZER=${CLIENT_API_FIXED_ORGANIZER}
-# Install pnpm in the production stage to ensure it's available
-RUN npm install -g pnpm
-RUN printenv
-
-
-# Set working directory
-WORKDIR /app
-
-# Copy the built Next.js application, node_modules, and the entire source code
-COPY --from=build-stage /app/node_modules ./node_modules
-COPY --from=build-stage /app/.next ./.next
-COPY --from=build-stage /app/public ./public
-COPY --from=build-stage /app/package.json ./package.json
-COPY --from=build-stage /app/src ./src
-COPY --from=build-stage /app/next.config.js ./next.config.js
-COPY --from=build-stage /app/tsconfig.json ./tsconfig.json
-COPY --from=build-stage /app/tailwind.config.js ./tailwind.config.js
-RUN echo "NEXT_PUBLIC_BOT_USERNAME Deloy stage"  && echo $NEXT_PUBLIC_BOT_USERNAME
+# Stage : Production Stage
+FROM build-stage AS production
 # Expose the necessary port for mini-app (Next.js)
-EXPOSE $MINI_APP_PORT
 
+EXPOSE $MINI_APP_PORT
 # Default command for the Next.js app
 CMD  node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT
+
+# Stage : Development Stage
+FROM minimum-image AS development
+# Copy the entire project to be used in the build stages
+COPY . /app
+EXPOSE $MINI_APP_PORT
+# Set the working directory
+WORKDIR /app
+# Run the app in development mode
+CMD export NODE_ENV=development && pnpm install  && node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
+

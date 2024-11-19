@@ -1,5 +1,7 @@
 ##### this file is used to test the deploy script #####
 ### we will write temporary text here to trigger the deploy script ###
+d
+-
+dasd=s
+ss
 
-test of build
-fix gh login issue 1fdsasasdadssadsfsddadsc

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "dotenv -e ../.env -- cross-var   next dev --port %PORT_WEB_SITE% ",
+    "dev:server": "next dev",
     "build": "next build",
     "build:local": "dotenv -e ../.env -- next build",
     "start": "next start",
@@ -15,7 +16,8 @@
     "cross-env": "^7.0.3",
     "next": "14.2.5",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "sharp": "^0.33.5"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.15",

@@ -34,6 +34,7 @@ export const orders = pgTable(
     company: text("company").notNull(),
     position: text("position").notNull(),
     owner_address: text("owner_address").notNull(),
+    utm: text("utm"),
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
       mode: "date",

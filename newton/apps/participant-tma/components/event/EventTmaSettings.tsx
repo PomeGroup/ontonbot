@@ -11,18 +11,22 @@ import {
 } from "@tma.js/sdk-react";
 import { env } from "~/env.mjs";
 import { useEventData } from "~/hooks/queries/useEventData";
-import { useTonConnectModal, useTonWallet } from "@tonconnect/ui-react";
+import { useTonConnectModal, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
+import { RequestError } from "~/utils/custom-error";
+import { toast } from "@ui/base/sonner";
 
 type EventMainButtonProps = {
   eventId: string;
   requiresTicketToChekin: boolean;
   eventManagerRole: boolean;
+  utm: string | null;
 };
 
 const EventTmaSettings = ({
   eventId,
   requiresTicketToChekin,
   eventManagerRole,
+  utm,
 }: EventMainButtonProps) => {
   const mainButton = useMainButton(true);
   const backButton = useBackButton(true);
@@ -32,12 +36,21 @@ const EventTmaSettings = ({
   const router = useRouter();
   const wallet = useTonWallet()
   const tonConnectModal = useTonConnectModal()
+  const [tonConnectUi] = useTonConnectUI()
 
-  const { data: event, isLoading, isError, isSuccess } = useEventData(eventId);
+  const { data: event, isLoading, isError, isSuccess, error } = useEventData(eventId);
   const needsInfoUpdate = event?.needToUpdateTicket
 
+
   useEffect(() => {
-    if (isLoading || isError) return;
+    if (isError && error instanceof RequestError && error.name === 'REQUEST_401_ERROR') {
+      tonConnectUi.disconnect()
+      toast.error(error.message)
+    }
+  }, [isError])
+
+  useEffect(() => {
+    if (isLoading) return;
 
     const manageEventBtnOnClick = () => {
       tmaUtils?.openTelegramLink(
@@ -47,7 +60,7 @@ const EventTmaSettings = ({
 
     const goToTicketPage = () => router.push(`/ticket/${eventId}`);
     const goToUpdateInfoPage = () => router.push(`/event/${eventId}/claim-ticket`);
-    const mainBtnOnClick = () => router.push(`/event/${eventId}/buy-ticket`);
+    const mainBtnOnClick = () => router.push(`/event/${eventId}/buy-ticket${utm ? `?utm_source=telegram&utm_medium=notification&utm_campaign=${utm}` : ''}`);
     const openTonConnectModal = () => tonConnectModal.open();
 
     const setupMainButton = (
