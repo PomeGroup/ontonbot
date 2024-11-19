@@ -464,7 +464,7 @@ jobs:
 
           
           echo "Copying files to server..."
-          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops githubrunner@$ssh_ip:/home/tonont/$branch_name
+          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml .env docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops githubrunner@$ssh_ip:/home/tonont/$branch_name
           
           # Remove brackets and convert to space-separated string
           services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
@@ -532,7 +532,7 @@ jobs:
         if: always()
         run: |
           echo "Cleaning up environment variables script..."
-          rm -f .env
+          #rm -f .env
           echo "Environment variables script deleted successfully."
 
       - name: Send Telegram Message - Deployment Success
