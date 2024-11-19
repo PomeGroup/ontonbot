@@ -65,6 +65,7 @@ RUN apk add \
   curl \
   ca-certificates
 
+
 # Stage : Dependencies
 FROM base AS dependencies
 # Copy package files for dependency installation

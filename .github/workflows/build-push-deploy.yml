@@ -335,8 +335,10 @@ jobs:
     needs: [determine-services, build-and-push]
     if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
     permissions:
-      contents: read
+      contents: write
       packages: read
+      actions: write
+      id-token: write
 
     env:
       ALLMYSECRETS: ${{ toJSON(secrets) }}
@@ -358,7 +360,7 @@ jobs:
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Generate Environment Variables Script
+      - name: Generate Environment Variables .env File
         id: generate-env-script
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -379,18 +381,20 @@ jobs:
           
           # Parse the JSON and filter the variables with the appropriate prefix, removing the prefix when writing to the env file
           echo "$secrets_json" | jq -r --arg prefix "$prefix" \
-            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\(.value)"' >> $env_file
+            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\"\(.value)\""' >> $env_file
           
           echo "$vars_json" | jq -r --arg prefix "$prefix" \
-            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\(.value)"' >> $env_file
+            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\"\(.value)\""' >> $env_file
           
-          #Addd branch name as env also
-          echo "BRANCH_NAME=$branch_name" >> $env_file
-          #Add github repo as env also
-          echo "GITHUB_REPO=$github_repo" >> $env_file
+          # Add branch name as env also
+          echo "BRANCH_NAME=\"$branch_name\"" >> $env_file
+          # Add github repo as env also
+          echo "GITHUB_REPO=\"$github_repo\"" >> $env_file
           # Add the GitHub Container Registry PAT to the env file
-          echo "CR_PAT=${CR_PAT}" >> $env_file
-          echo "Generated environment variables script:"
+          echo "CR_PAT=\"${CR_PAT}\"" >> $env_file
+          
+          echo "Environment variables script generated successfully."
+ 
 
       - name: Set up SSH Environment Variables
         id: set-env-vars
@@ -430,6 +434,7 @@ jobs:
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          ls -la
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
           ssh_port="${SSH_PORT}"
@@ -446,7 +451,7 @@ jobs:
           # Use case-insensitive prefix matching for branch name
           # [[ "$branch_name" == "dev" ]] ||
           if [[ "$branch_name" == "sandbox" ]]; then
-            ssh -o StrictHostKeyChecking=no -p "$ssh_port" githubrunner@$ssh_ip  << EOF
+            ssh -o StrictHostKeyChecking=no -p "$ssh_port" tonont@$ssh_ip  << EOF
             mkdir -p /home/tonont/$branch_name
             mkdir -p /home/tonont/$branch_name/mini-app
             mkdir -p /home/tonont/$branch_name/mini-app-cron
@@ -457,19 +462,19 @@ jobs:
             mkdir -p /home/tonont/$branch_name/website
             EOF
           else
-            ssh -o StrictHostKeyChecking=no -p "$ssh_port" githubrunner@$ssh_ip << EOF
+            ssh -o StrictHostKeyChecking=no -p "$ssh_port" tonont@$ssh_ip << EOF
             mkdir -p /home/tonont/$branch_name
           EOF
           fi
 
           
           echo "Copying files to server..."
-          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops githubrunner@$ssh_ip:/home/tonont/$branch_name
+          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml .env docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops tonont@$ssh_ip:/home/tonont/$branch_name
           
           # Remove brackets and convert to space-separated string
           services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
           echo "Formatted services to build: $services"  # Debug output        
-          ssh -p "$ssh_port" -o StrictHostKeyChecking=no githubrunner@$ssh_ip << EOF
+          ssh -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
             echo "Loading environment variables..."
             cd /home/tonont/$branch_name
             source .env
@@ -480,7 +485,6 @@ jobs:
             
             
             echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            # Check if the login succeeded and show the contents of the Docker config
              
             echo "services to build: $services_to_build"
             # Remove the square brackets and split by comma
@@ -496,19 +500,28 @@ jobs:
             done
           EOF
           echo "Exporting all environment variables with branch-specific prefix..."
-          ssh  -p "$ssh_port" -o StrictHostKeyChecking=no githubrunner@$ssh_ip << EOF
+          ssh  -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
             echo "Listing files in branch directory..."        
             cd /home/tonont/$branch_name
-            echo "Exporting environment variables and deploying services..."
-            export \$(printenv | grep '^${branch_name^^}_' | xargs)
+            ls -la
+            echo "Sourcing .env file..."
+            set -o allexport
+            source .env
+            set +o allexport
             cd /home/tonont/$branch_name
             source /home/tonont/$branch_name/.env
-            echo "Logging into GitHub Container Registry with GHCR_PAT..."
-            echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+            echo "******Logging into GitHub Container Registry..."
+            if [ -z "$CR_PAT" ]; then
+              echo "CR_PAT is not set or is empty"; exit 1;
+            fi
+          
+          
+            echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             chmod +x devops/generate-caddyfile.sh
             chmod +x devops/minio-init.sh
             echo "Updating Docker node label for stage $branch_name..."
             docker node update --label-add stage.$branch_name=true ontonServer
+
 
             echo "Deploying Docker stack for $branch_name..."
             docker stack deploy -c docker-compose-server.yml $branch_name
@@ -527,7 +540,7 @@ jobs:
         if: always()
         run: |
           echo "Cleaning up environment variables script..."
-          rm -f .env
+          #rm -f .env
           echo "Environment variables script deleted successfully."
 
       - name: Send Telegram Message - Deployment Success
