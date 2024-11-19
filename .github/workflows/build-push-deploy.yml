@@ -38,9 +38,7 @@ jobs:
           echo "Determining services that have changed..."
           changed_files=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")
           echo "Changed files: $changed_files"
-
           declare -a services_to_build=()
-
           # Define service directory mappings
           declare -A service_dirs=(
             ["client-web"]="client-web-panel"
@@ -66,7 +64,7 @@ jobs:
           fi
           # Add 'giveaway-checker' if no services have changed
           if [ ${#services_to_build[@]} -eq 0 ]; then
-          echo "No services have changed, defaulting to 'giveaway-checker'."
+            echo "No services have changed, defaulting to 'giveaway-checker'."
           services_to_build+=("giveaway-checker")
           fi
           if [ ${#services_to_build[@]} -eq 0 ]; then
@@ -241,7 +239,6 @@ jobs:
             echo "Generated build args file with $(wc -l < "$BUILD_ARGS_FILE") variables"
             echo "Dockerfile path: $dockerfile_path"
             echo "Build context: $build_context"
-            cat $BUILD_ARGS_FILE
             # Create Docker build command with proper escaping
             DOCKER_CMD="docker buildx build --push "
 
@@ -267,7 +264,7 @@ jobs:
             DOCKER_CMD+=" -t \"$tag_commit\""
             DOCKER_CMD+=" -t \"$tag_latest\""
             DOCKER_CMD+=" \"$build_context\""
-            echo "here is the docker command::: $DOCKER_CMD"
+
           
             # Execute build
             echo "Starting docker build..."
@@ -405,21 +402,20 @@ jobs:
           # Use case-insensitive prefix matching for branch name
           if [[ "$branch_name" == "dev" ]]; then
             echo "SSH_IP=${{ secrets.SSH_DEV_IP }}" >> $GITHUB_ENV
+            echo "SSH_PORT=${{ secrets.SSH_DEV_PORT }}" >> $GITHUB_ENV
           elif [[ "$branch_name" == "staging" ]]; then
             echo "SSH_IP=${{ secrets.SSH_STAGE_IP }}" >> $GITHUB_ENV
+            echo "SSH_PORT=${{ secrets.SSH_STAGE_PORT }}" >> $GITHUB_ENV
           elif [[ "$branch_name" == "sandbox" ]]; then
             echo "SSH_IP=${{ secrets.SSH_SANDBOX_IP }}" >> $GITHUB_ENV
+            echo "SSH_PORT=${{ secrets.SSH_SANDBOX_PORT }}" >> $GITHUB_ENV
+          elif [[ "$branch_name" == "main" ]]; then
+            echo "SSH_IP=${{ secrets.SSH_SANDBOX_PORT }}" >> $GITHUB_ENV
+            echo "SSH_PORT=${{ secrets.SSH_SANDBOX_PORT }}" >> $GITHUB_ENV
           else
             echo "Error: Unknown branch name, unable to set SSH credentials."
             exit 1
           fi
-      - name: Debugging SSH Setup
-        run: |
-          echo "SSH environment variables set."
-          echo "SSH_IP: ${SSH_IP}"
-          echo "Checking if SSH key is added to the agent..."
-          ssh-add -l
-
       - name: Authenticate to GitHub Container Registry on Remote Server
         run: |
           echo "Authenticating to GitHub Container Registry..."
@@ -435,6 +431,7 @@ jobs:
         run: |
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
+          ssh_port="${SSH_PORT}"
           services_to_build=${{ needs.determine-services.outputs.services_to_build }}   
           echo "changed services: $services_to_build"
           echo "Deploying services to branch: $branch_name"
@@ -448,31 +445,30 @@ jobs:
           # Use case-insensitive prefix matching for branch name
           # [[ "$branch_name" == "dev" ]] ||
           if [[ "$branch_name" == "sandbox" ]]; then
-          ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
-          mkdir -p /home/onton/$branch_name
-          mkdir -p /home/onton/$branch_name/mini-app
-          mkdir -p /home/onton/$branch_name/mini-app-cron
-          mkdir -p /home/onton/$branch_name/telegram-bot
-          mkdir -p /home/onton/$branch_name/client-web
-          mkdir -p /home/onton/$branch_name/participant-tma
-          mkdir -p /home/onton/$branch_name/nft-microservice
-          mkdir -p /home/onton/$branch_name/website
-          EOF
+            ssh -o StrictHostKeyChecking=no -p "$ssh_port" root@$ssh_ip  << EOF
+            mkdir -p /home/onton/$branch_name
+            mkdir -p /home/onton/$branch_name/mini-app
+            mkdir -p /home/onton/$branch_name/mini-app-cron
+            mkdir -p /home/onton/$branch_name/telegram-bot
+            mkdir -p /home/onton/$branch_name/client-web
+            mkdir -p /home/onton/$branch_name/participant-tma
+            mkdir -p /home/onton/$branch_name/nft-microservice
+            mkdir -p /home/onton/$branch_name/website
+            EOF
           else
-          ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
-          mkdir -p /home/onton/$branch_name
+            ssh -o StrictHostKeyChecking=no -p "$ssh_port" root@$ssh_ip << EOF
+            mkdir -p /home/onton/$branch_name
           EOF
           fi
 
           
           echo "Copying files to server..."
-          scp -r -o StrictHostKeyChecking=no docker-compose-server.yml docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops root@$ssh_ip:/home/onton/$branch_name
-
+          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops root@$ssh_ip:/home/onton/$branch_name
           
           # Remove brackets and convert to space-separated string
           services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
           echo "Formatted services to build: $services"  # Debug output        
-          ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
+          ssh -p "$ssh_port" -o StrictHostKeyChecking=no root@$ssh_ip << EOF
             echo "Loading environment variables..."
             cd /home/onton/$branch_name
             source .env
@@ -500,11 +496,23 @@ jobs:
             export \$(printenv | grep '^${branch_name^^}_' | xargs)
             cd /home/onton/$branch_name
             source /home/onton/$branch_name/.env
-            #echo "Logging into GitHub Container Registry with GHCR_PAT..."
-            #echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+            echo "Logging into GitHub Container Registry with GHCR_PAT..."
+            echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
             chmod +x devops/generate-caddyfile.sh
             chmod +x devops/minio-init.sh
-            docker compose  -f docker-compose-server.yml --env-file .env --profile full up -d
+            echo "Updating Docker node label for stage $branch_name..."
+            docker node update --label-add stage.$branch_name=true ontonServer
+
+            echo "Deploying Docker stack for $branch_name..."
+            docker stack deploy -c docker-compose-server-server.yml $branch_name
+
+            echo "Forcing update of services..."
+            services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
+            for service in \$services; do
+              echo "Updating service: \$service"
+              docker service update --force \$branch_name\_\$service || echo "Failed to update service \$service"
+            done
+          
           EOF
 
           echo "Services deployed successfully."

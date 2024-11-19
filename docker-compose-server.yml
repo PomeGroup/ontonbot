@@ -78,7 +78,7 @@ services:
     build:
       context: ./devops/caddy
       dockerfile: Dockerfile
-    container_name: ${ENV}-caddy
+#    container_name: ${ENV}-caddy
     restart: unless-stopped
     profiles:
       - front-end-development
@@ -106,7 +106,7 @@ services:
 
   minio:
     hostname: minio
-    container_name: ${STAGE_NAME}-minio
+#    container_name: ${STAGE_NAME}-minio
     image: minio/minio
     restart: unless-stopped
     profiles:
@@ -126,7 +126,7 @@ services:
 
   postgres:
     hostname: postgres
-    container_name : ${STAGE_NAME}-postgres
+#    container_name : ${STAGE_NAME}-postgres
     image: postgres:16.3-alpine3.20
     restart: unless-stopped
     profiles:
@@ -145,7 +145,7 @@ services:
   redis:
     image: redis:7.4.1-bookworm
     hostname: redis
-    container_name: ${STAGE_NAME}-redis
+#    container_name: ${STAGE_NAME}-redis
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -164,7 +164,7 @@ services:
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
-    container_name: ${STAGE_NAME}-clamav
+#    container_name: ${STAGE_NAME}-clamav
     profiles:
       - front-end-development
       - manual-apps
@@ -181,7 +181,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: ${STAGE_NAME}-pgadmin
+#    container_name: ${STAGE_NAME}-pgadmin
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
@@ -202,7 +202,7 @@ services:
       - pgadmin:/var/lib/pgadmin
 
   telegram-bot:
-    container_name: ${STAGE_NAME}-telegram-bot
+#    container_name: ${STAGE_NAME}-telegram-bot
     image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
     pull_policy: build
     restart: "unless-stopped"
@@ -220,7 +220,7 @@ services:
 
   mini-app:
     hostname: mini-app
-    container_name: ${STAGE_NAME}-mini-app
+#    container_name: ${STAGE_NAME}-mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     profiles:
       - full
@@ -240,7 +240,7 @@ services:
 
   mini-app-cron:
     hostname: mini-app
-    container_name: ${STAGE_NAME}-mini-app-cron
+#    container_name: ${STAGE_NAME}-mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     pull_policy: build
     restart: "unless-stopped"
@@ -262,7 +262,7 @@ services:
 
   participant-tma:
     hostname: participant-tma
-    container_name: ${STAGE_NAME}-participant-tma
+#    container_name: ${STAGE_NAME}-participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
     pull_policy: build
     <<: *default-extra-hosts
@@ -277,7 +277,7 @@ services:
 
   nft-microservice:
     hostname: nft-service
-    container_name : ${STAGE_NAME}-nft-service
+#    container_name : ${STAGE_NAME}-nft-service
     image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
     pull_policy: build
     restart: unless-stopped
@@ -293,7 +293,7 @@ services:
         ipv4_address: "${IP_NFT_MANAGER}"
 
   giveaway-checker:
-    container_name: ${STAGE_NAME}-giveaway-checker
+#    container_name: ${STAGE_NAME}-giveaway-checker
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
     restart: unless-stopped
     profiles:
@@ -308,7 +308,7 @@ services:
 
   website:
     hostname: website
-    container_name: ${STAGE_NAME}-website
+#    container_name: ${STAGE_NAME}-website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
     pull_policy: build
     restart: "unless-stopped"
@@ -323,7 +323,7 @@ services:
         ipv4_address: ${IP_WEBSITE}
 
   golang-server:
-    container_name: ${STAGE_NAME}-golang-server
+#    container_name: ${STAGE_NAME}-golang-server
     image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
     restart: unless-stopped
     profiles:
@@ -338,7 +338,7 @@ services:
         ipv4_address: ${IP_GOLANG_SERVER}
 
   golang-worker:
-    container_name: ${STAGE_NAME}-golang-worker
+#    container_name: ${STAGE_NAME}-golang-worker
     image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
     restart: unless-stopped
     profiles:
@@ -355,7 +355,7 @@ services:
   metabase:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
-    container_name: ${STAGE_NAME}-metabase
+#    container_name: ${STAGE_NAME}-metabase
     restart: unless-stopped
     profiles:
       - full
@@ -383,7 +383,7 @@ services:
 
   client-web:
     hostname: client-web
-    container_name: ${STAGE_NAME}-client-web
+#    container_name: ${STAGE_NAME}-client-web
     <<: *default-extra-hosts
     profiles:
       - full
