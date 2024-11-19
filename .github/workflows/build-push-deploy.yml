@@ -472,8 +472,8 @@ jobs:
             echo "Loading environment variables..."
             cd /home/tonont/$branch_name
             source .env
-            #echo "******Logging into GitHub Container Registry..."
-            #echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "******Logging into GitHub Container Registry..."
+            echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             echo "Pulling latest images of changed services..."
             echo "services to build: $services_to_build"
             # Remove the square brackets and split by comma
