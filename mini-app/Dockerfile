@@ -75,7 +75,7 @@ COPY ./package.json  /app/
 WORKDIR /app
 # Install production dependencies only
 RUN pnpm install --pnpm
-
+RUN  pnpm install --prod
 
 # Stage : With Files
 FROM dependencies AS with-files
