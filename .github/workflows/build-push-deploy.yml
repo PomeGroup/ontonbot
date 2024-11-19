@@ -502,8 +502,11 @@ jobs:
           ssh  -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
             echo "Listing files in branch directory..."        
             cd /home/tonont/$branch_name
-            echo "Exporting environment variables and deploying services..."
-            export \$(printenv | grep '^${branch_name^^}_' | xargs)
+            ls -la
+            echo "Sourcing .env file..."
+            set -o allexport
+            source .env
+            set +o allexport
             cd /home/tonont/$branch_name
             source /home/tonont/$branch_name/.env
             echo "******Logging into GitHub Container Registry..."
