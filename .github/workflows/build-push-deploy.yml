@@ -338,6 +338,7 @@ jobs:
       contents: read
       id-token: write
       actions: write
+      packages: read
 
     env:
       ALLMYSECRETS: ${{ toJSON(secrets) }}
