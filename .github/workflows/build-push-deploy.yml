@@ -514,6 +514,7 @@ jobs:
             echo "Updating Docker node label for stage $branch_name..."
             docker node update --label-add stage.$branch_name=true ontonServer
 
+
             echo "Deploying Docker stack for $branch_name..."
             docker stack deploy -c docker-compose-server.yml $branch_name
 
