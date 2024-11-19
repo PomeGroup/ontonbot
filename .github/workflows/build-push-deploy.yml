@@ -445,7 +445,7 @@ jobs:
           # Use case-insensitive prefix matching for branch name
           # [[ "$branch_name" == "dev" ]] ||
           if [[ "$branch_name" == "sandbox" ]]; then
-            ssh -o StrictHostKeyChecking=no -p "$ssh_port" root@$ssh_ip  << EOF
+            ssh -o StrictHostKeyChecking=no -p "$ssh_port" githubrunner@$ssh_ip  << EOF
             mkdir -p /home/onton/$branch_name
             mkdir -p /home/onton/$branch_name/mini-app
             mkdir -p /home/onton/$branch_name/mini-app-cron
@@ -456,19 +456,19 @@ jobs:
             mkdir -p /home/onton/$branch_name/website
             EOF
           else
-            ssh -o StrictHostKeyChecking=no -p "$ssh_port" root@$ssh_ip << EOF
+            ssh -o StrictHostKeyChecking=no -p "$ssh_port" githubrunner@$ssh_ip << EOF
             mkdir -p /home/onton/$branch_name
           EOF
           fi
 
           
           echo "Copying files to server..."
-          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops root@$ssh_ip:/home/onton/$branch_name
+          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops githubrunner@$ssh_ip:/home/onton/$branch_name
           
           # Remove brackets and convert to space-separated string
           services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
           echo "Formatted services to build: $services"  # Debug output        
-          ssh -p "$ssh_port" -o StrictHostKeyChecking=no root@$ssh_ip << EOF
+          ssh -p "$ssh_port" -o StrictHostKeyChecking=no githubrunner@$ssh_ip << EOF
             echo "Loading environment variables..."
             cd /home/onton/$branch_name
             source .env
@@ -489,7 +489,7 @@ jobs:
             done
           EOF
           echo "Exporting all environment variables with branch-specific prefix..."
-          ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
+          ssh -o StrictHostKeyChecking=no githubrunner@$ssh_ip << EOF
             echo "Listing files in branch directory..."        
             cd /home/onton/$branch_name
             echo "Exporting environment variables and deploying services..."
