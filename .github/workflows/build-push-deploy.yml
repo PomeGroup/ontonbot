@@ -392,8 +392,8 @@ jobs:
           echo "GITHUB_REPO=$github_repo" >> $env_file
           # Add the GitHub Container Registry PAT to the env file
           echo "CR_PAT=${CR_PAT}" >> $env_file
-          echo "Generated environment variables script:"
-            cat $env_file
+ 
+
       - name: Set up SSH Environment Variables
         id: set-env-vars
         run: |
@@ -432,6 +432,7 @@ jobs:
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cat $env_file
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
           ssh_port="${SSH_PORT}"
