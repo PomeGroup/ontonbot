@@ -218,7 +218,6 @@ services:
 
   mini-app:
     hostname: mini-app
-#    container_name: ${STAGE_NAME}-mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     profiles:
       - full
@@ -230,6 +229,9 @@ services:
     depends_on:
       - postgres
       - redis
+      - caddy
+      - minio
+      - nft-microservice
     volumes:
       - drizzle_data:/app/drizzle
     networks:
@@ -237,7 +239,7 @@ services:
         ipv4_address: ${IP_MINI_APP}
 
   mini-app-cron:
-    hostname: mini-app
+    hostname: mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     restart: "unless-stopped"
     profiles:
@@ -249,6 +251,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - minio
     volumes:
       - drizzle_data_cron:/app/drizzle
     networks:
@@ -263,6 +266,9 @@ services:
     profiles:
       - full
     restart: "unless-stopped"
+    depends_on:
+      - mini-app
+      - caddy
     environment:
         <<: *common-env
     networks:
@@ -273,6 +279,12 @@ services:
     hostname: nft-service
     image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
     restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - caddy
+      - mini-app
     profiles:
       - front-end-development
       - manual-apps
@@ -285,7 +297,6 @@ services:
         ipv4_address: "${IP_NFT_MANAGER}"
 
   giveaway-checker:
-#    container_name: ${STAGE_NAME}-giveaway-checker
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
     restart: unless-stopped
     profiles:
@@ -304,8 +315,8 @@ services:
     restart: "unless-stopped"
     profiles:
       - full
-#    depends_on:
-#     - caddy
+    depends_on:
+     - caddy
     environment:
         <<: *common-env
     networks:
@@ -313,7 +324,6 @@ services:
         ipv4_address: ${IP_WEBSITE}
 
   golang-server:
-#    container_name: ${STAGE_NAME}-golang-server
     image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
     restart: unless-stopped
     profiles:
@@ -328,7 +338,6 @@ services:
         ipv4_address: ${IP_GOLANG_SERVER}
 
   golang-worker:
-#    container_name: ${STAGE_NAME}-golang-worker
     image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
     restart: unless-stopped
     profiles:
@@ -336,6 +345,7 @@ services:
       - full
     depends_on:
       - redis
+      - golang-server
     environment:
         <<: *common-env
     networks:
@@ -365,6 +375,7 @@ services:
         ipv4_address: ${IP_METABASE}
     depends_on:
       - postgres
+      - caddy
     healthcheck:
       test: curl --fail -I http://localhost:3000/api/health || exit 1
       interval: 15s
@@ -386,8 +397,8 @@ services:
       CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
       CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
       PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
-#    depends_on:
-#      - caddy
+    depends_on:
+      - caddy
     networks:
       onton-network:
         ipv4_address: ${IP_CLIENT_WEB}
