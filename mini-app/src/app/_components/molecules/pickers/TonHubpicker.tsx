@@ -25,10 +25,10 @@ const TonHubPicker: FC<{
     }
   }, [hubsResponse.status]);
 
-  function onHubChange(id: string) {
-    const hub = hubs.find((hub) => hub.id === id)!;
+  const onHubChange = (e: any) => {
+    const hub = hubs.find((hub) => hub.id === e.target.value)!;
     onValueChange(hub);
-  }
+  };
 
   return (
     <ListInput
@@ -36,6 +36,7 @@ const TonHubPicker: FC<{
       placeholder="Select TON Hub"
       label="TON Hub"
       dropdown
+      name="hub"
       type="select"
       value={value?.id}
       onChange={onHubChange}

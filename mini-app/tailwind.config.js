@@ -1,4 +1,4 @@
-const konstaConfig = require('konsta/config');
+const konstaConfig = require("konsta/config");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = konstaConfig({
@@ -11,6 +11,9 @@ module.exports = konstaConfig({
   ],
   prefix: "",
   theme: {
+    fontFamily: {
+      ios: "-apple-system, Roboto ,SF Pro Text, SF UI Text, system-ui, Helvetica Neue, Helvetica, Arial, sans-serif",
+    },
     container: {
       center: true,
       padding: "2rem",

@@ -25,7 +25,6 @@ export const GeneralStep = () => {
     if (!formRef.current) return;
 
     const formData = new FormData(formRef.current);
-    formData.append("hub", eventData?.society_hub?.id || "");
     formData.append("image_url", eventData?.image_url || "");
 
     const formDataObject = Object.fromEntries(formData.entries());
@@ -52,10 +51,7 @@ export const GeneralStep = () => {
       return;
     }
 
-    setEventData({
-      ...eventData,
-      ...formDataParsed.data,
-    });
+    setEventData(formDataParsed.data);
     clearGeneralErrors();
     setCurrentStep(2);
   };

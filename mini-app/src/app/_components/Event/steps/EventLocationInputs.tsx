@@ -33,6 +33,7 @@ const EventLocationManager = () => {
         <ListInput
           outline
           label="URL"
+          placeholder={"https://example.com"}
           name="location"
           error={errors?.location?.[0]}
           defaultValue={eventData?.location}
@@ -42,6 +43,7 @@ const EventLocationManager = () => {
       {eventData?.eventLocationType === "in_person" && (
         <ListInput
           outline
+          placeholder={"Room 123, Building 456"}
           label="Address"
           name="location"
           error={errors?.location?.[0]}

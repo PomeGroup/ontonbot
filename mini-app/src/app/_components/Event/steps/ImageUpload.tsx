@@ -1,5 +1,6 @@
 import { UploadImageFile } from "@/components/ui/upload-file";
 import { useCreateEventStore } from "@/zustand/createEventStore";
+import { Block } from "konsta/react";
 
 export const ImageUpload = ({
   isError,
@@ -17,14 +18,16 @@ export const ImageUpload = ({
   };
 
   return (
-    <UploadImageFile
-      triggerText="Upload Event Image"
-      drawerDescriptionText="Upload your event's poster from your device"
-      infoText="Image must be in 1:1 ratio"
-      changeText="Change Image"
-      isError={isError}
-      onDone={handleImageChange}
-      defaultImage={eventData?.image_url}
-    />
+    <Block>
+      <UploadImageFile
+        triggerText="Upload Event Image"
+        drawerDescriptionText="Upload your event's poster from your device"
+        infoText="Image must be in 1:1 ratio"
+        changeText="Change Image"
+        isError={isError}
+        onDone={handleImageChange}
+        defaultImage={eventData?.image_url}
+      />
+    </Block>
   );
 };

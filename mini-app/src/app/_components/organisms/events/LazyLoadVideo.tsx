@@ -47,7 +47,7 @@ const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({
           loop
           muted
           playsInline
-          className="w-full bg-gray-600"
+          className="w-full bg-gray-600 rounded-lg"
           style={{ pointerEvents: "none" }}
         />
       ) : (
@@ -66,7 +66,7 @@ const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({
             src={coverImage}
             alt={`${hubName} cover`}
             fill
-            className={`object-cover transition-opacity duration-500 ${
+            className={`object-cover rounded-lg transition-opacity duration-500 ${
               isLoading ? "opacity-0" : "opacity-100"
             }`}
             onLoadingComplete={() => setIsLoading(false)}

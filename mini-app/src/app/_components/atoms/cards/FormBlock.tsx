@@ -14,7 +14,7 @@ const FormBlock = ({
       <Block
         inset
         strong
-        title="Basic"
+        title={title}
         className="!p-0"
       >
         <List margin="!my-1">{children}</List>

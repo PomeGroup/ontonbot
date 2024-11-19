@@ -3,18 +3,10 @@ import useWebApp from "@/hooks/useWebApp";
 import { getErrorMessages } from "@/lib/error";
 import { cn, fileToBase64 } from "@/lib/utils";
 import { CircleArrowUp } from "lucide-react";
-import React, { useRef, useState } from "react";
-import { Button } from "./button";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "./drawer";
+import React, { useEffect, useRef, useState } from "react";
+import { Button, KButton } from "./button";
+import { Block, BlockTitle, Sheet } from "konsta/react";
+import { createPortal } from "react-dom";
 
 type UploadFileProps = {
   triggerText: React.ReactNode;
@@ -33,6 +25,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
   const [videoPreview, setVideoPreview] = useState<string | undefined>(
     props.defaultVideo
   );
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const uploadVideo = trpc.files.uploadVideo.useMutation({
     onSuccess: (data) => {
@@ -114,144 +107,142 @@ export const UploadVideoFile = (props: UploadFileProps) => {
     }
   };
 
+  useEffect(() => {
+    if (isSheetOpen) {
+      webApp?.MainButton.hide();
+    } else {
+      webApp?.MainButton.show();
+    }
+  }, [isSheetOpen]);
+
   return (
-    <Drawer
-      onOpenChange={(open) => {
-        if (open) {
-          webApp?.MainButton.hide();
-        } else {
-          webApp?.MainButton.show();
-        }
-        try {
-          webApp?.HapticFeedback.impactOccurred("medium");
-        } catch (error) {}
-      }}
-    >
-      <DrawerTrigger asChild>
-        <Button
-          className={cn(
-            "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
-            props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
-          )}
-          onClick={() => {
-            if (webApp?.platform === "ios") {
-              // fix for ios
-              window.scrollTo({ top: 0, behavior: "instant" });
-            }
-          }}
-          variant={props.isError ? "destructive" : "outline"}
+    <>
+      <Button
+        className={cn(
+          "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
+          props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
+        )}
+        onClick={() => setIsSheetOpen(true)}
+        type="button"
+        variant={props.isError ? "destructive" : "outline"}
+      >
+        {videoPreview ? (
+          <div className="flex gap-4 items-center justify-start w-full">
+            <video
+              key={videoPreview}
+              width="80"
+              height="80"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="rounded-xl"
+            >
+              <source
+                src={videoPreview}
+                type="video/mp4"
+              />
+            </video>
+            <p className="font-semibold flex items-center gap-2 text-lg">
+              <CircleArrowUp className="w-5" />
+              {props.changeText}
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="font-semibold flex items-center gap-2 text-lg">
+              <CircleArrowUp className="w-5" />
+              {props.triggerText}
+            </p>
+            {props.infoText && (
+              <p className="text-muted-foreground text-sm w-full text-balance">
+                {props.infoText}
+              </p>
+            )}
+          </>
+        )}
+      </Button>
+      {createPortal(
+        <Sheet
+          opened={isSheetOpen}
+          onBackdropClick={() => setIsSheetOpen(false)}
+          className="w-full"
         >
-          {videoPreview ? (
-            <div className="flex gap-4 items-center justify-start w-full">
+          <BlockTitle>Upload Video</BlockTitle>
+          <Block className="space-y-2">
+            {!videoPreview && (
+              <p>
+                {props.drawerDescriptionText ||
+                  "Upload an MP4 video from your device (max 5 MB)"}
+              </p>
+            )}
+            {videoPreview && (
               <video
                 key={videoPreview}
-                width="80"
-                height="80"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="rounded-xl"
+                controls
+                width="100"
+                height="100"
+                className="w-full h-auto"
               >
                 <source
                   src={videoPreview}
                   type="video/mp4"
                 />
               </video>
-              <p className="font-semibold flex items-center gap-2 text-lg">
-                <CircleArrowUp className="w-5" />
-                {props.changeText}
-              </p>
-            </div>
-          ) : (
-            <>
-              <p className="font-semibold flex items-center gap-2 text-lg">
-                <CircleArrowUp className="w-5" />
-                {props.triggerText}
-              </p>
-              {props.infoText && (
-                <p className="text-muted-foreground text-sm w-full text-balance">
-                  {props.infoText}
-                </p>
-              )}
-            </>
-          )}
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Upload Video</DrawerTitle>
-          {!videoPreview && (
-            <DrawerDescription>
-              {props.drawerDescriptionText ||
-                "Upload an MP4 video from your device (max 5 MB)"}
-            </DrawerDescription>
-          )}
-        </DrawerHeader>
-        {videoPreview && (
-          <video
-            key={videoPreview}
-            controls
-            width="100"
-            height="100"
-            className="w-full h-auto"
-          >
-            <source
-              src={videoPreview}
-              type="video/mp4"
-            />
-          </video>
-        )}
-        {uploadVideo.error && (
-          <div className="text-red-500 text-sm w-full text-balance mt-2">
-            {getErrorMessages(uploadVideo.error.message).map(
-              (errMessage, idx: number) => (
-                <p key={idx}>{errMessage}</p>
-              )
             )}
-          </div>
-        )}
-        <DrawerFooter>
-          <input
-            ref={videoInputRef}
-            type="file"
-            name="video"
-            accept="video/mp4"
-            onChange={(e) => {
-              e.preventDefault();
-              handleSubmit();
-            }}
-            id="event_video_input"
-            className="hidden"
-          />
-          <Button
-            type="button"
-            className="w-full h-12.5 flex items-center gap-2"
-            onClick={(e) => {
-              e.preventDefault();
-              videoInputRef.current?.click();
-            }}
-            isLoading={uploadVideo.isLoading}
-          >
-            <CircleArrowUp className="w-5" />
-            <span>{videoPreview ? "Change Video" : "Upload Video"}</span>
-          </Button>
-          {videoPreview && (
-            <DrawerClose asChild>
-              <Button
+            {uploadVideo.error && (
+              <div className="text-red-500 text-sm w-full text-balance mt-2">
+                {getErrorMessages(uploadVideo.error.message).map(
+                  (errMessage, idx: number) => (
+                    <p key={idx}>{errMessage}</p>
+                  )
+                )}
+              </div>
+            )}
+            <input
+              ref={videoInputRef}
+              type="file"
+              name="video"
+              accept="video/mp4"
+              onChange={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              id="event_video_input"
+              className="hidden"
+            />
+            <KButton
+              itemType="button"
+              clear
+              className="w-full h-12.5 flex items-center gap-2"
+              disabled={uploadVideo.isLoading}
+              onClick={(e) => {
+                e.preventDefault();
+                // click on upload input
+                videoInputRef.current?.click();
+              }}
+            >
+              <CircleArrowUp className="w-5" />
+              <span>{videoPreview ? "Change Video" : "Upload Video"}</span>
+            </KButton>
+            {videoPreview && (
+              <KButton
                 className="w-16 h-10 mx-auto rounded-full mt-4"
-                variant="secondary"
-                onClick={() =>
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsSheetOpen(false);
                   typeof props?.onDone === "function" &&
-                  props.onDone(videoPreview)
-                }
+                    props.onDone(videoPreview);
+                }}
+                itemType="button"
               >
                 Done
-              </Button>
-            </DrawerClose>
-          )}
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+              </KButton>
+            )}
+          </Block>
+        </Sheet>,
+        document.body
+      )}
+    </>
   );
 };

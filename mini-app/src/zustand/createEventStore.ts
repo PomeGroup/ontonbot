@@ -1,5 +1,6 @@
 import {
   GeneralFormErrors,
+  RewardFormErrors,
   TimePlaceFormErorrs,
 } from "@/app/_components/Event/steps/types";
 import { EventDataSchemaAllOptional } from "@/types";
@@ -27,18 +28,27 @@ export type CreateEventStoreType = {
   setGeneralStepErrors: (_: GeneralFormErrors) => void;
   setTimePlaceStepErrors: (_: TimePlaceFormErorrs) => void;
   clearGeneralStepErrors: () => void;
+  rewardStepErrors?: RewardFormErrors;
+  setRewardStepErrors: (_: RewardFormErrors) => void;
+  clearRewardStepErrors: () => void;
   clearTimePlaceStepErrors: () => void;
+  resetReward: () => void;
+};
+
+const defaultState = {
+  event: {
+    dynamic_fields: [],
+    owner: 0,
+    type: 0,
+    hasEnded: true,
+  },
+  step: 1,
 };
 
 export const useCreateEventStore = create(
   devtools<CreateEventStoreType>((set) => ({
-    currentStep: 1,
-    eventData: {
-      dynamic_fields: [],
-      owner: 0,
-      type: 0,
-      hasEnded: true,
-    },
+    currentStep: defaultState.step,
+    eventData: defaultState.event,
     clearImageErrors: () => {
       set((state) => ({
         ...state,
@@ -57,6 +67,12 @@ export const useCreateEventStore = create(
         timeplaceStepErrors: errors,
       }));
     },
+    setRewardStepErrors: (errors) => {
+      set((state) => ({
+        ...state,
+        rewardStepErrors: errors,
+      }));
+    },
     clearGeneralStepErrors: () => {
       set((state) => {
         return {
@@ -72,6 +88,12 @@ export const useCreateEventStore = create(
           timeplaceStepErrors: {},
         };
       });
+    },
+    clearRewardStepErrors: () => {
+      set((state) => ({
+        ...state,
+        rewardStepErrors: {},
+      }));
     },
     setCurrentStep: (step: number) =>
       set((state) => ({ ...state, currentStep: step })),
@@ -95,9 +117,20 @@ export const useCreateEventStore = create(
 
     resetState: () => {
       set(() => ({
-        currentStep: 1,
-        eventData: { dynamic_fields: [], type: 0, owner: 0, hasEnded: true },
+        currentStep: defaultState.step,
+        eventData: defaultState.event,
         edit: {},
+      }));
+    },
+    resetReward: () => {
+      set((state) => ({
+        ...state,
+        eventData: {
+          hasEnded: true,
+          ...state.eventData,
+          video_url: "",
+          ts_reward_url: "",
+        },
       }));
     },
   }))

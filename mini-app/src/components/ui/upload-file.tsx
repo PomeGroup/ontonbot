@@ -6,7 +6,7 @@ import { CircleArrowUp } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { Button, KButton } from "./button";
-import { Block, BlockTitle, Card, Sheet } from "konsta/react";
+import { Block, BlockTitle, Sheet } from "konsta/react";
 import { createPortal } from "react-dom";
 
 /**
@@ -105,7 +105,7 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
   };
 
   return (
-    <Card>
+    <>
       <Button
         className={cn(
           "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
@@ -191,9 +191,11 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
             <KButton
               itemType="button"
               clear
+              disabled={uploadImage.isLoading}
               className="flex items-center gap-2"
               onClick={(e) => {
                 e.preventDefault();
+                // click on upload input
                 imageInputRef.current?.click();
               }}
             >
@@ -217,6 +219,6 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
         </Sheet>,
         document.body
       )}
-    </Card>
+    </>
   );
 };

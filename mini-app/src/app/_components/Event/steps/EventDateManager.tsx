@@ -6,6 +6,7 @@ import EventDateInput from "./EventDateInput";
 
 export const EventDateManager = () => {
   const eventData = useCreateEventStore((state) => state.eventData);
+  const editOptions = useCreateEventStore((state) => state.edit);
   const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
 
   const [startDate, setStartDate] = useState<string>("");
@@ -33,6 +34,8 @@ export const EventDateManager = () => {
     }
   }, [eventData?.start_date, eventData?.end_date]);
 
+  const eventEnded = Boolean(editOptions?.eventHash && eventData?.hasEnded);
+
   useEffect(() => {
     if (startDate && endDate) {
       const durationInSeconds =
@@ -43,7 +46,7 @@ export const EventDateManager = () => {
 
   return (
     <>
-      {eventData?.hasEnded && (
+      {eventEnded && (
         <>
           <BlockTitle className="text-red-500">Event is Ended</BlockTitle>
           <Block margin="-mb-3 mt-8">
@@ -59,14 +62,14 @@ export const EventDateManager = () => {
           date={startDate}
           setDate={setStartDate}
           error={errors?.start_date?.[0]}
-          disabled={eventData?.hasEnded}
+          disabled={eventEnded}
         />
         <EventDateInput
           isStart={false}
           date={endDate}
           setDate={setEndDate}
           error={errors?.end_date?.[0]}
-          disabled={eventData?.hasEnded}
+          disabled={eventEnded}
         />
         <ListItem
           title="Duration"

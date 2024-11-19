@@ -15,3 +15,9 @@ export type TimePlaceFormErorrs = {
   cityId?: string[];
   countryId?: string[];
 };
+
+export type RewardFormErrors = {
+  secret_phrase?: string[];
+  ts_reward_url?: string[];
+  video_url?: string[];
+};

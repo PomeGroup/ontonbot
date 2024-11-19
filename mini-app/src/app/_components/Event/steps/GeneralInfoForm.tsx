@@ -2,8 +2,7 @@
 import TonHubPicker from "@/app/_components/molecules/pickers/TonHubpicker";
 import { ImageUpload } from "@/app/_components/Event/steps/ImageUpload";
 import { useCreateEventStore } from "@/zustand/createEventStore";
-import { Toggle } from "@/components/ui/switch";
-import { ListInput, ListItem } from "konsta/react";
+import { ListInput } from "konsta/react";
 import FormBlock from "../../atoms/cards/FormBlock";
 
 export const EventGeneralInfoFormFields = () => {
@@ -57,18 +56,18 @@ export const EventGeneralInfoFormFields = () => {
           defaultValue={eventData?.description}
         />
       </FormBlock>
-      <FormBlock title="Registration">
-        <ListItem
-          label
-          title="Enable User Registration"
-          after={
-            <Toggle
-              component="div"
-              className="-my-1"
-            />
-          }
-        />
-      </FormBlock>
+      {/* <FormBlock title="Registration"> */}
+      {/*   <ListItem */}
+      {/*     label */}
+      {/*     title="Enable User Registration" */}
+      {/*     after={ */}
+      {/*       <Toggle */}
+      {/*         component="div" */}
+      {/*         className="-my-1" */}
+      {/*       /> */}
+      {/*     } */}
+      {/*   /> */}
+      {/* </FormBlock> */}
     </>
   );
 };
