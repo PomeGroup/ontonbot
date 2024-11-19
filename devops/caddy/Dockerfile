@@ -6,3 +6,4 @@ RUN xcaddy build \
 # Stage 2: Copy the built Caddy binary to a new Caddy image
 FROM caddy:latest AS production
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+
