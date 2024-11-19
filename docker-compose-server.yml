@@ -155,7 +155,6 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
-#    container_name: ${STAGE_NAME}-pgadmin
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
@@ -195,7 +194,6 @@ services:
       - redis
       - caddy
       - minio
-      - nft-microservice
     volumes:
       - drizzle_data:/app/drizzle
     networks:
