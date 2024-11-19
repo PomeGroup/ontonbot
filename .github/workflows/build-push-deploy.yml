@@ -50,6 +50,7 @@ jobs:
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
             ["golang-worker"]="golang-server/worker"
+            ["caddy"]="devops/caddy"
           )
           # If Trigger-full-build.txt has changed, add all services
           if echo "$changed_files" | grep -q "^Trigger-full-build.txt$"; then
@@ -157,6 +158,7 @@ jobs:
             ["mini-app"]="mini-app"
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
+            ["caddy"]="devops/caddy"
           )
           branch_name="${{ github.ref_name }}"
           service="${{ matrix.service }}"
@@ -176,6 +178,9 @@ jobs:
             build_context="./newton"
           elif [ "$service" == "nft-microservice" ]; then
             dockerfile_path="newton/apps/nft-manager/Dockerfile"
+            build_context="./newton"
+          elif [ "$service" == "caddy" ]; then
+            dockerfile_path="devops/caddy/Dockerfile"
             build_context="./newton"
           elif [ "$service" == "golang-server" ]; then
             dockerfile_path="golang-server/server/Dockerfile"

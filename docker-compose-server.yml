@@ -74,11 +74,7 @@ x-common-env: &common-env
 
 services:
   caddy:
-    image: caddy:latest
-    build:
-      context: ./devops/caddy
-      dockerfile: Dockerfile
-    restart: unless-stopped
+    image: ghcr.io/${GITHUB_REPOSITORY}/caddy:${GITHUB_SHA}
     ports:
       - "${NETWORK_PUBLIC_IP}:80:80"
       - "${NETWORK_PUBLIC_IP}:443:443"
@@ -100,7 +96,6 @@ services:
 
   minio:
     hostname: minio
-#    container_name: ${STAGE_NAME}-minio
     image: minio/minio
     restart: unless-stopped
     networks:
