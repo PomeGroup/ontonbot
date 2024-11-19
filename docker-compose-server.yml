@@ -358,7 +358,7 @@ services:
 
 networks:
   onton-network:
-    driver: bridge
+    driver: overlay
     driver_opts:
       com.docker.network.bridge.host_binding_ipv4: ${NETWORK_PUBLIC_IP}
     name: ${NETWORK_NAME}
