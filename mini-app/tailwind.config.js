@@ -1,5 +1,7 @@
+const konstaConfig = require("konsta/config");
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+module.exports = konstaConfig({
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -9,6 +11,9 @@ module.exports = {
   ],
   prefix: "",
   theme: {
+    fontFamily: {
+      ios: "-apple-system, Roboto ,SF Pro Text, SF UI Text, system-ui, Helvetica Neue, Helvetica, Arial, sans-serif",
+    },
     container: {
       center: true,
       padding: "2rem",
@@ -95,4 +100,4 @@ module.exports = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+});

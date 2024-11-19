@@ -51,7 +51,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     {
       event_uuid,
       // @ts-expect-error
-      init_data: webApp?.initData  ,
+      init_data: webApp?.initData,
       limit: 50,
       dynamic_fields: false,
 

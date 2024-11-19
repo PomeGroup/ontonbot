@@ -237,7 +237,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setApplyingFilters(false);
       storeSetSearchInput({ search: searchInput.search });
 
-      handleFilterApply().then(() => {refetchEvents()});
+      handleFilterApply().then(() => {
+        refetchEvents();
+      });
     }
   }, [applyingFilters]);
 
@@ -278,7 +280,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
       onUpdateResults([]);
 
       setFinalSearchInput && setFinalSearchInput(searchInput);
-
     }
   };
 

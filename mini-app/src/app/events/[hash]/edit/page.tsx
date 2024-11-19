@@ -4,24 +4,22 @@ import Alerts from "@/app/_components/molecules/alerts";
 import { ManageEvent } from "@/app/_components/organisms/events";
 import GuestList from "@/app/_components/organisms/events/GuestList";
 import { trpc } from "@/app/_trpc/client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
-import { FC } from "react";
-import { BsFillPersonLinesFill } from "react-icons/bs";
-import { FaRegEdit } from "react-icons/fa";
+import { Block, Page, Segmented, SegmentedButton } from "konsta/react";
+import { FC, useState } from "react";
+
+type ActiveTab = "guest_list" | "edit";
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
+  const [activeTab, setActiveTab] = useState<ActiveTab>("guest_list");
   const WebApp = useWebApp();
 
   const event = trpc.events.getEvent.useQuery(
     { event_uuid: params.hash },
     {
       cacheTime: 0,
-      queryKey: [
-        "events.getEvent",
-        { event_uuid: params.hash, },
-      ],
+      queryKey: ["events.getEvent", { event_uuid: params.hash }],
     }
   );
   const hapticFeedback = WebApp?.HapticFeedback;
@@ -41,48 +39,38 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   }
 
   return (
-    <div>
-      <Tabs
-        defaultValue="manage"
-        className="mb-4"
-      >
-        <TabsList className="grid w-full py-0  grid-cols-2">
-          <TabsTrigger
-            onClick={() => hapticFeedback?.impactOccurred("medium")}
-            value="manage"
+    <Page>
+      <Block>
+        <Segmented strong>
+          <SegmentedButton
+            strong
+            active={activeTab === "guest_list"}
+            onClick={() => setActiveTab("guest_list")}
           >
-            <BsFillPersonLinesFill className="mr-2" />
             Guests List
-          </TabsTrigger>
-          <TabsTrigger
-            onClick={() => hapticFeedback?.impactOccurred("medium")}
-            value="edit"
+          </SegmentedButton>
+          <SegmentedButton
+            strong
+            active={activeTab === "edit"}
+            onClick={() => setActiveTab("edit")}
           >
-            <FaRegEdit className="mr-2" /> Edit
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="manage">
-          {
-            event.data &&
-            <GuestList
-              event={event.data}
-              params={params}
-            />
-          }
-        </TabsContent>
-
-        <TabsContent
-          value="edit"
-          className="pt-4"
-        >
-          <ManageEvent
-            /* @ts-ignore  */
-            event={event.data}
-            eventHash={params.hash}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+            Edit
+          </SegmentedButton>
+        </Segmented>
+      </Block>
+      {activeTab === "edit" && (
+        <ManageEvent
+          event={event.data}
+          eventHash={params.hash}
+        />
+      )}
+      {activeTab === "guest_list" && event.data && (
+        <GuestList
+          event={event.data}
+          params={params}
+        />
+      )}
+    </Page>
   );
 };
 

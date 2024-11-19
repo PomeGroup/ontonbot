@@ -72,6 +72,9 @@ export const msToTime = (duration: number): string => {
 };
 
 // Converts a date to  round date to interval
-export const roundDateToInterval = (date: number | undefined, interval: number): number | undefined => {
+export const roundDateToInterval = (
+  date: number | undefined,
+  interval: number
+): number | undefined => {
   return date ? Math.floor(date / interval) * interval : date;
 };

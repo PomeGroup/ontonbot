@@ -43,7 +43,12 @@ interface EventCardProps {
     country?: string;
     participationType?: string;
   };
-  mode?: "normal" | "small" | "detailed" | "ongoing" | "normal_without_dropdown";
+  mode?:
+    | "normal"
+    | "small"
+    | "detailed"
+    | "ongoing"
+    | "normal_without_dropdown";
   currentUserId?: number;
 }
 
@@ -89,7 +94,6 @@ const EventCard: React.FC<EventCardProps> = memo(
           : "unknown";
 
     const handleEventClick = () => {
-        console.log("TELEGRAM LINK",`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`)
       if (ticketToCheckIn) {
         webApp?.openTelegramLink(
           `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
@@ -195,8 +199,9 @@ const EventCard: React.FC<EventCardProps> = memo(
 
     const renderNormalMode = () => (
       <>
-        {(currentUserId === organizerUserId || user?.role === "admin") && mode!== "normal_without_dropdown" ? (
-            renderDropdownMenu()
+        {(currentUserId === organizerUserId || user?.role === "admin") &&
+        mode !== "normal_without_dropdown" ? (
+          renderDropdownMenu()
         ) : (
           <div
             onClick={handleEventClick}
@@ -265,8 +270,8 @@ const EventCard: React.FC<EventCardProps> = memo(
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
-            // if date now before 5 november 2024 show special image
-          src={isValidImageUrl(imageUrl) ?  imageUrl : defaultImage}
+          // if date now before 5 november 2024 show special image
+          src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
           alt={title}
           width={window?.innerWidth || 400}
           height={400}

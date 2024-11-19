@@ -7,7 +7,7 @@ export const StepLayout = (props: {
   title?: React.ReactNode;
 }) => {
   return (
-    <section className="py-4 space-y-8">
+    <section className="space-y-8">
       {props.title && <Title3>{props.title}</Title3>}
       <>{props.children}</>
     </section>

@@ -36,15 +36,15 @@ const insert = async (
 ) => {
   const visitor = await db.query.visitors.findFirst({
     where: (fields, ops) => {
-      return ops.eq(fields.id, visitor_id)
-    }
-  })
+      return ops.eq(fields.id, visitor_id);
+    },
+  });
 
   const event = await db.query.events.findFirst({
     where: (fields, ops) => {
-      return ops.eq(fields.event_uuid, visitor?.event_uuid!)
-    }
-  })
+      return ops.eq(fields.event_uuid, visitor?.event_uuid!);
+    },
+  });
 
   const result = await db
     .insert(rewards)
@@ -148,15 +148,15 @@ const insertReward = async (
 ) => {
   const visitor = await db.query.visitors.findFirst({
     where: (fields, ops) => {
-      return ops.eq(fields.id, visitor_id)
-    }
-  })
+      return ops.eq(fields.id, visitor_id);
+    },
+  });
 
   const event = await db.query.events.findFirst({
     where: (fields, ops) => {
-      return ops.eq(fields.event_uuid, visitor?.event_uuid!)
-    }
-  })
+      return ops.eq(fields.event_uuid, visitor?.event_uuid!);
+    },
+  });
 
   return await db
     .insert(rewards)

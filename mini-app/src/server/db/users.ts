@@ -90,7 +90,7 @@ const insertUser = async (initDataJson: {
       console.log(
         `User ${initDataJson.user.username} ${initDataJson.user.id} added`
       );
-       return await selectUserById(initDataJson.user.id);
+      return await selectUserById(initDataJson.user.id);
     } catch (e) {
       console.log("add user error: ", e);
     }
@@ -151,8 +151,6 @@ const updateWallet = async (
 };
 // Function to get a user by username with caching
 export const selectUserByUsername = async (username: string) => {
-
-
   // If not found in cache, query the database
   const userInfo = await db
     .select({
@@ -166,12 +164,11 @@ export const selectUserByUsername = async (username: string) => {
       created_at: users.created_at,
       updated_at: users.updatedAt,
       updated_by: users.updatedBy,
-
     })
     .from(users)
-    .where(eq(users.username, username.replace(/^@/, '')))
+    .where(eq(users.username, username.replace(/^@/, "")))
     .execute();
-    console.log("selectUserByUsername", userInfo);
+  console.log("selectUserByUsername", userInfo);
   if (userInfo.length > 0) {
     return userInfo[0];
   }

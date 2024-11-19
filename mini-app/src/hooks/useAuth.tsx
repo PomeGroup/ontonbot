@@ -5,7 +5,7 @@ import { useUserStore } from "@/context/store/user.store";
 const useAuth = () => {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { initData } = useUserStore()
+  const { initData } = useUserStore();
 
   const validateUserInitDataQuery =
     trpc.users.haveAccessToEventAdministration.useQuery();

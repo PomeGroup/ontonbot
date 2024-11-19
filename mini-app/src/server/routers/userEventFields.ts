@@ -64,9 +64,9 @@ export const userEventFieldsRouter = router({
 
       const isRealPasswordCorrect = eventData.secret_phrase
         ? await bcryptLib.comparePassword(
-          enteredPassword,
-          eventData.secret_phrase
-        )
+            enteredPassword,
+            eventData.secret_phrase
+          )
         : false;
 
       if (!isFixedPasswordCorrect && !isRealPasswordCorrect) {
@@ -77,7 +77,7 @@ export const userEventFieldsRouter = router({
       }
 
       // Hash the entered password and store it
-      const hashPassword = await bcryptLib.hashPassword(enteredPassword)
+      const hashPassword = await bcryptLib.hashPassword(enteredPassword);
 
       await userEventFieldsDB.upsertUserEventFields(
         opts.ctx.user.user_id,

@@ -63,7 +63,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
           <Button
             variant="outline"
             className="w-full"
-            size='sm'
+            size="sm"
           >
             <FaCalendarPlus className="mr-2" />
             Add to Calendar
@@ -100,7 +100,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
           <div className="p-4">
             <Button
               variant="primary"
-              className='w-full'
+              className="w-full"
               onClick={() => setIsOpen(false)}
             >
               Close

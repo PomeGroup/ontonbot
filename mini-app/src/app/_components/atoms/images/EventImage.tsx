@@ -2,11 +2,11 @@ import React from "react";
 import Image from "next/image";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 
-const EventImage: React.FC<{ url: string; width?: number; height?: number }> = ({
-  url,
-  width = 0,
-  height = 0,
-}) => {
+const EventImage: React.FC<{
+  url: string;
+  width?: number;
+  height?: number;
+}> = ({ url, width = 0, height = 0 }) => {
   const defaultImage = "/template-images/default.webp";
 
   return (

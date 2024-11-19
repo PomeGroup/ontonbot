@@ -2,13 +2,9 @@ import { rewardLinkZod } from "@/types/user.types";
 import { validateMiniAppData } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import {
-  findVisitorByUserAndEventUuid,
-} from "../db/visitors";
+import { findVisitorByUserAndEventUuid } from "../db/visitors";
 
-import {
-  default as rewardDB,
-} from "@/server/db/rewards.db";
+import { default as rewardDB } from "@/server/db/rewards.db";
 import { usersDB } from "@/server/db/users";
 import {
   adminOrganizerProtectedProcedure,
@@ -38,10 +34,9 @@ export const usersRouter = router({
   ),
 
   // private
-  syncUser: initDataProtectedProcedure
-    .query(async (opts) => {
-      return opts.ctx.user;
-    }),
+  syncUser: initDataProtectedProcedure.query(async (opts) => {
+    return opts.ctx.user;
+  }),
 
   // private
   getWallet: initDataProtectedProcedure
@@ -115,7 +110,7 @@ export const usersRouter = router({
     )
     .query(async (opts) => {
       try {
-        console.log('context we found', opts.ctx);
+        console.log("context we found", opts.ctx);
 
         await visitorService.addVisitor(opts);
         // Fetch the visitor from the database
@@ -208,5 +203,3 @@ export const usersRouter = router({
       }
     }),
 });
-
-

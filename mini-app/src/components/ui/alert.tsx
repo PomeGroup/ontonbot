@@ -4,21 +4,18 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Info } from "lucide-react";
 
-const alertVariants = cva(
-  "relative w-full rounded-xl p-2 items-center grid grid-cols-12",
-  {
-    variants: {
-      variant: {
-        default: "bg-disabled-font/10 text-disabled-font",
-        destructive:
-          "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
-      },
+const alertVariants = cva("relative w-full rounded-xl p-2 items-center flex", {
+  variants: {
+    variant: {
+      default: "bg-disabled-font/10 text-disabled-font",
+      destructive:
+        "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
     },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
 const Alert = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
@@ -64,12 +61,10 @@ const AlertGeneric = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <Alert
     ref={ref}
-    className={cn("gap-1", className)}
+    className={cn("gap-2", className)}
   >
-    {props.variant === "info" && <Info className="col-span-1" />}
-    <AlertDescription className="col-span-11">
-      {props.children}
-    </AlertDescription>
+    {props.variant === "info" && <Info className="min-w-6" />}
+    <AlertDescription>{props.children}</AlertDescription>
   </Alert>
 ));
 AlertGeneric.displayName = "AlertGeneric";

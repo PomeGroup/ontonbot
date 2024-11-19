@@ -9,8 +9,7 @@ import { trpc } from "../_trpc/client";
 import "../page.css";
 import { useConfig } from "@/context/ConfigContext";
 import "swiper/css";
-import {useWithBackButton} from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
-
+import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 
 // Define types for events
 type EventData = any[];
@@ -87,9 +86,7 @@ export default function Home() {
             sliderEventsState.length > 0 && (
               <>
                 <div className="pt-4 w-full pb-4 flex justify-between items-center">
-
                   <h2 className="font-bold text-lg">Gateway Main Events</h2>
-
                 </div>
                 <EventCard
                   event={sliderEventsState[0]}
