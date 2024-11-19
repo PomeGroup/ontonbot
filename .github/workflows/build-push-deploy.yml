@@ -360,7 +360,7 @@ jobs:
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Generate Environment Variables Script
+      - name: Generate Environment Variables .env File
         id: generate-env-script
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -381,17 +381,19 @@ jobs:
           
           # Parse the JSON and filter the variables with the appropriate prefix, removing the prefix when writing to the env file
           echo "$secrets_json" | jq -r --arg prefix "$prefix" \
-            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\(.value)"' >> $env_file
+            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\"\(.value)\""' >> $env_file
           
           echo "$vars_json" | jq -r --arg prefix "$prefix" \
-            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\(.value)"' >> $env_file
+            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\"\(.value)\""' >> $env_file
           
-          #Addd branch name as env also
-          echo "BRANCH_NAME=$branch_name" >> $env_file
-          #Add github repo as env also
-          echo "GITHUB_REPO=$github_repo" >> $env_file
+          # Add branch name as env also
+          echo "BRANCH_NAME=\"$branch_name\"" >> $env_file
+          # Add github repo as env also
+          echo "GITHUB_REPO=\"$github_repo\"" >> $env_file
           # Add the GitHub Container Registry PAT to the env file
-          echo "CR_PAT=${CR_PAT}" >> $env_file
+          echo "CR_PAT=\"${CR_PAT}\"" >> $env_file
+          
+          echo "Environment variables script generated successfully."
  
 
       - name: Set up SSH Environment Variables
@@ -432,7 +434,6 @@ jobs:
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat .env
           ls -la
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
