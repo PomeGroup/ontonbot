@@ -26,6 +26,7 @@ FROM dependencies AS with-files
 # Copy the rest of the application code
 COPY . .
 
+
 FROM with-files AS build
 # Build the application
 RUN pnpm run build
