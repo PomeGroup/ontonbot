@@ -159,7 +159,7 @@ declare -A secrets
 
 # Function to read the .env file with the specified prefix and separate variables and secrets
 load_env_file() {
-    env_file="env_per_stages/.env.$env_prefix"
+    env_file="./env_stages/.env.$env_prefix"
 
     if [[ ! -f $env_file ]]; then
         echo "Error: $env_file file not found!"
@@ -229,34 +229,41 @@ done
 
 # Load the appropriate .env file
 load_env_file
+
 #check domains
 check_domains
+
+
 # Iterate over repositories and delete old secrets and variables
+# Convert the prefix to uppercase
+#env_prefix_upper=$(echo "$env_prefix" | tr '[:lower:]' '[:upper:]')
 #for repo in "${repos[@]}"; do
 #    echo "Deleting old secrets with prefix '$env_prefix' in $repo"
-#
+#    echo "gh secret list --repo \"$repo\" --app actions | awk '{print $1}'"
 #    # Delete old secrets in parallel
 #    existing_secrets=$(gh secret list --repo "$repo" --app actions | awk '{print $1}')
 #    for secret in $existing_secrets; do
-#        if [[ "$secret" == ${env_prefix}_* ]]; then
+#        echo "try to delete secret $secret ${env_prefix_upper}"
+#        if [[ "$secret" == ${env_prefix_upper}_* ]]; then
 #            echo "Deleting secret $secret from $repo"
+#
 #            printf 'y\n' | gh secret delete "$secret" --repo "$repo" --app actions &
 #        fi
 #    done
 #
-#    echo "Deleting old variables with prefix '$env_prefix' in $repo"
+#    echo "Deleting old variables with prefix '$env_prefix_upper' in $repo"
 #
 #    # Delete old variables in parallel
 #    existing_vars=$(gh variable list --repo "$repo" | awk '{print $1}')
 #    for var in $existing_vars; do
-#        if [[ "$var" == ${env_prefix}_* ]]; then
+#        if [[ "$var" == ${env_prefix_upper}_* ]]; then
 #            echo "Deleting variable $var from $repo"
 #            gh variable delete "$var" --repo "$repo" &
 #        fi
 #    done
 #done
 
-# Wait for all background deletion jobs to finish
+ #Wait for all background deletion jobs to finish
 wait
 
 # Iterate over repositories and set new secrets and variables in parallel
