@@ -336,8 +336,6 @@ jobs:
     if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
     permissions:
       contents: read
-      id-token: write
-      actions: write
       packages: read
 
     env:
