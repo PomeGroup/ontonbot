@@ -4,12 +4,12 @@
 minio server /data --address ":${MINIO_PORT}" --console-address ":${MINIO_DASHBOARD_PORT}" &
 echo "Minio server started on port ${MINIO_PORT} and console on port ${MINIO_DASHBOARD_PORT}"
 # Wait for Minio to start
-sleep 15
+#sleep 15
 
 
 # Initialize Minio client
-mc alias set local ${MINIO_PUBLIC_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
-echo "alias set local ${MINIO_PUBLIC_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}"
+#mc alias set local ${MINIO_PUBLIC_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
+#echo "alias set local ${MINIO_PUBLIC_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}"
 #mc ls local
 #mc mb --ignore-existing local/${MINIO_COLLECTION_BUCKET}
 #mc mb --ignore-existing local/${MINIO_ITEM_BUCKET}
