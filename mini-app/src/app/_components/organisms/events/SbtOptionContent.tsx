@@ -39,7 +39,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
   );
 
   const [selectedSbtId, setSelectedSbtId] = useState<number | undefined>(
-    rewardCollections?.[0].id
+    rewardCollections?.[0]?.id
   );
 
   const [emblaRef, emblaApi] = useEmblaCarousel({

@@ -10,7 +10,10 @@ const EventLocationManager = () => {
   const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
 
   return (
-    <FormBlock title="Location">
+    <FormBlock
+      inset={false}
+      title="Location"
+    >
       <ListItem
         title="Online"
         after={

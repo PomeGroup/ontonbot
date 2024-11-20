@@ -3,7 +3,7 @@
 import useWebApp from "@/hooks/useWebApp";
 import { type RouterOutput } from "@/server";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { GeneralStep } from "./GeneralStep";
 import { TimePlaceStep } from "./TimePlaceStep";
@@ -23,11 +23,15 @@ const ManageEvent = (props: ManageEventProps) => {
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
   const resetState = useCreateEventStore((state) => state.resetState);
+  const [isReset, setIsReset] = useState(false);
+
   const webApp = useWebApp();
   const router = useRouter();
 
   useLayoutEffect(() => {
     resetState();
+    setIsReset(true);
+
     if (props.eventHash) {
       setEdit({
         eventHash: props.eventHash,
@@ -100,9 +104,9 @@ const ManageEvent = (props: ManageEventProps) => {
       </Block>
 
       <Block className="!p-0">
-        {currentStep === 1 && <GeneralStep />}
-        {currentStep === 2 && <TimePlaceStep />}
-        {currentStep === 3 && <RewardStep />}
+        {isReset && currentStep === 1 && <GeneralStep />}
+        {isReset && currentStep === 2 && <TimePlaceStep />}
+        {isReset && currentStep === 3 && <RewardStep />}
       </Block>
     </>
   );

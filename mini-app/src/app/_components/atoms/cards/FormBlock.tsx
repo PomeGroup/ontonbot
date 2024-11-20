@@ -1,12 +1,15 @@
+import { cn } from "@/utils";
 import { Block, BlockTitle, List } from "konsta/react";
 import React, { ReactNode } from "react";
 
 const FormBlock = ({
   children,
   title,
+  inset = true,
 }: {
   children?: ReactNode;
   title?: string;
+  inset?: boolean;
 }) => {
   return (
     <>
@@ -15,9 +18,14 @@ const FormBlock = ({
         inset
         strong
         title={title}
-        className="!p-0"
+        className={cn("!p-0", { "!py-2": inset })}
       >
-        <List margin="!my-1">{children}</List>
+        <List
+          margin="!my-1"
+          className="dark:hairline-zinc-700"
+        >
+          {children}
+        </List>
       </Block>
     </>
   );

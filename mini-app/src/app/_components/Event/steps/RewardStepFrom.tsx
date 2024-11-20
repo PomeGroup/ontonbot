@@ -31,7 +31,10 @@ export const RewardForm = ({
 
   return (
     <>
-      <FormBlock title="Event password">
+      <FormBlock
+        inset={false}
+        title="Event password"
+      >
         <ListInput
           placeholder="Enter your chosen password"
           name="secret_phrase"
