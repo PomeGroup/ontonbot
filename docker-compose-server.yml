@@ -330,9 +330,9 @@ services:
       restart_policy:
         condition: any
         delay: 3s
-    depends_on:
-      - mini-app
-      - caddy
+#    depends_on:
+#      - mini-app
+#      - caddy
     environment:
         <<: *common-env
     networks:
