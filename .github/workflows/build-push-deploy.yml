@@ -524,6 +524,7 @@ jobs:
             echo "Forcing update of services..."
             services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
             underscore="_"
+            echo $services
             for service in $services; do
               echo " branch name: $branch_name"
               echo " service: ${service}"
