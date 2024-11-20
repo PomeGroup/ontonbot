@@ -23,6 +23,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { useTheme } from "next-themes";
+import { Block } from "konsta/react";
 
 // Define types for events
 type EventData = any[];
@@ -218,7 +219,7 @@ export default function Home() {
   }, [router]);
 
   return (
-    <>
+    <Block margin="mt-2">
       <div className="flex flex-col h-screen">
         {/* Fixed Search Bar */}
         <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
@@ -426,6 +427,6 @@ export default function Home() {
             onClick={handleCreateEvent}
           />
         )}
-    </>
+    </Block>
   );
 }
