@@ -94,249 +94,249 @@ jobs:
             📝 branch: ${{ github.ref }}
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
-  build-and-push:
-    runs-on: self-hosted
-    needs: determine-services
-    if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
-    strategy:
-      matrix:
-        service: ${{ fromJson(needs.determine-services.outputs.services_to_build) }}
-    permissions:
-      contents: read
-      packages: write
-      actions: write
-    env:
-      ALLMYSECRETS: ${{ toJSON(secrets) }}
-      ALLMYVARS: ${{ toJSON(vars) }}
-    steps:
-      - name: Send Telegram Message - Build Start
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "Error: Telegram deployment bot vars are not set or are empty."
-            exit 1
-          fi
-
-          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-            -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d text="
-            Hi there!
-            🔄 Build Started for ${{ github.repository }}
-            📝 branch: ${{ github.ref }}
-
-            🧑 ‍💻Actor: ${{ github.actor }}
-
-            🖊   message: ${{ github.event.head_commit.message }}
-
-            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
-
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.7.1
-
-      - name: Authenticate to GitHub Container Registry
-        env:
-          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and push image for ${{ matrix.service }}
-
-        run: |
-          declare -A services=(
-            ["nft-microservice"]="newton/apps/nft-manager"
-            ["participant-tma"]="newton/apps/participant-tma"
-            ["client-web"]="client-web-panel"
-            ["mini-app-cron"]="mini-app"
-            ["giveaway-checker"]="giveaway-checker"
-            ["golang-server"]="golang-server"
-            ["golang-worker"]="golang-server/worker"
-            ["mini-app"]="mini-app"
-            ["telegram-bot"]="telegram-bot"
-            ["website"]="website"
-            ["caddy"]="devops/caddy"
-          )
-          branch_name="${{ github.ref_name }}"
-          service="${{ matrix.service }}"
-          build_path="${services[$service]}"
-          repository=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          service=$(echo "$service" | tr '[:upper:]' '[:lower:]')
-
-          image_name="ghcr.io/${repository}/${service}"
-          tag_commit="${image_name}:${branch_name}-${{ github.run_id }}"
-          tag_latest="${image_name}:${branch_name}-latest"
-
-          echo "Processing service: $service"
-          echo "Build path: $build_path"
-
-          if  [ "$service" == "participant-tma" ]; then
-            dockerfile_path="newton/apps/participant-tma/Dockerfile"
-            build_context="./newton"
-          elif [ "$service" == "nft-microservice" ]; then
-            dockerfile_path="newton/apps/nft-manager/Dockerfile"
-            build_context="./newton"
-          elif [ "$service" == "caddy" ]; then
-            dockerfile_path="devops/caddy/Dockerfile"
-            build_context="./devops/caddy/"
-          elif [ "$service" == "golang-server" ]; then
-            dockerfile_path="golang-server/server/Dockerfile"
-            build_context="./golang-server"
-          elif [ "$service" == "golang-worker" ]; then
-            dockerfile_path="golang-server/worker/Dockerfile"
-            build_context="./golang-server"
-          else
-            dockerfile_path="$build_path/Dockerfile"
-            build_context="$build_path"
-          fi
-
-          if [ -f "$dockerfile_path" ]; then
-            echo "Using Dockerfile at $dockerfile_path"
-            # Create commit details file
-            COMMIT_DETAILS_FILE=$(mktemp)
-            echo "Commit SHA: ${{ github.sha }}" > "$COMMIT_DETAILS_FILE"
-            echo "Commit Author: ${{ github.actor }}" >> "$COMMIT_DETAILS_FILE"
-            echo "Commit Message: ${{ github.event.head_commit.message }}" >> "$COMMIT_DETAILS_FILE"
-            echo "Commit Date: ${{ github.event.head_commit.timestamp }}" >> "$COMMIT_DETAILS_FILE"
-
-            # Move the commit details file to the appropriate build context
-            mv "$COMMIT_DETAILS_FILE" "$build_context/commit_details.txt"
-            # Create temporary build args file
-            BUILD_ARGS_FILE=$(mktemp)
-
-            # Extract environment variables for the current branch
-            branch_prefix="${branch_name^^}_"
-            echo "Extracting environment variables for the branch prefix: $branch_prefix"
-
-            # Function to safely process environment variables
-            process_env_vars() {
-              local json_str="$1"
-              local prefix="$2"
-              local outfile="$3"
-
-              # Ensure JSON is properly formatted
-              echo "$json_str" | jq -r --arg prefix "$prefix" \
-                'with_entries(select(.key | startswith($prefix))) |
-                to_entries[] |
-                "\(.key | sub($prefix; ""))=\(.value)"' >> "$outfile" || true
-            }
-
-            # Process secrets with error handling
-            if [ -n "$ALLMYSECRETS" ]; then
-              echo "Processing secrets..."
-              process_env_vars "$ALLMYSECRETS" "$branch_prefix" "$BUILD_ARGS_FILE"
-
-            fi
-
-            # Process vars with error handling
-            if [ -n "$ALLMYVARS" ]; then
-              echo "Processing vars..."
-              process_env_vars "$ALLMYVARS" "$branch_prefix" "$BUILD_ARGS_FILE"
-            fi
-
-            # Add package manager
-            echo "PACKAGE_MANAGER=pnpm" >> "$BUILD_ARGS_FILE"
-
-            # Debug output (without showing sensitive values)
-            echo "Generated build args file with $(wc -l < "$BUILD_ARGS_FILE") variables"
-            echo "Dockerfile path: $dockerfile_path"
-            echo "Build context: $build_context"
-            # Create Docker build command with proper escaping
-            DOCKER_CMD="docker buildx build --push "
-
-            # Check if branch name is dev or sandbox
-            #
-            #            if  [ "$branch_name" == "dev" ] || [ "$branch_name" == "sandbox" ]; then
-            #              echo "Branch is $branch_name. Building with target development."
-            #              DOCKER_CMD+=" --target development "
-            #            else
-            #              echo "Branch is $branch_name. Building with default (production) target."
-            #              DOCKER_CMD+=" --target production "
-            #            fi
-            DOCKER_CMD+=" --target production "
-            # Add build args from file
-            while IFS='=' read -r key value; do
-              if [ -n "$key" ]; then
-                DOCKER_CMD+="--build-arg $key=\"$value\" "
-              fi
-            done < "$BUILD_ARGS_FILE"
-
-            # Add remaining arguments
-            DOCKER_CMD+=" -f \"$dockerfile_path\""
-            DOCKER_CMD+=" -t \"$tag_commit\""
-            DOCKER_CMD+=" -t \"$tag_latest\""
-            DOCKER_CMD+=" \"$build_context\""
-
-
-            # Execute build
-            echo "Starting docker build..."
-            if ! eval "$DOCKER_CMD"; then
-              echo "Retrying without cache due to potential dependency issues..."
-              eval "$DOCKER_CMD --no-cache"
-            fi
-
-            # Cleanup
-            rm -f "$BUILD_ARGS_FILE"
-          else
-            echo "Error: Dockerfile $dockerfile_path does not exist. Skipping $service."
-          fi
-      - name: Send Telegram Message - Build Success
-        if: success()
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
-        run: |
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "Error: Telegram vars are not set or are empty."
-            exit 1
-          fi
-
-          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-            -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d text="
-            Hi there!
-            🔄 Build was successful for ${{ github.repository }}
-
-            📝 branch: ${{ github.ref }}
-
-            🧑 ‍💻Actor: ${{ github.actor }}
-
-            🖊   message: ${{ github.event.head_commit.message }}
-
-            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
-      - name: Send Telegram Message - Build Failure
-        if: failure()
-        continue-on-error: true
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
-          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
-        run: |
-
-          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "Error: Telegram vars are not set or are empty."
-            exit 1
-          fi
-
-          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-            -d chat_id="$TELEGRAM_CHAT_ID" \
-            -d text="
-            Hi there!
-            🔄 Build was NOT successful for ${{ github.repository }}
-
-            📝 branch: ${{ github.ref }}
-
-            🧑 ‍💻Actor: ${{ github.actor }}
-
-            🖊   message: ${{ github.event.head_commit.message }}
-
-            ❌ ❌ Build failed ❌ ❌
-
-            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+#  build-and-push:
+#    runs-on: self-hosted
+#    needs: determine-services
+#    if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
+#    strategy:
+#      matrix:
+#        service: ${{ fromJson(needs.determine-services.outputs.services_to_build) }}
+#    permissions:
+#      contents: read
+#      packages: write
+#      actions: write
+#    env:
+#      ALLMYSECRETS: ${{ toJSON(secrets) }}
+#      ALLMYVARS: ${{ toJSON(vars) }}
+#    steps:
+#      - name: Send Telegram Message - Build Start
+#        env:
+#          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+#          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+#        run: |
+#          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+#            echo "Error: Telegram deployment bot vars are not set or are empty."
+#            exit 1
+#          fi
+#
+#          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+#            -d chat_id="$TELEGRAM_CHAT_ID" \
+#            -d text="
+#            Hi there!
+#            🔄 Build Started for ${{ github.repository }}
+#            📝 branch: ${{ github.ref }}
+#
+#            🧑 ‍💻Actor: ${{ github.actor }}
+#
+#            🖊   message: ${{ github.event.head_commit.message }}
+#
+#            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+#
+#      - name: Checkout Code
+#        uses: actions/checkout@v4
+#
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v3.7.1
+#
+#      - name: Authenticate to GitHub Container Registry
+#        env:
+#          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
+#        run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+#
+#      - name: Build and push image for ${{ matrix.service }}
+#
+#        run: |
+#          declare -A services=(
+#            ["nft-microservice"]="newton/apps/nft-manager"
+#            ["participant-tma"]="newton/apps/participant-tma"
+#            ["client-web"]="client-web-panel"
+#            ["mini-app-cron"]="mini-app"
+#            ["giveaway-checker"]="giveaway-checker"
+#            ["golang-server"]="golang-server"
+#            ["golang-worker"]="golang-server/worker"
+#            ["mini-app"]="mini-app"
+#            ["telegram-bot"]="telegram-bot"
+#            ["website"]="website"
+#            ["caddy"]="devops/caddy"
+#          )
+#          branch_name="${{ github.ref_name }}"
+#          service="${{ matrix.service }}"
+#          build_path="${services[$service]}"
+#          repository=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+#          service=$(echo "$service" | tr '[:upper:]' '[:lower:]')
+#
+#          image_name="ghcr.io/${repository}/${service}"
+#          tag_commit="${image_name}:${branch_name}-${{ github.run_id }}"
+#          tag_latest="${image_name}:${branch_name}-latest"
+#
+#          echo "Processing service: $service"
+#          echo "Build path: $build_path"
+#
+#          if  [ "$service" == "participant-tma" ]; then
+#            dockerfile_path="newton/apps/participant-tma/Dockerfile"
+#            build_context="./newton"
+#          elif [ "$service" == "nft-microservice" ]; then
+#            dockerfile_path="newton/apps/nft-manager/Dockerfile"
+#            build_context="./newton"
+#          elif [ "$service" == "caddy" ]; then
+#            dockerfile_path="devops/caddy/Dockerfile"
+#            build_context="./devops/caddy/"
+#          elif [ "$service" == "golang-server" ]; then
+#            dockerfile_path="golang-server/server/Dockerfile"
+#            build_context="./golang-server"
+#          elif [ "$service" == "golang-worker" ]; then
+#            dockerfile_path="golang-server/worker/Dockerfile"
+#            build_context="./golang-server"
+#          else
+#            dockerfile_path="$build_path/Dockerfile"
+#            build_context="$build_path"
+#          fi
+#
+#          if [ -f "$dockerfile_path" ]; then
+#            echo "Using Dockerfile at $dockerfile_path"
+#            # Create commit details file
+#            COMMIT_DETAILS_FILE=$(mktemp)
+#            echo "Commit SHA: ${{ github.sha }}" > "$COMMIT_DETAILS_FILE"
+#            echo "Commit Author: ${{ github.actor }}" >> "$COMMIT_DETAILS_FILE"
+#            echo "Commit Message: ${{ github.event.head_commit.message }}" >> "$COMMIT_DETAILS_FILE"
+#            echo "Commit Date: ${{ github.event.head_commit.timestamp }}" >> "$COMMIT_DETAILS_FILE"
+#
+#            # Move the commit details file to the appropriate build context
+#            mv "$COMMIT_DETAILS_FILE" "$build_context/commit_details.txt"
+#            # Create temporary build args file
+#            BUILD_ARGS_FILE=$(mktemp)
+#
+#            # Extract environment variables for the current branch
+#            branch_prefix="${branch_name^^}_"
+#            echo "Extracting environment variables for the branch prefix: $branch_prefix"
+#
+#            # Function to safely process environment variables
+#            process_env_vars() {
+#              local json_str="$1"
+#              local prefix="$2"
+#              local outfile="$3"
+#
+#              # Ensure JSON is properly formatted
+#              echo "$json_str" | jq -r --arg prefix "$prefix" \
+#                'with_entries(select(.key | startswith($prefix))) |
+#                to_entries[] |
+#                "\(.key | sub($prefix; ""))=\(.value)"' >> "$outfile" || true
+#            }
+#
+#            # Process secrets with error handling
+#            if [ -n "$ALLMYSECRETS" ]; then
+#              echo "Processing secrets..."
+#              process_env_vars "$ALLMYSECRETS" "$branch_prefix" "$BUILD_ARGS_FILE"
+#
+#            fi
+#
+#            # Process vars with error handling
+#            if [ -n "$ALLMYVARS" ]; then
+#              echo "Processing vars..."
+#              process_env_vars "$ALLMYVARS" "$branch_prefix" "$BUILD_ARGS_FILE"
+#            fi
+#
+#            # Add package manager
+#            echo "PACKAGE_MANAGER=pnpm" >> "$BUILD_ARGS_FILE"
+#
+#            # Debug output (without showing sensitive values)
+#            echo "Generated build args file with $(wc -l < "$BUILD_ARGS_FILE") variables"
+#            echo "Dockerfile path: $dockerfile_path"
+#            echo "Build context: $build_context"
+#            # Create Docker build command with proper escaping
+#            DOCKER_CMD="docker buildx build --push "
+#
+#            # Check if branch name is dev or sandbox
+#            #
+#            #            if  [ "$branch_name" == "dev" ] || [ "$branch_name" == "sandbox" ]; then
+#            #              echo "Branch is $branch_name. Building with target development."
+#            #              DOCKER_CMD+=" --target development "
+#            #            else
+#            #              echo "Branch is $branch_name. Building with default (production) target."
+#            #              DOCKER_CMD+=" --target production "
+#            #            fi
+#            DOCKER_CMD+=" --target production "
+#            # Add build args from file
+#            while IFS='=' read -r key value; do
+#              if [ -n "$key" ]; then
+#                DOCKER_CMD+="--build-arg $key=\"$value\" "
+#              fi
+#            done < "$BUILD_ARGS_FILE"
+#
+#            # Add remaining arguments
+#            DOCKER_CMD+=" -f \"$dockerfile_path\""
+#            DOCKER_CMD+=" -t \"$tag_commit\""
+#            DOCKER_CMD+=" -t \"$tag_latest\""
+#            DOCKER_CMD+=" \"$build_context\""
+#
+#
+#            # Execute build
+#            echo "Starting docker build..."
+#            if ! eval "$DOCKER_CMD"; then
+#              echo "Retrying without cache due to potential dependency issues..."
+#              eval "$DOCKER_CMD --no-cache"
+#            fi
+#
+#            # Cleanup
+#            rm -f "$BUILD_ARGS_FILE"
+#          else
+#            echo "Error: Dockerfile $dockerfile_path does not exist. Skipping $service."
+#          fi
+#      - name: Send Telegram Message - Build Success
+#        if: success()
+#        env:
+#          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+#          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+#        run: |
+#          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+#            echo "Error: Telegram vars are not set or are empty."
+#            exit 1
+#          fi
+#
+#          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+#            -d chat_id="$TELEGRAM_CHAT_ID" \
+#            -d text="
+#            Hi there!
+#            🔄 Build was successful for ${{ github.repository }}
+#
+#            📝 branch: ${{ github.ref }}
+#
+#            🧑 ‍💻Actor: ${{ github.actor }}
+#
+#            🖊   message: ${{ github.event.head_commit.message }}
+#
+#            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+#      - name: Send Telegram Message - Build Failure
+#        if: failure()
+#        continue-on-error: true
+#        env:
+#          TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+#          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
+#        run: |
+#
+#          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+#            echo "Error: Telegram vars are not set or are empty."
+#            exit 1
+#          fi
+#
+#          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+#            -d chat_id="$TELEGRAM_CHAT_ID" \
+#            -d text="
+#            Hi there!
+#            🔄 Build was NOT successful for ${{ github.repository }}
+#
+#            📝 branch: ${{ github.ref }}
+#
+#            🧑 ‍💻Actor: ${{ github.actor }}
+#
+#            🖊   message: ${{ github.event.head_commit.message }}
+#
+#            ❌ ❌ Build failed ❌ ❌
+#
+#            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
   deploy:
     runs-on: ubuntu-latest
-    needs: [determine-services , build-and-push]
+    needs: [determine-services ] #, build-and-push
     if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
     permissions:
       contents: write

@@ -94,6 +94,6 @@ ${ONTON_DOMAIN} {
     reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
 }
 
-" > "${CADDY_FILE_PATH}"
-cat "${CADDY_FILE_PATH}"
+" > "${CADDYFILE_PATH}"
+cat "${CADDYFILE_PATH}"
 
