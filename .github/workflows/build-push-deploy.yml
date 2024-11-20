@@ -526,12 +526,10 @@ jobs:
             echo $services_to_build
             for service in $services; do
               echo " branch name: $branch_name"
-              echo " service: \$service"
-              full_service_name="\$branch_name\$underscore\$service"
-          
+              echo " service: \$service"         
               echo "must $full_service_name"
-              echo "docker service update --force $branch_name_\$service"
-              docker service update --force $branch_name_\$service
+              echo "docker service update --force $branch_name\_\$service"
+              docker service update --force $branch_name\_\$service
             done
 
           

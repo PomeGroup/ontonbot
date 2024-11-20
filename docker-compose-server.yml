@@ -259,7 +259,7 @@ services:
       resources:
         limits:
           memory: 3000M
-          cpus: 2.0
+          cpus: '2.0'
       replicas: ${SYS_MINI_APP_REPLICAS-2}
       update_config:
         failure_action: rollback
