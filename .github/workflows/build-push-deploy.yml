@@ -378,6 +378,7 @@ jobs:
           # Create or truncate the env file if it already exists
           > $env_file
           
+          
           # Extract GitHub secrets and environment variables from ALLMYSECRETS and ALLMYVARS
           secrets_json="${ALLMYSECRETS}"
           vars_json="${ALLMYVARS}"
