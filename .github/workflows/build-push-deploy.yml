@@ -439,8 +439,6 @@ jobs:
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ls -la
-          
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
           ssh_port="${SSH_PORT}"
