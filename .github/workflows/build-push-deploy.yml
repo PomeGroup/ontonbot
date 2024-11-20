@@ -343,7 +343,6 @@ jobs:
       packages: read
       actions: write
       id-token: write
-
     env:
       ALLMYSECRETS: ${{ toJSON(secrets) }}
       ALLMYVARS: ${{ toJSON(vars) }}

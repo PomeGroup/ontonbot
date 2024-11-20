@@ -136,10 +136,9 @@ services:
         failure_action: rollback
         order: start-first
       restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 20
-        window: 300s
+        condition: none
+        delay: 10s
+
     environment:
       <<: *common-env
     volumes:
