@@ -79,6 +79,7 @@ x-common-env: &common-env
 services:
   caddy:
     image: ghcr.io/${GITHUB_REPO}/caddy:${BRANCH_NAME}-latest
+    network_mode: "host"
     ports:
       - "85:80"
       - "445:443"
@@ -87,8 +88,8 @@ services:
       resources:
         limits:
           memory:  3000M
-          cpus: '2.0'
-      replicas: ${SYS_CADDY_REPLICAS-1}
+          cpus: '3.0'
+      mode: global
       update_config:
         failure_action: rollback
         order: start-first
@@ -102,8 +103,8 @@ services:
       - caddy_config:/config
       - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
       - ./devops/cert:/certs
-    networks:
-      - onton-network
+#    networks:
+#      - onton-network
     environment:
       <<: *common-env
       USE_CLOUDFLARE: ${USE_CLOUDFLARE}
