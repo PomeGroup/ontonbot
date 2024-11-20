@@ -56,7 +56,7 @@ ${METABASE_DOMAIN} {
 ${MINIO_STORAGE_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy http://${IP_MINIO}:${MINIO_PORT}
+    reverse_proxy http://${PROXY_MINIO}:${MINIO_PORT}
 }
 
 ${MINIO_STORAGE_ADMIN_DOMAIN} {
