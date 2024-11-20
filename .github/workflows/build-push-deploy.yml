@@ -513,6 +513,7 @@ jobs:
                   chmod +x devops/generate-caddyfile-by-address.sh
                   rm -f /home/tonont/caddy/tmp/$branch_name/Caddyfile
                   mkdir -p /home/tonont/caddy/tmp/$branch_name/
+                  mkdir -p /home/tonont/caddy/Caddyfile
                   
                   export CADDYFILE_PATH="/home/tonont/caddy/tmp/$branch_name/Caddyfile"
                   sh devops/generate-caddyfile-by-address.sh
