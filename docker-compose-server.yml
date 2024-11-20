@@ -115,7 +115,7 @@ services:
     environment:
       <<: *common-env
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - onton-network
 
@@ -344,8 +344,8 @@ volumes:
       name: "${STAGE_NAME}_clamav_data"
     minio_data:
       name: "${STAGE_NAME}_minio_data"
-    db_data:
-      name: "${STAGE_NAME}_db_data"
+    postgres_data:
+      name: "${STAGE_NAME}_postgres_data"
     redis_data:
       name: "${STAGE_NAME}_redis_data"
     drizzle_data:

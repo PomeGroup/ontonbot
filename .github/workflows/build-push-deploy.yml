@@ -93,7 +93,6 @@ jobs:
             🧐 Changed services:  $services_json  
             📝 branch: ${{ github.ref }}
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
-          
 
 #  build-and-push:
 #    runs-on: self-hosted
