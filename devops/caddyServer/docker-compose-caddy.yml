@@ -1,0 +1,40 @@
+services:
+  caddy:
+    image: ghcr.io/${GITHUB_REPO}/caddy:dev-latest
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    deploy:
+      resources:
+        limits:
+          memory:  3000M
+          cpus: '2.0'
+      replicas: 3
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - /home/tonont/caddy/Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      - onton-network
+    environment:
+      USE_CLOUDFLARE: ${USE_CLOUDFLARE}
+      CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+    secrets:
+      - ghcr-radio-config
+
+volumes:
+  caddy_data:
+    name: "server_caddy_data"
+  caddy_config:
+    name: "server_caddy_config"
+secrets:
+  ghcr-radio-config:
+    external: true

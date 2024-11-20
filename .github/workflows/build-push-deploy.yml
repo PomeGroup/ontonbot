@@ -500,9 +500,32 @@ jobs:
                 echo "Pulling Docker image for service: \$service"
                 docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
               fi
+              if [[ "\$service" == "caddy" ]]; then
+                echo "creating caady files"
+                ssh  -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
+                  echo "Listing files in branch directory..."        
+                  cd /home/tonont/$branch_name
+                  ls -la
+                  echo "Sourcing .env file..."
+                  set -o allexport
+                  source .env
+                  set +o allexport
+                  source /home/tonont/$branch_name/.env
+                  chmod +x devops/generate-caddyfile-by-address.sh
+                  mkdir -p /home/tonont/caddy/tmp/$branch_name/
+                  export CADDYFILE_PATH="/home/tonont/caddy/tmp/$branch_name/"
+                  sh devops/generate-caddyfile-by-address.sh
+                  mv /home/tonont/caddy/tmp/$branch_name/Caddyfile /home/tonont/caddy/Caddyfile
+                  docker stack deploy --with-registry-auth -c ./devops/caddyServer/docker-compose-caddy.yml caddy
+                  docker service update --force caddy
+                  echo "Services deployed caddy successfully."
+                EOF
+
+              fi
             done
           EOF
           echo "Exporting all environment variables with branch-specific prefix..."
+          
           ssh  -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
             echo "Listing files in branch directory..."        
             cd /home/tonont/$branch_name

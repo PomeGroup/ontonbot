@@ -81,9 +81,9 @@ services:
     image: ghcr.io/${GITHUB_REPO}/caddy:${BRANCH_NAME}-latest
     network_mode: "host"
     ports:
-      - "85:80"
-      - "445:443"
-      - "445:443/udp"
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
     deploy:
       resources:
         limits:
@@ -522,10 +522,7 @@ volumes:
         name: "${STAGE_NAME}_drizzle_data"
     drizzle_data_cron:
       name: "${STAGE_NAME}_drizzle_data_cron"
-    caddy_data:
-      name: "${STAGE_NAME}_caddy_data"
-    caddy_config:
-      name: "${STAGE_NAME}_caddy_config"
+
 
 secrets:
   ghcr-radio-config:
