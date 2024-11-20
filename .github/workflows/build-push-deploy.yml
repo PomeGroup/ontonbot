@@ -531,8 +531,7 @@ jobs:
               echo "docker service update --force $branch_name\_\$service"
               docker service update --force $branch_name\_\$service
             done
-
-          
+            echo "Services deployed successfully."         
           EOF
 
           echo "Services deployed successfully."
