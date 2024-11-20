@@ -104,7 +104,7 @@ services:
       <<: *common-env
 
   postgres:
-    hostname: postgres-${BRANCH_NAME}
+    hostname: postgres
     image: postgres:16.3-alpine3.20
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
@@ -197,6 +197,7 @@ services:
 
   telegram-bot:
     image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
+    hostname: telegram-bot
     deploy:
       resources:
         limits:
@@ -343,6 +344,7 @@ services:
       - ghcr-radio-config
   giveaway-checker:
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
+    hostname: giveaway-checker
     depends_on:
       - postgres
     environment:
@@ -379,6 +381,7 @@ services:
 
   golang-server:
     image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
+    hostname: golang-server
     depends_on:
       - redis
     environment:
@@ -388,6 +391,7 @@ services:
 
   golang-worker:
     image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
+    hostname: golang-worker
     depends_on:
       - redis
       - golang-server
