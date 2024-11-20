@@ -518,7 +518,7 @@ jobs:
                   export CADDYFILE_PATH="/home/tonont/caddy/tmp/$branch_name/Caddyfile"
                   sh devops/generate-caddyfile-by-address.sh
                   ls -la /home/tonont/caddy/tmp/$branch_name/
-                  mv /home/tonont/caddy/tmp/$branch_name/Caddyfile /home/tonont/caddy/Caddyfile
+                  mv /home/tonont/caddy/tmp/$branch_name/Caddyfile /home/tonont/caddy/Caddyfiles_$branch_name
                   docker stack deploy --with-registry-auth -c ./devops/caddyServer/docker-compose-caddy.yml caddy
                   docker service update --force caddy
                   echo "Services deployed caddy successfully."
