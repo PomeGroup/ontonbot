@@ -83,8 +83,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: '${CADDY_MEMORY-2000}'M
-          cpus: '${SYS_CADDY_CPU-2000M}'
+          memory:  3000M
+          cpus: '2.0'
       replicas: ${SYS_CADDY_REPLICAS-1}
       update_config:
         failure_action: rollback
