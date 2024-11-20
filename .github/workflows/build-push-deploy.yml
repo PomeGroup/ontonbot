@@ -489,8 +489,6 @@ jobs:
             if [ -z "$CR_PAT" ]; then
               echo "CR_PAT is not set or is empty"; exit 1;
             fi
-                        
-            #echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
              
             echo "services to build: $services_to_build"
             # Remove the square brackets and split by comma
@@ -516,27 +514,17 @@ jobs:
             set +o allexport
             cd /home/tonont/$branch_name
             source /home/tonont/$branch_name/.env
-            echo "******Logging into GitHub Container Registry..."
-            echo "******Logging into GitHub Container Registry..."
-            if [ -z "$CR_PAT" ]; then
-              echo "CR_PAT is not set or is empty"; exit 1;
-            fi
-          
-            #echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker login ghcr.io 
             chmod +x devops/generate-caddyfile.sh
             chmod +x devops/minio-init.sh
             echo "Updating Docker node label for stage $branch_name..."
             docker node update --label-add stage.$branch_name=true ontonServer
-
-
             echo "Deploying Docker stack for $branch_name..."
             docker stack deploy --with-registry-auth -c docker-compose-server.yml $branch_name
 
             echo "Forcing update of services..."
             services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
             for service in $services; do
-              full_service_name=$branch_name_$service
+              full_service_name=$branch_name +"_"+ $service
               echo "docker service update --force \"$full_service_name\""
               docker service update --force "$full_service_name" || echo "Failed to update service $service"
             done
