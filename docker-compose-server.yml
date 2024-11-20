@@ -327,6 +327,7 @@ services:
 
 networks:
   onton-network:
+    name: onton-network-${DEPLOY_PATH}
     driver: overlay
     external: true
 #    driver_opts:
