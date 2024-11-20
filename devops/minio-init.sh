@@ -10,19 +10,19 @@ sleep 15
 # Initialize Minio client
 mc alias set local ${MINIO_PUBLIC_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}
 echo "alias set local ${MINIO_PUBLIC_URL} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD}"
-mc ls local
-mc mb --ignore-existing local/${MINIO_COLLECTION_BUCKET}
-mc mb --ignore-existing local/${MINIO_ITEM_BUCKET}
-mc mb --ignore-existing local/${MINIO_IMAGE_BUCKET}
-mc mb --ignore-existing local/${MINIO_VIDEO_BUCKET}
-mc mb --ignore-existing local/${MINIO_DOC_BUCKET}
-mc mb --ignore-existing local/${MINIO_DOC_DEFAULT_BUCKET}
-mc anonymous set download local/${MINIO_COLLECTION_BUCKET}
-mc anonymous set download local/${MINIO_ITEM_BUCKET}
-mc anonymous set download local/${MINIO_IMAGE_BUCKET}
-mc anonymous set download local/${MINIO_VIDEO_BUCKET}
-mc anonymous set download local/${MINIO_DOC_BUCKET}
-mc anonymous set download local/${MINIO_DOC_DEFAULT_BUCKET}
-mc policy set download local/${MINIO_SBT_COLLECTIONS_BUCKET}
+#mc ls local
+#mc mb --ignore-existing local/${MINIO_COLLECTION_BUCKET}
+#mc mb --ignore-existing local/${MINIO_ITEM_BUCKET}
+#mc mb --ignore-existing local/${MINIO_IMAGE_BUCKET}
+#mc mb --ignore-existing local/${MINIO_VIDEO_BUCKET}
+#mc mb --ignore-existing local/${MINIO_DOC_BUCKET}
+#mc mb --ignore-existing local/${MINIO_DOC_DEFAULT_BUCKET}
+#mc anonymous set download local/${MINIO_COLLECTION_BUCKET}
+#mc anonymous set download local/${MINIO_ITEM_BUCKET}
+#mc anonymous set download local/${MINIO_IMAGE_BUCKET}
+#mc anonymous set download local/${MINIO_VIDEO_BUCKET}
+#mc anonymous set download local/${MINIO_DOC_BUCKET}
+#mc anonymous set download local/${MINIO_DOC_DEFAULT_BUCKET}
+#mc policy set download local/${MINIO_SBT_COLLECTIONS_BUCKET}
 
 
