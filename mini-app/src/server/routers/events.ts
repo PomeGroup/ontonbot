@@ -141,10 +141,20 @@ export const eventsRouter = router({
 
     // no status for registran
 
-    // if (eventData?.capacity) {
-    //   capacity_filled = true;
-    //   return { capacity_filled, registrant_status, ...eventData };
-    // }
+    if (eventData.capacity) {
+      const approved_requests_count = await getApprovedRequestsCount(event_uuid);
+
+      if (
+        approved_requests_count >= eventData.capacity ||
+        (!eventData.has_waiting_list && (await getNotRejectedRequestsCount(event_uuid)) >= eventData.capacity)
+      ) {
+        // Event capacity filled
+        // First condition: Approved users >= eventData.capacity
+        // Second condition: Not Rejected Requests >= eventData.capacity && No Waiting List
+        capacity_filled = true;
+        return { capacity_filled, registrant_status, ...eventData };
+      }
+    }
 
     // NO Status
     return { capacity_filled, registrant_status, ...eventData };
@@ -192,16 +202,19 @@ export const eventsRouter = router({
       const event = await selectEventByUuid(event_uuid);
 
       if (!event) {
-        throw new TRPCError({code : "NOT_FOUND" , message : "event not found"});
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
       }
 
       if (!event.has_registration) {
-        throw new TRPCError({code : "BAD_REQUEST" , message : "event is not registrable"});
+        throw new TRPCError({ code: "BAD_REQUEST", message: "event is not registrable" });
       }
       const user_request = await getRegistrantRequest(event_uuid, userId);
 
       if (user_request) {
-        throw new TRPCError({code : "CONFLICT" , message : `registrant already has a [${user_request.status}] Request `});
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `registrant already has a [${user_request.status}] Request `,
+        });
       }
       if (event.capacity) {
         const approved_requests_count = await getApprovedRequestsCount(event_uuid);
@@ -216,7 +229,6 @@ export const eventsRouter = router({
           throw new TRPCError({
             code: "CONFLICT",
             message: `Event Capacity Reached Waiting List : ${event.has_waiting_list}`,
-            
           });
         }
       }
@@ -242,7 +254,7 @@ export const eventsRouter = router({
       const event = await selectEventByUuid(event_uuid);
 
       if (!event) {
-        throw new TRPCError({code : "NOT_FOUND" , message : "event not found"});
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
       }
 
       const registrants = await db
@@ -268,20 +280,22 @@ export const eventsRouter = router({
     )
     .query(async (opts) => {
       const event_uuid = opts.input.event_uuid;
+      const registrant_id = opts.input.registrant_id;
       const event = await selectEventByUuid(event_uuid);
 
       if (!event) {
-        throw new TRPCError({code : "NOT_FOUND" , message : "event not found"});
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
       }
 
-      const registrants = await db
-        .select()
-        .from(eventRegistrants)
-        .where(eq(eventRegistrants.event_uuid, event_uuid))
-        .orderBy(desc(events.created_at))
+      const result = await db
+        .update(eventRegistrants)
+        .set({
+          status: opts.input.status,
+        })
+        .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, registrant_id)))
         .execute();
 
-      return registrants;
+      return { code: 201, message: "ok" };
     }),
 
   // private
