@@ -22,7 +22,7 @@ services:
       - caddy_config:/config
       - /home/tonont/caddy/Caddyfile:/etc/caddy/Caddyfile
     networks:
-      - onton-network
+      - caddy-network
     environment:
       USE_CLOUDFLARE: ${USE_CLOUDFLARE}
       CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
@@ -30,11 +30,19 @@ services:
     secrets:
       - ghcr-radio-config
 
+
+networks:
+  caddy-network:
+    name: caddy-network
+    driver: overlay
+    external: true
+
 volumes:
   caddy_data:
     name: "server_caddy_data"
   caddy_config:
     name: "server_caddy_config"
+
 secrets:
   ghcr-radio-config:
     external: true
