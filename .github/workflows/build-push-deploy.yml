@@ -527,7 +527,6 @@ jobs:
             for service in $services; do
               echo " branch name: $branch_name"
               echo " service: \$service"
-          
               full_service_name=$branch_name$underscore\$service
               echo $full_service_name
               echo "docker service update --force $full_service_name"

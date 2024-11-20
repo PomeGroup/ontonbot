@@ -83,7 +83,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: '${CADDY_MEMORY-2000M}'
+          memory: '${CADDY_MEMORY-2000}'M
           cpus: '${SYS_CADDY_CPU-2000M}'
       replicas: ${SYS_CADDY_REPLICAS-1}
       update_config:
