@@ -502,7 +502,6 @@ jobs:
               fi
               if [[ "\$service" == "caddy" ]]; then
                 echo "creating caady files"
-                ssh  -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
                   echo "Listing files in branch directory..."        
                   cd /home/tonont/$branch_name
                   ls -la
@@ -519,8 +518,6 @@ jobs:
                   docker stack deploy --with-registry-auth -c ./devops/caddyServer/docker-compose-caddy.yml caddy
                   docker service update --force caddy
                   echo "Services deployed caddy successfully."
-                EOF
-
               fi
             done
           EOF
