@@ -523,6 +523,7 @@ jobs:
             fi
           
             #echo "$CR_PAT" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker login ghcr.io 
             chmod +x devops/generate-caddyfile.sh
             chmod +x devops/minio-init.sh
             echo "Updating Docker node label for stage $branch_name..."
