@@ -440,7 +440,7 @@ jobs:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ls -la
-          whoami
+          
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
           ssh_port="${SSH_PORT}"
@@ -481,6 +481,7 @@ jobs:
           services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
           echo "Formatted services to build: $services"  # Debug output        
           ssh -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
+            whoami
             echo "Loading environment variables..."
             cd /home/tonont/$branch_name
             source .env
