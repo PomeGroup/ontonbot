@@ -141,14 +141,13 @@ export const eventsRouter = router({
 
     // no status for registran
 
-    if (eventData?.capacity) {
-      const capacityFilled = false; // TODO : Implement
-      if (capacityFilled) {
-        // can't join por shode
-        return;
-      }
-    }
+    // if (eventData?.capacity) {
+    //   capacity_filled = true;
+    //   return { capacity_filled, registrant_status, ...eventData };
+    // }
+
     // NO Status
+    return { capacity_filled, registrant_status, ...eventData };
 
     /* -------------------------------------------------------------------------- */
   }),
