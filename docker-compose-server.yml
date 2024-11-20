@@ -79,6 +79,9 @@ services:
     image: minio/minio
     networks:
       - onton-network
+    ports:
+      - "${MINIO_PORT}:${MINIO_PORT}"
+      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     deploy:
       resources:
         limits:
@@ -220,6 +223,8 @@ services:
   mini-app:
     hostname: mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    ports:
+      - "${MINI_APP_PORT}:${MINI_APP_PORT}"
     deploy:
       resources:
         limits:
@@ -282,6 +287,8 @@ services:
   participant-tma:
     hostname: participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
+    ports:
+      - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
 #    <<: *default-extra-hosts
     deploy:
       resources:
@@ -347,6 +354,8 @@ services:
   website:
     hostname: website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
+    ports:
+      - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
     deploy:
       resources:
         limits:
@@ -390,6 +399,8 @@ services:
   metabase:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
+    ports:
+      - "${PORT_METABASE}:${PORT_METABASE}"
     deploy:
       resources:
         limits:
@@ -431,6 +442,8 @@ services:
     hostname: client-web
     <<: *default-extra-hosts
     image: ghcr.io/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
+    ports:
+      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
     environment:
       NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
       CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
@@ -460,12 +473,7 @@ networks:
     name: onton-network-${BRANCH_NAME}
     driver: overlay
     external: true
-#    driver_opts:
-#      com.docker.network.bridge.host_binding_ipv4: ${NETWORK_PUBLIC_IP}
-#    name: ${NETWORK_NAME}
-#    ipam:
-#      config:
-#        - subnet: "${IP_RANGE_START}.0.0/${IP_RANGE_SUBNET}"
+
 
 volumes:
     pgadmin:
