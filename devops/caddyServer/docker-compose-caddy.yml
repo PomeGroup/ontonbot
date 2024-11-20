@@ -20,7 +20,7 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-      - /home/tonont/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - /home/tonont/caddy/:/etc/caddy/
     networks:
       - caddy-network
     environment:
