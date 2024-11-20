@@ -20,7 +20,7 @@ export const eventRegistrants = pgTable(
     user_id: bigint("user_id", { mode: "number" }).references(
       () => users.user_id
     ),
-    status: text("status"),
+    status: text("status").notNull(),
 
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
