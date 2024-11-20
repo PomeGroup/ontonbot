@@ -80,6 +80,20 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+    deploy:
+      resources:
+        limits:
+          memory: '${CADDY_MEMORY-2000M}'
+          cpus: '${SYS_CADDY_CPU-2000M}'
+      replicas: ${SYS_CADDY_REPLICAS-1}
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     volumes:
       - caddy_data:/data
       - caddy_config:/config
@@ -244,9 +258,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 3000M
-          cpus: '3.0'
-      replicas: 10
+          memory: '${SYS_MINI_APP_MEMORY-3000M}'
+          cpus: '${SYS_MINI_APP_CPU-2.0}'
+      replicas: ${SYS_MINI_APP_REPLICAS-2}
       update_config:
         failure_action: rollback
         order: start-first
