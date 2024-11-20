@@ -282,7 +282,7 @@ export const eventsRouter = router({
         status: z.enum(["approved", "rejected"]),
       })
     )
-    .query(async (opts) => {
+    .mutation(async (opts) => {
       const event_uuid = opts.input.event_uuid;
       const registrant_id = opts.input.registrant_id;
       const event = await selectEventByUuid(event_uuid);
