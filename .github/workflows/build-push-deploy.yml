@@ -524,29 +524,15 @@ jobs:
             services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
             underscore="_"
             echo $services_to_build
-            # Create a temporary file to store the service names
-            temp_file=$(mktemp)
-            
-            # Write the service names to the file
             for service in $services; do
-            full_service_name="${branch_name}_${service}"
-            echo "$full_service_name" >> "$temp_file"
+              echo " branch name: $branch_name"
+              echo " service: \$service"
+              full_service_name="\$branch_name\$underscore\$service"
+          
+              echo "must $full_service_name"
+              echo "docker service update --force $branch_name_\$service"
+              docker service update --force $branch_name_\$service
             done
-            
-            # Read the service names from the file and update the services
-            while IFS= read -r full_service_name; do
-            echo "Updating service: $full_service_name"
-            
-            # Check if the service exists before updating
-              if docker service inspect "$full_service_name" > /dev/null 2>&1; then
-              docker service update --force "$full_service_name"
-              else
-            echo "Error: No such service: $full_service_name"
-              fi
-              done < "$temp_file"
-              
-              # Remove the temporary file after processing
-              rm -f "$temp_file"
 
           
           EOF

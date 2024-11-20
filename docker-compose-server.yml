@@ -258,8 +258,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: '${SYS_MINI_APP_MEMORY-3000M}'
-          cpus: '${SYS_MINI_APP_CPU-2.0}'
+          memory: 3000M
+          cpus: 2.0
       replicas: ${SYS_MINI_APP_REPLICAS-2}
       update_config:
         failure_action: rollback
@@ -323,7 +323,7 @@ services:
         limits:
           memory: 3000M
           cpus: '2.0'
-      replicas: 4
+      replicas: '${SYS_PARTICIPANT_TMA_REPLICAS-1}'
       update_config:
         failure_action: rollback
         order: start-first
@@ -387,7 +387,7 @@ services:
         limits:
           memory: 2000M
           cpus: '1.0'
-      replicas: 4
+      replicas: '${SYS_WEB_SITE_REPLICAS-1}'
       update_config:
         failure_action: rollback
         order: start-first
