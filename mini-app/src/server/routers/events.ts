@@ -249,7 +249,7 @@ export const eventsRouter = router({
         .select()
         .from(eventRegistrants)
         .where(eq(eventRegistrants.event_uuid, event_uuid))
-        .orderBy(desc(events.created_at))
+        .orderBy(desc(eventRegistrants.created_at))
         .execute();
 
       return registrants;
