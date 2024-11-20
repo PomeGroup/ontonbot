@@ -100,6 +100,20 @@ services:
     image: minio/minio
     networks:
       - onton-network
+    deploy:
+      resources:
+        limits:
+          memory: 8000M
+          cpus: '3.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     volumes:
       - minio_data:/data
       - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
@@ -112,6 +126,20 @@ services:
     image: postgres:16.3-alpine3.20
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: 8000M
+          cpus: '5.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     environment:
       <<: *common-env
     volumes:
@@ -124,7 +152,23 @@ services:
     hostname: redis
     volumes:
       - redis_data:/data
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
     command: redis-server --save "" --appendonly no
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '2.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     environment:
         <<: *common-env
     networks:
@@ -136,6 +180,20 @@ services:
     environment:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
+    deploy:
+      resources:
+        limits:
+          memory: 1000M
+          cpus: '5.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     volumes:
       - clamav_data:/var/lib/clamav  # Persist virus definition database
     networks:
@@ -158,6 +216,20 @@ services:
 
   telegram-bot:
     image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '2.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     environment:
       <<: *common-env
     depends_on:
@@ -170,6 +242,18 @@ services:
   mini-app:
     hostname: mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '3.0'
+      replicas: 10
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 3s
     environment:
         <<: *common-env
         TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -188,6 +272,20 @@ services:
   mini-app-cron:
     hostname: mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+          cpus: '2.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 20
+        window: 300s
     environment:
         <<: *common-env
         TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -207,6 +305,18 @@ services:
     hostname: participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
     <<: *default-extra-hosts
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '2.0'
+      replicas: 4
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 3s
     depends_on:
       - mini-app
       - caddy
@@ -219,6 +329,20 @@ services:
   nft-manager:
     hostname: nft-manager
     image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '3.0'
+      replicas: 1
+      update_config:
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
     depends_on:
       - postgres
       - redis
@@ -245,6 +369,20 @@ services:
   website:
     hostname: website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+          cpus: '1.0'
+      replicas: 4
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     depends_on:
      - caddy
     environment:
@@ -274,6 +412,20 @@ services:
   metabase:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+          cpus: '2.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 20
+        window: 300s
     volumes:
       - /dev/urandom:/dev/random:ro
     environment:
