@@ -106,6 +106,7 @@ services:
       USE_CLOUDFLARE: ${USE_CLOUDFLARE}
       CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+      CADDY_BIND_IP: "${NETWORK_PUBLIC_IP}"
     entrypoint: /usr/bin/envsh/generate-caddyfile.sh
     secrets:
       - ghcr-radio-config
@@ -124,7 +125,7 @@ services:
         failure_action: rollback
         order: start-first
       restart_policy:
-        condition: on-failure
+        condition: none
         delay: 5s
         max_attempts: 20
         window: 300s
