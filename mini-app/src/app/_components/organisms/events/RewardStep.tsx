@@ -23,7 +23,9 @@ export const RewardStep = () => {
   } = useCreateEventStore();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [passwordDisabled] = useState(!!editOptions?.eventHash);
+  const [passwordDisabled, setPasswordDisabled] = useState(
+    !!editOptions?.eventHash
+  );
   const [passwordValue, setPasswordValue] = useState(
     editOptions?.eventHash ? "{** click to change password **}" : ""
   );
@@ -100,9 +102,6 @@ export const RewardStep = () => {
       }
 
       const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
-      console.log("asdhjaksjhdaksjdhakjh", {
-        formDataParsed,
-      });
 
       if (!formDataParsed.success) {
         setRewardStepErrors(formDataParsed.error.flatten().fieldErrors);
@@ -193,6 +192,7 @@ export const RewardStep = () => {
     >
       <RewardForm
         passwordDisabled={passwordDisabled}
+        setPasswordDisabled={setPasswordDisabled}
         passwordValue={passwordValue}
         setPasswordValue={setPasswordValue}
         sbtOption={sbtOption}

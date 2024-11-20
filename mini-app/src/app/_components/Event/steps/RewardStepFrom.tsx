@@ -2,11 +2,13 @@ import { useCreateEventStore } from "@/zustand/createEventStore";
 import { SbtOptionContent } from "../../organisms/events/SbtOptionContent";
 import FormBlock from "../../atoms/cards/FormBlock";
 import { ListInput, ListItem, Toggle } from "konsta/react";
+import { cn } from "@/utils";
 
 interface RewardFormProps {
   passwordDisabled: boolean;
   passwordValue: string;
   setPasswordValue: (_: string) => void;
+  setPasswordDisabled: (_: boolean) => void;
   sbtOption: "custom" | "default";
   setSbtOption: (_: "custom" | "default") => void;
   clearImageError: () => void;
@@ -17,6 +19,7 @@ export const RewardForm = ({
   passwordDisabled,
   passwordValue,
   setPasswordValue,
+  setPasswordDisabled,
   sbtOption,
   setSbtOption,
   clearImageError,
@@ -44,8 +47,18 @@ export const RewardForm = ({
               </p>
             </div>
           }
-          disabled={passwordDisabled}
-          onChange={(e) => setPasswordValue(e.target.value)}
+          inputClassName={cn({
+            "text-white/70 cursor-pointer": passwordDisabled,
+          })}
+          onClick={() => {
+            if (passwordDisabled) {
+              setPasswordDisabled(false);
+              setPasswordValue("");
+            }
+          }}
+          onChange={(e) => {
+            setPasswordValue(e.target.value);
+          }}
           error={errors?.secret_phrase?.[0]}
         />
       </FormBlock>
