@@ -531,7 +531,7 @@ jobs:
 
 
             echo "Deploying Docker stack for $branch_name..."
-            docker stack deploy -c docker-compose-server.yml $branch_name
+            docker stack deploy --with-registry-auth -c docker-compose-server.yml $branch_name
 
             echo "Forcing update of services..."
             services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
