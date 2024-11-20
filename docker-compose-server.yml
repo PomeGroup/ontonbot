@@ -122,6 +122,7 @@ services:
         delay: 10s
     environment:
       <<: *common-env
+    command: postgres -p ${POSTGRES_PORT}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -134,7 +135,7 @@ services:
       - redis_data:/data
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
-    command: redis-server --save "" --appendonly no
+    command: redis-server --save "" --appendonly no --port ${REDIS_PORT}
     deploy:
       resources:
         limits:
@@ -160,6 +161,7 @@ services:
     environment:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
+      - CLAMD_SETTINGS_TCPSOCKET=${CLAMAV_PORT}
     deploy:
       resources:
         limits:
@@ -429,6 +431,7 @@ services:
       MB_LOG_LEVEL: error
       MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
       MB_REDIRECT_ALL_REQUESTS_TO_HTTPS: ${MB_REDIRECT_ALL_REQUESTS_TO_HTTPS}
+      MB_JETTY_PORT: ${PORT_METABASE}
     networks:
       - onton-network
     depends_on:
