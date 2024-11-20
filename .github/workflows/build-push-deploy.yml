@@ -525,10 +525,10 @@ jobs:
             services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
             for service in $services; do
               echo " branch name: $branch_name"
-              echo " service: \$service"
-              full_service_name= "\$branch_name_\$service"
-              echo "docker service update --force \$full_service_name"
-              docker service update --force  \$full_service_name
+              echo " service: $service"
+              full_service_name="${branch_name}_${service}"
+              echo "docker service update --force $full_service_name"
+              docker service update --force "$full_service_name"
             done
 
           
