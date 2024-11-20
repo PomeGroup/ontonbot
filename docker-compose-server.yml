@@ -73,13 +73,16 @@ x-common-env: &common-env
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
   DOCKER_CONFIG: "/run/secrets/ghcr-radio-config"
 
+
+
+
 services:
   caddy:
     image: ghcr.io/${GITHUB_REPO}/caddy:${BRANCH_NAME}-latest
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      - "85:80"
+      - "445:443"
+      - "445:443/udp"
     deploy:
       resources:
         limits:
