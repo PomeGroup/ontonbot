@@ -65,10 +65,12 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         />
       )}
       {activeTab === "guest_list" && event.data && (
-        <GuestList
-          event={event.data}
-          params={params}
-        />
+        <Block>
+          <GuestList
+            event={event.data}
+            params={params}
+          />
+        </Block>
       )}
     </Page>
   );

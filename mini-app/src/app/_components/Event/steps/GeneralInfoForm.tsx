@@ -63,9 +63,36 @@ export const EventGeneralInfoFormFields = () => {
       {/*     after={ */}
       {/*       <Toggle */}
       {/*         component="div" */}
+      {/*         checked */}
       {/*         className="-my-1" */}
       {/*       /> */}
       {/*     } */}
+      {/*   /> */}
+      {/*   <ListItem */}
+      {/*     label */}
+      {/*     title="Approve Users" */}
+      {/*     after={ */}
+      {/*       <Toggle */}
+      {/*         component="div" */}
+      {/*         checked */}
+      {/*         className="-my-1" */}
+      {/*       /> */}
+      {/*     } */}
+      {/*   /> */}
+      {/*   <ListItem */}
+      {/*     label */}
+      {/*     title="Capacity" */}
+      {/*     after={ */}
+      {/*       <Toggle */}
+      {/*         component="div" */}
+      {/*         checked */}
+      {/*         className="-my-1" */}
+      {/*       /> */}
+      {/*     } */}
+      {/*   /> */}
+      {/*   <ListInput */}
+      {/*     label="Capacity" */}
+      {/*     info="The number of participants allowed" */}
       {/*   /> */}
       {/* </FormBlock> */}
     </>
