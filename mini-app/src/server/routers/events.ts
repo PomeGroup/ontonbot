@@ -143,9 +143,9 @@ export const eventsRouter = router({
 
     if (eventData.capacity) {
       const approved_requests_count = await getApprovedRequestsCount(event_uuid);
-      console.log("Yakuuuuuuza :::::: ??approved_requests_count?? " , approved_requests_count )
-      console.log("Yakuuuuuuza :::::: ??getNotRejectedRequestsCount?? " , (await getNotRejectedRequestsCount(event_uuid)) )
-      
+      console.log("Yakuuuuuuza :::::: ??approved_requests_count?? ", approved_requests_count);
+      console.log("Yakuuuuuuza :::::: ??getNotRejectedRequestsCount?? ", await getNotRejectedRequestsCount(event_uuid));
+
       if (
         approved_requests_count >= eventData.capacity ||
         (!eventData.has_waiting_list && (await getNotRejectedRequestsCount(event_uuid)) >= eventData.capacity)
@@ -202,6 +202,8 @@ export const eventsRouter = router({
       const userId = opts.ctx.user.user_id;
       const event_uuid = opts.input.input_data.event_uuid;
       const event = await selectEventByUuid(event_uuid);
+
+      console.log("event_register", event_uuid, userId);
 
       if (!event) {
         throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
