@@ -71,6 +71,7 @@ x-common-env: &common-env
   TONAPI_API_KEY: ${TONAPI_API_KEY}
   TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
+  DOCKER_CONFIG: "/run/secrets/ghcr-radio-config"
 
 services:
   caddy:
@@ -93,7 +94,8 @@ services:
       CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
     entrypoint: /usr/bin/envsh/generate-caddyfile.sh
-
+    secrets:
+      - ghcr-radio-config
   minio:
     hostname: minio
     image: minio/minio
@@ -164,6 +166,8 @@ services:
       <<: *common-env
     depends_on:
       - postgres
+    secrets:
+      - ghcr-radio-config
     networks:
       onton-network:
         ipv4_address: "${IP_TELEGRAM_BOT}"
@@ -185,7 +189,8 @@ services:
     networks:
       onton-network:
         ipv4_address: ${IP_MINI_APP}
-
+    secrets:
+      - ghcr-radio-config
   mini-app-cron:
     hostname: mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -203,7 +208,8 @@ services:
       onton-network:
         ipv4_address: "${IP_MINI_APP_CRON}"
     command: ["pnpm","run", "start-cron"]
-
+    secrets:
+      - ghcr-radio-config
   participant-tma:
     hostname: participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
@@ -216,7 +222,8 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_PARTICIPANT_TMA}"
-
+    secrets:
+      - ghcr-radio-config
   nft-microservice:
     hostname: nft-service
     image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
@@ -232,7 +239,8 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_NFT_MANAGER}"
-
+    secrets:
+      - ghcr-radio-config
   giveaway-checker:
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
     depends_on:
@@ -242,7 +250,8 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_GIVEAWAY_CHECKER}"
-
+    secrets:
+      - ghcr-radio-config
   website:
     hostname: website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
@@ -361,4 +370,6 @@ volumes:
     caddy_config:
       name: "${STAGE_NAME}_caddy_config"
 
-
+secrets:
+  ghcr-radio-config:
+    external: true
