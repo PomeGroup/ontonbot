@@ -440,6 +440,7 @@ jobs:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ls -la
+          whoami
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
           ssh_port="${SSH_PORT}"
