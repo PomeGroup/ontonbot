@@ -120,7 +120,6 @@ services:
       restart_policy:
         condition: none
         delay: 10s
-
     environment:
       <<: *common-env
     volumes:
