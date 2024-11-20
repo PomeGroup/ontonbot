@@ -317,7 +317,7 @@ services:
   participant-tma:
     hostname: participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
-    <<: *default-extra-hosts
+#    <<: *default-extra-hosts
     deploy:
       resources:
         limits:
