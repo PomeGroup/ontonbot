@@ -10,7 +10,7 @@ import {
   WalletContractV3R2,
   WalletContractV4 as WalletContractV4R2,
   WalletContractV5Beta,
-  WalletContractV5R1
+  WalletContractV5R1,
 } from "@ton/ton";
 import { Buffer } from "buffer";
 import { WalletContractV4R1 } from "./wallet-contract-v4-r1";
@@ -88,8 +88,7 @@ export function tryParsePublicKey(stateInit: StateInit): Buffer | null {
       if (wallet.init.code.equals(stateInit.code)) {
         return loadData(stateInit.data.beginParse()).publicKey;
       }
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   return null;

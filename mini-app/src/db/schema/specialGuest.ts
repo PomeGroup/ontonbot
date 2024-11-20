@@ -1,4 +1,4 @@
-import {pgTable, serial, integer, varchar, uuid} from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, varchar, uuid } from "drizzle-orm/pg-core";
 
 export const specialGuests = pgTable("special_guests", {
   id: serial("id").primaryKey(),

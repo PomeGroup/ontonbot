@@ -4,7 +4,8 @@ import {
   event_details_search_list,
   eventFields,
   events,
-  rewards, tickets,
+  rewards,
+  tickets,
   users,
   visitors,
 } from "@/db/schema";
@@ -230,22 +231,16 @@ export const getOrganizerEvents = async (
       society_hub_id: events.society_hub_id,
       ticket_to_check_in: events.ticketToCheckIn,
       timezone: events.timezone,
-    }
-    )
+    })
     .from(events)
     .where(eq(events.owner, organizerId))
     .orderBy(desc(events.start_date))
     .limit(finalLimit)
     .offset(finalOffset);
 
-
   // Return the result of the query
   return await eventsQuery.execute();
 };
-
-
-
-
 
 export const getEventsWithFilters = async (
   params: z.infer<typeof searchEventsInputZod>
@@ -409,8 +404,7 @@ export const getEventsWithFilters = async (
     } else if (sortBy === "most_people_reached" || sortBy === "default") {
       // @ts-expect-error
       query = query.orderBy(desc(event_details_search_list.visitorCount));
-    }
-    else if (sortBy === "random") {
+    } else if (sortBy === "random") {
       // @ts-expect-error
       query = query.orderBy(sql`random()`);
     }

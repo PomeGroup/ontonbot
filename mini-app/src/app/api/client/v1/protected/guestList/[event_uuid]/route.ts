@@ -81,8 +81,8 @@ export async function GET(
     return NextResponse.json(
       {
         error: parsed.error.errors.map((err) => ({
-          path: err.path ,
-          message: err.message ,
+          path: err.path,
+          message: err.message,
         })),
       },
       { status: 400 }
@@ -106,7 +106,6 @@ export async function GET(
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
-
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";

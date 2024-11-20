@@ -1,3 +1,2 @@
 ### change this file if you want to trigger a full build ###
-
-dsa alldasd
+rebuild for 0assigning ports

@@ -6,7 +6,6 @@ import MainButton from "../atoms/buttons/web-app/MainButton";
 import ModalDialog from "../SecretSavedModal";
 import { trpc } from "@/app/_trpc/client";
 
-
 // Child component
 function ClaimRewardButtonChild(props: {
   link: string | null;
@@ -44,16 +43,17 @@ function ClaimRewardButtonChild(props: {
   );
 }
 
-export function ClaimRewardButton(props: { eventId: string, initData: string, isWalletConnected: boolean | undefined }) {
+export function ClaimRewardButton(props: {
+  eventId: string;
+  initData: string;
+  isWalletConnected: boolean | undefined;
+}) {
   const visitorReward = trpc.users.getVisitorReward.useQuery(
     {
       event_uuid: props.eventId,
     },
     {
-      queryKey: [
-        "users.getVisitorReward",
-        { event_uuid: props.eventId },
-      ],
+      queryKey: ["users.getVisitorReward", { event_uuid: props.eventId }],
       retry: false,
     }
   );

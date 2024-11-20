@@ -7,12 +7,12 @@ import { useUserStore } from "@/context/store/user.store";
 
 const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
   const webApp = useWebApp();
-  const { setInitData, initData } = useUserStore()
+  const { setInitData, initData } = useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     if (webApp?.initData && webApp?.initDataUnsafe && !isInitialized) {
-      setInitData(webApp.initData)
+      setInitData(webApp.initData);
       Sentry.init({
         environment: process.env.ENV,
       });

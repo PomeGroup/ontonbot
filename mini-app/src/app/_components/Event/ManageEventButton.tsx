@@ -5,7 +5,7 @@ import MainButton from "../atoms/buttons/web-app/MainButton";
 
 export const ManageEventButton = () => {
   const { authorized, role, user } = useAuth();
-  const { eventData, eventHash } = useEventData()
+  const { eventData, eventHash } = useEventData();
   const router = useRouter();
 
   if (

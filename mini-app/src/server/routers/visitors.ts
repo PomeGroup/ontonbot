@@ -1,10 +1,6 @@
 import { z } from "zod";
 import { selectVisitorsByEventUuid } from "../db/visitors";
-import {
-  eventManagementProtectedProcedure,
-  router,
-} from "../trpc";
-
+import { eventManagementProtectedProcedure, router } from "../trpc";
 
 export const visitorsRouter = router({
   // protect
@@ -28,5 +24,4 @@ export const visitorsRouter = router({
       );
       return { ...data, event: opts.ctx.event || null };
     }),
-
 });

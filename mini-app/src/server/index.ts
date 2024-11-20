@@ -10,7 +10,7 @@ import { userEventFieldsRouter } from "./routers/userEventFields";
 import { usersRouter } from "./routers/users";
 import { visitorsRouter } from "./routers/visitors";
 import { router } from "./trpc";
-import {sbtRewardCollectionRouter} from "@/server/routers/sbtRewardCollectionRouter";
+import { sbtRewardCollectionRouter } from "@/server/routers/sbtRewardCollectionRouter";
 
 export const appRouter = router({
   users: usersRouter,

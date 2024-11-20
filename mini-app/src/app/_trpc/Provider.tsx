@@ -1,7 +1,7 @@
 "use client";
 
 import { httpLink, TRPCLink } from "@trpc/react-query";
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { trpc } from "./client";
 import { useUserStore } from "@/context/store/user.store";
@@ -77,41 +77,47 @@ const createCombinedLink = (): TRPCLink<any> => {
   };
 };
 
-export default function TRPCAPIProvider({ children }: { children: React.ReactNode }) {
-  const { initData } = useUserStore()
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false, // handling it manually in our customLink
-        retryOnMount: false,
-        refetchOnWindowFocus: false
-      }
-    }
-  }));
-
-  const [trpcClient] = useState(trpc.createClient({
-    links: [
-      createCombinedLink(),// custom link to handlen retring
-      httpLink({
-        url: "/api/trpc",
-        headers: () => {
-          return {
-            Authorization: initData!
-          }
+export default function TRPCAPIProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { initData } = useUserStore();
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            retry: false, // handling it manually in our customLink
+            retryOnMount: false,
+            refetchOnWindowFocus: false,
+          },
         },
-      }),
-    ],
-  })
-  )
+      })
+  );
+
+  const [trpcClient] = useState(
+    trpc.createClient({
+      links: [
+        createCombinedLink(), // custom link to handlen retring
+        httpLink({
+          url: "/api/trpc",
+          headers: () => {
+            return {
+              Authorization: initData!,
+            };
+          },
+        }),
+      ],
+    })
+  );
 
   return (
     <trpc.Provider
       client={trpcClient}
       queryClient={queryClient}
     >
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </trpc.Provider>
   );
 }

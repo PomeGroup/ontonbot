@@ -20,11 +20,12 @@ FROM base AS dependencies
 # Copy package.json and package-lock.json
 COPY package*.json ./
 # Install dependencies
-RUN pnpm install --prod
+RUN pnpm install
 
 FROM dependencies AS with-files
 # Copy the rest of the application code
 COPY . .
+
 
 FROM with-files AS build
 # Build the application

@@ -5,18 +5,17 @@ import EventSkeleton from "./molecules/skeletons/EventSkeleton";
 import { trpc } from "../_trpc/client";
 import { useUserStore } from "@/context/store/user.store";
 
-
 const UserSaver: FC<{
   children: ReactNode;
 }> = ({ children }) => {
-  const { setUser } = useUserStore()
+  const { setUser } = useUserStore();
 
-  const syncUser = trpc.users.syncUser.useQuery()
+  const syncUser = trpc.users.syncUser.useQuery();
 
   // Second effect: Handle user saving after WebApp is ready
   useEffect(() => {
     if (syncUser.isSuccess) {
-      setUser(syncUser.data)
+      setUser(syncUser.data);
     }
   }, [syncUser.isSuccess, syncUser.data?.wallet_address]);
 

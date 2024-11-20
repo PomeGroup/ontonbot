@@ -47,10 +47,9 @@ export const WalletAddress = z.object({
   address: z.string(),
 });
 
-
 export const CheckProofRequest = z.object({
   address: z.string(),
-  network: z.enum(['-239', '-3']),
+  network: z.enum(["-239", "-3"]),
   public_key: z.string(),
   proof: z.object({
     timestamp: z.number(),

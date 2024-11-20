@@ -6,7 +6,7 @@ import { type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/server/auth";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
-import {configProtected} from "@/server/config";
+import { configProtected } from "@/server/config";
 import dealRoomService from "@/server/routers/services/DealRoomService";
 
 const updateTicketSchema = z.object({
@@ -65,9 +65,7 @@ export async function PUT(
 
     let decoded;
     try {
-      if (
-        !await verifyToken(proof_token)
-      ) {
+      if (!(await verifyToken(proof_token))) {
         return Response.json(
           {
             message: "invalid token",
@@ -80,9 +78,8 @@ export async function PUT(
       }
 
       decoded = {
-        address: decodePayloadToken(proof_token)?.address
-      }
-
+        address: decodePayloadToken(proof_token)?.address,
+      };
     } catch {
       return Response.json(
         {
@@ -139,10 +136,16 @@ export async function PUT(
       .where(eq(tickets.nftAddress, nft_address))
       .execute();
     // log user id ticket id and other info
-    console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
+    console.log(
+      `route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`
+    );
     // Call the separate fetch function
-    const result = await dealRoomService.RefreshGuestList(configProtected?.dealRoomRefreshCode || "");
-    console.log(`route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`);
+    const result = await dealRoomService.RefreshGuestList(
+      configProtected?.dealRoomRefreshCode || ""
+    );
+    console.log(
+      `route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`
+    );
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
     if (error instanceof SyntaxError)

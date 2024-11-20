@@ -3,7 +3,6 @@ FROM node:22-alpine3.19 AS minimum-image
 RUN apk update
 RUN npm i -g pnpm
 # ARGS
-ARG NODE_ENV
 ARG ENV
 ARG DATABASE_URL_NFT_MANAGER
 ARG TON_CENTER_TOKEN
@@ -31,7 +30,6 @@ ARG CLIENT_API_FIXED_KEY
 ARG CLIENT_API_FIXED_USER
 ARG CLIENT_API_FIXED_ORGANIZER
 # Export arguments as environment variables
-ENV NODE_ENV=${NODE_ENV}
 ENV ENV=${ENV}
 ENV DATABASE_URL_NFT_MANAGER=${DATABASE_URL_NFT_MANAGER}
 ENV TON_CENTER_TOKEN=${TON_CENTER_TOKEN}
@@ -67,14 +65,15 @@ RUN apk add \
   curl \
   ca-certificates
 
+
 # Stage : Dependencies
 FROM base AS dependencies
 # Copy package files for dependency installation
 COPY ./package.json  /app/
-# Install production dependencies only
-RUN pnpm install --pnpm
 # Set working directory
 WORKDIR /app
+# Install production dependencies only
+RUN  pnpm install --prod
 
 # Stage : With Files
 FROM dependencies AS with-files
@@ -83,7 +82,8 @@ COPY . /app
 
 # Stage : Build Stage
 FROM with-files AS build-stage
-
+RUN echo "Build stage files " && ls -la /app && ls -la
+RUN  pnpm install
 # Build the Next.js application
 RUN pnpm run build
 # Clean up unnecessary files to reduce image size
@@ -91,6 +91,7 @@ RUN pnpm run build
 # Stage : Production Stage
 FROM build-stage AS production
 # Expose the necessary port for mini-app (Next.js)
+
 EXPOSE $MINI_APP_PORT
 # Default command for the Next.js app
 CMD  node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT

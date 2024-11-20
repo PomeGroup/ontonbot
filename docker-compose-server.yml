@@ -3,7 +3,7 @@ x-common-extra-hosts: &default-extra-hosts
     - "${MINI_APP_DOMAIN}:${IP_CADDY}"
 
 x-common-env: &common-env
-  ACME_AGREE: true
+  ACME_AGREE: ${ACME_AGREE}
   BOT_TOKEN: ${BOT_TOKEN}
   CLIENT_WEB_DOMAIN: ${CLIENT_WEB_DOMAIN}
   DATABASE_URL: ${DATABASE_URL}
@@ -71,52 +71,31 @@ x-common-env: &common-env
   TONAPI_API_KEY: ${TONAPI_API_KEY}
   TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
+  DOCKER_CONFIG: "/run/secrets/ghcr-radio-config"
 
 services:
-  caddy:
-    image: caddy:latest
-    build:
-      context: ./devops/caddy
-      dockerfile: Dockerfile
-    container_name: ${ENV}-caddy
-    restart: unless-stopped
-    profiles:
-      - front-end-development
-      - minimal
-      - expecting-mini-app
-      - full
-    ports:
-      - "${NETWORK_PUBLIC_IP}:80:80"
-      - "${NETWORK_PUBLIC_IP}:443:443"
-      - "${NETWORK_PUBLIC_IP}:443:443/udp"
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-      - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
-      - ./devops/cert:/certs
-    networks:
-      onton-network:
-        ipv4_address: "${IP_CADDY}"
-    environment:
-      <<: *common-env
-      USE_CLOUDFLARE: ${USE_CLOUDFLARE}
-      CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
-      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
-    entrypoint: /usr/bin/envsh/generate-caddyfile.sh
-
   minio:
     hostname: minio
-    container_name: ${STAGE_NAME}-minio
     image: minio/minio
-    restart: unless-stopped
-    profiles:
-      - front-end-development
-      - expecting-mini-app
-      - minimal
-      - full
     networks:
-      onton-network:
-        ipv4_address: "${IP_MINIO}"
+      - onton-network
+    ports:
+      - "${MINIO_PORT}:${MINIO_PORT}"
+      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: 8000M
+          cpus: '3.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: none
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     volumes:
       - minio_data:/data
       - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
@@ -124,107 +103,143 @@ services:
     environment:
       <<: *common-env
 
+
   postgres:
     hostname: postgres
-    container_name : ${STAGE_NAME}-postgres
     image: postgres:16.3-alpine3.20
-    restart: unless-stopped
-    profiles:
-      - front-end-development
-      - expecting-mini-app
-      - full
-      - minimal
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: 8000M
+          cpus: '5.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: none
+        delay: 10s
     environment:
       <<: *common-env
+    command: postgres -p ${POSTGRES_PORT}
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      onton-network:
-        ipv4_address: "${IP_POSTGRES}"
+      - onton-network
 
   redis:
     image: redis:7.4.1-bookworm
     hostname: redis
-    container_name: ${STAGE_NAME}-redis
-    restart: unless-stopped
     volumes:
       - redis_data:/data
-    profiles:
-      - front-end-development
-      - expecting-mini-app
-      - minimal
-      - full
-    command: redis-server --save "" --appendonly no
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    command: redis-server --save "" --appendonly no --port ${REDIS_PORT}
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '2.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     environment:
         <<: *common-env
     networks:
-      onton-network:
-        ipv4_address: ${IP_REDIS}
+      - onton-network
 
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
-    container_name: ${STAGE_NAME}-clamav
-    profiles:
-      - front-end-development
-      - manual-apps
-      - full
     environment:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
+      - CLAMD_SETTINGS_TCPSOCKET=${CLAMAV_PORT}
+    deploy:
+      resources:
+        limits:
+          memory: 1000M
+          cpus: '5.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     volumes:
       - clamav_data:/var/lib/clamav  # Persist virus definition database
-    restart: unless-stopped
     networks:
-        onton-network:
-            ipv4_address: "${IP_CLAMAV}"
+      - onton-network
 
   pgadmin:
     image: dpage/pgadmin4
-    container_name: ${STAGE_NAME}-pgadmin
-    restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
       PGADMIN_LISTEN_PORT: ${PORT_PGADMIN}
-    profiles:
-      - full
-      - manual-apps
-      - minimal
     depends_on:
       - postgres
     ports:
       - "${PORT_PGADMIN}:${PORT_PGADMIN}"
     networks:
-      onton-network:
-        ipv4_address: ${IP_PGADMIN}
+      - onton-network
     volumes:
       - pgadmin:/var/lib/pgadmin
 
   telegram-bot:
-    container_name: ${STAGE_NAME}-telegram-bot
     image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
-    pull_policy: build
-    restart: "unless-stopped"
-    profiles:
-      - front-end-development
-      - manual-apps
-      - full
+    hostname: telegram-bot
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '2.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
     environment:
       <<: *common-env
     depends_on:
       - postgres
+    secrets:
+      - ghcr-radio-config
     networks:
-      onton-network:
-        ipv4_address: "${IP_TELEGRAM_BOT}"
+      - onton-network
 
   mini-app:
     hostname: mini-app
-    container_name: ${STAGE_NAME}-mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
-    profiles:
-      - full
-    restart: "unless-stopped"
+    ports:
+      - "${MINI_APP_PORT}:${MINI_APP_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '2.0'
+      replicas: ${SYS_MINI_APP_REPLICAS-2}
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 3s
     environment:
         <<: *common-env
         TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -232,20 +247,31 @@ services:
     depends_on:
       - postgres
       - redis
+      - caddy
+      - minio
     volumes:
       - drizzle_data:/app/drizzle
     networks:
-      onton-network:
-        ipv4_address: ${IP_MINI_APP}
-
+      - onton-network
+    secrets:
+      - ghcr-radio-config
   mini-app-cron:
-    hostname: mini-app
-    container_name: ${STAGE_NAME}-mini-app-cron
+    hostname: mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
-    pull_policy: build
-    restart: "unless-stopped"
-    profiles:
-      - full
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+          cpus: '2.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 20
+        window: 300s
     environment:
         <<: *common-env
         TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -253,112 +279,148 @@ services:
     depends_on:
       - postgres
       - redis
+      - minio
     volumes:
       - drizzle_data_cron:/app/drizzle
     networks:
-      onton-network:
-        ipv4_address: "${IP_MINI_APP_CRON}"
+      - onton-network
     command: ["pnpm","run", "start-cron"]
-
+    secrets:
+      - ghcr-radio-config
   participant-tma:
     hostname: participant-tma
-    container_name: ${STAGE_NAME}-participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
-    pull_policy: build
-    <<: *default-extra-hosts
-    profiles:
-      - full
-    restart: "unless-stopped"
+    ports:
+      - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
+#    <<: *default-extra-hosts
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '2.0'
+      replicas: '${SYS_PARTICIPANT_TMA_REPLICAS-1}'
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 3s
+#    depends_on:
+#      - mini-app
+#      - caddy
     environment:
         <<: *common-env
     networks:
-      onton-network:
-        ipv4_address: "${IP_PARTICIPANT_TMA}"
-
-  nft-microservice:
-    hostname: nft-service
-    container_name : ${STAGE_NAME}-nft-service
+      - onton-network
+    secrets:
+      - ghcr-radio-config
+  nft-manager:
+    hostname: nft-manager
     image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
-    pull_policy: build
-    restart: unless-stopped
-    profiles:
-      - front-end-development
-      - manual-apps
-      - full
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: '3.0'
+      replicas: 1
+      update_config:
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - caddy
+      - mini-app
     environment:
       <<: *common-env
       MNEMONIC: ${MNEMONIC}
     networks:
-      onton-network:
-        ipv4_address: "${IP_NFT_MANAGER}"
-
+      - onton-network
+    secrets:
+      - ghcr-radio-config
   giveaway-checker:
-    container_name: ${STAGE_NAME}-giveaway-checker
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
-    restart: unless-stopped
-    profiles:
-      - full
+    hostname: giveaway-checker
     depends_on:
       - postgres
     environment:
         <<: *common-env
     networks:
-      onton-network:
-        ipv4_address: "${IP_GIVEAWAY_CHECKER}"
-
+      - onton-network
+    secrets:
+      - ghcr-radio-config
   website:
     hostname: website
-    container_name: ${STAGE_NAME}-website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
-    pull_policy: build
-    restart: "unless-stopped"
-    profiles:
-      - full
-#    depends_on:
-#     - caddy
+    ports:
+      - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+          cpus: '1.0'
+      replicas: '${SYS_WEB_SITE_REPLICAS-1}'
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 20
+        window: 300s
+    depends_on:
+     - caddy
     environment:
         <<: *common-env
     networks:
-      onton-network:
-        ipv4_address: ${IP_WEBSITE}
+      - onton-network
 
   golang-server:
-    container_name: ${STAGE_NAME}-golang-server
     image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
-    restart: unless-stopped
-    profiles:
-      - expecting-mini-app
-      - full
+    hostname: golang-server
     depends_on:
       - redis
     environment:
       <<: *common-env
     networks:
-      onton-network:
-        ipv4_address: ${IP_GOLANG_SERVER}
+      - onton-network
 
   golang-worker:
-    container_name: ${STAGE_NAME}-golang-worker
     image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
-    restart: unless-stopped
-    profiles:
-      - expecting-mini-app
-      - full
+    hostname: golang-worker
     depends_on:
       - redis
+      - golang-server
     environment:
         <<: *common-env
     networks:
-      onton-network:
-        ipv4_address: ${IP_GOLANG_WORKER}
+      - onton-network
 
   metabase:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
-    container_name: ${STAGE_NAME}-metabase
-    restart: unless-stopped
-    profiles:
-      - full
+    ports:
+      - "${PORT_METABASE}:${PORT_METABASE}"
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+          cpus: '2.0'
+      replicas: 1
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 20
+        window: 300s
     volumes:
       - /dev/urandom:/dev/random:ro
     environment:
@@ -370,26 +432,25 @@ services:
       MB_LOG_LEVEL: error
       MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
       MB_REDIRECT_ALL_REQUESTS_TO_HTTPS: ${MB_REDIRECT_ALL_REQUESTS_TO_HTTPS}
+      MB_JETTY_PORT: ${PORT_METABASE}
     networks:
-      onton-network:
-        ipv4_address: ${IP_METABASE}
+      - onton-network
     depends_on:
       - postgres
+      - caddy
     healthcheck:
       test: curl --fail -I http://localhost:3000/api/health || exit 1
       interval: 15s
       timeout: 5s
       retries: 5
 
+
   client-web:
     hostname: client-web
-    container_name: ${STAGE_NAME}-client-web
     <<: *default-extra-hosts
-    profiles:
-      - full
     image: ghcr.io/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
-    pull_policy: build
-    restart: "unless-stopped"
+    ports:
+      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
     environment:
       NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
       CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
@@ -397,11 +458,10 @@ services:
       CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
       CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
       PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
-#    depends_on:
-#      - caddy
+    depends_on:
+      - caddy
     networks:
-      onton-network:
-        ipv4_address: ${IP_CLIENT_WEB}
+      - onton-network
 
 #  swagger-ui:
 #    image: swaggerapi/swagger-ui
@@ -417,13 +477,10 @@ services:
 
 networks:
   onton-network:
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.host_binding_ipv4: ${NETWORK_PUBLIC_IP}
-    name: ${NETWORK_NAME}
-    ipam:
-      config:
-        - subnet: "${IP_RANGE_START}.0.0/${IP_RANGE_SUBNET}"
+    name: onton-network-${BRANCH_NAME}
+    driver: overlay
+    external: true
+
 
 volumes:
     pgadmin:
@@ -432,17 +489,16 @@ volumes:
       name: "${STAGE_NAME}_clamav_data"
     minio_data:
       name: "${STAGE_NAME}_minio_data"
-    db_data:
-      name: "${STAGE_NAME}_db_data"
+    postgres_data:
+      name: "${STAGE_NAME}_postgres_data"
     redis_data:
       name: "${STAGE_NAME}_redis_data"
     drizzle_data:
         name: "${STAGE_NAME}_drizzle_data"
     drizzle_data_cron:
       name: "${STAGE_NAME}_drizzle_data_cron"
-    caddy_data:
-      name: "${STAGE_NAME}_caddy_data"
-    caddy_config:
-      name: "${STAGE_NAME}_caddy_config"
 
 
+secrets:
+  ghcr-radio-config:
+    external: true

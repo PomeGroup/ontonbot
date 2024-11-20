@@ -99,23 +99,21 @@ export const fieldsRouter = router({
       // Send the image data to the upload service (MinIO)
       const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload`;
       console.log("URL: ", url);
-        try {
-            const res = await axios.post(
-                url,
-                formData,
-                { headers: formData.getHeaders() }
-            );
-            console.log("Response: ", res.data);
+      try {
+        const res = await axios.post(url, formData, {
+          headers: formData.getHeaders(),
+        });
+        console.log("Response: ", res.data);
 
-            if (!res.data || !res.data.imageUrl) {
-                throw new Error("File upload failed");
-            }
-
-            return res.data as { imageUrl: string };
-        } catch (error) {
-            console.error("Error during file upload:", error);
-            throw new Error("An error occurred during file upload");
+        if (!res.data || !res.data.imageUrl) {
+          throw new Error("File upload failed");
         }
+
+        return res.data as { imageUrl: string };
+      } catch (error) {
+        console.error("Error during file upload:", error);
+        throw new Error("An error occurred during file upload");
+      }
     }),
   uploadVideo: adminOrganizerProtectedProcedure
     .input(
@@ -178,12 +176,10 @@ export const fieldsRouter = router({
       });
 
       formData.append("bucketName", bucketName);
-        const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-video`;
-        const res = await axios.post(
-            url,
-        formData,
-        { headers: formData.getHeaders() }
-      );
+      const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-video`;
+      const res = await axios.post(url, formData, {
+        headers: formData.getHeaders(),
+      });
 
       if (!res.data || !res.data.videoUrl) {
         throw new Error("File upload failed");

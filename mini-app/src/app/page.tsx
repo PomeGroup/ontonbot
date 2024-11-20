@@ -1,5 +1,11 @@
 "use client";
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
@@ -17,6 +23,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { useTheme } from "next-themes";
+import { Block } from "konsta/react";
 
 // Define types for events
 type EventData = any[];
@@ -28,7 +35,7 @@ export default function Home() {
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
 
-  const { setTheme } = useTheme()
+  const { setTheme } = useTheme();
 
   const UserId = webApp?.initDataUnsafe?.user?.id;
 
@@ -188,8 +195,8 @@ export default function Home() {
   };
 
   useLayoutEffect(() => {
-    setTheme('dark')
-  }, [])
+    setTheme("dark");
+  }, []);
 
   // Handle swiper slide change
   const handleSlideChange = (swiper: any) => {
@@ -212,13 +219,13 @@ export default function Home() {
   }, [router]);
 
   return (
-    <>
+    <Block margin="mt-2">
       <div className="flex flex-col h-screen">
         {/* Fixed Search Bar */}
         <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
           <SearchBar
             includeQueryParam={false}
-            onUpdateResults={() => { }}
+            onUpdateResults={() => {}}
             tabValue={tabValueForSearchBar}
             userRole={authorized ? userRole : "user"}
           />
@@ -232,15 +239,17 @@ export default function Home() {
             <TabsList className="flex bg-gray-600 h-33 rounded-lg p-1">
               <TabsTrigger
                 value="all-events"
-                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
-                  }`}
+                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
+                  activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
+                }`}
               >
                 All events
               </TabsTrigger>
               <TabsTrigger
                 value="my-events"
-                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${activeTab === "my-events" ? "bg-blue-600" : "bg-transparent"
-                  }`}
+                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
+                  activeTab === "my-events" ? "bg-blue-600" : "bg-transparent"
+                }`}
               >
                 My events
               </TabsTrigger>
@@ -396,7 +405,7 @@ export default function Home() {
                         currentUserId={UserId}
                         mode={
                           currentDateTime > event.startDate &&
-                            currentDateTime < event.endDate
+                          currentDateTime < event.endDate
                             ? "ongoing"
                             : "normal"
                         }
@@ -418,6 +427,6 @@ export default function Home() {
             onClick={handleCreateEvent}
           />
         )}
-    </>
+    </Block>
   );
 }

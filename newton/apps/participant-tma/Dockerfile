@@ -1,7 +1,10 @@
 # minimum required version of Node.js
 FROM node:22-alpine3.19 AS minimum-image
 RUN apk update
-RUN npm i -g pnpm
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
 
 # Base stage
 FROM minimum-image AS base
@@ -15,7 +18,7 @@ ARG PARTICIPANT_TMA_PORT
 ARG MINI_APP_DOMAIN
 ARG MINI_APP_PORT
 ARG NODE_TLS_REJECT_UNAUTHORIZED
-ARG NODE_ENV
+
 # Export arguments as environment variables
 ENV BOT_TOKEN=${BOT_TOKEN}
 ENV ONTON_API_KEY=${ONTON_API_KEY}
@@ -26,26 +29,33 @@ ENV PARTICIPANT_TMA_PORT=${PARTICIPANT_TMA_PORT}
 ENV MINI_APP_DOMAIN=${MINI_APP_DOMAIN}
 ENV MINI_APP_PORT=${MINI_APP_PORT}
 ENV NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}
-ENV NODE_ENV=${NODE_ENV}
+
+
 # Install necessary packages
 RUN apk add \
   bash \
   curl \
   ca-certificates
 # Set the working directory
-WORKDIR /app
+
 
 # Dependencies stage
 FROM base AS dependencies
 # Copy package files for dependency installation
-COPY ./ /app/
+# Copy all necessary files from the workspace root
+COPY  ./ /app
+# Install production dependencies only
+WORKDIR /app/
 # Install production dependencies only
 RUN pnpm install
+
+
 
 # Development stage (includes devDependencies)
 FROM base AS development
 # Copy all necessary files from the workspace root
 COPY ./ /app/
+
 # Set the working directory for participant-tma
 WORKDIR /app/apps/participant-tma
 # Expose the default port for development mode (e.g., 3000)
@@ -55,10 +65,10 @@ CMD  export NODE_ENV=development && cd /app/ && pnpm install && cd /app/apps/par
 
 # Build stage
 FROM dependencies AS build
-# Set the working directory for participant-tma
 WORKDIR /app/apps/participant-tma
-# Build the participant-tma app
-RUN pnpm build
+RUN echo "Build stage files " && ls -la
+RUN pnpm run build
+
 # Clean up unnecessary files to reduce image size
 RUN rm -rf /app/apps/nft-manager \
           /app/apps/participant-tma/node_modules/env.mjs \
@@ -77,4 +87,3 @@ FROM build AS production
 EXPOSE $PORT
 # Run the app in production mode with the original command style
 CMD pnpm start --port $PARTICIPANT_TMA_PORT
-

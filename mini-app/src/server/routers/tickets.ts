@@ -4,7 +4,7 @@ import ticketDB from "@/server/db/ticket.db";
 import { TRPCError } from "@trpc/server";
 import rewardsService from "@/server/routers/services/rewardsService";
 import dealRoomService from "@/server/routers/services/DealRoomService";
-import {configProtected } from "@/server/config";
+import { configProtected } from "@/server/config";
 
 // Type guard to check if result is alreadyCheckedIn type
 function isAlreadyCheckedIn(
@@ -42,9 +42,8 @@ export const ticketRouter = router({
     .mutation(async (opts) => {
       const result = await ticketDB.checkInTicket(opts.input.ticketUuid);
 
-
       console.log("result", result);
-      if (!result ) {
+      if (!result) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to check in the ticket",
@@ -67,7 +66,9 @@ export const ticketRouter = router({
           return { alreadyCheckedIn: true, result: result };
         }
 
-        const dealRoomResult = await dealRoomService.RefreshGuestList(configProtected?.dealRoomRefreshCode || "");
+        const dealRoomResult = await dealRoomService.RefreshGuestList(
+          configProtected?.dealRoomRefreshCode || ""
+        );
         return {
           checkInSuccess: true,
           result: result,

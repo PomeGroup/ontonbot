@@ -11,8 +11,7 @@ const handler = async (req: Request) => {
     endpoint: "/api/trpc",
     req,
     router: appRouter,
-    createContext: () =>
-      createContext({ req }),
+    createContext: () => createContext({ req }),
   });
 
   const text = await response.text();
