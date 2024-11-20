@@ -88,8 +88,8 @@ services:
       resources:
         limits:
           memory:  3000M
-          cpus: '3.0'
-      mode: global
+          cpus: '2.0'
+      replicas: ${SYS_CADDY_REPLICAS-1}
       update_config:
         failure_action: rollback
         order: start-first
@@ -103,14 +103,14 @@ services:
       - caddy_config:/config
       - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
       - ./devops/cert:/certs
-#    networks:
-#      - onton-network
+    networks:
+      - onton-network
     environment:
       <<: *common-env
       USE_CLOUDFLARE: ${USE_CLOUDFLARE}
       CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
-      CADDY_BIND_IP: "${NETWORK_PUBLIC_IP}"
+#      CADDY_BIND_IP: "${NETWORK_PUBLIC_IP}"
     entrypoint: /usr/bin/envsh/generate-caddyfile.sh
     secrets:
       - ghcr-radio-config
