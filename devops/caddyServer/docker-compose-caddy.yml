@@ -10,15 +10,15 @@ services:
     deploy:
       resources:
         limits:
-          memory:  3000M
-          cpus: '2.0'
+          memory:  6000M
+          cpus: '4.0'
       mode: global
       update_config:
         failure_action: rollback
         order: start-first
       restart_policy:
         condition: on-failure
-        delay: 5s
+        delay: 3s
     volumes:
       - caddy_data:/data
       - caddy_config:/config
