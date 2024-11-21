@@ -4,6 +4,10 @@ export type GeneralFormErrors = {
   description?: string[];
   image_url?: string[];
   hub?: string[];
+  // registration
+  has_registration?: string[];
+  has_approval?: string[];
+  capacity?: string[];
 };
 
 export type TimePlaceFormErorrs = {

@@ -16,22 +16,25 @@ export type CreateEventStoreType = {
   currentStep: number;
   setCurrentStep: (_step: number) => void;
   eventData?: StoreEventData;
-  setEventData: (_data: z.infer<typeof EventDataSchemaAllOptional>) => void;
   edit?: {
     eventHash?: string;
   };
+  setEventData: (_data: z.infer<typeof EventDataSchemaAllOptional>) => void;
   setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
+  // form errors
   generalStepErrors?: GeneralFormErrors;
   timeplaceStepErrors?: TimePlaceFormErorrs;
-  clearImageErrors: () => void;
+  rewardStepErrors?: RewardFormErrors;
+  // set errors
   setGeneralStepErrors: (_: GeneralFormErrors) => void;
   setTimePlaceStepErrors: (_: TimePlaceFormErorrs) => void;
-  clearGeneralStepErrors: () => void;
-  rewardStepErrors?: RewardFormErrors;
   setRewardStepErrors: (_: RewardFormErrors) => void;
+  // clear errors
+  clearGeneralStepErrors: () => void;
   clearRewardStepErrors: () => void;
   clearTimePlaceStepErrors: () => void;
+  clearImageErrors: () => void;
   resetReward: () => void;
 };
 

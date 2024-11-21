@@ -229,6 +229,12 @@ export const EventDataSchemaAllOptional = z.object({
   countryId: z.number().optional(),
   cityId: z.number().optional(),
   agenda: z.array(AgendaHeaderSchema).optional(),
+  // registration
+  has_registration: z.boolean().optional(),
+  has_approval: z.boolean().optional(),
+  has_waiting_list: z.boolean().optional(),
+  has_capacity: z.boolean().optional(),
+  capacity: z.number().optional(),
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;
