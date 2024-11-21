@@ -94,6 +94,6 @@ ${ONTON_DOMAIN} {
     reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
 }
 
-" > /etc/caddy/Caddyfile
-cat /etc/caddy/Caddyfile
-exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
+" > "${CADDYFILE_PATH}"
+cat "${CADDYFILE_PATH}"
+

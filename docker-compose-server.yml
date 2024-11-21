@@ -73,52 +73,15 @@ x-common-env: &common-env
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
   DOCKER_CONFIG: "/run/secrets/ghcr-radio-config"
 
-
-
-
 services:
-  caddy:
-    image: ghcr.io/${GITHUB_REPO}/caddy:${BRANCH_NAME}-latest
-    network_mode: "host"
-    ports:
-      - "85:80"
-      - "445:443"
-      - "445:443/udp"
-    deploy:
-      resources:
-        limits:
-          memory:  3000M
-          cpus: '2.0'
-      replicas: ${SYS_CADDY_REPLICAS-1}
-      update_config:
-        failure_action: rollback
-        order: start-first
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 20
-        window: 300s
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-      - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
-      - ./devops/cert:/certs
-    networks:
-      - onton-network
-    environment:
-      <<: *common-env
-      USE_CLOUDFLARE: ${USE_CLOUDFLARE}
-      CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
-      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
-#      CADDY_BIND_IP: "${NETWORK_PUBLIC_IP}"
-    entrypoint: /usr/bin/envsh/generate-caddyfile.sh
-    secrets:
-      - ghcr-radio-config
   minio:
     hostname: minio
     image: minio/minio
     networks:
       - onton-network
+    ports:
+      - "${MINIO_PORT}:${MINIO_PORT}"
+      - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     deploy:
       resources:
         limits:
@@ -140,8 +103,9 @@ services:
     environment:
       <<: *common-env
 
+
   postgres:
-    hostname: postgres-${BRANCH_NAME}
+    hostname: postgres
     image: postgres:16.3-alpine3.20
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
@@ -157,9 +121,9 @@ services:
       restart_policy:
         condition: none
         delay: 10s
-
     environment:
       <<: *common-env
+    command: postgres -p ${POSTGRES_PORT}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -172,7 +136,7 @@ services:
       - redis_data:/data
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
-    command: redis-server --save "" --appendonly no
+    command: redis-server --save "" --appendonly no --port ${REDIS_PORT}
     deploy:
       resources:
         limits:
@@ -198,6 +162,7 @@ services:
     environment:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
+      - CLAMD_SETTINGS_TCPSOCKET=${CLAMAV_PORT}
     deploy:
       resources:
         limits:
@@ -234,12 +199,13 @@ services:
 
   telegram-bot:
     image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
+    hostname: telegram-bot
     deploy:
       resources:
         limits:
           memory: 3000M
           cpus: '2.0'
-      replicas: 1
+      mode: global
       update_config:
         failure_action: rollback
         order: start-first
@@ -260,6 +226,8 @@ services:
   mini-app:
     hostname: mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    ports:
+      - "${MINI_APP_PORT}:${MINI_APP_PORT}"
     deploy:
       resources:
         limits:
@@ -322,6 +290,8 @@ services:
   participant-tma:
     hostname: participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
+    ports:
+      - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
 #    <<: *default-extra-hosts
     deploy:
       resources:
@@ -352,7 +322,7 @@ services:
         limits:
           memory: 3000M
           cpus: '3.0'
-      replicas: 1
+      mode: global
       update_config:
         parallelism: 1
       placement:
@@ -376,6 +346,7 @@ services:
       - ghcr-radio-config
   giveaway-checker:
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
+    hostname: giveaway-checker
     depends_on:
       - postgres
     environment:
@@ -387,6 +358,8 @@ services:
   website:
     hostname: website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
+    ports:
+      - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
     deploy:
       resources:
         limits:
@@ -410,6 +383,7 @@ services:
 
   golang-server:
     image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
+    hostname: golang-server
     depends_on:
       - redis
     environment:
@@ -419,6 +393,7 @@ services:
 
   golang-worker:
     image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
+    hostname: golang-worker
     depends_on:
       - redis
       - golang-server
@@ -430,6 +405,8 @@ services:
   metabase:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
+    ports:
+      - "${PORT_METABASE}:${PORT_METABASE}"
     deploy:
       resources:
         limits:
@@ -455,6 +432,7 @@ services:
       MB_LOG_LEVEL: error
       MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
       MB_REDIRECT_ALL_REQUESTS_TO_HTTPS: ${MB_REDIRECT_ALL_REQUESTS_TO_HTTPS}
+      MB_JETTY_PORT: ${PORT_METABASE}
     networks:
       - onton-network
     depends_on:
@@ -471,6 +449,8 @@ services:
     hostname: client-web
     <<: *default-extra-hosts
     image: ghcr.io/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
+    ports:
+      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
     environment:
       NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
       CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
@@ -500,12 +480,7 @@ networks:
     name: onton-network-${BRANCH_NAME}
     driver: overlay
     external: true
-#    driver_opts:
-#      com.docker.network.bridge.host_binding_ipv4: ${NETWORK_PUBLIC_IP}
-#    name: ${NETWORK_NAME}
-#    ipam:
-#      config:
-#        - subnet: "${IP_RANGE_START}.0.0/${IP_RANGE_SUBNET}"
+
 
 volumes:
     pgadmin:
@@ -522,10 +497,7 @@ volumes:
         name: "${STAGE_NAME}_drizzle_data"
     drizzle_data_cron:
       name: "${STAGE_NAME}_drizzle_data_cron"
-    caddy_data:
-      name: "${STAGE_NAME}_caddy_data"
-    caddy_config:
-      name: "${STAGE_NAME}_caddy_config"
+
 
 secrets:
   ghcr-radio-config:

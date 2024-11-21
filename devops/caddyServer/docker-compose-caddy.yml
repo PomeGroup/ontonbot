@@ -1,0 +1,53 @@
+services:
+  caddy:
+    image: ghcr.io/${GITHUB_REPO}/caddy:dev-latest
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    extra_hosts:
+         - host.docker.internal:host-gateway
+    deploy:
+      resources:
+        limits:
+          memory:  6000M
+          cpus: '4.0'
+      mode: global
+      update_config:
+        failure_action: continue
+        order: start-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 3s
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - /home/tonont/caddy/:/etc/caddy/
+    networks:
+      - caddy-network
+    environment:
+      USE_CLOUDFLARE: ${USE_CLOUDFLARE}
+      CLOUDFLARE_EMAIL: ${CLOUDFLARE_EMAIL}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+    secrets:
+      - ghcr-radio-config
+
+networks:
+  caddy-network:
+    name: caddy-network
+    driver: overlay
+    external: true
+
+volumes:
+  caddy_data:
+    name: "server_caddy_data"
+  caddy_config:
+    name: "server_caddy_config"
+
+secrets:
+  ghcr-radio-config:
+    external: true
