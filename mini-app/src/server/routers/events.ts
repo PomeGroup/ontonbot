@@ -1028,11 +1028,3 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       }
     }),
 });
-
-function timestampToIsoString(timestamp: number) {
-  const date = new Date(timestamp * 1000);
-  return date.toISOString();
-}
-
-const formatChanges = (changes: any) =>
-  JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
