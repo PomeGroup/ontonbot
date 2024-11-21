@@ -50,7 +50,9 @@ export function UserRegistrationForm() {
               <p className="space-x-4">
                 <span>Capacity</span>
                 <small className={"dark:text-zinc-400"}>
-                  {eventData.has_capacity ? eventData.capacity : "unlimited"}
+                  {eventData.capacity !== null
+                    ? eventData.capacity
+                    : "unlimited"}
                 </small>
               </p>
             }
@@ -58,10 +60,10 @@ export function UserRegistrationForm() {
             after={
               <Toggle
                 onChange={() =>
-                  setEventData({ has_capacity: !eventData?.has_capacity })
+                  setEventData({ capacity: eventData?.capacity ? null : 100 })
                 }
                 component="div"
-                checked={eventData?.has_capacity}
+                checked={eventData?.capacity !== null}
               />
             }
           />
@@ -82,7 +84,7 @@ export function UserRegistrationForm() {
           {/*     /> */}
           {/*   } */}
           {/* /> */}
-          {eventData?.has_capacity && (
+          {eventData?.capacity && (
             <ListInput
               title="Max Capacity"
               type="number"

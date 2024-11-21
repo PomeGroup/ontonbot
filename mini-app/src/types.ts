@@ -258,8 +258,7 @@ export const EventDataSchemaAllOptional = z.object({
   has_registration: z.boolean().optional(),
   has_approval: z.boolean().optional(),
   has_waiting_list: z.boolean().optional(),
-  has_capacity: z.boolean().optional(),
-  capacity: z.number().optional(),
+  capacity: z.number().optional().nullish(),
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;

@@ -44,7 +44,7 @@ const defaultState = {
     owner: 0,
     type: 0,
     hasEnded: true,
-    capacity: 100,
+    capacity: null,
   },
   step: 1,
 };
