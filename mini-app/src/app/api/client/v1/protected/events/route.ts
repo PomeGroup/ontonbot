@@ -44,67 +44,72 @@ const ERROR_CODES = {
  *         description: Unauthorized (Invalid or missing JWT)
  */
 export async function GET(request: Request) {
-  // Validate JWT token from the request
-  const jwtValidation = await validateJwtFromRequest(request);
+  /* ----------------------------- OUT OF SERVICE ----------------------------- */
+  return NextResponse.json({
+      success: false,
+      error: "out_of_service",}
+  )
+  // // Validate JWT token from the request
+  // const jwtValidation = await validateJwtFromRequest(request);
 
-  if (!jwtValidation.success) {
-    return jwtValidation.response; // Return the JWT error response if token is invalid
-  }
+  // if (!jwtValidation.success) {
+  //   return jwtValidation.response; // Return the JWT error response if token is invalid
+  // }
 
-  // Check if the organizerId exists, otherwise return an error
-  const { organizerId } = jwtValidation.payload || {};
-  if (!organizerId) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: ERROR_CODES.ORGANIZER_NOT_FOUND,
-      },
-      { status: 400 }
-    );
-  }
+  // // Check if the organizerId exists, otherwise return an error
+  // const { organizerId } = jwtValidation.payload || {};
+  // if (!organizerId) {
+  //   return NextResponse.json(
+  //     {
+  //       success: false,
+  //       error: ERROR_CODES.ORGANIZER_NOT_FOUND,
+  //     },
+  //     { status: 400 }
+  //   );
+  // }
 
-  // Parse query parameters from the request URL
-  const url = new URL(request.url);
-  const limitParam = url.searchParams.get("limit");
-  const offsetParam = url.searchParams.get("offset");
+  // // Parse query parameters from the request URL
+  // const url = new URL(request.url);
+  // const limitParam = url.searchParams.get("limit");
+  // const offsetParam = url.searchParams.get("offset");
 
-  // Validate the query parameters using Zod
-  const parsed = getEventsListSchema.safeParse({
-    limit: limitParam,
-    offset: offsetParam,
-  });
+  // // Validate the query parameters using Zod
+  // const parsed = getEventsListSchema.safeParse({
+  //   limit: limitParam,
+  //   offset: offsetParam,
+  // });
 
-  if (!parsed.success) {
-    // Return validation errors with status 400
-    return NextResponse.json(
-      {
-        error: parsed.error.errors.map((err) => ({
-          path: err.path,
-          message: err.message,
-        })),
-      },
-      { status: 400 }
-    );
-  }
+  // if (!parsed.success) {
+  //   // Return validation errors with status 400
+  //   return NextResponse.json(
+  //     {
+  //       error: parsed.error.errors.map((err) => ({
+  //         path: err.path,
+  //         message: err.message,
+  //       })),
+  //     },
+  //     { status: 400 }
+  //   );
+  // }
 
-  // Safely parse limit and offset to numbers if provided
-  const limit = parsed.data.limit ? parseInt(parsed.data.limit, 10) : undefined;
-  const offset = parsed.data.offset
-    ? parseInt(parsed.data.offset, 10)
-    : undefined;
+  // // Safely parse limit and offset to numbers if provided
+  // const limit = parsed.data.limit ? parseInt(parsed.data.limit, 10) : undefined;
+  // const offset = parsed.data.offset
+  //   ? parseInt(parsed.data.offset, 10)
+  //   : undefined;
 
-  try {
-    // Fetch organizer's events from the database using the organizerId, limit, and offset
-    console.log("organizerId", organizerId, limit, offset);
-    const events = await getOrganizerEvents(organizerId, limit, offset);
+  // try {
+  //   // Fetch organizer's events from the database using the organizerId, limit, and offset
+  //   console.log("organizerId", organizerId, limit, offset);
+  //   const events = await getOrganizerEvents(organizerId, limit, offset);
 
-    // Return the list of events as the response
-    return NextResponse.json(events, { status: 200 });
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "An unknown error occurred";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
-  }
+  //   // Return the list of events as the response
+  //   return NextResponse.json(events, { status: 200 });
+  // } catch (error: unknown) {
+  //   const errorMessage =
+  //     error instanceof Error ? error.message : "An unknown error occurred";
+  //   return NextResponse.json({ error: errorMessage }, { status: 500 });
+  // }
 }
 
 // Force dynamic rendering

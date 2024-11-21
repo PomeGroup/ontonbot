@@ -123,138 +123,144 @@ const SUCCESS_CODES = {
  *                       example: "An unknown error occurred while sending OTP."
  */
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const schema = z.object({
-      organizerId: z
-        .string()
-        .min(2)
-        .regex(
-          /^@[a-zA-Z0-9_]{5,}$/,
-          "Invalid organizer Telegram username format"
-        ),
-      userId: z
-        .string()
-        .min(2)
-        .regex(/^@[a-zA-Z0-9_]{5,}$/, "Invalid user Telegram username format"),
-    });
+  /* ----------------------------- OUT OF SERVICE ----------------------------- */
+  return NextResponse.json({
+    success: false,
+    error: "out_of_service",}
+  )
 
-    const parsed = schema.safeParse(body);
+  // try {
+  //   const body = await req.json();
+  //   const schema = z.object({
+  //     organizerId: z
+  //       .string()
+  //       .min(2)
+  //       .regex(
+  //         /^@[a-zA-Z0-9_]{5,}$/,
+  //         "Invalid organizer Telegram username format"
+  //       ),
+  //     userId: z
+  //       .string()
+  //       .min(2)
+  //       .regex(/^@[a-zA-Z0-9_]{5,}$/, "Invalid user Telegram username format"),
+  //   });
 
-    // Return validation errors if parsing fails
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: ERROR_CODES.VALIDATION_FAILED,
-          details: parsed.error.errors.map((err) => ({
-            path: err.path,
-            message: err.message,
-          })),
-        },
-        { status: 400 }
-      );
-    }
+  //   const parsed = schema.safeParse(body);
 
-    const { organizerId, userId } = parsed.data;
+  //   // Return validation errors if parsing fails
+  //   if (!parsed.success) {
+  //     return NextResponse.json(
+  //       {
+  //         success: false,
+  //         error: ERROR_CODES.VALIDATION_FAILED,
+  //         details: parsed.error.errors.map((err) => ({
+  //           path: err.path,
+  //           message: err.message,
+  //         })),
+  //       },
+  //       { status: 400 }
+  //     );
+  //   }
 
-    // Generate OTP code
-    const code = Math.floor(10000 + Math.random() * 90000).toString();
+  //   const { organizerId, userId } = parsed.data;
 
-    // Fetch organizer and user details
-    const organizer = await selectUserByUsername(organizerId.replace("@", ""));
-    const user = await selectUserByUsername(userId.replace("@", ""));
+  //   // Generate OTP code
+  //   const code = Math.floor(10000 + Math.random() * 90000).toString();
 
-    if (!organizer || !user) {
-      return NextResponse.json(
-        { success: false, error: ERROR_CODES.TELEGRAM_ID_NOT_FOUND },
-        { status: 404 }
-      );
-    }
+  //   // Fetch organizer and user details
+  //   const organizer = await selectUserByUsername(organizerId.replace("@", ""));
+  //   const user = await selectUserByUsername(userId.replace("@", ""));
 
-    // Send OTP to the organizer with information about the user requesting the OTP
-    try {
-      const messageToOrganizer = `Your OTP code is: ${code}. User @${userId} is requesting access to the event. Please provide the OTP to the user.`;
-      const sendCodeResponse = await tgService.sendTelegramMessageNoLink(
-        organizer.user_id,
-        messageToOrganizer
-      );
+  //   if (!organizer || !user) {
+  //     return NextResponse.json(
+  //       { success: false, error: ERROR_CODES.TELEGRAM_ID_NOT_FOUND },
+  //       { status: 404 }
+  //     );
+  //   }
 
-      if (!sendCodeResponse.success) {
-        return NextResponse.json(
-          { success: false, error: ERROR_CODES.OTP_SEND_FAILED },
-          { status: 500 }
-        );
-      }
-    } catch (err) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: ERROR_CODES.OTP_SEND_FAILED,
-          details:
-            err instanceof Error ? err.message : "An unknown error occurred",
-        },
-        { status: 500 }
-      );
-    }
+  //   // Send OTP to the organizer with information about the user requesting the OTP
+  //   try {
+  //     const messageToOrganizer = `Your OTP code is: ${code}. User @${userId} is requesting access to the event. Please provide the OTP to the user.`;
+  //     const sendCodeResponse = await tgService.sendTelegramMessageNoLink(
+  //       organizer.user_id,
+  //       messageToOrganizer
+  //     );
 
-    // Send message to the user about requesting OTP from the organizer
-    try {
-      const messageToUser = `Your login code has been sent to the organizer of the event. Please ask the organizer (@${organizerId}) for the code to log in.`;
-      await tgService.sendTelegramMessageNoLink(user.user_id, messageToUser);
-    } catch (err) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "USER_MESSAGE_FAILED",
-          message: "Failed to send message to the user",
-          details:
-            err instanceof Error ? err.message : "An unknown error occurred",
-        },
-        { status: 500 }
-      );
-    }
+  //     if (!sendCodeResponse.success) {
+  //       return NextResponse.json(
+  //         { success: false, error: ERROR_CODES.OTP_SEND_FAILED },
+  //         { status: 500 }
+  //       );
+  //     }
+  //   } catch (err) {
+  //     return NextResponse.json(
+  //       {
+  //         success: false,
+  //         error: ERROR_CODES.OTP_SEND_FAILED,
+  //         details:
+  //           err instanceof Error ? err.message : "An unknown error occurred",
+  //       },
+  //       { status: 500 }
+  //     );
+  //   }
 
-    // Cache the OTP in Redis, associating it with the organizer and user
-    try {
-      await redisTools.setCache(
-        `${redisTools.cacheKeys.authApiOtp}${organizerId}:${userId}`,
-        code,
-        redisTools.cacheLvl.authApiOtpTimeout // Set an expiration time for the OTP
-      );
-    } catch (err) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: ERROR_CODES.OTP_CACHE_FAILED,
-          details:
-            err instanceof Error ? err.message : "An unknown error occurred",
-        },
-        { status: 500 }
-      );
-    }
+  //   // Send message to the user about requesting OTP from the organizer
+  //   try {
+  //     const messageToUser = `Your login code has been sent to the organizer of the event. Please ask the organizer (@${organizerId}) for the code to log in.`;
+  //     await tgService.sendTelegramMessageNoLink(user.user_id, messageToUser);
+  //   } catch (err) {
+  //     return NextResponse.json(
+  //       {
+  //         success: false,
+  //         error: "USER_MESSAGE_FAILED",
+  //         message: "Failed to send message to the user",
+  //         details:
+  //           err instanceof Error ? err.message : "An unknown error occurred",
+  //       },
+  //       { status: 500 }
+  //     );
+  //   }
 
-    // Respond with success
-    return NextResponse.json(
-      {
-        success: true,
-        code: SUCCESS_CODES.OTP_SENT.code,
-        message: `OTP has been sent to the organizer (@${organizerId}).`,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "An unknown error occurred";
-    return NextResponse.json(
-      {
-        success: false,
-        error: ERROR_CODES.UNKNOWN_ERROR,
-        details: errorMessage,
-      },
-      { status: 500 }
-    );
-  }
+  //   // Cache the OTP in Redis, associating it with the organizer and user
+  //   try {
+  //     await redisTools.setCache(
+  //       `${redisTools.cacheKeys.authApiOtp}${organizerId}:${userId}`,
+  //       code,
+  //       redisTools.cacheLvl.authApiOtpTimeout // Set an expiration time for the OTP
+  //     );
+  //   } catch (err) {
+  //     return NextResponse.json(
+  //       {
+  //         success: false,
+  //         error: ERROR_CODES.OTP_CACHE_FAILED,
+  //         details:
+  //           err instanceof Error ? err.message : "An unknown error occurred",
+  //       },
+  //       { status: 500 }
+  //     );
+  //   }
+
+  //   // Respond with success
+  //   return NextResponse.json(
+  //     {
+  //       success: true,
+  //       code: SUCCESS_CODES.OTP_SENT.code,
+  //       message: `OTP has been sent to the organizer (@${organizerId}).`,
+  //     },
+  //     { status: 200 }
+  //   );
+  // } catch (error) {
+  //   const errorMessage =
+  //     error instanceof Error ? error.message : "An unknown error occurred";
+  //   return NextResponse.json(
+  //     {
+  //       success: false,
+  //       error: ERROR_CODES.UNKNOWN_ERROR,
+  //       details: errorMessage,
+  //     },
+  //     { status: 500 }
+  //   );
+  // }
 }
 
 // Force dynamic rendering

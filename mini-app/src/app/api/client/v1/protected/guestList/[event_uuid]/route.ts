@@ -53,58 +53,63 @@ export async function GET(
   request: Request,
   { params }: { params: { event_uuid: string } }
 ) {
-  // First, validate the JWT token
-  const jwtValidation = await validateJwtFromRequest(request);
+  /* ----------------------------- OUT OF SERVICE ----------------------------- */
+  return NextResponse.json({
+      success: false,
+      error: "out_of_service",}
+  )
+  // // First, validate the JWT token
+  // const jwtValidation = await validateJwtFromRequest(request);
 
-  if (!jwtValidation.success) {
-    return jwtValidation.response; // Return the JWT error response
-  }
+  // if (!jwtValidation.success) {
+  //   return jwtValidation.response; // Return the JWT error response
+  // }
 
-  const { event_uuid } = params;
+  // const { event_uuid } = params;
 
-  // Parse the query parameters
-  const url = new URL(request.url);
-  const limit = url.searchParams.get("limit");
-  const cursor = url.searchParams.get("cursor");
-  const search = url.searchParams.get("search");
+  // // Parse the query parameters
+  // const url = new URL(request.url);
+  // const limit = url.searchParams.get("limit");
+  // const cursor = url.searchParams.get("cursor");
+  // const search = url.searchParams.get("search");
 
-  // Validate the event_uuid and optional query params
-  const parsed = getGuestListSchema.safeParse({
-    event_uuid,
-    limit: limit || undefined,
-    cursor: cursor || undefined,
-    search: search || undefined,
-  });
+  // // Validate the event_uuid and optional query params
+  // const parsed = getGuestListSchema.safeParse({
+  //   event_uuid,
+  //   limit: limit || undefined,
+  //   cursor: cursor || undefined,
+  //   search: search || undefined,
+  // });
 
-  if (!parsed.success) {
-    // Return validation errors with status 400
-    return NextResponse.json(
-      {
-        error: parsed.error.errors.map((err) => ({
-          path: err.path,
-          message: err.message,
-        })),
-      },
-      { status: 400 }
-    );
-  }
+  // if (!parsed.success) {
+  //   // Return validation errors with status 400
+  //   return NextResponse.json(
+  //     {
+  //       error: parsed.error.errors.map((err) => ({
+  //         path: err.path ,
+  //         message: err.message ,
+  //       })),
+  //     },
+  //     { status: 400 }
+  //   );
+  // }
 
-  try {
-    // Fetch guest list from the database
-    const data = await selectVisitorsByEventUuid(
-      parsed.data.event_uuid,
-      limit ? parseInt(limit, 10) : 10000,
-      cursor ? parseInt(cursor, 10) : undefined,
-      false, // Always set dynamic_fields to false
-      search || undefined
-    );
-    console.log(data);
-    return NextResponse.json(data, { status: 200 });
-  } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "An unknown error occurred";
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
-  }
+  // try {
+  //   // Fetch guest list from the database
+  //   const data = await selectVisitorsByEventUuid(
+  //     parsed.data.event_uuid,
+  //     limit ? parseInt(limit, 10) : 10000,
+  //     cursor ? parseInt(cursor, 10) : undefined,
+  //     false, // Always set dynamic_fields to false
+  //     search || undefined
+  //   );
+  //   console.log(data);
+  //   return NextResponse.json(data, { status: 200 });
+  // } catch (error: unknown) {
+  //   const errorMessage =
+  //     error instanceof Error ? error.message : "An unknown error occurred";
+  //   return NextResponse.json({ error: errorMessage }, { status: 500 });
+  // }
 }
 
 // Force dynamic rendering

@@ -20,106 +20,112 @@ const ERROR_CODES = {
 };
 
 export async function validateJwtFromRequest(req: Request) {
-  const authorization = req.headers.get("Authorization");
+  
+  /* ----------------------------- OUT OF SERVICE ----------------------------- */
+  return NextResponse.json({
+    success: false,
+    error: "out_of_service",})
 
-  if (!authorization) {
-    return {
-      success: false,
-      error: {
-        code: ERROR_CODES.JWT_MISSING.code,
-        message: ERROR_CODES.JWT_MISSING.message,
-      },
-      response: NextResponse.json(
-        {
-          success: false,
-          error: ERROR_CODES.JWT_MISSING,
-        },
-        { status: 401 }
-      ),
-    };
-  }
+  // const authorization = req.headers.get("Authorization");
 
-  try {
-    const token = authorization.split(" ")[1];
+  // if (!authorization) {
+  //   return {
+  //     success: false,
+  //     error: {
+  //       code: ERROR_CODES.JWT_MISSING.code,
+  //       message: ERROR_CODES.JWT_MISSING.message,
+  //     },
+  //     response: NextResponse.json(
+  //       {
+  //         success: false,
+  //         error: ERROR_CODES.JWT_MISSING,
+  //       },
+  //       { status: 401 }
+  //     ),
+  //   };
+  // }
 
-    // Check if the token is blacklisted
-    const isBlacklisted = await redisTools.getCache(
-      `${redisTools.cacheKeys.jwtBlacklist}${token}`
-    );
+  // try {
+  //   const token = authorization.split(" ")[1];
 
-    if (isBlacklisted) {
-      return {
-        success: false,
-        error: {
-          code: ERROR_CODES.JWT_BLACKLISTED.code,
-          message: ERROR_CODES.JWT_BLACKLISTED.message,
-        },
-        response: NextResponse.json(
-          {
-            success: false,
-            error: ERROR_CODES.JWT_BLACKLISTED,
-          },
-          { status: 401 }
-        ),
-      };
-    }
+  //   // Check if the token is blacklisted
+  //   const isBlacklisted = await redisTools.getCache(
+  //     `${redisTools.cacheKeys.jwtBlacklist}${token}`
+  //   );
 
-    // Verify the JWT token and extract payload
-    const payload = jwt.verify(token, JWT_SECRET);
+  //   if (isBlacklisted) {
+  //     return {
+  //       success: false,
+  //       error: {
+  //         code: ERROR_CODES.JWT_BLACKLISTED.code,
+  //         message: ERROR_CODES.JWT_BLACKLISTED.message,
+  //       },
+  //       response: NextResponse.json(
+  //         {
+  //           success: false,
+  //           error: ERROR_CODES.JWT_BLACKLISTED,
+  //         },
+  //         { status: 401 }
+  //       ),
+  //     };
+  //   }
 
-    // Extract organizerId and userId from the payload
+  //   // Verify the JWT token and extract payload
+  //   const payload = jwt.verify(token, JWT_SECRET);
 
-    const { organizerId, userId } = payload as {
-      userId: number;
-      organizerId: string;
-    };
+  //   // Extract organizerId and userId from the payload
 
-    const organizer = await selectUserByUsername(organizerId);
+  //   const { organizerId, userId } = payload as {
+  //     userId: number;
+  //     organizerId: string;
+  //   };
 
-    const user = await selectUserById(userId);
+  //   const organizer = await selectUserByUsername( organizerId);
 
-    if (!organizer?.user_id || !user?.user_id) {
-      return {
-        success: false,
-        error: {
-          code: ERROR_CODES.JWT_INVALID.code,
-          message: ERROR_CODES.JWT_INVALID.message,
-        },
-        response: NextResponse.json(
-          {
-            success: false,
-            error: ERROR_CODES.JWT_INVALID,
-          },
-          { status: 401 }
-        ),
-      };
-    }
-    return {
-      success: true,
-      payload: {
-        organizerTelegramId: organizer.username,
-        organizerId: organizer.user_id,
-        organizer,
-        userTelegramId: user.username,
-        userId: user.user_id,
-        user,
-      }, // Return organizerId and userId if token is valid
-    };
-  } catch (err) {
-    console.error("JWT validation error: ", err);
-    return {
-      success: false,
-      error: {
-        code: ERROR_CODES.JWT_INVALID.code,
-        message: ERROR_CODES.JWT_INVALID.message,
-      },
-      response: NextResponse.json(
-        {
-          success: false,
-          error: ERROR_CODES.JWT_INVALID,
-        },
-        { status: 401 }
-      ),
-    };
-  }
+  //   const user = await selectUserById(userId);
+
+  //   if (!organizer?.user_id || !user?.user_id) {
+  //     return {
+  //       success: false,
+  //       error: {
+  //         code: ERROR_CODES.JWT_INVALID.code,
+  //         message: ERROR_CODES.JWT_INVALID.message,
+  //       },
+  //       response: NextResponse.json(
+  //         {
+  //           success: false,
+  //           error: ERROR_CODES.JWT_INVALID,
+  //         },
+  //         { status: 401 }
+  //       ),
+  //     };
+  //   }
+  //   return {
+  //     success: true,
+  //     payload: {
+  //       organizerTelegramId: organizer.username,
+  //       organizerId: organizer.user_id,
+  //       organizer,
+  //       userTelegramId: user.username,
+  //       userId: user.user_id,
+  //       user,
+  //     }, // Return organizerId and userId if token is valid
+  //   };
+  // } catch (err) {
+  //   console.error("JWT validation error: ", err);
+  //   return {
+  //     success: false,
+  //     error: {
+  //       code: ERROR_CODES.JWT_INVALID.code,
+  //       message: ERROR_CODES.JWT_INVALID.message,
+  //     },
+  //     response: NextResponse.json(
+  //       {
+  //         success: false,
+  //         error: ERROR_CODES.JWT_INVALID,
+  //       },
+  //       { status: 401 }
+  //     ),
+  //   };
+  // }
 }
