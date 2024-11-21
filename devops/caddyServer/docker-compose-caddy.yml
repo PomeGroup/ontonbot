@@ -17,6 +17,10 @@ services:
       update_config:
         failure_action: continue
         order: start-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
       restart_policy:
         condition: on-failure
         delay: 3s
