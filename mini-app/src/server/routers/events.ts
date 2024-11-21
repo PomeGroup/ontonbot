@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events } from "@/db/schema";
+import { eventFields, events,eventRegistrants } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
 import {
   findVisitorByUserAndEventUuid,
@@ -19,6 +19,7 @@ import {
   HubsResponse,
   SocietyHub,
   UpdateEventDataSchema,
+  EventRegisterSchema,
 } from "@/types";
 
 import { fetchBalance } from "@/utils";
@@ -26,7 +27,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, ne } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -57,37 +58,162 @@ const PLACEHOLDER_IMAGE =
 const PLACEHOLDER_VIDEO =
   "https://storage.onton.live/ontonvideo/event/dCsiY_1731355946593_event_video.mp4";
 
+/* -------------------------------------------------------------------------- */
+/*                                  FUNCTIONS                                 */
+/* -------------------------------------------------------------------------- */
+function timestampToIsoString(timestamp: number) {
+  const date = new Date(timestamp * 1000);
+  return date.toISOString();
+}
+
+const formatChanges = (changes: any) =>
+  JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
+
+async function getRegistrantRequest(event_uuid: string, user_id: number) {
+  const result = (
+    await db
+      .select()
+      .from(eventRegistrants)
+      .where(
+        and(
+          eq(eventRegistrants.event_uuid, event_uuid),
+          eq(eventRegistrants.user_id, user_id)
+        )
+      )
+      .execute()
+  ).pop();
+
+  return result;
+}
+async function getApprovedRequestsCount(event_uuid: string) {
+  const approved_requests_count =
+    (
+      await db
+        .select({ count: count() })
+        .from(eventRegistrants)
+        .where(
+          and(
+            eq(eventRegistrants.status, "approved"),
+            eq(eventRegistrants.event_uuid, event_uuid)
+          )
+        )
+        .execute()
+    ).pop()?.count || 0;
+  return approved_requests_count;
+}
+
+async function getNotRejectedRequestsCount(event_uuid: string) {
+  const notrejected_requests_count =
+    (
+      await db
+        .select({ count: count() })
+        .from(eventRegistrants)
+        .where(
+          and(
+            ne(eventRegistrants.status, "rejected"),
+            eq(eventRegistrants.event_uuid, event_uuid)
+          )
+        )
+        .execute()
+    ).pop()?.count || 0;
+  return notrejected_requests_count;
+}
+
+/* //FIXME  -------------------------------------------------------------------------- */
+
+/* -------------------------------------------------------------------------- */
+/*                                EVENT ROUTER                                */
+/* -------------------------------------------------------------------------- */
+
 export const eventsRouter = router({
-  // private
-  getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
-    async (opts) => {
-      return (
-        (await selectVisitorsWithWalletAddress(opts.ctx.event.event_uuid))
-          .length || 0
-      );
-    }
-  ),
+  // // private
+  // getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
+  //   async (opts) => {
+  //     return (
+  //       (await selectVisitorsWithWalletAddress(opts.ctx.event.event_uuid))
+  //         .length || 0
+  //     );
+  //   }
+  // ),
 
-  getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
-    return await fetchBalance(opts.input);
-  }),
-
+  // getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
+  //   return await fetchBalance(opts.input);
+  // }),
+  /* -------------------------------------------------------------------------- */
+  /*                            Get an Event By User                            */
+  /* -------------------------------------------------------------------------- */
   getEvent: initDataProtectedProcedure
     .input(z.object({ event_uuid: z.string() }))
     .query(async (opts) => {
-      try {
-        const eventVisitor = await findVisitorByUserAndEventUuid(
-          opts.ctx.user.user_id,
-          opts.input.event_uuid
-        );
-        if (eventVisitor) {
-          await updateVisitorLastVisit(eventVisitor.id);
-        }
-      } catch (error) {
-        console.error("Error at updating visitor", error);
+      // try {
+      //   const eventVisitor = await findVisitorByUserAndEventUuid(
+      //     opts.ctx.user.user_id,
+      //     opts.input.event_uuid
+      //   );
+      //   if (eventVisitor) {
+      //     await updateVisitorLastVisit(eventVisitor.id);
+      //   }
+      // } catch (error) {
+      //   console.error("Error at updating visitor", error);
+      // }
+      // console.log("event_uuid", opts.input.event_uuid);
+      const userId = opts.ctx.user.user_id;
+      const event_uuid = opts.input.event_uuid;
+      const eventData = await selectEventByUuid(event_uuid);
+      let capacity_filled = false;
+      let registrant_status = "";
+      if (!eventData) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "event not found",
+        });
       }
-      console.log("event_uuid", opts.input.event_uuid);
-      return selectEventByUuid(opts.input.event_uuid);
+      if (!eventData.has_registration) {
+        return { capacity_filled, registrant_status, ...eventData };
+      }
+
+      /* ------------------------ Event Needs Registration ------------------------ */
+
+      const user_request = await getRegistrantRequest(event_uuid, userId);
+
+      // Registrant Already has a request
+      if (user_request) {
+        registrant_status = user_request.status;
+        return { capacity_filled, registrant_status, ...eventData };
+      }
+
+      // no status for registran
+
+      if (eventData.capacity) {
+        const approved_requests_count =
+          await getApprovedRequestsCount(event_uuid);
+        console.log(
+          "Yakuuuuuuza :::::: ??approved_requests_count?? ",
+          approved_requests_count
+        );
+        console.log(
+          "Yakuuuuuuza :::::: ??getNotRejectedRequestsCount?? ",
+          await getNotRejectedRequestsCount(event_uuid)
+        );
+
+        if (
+          approved_requests_count >= eventData.capacity ||
+          (!eventData.has_waiting_list &&
+            (await getNotRejectedRequestsCount(event_uuid)) >=
+              eventData.capacity)
+        ) {
+          // Event capacity filled
+          // First condition: Approved users >= eventData.capacity
+          // Second condition: Not Rejected Requests >= eventData.capacity && No Waiting List
+          capacity_filled = true;
+          return { capacity_filled, registrant_status, ...eventData };
+        }
+      }
+
+      // NO Status
+      return { capacity_filled, registrant_status, ...eventData };
+
+      /* -------------------------------------------------------------------------- */
     }),
 
   // private
@@ -121,6 +247,126 @@ export const eventsRouter = router({
       ({ wallet_seed_phrase, ...restEventData }) => restEventData
     );
   }),
+
+  /* -------------------------------------------------------------------------- */
+  /*                           Event Register by user                           */
+  /* -------------------------------------------------------------------------- */
+  // private
+  eventRegister: initDataProtectedProcedure
+    .input(z.object({ input_data: EventRegisterSchema }))
+    .mutation(async (opts) => {
+      const userId = opts.ctx.user.user_id;
+      const event_uuid = opts.input.input_data.event_uuid;
+      const event = await selectEventByUuid(event_uuid);
+
+      console.log("event_register", event_uuid, userId);
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+      }
+
+      if (!event.has_registration) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "event is not registrable",
+        });
+      }
+      const user_request = await getRegistrantRequest(event_uuid, userId);
+
+      if (user_request) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `registrant already has a [${user_request.status}] Request `,
+        });
+      }
+      if (event.capacity) {
+        const approved_requests_count =
+          await getApprovedRequestsCount(event_uuid);
+
+        if (
+          approved_requests_count >= event.capacity ||
+          (!event.has_waiting_list &&
+            (await getNotRejectedRequestsCount(event_uuid)) >= event.capacity)
+        ) {
+          // Event capacity filled
+          // First condition: Approved users >= event.capacity
+          // Second condition: Not Rejected Requests >= event.capacity && No Waiting List
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `Event Capacity Reached Waiting List : ${event.has_waiting_list}`,
+          });
+        }
+      }
+
+      const request_status = !!event.has_approval ? "pending" : "approved"; // pending if approval is required otherwise auto approve them
+      await db.insert(eventRegistrants).values({
+        event_uuid: event_uuid,
+        user_id: userId,
+        status: request_status,
+      });
+
+      // TODO add event registration details from user into some table
+      return { message: "success", code: 201 };
+    }),
+
+  /* -------------------------------------------------------------------------- */
+  /*                            Get Event Registrant                            */
+  /* -------------------------------------------------------------------------- */
+  getEventRegistrants: eventManagementProtectedProcedure
+    .input(z.object({ event_uuid: z.string() }))
+    .query(async (opts) => {
+      const event_uuid = opts.input.event_uuid;
+      const event = await selectEventByUuid(event_uuid);
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+      }
+
+      const registrants = await db
+        .select()
+        .from(eventRegistrants)
+        .where(eq(eventRegistrants.event_uuid, event_uuid))
+        .orderBy(desc(eventRegistrants.created_at))
+        .execute();
+
+      return registrants;
+    }),
+
+  /* -------------------------------------------------------------------------- */
+  /*              Process Registrant Request (Approve✅ / Reject ❌)           */
+  /* -------------------------------------------------------------------------- */
+  processRegistrantRequest: eventManagementProtectedProcedure
+    .input(
+      z.object({
+        event_uuid: z.string(),
+        registrant_id: z.number(),
+        status: z.enum(["approved", "rejected"]),
+      })
+    )
+    .mutation(async (opts) => {
+      const event_uuid = opts.input.event_uuid;
+      const registrant_id = opts.input.registrant_id;
+      const event = await selectEventByUuid(event_uuid);
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+      }
+
+      const result = await db
+        .update(eventRegistrants)
+        .set({
+          status: opts.input.status,
+        })
+        .where(
+          and(
+            eq(eventRegistrants.event_uuid, event_uuid),
+            eq(eventRegistrants.user_id, registrant_id)
+          )
+        )
+        .execute();
+
+      return { code: 201, message: "ok" };
+    }),
 
   // private
   addEvent: adminOrganizerProtectedProcedure
@@ -174,6 +420,13 @@ export const eventsRouter = router({
               tsRewardImage: opts.input.eventData.ts_reward_url,
               tsRewardVideo: opts.input.eventData.video_url,
               cityId: opts.input.eventData.cityId,
+
+              //Event Registration
+              has_registration: opts.input.eventData.has_registration,
+              has_approval: opts.input.eventData.has_approval,
+              capacity: opts.input.eventData.capacity,
+              has_waiting_list: opts.input.eventData.has_waiting_list,
+              //Event Registration
             })
             .returning();
 
@@ -335,34 +588,34 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     }),
 
   // private
-  deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
-    try {
-      return await db.transaction(async (trx) => {
-        const deletedEvent = await trx
-          .update(events)
-          .set({
-            hidden: true,
-            updatedBy: "system-delete",
-            updatedAt: new Date(),
-          }) // Set the 'hidden' field to true
-          .where(eq(events.event_uuid, opts.input.event_uuid))
-          .returning();
+  //   deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
+  //     try {
+  //       return await db.transaction(async (trx) => {
+  //         const deletedEvent = await trx
+  //           .update(events)
+  //           .set({
+  //             hidden: true,
+  //             updatedBy: "system-delete",
+  //             updatedAt: new Date(),
+  //           }) // Set the 'hidden' field to true
+  //           .where(eq(events.event_uuid, opts.input.event_uuid))
+  //           .returning();
 
-        await sendLogNotification({
-          message: `
-@${opts.ctx.user.username} <b>Deleted</b> an event <code>${deletedEvent[0].event_uuid}</code>.
+  //         await sendLogNotification({
+  //           message: `
+  // @${opts.ctx.user.username} <b>Deleted</b> an event <code>${deletedEvent[0].event_uuid}</code>.
 
-<pre><code>${JSON.stringify(deletedEvent[0], null, 2)}</code></pre>
-`,
-        });
+  // <pre><code>${JSON.stringify(deletedEvent[0], null, 2)}</code></pre>
+  // `,
+  //         });
 
-        return { success: true };
-      });
-    } catch (error) {
-      console.error(error);
-      return { success: false };
-    }
-  }),
+  //         return { success: true };
+  //       });
+  //     } catch (error) {
+  //       console.error(error);
+  //       return { success: false };
+  //     }
+  //   }),
 
   // private
   updateEvent: eventManagementProtectedProcedure
@@ -411,6 +664,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               cityId: eventData.cityId,
               updatedBy: opts.ctx.user.user_id.toString(),
               updatedAt: new Date(),
+
+              /* ------------------------ Event Registration Update ----------------------- */
+              // Updating has_registraion is not allowed
+              has_approval: eventData.has_approval,
+              capacity: eventData.capacity,
+              has_waiting_list: eventData.has_waiting_list,
+              /* ------------------------ Event Registration Update ----------------------- */
             })
             .where(eq(events.event_uuid, eventUuid))
             .returning()
@@ -538,8 +798,8 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
         });
       } catch (err) {
-        console.info(
-          `update event id: ${opts.ctx.event.event_uuid}, error: `,
+        console.error(
+          `[eventRouter] update event failed id: ${opts.ctx.event.event_uuid}, error: `,
           err
         );
 
@@ -666,6 +926,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           username: visitor.username === "null" ? null : visitor.username,
         };
         // Copy the visitor object without modifying dynamicFields directly
+
 
         // If ticketToCheckIn is false, remove specific fields
         if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {

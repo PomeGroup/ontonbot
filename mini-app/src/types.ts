@@ -121,6 +121,7 @@ export const DynamicFieldsSchema = z.array(
   })
 );
 
+//Create Event 
 export const EventDataSchema = z.object({
   event_id: z.number().optional(),
   event_uuid: z.string().optional(),
@@ -155,6 +156,14 @@ export const EventDataSchema = z.object({
   eventLocationType: z.enum(["online", "in_person"]).optional(),
   countryId: z.number().optional(),
   cityId: z.number().optional(),
+
+  /* -------------------------- // Free Event Registration Creation ------------------------- */
+  has_registration : z.boolean(),
+  has_approval : z.boolean(),
+  capacity : z.number().nullable(),
+  has_waiting_list : z.boolean(),
+  /* -------------------------- // Free Event Registration Creation ------------------------- */
+  
 });
 
 export const UpdateEventDataSchema = z.object({
@@ -191,7 +200,23 @@ export const UpdateEventDataSchema = z.object({
   eventLocationType: z.enum(["online", "in_person"]).optional(),
   countryId: z.number().optional(),
   cityId: z.number().optional(),
+
+  /* -------------------------- // Free Event Registration Update ------------------------- */
+  has_approval : z.boolean(),
+  capacity : z.number().nullable(),
+  has_waiting_list : z.boolean(),
+  /* -------------------------- // Free Event Registration Update ------------------------- */
+  
+
 });
+
+ export const EventRegisterSchema = z.object({
+  event_uuid: z.string().uuid(),
+  full_name : z.string().min(1).max(40) , 
+  position : z.string().min(1).max(40) ,
+  company : z.string().min(1).max(40),
+  notes : z.string().min(1).max(512)
+ })
 
 export const AgendaItemSchema = z.object({
   time: z.string(), // assuming time is a string, e.g., "10:00 AM"
