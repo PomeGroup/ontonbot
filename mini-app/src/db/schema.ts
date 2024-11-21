@@ -29,6 +29,7 @@ import {
 import { userRelations, users } from "./schema/users";
 import { visitors } from "./schema/visitors";
 import { sideEvents } from "./schema/sideEvents";
+import { eventRegistrants } from "./schema/eventRegistrants";
 
 // export all the enums
 export {
@@ -63,4 +64,5 @@ export {
   users,
   visitors,
   sbtRewardCollections,
+  eventRegistrants,
 };

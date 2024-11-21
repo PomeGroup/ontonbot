@@ -1,40 +1,25 @@
 import { db } from "@/db/db";
-import { eventFields, events } from "@/db/schema";
+import { eventFields, events, eventRegistrants } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
-import {
-  findVisitorByUserAndEventUuid,
-  selectVisitorsWithWalletAddress,
-} from "@/server/db/visitors";
+import { findVisitorByUserAndEventUuid, selectVisitorsWithWalletAddress } from "@/server/db/visitors";
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification, sendTelegramMessage } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
-import {
-  EventDataSchema,
-  HubsResponse,
-  SocietyHub,
-  UpdateEventDataSchema,
-} from "@/types";
+import { EventDataSchema, HubsResponse, SocietyHub, UpdateEventDataSchema, EventRegisterSchema } from "@/types";
 
 import { fetchBalance } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
-import { and, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq, ne } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import {
-  getEventByUuid,
-  getEventsWithFilters,
-  selectEventByUuid,
-} from "../db/events";
-import {
-  selectVisitorsByEventUuid,
-  updateVisitorLastVisit,
-} from "../db/visitors";
+import { getEventByUuid, getEventsWithFilters, selectEventByUuid } from "../db/events";
+import { selectVisitorsByEventUuid, updateVisitorLastVisit } from "../db/visitors";
 import {
   adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure,
@@ -48,38 +33,136 @@ import telegramService from "@/server/routers/services/telegramService";
 
 dotenv.config();
 
+/* -------------------------------------------------------------------------- */
+/*                                  FUNCTIONS                                 */
+/* -------------------------------------------------------------------------- */
+function timestampToIsoString(timestamp: number) {
+  const date = new Date(timestamp * 1000);
+  return date.toISOString();
+}
+
+const formatChanges = (changes: any) => JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
+
+async function getRegistrantRequest(event_uuid: string, user_id: number) {
+  const result = (
+    await db
+      .select()
+      .from(eventRegistrants)
+      .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, user_id)))
+      .execute()
+  ).pop();
+
+  return result;
+}
+async function getApprovedRequestsCount(event_uuid: string) {
+  const approved_requests_count =
+    (
+      await db
+        .select({ count: count() })
+        .from(eventRegistrants)
+        .where(and(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.event_uuid, event_uuid)))
+        .execute()
+    ).pop()?.count || 0;
+  return approved_requests_count;
+}
+
+async function getNotRejectedRequestsCount(event_uuid: string) {
+  const notrejected_requests_count =
+    (
+      await db
+        .select({ count: count() })
+        .from(eventRegistrants)
+        .where(and(ne(eventRegistrants.status, "rejected"), eq(eventRegistrants.event_uuid, event_uuid)))
+        .execute()
+    ).pop()?.count || 0;
+  return notrejected_requests_count;
+}
+
+/* //FIXME  -------------------------------------------------------------------------- */
+
+/* -------------------------------------------------------------------------- */
+/*                                EVENT ROUTER                                */
+/* -------------------------------------------------------------------------- */
+
 export const eventsRouter = router({
-  // private
-  getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
-    async (opts) => {
-      return (
-        (await selectVisitorsWithWalletAddress(opts.ctx.event.event_uuid))
-          .length || 0
-      );
+  // // private
+  // getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
+  //   async (opts) => {
+  //     return (
+  //       (await selectVisitorsWithWalletAddress(opts.ctx.event.event_uuid))
+  //         .length || 0
+  //     );
+  //   }
+  // ),
+
+  // getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
+  //   return await fetchBalance(opts.input);
+  // }),
+  /* -------------------------------------------------------------------------- */
+  /*                            Get an Event By User                            */
+  /* -------------------------------------------------------------------------- */
+  getEvent: initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
+    // try {
+    //   const eventVisitor = await findVisitorByUserAndEventUuid(
+    //     opts.ctx.user.user_id,
+    //     opts.input.event_uuid
+    //   );
+    //   if (eventVisitor) {
+    //     await updateVisitorLastVisit(eventVisitor.id);
+    //   }
+    // } catch (error) {
+    //   console.error("Error at updating visitor", error);
+    // }
+    // console.log("event_uuid", opts.input.event_uuid);
+    const userId = opts.ctx.user.user_id;
+    const event_uuid = opts.input.event_uuid;
+    const eventData = await selectEventByUuid(event_uuid);
+    let capacity_filled = false;
+    let registrant_status = "";
+    if (!eventData) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "event not found",
+      });
     }
-  ),
+    if (!eventData.has_registration) {
+      return { capacity_filled, registrant_status, ...eventData };
+    }
 
-  getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
-    return await fetchBalance(opts.input);
-  }),
+    /* ------------------------ Event Needs Registration ------------------------ */
 
-  getEvent: initDataProtectedProcedure
-    .input(z.object({ event_uuid: z.string() }))
-    .query(async (opts) => {
-      try {
-        const eventVisitor = await findVisitorByUserAndEventUuid(
-          opts.ctx.user.user_id,
-          opts.input.event_uuid
-        );
-        if (eventVisitor) {
-          await updateVisitorLastVisit(eventVisitor.id);
-        }
-      } catch (error) {
-        console.error("Error at updating visitor", error);
+    const user_request = await getRegistrantRequest(event_uuid, userId);
+
+    // Registrant Already has a request
+    if (user_request) {
+      registrant_status = user_request.status;
+      return { capacity_filled, registrant_status, ...eventData };
+    }
+
+    // no status for registran
+
+    if (eventData.capacity) {
+      const approved_requests_count = await getApprovedRequestsCount(event_uuid);
+      console.log("Yakuuuuuuza :::::: ??approved_requests_count?? ", approved_requests_count);
+      console.log("Yakuuuuuuza :::::: ??getNotRejectedRequestsCount?? ", await getNotRejectedRequestsCount(event_uuid));
+
+      if (
+        approved_requests_count >= eventData.capacity ||
+        (!eventData.has_waiting_list && (await getNotRejectedRequestsCount(event_uuid)) >= eventData.capacity)
+      ) {
+        // Event capacity filled
+        // First condition: Approved users >= eventData.capacity
+        // Second condition: Not Rejected Requests >= eventData.capacity && No Waiting List
+        capacity_filled = true;
+        return { capacity_filled, registrant_status, ...eventData };
       }
-      console.log("event_uuid", opts.input.event_uuid);
-      return selectEventByUuid(opts.input.event_uuid);
-    }),
+    }
+
+    // NO Status
+    return { capacity_filled, registrant_status, ...eventData };
+
+    /* -------------------------------------------------------------------------- */
+  }),
 
   // private
   getEvents: adminOrganizerProtectedProcedure.query(async (opts) => {
@@ -96,9 +179,7 @@ export const eventsRouter = router({
       eventsData = await db
         .select()
         .from(events)
-        .where(
-          and(eq(events.hidden, false), eq(events.owner, opts.ctx.user.user_id))
-        )
+        .where(and(eq(events.hidden, false), eq(events.owner, opts.ctx.user.user_id)))
         .orderBy(desc(events.created_at))
         .execute();
     } else {
@@ -108,10 +189,118 @@ export const eventsRouter = router({
       });
     }
 
-    return eventsData.map(
-      ({ wallet_seed_phrase, ...restEventData }) => restEventData
-    );
+    return eventsData.map(({ wallet_seed_phrase, ...restEventData }) => restEventData);
   }),
+
+  /* -------------------------------------------------------------------------- */
+  /*                           Event Register by user                           */
+  /* -------------------------------------------------------------------------- */
+  // private
+  eventRegister: initDataProtectedProcedure
+    .input(z.object({ input_data: EventRegisterSchema }))
+    .mutation(async (opts) => {
+      const userId = opts.ctx.user.user_id;
+      const event_uuid = opts.input.input_data.event_uuid;
+      const event = await selectEventByUuid(event_uuid);
+
+      console.log("event_register", event_uuid, userId);
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+      }
+
+      if (!event.has_registration) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "event is not registrable" });
+      }
+      const user_request = await getRegistrantRequest(event_uuid, userId);
+
+      if (user_request) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `registrant already has a [${user_request.status}] Request `,
+        });
+      }
+      if (event.capacity) {
+        const approved_requests_count = await getApprovedRequestsCount(event_uuid);
+
+        if (
+          approved_requests_count >= event.capacity ||
+          (!event.has_waiting_list && (await getNotRejectedRequestsCount(event_uuid)) >= event.capacity)
+        ) {
+          // Event capacity filled
+          // First condition: Approved users >= event.capacity
+          // Second condition: Not Rejected Requests >= event.capacity && No Waiting List
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `Event Capacity Reached Waiting List : ${event.has_waiting_list}`,
+          });
+        }
+      }
+
+      const request_status = !!event.has_approval ? "pending" : "approved"; // pending if approval is required otherwise auto approve them
+      await db.insert(eventRegistrants).values({
+        event_uuid: event_uuid,
+        user_id: userId,
+        status: request_status,
+      });
+
+      // TODO add event registration details from user into some table
+      return { message: "success", code: 201 };
+    }),
+
+  /* -------------------------------------------------------------------------- */
+  /*                            Get Event Registrant                            */
+  /* -------------------------------------------------------------------------- */
+  getEventRegistrants: eventManagementProtectedProcedure
+    .input(z.object({ event_uuid: z.string() }))
+    .query(async (opts) => {
+      const event_uuid = opts.input.event_uuid;
+      const event = await selectEventByUuid(event_uuid);
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+      }
+
+      const registrants = await db
+        .select()
+        .from(eventRegistrants)
+        .where(eq(eventRegistrants.event_uuid, event_uuid))
+        .orderBy(desc(eventRegistrants.created_at))
+        .execute();
+
+      return registrants;
+    }),
+
+  /* -------------------------------------------------------------------------- */
+  /*              Process Registrant Request (Approve✅ / Reject ❌)           */
+  /* -------------------------------------------------------------------------- */
+  processRegistrantRequest: eventManagementProtectedProcedure
+    .input(
+      z.object({
+        event_uuid: z.string(),
+        registrant_id: z.number(),
+        status: z.enum(["approved", "rejected"]),
+      })
+    )
+    .mutation(async (opts) => {
+      const event_uuid = opts.input.event_uuid;
+      const registrant_id = opts.input.registrant_id;
+      const event = await selectEventByUuid(event_uuid);
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+      }
+
+      const result = await db
+        .update(eventRegistrants)
+        .set({
+          status: opts.input.status,
+        })
+        .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, registrant_id)))
+        .execute();
+
+      return { code: 201, message: "ok" };
+    }),
 
   // private
   addEvent: adminOrganizerProtectedProcedure
@@ -124,17 +313,11 @@ export const eventsRouter = router({
       try {
         const result = await db.transaction(async (trx) => {
           const countryId = opts.input.eventData.countryId;
-          const country = countryId
-            ? await fetchCountryById(countryId)
-            : undefined;
+          const country = countryId ? await fetchCountryById(countryId) : undefined;
 
-          const inputSecretPhrase = opts.input.eventData.secret_phrase
-            .trim()
-            .toLowerCase();
+          const inputSecretPhrase = opts.input.eventData.secret_phrase.trim().toLowerCase();
 
-          const hashedSecretPhrase = Boolean(inputSecretPhrase)
-            ? await hashPassword(inputSecretPhrase)
-            : undefined;
+          const hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
 
           if (!hashedSecretPhrase) {
             throw new TRPCError({
@@ -165,6 +348,13 @@ export const eventsRouter = router({
               tsRewardImage: opts.input.eventData.ts_reward_url,
               tsRewardVideo: opts.input.eventData.video_url,
               cityId: opts.input.eventData.cityId,
+
+              //Event Registration
+              has_registration: opts.input.eventData.has_registration,
+              has_approval: opts.input.eventData.has_approval,
+              capacity: opts.input.eventData.capacity,
+              has_waiting_list: opts.input.eventData.has_waiting_list,
+              //Event Registration
             })
             .returning();
 
@@ -175,8 +365,7 @@ export const eventsRouter = router({
               emoji: field.emoji,
               title: field.title,
               description: field.description,
-              placeholder:
-                field.type === "button" ? field.url : field.placeholder,
+              placeholder: field.type === "button" ? field.url : field.placeholder,
               type: field.type,
               order_place: i,
               event_id: newEvent[0].event_id,
@@ -198,10 +387,7 @@ export const eventsRouter = router({
             });
           }
 
-          const additional_info = z
-            .string()
-            .url()
-            .safeParse(opts.input.eventData.location).success
+          const additional_info = z.string().url().safeParse(opts.input.eventData.location).success
             ? "Online"
             : opts.input.eventData.location;
 
@@ -225,10 +411,10 @@ export const eventsRouter = router({
                       title: opts.input.eventData.title,
                       description: opts.input.eventData.description,
                       image: {
-                        url:  opts.input.eventData.image_url  ,
+                        url: opts.input.eventData.image_url,
                       },
                       cover: {
-                        url:  opts.input.eventData.image_url,
+                        url: opts.input.eventData.image_url,
                       },
                       item_title: opts.input.eventData.title,
                       item_description: "Reward for participation",
@@ -238,17 +424,16 @@ export const eventsRouter = router({
                       ...(opts.input.eventData.video_url
                         ? {
                             item_video: {
-                              url:  new URL(opts.input.eventData.video_url).origin + new URL(opts.input.eventData.video_url).pathname,
+                              url:
+                                new URL(opts.input.eventData.video_url).origin +
+                                new URL(opts.input.eventData.video_url).pathname,
                             },
                           }
                         : {}),
                       item_metadata: {
                         activity_type: "event",
                         place: {
-                          type:
-                            opts.input.eventData.eventLocationType === "online"
-                              ? "Online"
-                              : "Offline",
+                          type: opts.input.eventData.eventLocationType === "online" ? "Online" : "Offline",
                           ...(country && country?.abbreviatedCode
                             ? {
                                 country_code_iso: country.abbreviatedCode,
@@ -311,34 +496,34 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     }),
 
   // private
-  deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
-    try {
-      return await db.transaction(async (trx) => {
-        const deletedEvent = await trx
-          .update(events)
-          .set({
-            hidden: true,
-            updatedBy: "system-delete",
-            updatedAt: new Date(),
-          }) // Set the 'hidden' field to true
-          .where(eq(events.event_uuid, opts.input.event_uuid))
-          .returning();
+  //   deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
+  //     try {
+  //       return await db.transaction(async (trx) => {
+  //         const deletedEvent = await trx
+  //           .update(events)
+  //           .set({
+  //             hidden: true,
+  //             updatedBy: "system-delete",
+  //             updatedAt: new Date(),
+  //           }) // Set the 'hidden' field to true
+  //           .where(eq(events.event_uuid, opts.input.event_uuid))
+  //           .returning();
 
-        await sendLogNotification({
-          message: `
-@${opts.ctx.user.username} <b>Deleted</b> an event <code>${deletedEvent[0].event_uuid}</code>.
+  //         await sendLogNotification({
+  //           message: `
+  // @${opts.ctx.user.username} <b>Deleted</b> an event <code>${deletedEvent[0].event_uuid}</code>.
 
-<pre><code>${JSON.stringify(deletedEvent[0], null, 2)}</code></pre>
-`,
-        });
+  // <pre><code>${JSON.stringify(deletedEvent[0], null, 2)}</code></pre>
+  // `,
+  //         });
 
-        return { success: true };
-      });
-    } catch (error) {
-      console.error(error);
-      return { success: false };
-    }
-  }),
+  //         return { success: true };
+  //       });
+  //     } catch (error) {
+  //       console.error(error);
+  //       return { success: false };
+  //     }
+  //   }),
 
   // private
   updateEvent: eventManagementProtectedProcedure
@@ -354,18 +539,11 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
       try {
         return await db.transaction(async (trx) => {
-          const inputSecretPhrase = eventData.secret_phrase
-            ? eventData.secret_phrase.trim().toLowerCase()
-            : undefined;
+          const inputSecretPhrase = eventData.secret_phrase ? eventData.secret_phrase.trim().toLowerCase() : undefined;
 
-          const hashedSecretPhrase = inputSecretPhrase
-            ? await hashPassword(inputSecretPhrase)
-            : undefined;
+          const hashedSecretPhrase = inputSecretPhrase ? await hashPassword(inputSecretPhrase) : undefined;
 
-          const oldEvent = await trx
-            .select()
-            .from(events)
-            .where(eq(events.event_uuid, eventUuid!));
+          const oldEvent = await trx.select().from(events).where(eq(events.event_uuid, eventUuid!));
 
           const updatedEvent = await trx
             .update(events)
@@ -387,21 +565,24 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               cityId: eventData.cityId,
               updatedBy: opts.ctx.user.user_id.toString(),
               updatedAt: new Date(),
+
+              /* ------------------------ Event Registration Update ----------------------- */
+              // Updating has_registraion is not allowed
+              has_approval: eventData.has_approval,
+              capacity: eventData.capacity,
+              has_waiting_list: eventData.has_waiting_list,
+              /* ------------------------ Event Registration Update ----------------------- */
             })
             .where(eq(events.event_uuid, eventUuid))
             .returning()
             .execute();
 
-          const currentFields = await eventFieldsDB.selectEventFieldsByEventId(
-            trx,
-            eventId!
-          );
+          const currentFields = await eventFieldsDB.selectEventFieldsByEventId(trx, eventId!);
 
           const fieldsToDelete = currentFields.filter(
             (field) =>
-              !eventData.dynamic_fields.some(
-                (newField) => newField.id === field.id
-              ) && field.title !== "secret_phrase_onton_input"
+              !eventData.dynamic_fields.some((newField) => newField.id === field.id) &&
+              field.title !== "secret_phrase_onton_input"
           );
 
           for (const field of fieldsToDelete) {
@@ -411,26 +592,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           const secretPhraseTask = await trx
             .select()
             .from(eventFields)
-            .where(
-              and(
-                eq(eventFields.event_id, eventId!),
-                eq(eventFields.title, "secret_phrase_onton_input")
-              )
-            )
+            .where(and(eq(eventFields.event_id, eventId!), eq(eventFields.title, "secret_phrase_onton_input")))
             .execute();
 
-          if (
-            hashedSecretPhrase ||
-            (hashedSecretPhrase === undefined &&
-              oldEvent[0].ticketToCheckIn === false)
-          ) {
+          if (hashedSecretPhrase || (hashedSecretPhrase === undefined && oldEvent[0].ticketToCheckIn === false)) {
             if (secretPhraseTask.length > 0) {
               // Update the existing secret phrase task
-              await eventFieldsDB.updateEventFieldLog(
-                trx,
-                secretPhraseTask[0].id,
-                opts.ctx.user.user_id.toString()
-              );
+              await eventFieldsDB.updateEventFieldLog(trx, secretPhraseTask[0].id, opts.ctx.user.user_id.toString());
             } else {
               // Insert a new secret phrase task
               await eventFieldsDB.insertEventField(trx, {
@@ -449,13 +617,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           for (const [index, field] of eventData.dynamic_fields
             .filter((f) => f.title !== "secret_phrase_onton_input")
             .entries()) {
-            await eventFieldsDB.upsertEventField(
-              trx,
-              field,
-              index,
-              opts.ctx.user.user_id.toString(),
-              eventId
-            );
+            await eventFieldsDB.upsertEventField(trx, field, index, opts.ctx.user.user_id.toString(), eventId);
           }
 
           const additional_info = z.string().url().safeParse(eventData).success
@@ -476,22 +638,12 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             },
           };
           // Remove the description key from updatedEvent
-          const {
-            description: updatedDescription,
-            ...updatedEventWithoutDescription
-          } = updatedEvent[0];
+          const { description: updatedDescription, ...updatedEventWithoutDescription } = updatedEvent[0];
           // Remove the description key from oldEvent
-          const { description: oldDescription, ...oldEventWithoutDescription } =
-            oldEvent[0];
-          const oldChanges = getObjectDifference(
-            updatedEventWithoutDescription,
-            oldEventWithoutDescription
-          );
+          const { description: oldDescription, ...oldEventWithoutDescription } = oldEvent[0];
+          const oldChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
 
-          const updateChanges = getObjectDifference(
-            updatedEventWithoutDescription,
-            oldEventWithoutDescription
-          );
+          const updateChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
 
           const message = `
 @${opts.ctx.user.username} <b>Updated</b> an event <code>${eventUuid}</code> successfully
@@ -505,19 +657,13 @@ After:
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
 `;
 
-          await updateActivity(
-            eventDraft,
-            opts.ctx.event.activity_id as number
-          );
+          await updateActivity(eventDraft, opts.ctx.event.activity_id as number);
           await sendLogNotification({ message });
 
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
         });
       } catch (err) {
-        console.info(
-          `update event id: ${opts.ctx.event.event_uuid}, error: `,
-          err
-        );
+        console.error(`[eventRouter] update event failed id: ${opts.ctx.event.event_uuid}, error: `, err);
 
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -528,25 +674,17 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
   // private
   getHubs: publicProcedure.query(
-    async (): Promise<
-      | { status: "success"; hubs: SocietyHub[] }
-      | { status: "error"; message: string }
-    > => {
+    async (): Promise<{ status: "success"; hubs: SocietyHub[] } | { status: "error"; message: string }> => {
       try {
-        const response = await axios.get<HubsResponse>(
-          `${process.env.TON_SOCIETY_BASE_URL}/hubs`,
-          {
-            params: {
-              _start: 0,
-              _end: 100,
-            },
-          }
-        );
+        const response = await axios.get<HubsResponse>(`${process.env.TON_SOCIETY_BASE_URL}/hubs`, {
+          params: {
+            _start: 0,
+            _end: 100,
+          },
+        });
 
         if (response.status === 200 && response.data) {
-          const sortedHubs = response.data.data.sort(
-            (a, b) => Number(a.id) - Number(b.id)
-          );
+          const sortedHubs = response.data.data.sort((a, b) => Number(a.id) - Number(b.id));
 
           const transformedHubs = sortedHubs.map((hub) => ({
             id: hub.id.toString(),
@@ -594,10 +732,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
         const { event_uuid } = event;
         // Step 2: Make the request to share the event
-        const result = await telegramService.shareEventRequest(
-          opts.ctx.user.user_id.toString(),
-          event_uuid.toString()
-        );
+        const result = await telegramService.shareEventRequest(opts.ctx.user.user_id.toString(), event_uuid.toString());
 
         if (result.success) {
           console.log("Event shared successfully:", result.data);
@@ -621,81 +756,72 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     }),
 
   // private
-  requestExportFile: eventManagementProtectedProcedure.mutation(
-    async (opts) => {
-      const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid , -1, 0, true, "");
-      const eventData = await selectEventByUuid(opts.input.event_uuid);
-      // Map the data and conditionally remove fields
-        const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
-            // Explicitly define wallet_address type and handle other optional fields
-            //@ts-ignore
-            const visitorData: Partial<VisitorsWithDynamicFields> = {
-                ...visitor,
-                ticket_status: "ticket_status" in visitor ? visitor.ticket_status ?? undefined : undefined,
-                wallet_address: visitor.wallet_address as string | null | undefined,
-                username: visitor.username === "null" ? null : visitor.username,
-            };
-        // Copy the visitor object without modifying dynamicFields directly
+  requestExportFile: eventManagementProtectedProcedure.mutation(async (opts) => {
+    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, true, "");
+    const eventData = await selectEventByUuid(opts.input.event_uuid);
+    // Map the data and conditionally remove fields
+    const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+      // Explicitly define wallet_address type and handle other optional fields
+      //@ts-ignore
+      const visitorData: Partial<VisitorsWithDynamicFields> = {
+        ...visitor,
+        ticket_status: "ticket_status" in visitor ? (visitor.ticket_status ?? undefined) : undefined,
+        wallet_address: visitor.wallet_address as string | null | undefined,
+        username: visitor.username === "null" ? null : visitor.username,
+      };
+      // Copy the visitor object without modifying dynamicFields directly
 
-
-        // If ticketToCheckIn is false, remove specific fields
-        if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
-          delete visitorData.has_ticket;
-          delete visitorData.ticket_status;
-          delete visitorData.ticket_id;
-        }
-
-        // Generate a new object for CSV with stringified dynamicFields
-        return {
-          ...visitorData,
-          dynamicFields: JSON.stringify(visitor.dynamicFields),
-        };
-      });
-
-      console.log("dataForCsv:  ", dataForCsv);
-
-      const csvString = Papa.unparse(dataForCsv || [], {
-        header: true,
-      });
-
-      try {
-        const formData = new FormData();
-
-        // Add BOM at the beginning of the CSV string for UTF-8 encoding
-        const bom = "\uFEFF";
-        const csvContentWithBom = bom + csvString;
-
-        const fileBlob = new Blob([csvContentWithBom], {
-          type: "text/csv;charset=utf-8;",
-        });
-        formData.append("file", fileBlob, "visitors.csv");
-        // Include the custom message in the form data
-        let customMessage = "Here is the guest list for your event.";
-        if (eventData && eventData?.title) {
-          customMessage = `📂 Download Guest List Report \n\n🟢 ${eventData?.title} \n\n👤 Count of Guests ${visitors.visitorsWithDynamicFields?.length}`;
-        }
-        formData.append("message", customMessage);
-        formData.append("fileName", eventData?.title || "visitors");
-        const userId = opts.ctx.user.user_id;
-        const response = await axios.post(
-          `http://telegram-bot:3333/send-file?id=${userId}`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-
-        return response.status === 200
-          ? { status: "success", data: null }
-          : { status: "fail", data: response.data };
-      } catch (error) {
-        console.error("Error while sending file: ", error);
-        return { status: "fail", data: null };
+      // If ticketToCheckIn is false, remove specific fields
+      if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
+        delete visitorData.has_ticket;
+        delete visitorData.ticket_status;
+        delete visitorData.ticket_id;
       }
+
+      // Generate a new object for CSV with stringified dynamicFields
+      return {
+        ...visitorData,
+        dynamicFields: JSON.stringify(visitor.dynamicFields),
+      };
+    });
+
+    console.log("dataForCsv:  ", dataForCsv);
+
+    const csvString = Papa.unparse(dataForCsv || [], {
+      header: true,
+    });
+
+    try {
+      const formData = new FormData();
+
+      // Add BOM at the beginning of the CSV string for UTF-8 encoding
+      const bom = "\uFEFF";
+      const csvContentWithBom = bom + csvString;
+
+      const fileBlob = new Blob([csvContentWithBom], {
+        type: "text/csv;charset=utf-8;",
+      });
+      formData.append("file", fileBlob, "visitors.csv");
+      // Include the custom message in the form data
+      let customMessage = "Here is the guest list for your event.";
+      if (eventData && eventData?.title) {
+        customMessage = `📂 Download Guest List Report \n\n🟢 ${eventData?.title} \n\n👤 Count of Guests ${visitors.visitorsWithDynamicFields?.length}`;
+      }
+      formData.append("message", customMessage);
+      formData.append("fileName", eventData?.title || "visitors");
+      const userId = opts.ctx.user.user_id;
+      const response = await axios.post(`http://telegram-bot:3333/send-file?id=${userId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return response.status === 200 ? { status: "success", data: null } : { status: "fail", data: response.data };
+    } catch (error) {
+      console.error("Error while sending file: ", error);
+      return { status: "fail", data: null };
     }
-  ),
+  }),
   // private
   requestSendQRcode: eventManagementProtectedProcedure
     .input(
@@ -706,43 +832,28 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     )
     .mutation(async (opts) => {
       try {
-        const response = await axios.get(
-          "http://telegram-bot:3333/generate-qr",
-          {
-            params: {
-              id: opts.ctx.user.user_id,
-              url: opts.input.url,
-              hub: opts.input.hub,
-            },
-          }
-        );
+        const response = await axios.get("http://telegram-bot:3333/generate-qr", {
+          params: {
+            id: opts.ctx.user.user_id,
+            url: opts.input.url,
+            hub: opts.input.hub,
+          },
+        });
 
-        return response.status === 200
-          ? { status: "success", data: null }
-          : { status: "fail", data: response.data };
+        return response.status === 200 ? { status: "success", data: null } : { status: "fail", data: response.data };
       } catch (error) {
         console.error("Error while generating QR Code: ", error);
         return { status: "fail", data: null };
       }
     }),
-  getEventsWithFilters: publicProcedure
-    .input(searchEventsInputZod)
-    .query(async (opts) => {
-      // console.log("*****config", config, configProtected);
-      try {
-        const events = await getEventsWithFilters(opts.input);
-        return { status: "success", data: events };
-      } catch (error) {
-        console.error("Error fetching events:", error);
-        return { status: "fail", data: null };
-      }
-    }),
+  getEventsWithFilters: publicProcedure.input(searchEventsInputZod).query(async (opts) => {
+    // console.log("*****config", config, configProtected);
+    try {
+      const events = await getEventsWithFilters(opts.input);
+      return { status: "success", data: events };
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      return { status: "fail", data: null };
+    }
+  }),
 });
-
-function timestampToIsoString(timestamp: number) {
-  const date = new Date(timestamp * 1000);
-  return date.toISOString();
-}
-
-const formatChanges = (changes: any) =>
-  JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
