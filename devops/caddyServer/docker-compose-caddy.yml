@@ -13,8 +13,9 @@ services:
           memory:  6000M
           cpus: '4.0'
       mode: global
+      replicas: 1
       update_config:
-        failure_action: rollback
+        failure_action: continue
         order: start-first
       restart_policy:
         condition: on-failure
