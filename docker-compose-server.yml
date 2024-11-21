@@ -205,7 +205,7 @@ services:
         limits:
           memory: 3000M
           cpus: '2.0'
-      replicas: 1
+      mode: global
       update_config:
         failure_action: rollback
         order: start-first
@@ -322,7 +322,7 @@ services:
         limits:
           memory: 3000M
           cpus: '3.0'
-      replicas: 1
+      mode: global
       update_config:
         parallelism: 1
       placement:

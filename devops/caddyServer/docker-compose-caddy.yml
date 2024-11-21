@@ -12,7 +12,7 @@ services:
         limits:
           memory:  3000M
           cpus: '2.0'
-      replicas: 3
+      mode: global
       update_config:
         failure_action: rollback
         order: start-first
@@ -31,8 +31,6 @@ services:
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
     secrets:
       - ghcr-radio-config
-
-
 networks:
   caddy-network:
     name: caddy-network
