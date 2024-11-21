@@ -1,10 +1,7 @@
 import { db } from "@/db/db";
-import { eventFields, events,eventRegistrants } from "@/db/schema";
+import { eventFields, events, eventRegistrants } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
-import {
-  findVisitorByUserAndEventUuid,
-  selectVisitorsWithWalletAddress,
-} from "@/server/db/visitors";
+
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import {
@@ -22,7 +19,6 @@ import {
   EventRegisterSchema,
 } from "@/types";
 
-import { fetchBalance } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
@@ -36,10 +32,7 @@ import {
   getEventsWithFilters,
   selectEventByUuid,
 } from "../db/events";
-import {
-  selectVisitorsByEventUuid,
-  updateVisitorLastVisit,
-} from "../db/visitors";
+import { selectVisitorsByEventUuid } from "../db/visitors";
 import {
   adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure,
@@ -558,17 +551,20 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             `,
           });
 
-          const res = await registerActivity(eventDraft);
+          // On local development environment, we skip the registration on ton society
+          if (process.env.ENV !== "local") {
+            const res = await registerActivity(eventDraft);
 
-          await trx
-            .update(events)
-            .set({
-              activity_id: res.data.activity_id,
-              updatedBy: opts.ctx.user.user_id.toString(),
-              updatedAt: new Date(),
-            })
-            .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
-            .execute();
+            await trx
+              .update(events)
+              .set({
+                activity_id: res.data.activity_id,
+                updatedBy: opts.ctx.user.user_id.toString(),
+                updatedAt: new Date(),
+              })
+              .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
+              .execute();
+          }
 
           return newEvent;
         });
@@ -926,7 +922,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           username: visitor.username === "null" ? null : visitor.username,
         };
         // Copy the visitor object without modifying dynamicFields directly
-
 
         // If ticketToCheckIn is false, remove specific fields
         if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
