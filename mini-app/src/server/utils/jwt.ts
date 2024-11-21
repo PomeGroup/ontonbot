@@ -1,11 +1,11 @@
-import { CHAIN, SHARED_SECRET } from '@/constants';
-import { ValueOf } from '@/types';
-import { decodeJwt, JWTPayload, jwtVerify, SignJWT } from 'jose';
+import { CHAIN, SHARED_SECRET } from "@/constants";
+import { ValueOf } from "@/types";
+import { decodeJwt, JWTPayload, jwtVerify, SignJWT } from "jose";
 
 /**
  * Secret key for the token.
  */
-const JWT_SECRET_KEY = SHARED_SECRET
+const JWT_SECRET_KEY = SHARED_SECRET;
 
 /**
  * Payload of the token.
@@ -22,20 +22,22 @@ export type PayloadToken = {
 /**
  * Create a token with the given payload.
  */
-function buildCreateToken<T extends JWTPayload>(expirationTime: string): (payload: T) => Promise<string> {
+function buildCreateToken<T extends JWTPayload>(
+  expirationTime: string
+): (payload: T) => Promise<string> {
   return async (payload: T) => {
     const encoder = new TextEncoder();
     const key = encoder.encode(JWT_SECRET_KEY);
     return new SignJWT(payload)
-      .setProtectedHeader({ alg: 'HS256' })
+      .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
       .setExpirationTime(expirationTime)
       .sign(key);
   };
 }
 
-export const createAuthToken = buildCreateToken<AuthToken>('2w');
-export const createPayloadToken = buildCreateToken<PayloadToken>('2w');
+export const createAuthToken = buildCreateToken<AuthToken>("2w");
+export const createPayloadToken = buildCreateToken<PayloadToken>("2w");
 
 /**
  * Verify the given token.
@@ -50,7 +52,6 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     return null;
   }
 }
-
 
 /**
  * Decode the given token.

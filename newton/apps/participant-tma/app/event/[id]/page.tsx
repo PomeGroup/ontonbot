@@ -22,11 +22,15 @@ type EventParams = {
   params: {
     id: string;
   };
+  searchParams: { [key: string]: string | undefined };
 };
 
-const Event = async ({ params }: EventParams) => {
+const Event = async ({ params, searchParams }: EventParams)  => {
   noStore();
   const [userId, error] = getAuthenticatedUser();
+
+  
+  const page_utm = searchParams.utm_campaign || null ; 
 
   if (error) {
     return (
@@ -46,6 +50,10 @@ const Event = async ({ params }: EventParams) => {
   const event = await getEventDataOnly(params.id);
   if (!event) {
     return <QueryState isError text={`Event #${params.id} Not Found`} />;
+  }
+
+  if(page_utm){
+        console.log("ptma_event_page_utm" , `utm_campaign=${page_utm} , user_id=${userId}`)
   }
 
   const eventManagerRole =
@@ -114,6 +122,7 @@ const Event = async ({ params }: EventParams) => {
         eventManagerRole={eventManagerRole}
         requiresTicketToChekin={event.ticketToCheckIn}
         eventId={params.id}
+        utm={page_utm}
       />
     </PageTma>
   );

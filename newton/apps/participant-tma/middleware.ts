@@ -29,6 +29,22 @@ export async function middleware(req: NextRequest) {
           new URL(`/events/${eventId}/edit`, req.nextUrl.origin),
         );
       }
+      const isMysteryUtm =
+        tgAppStartParam.length >= 8 && tgAppStartParam.length <= 12;
+      if (isMysteryUtm) {
+        console.log("redirecting to mystery " + tgAppStartParam);
+        const mysteryUUID = "43d33878-a1ba-4209-9169-4845066004c6";
+        const url = new URL(`/ptma/event/${mysteryUUID}`, req.nextUrl.origin);
+        url.searchParams.set("not_authenticated", userToken ? "false" : "true");
+
+        url.searchParams.set("utm_source", "telegram");
+        url.searchParams.set("utm_medium", "notification");
+        url.searchParams.set("utm_campaign", tgAppStartParam);
+
+        console.log("Redirect to : ", url.href);
+
+        return NextResponse.redirect(url);
+      }
 
       const event = await getEventDataOnly(tgAppStartParam);
       const ptam_utm_link = utm_source ? `&utm_source=${utm_source}` : "";

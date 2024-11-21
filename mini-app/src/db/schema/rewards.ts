@@ -23,8 +23,8 @@ export const rewards = pgTable(
     tryCount: integer("try_count").default(0).notNull(),
     status: rewardStatus("status").notNull().default("created"),
     created_at: timestamp("created_at").defaultNow(),
-    event_start_date: integer('event_start_date').notNull(),
-    event_end_date: integer('event_end_date').notNull(),
+    event_start_date: integer("event_start_date").notNull(),
+    event_end_date: integer("event_end_date").notNull(),
     updatedAt: timestamp("updated_at", {
       mode: "date",
       precision: 3,

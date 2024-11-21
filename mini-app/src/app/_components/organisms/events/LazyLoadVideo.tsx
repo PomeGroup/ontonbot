@@ -29,8 +29,9 @@ const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({
     <div
       ref={ref}
       onClick={onClick}
-      className={`p-2 rounded-lg cursor-pointer transition-shadow ${selected ? "font-bold" : "font-light"
-        }`}
+      className={`p-2 rounded-lg cursor-pointer transition-shadow ${
+        selected ? "font-bold" : "font-light"
+      }`}
     >
       <div className="flex items-center justify-center mt-2 space-x-1">
         {selected && <FaSquareCheck />} {/* Icon next to the text */}
@@ -46,7 +47,7 @@ const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({
           loop
           muted
           playsInline
-          className="w-full bg-gray-600"
+          className="w-full bg-gray-600 rounded-lg"
           style={{ pointerEvents: "none" }}
         />
       ) : (
@@ -65,8 +66,9 @@ const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({
             src={coverImage}
             alt={`${hubName} cover`}
             fill
-            className={`object-cover transition-opacity duration-500 ${isLoading ? "opacity-0" : "opacity-100"
-              }`}
+            className={`object-cover rounded-lg transition-opacity duration-500 ${
+              isLoading ? "opacity-0" : "opacity-100"
+            }`}
             onLoadingComplete={() => setIsLoading(false)}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />

@@ -2,7 +2,7 @@
 
 import React, { FormEventHandler, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
-import { useMainButton } from "@tma.js/sdk-react";
+import { searchParams, useMainButton } from "@tma.js/sdk-react";
 import { beginCell, toNano } from "@ton/ton";
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { Card, CardContent } from "@ui/base/card";
@@ -26,7 +26,8 @@ type BuyTicketFormProps = {
   userHasTicket: boolean;
   orderAlreadyPlace: boolean;
   eventTicketId: number;
-  sendTo: string
+  sendTo: string,
+  utm_tag : string | null
 };
 
 interface BuyTicketFormElement extends HTMLFormElement {
@@ -49,6 +50,8 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   const [tonconnectUI] = useTonConnectUI();
   const mainButton = useMainButton(true);
 
+  const utm = params.utm_tag || null;
+
   const buyTicketOnClick: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
       e.preventDefault();
@@ -70,6 +73,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
       addOrder
         .mutateAsync({
           event_ticket_id: params.eventTicketId,
+          utm,
           ...data,
         })
         .then((data) => {

@@ -38,12 +38,11 @@ const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
     >
       {shareEventMutation.isLoading ? (
         <LoaderIcon className="animate-spin text-blue-600" />
-      ) : <PiShareFatBold className="text-blue-600" />
-      }
+      ) : (
+        <PiShareFatBold className="text-blue-600" />
+      )}
     </button>
   );
 };
 
 export default ShareEventButton;
-
-

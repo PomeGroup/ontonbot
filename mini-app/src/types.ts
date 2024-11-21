@@ -124,12 +124,12 @@ export const DynamicFieldsSchema = z.array(
 export const EventDataSchema = z.object({
   event_id: z.number().optional(),
   event_uuid: z.string().optional(),
-  type: z.number(),
-  title: z.string(),
-  subtitle: z.string(),
-  description: z.string(),
-  location: z.string(),
-  image_url: z.string().url(),
+  type: z.number({ required_error: "type is required" }),
+  title: z.string({ required_error: "title is required" }),
+  subtitle: z.string({ required_error: "subtitle is required" }),
+  description: z.string({ required_error: "description is required" }),
+  location: z.string({ required_error: "location is required" }),
+  image_url: z.string().url({ message: "Please upload a valid image URL" }),
   video_url: z.string().url().optional(),
   ts_reward_url: z
     .string()
@@ -142,16 +142,16 @@ export const EventDataSchema = z.object({
       { message: "Please upload a valid reward image URL" }
     ),
   society_hub: z.object({
-    id: z.string(),
-    name: z.string(),
+    id: z.string({ required_error: "society_hub.id is required" }),
+    name: z.string({ required_error: "society_hub.name is required" }),
   }),
-  secret_phrase: z.string(),
-  start_date: z.number(),
+  secret_phrase: z.string({ required_error: "secret_phrase is required" }),
+  start_date: z.number({ required_error: "start_date is required" }),
   end_date: z.number().nullable(),
-  owner: z.number(),
+  owner: z.number({ required_error: "owner is required" }),
   activity_id: z.number().optional(),
-  timezone: z.string(),
-  dynamic_fields: DynamicFieldsSchema,
+  timezone: z.string({ required_error: "timezone is required" }),
+  dynamic_fields: DynamicFieldsSchema, // Assuming DynamicFieldsSchema is defined elsewhere
   eventLocationType: z.enum(["online", "in_person"]).optional(),
   countryId: z.number().optional(),
   cityId: z.number().optional(),
@@ -160,12 +160,12 @@ export const EventDataSchema = z.object({
 export const UpdateEventDataSchema = z.object({
   event_id: z.number().optional(),
   event_uuid: z.string().optional(),
-  type: z.number(),
-  title: z.string(),
-  subtitle: z.string(),
-  description: z.string(),
-  location: z.string(),
-  image_url: z.string().url(),
+  type: z.number({ required_error: "type is required" }),
+  title: z.string({ required_error: "title is required" }),
+  subtitle: z.string({ required_error: "subtitle is required" }),
+  description: z.string({ required_error: "description is required" }),
+  location: z.string({ required_error: "location is required" }),
+  image_url: z.string().url({ message: "Please upload a valid image URL" }),
   video_url: z.string().url().optional(),
   ts_reward_url: z
     .string()
@@ -178,16 +178,16 @@ export const UpdateEventDataSchema = z.object({
       { message: "Please upload a valid reward image URL" }
     ),
   society_hub: z.object({
-    id: z.string(),
-    name: z.string(),
+    id: z.string({ required_error: "society_hub.id is required" }),
+    name: z.string({ required_error: "society_hub.name is required" }),
   }),
   secret_phrase: z.string().optional(),
-  start_date: z.number(),
+  start_date: z.number({ required_error: "start_date is required" }),
   end_date: z.number().nullable(),
-  owner: z.number(),
+  owner: z.number({ required_error: "owner is required" }),
   activity_id: z.number().optional(),
-  timezone: z.string(),
-  dynamic_fields: DynamicFieldsSchema,
+  timezone: z.string({ required_error: "timezone is required" }),
+  dynamic_fields: DynamicFieldsSchema, // Assuming DynamicFieldsSchema is defined elsewhere
   eventLocationType: z.enum(["online", "in_person"]).optional(),
   countryId: z.number().optional(),
   cityId: z.number().optional(),
@@ -229,6 +229,12 @@ export const EventDataSchemaAllOptional = z.object({
   countryId: z.number().optional(),
   cityId: z.number().optional(),
   agenda: z.array(AgendaHeaderSchema).optional(),
+  // registration
+  has_registration: z.boolean().optional(),
+  has_approval: z.boolean().optional(),
+  has_waiting_list: z.boolean().optional(),
+  has_capacity: z.boolean().optional(),
+  capacity: z.number().optional(),
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;

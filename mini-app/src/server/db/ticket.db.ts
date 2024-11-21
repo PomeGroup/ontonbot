@@ -30,7 +30,7 @@ export const checkInTicket = async (
       order_uuid: tickets.order_uuid,
       id: tickets.id,
       user_id: tickets.user_id,
-      telegram_username : tickets.telegram,
+      telegram_username: tickets.telegram,
     })
     .from(tickets)
     .where(eq(tickets.order_uuid, ticketUuid))

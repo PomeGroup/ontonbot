@@ -7,7 +7,11 @@ import {
 } from "@/server/db/visitors";
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
-import { registerActivity, tonSocietyClient, updateActivity } from "@/lib/ton-society-api";
+import {
+  registerActivity,
+  tonSocietyClient,
+  updateActivity,
+} from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import {
@@ -47,6 +51,11 @@ import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
 
 dotenv.config();
+
+const PLACEHOLDER_IMAGE =
+  "https://storage.onton.live/ontonimage/test_image.png";
+const PLACEHOLDER_VIDEO =
+  "https://storage.onton.live/ontonvideo/event/dCsiY_1731355946593_event_video.mp4";
 
 export const eventsRouter = router({
   // private
@@ -219,49 +228,64 @@ export const eventsRouter = router({
             },
             ...(opts.input.eventData.ts_reward_url
               ? {
-                rewards: {
-                  mint_type: "manual",
-                  collection: {
-                    title: opts.input.eventData.title,
-                    description: opts.input.eventData.description,
-                    image: {
-                      url: opts.input.eventData.image_url,
-                    },
-                    cover: {
-                      url: opts.input.eventData.image_url,
-                    },
-                    item_title: opts.input.eventData.title,
-                    item_description: "Reward for participation",
-                    item_image: {
-                      url: opts.input.eventData.ts_reward_url,
-                    },
-                    ...(opts.input.eventData.video_url
-                      ? {
-                        item_video: {
-                          url: new URL(opts.input.eventData.video_url).origin + new URL(opts.input.eventData.video_url).pathname,
-                        },
-                      }
-                      : {}),
-                    item_metadata: {
-                      activity_type: "event",
-                      place: {
-                        type:
-                          opts.input.eventData.eventLocationType === "online"
-                            ? "Online"
-                            : "Offline",
-                        ...(country && country?.abbreviatedCode
-                          ? {
-                            country_code_iso: country.abbreviatedCode,
-                            venue_name: opts.input.eventData.location,
+                  rewards: {
+                    mint_type: "manual",
+                    collection: {
+                      title: opts.input.eventData.title,
+                      description: opts.input.eventData.description,
+                      image: {
+                        url:
+                          process.env.ENV !== "local"
+                            ? opts.input.eventData.image_url
+                            : PLACEHOLDER_IMAGE,
+                      },
+                      cover: {
+                        url:
+                          process.env.ENV !== "local"
+                            ? opts.input.eventData.image_url
+                            : PLACEHOLDER_IMAGE,
+                      },
+                      item_title: opts.input.eventData.title,
+                      item_description: "Reward for participation",
+                      item_image: {
+                        url:
+                          process.env.ENV !== "local"
+                            ? opts.input.eventData.ts_reward_url
+                            : PLACEHOLDER_IMAGE,
+                      },
+                      ...(opts.input.eventData.video_url
+                        ? {
+                            item_video: {
+                              url:
+                                process.env.ENV !== "local"
+                                  ? new URL(opts.input.eventData.video_url)
+                                      .origin +
+                                    new URL(opts.input.eventData.video_url)
+                                      .pathname
+                                  : PLACEHOLDER_VIDEO,
+                            },
                           }
-                          : {
-                            venue_name: opts.input.eventData.location, // Use location regardless of country
-                          }),
+                        : {}),
+                      item_metadata: {
+                        activity_type: "event",
+                        place: {
+                          type:
+                            opts.input.eventData.eventLocationType === "online"
+                              ? "Online"
+                              : "Offline",
+                          ...(country && country?.abbreviatedCode
+                            ? {
+                                country_code_iso: country.abbreviatedCode,
+                                venue_name: opts.input.eventData.location,
+                              }
+                            : {
+                                venue_name: opts.input.eventData.location, // Use location regardless of country
+                              }),
+                        },
                       },
                     },
                   },
-                },
-              }
+                }
               : {}),
           };
 
@@ -533,15 +557,12 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       | { status: "error"; message: string }
     > => {
       try {
-        const response = await tonSocietyClient.get<HubsResponse>(
-          `/hubs`,
-          {
-            params: {
-              _start: 0,
-              _end: 100,
-            },
-          }
-        );
+        const response = await tonSocietyClient.get<HubsResponse>(`/hubs`, {
+          params: {
+            _start: 0,
+            _end: 100,
+          },
+        });
 
         if (response.status === 200 && response.data) {
           const sortedHubs = response.data.data.sort(
@@ -564,7 +585,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           } as const;
         }
       } catch (error) {
-        console.error('hub fetch failed', error);
+        console.error("hub fetch failed", error);
 
         return {
           status: "error",
@@ -623,7 +644,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(
     async (opts) => {
-      const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, true, "");
+      const visitors = await selectVisitorsByEventUuid(
+        opts.input.event_uuid,
+        -1,
+        0,
+        true,
+        ""
+      );
       const eventData = await selectEventByUuid(opts.input.event_uuid);
       // Map the data and conditionally remove fields
       const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
@@ -631,12 +658,14 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         //@ts-ignore
         const visitorData: Partial<VisitorsWithDynamicFields> = {
           ...visitor,
-          ticket_status: "ticket_status" in visitor ? visitor.ticket_status ?? undefined : undefined,
+          ticket_status:
+            "ticket_status" in visitor
+              ? (visitor.ticket_status ?? undefined)
+              : undefined,
           wallet_address: visitor.wallet_address as string | null | undefined,
           username: visitor.username === "null" ? null : visitor.username,
         };
         // Copy the visitor object without modifying dynamicFields directly
-
 
         // If ticketToCheckIn is false, remove specific fields
         if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {

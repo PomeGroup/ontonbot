@@ -74,7 +74,7 @@ export async function validateJwtFromRequest(req: Request) {
       organizerId: string;
     };
 
-    const organizer = await selectUserByUsername( organizerId);
+    const organizer = await selectUserByUsername(organizerId);
 
     const user = await selectUserById(userId);
 

@@ -1,5 +1,10 @@
+# minimum-image
+FROM node:22-alpine3.19 AS minimum-image
+RUN apk update
+RUN npm i -g pnpm
+
 # Base image
-FROM node:21.1.0-alpine3.17 AS base
+FROM minimum-image AS base
 # Build arguments to accept environment variables
 ARG BOT_TOKEN
 ARG ONTON_API_KEY
@@ -20,18 +25,16 @@ ENV PARTICIPANT_TMA_PORT=${PARTICIPANT_TMA_PORT}
 ENV MINI_APP_DOMAIN=${MINI_APP_DOMAIN}
 ENV MINI_APP_PORT=${MINI_APP_PORT}
 ENV NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED}
+
+# production base image
+FROM base AS base-prod
 # Install necessary packages
-RUN apk update && apk upgrade && \
-  apk add --no-cache \
+RUN apk add  \
   bash \
   curl \
   ca-certificates
-# Install pnpm globally
-RUN npm i -g pnpm
-# Set the working directory
-
 # Dependencies stage
-FROM base AS dependencies
+FROM base-prod AS dependencies
 # Copy all necessary files from the workspace root
 COPY  ../../ /app/
 # Install production dependencies only
@@ -41,16 +44,24 @@ RUN pnpm install
 WORKDIR /app/apps/nft-manager/
 
 # Development stage (includes devDependencies)
-FROM dependencies AS development
-CMD ["pnpm", "dev:server"]
+FROM base AS development
+COPY  ../../ /app/
+# Copy all necessary files from the workspace root
+WORKDIR /app/
+RUN echo "Development stage files " && ls -la
+RUN  pnpm install
+WORKDIR /app/apps/nft-manager/
+CMD export NODE_ENV=development && pnpm install && pnpm run dev:server
 
 # Build stage
 FROM dependencies AS build
 # Build the application
 RUN pnpm build
+# Remove the source code
 RUN rm -rf /app/apps/participant-tma
 
 # Production stage
 FROM build AS production
 # Run the app in production mode
 CMD ["pnpm", "start:prod"]
+

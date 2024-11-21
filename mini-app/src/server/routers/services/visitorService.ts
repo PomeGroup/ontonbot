@@ -25,7 +25,9 @@ export const getAndValidateVisitor = async (
 
     // If no ticketOrderUuid, validate if the visitor is valid
     if (!ticketOrderUuid) {
-      const isValidVisitor = await visitorsDB.selectValidVisitorById(visitor.id);
+      const isValidVisitor = await visitorsDB.selectValidVisitorById(
+        visitor.id
+      );
 
       // If the visitor is invalid, return a failure response
       if (!isValidVisitor.length) {
@@ -83,7 +85,6 @@ export const addVisitor = async (opts: any) => {
       code: "CONFLICT",
       message: "You have not completed the task",
     });
-
   }
 
   // Add a visitor if the task is not completed
@@ -93,11 +94,10 @@ export const addVisitor = async (opts: any) => {
     message: "Visitor added",
     data: visitor,
   };
-}
+};
 const visitorService = {
   getAndValidateVisitor,
   addVisitor,
 };
-
 
 export default visitorService;

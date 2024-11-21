@@ -1,4 +1,4 @@
-FROM node:21.1.0-alpine3.17 AS base
+FROM node:22-alpine3.19 AS base
 ARG PORT_WEB_SITE
 ARG NEXT_PUBLIC_APP_BASE_URL
 ARG MINI_APP_DOMAIN
@@ -20,11 +20,12 @@ FROM base AS dependencies
 # Copy package.json and package-lock.json
 COPY package*.json ./
 # Install dependencies
-RUN pnpm install --prod
+RUN pnpm install
 
 FROM dependencies AS with-files
 # Copy the rest of the application code
 COPY . .
+
 
 FROM with-files AS build
 # Build the application
@@ -40,4 +41,4 @@ FROM with-files AS development
 # Expose the port on which the app runs
 EXPOSE $PORT_WEB_SITE
 # Start the application in development mode
-CMD node ./node_modules/next/dist/bin/next  dev    --port  $PORT_WEB_SITE
+CMD export NODE_ENV=development && node ./node_modules/next/dist/bin/next  dev    --port  $PORT_WEB_SITE

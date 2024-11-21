@@ -5,10 +5,10 @@ import EventPageLoadingSkeleton from "../../events/[hash]/loading";
 import { useEventData } from "./eventPageContext";
 import { EventDataProvider } from "./EventDataProvider";
 import { EventSections } from "./EventPageSections";
-
+import { Block } from "konsta/react";
 
 const EventDataQueryState = () => {
-  const { eventData, initData } = useEventData()
+  const { eventData, initData } = useEventData();
 
   switch (true) {
     case eventData.isLoading || !initData:
@@ -20,7 +20,7 @@ const EventDataQueryState = () => {
     default:
       return <EventSections />;
   }
-}
+};
 
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   useWithBackButton({
@@ -28,8 +28,10 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   });
 
   return (
-    <EventDataProvider eventHash={eventHash}>
-      <EventDataQueryState />
-    </EventDataProvider>
+    <Block margin="mt-2">
+      <EventDataProvider eventHash={eventHash}>
+        <EventDataQueryState />
+      </EventDataProvider>
+    </Block>
   );
 };

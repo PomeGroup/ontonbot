@@ -3,6 +3,7 @@
 import Alerts from "@/app/_components/molecules/alerts";
 import { ManageEvent } from "@/app/_components/organisms/events";
 import useAuth from "@/hooks/useAuth";
+import { Page } from "konsta/react";
 
 const CreateEventAdminPage = () => {
   const { authorized, isLoading } = useAuth();
@@ -15,7 +16,11 @@ const CreateEventAdminPage = () => {
     return <Alerts.NotAuthorized />;
   }
 
-  return <ManageEvent />;
+  return (
+    <Page>
+      <ManageEvent />
+    </Page>
+  );
 };
 
 export default CreateEventAdminPage;

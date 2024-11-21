@@ -1,3 +1,7 @@
+x-common-extra-hosts: &default-extra-hosts
+  extra_hosts:
+    - "${MINI_APP_DOMAIN}:${IP_RANGE_BASE}"
+
 x-common-env: &common-env
   ACME_AGREE: true
   BOT_TOKEN: ${BOT_TOKEN}
@@ -64,26 +68,28 @@ x-common-env: &common-env
   REDIS_PORT: ${REDIS_PORT}
   TELEGRAM_BOT_PORT: ${TELEGRAM_BOT_PORT}
   TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
-  TONAPI_API_KEY: ${TONAPI_API_KEY}
-  TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
+
 
 services:
   mini-app:
     build:
-      context: ./mini-app  
-      dockerfile: Dockerfile  
-      target: development
-      args:
-        <<: *common-env  
+      context: ./mini-app
+      dockerfile: Dockerfile
+      target: production
+#    volumes:
+#        - mini-app:/app/node_modules
+
 
   mini-app-cron:
     build:
-      context: ./mini-app  
-      dockerfile: Dockerfile  
+      context: ./mini-app
+      dockerfile: Dockerfile
       target: development
       args:
-        <<: *common-env  
+        <<: *common-env
+    volumes:
+      - mini-app-cron:/app/node_modules
 
   telegram-bot:
     build:
@@ -92,22 +98,27 @@ services:
       target: development
       args:
         <<: *common-env  
-
+    volumes:
+        - telegram-bot:/app/node_modules
   client-web:
     build:
       context: ./client-web-panel  
       dockerfile: Dockerfile  
       target: development
       args:
-        <<: *common-env  
+        <<: *common-env
+    volumes:
+        - client-web:/app/node_modules
 
   participant-tma:
     build:
       context: ./newton/
       dockerfile: ./apps/participant-tma/Dockerfile
-      target: development
+      target: production
       args:
-        <<: *common-env  
+        <<: *common-env
+    volumes:
+        - participant-tma:/app/node_modules
 
   nft-microservice:
     build:
@@ -115,7 +126,9 @@ services:
       dockerfile: ./apps/nft-manager/Dockerfile
       target: development
       args:
-        <<: *common-env  
+        <<: *common-env
+    volumes:
+        - nft-microservice:/app/node_modules
 
   giveaway-checker:
     build:
@@ -128,20 +141,17 @@ services:
     build:
       context: ./website  
       dockerfile: Dockerfile
-      target: production
+      target: development
       args:
-        <<: *common-env  
+        <<: *common-env
+    volumes:
+        - website:/app/node_modules
 
-  golang-server:
-    build:
-      context: ./golang-server  
-      dockerfile: ./server/Dockerfile
-      args:
-        <<: *common-env  
-
-  golang-worker:
-    build:
-      context: ./golang-server  
-      dockerfile: ./worker/Dockerfile
-      args:
-        <<: *common-env  
+volumes:
+    mini-app:
+    mini-app-cron:
+    telegram-bot:
+    client-web:
+    participant-tma:
+    nft-microservice:
+    website:

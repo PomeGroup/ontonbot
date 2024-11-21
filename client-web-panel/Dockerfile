@@ -1,5 +1,5 @@
 # Use an official Node runtime as the base image
-FROM node:21.1.0-alpine3.17 AS base
+FROM node:22-alpine3.19 AS base
 ARG NEXT_PUBLIC_BACKEND_URL_CLIENT
 ARG PORT_CLIENT_WEB
 ENV NEXT_PUBLIC_BACKEND_URL_CLIENT=$NEXT_PUBLIC_BACKEND_URL_CLIENT
@@ -12,21 +12,18 @@ RUN apk update && apk upgrade && \
   ca-certificates
 # Install pnpm globally
 RUN npm i -g pnpm
-WORKDIR /usr/src/app
+WORKDIR /app
 
-FROM base AS dependencies
+FROM base AS with-files
 # Copy package.json and package-lock.json
-COPY package*.json ./
-# Install dependencies
-RUN pnpm install --prod
-
-FROM dependencies AS with-files
-# Copy the rest of the application
 COPY . .
 
+# Before the development stage
+FROM with-files AS before-development
+RUN pnpm install
+
 # Stage for local development
-FROM with-files AS development
-RUN  pnpm install
+FROM before-development AS development
 # Expose the port the app runs on
 EXPOSE $PORT_CLIENT_WEB
 # Command to run the application in development mode
@@ -35,6 +32,7 @@ CMD node ./node_modules/next/dist/bin/next  dev --port  $PORT_CLIENT_WEB
 # Stage for production build
 FROM with-files AS build
 # Build the application
+RUN pnpm install
 RUN pnpm run build
 
 # Final stage for production
@@ -42,7 +40,7 @@ FROM build AS production
 # Expose the port the app runs on
 EXPOSE $PORT_CLIENT_WEB
 # Command to run the application in production mode
-CMD node ./node_modules/next/dist/bin/next  start --port  $PORT_CLIENT_WEB
+CMD export NODE_ENV=development && node ./node_modules/next/dist/bin/next  start --port  $PORT_CLIENT_WEB
 
 
 

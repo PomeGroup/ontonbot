@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "dev"
+      - "staging"
     paths:
       - 'client-web-panel/**'
       - 'devops/**'
@@ -30,13 +31,14 @@ jobs:
 
       - name: Determine Services to Build
         id: determine-services
+        env:
+          TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
+          TELEGRAM_CHAT_ID_FOR_DEPLOYMENT: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
         run: |
           echo "Determining services that have changed..."
           changed_files=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")
           echo "Changed files: $changed_files"
-
           declare -a services_to_build=()
-
           # Define service directory mappings
           declare -A service_dirs=(
             ["client-web"]="client-web-panel"
@@ -48,6 +50,7 @@ jobs:
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
             ["golang-worker"]="golang-server/worker"
+            ["caddy"]="devops/caddy"
           )
           # If Trigger-full-build.txt has changed, add all services
           if echo "$changed_files" | grep -q "^Trigger-full-build.txt$"; then
@@ -62,7 +65,7 @@ jobs:
           fi
           # Add 'giveaway-checker' if no services have changed
           if [ ${#services_to_build[@]} -eq 0 ]; then
-          echo "No services have changed, defaulting to 'giveaway-checker'."
+            echo "No services have changed, defaulting to 'giveaway-checker'."
           services_to_build+=("giveaway-checker")
           fi
           if [ ${#services_to_build[@]} -eq 0 ]; then
@@ -74,6 +77,22 @@ jobs:
 
           echo "Services to build: $services_json"
           echo "services=$services_json" >> $GITHUB_OUTPUT
+          
+          if [ -z "TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT" ] || [ -z "$TELEGRAM_CHAT_ID_FOR_DEPLOYMENT" ]; then
+            echo "Error: Telegram  deployment bot vars  are not set or are empty."
+            exit 1
+          fi
+
+          curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID_FOR_DEPLOYMENT" \
+            -d text="
+            Hi there! 
+            🔄 Build Started for ${{ github.repository }}
+          
+            🧑 ‍💻Actor: ${{ github.actor }}
+            🧐 Changed services:  $services_json  
+            📝 branch: ${{ github.ref }}
+            🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
   build-and-push:
     runs-on: self-hosted
@@ -96,18 +115,21 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
         run: |
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
-            echo "Error: Telegram vars are not set or are empty."
+            echo "Error: Telegram deployment bot vars are not set or are empty."
             exit 1
           fi
 
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
-            Hi there! 
+            Hi there!
             🔄 Build Started for ${{ github.repository }}
-          
+            📝 branch: ${{ github.ref }}
+
             🧑 ‍💻Actor: ${{ github.actor }}
-          
+
+            🖊   message: ${{ github.event.head_commit.message }}
+
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
       - name: Checkout Code
@@ -122,6 +144,7 @@ jobs:
         run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and push image for ${{ matrix.service }}
+
         run: |
           declare -A services=(
             ["nft-microservice"]="newton/apps/nft-manager"
@@ -134,6 +157,7 @@ jobs:
             ["mini-app"]="mini-app"
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
+            ["caddy"]="devops/caddy"
           )
           branch_name="${{ github.ref_name }}"
           service="${{ matrix.service }}"
@@ -142,7 +166,7 @@ jobs:
           service=$(echo "$service" | tr '[:upper:]' '[:lower:]')
 
           image_name="ghcr.io/${repository}/${service}"
-          tag_commit="${image_name}:${branch_name}-${{ github.run_id }}" 
+          tag_commit="${image_name}:${branch_name}-${{ github.run_id }}"
           tag_latest="${image_name}:${branch_name}-latest"
 
           echo "Processing service: $service"
@@ -154,6 +178,9 @@ jobs:
           elif [ "$service" == "nft-microservice" ]; then
             dockerfile_path="newton/apps/nft-manager/Dockerfile"
             build_context="./newton"
+          elif [ "$service" == "caddy" ]; then
+            dockerfile_path="devops/caddy/Dockerfile"
+            build_context="./devops/caddy/"
           elif [ "$service" == "golang-server" ]; then
             dockerfile_path="golang-server/server/Dockerfile"
             build_context="./golang-server"
@@ -173,12 +200,12 @@ jobs:
             echo "Commit Author: ${{ github.actor }}" >> "$COMMIT_DETAILS_FILE"
             echo "Commit Message: ${{ github.event.head_commit.message }}" >> "$COMMIT_DETAILS_FILE"
             echo "Commit Date: ${{ github.event.head_commit.timestamp }}" >> "$COMMIT_DETAILS_FILE"
-      
+
             # Move the commit details file to the appropriate build context
             mv "$COMMIT_DETAILS_FILE" "$build_context/commit_details.txt"
             # Create temporary build args file
             BUILD_ARGS_FILE=$(mktemp)
-          
+
             # Extract environment variables for the current branch
             branch_prefix="${branch_name^^}_"
             echo "Extracting environment variables for the branch prefix: $branch_prefix"
@@ -188,11 +215,11 @@ jobs:
               local json_str="$1"
               local prefix="$2"
               local outfile="$3"
-          
+
               # Ensure JSON is properly formatted
               echo "$json_str" | jq -r --arg prefix "$prefix" \
-                'with_entries(select(.key | startswith($prefix))) | 
-                to_entries[] | 
+                'with_entries(select(.key | startswith($prefix))) |
+                to_entries[] |
                 "\(.key | sub($prefix; ""))=\(.value)"' >> "$outfile" || true
             }
 
@@ -200,7 +227,7 @@ jobs:
             if [ -n "$ALLMYSECRETS" ]; then
               echo "Processing secrets..."
               process_env_vars "$ALLMYSECRETS" "$branch_prefix" "$BUILD_ARGS_FILE"
-          
+
             fi
 
             # Process vars with error handling
@@ -216,10 +243,19 @@ jobs:
             echo "Generated build args file with $(wc -l < "$BUILD_ARGS_FILE") variables"
             echo "Dockerfile path: $dockerfile_path"
             echo "Build context: $build_context"
-            cat $BUILD_ARGS_FILE
             # Create Docker build command with proper escaping
             DOCKER_CMD="docker buildx build --push "
-          
+
+            # Check if branch name is dev or sandbox
+            #
+            #            if  [ "$branch_name" == "dev" ] || [ "$branch_name" == "sandbox" ]; then
+            #              echo "Branch is $branch_name. Building with target development."
+            #              DOCKER_CMD+=" --target development "
+            #            else
+            #              echo "Branch is $branch_name. Building with default (production) target."
+            #              DOCKER_CMD+=" --target production "
+            #            fi
+            DOCKER_CMD+=" --target production "
             # Add build args from file
             while IFS='=' read -r key value; do
               if [ -n "$key" ]; then
@@ -232,7 +268,8 @@ jobs:
             DOCKER_CMD+=" -t \"$tag_commit\""
             DOCKER_CMD+=" -t \"$tag_latest\""
             DOCKER_CMD+=" \"$build_context\""
-            echo "here is the docker command::: $DOCKER_CMD"
+
+
             # Execute build
             echo "Starting docker build..."
             if ! eval "$DOCKER_CMD"; then
@@ -259,10 +296,14 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
-            Hi there! 
+            Hi there!
             🔄 Build was successful for ${{ github.repository }}
-          
+
+            📝 branch: ${{ github.ref }}
+
             🧑 ‍💻Actor: ${{ github.actor }}
+
+            🖊   message: ${{ github.event.head_commit.message }}
 
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
       - name: Send Telegram Message - Build Failure
@@ -272,7 +313,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ vars.TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT }}
           TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID_FOR_DEPLOYMENT }}
         run: |
-          
+
           if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
             echo "Error: Telegram vars are not set or are empty."
             exit 1
@@ -281,21 +322,27 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
-            Hi there! 
-            🔄 Build was successful for ${{ github.repository }}
-          
+            Hi there!
+            🔄 Build was NOT successful for ${{ github.repository }}
+
+            📝 branch: ${{ github.ref }}
+
             🧑 ‍💻Actor: ${{ github.actor }}
-          
+
+            🖊   message: ${{ github.event.head_commit.message }}
+
+            ❌ ❌ Build failed ❌ ❌
+
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
   deploy:
     runs-on: ubuntu-latest
-    needs: [determine-services, build-and-push]
+    needs: [determine-services,build-and-push ]
     if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
     permissions:
-      contents: read
-      id-token: write
+      contents: write
+      packages: read
       actions: write
-
+      id-token: write
     env:
       ALLMYSECRETS: ${{ toJSON(secrets) }}
       ALLMYVARS: ${{ toJSON(vars) }}
@@ -312,9 +359,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: List Workspace Files
-        run: ls -la
-      - name: Generate Environment Variables Script
+      - name: Authenticate to GitHub Container Registry
+        env:
+          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Generate Environment Variables .env File
         id: generate-env-script
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -329,27 +378,28 @@ jobs:
           # Create or truncate the env file if it already exists
           > $env_file
           
+          
           # Extract GitHub secrets and environment variables from ALLMYSECRETS and ALLMYVARS
           secrets_json="${ALLMYSECRETS}"
           vars_json="${ALLMYVARS}"
           
           # Parse the JSON and filter the variables with the appropriate prefix, removing the prefix when writing to the env file
           echo "$secrets_json" | jq -r --arg prefix "$prefix" \
-            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\(.value)"' >> $env_file
+            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\"\(.value)\""' >> $env_file
           
           echo "$vars_json" | jq -r --arg prefix "$prefix" \
-            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\(.value)"' >> $env_file
+            'to_entries[] | select(.key | startswith($prefix)) | "\(.key[$prefix | length:])=\"\(.value)\""' >> $env_file
           
-          #Addd branch name as env also
-          echo "BRANCH_NAME=$branch_name" >> $env_file
-          #Add github repo as env also
-          echo "GITHUB_REPO=$github_repo" >> $env_file
+          # Add branch name as env also
+          echo "BRANCH_NAME=\"$branch_name\"" >> $env_file
+          # Add github repo as env also
+          echo "GITHUB_REPO=\"$github_repo\"" >> $env_file
           # Add the GitHub Container Registry PAT to the env file
-          echo "CR_PAT=${CR_PAT}" >> $env_file
-          echo "Generated environment variables script:"
+          echo "CR_PAT=\"${CR_PAT}\"" >> $env_file
+          
+          echo "Environment variables script generated successfully."
+ 
 
-      - name: Install sshpass
-        run: sudo apt-get update && sudo apt-get install -y sshpass
       - name: Set up SSH Environment Variables
         id: set-env-vars
         run: |
@@ -359,21 +409,20 @@ jobs:
           # Use case-insensitive prefix matching for branch name
           if [[ "$branch_name" == "dev" ]]; then
             echo "SSH_IP=${{ secrets.SSH_DEV_IP }}" >> $GITHUB_ENV
-          elif [[ "$branch_name" == "stage" ]]; then
+            echo "SSH_PORT=${{ secrets.SSH_DEV_PORT }}" >> $GITHUB_ENV
+          elif [[ "$branch_name" == "staging" ]]; then
             echo "SSH_IP=${{ secrets.SSH_STAGE_IP }}" >> $GITHUB_ENV
+            echo "SSH_PORT=${{ secrets.SSH_STAGE_PORT }}" >> $GITHUB_ENV
           elif [[ "$branch_name" == "sandbox" ]]; then
             echo "SSH_IP=${{ secrets.SSH_SANDBOX_IP }}" >> $GITHUB_ENV
+            echo "SSH_PORT=${{ secrets.SSH_SANDBOX_PORT }}" >> $GITHUB_ENV
+          elif [[ "$branch_name" == "main" ]]; then
+            echo "SSH_IP=${{ secrets.SSH_SANDBOX_PORT }}" >> $GITHUB_ENV
+            echo "SSH_PORT=${{ secrets.SSH_SANDBOX_PORT }}" >> $GITHUB_ENV
           else
             echo "Error: Unknown branch name, unable to set SSH credentials."
             exit 1
           fi
-      - name: Debugging SSH Setup
-        run: |
-          echo "SSH environment variables set."
-          echo "SSH_IP: ${SSH_IP}"
-          echo "Checking if SSH key is added to the agent..."
-          ssh-add -l
-
       - name: Authenticate to GitHub Container Registry on Remote Server
         run: |
           echo "Authenticating to GitHub Container Registry..."
@@ -386,10 +435,15 @@ jobs:
           fi
 
       - name: Deploy Changed Services
+        env:
+          CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           branch_name="${{ github.ref_name }}"
           ssh_ip="${SSH_IP}"
+          ssh_port="${SSH_PORT}"
           services_to_build=${{ needs.determine-services.outputs.services_to_build }}   
+          echo "create network"
+          docker network create --driver overlay --attachable onton-network-$branch_name || true
           echo "changed services: $services_to_build"
           echo "Deploying services to branch: $branch_name"
           if [ -z "$ssh_ip" ]; then
@@ -398,24 +452,43 @@ jobs:
           fi
 
           echo "Connecting to server and creating branch directory..."
-          ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
-            mkdir -p /home/onton/$branch_name
-          EOF
-          
-          echo "Copying files to server..."
-          scp -r -o StrictHostKeyChecking=no docker-compose-server.yml  .dockerignore  devops root@$ssh_ip:/home/onton/$branch_name
 
+          # Use case-insensitive prefix matching for branch name
+          # [[ "$branch_name" == "dev" ]] ||
+          if [[ "$branch_name" == "sandbox" ]]; then
+            ssh -o StrictHostKeyChecking=no -p "$ssh_port" tonont@$ssh_ip  << EOF
+            mkdir -p /home/tonont/$branch_name
+            mkdir -p /home/tonont/$branch_name/mini-app
+            mkdir -p /home/tonont/$branch_name/mini-app-cron
+            mkdir -p /home/tonont/$branch_name/telegram-bot
+            mkdir -p /home/tonont/$branch_name/client-web
+            mkdir -p /home/tonont/$branch_name/participant-tma
+            mkdir -p /home/tonont/$branch_name/nft-microservice
+            mkdir -p /home/tonont/$branch_name/website
+            EOF
+          else
+            ssh -o StrictHostKeyChecking=no -p "$ssh_port" tonont@$ssh_ip << EOF
+            mkdir -p /home/tonont/$branch_name
+          EOF
+          fi
+
+          echo "Copying files to server..."
+          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml .env docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops tonont@$ssh_ip:/home/tonont/$branch_name
+          
           
           # Remove brackets and convert to space-separated string
           services=$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
           echo "Formatted services to build: $services"  # Debug output        
-          ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
+          ssh -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
+            whoami
             echo "Loading environment variables..."
-            cd /home/onton/$branch_name
+            cd /home/tonont/$branch_name
             source .env
             echo "******Logging into GitHub Container Registry..."
-            echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            echo "Pulling latest images of changed services..."
+            if [ -z "$CR_PAT" ]; then
+              echo "CR_PAT is not set or is empty"; exit 1;
+            fi
+             
             echo "services to build: $services_to_build"
             # Remove the square brackets and split by comma
             echo "Pulling latest images of changed services..."
@@ -427,25 +500,62 @@ jobs:
                 echo "Pulling Docker image for service: \$service"
                 docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
               fi
+              if [[ "\$service" == "caddy" ]]; then
+                echo "creating caady files"
+                  echo "Listing files in branch directory..."        
+                  cd /home/tonont/$branch_name
+                  ls -la
+                  echo "Sourcing .env file..."
+                  set -o allexport
+                  source .env
+                  set +o allexport
+                  source /home/tonont/$branch_name/.env
+                  chmod +x devops/generate-caddyfile-by-address.sh
+                  rm -f /home/tonont/caddy/tmp/$branch_name/Caddyfile
+                  mkdir -p /home/tonont/caddy/tmp/$branch_name/
+                  mkdir -p /home/tonont/caddy/Caddyfile
+                  
+                  export CADDYFILE_PATH="/home/tonont/caddy/tmp/$branch_name.caddyfile"
+                  sh devops/generate-caddyfile-by-address.sh
+                  ls -la /home/tonont/caddy/tmp/$branch_name.caddyfile
+                  mv /home/tonont/caddy/tmp/$branch_name.caddyfile /home/tonont/caddy/$branch_name.caddyfile
+                  docker stack deploy --with-registry-auth -c ./devops/caddyServer/docker-compose-caddy.yml caddy
+                  docker service update --force caddy_caddy
+                  echo "Services deployed caddy successfully."
+              fi
             done
           EOF
           echo "Exporting all environment variables with branch-specific prefix..."
-          ssh -o StrictHostKeyChecking=no root@$ssh_ip << EOF
+          
+          ssh  -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
             echo "Listing files in branch directory..."        
-            cd /home/onton/$branch_name
-            ls -la 
-            echo "Sourcing environment variables..."
-            echo "Exporting environment variables and deploying services..."
-            export \$(printenv | grep '^${branch_name^^}_' | xargs)
-            cd /home/onton/$branch_name
-            source /home/onton/$branch_name/.env
-            echo "Logging into GitHub Container Registry with GHCR_PAT..."
-            echo "\$GIT_API_KEY" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
-            echo "Printing environment variables..."
+            cd /home/tonont/$branch_name
+            ls -la
+            echo "Sourcing .env file..."
+            set -o allexport
+            source .env
+            set +o allexport
+            cd /home/tonont/$branch_name
+            source /home/tonont/$branch_name/.env
             chmod +x devops/generate-caddyfile.sh
             chmod +x devops/minio-init.sh
-            docker compose  -f docker-compose-server.yml --env-file .env --profile full up -d
-            docker system prune -f
+            echo "Updating Docker node label for stage $branch_name..."
+            docker node update --label-add stage.$branch_name=true ontonServer
+            echo "Deploying Docker stack for $branch_name..."
+            docker stack deploy --with-registry-auth -c docker-compose-server.yml $branch_name
+
+            echo "Forcing update of services..."
+            services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
+            underscore="_"
+            echo $services_to_build
+            for service in $services; do
+              echo " branch name: $branch_name"
+              echo " service: \$service"         
+              echo "must $full_service_name"
+              echo "docker service update --force $branch_name\_\$service"
+              docker service update --force $branch_name\_\$service
+            done
+            echo "Services deployed successfully."         
           EOF
 
           echo "Services deployed successfully."
@@ -453,7 +563,7 @@ jobs:
         if: always()
         run: |
           echo "Cleaning up environment variables script..."
-          rm -f .env
+          #rm -f .env
           echo "Environment variables script deleted successfully."
 
       - name: Send Telegram Message - Deployment Success
@@ -475,6 +585,9 @@ jobs:
             🔄 Build Started for ${{ github.repository }}
           
             🧑 ‍💻Actor: ${{ github.actor }}
+            📝 branch: ${{ github.ref }}
+          
+            🖊   message: ${{ github.event.head_commit.message }}
           
             ✅ deployment completed successfully
             "
@@ -497,5 +610,9 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
           
+            🖊   message: ${{ github.event.head_commit.message }}
+            
+            📝 branch: ${{ github.ref }}
+            
             ❌ ❌ deployment failed ❌ ❌ 
             "

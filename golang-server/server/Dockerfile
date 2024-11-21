@@ -1,5 +1,5 @@
 # Use the official Golang image as a parent image
-FROM golang:1.23.3-alpine3.20
+FROM golang:1.23.3-alpine3.20 as full
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -21,6 +21,9 @@ RUN go mod tidy
 
 # Build the application
 RUN go build -o server .
-
+FROM full AS development
 # Command to run the executable
+CMD ["./server"]
+
+FROM full AS production
 CMD ["./server"]
