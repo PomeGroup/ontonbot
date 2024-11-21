@@ -20,65 +20,84 @@ export function UserRegistrationForm() {
         footer="Enable user registration to allow attendees to fill out details like name, company, position, and notes during the event sign-up."
         after={
           <Toggle
+            onChange={() =>
+              setEventData({ has_registration: !eventData?.has_registration })
+            }
             component="div"
             checked={eventData?.has_registration}
           />
         }
       />
-      <ListItem
-        label
-        title="Require Approval"
-        className={cn({ hidden: !Boolean(eventData?.has_registration) })}
-        media={<UserRoundCheck />}
-        after={
-          <Toggle
-            component="div"
-            checked={eventData?.has_approval}
+      {eventData?.has_registration && (
+        <>
+          <ListItem
+            label
+            title="Require Approval"
+            media={<UserRoundCheck />}
+            after={
+              <Toggle
+                component="div"
+                onChange={() =>
+                  setEventData({ has_approval: !eventData?.has_approval })
+                }
+                checked={eventData?.has_approval}
+              />
+            }
           />
-        }
-      />
-      <ListItem
-        label
-        title={
-          <p className="space-x-4">
-            <span>Capacity</span>
-            <small className="dark:text-zinc-400">unlimited</small>
-          </p>
-        }
-        className={cn({ hidden: !Boolean(eventData?.has_registration) })}
-        media={<ArrowUpToLine />}
-        after={
-          <Toggle
-            component="div"
-            checked={eventData?.has_capacity}
+          <ListItem
+            label
+            title={
+              <p className="space-x-4">
+                <span>Capacity</span>
+                <small className={"dark:text-zinc-400"}>
+                  {eventData.has_capacity ? eventData.capacity : "unlimited"}
+                </small>
+              </p>
+            }
+            media={<ArrowUpToLine />}
+            after={
+              <Toggle
+                onChange={() =>
+                  setEventData({ has_capacity: !eventData?.has_capacity })
+                }
+                component="div"
+                checked={eventData?.has_capacity}
+              />
+            }
           />
-        }
-      />
-      {/* <ListItem */}
-      {/*   label */}
-      {/*   title={ */}
-      {/*     <p className="space-x-4"> */}
-      {/*       <span>Over-Capacity</span> */}
-      {/*       <small className="dark:text-zinc-400">waitlist</small> */}
-      {/*     </p> */}
-      {/*   } */}
-      {/*   media={<Clock />} */}
-      {/*   after={ */}
-      {/*     <Toggle */}
-      {/*       component="div" */}
-      {/*       checked */}
-      {/*       className="" */}
-      {/*     /> */}
-      {/*   } */}
-      {/* /> */}
-      <ListInput
-        title="Max Capacity"
-        inputClassName={cn("placeholder:tracking-[.2rem]")}
-        className={cn({ hidden: !Boolean(eventData?.has_registration) })}
-        placeholder={"100"}
-        outline
-        info="Automatically close registration once capacity is reached, counting only approved guests."
-      />
+          {/* <ListItem */}
+          {/*   label */}
+          {/*   title={ */}
+          {/*     <p className="space-x-4"> */}
+          {/*       <span>Over-Capacity</span> */}
+          {/*       <small className="dark:text-zinc-400">waitlist</small> */}
+          {/*     </p> */}
+          {/*   } */}
+          {/*   media={<Clock />} */}
+          {/*   after={ */}
+          {/*     <Toggle */}
+          {/*       component="div" */}
+          {/*       checked */}
+          {/*       className="" */}
+          {/*     /> */}
+          {/*   } */}
+          {/* /> */}
+          {eventData?.has_capacity && (
+            <ListInput
+              title="Max Capacity"
+              type="number"
+              name="capacity"
+              inputMode="number"
+              inputClassName={cn(
+                "placeholder:tracking-[.2rem] tracking-widest"
+              )}
+              placeholder={"100"}
+              outline
+              info="Automatically close registration once capacity is reached, counting only approved guests."
+            />
+          )}
+        </>
+      )}
     </FormBlock>
   );
 }
