@@ -3,7 +3,7 @@
 import Alerts from "@/app/_components/molecules/alerts";
 import { ManageEvent } from "@/app/_components/organisms/events";
 import GuestList from "@/app/_components/organisms/events/GuestList";
-import { trpc } from "@/app/_trpc/client";
+import { useGetEvent } from "@/hooks/event/useGetEvent";
 import useAuth from "@/hooks/useAuth";
 import { Block, Page, Segmented, SegmentedButton } from "konsta/react";
 import { useTheme } from "next-themes";
@@ -15,13 +15,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("guest_list");
   const { setTheme } = useTheme();
 
-  const event = trpc.events.getEvent.useQuery(
-    { event_uuid: params.hash },
-    {
-      cacheTime: 0,
-      queryKey: ["events.getEvent", { event_uuid: params.hash }],
-    }
-  );
+  const event = useGetEvent();
 
   const { authorized, isLoading } = useAuth();
 

@@ -26,7 +26,7 @@ const QrCodeButton = ({
         "w-full space-x-2 mb-4 mt-2",
         requestSendQRcodeMutation.isLoading && Boolean(initData) && "opacity-50"
       )}
-      variant={"outline"}
+      variant={"secondary"}
       disabled={!initData || requestSendQRcodeMutation.isLoading}
       onClick={async () => {
         if (!initData) return;
@@ -44,7 +44,7 @@ const QrCodeButton = ({
       }}
     >
       <QrCode />
-      <span className="text-lg">Get Link and QR</span>
+      <span className="text-lg">Get Event Link and QR</span>
       {requestSendQRcodeMutation.isLoading && (
         <LoaderIcon className="h-5 animate-spin" />
       )}

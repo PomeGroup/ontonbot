@@ -44,7 +44,7 @@ module.exports = konstaConfig({
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
+        background: "var(--background)",
         foreground: "hsl(var(--foreground))",
         "main-button-color": "#007AFF",
         "disabled-font": "#B9B9BA",

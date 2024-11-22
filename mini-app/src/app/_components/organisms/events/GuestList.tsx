@@ -1,12 +1,8 @@
-import Tables from "@/app/_components/molecules/tables";
-import { trpc } from "@/app/_trpc/client";
-import useWebApp from "@/hooks/useWebApp";
 import { RouterOutput } from "@/server";
-import { useState } from "react";
-import QrCodeButton from "../../atoms/buttons/QrCodeButton";
 import { useWithBackButton } from "../../atoms/buttons/web-app/useWithBackButton";
-import CheckInGuest from "../../checkInGuest/CheckInGuest";
-import { Block } from "konsta/react";
+import RegistrationGuestlist from "../../Event/RegistrationGuestList";
+import NonRegistrationGuestList from "../../Event/NonRegistrationGuestList";
+import { useGetEvent } from "@/hooks/event/useGetEvent";
 
 interface Props {
   event: RouterOutput["events"]["getEvent"];
@@ -20,53 +16,13 @@ const GuestList = (props: Props) => {
     whereTo: "/",
   });
 
-  const [needRefresh, setNeedRefresh] = useState(false);
-  const webApp = useWebApp();
-  const hapticFeedback = webApp?.HapticFeedback;
-  const requestExportFileMutation = trpc.events.requestExportFile.useMutation();
-  const handleVisitorsExport = async () => {
-    await requestExportFileMutation.mutateAsync({
-      event_uuid: props.params.hash,
-    });
-    hapticFeedback?.impactOccurred("medium");
+  // this will not refetch (it will fetch once)
+  const event = useGetEvent();
 
-    webApp?.close();
-  };
-  const guestCheckInParams = {
-    hash: props.params.hash,
-    setNeedRefresh,
-    needRefresh,
-  };
-
-  return (
-    <Block>
-      {props.event?.event_uuid && (
-        <QrCodeButton
-          event_uuid={props.event.event_uuid}
-          url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event.event_uuid}`}
-          hub={props.event.society_hub.name!}
-        />
-      )}
-
-      <div className="mt-0 flex items-center space-x-2 px-2  ">
-        <span className=" text-2xl font-extrabold tracking-tight text-gray-300 mr-auto">
-          {" "}
-          Guests List{" "}
-        </span>
-        {props.event && props.event.ticketToCheckIn === true && (
-          <span>
-            <CheckInGuest params={guestCheckInParams} />
-          </span>
-        )}
-      </div>
-
-      <Tables.Visitors
-        event_uuid={props.params.hash}
-        handleVisitorsExport={handleVisitorsExport}
-        setNeedRefresh={setNeedRefresh}
-        needRefresh={needRefresh}
-      />
-    </Block>
+  return event.data?.has_registration ? (
+    <RegistrationGuestlist />
+  ) : (
+    <NonRegistrationGuestList {...props} />
   );
 };
 

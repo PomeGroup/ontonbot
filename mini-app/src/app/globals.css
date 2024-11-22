@@ -154,7 +154,7 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: #ffffff;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -198,7 +198,7 @@ body {
     --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 201 11% 98%, 1;
+    --secondary: 211, 100%, 50%, 0.2;
     --secondary-foreground: 201, 100%, 46%;
 
     --muted: 240, 5%, 24%, 1;
