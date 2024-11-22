@@ -21,8 +21,6 @@ RUN apk update && apk upgrade && \
   jpeg-dev \
   giflib-dev
 
-# Verify Python and pip installations
-RUN python3 --version && pip3 --version
 # Install pnpm globally
 RUN npm i -g pnpm
 WORKDIR /app
@@ -45,12 +43,14 @@ CMD node ./node_modules/next/dist/bin/next  dev --port  $PORT_CLIENT_WEB
 # Stage for production build
 FROM with-files AS build
 # Build the application
+WORKDIR /app
 RUN pnpm install
 RUN pnpm run build
 
 # Final stage for production
 FROM build AS production
 # Expose the port the app runs on
+WORKDIR /app
 EXPOSE $PORT_CLIENT_WEB
 # Command to run the application in production mode
 CMD export NODE_ENV=development && node ./node_modules/next/dist/bin/next  start --port  $PORT_CLIENT_WEB
