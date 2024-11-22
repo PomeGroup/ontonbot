@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client-web-panel/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/client-web-panel/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/drizzle/meta/_journal.json" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/drizzle/meta/_journal.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/telegram-bot/deploy.test" beforeDir="false" afterPath="$PROJECT_DIR$/telegram-bot/deploy.test" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

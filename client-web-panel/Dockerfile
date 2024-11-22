@@ -9,14 +9,27 @@ RUN apk update && apk upgrade && \
   apk add \
   bash \
   curl \
-  ca-certificates
+  ca-certificates \
+  python3 \
+  py3-pip \
+  make \
+  g++ \
+  pkgconfig \
+  pixman \
+  cairo-dev \
+  pango-dev \
+  jpeg-dev \
+  giflib-dev
+
+# Verify Python and pip installations
+RUN python3 --version && pip3 --version
 # Install pnpm globally
 RUN npm i -g pnpm
 WORKDIR /app
 
 FROM base AS with-files
 # Copy package.json and package-lock.json
-COPY . .
+COPY . /app
 
 # Before the development stage
 FROM with-files AS before-development
