@@ -6,6 +6,7 @@ import { useState } from "react";
 import QrCodeButton from "../../atoms/buttons/QrCodeButton";
 import { useWithBackButton } from "../../atoms/buttons/web-app/useWithBackButton";
 import CheckInGuest from "../../checkInGuest/CheckInGuest";
+import { Block } from "konsta/react";
 
 interface Props {
   event: RouterOutput["events"]["getEvent"];
@@ -18,6 +19,7 @@ const GuestList = (props: Props) => {
   useWithBackButton({
     whereTo: "/",
   });
+
   const [needRefresh, setNeedRefresh] = useState(false);
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
@@ -37,7 +39,7 @@ const GuestList = (props: Props) => {
   };
 
   return (
-    <>
+    <Block>
       {props.event?.event_uuid && (
         <QrCodeButton
           event_uuid={props.event.event_uuid}
@@ -64,7 +66,7 @@ const GuestList = (props: Props) => {
         setNeedRefresh={setNeedRefresh}
         needRefresh={needRefresh}
       />
-    </>
+    </Block>
   );
 };
 

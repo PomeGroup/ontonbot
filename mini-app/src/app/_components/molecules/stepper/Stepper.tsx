@@ -40,9 +40,9 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
                     "in-progress",
                     "in-progress-last",
                   ].includes(stepState),
-                  "text-secondary after:bg-muted-foreground":
+                  "text-muted-foreground after:bg-muted-foreground":
                     stepState === "not-active",
-                  "text-secondary": stepState === "last",
+                  "text-muted-foreground": stepState === "last",
                 },
                 stepState === "last" || stepState === "in-progress-last"
                   ? "after:hidden"

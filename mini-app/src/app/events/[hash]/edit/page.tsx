@@ -5,15 +5,15 @@ import { ManageEvent } from "@/app/_components/organisms/events";
 import GuestList from "@/app/_components/organisms/events/GuestList";
 import { trpc } from "@/app/_trpc/client";
 import useAuth from "@/hooks/useAuth";
-import useWebApp from "@/hooks/useWebApp";
 import { Block, Page, Segmented, SegmentedButton } from "konsta/react";
-import { FC, useState } from "react";
+import { useTheme } from "next-themes";
+import { FC, useEffect, useState } from "react";
 
 type ActiveTab = "guest_list" | "edit";
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("guest_list");
-  const WebApp = useWebApp();
+  const { setTheme } = useTheme();
 
   const event = trpc.events.getEvent.useQuery(
     { event_uuid: params.hash },
@@ -22,9 +22,15 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
       queryKey: ["events.getEvent", { event_uuid: params.hash }],
     }
   );
-  const hapticFeedback = WebApp?.HapticFeedback;
 
   const { authorized, isLoading } = useAuth();
+
+  useEffect(() => {
+    setTheme("light");
+    return () => {
+      setTheme("dark");
+    };
+  }, []);
 
   if (isLoading) {
     return null;
@@ -65,12 +71,10 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         />
       )}
       {activeTab === "guest_list" && event.data && (
-        <Block>
-          <GuestList
-            event={event.data}
-            params={params}
-          />
-        </Block>
+        <GuestList
+          event={event.data}
+          params={params}
+        />
       )}
     </Page>
   );
