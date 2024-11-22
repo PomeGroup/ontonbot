@@ -2,6 +2,11 @@ const konstaConfig = require("konsta/config");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = konstaConfig({
+  konsta: {
+    colors: {
+      "brand-red": "#ff0000",
+    },
+  },
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",

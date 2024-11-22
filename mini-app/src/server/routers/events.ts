@@ -662,7 +662,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               updatedAt: new Date(),
 
               /* ------------------------ Event Registration Update ----------------------- */
-              // Updating has_registraion is not allowed
+              // Updating has_registration is not allowed
               has_approval: eventData.has_approval,
               capacity: eventData.capacity,
               has_waiting_list: eventData.has_waiting_list,
@@ -755,14 +755,18 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               label: "Enter Event",
             },
           };
-          // Remove the description key from updatedEvent
-          const {
-            description: updatedDescription,
-            ...updatedEventWithoutDescription
-          } = updatedEvent[0];
-          // Remove the description key from oldEvent
-          const { description: oldDescription, ...oldEventWithoutDescription } =
-            oldEvent[0];
+
+          // Remove the description key from updated Event
+          const updatedEventWithoutDescription = removeKey(
+            updatedEvent[0],
+            "description"
+          );
+          // Remove the description key from old Event
+          const oldEventWithoutDescription = removeKey(
+            oldEvent[0],
+            "description"
+          );
+
           const oldChanges = getObjectDifference(
             updatedEventWithoutDescription,
             oldEventWithoutDescription
@@ -785,10 +789,14 @@ After:
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
 `;
 
-          await updateActivity(
-            eventDraft,
-            opts.ctx.event.activity_id as number
-          );
+          // if it was a fully local setup we don't want to update the activity_id
+          if (process.env.ENV !== "local") {
+            await updateActivity(
+              eventDraft,
+              opts.ctx.event.activity_id as number
+            );
+          }
+
           await sendLogNotification({ message });
 
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;

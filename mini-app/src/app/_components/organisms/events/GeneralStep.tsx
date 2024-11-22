@@ -33,7 +33,9 @@ export const GeneralStep = () => {
       has_registration: Boolean(eventData?.has_registration),
       has_approval: Boolean(eventData?.has_approval),
       has_waiting_list: Boolean(eventData?.has_waiting_list),
-      capacity: eventData?.capacity || null,
+      capacity: !isNaN(Number(formDataObject.capacity))
+        ? Number(formDataObject.capacity)
+        : eventData?.capacity || null,
     });
 
     if (!formDataParsed.success) {

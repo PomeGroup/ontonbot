@@ -56,6 +56,12 @@ const ManageEvent = (props: ManageEventProps) => {
           countryId: props.event.countryId || undefined,
           cityId: props.event.cityId || undefined,
           ts_reward_url: props.event.tsRewardImage || undefined,
+
+          // User Registration Attributes 📎
+          has_registration: Boolean(props.event.has_registration),
+          has_approval: Boolean(props.event.has_approval),
+          capacity: props.event.capacity || null,
+          has_waiting_list: Boolean(props.event.has_waiting_list),
         });
       }
     }
