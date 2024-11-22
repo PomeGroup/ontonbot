@@ -77,7 +77,7 @@ export const EventPasswordInput = () => {
         name="event_password"
         autoFocus
         type="text"
-        className="bg-muted border-secondary-foreground/40 border"
+        className="bg-cn-muted border-secondary-foreground/40 border"
         minLength={4}
         errors={
           upsertUserEventFieldMutation.error?.message
@@ -86,7 +86,7 @@ export const EventPasswordInput = () => {
         }
         prefix_icon={<PasscodeIcon />}
       />
-      <p className="text-muted-foreground text-xs">
+      <p className="text-cn-muted-foreground text-xs">
         Enter the Event Password that the organizer shared to confirm your
         participation in the event.
       </p>

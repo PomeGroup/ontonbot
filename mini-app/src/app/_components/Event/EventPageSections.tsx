@@ -46,7 +46,7 @@ const EventLocation = () => {
     <EventKeyValue
       label="Location"
       value={location}
-      className="text-primary text-[14px]"
+      className="text-cn-primary text-[14px]"
     />
   ) : null;
 };

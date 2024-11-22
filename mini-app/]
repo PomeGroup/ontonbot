@@ -209,9 +209,9 @@ const StatusChip: React.FC<StatusChipProps> = ({
   const variantStyles = cva("", {
     variants: {
       variant: {
-        primary: "bg-blue-500 text-blue-600",
-        success: "bg-green-500 text-green-700",
-        danger: "bg-red-500 text-red-600",
+        primary: "bg-blue-500 text-blue-500",
+        success: "bg-green-500 text-green-600",
+        danger: "bg-red-500 text-red-500",
       },
     },
     defaultVariants: {

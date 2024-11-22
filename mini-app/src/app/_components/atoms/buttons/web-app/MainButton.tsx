@@ -119,7 +119,7 @@ export default MainButton;
 // }) => (
 //   <>
 //     {createPortal(
-//       <h1 className="sticky bottom-0 py-2 px-4 bg-background border-t border-muted w-full">
+//       <h1 className="sticky bottom-0 py-2 px-4 bg-cn-background border-t border-cn-muted w-full">
 //         <Button
 //           variant={color || "primary"}
 //           className="w-full"

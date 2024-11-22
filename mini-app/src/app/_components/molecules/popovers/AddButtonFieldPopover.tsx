@@ -69,7 +69,7 @@ const AddButtonFieldPopover: React.FC<{
           Add Link
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="!border-separator !bg-separatorwo !rounded-lg">
+      <PopoverContent className="!border-cn-separator !bg-separatorwo !rounded-lg">
         <div className="grid gap-1">
           <div className="grid gap-2">
             <div className="grid grid-cols-3 items-center gap-4">

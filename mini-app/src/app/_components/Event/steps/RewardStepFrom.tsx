@@ -51,7 +51,7 @@ export const RewardForm = ({
             </div>
           }
           inputClassName={cn({
-            "text-muted-foreground cursor-pointer": passwordDisabled,
+            "text-cn-muted-foreground cursor-pointer": passwordDisabled,
           })}
           onClick={() => {
             if (passwordDisabled) {

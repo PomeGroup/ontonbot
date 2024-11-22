@@ -8,7 +8,7 @@ const Card: React.FC<{
   return (
     <div
       className={cn(
-        "my-4 rounded-[14px] p-4 border border-separator flex items-center justify-start",
+        "my-4 rounded-[14px] p-4 border border-cn-separator flex items-center justify-start",
         className
       )}
     >

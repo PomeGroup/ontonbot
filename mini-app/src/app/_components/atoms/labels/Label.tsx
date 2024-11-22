@@ -6,7 +6,7 @@ const Label: React.FC<{
   className?: string; // Allow passing custom class names
 }> = ({ children, className }) => {
   return (
-    <div className={cn("text-[12px] font-medium text-secondary", className)}>
+    <div className={cn("text-[12px] font-medium text-cn-secondary", className)}>
       {children}
     </div>
   );
