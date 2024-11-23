@@ -1,5 +1,5 @@
 import { ListItem, Toggle, ListInput } from "konsta/react";
-import { UserRoundCheck, ArrowUpToLine, FileUser } from "lucide-react";
+import { UserRoundCheck, ArrowUpToLine, FileUser, Clock } from "lucide-react";
 import FormBlock from "../../atoms/cards/FormBlock";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { cn } from "@/utils";
@@ -71,37 +71,44 @@ export function UserRegistrationForm() {
               />
             }
           />
-          {/* <ListItem */}
-          {/*   label */}
-          {/*   title={ */}
-          {/*     <p className="space-x-4"> */}
-          {/*       <span>Over-Capacity</span> */}
-          {/*       <small className="dark:text-zinc-400">waitlist</small> */}
-          {/*     </p> */}
-          {/*   } */}
-          {/*   media={<Clock />} */}
-          {/*   after={ */}
-          {/*     <Toggle */}
-          {/*       component="div" */}
-          {/*       checked */}
-          {/*       className="" */}
-          {/*     /> */}
-          {/*   } */}
-          {/* /> */}
           {eventData?.capacity && (
-            <ListInput
-              title="Max Capacity"
-              type="number"
-              name="capacity"
-              inputMode="number"
-              defaultValue={eventData.capacity}
-              inputClassName={cn(
-                "placeholder:tracking-[.2rem] tracking-widest"
-              )}
-              placeholder={"100"}
-              outline
-              info="Automatically close registration once capacity is reached, counting only approved guests."
-            />
+            <>
+              <ListInput
+                title="Max Capacity"
+                type="number"
+                name="capacity"
+                inputMode="number"
+                defaultValue={eventData.capacity}
+                inputClassName={cn(
+                  "placeholder:tracking-[.2rem] tracking-widest"
+                )}
+                placeholder={"100"}
+                outline
+                info="Automatically close registration once capacity is reached, counting only approved guests."
+              />
+              <ListItem
+                label
+                title={
+                  <p className="space-x-4">
+                    <span>Over-Capacity</span>
+                    <small className="dark:text-zinc-400">waitlist</small>
+                  </p>
+                }
+                footer="Accept registrations over the max-capacity, with approval required for users over capacity."
+                media={<Clock />}
+                after={
+                  <Toggle
+                    component="div"
+                    checked={eventData.has_waiting_list}
+                    onChange={() =>
+                      setEventData({
+                        has_waiting_list: !eventData.has_waiting_list,
+                      })
+                    }
+                  />
+                }
+              />
+            </>
           )}
         </>
       )}
