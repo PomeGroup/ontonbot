@@ -160,7 +160,7 @@ export const EventDataSchema = z.object({
   /* -------------------------- // Free Event Registration Creation ------------------------- */
   has_registration: z.boolean(),
   has_approval: z.boolean(),
-  capacity: z.number().nullable(),
+  capacity: z.number().min(1).nullable(),
   has_waiting_list: z.boolean(),
   /* -------------------------- // Free Event Registration Creation ------------------------- */
 });
@@ -202,7 +202,7 @@ export const UpdateEventDataSchema = z.object({
 
   /* -------------------------- // Free Event Registration Update ------------------------- */
   has_approval: z.boolean(),
-  capacity: z.number().nullable(),
+  capacity: z.number().min(1).nullable(),
   has_waiting_list: z.boolean(),
   /* -------------------------- // Free Event Registration Update ------------------------- */
 });
