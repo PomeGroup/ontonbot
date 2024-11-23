@@ -76,6 +76,13 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
     }
   }, [emblaApi, rewardCollections, setEventData, eventData]);
 
+  useEffect(() => {
+    if (rewardCollections?.length) {
+      const collection = rewardCollections[0];
+      setSelectedSbtId(collection.id);
+    }
+  }, [rewardCollections?.length]);
+
   if (sbtOption === "default") {
     return isLoading && !isSuccess ? (
       <Block className="justify-center flex">
