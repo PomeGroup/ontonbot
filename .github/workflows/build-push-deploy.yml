@@ -358,7 +358,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: [determine-services,build-and-push ]
+    needs: [determine-services, build-and-push , manual-approval ]
     if: ${{ needs.determine-services.outputs.services_to_build != '[]' && github.event_name == 'push' }}
     permissions:
       contents: write
