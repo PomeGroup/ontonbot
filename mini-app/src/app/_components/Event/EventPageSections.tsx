@@ -5,8 +5,6 @@ import Labels from "@/app/_components/atoms/labels";
 import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
 import { EventActions } from "./EventActions";
-import { useLayoutEffect } from "react";
-import { useTheme } from "next-themes";
 import ShareEventButton from "../ShareEventButton";
 import { EventPasswordInput } from "./EventPasswordInput";
 import EventKeyValue from "../organisms/events/EventKewValue";
@@ -184,20 +182,13 @@ const EventStatus = ({
 // Main component
 export const EventSections = () => {
   const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } = useEventData();
-  const { setTheme } = useTheme();
   const { user } = useUserStore();
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
-  const isEventActive = isStarted && isNotEnded;
   const showPasswordInput =
     !isAdminOrOrganizer &&
     (eventData.data?.registrant_status === "approved" || !eventData.data?.has_registration) &&
     !userEventPasswordField?.completed;
-
-  useLayoutEffect(() => {
-    setTheme("light");
-    return () => setTheme("dark");
-  }, [setTheme]);
 
   return (
     <div className="space-y-2">
