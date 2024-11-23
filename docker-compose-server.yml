@@ -102,7 +102,11 @@ services:
     entrypoint: ["/usr/bin/entrypoint.sh"]  # Use the custom entrypoint script
     environment:
       <<: *common-env
-
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-minio"
 
   postgres:
     hostname: postgres
@@ -119,7 +123,7 @@ services:
         failure_action: rollback
         order: start-first
       restart_policy:
-        condition: none
+        condition: on-failure
         delay: 10s
     environment:
       <<: *common-env
@@ -128,6 +132,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - onton-network
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-postgres"
 
   redis:
     image: redis:7.4.1-bookworm
@@ -155,7 +164,11 @@ services:
         <<: *common-env
     networks:
       - onton-network
-
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-redis"
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
@@ -226,7 +239,11 @@ services:
       - ghcr-radio-config
     networks:
       - onton-network
-
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-telegram-bot"
   mini-app:
     hostname: mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -259,6 +276,11 @@ services:
       - onton-network
     secrets:
       - ghcr-radio-config
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-mini-app"
   mini-app-cron:
     hostname: mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -291,12 +313,17 @@ services:
     command: ["pnpm","run", "start-cron"]
     secrets:
       - ghcr-radio-config
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-mini-app-cron"
+
   participant-tma:
     hostname: participant-tma
     image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
     ports:
       - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
-#    <<: *default-extra-hosts
     deploy:
       resources:
         limits:
@@ -309,15 +336,20 @@ services:
       restart_policy:
         condition: any
         delay: 3s
-#    depends_on:
-#      - mini-app
-#      - caddy
+    depends_on:
+      - mini-app
+      - caddy
     environment:
         <<: *common-env
     networks:
       - onton-network
     secrets:
       - ghcr-radio-config
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-participant-tma"
   nft-manager:
     hostname: nft-manager
     image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
@@ -350,6 +382,12 @@ services:
       - onton-network
     secrets:
       - ghcr-radio-config
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-nft-manager"
+
   giveaway-checker:
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
     hostname: giveaway-checker
@@ -361,6 +399,11 @@ services:
       - onton-network
     secrets:
       - ghcr-radio-config
+    logging:
+        driver: "gelf"
+        options:
+            gelf-address: "udp://logstash:5044"
+            tag: "${BRANCH_NAME}-giveaway-checker"
   website:
     hostname: website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
@@ -386,6 +429,11 @@ services:
         <<: *common-env
     networks:
       - onton-network
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-website"
 
   golang-server:
     image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
@@ -396,6 +444,11 @@ services:
       <<: *common-env
     networks:
       - onton-network
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag:  "${BRANCH_NAME}-golang-server"
 
   golang-worker:
     image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
@@ -407,6 +460,11 @@ services:
         <<: *common-env
     networks:
       - onton-network
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-golang-worker"
 
   metabase:
     image: metabase/metabase:v0.50.18.3
@@ -449,7 +507,11 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-
+    logging:
+      driver: "gelf"
+      options:
+        gelf-address: "udp://logstash:5044"
+        tag: "${BRANCH_NAME}-metabase"
 
   client-web:
     hostname: client-web
@@ -468,7 +530,69 @@ services:
       - caddy
     networks:
       - onton-network
+    logging:
+        driver: "gelf"
+        options:
+            gelf-address: "udp://logstash:5044"
+            tag: "${BRANCH_NAME}-client-web"
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+          cpus: '2.0'
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - onton-network
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.10.2
+    volumes:
+      - ./devops/logstash/pipeline:/usr/share/logstash/pipeline
+    environment:
+      - xpack.monitoring.enabled=false
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+    networks:
+      - onton-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.2
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+          cpus: '1.0'
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "5601:5601"
 #  swagger-ui:
 #    image: swaggerapi/swagger-ui
 #    environment:
@@ -480,6 +604,7 @@ services:
 #    networks:
 #      onton-network:
 #        ipv4_address: "${IP_SWAGGER_UI}"
+
 
 networks:
   onton-network:
@@ -503,7 +628,8 @@ volumes:
         name: "${STAGE_NAME}_drizzle_data"
     drizzle_data_cron:
       name: "${STAGE_NAME}_drizzle_data_cron"
-
+    elasticsearch_data:
+      name: "${STAGE_NAME}_elasticsearch_data"
 
 secrets:
   ghcr-radio-config:
