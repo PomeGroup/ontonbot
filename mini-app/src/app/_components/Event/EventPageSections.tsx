@@ -13,6 +13,7 @@ import { ClaimRewardButton } from "./ClaimRewardButton";
 import { ManageEventButton } from "./ManageEventButton";
 import { useUserStore } from "@/context/store/user.store";
 import MainButton from "../atoms/buttons/web-app/MainButton";
+import UserRegisterForm from "./UserRegisterForm";
 
 const EventImage = () => {
   const { eventData } = useEventData();
@@ -134,6 +135,7 @@ export const EventSections = () => {
           isWalletConnected={Boolean(user.wallet_address)}
         />
       )}
+      <UserRegisterForm />
       {!isAdminOrOrganizer && !isStarted && isNotEnded && (
         <MainButton
           text="Event Not Started Yet"

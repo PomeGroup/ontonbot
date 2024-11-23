@@ -204,7 +204,7 @@ export const EventRegisterSchema = z.object({
   full_name: z.string().min(1).max(40),
   position: z.string().min(1).max(40),
   company: z.string().min(1).max(40),
-  notes: z.string().min(1).max(512),
+  notes: z.string().min(0).max(512),
 });
 
 export const AgendaItemSchema = z.object({
@@ -248,7 +248,7 @@ export const EventDataSchemaAllOptional = z.object({
   has_registration: z.boolean().optional(),
   has_approval: z.boolean().optional(),
   has_waiting_list: z.boolean().optional(),
-  capacity: z.number().nullable().optional(),
+  capacity: z.number().min(1).nullable().optional(),
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;

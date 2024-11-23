@@ -70,6 +70,7 @@ export function UserRegistrationForm() {
                 type="number"
                 name="capacity"
                 inputMode="number"
+                min={1}
                 defaultValue={eventData.capacity}
                 inputClassName={cn("placeholder:tracking-[.2rem] tracking-widest")}
                 placeholder={"100"}
