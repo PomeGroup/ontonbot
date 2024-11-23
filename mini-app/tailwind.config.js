@@ -48,7 +48,7 @@ module.exports = konstaConfig({
         "cn-border": "hsl(var(--shadcn-border))",
         "cn-input": "hsl(var(--shadcn-input))",
         "cn-ring": "hsl(var(--shadcn-ring))",
-        "cn-background": "var(--shadcn-background)",
+        "cn-background": "hsl(var(--shadcn-background))",
         "cn-foreground": "hsl(var(--shadcn-foreground))",
         "main-button-color": "#007AFF",
         "disabled-font": "#B9B9BA",

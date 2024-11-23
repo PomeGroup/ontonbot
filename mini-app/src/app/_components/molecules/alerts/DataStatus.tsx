@@ -22,7 +22,7 @@ const DATA_STATUS_ANIMATIONS: Record<DataStatusProps["status"], string> = {
 // @ts-expect-error
 const ANIMATION_SIZES: Record<DataStatusProps["size"], number> = {
   lg: 300,
-  md: 150,
+  md: 120,
   sm: 80,
 };
 

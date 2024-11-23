@@ -1,14 +1,16 @@
 import { trpc } from "@/app/_trpc/client";
 import { KButton } from "@/components/ui/button";
-import { useGetEventRegistrants } from "@/hooks/events.hooks";
+import { useGetEvent, useGetEventRegistrants } from "@/hooks/events.hooks";
 import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
-import { List, BlockTitle, ListItem, Chip, BlockHeader, Sheet, BlockFooter } from "konsta/react";
+import { List, BlockTitle, ListItem, Chip, BlockHeader, Sheet, BlockFooter, Block } from "konsta/react";
 import { Check, FileUser, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useState } from "react";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { createPortal } from "react-dom";
+import QrCodeButton from "../atoms/buttons/QrCodeButton";
+import EventImage from "../atoms/images/EventImage";
 
 interface CustomListItemProps {
   name: string;
@@ -267,6 +269,7 @@ const RegistrationGuestlist = () => {
    */
   const params = useParams<{ hash: string }>();
   const registrants = useGetEventRegistrants();
+  const eventData = useGetEvent();
 
   /*
    * Process Registrant (Approve ✅ / Reject ❌)
@@ -293,6 +296,21 @@ const RegistrationGuestlist = () => {
 
   return (
     <>
+      <BlockTitle medium>{eventData.data?.title}</BlockTitle>
+      <Block className="!-mb-8">
+        {eventData.data?.image_url && (
+          <EventImage
+            url={eventData.data?.image_url}
+            width={300}
+            height={300}
+          />
+        )}
+        <QrCodeButton
+          event_uuid={params.hash}
+          url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${params.hash}`}
+          hub={eventData.data?.society_hub.name!}
+        />
+      </Block>
       <BlockTitle medium>Guest List</BlockTitle>
       {/* <BlockHeader className="!px-2"> */}
       {/*   <Searchbar clearButton /> */}
