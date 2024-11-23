@@ -143,16 +143,21 @@ export const eventsRouter = router({
     const user_request = await getRegistrantRequest(event_uuid, userId);
     const event_location = eventData.location;
 
-    let location: string | null = "Register to see";
-    console.log("get_event_location", location, { ...eventData, location });
+    eventData.location = "Register to see";
+    if (eventData.capacity && eventData.owner != userId) {
+      eventData.capacity = 99;
+    }
+    if (eventData.owner == userId) {
+      eventData.location = event_location;
+    }
 
     // Registrant Already has a request
     if (user_request) {
       registrant_status = user_request.status;
       if (registrant_status == "approved") {
-        location = event_location;
+        eventData.location = event_location;
       }
-      return { capacity_filled, registrant_status, ...eventData, location };
+      return { capacity_filled, registrant_status, ...eventData };
     }
 
     // no status for registran
@@ -160,15 +165,15 @@ export const eventsRouter = router({
     if (eventData.capacity) {
       const approved_requests_count = await getApprovedRequestsCount(event_uuid);
 
-      if (approved_requests_count >= eventData.capacity && !eventData.has_waiting_list) {
-        // Event capacity filled and no waiting list
+      if (approved_requests_count >= eventData.capacity) {
+        // Event capacity filled
         capacity_filled = true;
-        return { capacity_filled, registrant_status, ...eventData, location };
+        return { capacity_filled, registrant_status, ...eventData };
       }
     }
 
     // NO Status
-    return { capacity_filled, registrant_status, ...eventData, location };
+    return { capacity_filled, registrant_status, ...eventData };
 
     /* -------------------------------------------------------------------------- */
   }),
@@ -237,14 +242,14 @@ export const eventsRouter = router({
       const approved_requests_count = await getApprovedRequestsCount(event_uuid);
       const event_cap_filled = approved_requests_count >= event.capacity;
 
+      event_filled_and_has_waiting_list = !!(event_cap_filled && event.has_waiting_list);
+
       if (event_cap_filled && !event.has_waiting_list) {
         // Event capacity filled and no waiting list
         throw new TRPCError({
           code: "CONFLICT",
           message: `Event Capacity Reached`,
         });
-      } else if (event_cap_filled && event.has_waiting_list) {
-        event_filled_and_has_waiting_list = true;
       }
     }
 
