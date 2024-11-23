@@ -236,8 +236,8 @@ export const eventsRouter = router({
       });
     }
 
-    return eventsData.map(
-      ({ wallet_seed_phrase, ...restEventData }) => restEventData
+    return eventsData.map((restEventData) =>
+      removeKey(restEventData, "wallet_seed_phrase")
     );
   }),
 
@@ -332,20 +332,20 @@ export const eventsRouter = router({
     .input(
       z.object({
         event_uuid: z.string(),
-        registrant_id: z.number(),
+        user_id: z.number(),
         status: z.enum(["approved", "rejected"]),
       })
     )
     .mutation(async (opts) => {
       const event_uuid = opts.input.event_uuid;
-      const registrant_id = opts.input.registrant_id;
+      const user_id = opts.input.user_id;
       const event = await selectEventByUuid(event_uuid);
 
       if (!event) {
         throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
       }
 
-      const result = await db
+      await db
         .update(eventRegistrants)
         .set({
           status: opts.input.status,
@@ -353,7 +353,7 @@ export const eventsRouter = router({
         .where(
           and(
             eq(eventRegistrants.event_uuid, event_uuid),
-            eq(eventRegistrants.user_id, registrant_id)
+            eq(eventRegistrants.user_id, user_id)
           )
         )
         .execute();
@@ -540,7 +540,10 @@ export const eventsRouter = router({
           const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
 
           // Remove the description key
-          const { description, ...eventDataWithoutDescription } = eventData;
+          const eventDataWithoutDescription = removeKey(
+            eventData,
+            "description"
+          );
           await sendLogNotification({
             message: `
 @${opts.ctx.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully

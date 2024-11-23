@@ -4,6 +4,24 @@ import { useParams } from "next/navigation";
 /**
  * @param event_hash - if not provided will use current page hash for the event_uuid
  */
+export function useGetEventRegistrants(event_hash?: string) {
+  const params = useParams<{ hash: string }>();
+  const event_uuid = event_hash ?? params.hash;
+
+  return trpc.events.getEventRegistrants.useQuery(
+    {
+      event_uuid,
+    },
+    {
+      staleTime: 10_000,
+      queryKey: ["events.getEventRegistrants", { event_uuid }],
+    }
+  );
+}
+
+/**
+ * @param event_hash - if not provided will use current page hash for the event_uuid
+ */
 export function useGetEvent(event_hash?: string) {
   const params = useParams<{ hash: string }>();
 

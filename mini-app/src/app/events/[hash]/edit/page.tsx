@@ -3,7 +3,7 @@
 import Alerts from "@/app/_components/molecules/alerts";
 import { ManageEvent } from "@/app/_components/organisms/events";
 import GuestList from "@/app/_components/organisms/events/GuestList";
-import { useGetEvent } from "@/hooks/event/useGetEvent";
+import { useGetEvent } from "@/hooks/events.hooks";
 import useAuth from "@/hooks/useAuth";
 import { Block, Page, Segmented, SegmentedButton } from "konsta/react";
 import { useTheme } from "next-themes";

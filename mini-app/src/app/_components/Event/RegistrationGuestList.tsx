@@ -1,25 +1,21 @@
+import { trpc } from "@/app/_trpc/client";
 import { KButton } from "@/components/ui/button";
+import { useGetEventRegistrants } from "@/hooks/events.hooks";
 import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
-import {
-  List,
-  BlockTitle,
-  BlockHeader,
-  Searchbar,
-  ListItem,
-  Chip,
-} from "konsta/react";
+import { List, BlockTitle, ListItem, Chip, BlockHeader } from "konsta/react";
 import { Check, Pencil, X } from "lucide-react";
+import { useParams } from "next/navigation";
 import React, { useState } from "react";
 
 interface CustomListItemProps {
   name: string;
   username: string;
   date: string;
-  status: "pending" | "edit" | "approved" | "declined";
-  onEdit?: () => void;
-  handleApprove: () => Promise<void>;
-  handleDecline: () => Promise<void>;
+  status: "pending" | "approved" | "rejected";
+  user_id: number;
+  handleApprove: (_: number) => Promise<void>;
+  handleReject: (_: number) => Promise<void>;
 }
 
 const CustomListItem: React.FC<CustomListItemProps> = ({
@@ -27,43 +23,41 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   username,
   date,
   status,
-  onEdit,
+  user_id,
   handleApprove,
-  handleDecline,
+  handleReject,
 }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
+  const [itemStatus, setItemStatus] = useState(status);
 
   const handleEdit = () => {
-    // Change status to "pending" and call onEdit if provided
-    // You may need to manage this state in the parent component
-    if (onEdit) {
-      onEdit();
-    }
+    // Change status to "pending"
+    setItemStatus("pending");
   };
 
   const handleApproveClick = async () => {
     setIsApproving(true);
     try {
-      await handleApprove();
+      await handleApprove(user_id);
       // Optimistically update the status to "approved"
       // This would typically be managed in the parent component's state
+      setItemStatus("approved");
     } catch (error) {
-      // Handle error, possibly revert the status change
       console.error("Approval failed:", error);
     } finally {
       setIsApproving(false);
     }
   };
 
-  const handleDeclineClick = async () => {
+  const handleRejectClick = async () => {
     setIsDeclining(true);
     try {
-      await handleDecline();
+      await handleReject(user_id);
       // Optimistically update the status to "declined"
+      setItemStatus("rejected");
     } catch (error) {
-      // Handle error, possibly revert the status change
-      console.error("Decline failed:", error);
+      console.error("Reject failed:", error);
     } finally {
       setIsDeclining(false);
     }
@@ -72,10 +66,10 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   let afterContent;
   let footerContent;
 
-  switch (status) {
+  switch (itemStatus) {
     case "pending":
       afterContent = (
-        <div className="flex flex-col text-xs">
+        <div className="flex flex-col text-end text-xs">
           <span>{date}</span>
           <span>Registered</span>
         </div>
@@ -85,8 +79,8 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
           <Button
             variant="danger"
             icon={<X size={18} />}
-            label="Decline"
-            onClick={handleDeclineClick}
+            label="Reject"
+            onClick={handleRejectClick}
             isLoading={isDeclining}
           />
           <Button
@@ -114,7 +108,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       );
       footerContent = null;
       break;
-    case "declined":
+    case "rejected":
       afterContent = (
         <div className="flex space-x-2">
           <Button
@@ -123,7 +117,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
           />
           <StatusChip
             variant="danger"
-            label="Declined"
+            label="Rejected"
           />
         </div>
       );
@@ -138,9 +132,11 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
     <ListItem
       className="!ps-0"
       title={
-        <div>
-          <h4>{name}</h4>
-          <p className="text-xs text-cn-muted-foreground">{username}</p>
+        <div className="w-44">
+          <h4 className="truncate">{name}</h4>
+          <p className="text-xs truncate text-cn-muted-foreground">
+            {username}
+          </p>
         </div>
       }
       after={afterContent}
@@ -225,51 +221,76 @@ const StatusChip: React.FC<StatusChipProps> = ({
 };
 
 const RegistrationGuestlist = () => {
-  // Mock data and functions for demonstration purposes
-  const handleApprove = async () => {
-    // Perform approval logic
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  };
+  /*
+   * Get Event Registrants
+   */
+  const params = useParams<{ hash: string }>();
+  const registrants = useGetEventRegistrants();
 
-  const handleDecline = async () => {
+  /*
+   * Process Registrant (Approve ✅ / Reject ❌)
+   */
+  const processRegistrantRequest =
+    trpc.events.processRegistrantRequest.useMutation();
+
+  const handleApprove = async (user_id: number) => {
+    // Perform approval logic
+    await processRegistrantRequest.mutateAsync({
+      event_uuid: params.hash,
+      status: "approved",
+      user_id,
+    });
+  };
+  const handleReject = async (user_id: number) => {
     // Perform decline logic
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    await processRegistrantRequest.mutateAsync({
+      event_uuid: params.hash,
+      status: "rejected",
+      user_id,
+    });
   };
 
   return (
     <>
       <BlockTitle medium>Guest List</BlockTitle>
-      <BlockHeader className="!px-2">
-        <Searchbar clearButton />
+      {/* <BlockHeader className="!px-2"> */}
+      {/*   <Searchbar clearButton /> */}
+      {/* </BlockHeader> */}
+      <BlockHeader className="font-bold">
+        {/* TODO: Better UI for state handling */}
+        {registrants.isSuccess &&
+          !registrants.data?.length &&
+          "No Registrants Yet 😶"}
+        {registrants.isLoading && "Loading Registrants List 🏗"}
+        {registrants.isError &&
+          (registrants.error.data?.code === "NOT_FOUND"
+            ? "Event Not Found 🔎"
+            : "There was a problem try refreshing the page ⚠️")}
       </BlockHeader>
       <List
         strong
         title="Guest List"
       >
-        <CustomListItem
-          name="Guest Name 1"
-          username="@guest1"
-          date="14 Nov"
-          status="pending"
-          handleApprove={handleApprove}
-          handleDecline={handleDecline}
-        />
-        <CustomListItem
-          name="Guest Name 3"
-          username="@guest3"
-          date="16 Nov"
-          status="approved"
-          handleApprove={handleApprove}
-          handleDecline={handleDecline}
-        />
-        <CustomListItem
-          name="Guest Name 4"
-          username="@guest4"
-          date="17 Nov"
-          status="declined"
-          handleApprove={handleApprove}
-          handleDecline={handleDecline}
-        />
+        {registrants.data?.map((registrant) => (
+          <CustomListItem
+            key={registrant.id}
+            name={registrant.user_id?.toString() || "user_id"}
+            username={registrant.user_id?.toString() || "user_id"}
+            date={
+              registrant.created_at
+                ? new Date(registrant.created_at).toLocaleString("default", {
+                    month: "short",
+                    day: "numeric",
+                  })
+                : "no_date"
+            }
+            user_id={registrant.user_id!}
+            status={registrant.status as "approved" | "rejected" | "pending"}
+            handleApprove={handleApprove}
+            handleReject={handleReject}
+          />
+        ))}
       </List>
     </>
   );
