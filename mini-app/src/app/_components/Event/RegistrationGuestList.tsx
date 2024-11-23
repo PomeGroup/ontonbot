@@ -272,9 +272,9 @@ const RegistrationGuestlist = () => {
         strong
         title="Guest List"
       >
-        {registrants.data?.map((registrant) => (
+        {registrants.data?.map((registrant, idx) => (
           <CustomListItem
-            key={registrant.id}
+            key={"registrant_" + idx}
             name={registrant.user_id?.toString() || "user_id"}
             username={registrant.user_id?.toString() || "user_id"}
             date={
