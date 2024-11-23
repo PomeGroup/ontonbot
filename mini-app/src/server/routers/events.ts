@@ -154,6 +154,7 @@ export const eventsRouter = router({
       }
       return { capacity_filled, registrant_status, ...eventData, location };
     }
+    
 
     // no status for registran
 

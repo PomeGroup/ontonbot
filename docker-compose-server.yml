@@ -119,12 +119,18 @@ services:
           memory: 8000M
           cpus: '5.0'
       replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
       update_config:
         failure_action: rollback
-        order: start-first
+        order: stop-first
       restart_policy:
         condition: on-failure
-        delay: 10s
+        delay: 15s
+        window: 30s
+    stop_grace_period: 120s
+    stop_signal: SIGTERM
     environment:
       <<: *common-env
     command: postgres -p ${POSTGRES_PORT}
@@ -132,11 +138,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - onton-network
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-postgres"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-postgres"
 
   redis:
     image: redis:7.4.1-bookworm
@@ -145,7 +151,7 @@ services:
       - redis_data:/data
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
-    command: redis-server --save "" --appendonly no --port ${REDIS_PORT}
+    command: redis-server  --port ${REDIS_PORT}
     deploy:
       resources:
         limits:
@@ -154,12 +160,14 @@ services:
       replicas: 1
       update_config:
         failure_action: rollback
-        order: start-first
+        order: stop-first
       restart_policy:
         condition: on-failure
-        delay: 5s
+        delay: 15s
         max_attempts: 20
-        window: 300s
+        window: 30s
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
     environment:
         <<: *common-env
     networks:
@@ -239,11 +247,12 @@ services:
       - ghcr-radio-config
     networks:
       - onton-network
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-telegram-bot"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-telegram-bot"
+
   mini-app:
     hostname: mini-app
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -276,11 +285,11 @@ services:
       - onton-network
     secrets:
       - ghcr-radio-config
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-mini-app"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-mini-app"
   mini-app-cron:
     hostname: mini-app-cron
     image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -345,11 +354,11 @@ services:
       - onton-network
     secrets:
       - ghcr-radio-config
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-participant-tma"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-participant-tma"
   nft-manager:
     hostname: nft-manager
     image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
@@ -382,11 +391,11 @@ services:
       - onton-network
     secrets:
       - ghcr-radio-config
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-nft-manager"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-nft-manager"
 
   giveaway-checker:
     image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
@@ -622,17 +631,21 @@ volumes:
     clamav_data:
       name: "${STAGE_NAME}_clamav_data"
     minio_data:
+      driver: local
       name: "${STAGE_NAME}_minio_data"
     postgres_data:
+      driver: local
       name: "${STAGE_NAME}_postgres_data"
     redis_data:
+      driver: local
       name: "${STAGE_NAME}_redis_data"
     drizzle_data:
         name: "${STAGE_NAME}_drizzle_data"
     drizzle_data_cron:
       name: "${STAGE_NAME}_drizzle_data_cron"
     elasticsearch_data:
-      name: "${STAGE_NAME}_elasticsearch_data"
+        driver: local
+        name: "${STAGE_NAME}_elasticsearch_data"
 
 secrets:
   ghcr-radio-config:
