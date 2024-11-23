@@ -5,6 +5,9 @@ on:
     branches:
       - "dev"
       - "staging"
+      - "sandbox"
+      - "devops"
+      - "main"
     paths:
       - 'client-web-panel/**'
       - 'devops/**'
@@ -17,7 +20,13 @@ on:
       - 'website/**'
       - '.github/workflows/**'
       - 'Trigger-full-build.txt'
-
+  pull_request:
+    branches:
+      - "dev"
+      - "staging"
+      - "sandbox"
+      - "devops"
+      - "main"
 jobs:
   determine-services:
     runs-on: self-hosted
@@ -337,7 +346,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: [determine-services,build-and-push ]
-    if: ${{ needs.determine-services.outputs.services_to_build != '[]' }}
+    if: ${{ needs.determine-services.outputs.services_to_build != '[]' && github.event_name == 'push' }}
     permissions:
       contents: write
       packages: read
