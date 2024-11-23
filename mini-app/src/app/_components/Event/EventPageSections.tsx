@@ -207,19 +207,24 @@ export const EventSections = () => {
   return (
     <div className="space-y-2">
       <EventImage />
+
       {showPasswordInput && <EventPasswordInput />}
+
       <EventHead />
       <EventAttributes />
       <EventActions />
       <EventDescription />
 
-      {!isAdminOrOrganizer && user?.wallet_address && userEventPasswordField?.completed && (
-        <ClaimRewardButton
-          initData={initData}
-          eventId={eventData.data?.event_uuid ?? ""}
-          isWalletConnected={Boolean(user.wallet_address)}
-        />
-      )}
+      {!isAdminOrOrganizer &&
+        eventData.data?.registrant_status === "approved" &&
+        user?.wallet_address &&
+        userEventPasswordField?.completed && (
+          <ClaimRewardButton
+            initData={initData}
+            eventId={eventData.data?.event_uuid ?? ""}
+            isWalletConnected={Boolean(user.wallet_address)}
+          />
+        )}
 
       {!isAdminOrOrganizer && (
         <EventStatus
@@ -246,9 +251,7 @@ export const EventSections = () => {
         />
       )}
 
-      {isAdminOrOrganizer && (!eventData.data?.capacity_filled || eventData.data?.has_waiting_list) && (
-        <ManageEventButton />
-      )}
+      {isAdminOrOrganizer && <ManageEventButton />}
 
       <Buttons.Support />
     </div>
