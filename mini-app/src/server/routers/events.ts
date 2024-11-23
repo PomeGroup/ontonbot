@@ -144,7 +144,7 @@ export const eventsRouter = router({
     const event_location = eventData.location;
 
     let location: string | null = "Register to see";
-    console.log("get_event_location" , location , { ...eventData, location } )
+    console.log("get_event_location", location, { ...eventData, location });
 
     // Registrant Already has a request
     if (user_request) {
@@ -154,7 +154,6 @@ export const eventsRouter = router({
       }
       return { capacity_filled, registrant_status, ...eventData, location };
     }
-    
 
     // no status for registran
 
@@ -208,7 +207,7 @@ export const eventsRouter = router({
   // private
   eventRegister: initDataProtectedProcedure.input(EventRegisterSchema).mutation(async (opts) => {
     const userId = opts.ctx.user.user_id;
-    const { event_uuid , ...registerInfo } = opts.input
+    const { event_uuid, ...registerInfo } = opts.input;
     const event = await selectEventByUuid(event_uuid);
 
     console.log("event_register", event_uuid, userId);
@@ -251,16 +250,13 @@ export const eventsRouter = router({
 
     const request_status = !!event.has_approval || event_filled_and_has_waiting_list ? "pending" : "approved"; // pending if approval is required otherwise auto approve them
 
-    
-
     await db.insert(eventRegistrants).values({
       event_uuid: event_uuid,
       user_id: userId,
       status: request_status,
-      register_info : registerInfo
+      register_info: registerInfo,
     });
 
-    
     return { message: "success", code: 201 };
   }),
 

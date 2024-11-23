@@ -11,7 +11,7 @@ import {
   uniqueIndex,
   timestamp,
   pgEnum,
-  json,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const eventRegistrantStatus = pgEnum("registrant_status", ["pending", "rejected", "approved"]);
@@ -24,7 +24,7 @@ export const eventRegistrants = pgTable(
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
 
     status: eventRegistrantStatus("status").default("pending").notNull(),
-    register_info: json("register_info").notNull().default({}),
+    register_info: jsonb("register_info").notNull().default({}),
 
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
