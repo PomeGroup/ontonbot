@@ -287,6 +287,7 @@ export const eventsRouter = router({
           last_name: users.last_name,
           status: eventRegistrants.status,
           created_at: eventRegistrants.created_at,
+          regisrtant_info: eventRegistrants.register_info,
         })
         .from(eventRegistrants)
         .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
