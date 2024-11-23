@@ -360,6 +360,20 @@ jobs:
       ALLMYSECRETS: ${{ toJSON(secrets) }}
       ALLMYVARS: ${{ toJSON(vars) }}
     steps:
+      - name: Manual Approval
+        if: |
+          github.ref_name == 'main' || 
+          github.ref_name == 'staging'
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.token }}
+          approvers: ${{ github.actor }}
+          minimum-approvals: 1
+          issue-title: "Deploying to ${{ github.ref_name }} branch"
+          issue-body: "Please approve or deny the deployment to ${{ github.ref_name }} branch"
+          exclude-workflow-initiator-as-approver: false
+          additional-approved-words: 'approve,approved,lgtm,yes'
+          additional-denied-words: 'deny,denied,no'
       - name: Authenticate to GitHub Container Registry
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
