@@ -24,7 +24,7 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
   };
 
   return (
-    <ol className="flex items-stretch w-full text-xs text-secondary font-medium sm:text-base">
+    <ol className="flex items-stretch w-full text-xs text-cn-secondary font-medium sm:text-base">
       {steps.map((step, index) => {
         const stepState = getStepState(index);
 
@@ -35,14 +35,14 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
               className={cn(
                 "flex w-full justify-center relative",
                 {
-                  "text-primary after:bg-primary": [
+                  "text-primary after:bg-cn-primary": [
                     "completed",
                     "in-progress",
                     "in-progress-last",
                   ].includes(stepState),
-                  "text-secondary after:bg-muted-foreground":
+                  "text-cn-muted-foreground after:bg-cn-muted-foreground":
                     stepState === "not-active",
-                  "text-secondary": stepState === "last",
+                  "text-cn-muted-foreground": stepState === "last",
                 },
                 stepState === "last" || stepState === "in-progress-last"
                   ? "after:hidden"
@@ -55,12 +55,12 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
                   className={cn(
                     "w-6 h-6 flex justify-center items-center mx-auto mb-2 text-sm rounded-full lg:w-10 lg:h-10",
                     {
-                      "bg-primary text-white border-transparent": [
+                      "bg-cn-primary text-white border-transparent": [
                         "completed",
                         "in-progress",
                         "in-progress-last",
                       ].includes(stepState),
-                      "bg-muted text-muted-foreground border-muted":
+                      "bg-cn-muted text-cn-muted-foreground border-cn-muted":
                         stepState === "not-active" || stepState === "last",
                     }
                   )}

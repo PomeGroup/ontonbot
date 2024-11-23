@@ -119,8 +119,8 @@ export const UploadVideoFile = (props: UploadFileProps) => {
     <>
       <Button
         className={cn(
-          "w-full h-auto flex flex-col border border-primary gap-3.5 border-dashed rounded-xl p-3",
-          props.isError ? "border-red-300 bg-red-400/10" : "border-primary"
+          "w-full h-auto flex flex-col border border-cn-primary gap-3.5 border-dashed rounded-xl p-3",
+          props.isError ? "border-red-300 bg-red-400/10" : "border-cn-primary"
         )}
         onClick={() => setIsSheetOpen(true)}
         type="button"
@@ -155,7 +155,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               {props.triggerText}
             </p>
             {props.infoText && (
-              <p className="text-muted-foreground text-sm w-full text-balance">
+              <p className="text-cn-muted-foreground text-sm w-full text-balance">
                 {props.infoText}
               </p>
             )}

@@ -2,6 +2,16 @@ const konstaConfig = require("konsta/config");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = konstaConfig({
+  konsta: {
+    colors: {
+      // "primary" is the main app color, if not specified will be default to '#007aff'
+      primary: "#007aff",
+      // custom colors used for Konsta UI components theming
+      "brand-red": "#ff0000",
+      "brand-green": "#10b210",
+      "brand-gray": "#888888",
+    },
+  },
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -9,7 +19,6 @@ module.exports = konstaConfig({
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
   ],
-  prefix: "",
   theme: {
     fontFamily: {
       ios: "-apple-system, Roboto ,SF Pro Text, SF UI Text, system-ui, Helvetica Neue, Helvetica, Arial, sans-serif",
@@ -31,65 +40,61 @@ module.exports = konstaConfig({
         12.5: "50px",
       },
       backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-radial": "radial-gradient(var(--shadcn-tw-gradient-stops))",
         "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+          "conic-gradient(from 180deg at 50% 50%, var(--shadcn-tw-gradient-stops))",
       },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        "cn-border": "hsl(var(--shadcn-border))",
+        "cn-input": "hsl(var(--shadcn-input))",
+        "cn-ring": "hsl(var(--shadcn-ring))",
+        "cn-background": "var(--shadcn-background)",
+        "cn-foreground": "hsl(var(--shadcn-foreground))",
         "main-button-color": "#007AFF",
         "disabled-font": "#B9B9BA",
         confirm: "#34C759",
         "wallet-tertiary_fill_background": "#747480",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+
+        "cn-primary": {
+          DEFAULT: "hsl(var(--shadcn-primary))",
+          foreground: "hsl(var(--shadcn-primary-foreground))",
         },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+
+        "cn-secondary": {
+          DEFAULT: "hsla(var(--shadcn-secondary))",
+          foreground: "hsl(var(--shadcn-secondary-foreground))",
         },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+        "cn-destructive": {
+          DEFAULT: "hsla(var(--shadcn-destructive))",
+          foreground: "hsl(var(--shadcn-destructive-foreground))",
         },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+        "cn-muted": {
+          DEFAULT: "hsla(var(--shadcn-muted))",
+          foreground: "hsl(var(--shadcn-muted-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+        "cn-accent": {
+          DEFAULT: "hsl(var(--shadcn-accent))",
+          foreground: "hsl(var(--shadcn-accent-foreground))",
         },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+        "cn-popover": {
+          DEFAULT: "hsl(var(--shadcn-popover))",
+          foreground: "hsl(var(--shadcn-popover-foreground))",
         },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+        "cn-card": {
+          DEFAULT: "hsl(var(--shadcn-card))",
+          foreground: "hsl(var(--shadcn-card-foreground))",
         },
-        separator: "var(--color-separator)",
-        tertiary: "var(--color-bg-tertiary)",
-        separatorwo: "var( --color-separator-without-opacity)",
-      },
-      borderRadius: {
-        xl: "calc(var(--radius) + 2px)",
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        "cn-separator": "var(--shadcn-color-separator)",
+        "cn-tertiary": "var(--shadcn-color-bg-tertiary)",
+        "cn-separatorwo": "var( --shadcn-color-separator-without-opacity)",
       },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "var(--shadcn-radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
+          from: { height: "var(--shadcn-radix-accordion-content-height)" },
           to: { height: "0" },
         },
       },

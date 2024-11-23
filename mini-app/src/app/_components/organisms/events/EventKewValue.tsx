@@ -29,7 +29,7 @@ const EventKeyValue = (props: EventKeyValueProps) => {
 
   return (
     <div className="flex items-center justify-between">
-      <label className="text-left text-sm text-muted-foreground flex-1">
+      <label className="text-left text-sm text-cn-muted-foreground flex-1">
         {props.label}
       </label>
       <p

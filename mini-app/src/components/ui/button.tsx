@@ -8,18 +8,18 @@ import { Loader2 } from "lucide-react";
 import { Button as KButton } from "konsta/react";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-xl disabled:cursor-not-allowed",
+  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-cn-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cn-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 rounded-xl disabled:cursor-not-allowed",
   {
     variants: {
       variant: {
-        default: "bg-primary/10 text-primary-foreground hover:bg-primary/30",
-        primary: "bg-primary text-primary-foreground hover:bg-primary/80",
+        default: "bg-primary/10 text-cn-primary-foreground hover:bg-primary/30",
+        primary: "bg-cn-primary text-cn-primary-foreground hover:bg-primary/80",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "bg-primary/10 text-secondary-foreground hover:bg-primary/20",
-        secondary: "bg-muted text-muted-foreground hover:bg-accent",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 text-zinc hover:underline",
+          "bg-cn-destructive text-cn-destructive-foreground hover:bg-destructive/90",
+        outline: "bg-primary/10 text-cn-secondary-foreground hover:bg-primary/20",
+        secondary: "bg-cn-secondary text-cn-secondary-foreground hover:bg-cn-accent",
+        ghost: "hover:bg-cn-accent hover:text-accent-foreground",
+        link: "text-cn-primary underline-offset-4 text-zinc hover:underline",
       },
       size: {
         default: "min-h-10 px-4 py-2",

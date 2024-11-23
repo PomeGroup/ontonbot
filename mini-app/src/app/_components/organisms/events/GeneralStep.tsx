@@ -28,7 +28,15 @@ export const GeneralStep = () => {
     formData.append("image_url", eventData?.image_url || "");
 
     const formDataObject = Object.fromEntries(formData.entries());
-    const formDataParsed = generalStepDataSchema.safeParse(formDataObject);
+    const formDataParsed = generalStepDataSchema.safeParse({
+      ...formDataObject,
+      has_registration: Boolean(eventData?.has_registration),
+      has_approval: Boolean(eventData?.has_approval),
+      has_waiting_list: Boolean(eventData?.has_waiting_list),
+      capacity: !isNaN(Number(formDataObject.capacity))
+        ? Number(formDataObject.capacity)
+        : eventData?.capacity || null,
+    });
 
     if (!formDataParsed.success) {
       const flattenedErrors = formDataParsed.error.flatten().fieldErrors;

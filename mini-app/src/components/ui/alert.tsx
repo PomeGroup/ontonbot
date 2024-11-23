@@ -9,7 +9,7 @@ const alertVariants = cva("relative w-full rounded-xl p-2 items-center flex", {
     variant: {
       default: "bg-disabled-font/10 text-disabled-font",
       destructive:
-        "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+        "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-cn-destructive",
     },
   },
   defaultVariants: {

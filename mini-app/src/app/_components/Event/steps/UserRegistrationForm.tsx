@@ -6,6 +6,7 @@ import { cn } from "@/utils";
 
 export function UserRegistrationForm() {
   const eventData = useCreateEventStore((state) => state.eventData);
+  const editOtions = useCreateEventStore((state) => state.edit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
   return (
@@ -23,6 +24,9 @@ export function UserRegistrationForm() {
             onChange={() =>
               setEventData({ has_registration: !eventData?.has_registration })
             }
+            className={cn({ "opacity-50": editOtions?.eventHash })}
+            readOnly={Boolean(editOtions?.eventHash)}
+            disabled={Boolean(editOtions?.eventHash)}
             component="div"
             checked={eventData?.has_registration}
           />
@@ -90,6 +94,7 @@ export function UserRegistrationForm() {
               type="number"
               name="capacity"
               inputMode="number"
+              defaultValue={eventData.capacity}
               inputClassName={cn(
                 "placeholder:tracking-[.2rem] tracking-widest"
               )}

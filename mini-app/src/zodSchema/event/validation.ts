@@ -19,10 +19,10 @@ export const generalStepDataSchema = z.object({
     .string({ required_error: "Please select a hub" })
     .min(1, { message: "Please select a hub" }),
   // all optional just for type safety and auto completion
-  has_registration: z.boolean().optional(),
-  has_approval: z.boolean().optional(),
-  has_waiting_list: z.boolean().optional(),
-  capacity: z.number().optional().nullish(),
+  has_registration: z.boolean(),
+  has_approval: z.boolean(),
+  has_waiting_list: z.boolean(),
+  capacity: z.number().nullable(),
 });
 
 export function rewardStepValidation(passwordDisabled: boolean) {

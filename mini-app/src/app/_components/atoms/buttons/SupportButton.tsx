@@ -10,7 +10,7 @@ const SupportButton = () => {
 
   return (
     <div
-      className="flex items-center justify-center text-xs text-muted-foreground"
+      className="flex items-center justify-center text-xs text-cn-muted-foreground"
       onClick={() => {
         hapticfeedback?.impactOccurred("medium");
         webApp?.openTelegramLink("https://t.me/ontonsupport");

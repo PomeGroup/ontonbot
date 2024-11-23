@@ -46,7 +46,7 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-background p-4",
+        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-cn-background p-4",
         className
       )}
       {...props}
@@ -54,7 +54,7 @@ const DrawerContent = React.forwardRef<
       {/* Conditionally render the DrawerClose button */}
       {showCloseButton && (
         <DrawerClose asChild>
-          <button className="ms-auto mr-2 flex items-center justify-center h-6 w-6 rounded-full bg-muted">
+          <button className="ms-auto mr-2 flex items-center justify-center h-6 w-6 rounded-full bg-cn-muted">
             <X className="h-4 w-4" />
           </button>
         </DrawerClose>
@@ -108,7 +108,7 @@ const DrawerDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-sm text-cn-muted-foreground", className)}
     {...props}
   />
 ));

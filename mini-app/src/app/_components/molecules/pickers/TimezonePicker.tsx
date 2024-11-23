@@ -33,7 +33,7 @@ const TimezonePicker: FC<{
         value={value}
         onValueChange={onValueChange}
       >
-        <SelectTrigger className="w-full dark:bg-separator">
+        <SelectTrigger className="w-full dark:bg-cn-separator">
           <SelectValue placeholder="Select Time Zone" />
         </SelectTrigger>
         <SelectContent
@@ -48,7 +48,7 @@ const TimezonePicker: FC<{
           <SelectGroup className="max-h-[250px]">
             {gmtTimeZones.map((zone, index) => (
               <SelectItem
-                className="dark:hover:bg-separator"
+                className="dark:hover:bg-cn-separator"
                 key={index}
                 value={zone}
               >

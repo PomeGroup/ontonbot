@@ -1,10 +1,7 @@
 import { db } from "@/db/db";
-import { eventFields, events,eventRegistrants } from "@/db/schema";
+import { eventFields, events, eventRegistrants , users } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
-import {
-  findVisitorByUserAndEventUuid,
-  selectVisitorsWithWalletAddress,
-} from "@/server/db/visitors";
+
 import { hashPassword } from "@/lib/bcrypt";
 import { sendLogNotification } from "@/lib/tgBot";
 import {
@@ -22,7 +19,6 @@ import {
   EventRegisterSchema,
 } from "@/types";
 
-import { fetchBalance } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
@@ -36,10 +32,7 @@ import {
   getEventsWithFilters,
   selectEventByUuid,
 } from "../db/events";
-import {
-  selectVisitorsByEventUuid,
-  updateVisitorLastVisit,
-} from "../db/visitors";
+import { selectVisitorsByEventUuid } from "../db/visitors";
 import {
   adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure,
@@ -243,8 +236,8 @@ export const eventsRouter = router({
       });
     }
 
-    return eventsData.map(
-      ({ wallet_seed_phrase, ...restEventData }) => restEventData
+    return eventsData.map((restEventData) =>
+      removeKey(restEventData, "wallet_seed_phrase")
     );
   }),
 
@@ -323,8 +316,17 @@ export const eventsRouter = router({
       }
 
       const registrants = await db
-        .select()
+        .select({
+          event_uuid: eventRegistrants.event_uuid,
+          user_id: eventRegistrants.user_id,
+          username: users.username,
+          first_name: users.first_name,
+          last_name: users.last_name,
+          status: eventRegistrants.status,
+          created_at: eventRegistrants.created_at,
+        })
         .from(eventRegistrants)
+        .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
         .where(eq(eventRegistrants.event_uuid, event_uuid))
         .orderBy(desc(eventRegistrants.created_at))
         .execute();
@@ -339,20 +341,20 @@ export const eventsRouter = router({
     .input(
       z.object({
         event_uuid: z.string(),
-        registrant_id: z.number(),
+        user_id: z.number(),
         status: z.enum(["approved", "rejected"]),
       })
     )
     .mutation(async (opts) => {
       const event_uuid = opts.input.event_uuid;
-      const registrant_id = opts.input.registrant_id;
+      const user_id = opts.input.user_id;
       const event = await selectEventByUuid(event_uuid);
 
       if (!event) {
         throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
       }
 
-      const result = await db
+      await db
         .update(eventRegistrants)
         .set({
           status: opts.input.status,
@@ -360,7 +362,7 @@ export const eventsRouter = router({
         .where(
           and(
             eq(eventRegistrants.event_uuid, event_uuid),
-            eq(eventRegistrants.user_id, registrant_id)
+            eq(eventRegistrants.user_id, user_id)
           )
         )
         .execute();
@@ -547,7 +549,10 @@ export const eventsRouter = router({
           const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
 
           // Remove the description key
-          const { description, ...eventDataWithoutDescription } = eventData;
+          const eventDataWithoutDescription = removeKey(
+            eventData,
+            "description"
+          );
           await sendLogNotification({
             message: `
 @${opts.ctx.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
@@ -558,17 +563,20 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             `,
           });
 
-          const res = await registerActivity(eventDraft);
+          // On local development environment, we skip the registration on ton society
+          if (process.env.ENV !== "local") {
+            const res = await registerActivity(eventDraft);
 
-          await trx
-            .update(events)
-            .set({
-              activity_id: res.data.activity_id,
-              updatedBy: opts.ctx.user.user_id.toString(),
-              updatedAt: new Date(),
-            })
-            .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
-            .execute();
+            await trx
+              .update(events)
+              .set({
+                activity_id: res.data.activity_id,
+                updatedBy: opts.ctx.user.user_id.toString(),
+                updatedAt: new Date(),
+              })
+              .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
+              .execute();
+          }
 
           return newEvent;
         });
@@ -666,7 +674,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               updatedAt: new Date(),
 
               /* ------------------------ Event Registration Update ----------------------- */
-              // Updating has_registraion is not allowed
+              // Updating has_registration is not allowed
               has_approval: eventData.has_approval,
               capacity: eventData.capacity,
               has_waiting_list: eventData.has_waiting_list,
@@ -759,14 +767,18 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
               label: "Enter Event",
             },
           };
-          // Remove the description key from updatedEvent
-          const {
-            description: updatedDescription,
-            ...updatedEventWithoutDescription
-          } = updatedEvent[0];
-          // Remove the description key from oldEvent
-          const { description: oldDescription, ...oldEventWithoutDescription } =
-            oldEvent[0];
+
+          // Remove the description key from updated Event
+          const updatedEventWithoutDescription = removeKey(
+            updatedEvent[0],
+            "description"
+          );
+          // Remove the description key from old Event
+          const oldEventWithoutDescription = removeKey(
+            oldEvent[0],
+            "description"
+          );
+
           const oldChanges = getObjectDifference(
             updatedEventWithoutDescription,
             oldEventWithoutDescription
@@ -789,10 +801,14 @@ After:
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
 `;
 
-          await updateActivity(
-            eventDraft,
-            opts.ctx.event.activity_id as number
-          );
+          // if it was a fully local setup we don't want to update the activity_id
+          if (process.env.ENV !== "local") {
+            await updateActivity(
+              eventDraft,
+              opts.ctx.event.activity_id as number
+            );
+          }
+
           await sendLogNotification({ message });
 
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
@@ -926,7 +942,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           username: visitor.username === "null" ? null : visitor.username,
         };
         // Copy the visitor object without modifying dynamicFields directly
-
 
         // If ticketToCheckIn is false, remove specific fields
         if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {

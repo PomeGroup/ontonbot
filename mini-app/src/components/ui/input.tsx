@@ -15,7 +15,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <div>
         <div
           className={cn(
-            "dark:text-white text-black flex h-10 bn b w-full rounded-xl bg-muted p-1 xxs:px-3 xxs:py-2 text-sm ring-offset-background items-center space-x-2",
+            "dark:text-white text-black flex h-10 bn b w-full rounded-xl bg-cn-muted p-1 xxs:px-3 xxs:py-2 text-sm ring-offset-cn-background items-center space-x-2",
             className,
             {
               "ring-red-400 ring-1": props.errors?.length,
@@ -25,7 +25,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {props.prefix_icon}
           <input
             type={type}
-            className="bg-transparent file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 border-none w-full h-full"
+            className="bg-transparent file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-cn-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 border-none w-full h-full"
             ref={ref}
             {...props}
           />
