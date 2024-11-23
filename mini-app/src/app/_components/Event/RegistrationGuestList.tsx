@@ -4,9 +4,10 @@ import { useGetEventRegistrants } from "@/hooks/events.hooks";
 import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
 import { List, BlockTitle, ListItem, Chip, BlockHeader } from "konsta/react";
-import { Check, Pencil, X } from "lucide-react";
+import { Check, FileUser, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useState } from "react";
+import DataStatus from "../molecules/alerts/DataStatus";
 
 interface CustomListItemProps {
   name: string;
@@ -113,6 +114,10 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
         <div className="flex space-x-2">
           <Button
             icon={<Pencil size={18} />}
+            onClick={handleEdit}
+          />
+          <Button
+            icon={<FileUser size={18} />}
             onClick={handleEdit}
           />
           <StatusChip
@@ -243,12 +248,37 @@ const RegistrationGuestlist = () => {
       {/* </BlockHeader> */}
       <BlockHeader className="font-bold">
         {/* TODO: Better UI for state handling */}
-        {registrants.isSuccess && !registrants.data?.length && "No Registrants Yet 😶"}
-        {registrants.isLoading && "Loading Registrants List 🏗"}
+        {registrants.isSuccess && !registrants.data?.length && (
+          <DataStatus
+            status="not_found"
+            size="md"
+            title="No Registrants Yet"
+            description="No one has filled the form yet."
+          />
+        )}
+        {registrants.isLoading && (
+          <DataStatus
+            status="pending"
+            size="md"
+            title="Loading Guest List"
+          />
+        )}
         {registrants.isError &&
-          (registrants.error.data?.code === "NOT_FOUND"
-            ? "Event Not Found 🔎"
-            : "There was a problem try refreshing the page ⚠️")}
+          (registrants.error.data?.code === "NOT_FOUND" ? (
+            <DataStatus
+              status="not_found"
+              size="md"
+              title="Event Not Found"
+              description={`Event does not exist with id = ${params.hash}`}
+            />
+          ) : (
+            <DataStatus
+              status="danger"
+              size="md"
+              title="Something Went Wrong"
+              description={"There was a problem try refreshing the page"}
+            />
+          ))}
       </BlockHeader>
       <List
         strong
@@ -257,8 +287,8 @@ const RegistrationGuestlist = () => {
         {registrants.data?.map((registrant, idx) => (
           <CustomListItem
             key={"registrant_" + idx}
-            name={registrant.user_id?.toString() || "user_id"}
-            username={registrant.user_id?.toString() || "user_id"}
+            name={registrant.first_name || "No Name"}
+            username={registrant.username || "no username"}
             date={
               registrant.created_at
                 ? new Date(registrant.created_at).toLocaleString("default", {

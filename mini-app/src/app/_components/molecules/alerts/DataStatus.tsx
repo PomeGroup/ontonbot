@@ -1,11 +1,13 @@
 import React, { ReactNode } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { cn } from "@/utils";
 
 interface DataStatusProps {
   status: "pending" | "success" | "danger" | "not_found" | "approved" | "rejected";
   title?: ReactNode;
   description?: ReactNode;
   size?: "sm" | "md" | "lg";
+  className?: string;
 }
 
 const DATA_STATUS_ANIMATIONS: Record<DataStatusProps["status"], string> = {
@@ -26,7 +28,7 @@ const ANIMATION_SIZES: Record<DataStatusProps["size"], number> = {
 
 export default function DataStatus(props: DataStatusProps) {
   return (
-    <div className="flex flex-col items-center">
+    <div className={cn("flex flex-col items-center mx-auto", props.className)}>
       <DotLottieReact
         loop
         autoplay
@@ -35,7 +37,7 @@ export default function DataStatus(props: DataStatusProps) {
         height={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.sm}
         // @ts-expect-error
         width={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.sm}
-        className="mx-auto mb-3 lg:w-[180px]"
+        className={"mx-auto mb-3 lg:w-[180px]"}
       />
       <h4 className="block text-[20px] font-semibold mb-1">{props.title}</h4>
       <p className="text-center text-cn-muted-foreground">{props.description}</p>
