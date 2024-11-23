@@ -3,11 +3,12 @@ import { KButton } from "@/components/ui/button";
 import { useGetEventRegistrants } from "@/hooks/events.hooks";
 import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
-import { List, BlockTitle, ListItem, Chip, BlockHeader } from "konsta/react";
+import { List, BlockTitle, ListItem, Chip, BlockHeader, Sheet } from "konsta/react";
 import { Check, FileUser, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useState } from "react";
 import DataStatus from "../molecules/alerts/DataStatus";
+import { createPortal } from "react-dom";
 
 interface CustomListItemProps {
   name: string;
@@ -15,6 +16,7 @@ interface CustomListItemProps {
   date: string;
   status: "pending" | "approved" | "rejected";
   user_id: number;
+  registrantInfo: any;
   handleApprove: (_: number) => Promise<void>;
   handleReject: (_: number) => Promise<void>;
 }
@@ -25,12 +27,14 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   date,
   status,
   user_id,
+  registrantInfo,
   handleApprove,
   handleReject,
 }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [itemStatus, setItemStatus] = useState(status);
+  const [showRegistrantInfo, setShowRegistrantInfo] = useState<any>(null);
 
   const handleEdit = () => {
     // Change status to "pending"
@@ -118,7 +122,9 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
           />
           <Button
             icon={<FileUser size={18} />}
-            onClick={handleEdit}
+            onClick={() => {
+              setShowRegistrantInfo(registrantInfo);
+            }}
           />
           <StatusChip
             variant="danger"
@@ -134,17 +140,23 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   }
 
   return (
-    <ListItem
-      className="!ps-0"
-      title={
-        <div className="w-44">
-          <h4 className="truncate">{name}</h4>
-          <p className="text-xs truncate text-cn-muted-foreground">{username}</p>
-        </div>
-      }
-      after={afterContent}
-      footer={footerContent}
-    />
+    <>
+      <ListItem
+        className="!ps-0"
+        title={
+          <div className="w-44">
+            <h4 className="truncate">{name}</h4>
+            <p className="text-xs truncate text-cn-muted-foreground">{username}</p>
+          </div>
+        }
+        after={afterContent}
+        footer={footerContent}
+      />
+      {createPortal(
+        <Sheet opened={Boolean(showRegistrantInfo)}>{JSON.stringify(registrantInfo)}</Sheet>,
+        document.body
+      )}
+    </>
   );
 };
 
@@ -297,6 +309,7 @@ const RegistrationGuestlist = () => {
                   })
                 : "no_date"
             }
+            registrantInfo={registrant.regisrtant_info}
             user_id={registrant.user_id!}
             status={registrant.status as "approved" | "rejected" | "pending"}
             handleApprove={handleApprove}
