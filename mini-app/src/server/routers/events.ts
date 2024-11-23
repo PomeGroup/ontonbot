@@ -208,7 +208,7 @@ export const eventsRouter = router({
   // private
   eventRegister: initDataProtectedProcedure.input(EventRegisterSchema).mutation(async (opts) => {
     const userId = opts.ctx.user.user_id;
-    const event_uuid = opts.input.event_uuid;
+    const { event_uuid , ...registerInfo } = opts.input
     const event = await selectEventByUuid(event_uuid);
 
     console.log("event_register", event_uuid, userId);
@@ -251,13 +251,16 @@ export const eventsRouter = router({
 
     const request_status = !!event.has_approval || event_filled_and_has_waiting_list ? "pending" : "approved"; // pending if approval is required otherwise auto approve them
 
+    
+
     await db.insert(eventRegistrants).values({
       event_uuid: event_uuid,
       user_id: userId,
       status: request_status,
+      register_info : registerInfo
     });
 
-    // TODO add event registration details from user into some table
+    
     return { message: "success", code: 201 };
   }),
 
