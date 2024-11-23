@@ -124,18 +124,14 @@ EventAttributes.displayName = "EventAttributes";
 
 // Status component to handle different event states
 const EventStatus = ({
-  isEventActive,
   registrantStatus,
   capacityFilled,
   hasWaitingList,
 }: {
-  isEventActive: boolean;
   registrantStatus: "" | "approved" | "rejected" | "pending";
   capacityFilled: boolean;
   hasWaitingList: boolean;
 }) => {
-  if (!isEventActive) return null;
-
   const statusConfigs = {
     "": () => <UserRegisterForm />,
     pending: () => (
@@ -195,7 +191,6 @@ export const EventSections = () => {
   const isEventActive = isStarted && isNotEnded;
   const showPasswordInput =
     !isAdminOrOrganizer &&
-    isEventActive &&
     (eventData.data?.registrant_status === "approved" || !eventData.data?.has_registration) &&
     !userEventPasswordField?.completed;
 
@@ -215,20 +210,20 @@ export const EventSections = () => {
       <EventActions />
       <EventDescription />
 
-      {!isAdminOrOrganizer &&
-        eventData.data?.registrant_status === "approved" &&
-        user?.wallet_address &&
-        userEventPasswordField?.completed && (
-          <ClaimRewardButton
-            initData={initData}
-            eventId={eventData.data?.event_uuid ?? ""}
-            isWalletConnected={Boolean(user.wallet_address)}
-          />
-        )}
+      {!isAdminOrOrganizer && eventData.data?.has_registration
+        ? eventData.data?.registrant_status === "approved"
+        : true &&
+          user?.wallet_address &&
+          userEventPasswordField?.completed && (
+            <ClaimRewardButton
+              initData={initData}
+              eventId={eventData.data?.event_uuid ?? ""}
+              isWalletConnected={Boolean(user.wallet_address)}
+            />
+          )}
 
       {!isAdminOrOrganizer && (
         <EventStatus
-          isEventActive={isEventActive}
           registrantStatus={eventData.data?.registrant_status ?? ""}
           capacityFilled={Boolean(eventData.data?.capacity_filled)}
           hasWaitingList={Boolean(eventData.data?.has_waiting_list)}

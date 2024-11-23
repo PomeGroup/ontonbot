@@ -35,6 +35,9 @@ export const TimePlaceStep = () => {
     formDataObject.eventLocationType = eventData?.eventLocationType || "online";
     formDataObject.cityId = eventData?.cityId ? Number(eventData.cityId) : undefined;
     formDataObject.countryId = eventData?.countryId ? Number(eventData.countryId) : undefined;
+    if (formDataObject?.location) {
+      formDataObject.location = formDataObject.location ? formDataObject?.location?.toLowerCase() : undefined;
+    }
 
     const secondStepDataSchema = timeplaceStepValidation(
       editOptions,

@@ -60,19 +60,6 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
           setSelectedSbtId(currentSlide.id);
         }
       });
-      emblaApi.on("init", () => {
-        const currentIndex = emblaApi.selectedScrollSnap();
-        const currentSlide = rewardCollections?.[currentIndex];
-
-        if (currentSlide) {
-          setEventData({
-            ...eventData,
-            ts_reward_url: currentSlide.imageLink,
-            video_url: currentSlide.videoLink,
-          });
-          setSelectedSbtId(currentSlide.id);
-        }
-      });
     }
   }, [emblaApi, rewardCollections, setEventData, eventData]);
 
