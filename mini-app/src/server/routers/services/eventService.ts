@@ -44,8 +44,7 @@ export const validateEventData = async (event_uuid: string) => {
     return { success: true, data: eventData };
   } catch (error) {
     // Log unexpected errors
-    const errorMsg =
-      error instanceof Error ? error.message : "An unexpected error occurred";
+    const errorMsg = error instanceof Error ? error.message : "An unexpected error occurred";
     console.error(`validateEventData Unexpected Error:`, error);
     return {
       success: false,

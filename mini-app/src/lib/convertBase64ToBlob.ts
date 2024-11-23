@@ -1,8 +1,5 @@
 // Helper function to convert Base64 to Blob
-export const convertBase64ToBlob = (
-  base64Data: string,
-  mimeType: string
-): Blob => {
+export const convertBase64ToBlob = (base64Data: string, mimeType: string): Blob => {
   const bstr = atob(base64Data);
   let n = bstr.length;
   const u8arr = new Uint8Array(n);

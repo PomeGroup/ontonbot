@@ -7,9 +7,7 @@ import dealRoomService from "@/server/routers/services/DealRoomService";
 import { configProtected } from "@/server/config";
 
 // Type guard to check if result is alreadyCheckedIn type
-function isAlreadyCheckedIn(
-  result: any
-): result is { alreadyCheckedIn: boolean } {
+function isAlreadyCheckedIn(result: any): result is { alreadyCheckedIn: boolean } {
   return result && "alreadyCheckedIn" in result;
 }
 

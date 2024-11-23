@@ -14,11 +14,7 @@ import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
 import React, { memo, useState } from "react";
 import { IoIosPlayCircle } from "react-icons/io";
-import {
-  IoChevronForwardOutline,
-  IoReorderFour,
-  IoSettingsOutline,
-} from "react-icons/io5";
+import { IoChevronForwardOutline, IoReorderFour, IoSettingsOutline } from "react-icons/io5";
 
 interface EventCardProps {
   event: {
@@ -43,12 +39,7 @@ interface EventCardProps {
     country?: string;
     participationType?: string;
   };
-  mode?:
-    | "normal"
-    | "small"
-    | "detailed"
-    | "ongoing"
-    | "normal_without_dropdown";
+  mode?: "normal" | "small" | "detailed" | "ongoing" | "normal_without_dropdown";
   currentUserId?: number;
 }
 
@@ -87,11 +78,7 @@ const EventCard: React.FC<EventCardProps> = memo(
           : location;
 
     const isOnline =
-      participationType === "online"
-        ? "Online"
-        : participationType === "in_person"
-          ? geoLocation
-          : "unknown";
+      participationType === "online" ? "Online" : participationType === "in_person" ? geoLocation : "unknown";
 
     const handleEventClick = () => {
       if (ticketToCheckIn) {
@@ -144,17 +131,14 @@ const EventCard: React.FC<EventCardProps> = memo(
                       </div>
                     ) : (
                       <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
-                        {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
-                        {isOnline}
+                        {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
                       </span>
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
                     <Badge variant="ontonDark">hosted</Badge>
                   ) : (
-                    <Badge variant="ontonDark">
-                      {ticketPrice > 0 ? ticketPrice : "free"}
-                    </Badge>
+                    <Badge variant="ontonDark">{ticketPrice > 0 ? ticketPrice : "free"}</Badge>
                   )}
                 </div>
                 <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
@@ -178,8 +162,7 @@ const EventCard: React.FC<EventCardProps> = memo(
             className="text-lg px-2 rounded-none "
             onClick={handleEventClick}
           >
-            <IoReorderFour className="mr-1" /> Show Event{" "}
-            <IoChevronForwardOutline className="ml-auto" />
+            <IoReorderFour className="mr-1" /> Show Event <IoChevronForwardOutline className="ml-auto" />
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -233,17 +216,14 @@ const EventCard: React.FC<EventCardProps> = memo(
                       </div>
                     ) : (
                       <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
-                        {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
-                        {isOnline}
+                        {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
                       </span>
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
                     <Badge variant="ontonDark">hosted</Badge>
                   ) : (
-                    <Badge variant="ontonDark">
-                      {ticketPrice > 0 ? ticketPrice : "free"}
-                    </Badge>
+                    <Badge variant="ontonDark">{ticketPrice > 0 ? ticketPrice : "free"}</Badge>
                   )}
                 </div>
                 <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
@@ -313,8 +293,7 @@ const EventCard: React.FC<EventCardProps> = memo(
             <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
               <div className="flex items-center self-stretch flex-nowrap relative">
                 <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-3">
-                  {formatDateRange(startDate, endDate, validTimezone)} ·{" "}
-                  {isOnline}
+                  {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
                 </span>
               </div>
               <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">

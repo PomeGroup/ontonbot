@@ -12,15 +12,11 @@ export const sbtRewardCollectionRouter = router({
     return await fetchAllSBTRewardCollections();
   }),
 
-  getRewardCollectionsByHubID: publicProcedure
-    .input(z.object({ hubID: z.number() }))
-    .query(async (opts) => {
-      return await fetchSBTRewardCollectionsByHubID(opts.input.hubID);
-    }),
+  getRewardCollectionsByHubID: publicProcedure.input(z.object({ hubID: z.number() })).query(async (opts) => {
+    return await fetchSBTRewardCollectionsByHubID(opts.input.hubID);
+  }),
 
-  getRewardCollectionById: publicProcedure
-    .input(z.object({ id: z.number() }))
-    .query(async (opts) => {
-      return await fetchSBTRewardCollectionById(opts.input.id);
-    }),
+  getRewardCollectionById: publicProcedure.input(z.object({ id: z.number() })).query(async (opts) => {
+    return await fetchSBTRewardCollectionById(opts.input.id);
+  }),
 });

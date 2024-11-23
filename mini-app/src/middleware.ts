@@ -46,23 +46,17 @@ export function middleware(request: NextRequest) {
 
   // Check if the request matches any of the protected routes
   const isProtected = protectWithAPIKeyPatterns.some(
-    (route) =>
-      (route.methods.includes("*") || route.methods.includes(method)) &&
-      route.pattern.test(pathname)
+    (route) => (route.methods.includes("*") || route.methods.includes(method)) && route.pattern.test(pathname)
   );
 
   // Check if the request matches the new client protected API routes
   const isClientAPIProtected = protectClientAPI.some(
-    (route) =>
-      (route.methods.includes("*") || route.methods.includes(method)) &&
-      route.pattern.test(pathname)
+    (route) => (route.methods.includes("*") || route.methods.includes(method)) && route.pattern.test(pathname)
   );
 
   // Check if the request matches public routes (Swagger docs, etc.)
   const isPublic = publicRoutes.some(
-    (route) =>
-      (route.methods.includes("*") || route.methods.includes(method)) &&
-      route.pattern.test(pathname)
+    (route) => (route.methods.includes("*") || route.methods.includes(method)) && route.pattern.test(pathname)
   );
 
   // If the request is protected by client API route

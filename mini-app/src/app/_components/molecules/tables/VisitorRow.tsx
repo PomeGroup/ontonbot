@@ -14,14 +14,7 @@ interface VisitorRowProps {
   needRefresh: boolean;
 }
 
-const VisitorRow: FC<VisitorRowProps> = ({
-  visitor,
-  refProp,
-  webApp,
-  index,
-  isLast,
-  needRefresh,
-}) => {
+const VisitorRow: FC<VisitorRowProps> = ({ visitor, refProp, webApp, index, isLast, needRefresh }) => {
   if (!visitor) {
     return null;
   }
@@ -59,9 +52,7 @@ const VisitorRow: FC<VisitorRowProps> = ({
               className="cursor-pointer"
               onClick={() => {
                 if (visitor?.wallet_address) {
-                  webApp?.openLink(
-                    `https://tonviewer.com/${visitor?.wallet_address}`
-                  );
+                  webApp?.openLink(`https://tonviewer.com/${visitor?.wallet_address}`);
                 }
               }}
             >
@@ -78,8 +69,7 @@ const VisitorRow: FC<VisitorRowProps> = ({
                 <>No Wallet</>
               )}
             </div>
-          ) : visitor?.ticket_id !== Number(needRefresh) &&
-            visitor?.ticket_id ? (
+          ) : visitor?.ticket_id !== Number(needRefresh) && visitor?.ticket_id ? (
             <VariantBadge
               key={visitor?.created_at?.toString()}
               status={visitor?.ticket_status || ""}

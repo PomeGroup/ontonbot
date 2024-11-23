@@ -13,10 +13,7 @@ export const EventDataContext = createContext<{
   initData: string;
   eventHash: string;
   isLocationUrl: boolean;
-  userEventFields: UseTRPCQueryResult<
-    RouterOutput["userEventFields"]["getUserEventFields"],
-    unknown
-  >;
+  userEventFields: UseTRPCQueryResult<RouterOutput["userEventFields"]["getUserEventFields"], unknown>;
   userEventPasswordField:
     | {
         user_id: number;

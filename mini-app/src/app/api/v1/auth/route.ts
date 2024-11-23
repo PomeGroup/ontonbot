@@ -60,13 +60,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Check if user exists in db
-    let user = (
-      await db
-        .select()
-        .from(users)
-        .where(eq(users.user_id, userdata.data.id))
-        .execute()
-    ).pop();
+    let user = (await db.select().from(users).where(eq(users.user_id, userdata.data.id)).execute()).pop();
 
     if (!user) {
       user = (

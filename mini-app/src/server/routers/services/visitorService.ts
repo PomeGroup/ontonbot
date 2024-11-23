@@ -25,9 +25,7 @@ export const getAndValidateVisitor = async (
 
     // If no ticketOrderUuid, validate if the visitor is valid
     if (!ticketOrderUuid) {
-      const isValidVisitor = await visitorsDB.selectValidVisitorById(
-        visitor.id
-      );
+      const isValidVisitor = await visitorsDB.selectValidVisitorById(visitor.id);
 
       // If the visitor is invalid, return a failure response
       if (!isValidVisitor.length) {
@@ -42,8 +40,7 @@ export const getAndValidateVisitor = async (
     return { success: true, data: visitor };
   } catch (error) {
     // Catch any unexpected errors and return them
-    const errorMsg =
-      error instanceof Error ? error.message : "An unexpected error occurred";
+    const errorMsg = error instanceof Error ? error.message : "An unexpected error occurred";
     console.error(`getAndValidateVisitor Unexpected Error:`, error);
     return {
       success: false,
@@ -69,16 +66,12 @@ export const addVisitor = async (opts: any) => {
     console.error(`Event requires ticket to check in: ${event_uuid}`);
     throw new TRPCError({
       code: "FORBIDDEN",
-      message:
-        "This event requires a ticket to add user as visitor to the event",
+      message: "This event requires a ticket to add user as visitor to the event",
     });
   }
 
   // Check if the user has already completed the task
-  const taskCompleted = await userEventFieldsDB.checkPasswordTask(
-    user_id,
-    event.event_id
-  );
+  const taskCompleted = await userEventFieldsDB.checkPasswordTask(user_id, event.event_id);
 
   if (!taskCompleted) {
     throw new TRPCError({

@@ -11,11 +11,7 @@ type EventNotStartedProps = {
 const gifUrl =
   "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Telegram-Animated-Emojis/main/People/Eyes.webp";
 
-const EventNotStarted = ({
-  end_date,
-  start_date,
-  title,
-}: EventNotStartedProps) => {
+const EventNotStarted = ({ end_date, start_date, title }: EventNotStartedProps) => {
   const [gifSrc, setGifSrc] = useState(gifUrl);
   const [endDate] = useState(new Date(end_date).toLocaleString());
   const [startDate] = useState(new Date(start_date).toLocaleString());

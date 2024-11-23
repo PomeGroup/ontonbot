@@ -9,9 +9,7 @@ type Environment = "development" | "production" | "staging" | "local";
 export async function fetchOntonSettings() {
   // Try to fetch non-protected settings from cache
   const cachedConfig = await getCache(cacheKeys.ontonSettings);
-  const cachedConfigProtected = await getCache(
-    cacheKeys.ontonSettingsProtected
-  );
+  const cachedConfigProtected = await getCache(cacheKeys.ontonSettingsProtected);
 
   // If both configurations are cached, return them immediately
   if (cachedConfig && cachedConfigProtected) {
@@ -22,20 +20,12 @@ export async function fetchOntonSettings() {
   let configProtected: { [key: string]: string | null } = {};
 
   // Validate ENV value
-  if (
-    !["development", "production", "staging", "local"].includes(
-      process.env.ENV!
-    )
-  ) {
+  if (!["development", "production", "staging", "local"].includes(process.env.ENV!)) {
     throw new Error("Invalid ENV");
   }
   const env = process.env.ENV as Environment;
 
-  const settings = await db
-    .select()
-    .from(ontoSetting)
-    .where(eq(ontoSetting.env, env))
-    .execute();
+  const settings = await db.select().from(ontoSetting).where(eq(ontoSetting.env, env)).execute();
   // Categorize settings based on the protected flag
   settings.forEach((setting) => {
     const key = `${setting.var}`;

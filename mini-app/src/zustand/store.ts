@@ -52,9 +52,6 @@ export const useCompleteStore = create<StoreState>((set) => ({
 
   allTasksCompleted: () => {
     const state: any = useCompleteStore.getState();
-    return (
-      state.walletConnected &&
-      state.completedTaskIds.size === state.totalDynamicTasks
-    );
+    return state.walletConnected && state.completedTaskIds.size === state.totalDynamicTasks;
   },
 }));

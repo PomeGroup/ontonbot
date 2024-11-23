@@ -14,8 +14,7 @@ const RadioGroup = React.forwardRef<
     orientation?: typeof ORIENTATION_VERTICAL | typeof ORIENTATION_HORIZONTAL;
   } & React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
 >(({ className, orientation = ORIENTATION_HORIZONTAL, ...props }, ref) => {
-  const orientationClass =
-    orientation === ORIENTATION_VERTICAL ? "flex flex-col" : "flex";
+  const orientationClass = orientation === ORIENTATION_VERTICAL ? "flex flex-col" : "flex";
 
   return (
     <RadioGroupPrimitive.Root

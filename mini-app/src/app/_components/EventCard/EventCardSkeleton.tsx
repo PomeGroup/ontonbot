@@ -4,9 +4,7 @@ interface EventCardSkeletonProps {
   mode?: "normal" | "small" | "detailed";
 }
 
-const EventCardSkeleton: React.FC<EventCardSkeletonProps> = ({
-  mode = "normal",
-}) => {
+const EventCardSkeleton: React.FC<EventCardSkeletonProps> = ({ mode = "normal" }) => {
   const renderNormalModeSkeleton = () => (
     <div className="flex w-full pt-4 pr-4 pb-4 pl-0 gap-4 items-start flex-nowrap relative overflow-hidden animate-pulse">
       <div className="w-24 h-24 shrink-0 rounded-lg relative overflow-hidden bg-gray-200 dark:bg-gray-700"></div>

@@ -16,13 +16,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     await db
       .select()
       .from(tickets)
-      .where(
-        and(
-          eq(tickets.event_uuid, eventId),
-          eq(tickets.user_id, userId),
-          eq(tickets.status, "UNUSED")
-        )
-      )
+      .where(and(eq(tickets.event_uuid, eventId), eq(tickets.user_id, userId), eq(tickets.status, "UNUSED")))
       .orderBy(desc(tickets.updatedAt))
 
       .execute()
@@ -34,11 +28,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   }
 
   const eventTicketData = (
-    await db
-      .select()
-      .from(eventTicket)
-      .where(eq(eventTicket.id, ticket.ticket_id))
-      .execute()
+    await db.select().from(eventTicket).where(eq(eventTicket.id, ticket.ticket_id)).execute()
   ).pop();
 
   if (!eventTicketData) {

@@ -20,10 +20,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logSQLQuery } from "@/lib/logSQLQuery";
 
-export const checkIsEventOwner = async (
-  rawInitData: string,
-  eventUuid: string
-) => {
+export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) => {
   const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData);
 
   if (!valid) {
@@ -96,10 +93,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
     return null;
   }
 
-  const { wallet_seed_phrase, ...restEventData } = removeKey(
-    eventData,
-    "secret_phrase"
-  );
+  const { wallet_seed_phrase, ...restEventData } = removeKey(eventData, "secret_phrase");
 
   const dynamicFields = await db
     .select()
@@ -141,11 +135,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
   };
 };
 
-export const getUserEvents = async (
-  userId: number | null,
-  limit: number | 100,
-  offset: number | 0
-) => {
+export const getUserEvents = async (userId: number | null, limit: number | 100, offset: number | 0) => {
   if (userId === null) {
     return [];
   }
@@ -242,17 +232,8 @@ export const getOrganizerEvents = async (
   return await eventsQuery.execute();
 };
 
-export const getEventsWithFilters = async (
-  params: z.infer<typeof searchEventsInputZod>
-): Promise<any[]> => {
-  const {
-    limit = 10,
-    offset = 0,
-    search,
-    filter,
-    sortBy = "default",
-    useCache = false,
-  } = params;
+export const getEventsWithFilters = async (params: z.infer<typeof searchEventsInputZod>): Promise<any[]> => {
+  const { limit = 10, offset = 0, search, filter, sortBy = "default", useCache = false } = params;
   const roundMinutesInMs = 2000; // 10 minutes in milliseconds
 
   if (filter?.startDate) {
@@ -326,22 +307,16 @@ export const getEventsWithFilters = async (
 
   // Apply organizer_user_id filter
   if (filter?.organizer_user_id) {
-    conditions.push(
-      eq(event_details_search_list.organizerUserId, filter.organizer_user_id)
-    );
+    conditions.push(eq(event_details_search_list.organizerUserId, filter.organizer_user_id));
   }
 
   // Apply event_ids filter
   if (filter?.event_ids && filter.event_ids.length) {
-    conditions.push(
-      sql`${event_details_search_list.eventId} = any(${filter.event_ids})`
-    );
+    conditions.push(sql`${event_details_search_list.eventId} = any(${filter.event_ids})`);
   }
   // Apply society_hub_id filter
   if (filter?.society_hub_id && filter.society_hub_id.length) {
-    conditions.push(
-      inArray(event_details_search_list.societyHubID, filter.society_hub_id)
-    );
+    conditions.push(inArray(event_details_search_list.societyHubID, filter.society_hub_id));
   }
   // Apply event_uuids filter
   if (filter?.event_uuids && filter.event_uuids.length) {
@@ -350,9 +325,7 @@ export const getEventsWithFilters = async (
     );
     console.log("validEventUuids", validEventUuids);
     if (validEventUuids.length) {
-      conditions.push(
-        inArray(event_details_search_list.eventUuid, validEventUuids)
-      );
+      conditions.push(inArray(event_details_search_list.eventUuid, validEventUuids));
     }
   }
 
@@ -424,15 +397,8 @@ export const getEventsWithFilters = async (
   return eventsData;
 };
 
-export const getEventByUuid = async (
-  eventUuid: string,
-  removeSecret: boolean = true
-) => {
-  const event = await db
-    .select()
-    .from(events)
-    .where(eq(events.event_uuid, eventUuid))
-    .execute();
+export const getEventByUuid = async (eventUuid: string, removeSecret: boolean = true) => {
+  const event = await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute();
   if (event === undefined || event.length === 0) {
     throw new TRPCError({
       code: "NOT_FOUND",
@@ -445,11 +411,7 @@ export const getEventByUuid = async (
 };
 
 export const getEventById = async (eventId: number) => {
-  const event = await db
-    .select()
-    .from(events)
-    .where(eq(events.event_id, eventId))
-    .execute();
+  const event = await db.select().from(events).where(eq(events.event_id, eventId)).execute();
 
   return event === undefined || event.length === 0 ? null : event[0];
 };

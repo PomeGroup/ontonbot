@@ -38,9 +38,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
     }
   );
 
-  const [selectedSbtId, setSelectedSbtId] = useState<number | undefined>(
-    rewardCollections?.[0]?.id
-  );
+  const [selectedSbtId, setSelectedSbtId] = useState<number | undefined>(rewardCollections?.[0]?.id);
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true,
@@ -129,8 +127,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
           variant="info"
           className="my-4"
         >
-          Events reward badge, visible on TON society. It cannot be changed
-          after event creation.
+          Events reward badge, visible on TON society. It cannot be changed after event creation.
         </AlertGeneric>
         <UploadImageFile
           changeText="Change SBT Image"
@@ -151,8 +148,8 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
           variant="info"
           className="my-4"
         >
-          Upload a video related to your event. Only MP4 format is allowed, and
-          the file size must be under 5 MB.
+          Upload a video related to your event. Only MP4 format is allowed, and the file size must be under 5
+          MB.
         </AlertGeneric>
         <UploadVideoFile
           changeText="Change SBT Video"

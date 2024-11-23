@@ -19,11 +19,7 @@ const GuestList = (props: Props) => {
   // this will not refetch (it will fetch once)
   const event = useGetEvent();
 
-  return event.data?.has_registration ? (
-    <RegistrationGuestlist />
-  ) : (
-    <NonRegistrationGuestList {...props} />
-  );
+  return event.data?.has_registration ? <RegistrationGuestlist /> : <NonRegistrationGuestList {...props} />;
 };
 
 export default GuestList;

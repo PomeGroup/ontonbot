@@ -22,9 +22,7 @@ type UploadFileProps = {
 export const UploadVideoFile = (props: UploadFileProps) => {
   const videoInputRef = useRef<HTMLInputElement>(null);
   const webApp = useWebApp();
-  const [videoPreview, setVideoPreview] = useState<string | undefined>(
-    props.defaultVideo
-  );
+  const [videoPreview, setVideoPreview] = useState<string | undefined>(props.defaultVideo);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const uploadVideo = trpc.files.uploadVideo.useMutation({
@@ -53,11 +51,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
 
       video.onerror = () => {
         URL.revokeObjectURL(video.src); // Free up memory
-        reject(
-          new Error(
-            "Failed to load video metadata. Please ensure the video is a valid MP4 file."
-          )
-        );
+        reject(new Error("Failed to load video metadata. Please ensure the video is a valid MP4 file."));
       };
 
       // Assign the video source
@@ -155,9 +149,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               {props.triggerText}
             </p>
             {props.infoText && (
-              <p className="text-cn-muted-foreground text-sm w-full text-balance">
-                {props.infoText}
-              </p>
+              <p className="text-cn-muted-foreground text-sm w-full text-balance">{props.infoText}</p>
             )}
           </>
         )}
@@ -171,10 +163,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
           <BlockTitle>Upload Video</BlockTitle>
           <Block className="space-y-2">
             {!videoPreview && (
-              <p>
-                {props.drawerDescriptionText ||
-                  "Upload an MP4 video from your device (max 5 MB)"}
-              </p>
+              <p>{props.drawerDescriptionText || "Upload an MP4 video from your device (max 5 MB)"}</p>
             )}
             {videoPreview && (
               <video
@@ -192,11 +181,9 @@ export const UploadVideoFile = (props: UploadFileProps) => {
             )}
             {uploadVideo.error && (
               <div className="text-red-500 text-sm w-full text-balance mt-2">
-                {getErrorMessages(uploadVideo.error.message).map(
-                  (errMessage, idx: number) => (
-                    <p key={idx}>{errMessage}</p>
-                  )
-                )}
+                {getErrorMessages(uploadVideo.error.message).map((errMessage, idx: number) => (
+                  <p key={idx}>{errMessage}</p>
+                ))}
               </div>
             )}
             <input
@@ -231,8 +218,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
                 onClick={(e) => {
                   e.preventDefault();
                   setIsSheetOpen(false);
-                  typeof props?.onDone === "function" &&
-                    props.onDone(videoPreview);
+                  typeof props?.onDone === "function" && props.onDone(videoPreview);
                 }}
                 itemType="button"
               >

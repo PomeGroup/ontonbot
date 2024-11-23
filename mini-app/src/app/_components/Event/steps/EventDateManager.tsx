@@ -16,8 +16,7 @@ export const EventDateManager = () => {
   useEffect(() => {
     if (eventData?.start_date) {
       const formattedStartDate = new Date(
-        new Date(eventData.start_date * 1000).toString().split("GMT")[0] +
-          " UTC"
+        new Date(eventData.start_date * 1000).toString().split("GMT")[0] + " UTC"
       )
         .toISOString()
         .split(".")[0];
@@ -38,8 +37,7 @@ export const EventDateManager = () => {
 
   useEffect(() => {
     if (startDate && endDate) {
-      const durationInSeconds =
-        (new Date(endDate).getTime() - new Date(startDate).getTime()) / 1000;
+      const durationInSeconds = (new Date(endDate).getTime() - new Date(startDate).getTime()) / 1000;
       setDuration(durationInSeconds);
     }
   }, [startDate, endDate]);
@@ -50,9 +48,7 @@ export const EventDateManager = () => {
         <>
           <BlockTitle className="text-red-500">Event is Ended</BlockTitle>
           <Block margin="-mb-3 mt-8">
-            <p className="text-red-300">
-              This event has ended and can no longer be edited.
-            </p>
+            <p className="text-red-300">This event has ended and can no longer be edited.</p>
           </Block>
         </>
       )}
@@ -73,11 +69,7 @@ export const EventDateManager = () => {
         />
         <ListItem
           title="Duration"
-          after={
-            <Chip>
-              {duration > 0 && Math.floor((duration / 60 / 60) * 10) / 10} hours
-            </Chip>
-          }
+          after={<Chip>{duration > 0 && Math.floor((duration / 60 / 60) * 10) / 10} hours</Chip>}
         />
         <ListItem
           header="The time is based on your location and timezone."

@@ -24,9 +24,7 @@ const TimezonePicker: FC<{
       <div className="flex justify-between w-full">
         <Labels.Label>Time Zone</Labels.Label>
         <Labels.Label>
-          {errors?.timezone && (
-            <div className="text-red-500 text-end">{errors.timezone}</div>
-          )}
+          {errors?.timezone && <div className="text-red-500 text-end">{errors.timezone}</div>}
         </Labels.Label>
       </div>
       <Select

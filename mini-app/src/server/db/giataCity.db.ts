@@ -42,10 +42,7 @@ export async function fetchCountries(search?: string): Promise<Country[]> {
 }
 
 // Function to get cities
-export async function fetchCities(
-  countryId: number,
-  search?: string
-): Promise<City[]> {
+export async function fetchCities(countryId: number, search?: string): Promise<City[]> {
   const cacheKey = `cities:${countryId}:${search || "all"}`;
 
   const cachedResult = await redisTools.getCache(cacheKey);
@@ -100,9 +97,7 @@ export async function fetchCityById(cityId: number): Promise<City | undefined> {
 }
 
 // Function to get country by ID
-export async function fetchCountryById(
-  countryId: number
-): Promise<Country | undefined> {
+export async function fetchCountryById(countryId: number): Promise<Country | undefined> {
   const cacheKey = redisTools.cacheKeys.country + countryId;
 
   const cachedResult = await redisTools.getCache(cacheKey);

@@ -1,11 +1,4 @@
-import {
-  index,
-  integer,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { index, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
 import { relations } from "drizzle-orm";
 import { userEventFields } from "@/db/schema/userEventFields";

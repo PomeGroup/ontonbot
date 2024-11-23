@@ -79,10 +79,7 @@ export const sendCode = async (telegramUserId: number, code: string) => {
   }
 };
 // Send a simple Telegram message without a link
-export const sendTelegramMessageNoLink = async (
-  chat_id: string | number,
-  message: string
-) => {
+export const sendTelegramMessageNoLink = async (chat_id: string | number, message: string) => {
   try {
     const response = await sendTelegramMessage({
       chat_id,

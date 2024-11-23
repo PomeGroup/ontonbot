@@ -23,9 +23,7 @@ export const users = pgTable(
   },
   (table) => ({
     usernameIdx: index("users_username_idx").on(table.username),
-    walletAddressIdx: index("users_wallet_address_idx").on(
-      table.wallet_address
-    ),
+    walletAddressIdx: index("users_wallet_address_idx").on(table.wallet_address),
     roleIdx: index("users_role_idx").on(table.role),
     createdAtIdx: index("users_created_at_idx").on(table.created_at),
     updatedAtIdx: index("users_updated_at_idx").on(table.updatedAt),

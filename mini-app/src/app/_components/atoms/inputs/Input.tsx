@@ -17,10 +17,7 @@ const Input: React.FC<InputProps> = ({
   className = "",
   ...rest // captures all other props
 }) => {
-  const inputClass = cn(
-    "w-full h-10 rounded-lg border border-cn-separator p-2",
-    className
-  );
+  const inputClass = cn("w-full h-10 rounded-lg border border-cn-separator p-2", className);
 
   return (
     <input

@@ -1,10 +1,4 @@
-import {
-  pgTable,
-  varchar,
-  text,
-  primaryKey,
-  boolean,
-} from "drizzle-orm/pg-core";
+import { pgTable, varchar, text, primaryKey, boolean } from "drizzle-orm/pg-core";
 import { developmentEnvironment } from "@/db/schema";
 
 export const ontoSetting = pgTable(

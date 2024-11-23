@@ -12,10 +12,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
     // Extract code from query or set default
     const url = new URL(req.url);
-    const code =
-      url.searchParams.get("code") ||
-      configProtected?.dealRoomRefreshCode ||
-      "";
+    const code = url.searchParams.get("code") || configProtected?.dealRoomRefreshCode || "";
     // Call the separate fetch function
     const result = await dealRoomService.RefreshGuestList(code);
     return Response.json(result);

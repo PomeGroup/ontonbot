@@ -1,13 +1,4 @@
-import {
-  bigint,
-  index,
-  integer,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { bigint, index, integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { ticketStatus } from "@/db/schema";
 import { orders } from "@/db/schema/orders";
 import { events } from "@/db/schema/events";
@@ -30,9 +21,7 @@ export const tickets = pgTable(
     ticket_id: integer("event_ticket_id")
       .references(() => eventTicket.id)
       .notNull(),
-    user_id: bigint("user_id", { mode: "number" }).references(
-      () => users.user_id
-    ),
+    user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
       mode: "date",

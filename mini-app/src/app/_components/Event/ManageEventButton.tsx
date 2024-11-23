@@ -8,10 +8,7 @@ export const ManageEventButton = () => {
   const { eventData, eventHash } = useEventData();
   const router = useRouter();
 
-  if (
-    authorized &&
-    (role === "admin" || user?.user_id === eventData.data?.owner)
-  ) {
+  if (authorized && (role === "admin" || user?.user_id === eventData.data?.owner)) {
     return (
       <MainButton
         text="Manage Event"

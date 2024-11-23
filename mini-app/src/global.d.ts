@@ -49,12 +49,8 @@ declare global {
   }
 
   interface HapticFeedback {
-    impactOccurred: (
-      _style: "light" | "medium" | "heavy" | "rigid" | "soft"
-    ) => HapticFeedback;
-    notificationOccurred: (
-      _type: "error" | "success" | "warning"
-    ) => HapticFeedback;
+    impactOccurred: (_style: "light" | "medium" | "heavy" | "rigid" | "soft") => HapticFeedback;
+    notificationOccurred: (_type: "error" | "success" | "warning") => HapticFeedback;
     selectionChanged: () => HapticFeedback;
   }
 
@@ -79,12 +75,7 @@ declare global {
       _keys: Array<CloudStorageKey>,
       _callback?: (_error: string | null, _result?: CloudStorageItems) => void
     ) => void;
-    getKeys: (
-      _callback?: (
-        _error: string | null,
-        _result?: Array<CloudStorageKey>
-      ) => void
-    ) => void;
+    getKeys: (_callback?: (_error: string | null, _result?: Array<CloudStorageKey>) => void) => void;
     removeItem: (
       _key: CloudStorageKey,
       _callback?: (_error: string | null, _result?: boolean) => void
@@ -202,14 +193,8 @@ declare global {
     initDataUnsafe: WebAppInitData;
     initData: string;
     colorScheme: "light" | "dark";
-    onEvent: <T extends EventNames>(
-      _eventName: T,
-      _callback: (_params: EventParams[T]) => unknown
-    ) => void;
-    offEvent: <T extends EventNames>(
-      _eventName: T,
-      _callback: (_params: EventParams[T]) => unknown
-    ) => void;
+    onEvent: <T extends EventNames>(_eventName: T, _callback: (_params: EventParams[T]) => unknown) => void;
+    offEvent: <T extends EventNames>(_eventName: T, _callback: (_params: EventParams[T]) => unknown) => void;
     sendData: (_data: unknown) => void;
     close: VoidFunction;
     expand: VoidFunction;
@@ -221,31 +206,15 @@ declare global {
     BackButton: BackButton;
     version: string;
     isVersionAtLeast: (_version: string) => boolean;
-    openInvoice: (
-      _url: string,
-      _callback?: (_status: InvoiceStatuses) => unknown
-    ) => void;
-    setHeaderColor: (
-      _color: "bg_color" | "secondary_bg_color" | `#${string}`
-    ) => void;
-    setBackgroundColor: (
-      _color: "bg_color" | "secondary_bg_color" | `#${string}`
-    ) => void;
-    showConfirm: (
-      _message: string,
-      _callback?: (_confirmed: boolean) => void
-    ) => void;
-    showPopup: (
-      _params: PopupParams,
-      _callback?: (_id?: string) => unknown
-    ) => void;
+    openInvoice: (_url: string, _callback?: (_status: InvoiceStatuses) => unknown) => void;
+    setHeaderColor: (_color: "bg_color" | "secondary_bg_color" | `#${string}`) => void;
+    setBackgroundColor: (_color: "bg_color" | "secondary_bg_color" | `#${string}`) => void;
+    showConfirm: (_message: string, _callback?: (_confirmed: boolean) => void) => void;
+    showPopup: (_params: PopupParams, _callback?: (_id?: string) => unknown) => void;
     showAlert: (_message: string, _callback?: () => unknown) => void;
     enableClosingConfirmation: VoidFunction;
     disableClosingConfirmation: VoidFunction;
-    showScanQrPopup: (
-      _params: ScanQrPopupParams,
-      _callback?: (_text: string) => void | true
-    ) => void;
+    showScanQrPopup: (_params: ScanQrPopupParams, _callback?: (_text: string) => void | true) => void;
     closeScanQrPopup: () => void;
     readTextFromClipboard: (_callback?: (_text: string) => unknown) => void;
     ready: VoidFunction;

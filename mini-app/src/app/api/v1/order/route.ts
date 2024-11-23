@@ -14,9 +14,7 @@ const addOrderSchema = z.object({
   company: z.string(),
   position: z.string(),
   utm: z.string().nullable(),
-  owner_address: z
-    .string()
-    .refine((data) => Address.isAddress(Address.parse(data))),
+  owner_address: z.string().refine((data) => Address.isAddress(Address.parse(data))),
 });
 
 export async function POST(request: Request) {
@@ -35,7 +33,6 @@ export async function POST(request: Request) {
     });
   }
 
-
   const eventTicket = await db.query.eventTicket.findFirst({
     where(fields, { eq }) {
       return eq(fields.id, body.data.event_ticket_id);
@@ -48,11 +45,7 @@ export async function POST(request: Request) {
     .where(
       and(
         eq(orders.event_ticket_id, body.data.event_ticket_id),
-        or(
-          eq(orders.state, "minted"),
-          eq(orders.state, "created"),
-          eq(orders.state, "mint_request")
-        )
+        or(eq(orders.state, "minted"), eq(orders.state, "created"), eq(orders.state, "mint_request"))
       )
     )
     .execute();
@@ -73,11 +66,7 @@ export async function POST(request: Request) {
       return and(
         eq(fields.user_id, userId),
         eq(fields.event_ticket_id, eventTicket.id),
-        or(
-          eq(fields.state, "created"),
-          eq(fields.state, "minted"),
-          eq(fields.state, "mint_request")
-        )
+        or(eq(fields.state, "created"), eq(fields.state, "minted"), eq(fields.state, "mint_request"))
       );
     },
   });
@@ -123,7 +112,7 @@ export async function POST(request: Request) {
   return Response.json({
     order_id: new_order?.uuid,
     message: "order created successfully",
-    utm_tag : body.data.utm,
+    utm_tag: body.data.utm,
   });
 }
 
@@ -138,12 +127,7 @@ export async function PATCH() {
       updatedBy: "system",
       updatedAt: new Date(),
     })
-    .where(
-      and(
-        eq(orders.state, "created"),
-        lt(orders.created_at, new Date(Date.now() - 1000 * 60 * 10))
-      )
-    );
+    .where(and(eq(orders.state, "created"), lt(orders.created_at, new Date(Date.now() - 1000 * 60 * 10))));
 
   return Response.json({
     message: "orders updated",

@@ -46,9 +46,9 @@ const ERROR_CODES = {
 export async function GET(request: Request) {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
-      success: false,
-      error: "out_of_service",}
-  )
+    success: false,
+    error: "out_of_service",
+  });
   // // Validate JWT token from the request
   // const jwtValidation = await validateJwtFromRequest(request);
 

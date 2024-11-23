@@ -77,9 +77,7 @@ export const SelectLocation = () => {
           value: city.id.toString(),
         }))}
         placeholder="Select a city"
-        onInputChange={(inputValue) =>
-          !isCityDisabled && setCitySearch(inputValue)
-        } // Disable input change if no country is selected
+        onInputChange={(inputValue) => !isCityDisabled && setCitySearch(inputValue)} // Disable input change if no country is selected
         defaultValue={eventData?.cityId?.toString()}
         onSelect={(data) => {
           if (data && !isCityDisabled) {
@@ -91,11 +89,7 @@ export const SelectLocation = () => {
           "w-full",
           isCityDisabled && "opacity-50 cursor-not-allowed" // Add disabled style
         )}
-        searchPlaceholder={
-          isCityDisabled
-            ? "Select a country first..."
-            : "Type to search for cities..."
-        }
+        searchPlaceholder={isCityDisabled ? "Select a country first..." : "Type to search for cities..."}
         disabled={isCityDisabled}
       />
     </Block>

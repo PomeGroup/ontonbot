@@ -11,10 +11,7 @@ import { NFTItem } from "@/server/routers/services/tonCenter";
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 
 // Helper function for retrying the HTTP request
-async function getRequestWithRetry(
-  uri: string,
-  retries: number = 3
-): Promise<any> {
+async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
   let attempt = 0;
   while (attempt < retries) {
     try {
@@ -37,10 +34,7 @@ async function getValidNfts(
   collectionAddress: string,
   userId: number
 ): Promise<{ valid_nfts_no_info: NFTItem[]; valid_nfts_with_info: NFTItem[] }> {
-  const wallet_nfts = await tonCenter.fetchNFTItemsWithRetry(
-    ownerAddress,
-    collectionAddress
-  );
+  const wallet_nfts = await tonCenter.fetchNFTItemsWithRetry(ownerAddress, collectionAddress);
 
   const valid_nfts_no_info: NFTItem[] = [];
   const valid_nfts_with_info: NFTItem[] = [];
@@ -63,20 +57,14 @@ async function getValidNfts(
 
         // Check if there's exactly one ticket for this NFT
         if (ticketsResult.length !== 1) {
-          console.error(
-            `Unexpected number of tickets found for NFT ${nft.address}`
-          );
+          console.error(`Unexpected number of tickets found for NFT ${nft.address}`);
           continue;
         }
 
         const ticket = ticketsResult[0];
 
         // Ensure the ticket is UNUSED and the NFT is not revoked
-        if (
-          ticket &&
-          ticket.status === "UNUSED" &&
-          !name.toLowerCase().includes("revoked")
-        ) {
+        if (ticket && ticket.status === "UNUSED" && !name.toLowerCase().includes("revoked")) {
           if (ticket.user_id === userId) {
             valid_nfts_with_info.push(nft);
           } else {
@@ -92,10 +80,7 @@ async function getValidNfts(
   return { valid_nfts_no_info, valid_nfts_with_info };
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const eventId = params.id;
     const searchParams = req.nextUrl.searchParams;
@@ -117,10 +102,7 @@ export async function GET(
 
     if (!organizer) {
       console.error(`Organizer not found for event ID: ${eventId}`);
-      return Response.json(
-        { error: `Organizer not found for event ID: ${eventId}` },
-        { status: 400 }
-      );
+      return Response.json({ error: `Organizer not found for event ID: ${eventId}` }, { status: 400 });
     }
 
     let ticket;
@@ -141,18 +123,13 @@ export async function GET(
       .where(
         and(
           eq(orders.event_uuid, event.event_uuid as string),
-          or(
-            eq(orders.state, "minted"),
-            eq(orders.state, "created"),
-            eq(orders.state, "mint_request")
-          )
+          or(eq(orders.state, "minted"), eq(orders.state, "created"), eq(orders.state, "mint_request"))
         )
       )
       .execute();
 
     const isSoldOut =
-      (soldTicketsCount[0].count as unknown as number) >=
-      (ticket?.count as unknown as number);
+      (soldTicketsCount[0].count as unknown as number) >= (ticket?.count as unknown as number);
 
     if (dataOnly === "true") {
       return Response.json(
@@ -238,8 +215,7 @@ export async function GET(
       userId
     );
 
-    const userHasTicket =
-      !!valid_nfts_no_info.length || !!valid_nfts_with_info.length;
+    const userHasTicket = !!valid_nfts_no_info.length || !!valid_nfts_with_info.length;
     // const userHasTicket = (
     //   await db
     //     .select()

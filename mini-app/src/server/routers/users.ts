@@ -17,21 +17,17 @@ import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
 
 export const usersRouter = router({
-  validateUserInitData: publicProcedure
-    .input(z.string())
-    .query(async (opts) => {
-      return validateMiniAppData(opts.input);
-    }),
+  validateUserInitData: publicProcedure.input(z.string()).query(async (opts) => {
+    return validateMiniAppData(opts.input);
+  }),
 
-  haveAccessToEventAdministration: adminOrganizerProtectedProcedure.query(
-    async (opts) => {
-      return {
-        valid: true,
-        role: opts.ctx.userRole,
-        user: opts.ctx.user,
-      } as const;
-    }
-  ),
+  haveAccessToEventAdministration: adminOrganizerProtectedProcedure.query(async (opts) => {
+    return {
+      valid: true,
+      role: opts.ctx.userRole,
+      user: opts.ctx.user,
+    } as const;
+  }),
 
   // private
   syncUser: initDataProtectedProcedure.query(async (opts) => {
@@ -56,11 +52,7 @@ export const usersRouter = router({
       })
     )
     .mutation(async (opts) => {
-      await usersDB.updateWallet(
-        opts.ctx.user.user_id,
-        opts.input.wallet,
-        opts.ctx.user.user_id.toString()
-      );
+      await usersDB.updateWallet(opts.ctx.user.user_id, opts.input.wallet, opts.ctx.user.user_id.toString());
     }),
 
   // private
@@ -81,11 +73,7 @@ export const usersRouter = router({
         return;
       }
 
-      await usersDB.updateWallet(
-        initDataJson.user.id,
-        "",
-        initDataJson.user.id.toString()
-      );
+      await usersDB.updateWallet(initDataJson.user.id, "", initDataJson.user.id.toString());
     }),
 
   createUserReward: initDataProtectedProcedure
@@ -114,17 +102,13 @@ export const usersRouter = router({
 
         await visitorService.addVisitor(opts);
         // Fetch the visitor from the database
-        const visitor = await findVisitorByUserAndEventUuid(
-          opts.ctx.user.user_id,
-          opts.input.event_uuid
-        );
+        const visitor = await findVisitorByUserAndEventUuid(opts.ctx.user.user_id, opts.input.event_uuid);
 
         // Check if visitor exists
         if (!visitor) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message:
-              "Visitor not found with the provided user ID and event UUID.",
+            message: "Visitor not found with the provided user ID and event UUID.",
           });
         }
 
@@ -196,8 +180,7 @@ export const usersRouter = router({
         } else {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message:
-              "An unexpected error occurred while retrieving visitor reward.",
+            message: "An unexpected error occurred while retrieving visitor reward.",
           });
         }
       }

@@ -19,10 +19,7 @@ const updateTicketSchema = z.object({
   proof_token: z.string(),
 });
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { nftaddress: string } }
-) {
+export async function PUT(req: NextRequest, { params }: { params: { nftaddress: string } }) {
   try {
     const nft_address = params.nftaddress;
 
@@ -43,9 +40,7 @@ export async function PUT(
     /* -------------------------------------------------------------------------- */
 
     if (unauthorized) {
-      console.warn(
-        `Unauthorized access attempt for ticket update: ${nft_address}`
-      );
+      console.warn(`Unauthorized access attempt for ticket update: ${nft_address}`);
       return unauthorized;
     }
 
@@ -105,11 +100,7 @@ export async function PUT(
     }
 
     const walletAddress = decoded.address;
-    const nftItem = await tonCenter.fetchNFTItemsWithRetry(
-      walletAddress,
-      "",
-      nft_address
-    );
+    const nftItem = await tonCenter.fetchNFTItemsWithRetry(walletAddress, "", nft_address);
     // Check if nftItem is valid and contains nft_items
     if (!nftItem || !nftItem.nft_items || nftItem.nft_items.length === 0) {
       return Response.json(
@@ -136,16 +127,10 @@ export async function PUT(
       .where(eq(tickets.nftAddress, nft_address))
       .execute();
     // log user id ticket id and other info
-    console.log(
-      `route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`
-    );
+    console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
     // Call the separate fetch function
-    const result = await dealRoomService.RefreshGuestList(
-      configProtected?.dealRoomRefreshCode || ""
-    );
-    console.log(
-      `route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`
-    );
+    const result = await dealRoomService.RefreshGuestList(configProtected?.dealRoomRefreshCode || "");
+    console.log(`route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`);
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
     if (error instanceof SyntaxError)

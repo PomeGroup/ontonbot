@@ -21,9 +21,7 @@ export function UserRegistrationForm() {
         footer="Enable user registration to allow attendees to fill out details like name, company, position, and notes during the event sign-up."
         after={
           <Toggle
-            onChange={() =>
-              setEventData({ has_registration: !eventData?.has_registration })
-            }
+            onChange={() => setEventData({ has_registration: !eventData?.has_registration })}
             className={cn({ "opacity-50": editOtions?.eventHash })}
             readOnly={Boolean(editOtions?.eventHash)}
             disabled={Boolean(editOtions?.eventHash)}
@@ -41,9 +39,7 @@ export function UserRegistrationForm() {
             after={
               <Toggle
                 component="div"
-                onChange={() =>
-                  setEventData({ has_approval: !eventData?.has_approval })
-                }
+                onChange={() => setEventData({ has_approval: !eventData?.has_approval })}
                 checked={eventData?.has_approval}
               />
             }
@@ -54,18 +50,14 @@ export function UserRegistrationForm() {
               <p className="space-x-4">
                 <span>Capacity</span>
                 <small className={"dark:text-zinc-400"}>
-                  {eventData.capacity !== null
-                    ? eventData.capacity
-                    : "unlimited"}
+                  {eventData.capacity !== null ? eventData.capacity : "unlimited"}
                 </small>
               </p>
             }
             media={<ArrowUpToLine />}
             after={
               <Toggle
-                onChange={() =>
-                  setEventData({ capacity: eventData?.capacity ? null : 100 })
-                }
+                onChange={() => setEventData({ capacity: eventData?.capacity ? null : 100 })}
                 component="div"
                 checked={eventData?.capacity !== null}
               />
@@ -95,9 +87,7 @@ export function UserRegistrationForm() {
               name="capacity"
               inputMode="number"
               defaultValue={eventData.capacity}
-              inputClassName={cn(
-                "placeholder:tracking-[.2rem] tracking-widest"
-              )}
+              inputClassName={cn("placeholder:tracking-[.2rem] tracking-widest")}
               placeholder={"100"}
               outline
               info="Automatically close registration once capacity is reached, counting only approved guests."

@@ -1,10 +1,7 @@
 // The integration with ton society apis will be here
 import { TonSocietyRegisterActivityResponse } from "@/types/event.types";
 import { TSAPIoperations } from "@/types/ton-society-api-types";
-import {
-  CreateUserRewardLinkReturnType,
-  type CreateUserRewardLinkInputType,
-} from "@/types/user.types";
+import { CreateUserRewardLinkReturnType, type CreateUserRewardLinkInputType } from "@/types/user.types";
 import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import axios, { AxiosError } from "axios";
@@ -89,9 +86,6 @@ export async function updateActivity(
       code: "BAD_REQUEST",
       message: "event does not have a valid activity id",
     });
-  const response = await tonSocietyClient.patch(
-    `/activities/${activity_id}`,
-    activityDetails
-  );
+  const response = await tonSocietyClient.patch(`/activities/${activity_id}`, activityDetails);
   return response.data as { status: "success"; data: {} };
 }

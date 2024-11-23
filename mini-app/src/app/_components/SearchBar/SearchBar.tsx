@@ -70,22 +70,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const UserId = webApp?.initDataUnsafe?.user?.id || 0;
   type SortBy = SearchEventsInput["sortBy"];
-  type ParticipationType = NonNullable<
-    SearchEventsInput["filter"]
-  >["participationType"];
-  type SocietyHubId = NonNullable<
-    SearchEventsInput["filter"]
-  >["society_hub_id"];
-  const [sortBy, setSortBy] = useState<SortBy>(
-    searchInput?.sortBy ? searchInput.sortBy : "start_date_desc"
-  );
+  type ParticipationType = NonNullable<SearchEventsInput["filter"]>["participationType"];
+  type SocietyHubId = NonNullable<SearchEventsInput["filter"]>["society_hub_id"];
+  const [sortBy, setSortBy] = useState<SortBy>(searchInput?.sortBy ? searchInput.sortBy : "start_date_desc");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showDialogParticipantError, setShowDialogParticipantError] =
-    useState(false);
+  const [showDialogParticipantError, setShowDialogParticipantError] = useState(false);
   const allParticipationTypes: ParticipationType = ["online", "in_person"];
-  const [participationType, setParticipationType] = useState<ParticipationType>(
-    ["online", "in_person"]
-  );
+  const [participationType, setParticipationType] = useState<ParticipationType>(["online", "in_person"]);
 
   const [selectedHubs, setSelectedHubs] = useState<string[]>([]);
   const [applyingFilters, setApplyingFilters] = useState(false);
@@ -117,23 +108,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, [hubsResponse.data?.status]);
 
-  const { searchTerm, setSearchTerm, autoSuggestions, setAutoSuggestions } =
-    useSearchEvents();
+  const { searchTerm, setSearchTerm, autoSuggestions, setAutoSuggestions } = useSearchEvents();
 
   const [initialHubsSet, setInitialHubsSet] = useState(false);
   // const [pageInit, setPageInit] = useState(false);
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
-      const participantFromQuery =
-        searchParams.get("participationType")?.split(",") || [];
+      const participantFromQuery = searchParams.get("participationType")?.split(",") || [];
       const participationType =
-        participantFromQuery.length > 0 && participantFromQuery.length !== 2
-          ? participantFromQuery
-          : [];
+        participantFromQuery.length > 0 && participantFromQuery.length !== 2 ? participantFromQuery : [];
 
-      const selectedHubsFromParams =
-        searchParams.get("selectedHubs")?.split(",") || [];
+      const selectedHubsFromParams = searchParams.get("selectedHubs")?.split(",") || [];
       const sortBy = searchParams.get("sortBy") || "start_date_desc";
       const searchTerm = searchParams.get("query") || "";
 
@@ -184,9 +170,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setShowFilterButton(true);
   };
 
-  const handleSearchInputChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = event.target.value;
     // check is focus
     const isFocus = event.target === document.activeElement;
@@ -223,9 +207,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       );
 
       // Ensure selectedHubs are converted from string[] to number[]
-      const society_hub_id: SocietyHubId = selectedHubs
-        .map(Number)
-        .filter((id) => !isNaN(id)); // Ensure only valid numbers are included
+      const society_hub_id: SocietyHubId = selectedHubs.map(Number).filter((id) => !isNaN(id)); // Ensure only valid numbers are included
       // @ts-ignore
       storeSetSelectedHubs({ society_hub_id: society_hub_id });
       storeSetParticipationType(participationTypeStore);
@@ -331,9 +313,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const toggleHubSelection = (hubId: string) => {
     setSelectedHubs((prev) => {
-      return prev.includes(hubId)
-        ? prev.filter((id) => id !== hubId)
-        : [...prev, hubId];
+      return prev.includes(hubId) ? prev.filter((id) => id !== hubId) : [...prev, hubId];
     });
     hapticFeedback?.selectionChanged();
   };
@@ -371,24 +351,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
   };
 
   useEffect(() => {
-    if (
-      (userRole === "admin" || userRole === "organizer") &&
-      pathname === "/"
-    ) {
+    if ((userRole === "admin" || userRole === "organizer") && pathname === "/") {
       if (HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log(
-          "+++++HideMainButton isVisible",
-          WebApp?.MainButton.isVisible
-        );
+        console.log("+++++HideMainButton isVisible", WebApp?.MainButton.isVisible);
         WebApp?.MainButton.hide();
         WebApp?.MainButton.hide();
       } else if (!HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log(
-          "++++ShowMainButton isVisible",
-          WebApp?.MainButton.isVisible
-        );
+        console.log("++++ShowMainButton isVisible", WebApp?.MainButton.isVisible);
         WebApp?.MainButton.show();
         WebApp?.MainButton.show();
       }
@@ -465,9 +436,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     const scrollArea = scrollAreaRef.current;
     if (scrollArea) {
       setShowLeftArrow(scrollArea.scrollLeft > 0);
-      setShowRightArrow(
-        scrollArea.scrollLeft < scrollArea.scrollWidth - scrollArea.clientWidth
-      );
+      setShowRightArrow(scrollArea.scrollLeft < scrollArea.scrollWidth - scrollArea.clientWidth);
     }
   };
   const handleShowAll = () => {
@@ -488,9 +457,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         >
           <input
             type="text"
-            placeholder={
-              tabValue === "" ? "Search All Events" : `Search ${tabValue} `
-            }
+            placeholder={tabValue === "" ? "Search All Events" : `Search ${tabValue} `}
             className="w-full pl-10 pr-10 p-2 rounded-2xl bg-gray-800 text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-blue-600 focus:outline-none transition-width duration-300"
             onChange={handleSearchInputChange}
             onKeyDown={handleKeyDown}
@@ -570,9 +537,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
           >
-            <div className="flex w-max space-x-2 p-2 pt-0">
-              {renderFilterButtons()}
-            </div>
+            <div className="flex w-max space-x-2 p-2 pt-0">{renderFilterButtons()}</div>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
 

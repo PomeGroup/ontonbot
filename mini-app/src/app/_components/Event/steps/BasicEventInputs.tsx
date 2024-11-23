@@ -9,9 +9,7 @@ const BasicEventInputs = () => {
   const errors = useCreateEventStore((state) => state.generalStepErrors);
   const eventData = useCreateEventStore((state) => state.eventData);
   const setEventData = useCreateEventStore((state) => state.setEventData);
-  const clearImageError = useCreateEventStore(
-    (state) => state.clearImageErrors
-  );
+  const clearImageError = useCreateEventStore((state) => state.clearImageErrors);
 
   return (
     <FormBlock title="Basic">

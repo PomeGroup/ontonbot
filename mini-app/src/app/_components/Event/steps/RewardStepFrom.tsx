@@ -41,12 +41,10 @@ export const RewardForm = ({
           value={passwordValue}
           info={
             <div className="space-y-1">
+              <p>Password is case-insensitive and must be at least 4 characters.</p>
               <p>
-                Password is case-insensitive and must be at least 4 characters.
-              </p>
-              <p>
-                By setting a password for the event, you can prevent checking-in
-                unexpectedly and receiving a reward without attending the event.
+                By setting a password for the event, you can prevent checking-in unexpectedly and receiving a
+                reward without attending the event.
               </p>
             </div>
           }

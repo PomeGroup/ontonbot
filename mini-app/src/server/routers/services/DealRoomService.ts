@@ -9,9 +9,7 @@ import axios from "axios";
 const dealRoomBaseUrl = "https://letsgo.dealroomevents.com/v1/";
 export const RefreshGuestList = async (code: string) => {
   try {
-    const response = await axios.get(
-      `${dealRoomBaseUrl}url/action?code=${code}`
-    );
+    const response = await axios.get(`${dealRoomBaseUrl}url/action?code=${code}`);
 
     if (response.status === 200 && response.data.success === true) {
       return { success: true, message: "share message sent successfully" };

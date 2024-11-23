@@ -13,9 +13,7 @@ export const AgendaStep = () => {
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
   const [agenda, setAgenda] = useState(
-    eventData?.agenda || [
-      { header: "", items: [{ time: "", title: "", description: "" }] },
-    ]
+    eventData?.agenda || [{ header: "", items: [{ time: "", title: "", description: "" }] }]
   );
 
   // Convert eventData.start_date to 'HH:MM' format if start_date exists
@@ -47,10 +45,7 @@ export const AgendaStep = () => {
       i === headerIndex
         ? {
             ...header,
-            items: [
-              ...header.items,
-              { time: getDefaultTime(), title: "", description: "" },
-            ],
+            items: [...header.items, { time: getDefaultTime(), title: "", description: "" }],
           }
         : header
     );
@@ -59,9 +54,7 @@ export const AgendaStep = () => {
 
   const handleRemoveItem = (headerIndex: number, itemIndex: number) => {
     const updatedAgenda = agenda.map((header, i) =>
-      i === headerIndex
-        ? { ...header, items: header.items.filter((_, j) => j !== itemIndex) }
-        : header
+      i === headerIndex ? { ...header, items: header.items.filter((_, j) => j !== itemIndex) } : header
     );
     setAgenda(updatedAgenda);
   };
@@ -105,9 +98,7 @@ export const AgendaStep = () => {
               <Input
                 placeholder="Header"
                 value={header.header}
-                onChange={(e) =>
-                  handleInputChange(headerIndex, null, "header", e.target.value)
-                }
+                onChange={(e) => handleInputChange(headerIndex, null, "header", e.target.value)}
               />
               <Button
                 variant="outline"
@@ -128,28 +119,14 @@ export const AgendaStep = () => {
                   type="time"
                   placeholder="Time"
                   value={item.time || getDefaultTime()}
-                  onChange={(e) =>
-                    handleInputChange(
-                      headerIndex,
-                      itemIndex,
-                      "time",
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => handleInputChange(headerIndex, itemIndex, "time", e.target.value)}
                   className="w-[120px]"
                 />
                 {/* Title Input - now takes up remaining space */}
                 <Input
                   placeholder="Title"
                   value={item.title}
-                  onChange={(e) =>
-                    handleInputChange(
-                      headerIndex,
-                      itemIndex,
-                      "title",
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => handleInputChange(headerIndex, itemIndex, "title", e.target.value)}
                 />
                 {/* Delete Button spans both rows */}
                 <Button
@@ -164,14 +141,7 @@ export const AgendaStep = () => {
                 <Textarea
                   placeholder="Description"
                   value={item.description}
-                  onChange={(e) =>
-                    handleInputChange(
-                      headerIndex,
-                      itemIndex,
-                      "description",
-                      e.target.value
-                    )
-                  }
+                  onChange={(e) => handleInputChange(headerIndex, itemIndex, "description", e.target.value)}
                   className="resize-none overflow-hidden min-h-[56px] col-span-2"
                   rows={2}
                   style={{ height: "auto" }}

@@ -49,22 +49,25 @@ export default function Home() {
   const [sideEventsState, setSideEventsState] = useState<EventData>([]);
 
   // Queries without caching
-  const { data: sliderEventData, isLoading: isLoadingSlider } =
-    trpc.events.getEventsWithFilters.useQuery(sliderEventParams, {
+  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery(
+    sliderEventParams,
+    {
       cacheTime: 10000,
       enabled: sliderEventsState.length === 0,
-    });
+    }
+  );
 
-  const { data: sideEventData, isLoading: isLoadingSide } =
-    trpc.events.getEventsWithFilters.useQuery(slideEventParams, {
+  const { data: sideEventData, isLoading: isLoadingSide } = trpc.events.getEventsWithFilters.useQuery(
+    slideEventParams,
+    {
       cacheTime: 10000,
       enabled: sliderEventsState.length === 0,
-    });
+    }
+  );
   useEffect(() => {
     if (sliderEventData?.data && sliderEventData?.data?.length > 0)
       setSliderEventsState(sliderEventData.data);
-    if (sideEventData?.data && sideEventData?.data?.length > 0)
-      setSideEventsState(sideEventData.data);
+    if (sideEventData?.data && sideEventData?.data?.length > 0) setSideEventsState(sideEventData.data);
   }, [sliderEventData, sideEventData]);
   return (
     <>

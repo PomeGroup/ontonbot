@@ -28,17 +28,13 @@ export class TonProofService {
     getWalletPublicKey: (address: string) => Promise<Buffer | null>
   ): Promise<boolean> {
     try {
-      const stateInit = loadStateInit(
-        Cell.fromBase64(payload.proof.state_init).beginParse()
-      );
+      const stateInit = loadStateInit(Cell.fromBase64(payload.proof.state_init).beginParse());
 
       // 1. First, try to obtain public key via get_public_key get-method on smart contract deployed at Address.
       // 2. If the smart contract is not deployed yet, or the get-method is missing, you need:
       //  2.1. Parse TonAddressItemReply.walletStateInit and get public key from stateInit. You can compare the walletStateInit.code
       //  with the code of standard wallets contracts and parse the data according to the found wallet version.
-      let publicKey =
-        tryParsePublicKey(stateInit) ??
-        (await getWalletPublicKey(payload.address));
+      let publicKey = tryParsePublicKey(stateInit) ?? (await getWalletPublicKey(payload.address));
       if (!publicKey) {
         return false;
       }
@@ -109,11 +105,7 @@ export class TonProofService {
       const msgHash = Buffer.from(await sha256(msg));
 
       // signature = Ed25519Sign(privkey, sha256(0xffff ++ utf8_encode("ton-connect") ++ sha256(message)))
-      const fullMsg = Buffer.concat([
-        Buffer.from([0xff, 0xff]),
-        Buffer.from(tonConnectPrefix),
-        msgHash,
-      ]);
+      const fullMsg = Buffer.concat([Buffer.from([0xff, 0xff]), Buffer.from(tonConnectPrefix), msgHash]);
 
       const result = Buffer.from(await sha256(fullMsg));
 

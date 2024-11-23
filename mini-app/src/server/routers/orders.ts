@@ -15,9 +15,7 @@ export const ordersRouter = router({
         telegram: z.string(),
         company: z.string(),
         position: z.string(),
-        owner_address: z
-          .string()
-          .refine((data) => Address.isAddress(Address.parse(data))),
+        owner_address: z.string().refine((data) => Address.isAddress(Address.parse(data))),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -36,11 +34,7 @@ export const ordersRouter = router({
         .where(
           and(
             eq(orders.event_ticket_id, body.event_ticket_id),
-            or(
-              eq(orders.state, "minted"),
-              eq(orders.state, "created"),
-              eq(orders.state, "mint_request")
-            )
+            or(eq(orders.state, "minted"), eq(orders.state, "created"), eq(orders.state, "mint_request"))
           )
         )
         .execute();
@@ -57,11 +51,7 @@ export const ordersRouter = router({
           return and(
             eq(fields.user_id, userId),
             eq(fields.event_ticket_id, eventTicket.id),
-            or(
-              eq(fields.state, "created"),
-              eq(fields.state, "minted"),
-              eq(fields.state, "mint_request")
-            )
+            or(eq(fields.state, "created"), eq(fields.state, "minted"), eq(fields.state, "mint_request"))
           );
         },
       });

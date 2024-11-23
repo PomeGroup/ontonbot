@@ -1,12 +1,4 @@
-import {
-  index,
-  integer,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { index, integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
 
 export const eventTicket = pgTable(
@@ -31,9 +23,7 @@ export const eventTicket = pgTable(
     eventUuidIdx: index("eventt_event_uuid_idx").on(table.event_uuid),
     titleIdx: index("eventt_title_idx").on(table.title),
     priceIdx: index("eventt_price_idx").on(table.price),
-    collectionAddressIdx: index("eventt_collection_address_idx").on(
-      table.collectionAddress
-    ),
+    collectionAddressIdx: index("eventt_collection_address_idx").on(table.collectionAddress),
     createdAtIdx: index("eventt_created_at_idx").on(table.created_at),
     updatedAtIdx: index("eventt_updated_at_idx").on(table.updatedAt),
   })

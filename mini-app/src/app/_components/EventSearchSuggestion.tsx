@@ -36,10 +36,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
         startDateOperator: searchInput?.filter?.startDateOperator || ">=",
         endDate: searchInput?.filter?.endDate || undefined,
         endDateOperator: searchInput?.filter?.endDateOperator || "<=",
-        participationType: searchInput?.filter?.participationType || [
-          "online",
-          "in_person",
-        ],
+        participationType: searchInput?.filter?.participationType || ["online", "in_person"],
         society_hub_id: searchInput?.filter?.society_hub_id || [],
         user_id: searchInput?.filter?.user_id || undefined,
       },
@@ -76,10 +73,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionBoxRef.current &&
-        !suggestionBoxRef.current.contains(event.target as Node)
-      ) {
+      if (suggestionBoxRef.current && !suggestionBoxRef.current.contains(event.target as Node)) {
         onClose();
       }
     };

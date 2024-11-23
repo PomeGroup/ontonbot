@@ -23,9 +23,7 @@ export const RewardStep = () => {
   } = useCreateEventStore();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [passwordDisabled, setPasswordDisabled] = useState(
-    !!editOptions?.eventHash
-  );
+  const [passwordDisabled, setPasswordDisabled] = useState(!!editOptions?.eventHash);
   const [passwordValue, setPasswordValue] = useState(
     editOptions?.eventHash ? "{** click to change password **}" : ""
   );
@@ -72,9 +70,7 @@ export const RewardStep = () => {
         ...formDataObject,
         ts_reward_url: eventData?.ts_reward_url,
         video_url: eventData?.video_url,
-        secret_phrase: passwordDisabled
-          ? undefined
-          : formDataObject.secret_phrase,
+        secret_phrase: passwordDisabled ? undefined : formDataObject.secret_phrase,
       };
 
       if (
@@ -83,12 +79,8 @@ export const RewardStep = () => {
         !editOptions?.eventHash
       ) {
         setRewardStepErrors({
-          ts_reward_url: !eventData?.ts_reward_url
-            ? ["Please upload a reward image."]
-            : undefined,
-          video_url: !eventData?.video_url
-            ? ["Please upload a video."]
-            : undefined,
+          ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
+          video_url: !eventData?.video_url ? ["Please upload a video."] : undefined,
         });
 
         toast.error(
@@ -112,8 +104,7 @@ export const RewardStep = () => {
               key="secret_phrase"
               className="flex items-center"
             >
-              <FiAlertCircle className="mr-2" />{" "}
-              {flattenedErrors.secret_phrase[0]}
+              <FiAlertCircle className="mr-2" /> {flattenedErrors.secret_phrase[0]}
             </div>
           ) : null,
           flattenedErrors.ts_reward_url ? (
@@ -122,8 +113,7 @@ export const RewardStep = () => {
               className="flex items-center"
             >
               <FiAlertCircle className="mr-2" />{" "}
-              {flattenedErrors.ts_reward_url[0] ||
-                "Please upload a reward image"}
+              {flattenedErrors.ts_reward_url[0] || "Please upload a reward image"}
             </div>
           ) : null,
         ].filter(Boolean);

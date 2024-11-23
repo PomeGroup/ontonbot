@@ -3,10 +3,7 @@ import useWebApp from "./useWebApp";
 import { useEffect } from "react";
 import { TRPCClientError } from "@trpc/client";
 
-export function useCreateRewardLink(props: {
-  eventHash: string;
-  tasksCompleted: boolean;
-}) {
+export function useCreateRewardLink(props: { eventHash: string; tasksCompleted: boolean }) {
   const WebApp = useWebApp();
   const initData = WebApp?.initData;
 

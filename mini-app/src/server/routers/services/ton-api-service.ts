@@ -36,22 +36,14 @@ export class TonApiService {
       "get_public_key",
       []
     );
-    return Buffer.from(
-      result.reader.readBigNumber().toString(16).padStart(64, "0"),
-      "hex"
-    );
+    return Buffer.from(result.reader.readBigNumber().toString(16).padStart(64, "0"), "hex");
   }
 
   /**
    * Get account info by address.
    */
-  public async getAccountInfo(
-    address: string
-  ): Promise<ReturnType<TonClient4["getAccount"]>> {
+  public async getAccountInfo(address: string): Promise<ReturnType<TonClient4["getAccount"]>> {
     const masterAt = await this.client.getLastBlock();
-    return await this.client.getAccount(
-      masterAt.last.seqno,
-      Address.parse(address)
-    );
+    return await this.client.getAccount(masterAt.last.seqno, Address.parse(address));
   }
 }

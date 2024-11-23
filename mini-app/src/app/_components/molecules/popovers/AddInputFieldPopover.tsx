@@ -3,18 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  FieldElement,
-  InputDynamicField,
-  InputDynamicFieldSchema,
-  InputField,
-  ZodErrors,
-} from "@/types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { FieldElement, InputDynamicField, InputDynamicFieldSchema, InputField, ZodErrors } from "@/types";
 import { Dispatch, SetStateAction, useState } from "react";
 
 const AddInputFieldPopover: React.FC<{
@@ -26,10 +16,7 @@ const AddInputFieldPopover: React.FC<{
   const [open, setOpen] = useState(false);
   const [zodErrors, setZodErrors] = useState<ZodErrors>({});
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    property: keyof InputField
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, property: keyof InputField) => {
     setNewField({ ...newField, [property]: e.target.value });
   };
 
@@ -77,9 +64,7 @@ const AddInputFieldPopover: React.FC<{
               <Label htmlFor="title">
                 Title
                 {zodErrors?.title && (
-                  <div className="text-red-500 col-start-3 text-[12px]">
-                    {zodErrors.title}
-                  </div>
+                  <div className="text-red-500 col-start-3 text-[12px]">{zodErrors.title}</div>
                 )}
               </Label>
               <Input
@@ -94,9 +79,7 @@ const AddInputFieldPopover: React.FC<{
               <Label htmlFor="description">
                 Description
                 {zodErrors?.description && (
-                  <div className="text-red-500 col-start-3 text-[12px]">
-                    {zodErrors.description}
-                  </div>
+                  <div className="text-red-500 col-start-3 text-[12px]">{zodErrors.description}</div>
                 )}
               </Label>
               <Input
@@ -111,9 +94,7 @@ const AddInputFieldPopover: React.FC<{
               <Label htmlFor="placeholder">
                 Placeholder
                 {zodErrors?.placeholder && (
-                  <div className="text-red-500 col-start-3 text-[12px]">
-                    {zodErrors.placeholder}
-                  </div>
+                  <div className="text-red-500 col-start-3 text-[12px]">{zodErrors.placeholder}</div>
                 )}
               </Label>
               <Input
@@ -128,9 +109,7 @@ const AddInputFieldPopover: React.FC<{
               <Label htmlFor="emoji">
                 Emoji
                 {zodErrors?.emoji && (
-                  <div className="text-red-500 col-start-3 text-[12px]">
-                    {zodErrors.emoji}
-                  </div>
+                  <div className="text-red-500 col-start-3 text-[12px]">{zodErrors.emoji}</div>
                 )}
               </Label>
               <Input

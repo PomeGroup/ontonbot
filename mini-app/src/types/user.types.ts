@@ -20,10 +20,6 @@ export const createUserRewardLinkReturnZod = z.object({
   data: rewardLinkZod,
 });
 
-export type CreateUserRewardLinkInputType = z.infer<
-  typeof createUserRewardLinkInputZod
->;
-export type CreateUserRewardLinkReturnType = z.infer<
-  typeof createUserRewardLinkReturnZod
->;
+export type CreateUserRewardLinkInputType = z.infer<typeof createUserRewardLinkInputZod>;
+export type CreateUserRewardLinkReturnType = z.infer<typeof createUserRewardLinkReturnZod>;
 export type RewardLinkType = z.infer<typeof rewardLinkZod>;

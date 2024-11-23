@@ -41,20 +41,14 @@ function cronJob(fn: (pushLockTTl: () => any) => any) {
   const cacheLockKey = redisTools.cacheKeys.cronJobLock + name;
 
   return async () => {
-    const cronLock = await redisTools.getCache(
-      redisTools.cacheKeys.cronJobLock + name
-    );
+    const cronLock = await redisTools.getCache(redisTools.cacheKeys.cronJobLock + name);
 
     if (cronLock) {
       console.log(`Cron job ${name} is already running`);
       return;
     }
 
-    await redisTools.setCache(
-      redisTools.cacheKeys.cronJobLock + name,
-      true,
-      CACHE_TTL
-    );
+    await redisTools.setCache(redisTools.cacheKeys.cronJobLock + name, true, CACHE_TTL);
 
     async function pushLockTTl() {
       try {
@@ -104,19 +98,13 @@ async function processRewardChunk(pendingRewards: RewardType[]) {
     try {
       const visitor = await findVisitorById(pendingReward.visitor_id);
       const event = await db.query.events.findFirst({
-        where: (fields, { eq }) =>
-          eq(fields.event_uuid, visitor?.event_uuid as string),
+        where: (fields, { eq }) => eq(fields.event_uuid, visitor?.event_uuid as string),
       });
 
-      const response = await createUserRewardLink(
-        event?.activity_id as number,
-        {
-          telegram_user_id: visitor?.user_id as number,
-          attributes: [
-            { trait_type: "Organizer", value: event?.society_hub as string },
-          ],
-        }
-      );
+      const response = await createUserRewardLink(event?.activity_id as number, {
+        telegram_user_id: visitor?.user_id as number,
+        attributes: [{ trait_type: "Organizer", value: event?.society_hub as string }],
+      });
       await sleep(100);
       await rewardDB.updateReward(pendingReward.id, response.data.data);
     } catch (error) {
@@ -139,11 +127,9 @@ async function notifyUsersForRewards(pushLockTTl: () => any) {
 
     offset += createdRewards.length;
 
-    const notificationPromises = createdRewards.map(
-      (createdReward) => async () => {
-        await sendRewardNotification(createdReward);
-      }
-    );
+    const notificationPromises = createdRewards.map((createdReward) => async () => {
+      await sendRewardNotification(createdReward);
+    });
 
     for (const notification of notificationPromises) {
       await notification();
@@ -175,11 +161,7 @@ async function sendRewardNotification(createdReward: RewardType) {
     }>(`/activities/${event.activity_id}/rewards/${visitor.user_id}/status`);
 
     if (rewardRes.data.data.status === "NOT_CLAIMED") {
-      await telegramService.sendRewardNotification(
-        createdReward,
-        visitor,
-        event
-      );
+      await telegramService.sendRewardNotification(createdReward, visitor, event);
     }
 
     await updateRewardStatus(createdReward.id, "notified");
@@ -197,9 +179,7 @@ async function updateRewardStatus(
     data: any;
   }
 ) {
-  const reward = (
-    await db.select().from(rewards).where(eq(rewards.id, rewardId))
-  )[0];
+  const reward = (await db.select().from(rewards).where(eq(rewards.id, rewardId)))[0];
 
   await db
     .update(rewards)
@@ -221,14 +201,7 @@ async function handleRewardError(reward: RewardType, error: any) {
   const newStatus = shouldFail ? "notification_failed" : undefined;
   const newData = shouldFail ? { fail_reason: error.message } : undefined;
 
-  console.error(
-    "handleRewardError",
-    getErrorMessages(error),
-    reward,
-    shouldFail,
-    newStatus,
-    newData
-  );
+  console.error("handleRewardError", getErrorMessages(error), reward, shouldFail, newStatus, newData);
 
   try {
     await updateRewardStatus(reward.id, newStatus, {

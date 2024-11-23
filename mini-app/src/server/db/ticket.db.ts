@@ -5,24 +5,15 @@ import { eq } from "drizzle-orm";
 
 // Function to get a ticket by its UUID
 const getTicketByUuid = async (ticketUuid: string) => {
-  const ticket = await db
-    .select()
-    .from(tickets)
-    .where(eq(tickets.order_uuid, ticketUuid))
-    .limit(1)
-    .execute();
+  const ticket = await db.select().from(tickets).where(eq(tickets.order_uuid, ticketUuid)).limit(1).execute();
 
   return ticket.length > 0 ? ticket[0] : null;
 };
 
-type CheckInTicketResult =
-  | { status: TicketStatus | null }
-  | { alreadyCheckedIn: boolean };
+type CheckInTicketResult = { status: TicketStatus | null } | { alreadyCheckedIn: boolean };
 
 // Function to check in a ticket (update its status to "USED")
-export const checkInTicket = async (
-  ticketUuid: string
-): Promise<CheckInTicketResult | null> => {
+export const checkInTicket = async (ticketUuid: string): Promise<CheckInTicketResult | null> => {
   // First, fetch the current status of the ticket
   const ticket = await db
     .select({

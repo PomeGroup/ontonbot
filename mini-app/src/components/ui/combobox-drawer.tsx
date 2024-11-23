@@ -64,9 +64,7 @@ export function ComboboxDrawer({
   // Handle when a selection is made from the list
   const handleSelect = (selectedValue: string) => {
     setValue(selectedValue); // Update the actual selected value
-    setSearch(
-      options?.find((option) => option.value === selectedValue)?.label || ""
-    ); // Update search to show the selected value
+    setSearch(options?.find((option) => option.value === selectedValue)?.label || ""); // Update search to show the selected value
     setOpen(false); // Close the drawer
     onSelect?.(selectedValue); // Call the onSelect callback if provided
   };
@@ -104,8 +102,7 @@ export function ComboboxDrawer({
             disabled={disabled}
           >
             {/* Show the selected value label, or the searchPlaceholder */}
-            {options?.find((option) => option.value === value)?.label ||
-              placeholder}
+            {options?.find((option) => option.value === value)?.label || placeholder}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </DrawerTrigger>
@@ -138,10 +135,7 @@ export function ComboboxDrawer({
                       }}
                     >
                       <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === option.value ? "opacity-100" : "opacity-0"
-                        )}
+                        className={cn("mr-2 h-4 w-4", value === option.value ? "opacity-100" : "opacity-0")}
                       />
                       {option.label}
                     </CommandItem>

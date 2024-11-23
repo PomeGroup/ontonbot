@@ -13,12 +13,8 @@ export const GeneralStep = () => {
   const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const eventData = useCreateEventStore((state) => state.eventData);
-  const clearGeneralErrors = useCreateEventStore(
-    (state) => state.clearGeneralStepErrors
-  );
-  const setGeneralStepErrors = useCreateEventStore(
-    (state) => state.setGeneralStepErrors
-  );
+  const clearGeneralErrors = useCreateEventStore((state) => state.clearGeneralStepErrors);
+  const setGeneralStepErrors = useCreateEventStore((state) => state.setGeneralStepErrors);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

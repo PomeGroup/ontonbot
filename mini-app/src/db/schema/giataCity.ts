@@ -14,9 +14,7 @@ export const giataCity = pgTable(
     titleIdx: index("giata_city_title_idx").on(table.title),
     parentIdIdx: index("giata_city_parent_id_idx").on(table.parentId),
     insertDateIdx: index("giata_city_insert_date_idx").on(table.insertDate),
-    abbreviatedCodeIdx: index("giata_city_abbreviated_code_idx").on(
-      table.abbreviatedCode
-    ),
+    abbreviatedCodeIdx: index("giata_city_abbreviated_code_idx").on(table.abbreviatedCode),
     giataCodeIdx: index("giata_city_giata_code_idx").on(table.giataCode),
   })
 );
