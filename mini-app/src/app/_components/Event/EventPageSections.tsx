@@ -1,3 +1,4 @@
+import React from "react";
 import Buttons from "@/app/_components/atoms/buttons";
 import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
@@ -16,56 +17,67 @@ import MainButton from "../atoms/buttons/web-app/MainButton";
 import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 
-const EventImage = () => {
+// Base components with memoization where beneficial
+const EventImage = React.memo(() => {
   const { eventData } = useEventData();
   return (
     <Images.Event
       width={300}
       height={300}
-      url={eventData.data?.image_url!}
+      url={eventData.data?.image_url ?? ""}
     />
   );
-};
+});
 
-const EventTitle = () => {
+EventImage.displayName = "EventImage";
+
+const EventTitle = React.memo(() => {
   const { eventData } = useEventData();
-  return <Labels.CampaignTitle title={eventData.data?.title!} />;
-};
+  return <Labels.CampaignTitle title={eventData.data?.title ?? ""} />;
+});
 
-const EventSubtitle = () => {
+EventTitle.displayName = "EventTitle";
+
+const EventSubtitle = React.memo(() => {
   const { eventData } = useEventData();
   return (
     <Labels.CampaignDescription
-      description={eventData.data?.subtitle!}
+      description={eventData.data?.subtitle ?? ""}
       className="text-gray-600 text-xs"
     />
   );
-};
+});
+EventSubtitle.displayName = "EventSubtitle";
 
-const EventLocation = () => {
+const EventLocation = React.memo(() => {
   const { location, isLocationUrl } = useEventData();
-  return location && !isLocationUrl ? (
+  if (!location || isLocationUrl) return null;
+
+  return (
     <EventKeyValue
       label="Location"
       value={location}
       className="text-cn-primary text-[14px]"
     />
-  ) : null;
-};
+  );
+});
+EventLocation.displayName = "EventLocation";
 
-const EventWebsiteLink = () => {
+const EventWebsiteLink = React.memo(() => {
   const { location, isLocationUrl } = useEventData();
+  if (!location || !isLocationUrl) return null;
 
-  return location && isLocationUrl ? (
+  return (
     <EventKeyValue
-      variant={"link"}
-      label={"Event Link"}
+      variant="link"
+      label="Event Link"
       value={location}
     />
-  ) : null;
-};
+  );
+});
+EventWebsiteLink.displayName = "EventWebsiteLink";
 
-const EventDatesComponent = () => {
+const EventDatesComponent = React.memo(() => {
   const { startUTC, endUTC } = useEventData();
   return (
     <EventDates
@@ -73,14 +85,18 @@ const EventDatesComponent = () => {
       endDate={endUTC}
     />
   );
-};
+});
 
-const EventDescription = () => {
+EventDatesComponent.displayName = "EventDatesComponent";
+
+const EventDescription = React.memo(() => {
   const { eventData } = useEventData();
-  return <Labels.CampaignDescription description={eventData.data?.description!} />;
-};
+  return <Labels.CampaignDescription description={eventData.data?.description ?? ""} />;
+});
 
-const EventHead = () => {
+EventDescription.displayName = "EventDescription";
+
+const EventHead = React.memo(() => {
   const { eventHash } = useEventData();
 
   return (
@@ -92,9 +108,10 @@ const EventHead = () => {
       <ShareEventButton event_uuid={eventHash} />
     </div>
   );
-};
+});
+EventHead.displayName = "EventHead";
 
-const EventAttributes = () => {
+const EventAttributes = React.memo(() => {
   return (
     <div className="space-y-2">
       <EventLocation />
@@ -102,8 +119,73 @@ const EventAttributes = () => {
       <EventDatesComponent />
     </div>
   );
+});
+EventAttributes.displayName = "EventAttributes";
+
+// Status component to handle different event states
+const EventStatus = ({
+  isEventActive,
+  registrantStatus,
+  capacityFilled,
+  hasWaitingList,
+}: {
+  isEventActive: boolean;
+  registrantStatus: "" | "approved" | "rejected" | "pending";
+  capacityFilled: boolean;
+  hasWaitingList: boolean;
+}) => {
+  if (!isEventActive) return null;
+
+  const statusConfigs = {
+    "": () => <UserRegisterForm />,
+    pending: () => (
+      <DataStatus
+        status="pending"
+        size="md"
+        title="Request Pending"
+        description="Your request to join this event is pending to be approved."
+      />
+    ),
+    approved: () => (
+      <DataStatus
+        status="approved"
+        size="md"
+        title="Request Approved"
+        description="Your request to join this event has been approved"
+      />
+    ),
+    rejected: () => (
+      <DataStatus
+        status="rejected"
+        size="md"
+        title="Request Rejected"
+        description="Your request to join this event has been rejected."
+      />
+    ),
+  };
+
+  if (capacityFilled && !hasWaitingList) {
+    return (
+      <>
+        <DataStatus
+          status="rejected"
+          size="md"
+          title="Capacity Filled"
+          description="Event capacity is filled and no longer accepts registrations."
+        />
+        <MainButton
+          text="Event Capacity Filled"
+          disabled
+          color="secondary"
+        />
+      </>
+    );
+  }
+
+  return statusConfigs[registrantStatus]?.() ?? null;
 };
 
+// Main component
 export const EventSections = () => {
   const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } = useEventData();
   const { setTheme } = useTheme();
@@ -111,6 +193,11 @@ export const EventSections = () => {
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
   const isEventActive = isStarted && isNotEnded;
+  const showPasswordInput =
+    !isAdminOrOrganizer &&
+    isEventActive &&
+    (eventData.data?.registrant_status === "approved" || !eventData.data?.has_registration) &&
+    !userEventPasswordField?.completed;
 
   useLayoutEffect(() => {
     setTheme("light");
@@ -120,48 +207,26 @@ export const EventSections = () => {
   return (
     <div className="space-y-2">
       <EventImage />
-      {!isAdminOrOrganizer &&
-        isEventActive &&
-        isStarted &&
-        isNotEnded &&
-        !userEventPasswordField?.completed && <EventPasswordInput />}
+      {showPasswordInput && <EventPasswordInput />}
       <EventHead />
       <EventAttributes />
       <EventActions />
       <EventDescription />
+
       {!isAdminOrOrganizer && user?.wallet_address && userEventPasswordField?.completed && (
         <ClaimRewardButton
           initData={initData}
-          eventId={eventData.data?.event_uuid as string}
+          eventId={eventData.data?.event_uuid ?? ""}
           isWalletConnected={Boolean(user.wallet_address)}
         />
       )}
-      {eventData.data?.has_registration && eventData.data?.registrant_status === "" && <UserRegisterForm />}
 
-      {eventData.data?.registrant_status === "pending" && (
-        <DataStatus
-          status="pending"
-          size="md"
-          title="Request Pending"
-          description="Your request to join this event is pending to be approved."
-        />
-      )}
-
-      {eventData.data?.registrant_status === "approved" && (
-        <DataStatus
-          status="approved"
-          size="md"
-          title="Request Approved"
-          description="Your request to join this event hass been approved"
-        />
-      )}
-
-      {eventData.data?.registrant_status === "rejected" && (
-        <DataStatus
-          status="rejected"
-          size="md"
-          title="Request Rejected"
-          description="Your request to join this event has been rejected."
+      {!isAdminOrOrganizer && (
+        <EventStatus
+          isEventActive={isEventActive}
+          registrantStatus={eventData.data?.registrant_status ?? ""}
+          capacityFilled={Boolean(eventData.data?.capacity_filled)}
+          hasWaitingList={Boolean(eventData.data?.has_waiting_list)}
         />
       )}
 
@@ -172,6 +237,7 @@ export const EventSections = () => {
           color="secondary"
         />
       )}
+
       {!isAdminOrOrganizer && !isNotEnded && (
         <MainButton
           text="Event Has Ended"
@@ -179,7 +245,11 @@ export const EventSections = () => {
           color="secondary"
         />
       )}
-      {isAdminOrOrganizer && <ManageEventButton />}
+
+      {isAdminOrOrganizer && (!eventData.data?.capacity_filled || eventData.data?.has_waiting_list) && (
+        <ManageEventButton />
+      )}
+
       <Buttons.Support />
     </div>
   );
