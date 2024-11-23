@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events, eventRegistrants , users } from "@/db/schema";
+import { eventFields, events, eventRegistrants, users } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
 
 import { hashPassword } from "@/lib/bcrypt";
@@ -133,7 +133,7 @@ export const eventsRouter = router({
   //   return await fetchBalance(opts.input);
   // }),
   /* -------------------------------------------------------------------------- */
-  /*                            Get an Event By User                            */
+  /*                            📢 Get an Event By User                        */
   /* -------------------------------------------------------------------------- */
   getEvent: initDataProtectedProcedure
     .input(z.object({ event_uuid: z.string() }))
@@ -180,24 +180,12 @@ export const eventsRouter = router({
       if (eventData.capacity) {
         const approved_requests_count =
           await getApprovedRequestsCount(event_uuid);
-        console.log(
-          "Yakuuuuuuza :::::: ??approved_requests_count?? ",
-          approved_requests_count
-        );
-        console.log(
-          "Yakuuuuuuza :::::: ??getNotRejectedRequestsCount?? ",
-          await getNotRejectedRequestsCount(event_uuid)
-        );
 
         if (
-          approved_requests_count >= eventData.capacity ||
-          (!eventData.has_waiting_list &&
-            (await getNotRejectedRequestsCount(event_uuid)) >=
-              eventData.capacity)
+          approved_requests_count >= eventData.capacity &&
+          !eventData.has_waiting_list
         ) {
-          // Event capacity filled
-          // First condition: Approved users >= eventData.capacity
-          // Second condition: Not Rejected Requests >= eventData.capacity && No Waiting List
+          // Event capacity filled and no waiting list
           capacity_filled = true;
           return { capacity_filled, registrant_status, ...eventData };
         }
@@ -242,7 +230,7 @@ export const eventsRouter = router({
   }),
 
   /* -------------------------------------------------------------------------- */
-  /*                           Event Register by user                           */
+  /*                           📝 Event Register by user                       */
   /* -------------------------------------------------------------------------- */
   // private
   eventRegister: initDataProtectedProcedure
@@ -272,26 +260,30 @@ export const eventsRouter = router({
           message: `registrant already has a [${user_request.status}] Request `,
         });
       }
+
+      let event_filled_and_has_waiting_list = false;
+
       if (event.capacity) {
         const approved_requests_count =
           await getApprovedRequestsCount(event_uuid);
+        const event_cap_filled = approved_requests_count >= event.capacity;
 
-        if (
-          approved_requests_count >= event.capacity ||
-          (!event.has_waiting_list &&
-            (await getNotRejectedRequestsCount(event_uuid)) >= event.capacity)
-        ) {
-          // Event capacity filled
-          // First condition: Approved users >= event.capacity
-          // Second condition: Not Rejected Requests >= event.capacity && No Waiting List
+        if (event_cap_filled && !event.has_waiting_list) {
+          // Event capacity filled and no waiting list
           throw new TRPCError({
             code: "CONFLICT",
-            message: `Event Capacity Reached Waiting List : ${event.has_waiting_list}`,
+            message: `Event Capacity Reached`,
           });
+        } else if (event_cap_filled && event.has_waiting_list) {
+          event_filled_and_has_waiting_list = true;
         }
       }
 
-      const request_status = !!event.has_approval ? "pending" : "approved"; // pending if approval is required otherwise auto approve them
+      const request_status =
+        !!event.has_approval || event_filled_and_has_waiting_list
+          ? "pending"
+          : "approved"; // pending if approval is required otherwise auto approve them
+
       await db.insert(eventRegistrants).values({
         event_uuid: event_uuid,
         user_id: userId,
@@ -303,7 +295,7 @@ export const eventsRouter = router({
     }),
 
   /* -------------------------------------------------------------------------- */
-  /*                            Get Event Registrant                            */
+  /*                            Get Event Registrant 👨‍👩‍👧                        */
   /* -------------------------------------------------------------------------- */
   getEventRegistrants: eventManagementProtectedProcedure
     .input(z.object({ event_uuid: z.string() }))
