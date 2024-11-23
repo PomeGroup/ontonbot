@@ -542,6 +542,7 @@ services:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=true
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
     deploy:
       resources:
@@ -593,6 +594,8 @@ services:
         condition: on-failure
     ports:
       - "5601:5601"
+    networks:
+      - onton-network
 #  swagger-ui:
 #    image: swaggerapi/swagger-ui
 #    environment:
