@@ -143,12 +143,12 @@ export const eventsRouter = router({
     const user_request = await getRegistrantRequest(event_uuid, userId);
     const event_location = eventData.location;
 
-    const userIsAdminOrOwner = eventData.owner == userId || opts.ctx.user.role == 'admin';
-
+    const userIsAdminOrOwner = eventData.owner == userId || opts.ctx.user.role == "admin";
+    let mask_event_capacity = true;
 
     eventData.location = "Only Visible To Registered Users ";
-    if (eventData.capacity && !userIsAdminOrOwner) {
-      eventData.capacity = 99;
+    if (eventData.capacity && userIsAdminOrOwner) {
+      mask_event_capacity = false;
     }
     if (userIsAdminOrOwner) {
       eventData.location = event_location;
@@ -160,23 +160,29 @@ export const eventsRouter = router({
       if (registrant_status == "approved") {
         eventData.location = event_location;
       }
+      if (mask_event_capacity) {
+        eventData.capacity = 99;
+      }
       return { capacity_filled, registrant_status, ...eventData };
     }
 
     // no status for registran
-    console.log("event data capcity" , eventData.capacity)
     if (eventData.capacity) {
       const approved_requests_count = await getApprovedRequestsCount(event_uuid);
-      console.log("approved_requests_count" , approved_requests_count)
-
       if (approved_requests_count >= eventData.capacity) {
         // Event capacity filled
         capacity_filled = true;
+        if (mask_event_capacity) {
+          eventData.capacity = 99;
+        }
         return { capacity_filled, registrant_status, ...eventData };
       }
     }
 
     // NO Status
+    if (mask_event_capacity) {
+      eventData.capacity = 99;
+    }
     return { capacity_filled, registrant_status, ...eventData };
 
     /* -------------------------------------------------------------------------- */
