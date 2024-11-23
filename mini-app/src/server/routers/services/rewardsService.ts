@@ -9,6 +9,22 @@ import { findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/server/
 import { validateEventData, validateEventDates } from "@/server/routers/services/eventService";
 import { sendRewardNotification } from "@/server/routers/services/telegramService";
 import { TRPCError } from "@trpc/server";
+import { eventRegistrants } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+
+
+//TODO - Put this in db functions files
+async function getRegistrantRequest(event_uuid: string, user_id: number) {
+  const result = (
+    await db
+      .select()
+      .from(eventRegistrants)
+      .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, user_id)))
+      .execute()
+  ).pop();
+
+  return result;
+}
 
 // Main function to create a reward for a user
 export const createUserRewardSBT = async (props: {
@@ -185,6 +201,16 @@ export const createUserReward = async (props: {
         code: "BAD_REQUEST",
         message: `this event does not have an activity id ${eventData?.activity_id}`,
       });
+    }
+
+    if (eventData.has_registration) {
+      const eventRegistrantRequest = await getRegistrantRequest(props.event_uuid, props.user_id);
+      if (!eventRegistrantRequest || eventRegistrantRequest.status != "approved") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `Event with registration and user is not approved`,
+        });
+      }
     }
 
     const startDate = Number(eventData.start_date) * 1000;

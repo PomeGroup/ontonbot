@@ -55,26 +55,26 @@ export const usersRouter = router({
       await usersDB.updateWallet(opts.ctx.user.user_id, opts.input.wallet, opts.ctx.user.user_id.toString());
     }),
 
-  // private
-  deleteWallet: publicProcedure
-    .input(
-      z.object({
-        initData: z.string().optional(),
-      })
-    )
-    .mutation(async (opts) => {
-      if (!opts.input.initData) {
-        return;
-      }
+  // // private
+  // deleteWallet: publicProcedure
+  //   .input(
+  //     z.object({
+  //       initData: z.string().optional(),
+  //     })
+  //   )
+  //   .mutation(async (opts) => {
+  //     if (!opts.input.initData) {
+  //       return;
+  //     }
 
-      const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
+  //     const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
 
-      if (!valid) {
-        return;
-      }
+  //     if (!valid) {
+  //       return;
+  //     }
 
-      await usersDB.updateWallet(initDataJson.user.id, "", initDataJson.user.id.toString());
-    }),
+  //     await usersDB.updateWallet(initDataJson.user.id, "", initDataJson.user.id.toString());
+  //   }),
 
   createUserReward: initDataProtectedProcedure
     .input(
