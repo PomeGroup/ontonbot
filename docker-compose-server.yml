@@ -172,11 +172,11 @@ services:
         <<: *common-env
     networks:
       - onton-network
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-redis"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-redis"
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
