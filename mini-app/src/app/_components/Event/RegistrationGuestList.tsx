@@ -3,7 +3,7 @@ import { KButton } from "@/components/ui/button";
 import { useGetEventRegistrants } from "@/hooks/events.hooks";
 import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
-import { List, BlockTitle, ListItem, Chip, BlockHeader, Sheet } from "konsta/react";
+import { List, BlockTitle, ListItem, Chip, BlockHeader, Sheet, BlockFooter } from "konsta/react";
 import { Check, FileUser, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useState } from "react";
@@ -74,9 +74,19 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   switch (itemStatus) {
     case "pending":
       afterContent = (
-        <div className="flex flex-col text-end text-xs">
-          <span>{date}</span>
-          <span>Registered</span>
+        <div className="flex space-x-2">
+          <Button
+            icon={<FileUser size={18} />}
+            variant="purple"
+            onClick={() => {
+              setShowRegistrantInfo(registrantInfo);
+            }}
+          />
+
+          <div className="flex flex-col text-end text-xs">
+            <span>{date}</span>
+            <span>Registered</span>
+          </div>
         </div>
       );
       footerContent = (
@@ -105,6 +115,13 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
             icon={<Pencil size={18} />}
             onClick={handleEdit}
           />
+          <Button
+            icon={<FileUser size={18} />}
+            variant="purple"
+            onClick={() => {
+              setShowRegistrantInfo(registrantInfo);
+            }}
+          />
           <StatusChip
             variant="success"
             label="Approved"
@@ -122,6 +139,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
           />
           <Button
             icon={<FileUser size={18} />}
+            variant="purple"
             onClick={() => {
               setShowRegistrantInfo(registrantInfo);
             }}
@@ -153,7 +171,27 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
         footer={footerContent}
       />
       {createPortal(
-        <Sheet opened={Boolean(showRegistrantInfo)}>{JSON.stringify(registrantInfo)}</Sheet>,
+        <Sheet
+          onBackdropClick={() => setShowRegistrantInfo(null)}
+          opened={Boolean(showRegistrantInfo)}
+          className="!overflow-hidden w-full"
+        >
+          <BlockTitle>Registrant Info</BlockTitle>
+          <List className="!pe-2">
+            {Object.entries(registrantInfo as object).map(([key, value], idx) => {
+              return (
+                <ListItem
+                  key={idx}
+                  title={<div className="capitalize">{key.split("_").join(" ")}</div>}
+                  subtitle={value}
+                />
+              );
+            })}
+          </List>
+          <BlockFooter>
+            <KButton onClick={() => setShowRegistrantInfo(null)}>Close</KButton>
+          </BlockFooter>
+        </Sheet>,
         document.body
       )}
     </>
@@ -161,7 +199,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
 };
 
 interface ButtonProps {
-  variant?: "primary" | "secondary" | "danger" | "success";
+  variant?: "primary" | "secondary" | "danger" | "success" | "purple";
   icon?: React.ReactNode;
   label?: string;
   onClick?: () => void;
@@ -177,6 +215,7 @@ const Button: React.FC<ButtonProps> = ({ variant, icon, label, onClick, isLoadin
         secondary: "k-color-brand-gray",
         danger: "k-color-brand-red",
         success: "k-color-brand-green",
+        purple: "k-color-brand-purple",
       },
     },
     defaultVariants: {

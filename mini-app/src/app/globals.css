@@ -247,3 +247,7 @@ body {
     -webkit-text-fill-color: transparent;
   }
 }
+
+ul > li > div > div > div.text-sm {
+  overflow: visible;
+}

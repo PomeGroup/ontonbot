@@ -10,6 +10,7 @@ module.exports = konstaConfig({
       "brand-red": "#ff0000",
       "brand-green": "#10b210",
       "brand-gray": "#888888",
+      "brand-purple": "#6d28d9",
     },
   },
   darkMode: ["class"],
@@ -41,8 +42,7 @@ module.exports = konstaConfig({
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--shadcn-tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--shadcn-tw-gradient-stops))",
+        "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--shadcn-tw-gradient-stops))",
       },
       colors: {
         "cn-border": "hsl(var(--shadcn-border))",
