@@ -26,8 +26,6 @@ const AddInputFieldPopover: React.FC<{
   const [open, setOpen] = useState(false);
   const [zodErrors, setZodErrors] = useState<ZodErrors>({});
 
-  // InputDynamicFieldSchema
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     property: keyof InputField
