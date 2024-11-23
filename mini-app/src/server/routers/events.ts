@@ -160,10 +160,12 @@ export const eventsRouter = router({
       if (registrant_status == "approved") {
         eventData.location = event_location;
       }
-      if (mask_event_capacity) {
-        eventData.capacity = 99;
-      }
-      return { capacity_filled, registrant_status, ...eventData };
+      return {
+        capacity_filled,
+        registrant_status,
+        ...eventData,
+        capacity: mask_event_capacity ? 99 : eventData.capacity,
+      };
     }
 
     // no status for registran
@@ -172,18 +174,22 @@ export const eventsRouter = router({
       if (approved_requests_count >= eventData.capacity) {
         // Event capacity filled
         capacity_filled = true;
-        if (mask_event_capacity) {
-          eventData.capacity = 99;
-        }
-        return { capacity_filled, registrant_status, ...eventData };
+        return {
+          capacity_filled,
+          registrant_status,
+          ...eventData,
+          capacity: mask_event_capacity ? 99 : eventData.capacity,
+        };
       }
     }
 
     // NO Status
-    if (mask_event_capacity) {
-      eventData.capacity = 99;
-    }
-    return { capacity_filled, registrant_status, ...eventData };
+    return {
+      capacity_filled,
+      registrant_status,
+      ...eventData,
+      capacity: mask_event_capacity ? 99 : eventData.capacity,
+    };
 
     /* -------------------------------------------------------------------------- */
   }),
