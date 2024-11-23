@@ -164,9 +164,10 @@ export const eventsRouter = router({
     }
 
     // no status for registran
-
+    console.log("event data capcity" , eventData.capacity)
     if (eventData.capacity) {
       const approved_requests_count = await getApprovedRequestsCount(event_uuid);
+      console.log("approved_requests_count" , approved_requests_count)
 
       if (approved_requests_count >= eventData.capacity) {
         // Event capacity filled
