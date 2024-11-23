@@ -141,10 +141,16 @@ export const eventsRouter = router({
     /* ------------------------ Event Needs Registration ------------------------ */
 
     const user_request = await getRegistrantRequest(event_uuid, userId);
+    const event_website = eventData.website;
+
+    eventData.website = "Register to see";
 
     // Registrant Already has a request
     if (user_request) {
       registrant_status = user_request.status;
+      if (registrant_status == "approved") {
+        eventData.website = event_website;
+      }
       return { capacity_filled, registrant_status, ...eventData };
     }
 
