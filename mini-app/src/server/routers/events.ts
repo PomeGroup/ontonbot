@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events, eventRegistrants } from "@/db/schema";
+import { eventFields, events, eventRegistrants , users } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
 
 import { hashPassword } from "@/lib/bcrypt";
@@ -316,8 +316,17 @@ export const eventsRouter = router({
       }
 
       const registrants = await db
-        .select()
+        .select({
+          event_uuid: eventRegistrants.event_uuid,
+          user_id: eventRegistrants.user_id,
+          username: users.username,
+          first_name: users.first_name,
+          last_name: users.last_name,
+          status: eventRegistrants.status,
+          created_at: eventRegistrants.created_at,
+        })
         .from(eventRegistrants)
+        .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
         .where(eq(eventRegistrants.event_uuid, event_uuid))
         .orderBy(desc(eventRegistrants.created_at))
         .execute();
