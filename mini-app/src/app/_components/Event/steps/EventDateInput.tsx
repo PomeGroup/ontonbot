@@ -9,13 +9,7 @@ interface EventDateInputProps {
   disabled?: boolean;
 }
 
-const EventDateInput: React.FC<EventDateInputProps> = ({
-  isStart,
-  date,
-  setDate,
-  error,
-  disabled,
-}) => {
+const EventDateInput: React.FC<EventDateInputProps> = ({ isStart, date, setDate, error, disabled }) => {
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDate(e.target.value);
   };

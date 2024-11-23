@@ -1,9 +1,6 @@
 import { TRPCError } from "@trpc/server";
 
-export const throwTRPCError = (
-  code: TRPCError["code"],
-  message: unknown
-): never => {
+export const throwTRPCError = (code: TRPCError["code"], message: unknown): never => {
   // Handle different types of `message` and ensure it's a string
   let errorMessage: string;
 

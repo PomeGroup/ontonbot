@@ -61,8 +61,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           >
             <p className=" font-medium text-zinc-100">EVENT TYPE</p>
             <div className="cursor-pointer text-sm  text-zinc-400 flex items-center">
-              {participationType.length === 0 ||
-              participationType.length == allParticipationTypes.length
+              {participationType.length === 0 || participationType.length == allParticipationTypes.length
                 ? "All"
                 : participationType.join(", ").replace("_", " ")}
               <IoIosArrowForward className="ml-auto" />
@@ -74,9 +73,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           >
             <div className="flex-1 space-y-3">
               <p className="font-medium text-zinc-100">Ton hub</p>
-              <div className="text-zinc-400 text-sm line-clamp-1 w-11/12 overflow-hidden">
-                {hubText}
-              </div>
+              <div className="text-zinc-400 text-sm line-clamp-1 w-11/12 overflow-hidden">{hubText}</div>
             </div>
 
             <IoIosArrowForward className="text-sm text-zinc-400 ml-2 mt-8" />
@@ -98,9 +95,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               </label>
 
               <label className="flex justify-between items-center">
-                <span className="text-zinc-400 text-sm ">
-                  Most People Reached
-                </span>
+                <span className="text-zinc-400 text-sm ">Most People Reached</span>
                 <RadioGroupItem
                   value="most_people_reached"
                   className="h-4 w-4"

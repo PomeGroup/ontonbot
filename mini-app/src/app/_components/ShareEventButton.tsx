@@ -28,9 +28,7 @@ const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
         });
 
         // Add the logic for the platform or sharing link
-        WebApp?.openTelegramLink(
-          `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`
-        );
+        WebApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`);
         hapticFeedback?.impactOccurred("medium");
         await wait(500);
         WebApp?.close();

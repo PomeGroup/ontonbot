@@ -15,9 +15,7 @@ export const generalStepDataSchema = z.object({
   image_url: z
     .string({ required_error: "Please select an image" })
     .url({ message: "Please select a valid image" }),
-  hub: z
-    .string({ required_error: "Please select a hub" })
-    .min(1, { message: "Please select a hub" }),
+  hub: z.string({ required_error: "Please select a hub" }).min(1, { message: "Please select a hub" }),
   // all optional just for type safety and auto completion
   has_registration: z.boolean(),
   has_approval: z.boolean(),
@@ -36,23 +34,15 @@ export function rewardStepValidation(passwordDisabled: boolean) {
     ts_reward_url: z
       .string()
       .optional()
-      .refine(
-        (url) =>
-          url === undefined ||
-          url === "" ||
-          z.string().url().safeParse(url).success,
-        { message: "Please upload a valid reward image URL" }
-      ),
+      .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {
+        message: "Please upload a valid reward image URL",
+      }),
     event_video_url: z
       .string()
       .optional()
-      .refine(
-        (url) =>
-          url === undefined ||
-          url === "" ||
-          z.string().url().safeParse(url).success,
-        { message: "Please upload a valid video URL" }
-      ),
+      .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {
+        message: "Please upload a valid video URL",
+      }),
   });
 }
 
@@ -68,12 +58,9 @@ export function timeplaceStepValidation(
       start_date: z
         .number()
         .positive("Start date must be a valid positive timestamp")
-        .refine(
-          (data) => Boolean(editOptions?.eventHash) || data > startDateLimit,
-          {
-            message: "Start date must be in the future",
-          }
-        ),
+        .refine((data) => Boolean(editOptions?.eventHash) || data > startDateLimit, {
+          message: "Start date must be in the future",
+        }),
       end_date: z
         .number()
         .positive("End date must be a valid positive timestamp")
@@ -85,10 +72,7 @@ export function timeplaceStepValidation(
           (data) => {
             console.log("asdahsdjahskdjhasjdkh", data, eventData?.start_date!);
 
-            return (
-              Boolean(editOptions?.eventHash) ||
-              data > formDataObject?.start_date!
-            );
+            return Boolean(editOptions?.eventHash) || data > formDataObject?.start_date!;
           },
           {
             message: "End date must be after start date",
@@ -106,8 +90,7 @@ export function timeplaceStepValidation(
     .refine(
       (data) => {
         if (data.eventLocationType === "online") {
-          return dataValidationSchema.urlSchema.safeParse(data.location)
-            .success;
+          return dataValidationSchema.urlSchema.safeParse(data.location).success;
         }
         return true;
       },

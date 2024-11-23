@@ -6,11 +6,7 @@ const useWebApp = () => {
 
   useEffect(() => {
     const checkWebApp = () => {
-      if (
-        typeof window !== "undefined" &&
-        window.Telegram &&
-        window.Telegram.WebApp
-      ) {
+      if (typeof window !== "undefined" && window.Telegram && window.Telegram.WebApp) {
         setWebApp(window.Telegram.WebApp);
       }
     };

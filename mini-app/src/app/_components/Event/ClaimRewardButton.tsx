@@ -7,10 +7,7 @@ import ModalDialog from "../SecretSavedModal";
 import { trpc } from "@/app/_trpc/client";
 
 // Child component
-function ClaimRewardButtonChild(props: {
-  link: string | null;
-  isNotified: boolean;
-}) {
+function ClaimRewardButtonChild(props: { link: string | null; isNotified: boolean }) {
   const webApp = useWebApp();
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
 
@@ -63,8 +60,7 @@ export function ClaimRewardButton(props: {
     return visitorReward.isSuccess && props.isWalletConnected ? (
       <ClaimRewardButtonChild
         isNotified={
-          visitorReward.data.type === "reward_link_generated" &&
-          visitorReward.data.status === "notified"
+          visitorReward.data.type === "reward_link_generated" && visitorReward.data.status === "notified"
         }
         link={visitorReward.data.data}
       />

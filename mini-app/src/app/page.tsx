@@ -1,11 +1,5 @@
 "use client";
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
@@ -108,27 +102,33 @@ export default function Home() {
   const [pastEventsState, setPastEventsState] = useState<EventData>([]);
 
   // Queries without caching
-  const { data: sliderEventData, isLoading: isLoadingSlider } =
-    trpc.events.getEventsWithFilters.useQuery(sliderEventParams, {
+  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery(
+    sliderEventParams,
+    {
       cacheTime: 10000,
       enabled: sliderEventsState.length === 0,
-    });
+    }
+  );
   const { data: upcomingEventsData, isLoading: isLoadingUpcoming } =
     trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams, {
       cacheTime: 10000,
       enabled: upcomingEventsState.length === 0,
     });
-  const { data: ongoingEventsData, isLoading: isLoadingOngoing } =
-    trpc.events.getEventsWithFilters.useQuery(ongoingEventsParams, {
+  const { data: ongoingEventsData, isLoading: isLoadingOngoing } = trpc.events.getEventsWithFilters.useQuery(
+    ongoingEventsParams,
+    {
       cacheTime: 10000,
       enabled: ongoingEventsState.length === 0,
-    });
-  const { data: pastEventsData, isLoading: isLoadingPast } =
-    trpc.events.getEventsWithFilters.useQuery(pastEventsParams, {
+    }
+  );
+  const { data: pastEventsData, isLoading: isLoadingPast } = trpc.events.getEventsWithFilters.useQuery(
+    pastEventsParams,
+    {
       cacheTime: 10000,
       retryDelay: 5000,
       enabled: pastEventsState.length === 0,
-    });
+    }
+  );
   const {
     data: myEventsData,
     isLoading: isLoadingMyEvents,
@@ -150,8 +150,7 @@ export default function Home() {
       setUpcomingEventsState(upcomingEventsData.data);
     if (ongoingEventsData?.data && ongoingEventsData?.data?.length > 0)
       setOngoingEventsState(ongoingEventsData.data);
-    if (pastEventsData?.data && pastEventsData?.data?.length > 0)
-      setPastEventsState(pastEventsData.data);
+    if (pastEventsData?.data && pastEventsData?.data?.length > 0) setPastEventsState(pastEventsData.data);
   }, [sliderEventData, upcomingEventsData, ongoingEventsData, pastEventsData]);
 
   // Disable body scroll with inline styles
@@ -381,9 +380,7 @@ export default function Home() {
             <SwiperSlide>
               <div className="pt-2 flex-grow overflow-y-auto h-screen pb-[120px]">
                 {isLoadingMyEvents ? (
-                  [1, 2, 3, 4, 5].map((index) => (
-                    <EventCardSkeleton key={index} />
-                  ))
+                  [1, 2, 3, 4, 5].map((index) => <EventCardSkeleton key={index} />)
                 ) : myEventsData?.data?.length === 0 ? (
                   <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
                     <Image
@@ -392,9 +389,7 @@ export default function Home() {
                       width={180}
                       height={180}
                     />
-                    <div className="text-gray-500 max-w-md">
-                      No Events at this time.
-                    </div>
+                    <div className="text-gray-500 max-w-md">No Events at this time.</div>
                   </div>
                 ) : (
                   myEventsData?.data?.map((event) => (
@@ -404,8 +399,7 @@ export default function Home() {
                         event={event}
                         currentUserId={UserId}
                         mode={
-                          currentDateTime > event.startDate &&
-                          currentDateTime < event.endDate
+                          currentDateTime > event.startDate && currentDateTime < event.endDate
                             ? "ongoing"
                             : "normal"
                         }
@@ -419,14 +413,12 @@ export default function Home() {
         </div>
       </div>
 
-      {!useAuthLoading &&
-        (userRole === "admin" || userRole === "organizer") &&
-        authorized && (
-          <MemoizedMainButton
-            text="Create new event"
-            onClick={handleCreateEvent}
-          />
-        )}
+      {!useAuthLoading && (userRole === "admin" || userRole === "organizer") && authorized && (
+        <MemoizedMainButton
+          text="Create new event"
+          onClick={handleCreateEvent}
+        />
+      )}
     </Block>
   );
 }

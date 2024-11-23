@@ -16,8 +16,7 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
 
   const getStepState = (index: number) => {
     if (index < currentStep - 1) return "completed";
-    if (index === currentStep - 1 && index === steps.length - 1)
-      return "in-progress-last";
+    if (index === currentStep - 1 && index === steps.length - 1) return "in-progress-last";
     if (index === currentStep - 1) return "in-progress";
     if (index === steps.length - 1) return "last";
     return "not-active";
@@ -40,8 +39,7 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
                     "in-progress",
                     "in-progress-last",
                   ].includes(stepState),
-                  "text-cn-muted-foreground after:bg-cn-muted-foreground":
-                    stepState === "not-active",
+                  "text-cn-muted-foreground after:bg-cn-muted-foreground": stepState === "not-active",
                   "text-cn-muted-foreground": stepState === "last",
                 },
                 stepState === "last" || stepState === "in-progress-last"

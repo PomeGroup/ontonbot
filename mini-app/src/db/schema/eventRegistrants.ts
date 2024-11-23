@@ -13,20 +13,14 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 
-export const eventRegistrantStatus = pgEnum("registrant_status", [
-  "pending",
-  "rejected",
-  "approved",
-]);
+export const eventRegistrantStatus = pgEnum("registrant_status", ["pending", "rejected", "approved"]);
 
 export const eventRegistrants = pgTable(
   "event_registrants",
   {
     id: serial("id").primaryKey(),
     event_uuid: uuid("event_uuid").references(() => events.event_uuid),
-    user_id: bigint("user_id", { mode: "number" }).references(
-      () => users.user_id
-    ),
+    user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
 
     status: eventRegistrantStatus("status").default("pending").notNull(),
 
@@ -39,9 +33,6 @@ export const eventRegistrants = pgTable(
   },
   (table) => ({
     uniqueEventUser: uniqueIndex().on(table.event_uuid, table.user_id),
-    statusCheck: check(
-      "valid_status",
-      sql`${table.status} IN ('pending', 'rejected', 'approved')`
-    ),
+    statusCheck: check("valid_status", sql`${table.status} IN ('pending', 'rejected', 'approved')`),
   })
 );

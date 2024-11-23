@@ -49,15 +49,12 @@ const getGuestListSchema = z.object({
  *       401:
  *         description: Unauthorized (Invalid or missing JWT)
  */
-export async function GET(
-  request: Request,
-  { params }: { params: { event_uuid: string } }
-) {
+export async function GET(request: Request, { params }: { params: { event_uuid: string } }) {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
-      success: false,
-      error: "out_of_service",}
-  )
+    success: false,
+    error: "out_of_service",
+  });
   // // First, validate the JWT token
   // const jwtValidation = await validateJwtFromRequest(request);
 

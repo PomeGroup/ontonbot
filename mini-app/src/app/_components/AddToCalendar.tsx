@@ -27,9 +27,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
 
   const googleCalendarLink = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
     title
-  )}&dates=${startFormatted}/${endFormatted}&details=${encodeURIComponent(
-    description
-  )}`;
+  )}&dates=${startFormatted}/${endFormatted}&details=${encodeURIComponent(description)}`;
 
   const outlookLink = `https://outlook.live.com/owa/?path=/calendar/action/compose&rru=addevent&startdt=${new Date(
     startDate

@@ -13,9 +13,7 @@ const LocationPin = ({ location, className }: Props) => {
   return (
     <div className={cn("flex items-center", className)}>
       <FaLocationDot className="mr-2" />
-      <Labels.Label className="truncate text-cn-primary font-sm max-w-xs">
-        {location}
-      </Labels.Label>
+      <Labels.Label className="truncate text-cn-primary font-sm max-w-xs">{location}</Labels.Label>
     </div>
   );
 };

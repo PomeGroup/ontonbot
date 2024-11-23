@@ -29,9 +29,7 @@ const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({
     <div
       ref={ref}
       onClick={onClick}
-      className={`p-2 rounded-lg cursor-pointer transition-shadow ${
-        selected ? "font-bold" : "font-light"
-      }`}
+      className={`p-2 rounded-lg cursor-pointer transition-shadow ${selected ? "font-bold" : "font-light"}`}
     >
       <div className="flex items-center justify-center mt-2 space-x-1">
         {selected && <FaSquareCheck />} {/* Icon next to the text */}

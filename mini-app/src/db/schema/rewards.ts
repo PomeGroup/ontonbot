@@ -1,13 +1,4 @@
-import {
-  index,
-  integer,
-  json,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { index, integer, json, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { rewardStatus, rewardType } from "@/db/schema";
 import { visitors } from "@/db/schema/visitors";
 

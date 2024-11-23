@@ -3,21 +3,14 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { user_id: string } }
-) {
+export async function GET(req: NextRequest, { params }: { params: { user_id: string } }) {
   const userId = parseInt(params.user_id);
 
   if (isNaN(userId)) {
     return Response.json({ message: "invalid user id" }, { status: 400 });
   }
 
-  const user = await db
-    .select()
-    .from(users)
-    .where(eq(users.user_id, userId))
-    .execute();
+  const user = await db.select().from(users).where(eq(users.user_id, userId)).execute();
 
   if (!user.length) {
     return Response.json({ message: "user not found" }, { status: 404 });

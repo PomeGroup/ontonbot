@@ -7,14 +7,10 @@ const useAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { initData } = useUserStore();
 
-  const validateUserInitDataQuery =
-    trpc.users.haveAccessToEventAdministration.useQuery();
+  const validateUserInitDataQuery = trpc.users.haveAccessToEventAdministration.useQuery();
 
   useEffect(() => {
-    if (
-      validateUserInitDataQuery.isLoading ||
-      validateUserInitDataQuery.isError
-    ) {
+    if (validateUserInitDataQuery.isLoading || validateUserInitDataQuery.isError) {
       setIsLoading(true);
       return;
     }
@@ -31,12 +27,8 @@ const useAuth = () => {
   return {
     authorized,
     isLoading,
-    role: validateUserInitDataQuery.data?.valid
-      ? validateUserInitDataQuery.data?.role
-      : undefined,
-    user: validateUserInitDataQuery.data?.valid
-      ? validateUserInitDataQuery.data?.user
-      : undefined,
+    role: validateUserInitDataQuery.data?.valid ? validateUserInitDataQuery.data?.role : undefined,
+    user: validateUserInitDataQuery.data?.valid ? validateUserInitDataQuery.data?.user : undefined,
   };
 };
 

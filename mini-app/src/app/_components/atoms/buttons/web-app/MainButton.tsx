@@ -23,12 +23,7 @@ const MainButton: FC<MainButtonProps> = ({
 
   const buttonParams = useMemo(
     () => ({
-      color:
-        color === "primary"
-          ? "#2ea6ff"
-          : color === "secondary"
-            ? "#747480"
-            : undefined,
+      color: color === "primary" ? "#2ea6ff" : color === "secondary" ? "#747480" : undefined,
       text_color: textColor,
     }),
     [color, textColor]
@@ -85,17 +80,7 @@ const MainButton: FC<MainButtonProps> = ({
         WebApp.MainButton.offClick(onClick);
       }
     };
-  }, [
-    WebApp,
-    updateButton,
-    onClick,
-    progress,
-    disabled,
-    buttonParams,
-    text,
-    color,
-    textColor,
-  ]);
+  }, [WebApp, updateButton, onClick, progress, disabled, buttonParams, text, color, textColor]);
 
   return null;
 };

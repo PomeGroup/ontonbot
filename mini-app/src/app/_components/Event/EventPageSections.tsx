@@ -75,9 +75,7 @@ const EventDatesComponent = () => {
 
 const EventDescription = () => {
   const { eventData } = useEventData();
-  return (
-    <Labels.CampaignDescription description={eventData.data?.description!} />
-  );
+  return <Labels.CampaignDescription description={eventData.data?.description!} />;
 };
 
 const EventHead = () => {
@@ -105,13 +103,11 @@ const EventAttributes = () => {
 };
 
 export const EventSections = () => {
-  const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } =
-    useEventData();
+  const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } = useEventData();
   const { setTheme } = useTheme();
   const { user } = useUserStore();
 
-  const isAdminOrOrganizer =
-    user?.role === "admin" || user?.user_id === eventData.data?.owner;
+  const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
   const isEventActive = isStarted && isNotEnded;
 
   useLayoutEffect(() => {
@@ -131,15 +127,13 @@ export const EventSections = () => {
       <EventAttributes />
       <EventActions />
       <EventDescription />
-      {!isAdminOrOrganizer &&
-        user?.wallet_address &&
-        userEventPasswordField?.completed && (
-          <ClaimRewardButton
-            initData={initData}
-            eventId={eventData.data?.event_uuid as string}
-            isWalletConnected={Boolean(user.wallet_address)}
-          />
-        )}
+      {!isAdminOrOrganizer && user?.wallet_address && userEventPasswordField?.completed && (
+        <ClaimRewardButton
+          initData={initData}
+          eventId={eventData.data?.event_uuid as string}
+          isWalletConnected={Boolean(user.wallet_address)}
+        />
+      )}
       {!isAdminOrOrganizer && !isStarted && isNotEnded && (
         <MainButton
           text="Event Not Started Yet"

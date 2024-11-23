@@ -29,11 +29,7 @@ const insertEventField = async (
 };
 
 // Function to update an event field
-const updateEventFieldLog = async (
-  trx: typeof db,
-  fieldId: number,
-  updatedBy: string
-) => {
+const updateEventFieldLog = async (trx: typeof db, fieldId: number, updatedBy: string) => {
   await trx
     .update(eventFields)
     .set({
@@ -46,19 +42,11 @@ const updateEventFieldLog = async (
 
 // Function to select event fields by event ID
 const selectEventFieldsByEventId = async (trx: typeof db, eventId: number) => {
-  return await trx
-    .select()
-    .from(eventFields)
-    .where(eq(eventFields.event_id, eventId))
-    .execute();
+  return await trx.select().from(eventFields).where(eq(eventFields.event_id, eventId)).execute();
 };
 
 // Function to delete an event field by its ID
-const deleteEventFieldById = async (
-  trx: typeof db,
-  fieldId: number,
-  eventId: number
-) => {
+const deleteEventFieldById = async (trx: typeof db, fieldId: number, eventId: number) => {
   return await trx
     .delete(eventFields)
     .where(and(eq(eventFields.id, fieldId), eq(eventFields.event_id, eventId)))
@@ -86,11 +74,7 @@ const upsertEventField = async (
 
   if (field.id) {
     // Update the existing field
-    await trx
-      .update(eventFields)
-      .set(fieldData)
-      .where(eq(eventFields.id, field.id))
-      .execute();
+    await trx.update(eventFields).set(fieldData).where(eq(eventFields.id, field.id)).execute();
   } else {
     // Insert a new field
     await trx
@@ -104,15 +88,8 @@ const upsertEventField = async (
 };
 
 // Function to handle dynamic fields
-const handleDynamicFields = async (
-  trx: typeof db,
-  eventData: any,
-  userId: string,
-  eventId: number
-) => {
-  const dynamicFields = eventData.dynamic_fields.filter(
-    (f: any) => f.title !== "secret_phrase_onton_input"
-  );
+const handleDynamicFields = async (trx: typeof db, eventData: any, userId: string, eventId: number) => {
+  const dynamicFields = eventData.dynamic_fields.filter((f: any) => f.title !== "secret_phrase_onton_input");
 
   for (const [index, field] of dynamicFields.entries()) {
     await upsertEventField(trx, field, index, userId, eventId);

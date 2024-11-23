@@ -62,9 +62,7 @@ type UploadFileProps = {
 export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const webApp = useWebApp();
-  const [imagePreview, setImagePreview] = useState<string | undefined>(
-    undefined
-  );
+  const [imagePreview, setImagePreview] = useState<string | undefined>(undefined);
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -136,9 +134,7 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
               {props.triggerText}
             </p>
             {props.infoText && (
-              <p className="text-cn-muted-foreground text-sm w-full text-balance">
-                {props.infoText}
-              </p>
+              <p className="text-cn-muted-foreground text-sm w-full text-balance">{props.infoText}</p>
             )}
           </>
         )}
@@ -151,12 +147,7 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
         >
           <BlockTitle>Upload Image</BlockTitle>
           <Block className="space-y-2">
-            {!imagePreview && (
-              <p>
-                {props.drawerDescriptionText ||
-                  "Upload an image from your device"}
-              </p>
-            )}
+            {!imagePreview && <p>{props.drawerDescriptionText || "Upload an image from your device"}</p>}
             {imagePreview && (
               <Image
                 src={imagePreview}
@@ -169,11 +160,9 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
             )}
             {uploadImage.error && (
               <div className="text-red-500 text-sm w-full text-balance mt-2">
-                {getErrorMessages(uploadImage.error.message).map(
-                  (errMessage, idx: number) => (
-                    <p key={idx}>{errMessage}</p>
-                  )
-                )}
+                {getErrorMessages(uploadImage.error.message).map((errMessage, idx: number) => (
+                  <p key={idx}>{errMessage}</p>
+                ))}
               </div>
             )}
             <input
@@ -208,8 +197,7 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
                 onClick={(e) => {
                   e.preventDefault();
                   setIsSheetOpen(false);
-                  typeof props?.onDone === "function" &&
-                    props.onDone(imagePreview);
+                  typeof props?.onDone === "function" && props.onDone(imagePreview);
                 }}
               >
                 Done

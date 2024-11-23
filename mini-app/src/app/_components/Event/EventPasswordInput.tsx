@@ -23,17 +23,16 @@ export const EventPasswordInput = () => {
     },
   });
 
-  const upsertUserEventFieldMutation =
-    trpc.userEventFields.upsertUserEventField.useMutation({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: () => {
-        trpcUtils.userEventFields.getUserEventFields.refetch({
-          event_hash: eventHash,
-        });
-      },
-    });
+  const upsertUserEventFieldMutation = trpc.userEventFields.upsertUserEventField.useMutation({
+    onError: (error) => {
+      toast.error(error.message);
+    },
+    onSuccess: () => {
+      trpcUtils.userEventFields.getUserEventFields.refetch({
+        event_hash: eventHash,
+      });
+    },
+  });
 
   useEffect(() => {
     // if user had wallet we do not want to save it
@@ -87,8 +86,7 @@ export const EventPasswordInput = () => {
         prefix_icon={<PasscodeIcon />}
       />
       <p className="text-cn-muted-foreground text-xs">
-        Enter the Event Password that the organizer shared to confirm your
-        participation in the event.
+        Enter the Event Password that the organizer shared to confirm your participation in the event.
       </p>
       <MainButton
         progress={upsertUserEventFieldMutation.isLoading}

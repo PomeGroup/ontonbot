@@ -14,9 +14,6 @@ export async function GET() {
     return NextResponse.json({ payload: payloadToken });
   } catch (error) {
     // Handle any errors
-    return NextResponse.json(
-      { error: "Failed to generate payload" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to generate payload" }, { status: 500 });
   }
 }

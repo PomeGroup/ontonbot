@@ -7,9 +7,7 @@ const searchEventsInputZod = z.object({
   search: z.string().optional().default(""),
   filter: z
     .object({
-      participationType: z
-        .array(z.enum(["online", "in_person"]))
-        .default(["online", "in_person"]),
+      participationType: z.array(z.enum(["online", "in_person"])).default(["online", "in_person"]),
       organizer_user_id: z.number().optional(),
       startDate: z.number().optional(),
       startDateOperator: z.enum([">=", ">", "=", "<", "<="]).default(">="),

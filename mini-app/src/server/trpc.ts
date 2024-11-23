@@ -3,83 +3,73 @@ import { TRPCError, initTRPC } from "@trpc/server";
 import { z } from "zod";
 import { createContext } from "./context";
 
-export const trpcApiInstance = initTRPC
-  .context<typeof createContext>()
-  .create();
+export const trpcApiInstance = initTRPC.context<typeof createContext>().create();
 
 export const router = trpcApiInstance.router;
 
 export const publicProcedure = trpcApiInstance.procedure;
 
 // protected using initData
-export const initDataProtectedProcedure = trpcApiInstance.procedure.use(
-  async (opts) => {
-    if (!opts.ctx.user) {
+export const initDataProtectedProcedure = trpcApiInstance.procedure.use(async (opts) => {
+  if (!opts.ctx.user) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "No auth header found",
+    });
+  }
+
+  return opts.next({
+    ctx: {
+      user: opts.ctx.user,
+    },
+  });
+});
+
+export const adminOrganizerProtectedProcedure = initDataProtectedProcedure.use((opts) => {
+  if (opts.ctx.user.role !== "admin" && opts.ctx.user.role !== "organizer") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Unauthorized access, invalid role",
+    });
+  }
+
+  return opts.next({
+    ctx: {
+      ...opts.ctx,
+      userRole: opts.ctx.user.role as "admin" | "organizer",
+    },
+  });
+});
+
+export const eventManagementProtectedProcedure = adminOrganizerProtectedProcedure
+  .input(z.object({ event_uuid: z.string().uuid() }))
+  .use(async (opts) => {
+    const event = await db.query.events.findFirst({
+      where: (fields, { eq }) => {
+        return eq(fields.event_uuid, opts.input.event_uuid);
+      },
+    });
+
+    if (!event) {
       throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "No auth header found",
+        code: "BAD_REQUEST",
+        message: "event not found",
       });
     }
 
-    return opts.next({
-      ctx: {
-        user: opts.ctx.user,
-      },
-    });
-  }
-);
+    // check if the user is the owner of the event
 
-export const adminOrganizerProtectedProcedure = initDataProtectedProcedure.use(
-  (opts) => {
-    if (opts.ctx.user.role !== "admin" && opts.ctx.user.role !== "organizer") {
+    if (opts.ctx.userRole === "organizer" && event.owner !== opts.ctx.user.user_id) {
       throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "Unauthorized access, invalid role",
+        code: "UNAUTHORIZED",
+        message: "Unauthorized access, you don't have access to this event",
       });
     }
 
     return opts.next({
       ctx: {
         ...opts.ctx,
-        userRole: opts.ctx.user.role as "admin" | "organizer",
+        event,
       },
     });
-  }
-);
-
-export const eventManagementProtectedProcedure =
-  adminOrganizerProtectedProcedure
-    .input(z.object({ event_uuid: z.string().uuid() }))
-    .use(async (opts) => {
-      const event = await db.query.events.findFirst({
-        where: (fields, { eq }) => {
-          return eq(fields.event_uuid, opts.input.event_uuid);
-        },
-      });
-
-      if (!event) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "event not found",
-        });
-      }
-
-      // check if the user is the owner of the event
-
-      if (
-        opts.ctx.userRole === "organizer" &&
-        event.owner !== opts.ctx.user.user_id
-      ) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Unauthorized access, you don't have access to this event",
-        });
-      }
-
-      return opts.next({
-        ctx: {
-          ...opts.ctx,
-          event,
-        },
-      });
-    });
+  });

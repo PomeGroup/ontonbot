@@ -5,14 +5,8 @@ import { getAndValidateVisitor } from "@/server/routers/services/visitorService"
 
 import { db } from "@/db/db";
 import rewardsDb from "@/server/db/rewards.db";
-import {
-  findVisitorByUserAndEventUuid,
-  selectValidVisitorById,
-} from "@/server/db/visitors";
-import {
-  validateEventData,
-  validateEventDates,
-} from "@/server/routers/services/eventService";
+import { findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/server/db/visitors";
+import { validateEventData, validateEventDates } from "@/server/routers/services/eventService";
 import { sendRewardNotification } from "@/server/routers/services/telegramService";
 import { TRPCError } from "@trpc/server";
 
@@ -29,30 +23,18 @@ export const createUserRewardSBT = async (props: {
     // Validate event data
     const eventValidationResult = await validateEventData(event_uuid);
     const eventData = eventValidationResult?.data;
-    if (
-      !eventValidationResult.success ||
-      !eventData ||
-      !eventData.start_date ||
-      !eventData.end_date
-    ) {
+    if (!eventValidationResult.success || !eventData || !eventData.start_date || !eventData.end_date) {
       return eventValidationResult; // Return the error in JSON format
     }
 
     // validate event date
-    const validateEventDateResult = validateEventDates(
-      eventData.start_date,
-      eventData.end_date
-    );
+    const validateEventDateResult = validateEventDates(eventData.start_date, eventData.end_date);
     if (!validateEventDateResult.success) {
       return validateEventDateResult;
     }
 
     // Validate visitor
-    const visitorValidationResult = await getAndValidateVisitor(
-      user_id,
-      event_uuid,
-      ticketOrderUuid
-    );
+    const visitorValidationResult = await getAndValidateVisitor(user_id, event_uuid, ticketOrderUuid);
     console.log("visitorValidationResult", visitorValidationResult);
     if (!visitorValidationResult.success || !visitorValidationResult.data) {
       return visitorValidationResult; // Return the error in JSON format
@@ -71,22 +53,14 @@ export const createUserRewardSBT = async (props: {
     }
 
     // Process reward creation
-    const createRewardResult = await processRewardCreation(
-      eventData,
-      user_id,
-      visitor
-    );
+    const createRewardResult = await processRewardCreation(eventData, user_id, visitor);
     console.log("createRewardResult", createRewardResult);
     // If reward creation was successful
     if (createRewardResult?.success) {
       reward = createRewardResult.data;
       // Send notification to the user
       if (reward?.status === "created") {
-        const notificationResult = await sendRewardNotification(
-          createRewardResult.data,
-          visitor,
-          eventData
-        );
+        const notificationResult = await sendRewardNotification(createRewardResult.data, visitor, eventData);
 
         // If notification was sent successfully, update the reward status
         if (notificationResult.success) {
@@ -111,10 +85,7 @@ export const createUserRewardSBT = async (props: {
     // Return a JSON response for any unexpected errors
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred.",
+      error: error instanceof Error ? error.message : "An unexpected error occurred.",
       errorCode: "INTERNAL_SERVER_ERROR",
       data: null,
     };
@@ -122,19 +93,9 @@ export const createUserRewardSBT = async (props: {
 };
 
 // Function to process reward creation
-export const processRewardCreation = async (
-  eventData: any,
-  user_id: number,
-  visitor: any
-) => {
+export const processRewardCreation = async (eventData: any, user_id: number, visitor: any) => {
   let reward;
-  reward = await rewardDB.insert(
-    visitor.id,
-    null,
-    user_id,
-    "ton_society_sbt",
-    "pending_creation"
-  );
+  reward = await rewardDB.insert(visitor.id, null, user_id, "ton_society_sbt", "pending_creation");
 
   try {
     // Call the function to create a user reward link
@@ -182,10 +143,7 @@ export const createUserReward = async (props: {
 }) => {
   try {
     // Fetch the visitor from the database
-    const visitor = await findVisitorByUserAndEventUuid(
-      props.user_id,
-      props.event_uuid
-    );
+    const visitor = await findVisitorByUserAndEventUuid(props.user_id, props.event_uuid);
 
     // Check if visitor exists
     if (!visitor) {

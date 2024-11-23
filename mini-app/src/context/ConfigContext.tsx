@@ -9,9 +9,7 @@ type ConfigContextType = {
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
-export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [config, setConfig] = useState<{ [key: string]: string | null }>({});
 
   const { data, error } = trpc.config.getConfig.useQuery();
@@ -26,11 +24,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({
     console.error("Failed to fetch config:", error);
   }
 
-  return (
-    <ConfigContext.Provider value={{ config }}>
-      {children}
-    </ConfigContext.Provider>
-  );
+  return <ConfigContext.Provider value={{ config }}>{children}</ConfigContext.Provider>;
 };
 
 export const useConfig = (): ConfigContextType => {

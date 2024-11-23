@@ -18,8 +18,7 @@ const TonHubPicker: FC<{
   const hubsResponse = trpc.events.getHubs.useQuery();
 
   useEffect(() => {
-    if (hubsResponse.data?.status === "success")
-      setHubs(hubsResponse.data.hubs);
+    if (hubsResponse.data?.status === "success") setHubs(hubsResponse.data.hubs);
     else {
       console.log(hubsResponse.data);
     }

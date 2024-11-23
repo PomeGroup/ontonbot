@@ -135,13 +135,9 @@ export const EventDataSchema = z.object({
   ts_reward_url: z
     .string()
     .optional() // This allows the field to be undefined
-    .refine(
-      (url) =>
-        url === undefined ||
-        url === "" ||
-        z.string().url().safeParse(url).success,
-      { message: "Please upload a valid reward image URL" }
-    ),
+    .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {
+      message: "Please upload a valid reward image URL",
+    }),
   society_hub: z.object({
     id: z.string({ required_error: "society_hub.id is required" }),
     name: z.string({ required_error: "society_hub.name is required" }),
@@ -178,13 +174,9 @@ export const UpdateEventDataSchema = z.object({
   ts_reward_url: z
     .string()
     .optional() // This allows the field to be undefined
-    .refine(
-      (url) =>
-        url === undefined ||
-        url === "" ||
-        z.string().url().safeParse(url).success,
-      { message: "Please upload a valid reward image URL" }
-    ),
+    .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {
+      message: "Please upload a valid reward image URL",
+    }),
   society_hub: z.object({
     id: z.string({ required_error: "society_hub.id is required" }),
     name: z.string({ required_error: "society_hub.name is required" }),
@@ -276,10 +268,7 @@ export const RequiredEventFieldsSchema = z
     secret_phrase: z
       .string()
       .transform((phrase) => phrase.trim().toLowerCase())
-      .refine(
-        (phrase) => phrase.length >= 4 && phrase.length <= 20,
-        "Length must be between 4 and 20"
-      ),
+      .refine((phrase) => phrase.length >= 4 && phrase.length <= 20, "Length must be between 4 and 20"),
     start_date: z
       .number()
       .min(new Date("2023-01-01").getTime() / 1000)
@@ -305,9 +294,7 @@ export const RequiredEventFieldsSchema = z
     }
   );
 
-export type TRequiredEventFieldsSchema = z.infer<
-  typeof RequiredEventFieldsSchema
->;
+export type TRequiredEventFieldsSchema = z.infer<typeof RequiredEventFieldsSchema>;
 
 // user_id: opts.input.user.id,
 // username: opts.input.user.username,

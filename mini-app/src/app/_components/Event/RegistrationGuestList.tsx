@@ -134,9 +134,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       title={
         <div className="w-44">
           <h4 className="truncate">{name}</h4>
-          <p className="text-xs truncate text-cn-muted-foreground">
-            {username}
-          </p>
+          <p className="text-xs truncate text-cn-muted-foreground">{username}</p>
         </div>
       }
       after={afterContent}
@@ -154,14 +152,7 @@ interface ButtonProps {
   className?: string;
 }
 
-const Button: React.FC<ButtonProps> = ({
-  variant,
-  icon,
-  label,
-  onClick,
-  isLoading,
-  className,
-}) => {
+const Button: React.FC<ButtonProps> = ({ variant, icon, label, onClick, isLoading, className }) => {
   const variantStyles = cva("", {
     variants: {
       variant: {
@@ -197,11 +188,7 @@ interface StatusChipProps {
   className?: string;
 }
 
-const StatusChip: React.FC<StatusChipProps> = ({
-  variant,
-  label,
-  className,
-}) => {
+const StatusChip: React.FC<StatusChipProps> = ({ variant, label, className }) => {
   const variantStyles = cva("", {
     variants: {
       variant: {
@@ -215,9 +202,7 @@ const StatusChip: React.FC<StatusChipProps> = ({
     },
   });
 
-  return (
-    <Chip className={cn(variantStyles({ variant, className }))}>{label}</Chip>
-  );
+  return <Chip className={cn(variantStyles({ variant, className }))}>{label}</Chip>;
 };
 
 const RegistrationGuestlist = () => {
@@ -230,8 +215,7 @@ const RegistrationGuestlist = () => {
   /*
    * Process Registrant (Approve ✅ / Reject ❌)
    */
-  const processRegistrantRequest =
-    trpc.events.processRegistrantRequest.useMutation();
+  const processRegistrantRequest = trpc.events.processRegistrantRequest.useMutation();
 
   const handleApprove = async (user_id: number) => {
     // Perform approval logic
@@ -259,9 +243,7 @@ const RegistrationGuestlist = () => {
       {/* </BlockHeader> */}
       <BlockHeader className="font-bold">
         {/* TODO: Better UI for state handling */}
-        {registrants.isSuccess &&
-          !registrants.data?.length &&
-          "No Registrants Yet 😶"}
+        {registrants.isSuccess && !registrants.data?.length && "No Registrants Yet 😶"}
         {registrants.isLoading && "Loading Registrants List 🏗"}
         {registrants.isError &&
           (registrants.error.data?.code === "NOT_FOUND"

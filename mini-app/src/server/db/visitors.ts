@@ -13,13 +13,9 @@ import { and, between, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { checkEventTicketToCheckIn } from "@/server/db/events";
 import { redisTools } from "@/lib/redisTools";
 
-const getVisitorCacheKey = (user_id: number, event_uuid: string) =>
-  `visitor:${user_id}:${event_uuid}`;
+const getVisitorCacheKey = (user_id: number, event_uuid: string) => `visitor:${user_id}:${event_uuid}`;
 
-const findVisitorByUserAndEvent = async (
-  user_id: number,
-  event_uuid: string
-) => {
+const findVisitorByUserAndEvent = async (user_id: number, event_uuid: string) => {
   const cacheKey = getVisitorCacheKey(user_id, event_uuid);
   const cachedVisitor = await redisTools.getCache(cacheKey);
 
@@ -31,20 +27,14 @@ const findVisitorByUserAndEvent = async (
   const visitorsFound = await db
     .select()
     .from(visitors)
-    .where(
-      and(eq(visitors.user_id, user_id), eq(visitors.event_uuid, event_uuid))
-    )
+    .where(and(eq(visitors.user_id, user_id), eq(visitors.event_uuid, event_uuid)))
     .execute();
 
   const visitor = visitorsFound?.[0] ?? null;
 
   // Cache the result
   if (visitor) {
-    await redisTools.setCache(
-      cacheKey,
-      JSON.stringify(visitor),
-      redisTools.cacheLvl.medium
-    );
+    await redisTools.setCache(cacheKey, JSON.stringify(visitor), redisTools.cacheLvl.medium);
   }
 
   return visitor;
@@ -65,11 +55,7 @@ const insertNewVisitor = async (user_id: number, event_uuid: string) => {
   // Cache the newly inserted visitor
   if (visitor) {
     const cacheKey = getVisitorCacheKey(user_id, event_uuid);
-    await redisTools.setCache(
-      cacheKey,
-      JSON.stringify(visitor),
-      redisTools.cacheLvl.medium
-    );
+    await redisTools.setCache(cacheKey, JSON.stringify(visitor), redisTools.cacheLvl.medium);
   }
 
   return visitor;
@@ -90,14 +76,8 @@ const generateRandomVisitor = (userId: number) => ({
   ],
 });
 
-export const selectVisitorsByEventUuidMock = async (
-  event_uuid: string,
-  limit: number,
-  cursor: number
-) => {
-  const visitorsData = Array.from({ length: limit }, (_, index) =>
-    generateRandomVisitor(cursor + index + 1)
-  );
+export const selectVisitorsByEventUuidMock = async (event_uuid: string, limit: number, cursor: number) => {
+  const visitorsData = Array.from({ length: limit }, (_, index) => generateRandomVisitor(cursor + index + 1));
 
   const moreRecordsAvailable = visitorsData.length === limit; // Simulate the possibility of more records
 
@@ -276,9 +256,7 @@ export const selectVisitorsByEventUuid = async (
   END
 `.as("username"),
           first_name: specialGuests.name,
-          last_name: sql<string>`COALESCE(${specialGuests.surname}, '')`.as(
-            "last_name"
-          ),
+          last_name: sql<string>`COALESCE(${specialGuests.surname}, '')`.as("last_name"),
           wallet_address: sql`null`.as("wallet_address"),
           created_at: sql`NOW()`.as("created_at"),
           has_ticket: sql<boolean>`true`.as("has_ticket"),
@@ -294,12 +272,8 @@ export const selectVisitorsByEventUuid = async (
             )
           `.as("ticket_order_id"),
           ticket_qr_code: sql`null`.as("ticket_qr_code"),
-          ticket_position: sql`COALESCE(${specialGuests.position}, '' )`.as(
-            "ticket_position"
-          ),
-          ticket_company: sql`COALESCE(${specialGuests.company}, '' )`.as(
-            "ticket_position"
-          ),
+          ticket_position: sql`COALESCE(${specialGuests.position}, '' )`.as("ticket_position"),
+          ticket_company: sql`COALESCE(${specialGuests.company}, '' )`.as("ticket_position"),
           ticket_nft_address: sql`null`.as("ticket_nft_address"),
           ticket_created_at: sql`NOW()`.as("ticket_created_at"),
           badge_info: sql<string>`
@@ -331,8 +305,7 @@ export const selectVisitorsByEventUuid = async (
     console.log(ticketDataResults);
   }
 
-  const moreRecordsAvailable =
-    typeof limit === "number" ? visitorsData.length === limit : false;
+  const moreRecordsAvailable = typeof limit === "number" ? visitorsData.length === limit : false;
   const nextCursor = moreRecordsAvailable && true ? cursor + limit! : null;
   if (!dynamic_fields) {
     return {
@@ -411,16 +384,11 @@ export const selectVisitorsWithWalletAddress = async (event_uuid: string) => {
     .select()
     .from(visitors)
     .fullJoin(users, eq(visitors.user_id, users.user_id))
-    .where(
-      and(eq(visitors.event_uuid, event_uuid), isNotNull(users.wallet_address))
-    )
+    .where(and(eq(visitors.event_uuid, event_uuid), isNotNull(users.wallet_address)))
     .execute();
 };
 
-export const findVisitorByUserAndEventUuid = async (
-  user_id: number,
-  event_uuid: string
-) => {
+export const findVisitorByUserAndEventUuid = async (user_id: number, event_uuid: string) => {
   const cacheKey = getVisitorCacheKey(user_id, event_uuid);
   const cachedVisitor = await redisTools.getCache(cacheKey);
 
@@ -431,20 +399,13 @@ export const findVisitorByUserAndEventUuid = async (
 
   const visitor = await db.query.visitors.findFirst({
     where(fields, { eq, and }) {
-      return and(
-        eq(fields.user_id, user_id),
-        eq(fields.event_uuid, event_uuid)
-      );
+      return and(eq(fields.user_id, user_id), eq(fields.event_uuid, event_uuid));
     },
   });
 
   // Cache the result if it exists
   if (visitor) {
-    await redisTools.setCache(
-      cacheKey,
-      JSON.stringify(visitor),
-      redisTools.cacheLvl.medium
-    );
+    await redisTools.setCache(cacheKey, JSON.stringify(visitor), redisTools.cacheLvl.medium);
   }
 
   return visitor;

@@ -109,13 +109,7 @@ async function fetchNFTItemsWithRetry(
   while (attempt < retries) {
     try {
       // Call fetchNFTItems function
-      const result = await fetchNFTItems(
-        ownerAddress,
-        collectionAddress,
-        nft_address,
-        limit,
-        offset
-      );
+      const result = await fetchNFTItems(ownerAddress, collectionAddress, nft_address, limit, offset);
       return result; // Return the result if successful
     } catch (error) {
       attempt++;

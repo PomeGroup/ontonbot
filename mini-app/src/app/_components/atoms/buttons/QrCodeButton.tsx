@@ -6,15 +6,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { cn, wait } from "@/lib/utils";
 import { LoaderIcon, QrCode } from "lucide-react";
 
-const QrCodeButton = ({
-  url,
-  hub,
-  event_uuid,
-}: {
-  event_uuid: string;
-  url: string;
-  hub?: string;
-}) => {
+const QrCodeButton = ({ url, hub, event_uuid }: { event_uuid: string; url: string; hub?: string }) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
   const hapticFeedback = WebApp?.HapticFeedback;
@@ -35,9 +27,7 @@ const QrCodeButton = ({
           hub,
           event_uuid,
         });
-        WebApp?.openTelegramLink(
-          `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`
-        );
+        WebApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`);
         hapticFeedback?.impactOccurred("medium");
         await wait(500);
         WebApp?.close();
@@ -45,9 +35,7 @@ const QrCodeButton = ({
     >
       <QrCode />
       <span className="text-lg">Get Event Link and QR</span>
-      {requestSendQRcodeMutation.isLoading && (
-        <LoaderIcon className="h-5 animate-spin" />
-      )}
+      {requestSendQRcodeMutation.isLoading && <LoaderIcon className="h-5 animate-spin" />}
     </Button>
   );
 };

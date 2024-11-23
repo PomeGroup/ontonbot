@@ -16,11 +16,7 @@ export const formatDate = (date: number): string => {
   });
 };
 
-export const formatDateRange = (
-  start: number,
-  end: number,
-  _timezone: string
-): string => {
+export const formatDateRange = (start: number, end: number, _timezone: string): string => {
   if (!start || !end) return "Date not available";
 
   const startDate = new Date(start * 1000);

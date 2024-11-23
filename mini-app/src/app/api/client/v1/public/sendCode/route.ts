@@ -126,8 +126,8 @@ export async function POST(req: Request) {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
     success: false,
-    error: "out_of_service",}
-  )
+    error: "out_of_service",
+  });
 
   // try {
   //   const body = await req.json();

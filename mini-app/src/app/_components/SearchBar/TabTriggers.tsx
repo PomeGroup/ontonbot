@@ -15,12 +15,7 @@ interface TabTriggersProps {
   swiperRef: React.MutableRefObject<any>;
 }
 
-const TabTriggers: React.FC<TabTriggersProps> = ({
-  tabs,
-  setTabValue,
-  tabValue = "All",
-  swiperRef,
-}) => {
+const TabTriggers: React.FC<TabTriggersProps> = ({ tabs, setTabValue, tabValue = "All", swiperRef }) => {
   const handleTabClick = (value: string, index: number) => {
     setTabValue(value);
 

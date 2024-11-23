@@ -12,9 +12,7 @@ interface SBTRewardCollection {
 }
 
 // Function to fetch all reward collections
-export const fetchAllSBTRewardCollections = async (): Promise<
-  SBTRewardCollection[]
-> => {
+export const fetchAllSBTRewardCollections = async (): Promise<SBTRewardCollection[]> => {
   const cacheKey = redisTools.cacheKeys.SBTRewardCollections;
 
   const cachedResult = await redisTools.getCache(cacheKey);
@@ -30,9 +28,7 @@ export const fetchAllSBTRewardCollections = async (): Promise<
 };
 
 // Function to fetch reward collections by hubID
-export const fetchSBTRewardCollectionsByHubID = async (
-  hubID: number
-): Promise<SBTRewardCollection[]> => {
+export const fetchSBTRewardCollectionsByHubID = async (hubID: number): Promise<SBTRewardCollection[]> => {
   const cacheKey = `${redisTools.cacheKeys.SBTRewardCollectionByHubID}${hubID}`;
 
   const cachedResult = await redisTools.getCache(cacheKey);
@@ -52,9 +48,7 @@ export const fetchSBTRewardCollectionsByHubID = async (
 };
 
 // Function to fetch a single reward collection by ID
-export const fetchSBTRewardCollectionById = async (
-  id: number
-): Promise<SBTRewardCollection | undefined> => {
+export const fetchSBTRewardCollectionById = async (id: number): Promise<SBTRewardCollection | undefined> => {
   const cacheKey = `SBTRewardCollection:${id}`;
 
   const cachedResult = await redisTools.getCache(cacheKey);

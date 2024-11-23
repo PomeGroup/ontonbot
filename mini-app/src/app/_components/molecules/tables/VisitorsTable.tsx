@@ -112,9 +112,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
 
     return flatData.filter((visitor) => {
       const matchesSearch =
-        visitor?.username
-          ?.toLowerCase()
-          .includes(debouncedSearchQuery.toLowerCase()) ||
+        visitor?.username?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         `${visitor?.first_name} ${visitor?.last_name}`
           .toLowerCase()
           .includes(debouncedSearchQuery.toLowerCase());

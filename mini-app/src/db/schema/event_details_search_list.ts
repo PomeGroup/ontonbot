@@ -4,15 +4,7 @@ import { giataCity } from "@/db/schema/giataCity";
 import { users } from "@/db/schema/users";
 import { visitors } from "@/db/schema/visitors";
 import { sql } from "drizzle-orm";
-import {
-  bigint,
-  boolean,
-  integer,
-  pgView,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { bigint, boolean, integer, pgView, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 // this view is used to get the event details with the ticket and visitor count
 export const event_details_search_list = pgView("event_details_search_list", {

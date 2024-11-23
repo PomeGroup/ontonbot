@@ -6,12 +6,7 @@ export const getUserEventFields = async (user_id: number, event_id: number) => {
   return await db
     .select()
     .from(userEventFields)
-    .where(
-      and(
-        eq(userEventFields.event_id, event_id),
-        eq(userEventFields.user_id, user_id)
-      )
-    )
+    .where(and(eq(userEventFields.event_id, event_id), eq(userEventFields.user_id, user_id)))
     .execute();
 };
 
@@ -49,10 +44,7 @@ export const upsertUserEventFields = async (
     .execute();
 };
 
-export const getSecureUserEventFields = async (
-  user_id: number,
-  event_uuid: string
-) => {
+export const getSecureUserEventFields = async (user_id: number, event_uuid: string) => {
   return await db
     .select({
       eventFieldId: userEventFields.event_field_id,
@@ -65,10 +57,7 @@ export const getSecureUserEventFields = async (
     .innerJoin(eventFields, eq(eventFields.event_id, events.event_id))
     .leftJoin(
       userEventFields,
-      and(
-        eq(userEventFields.event_field_id, eventFields.id),
-        eq(userEventFields.user_id, user_id)
-      )
+      and(eq(userEventFields.event_field_id, eventFields.id), eq(userEventFields.user_id, user_id))
     )
     .where(eq(events.event_uuid, event_uuid))
     .execute();

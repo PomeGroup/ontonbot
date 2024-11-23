@@ -2,13 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Hub {
@@ -41,9 +35,7 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
 
   const toggleHubSelection = (hubId: string) => {
     setLocalSelectedHubs((prev) =>
-      prev.includes(hubId)
-        ? prev.filter((id) => id !== hubId)
-        : [...prev, hubId]
+      prev.includes(hubId) ? prev.filter((id) => id !== hubId) : [...prev, hubId]
     );
   };
 

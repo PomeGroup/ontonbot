@@ -11,18 +11,13 @@ export const scanFileWithClamAV = async (buffer: Buffer): Promise<boolean> =>
         // If ClamAV is not running, resolve as true (clean) but log the error
         return resolve(true);
       }
-      clamav.scan(
-        buffer,
-        CLAMAV_PORT,
-        CLAMAV_HOST,
-        (err: any, object: any, malicious: boolean) => {
-          if (err) {
-            console.error("Error scanning file:", err);
-            // In case of error during scan, resolve as true (clean) but log the error
-            return resolve(true);
-          }
-          resolve(!malicious); // Return true if the file is clean
+      clamav.scan(buffer, CLAMAV_PORT, CLAMAV_HOST, (err: any, object: any, malicious: boolean) => {
+        if (err) {
+          console.error("Error scanning file:", err);
+          // In case of error during scan, resolve as true (clean) but log the error
+          return resolve(true);
         }
-      );
+        resolve(!malicious); // Return true if the file is clean
+      });
     });
   });

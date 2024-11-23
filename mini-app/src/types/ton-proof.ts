@@ -38,10 +38,7 @@ export const CheckTonProofError = z.object({
   error: z.string(),
 });
 
-export const CheckTonProof = z.union([
-  CheckTonProofSuccess,
-  CheckTonProofError,
-]);
+export const CheckTonProof = z.union([CheckTonProofSuccess, CheckTonProofError]);
 
 export const WalletAddress = z.object({
   address: z.string(),

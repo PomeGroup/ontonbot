@@ -14,8 +14,7 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary/10 text-cn-primary-foreground hover:bg-primary/30",
         primary: "bg-cn-primary text-cn-primary-foreground hover:bg-primary/80",
-        destructive:
-          "bg-cn-destructive text-cn-destructive-foreground hover:bg-destructive/90",
+        destructive: "bg-cn-destructive text-cn-destructive-foreground hover:bg-destructive/90",
         outline: "bg-primary/10 text-cn-secondary-foreground hover:bg-primary/20",
         secondary: "bg-cn-secondary text-cn-secondary-foreground hover:bg-cn-accent",
         ghost: "hover:bg-cn-accent hover:text-accent-foreground",
@@ -52,11 +51,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={props.disabled || props.isLoading}
         {...props}
       >
-        {props.isLoading ? (
-          <Loader2 className="me-2 min-h-4 w-4 animate-spin" />
-        ) : (
-          props.children
-        )}
+        {props.isLoading ? <Loader2 className="me-2 min-h-4 w-4 animate-spin" /> : props.children}
       </Comp>
     );
   }

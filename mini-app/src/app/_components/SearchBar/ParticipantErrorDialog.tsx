@@ -17,11 +17,7 @@ interface ParticipantErrorDialogProps {
   onConfirm: () => void;
 }
 
-const ParticipantErrorDialog: React.FC<ParticipantErrorDialogProps> = ({
-  open,
-  onClose,
-  onConfirm,
-}) => {
+const ParticipantErrorDialog: React.FC<ParticipantErrorDialogProps> = ({ open, onClose, onConfirm }) => {
   return (
     <AlertDialog
       open={open}

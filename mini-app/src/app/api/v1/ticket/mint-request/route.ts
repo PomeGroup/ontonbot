@@ -32,18 +32,11 @@ export async function POST(req: Request) {
   const data = parsedData.data;
 
   const eventTicketData = (
-    await db
-      .select()
-      .from(eventTicket)
-      .where(eq(eventTicket.event_uuid, data.event_id))
-      .execute()
+    await db.select().from(eventTicket).where(eq(eventTicket.event_uuid, data.event_id)).execute()
   ).pop();
 
   if (!eventTicketData) {
-    return Response.json(
-      { error: "Event ticket data not found" },
-      { status: 400 }
-    );
+    return Response.json({ error: "Event ticket data not found" }, { status: 400 });
   }
 
   // check if user already has the ticket
@@ -52,18 +45,12 @@ export async function POST(req: Request) {
       .select()
       .from(tickets)
       .where(
-        and(
-          eq(tickets.user_id, parsedData.data.user_id),
-          eq(tickets.event_uuid, parsedData.data.event_id)
-        )
+        and(eq(tickets.user_id, parsedData.data.user_id), eq(tickets.event_uuid, parsedData.data.event_id))
       )
   ).pop();
 
   if (userHasTicket) {
-    return Response.json(
-      { error: "User already owns a ticket" },
-      { status: 400 }
-    );
+    return Response.json({ error: "User already owns a ticket" }, { status: 400 });
   }
 
   try {
@@ -98,16 +85,13 @@ export async function POST(req: Request) {
       });
 
       // return the response returned by this fetch
-      const res = await fetch(
-        `${process.env.NFT_MANAGER_BASE_URL}/validateTrx`,
-        {
-          method: "POST",
-          body,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const res = await fetch(`${process.env.NFT_MANAGER_BASE_URL}/validateTrx`, {
+        method: "POST",
+        body,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (res.status !== 201) {
         tx.rollback();

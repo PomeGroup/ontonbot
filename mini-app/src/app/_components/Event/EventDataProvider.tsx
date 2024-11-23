@@ -55,9 +55,7 @@ export const EventDataProvider = ({
   );
 
   const eventPasswordField = useMemo(() => {
-    return eventData.data?.dynamic_fields.find(
-      (v) => v.title === "secret_phrase_onton_input"
-    );
+    return eventData.data?.dynamic_fields.find((v) => v.title === "secret_phrase_onton_input");
   }, [eventData.data?.dynamic_fields.length]);
 
   const { isLocationUrl, endUTC, startUTC, location } = useMemo(() => {
@@ -80,22 +78,14 @@ export const EventDataProvider = ({
       startUTC,
       location,
     };
-  }, [
-    eventData.data?.start_date,
-    eventData.data?.end_date,
-    eventData.data?.location,
-  ]);
+  }, [eventData.data?.start_date, eventData.data?.end_date, eventData.data?.location]);
 
   const userEventPasswordField = useMemo(() => {
     console.log(userEventFields.data);
     if (eventPasswordField?.id) {
       return userEventFields.data?.[eventPasswordField.id];
     }
-  }, [
-    eventPasswordField?.id,
-    userEventFields.isFetching,
-    userEventFields.isSuccess,
-  ]);
+  }, [eventPasswordField?.id, userEventFields.isFetching, userEventFields.isSuccess]);
 
   return (
     <EventDataContext.Provider

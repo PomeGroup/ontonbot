@@ -21,9 +21,7 @@ export const userEventFields = pgTable(
     event_id: integer("event_id")
       .references(() => events.event_id)
       .notNull(),
-    user_id: bigint("user_id", { mode: "number" }).references(
-      () => users.user_id
-    ),
+    user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
     data: text("data"),
     completed: boolean("completed"),
     created_at: timestamp("created_at").defaultNow(),
@@ -46,16 +44,13 @@ export const userEventFields = pgTable(
 
 // Relations
 
-export const userEventFieldRelations = relations(
-  userEventFields,
-  ({ one }) => ({
-    eventField: one(eventFields, {
-      fields: [userEventFields.event_field_id],
-      references: [eventFields.id],
-    }),
-    user: one(users, {
-      fields: [userEventFields.user_id],
-      references: [users.user_id],
-    }),
-  })
-);
+export const userEventFieldRelations = relations(userEventFields, ({ one }) => ({
+  eventField: one(eventFields, {
+    fields: [userEventFields.event_field_id],
+    references: [eventFields.id],
+  }),
+  user: one(users, {
+    fields: [userEventFields.user_id],
+    references: [users.user_id],
+  }),
+}));

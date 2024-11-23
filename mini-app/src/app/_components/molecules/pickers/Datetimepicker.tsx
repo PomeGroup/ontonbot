@@ -38,9 +38,7 @@ const Datetimepicker: FC<DatetimepickerProps> = ({
       : `${currentDate!.year}-${currentDate!.month}-${currentDate!.day}`
   );
   const [time, setTime] = useState(
-    value
-      ? `${formTime.hours}:${formTime.minutes}`
-      : `${currentTime.hours}:${currentTime.minutes}`
+    value ? `${formTime.hours}:${formTime.minutes}` : `${currentTime.hours}:${currentTime.minutes}`
   );
 
   // Calculate minDate and minTime for greaterThan, and maxDate and maxTime for lowerThan
@@ -64,21 +62,16 @@ const Datetimepicker: FC<DatetimepickerProps> = ({
   // Function to handle date change
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedDate = e.target.value;
-    const selectedDateTime =
-      new Date(`${selectedDate}T${time}`).getTime() / 1000;
+    const selectedDateTime = new Date(`${selectedDate}T${time}`).getTime() / 1000;
 
     // Validate the date selection before updating
     if (greaterThan && selectedDateTime < greaterThan) {
-      toast.error(
-        `The selected date/time must be after ${new Date(greaterThan * 1000).toLocaleString()}.`
-      );
+      toast.error(`The selected date/time must be after ${new Date(greaterThan * 1000).toLocaleString()}.`);
       return; // Discard change if invalid
     }
 
     if (lowerThan && selectedDateTime > lowerThan) {
-      toast.error(
-        `The selected date/time must be before ${new Date(lowerThan * 1000).toLocaleString()}.`
-      );
+      toast.error(`The selected date/time must be before ${new Date(lowerThan * 1000).toLocaleString()}.`);
       return; // Discard change if invalid
     }
 
@@ -90,21 +83,16 @@ const Datetimepicker: FC<DatetimepickerProps> = ({
   // Function to handle time change
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedTime = e.target.value;
-    const selectedDateTime =
-      new Date(`${date}T${selectedTime}`).getTime() / 1000;
+    const selectedDateTime = new Date(`${date}T${selectedTime}`).getTime() / 1000;
 
     // Validate the time selection before updating
     if (greaterThan && selectedDateTime < greaterThan) {
-      toast.error(
-        `The selected date/time must be after ${new Date(greaterThan * 1000).toLocaleString()}.`
-      );
+      toast.error(`The selected date/time must be after ${new Date(greaterThan * 1000).toLocaleString()}.`);
       return; // Discard change if invalid
     }
 
     if (lowerThan && selectedDateTime > lowerThan) {
-      toast.error(
-        `The selected date/time must be before ${new Date(lowerThan * 1000).toLocaleString()}.`
-      );
+      toast.error(`The selected date/time must be before ${new Date(lowerThan * 1000).toLocaleString()}.`);
       return; // Discard change if invalid
     }
 

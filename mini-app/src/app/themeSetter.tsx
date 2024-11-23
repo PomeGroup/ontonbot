@@ -4,11 +4,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { useTheme } from "next-themes";
 import { useEffect } from "react";
 
-export default function ThemeSetter({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ThemeSetter({ children }: { children: React.ReactNode }) {
   const { theme, setTheme } = useTheme();
   const webApp = useWebApp();
   const themeParams = webApp?.themeParams;

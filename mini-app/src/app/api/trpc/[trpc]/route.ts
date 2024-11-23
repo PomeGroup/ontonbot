@@ -15,10 +15,7 @@ const handler = async (req: Request) => {
   });
 
   const text = await response.text();
-  const { compressedBody, encoding } = await compressResponse(
-    text,
-    acceptEncoding
-  );
+  const { compressedBody, encoding } = await compressResponse(text, acceptEncoding);
 
   return new NextResponse(compressedBody, {
     headers: {

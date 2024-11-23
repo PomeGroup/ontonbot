@@ -16,9 +16,7 @@ export const POST = async (req: Request) => {
     const client = TonApiService.create(body.network);
     const service = new TonProofService();
 
-    const isValid = await service.checkProof(body, (address) =>
-      client.getWalletPublicKey(address)
-    );
+    const isValid = await service.checkProof(body, (address) => client.getWalletPublicKey(address));
     if (!isValid) {
       return NextResponse.json(
         { error: "Invalid proof" },
@@ -46,9 +44,6 @@ export const POST = async (req: Request) => {
     return NextResponse.json({ token });
   } catch (e) {
     console.log("err", e);
-    return NextResponse.json(
-      { error: "Invalid request", trace: e },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Invalid request", trace: e }, { status: 500 });
   }
 };

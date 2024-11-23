@@ -32,10 +32,7 @@ const initialState: SearchEventsInput = {
 };
 
 // Helper function to update filter
-const updateFilter = (
-  state: SearchEventsInput,
-  updates: FilterUpdate
-): SearchEventsInput => ({
+const updateFilter = (state: SearchEventsInput, updates: FilterUpdate): SearchEventsInput => ({
   ...state,
   //@ts-ignore
   filter: state.filter
@@ -64,14 +61,10 @@ const useSearchEventsStore = create<{
 
   // Filter setters
   setFilter: (_filter: Filter) => void;
-  setParticipationType: (
-    _participationType: Filter["participationType"]
-  ) => void;
+  setParticipationType: (_participationType: Filter["participationType"]) => void;
   setOrganizerUserId: (_organizer_user_id: Filter["organizer_user_id"]) => void;
   setStartDate: (_startDate: Filter["startDate"]) => void;
-  setStartDateOperator: (
-    _startDateOperator: Filter["startDateOperator"]
-  ) => void;
+  setStartDateOperator: (_startDateOperator: Filter["startDateOperator"]) => void;
   setEndDate: (_endDate: Filter["endDate"]) => void;
   setEndDateOperator: (_endDateOperator: Filter["endDateOperator"]) => void;
   setEventIds: (_event_ids: Filter["event_ids"]) => void;

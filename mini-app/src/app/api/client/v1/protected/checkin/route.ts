@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import ticketDB from "@/server/db/ticket.db";
 import rewardsService from "@/server/routers/services/rewardsService";
 import { validateJwtFromRequest } from "@/app/api/client/v1/authService";
-import {selectUserById} from "@/server/db/users";
+import { selectUserById } from "@/server/db/users";
 import dealRoomService from "@/server/routers/services/DealRoomService"; // Import the JWT validation function
 
 // Zod schema to validate the request body
@@ -37,9 +37,7 @@ const ERROR_CODES = {
 };
 
 // Type guard to check if result is alreadyCheckedIn type
-function isAlreadyCheckedIn(
-  result: any
-): result is { alreadyCheckedIn: boolean } {
+function isAlreadyCheckedIn(result: any): result is { alreadyCheckedIn: boolean } {
   return result && "alreadyCheckedIn" in result;
 }
 
@@ -109,9 +107,9 @@ function isAlreadyCheckedIn(
 export async function POST(req: Request) {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
-      success: false,
-      error: "out_of_service",}
-  )
+    success: false,
+    error: "out_of_service",
+  });
   // // First, validate the JWT token
   // const jwtValidation = await validateJwtFromRequest(req);
   // if (!jwtValidation.success) {

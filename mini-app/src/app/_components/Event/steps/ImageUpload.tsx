@@ -2,13 +2,7 @@ import { UploadImageFile } from "@/components/ui/upload-file";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { Block } from "konsta/react";
 
-export const ImageUpload = ({
-  isError,
-  clearError,
-}: {
-  isError: boolean;
-  clearError: () => void;
-}) => {
+export const ImageUpload = ({ isError, clearError }: { isError: boolean; clearError: () => void }) => {
   const eventData = useCreateEventStore((state) => state.eventData);
   const setEventData = useCreateEventStore((state) => state.setEventData);
 

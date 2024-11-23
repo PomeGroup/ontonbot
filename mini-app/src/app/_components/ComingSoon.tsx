@@ -41,9 +41,7 @@ export function ComingSoon() {
           alt="coming soon gif"
         />
         <h1 className="font-bold text-3xl">Coming Soon</h1>
-        <p className="font-bold leading-4">
-          Discover a World of Events at Your Fingertips
-        </p>
+        <p className="font-bold leading-4">Discover a World of Events at Your Fingertips</p>
         <Button
           onClick={() => {
             webApp?.openTelegramLink(

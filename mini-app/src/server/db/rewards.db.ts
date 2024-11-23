@@ -21,8 +21,7 @@ const checkExistingReward = async (visitor_id: number) => {
     },
   });
 
-  if (dbReward)
-    await redisTools.setCache(cacheKey, dbReward, redisTools.cacheLvl.long); // Cache the result
+  if (dbReward) await redisTools.setCache(cacheKey, dbReward, redisTools.cacheLvl.long); // Cache the result
   return dbReward;
 };
 
@@ -77,11 +76,7 @@ const updateStatusById = async (visitor_id: number, status: RewardStatus) => {
     .execute();
 
   const cacheKey = generateCacheKey(visitor_id);
-  await redisTools.setCache(
-    cacheKey,
-    updatedVisitor?.[0],
-    redisTools.cacheLvl.medium
-  ); // Update cache
+  await redisTools.setCache(cacheKey, updatedVisitor?.[0], redisTools.cacheLvl.medium); // Update cache
   return updatedVisitor?.[0] ?? null;
 };
 
@@ -109,11 +104,7 @@ const updateRewardById = async (
 
   if (updateFields.visitor_id) {
     const cacheKey = generateCacheKey(updateFields.visitor_id, reward_id);
-    await redisTools.setCache(
-      cacheKey,
-      updatedReward?.[0],
-      redisTools.cacheLvl.long
-    ); // Update cache for specific reward
+    await redisTools.setCache(cacheKey, updatedReward?.[0], redisTools.cacheLvl.long); // Update cache for specific reward
   }
 
   return updatedReward?.[0] ?? null;
@@ -140,12 +131,7 @@ const insertRewardWithData = async (
     status // Status as a parameter (e.g., "notified_by_ui")
   );
 };
-const insertReward = async (
-  visitor_id: number,
-  user_id: string,
-  status: RewardStatus,
-  type: RewardType
-) => {
+const insertReward = async (visitor_id: number, user_id: string, status: RewardStatus, type: RewardType) => {
   const visitor = await db.query.visitors.findFirst({
     where: (fields, ops) => {
       return ops.eq(fields.id, visitor_id);

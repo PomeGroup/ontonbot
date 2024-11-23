@@ -14,12 +14,8 @@ export const TimePlaceStep = () => {
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const editOptions = useCreateEventStore((state) => state.edit);
   const eventData = useCreateEventStore((state) => state.eventData);
-  const setErrors = useCreateEventStore(
-    (state) => state.setTimePlaceStepErrors
-  );
-  const clearErrors = useCreateEventStore(
-    (state) => state.clearTimePlaceStepErrors
-  );
+  const setErrors = useCreateEventStore((state) => state.setTimePlaceStepErrors);
+  const clearErrors = useCreateEventStore((state) => state.clearTimePlaceStepErrors);
 
   const startDateLimit = (Date.now() - 1000 * 3600 * 4) / 1000; // 4 hours before now
 
@@ -30,25 +26,15 @@ export const TimePlaceStep = () => {
       return;
     }
     const formData = new FormData(formRef.current);
-    const formDataObject = Object.fromEntries(formData.entries()) as Record<
-      string,
-      any
-    >;
+    const formDataObject = Object.fromEntries(formData.entries()) as Record<string, any>;
 
-    formDataObject.start_date =
-      new Date(formDataObject?.start_date).getTime() / 1000;
-    formDataObject.end_date =
-      new Date(formDataObject?.end_date).getTime() / 1000;
-    formDataObject.duration =
-      (formDataObject.end_date || 0) - (formDataObject.start_date || 0);
+    formDataObject.start_date = new Date(formDataObject?.start_date).getTime() / 1000;
+    formDataObject.end_date = new Date(formDataObject?.end_date).getTime() / 1000;
+    formDataObject.duration = (formDataObject.end_date || 0) - (formDataObject.start_date || 0);
     formDataObject.timezone = eventData?.timezone || "";
     formDataObject.eventLocationType = eventData?.eventLocationType || "online";
-    formDataObject.cityId = eventData?.cityId
-      ? Number(eventData.cityId)
-      : undefined;
-    formDataObject.countryId = eventData?.countryId
-      ? Number(eventData.countryId)
-      : undefined;
+    formDataObject.cityId = eventData?.cityId ? Number(eventData.cityId) : undefined;
+    formDataObject.countryId = eventData?.countryId ? Number(eventData.countryId) : undefined;
 
     const secondStepDataSchema = timeplaceStepValidation(
       editOptions,

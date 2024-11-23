@@ -34,9 +34,7 @@ const SUCCESS_CODES = {
 
 // Zod schema for validating the request body
 const logoutSchema = z.object({
-  telegramUserId: z
-    .string()
-    .regex(/^@[a-zA-Z0-9_]{5,}$/, "Invalid Telegram username format"),
+  telegramUserId: z.string().regex(/^@[a-zA-Z0-9_]{5,}$/, "Invalid Telegram username format"),
 });
 
 /**
@@ -44,11 +42,11 @@ const logoutSchema = z.object({
  * Logs out the user by removing session-related data from Redis and blacklisting the JWT token.
  */
 export async function POST(req: Request) {
-    /* ----------------------------- OUT OF SERVICE ----------------------------- */
-    return NextResponse.json({
-      success: false,
-      error: "out_of_service",}
-    )
+  /* ----------------------------- OUT OF SERVICE ----------------------------- */
+  return NextResponse.json({
+    success: false,
+    error: "out_of_service",
+  });
 
   // // Validate the JWT token
   // const jwtValidation = await validateJwtFromRequest(req);

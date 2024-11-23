@@ -37,9 +37,7 @@ export const userEventFieldsRouter = router({
         });
       }
 
-      const inputField = await eventFieldsDB.getEventFields(
-        opts.input.field_id
-      );
+      const inputField = await eventFieldsDB.getEventFields(opts.input.field_id);
 
       if (inputField.length === 0) {
         throw new TRPCError({
@@ -59,14 +57,10 @@ export const userEventFieldsRouter = router({
       // Compare the entered password against both the fixed password and the real password
       const enteredPassword = opts.input.data.trim().toLowerCase();
 
-      const isFixedPasswordCorrect =
-        enteredPassword === fixedPassword.toLowerCase();
+      const isFixedPasswordCorrect = enteredPassword === fixedPassword.toLowerCase();
 
       const isRealPasswordCorrect = eventData.secret_phrase
-        ? await bcryptLib.comparePassword(
-            enteredPassword,
-            eventData.secret_phrase
-          )
+        ? await bcryptLib.comparePassword(enteredPassword, eventData.secret_phrase)
         : false;
 
       if (!isFixedPasswordCorrect && !isRealPasswordCorrect) {
@@ -96,11 +90,10 @@ export const userEventFieldsRouter = router({
     )
     .query(async (opts) => {
       try {
-        const userEventFieldsResult =
-          await userEventFieldsDB.getSecureUserEventFields(
-            opts.ctx.user.user_id,
-            opts.input.event_hash
-          );
+        const userEventFieldsResult = await userEventFieldsDB.getSecureUserEventFields(
+          opts.ctx.user.user_id,
+          opts.input.event_hash
+        );
 
         if (!userEventFieldsResult || userEventFieldsResult.length === 0) {
           return {};
@@ -131,8 +124,7 @@ export const userEventFieldsRouter = router({
         } else {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message:
-              "An unexpected error occurred while retrieving user event fields",
+            message: "An unexpected error occurred while retrieving user event fields",
           });
         }
       }

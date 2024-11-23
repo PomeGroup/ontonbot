@@ -27,9 +27,7 @@ interface TicketDrawerProps {
 }
 
 const formatAddress = (address: string) => {
-  return address
-    ? `${address.slice(0, 4)}....${address.slice(-3)}`
-    : "Not available";
+  return address ? `${address.slice(0, 4)}....${address.slice(-3)}` : "Not available";
 };
 
 const TicketDrawer: FC<TicketDrawerProps> = ({
@@ -57,9 +55,7 @@ const TicketDrawer: FC<TicketDrawerProps> = ({
               <div className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer pt-1 flex justify-center items-center">
                 <Image
                   src={
-                    isValidImageUrl(eventTicketData.ticketImage)
-                      ? eventTicketData.ticketImage
-                      : defaultImage
+                    isValidImageUrl(eventTicketData.ticketImage) ? eventTicketData.ticketImage : defaultImage
                   }
                   alt="Ticket Image"
                   width={300}
@@ -68,9 +64,7 @@ const TicketDrawer: FC<TicketDrawerProps> = ({
                   loading="lazy"
                 />
               </div>
-              <p className="mt-4 text-xl font-semibold">
-                Ticket #{ticketData.id}
-              </p>
+              <p className="mt-4 text-xl font-semibold">Ticket #{ticketData.id}</p>
               <p className="text-sm text-gray-500 line-clamp-2 mb-2">
                 {eventTicketData.description ?? "No description available."}
               </p>
@@ -86,9 +80,7 @@ const TicketDrawer: FC<TicketDrawerProps> = ({
                 </div>
                 <div className="flex justify-between">
                   <span>Contract Address:</span>
-                  <span>
-                    {formatAddress(eventTicketData.collectionAddress)}
-                  </span>
+                  <span>{formatAddress(eventTicketData.collectionAddress)}</span>
                 </div>
               </div>
             </div>
@@ -160,9 +152,7 @@ const TicketDrawer: FC<TicketDrawerProps> = ({
     <>
       <DrawerHeader>
         <DrawerTitle className="text-left">{drawerTitle}</DrawerTitle>
-        <DrawerDescription className="text-center text-lg">
-          {errorMessage} !
-        </DrawerDescription>
+        <DrawerDescription className="text-center text-lg">{errorMessage} !</DrawerDescription>
       </DrawerHeader>
       <DrawerFooter>
         <Button

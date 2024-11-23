@@ -3,18 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  ButtonDynamicField,
-  ButtonDynamicFieldSchema,
-  ButtonField,
-  FieldElement,
-  ZodErrors,
-} from "@/types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ButtonDynamicField, ButtonDynamicFieldSchema, ButtonField, FieldElement, ZodErrors } from "@/types";
 import { Dispatch, SetStateAction, useState } from "react";
 
 const AddButtonFieldPopover: React.FC<{
@@ -27,10 +17,7 @@ const AddButtonFieldPopover: React.FC<{
 
   const [zodErrors, setZodErrors] = useState<ZodErrors>({});
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    property: keyof ButtonField
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, property: keyof ButtonField) => {
     setNewButtonField({ ...newButtonField, [property]: e.target.value });
   };
 
@@ -76,9 +63,7 @@ const AddButtonFieldPopover: React.FC<{
               <Label htmlFor="title">
                 Title
                 {zodErrors?.title && (
-                  <div className="text-red-500 col-start-3 text-[12px]">
-                    {zodErrors.title}
-                  </div>
+                  <div className="text-red-500 col-start-3 text-[12px]">{zodErrors.title}</div>
                 )}
               </Label>
               <Input
@@ -93,9 +78,7 @@ const AddButtonFieldPopover: React.FC<{
               <Label htmlFor="description">
                 Description
                 {zodErrors?.description && (
-                  <div className="text-red-500 col-start-3 text-[12px]">
-                    {zodErrors.description}
-                  </div>
+                  <div className="text-red-500 col-start-3 text-[12px]">{zodErrors.description}</div>
                 )}
               </Label>
               <Input
@@ -110,9 +93,7 @@ const AddButtonFieldPopover: React.FC<{
               <Label htmlFor="url">
                 URL
                 {zodErrors?.url && (
-                  <div className="text-red-500 col-start-3 text-[12px]">
-                    {zodErrors.url}
-                  </div>
+                  <div className="text-red-500 col-start-3 text-[12px]">{zodErrors.url}</div>
                 )}
               </Label>
               <Input
@@ -127,9 +108,7 @@ const AddButtonFieldPopover: React.FC<{
               <Label htmlFor="emoji">
                 Emoji
                 {zodErrors?.emoji && (
-                  <div className="text-red-500 col-start-3 text-[12px]">
-                    {zodErrors.emoji}
-                  </div>
+                  <div className="text-red-500 col-start-3 text-[12px]">{zodErrors.emoji}</div>
                 )}
               </Label>
               <Input

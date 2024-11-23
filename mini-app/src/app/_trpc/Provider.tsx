@@ -77,11 +77,7 @@ const createCombinedLink = (): TRPCLink<any> => {
   };
 };
 
-export default function TRPCAPIProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function TRPCAPIProvider({ children }: { children: React.ReactNode }) {
   const { initData } = useUserStore();
   const [queryClient] = useState(
     () =>

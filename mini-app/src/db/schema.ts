@@ -7,10 +7,7 @@ import {
   ticketStatus,
 } from "@/db/enum";
 
-import {
-  airdropRoutineRelations,
-  airdropRoutines,
-} from "./schema/airdropRoutines";
+import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
 import { eventTicket } from "./schema/eventTicket";
 import { event_details_search_list } from "./schema/event_details_search_list";
@@ -22,27 +19,14 @@ import { rewards } from "./schema/rewards";
 import { sbtRewardCollections } from "./schema/sbtRewardCollections";
 import { tickets, ticketsRelations } from "./schema/tickets";
 import { specialGuests } from "@/db/schema/specialGuest";
-import {
-  userEventFieldRelations,
-  userEventFields,
-} from "./schema/userEventFields";
+import { userEventFieldRelations, userEventFields } from "./schema/userEventFields";
 import { userRelations, users } from "./schema/users";
 import { visitors } from "./schema/visitors";
 import { sideEvents } from "./schema/sideEvents";
-import {
-  eventRegistrants,
-  eventRegistrantStatus,
-} from "./schema/eventRegistrants";
+import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 
 // export all the enums
-export {
-  developmentEnvironment,
-  eventParticipationType,
-  orderState,
-  rewardStatus,
-  rewardType,
-  ticketStatus,
-};
+export { developmentEnvironment, eventParticipationType, orderState, rewardStatus, rewardType, ticketStatus };
 
 // export all the tables and relations
 export {

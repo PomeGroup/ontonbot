@@ -31,9 +31,7 @@ const Search: React.FC = () => {
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();
   const { searchInput, setSearchInput, setFilter, setOffset } = searchStore;
-  const [finalSearchInput, setFinalSearchInput] = useState(
-    searchEventsInputZod.parse(searchInput)
-  );
+  const [finalSearchInput, setFinalSearchInput] = useState(searchEventsInputZod.parse(searchInput));
   const webApp = useWebApp();
   const { authorized, role: userRole } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
@@ -100,9 +98,7 @@ const Search: React.FC = () => {
       }
     });
 
-    const lastElement = document.querySelector(
-      `.last-event-card-${observingTab}`
-    );
+    const lastElement = document.querySelector(`.last-event-card-${observingTab}`);
     if (lastElement) {
       observerRef.current.observe(lastElement);
     }
@@ -143,8 +139,7 @@ const Search: React.FC = () => {
   useEffect(() => {
     const handleScroll = () => {
       if (scrollableDivRef.current) {
-        const { scrollTop, scrollHeight, clientHeight } =
-          scrollableDivRef.current;
+        const { scrollTop, scrollHeight, clientHeight } = scrollableDivRef.current;
         // Check if user has scrolled to the bottom
         if (scrollTop + clientHeight >= scrollHeight - 50) {
           loadMoreResults();
@@ -262,8 +257,7 @@ const Search: React.FC = () => {
                         <div
                           key={event.event_uuid}
                           className={
-                            eventIndex === results.length - 2 ||
-                            eventIndex === results.length - 1
+                            eventIndex === results.length - 2 || eventIndex === results.length - 1
                               ? `last-event-card-${index}`
                               : ""
                           }
@@ -277,13 +271,11 @@ const Search: React.FC = () => {
                     </>
                   )}
 
-                  {isFetchingSearchResults &&
-                    hasMore &&
-                    results.length !== 0 && (
-                      <div className="text-center py-4 pb-5 w-full">
-                        <div className="loader">Loading results...</div>
-                      </div>
-                    )}
+                  {isFetchingSearchResults && hasMore && results.length !== 0 && (
+                    <div className="text-center py-4 pb-5 w-full">
+                      <div className="loader">Loading results...</div>
+                    </div>
+                  )}
                   <div className="text-center py-4 pb-5 ">
                     <div className="loader"> &nbsp; </div>
                   </div>

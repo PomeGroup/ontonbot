@@ -32,8 +32,7 @@ export async function fetchBalance(address: string) {
   }
 }
 
-export const sleep = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -88,9 +87,7 @@ export const validateMiniAppData = (rawInitData: string) => {
   }
 };
 
-export const getTimeFromUnix = (
-  unixTimestamp: number
-): { hours: string; minutes: string } => {
+export const getTimeFromUnix = (unixTimestamp: number): { hours: string; minutes: string } => {
   const date = new Date(unixTimestamp * 1000);
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");

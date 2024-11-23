@@ -43,11 +43,7 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
     },
   });
 
-  if (!eventTicketData)
-    return Response.json(
-      { message: "event_ticket_not_found" },
-      { status: 404 }
-    );
+  if (!eventTicketData) return Response.json({ message: "event_ticket_not_found" }, { status: 404 });
 
   return Response.json({
     ...order,
@@ -59,13 +55,7 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
 
 // Continue from here
 const patchOrderBodySchema = z.object({
-  state: z.enum([
-    "created",
-    "mint_request",
-    "minted",
-    "failed",
-    "validation_failed",
-  ]),
+  state: z.enum(["created", "mint_request", "minted", "failed", "validation_failed"]),
   transaction_id: z.string().uuid().optional(),
   nft_address: z
     .string()

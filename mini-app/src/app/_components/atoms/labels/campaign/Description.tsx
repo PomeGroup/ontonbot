@@ -5,11 +5,7 @@ const CampaignDescription: React.FC<{
   description: string;
   className?: string;
 }> = ({ description, className }) => {
-  return (
-    <div className={cn("whitespace-pre-line text-sm", className)}>
-      {description}
-    </div>
-  );
+  return <div className={cn("whitespace-pre-line text-sm", className)}>{description}</div>;
 };
 
 export default CampaignDescription;

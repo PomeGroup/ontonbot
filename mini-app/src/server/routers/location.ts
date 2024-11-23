@@ -1,11 +1,7 @@
 // locationRouter.ts
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
-import {
-  fetchCountries,
-  fetchCities,
-  fetchCityById,
-} from "@/server/db/giataCity.db";
+import { fetchCountries, fetchCities, fetchCityById } from "@/server/db/giataCity.db";
 
 export const locationRouter = router({
   getCountries: publicProcedure
@@ -24,9 +20,7 @@ export const locationRouter = router({
       return await fetchCities(opts.input.countryId, opts.input.search);
     }),
 
-  getCityById: publicProcedure
-    .input(z.object({ cityId: z.number() }))
-    .query(async (opts) => {
-      return await fetchCityById(opts.input.cityId);
-    }),
+  getCityById: publicProcedure.input(z.object({ cityId: z.number() })).query(async (opts) => {
+    return await fetchCityById(opts.input.cityId);
+  }),
 });

@@ -6,17 +6,13 @@ import { InferSelectModel, eq } from "drizzle-orm";
 // Cache key prefix
 
 // Function to generate cache key for user
-const getUserCacheKey = (userId: number) =>
-  `${redisTools.cacheKeys.user}${userId}`;
+const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}${userId}`;
 
 // Function to generate cache key for wallet
-const getWalletCacheKey = (userId: number) =>
-  `${redisTools.cacheKeys.userWallet}${userId}`;
+const getWalletCacheKey = (userId: number) => `${redisTools.cacheKeys.userWallet}${userId}`;
 
 // Function to get a user by user ID with caching
-export const selectUserById = async (
-  userId: number
-): Promise<InferSelectModel<typeof users> | null> => {
+export const selectUserById = async (userId: number): Promise<InferSelectModel<typeof users> | null> => {
   const cacheKey = getUserCacheKey(userId);
 
   // Try to get the user from cache
@@ -46,11 +42,7 @@ export const selectUserById = async (
       .execute();
 
     if (userInfo.length > 0) {
-      await redisTools.setCache(
-        cacheKey,
-        userInfo[0],
-        redisTools.cacheLvl.short
-      ); // Cache the user
+      await redisTools.setCache(cacheKey, userInfo[0], redisTools.cacheLvl.short); // Cache the user
       return userInfo[0];
     }
     return null;
@@ -87,9 +79,7 @@ const insertUser = async (initDataJson: {
         .onConflictDoNothing() // Avoid conflict on duplicate entries
         .execute();
 
-      console.log(
-        `User ${initDataJson.user.username} ${initDataJson.user.id} added`
-      );
+      console.log(`User ${initDataJson.user.username} ${initDataJson.user.id} added`);
       return await selectUserById(initDataJson.user.id);
     } catch (e) {
       console.log("add user error: ", e);
@@ -100,9 +90,7 @@ const insertUser = async (initDataJson: {
 };
 
 // Function to select wallet by user ID with caching
-const selectWalletById: (
-  user_id: number
-) => Promise<{ wallet: string | null }> = async (user_id: number) => {
+const selectWalletById: (user_id: number) => Promise<{ wallet: string | null }> = async (user_id: number) => {
   const cacheKey = getWalletCacheKey(user_id);
 
   // Try to get the wallet from cache
@@ -119,11 +107,7 @@ const selectWalletById: (
     .execute();
 
   if (walletInfo.length > 0) {
-    await redisTools.setCache(
-      cacheKey,
-      walletInfo[0],
-      redisTools.cacheLvl.short
-    ); // Cache the wallet
+    await redisTools.setCache(cacheKey, walletInfo[0], redisTools.cacheLvl.short); // Cache the wallet
     return walletInfo[0];
   }
 
@@ -131,11 +115,7 @@ const selectWalletById: (
 };
 
 // Update wallet and clear cache
-const updateWallet = async (
-  user_id: number,
-  wallet_address: string,
-  updatedBy: string
-) => {
+const updateWallet = async (user_id: number, wallet_address: string, updatedBy: string) => {
   await db
     .update(users)
     .set({

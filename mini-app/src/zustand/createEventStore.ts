@@ -102,8 +102,7 @@ export const useCreateEventStore = create(
         rewardStepErrors: {},
       }));
     },
-    setCurrentStep: (step: number) =>
-      set((state) => ({ ...state, currentStep: step })),
+    setCurrentStep: (step: number) => set((state) => ({ ...state, currentStep: step })),
     setEventData: (data: z.infer<typeof EventDataSchemaAllOptional>) =>
       set((state) => {
         return {
@@ -119,8 +118,7 @@ export const useCreateEventStore = create(
           },
         };
       }),
-    setEdit: (edit: { eventHash?: string }) =>
-      set((state) => ({ ...state, edit })),
+    setEdit: (edit: { eventHash?: string }) => set((state) => ({ ...state, edit })),
 
     resetState: () => {
       set(() => ({

@@ -5,13 +5,7 @@ export function getAuthenticatedUser(): [number, null] | [null, Response] {
   const userToken = cookies().get("token");
 
   if (!userToken) {
-    return [
-      null,
-      Response.json(
-        { error: "Unauthorized: No token provided" },
-        { status: 401 }
-      ),
-    ];
+    return [null, Response.json({ error: "Unauthorized: No token provided" }, { status: 401 })];
   }
 
   try {
@@ -19,21 +13,12 @@ export function getAuthenticatedUser(): [number, null] | [null, Response] {
     const validation = verify(userToken.value, process.env.BOT_TOKEN as string);
 
     if (typeof validation === "string") {
-      return [
-        null,
-        Response.json(
-          { error: "Unauthorized: Validation failed" },
-          { status: 401 }
-        ),
-      ];
+      return [null, Response.json({ error: "Unauthorized: Validation failed" }, { status: 401 })];
     }
 
     return [validation.id as number, null];
   } catch (err) {
-    return [
-      null,
-      Response.json({ error: "Unauthorized: invalid token" }, { status: 401 }),
-    ];
+    return [null, Response.json({ error: "Unauthorized: invalid token" }, { status: 401 })];
   }
 }
 

@@ -30,9 +30,7 @@ const WebsiteLink = ({ location, className }: Props) => {
       )}
     >
       <BsLink45Deg className="mr-2" />
-      <Labels.Label className="truncate font-sm max-w-xs">
-        Event Link: {normalizeURL2(location)}
-      </Labels.Label>
+      <Labels.Label className="truncate font-sm max-w-xs">Event Link: {normalizeURL2(location)}</Labels.Label>
     </Link>
   );
 };

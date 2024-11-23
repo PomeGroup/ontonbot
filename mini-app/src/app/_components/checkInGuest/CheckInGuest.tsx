@@ -21,8 +21,7 @@ const CheckInGuest: FC<{
   const [ticketUuid, setTicketUuid] = useState<string | null>(null);
   const [drawerTitle, setDrawerTitle] = useState<string | null>(null);
   const [ticketData, setTicketData] = useState<any | null>(null);
-  const [checkInState, setCheckInState] =
-    useState<CheckInState>("NoTicketData");
+  const [checkInState, setCheckInState] = useState<CheckInState>("NoTicketData");
 
   const ticketQuery = trpc.ticket.getTicketByUuid.useQuery(
     { ticketUuid: ticketUuid ?? "" },
@@ -94,11 +93,7 @@ const CheckInGuest: FC<{
     } else if (checkInMutation.isError) {
       setCheckInState("checkInError");
     }
-  }, [
-    checkInMutation.isSuccess,
-    checkInMutation.isError,
-    checkInMutation.data,
-  ]);
+  }, [checkInMutation.isSuccess, checkInMutation.isError, checkInMutation.data]);
 
   const handleCheckIn = useCallback(() => {
     if (ticketData && ticketData.order_uuid) {

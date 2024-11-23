@@ -1,9 +1,7 @@
 import crypto from "crypto";
 import { getRedisClient } from "./redisClient"; // Use getRedisClient to ensure a valid Redis client
 
-const CACHE_ENABLED = process.env.CACHE_ENABLED
-  ? process.env.CACHE_ENABLED.toLowerCase() === "true"
-  : true;
+const CACHE_ENABLED = process.env.CACHE_ENABLED ? process.env.CACHE_ENABLED.toLowerCase() === "true" : true;
 /**
  * Generates an MD5 hash for a given key.
  *
@@ -21,11 +19,7 @@ const generateHash = (key: string): string => {
  * @param value - The value to store.
  * @param ttl - Optional time-to-live for this specific cache entry (in seconds).
  */
-export const setCache = async (
-  key: string,
-  value: any,
-  ttl?: number
-): Promise<void> => {
+export const setCache = async (key: string, value: any, ttl?: number): Promise<void> => {
   if (!CACHE_ENABLED) return;
 
   try {
@@ -102,11 +96,7 @@ export const keyExists = async (key: string): Promise<boolean> => {
  * @param value - The value to store (as JSON).
  * @param ttl - Optional time-to-live for this specific cache entry.
  */
-export const setRedisKeyJson = async (
-  key: string,
-  value: any,
-  ttl?: number
-): Promise<void> => {
+export const setRedisKeyJson = async (key: string, value: any, ttl?: number): Promise<void> => {
   if (!CACHE_ENABLED) return;
 
   try {
@@ -126,9 +116,7 @@ export const setRedisKeyJson = async (
  * @param key - The cache key.
  * @returns The cached JSON value or undefined if not found.
  */
-export const getRedisKeyJson = async (
-  key: string
-): Promise<any | undefined> => {
+export const getRedisKeyJson = async (key: string): Promise<any | undefined> => {
   if (!CACHE_ENABLED) return;
 
   try {
@@ -146,9 +134,7 @@ export const getRedisKeyJson = async (
  * @param key - The cache key.
  * @returns The type of the key.
  */
-export const getRedisKeyType = async (
-  key: string
-): Promise<string | undefined> => {
+export const getRedisKeyType = async (key: string): Promise<string | undefined> => {
   if (!CACHE_ENABLED) return undefined;
 
   try {
@@ -198,9 +184,7 @@ export const decrementKey = async (key: string): Promise<void> => {
  * @param key - The cache key.
  * @returns The TTL in seconds, or -1 if the key does not expire, or -2 if the key does not exist.
  */
-export const getRedisKeyTTL = async (
-  key: string
-): Promise<number | undefined> => {
+export const getRedisKeyTTL = async (key: string): Promise<number | undefined> => {
   if (!CACHE_ENABLED) return undefined;
 
   try {
@@ -218,10 +202,7 @@ export const getRedisKeyTTL = async (
  * @param key - The cache key.
  * @param ttl - The TTL in seconds.
  */
-export const setRedisKeyTTL = async (
-  key: string,
-  ttl: number
-): Promise<void> => {
+export const setRedisKeyTTL = async (key: string, ttl: number): Promise<void> => {
   if (!CACHE_ENABLED) return undefined;
 
   try {

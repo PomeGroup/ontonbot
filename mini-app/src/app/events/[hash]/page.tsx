@@ -32,11 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 async function EventPage({ params }: Props) {
   if (params.hash.length !== 36) {
-    return (
-      <div>
-        Incorrect event link. Startapp param should be 36 characters long
-      </div>
-    );
+    return <div>Incorrect event link. Startapp param should be 36 characters long</div>;
   }
 
   return <EventDataPage eventHash={params.hash} />;

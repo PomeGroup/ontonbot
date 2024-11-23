@@ -3,21 +3,14 @@ import { twMerge } from "tailwind-merge";
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
-export const removeKey = <T extends object, K extends keyof T>(
-  obj: T,
-  key: K
-): Omit<T, K> => {
+export const removeKey = <T extends object, K extends keyof T>(obj: T, key: K): Omit<T, K> => {
   const { [key]: _, ...rest } = obj;
   return rest;
 };
 
-export const wait = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+export const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const getObjectDifference = <T extends object>(
-  obj1: T,
-  obj2: T
-): Partial<T> | null => {
+export const getObjectDifference = <T extends object>(obj1: T, obj2: T): Partial<T> | null => {
   const diff: Partial<T> = {};
 
   for (const key in obj1) {
@@ -72,9 +65,6 @@ export const msToTime = (duration: number): string => {
 };
 
 // Converts a date to  round date to interval
-export const roundDateToInterval = (
-  date: number | undefined,
-  interval: number
-): number | undefined => {
+export const roundDateToInterval = (date: number | undefined, interval: number): number | undefined => {
   return date ? Math.floor(date / interval) * interval : date;
 };
