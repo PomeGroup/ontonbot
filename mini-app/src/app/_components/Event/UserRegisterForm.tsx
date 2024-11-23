@@ -1,20 +1,44 @@
 import { trpc } from "@/app/_trpc/client";
 import { KButton } from "@/components/ui/button";
-import { ListInput, List, BlockTitle, BlockFooter } from "konsta/react";
+import { EventRegisterSchema } from "@/types";
+import { ListInput, List, BlockTitle, BlockFooter, Preloader } from "konsta/react";
 import { useParams } from "next/navigation";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
 const UserRegisterForm = () => {
   const params = useParams<{ hash: string }>();
+  const [formErrors, setErrors] = useState<{
+    full_name?: string[];
+    company?: string[];
+    position?: string[];
+    notes?: string[];
+  }>();
 
   const registrationForm = useRef<HTMLFormElement>(null);
   const registerUser = trpc.events.eventRegister.useMutation();
 
-  const handleSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
-    registerUser.mutate({
-      input_data: {},
-    });
-    console.log("bnanna");
+  const handleSubmit: React.FormEventHandler = (e) => {
+    e.preventDefault();
+
+    if (!registrationForm.current) {
+      return;
+    }
+    const formData = new FormData(registrationForm.current);
+    const formObject = Object.fromEntries(formData.entries());
+    const registrationData = {
+      event_uuid: params.hash,
+      ...formObject,
+    };
+
+    const parsedData = EventRegisterSchema.safeParse(registrationData);
+
+    if (parsedData.error) {
+      setErrors(parsedData.error.flatten().fieldErrors);
+      return;
+    }
+    setErrors(undefined);
+
+    registerUser.mutate(parsedData.data);
   };
 
   return (
@@ -33,6 +57,7 @@ const UserRegisterForm = () => {
             label="Full Name"
             name="full_name"
             required
+            error={formErrors?.full_name?.[0]}
             placeholder="John Doe"
           />
           <ListInput
@@ -40,6 +65,7 @@ const UserRegisterForm = () => {
             label="Company"
             name="company"
             required
+            error={formErrors?.company?.[0]}
             placeholder="Example Company"
           />
           <ListInput
@@ -47,6 +73,7 @@ const UserRegisterForm = () => {
             label="Position"
             name="position"
             required
+            error={formErrors?.position?.[0]}
             placeholder="Designer"
           />
           <ListInput
@@ -54,6 +81,7 @@ const UserRegisterForm = () => {
             info="Optional"
             placeholder="I will be 30min late"
             name="notes"
+            error={formErrors?.notes?.[0]}
             label="Notes"
           />
         </List>
@@ -63,12 +91,13 @@ const UserRegisterForm = () => {
           className="bg-primary"
           title="Submit"
           itemType="button"
+          disabled={registerUser.isLoading}
           onClick={(e) => {
             e.preventDefault();
             registrationForm.current?.requestSubmit();
           }}
         >
-          Submit
+          {registerUser.isLoading ? <Preloader size="w-4 h-4" /> : "Submit"}
         </KButton>
       </BlockFooter>
     </>

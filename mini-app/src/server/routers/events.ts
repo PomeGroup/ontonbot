@@ -143,15 +143,15 @@ export const eventsRouter = router({
     const user_request = await getRegistrantRequest(event_uuid, userId);
     const event_location = eventData.location;
 
-    eventData.location = "Register to see";
+    let location: string | null = "Register to see";
 
     // Registrant Already has a request
     if (user_request) {
       registrant_status = user_request.status;
       if (registrant_status == "approved") {
-        eventData.location = event_location;
+        location = event_location;
       }
-      return { capacity_filled, registrant_status, ...eventData };
+      return { capacity_filled, registrant_status, ...eventData, location };
     }
 
     // no status for registran
@@ -162,12 +162,12 @@ export const eventsRouter = router({
       if (approved_requests_count >= eventData.capacity && !eventData.has_waiting_list) {
         // Event capacity filled and no waiting list
         capacity_filled = true;
-        return { capacity_filled, registrant_status, ...eventData };
+        return { capacity_filled, registrant_status, ...eventData, location };
       }
     }
 
     // NO Status
-    return { capacity_filled, registrant_status, ...eventData };
+    return { capacity_filled, registrant_status, ...eventData, location };
 
     /* -------------------------------------------------------------------------- */
   }),
@@ -204,63 +204,60 @@ export const eventsRouter = router({
   /*                           📝 Event Register by user                       */
   /* -------------------------------------------------------------------------- */
   // private
-  eventRegister: initDataProtectedProcedure
-    .input(z.object({ input_data: EventRegisterSchema }))
-    .mutation(async (opts) => {
-      const userId = opts.ctx.user.user_id;
-      const event_uuid = opts.input.input_data.event_uuid;
-      const event = await selectEventByUuid(event_uuid);
+  eventRegister: initDataProtectedProcedure.input(EventRegisterSchema).mutation(async (opts) => {
+    const userId = opts.ctx.user.user_id;
+    const event_uuid = opts.input.event_uuid;
+    const event = await selectEventByUuid(event_uuid);
 
-      console.log("event_register", event_uuid, userId);
+    console.log("event_register", event_uuid, userId);
 
-      if (!event) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
-      }
+    if (!event) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+    }
 
-      if (!event.has_registration) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "event is not registrable",
-        });
-      }
-      const user_request = await getRegistrantRequest(event_uuid, userId);
+    if (!event.has_registration) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "event is not registrable",
+      });
+    }
+    const user_request = await getRegistrantRequest(event_uuid, userId);
 
-      if (user_request) {
+    if (user_request) {
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: `registrant already has a [${user_request.status}] Request `,
+      });
+    }
+
+    let event_filled_and_has_waiting_list = false;
+
+    if (event.capacity) {
+      const approved_requests_count = await getApprovedRequestsCount(event_uuid);
+      const event_cap_filled = approved_requests_count >= event.capacity;
+
+      if (event_cap_filled && !event.has_waiting_list) {
+        // Event capacity filled and no waiting list
         throw new TRPCError({
           code: "CONFLICT",
-          message: `registrant already has a [${user_request.status}] Request `,
+          message: `Event Capacity Reached`,
         });
+      } else if (event_cap_filled && event.has_waiting_list) {
+        event_filled_and_has_waiting_list = true;
       }
+    }
 
-      let event_filled_and_has_waiting_list = false;
+    const request_status = !!event.has_approval || event_filled_and_has_waiting_list ? "pending" : "approved"; // pending if approval is required otherwise auto approve them
 
-      if (event.capacity) {
-        const approved_requests_count = await getApprovedRequestsCount(event_uuid);
-        const event_cap_filled = approved_requests_count >= event.capacity;
+    await db.insert(eventRegistrants).values({
+      event_uuid: event_uuid,
+      user_id: userId,
+      status: request_status,
+    });
 
-        if (event_cap_filled && !event.has_waiting_list) {
-          // Event capacity filled and no waiting list
-          throw new TRPCError({
-            code: "CONFLICT",
-            message: `Event Capacity Reached`,
-          });
-        } else if (event_cap_filled && event.has_waiting_list) {
-          event_filled_and_has_waiting_list = true;
-        }
-      }
-
-      const request_status =
-        !!event.has_approval || event_filled_and_has_waiting_list ? "pending" : "approved"; // pending if approval is required otherwise auto approve them
-
-      await db.insert(eventRegistrants).values({
-        event_uuid: event_uuid,
-        user_id: userId,
-        status: request_status,
-      });
-
-      // TODO add event registration details from user into some table
-      return { message: "success", code: 201 };
-    }),
+    // TODO add event registration details from user into some table
+    return { message: "success", code: 201 };
+  }),
 
   /* -------------------------------------------------------------------------- */
   /*                            Get Event Registrant 👨‍👩‍👧                        */

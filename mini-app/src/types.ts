@@ -204,7 +204,7 @@ export const EventRegisterSchema = z.object({
   full_name: z.string().min(1).max(40),
   position: z.string().min(1).max(40),
   company: z.string().min(1).max(40),
-  notes: z.string().min(0).max(512),
+  notes: z.string().min(0).max(512).optional(),
 });
 
 export const AgendaItemSchema = z.object({
