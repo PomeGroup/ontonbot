@@ -144,6 +144,7 @@ export const eventsRouter = router({
     const event_location = eventData.location;
 
     let location: string | null = "Register to see";
+    console.log("get_event_location" , location , { ...eventData, location } )
 
     // Registrant Already has a request
     if (user_request) {
