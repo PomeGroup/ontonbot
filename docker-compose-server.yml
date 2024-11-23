@@ -1,6 +1,6 @@
 x-common-extra-hosts: &default-extra-hosts
   extra_hosts:
-    - "${MINI_APP_DOMAIN}:${IP_CADDY}"
+    - "${MINI_APP_DOMAIN}:host.docker.internal"
 
 x-common-env: &common-env
   ACME_AGREE: ${ACME_AGREE}
@@ -559,7 +559,7 @@ services:
       - onton-network
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.10.2
+    image: docker.elastic.co/logstash/logstash:8.16.1
     volumes:
       - ./devops/logstash/pipeline:/usr/share/logstash/pipeline
     environment:
