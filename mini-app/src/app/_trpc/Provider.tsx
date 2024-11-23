@@ -101,7 +101,9 @@ export default function TRPCAPIProvider({
       links: [
         createCombinedLink(), // custom link to handlen retring
         httpLink({
-          url: "/api/trpc",
+          url: process.env.NEXT_PUBLIC_TRPC_BASE_URL
+            ? process.env.NEXT_PUBLIC_TRPC_BASE_URL + "/api/trpc"
+            : "/api/trpc",
           headers: () => {
             return {
               Authorization: initData!,
