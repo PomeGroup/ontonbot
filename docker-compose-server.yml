@@ -102,11 +102,11 @@ services:
     entrypoint: ["/usr/bin/entrypoint.sh"]  # Use the custom entrypoint script
     environment:
       <<: *common-env
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-minio"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-minio"
 
   postgres:
     hostname: postgres
@@ -408,11 +408,11 @@ services:
       - onton-network
     secrets:
       - ghcr-radio-config
-    logging:
-        driver: "gelf"
-        options:
-            gelf-address: "udp://logstash:5044"
-            tag: "${BRANCH_NAME}-giveaway-checker"
+#    logging:
+#        driver: "gelf"
+#        options:
+#            gelf-address: "udp://logstash:5044"
+#            tag: "${BRANCH_NAME}-giveaway-checker"
   website:
     hostname: website
     image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
@@ -438,11 +438,11 @@ services:
         <<: *common-env
     networks:
       - onton-network
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-website"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-website"
 
   golang-server:
     image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
@@ -453,11 +453,11 @@ services:
       <<: *common-env
     networks:
       - onton-network
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag:  "${BRANCH_NAME}-golang-server"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag:  "${BRANCH_NAME}-golang-server"
 
   golang-worker:
     image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
@@ -469,11 +469,11 @@ services:
         <<: *common-env
     networks:
       - onton-network
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-golang-worker"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-golang-worker"
 
   metabase:
     image: metabase/metabase:v0.50.18.3
@@ -516,11 +516,11 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-metabase"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-metabase"
 
   client-web:
     hostname: client-web
@@ -539,11 +539,11 @@ services:
       - caddy
     networks:
       - onton-network
-    logging:
-        driver: "gelf"
-        options:
-            gelf-address: "udp://logstash:5044"
-            tag: "${BRANCH_NAME}-client-web"
+#    logging:
+#        driver: "gelf"
+#        options:
+#            gelf-address: "udp://logstash:5044"
+#            tag: "${BRANCH_NAME}-client-web"
 
   elasticsearch:
     image: elasticsearch:8.16.1

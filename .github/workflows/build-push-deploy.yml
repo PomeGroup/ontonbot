@@ -18,7 +18,6 @@ on:
       - '.github/workflows/**'
       - 'Trigger-full-build.txt'
 
-
 jobs:
   determine-services:
     runs-on: self-hosted
