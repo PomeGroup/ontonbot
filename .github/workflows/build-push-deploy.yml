@@ -87,6 +87,7 @@ jobs:
           echo "Services to build: $services_json"
           echo "services=$services_json" >> $GITHUB_OUTPUT
           
+          
           if [ -z "TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT" ] || [ -z "$TELEGRAM_CHAT_ID_FOR_DEPLOYMENT" ]; then
             echo "Error: Telegram  deployment bot vars  are not set or are empty."
             exit 1
