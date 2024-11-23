@@ -209,6 +209,10 @@ services:
       update_config:
         failure_action: rollback
         order: start-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -324,6 +328,8 @@ services:
           cpus: '3.0'
       mode: global
       update_config:
+        failure_action: rollback
+        order: start-first
         parallelism: 1
       placement:
         constraints:
@@ -425,7 +431,7 @@ services:
       - /dev/urandom:/dev/random:ro
     environment:
       MB_DB_TYPE: postgres
-      MB_DB_DBNAME: ${POSTGRES_METABASE_DB}
+      MB_DB_DBNAME: ${SECRET_POSTGRES_MINI_APP_DB}
       MB_DB_PORT: ${POSTGRES_PORT}
       MB_DB_USER: ${POSTGRES_USER}
       MB_DB_PASS: ${POSTGRES_PASSWORD}

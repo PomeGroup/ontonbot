@@ -9,14 +9,25 @@ RUN apk update && apk upgrade && \
   apk add \
   bash \
   curl \
-  ca-certificates
+  ca-certificates \
+  python3 \
+  py3-pip \
+  make \
+  g++ \
+  pkgconfig \
+  pixman \
+  cairo-dev \
+  pango-dev \
+  jpeg-dev \
+  giflib-dev
+
 # Install pnpm globally
 RUN npm i -g pnpm
 WORKDIR /app
 
 FROM base AS with-files
 # Copy package.json and package-lock.json
-COPY . .
+COPY . /app
 
 # Before the development stage
 FROM with-files AS before-development
@@ -32,12 +43,14 @@ CMD node ./node_modules/next/dist/bin/next  dev --port  $PORT_CLIENT_WEB
 # Stage for production build
 FROM with-files AS build
 # Build the application
+WORKDIR /app
 RUN pnpm install
 RUN pnpm run build
 
 # Final stage for production
 FROM build AS production
 # Expose the port the app runs on
+WORKDIR /app
 EXPOSE $PORT_CLIENT_WEB
 # Command to run the application in production mode
 CMD export NODE_ENV=development && node ./node_modules/next/dist/bin/next  start --port  $PORT_CLIENT_WEB
