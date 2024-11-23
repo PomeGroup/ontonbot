@@ -143,7 +143,7 @@ export const eventsRouter = router({
     const user_request = await getRegistrantRequest(event_uuid, userId);
     const event_location = eventData.location;
 
-    eventData.location = "Register to see";
+    eventData.location = "Only Visible To Registered Users ";
     if (eventData.capacity && eventData.owner != userId) {
       eventData.capacity = 99;
     }
