@@ -504,7 +504,6 @@ jobs:
                 echo "creating caady files"
                   echo "Listing files in branch directory..."        
                   cd /home/tonont/$branch_name
-                  ls -la
                   echo "Sourcing .env file..."
                   set -o allexport
                   source .env
@@ -517,7 +516,6 @@ jobs:
                   
                   export CADDYFILE_PATH="/home/tonont/caddy/tmp/$branch_name.caddyfile"
                   sh devops/generate-caddyfile-by-address.sh
-                  ls -la /home/tonont/caddy/tmp/$branch_name.caddyfile
                   mv /home/tonont/caddy/tmp/$branch_name.caddyfile /home/tonont/caddy/$branch_name.caddyfile
                   docker stack deploy --with-registry-auth -c ./devops/caddyServer/docker-compose-caddy.yml caddy
                   docker service update --force caddy_caddy
