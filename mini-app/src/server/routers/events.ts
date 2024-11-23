@@ -143,11 +143,14 @@ export const eventsRouter = router({
     const user_request = await getRegistrantRequest(event_uuid, userId);
     const event_location = eventData.location;
 
+    const userIsAdminOrOwner = eventData.owner == userId || opts.ctx.user.role == 'admin';
+
+
     eventData.location = "Only Visible To Registered Users ";
-    if (eventData.capacity && eventData.owner != userId) {
+    if (eventData.capacity && !userIsAdminOrOwner) {
       eventData.capacity = 99;
     }
-    if (eventData.owner == userId) {
+    if (userIsAdminOrOwner) {
       eventData.location = event_location;
     }
 
