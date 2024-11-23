@@ -4,9 +4,12 @@ import { EventRegisterSchema } from "@/types";
 import { ListInput, List, BlockTitle, BlockFooter, Preloader } from "konsta/react";
 import { useParams } from "next/navigation";
 import React, { useRef, useState } from "react";
+import { toast } from "sonner";
 
 const UserRegisterForm = () => {
   const params = useParams<{ hash: string }>();
+  const registrationForm = useRef<HTMLFormElement>(null);
+
   const [formErrors, setErrors] = useState<{
     full_name?: string[];
     company?: string[];
@@ -14,8 +17,15 @@ const UserRegisterForm = () => {
     notes?: string[];
   }>();
 
-  const registrationForm = useRef<HTMLFormElement>(null);
-  const registerUser = trpc.events.eventRegister.useMutation();
+  const trpcUtils = trpc.useUtils();
+  const registerUser = trpc.events.eventRegister.useMutation({
+    onError: (error) => {
+      toast.error(error.data?.code + ": " + error.message);
+    },
+    onSuccess() {
+      trpcUtils.events.getEvent.refetch();
+    },
+  });
 
   const handleSubmit: React.FormEventHandler = (e) => {
     e.preventDefault();
@@ -48,10 +58,7 @@ const UserRegisterForm = () => {
         ref={registrationForm}
         onSubmit={handleSubmit}
       >
-        <List
-          margin="!-mx-4"
-          className="hairline-black"
-        >
+        <List margin="!-mx-4">
           <ListInput
             outline
             label="Full Name"
@@ -97,7 +104,7 @@ const UserRegisterForm = () => {
             registrationForm.current?.requestSubmit();
           }}
         >
-          {registerUser.isLoading ? <Preloader size="w-4 h-4" /> : "Submit"}
+          {registerUser.isLoading ? <Preloader size="w-4 h-4" /> : "Request to Join"}
         </KButton>
       </BlockFooter>
     </>

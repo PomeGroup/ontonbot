@@ -3,6 +3,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { useEffect, useMemo, useState } from "react";
 import zod from "zod";
 import { EventDataContext } from "./eventPageContext";
+import { useGetEvent } from "@/hooks/events.hooks";
 
 export const EventDataProvider = ({
   children,
@@ -44,15 +45,7 @@ export const EventDataProvider = ({
     }
   }, [webApp?.initData, isInitialized]);
 
-  const eventData = trpc.events.getEvent.useQuery(
-    {
-      event_uuid: eventHash,
-    },
-    {
-      queryKey: ["events.getEvent", { event_uuid: eventHash }],
-      enabled: Boolean(initData),
-    }
-  );
+  const eventData = useGetEvent();
 
   const eventPasswordField = useMemo(() => {
     return eventData.data?.dynamic_fields.find((v) => v.title === "secret_phrase_onton_input");

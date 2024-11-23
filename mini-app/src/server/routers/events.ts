@@ -127,7 +127,7 @@ export const eventsRouter = router({
     const event_uuid = opts.input.event_uuid;
     const eventData = await selectEventByUuid(event_uuid);
     let capacity_filled = false;
-    let registrant_status = "";
+    let registrant_status: "pending" | "rejected" | "approved" | "" = "";
     if (!eventData) {
       throw new TRPCError({
         code: "NOT_FOUND",

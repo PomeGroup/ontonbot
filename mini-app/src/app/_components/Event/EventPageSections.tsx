@@ -14,6 +14,7 @@ import { ManageEventButton } from "./ManageEventButton";
 import { useUserStore } from "@/context/store/user.store";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import UserRegisterForm from "./UserRegisterForm";
+import DataStatus from "../molecules/alerts/DataStatus";
 
 const EventImage = () => {
   const { eventData } = useEventData();
@@ -135,7 +136,35 @@ export const EventSections = () => {
           isWalletConnected={Boolean(user.wallet_address)}
         />
       )}
-      <UserRegisterForm />
+      {eventData.data?.has_registration && eventData.data?.registrant_status === "" && <UserRegisterForm />}
+
+      {eventData.data?.registrant_status === "pending" && (
+        <DataStatus
+          status="pending"
+          size="md"
+          title="Request Pending"
+          description="Your request to join this event is pending to be approved."
+        />
+      )}
+
+      {eventData.data?.registrant_status === "approved" && (
+        <DataStatus
+          status="approved"
+          size="md"
+          title="Request Approved"
+          description="Your request to join this event hass been approved"
+        />
+      )}
+
+      {eventData.data?.registrant_status === "rejected" && (
+        <DataStatus
+          status="rejected"
+          size="md"
+          title="Request Rejected"
+          description="Your request to join this event has been rejected."
+        />
+      )}
+
       {!isAdminOrOrganizer && !isStarted && isNotEnded && (
         <MainButton
           text="Event Not Started Yet"
