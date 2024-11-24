@@ -445,7 +445,7 @@ jobs:
             echo "SSH_PORT=${{ secrets.SSH_SANDBOX_PORT }}" >> $GITHUB_ENV
           elif [[ "$branch_name" == "main" ]]; then
             echo "SSH_IP=${{ secrets.SSH_MAIN_IP }}" >> $GITHUB_ENV
-            echo "SSH_PORT=${{ secrets.SSH_MAIN_IP }}" >> $GITHUB_ENV
+            echo "SSH_PORT=${{ secrets.SSH_MAIN_PORT }}" >> $GITHUB_ENV
           else
             echo "Error: Unknown branch name, unable to set SSH credentials."
             exit 1
