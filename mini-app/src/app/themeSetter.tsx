@@ -15,6 +15,11 @@ export default function ThemeSetter({ children }: { children: React.ReactNode })
     webApp?.setHeaderColor(theme === "dark" ? "#1C1C1E" : "#ffffff");
     webApp?.setBackgroundColor(theme === "dark" ? "#1C1C1E" : "#ffffff");
     habticfeedback?.impactOccurred("light");
+    if (theme === "dark") {
+      document.body.style.backgroundColor = "#1C1C1E";
+    } else {
+      document.body.style.backgroundColor = "#ffffff";
+    }
   }, [theme, webApp]);
 
   useEffect(() => {
