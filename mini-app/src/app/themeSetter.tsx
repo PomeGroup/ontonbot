@@ -17,5 +17,11 @@ export default function ThemeSetter({ children }: { children: React.ReactNode })
     habticfeedback?.impactOccurred("light");
   }, [theme, webApp]);
 
+  useEffect(() => {
+    console.log("current theme", {
+      theme,
+    });
+  }, [theme]);
+
   return <div>{children}</div>;
 }
