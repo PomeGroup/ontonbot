@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Block } from "konsta/react";
+import { useTheme } from "next-themes";
 
 const LIMIT = 5;
 
@@ -28,6 +29,12 @@ const Search: React.FC = () => {
   useWithBackButton({
     whereTo: "/",
   });
+
+  const { setTheme, theme } = useTheme();
+  useEffect(() => {
+    setTheme("dark");
+    return () => setTheme("light");
+  }, [setTheme, theme]);
 
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();

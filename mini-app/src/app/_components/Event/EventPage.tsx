@@ -6,7 +6,7 @@ import { useEventData } from "./eventPageContext";
 import { EventDataProvider } from "./EventDataProvider";
 import { EventSections } from "./EventPageSections";
 import { Block } from "konsta/react";
-import { useLayoutEffect } from "react";
+import { useEffect } from "react";
 import { useTheme } from "next-themes";
 
 const EventDataQueryState = () => {
@@ -28,12 +28,12 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   useWithBackButton({
     whereTo: "/",
   });
-  const { setTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     setTheme("light");
     return () => setTheme("dark");
-  }, [setTheme]);
+  }, [setTheme, theme]);
 
   return (
     <Block margin="mt-2">

@@ -22,7 +22,10 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         }}
         manifestUrl="https://gist.githubusercontent.com/nichitagutu/3cc22ee9749e77222c38313de47c94bc/raw/f37de28e672932101702f841d02d7414b93ca9ac/tonconnect-manifest.json"
       >
-        <ThemeProvider attribute="class">
+        <ThemeProvider
+          defaultTheme="light"
+          attribute="class"
+        >
           <WebAppProvider>
             <TRPCAPIProvider>
               <NavigationHistoryProvider>

@@ -29,7 +29,7 @@ export default function Home() {
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
 
-  const { setTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
 
   const UserId = webApp?.initDataUnsafe?.user?.id;
 
@@ -195,7 +195,8 @@ export default function Home() {
 
   useLayoutEffect(() => {
     setTheme("dark");
-  }, []);
+    return () => setTheme("light");
+  }, [setTheme, theme]);
 
   // Handle swiper slide change
   const handleSlideChange = (swiper: any) => {
