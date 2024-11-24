@@ -32,7 +32,6 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
 
   useEffect(() => {
     setTheme("light");
-    return () => setTheme("dark");
   }, [setTheme, theme]);
 
   return (

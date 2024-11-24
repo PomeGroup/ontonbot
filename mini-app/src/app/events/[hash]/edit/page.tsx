@@ -21,9 +21,6 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
   useEffect(() => {
     setTheme("light");
-    return () => {
-      setTheme("dark");
-    };
   }, [theme, setTheme]);
 
   if (isLoading) {
