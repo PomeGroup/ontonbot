@@ -5,8 +5,6 @@ import Labels from "@/app/_components/atoms/labels";
 import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
 import { EventActions } from "./EventActions";
-import { useLayoutEffect } from "react";
-import { useTheme } from "next-themes";
 import ShareEventButton from "../ShareEventButton";
 import { EventPasswordInput } from "./EventPasswordInput";
 import EventKeyValue from "../organisms/events/EventKewValue";
@@ -124,18 +122,14 @@ EventAttributes.displayName = "EventAttributes";
 
 // Status component to handle different event states
 const EventStatus = ({
-  isEventActive,
   registrantStatus,
   capacityFilled,
   hasWaitingList,
 }: {
-  isEventActive: boolean;
   registrantStatus: "" | "approved" | "rejected" | "pending";
   capacityFilled: boolean;
   hasWaitingList: boolean;
 }) => {
-  if (!isEventActive) return null;
-
   const statusConfigs = {
     "": () => <UserRegisterForm />,
     pending: () => (
@@ -188,21 +182,13 @@ const EventStatus = ({
 // Main component
 export const EventSections = () => {
   const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } = useEventData();
-  const { setTheme } = useTheme();
   const { user } = useUserStore();
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
-  const isEventActive = isStarted && isNotEnded;
   const showPasswordInput =
     !isAdminOrOrganizer &&
-    isEventActive &&
     (eventData.data?.registrant_status === "approved" || !eventData.data?.has_registration) &&
     !userEventPasswordField?.completed;
-
-  useLayoutEffect(() => {
-    setTheme("light");
-    return () => setTheme("dark");
-  }, [setTheme]);
 
   return (
     <div className="space-y-2">
@@ -215,20 +201,20 @@ export const EventSections = () => {
       <EventActions />
       <EventDescription />
 
-      {!isAdminOrOrganizer &&
-        eventData.data?.registrant_status === "approved" &&
-        user?.wallet_address &&
-        userEventPasswordField?.completed && (
-          <ClaimRewardButton
-            initData={initData}
-            eventId={eventData.data?.event_uuid ?? ""}
-            isWalletConnected={Boolean(user.wallet_address)}
-          />
-        )}
+      {!isAdminOrOrganizer && eventData.data?.has_registration
+        ? eventData.data?.registrant_status === "approved"
+        : true &&
+          user?.wallet_address &&
+          userEventPasswordField?.completed && (
+            <ClaimRewardButton
+              initData={initData}
+              eventId={eventData.data?.event_uuid ?? ""}
+              isWalletConnected={Boolean(user.wallet_address)}
+            />
+          )}
 
       {!isAdminOrOrganizer && (
         <EventStatus
-          isEventActive={isEventActive}
           registrantStatus={eventData.data?.registrant_status ?? ""}
           capacityFilled={Boolean(eventData.data?.capacity_filled)}
           hasWaitingList={Boolean(eventData.data?.has_waiting_list)}
