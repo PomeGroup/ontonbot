@@ -320,7 +320,6 @@ const RegistrationGuestlist = () => {
         {registrants.isSuccess && !registrants.data?.length && (
           <DataStatus
             status="not_found"
-            size="md"
             title="No Registrants Yet"
             description="No one has filled the form yet."
           />
@@ -328,7 +327,6 @@ const RegistrationGuestlist = () => {
         {registrants.isLoading && (
           <DataStatus
             status="pending"
-            size="md"
             title="Loading Guest List"
           />
         )}
@@ -336,14 +334,12 @@ const RegistrationGuestlist = () => {
           (registrants.error.data?.code === "NOT_FOUND" ? (
             <DataStatus
               status="not_found"
-              size="md"
               title="Event Not Found"
               description={`Event does not exist with id = ${params.hash}`}
             />
           ) : (
             <DataStatus
               status="danger"
-              size="md"
               title="Something Went Wrong"
               description={"There was a problem try refreshing the page"}
             />

@@ -26,26 +26,34 @@ export const generalStepDataSchema = z.object({
     .nullable(),
 });
 
-export function rewardStepValidation(passwordDisabled: boolean) {
+export function rewardStepValidation(editing: boolean) {
   return z.object({
-    secret_phrase: passwordDisabled
+    secret_phrase: editing
       ? z.string().optional()
       : z
           .string()
           .min(4, { message: "Password must be at least 4 characters" })
           .max(20, { message: "Password must be less than 20 characters" }),
-    ts_reward_url: z
-      .string()
-      .optional()
-      .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {
-        message: "Please upload a valid reward image URL",
-      }),
-    video_url: z
-      .string()
-      .optional()
-      .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {
-        message: "Please upload a valid video URL",
-      }),
+    ts_reward_url: editing
+      ? z
+          .string()
+          .url({
+            message: "please select a valid reward image url",
+          })
+          .optional()
+      : z.string().url({
+          message: "please select a valid reward image url",
+        }),
+    video_url: editing
+      ? z
+          .string()
+          .url({
+            message: "please select a valid reward video url",
+          })
+          .optional()
+      : z.string().url({
+          message: "please select a valid reward video url",
+        }),
   });
 }
 

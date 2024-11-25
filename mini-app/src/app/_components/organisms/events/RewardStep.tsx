@@ -123,10 +123,6 @@ export const RewardStep = () => {
       }
 
       clearRewardStepErrors();
-      setEventData({
-        secret_phrase: formDataParsed.data.secret_phrase,
-        ts_reward_url: formDataParsed.data.ts_reward_url,
-      });
 
       const dataToSubmit = { ...formDataParsed.data, ...eventData };
 

@@ -23,7 +23,7 @@ const DATA_STATUS_ANIMATIONS: Record<DataStatusProps["status"], string> = {
 const ANIMATION_SIZES: Record<DataStatusProps["size"], number> = {
   lg: 300,
   md: 120,
-  sm: 80,
+  sm: 60,
 };
 
 export default function DataStatus(props: DataStatusProps) {

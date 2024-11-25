@@ -53,7 +53,6 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
 
         if (currentSlide) {
           setEventData({
-            ...eventData,
             ts_reward_url: currentSlide.imageLink,
             video_url: currentSlide.videoLink,
           });
@@ -68,7 +67,6 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
     if (rewardCollections?.length) {
       const collection = rewardCollections[0];
       setEventData({
-        ...eventData,
         ts_reward_url: collection.imageLink,
         video_url: collection.videoLink,
       });
@@ -77,7 +75,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
   }, [rewardCollections?.length]);
 
   if (sbtOption === "default") {
-    return isLoading && !isSuccess ? (
+    return isLoading && !isSuccess && !eventData?.ts_reward_url ? (
       <Block className="justify-center flex">
         <Preloader />
       </Block>
