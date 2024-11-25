@@ -70,10 +70,6 @@ export const GeneralStep = () => {
       onSubmit={handleSubmit}
     >
       <EventGeneralInfoFormFields />
-      {/* <MainButton */}
-      {/*   text="Next Step" */}
-      {/*   onClick={() => formRef.current?.requestSubmit()} */}
-      {/* /> */}
     </form>
   );
 };

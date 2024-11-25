@@ -21,6 +21,7 @@ const EventDateInput: React.FC<EventDateInputProps> = ({ isStart, date, setDate,
       label={isStart ? "Starts at" : "Ends at"}
       name={isStart ? "start_date" : "end_date"}
       error={error}
+      placeholder={"Please select a date"}
       disabled={disabled}
       value={date}
       onChange={handleDateChange}

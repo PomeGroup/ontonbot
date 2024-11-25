@@ -92,20 +92,14 @@ export const TimePlaceStep = () => {
   }, "Next Step");
 
   return (
-    <>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-        ref={formRef}
-      >
-        <TimePlaceForm />
-      </form>
-      {/* <MainButton */}
-      {/*   text="Next Step" */}
-      {/*   onClick={handleSubmit} */}
-      {/* /> */}
-    </>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+      ref={formRef}
+    >
+      <TimePlaceForm />
+    </form>
   );
 };
