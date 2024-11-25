@@ -135,7 +135,6 @@ const EventRegistrationStatus = ({
     pending: () => (
       <DataStatus
         status="pending"
-        size="md"
         title="Request Pending"
         description="Your request to join this event is pending to be approved."
       />
@@ -143,7 +142,6 @@ const EventRegistrationStatus = ({
     approved: () => (
       <DataStatus
         status="approved"
-        size="md"
         title="Request Approved"
         description="Your request to join this event has been approved"
       />
@@ -151,7 +149,6 @@ const EventRegistrationStatus = ({
     rejected: () => (
       <DataStatus
         status="rejected"
-        size="md"
         title="Request Rejected"
         description="Your request to join this event has been rejected."
       />
@@ -163,7 +160,6 @@ const EventRegistrationStatus = ({
       <>
         <DataStatus
           status="rejected"
-          size="md"
           title="Capacity Filled"
           description="Event capacity is filled and no longer accepts registrations."
         />
