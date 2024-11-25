@@ -201,7 +201,7 @@ async function handleRewardError(reward: RewardType, error: any) {
   const newStatus = shouldFail ? "notification_failed" : undefined;
   const newData = shouldFail ? { fail_reason: error.message } : undefined;
 
-  console.error("handleRewardError", getErrorMessages(error), reward, shouldFail, newStatus, newData);
+  // console.error("handleRewardError", getErrorMessages(error), reward, shouldFail, newStatus, newData);
 
   try {
     await updateRewardStatus(reward.id, newStatus, {

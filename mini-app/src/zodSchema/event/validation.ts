@@ -5,10 +5,10 @@ import { StoreEventData } from "@/zustand/createEventStore";
 export const generalStepDataSchema = z.object({
   title: z
     .string({ required_error: "Please enter a title" })
-    .min(10, { message: "Title must be at least 10 characters" }),
+    .min(5, { message: "Title must be at least 5 characters" }),
   subtitle: z
     .string({ required_error: "Please enter a subtitle" })
-    .min(10, { message: "Subtitle must be at least 10 characters" }),
+    .min(1, { message: "Subtitle must be at least 1 characters" }),
   description: z
     .string({ required_error: "Please enter a description" })
     .min(20, { message: "Description must be at least 20 character" }),
@@ -40,7 +40,7 @@ export function rewardStepValidation(passwordDisabled: boolean) {
       .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {
         message: "Please upload a valid reward image URL",
       }),
-    event_video_url: z
+    video_url: z
       .string()
       .optional()
       .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {

@@ -63,9 +63,15 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
     }
   }, [emblaApi, rewardCollections, setEventData, eventData]);
 
+  // Select the first collection on collection load
   useEffect(() => {
     if (rewardCollections?.length) {
       const collection = rewardCollections[0];
+      setEventData({
+        ...eventData,
+        ts_reward_url: collection.imageLink,
+        video_url: collection.videoLink,
+      });
       setSelectedSbtId(collection.id);
     }
   }, [rewardCollections?.length]);

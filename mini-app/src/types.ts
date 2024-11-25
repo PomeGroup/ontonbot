@@ -130,14 +130,16 @@ export const EventDataSchema = z.object({
   subtitle: z.string({ required_error: "subtitle is required" }),
   description: z.string({ required_error: "description is required" }),
   location: z.string({ required_error: "location is required" }),
-  image_url: z.string().url({ message: "Please upload a valid image URL" }),
-  video_url: z.string().url().optional(),
+  image_url: z
+    .string({ required_error: "event image is required" })
+    .url({ message: "Please upload a valid event image URL" }),
+  video_url: z.string().url({ message: "Please upload a valid video URL" }).optional(),
   ts_reward_url: z
     .string()
-    .optional() // This allows the field to be undefined
-    .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {
+    .url({
       message: "Please upload a valid reward image URL",
-    }),
+    })
+    .optional(), // This allows the field to be undefined
   society_hub: z.object({
     id: z.string({ required_error: "society_hub.id is required" }),
     name: z.string({ required_error: "society_hub.name is required" }),
@@ -169,14 +171,16 @@ export const UpdateEventDataSchema = z.object({
   subtitle: z.string({ required_error: "subtitle is required" }),
   description: z.string({ required_error: "description is required" }),
   location: z.string({ required_error: "location is required" }),
-  image_url: z.string().url({ message: "Please upload a valid image URL" }),
-  video_url: z.string().url().optional(),
+  image_url: z
+    .string({ required_error: "event image is required" })
+    .url({ message: "Please upload a valid image URL" }),
+  video_url: z.string().url({ message: "Please upload a valid video URL" }).optional(),
   ts_reward_url: z
     .string()
-    .optional() // This allows the field to be undefined
-    .refine((url) => url === undefined || url === "" || z.string().url().safeParse(url).success, {
+    .url({
       message: "Please upload a valid reward image URL",
-    }),
+    })
+    .optional(), // This allows the field to be undefined
   society_hub: z.object({
     id: z.string({ required_error: "society_hub.id is required" }),
     name: z.string({ required_error: "society_hub.name is required" }),

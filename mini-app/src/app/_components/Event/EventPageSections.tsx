@@ -121,7 +121,7 @@ const EventAttributes = React.memo(() => {
 EventAttributes.displayName = "EventAttributes";
 
 // Status component to handle different event states
-const EventStatus = ({
+const EventRegistrationStatus = ({
   registrantStatus,
   capacityFilled,
   hasWaitingList,
@@ -213,8 +213,8 @@ export const EventSections = () => {
             />
           )}
 
-      {!isAdminOrOrganizer && (
-        <EventStatus
+      {!isAdminOrOrganizer && eventData.data?.has_registration && (
+        <EventRegistrationStatus
           registrantStatus={eventData.data?.registrant_status ?? ""}
           capacityFilled={Boolean(eventData.data?.capacity_filled)}
           hasWaitingList={Boolean(eventData.data?.has_waiting_list)}
