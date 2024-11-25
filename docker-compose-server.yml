@@ -88,9 +88,14 @@ services:
           memory: 8000M
           cpus: '3.0'
       replicas: 1
+      mode: global
       update_config:
         failure_action: rollback
-        order: start-first
+        order: stop-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
       restart_policy:
         condition: none
         delay: 5s
@@ -119,12 +124,14 @@ services:
           memory: 8000M
           cpus: '5.0'
       replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
+      mode: global
       update_config:
         failure_action: rollback
         order: stop-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
       restart_policy:
         condition: on-failure
         delay: 15s
@@ -158,9 +165,14 @@ services:
           memory: 3000M
           cpus: '2.0'
       replicas: 1
+      mode: global
       update_config:
         failure_action: rollback
         order: stop-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
       restart_policy:
         condition: on-failure
         delay: 15s
@@ -229,7 +241,7 @@ services:
       mode: global
       update_config:
         failure_action: rollback
-        order: start-first
+        order: stop-first
         parallelism: 1
       placement:
         constraints:
@@ -285,6 +297,11 @@ services:
       - onton-network
     secrets:
       - ghcr-radio-config
+    healthcheck:
+      test: ["CMD-SHELL", "curl  http://localhost:${MINI_APP_PORT}/api/client/v1/public/ping | grep -q pong "]
+      interval: 15s
+      timeout: 10s
+      start_period: 15s
 #    logging:
 #      driver: "gelf"
 #      options:
@@ -322,11 +339,11 @@ services:
     command: ["pnpm","run", "start-cron"]
     secrets:
       - ghcr-radio-config
-    logging:
-      driver: "gelf"
-      options:
-        gelf-address: "udp://logstash:5044"
-        tag: "${BRANCH_NAME}-mini-app-cron"
+#    logging:
+#      driver: "gelf"
+#      options:
+#        gelf-address: "udp://logstash:5044"
+#        tag: "${BRANCH_NAME}-mini-app-cron"
 
   participant-tma:
     hostname: participant-tma
@@ -347,7 +364,6 @@ services:
         delay: 3s
     depends_on:
       - mini-app
-      - caddy
     environment:
         <<: *common-env
     networks:
@@ -382,7 +398,6 @@ services:
       - postgres
       - redis
       - minio
-      - caddy
       - mini-app
     environment:
       <<: *common-env
@@ -432,8 +447,6 @@ services:
         delay: 5s
         max_attempts: 20
         window: 300s
-    depends_on:
-     - caddy
     environment:
         <<: *common-env
     networks:
@@ -486,9 +499,14 @@ services:
           memory: 2000M
           cpus: '2.0'
       replicas: 1
+      mode: global
       update_config:
         failure_action: rollback
-        order: start-first
+        order: stop-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
       restart_policy:
         condition: on-failure
         delay: 30s
