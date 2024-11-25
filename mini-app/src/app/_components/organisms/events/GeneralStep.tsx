@@ -1,10 +1,10 @@
 import React, { useRef } from "react";
 import { toast } from "sonner";
-import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { generalStepDataSchema } from "@/zodSchema/event/validation";
 import { ErrorMessage } from "@/app/_components/molecules/alerts/ErrorMessage";
 import { EventGeneralInfoFormFields } from "@/app/_components/Event/steps/GeneralInfoForm";
+import { useMainButton } from "@/hooks/useMainButton";
 
 let lastToastId: string | number | null = null;
 
@@ -60,16 +60,16 @@ export const GeneralStep = () => {
     setCurrentStep(2);
   };
 
+  useMainButton(() => {
+    formRef.current?.requestSubmit();
+  }, "Next Step");
+
   return (
     <form
       ref={formRef}
       onSubmit={handleSubmit}
     >
       <EventGeneralInfoFormFields />
-      <MainButton
-        text="Next Step"
-        onClick={() => formRef.current?.requestSubmit()}
-      />
     </form>
   );
 };

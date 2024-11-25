@@ -64,7 +64,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
 
   // Select the first collection on collection load
   useEffect(() => {
-    if (rewardCollections?.length) {
+    if (rewardCollections?.length && sbtOption === "default") {
       const collection = rewardCollections[0];
       setEventData({
         ts_reward_url: collection.imageLink,
@@ -72,7 +72,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
       });
       setSelectedSbtId(collection.id);
     }
-  }, [rewardCollections?.length]);
+  }, [rewardCollections?.length, sbtOption]);
 
   if (sbtOption === "default") {
     return isLoading && !isSuccess && !eventData?.ts_reward_url ? (

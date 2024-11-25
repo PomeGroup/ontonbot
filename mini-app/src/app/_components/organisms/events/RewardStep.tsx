@@ -7,11 +7,11 @@ import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
-import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import { FiAlertCircle } from "react-icons/fi";
 import { trpc } from "@/app/_trpc/client";
 import { RewardForm } from "../../Event/steps/RewardStepFrom";
 import { rewardStepValidation } from "@/zodSchema/event/validation";
+import { useMainButton } from "@/hooks/useMainButton";
 
 export const RewardStep = () => {
   const {
@@ -171,6 +171,17 @@ export const RewardStep = () => {
     clearRewardStepErrors();
   };
 
+  useMainButton(
+    () => {
+      formRef.current?.requestSubmit();
+    },
+    editOptions?.eventHash ? "Update event" : "Create Event",
+    {
+      disabled: updateEvent.isLoading || addEvent.isLoading,
+      isLoading: updateEvent.isLoading || addEvent.isLoading,
+    }
+  );
+
   return (
     <form
       ref={formRef}
@@ -186,21 +197,6 @@ export const RewardStep = () => {
         clearImageError={clearImageError}
         clearVideoError={clearVideoError}
       />
-      {editOptions?.eventHash ? (
-        <MainButton
-          text="Update event"
-          disabled={updateEvent.isLoading}
-          progress={updateEvent.isLoading}
-          onClick={() => formRef.current?.requestSubmit()}
-        />
-      ) : (
-        <MainButton
-          text="Create event"
-          disabled={addEvent.isLoading}
-          progress={addEvent.isLoading}
-          onClick={() => formRef.current?.requestSubmit()}
-        />
-      )}
     </form>
   );
 };
