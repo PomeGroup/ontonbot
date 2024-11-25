@@ -87,7 +87,6 @@ services:
         limits:
           memory: 8000M
           cpus: '3.0'
-      replicas: 1
       mode: global
       update_config:
         failure_action: rollback
@@ -123,7 +122,6 @@ services:
         limits:
           memory: 8000M
           cpus: '5.0'
-      replicas: 1
       mode: global
       update_config:
         failure_action: rollback
@@ -169,7 +167,6 @@ services:
         limits:
           memory: 3000M
           cpus: '2.0'
-      replicas: 1
       mode: global
       update_config:
         failure_action: rollback
@@ -325,7 +322,7 @@ services:
         limits:
           memory: 2000M
           cpus: '2.0'
-      replicas: 1
+      mode: global
       update_config:
         failure_action: rollback
         order: start-first
@@ -508,7 +505,6 @@ services:
         limits:
           memory: 2000M
           cpus: '2.0'
-      replicas: 1
       mode: global
       update_config:
         failure_action: rollback

@@ -1,2 +1,3 @@
 test separate cloudflare account for main
 health check for main containers
+remove replicas
