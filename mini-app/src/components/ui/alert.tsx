@@ -59,7 +59,7 @@ const AlertGeneric = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <Alert
     ref={ref}
-    className={cn("gap-2", className)}
+    className={cn("gap-2 text-cn-muted-foreground", className)}
   >
     {props.variant === "info" && <Info className="min-w-6" />}
     <AlertDescription>{props.children}</AlertDescription>

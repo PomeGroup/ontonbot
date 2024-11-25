@@ -1,12 +1,12 @@
 "use client";
-import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { toast } from "sonner";
 import * as React from "react";
 // Import icon for errors
 import TimePlaceForm from "@/app/_components/Event/steps/TimePlaceForm";
 import { timeplaceStepValidation } from "@/zodSchema/event/validation";
+import { useMainButton } from "@/hooks/useMainButton";
 
 export const TimePlaceStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -21,7 +21,7 @@ export const TimePlaceStep = () => {
 
   let lastToastIdRef = useRef<string | number | null>(null); // Store the ID of the last toast using a ref
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = () => {
     if (!formRef.current) {
       return;
     }
@@ -77,7 +77,7 @@ export const TimePlaceStep = () => {
     });
     clearErrors();
     setCurrentStep(3);
-  }, [Object.values(eventData || {})]);
+  };
 
   useEffect(() => {
     setEventData({
@@ -87,18 +87,25 @@ export const TimePlaceStep = () => {
     });
   }, []);
 
+  useMainButton(() => {
+    formRef.current?.requestSubmit();
+  }, "Next Step");
+
   return (
     <>
       <form
-        onSubmit={(e) => e.preventDefault()}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
         ref={formRef}
       >
         <TimePlaceForm />
       </form>
-      <MainButton
-        text="Next Step"
-        onClick={handleSubmit}
-      />
+      {/* <MainButton */}
+      {/*   text="Next Step" */}
+      {/*   onClick={handleSubmit} */}
+      {/* /> */}
     </>
   );
 };
