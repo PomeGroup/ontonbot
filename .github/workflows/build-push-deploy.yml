@@ -151,7 +151,9 @@ jobs:
       - name: Authenticate to GitHub Container Registry
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "${{ secrets.REGISTRY_USER_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USER_NAME }} --password-stdin
+        run: |
+              ping ${{ secrets.REGISTRY_URL }} -c 4
+              echo "${{ secrets.REGISTRY_USER_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USER_NAME }} --password-stdin
 
       - name: Build and push image for ${{ matrix.service }}
 
