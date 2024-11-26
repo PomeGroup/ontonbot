@@ -16,7 +16,6 @@ import * as Sentry from "@sentry/nextjs";
 const Providers = ({ children, isDevStage }: { children: React.ReactNode; isDevStage: boolean }) => {
   useEffect(() => {
     isDevStage && import("eruda").then((lib) => lib.default.init());
-    isDevStage && alert("this is development");
   }, [isDevStage]);
 
   return (

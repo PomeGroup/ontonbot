@@ -128,26 +128,6 @@ table {
   border-spacing: 0;
 }
 
-/* Using the universal selector */
-* {
-  -webkit-user-select: none;
-  /* Safari */
-  -moz-user-select: none;
-  /* Firefox */
-  -ms-user-select: none;
-  /* Internet Explorer/Edge */
-  user-select: none;
-  /* Non-prefixed version, currently supported by Chrome, Opera and Firefox */
-}
-
-/* Or, using the body tag */
-body {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
