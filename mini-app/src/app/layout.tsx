@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang="en"
-      className="overflow-x-hidden w-full"
+      className="w-full"
     >
       {process.env.NODE_ENV === "production" && (
         <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
