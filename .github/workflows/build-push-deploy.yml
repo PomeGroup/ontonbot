@@ -595,7 +595,6 @@ jobs:
               else
                 echo "docker service update --force $branch_name\_\$service"
                 docker service update --force $branch_name\_\$service
-            done
               fi
             done
             echo "Services deployed successfully."         
