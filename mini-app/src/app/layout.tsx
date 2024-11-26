@@ -48,13 +48,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             src="http://localhost:8097"
           ></script>
         )}
-        {process.env.ENV === "development" && (
-          <>
-            {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-            <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-            <script dangerouslySetInnerHTML={{ __html: `eruda.init();` }}></script>
-          </>
-        )}
       </body>
     </html>
   );

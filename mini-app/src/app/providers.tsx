@@ -5,15 +5,20 @@ import { ConfigProvider } from "@/context/ConfigContext";
 import { NavigationHistoryProvider } from "@/context/NavigationHistoryContext";
 import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { ThemeProvider } from "next-themes";
-import React from "react";
+import React, { useEffect } from "react";
 import WebAppProvider from "./_components/WebAppProvider";
 import ThemeSetter from "./themeSetter";
 import TRPCAPIProvider from "./_trpc/Provider";
 import KonstaAppProvider from "./_components/KonstaAppProvider";
 import UserSaver from "./_components/UserSaver";
 import * as Sentry from "@sentry/nextjs";
+import { isDevStage } from "@/constants";
 
 const Providers = ({ children }: { children: React.ReactNode }) => {
+  useEffect(() => {
+    isDevStage && import("eruda").then((lib) => lib.default.init());
+  }, [isDevStage]);
+
   return (
     <Sentry.ErrorBoundary>
       <TonConnectUIProvider

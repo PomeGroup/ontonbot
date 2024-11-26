@@ -599,3 +599,5 @@ export const CHAIN = {
   MAINNET: "-239",
   TESTNET: "-3",
 } as const;
+
+export const isDevStage = process.env.ENV === "development";
