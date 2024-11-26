@@ -151,7 +151,7 @@ jobs:
       - name: Authenticate to GitHub Container Registry
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${CR_PAT}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ github.actor }} --password-stdin
 
       - name: Build and push image for ${{ matrix.service }}
 
@@ -175,7 +175,7 @@ jobs:
           repository=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           service=$(echo "$service" | tr '[:upper:]' '[:lower:]')
 
-          image_name="ghcr.io/${repository}/${service}"
+          image_name="${{ secrets.REGISTRY_URL }}/${repository}/${service}"
           tag_commit="${image_name}:${branch_name}-${{ github.run_id }}"
           tag_latest="${image_name}:${branch_name}-latest"
 
@@ -377,7 +377,7 @@ jobs:
       - name: Authenticate to GitHub Container Registry
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${CR_PAT}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ github.actor }} --password-stdin
       - name: Start SSH Agent and Add Key
         uses: webfactory/ssh-agent@v0.9.0
         with:
@@ -389,7 +389,7 @@ jobs:
       - name: Authenticate to GitHub Container Registry
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "${CR_PAT}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        run: echo "${CR_PAT}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ github.actor }} --password-stdin
       - name: Generate Environment Variables .env File
         id: generate-env-script
         env:
@@ -466,6 +466,7 @@ jobs:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           branch_name="${{ github.ref_name }}"
+          registry_url="${{ secrets.REGISTRY_URL }}"
           ssh_ip="${SSH_IP}"
           ssh_port="${SSH_PORT}"
           services_to_build=${{ needs.determine-services.outputs.services_to_build }}   
@@ -479,7 +480,6 @@ jobs:
           fi
 
           echo "Connecting to server and creating branch directory..."
-
           # Use case-insensitive prefix matching for branch name
           # [[ "$branch_name" == "dev" ]] ||
           if [[ "$branch_name" == "sandbox" ]]; then
@@ -525,7 +525,7 @@ jobs:
                 echo "Warning: Found an empty service name, skipping..."
               else
                 echo "Pulling Docker image for service: \$service"
-                docker pull ghcr.io/pomegroup/ontonbot/\${service}:${branch_name}-latest
+                docker pull ${registry_url}/pomegroup/ontonbot/\${service}:${branch_name}-latest
               fi
               if [[ "\$service" == "caddy" ]]; then
                 echo "creating caady files"

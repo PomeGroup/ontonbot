@@ -37,7 +37,7 @@ services:
       CLOUDFLARE_API_TOKEN_MAIN: ${CLOUDFLARE_API_TOKEN_MAIN:-}
       BRANCH_NAME: ${BRANCH_NAME}
     secrets:
-      - ghcr-radio-config
+      - ghcr-onton-config
 
   registry:
     image: registry:latest
@@ -97,5 +97,5 @@ volumes:
   registry_data:
     name: "server_registry_data"
 secrets:
-  ghcr-radio-config:
+  ghcr-onton-config:
     external: true

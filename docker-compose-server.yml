@@ -71,7 +71,7 @@ x-common-env: &common-env
   TONAPI_API_KEY: ${TONAPI_API_KEY}
   TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
-  DOCKER_CONFIG: "/run/secrets/ghcr-radio-config"
+  DOCKER_CONFIG: "/run/secrets/ghcr-onton-config"
 
 services:
   minio:
@@ -263,7 +263,7 @@ services:
     depends_on:
       - postgres
     secrets:
-      - ghcr-radio-config
+      - ghcr-onton-config
     networks:
       - onton-network
 #    logging:
@@ -303,7 +303,7 @@ services:
     networks:
       - onton-network
     secrets:
-      - ghcr-radio-config
+      - ghcr-onton-config
     healthcheck:
       test: ["CMD-SHELL", "curl  http://localhost:${MINI_APP_PORT}/api/client/v1/public/ping | grep -q pong "]
       interval: 15s
@@ -345,7 +345,7 @@ services:
       - onton-network
     command: ["pnpm","run", "start-cron"]
     secrets:
-      - ghcr-radio-config
+      - ghcr-onton-config
 #    logging:
 #      driver: "gelf"
 #      options:
@@ -376,7 +376,7 @@ services:
     networks:
       - onton-network
     secrets:
-      - ghcr-radio-config
+      - ghcr-onton-config
 #    logging:
 #      driver: "gelf"
 #      options:
@@ -384,7 +384,7 @@ services:
 #        tag: "${BRANCH_NAME}-participant-tma"
   nft-manager:
     hostname: nft-manager
-    image: ghcr.io/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
     deploy:
       resources:
         limits:
@@ -412,7 +412,7 @@ services:
     networks:
       - onton-network
     secrets:
-      - ghcr-radio-config
+      - ghcr-onton-config
 #    logging:
 #      driver: "gelf"
 #      options:
@@ -420,7 +420,7 @@ services:
 #        tag: "${BRANCH_NAME}-nft-manager"
 
   giveaway-checker:
-    image: ghcr.io/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
     hostname: giveaway-checker
     depends_on:
       - postgres
@@ -429,7 +429,7 @@ services:
     networks:
       - onton-network
     secrets:
-      - ghcr-radio-config
+      - ghcr-onton-config
 #    logging:
 #        driver: "gelf"
 #        options:
@@ -437,7 +437,7 @@ services:
 #            tag: "${BRANCH_NAME}-giveaway-checker"
   website:
     hostname: website
-    image: ghcr.io/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
     ports:
       - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
     deploy:
@@ -465,7 +465,7 @@ services:
 #        tag: "${BRANCH_NAME}-website"
 
   golang-server:
-    image: ghcr.io/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
     hostname: golang-server
     depends_on:
       - redis
@@ -480,7 +480,7 @@ services:
 #        tag:  "${BRANCH_NAME}-golang-server"
 
   golang-worker:
-    image: ghcr.io/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
     hostname: golang-worker
     depends_on:
       - redis
@@ -549,7 +549,7 @@ services:
   client-web:
     hostname: client-web
     <<: *default-extra-hosts
-    image: ghcr.io/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
     ports:
       - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
     environment:
@@ -672,5 +672,5 @@ volumes:
         name: "${STAGE_NAME}_elasticsearch_data"
 
 secrets:
-  ghcr-radio-config:
+  ghcr-onton-config:
     external: true
