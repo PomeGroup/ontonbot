@@ -151,10 +151,16 @@ jobs:
       - name: Authenticate to GitHub Container Registry
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
+          REGISTRY_USER_PASSWORD: ${{ vars.REGISTRY_USER_PASSWORD }}
+          REGISTRY_URL: ${{ vars.REGISTRY_URL }}
+          REGISTRY_USER_NAME: ${{ vars.REGISTRY_USER_NAME }}
         run: |
               ping ${{ vars.REGISTRY_URL }} -c 4
               echo "Authenticating to GitHub Container Registry..."
-              echo "${{ vars.REGISTRY_USER_PASSWORD }}" | docker login ${{ vars.REGISTRY_URL }} -u ${{ vars.REGISTRY_USER_NAME }} --password-stdin
+              echo "${REGISTRY_URL}"
+              echo "${REGISTRY_USER_NAME}"
+              echo "${REGISTRY_USER_PASSWORD}"
+              echo "${REGISTRY_USER_PASSWORD}" | docker login ${REGISTRY_URL} -u ${REGISTRY_USER_NAME} --password-stdin
             
 
 
