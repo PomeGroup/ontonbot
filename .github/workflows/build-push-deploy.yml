@@ -152,13 +152,9 @@ jobs:
         env:
           CR_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
-              ping ${{ secrets.REGISTRY_URL }} -c 4
-                echo "Authenticating to GitHub Container Registry..."
-              echo ${{ secrets.REGISTRY_URL }}  > 1.txt
-                echo ${{ secrets.REGISTRY_USER_NAME }}  > 2.txt
-                echo ${{ secrets.REGISTRY_USER_PASSWORD }}  > 3.txt
-              cat 1.txt
-              echo "${{ secrets.REGISTRY_USER_PASSWORD }}" | docker login ${{ secrets.REGISTRY_URL }} -u ${{ secrets.REGISTRY_USER_NAME }} --password-stdin
+              ping ${{ vars.REGISTRY_URL }} -c 4
+              echo "Authenticating to GitHub Container Registry..."
+              echo "${{ vars.REGISTRY_USER_PASSWORD }}" | docker login ${{ vars.REGISTRY_URL }} -u ${{ vars.REGISTRY_USER_NAME }} --password-stdin
             
 
 
