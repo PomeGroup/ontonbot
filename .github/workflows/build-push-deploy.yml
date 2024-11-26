@@ -154,13 +154,7 @@ jobs:
           REGISTRY_USER_PASSWORD: ${{ secrets.REGISTRY_USER_PASSWORD }}
           REGISTRY_URL: ${{ secrets.REGISTRY_URL }}
           REGISTRY_USER_NAME: ${{ secrets.REGISTRY_USER_NAME }}
-        run: |
-              ping ${{ secrets.REGISTRY_URL }} -c 4
-              echo "Authenticating to GitHub Container Registry..."
-              echo "${REGISTRY_URL}"
-              echo "${REGISTRY_USER_NAME}"
-              echo "${REGISTRY_USER_PASSWORD}"
-              echo "${REGISTRY_USER_PASSWORD}" | docker login ${REGISTRY_URL} -u ${REGISTRY_USER_NAME} --password-stdin
+        run: echo "${REGISTRY_USER_PASSWORD}" | docker login ${REGISTRY_URL} -u ${REGISTRY_USER_NAME} --password-stdin
             
 
 
@@ -564,6 +558,8 @@ jobs:
           echo "Exporting all environment variables with branch-specific prefix..."
           
           ssh  -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
+            set -o errexit
+            set -o pipefail
             echo "Listing files in branch directory..."        
             cd /home/tonont/$branch_name
             ls -la
@@ -578,7 +574,13 @@ jobs:
             echo "Updating Docker node label for stage $branch_name..."
             docker node update --label-add stage.$branch_name=true ontonServer
             echo "Deploying Docker stack for $branch_name..."
-            docker stack deploy --with-registry-auth -c docker-compose-server.yml $branch_name
+            deploy_output=\$(docker stack deploy --with-registry-auth -c docker-compose-server.yml $branch_name 2>&1)
+          
+            echo "\$deploy_output"
+            if echo "\$deploy_output" | grep -q "could not be accessed on a registry"; then
+              echo "Error: Registry access issue detected during deployment."
+              exit 1
+            fi
 
             echo "Forcing update of services..."
             services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
