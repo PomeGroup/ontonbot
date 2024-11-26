@@ -1,6 +1,6 @@
 services:
   caddy:
-    image: ghcr.io/${GITHUB_REPO}/caddy:dev-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/caddy:dev-latest
     ports:
       - "80:80"
       - "443:443"
@@ -37,7 +37,7 @@ services:
       CLOUDFLARE_API_TOKEN_MAIN: ${CLOUDFLARE_API_TOKEN_MAIN:-}
       BRANCH_NAME: ${BRANCH_NAME}
     secrets:
-      - ghcr-onton-config
+      - registry-onton-config
 
   registry:
     image: registry:latest
@@ -97,5 +97,5 @@ volumes:
   registry_data:
     name: "server_registry_data"
 secrets:
-  ghcr-onton-config:
+  registry-onton-config:
     external: true

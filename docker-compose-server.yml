@@ -71,7 +71,7 @@ x-common-env: &common-env
   TONAPI_API_KEY: ${TONAPI_API_KEY}
   TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
-  DOCKER_CONFIG: "/run/secrets/ghcr-onton-config"
+  DOCKER_CONFIG: "/run/secrets/registry-onton-config"
 
 services:
   minio:
@@ -263,7 +263,7 @@ services:
     depends_on:
       - postgres
     secrets:
-      - ghcr-onton-config
+      - registry-onton-config
     networks:
       - onton-network
 #    logging:
@@ -303,7 +303,7 @@ services:
     networks:
       - onton-network
     secrets:
-      - ghcr-onton-config
+      - registry-onton-config
     healthcheck:
       test: ["CMD-SHELL", "curl  http://localhost:${MINI_APP_PORT}/api/client/v1/public/ping | grep -q pong "]
       interval: 15s
@@ -345,7 +345,7 @@ services:
       - onton-network
     command: ["pnpm","run", "start-cron"]
     secrets:
-      - ghcr-onton-config
+      - registry-onton-config
 #    logging:
 #      driver: "gelf"
 #      options:
@@ -376,7 +376,7 @@ services:
     networks:
       - onton-network
     secrets:
-      - ghcr-onton-config
+      - registry-onton-config
 #    logging:
 #      driver: "gelf"
 #      options:
@@ -412,7 +412,7 @@ services:
     networks:
       - onton-network
     secrets:
-      - ghcr-onton-config
+      - registry-onton-config
 #    logging:
 #      driver: "gelf"
 #      options:
@@ -429,7 +429,7 @@ services:
     networks:
       - onton-network
     secrets:
-      - ghcr-onton-config
+      - registry-onton-config
 #    logging:
 #        driver: "gelf"
 #        options:
@@ -672,5 +672,5 @@ volumes:
         name: "${STAGE_NAME}_elasticsearch_data"
 
 secrets:
-  ghcr-onton-config:
+  registry-onton-config:
     external: true
