@@ -25,15 +25,12 @@ export const viewport: Viewport = {
 };
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className="w-full"
-    >
+    <html lang="en">
       {process.env.NODE_ENV === "production" && (
         <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
       )}
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
-      <body className={cn(mainFont.className, "border-red-500 border-2")}>
+      <body className={cn(mainFont.className, "min-h-screen")}>
         <Providers isDevStage={isDevStage}>
           {process.env.ENV === "staging" && (
             <div className="flex justify-center bg-yellow-100 text-gray-600 py-2 text-xs">
