@@ -11,7 +11,7 @@ on:
     paths:
       - 'client-web-panel/**'
       - 'devops/**'
-      - 'docker-compose.server.yml'
+      - 'docker-compose-server.yml'
       - 'giveaway-checker/**'
       - 'golang-server/**'
       - 'mini-app/**'
@@ -581,7 +581,6 @@ jobs:
               echo "Error: Registry access issue detected during deployment."
               exit 1
             fi
-
             echo "Forcing update of services..."
             services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
             underscore="_"
