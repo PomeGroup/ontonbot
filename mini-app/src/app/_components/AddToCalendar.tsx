@@ -3,8 +3,9 @@
 import * as React from "react";
 import { FaGoogle, FaYahoo, FaCalendarPlus } from "react-icons/fa";
 import { SiMicrosoftoutlook } from "react-icons/si";
-import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Button, KButton } from "@/components/ui/button";
+import { createPortal } from "react-dom";
+import { Block, Sheet } from "konsta/react";
 // Assuming shadcn drawer is structured like this
 
 type Props = {
@@ -53,59 +54,62 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
 
   return (
     <>
-      <Drawer
-        open={isOpen}
-        onOpenChange={setIsOpen}
+      <KButton
+        className="w-full"
+        tonal
+        itemType="button"
+        // @ts-expect-error
+        type="button"
+        onClick={() => setIsOpen(true)}
       >
-        <DrawerTrigger asChild>
-          <Button
-            variant="outline"
-            className="w-full"
-            size="sm"
-          >
-            <FaCalendarPlus className="mr-2" />
-            Add to Calendar
-          </Button>
-        </DrawerTrigger>
-        <DrawerContent className="h-[60vh] flex flex-col justify-between">
-          <div className="space-y-2 p-4 divide-black divide-y-2 w-full">
-            <Button
-              variant="link"
-              className="flex rounded-none items-center w-full"
-              onClick={() => openInOSBrowser(googleCalendarLink)}
-            >
-              <FaGoogle className="mr-2" />
-              Add to Google Calendar
-            </Button>
-            <Button
-              variant="link"
-              className="flex rounded-none items-center w-full"
-              onClick={() => openInOSBrowser(outlookLink)}
-            >
-              <SiMicrosoftoutlook className="mr-2" />
-              Add to Outlook Calendar
-            </Button>
-            <Button
-              variant="link"
-              className="flex rounded-none items-center w-full"
-              onClick={() => openInOSBrowser(yahooLink)}
-            >
-              <FaYahoo className="mr-2" />
-              Add to Yahoo Calendar
-            </Button>
-          </div>
-          {/* Close button at the bottom */}
-          <div className="p-4">
-            <Button
-              variant="primary"
+        <FaCalendarPlus className="mr-2" />
+        Add to Calendar
+      </KButton>
+      {createPortal(
+        <Sheet
+          opened={isOpen}
+          onBackdropClick={setIsOpen}
+          className="w-full"
+        >
+          <Block className="flex flex-col gap-2 justify-between">
+            <div className="space-y-2 p-4 divide-black divide-y-2 w-full">
+              <Button
+                variant="link"
+                className="flex rounded-none items-center w-full"
+                onClick={() => openInOSBrowser(googleCalendarLink)}
+              >
+                <FaGoogle className="mr-2" />
+                Add to Google Calendar
+              </Button>
+              <Button
+                variant="link"
+                className="flex rounded-none items-center w-full"
+                onClick={() => openInOSBrowser(outlookLink)}
+              >
+                <SiMicrosoftoutlook className="mr-2" />
+                Add to Outlook Calendar
+              </Button>
+              <Button
+                variant="link"
+                className="flex rounded-none items-center w-full"
+                onClick={() => openInOSBrowser(yahooLink)}
+              >
+                <FaYahoo className="mr-2" />
+                Add to Yahoo Calendar
+              </Button>
+            </div>
+            {/* Close button at the bottom */}
+            <KButton
               className="w-full"
               onClick={() => setIsOpen(false)}
+              tonal
             >
               Close
-            </Button>
-          </div>
-        </DrawerContent>
-      </Drawer>
+            </KButton>
+          </Block>
+        </Sheet>,
+        document.body
+      )}
     </>
   );
 };

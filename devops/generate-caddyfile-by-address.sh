@@ -1,9 +1,16 @@
 #!/bin/sh
+
+# Determine which Cloudflare credentials to use based on the branch name
+if [ "${BRANCH_NAME}" = "main" ]; then
+    CLOUDFLARE_EMAIL="${CLOUDFLARE_EMAIL_MAIN}"
+    CLOUDFLARE_API_TOKEN="${CLOUDFLARE_API_TOKEN_MAIN}"
+fi
+
 # Define TLS configuration based on the USE_CLOUDFLARE variable
-echo "Generating Caddyfile... ${USE_CLOUDFLARE}"
+echo "Generating Caddyfile... USE_CLOUDFLARE=${USE_CLOUDFLARE}"
 if [ -n "${USE_CLOUDFLARE}" ]; then
     TLS_CONFIG="tls {
-        dns cloudflare  {env.CLOUDFLARE_API_TOKEN}
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
         protocols tls1.2 tls1.3
     }"
 else
@@ -11,6 +18,9 @@ else
         protocols tls1.2 tls1.3
     }"
 fi
+
+# Debug output
+echo "Using Cloudflare email: ${CLOUDFLARE_EMAIL}"
 
 # Set the IP for services based on the USE_MAIN_IP_TO_EXPOSE variable
 if [ "${USE_MAIN_IP_TO_EXPOSE}" = "true" ]; then

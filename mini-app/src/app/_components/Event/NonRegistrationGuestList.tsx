@@ -19,6 +19,7 @@ const NonRegistrationGuestList = (props: Props) => {
   useWithBackButton({
     whereTo: "/",
   });
+
   const [needRefresh, setNeedRefresh] = useState(false);
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
