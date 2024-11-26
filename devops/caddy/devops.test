@@ -2,3 +2,4 @@ test separate cloudflare account for main
 health check for main containers
 remove replicas
 remove postgres healthcheck
+add container registry

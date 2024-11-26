@@ -39,6 +39,50 @@ services:
     secrets:
       - ghcr-radio-config
 
+  registry:
+    image: registry:latest
+    environment:
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/registry.password
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+      SHOW_CONTENT_DIGEST: "true"
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+
+    volumes:
+      # Mount the password file
+      - /home/tonont/registry/registry.password:/auth/registry.password
+      # Mount the data directory
+      - registry_data:/data
+    deploy:
+        resources:
+            limits:
+              memory:  4000M
+              cpus: '2.0'
+        mode: global
+        update_config:
+            failure_action: continue
+            order: stop-first
+            parallelism: 1
+        placement:
+            constraints:
+            - node.role == manager
+        restart_policy:
+            condition: on-failure
+            delay: 10s
+    networks:
+      - caddy-network
+
+  registry-ui:
+    image: joxit/docker-registry-ui:latest
+    container_name: registry-ui
+    environment:
+      REGISTRY_TITLE: "ONTON Docker Registry UI"
+      NGINX_PROXY_PASS_URL: "http://registry:5000"
+      DELETE_IMAGES: "true"
+    networks:
+      - caddy-network
+
 networks:
   caddy-network:
     name: caddy-network
@@ -50,7 +94,8 @@ volumes:
     name: "server_caddy_data"
   caddy_config:
     name: "server_caddy_config"
-
+  registry_data:
+    name: "server_registry_data"
 secrets:
   ghcr-radio-config:
     external: true
