@@ -6,6 +6,7 @@ import Providers from "./providers";
 import { cn } from "@/lib/utils";
 import Script from "next/script";
 import React from "react";
+import { isDevStage } from "@/constants";
 
 const mainFont = Roboto({
   subsets: ["latin"],
@@ -33,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       )}
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
       <body className={cn(mainFont.className)}>
-        <Providers>
+        <Providers isDevStage={isDevStage}>
           {process.env.ENV === "staging" && (
             <div className="flex justify-center bg-yellow-100 text-gray-600 py-2 text-xs">
               ⚠️ you are On Staging App ⚠️

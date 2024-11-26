@@ -600,4 +600,4 @@ export const CHAIN = {
   TESTNET: "-3",
 } as const;
 
-export const isDevStage = process.env.ENV === "development";
+export const isDevStage = process.env.ENV === "development" || process.env.NODE_ENV === "development";

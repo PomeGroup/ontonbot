@@ -12,11 +12,11 @@ import TRPCAPIProvider from "./_trpc/Provider";
 import KonstaAppProvider from "./_components/KonstaAppProvider";
 import UserSaver from "./_components/UserSaver";
 import * as Sentry from "@sentry/nextjs";
-import { isDevStage } from "@/constants";
 
-const Providers = ({ children }: { children: React.ReactNode }) => {
+const Providers = ({ children, isDevStage }: { children: React.ReactNode; isDevStage: boolean }) => {
   useEffect(() => {
     isDevStage && import("eruda").then((lib) => lib.default.init());
+    isDevStage && alert("this is development");
   }, [isDevStage]);
 
   return (
