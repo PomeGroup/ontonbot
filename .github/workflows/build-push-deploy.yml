@@ -586,12 +586,17 @@ jobs:
             services=\$(echo "$services_to_build" | tr -d '[]"' | tr ',' ' ')
             underscore="_"
             echo $services_to_build
-            for service in $services; do
-              echo " branch name: $branch_name"
-              echo " service: \$service"         
-              echo "must $full_service_name"
-              echo "docker service update --force $branch_name\_\$service"
-              docker service update --force $branch_name\_\$service
+            for service in \$services; do
+              echo "Processing service: \$service"
+              if [ "\$service" == "caddy" ]; then
+                echo "Special handling for caddy service"
+                echo "docker service update --force caddy_caddy"
+                docker service update --force caddy_caddy
+              else
+                echo "docker service update --force $branch_name\_\$service"
+                docker service update --force $branch_name\_\$service
+            done
+              fi
             done
             echo "Services deployed successfully."         
           EOF
