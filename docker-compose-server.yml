@@ -296,7 +296,6 @@ services:
     depends_on:
       - postgres
       - redis
-      - caddy
       - minio
     volumes:
       - drizzle_data:/app/drizzle
@@ -534,7 +533,6 @@ services:
       - onton-network
     depends_on:
       - postgres
-      - caddy
     healthcheck:
       test: curl --fail -I http://localhost:3000/api/health || exit 1
       interval: 15s
@@ -559,8 +557,6 @@ services:
       CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
       CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
       PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
-    depends_on:
-      - caddy
     networks:
       - onton-network
 #    logging:
@@ -635,8 +631,6 @@ services:
 #      SWAGGER_JSON: /swagger.yaml
 #    volumes:
 #      - ./swagger/swagger.yaml:/swagger.yaml
-##    depends_on:
-##      - caddy
 #    networks:
 #      onton-network:
 #        ipv4_address: "${IP_SWAGGER_UI}"
