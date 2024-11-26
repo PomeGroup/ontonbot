@@ -11,6 +11,8 @@ import DataStatus from "../molecules/alerts/DataStatus";
 import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
 import EventImage from "../atoms/images/EventImage";
+import { useMainButton } from "@/hooks/useMainButton";
+import useWebApp from "@/hooks/useWebApp";
 
 interface CustomListItemProps {
   name: string;
@@ -270,11 +272,22 @@ const RegistrationGuestlist = () => {
   const params = useParams<{ hash: string }>();
   const registrants = useGetEventRegistrants();
   const eventData = useGetEvent();
+  const webApp = useWebApp();
 
   /*
    * Process Registrant (Approve ✅ / Reject ❌)
    */
   const processRegistrantRequest = trpc.events.processRegistrantRequest.useMutation();
+
+  /*
+   * Export visitor list
+   */
+  const exportVisitorList = trpc.events.requestExportFile.useMutation({
+    onSuccess: () => {
+      webApp?.HapticFeedback.impactOccurred("soft");
+      webApp?.close();
+    },
+  });
 
   const handleApprove = async (user_id: number) => {
     // Perform approval logic
@@ -293,6 +306,19 @@ const RegistrationGuestlist = () => {
       user_id,
     });
   };
+
+  useMainButton(
+    () => {
+      exportVisitorList.mutate({
+        event_uuid: params.hash,
+      });
+    },
+    "Download List Excel",
+    {
+      isLoading: exportVisitorList.isLoading,
+      disabled: exportVisitorList.isLoading,
+    }
+  );
 
   return (
     <>

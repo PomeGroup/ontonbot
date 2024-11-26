@@ -36,7 +36,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   }
 
   return (
-    <Page>
+    <Page className="min-h-screen">
       <Block>
         <Segmented strong>
           <SegmentedButton

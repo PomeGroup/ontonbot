@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { KButton } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -12,9 +12,10 @@ import {
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import useWebApp from "@/hooks/useWebApp";
 import { FiAlertCircle } from "react-icons/fi";
+import { Block, Preloader, Sheet } from "konsta/react";
+import { createPortal } from "react-dom";
+import { CommandLoading } from "cmdk";
 
 interface ComboboxDrawerProps {
   options?: { value: string; label: string }[];
@@ -22,6 +23,7 @@ interface ComboboxDrawerProps {
   emptyMessage?: string;
   searchPlaceholder?: string;
   className?: string;
+  isLoading?: boolean;
   defaultValue?: string;
   onSelect?: (_value: string) => void;
   errors?: (string | undefined)[];
@@ -38,10 +40,10 @@ export function ComboboxDrawer({
   defaultValue,
   onSelect,
   errors,
+  isLoading,
   onInputChange,
   disabled = false,
 }: ComboboxDrawerProps) {
-  const webApp = useWebApp();
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(defaultValue); // Track the selected value
   const [search, setSearch] = useState(""); // Track the search input
@@ -79,84 +81,93 @@ export function ComboboxDrawer({
   return (
     <div className="relative w-full">
       {/* Trigger the Drawer when the button is clicked */}
-      <Drawer
-        open={open} // Bind the drawer state to `open`
-        onOpenChange={(isOpen) => {
-          setOpen(isOpen); // Update the state when the drawer opens/closes
-          if (isOpen) {
-            webApp?.MainButton.hide();
-          } else {
-            handleDrawerClose(); // Reset search on close if no selection
-            webApp?.MainButton.show();
-          }
-        }}
+      <KButton
+        role="combobox"
+        tonal
+        itemType="button"
+        aria-expanded={open}
+        className={cn(`${className} justify-between`, {
+          "border-red-300 border": Boolean(errors?.length),
+        })}
+        // @ts-expect-error
+        type="button"
+        onClick={() => setOpen(true)}
+        disabled={disabled}
       >
-        <DrawerTrigger asChild>
-          <Button
-            variant="secondary"
-            role="combobox"
-            aria-expanded={open}
-            className={cn(`${className} justify-between`, {
-              "border-red-300 border": Boolean(errors?.length),
-            })}
-            disabled={disabled}
-          >
-            {/* Show the selected value label, or the searchPlaceholder */}
-            {options?.find((option) => option.value === value)?.label || placeholder}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </DrawerTrigger>
-
-        {/* Drawer content with height 90vh and close button at the bottom */}
-        <DrawerContent
-          className="p-0 h-[90vh] flex flex-col justify-between"
-          showCloseButton={false}
+        {/* Show the selected value label, or the searchPlaceholder */}
+        {options?.find((option) => option.value === value)?.label || placeholder}
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </KButton>
+      {createPortal(
+        <Sheet
+          opened={open} // Bind the drawer state to `open`
+          onBackdropClick={(isOpen) => {
+            setOpen(isOpen); // Update the state when the drawer opens/closes
+            handleDrawerClose(); // Reset search on close if no selection
+          }}
+          className="w-full"
         >
-          <Command>
-            <CommandInput
-              value={search} // Use search state
-              onValueChange={handleInputChange} // Handle input change and scroll
-              placeholder={searchPlaceholder}
-            />
-            <div className="overflow-y-auto overflow-x-hidden max-h-full vaul-scrollable">
-              <CommandList
-                ref={commandListRef}
-                className="max-h-full"
-              >
-                <CommandEmpty>{emptyMessage}</CommandEmpty>
-                <CommandGroup>
-                  {options?.map((option) => (
-                    <CommandItem
-                      key={option.value}
-                      value={option.value}
-                      keywords={[option.label]}
-                      onSelect={(currentValue) => {
-                        handleSelect(currentValue); // Call handleSelect to update value
-                      }}
-                    >
-                      <Check
-                        className={cn("mr-2 h-4 w-4", value === option.value ? "opacity-100" : "opacity-0")}
-                      />
-                      {option.label}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
+          <Block className="!my-2 space-y-2">
+            <div className="h-[60vh]">
+              <Command>
+                <CommandInput
+                  value={search} // Use search state
+                  onValueChange={handleInputChange} // Handle input change and scroll
+                  placeholder={searchPlaceholder}
+                />
+                <div className="overflow-y-auto overflow-x-hidden max-h-full vaul-scrollable">
+                  <CommandList
+                    ref={commandListRef}
+                    className="max-h-full"
+                  >
+                    {isLoading ? (
+                      <CommandLoading>
+                        <div className="w-full text-center my-8">
+                          <Preloader />
+                          <p>Loading List</p>
+                        </div>
+                      </CommandLoading>
+                    ) : (
+                      <>
+                        <CommandEmpty>{emptyMessage}</CommandEmpty>
+                        <CommandGroup>
+                          {options?.map((option) => (
+                            <CommandItem
+                              key={option.value}
+                              value={option.value}
+                              keywords={[option.label]}
+                              onSelect={(currentValue) => {
+                                handleSelect(currentValue); // Call handleSelect to update value
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  value === option.value ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {option.label}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </>
+                    )}
+                  </CommandList>
+                </div>
+              </Command>
             </div>
-          </Command>
 
-          {/* Close button at the bottom */}
-          <div className="p-4">
-            <Button
-              variant="link"
+            {/* Close button at the bottom */}
+            <KButton
               className="w-full"
               onClick={() => setOpen(false)} // Set the drawer state to close
             >
               X Close
-            </Button>
-          </div>
-        </DrawerContent>
-      </Drawer>
+            </KButton>
+          </Block>
+        </Sheet>,
+        document.body
+      )}
 
       {errors && (
         <div className="text-red-300  pl-3 pt-1  text-sm flex items-center">

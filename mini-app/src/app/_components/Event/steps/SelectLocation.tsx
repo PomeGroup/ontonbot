@@ -48,12 +48,13 @@ export const SelectLocation = () => {
   }, [cityData, citySearch]);
 
   return (
-    <Block className="space-y-2">
+    <Block className="space-y-2 !my-4">
       <ComboboxDrawer
         options={countries.data?.map((country) => ({
           label: country.title,
           value: country.id.toString(),
         }))}
+        isLoading={countries.isLoading}
         placeholder="Select a country"
         onSelect={(data) => {
           if (data) {
@@ -76,6 +77,7 @@ export const SelectLocation = () => {
           label: city.title,
           value: city.id.toString(),
         }))}
+        isLoading={cities.isLoading}
         placeholder="Select a city"
         onInputChange={(inputValue) => !isCityDisabled && setCitySearch(inputValue)} // Disable input change if no country is selected
         defaultValue={eventData?.cityId?.toString()}

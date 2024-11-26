@@ -17,7 +17,7 @@ const CreateEventAdminPage = () => {
   }
 
   return (
-    <Page>
+    <Page className="min-h-screen">
       <ManageEvent />
     </Page>
   );
