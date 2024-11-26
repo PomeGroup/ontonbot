@@ -238,7 +238,7 @@ services:
       - pgadmin:/var/lib/pgadmin
 
   telegram-bot:
-    image: ghcr.io/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/telegram-bot:${BRANCH_NAME}-latest
     hostname: telegram-bot
     deploy:
       resources:
@@ -274,7 +274,7 @@ services:
 
   mini-app:
     hostname: mini-app
-    image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     ports:
       - "${MINI_APP_PORT}:${MINI_APP_PORT}"
     deploy:
@@ -315,7 +315,7 @@ services:
 #        tag: "${BRANCH_NAME}-mini-app"
   mini-app-cron:
     hostname: mini-app-cron
-    image: ghcr.io/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     deploy:
       resources:
         limits:
@@ -353,7 +353,7 @@ services:
 
   participant-tma:
     hostname: participant-tma
-    image: ghcr.io/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/participant-tma:${BRANCH_NAME}-latest
     ports:
       - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
     deploy:
