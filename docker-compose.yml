@@ -442,6 +442,35 @@ services:
     networks:
       onton-network:
         ipv4_address: ${IP_CLIENT_WEB}
+  rabbitmq:
+    image: "rabbitmq:4.0.4-management-alpine"
+    container_name:  ${ENV}-rabbitmq
+    hostname: rabbitmq
+    profiles:
+      - front-end-development
+      - expecting-mini-app
+      - full
+      - minimal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1G"
+        max-file: "2"
+    ports:
+      - '${RABBITMQ_MANAGEMENT_PORT}:${RABBITMQ_MANAGEMENT_PORT}' # Management console
+      - '${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}' # AMQP port
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_NODE_PORT=${RABBITMQ_NODE_PORT}
+      - RABBITMQ_NODE_MANAGEMENT_PORT=${RABBITMQ_MANAGEMENT_PORT}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+    restart: unless-stopped
+    tty: true
+    networks:
+      onton-network:
+        ipv4_address: ${IP_RABBITMQ}
 
 #  swagger-ui:
 #    image: swaggerapi/swagger-ui
@@ -464,4 +493,5 @@ networks:
 volumes:
     pgadmin:
     clamav_data:
+    rabbitmq_data:
 
