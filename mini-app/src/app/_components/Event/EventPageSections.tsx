@@ -126,7 +126,7 @@ const EventRegistrationStatus = ({
   capacityFilled,
   hasWaitingList,
 }: {
-  registrantStatus: "" | "approved" | "rejected" | "pending";
+  registrantStatus: "" | "approved" | "rejected" | "pending" | "checkedin";
   capacityFilled: boolean;
   hasWaitingList: boolean;
 }) => {
@@ -153,6 +153,9 @@ const EventRegistrationStatus = ({
         description="Your request to join this event has been rejected."
       />
     ),
+    checkedin: () => {
+      <div></div>;
+    },
   };
 
   if (capacityFilled && !hasWaitingList) {
