@@ -231,3 +231,7 @@ table {
 ul > li > div > div > div.text-sm {
   overflow: visible;
 }
+
+* {
+  @apply .no-safe-areas;
+}
