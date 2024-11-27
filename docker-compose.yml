@@ -69,6 +69,7 @@ x-common-env: &common-env
   TELEGRAM_BOT_PORT: ${TELEGRAM_BOT_PORT}
   TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
+  USE_MAIN_IP_TO_EXPOSE: ${USE_MAIN_IP_TO_EXPOSE}
 
 services:
   caddy:
@@ -109,7 +110,7 @@ services:
       onton-network:
         ipv4_address: "${IP_MINIO}"
     ports:
-#      - "${MINIO_PORT}:${MINIO_PORT}"
+      - "${MINIO_PORT}:${MINIO_PORT}"
       - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
       - ./data/minio_data:/data
@@ -247,7 +248,7 @@ services:
     container_name: ${ENV}-mini-app-cron
     build:
       context: ./mini-app
-      target: production-stage
+      target: production
       args:
         <<: *common-env
     restart: "unless-stopped"
