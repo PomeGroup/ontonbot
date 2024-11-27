@@ -14,6 +14,31 @@ const ScanRegistrantQRCode = () => {
   const checkInRegistrant = trpc.events.checkinRegistrantRequest.useMutation({
     onSuccess: (data) => {
       toast.success(data.message);
+      webApp?.showPopup(
+        {
+          title: "Check-In Success ✅",
+          message: data.message,
+          buttons: [
+            {
+              type: "close",
+              id: "close",
+            },
+            {
+              text: "Check-In Next",
+              type: "default",
+            },
+          ],
+        },
+        (id) => {
+          if (id === "close") {
+            webApp.closeScanQrPopup();
+          }
+        }
+      );
+    },
+    onError: (error) => {
+      webApp?.closeScanQrPopup();
+      toast.error(error.message);
     },
   });
 

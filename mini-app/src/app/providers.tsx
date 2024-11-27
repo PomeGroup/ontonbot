@@ -24,9 +24,18 @@ const Providers = ({ children, isDevStage }: { children: React.ReactNode; isDevS
 
   useEffect(() => {
     webApp?.platform === "ios" &&
-      document.addEventListener("focus", () => {
+      window.addEventListener("focus", () => {
         window.scrollTo(0, 0);
+        if (document.querySelector("html")) {
+          document.querySelector("html")!.style.overflowY = "hidden";
+        }
       });
+
+    window.addEventListener("focusout", () => {
+      if (document.querySelector("html")) {
+        document.querySelector("html")!.style.overflowY = "auto";
+      }
+    });
   }, []);
 
   return (
