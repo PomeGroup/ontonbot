@@ -4,7 +4,6 @@ import { Preloader } from "konsta/react";
 import { ScanLine } from "lucide-react";
 import { useParams } from "next/navigation";
 import React from "react";
-import { toast } from "sonner";
 
 const ScanRegistrantQRCode = () => {
   const params = useParams<{ hash: string }>();
@@ -13,7 +12,16 @@ const ScanRegistrantQRCode = () => {
   // TRPC
   const checkInRegistrant = trpc.events.checkinRegistrantRequest.useMutation({
     onSuccess: (data) => {
-      toast.success(data.message);
+      webApp?.showPopup({
+        title: "Check-In Success ✅",
+        message: data.message,
+      });
+    },
+    onError: (error) => {
+      webApp?.showPopup({
+        title: "Check-In Failed ❌",
+        message: error.message,
+      });
     },
   });
 

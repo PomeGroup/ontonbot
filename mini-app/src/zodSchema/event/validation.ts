@@ -16,14 +16,6 @@ export const generalStepDataSchema = z.object({
     .string({ required_error: "Please select an image" })
     .url({ message: "Please select a valid image" }),
   hub: z.string({ required_error: "Please select a hub" }).min(1, { message: "Please select a hub" }),
-  // all optional just for type safety and auto completion
-  has_registration: z.boolean(),
-  has_approval: z.boolean(),
-  has_waiting_list: z.boolean(),
-  capacity: z
-    .number({ required_error: "Capacity is required" })
-    .min(1, "Capacity should be at least 1")
-    .nullable(),
 });
 
 export function rewardStepValidation(editing: boolean) {

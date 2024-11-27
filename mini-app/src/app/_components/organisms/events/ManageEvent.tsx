@@ -10,6 +10,7 @@ import { TimePlaceStep } from "./TimePlaceStep";
 import { RewardStep } from "./RewardStep";
 import Stepper from "@/app/_components/molecules/stepper";
 import { Block } from "konsta/react";
+import RegistrationStep from "../../Event/steps/EventRegistration";
 
 type ManageEventProps = {
   eventHash?: string;
@@ -98,12 +99,13 @@ const ManageEvent = (props: ManageEventProps) => {
 
   return (
     <>
-      <Block>
+      <Block className="!-mb-2">
         <Stepper
           steps={[
             { icon: <span>1</span>, label: "General" },
             { icon: <span>2</span>, label: "Time/place" },
-            { icon: <span>3</span>, label: "Reward" },
+            { icon: <span>3</span>, label: "Registration" },
+            { icon: <span>4</span>, label: "Reward" },
           ]}
           currentStep={currentStep}
         />
@@ -112,7 +114,8 @@ const ManageEvent = (props: ManageEventProps) => {
       <Block className="!p-0">
         {isReset && currentStep === 1 && <GeneralStep />}
         {isReset && currentStep === 2 && <TimePlaceStep />}
-        {isReset && currentStep === 3 && <RewardStep />}
+        {isReset && currentStep === 3 && <RegistrationStep />}
+        {isReset && currentStep === 4 && <RewardStep />}
       </Block>
     </>
   );

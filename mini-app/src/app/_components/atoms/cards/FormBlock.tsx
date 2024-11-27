@@ -1,19 +1,22 @@
 import { cn } from "@/utils";
-import { Block, BlockTitle, List } from "konsta/react";
+import { Block, BlockHeader, BlockTitle, List } from "konsta/react";
 import React, { ReactNode } from "react";
 
 const FormBlock = ({
   children,
   title,
+  description,
   inset = true,
 }: {
   children?: ReactNode;
   title?: string;
+  description?: ReactNode;
   inset?: boolean;
 }) => {
   return (
     <>
       <BlockTitle className="!mt-4 capitalize">{title}</BlockTitle>
+      {description && <BlockHeader>{description}</BlockHeader>}
       <Block
         inset
         strong

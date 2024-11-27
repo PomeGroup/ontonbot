@@ -35,13 +35,10 @@ const RegistrantCheckInQrCode = (props: RegistrantCheckInQrCodeProps) => {
   }, []);
 
   return (
-    <div className="space-y-2">
-      <p>Please show this QR code to the event organizers to Check-In</p>
-      <div
-        className="[&>*]:w-full"
-        ref={ref}
-      />
-    </div>
+    <div
+      className="[&>*]:w-full"
+      ref={ref}
+    />
   );
 };
 

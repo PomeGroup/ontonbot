@@ -12,22 +12,12 @@ import TRPCAPIProvider from "./_trpc/Provider";
 import KonstaAppProvider from "./_components/KonstaAppProvider";
 import UserSaver from "./_components/UserSaver";
 import * as Sentry from "@sentry/nextjs";
-import useWebApp from "@/hooks/useWebApp";
 
 const Providers = ({ children, isDevStage }: { children: React.ReactNode; isDevStage: boolean }) => {
-  const webApp = useWebApp();
-
   useEffect(() => {
     isDevStage && import("eruda").then((lib) => lib.default.init());
     // isDevStage && alert("this is development");
   }, [isDevStage]);
-
-  useEffect(() => {
-    webApp?.platform === "ios" &&
-      document.addEventListener("focus", () => {
-        window.scrollTo(0, 0);
-      });
-  }, []);
 
   return (
     <Sentry.ErrorBoundary>
