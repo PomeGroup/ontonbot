@@ -38,10 +38,6 @@ const BasicEventInputs = () => {
         value={eventData?.society_hub}
         errors={errors?.hub}
       />
-      <ImageUpload
-        isError={Boolean(errors?.image_url)}
-        clearError={clearImageError}
-      />
       <ListInput
         type="textarea"
         outline
@@ -51,6 +47,10 @@ const BasicEventInputs = () => {
         inputClassName="min-h-20"
         error={errors?.description?.join(". ")}
         defaultValue={eventData?.description}
+      />
+      <ImageUpload
+        isError={Boolean(errors?.image_url)}
+        clearError={clearImageError}
       />
     </FormBlock>
   );

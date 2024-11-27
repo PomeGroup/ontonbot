@@ -150,7 +150,7 @@ table {
     --shadcn-secondary-foreground: 211, 100%, 50%;
 
     --shadcn-muted: 0, 0%, 90%, 1;
-    --shadcn-muted-foreground: 240, 2%, 57%;
+    --shadcn-muted-foreground: 0, 0%, 35%;
 
     --shadcn-accent: 211, 100%, 50%;
     --shadcn-accent-foreground: 0, 0%, 100%;

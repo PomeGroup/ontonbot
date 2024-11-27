@@ -3,19 +3,21 @@ import { UserRoundCheck, ArrowUpToLine, FileUser, Clock } from "lucide-react";
 import FormBlock from "../../atoms/cards/FormBlock";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { cn } from "@/utils";
-import { useState } from "react";
 
 export function UserRegistrationForm() {
   const eventData = useCreateEventStore((state) => state.eventData);
   const editOtions = useCreateEventStore((state) => state.edit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
-  const [placeholderCapacity, setPlaceholderCapacity] = useState(eventData?.capacity ?? 100);
-
   return (
     <FormBlock
       inset={false}
       title="Registration"
+      description={
+        eventData?.eventLocationType === "in_person" && (
+          <p className="text-cn-muted-foreground">User registration is mandatory for in-person events</p>
+        )
+      }
     >
       <ListItem
         label
@@ -25,9 +27,11 @@ export function UserRegistrationForm() {
         after={
           <Toggle
             onChange={() => setEventData({ has_registration: !eventData?.has_registration })}
-            className={cn({ "opacity-50": editOtions?.eventHash })}
+            className={cn({
+              "opacity-50": editOtions?.eventHash || eventData?.eventLocationType === "in_person",
+            })}
             readOnly={Boolean(editOtions?.eventHash)}
-            disabled={Boolean(editOtions?.eventHash)}
+            disabled={Boolean(editOtions?.eventHash) || eventData?.eventLocationType === "in_person"}
             component="div"
             checked={eventData?.has_registration}
           />
@@ -53,7 +57,7 @@ export function UserRegistrationForm() {
               <p className="space-x-4">
                 <span>Capacity</span>
                 <small className={"dark:text-zinc-400"}>
-                  {eventData.capacity !== null ? placeholderCapacity : "unlimited"}
+                  {eventData.capacity ? eventData.capacity : "unlimited"}
                 </small>
               </p>
             }
@@ -62,7 +66,6 @@ export function UserRegistrationForm() {
               <Toggle
                 onChange={() => {
                   setEventData({ capacity: eventData?.capacity ? null : 100 });
-                  setPlaceholderCapacity(100);
                 }}
                 component="div"
                 checked={eventData?.capacity !== null}
@@ -77,7 +80,7 @@ export function UserRegistrationForm() {
                 name="capacity"
                 inputMode="number"
                 min={1}
-                onChange={(e) => setPlaceholderCapacity(e.target.value)}
+                onChange={(e) => setEventData({ capacity: Number(e.target.value) })}
                 defaultValue={eventData.capacity}
                 inputClassName={cn("placeholder:tracking-[.2rem] tracking-widest")}
                 placeholder={"100"}
