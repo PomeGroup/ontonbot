@@ -26,26 +26,12 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"
-        />
-      </head>
       {process.env.NODE_ENV === "production" && (
         <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
       )}
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
-      <body className={cn(mainFont.className, "min-h-screen")}>
-        <Providers isDevStage={isDevStage}>
-          {process.env.ENV === "staging" && (
-            <div className="flex justify-center bg-yellow-100 text-gray-600 py-2 text-xs">
-              ⚠️ you are On Staging App ⚠️
-            </div>
-          )}
-
-          {children}
-        </Providers>
+      <body className={cn(mainFont.className)}>
+        <Providers isDevStage={isDevStage}>{children}</Providers>
         {process.env.NODE_ENV === "development" && (
           <script
             async

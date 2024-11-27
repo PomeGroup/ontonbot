@@ -143,7 +143,7 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
         <Sheet
           opened={isSheetOpen}
           onBackdropClick={() => setIsSheetOpen(false)}
-          className={cn("w-full", { hidden: !isSheetOpen })}
+          className={cn("w-full")}
         >
           <BlockTitle>Upload Image</BlockTitle>
           <Block className="space-y-2">

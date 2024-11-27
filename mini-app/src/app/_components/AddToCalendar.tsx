@@ -70,7 +70,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
         <Sheet
           opened={isOpen}
           onBackdropClick={setIsOpen}
-          className={cn("w-full", { hidden: !open })}
+          className={cn("w-full")}
         >
           <Block className="flex flex-col gap-2 justify-between">
             <div className="space-y-2 p-4 divide-black divide-y-2 w-full">

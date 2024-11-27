@@ -19,11 +19,6 @@ const Providers = ({ children, isDevStage }: { children: React.ReactNode; isDevS
     // isDevStage && alert("this is development");
   }, [isDevStage]);
 
-  useEffect(() => {
-    window.addEventListener("focusin", () => (document.body.style.overflow = "hidden"));
-    window.addEventListener("focusout", () => (document.body.style.overflow = ""));
-  }, []);
-
   return (
     <Sentry.ErrorBoundary>
       <TonConnectUIProvider

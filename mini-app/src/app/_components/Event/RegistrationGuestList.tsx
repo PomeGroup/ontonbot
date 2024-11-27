@@ -13,12 +13,13 @@ import QrCodeButton from "../atoms/buttons/QrCodeButton";
 import EventImage from "../atoms/images/EventImage";
 import { useMainButton } from "@/hooks/useMainButton";
 import useWebApp from "@/hooks/useWebApp";
+import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
 
 interface CustomListItemProps {
   name: string;
   username: string;
   date: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "checkedin";
   user_id: number;
   registrantInfo: any;
   handleApprove: (_: number) => Promise<void>;
@@ -112,6 +113,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
         </div>
       );
       break;
+    case "checkedin":
     case "approved":
       afterContent = (
         <div className="flex space-x-2">
@@ -127,13 +129,14 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
             }}
           />
           <StatusChip
-            variant="success"
-            label="Approved"
+            variant={status === "checkedin" ? "primary" : "success"}
+            label={status}
           />
         </div>
       );
       footerContent = null;
       break;
+
     case "rejected":
       afterContent = (
         <div className="flex space-x-2">
@@ -249,7 +252,7 @@ interface StatusChipProps {
 }
 
 const StatusChip: React.FC<StatusChipProps> = ({ variant, label, className }) => {
-  const variantStyles = cva("", {
+  const variantStyles = cva("capitalize", {
     variants: {
       variant: {
         primary: "bg-blue-500 text-blue-600",
@@ -337,7 +340,11 @@ const RegistrationGuestlist = () => {
           hub={eventData.data?.society_hub.name!}
         />
       </Block>
-      <BlockTitle medium>Guest List</BlockTitle>
+      <BlockTitle medium>
+        <span>Guest List</span>
+        {eventData.data?.participationType === "in_person" && <ScanRegistrantQRCode />}
+      </BlockTitle>
+
       {/* <BlockHeader className="!px-2"> */}
       {/*   <Searchbar clearButton /> */}
       {/* </BlockHeader> */}
@@ -390,7 +397,7 @@ const RegistrationGuestlist = () => {
             }
             registrantInfo={registrant.regisrtant_info}
             user_id={registrant.user_id!}
-            status={registrant.status as "approved" | "rejected" | "pending"}
+            status={registrant.status}
             handleApprove={handleApprove}
             handleReject={handleReject}
           />
