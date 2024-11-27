@@ -12,7 +12,6 @@ import { TRPCError } from "@trpc/server";
 import { eventRegistrants } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 
-
 //TODO - Put this in db functions files
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
   const result = (
@@ -205,10 +204,24 @@ export const createUserReward = async (props: {
 
     if (eventData.has_registration) {
       const eventRegistrantRequest = await getRegistrantRequest(props.event_uuid, props.user_id);
-      if (!eventRegistrantRequest || eventRegistrantRequest.status != "approved") {
+
+      if (!eventRegistrantRequest) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: `Event with registration and user is not approved`,
+        });
+      } else if (eventRegistrantRequest.status !== "approved" && eventData.participationType == "online") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `Online Event with registration needs approval`,
+        });
+      } else if (
+        eventRegistrantRequest.status !== "checkedin" &&
+        eventData.participationType == "in_person"
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `In-Persion Event with registration needs Check-in`,
         });
       }
     }
@@ -218,7 +231,7 @@ export const createUserReward = async (props: {
 
     if (Date.now() < startDate || Date.now() > endDate) {
       throw new TRPCError({
-        message: "Eather event is not started or ended",
+        message: "Event is ended/not started",
         code: "FORBIDDEN",
       });
     }

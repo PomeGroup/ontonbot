@@ -127,7 +127,9 @@ export const eventsRouter = router({
     const event_uuid = opts.input.event_uuid;
     const eventData = await selectEventByUuid(event_uuid);
     let capacity_filled = false;
-    let registrant_status: "pending" | "rejected" | "approved" | "" = "";
+    let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
+    let registrant_uuid = "";
+
     if (!eventData) {
       throw new TRPCError({
         code: "NOT_FOUND",
@@ -135,7 +137,7 @@ export const eventsRouter = router({
       });
     }
     if (!eventData.has_registration) {
-      return { capacity_filled, registrant_status, ...eventData };
+      return { capacity_filled, registrant_status, ...eventData, registrant_uuid };
     }
 
     /* ------------------------ Event Needs Registration ------------------------ */
@@ -146,7 +148,7 @@ export const eventsRouter = router({
     const userIsAdminOrOwner = eventData.owner == userId || opts.ctx.user.role == "admin";
     let mask_event_capacity = true;
 
-    eventData.location = "Only Visible To Registered Users ";
+    eventData.location = "Visible To Registered Users ";
     if (eventData.capacity && userIsAdminOrOwner) {
       mask_event_capacity = false;
     }
@@ -159,11 +161,13 @@ export const eventsRouter = router({
       registrant_status = user_request.status;
       if (registrant_status == "approved") {
         eventData.location = event_location;
+        registrant_uuid = user_request.registrant_uuid;
       }
       return {
         capacity_filled,
         registrant_status,
         ...eventData,
+        registrant_uuid,
         capacity: mask_event_capacity ? 99 : eventData.capacity,
       };
     }
@@ -178,6 +182,7 @@ export const eventsRouter = router({
           capacity_filled,
           registrant_status,
           ...eventData,
+          registrant_uuid,
           capacity: mask_event_capacity ? 99 : eventData.capacity,
         };
       }
@@ -188,6 +193,7 @@ export const eventsRouter = router({
       capacity_filled,
       registrant_status,
       ...eventData,
+      registrant_uuid,
       capacity: mask_event_capacity ? 99 : eventData.capacity,
     };
 
@@ -343,6 +349,63 @@ export const eventsRouter = router({
         .execute();
 
       return { code: 201, message: "ok" };
+    }),
+
+  /* -------------------------------------------------------------------------- */
+  /*                  Check-in Registrant Request (🙋‍♂️💁‍♂️)                  */
+  /* -------------------------------------------------------------------------- */
+  checkinRegistrantRequest: eventManagementProtectedProcedure
+    .input(
+      z.object({
+        event_uuid: z.string().uuid(),
+        registrant_uuid: z.string().uuid(),
+      })
+    )
+    .mutation(async (opts) => {
+      const event_uuid = opts.input.event_uuid;
+      const event = await selectEventByUuid(event_uuid);
+      const registrant_uuid = opts.input.registrant_uuid;
+
+      if (!event) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+      }
+      if (!event.has_registration || event.participationType !== "in_person") {
+        throw new TRPCError({
+          code: "NOT_IMPLEMENTED",
+          message: "Check-in only for in_person events with registration",
+        });
+      }
+      const registrant = (
+        await db
+          .select()
+          .from(eventRegistrants)
+          .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
+          .execute()
+      ).pop();
+
+      if (!registrant) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Registrant Not Found/Invalid" });
+      }
+      if (registrant.event_uuid !== event_uuid) {
+        throw new TRPCError({ code: "CONFLICT", message: "Registrant Not for this event" });
+      }
+
+      if (registrant.status === "checkedin") {
+        return { code: 200, message: "Already Checked-in" };
+      }
+      if (registrant.status !== "approved") {
+        throw new TRPCError({ code: "CONFLICT", message: "Registrant Not Approved" });
+      }
+
+      await db
+        .update(eventRegistrants)
+        .set({
+          status: "checkedin",
+        })
+        .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
+        .execute();
+
+      return { code: 200, message: "ok" };
     }),
 
   // private

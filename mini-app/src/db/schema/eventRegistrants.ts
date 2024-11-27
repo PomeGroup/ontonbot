@@ -14,17 +14,27 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core";
 
-export const eventRegistrantStatus = pgEnum("registrant_status", ["pending", "rejected", "approved"]);
+export const eventRegistrantStatus = pgEnum("registrant_status", [
+  "pending",
+  "rejected",
+  "approved",
+  "checkedin",
+]);
 
 export const eventRegistrants = pgTable(
   "event_registrants",
   {
     id: serial("id").primaryKey(),
-    event_uuid: uuid("event_uuid").references(() => events.event_uuid),
+    event_uuid: uuid("event_uuid"),
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
 
     status: eventRegistrantStatus("status").default("pending").notNull(),
     register_info: jsonb("register_info").notNull().default({}),
+
+    registrant_uuid: uuid("registrant_uuid")
+      .unique()
+      .notNull()
+      .default(sql`gen_random_uuid()`),
 
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
