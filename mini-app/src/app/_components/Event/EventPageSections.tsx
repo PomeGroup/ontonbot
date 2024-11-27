@@ -14,7 +14,7 @@ import { useUserStore } from "@/context/store/user.store";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
-import RegistrantCheckInQrCode from "./RegistrantCheckInQrCode";
+import { useRouter } from "next/navigation";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -181,28 +181,33 @@ const EventRegistrationStatus = ({
 
 // Main component
 export const EventSections = () => {
+  const router = useRouter();
   const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
   const userCompletedTasks =
     !isAdminOrOrganizer &&
-    (eventData.data?.registrant_status === "approved" || !eventData.data?.has_registration) &&
+    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) ||
+      !eventData.data?.has_registration) &&
     !userEventPasswordField?.completed &&
     user?.wallet_address;
+
+  const isOnlineEvent = eventData.data?.participationType === "online";
+  const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
 
   return (
     <div className="space-y-2">
       <EventImage />
 
-      {userCompletedTasks && <EventPasswordInput />}
+      {userCompletedTasks && isOnlineEvent && <EventPasswordInput />}
 
       <EventHead />
       <EventAttributes />
       <EventActions />
       <EventDescription />
 
-      {userCompletedTasks && (
+      {userCompletedTasks && isCheckedIn && (
         <ClaimRewardButton
           initData={initData}
           eventId={eventData.data?.event_uuid ?? ""}
@@ -218,8 +223,15 @@ export const EventSections = () => {
         />
       )}
 
-      {userCompletedTasks && eventData.data?.registrant_uuid && (
-        <RegistrantCheckInQrCode registrant_uuid={eventData.data.registrant_uuid} />
+      {userCompletedTasks && isCheckedIn && eventData.data?.registrant_uuid && (
+        <MainButton
+          text="Check In"
+          onClick={() =>
+            router.push(
+              `/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`
+            )
+          }
+        />
       )}
 
       {!isAdminOrOrganizer && !isStarted && isNotEnded && (

@@ -17,18 +17,17 @@ export const metadata: Metadata = {
   title: "Onton",
   description: "Events on TON",
 };
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1.0,
   maximumScale: 1.0,
   userScalable: false,
 };
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className="overflow-hidden h-screen"
-    >
+    <html lang="en">
       {process.env.NODE_ENV === "production" && (
         <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
       )}
