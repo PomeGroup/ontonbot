@@ -348,6 +348,13 @@ export const eventsRouter = router({
         .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, user_id)))
         .execute();
 
+      if (opts.input.status === "approved") {
+        await telegramService.sendTelegramMessage({
+          chat_id: user_id,
+          message: `Your request has been approved for the event : ${event.title} `,
+        });
+      }
+
       return { code: 201, message: "ok" };
     }),
 

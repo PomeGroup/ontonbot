@@ -153,6 +153,7 @@ const tgService = {
   sendCode, // send OTP code
   sendTelegramMessageNoLink, // send Telegram message without link
   shareEventRequest, // share event request
+  sendTelegramMessage
 };
 
 export default tgService;
