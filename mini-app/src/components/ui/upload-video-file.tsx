@@ -158,7 +158,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
         <Sheet
           opened={isSheetOpen}
           onBackdropClick={() => setIsSheetOpen(false)}
-          className="w-full"
+          className={cn("w-full", { hidden: !isSheetOpen })}
         >
           <BlockTitle>Upload Video</BlockTitle>
           <Block className="space-y-2">

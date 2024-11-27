@@ -105,7 +105,7 @@ export function ComboboxDrawer({
             setOpen(isOpen); // Update the state when the drawer opens/closes
             handleDrawerClose(); // Reset search on close if no selection
           }}
-          className="w-full"
+          className={cn("w-full", { hidden: !open })}
         >
           <Block className="!my-2 space-y-2">
             <div className="h-[60vh]">

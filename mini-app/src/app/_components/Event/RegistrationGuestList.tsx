@@ -178,7 +178,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
         <Sheet
           onBackdropClick={() => setShowRegistrantInfo(null)}
           opened={Boolean(showRegistrantInfo)}
-          className="!overflow-hidden w-full"
+          className={cn("!overflow-hidden w-full", { hidden: !Boolean(showRegistrantInfo) })}
         >
           <BlockTitle>Registrant Info</BlockTitle>
           <List className="!pe-2">

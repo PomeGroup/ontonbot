@@ -6,6 +6,7 @@ import { SiMicrosoftoutlook } from "react-icons/si";
 import { Button, KButton } from "@/components/ui/button";
 import { createPortal } from "react-dom";
 import { Block, Sheet } from "konsta/react";
+import { cn } from "@/utils";
 // Assuming shadcn drawer is structured like this
 
 type Props = {
@@ -69,7 +70,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
         <Sheet
           opened={isOpen}
           onBackdropClick={setIsOpen}
-          className="w-full"
+          className={cn("w-full", { hidden: !open })}
         >
           <Block className="flex flex-col gap-2 justify-between">
             <div className="space-y-2 p-4 divide-black divide-y-2 w-full">
