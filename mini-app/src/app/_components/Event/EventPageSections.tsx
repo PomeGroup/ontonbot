@@ -14,6 +14,7 @@ import { useUserStore } from "@/context/store/user.store";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
+import RegistrantCheckInQrCode from "./RegistrantCheckInQrCode";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -184,33 +185,30 @@ export const EventSections = () => {
   const { user } = useUserStore();
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
-  const showPasswordInput =
+  const userCompletedTasks =
     !isAdminOrOrganizer &&
     (eventData.data?.registrant_status === "approved" || !eventData.data?.has_registration) &&
-    !userEventPasswordField?.completed;
+    !userEventPasswordField?.completed &&
+    user?.wallet_address;
 
   return (
     <div className="space-y-2">
       <EventImage />
 
-      {showPasswordInput && <EventPasswordInput />}
+      {userCompletedTasks && <EventPasswordInput />}
 
       <EventHead />
       <EventAttributes />
       <EventActions />
       <EventDescription />
 
-      {!isAdminOrOrganizer && eventData.data?.has_registration
-        ? eventData.data?.registrant_status === "approved"
-        : true &&
-          user?.wallet_address &&
-          userEventPasswordField?.completed && (
-            <ClaimRewardButton
-              initData={initData}
-              eventId={eventData.data?.event_uuid ?? ""}
-              isWalletConnected={Boolean(user.wallet_address)}
-            />
-          )}
+      {userCompletedTasks && (
+        <ClaimRewardButton
+          initData={initData}
+          eventId={eventData.data?.event_uuid ?? ""}
+          isWalletConnected={Boolean(user.wallet_address)}
+        />
+      )}
 
       {!isAdminOrOrganizer && eventData.data?.has_registration && (
         <EventRegistrationStatus
@@ -218,6 +216,10 @@ export const EventSections = () => {
           capacityFilled={Boolean(eventData.data?.capacity_filled)}
           hasWaitingList={Boolean(eventData.data?.has_waiting_list)}
         />
+      )}
+
+      {userCompletedTasks && eventData.data?.registrant_uuid && (
+        <RegistrantCheckInQrCode registrant_uuid={eventData.data.registrant_uuid} />
       )}
 
       {!isAdminOrOrganizer && !isStarted && isNotEnded && (
