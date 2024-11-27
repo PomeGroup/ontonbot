@@ -218,6 +218,7 @@ jobs:
 
             # Move the commit details file to the appropriate build context
             mv "$COMMIT_DETAILS_FILE" "$build_context/commit_details.txt"
+            chmod 644 "$build_context/commit_details.txt"
             # Create temporary build args file
             BUILD_ARGS_FILE=$(mktemp)
 
