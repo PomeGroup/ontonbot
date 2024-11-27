@@ -168,9 +168,15 @@ export const createUserReward = async (props: {
       });
     }
 
+    const eventData = await db.query.events.findFirst({
+      where(fields, { eq }) {
+        return eq(fields.event_uuid, props.event_uuid);
+      },
+    });
+
     // Validate the visitor
     const isValidVisitor = await selectValidVisitorById(visitor.id);
-    if (!isValidVisitor.length) {
+    if (!isValidVisitor.length && eventData?.participationType !== "online") {
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "Invalid visitor: please complete the tasks.",
@@ -189,11 +195,6 @@ export const createUserReward = async (props: {
       });
     }
 
-    const eventData = await db.query.events.findFirst({
-      where(fields, { eq }) {
-        return eq(fields.event_uuid, props.event_uuid);
-      },
-    });
 
     if (!eventData?.activity_id || eventData.activity_id < 0) {
       throw new TRPCError({
