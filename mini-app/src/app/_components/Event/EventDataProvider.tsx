@@ -87,6 +87,9 @@ export const EventDataProvider = ({
         isNotEnded: Boolean(eventData.data?.isNotEnded),
         isStarted: Boolean(eventData.data?.isStarted),
         endUTC,
+        hasEnteredPassword: Boolean(
+          eventData.data?.participationType === "in_person" || userEventPasswordField?.completed
+        ),
         startUTC,
         location,
         initData,
