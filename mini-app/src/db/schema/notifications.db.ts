@@ -1,8 +1,20 @@
-import { json, pgTable, serial, smallint, timestamp, varchar } from "drizzle-orm/pg-core";
+import { json, pgSequence, pgTable, serial, smallint, timestamp, varchar } from "drizzle-orm/pg-core";
 import { notificationStatus, notificationType ,notificationItemType } from "@/db/enum";
+import { sql } from "drizzle-orm";
+
+
+// Define the sequence for `notifications`
+export const notificationsIdSequence = pgSequence("notifications_id_seq", {
+  increment: 1,
+  minValue: 1,
+  maxValue: "9223372036854775807",
+  startWith: 1,
+  cache: 1,
+  cycle: false,
+});
 
 export const notifications = pgTable("notifications", {
-  id: serial("id").primaryKey(),
+  id: serial("id").primaryKey().default(sql`nextval('${notificationsIdSequence.seqName}'::regclass)`),
   userId: serial("user_id"),
   type: notificationType("type").default("UNKNOWN"),
   title: varchar("title", { length: 255 }),

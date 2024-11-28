@@ -104,11 +104,12 @@ const processOngoingEvents = async () => {
                   expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 1 month
                 };
 
-
                 await notificationsDB.addNotification(notification);
+
                 console.log(
                   `Created notification for POA Trigger ${trigger.id} of Event ${eventId} - ${eventUuid} for User ${user.userId}`,
                 );
+
               } catch (notificationError) {
                 console.error(
                   `Failed to create notification for User ${user.userId} in Event ${eventId} - ${eventUuid}  for Trigger ${trigger.id}:`,
