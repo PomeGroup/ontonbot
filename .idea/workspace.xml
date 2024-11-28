@@ -5,14 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
-      <change afterPath="$PROJECT_DIR$/mini-app/src/workers/poaWorker.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/db/enum.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/db/enum.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mini-app/src/db/schema.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/db/schema.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/db/schema/eventPoaResults.db.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/db/schema/eventPoaResults.db.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/db/schema/eventPoaTriggers.db.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/db/schema/eventPoaTriggers.db.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mini-app/src/db/schema/notifications.db.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/db/schema/notifications.db.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/server/db/eventPoaTriggers.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/db/eventPoaTriggers.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/server/db/notifications.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/db/notifications.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/workers/poaWorker.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/workers/poaWorker.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -197,7 +195,7 @@
       <workItem from="1731002920533" duration="16855000" />
       <workItem from="1731065440661" duration="113589000" />
       <workItem from="1731618826777" duration="219672000" />
-      <workItem from="1732745005141" duration="30694000" />
+      <workItem from="1732745005141" duration="37291000" />
     </task>
     <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
       <option name="closed" value="true" />
