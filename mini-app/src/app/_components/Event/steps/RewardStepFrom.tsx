@@ -1,7 +1,7 @@
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { SbtOptionContent } from "../../organisms/events/SbtOptionContent";
 import FormBlock from "../../atoms/cards/FormBlock";
-import { Block, ListInput, ListItem, Preloader, Toggle } from "konsta/react";
+import { ListInput, ListItem, Preloader, Toggle } from "konsta/react";
 import { cn } from "@/utils";
 import { useEffect } from "react";
 import { useGetEvent } from "@/hooks/events.hooks";
@@ -83,23 +83,38 @@ export const RewardForm = ({
       )}
 
       {editOptions?.eventHash && (
-        <Block className="space-y-4">
-          {eventDataRes.isSuccess ? (
-            <>
-              <Image
-                alt="ts-reward"
-                width={100}
-                height={100}
-                src={eventDataRes.data?.tsRewardImage as string}
-              />
-              <video>
-                <source src={eventDataRes.data?.tsRewardVideo as string} />
-              </video>
-            </>
-          ) : (
-            <Preloader />
-          )}
-        </Block>
+        <>
+          <FormBlock title="SBT Reward">
+            {eventDataRes.isSuccess ? (
+              <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-col gap-2">
+                  <h5 className="text-lg font-medium">Reward Image</h5>
+                  <Image
+                    alt="ts-reward"
+                    className="rounded-lg w-full"
+                    width={300}
+                    height={300}
+                    src={eventDataRes.data?.tsRewardImage as string}
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h5 className="text-lg font-medium">Reward Video</h5>
+                  <video
+                    className="w-full rounded-lg"
+                    autoPlay
+                    loop
+                    width={300}
+                    height={300}
+                  >
+                    <source src={eventDataRes.data?.tsRewardVideo as string} />
+                  </video>
+                </div>
+              </div>
+            ) : (
+              <Preloader />
+            )}
+          </FormBlock>
+        </>
       )}
 
       {!editOptions?.eventHash && (
