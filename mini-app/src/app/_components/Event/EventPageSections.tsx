@@ -223,7 +223,7 @@ export const EventSections = () => {
         />
       )}
 
-      {userCompletedTasks && !isCheckedIn && eventData.data?.registrant_uuid && (
+      {userCompletedTasks && !isCheckedIn && isStarted && isNotEnded && eventData.data?.registrant_uuid && (
         <MainButton
           text="Check In"
           onClick={() =>
