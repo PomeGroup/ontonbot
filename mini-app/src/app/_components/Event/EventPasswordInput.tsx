@@ -5,15 +5,16 @@ import { useEventData } from "./eventPageContext";
 import PasscodeIcon from "@/components/icons/Passcode";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import { Input } from "@/components/ui/input";
-import { TonConnectButton, useTonAddress } from "@tonconnect/ui-react";
+import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
 import { useUserStore } from "@/context/store/user.store";
 
-export const EventPasswordInput = () => {
+export const EventPasswordAndWalletInput = () => {
   const { initData, eventPasswordField, eventHash } = useEventData();
   const trpcUtils = trpc.useUtils();
   const { user } = useUserStore();
   const formRef = useRef<HTMLFormElement>(null);
   const tonWalletAddress = useTonAddress();
+  const walletModal = useTonConnectModal();
 
   const addWalletMutation = trpc.users.addWallet.useMutation({
     onSuccess: () => {
@@ -64,7 +65,15 @@ export const EventPasswordInput = () => {
   };
 
   return !user?.wallet_address ? (
-    <TonConnectButton className="mx-auto" />
+    <>
+      <TonConnectButton className="mx-auto" />
+      <MainButton
+        text="Connect Wallet"
+        onClick={() => {
+          walletModal.open();
+        }}
+      />
+    </>
   ) : (
     <form
       className="mt-2 space-y-1"

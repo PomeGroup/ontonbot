@@ -72,7 +72,7 @@ export function UserRegistrationForm() {
               />
             }
           />
-          {eventData?.capacity && (
+          {eventData?.capacity !== null && (
             <>
               <ListInput
                 title="Max Capacity"
