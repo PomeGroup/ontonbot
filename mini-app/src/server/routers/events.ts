@@ -19,7 +19,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
-import { and, count, desc, eq, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, ne } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -315,7 +315,7 @@ export const eventsRouter = router({
         .from(eventRegistrants)
         .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
         .where(eq(eventRegistrants.event_uuid, event_uuid))
-        .orderBy(desc(eventRegistrants.created_at))
+        .orderBy(asc(eventRegistrants.created_at))
         .execute();
 
       return registrants;
@@ -914,7 +914,10 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(async (opts) => {
-    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, true, "");
+    const event = opts.ctx.event
+    const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
+
+    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
     const eventData = await selectEventByUuid(opts.input.event_uuid);
     
     console.log("====================visitors================== >> " , visitors , opts.input.event_uuid)
