@@ -6,13 +6,9 @@ import { SelectLocation } from "./SelectLocation";
 
 const EventLocationManager = () => {
   const eventData = useCreateEventStore((state) => state.eventData);
-  const editOptions = useCreateEventStore((state) => state.edit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
+  const editOptions = useCreateEventStore((state) => state.edit);
   const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
-
-  if (editOptions?.eventHash) {
-    return null;
-  }
 
   return (
     <FormBlock
@@ -25,6 +21,8 @@ const EventLocationManager = () => {
           <Radio
             onClick={() => setEventData({ eventLocationType: "online" })}
             checked={eventData?.eventLocationType === "online"}
+            className="disabled:opacity-50"
+            disabled={Boolean(editOptions?.eventHash)}
           />
         }
       />
@@ -34,6 +32,8 @@ const EventLocationManager = () => {
           <Radio
             onClick={() => setEventData({ eventLocationType: "in_person" })}
             checked={eventData?.eventLocationType === "in_person"}
+            className="disabled:opacity-50"
+            disabled={Boolean(editOptions?.eventHash)}
           />
         }
       />
