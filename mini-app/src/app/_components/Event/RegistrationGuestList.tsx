@@ -6,7 +6,7 @@ import { cva } from "class-variance-authority";
 import { List, BlockTitle, ListItem, Chip, BlockHeader, Sheet, BlockFooter, Block } from "konsta/react";
 import { Check, FileUser, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
@@ -73,96 +73,102 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
     }
   };
 
-  let afterContent;
-  let footerContent;
+  const { footerContent, afterContent } = useMemo(() => {
+    let afterContent;
+    let footerContent;
 
-  switch (itemStatus) {
-    case "pending":
-      afterContent = (
-        <div className="flex space-x-2">
-          <Button
-            icon={<FileUser size={18} />}
-            variant="purple"
-            onClick={() => {
-              setShowRegistrantInfo(registrantInfo);
-            }}
-          />
+    switch (itemStatus) {
+      case "pending":
+        afterContent = (
+          <div className="flex space-x-2">
+            <Button
+              icon={<FileUser size={18} />}
+              variant="purple"
+              onClick={() => {
+                setShowRegistrantInfo(registrantInfo);
+              }}
+            />
 
-          <div className="flex flex-col text-end text-xs">
-            <span>{date}</span>
-            <span>Registered</span>
+            <div className="flex flex-col text-end text-xs">
+              <span>{date}</span>
+              <span>Registered</span>
+            </div>
           </div>
-        </div>
-      );
-      footerContent = (
-        <div className="flex space-x-2">
-          <Button
-            variant="danger"
-            icon={<X size={18} />}
-            label="Reject"
-            onClick={handleRejectClick}
-            isLoading={isDeclining}
-          />
-          <Button
-            variant="success"
-            icon={<Check size={19} />}
-            label="Approve"
-            onClick={handleApproveClick}
-            isLoading={isApproving}
-          />
-        </div>
-      );
-      break;
-    case "checkedin":
-    case "approved":
-      afterContent = (
-        <div className="flex space-x-2">
-          <Button
-            icon={<Pencil size={18} />}
-            onClick={handleEdit}
-          />
-          <Button
-            icon={<FileUser size={18} />}
-            variant="purple"
-            onClick={() => {
-              setShowRegistrantInfo(registrantInfo);
-            }}
-          />
-          <StatusChip
-            variant={status === "checkedin" ? "primary" : "success"}
-            label={status}
-          />
-        </div>
-      );
-      footerContent = null;
-      break;
+        );
+        footerContent = (
+          <div className="flex space-x-2">
+            <Button
+              variant="danger"
+              icon={<X size={18} />}
+              label="Reject"
+              onClick={handleRejectClick}
+              isLoading={isDeclining}
+            />
+            <Button
+              variant="success"
+              icon={<Check size={19} />}
+              label="Approve"
+              onClick={handleApproveClick}
+              isLoading={isApproving}
+            />
+          </div>
+        );
+        break;
+      case "checkedin":
+      case "approved":
+        afterContent = (
+          <div className="flex space-x-2">
+            <Button
+              icon={<Pencil size={18} />}
+              onClick={handleEdit}
+            />
+            <Button
+              icon={<FileUser size={18} />}
+              variant="purple"
+              onClick={() => {
+                setShowRegistrantInfo(registrantInfo);
+              }}
+            />
+            <StatusChip
+              variant={itemStatus === "checkedin" ? "primary" : "success"}
+              label={itemStatus}
+            />
+          </div>
+        );
+        footerContent = null;
+        break;
 
-    case "rejected":
-      afterContent = (
-        <div className="flex space-x-2">
-          <Button
-            icon={<Pencil size={18} />}
-            onClick={handleEdit}
-          />
-          <Button
-            icon={<FileUser size={18} />}
-            variant="purple"
-            onClick={() => {
-              setShowRegistrantInfo(registrantInfo);
-            }}
-          />
-          <StatusChip
-            variant="danger"
-            label="Rejected"
-          />
-        </div>
-      );
-      footerContent = null;
-      break;
-    default:
-      afterContent = null;
-      footerContent = null;
-  }
+      case "rejected":
+        afterContent = (
+          <div className="flex space-x-2">
+            <Button
+              icon={<Pencil size={18} />}
+              onClick={handleEdit}
+            />
+            <Button
+              icon={<FileUser size={18} />}
+              variant="purple"
+              onClick={() => {
+                setShowRegistrantInfo(registrantInfo);
+              }}
+            />
+            <StatusChip
+              variant="danger"
+              label="Rejected"
+            />
+          </div>
+        );
+        footerContent = null;
+        break;
+      default:
+        afterContent = null;
+        footerContent = null;
+    }
+    return {
+      afterContent,
+      footerContent,
+    };
+  }, [itemStatus]);
 
   return (
     <>
@@ -349,7 +355,6 @@ const RegistrationGuestlist = () => {
       {/*   <Searchbar clearButton /> */}
       {/* </BlockHeader> */}
       <BlockHeader className="font-bold">
-        {/* TODO: Better UI for state handling */}
         {registrants.isSuccess && !registrants.data?.length && (
           <DataStatus
             status="not_found"
