@@ -28,44 +28,41 @@ export const RewardForm = ({
   const editOptions = useCreateEventStore((state) => state.edit);
   const resetReward = useCreateEventStore((state) => state.resetReward);
   const errors = useCreateEventStore((state) => state.rewardStepErrors);
-  const eventData = useCreateEventStore((state) => state.eventData);
 
   return (
     <>
-      {eventData?.eventLocationType === "online" && (
-        <FormBlock
-          inset={false}
-          title="Event password"
-        >
-          <ListInput
-            placeholder="Enter your chosen password"
-            name="secret_phrase"
-            value={passwordValue}
-            info={
-              <div className="space-y-1">
-                <p>Password is case-insensitive and must be at least 4 characters.</p>
-                <p>
-                  By setting a password for the event, you can prevent checking-in unexpectedly and receiving
-                  a reward without attending the event.
-                </p>
-              </div>
+      <FormBlock
+        inset={false}
+        title="Event password"
+      >
+        <ListInput
+          placeholder="Enter your chosen password"
+          name="secret_phrase"
+          value={passwordValue}
+          info={
+            <div className="space-y-1">
+              <p>Password is case-insensitive and must be at least 4 characters.</p>
+              <p>
+                By setting a password for the event, you can prevent checking-in unexpectedly and receiving a
+                reward without attending the event.
+              </p>
+            </div>
+          }
+          inputClassName={cn({
+            "text-cn-muted-foreground cursor-pointer": passwordDisabled,
+          })}
+          onClick={() => {
+            if (passwordDisabled) {
+              setPasswordDisabled(false);
+              setPasswordValue("");
             }
-            inputClassName={cn({
-              "text-cn-muted-foreground cursor-pointer": passwordDisabled,
-            })}
-            onClick={() => {
-              if (passwordDisabled) {
-                setPasswordDisabled(false);
-                setPasswordValue("");
-              }
-            }}
-            onChange={(e) => {
-              setPasswordValue(e.target.value);
-            }}
-            error={errors?.secret_phrase?.[0]}
-          />
-        </FormBlock>
-      )}
+          }}
+          onChange={(e) => {
+            setPasswordValue(e.target.value);
+          }}
+          error={errors?.secret_phrase?.[0]}
+        />
+      </FormBlock>
 
       {!editOptions?.eventHash && (
         <FormBlock title="Choose SBT Option">
