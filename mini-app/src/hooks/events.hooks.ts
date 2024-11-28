@@ -36,3 +36,13 @@ export function useGetEvent(event_hash?: string) {
     }
   );
 }
+
+/**
+ * get hubs
+ */
+export function useGetHubs() {
+  return trpc.events.getHubs.useQuery(undefined, {
+    staleTime: 5000,
+    queryKey: ["events.getHubs", undefined],
+  });
+}

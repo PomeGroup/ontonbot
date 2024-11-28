@@ -29,7 +29,7 @@ export default function Home() {
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
 
-  const { setTheme, theme } = useTheme();
+  const { setTheme } = useTheme();
 
   const UserId = webApp?.initDataUnsafe?.user?.id;
 

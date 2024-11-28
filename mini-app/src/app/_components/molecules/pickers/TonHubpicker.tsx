@@ -1,11 +1,10 @@
 "use client";
 
-import { trpc } from "@/app/_trpc/client";
-
 import { SocietyHub } from "@/types";
 import { FC, useEffect, useState } from "react";
 import * as React from "react";
 import { ListInput } from "konsta/react";
+import { useGetHubs } from "@/hooks/events.hooks";
 
 // https://society.ton.org/v1/society-hubs
 
@@ -15,7 +14,7 @@ const TonHubPicker: FC<{
   errors?: string[];
 }> = ({ value, onValueChange, errors }) => {
   const [hubs, setHubs] = useState<Array<SocietyHub>>([]);
-  const hubsResponse = trpc.events.getHubs.useQuery();
+  const hubsResponse = useGetHubs();
 
   useEffect(() => {
     if (hubsResponse.data?.status === "success") setHubs(hubsResponse.data.hubs);
