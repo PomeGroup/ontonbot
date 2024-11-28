@@ -152,7 +152,6 @@ export const processRewardCreation = async (eventData: any, user_id: number, vis
 };
 
 export const createUserReward = async (props: {
-  wallet_address: string;
   user_id: number;
   event_uuid: string;
 }) => {
