@@ -1,5 +1,5 @@
 import { json, pgTable, serial, smallint, timestamp, varchar } from "drizzle-orm/pg-core";
-import { notificationStatus, notificationType } from "@/db/enum";
+import { notificationStatus, notificationType ,notificationItemType } from "@/db/enum";
 
 export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
@@ -19,4 +19,5 @@ export const notifications = pgTable("notifications", {
   readAt: timestamp("read_at", { precision: 6 }),
   expiresAt: timestamp("expires_at", { precision: 6 }),
   itemId: serial("item_id"),
+  item_type: notificationItemType("item_type").default("UNKNOWN"),
 });

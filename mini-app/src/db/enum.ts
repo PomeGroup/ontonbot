@@ -43,6 +43,13 @@ export const notificationStatus = pgEnum("notification_status", [
   "REPLIED",
   "EXPIRED",
 ]);
+export const notificationItemType = pgEnum("notification_item_type", [
+  "POA_TRIGGER",
+  "EVENT",
+  "SBT_REWARD",
+  "TRANSACTION",
+  "UNKNOWN"
+]);
 // Type Exports
 export type EventParticipationType = (typeof eventParticipationType.enumValues)[number];
 export type RewardType = (typeof rewardType.enumValues)[number];
@@ -55,3 +62,5 @@ export type EventTriggerType = (typeof eventTriggerType.enumValues)[number];
 export type EventTriggerStatus = (typeof eventTriggerStatus.enumValues)[number];
 export type NotificationType = (typeof notificationType.enumValues)[number];
 export type NotificationStatus = (typeof notificationStatus.enumValues)[number];
+export type NotificationItemType = (typeof notificationItemType.enumValues)[number];
+

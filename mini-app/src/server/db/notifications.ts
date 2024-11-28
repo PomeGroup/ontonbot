@@ -1,7 +1,8 @@
 import { db } from "@/db/db";
-import { notifications, NotificationStatus, NotificationType } from "@/db/schema";
+import { NotificationItemType, notifications, NotificationStatus, NotificationType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { eq, lt } from "drizzle-orm";
+import { and, eq, lt } from "drizzle-orm";
+
 
 // Cache key generator for notifications
 const getNotificationCacheKey = (notificationId: number) => `${redisTools.cacheKeys.notification}${notificationId}`;
@@ -24,6 +25,7 @@ export const addNotification = async (notificationData: {
   readAt?: Date;
   expiresAt?: Date;
   itemId?: number;
+  item_type?: NotificationItemType
 }) => {
   try {
     const result = await db
@@ -33,18 +35,19 @@ export const addNotification = async (notificationData: {
         type: notificationData.type,
         title: notificationData.title,
         desc: notificationData.desc,
-        priority: notificationData.priority,
-        icon: notificationData.icon,
-        image: notificationData.image,
-        link: notificationData.link,
+        priority: notificationData.priority || 1,
+        icon: notificationData.icon || null,
+        image: notificationData.image || null,
+        link: notificationData.link || null,
         actionTimeout: notificationData.actionTimeout,
-        actionReply: notificationData.actionReply,
+        actionReply: null,
         additionalData: notificationData.additionalData,
         status: notificationData.status || "WAITING_TO_SEND",
         createdAt: notificationData.createdAt || new Date(),
-        readAt: notificationData.readAt,
+        readAt: notificationData.readAt || null,
         expiresAt: notificationData.expiresAt,
         itemId: notificationData.itemId,
+        item_type: notificationData.item_type || "UNKNOWN",
       })
       .onConflictDoNothing()
       .execute();
@@ -58,22 +61,20 @@ export const addNotification = async (notificationData: {
 };
 
 // Get notifications by status
-export const getNotificationsByStatus = async (status: NotificationStatus) => {
+export const getNotificationsByStatusAndItemId = async (itemId: number, status: NotificationStatus) => {
   try {
-    const cacheKey = `${redisTools.cacheKeys.notificationsByStatus}${status}`;
-    const cachedResult = await redisTools.getCache(cacheKey);
-
-    if (cachedResult) {
-      return cachedResult; // Return cached data if available
-    }
 
     const result = await db
       .select()
       .from(notifications)
-      .where(eq(notifications.status, status))
+      .where(
+        and(
+          eq(notifications.itemId, itemId),
+          eq(notifications.status, status)
+        )
+      )
       .execute();
 
-    await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.short); // Cache the result
     console.log(`Notifications with status "${status}" retrieved:`, result);
     return result;
   } catch (error) {
@@ -103,7 +104,7 @@ export const updateNotificationStatus = async (notificationId: number, newStatus
 export const updateNotificationStatusAndReply = async (
   notificationId: number,
   newStatus: NotificationStatus,
-  actionReply: object
+  actionReply: object,
 ) => {
   try {
     await db
@@ -139,7 +140,7 @@ export const deleteNotificationsByExpiry = async (expiryDate: Date) => {
 // Export all functions as a single object
 export const notificationsDB = {
   addNotification,
-  getNotificationsByStatus,
+  getNotificationsByStatusAndItemId,
   updateNotificationStatus,
   updateNotificationStatusAndReply,
   deleteNotificationsByExpiry,

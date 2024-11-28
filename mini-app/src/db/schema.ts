@@ -13,6 +13,8 @@ import {
   NotificationType,
   notificationStatus,
   NotificationStatus,
+  notificationItemType,
+  NotificationItemType,
 } from "@/db/enum";
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
@@ -48,6 +50,7 @@ export {
   ticketStatus,
   notificationType,
   notificationStatus,
+  notificationItemType,
 };
 
 
@@ -87,3 +90,4 @@ export type { EventTriggerType };
 export type { EventTriggerStatus };
 export type { NotificationStatus };
 export type { NotificationType };
+export type { NotificationItemType };

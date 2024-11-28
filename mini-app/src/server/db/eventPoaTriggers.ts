@@ -97,16 +97,18 @@ export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) =>
 };
 
 // Get a list of active POAs by time
-export const getActivePoaByTime = async (startTime: number, endTime: number) => {
+export const getActivePoaForEventByTime = async (eventId : number,startTime: number, endTime: number) => {
   try {
+    console.log(`Getting active POAs by time: ${startTime} - ${endTime}`);
     const activePoas = await db
       .select()
       .from(eventPoaTriggers)
       .where(
         and(
-          eq(eventPoaTriggers.status, "active"),
-          gte(eventPoaTriggers.startTime, startTime),
-          lte(eventPoaTriggers.startTime, endTime)
+          eq(eventPoaTriggers.eventId, eventId), // Check the event ID
+          eq(eventPoaTriggers.status, "active" as const), // Match against the correct enum
+          gte(eventPoaTriggers.startTime, startTime), // Start time >= startTime
+          lte(eventPoaTriggers.startTime, endTime) // Start time <= endTime
         )
       )
       .execute();
@@ -150,6 +152,6 @@ export const eventPoaTriggersDB = {
   updateEventPoaStatus,
   incrementCountOfSent,
   incrementCountOfSuccess,
-  getActivePoaByTime,
+  getActivePoaForEventByTime,
   getPoaByEventId,
 };
