@@ -22,7 +22,7 @@ export default function RegistrantQrCodePage() {
   const router = useRouter();
 
   return (
-    <Page style={{ height: webApp?.viewportHeight }}>
+    <Page>
       <BlockTitle>Check-in QR Code</BlockTitle>
       <BlockHeader>Please show this QR code to the event organizers to check-in.</BlockHeader>
       <Block
