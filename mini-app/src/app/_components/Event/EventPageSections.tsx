@@ -195,12 +195,13 @@ export const EventSections = () => {
 
   const isOnlineEvent = eventData.data?.participationType === "online";
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
+  const isEventActive = isStarted && isNotEnded;
 
   return (
     <div className="space-y-2">
       <EventImage />
 
-      {userCompletedTasks && isOnlineEvent && <EventPasswordInput />}
+      {userCompletedTasks && isEventActive && isOnlineEvent && <EventPasswordInput />}
 
       <EventHead />
       <EventAttributes />
@@ -223,7 +224,7 @@ export const EventSections = () => {
         />
       )}
 
-      {userCompletedTasks && !isCheckedIn && isStarted && isNotEnded && eventData.data?.registrant_uuid && (
+      {userCompletedTasks && !isCheckedIn && eventData.data?.registrant_uuid && (
         <MainButton
           text="Check In"
           onClick={() =>
