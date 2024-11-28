@@ -919,7 +919,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, true, "");
     const eventData = await selectEventByUuid(opts.input.event_uuid);
     
-    console.log("====================visitors==================" , visitors)
+    console.log("====================visitors================== >> " , visitors , opts.input.event_uuid)
     // Map the data and conditionally remove fields
 
     const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
