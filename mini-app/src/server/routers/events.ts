@@ -159,7 +159,7 @@ export const eventsRouter = router({
     // Registrant Already has a request
     if (user_request) {
       registrant_status = user_request.status;
-      if (registrant_status == "approved") {
+      if (registrant_status === "approved" || registrant_status === "checkedin") {
         eventData.location = event_location;
         registrant_uuid = user_request.registrant_uuid;
       }
