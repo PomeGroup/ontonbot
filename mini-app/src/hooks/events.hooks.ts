@@ -31,7 +31,7 @@ export function useGetEvent(event_hash?: string) {
     { event_uuid },
     {
       // after 10s data is considered stale and <<when>> the hook is used again will be refetched
-      staleTime: 10_000,
+      staleTime: Infinity,
       queryKey: ["events.getEvent", { event_uuid }],
     }
   );
