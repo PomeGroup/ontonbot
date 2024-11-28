@@ -84,7 +84,6 @@ export const usersRouter = router({
     )
     .mutation(async (opts) => {
       return await rewardService.createUserReward({
-        wallet_address: opts.ctx.user?.wallet_address as string,
         user_id: opts.ctx.user?.user_id as number,
         event_uuid: opts.input.event_uuid,
       });
@@ -114,7 +113,6 @@ export const usersRouter = router({
 
         try {
           await rewardService.createUserReward({
-            wallet_address: opts.ctx.user?.wallet_address as string,
             user_id: opts.ctx.user?.user_id as number,
             event_uuid: opts.input.event_uuid,
           });

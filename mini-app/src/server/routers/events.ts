@@ -35,6 +35,8 @@ import {
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
+import rewardService from "@/server/routers/services/rewardsService";
+import { addVisitor } from "@/server/db/visitors";
 
 dotenv.config();
 
@@ -283,6 +285,7 @@ export const eventsRouter = router({
       status: request_status,
       register_info: registerInfo,
     });
+    await addVisitor(userId ,event_uuid )
 
     return { message: "success", code: 201 };
   }),
@@ -412,6 +415,10 @@ export const eventsRouter = router({
         .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
         .execute();
 
+      await rewardService.createUserReward({
+        user_id: registrant.user_id as number,
+        event_uuid: event_uuid,
+      });
       return { code: 200, message: "ok" };
     }),
 
@@ -937,7 +944,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       };
     });
 
-    console.log("dataForCsv:  ", dataForCsv);
+    
 
     const csvString = Papa.unparse(dataForCsv || [], {
       header: true,

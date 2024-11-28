@@ -368,7 +368,6 @@ export const addVisitor = async (user_id: number, event_uuid: string) => {
   try {
     const existingVisitor = await getVisitor(user_id, event_uuid);
     if (existingVisitor) {
-      console.log("existingVisitor", existingVisitor);
       return existingVisitor; // Visitor already exists, no need to add
     }
     // Insert new visitor
