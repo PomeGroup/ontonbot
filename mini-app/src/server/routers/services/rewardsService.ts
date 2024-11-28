@@ -152,7 +152,6 @@ export const processRewardCreation = async (eventData: any, user_id: number, vis
 };
 
 export const createUserReward = async (props: {
-  wallet_address: string;
   user_id: number;
   event_uuid: string;
 }) => {
@@ -176,7 +175,7 @@ export const createUserReward = async (props: {
 
     // Validate the visitor
     const isValidVisitor = await selectValidVisitorById(visitor.id);
-    if (!isValidVisitor.length && eventData?.participationType !== "online") {
+    if (!isValidVisitor.length && eventData?.participationType === "online") {
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "Invalid visitor: please complete the tasks.",

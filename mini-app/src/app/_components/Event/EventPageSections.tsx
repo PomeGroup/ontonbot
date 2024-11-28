@@ -6,7 +6,7 @@ import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
 import { EventActions } from "./EventActions";
 import ShareEventButton from "../ShareEventButton";
-import { EventPasswordInput } from "./EventPasswordInput";
+import { EventPasswordAndWalletInput } from "./EventPasswordInput";
 import EventKeyValue from "../organisms/events/EventKewValue";
 import { ClaimRewardButton } from "./ClaimRewardButton";
 import { ManageEventButton } from "./ManageEventButton";
@@ -182,7 +182,7 @@ const EventRegistrationStatus = ({
 // Main component
 export const EventSections = () => {
   const router = useRouter();
-  const { eventData, userEventPasswordField, isStarted, isNotEnded, initData } = useEventData();
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
@@ -190,17 +190,20 @@ export const EventSections = () => {
     !isAdminOrOrganizer &&
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) ||
       !eventData.data?.has_registration) &&
-    !userEventPasswordField?.completed &&
+    hasEnteredPassword &&
     user?.wallet_address;
 
   const isOnlineEvent = eventData.data?.participationType === "online";
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
+  const isEventActive = isStarted && isNotEnded;
 
   return (
     <div className="space-y-2">
       <EventImage />
 
-      {userCompletedTasks && isOnlineEvent && <EventPasswordInput />}
+      {((userCompletedTasks && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
+        <EventPasswordAndWalletInput />
+      )}
 
       <EventHead />
       <EventAttributes />
@@ -215,7 +218,7 @@ export const EventSections = () => {
         />
       )}
 
-      {!isAdminOrOrganizer && eventData.data?.has_registration && (
+      {!isAdminOrOrganizer && isNotEnded && eventData.data?.has_registration && (
         <EventRegistrationStatus
           registrantStatus={eventData.data?.registrant_status ?? ""}
           capacityFilled={Boolean(eventData.data?.capacity_filled)}
@@ -223,7 +226,7 @@ export const EventSections = () => {
         />
       )}
 
-      {userCompletedTasks && isCheckedIn && eventData.data?.registrant_uuid && (
+      {userCompletedTasks && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
         <MainButton
           text="Check In"
           onClick={() =>

@@ -73,7 +73,7 @@ export const addVisitor = async (opts: any) => {
   // Check if the user has already completed the task
   const taskCompleted = await userEventFieldsDB.checkPasswordTask(user_id, event.event_id);
 
-  if (!taskCompleted) {
+  if (!taskCompleted && event.participationType !== "in_person") {
     throw new TRPCError({
       code: "CONFLICT",
       message: "You have not completed the task",

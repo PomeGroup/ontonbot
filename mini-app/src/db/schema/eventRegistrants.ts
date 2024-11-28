@@ -1,6 +1,5 @@
 import { sql } from "drizzle-orm";
 import { users } from "@/db/schema/users";
-import { events } from "@/db/schema/events";
 import {
   bigint,
   pgTable,

@@ -54,7 +54,7 @@ jobs:
             ["giveaway-checker"]="giveaway-checker"
             ["golang-server"]="golang-server"
             ["mini-app"]="mini-app"
-            ["nft-microservice"]="newton/apps/nft-manager"
+            ["nft-manager"]="newton/apps/nft-manager"
             ["participant-tma"]="newton/apps/participant-tma"
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
@@ -162,7 +162,7 @@ jobs:
 
         run: |
           declare -A services=(
-            ["nft-microservice"]="newton/apps/nft-manager"
+            ["nft-manager"]="newton/apps/nft-manager"
             ["participant-tma"]="newton/apps/participant-tma"
             ["client-web"]="client-web-panel"
             ["mini-app-cron"]="mini-app"
@@ -190,7 +190,7 @@ jobs:
           if  [ "$service" == "participant-tma" ]; then
             dockerfile_path="newton/apps/participant-tma/Dockerfile"
             build_context="./newton"
-          elif [ "$service" == "nft-microservice" ]; then
+          elif [ "$service" == "nft-manager" ]; then
             dockerfile_path="newton/apps/nft-manager/Dockerfile"
             build_context="./newton"
           elif [ "$service" == "caddy" ]; then
@@ -313,7 +313,7 @@ jobs:
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
             Hi there!
-            🔄 Build was successful for ${{ github.repository }}
+            ✔🔄✔ Build was successful for ${{ github.repository }}
 
             📝 branch: ${{ github.ref }}
 
@@ -496,7 +496,7 @@ jobs:
             mkdir -p /home/tonont/$branch_name/telegram-bot
             mkdir -p /home/tonont/$branch_name/client-web
             mkdir -p /home/tonont/$branch_name/participant-tma
-            mkdir -p /home/tonont/$branch_name/nft-microservice
+            mkdir -p /home/tonont/$branch_name/nft-manager
             mkdir -p /home/tonont/$branch_name/website
             EOF
           else
@@ -629,9 +629,7 @@ jobs:
             🧑 ‍💻Actor: ${{ github.actor }}
             📝 branch: ${{ github.ref }}
           
-            
-          
-            ✅ deployment completed successfully
+            ✅✅✅✅✅✅✅✅✅ deployment completed successfully ✅✅✅✅✅✅✅✅
             "
       - name: Send Telegram Message - Deployment Failure
         if: failure()
@@ -652,8 +650,6 @@ jobs:
           
             🧑 ‍💻Actor: ${{ github.actor }}
           
-            
-            
             📝 branch: ${{ github.ref }}
             
             ❌ ❌ deployment failed ❌ ❌ 

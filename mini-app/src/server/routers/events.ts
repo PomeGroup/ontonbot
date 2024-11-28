@@ -19,7 +19,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
-import { and, count, desc, eq, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, ne } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -35,6 +35,8 @@ import {
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
+import rewardService from "@/server/routers/services/rewardsService";
+import { addVisitor } from "@/server/db/visitors";
 
 dotenv.config();
 
@@ -146,12 +148,10 @@ export const eventsRouter = router({
     const event_location = eventData.location;
 
     const userIsAdminOrOwner = eventData.owner == userId || opts.ctx.user.role == "admin";
-    let mask_event_capacity = true;
+    let mask_event_capacity = !userIsAdminOrOwner;
 
     eventData.location = "Visible To Registered Users ";
-    if (eventData.capacity && userIsAdminOrOwner) {
-      mask_event_capacity = false;
-    }
+    
     if (userIsAdminOrOwner) {
       eventData.location = event_location;
     }
@@ -159,7 +159,7 @@ export const eventsRouter = router({
     // Registrant Already has a request
     if (user_request) {
       registrant_status = user_request.status;
-      if (registrant_status == "approved") {
+      if (registrant_status === "approved" || registrant_status === "checkedin") {
         eventData.location = event_location;
         registrant_uuid = user_request.registrant_uuid;
       }
@@ -283,6 +283,7 @@ export const eventsRouter = router({
       status: request_status,
       register_info: registerInfo,
     });
+    await addVisitor(userId ,event_uuid )
 
     return { message: "success", code: 201 };
   }),
@@ -314,7 +315,7 @@ export const eventsRouter = router({
         .from(eventRegistrants)
         .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
         .where(eq(eventRegistrants.event_uuid, event_uuid))
-        .orderBy(desc(eventRegistrants.created_at))
+        .orderBy(asc(eventRegistrants.created_at))
         .execute();
 
       return registrants;
@@ -412,6 +413,10 @@ export const eventsRouter = router({
         .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
         .execute();
 
+      await rewardService.createUserReward({
+        user_id: registrant.user_id as number,
+        event_uuid: event_uuid,
+      });
       return { code: 200, message: "ok" };
     }),
 
@@ -909,9 +914,15 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(async (opts) => {
-    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, true, "");
+    const event = opts.ctx.event
+    const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
+
+    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
     const eventData = await selectEventByUuid(opts.input.event_uuid);
+    
+    console.log("====================visitors================== >> " , visitors , opts.input.event_uuid)
     // Map the data and conditionally remove fields
+
     const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
       // Explicitly define wallet_address type and handle other optional fields
       //@ts-ignore
@@ -937,7 +948,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       };
     });
 
-    console.log("dataForCsv:  ", dataForCsv);
+    
 
     const csvString = Papa.unparse(dataForCsv || [], {
       header: true,

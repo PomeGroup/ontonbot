@@ -1,6 +1,7 @@
 "use client";
 
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
+import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import RegistrantCheckInQrCode from "@/app/_components/Event/RegistrantCheckInQrCode";
 import useWebApp from "@/hooks/useWebApp";
 import { Block, BlockHeader, BlockTitle, Page } from "konsta/react";
@@ -12,11 +13,16 @@ export default function RegistrantQrCodePage() {
     hash: string;
     reg_id: string;
   }>();
+
+  useWithBackButton({
+    whereTo: `/events/${params.hash}`,
+  });
+
   const webApp = useWebApp();
   const router = useRouter();
 
   return (
-    <Page style={{ height: webApp?.viewportHeight }}>
+    <Page>
       <BlockTitle>Check-in QR Code</BlockTitle>
       <BlockHeader>Please show this QR code to the event organizers to check-in.</BlockHeader>
       <Block

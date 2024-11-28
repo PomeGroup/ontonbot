@@ -13,6 +13,7 @@ export const EventDataContext = createContext<{
   initData: string;
   eventHash: string;
   isLocationUrl: boolean;
+  hasEnteredPassword: boolean;
   userEventFields: UseTRPCQueryResult<RouterOutput["userEventFields"]["getUserEventFields"], unknown>;
   userEventPasswordField:
     | {

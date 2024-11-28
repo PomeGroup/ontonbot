@@ -13,7 +13,7 @@ type ActiveTab = "guest_list" | "edit";
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("guest_list");
-  const { setTheme, theme } = useTheme();
+  const { setTheme } = useTheme();
 
   const event = useGetEvent();
 
@@ -21,7 +21,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
   useEffect(() => {
     setTheme("light");
-  }, [theme, setTheme]);
+  }, [setTheme]);
 
   if (isLoading) {
     return null;
@@ -36,7 +36,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   }
 
   return (
-    <Page className="min-h-screen">
+    <Page>
       <Block>
         <Segmented strong>
           <SegmentedButton
