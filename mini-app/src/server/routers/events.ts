@@ -148,12 +148,10 @@ export const eventsRouter = router({
     const event_location = eventData.location;
 
     const userIsAdminOrOwner = eventData.owner == userId || opts.ctx.user.role == "admin";
-    let mask_event_capacity = true;
+    let mask_event_capacity = !userIsAdminOrOwner;
 
     eventData.location = "Visible To Registered Users ";
-    if (eventData.capacity && userIsAdminOrOwner) {
-      mask_event_capacity = false;
-    }
+    
     if (userIsAdminOrOwner) {
       eventData.location = event_location;
     }
