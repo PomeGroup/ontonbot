@@ -6,8 +6,13 @@ import { SelectLocation } from "./SelectLocation";
 
 const EventLocationManager = () => {
   const eventData = useCreateEventStore((state) => state.eventData);
+  const editOptions = useCreateEventStore((state) => state.edit);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const errors = useCreateEventStore((state) => state.timeplaceStepErrors);
+
+  if (editOptions?.eventHash) {
+    return null;
+  }
 
   return (
     <FormBlock
