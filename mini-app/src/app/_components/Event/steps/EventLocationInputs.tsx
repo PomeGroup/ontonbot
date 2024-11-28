@@ -3,6 +3,7 @@ import { Radio, ListInput, ListItem } from "konsta/react";
 import React from "react";
 import FormBlock from "../../atoms/cards/FormBlock";
 import { SelectLocation } from "./SelectLocation";
+import { cn } from "@/utils";
 
 const EventLocationManager = () => {
   const eventData = useCreateEventStore((state) => state.eventData);
@@ -19,9 +20,9 @@ const EventLocationManager = () => {
         title="Online"
         after={
           <Radio
-            onClick={() => setEventData({ eventLocationType: "online" })}
+            onChange={() => setEventData({ eventLocationType: "online" })}
             checked={eventData?.eventLocationType === "online"}
-            className="disabled:opacity-50"
+            className={cn({ "opacity-50": Boolean(editOptions?.eventHash) })}
             disabled={Boolean(editOptions?.eventHash)}
           />
         }
@@ -30,9 +31,9 @@ const EventLocationManager = () => {
         title="In-Person"
         after={
           <Radio
-            onClick={() => setEventData({ eventLocationType: "in_person" })}
+            onChange={() => setEventData({ eventLocationType: "in_person" })}
             checked={eventData?.eventLocationType === "in_person"}
-            className="disabled:opacity-50"
+            className={cn({ "opacity-50": Boolean(editOptions?.eventHash) })}
             disabled={Boolean(editOptions?.eventHash)}
           />
         }
