@@ -5,10 +5,14 @@ import {
   rewardStatus,
   rewardType,
   ticketStatus,
+  EventTriggerType,
   eventTriggerType,
+  EventTriggerStatus,
   eventTriggerStatus,
   notificationType,
+  NotificationType,
   notificationStatus,
+  NotificationStatus,
 } from "@/db/enum";
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
@@ -36,15 +40,16 @@ import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistran
 export {
   developmentEnvironment,
   eventParticipationType,
+  eventTriggerType,
+  eventTriggerStatus,
   orderState,
   rewardStatus,
   rewardType,
   ticketStatus,
-  eventTriggerType,
-  eventTriggerStatus,
   notificationType,
   notificationStatus,
 };
+
 
 // export all the tables and relations
 export {
@@ -77,3 +82,8 @@ export {
   eventRegistrants,
   eventRegistrantStatus,
 };
+// Type Exports
+export type { EventTriggerType };
+export type { EventTriggerStatus };
+export type { NotificationStatus };
+export type { NotificationType };

@@ -276,6 +276,10 @@ export const cacheKeys = {
   jwtBlacklist: "auth:jwt:blacklist:",
   SBTRewardCollections: "SBTRewardCollections:",
   SBTRewardCollectionByHubID: "SBTRewardCollections:hubID:",
+  eventPoaTrigger: "eventPoaTrigger:",
+  eventPoaByEvent: "eventPoaByEvent:",
+  notification: "notification:",
+  notificationsByStatus: "notificationsByStatus:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes

@@ -51,3 +51,7 @@ export type TicketStatus = (typeof ticketStatus.enumValues)[number];
 export type OrderState = (typeof orderState.enumValues)[number];
 export type DevelopmentEnvironment = (typeof developmentEnvironment.enumValues)[number];
 
+export type EventTriggerType = (typeof eventTriggerType.enumValues)[number];
+export type EventTriggerStatus = (typeof eventTriggerStatus.enumValues)[number];
+export type NotificationType = (typeof notificationType.enumValues)[number];
+export type NotificationStatus = (typeof notificationStatus.enumValues)[number];
