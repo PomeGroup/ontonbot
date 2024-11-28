@@ -12,6 +12,7 @@ import TRPCAPIProvider from "./_trpc/Provider";
 import KonstaAppProvider from "./_components/KonstaAppProvider";
 import UserSaver from "./_components/UserSaver";
 import * as Sentry from "@sentry/nextjs";
+import ThemeToggleButton from "./_components/atoms/buttons/ThemeToggleButton";
 
 const Providers = ({ children, isDevStage }: { children: React.ReactNode; isDevStage: boolean }) => {
   useEffect(() => {
@@ -31,6 +32,7 @@ const Providers = ({ children, isDevStage }: { children: React.ReactNode; isDevS
           defaultTheme="light"
           attribute="class"
         >
+          {process.env.NODE_ENV === "development" && <ThemeToggleButton />}
           <WebAppProvider>
             <TRPCAPIProvider>
               <NavigationHistoryProvider>
