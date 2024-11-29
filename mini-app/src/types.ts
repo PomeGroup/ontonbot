@@ -209,9 +209,9 @@ export const EventRegisterSchema = z.object({
   company: z.string().min(1).max(40),
   position: z.string().min(1).max(40),
   // optional
-  linkedin: z.string().min(1).max(100).optional(),
-  github: z.string().min(1).max(100).optional(),
-  notes: z.string().min(0).max(512).optional(),
+  linkedin: z.string().max(100).optional(),
+  github: z.string().max(100).optional(),
+  notes: z.string().max(512).optional(),
 });
 
 export const AgendaItemSchema = z.object({

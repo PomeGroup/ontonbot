@@ -42,6 +42,10 @@ const UserRegisterForm = () => {
       ...formObject,
     };
 
+    console.log({
+      registrationData,
+    });
+
     const parsedData = EventRegisterSchema.safeParse(registrationData);
 
     if (parsedData.error) {
@@ -89,14 +93,14 @@ const UserRegisterForm = () => {
             outline
             label="LinkedIn"
             name="linkedin"
-            error={formErrors?.position?.[0]}
+            error={formErrors?.linkedin?.[0]}
             placeholder="www.linkedin.com/in/john"
           />
           <ListInput
             outline
             label="Github"
             name="github"
-            error={formErrors?.position?.[0]}
+            error={formErrors?.github?.[0]}
             placeholder="john_doe"
           />
           <ListInput
