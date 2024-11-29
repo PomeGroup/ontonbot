@@ -60,6 +60,62 @@ export const sendTelegramMessage = async (props: {
     };
   }
 };
+export const sendEventPhoto = async (props: {
+  event_id : string,
+  user_id: string | number;
+  message: string;
+  
+}) => {
+  try {
+    const response = await tgClient.post(
+      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-photo`,
+      {
+        id : props.event_id,
+        user_id: props.user_id,
+        message: props.message,
+      }
+    );
+
+    // If the response indicates success, return the response data
+    if (response.data.success) {
+      return {
+        success: true,
+        message: response.data.message || "Message sent successfully",
+      };
+    }
+
+    // If the server responded but with an error, handle the error
+    const errorMessage = `Error sending message sendTelegramMessage:${response.data.error || "An unknown error occurred"}`;
+    console.error(errorMessage);
+    return {
+      success: false,
+      error: errorMessage,
+      status: response.status || 500,
+    };
+  } catch (error: unknown) {
+    // Type assertion to AxiosError
+    if (error instanceof AxiosError && error.response && error.response.data) {
+      // Handle errors returned from the server
+      const errorMessage = `Error sending message sendTelegramMessage:${error.response.data.error || "Unknown error from server"}`;
+      console.error(errorMessage);
+      return {
+        success: false,
+        error: errorMessage,
+        status: error.response.status || 500,
+      };
+    }
+
+    // For other types of errors, such as network errors
+    const errorMessage = `Error sending message sendTelegramMessage:${(error as Error).message || "An unexpected error occurred"}`;
+    console.error(errorMessage);
+    return {
+      success: false,
+      error: errorMessage,
+      status: 500,
+    };
+  }
+};
+
 
 export const sendLogNotification = async (props: { message: string }) => {
   return await sendTelegramMessage({

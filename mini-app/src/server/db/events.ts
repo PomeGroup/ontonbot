@@ -323,7 +323,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
     const validEventUuids = filter.event_uuids.filter(
       (uuid) => uuid !== null && uuid !== undefined && uuid.length === 36
     );
-    console.log("validEventUuids", validEventUuids);
+    
     if (validEventUuids.length) {
       conditions.push(inArray(event_details_search_list.eventUuid, validEventUuids));
     }

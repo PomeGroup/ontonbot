@@ -350,9 +350,11 @@ export const eventsRouter = router({
         .execute();
 
       if (opts.input.status === "approved") {
-        await telegramService.sendTelegramMessage({
-          chat_id: user_id,
-          message: `Your request has been approved for the event : ${event.title} `,
+        const event_url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/events/${event_uuid}`;
+        await telegramService.sendEventPhoto({
+          event_id : event.event_uuid,
+          user_id: user_id,
+          message: `✅ Your request has been approved for the event : <b>${event.title}</b> <br> ${event_url}`,
         });
       }
 
@@ -1021,7 +1023,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       }
     }),
   getEventsWithFilters: publicProcedure.input(searchEventsInputZod).query(async (opts) => {
-    // console.log("*****config", config, configProtected);
+    
     try {
       const events = await getEventsWithFilters(opts.input);
       return { status: "success", data: events };
