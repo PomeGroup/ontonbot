@@ -1,8 +1,11 @@
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { SbtOptionContent } from "../../organisms/events/SbtOptionContent";
 import FormBlock from "../../atoms/cards/FormBlock";
-import { ListInput, ListItem, Toggle } from "konsta/react";
+import { ListInput, ListItem, Preloader, Toggle } from "konsta/react";
 import { cn } from "@/utils";
+import { useEffect } from "react";
+import { useGetEvent } from "@/hooks/events.hooks";
+import Image from "next/image";
 
 interface RewardFormProps {
   passwordDisabled: boolean;
@@ -25,44 +28,95 @@ export const RewardForm = ({
   clearImageError,
   clearVideoError,
 }: RewardFormProps) => {
-  const editOptions = useCreateEventStore((state) => state.edit);
-  const resetReward = useCreateEventStore((state) => state.resetReward);
-  const errors = useCreateEventStore((state) => state.rewardStepErrors);
+  const eventDataRes = useGetEvent();
+  const { editOptions, eventData, resetReward, errors, setEventData } = useCreateEventStore((state) => ({
+    editOptions: state.edit,
+    eventData: state.eventData,
+    resetReward: state.resetReward,
+    errors: state.rewardStepErrors,
+    setEventData: state.setEventData,
+  }));
+
+  useEffect(() => {
+    if (eventData?.eventLocationType === "in_person") {
+      setEventData({ secret_phrase: "onton_default_placeholder" });
+      setPasswordValue("onton_default_placeholder");
+    } else {
+      setEventData({ secret_phrase: "" });
+    }
+  }, [eventData?.eventLocationType]);
 
   return (
     <>
-      <FormBlock
-        inset={false}
-        title="Event password"
-      >
-        <ListInput
-          placeholder="Enter your chosen password"
-          name="secret_phrase"
-          value={passwordValue}
-          info={
-            <div className="space-y-1">
-              <p>Password is case-insensitive and must be at least 4 characters.</p>
-              <p>
-                By setting a password for the event, you can prevent checking-in unexpectedly and receiving a
-                reward without attending the event.
-              </p>
-            </div>
-          }
-          inputClassName={cn({
-            "text-cn-muted-foreground cursor-pointer": passwordDisabled,
-          })}
-          onClick={() => {
-            if (passwordDisabled) {
-              setPasswordDisabled(false);
-              setPasswordValue("");
+      {eventData?.eventLocationType !== "in_person" && (
+        <FormBlock
+          inset={false}
+          title="Event password"
+        >
+          <ListInput
+            placeholder="Enter your chosen password"
+            name="secret_phrase"
+            value={passwordValue}
+            info={
+              <div className="space-y-1">
+                <p>Password is case-insensitive and must be at least 4 characters.</p>
+                <p>
+                  By setting a password for the event, you can prevent checking-in unexpectedly and receiving
+                  a reward without attending the event.
+                </p>
+              </div>
             }
-          }}
-          onChange={(e) => {
-            setPasswordValue(e.target.value);
-          }}
-          error={errors?.secret_phrase?.[0]}
-        />
-      </FormBlock>
+            inputClassName={cn({
+              "text-cn-muted-foreground cursor-pointer": passwordDisabled,
+            })}
+            onClick={() => {
+              if (passwordDisabled) {
+                setPasswordDisabled(false);
+                setPasswordValue("");
+              }
+            }}
+            onChange={(e) => {
+              setPasswordValue(e.target.value);
+            }}
+            error={errors?.secret_phrase?.[0]}
+          />
+        </FormBlock>
+      )}
+
+      {editOptions?.eventHash && (
+        <>
+          <FormBlock title="SBT Reward">
+            {eventDataRes.isSuccess ? (
+              <div className="flex flex-col gap-6 p-6">
+                <div className="flex flex-col gap-2">
+                  <h5 className="text-lg font-medium">Reward Image</h5>
+                  <Image
+                    alt="ts-reward"
+                    className="rounded-lg w-full"
+                    width={300}
+                    height={300}
+                    src={eventDataRes.data?.tsRewardImage as string}
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h5 className="text-lg font-medium">Reward Video</h5>
+                  <video
+                    className="w-full rounded-lg"
+                    autoPlay
+                    loop
+                    width={300}
+                    height={300}
+                  >
+                    <source src={eventDataRes.data?.tsRewardVideo as string} />
+                  </video>
+                </div>
+              </div>
+            ) : (
+              <Preloader />
+            )}
+          </FormBlock>
+        </>
+      )}
 
       {!editOptions?.eventHash && (
         <FormBlock title="Choose SBT Option">

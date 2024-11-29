@@ -7,19 +7,13 @@ import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, tonSocietyClient, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
-import {
-  EventDataSchema,
-  HubsResponse,
-  SocietyHub,
-  UpdateEventDataSchema,
-  EventRegisterSchema,
-} from "@/types";
+import { EventDataSchema, HubsResponse, UpdateEventDataSchema, EventRegisterSchema } from "@/types";
 
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
-import { and, count, desc, eq, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, ne, or } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -71,7 +65,12 @@ async function getApprovedRequestsCount(event_uuid: string) {
       await db
         .select({ count: count() })
         .from(eventRegistrants)
-        .where(and(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.event_uuid, event_uuid)))
+        .where(
+          and(
+            or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
+            eq(eventRegistrants.event_uuid, event_uuid)
+          )
+        )
         .execute()
     ).pop()?.count || 0;
   return approved_requests_count;
@@ -151,7 +150,7 @@ export const eventsRouter = router({
     let mask_event_capacity = !userIsAdminOrOwner;
 
     eventData.location = "Visible To Registered Users ";
-    
+
     if (userIsAdminOrOwner) {
       eventData.location = event_location;
     }
@@ -283,7 +282,7 @@ export const eventsRouter = router({
       status: request_status,
       register_info: registerInfo,
     });
-    await addVisitor(userId ,event_uuid )
+    await addVisitor(userId, event_uuid);
 
     return { message: "success", code: 201 };
   }),
@@ -315,7 +314,7 @@ export const eventsRouter = router({
         .from(eventRegistrants)
         .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
         .where(eq(eventRegistrants.event_uuid, event_uuid))
-        .orderBy(desc(eventRegistrants.created_at))
+        .orderBy(asc(eventRegistrants.created_at))
         .execute();
 
       return registrants;
@@ -346,14 +345,23 @@ export const eventsRouter = router({
         .set({
           status: opts.input.status,
         })
-        .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, user_id)))
+        .where(
+          and(
+            eq(eventRegistrants.event_uuid, event_uuid),
+            eq(eventRegistrants.user_id, user_id),
+            ne(eventRegistrants.status, "checkedin")
+          )
+        )
         .execute();
 
       if (opts.input.status === "approved") {
-        await telegramService.sendTelegramMessage({
-          chat_id: user_id,
-          message: `Your request has been approved for the event : ${event.title} `,
+        const share_link = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`;
+        const response = await telegramService.sendEventPhoto({
+          event_id: event.event_uuid,
+          user_id: user_id,
+          message: `✅ Your request has been approved for the event : <b>${event.title}</b> \n${share_link}`,
         });
+        console.log("*******approved_guest", response.status, response.message);
       }
 
       return { code: 201, message: "ok" };
@@ -445,6 +453,22 @@ export const eventsRouter = router({
               message: "Invalid secret phrase",
             });
           }
+
+          /* ------------------------------ Invalid Dates ----------------------------- */
+          if (!opts.input.eventData.end_date || !opts.input.eventData.start_date) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Invalid start-date/end-date",
+            });
+          }
+          /* ------------------------- Event Duration > 1 Week ------------------------ */
+          //FIXME -  Discuss With Mike 
+          // if (opts.input.eventData.end_date! - opts.input.eventData.start_date > 604801) {
+          //   throw new TRPCError({
+          //     code: "BAD_REQUEST",
+          //     message: "Event Duration Can't be more than 1 week",
+          //   });
+          // }
 
           const newEvent = await trx
             .insert(events)
@@ -616,6 +640,9 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         } as const;
       } catch (error) {
         console.error(`Error while adding event: ${Date.now()}`, error);
+        if(error instanceof TRPCError ){
+          throw error;
+        }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Internal Error while adding event",
@@ -675,6 +702,8 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
           const oldEvent = await trx.select().from(events).where(eq(events.event_uuid, eventUuid!));
 
+          const canUpdateRegistraion = oldEvent[0].has_registration;
+
           const updatedEvent = await trx
             .update(events)
             .set({
@@ -698,9 +727,9 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
               /* ------------------------ Event Registration Update ----------------------- */
               // Updating has_registration is not allowed
-              has_approval: eventData.has_approval,
-              capacity: eventData.capacity,
-              has_waiting_list: eventData.has_waiting_list,
+              has_approval: canUpdateRegistraion ? eventData.has_approval : false,
+              capacity: canUpdateRegistraion ? eventData.capacity : null,
+              has_waiting_list: canUpdateRegistraion ? eventData.has_waiting_list : false,
               /* ------------------------ Event Registration Update ----------------------- */
             })
             .where(eq(events.event_uuid, eventUuid))
@@ -827,44 +856,42 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     }),
 
   // private
-  getHubs: publicProcedure.query(
-    async (): Promise<{ status: "success"; hubs: SocietyHub[] } | { status: "error"; message: string }> => {
-      try {
-        const response = await tonSocietyClient.get<HubsResponse>(`/hubs`, {
-          params: {
-            _start: 0,
-            _end: 100,
-          },
-        });
+  getHubs: publicProcedure.query(async () => {
+    try {
+      const response = await tonSocietyClient.get<HubsResponse>(`/hubs`, {
+        params: {
+          _start: 0,
+          _end: 100,
+        },
+      });
 
-        if (response.status === 200 && response.data) {
-          const sortedHubs = response.data.data.sort((a, b) => Number(a.id) - Number(b.id));
+      if (response.status === 200 && response.data) {
+        const sortedHubs = response.data.data.sort((a, b) => Number(a.id) - Number(b.id));
 
-          const transformedHubs = sortedHubs.map((hub) => ({
-            id: hub.id.toString(),
-            name: hub.attributes.title,
-          }));
-
-          return {
-            status: "success",
-            hubs: transformedHubs,
-          } as const;
-        } else {
-          return {
-            status: "error",
-            message: "Failed to fetch data",
-          } as const;
-        }
-      } catch (error) {
-        console.error("hub fetch failed", error);
+        const transformedHubs = sortedHubs.map((hub) => ({
+          id: hub.id.toString(),
+          name: hub.attributes.title,
+        }));
 
         return {
-          status: "error",
-          message: "Internal server error",
-        } as const;
+          status: "success",
+          hubs: transformedHubs,
+        };
+      } else {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch data",
+        });
       }
+    } catch (error) {
+      console.error("hub fetch failed", error);
+
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch data",
+      });
     }
-  ),
+  }),
   // private
   requestShareEvent: initDataProtectedProcedure
     .input(
@@ -914,10 +941,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(async (opts) => {
-    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, true, "");
+    const event = opts.ctx.event;
+    const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
+
+    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
     const eventData = await selectEventByUuid(opts.input.event_uuid);
-    
-    console.log("====================visitors================== >> " , visitors , opts.input.event_uuid)
+
+    console.log("====================visitors================== >> ", visitors, opts.input.event_uuid);
     // Map the data and conditionally remove fields
 
     const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
@@ -944,8 +974,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         dynamicFields: JSON.stringify(visitor.dynamicFields),
       };
     });
-
-    
 
     const csvString = Papa.unparse(dataForCsv || [], {
       header: true,
@@ -1018,7 +1046,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       }
     }),
   getEventsWithFilters: publicProcedure.input(searchEventsInputZod).query(async (opts) => {
-    // console.log("*****config", config, configProtected);
     try {
       const events = await getEventsWithFilters(opts.input);
       return { status: "success", data: events };

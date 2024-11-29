@@ -14,6 +14,8 @@ const UserRegisterForm = () => {
     full_name?: string[];
     company?: string[];
     position?: string[];
+    linkedin?: string[];
+    github?: string[];
     notes?: string[];
   }>();
 
@@ -39,6 +41,10 @@ const UserRegisterForm = () => {
       event_uuid: params.hash,
       ...formObject,
     };
+
+    console.log({
+      registrationData,
+    });
 
     const parsedData = EventRegisterSchema.safeParse(registrationData);
 
@@ -85,11 +91,25 @@ const UserRegisterForm = () => {
           />
           <ListInput
             outline
+            label="LinkedIn"
+            name="linkedin"
+            error={formErrors?.linkedin?.[0]}
+            placeholder="www.linkedin.com/in/john"
+          />
+          <ListInput
+            outline
+            label="Github"
+            name="github"
+            error={formErrors?.github?.[0]}
+            placeholder="john_doe"
+          />
+          <ListInput
+            outline
             info="Optional"
             placeholder="I will be 30min late"
             name="notes"
             error={formErrors?.notes?.[0]}
-            label="Notes"
+            label="Tel me about yourself"
           />
         </List>
       </form>

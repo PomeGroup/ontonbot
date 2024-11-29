@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
@@ -29,7 +29,7 @@ export default function Home() {
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
 
-  const { setTheme, theme } = useTheme();
+  const { setTheme } = useTheme();
 
   const UserId = webApp?.initDataUnsafe?.user?.id;
 
@@ -193,10 +193,12 @@ export default function Home() {
     }
   };
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     setTheme("dark");
-    return () => setTheme("light");
-  }, [setTheme, theme]);
+    return () => {
+      setTheme("light");
+    };
+  }, [setTheme]);
 
   // Handle swiper slide change
   const handleSlideChange = (swiper: any) => {

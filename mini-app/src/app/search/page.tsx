@@ -30,11 +30,13 @@ const Search: React.FC = () => {
     whereTo: "/",
   });
 
-  const { setTheme, theme } = useTheme();
+  const { setTheme } = useTheme();
   useEffect(() => {
     setTheme("dark");
-    return () => setTheme("light");
-  }, [setTheme, theme]);
+    return () => {
+      setTheme("light");
+    };
+  }, [setTheme]);
 
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();

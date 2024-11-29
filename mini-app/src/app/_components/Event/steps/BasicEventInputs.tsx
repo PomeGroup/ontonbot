@@ -4,15 +4,20 @@ import { ListInput } from "konsta/react";
 import TonHubPicker from "../../molecules/pickers/TonHubpicker";
 import { ImageUpload } from "./ImageUpload";
 import { useCreateEventStore } from "@/zustand/createEventStore";
+import { useGetHubs } from "@/hooks/events.hooks";
 
 const BasicEventInputs = () => {
   const errors = useCreateEventStore((state) => state.generalStepErrors);
   const eventData = useCreateEventStore((state) => state.eventData);
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const clearImageError = useCreateEventStore((state) => state.clearImageErrors);
+  const hubsResponse = useGetHubs();
 
   return (
-    <FormBlock title="Basic">
+    <FormBlock
+      title="Basic"
+      isLoading={hubsResponse.isLoading}
+    >
       <ListInput
         outline
         placeholder="Event Title"

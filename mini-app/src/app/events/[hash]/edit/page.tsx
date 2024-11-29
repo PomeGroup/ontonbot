@@ -1,8 +1,8 @@
 "use client";
 
 import Alerts from "@/app/_components/molecules/alerts";
-import { ManageEvent } from "@/app/_components/organisms/events";
 import GuestList from "@/app/_components/organisms/events/GuestList";
+import ManageEvent from "@/app/_components/organisms/events/ManageEvent";
 import { useGetEvent } from "@/hooks/events.hooks";
 import useAuth from "@/hooks/useAuth";
 import { Block, Page, Segmented, SegmentedButton } from "konsta/react";
@@ -13,7 +13,7 @@ type ActiveTab = "guest_list" | "edit";
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("guest_list");
-  const { setTheme, theme } = useTheme();
+  const { setTheme } = useTheme();
 
   const event = useGetEvent();
 
@@ -21,7 +21,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
 
   useEffect(() => {
     setTheme("light");
-  }, [theme, setTheme]);
+  }, [setTheme]);
 
   if (isLoading) {
     return null;
@@ -36,7 +36,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   }
 
   return (
-    <Page className="min-h-screen">
+    <Page>
       <Block>
         <Segmented strong>
           <SegmentedButton
@@ -55,12 +55,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           </SegmentedButton>
         </Segmented>
       </Block>
-      {activeTab === "edit" && (
-        <ManageEvent
-          event={event.data}
-          eventHash={params.hash}
-        />
-      )}
+      {activeTab === "edit" && <ManageEvent event={event.data} />}
       {activeTab === "guest_list" && event.data && (
         <GuestList
           event={event.data}

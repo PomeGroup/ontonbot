@@ -1,4 +1,4 @@
-import { sendTelegramMessage } from "@/lib/tgBot";
+import { sendTelegramMessage , sendEventPhoto } from "@/lib/tgBot";
 import { EventTypeSecure, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
 import axios from "axios";
@@ -153,7 +153,8 @@ const tgService = {
   sendCode, // send OTP code
   sendTelegramMessageNoLink, // send Telegram message without link
   shareEventRequest, // share event request
-  sendTelegramMessage
+  sendTelegramMessage,
+  sendEventPhoto
 };
 
 export default tgService;

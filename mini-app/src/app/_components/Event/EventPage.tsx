@@ -30,12 +30,11 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
     whereTo: "/",
   });
 
-  const { setTheme, theme } = useTheme();
+  const { setTheme } = useTheme();
 
   useEffect(() => {
     setTheme("light");
-  }, [setTheme, theme]);
-
+  }, [setTheme]);
 
   return (
     <Block margin="mt-2">
