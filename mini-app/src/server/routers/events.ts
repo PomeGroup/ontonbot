@@ -454,6 +454,21 @@ export const eventsRouter = router({
             });
           }
 
+          /* ------------------------------ Invalid Dates ----------------------------- */
+          if (!opts.input.eventData.end_date || !opts.input.eventData.start_date) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Invalid start-date/end-date",
+            });
+          }
+          /* ------------------------- Event Duration > 1 Week ------------------------ */
+          if (opts.input.eventData.end_date! - opts.input.eventData.start_date > 604801) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Event Duration Can't be more than 1 week",
+            });
+          }
+
           const newEvent = await trx
             .insert(events)
             .values({
