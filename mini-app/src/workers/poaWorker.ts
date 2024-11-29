@@ -7,7 +7,7 @@ import { getEventsWithFilters } from "@/server/db/events";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
 
-const WORKER_INTERVAL = 1 * 1000; // 1 minute
+const WORKER_INTERVAL = 5 * 1000; // 1 minute
 
 // Function to fetch ongoing events with online participation
 const fetchOngoingEvents = async () => {
@@ -24,6 +24,8 @@ const fetchOngoingEvents = async () => {
       endDateOperator: ">=",
     },
     sortBy: "start_date_asc",
+    limit: 100,
+    offset: 0,
     useCache: false,
   };
 
@@ -33,11 +35,13 @@ const fetchOngoingEvents = async () => {
 
 // Worker Function
 const processOngoingEvents = async () => {
-  console.log("Worker started at:", new Date().toISOString());
+  console.log("===================================");
+  console.log("POA Worker(👙) started at:", new Date().toISOString());
 
   try {
     const ongoingEvents = await fetchOngoingEvents();
     console.log(`Fetched ${ongoingEvents.length} ongoing events.`);
+    console.table(ongoingEvents);
 
     for (const event of ongoingEvents) {
       if (!event?.eventId) {
@@ -46,7 +50,7 @@ const processOngoingEvents = async () => {
       }
       const eventId = event.eventId;
       const eventUuid = event.eventUuid;
-
+      console.log("--------------------------------------------------");
       console.log(`Processing Event ${eventId} - ${eventUuid}: ${event.title} to send POA notifications`);
 
       try {
@@ -56,11 +60,13 @@ const processOngoingEvents = async () => {
           0,
           Date.now(),
         );
-        console.log(`Active POA Triggers for Event ${eventId} - ${eventUuid}:`, activePoaTriggers);
+
         if (activePoaTriggers.length === 0) {
-          console.warn(`No active POA triggers for Event ${eventId} - ${eventUuid}`);
+          console.warn(`No active POA triggers for Event ${eventId} - ${eventUuid} - ${event.title}`);
           continue; // Skip if no active triggers
         }
+        console.log(`Active POA Triggers for Event ${eventId} - ${eventUuid} - ${event.title}:`);
+        console.table(activePoaTriggers);
         // Fetch approved users for the event
         const approvedUsers = await db
           .select({ userId: eventRegistrants.user_id })
@@ -73,16 +79,16 @@ const processOngoingEvents = async () => {
           )
           .execute();
         if (approvedUsers.length === 0) {
-          console.warn(`No approved users for Event ${eventId} - ${eventUuid}`);
+          console.warn(`No approved users for Event ${eventId} `);
           continue; // Skip if no approved users
         }
-        console.log(`Approved Users for Event ${eventId} - ${eventUuid} :`, approvedUsers.length);
+        console.log(`Cont of Approved Users for Event ${eventId}  :`, approvedUsers.length);
 
         for (const trigger of activePoaTriggers) {
           try {
             for (const user of approvedUsers) {
               if (!user?.userId) {
-                console.warn(`Skipped invalid user for Event ${eventId} ${eventUuid} and Trigger ${trigger.id}`);
+                console.warn(`Skipped invalid user for Event ${eventId} and Trigger ${trigger.id}`);
                 continue;
               }
               try {
@@ -140,9 +146,19 @@ const processOngoingEvents = async () => {
 };
 
 
-processOngoingEvents();
 
-// Worker Interval
-// setInterval(async () => {
-//   await processOngoingEvents();
-// }, WORKER_INTERVAL);
+// Worker Loop
+const runWorker = async () => {
+  while (true) {
+    try {
+      await processOngoingEvents();
+    } catch (error) {
+      console.error("!!!!! Unhandled error in POA Worker:", error);
+    }
+    console.log(`Waiting for ${WORKER_INTERVAL / 1000} seconds before the next run...`);
+    await new Promise((resolve) => setTimeout(resolve, WORKER_INTERVAL));
+  }
+};
+
+// Start the Worker
+runWorker();

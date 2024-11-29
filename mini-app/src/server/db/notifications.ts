@@ -25,7 +25,7 @@ export const addNotification = async (notificationData: {
   readAt?: Date;
   expiresAt?: Date;
   itemId?: number;
-  item_type?: NotificationItemType
+  item_type?: NotificationItemType;
 }) => {
   try {
     const result = await db
@@ -50,10 +50,17 @@ export const addNotification = async (notificationData: {
         item_type: notificationData.item_type || "UNKNOWN",
       })
       .onConflictDoNothing()
+      .returning({ id: notifications.id }) // Return the ID of the inserted row
       .execute();
 
+    // Check if the result is empty, indicating the record already existed
+    if (result.length === 0) {
+      console.log("Notification already exists.");
+      return { success: false, message: "Record already exists." };
+    }
+
     console.log("Notification added:", result);
-    return result;
+    return { success: true, notificationId: result[0].id }; // Return the ID of the inserted notification
   } catch (error) {
     console.error("Error adding notification:", error);
     throw error;

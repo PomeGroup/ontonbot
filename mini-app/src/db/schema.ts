@@ -21,13 +21,13 @@ import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutin
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
 import { eventTicket } from "./schema/eventTicket";
 import { event_details_search_list } from "./schema/event_details_search_list";
-import { eventPoaTriggersIdSequence, eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers.db";
-import { eventPoaResultsIdSequence, eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults.db";
+import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers.db";
+import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults.db";
 import { events } from "./schema/events";
 import { giataCity } from "./schema/giataCity";
 import { ontoSetting } from "./schema/ontoSetting";
 import { orders } from "./schema/orders";
-import { notificationsIdSequence, notifications } from "./schema/notifications.db";
+import { notifications } from "./schema/notifications.db";
 import { rewards } from "./schema/rewards";
 import { sbtRewardCollections } from "./schema/sbtRewardCollections";
 import { tickets, ticketsRelations } from "./schema/tickets";
@@ -38,13 +38,6 @@ import { visitors } from "./schema/visitors";
 import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 
-
-// export all sequences
-export {
-  eventPoaTriggersIdSequence,
-  notificationsIdSequence,
-  eventPoaResultsIdSequence,
-};
 
 // export all the enums
 export {

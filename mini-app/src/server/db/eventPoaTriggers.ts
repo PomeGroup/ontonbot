@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventPoaTriggers,  EventTriggerStatus,EventTriggerType } from "@/db/schema";
+import { eventPoaTriggers, EventTriggerStatus,  EventTriggerType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 
@@ -100,7 +100,7 @@ export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) =>
 export const getActivePoaForEventByTime = async (eventId : number,startTime: number, endTime: number) => {
   try {
     console.log(`Getting active POAs by time: ${startTime} - ${endTime}`);
-    const activePoas = await db
+    const activePoa = await db
       .select()
       .from(eventPoaTriggers)
       .where(
@@ -113,8 +113,9 @@ export const getActivePoaForEventByTime = async (eventId : number,startTime: num
       )
       .execute();
 
-    console.log("Active POAs by time:", activePoas);
-    return activePoas;
+    // console.log("Active POAs by time:");
+    // console.table(activePoa);
+    return activePoa;
   } catch (error) {
     console.error("Error getting active POAs by time:", error);
     throw error;
@@ -146,6 +147,87 @@ export const getPoaByEventId = async (eventId: number) => {
   }
 };
 
+export const generatePoaForAddEvent = async (
+  trx: typeof db, // Accept the transaction context
+  params: {
+    eventId: number;
+    eventStartTime: number;
+    eventEndTime: number;
+    poaCount: number;
+    poaType: EventTriggerType;
+  }
+) => {
+  const { eventId, eventStartTime, eventEndTime, poaCount, poaType } = params;
+
+  // Buffer of 10 minutes (in seconds)
+  const buffer = 10 * 60;
+
+  // Validate inputs
+  if (eventStartTime >= eventEndTime) {
+    throw new Error("Event start time must be less than end time.");
+  }
+
+  if (poaCount <= 0) {
+    throw new Error("POA count must be greater than zero.");
+  }
+
+  // Adjust start and end times based on buffer
+  const adjustedStartTime = eventStartTime + buffer;
+  const adjustedEndTime = eventEndTime - buffer;
+
+  if (adjustedStartTime >= adjustedEndTime) {
+    throw new Error(
+      "Adjusted event times are invalid. Ensure the event duration is longer than the buffer."
+    );
+  }
+
+  // Calculate the interval between POAs
+  const interval = Math.floor((adjustedEndTime - adjustedStartTime) / poaCount);
+
+  // Generate POA start times
+  const poaStartTimes = Array.from({ length: poaCount }, (_, i) => adjustedStartTime + i * interval);
+
+  // Fetch the current maximum POA order for the event within the transaction
+  const existingPoa = await trx
+    .select({ poaOrder: eventPoaTriggers.poaOrder })
+    .from(eventPoaTriggers)
+    .where(eq(eventPoaTriggers.eventId, eventId))
+    .execute();
+
+  const maxExistingOrder = existingPoa.reduce<number>(
+    (max, poa) => (poa.poaOrder !== null && poa.poaOrder > max ? poa.poaOrder : max),
+    0
+  );
+
+  // Create POA triggers using addEventPoaTrigger
+  try {
+    for (let i = 0; i < poaStartTimes.length; i++) {
+      const poaOrder = (maxExistingOrder ?? 0) + i + 1;
+      const poaData = {
+        eventId,
+        poaOrder, // Increment POA order
+        startTime: poaStartTimes[i],
+        countOfSent: 0,
+        countOfSuccess: 0,
+        poaType,
+        status: "active" as const, // Default to active
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // Insert into the database within the transaction
+      await trx.insert(eventPoaTriggers).values(poaData).execute();
+      console.log(`POA Trigger added for event ${eventId}:`, poaData);
+    }
+    console.log(`Generated ${poaStartTimes.length} POA triggers for event ${eventId}.`);
+  } catch (error) {
+    console.error("Error generating POA triggers:", error);
+    throw error;
+  }
+};
+
+
+
 // Export all functions in a single object
 export const eventPoaTriggersDB = {
   addEventPoaTrigger,
@@ -154,4 +236,5 @@ export const eventPoaTriggersDB = {
   incrementCountOfSuccess,
   getActivePoaForEventByTime,
   getPoaByEventId,
+  generatePoaForAddEvent
 };
