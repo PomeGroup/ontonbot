@@ -224,6 +224,7 @@ declare global {
     ) => void;
     requestWriteAccess: (_callback?: (_access: boolean) => unknown) => void;
     requestContact: (_callback?: (_access: boolean) => unknown) => void;
+    disableVerticalSwipes: () => void;
   }
 
   // export interface Telegram {
