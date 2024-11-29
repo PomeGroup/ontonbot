@@ -236,7 +236,7 @@ export const eventsRouter = router({
     const { event_uuid, ...registerInfo } = opts.input;
     const event = await selectEventByUuid(event_uuid);
 
-    console.log("event_register", event_uuid, userId);
+    // console.log("event_register", event_uuid, userId);
 
     if (!event) {
       throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
