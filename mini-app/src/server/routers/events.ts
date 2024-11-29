@@ -462,12 +462,13 @@ export const eventsRouter = router({
             });
           }
           /* ------------------------- Event Duration > 1 Week ------------------------ */
-          if (opts.input.eventData.end_date! - opts.input.eventData.start_date > 604801) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: "Event Duration Can't be more than 1 week",
-            });
-          }
+          //FIXME -  Discuss With Mike 
+          // if (opts.input.eventData.end_date! - opts.input.eventData.start_date > 604801) {
+          //   throw new TRPCError({
+          //     code: "BAD_REQUEST",
+          //     message: "Event Duration Can't be more than 1 week",
+          //   });
+          // }
 
           const newEvent = await trx
             .insert(events)
