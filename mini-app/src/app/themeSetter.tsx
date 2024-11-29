@@ -28,11 +28,5 @@ export default function ThemeSetter({ children }: { children: React.ReactNode })
     });
   }, [theme]);
 
-  useEffect(() => {
-    // set html height to viewport height
-    // @ts-expect-error
-    document.querySelector("html").style.height = `${webApp?.viewportHeight}px`;
-  }, [webApp?.viewportHeight]);
-
   return <div>{children}</div>;
 }
