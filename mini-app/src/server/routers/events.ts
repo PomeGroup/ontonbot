@@ -639,6 +639,9 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         } as const;
       } catch (error) {
         console.error(`Error while adding event: ${Date.now()}`, error);
+        if(error instanceof TRPCError ){
+          throw error;
+        }
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Internal Error while adding event",
