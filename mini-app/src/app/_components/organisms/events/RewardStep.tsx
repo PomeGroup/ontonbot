@@ -126,7 +126,11 @@ export const RewardStep = () => {
 
     clearRewardStepErrors();
 
-    const dataToSubmit = { ...eventData, ...formDataParsed.data };
+    const dataToSubmit = {
+      ...eventData,
+      ...formDataParsed.data,
+      secret_phrase: eventData?.secret_phrase || formDataParsed.data.secret_phrase,
+    };
 
     if (editOptions?.eventHash) {
       const updateParsedData = UpdateEventDataSchema.safeParse(dataToSubmit);
