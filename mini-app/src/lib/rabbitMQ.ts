@@ -6,8 +6,9 @@ export const QueueNames = {
   TG_MESSAGES: `${process.env.STAGE_NAME || "onton"}-tg_messages`,
 } as const;
 
-export type QueueNamesType = keyof typeof QueueNames;
-// singleton class for RabbitMQ
+export type QueueNamesType = typeof QueueNames[keyof typeof QueueNames];
+
+// Singleton class for RabbitMQ
 class RabbitMQ {
   private static instance: RabbitMQ;
   private connection: Connection | null = null;
@@ -17,7 +18,7 @@ class RabbitMQ {
   private readonly password: string;
   private readonly port: number;
 
-  private constructor(url: string, username: string, password: string ,port : number) {
+  private constructor(url: string, username: string, password: string, port: number) {
     this.url = process.env.IP_RABBITMQ || url;
     this.username = process.env.RABBITMQ_DEFAULT_USER || username;
     this.password = process.env.RABBITMQ_DEFAULT_PASS || password;
@@ -55,12 +56,12 @@ class RabbitMQ {
 
         this.connection.on("error", (err) => {
           console.error("RabbitMQ connection error:", err);
-          this.connection = null; // Reset connection on error
+          this.connection = null;
         });
 
         this.connection.on("close", () => {
           console.warn("RabbitMQ connection closed.");
-          this.connection = null; // Reset connection on close
+          this.connection = null;
         });
 
         console.log("RabbitMQ connection established successfully.");
@@ -80,7 +81,6 @@ class RabbitMQ {
       await this.connect();
     } else {
       try {
-        // Verify the connection is still open
         await this.connection.createChannel();
       } catch (error) {
         console.warn("Connection was invalid, reconnecting...");
@@ -94,7 +94,7 @@ class RabbitMQ {
    * Get or create a channel for a queue
    */
   private async getChannel(queue: QueueNamesType): Promise<Channel> {
-    await this.ensureConnection(); // Ensure the connection is valid
+    await this.ensureConnection();
 
     if (this.channels.has(queue)) {
       return this.channels.get(queue) as Channel;
@@ -137,7 +137,7 @@ class RabbitMQ {
    */
   public async consume(
     queue: QueueNamesType,
-    onMessage: (msg: Message) => Promise<void>,
+    onMessage: (_msg: Message, _channel: Channel) => Promise<void>,
     prefetchCount = 1
   ): Promise<void> {
     try {
@@ -147,11 +147,10 @@ class RabbitMQ {
       await channel.consume(queue, async (msg) => {
         if (msg) {
           try {
-            await onMessage(msg);
-            channel.ack(msg); // Acknowledge successful processing
+            await onMessage(msg, channel); // Pass both `msg` and `channel` to the callback
           } catch (error) {
             console.error(`Error processing message from queue '${queue}':`, error);
-            channel.nack(msg); // Negative acknowledgment (requeue)
+            channel.nack(msg); // Requeue the message
           }
         }
       });
@@ -193,7 +192,7 @@ export const pushToQueue = async (queue: QueueNamesType, message: Record<string,
 
 export const consumeFromQueue = async (
   queue: QueueNamesType,
-  onMessage: (msg: Message) => Promise<void>,
+  onMessage: (_msg: Message, _channel: Channel) => Promise<void>,
   prefetchCount = 1
 ) => {
   await rabbit.consume(queue, onMessage, prefetchCount);
