@@ -3,5 +3,5 @@ health check for main containers
 remove replicas
 remove postgres healthcheck
 add container registry
-sssssssT
+generate new caddy file
 
