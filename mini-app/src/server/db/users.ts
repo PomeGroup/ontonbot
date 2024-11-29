@@ -79,7 +79,7 @@ const insertUser = async (initDataJson: {
         .onConflictDoNothing() // Avoid conflict on duplicate entries
         .execute();
 
-      console.log(`User ${initDataJson.user.username} ${initDataJson.user.id} added`);
+      // console.log(`User ${initDataJson.user.username} ${initDataJson.user.id} added`);
       return await selectUserById(initDataJson.user.id);
     } catch (e) {
       console.log("add user error: ", e);

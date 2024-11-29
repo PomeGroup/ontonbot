@@ -188,7 +188,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     })
     .from(tickets)
     .where(eq(tickets.user_id, userId!));
-  console.log("rewardQuery", ticketsQuery.toSQL().sql);
+  // console.log("rewardQuery", ticketsQuery.toSQL().sql);
   // Use unionAll to combine the results, apply orderBy, limit, and offset
   //@ts-ignore
   const combinedResultsQuery = unionAll(rewardQuery, eventQuery, ticketsQuery)

@@ -102,7 +102,7 @@ export const userEventFieldsRouter = router({
         const data: { [key: string]: EventFieldData } = {};
 
         for (const field of userEventFieldsResult) {
-          console.log(field);
+          // console.log(field);
 
           data[field.eventFieldId ?? "unknown"] = {
             id: field.eventFieldId ?? "unknown",

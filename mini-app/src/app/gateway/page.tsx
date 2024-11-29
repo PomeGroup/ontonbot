@@ -25,7 +25,7 @@ export default function Home() {
 
   const eventUUID = "6acf01ed-3122-498a-a937-329766b459aa";
   const sideEventUUIDs = config?.gatewaySideEvents?.split(",");
-  console.log(config?.gatewaySideEvents);
+  // console.log(config?.gatewaySideEvents);
 
   const { authorized, role: userRole } = useAuth();
 

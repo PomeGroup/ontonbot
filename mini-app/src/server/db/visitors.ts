@@ -20,7 +20,7 @@ const findVisitorByUserAndEvent = async (user_id: number, event_uuid: string) =>
   const cachedVisitor = await redisTools.getCache(cacheKey);
 
   if (cachedVisitor) {
-    console.log("Cache hit for:", cacheKey);
+    // console.log("Cache hit for:", cacheKey);
     return JSON.parse(cachedVisitor);
   }
 
@@ -302,7 +302,7 @@ export const selectVisitorsByEventUuid = async (
     } else {
       visitorsData = ticketDataResults;
     }
-    console.log(ticketDataResults);
+    // console.log(ticketDataResults);
   }
 
   const moreRecordsAvailable = typeof limit === "number" ? visitorsData.length === limit : false;
@@ -392,7 +392,7 @@ export const findVisitorByUserAndEventUuid = async (user_id: number, event_uuid:
   const cachedVisitor = await redisTools.getCache(cacheKey);
 
   if (cachedVisitor) {
-    console.log("Cache hit for:", cacheKey);
+    // console.log("Cache hit for:", cacheKey);
     return JSON.parse(cachedVisitor);
   }
 
