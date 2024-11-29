@@ -2,6 +2,8 @@ import { db } from "@/db/db";
 import { NotificationItemType, notifications, NotificationStatus, NotificationType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { and, eq, lt } from "drizzle-orm";
+import { QueueNames } from "@/lib/rabbitMQ";
+import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
 
 
 // Cache key generator for notifications
@@ -58,8 +60,17 @@ export const addNotification = async (notificationData: {
       console.log("Notification already exists.");
       return { success: false, message: "Record already exists." };
     }
+    // add to rabbitMQ
+    const notificationId = result[0].id;
 
-    console.log("Notification added:", result);
+    // Push the notification to RabbitMQ
+    const message = {
+      notificationId,
+      ...notificationData,
+    };
+
+    await rabbitMQService.pushMessageToQueue(QueueNames.NOTIFICATIONS, message);
+    console.log(`Notification added for User ${notificationData.userId} with ID ${notificationId} and type ${notificationData.type}`);
     return { success: true, notificationId: result[0].id }; // Return the ID of the inserted notification
   } catch (error) {
     console.error("Error adding notification:", error);

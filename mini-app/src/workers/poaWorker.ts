@@ -68,6 +68,7 @@ const processOngoingEvents = async () => {
         console.log(`Active POA Triggers for Event ${eventId} - ${eventUuid} - ${event.title}:`);
         console.table(activePoaTriggers);
         // Fetch approved users for the event
+        // @todo: Add a limit to the number of users fetched also fetch only users has not been sent the notification
         const approvedUsers = await db
           .select({ userId: eventRegistrants.user_id })
           .from(eventRegistrants)
