@@ -13,7 +13,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
-import { and, asc, count, desc, eq, ne } from "drizzle-orm";
+import { and, asc, count, desc, eq, ne ,or } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -65,7 +65,12 @@ async function getApprovedRequestsCount(event_uuid: string) {
       await db
         .select({ count: count() })
         .from(eventRegistrants)
-        .where(and(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.event_uuid, event_uuid)))
+        .where(
+          and(
+            or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
+            eq(eventRegistrants.event_uuid, event_uuid)
+          )
+        )
         .execute()
     ).pop()?.count || 0;
   return approved_requests_count;
@@ -340,17 +345,23 @@ export const eventsRouter = router({
         .set({
           status: opts.input.status,
         })
-        .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, user_id)))
+        .where(
+          and(
+            eq(eventRegistrants.event_uuid, event_uuid),
+            eq(eventRegistrants.user_id, user_id),
+            ne(eventRegistrants.status, "checkedin")
+          )
+        )
         .execute();
 
       if (opts.input.status === "approved") {
-        const event_url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/events/${event_uuid}`;
+        const share_link = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`;
         const response = await telegramService.sendEventPhoto({
-          event_id : event.event_uuid,
+          event_id: event.event_uuid,
           user_id: user_id,
-          message: `✅ Your request has been approved for the event : <b>${event.title}</b> ${event_url}`,
+          message: `✅ Your request has been approved for the event : <b>${event.title}</b> \n${share_link}`,
         });
-        console.log("*******approved_guest" , response.status , response.message)
+        console.log("*******approved_guest", response.status, response.message);
       }
 
       return { code: 201, message: "ok" };
