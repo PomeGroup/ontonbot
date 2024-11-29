@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
 import { useCreateEventStore } from "@/zustand/createEventStore";
@@ -61,109 +61,107 @@ export const RewardStep = () => {
 
   const thirdStepDataSchema = rewardStepValidation(passwordDisabled);
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!formRef.current) return;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formRef.current) return;
 
-      const formData = new FormData(formRef.current);
-      const formDataObject = Object.fromEntries(formData.entries());
-      const stepInputsObject = {
-        ...formDataObject,
-        ts_reward_url: eventData?.ts_reward_url,
-        video_url: eventData?.video_url,
-        secret_phrase: passwordDisabled ? undefined : formDataObject.secret_phrase,
-      };
+    const formData = new FormData(formRef.current);
+    const formDataObject = Object.fromEntries(formData.entries());
 
-      if (
-        sbtOption === "custom" &&
-        (!eventData?.ts_reward_url || !eventData?.video_url) &&
-        !editOptions?.eventHash
-      ) {
-        setRewardStepErrors({
-          ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
-          video_url: !eventData?.video_url ? ["Please upload a video."] : undefined,
-        });
+    const stepInputsObject = {
+      ...formDataObject,
+      ts_reward_url: eventData?.ts_reward_url,
+      video_url: eventData?.video_url,
+      secret_phrase: passwordDisabled ? undefined : formDataObject.secret_phrase,
+    };
 
-        toast.error(
-          <div className="flex items-center">
-            <FiAlertCircle className="mr-2" />
-            Please upload both an image and a video for your custom SBT reward.
-          </div>,
-          { duration: 5000 }
-        );
-        return;
-      }
+    if (
+      sbtOption === "custom" &&
+      (!eventData?.ts_reward_url || !eventData?.video_url) &&
+      !editOptions?.eventHash
+    ) {
+      setRewardStepErrors({
+        ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
+        video_url: !eventData?.video_url ? ["Please upload a video."] : undefined,
+      });
 
-      const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
+      toast.error(
+        <div className="flex items-center">
+          <FiAlertCircle className="mr-2" />
+          Please upload both an image and a video for your custom SBT reward.
+        </div>,
+        { duration: 5000 }
+      );
+      return;
+    }
 
-      if (!formDataParsed.success) {
-        setRewardStepErrors(formDataParsed.error.flatten().fieldErrors);
-        const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
-        const errorMessages = [
-          flattenedErrors.secret_phrase ? (
-            <div
-              key="secret_phrase"
-              className="flex items-center"
-            >
-              <FiAlertCircle className="mr-2" /> {flattenedErrors.secret_phrase[0]}
-            </div>
-          ) : null,
-          flattenedErrors.ts_reward_url ? (
-            <div
-              key="ts_reward_url"
-              className="flex items-center"
-            >
-              <FiAlertCircle className="mr-2" />{" "}
-              {flattenedErrors.ts_reward_url[0] || "Please upload a reward image"}
-            </div>
-          ) : null,
-        ].filter(Boolean);
+    const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
 
-        toast.error(errorMessages);
-        return;
-      }
+    if (!formDataParsed.success) {
+      setRewardStepErrors(formDataParsed.error.flatten().fieldErrors);
+      const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
+      const errorMessages = [
+        flattenedErrors.secret_phrase ? (
+          <div
+            key="secret_phrase"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.secret_phrase[0]}
+          </div>
+        ) : null,
+        flattenedErrors.ts_reward_url ? (
+          <div
+            key="ts_reward_url"
+            className="flex items-center"
+          >
+            <FiAlertCircle className="mr-2" />{" "}
+            {flattenedErrors.ts_reward_url[0] || "Please upload a reward image"}
+          </div>
+        ) : null,
+      ].filter(Boolean);
 
-      clearRewardStepErrors();
+      toast.error(errorMessages);
+      return;
+    }
 
-      const dataToSubmit = { ...formDataParsed.data, ...eventData };
+    clearRewardStepErrors();
 
-      if (editOptions?.eventHash) {
-        const updateParsedData = UpdateEventDataSchema.safeParse(dataToSubmit);
-        if (updateParsedData.success) {
-          updateEvent.mutate({
-            event_uuid: editOptions.eventHash,
-            eventData: updateParsedData.data,
-          });
-        }
+    const dataToSubmit = { ...eventData, ...formDataParsed.data };
 
-        // flattenedErrors and show toast
-        if (updateParsedData.error) {
-          const flattenedErrors = updateParsedData.error?.flatten().fieldErrors;
-          const errorMessages = Object.values(flattenedErrors)
-            .flat()
-            .map((v, i) => <div key={i}>* {v}</div>);
-          toast.error(errorMessages);
-        }
-        return;
-      }
-
-      const parsedEventData = EventDataSchema.safeParse(dataToSubmit);
-      if (parsedEventData.success) {
-        addEvent.mutate({
-          eventData: parsedEventData.data,
+    if (editOptions?.eventHash) {
+      const updateParsedData = UpdateEventDataSchema.safeParse(dataToSubmit);
+      if (updateParsedData.success) {
+        updateEvent.mutate({
+          event_uuid: editOptions.eventHash,
+          eventData: updateParsedData.data,
         });
       }
-      if (parsedEventData.error) {
-        const flattenedErrors = parsedEventData.error?.flatten().fieldErrors;
+
+      // flattenedErrors and show toast
+      if (updateParsedData.error) {
+        const flattenedErrors = updateParsedData.error?.flatten().fieldErrors;
         const errorMessages = Object.values(flattenedErrors)
           .flat()
           .map((v, i) => <div key={i}>* {v}</div>);
         toast.error(errorMessages);
       }
-    },
-    [eventData, sbtOption, passwordDisabled, editOptions?.eventHash]
-  );
+      return;
+    }
+
+    const parsedEventData = EventDataSchema.safeParse(dataToSubmit);
+    if (parsedEventData.success) {
+      addEvent.mutate({
+        eventData: parsedEventData.data,
+      });
+    }
+    if (parsedEventData.error) {
+      const flattenedErrors = parsedEventData.error?.flatten().fieldErrors;
+      const errorMessages = Object.values(flattenedErrors)
+        .flat()
+        .map((v, i) => <div key={i}>* {v}</div>);
+      toast.error(errorMessages);
+    }
+  };
 
   const clearImageError = () => {
     clearRewardStepErrors();

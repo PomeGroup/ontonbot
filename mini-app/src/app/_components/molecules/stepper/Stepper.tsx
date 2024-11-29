@@ -48,7 +48,7 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
                 "after:content-[''] after:w-full after:h-0.5 after:absolute lg:after:top-2.5 after:top-2 after:left-1/2"
               )}
             >
-              <div className="block text-[8px] font-semibold text-center z-10">
+              <div className="block text-xs font-semibold text-center z-10">
                 <span
                   className={cn(
                     "w-4 h-4 text-[10px] flex justify-center items-center mx-auto mb-2 rounded-full lg:w-8 lg:h-8",

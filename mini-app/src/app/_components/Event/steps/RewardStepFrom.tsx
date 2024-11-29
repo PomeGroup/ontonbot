@@ -68,11 +68,13 @@ export const RewardForm = ({
             inputClassName={cn({
               "text-cn-muted-foreground cursor-pointer": passwordDisabled,
             })}
-            onChange={(e) => {
+            onClick={() => {
               if (passwordDisabled) {
                 setPasswordDisabled(false);
                 setPasswordValue("");
               }
+            }}
+            onChange={(e) => {
               setPasswordValue(e.target.value);
             }}
             error={errors?.secret_phrase?.[0]}

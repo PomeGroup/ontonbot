@@ -7,13 +7,7 @@ import { sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, tonSocietyClient, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
-import {
-  EventDataSchema,
-  HubsResponse,
-  SocietyHub,
-  UpdateEventDataSchema,
-  EventRegisterSchema,
-} from "@/types";
+import { EventDataSchema, HubsResponse, UpdateEventDataSchema, EventRegisterSchema } from "@/types";
 
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
@@ -151,7 +145,7 @@ export const eventsRouter = router({
     let mask_event_capacity = !userIsAdminOrOwner;
 
     eventData.location = "Visible To Registered Users ";
-    
+
     if (userIsAdminOrOwner) {
       eventData.location = event_location;
     }
@@ -283,7 +277,7 @@ export const eventsRouter = router({
       status: request_status,
       register_info: registerInfo,
     });
-    await addVisitor(userId ,event_uuid )
+    await addVisitor(userId, event_uuid);
 
     return { message: "success", code: 201 };
   }),
@@ -830,44 +824,42 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     }),
 
   // private
-  getHubs: publicProcedure.query(
-    async (): Promise<{ status: "success"; hubs: SocietyHub[] } | { status: "error"; message: string }> => {
-      try {
-        const response = await tonSocietyClient.get<HubsResponse>(`/hubs`, {
-          params: {
-            _start: 0,
-            _end: 100,
-          },
-        });
+  getHubs: publicProcedure.query(async () => {
+    try {
+      const response = await tonSocietyClient.get<HubsResponse>(`/hubs`, {
+        params: {
+          _start: 0,
+          _end: 100,
+        },
+      });
 
-        if (response.status === 200 && response.data) {
-          const sortedHubs = response.data.data.sort((a, b) => Number(a.id) - Number(b.id));
+      if (response.status === 200 && response.data) {
+        const sortedHubs = response.data.data.sort((a, b) => Number(a.id) - Number(b.id));
 
-          const transformedHubs = sortedHubs.map((hub) => ({
-            id: hub.id.toString(),
-            name: hub.attributes.title,
-          }));
-
-          return {
-            status: "success",
-            hubs: transformedHubs,
-          } as const;
-        } else {
-          return {
-            status: "error",
-            message: "Failed to fetch data",
-          } as const;
-        }
-      } catch (error) {
-        console.error("hub fetch failed", error);
+        const transformedHubs = sortedHubs.map((hub) => ({
+          id: hub.id.toString(),
+          name: hub.attributes.title,
+        }));
 
         return {
-          status: "error",
-          message: "Internal server error",
-        } as const;
+          status: "success",
+          hubs: transformedHubs,
+        };
+      } else {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch data",
+        });
       }
+    } catch (error) {
+      console.error("hub fetch failed", error);
+
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch data",
+      });
     }
-  ),
+  }),
   // private
   requestShareEvent: initDataProtectedProcedure
     .input(
@@ -917,13 +909,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(async (opts) => {
-    const event = opts.ctx.event
+    const event = opts.ctx.event;
     const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
 
     const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
     const eventData = await selectEventByUuid(opts.input.event_uuid);
-    
-    console.log("====================visitors================== >> " , visitors , opts.input.event_uuid)
+
+    console.log("====================visitors================== >> ", visitors, opts.input.event_uuid);
     // Map the data and conditionally remove fields
 
     const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
@@ -950,8 +942,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         dynamicFields: JSON.stringify(visitor.dynamicFields),
       };
     });
-
-    
 
     const csvString = Papa.unparse(dataForCsv || [], {
       header: true,
@@ -1024,7 +1014,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       }
     }),
   getEventsWithFilters: publicProcedure.input(searchEventsInputZod).query(async (opts) => {
-    
     try {
       const events = await getEventsWithFilters(opts.input);
       return { status: "success", data: events };

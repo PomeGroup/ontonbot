@@ -42,7 +42,7 @@ export function useGetEvent(event_hash?: string) {
  */
 export function useGetHubs() {
   return trpc.events.getHubs.useQuery(undefined, {
-    staleTime: 5000,
+    staleTime: Infinity,
     queryKey: ["events.getHubs", undefined],
   });
 }

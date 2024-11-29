@@ -5,6 +5,7 @@ import { FC, useEffect, useState } from "react";
 import * as React from "react";
 import { ListInput } from "konsta/react";
 import { useGetHubs } from "@/hooks/events.hooks";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 
 // https://society.ton.org/v1/society-hubs
 
@@ -15,11 +16,12 @@ const TonHubPicker: FC<{
 }> = ({ value, onValueChange, errors }) => {
   const [hubs, setHubs] = useState<Array<SocietyHub>>([]);
   const hubsResponse = useGetHubs();
+  const setEventData = useCreateEventStore((state) => state.setEventData);
 
   useEffect(() => {
-    if (hubsResponse.data?.status === "success") setHubs(hubsResponse.data.hubs);
-    else {
-      console.log(hubsResponse.data);
+    if (hubsResponse.data?.status === "success") {
+      setHubs(hubsResponse.data.hubs);
+      setEventData({ society_hub: hubsResponse.data.hubs[0] });
     }
   }, [hubsResponse.status]);
 
