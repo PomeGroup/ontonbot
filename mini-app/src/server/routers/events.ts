@@ -351,11 +351,12 @@ export const eventsRouter = router({
 
       if (opts.input.status === "approved") {
         const event_url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/events/${event_uuid}`;
-        await telegramService.sendEventPhoto({
+        const response = await telegramService.sendEventPhoto({
           event_id : event.event_uuid,
           user_id: user_id,
           message: `✅ Your request has been approved for the event : <b>${event.title}</b> <br> ${event_url}`,
         });
+        console.log("*******approved_guest" , response.status , response.message)
       }
 
       return { code: 201, message: "ok" };
