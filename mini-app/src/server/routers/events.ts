@@ -928,7 +928,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         );
 
         if (result.success) {
-          console.log("Event shared successfully:", result.data);
+          // console.log("Event shared successfully:", result.data);
           return { status: "success", data: null };
         } else {
           console.error("Failed to share the event:", result.error);
