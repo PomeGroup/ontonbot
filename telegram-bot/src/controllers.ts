@@ -349,7 +349,10 @@ export const handlePhotoMessage = async (
 					caption: message,
 					parse_mode: "HTML",
 				});
-			} catch (error) {}
+			} catch (error) {
+					console.log("<----------------------> handlePhotoMessage" , error)
+
+			}
 
 			res.json(event);
 		} catch (error) {
