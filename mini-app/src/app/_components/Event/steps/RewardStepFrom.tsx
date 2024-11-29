@@ -40,6 +40,7 @@ export const RewardForm = ({
   useEffect(() => {
     if (eventData?.eventLocationType === "in_person") {
       setEventData({ secret_phrase: "onton_default_placeholder" });
+      setPasswordValue("onton_default_placeholder");
     } else {
       setEventData({ secret_phrase: "" });
     }
