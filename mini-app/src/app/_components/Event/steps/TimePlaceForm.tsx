@@ -5,8 +5,8 @@ import EventLocationManager from "./EventLocationInputs";
 const TimePlaceForm = () => {
   return (
     <>
-      <EventDateManager />
       <EventLocationManager />
+      <EventDateManager />
     </>
   );
 };
