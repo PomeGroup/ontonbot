@@ -23,7 +23,9 @@ export const RewardStep = () => {
   } = useCreateEventStore();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [passwordDisabled, setPasswordDisabled] = useState(!!editOptions?.eventHash);
+  const [passwordDisabled, setPasswordDisabled] = useState(
+    !!editOptions?.eventHash || eventData?.eventLocationType === "in_person"
+  );
   const [passwordValue, setPasswordValue] = useState(
     editOptions?.eventHash ? "{** click to change password **}" : ""
   );
