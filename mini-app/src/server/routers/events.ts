@@ -463,6 +463,7 @@ export const eventsRouter = router({
           }
           /* ------------------------- Event Duration > 1 Week ------------------------ */
           //FIXME -  Discuss With Mike
+
           // if (opts.input.eventData.end_date! - opts.input.eventData.start_date > 604801) {
           //   throw new TRPCError({
           //     code: "BAD_REQUEST",
