@@ -61,7 +61,7 @@ export const addVisitor = async (opts: any) => {
       message: "Event not found",
     });
   }
-  console.log(`Event: `, event);
+  // console.log(`Event: `, event);
   if (event.ticketToCheckIn) {
     console.error(`Event requires ticket to check in: ${event_uuid}`);
     throw new TRPCError({

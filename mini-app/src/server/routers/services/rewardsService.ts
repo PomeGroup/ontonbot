@@ -281,7 +281,7 @@ export const createUserReward = async (props: {
       });
     }
   } catch (error) {
-    console.error("Error in createUserReward mutation:", error);
+    // console.error("Error in createUserReward mutation:", error);
     if (error instanceof TRPCError) {
       throw error;
     } else {

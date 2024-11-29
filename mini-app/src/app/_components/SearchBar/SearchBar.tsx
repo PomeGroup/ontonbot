@@ -182,7 +182,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setShowSuggestions(true);
       setShowFilterButton(false);
       handleFilterApply().then((r) => {
-        console.log(r);
+        // console.log(r);
       });
     } else {
       setAutoSuggestions([]);
@@ -272,7 +272,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setSortBy("start_date_desc");
     setRenderedFilterTags(!renderedFilterTags);
     handleFilterApply().then((r) => {
-      console.log(r);
+      // console.log(r);
       refetchEvents();
     });
     hapticFeedback?.selectionChanged();

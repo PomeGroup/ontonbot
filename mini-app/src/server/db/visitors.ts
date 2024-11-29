@@ -302,7 +302,7 @@ export const selectVisitorsByEventUuid = async (
     } else {
       visitorsData = ticketDataResults;
     }
-    console.log(ticketDataResults);
+    // console.log(ticketDataResults);
   }
 
   const moreRecordsAvailable = typeof limit === "number" ? visitorsData.length === limit : false;
