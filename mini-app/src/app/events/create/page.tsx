@@ -1,7 +1,7 @@
 "use client";
 
 import Alerts from "@/app/_components/molecules/alerts";
-import { ManageEvent } from "@/app/_components/organisms/events";
+import ManageEvent from "@/app/_components/organisms/events/ManageEvent";
 import useAuth from "@/hooks/useAuth";
 import { Page } from "konsta/react";
 

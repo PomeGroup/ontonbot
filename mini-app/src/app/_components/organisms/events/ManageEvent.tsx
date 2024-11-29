@@ -2,7 +2,7 @@
 
 import useWebApp from "@/hooks/useWebApp";
 import { type RouterOutput } from "@/server";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { GeneralStep } from "./GeneralStep";
@@ -13,11 +13,11 @@ import { Block } from "konsta/react";
 import RegistrationStep from "../../Event/steps/EventRegistration";
 
 type ManageEventProps = {
-  eventHash?: string;
   event?: RouterOutput["events"]["getEvent"];
 };
 
 const ManageEvent = (props: ManageEventProps) => {
+  const params = useParams<{ hash: string }>();
   const { currentStep, setCurrentStep, setEdit, setEventData, resetState } = useCreateEventStore((state) => ({
     currentStep: state.currentStep,
     setCurrentStep: state.setCurrentStep,
@@ -35,10 +35,11 @@ const ManageEvent = (props: ManageEventProps) => {
     resetState();
     setIsReset(true);
 
-    if (props.eventHash && isReset) {
+    if (params.hash && isReset) {
       setEdit({
-        eventHash: props.eventHash,
+        eventHash: params.hash,
       });
+
       if (props.event) {
         setEventData({
           title: props.event.title || undefined,
@@ -68,12 +69,12 @@ const ManageEvent = (props: ManageEventProps) => {
         });
       }
     }
-  }, [props.eventHash, props.event, isReset]);
+  }, [params.hash, props.event, isReset]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
-    } else if (props.eventHash) {
+    } else if (params.hash) {
       router.push("/");
     } else {
       webApp?.showConfirm("Discard Changes?", (confirmed) => {
