@@ -348,7 +348,7 @@ export const eventsRouter = router({
         const response = await telegramService.sendEventPhoto({
           event_id : event.event_uuid,
           user_id: user_id,
-          message: `✅ Your request has been approved for the event : <b>${event.title}</b> <br> ${event_url}`,
+          message: `✅ Your request has been approved for the event : <b>${event.title}</b> ${event_url}`,
         });
         console.log("*******approved_guest" , response.status , response.message)
       }
