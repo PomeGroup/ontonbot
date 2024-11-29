@@ -50,7 +50,7 @@ export const createUserRewardSBT = async (props: {
 
     // Validate visitor
     const visitorValidationResult = await getAndValidateVisitor(user_id, event_uuid, ticketOrderUuid);
-    console.log("visitorValidationResult", visitorValidationResult);
+    // console.log("visitorValidationResult", visitorValidationResult);
     if (!visitorValidationResult.success || !visitorValidationResult.data) {
       return visitorValidationResult; // Return the error in JSON format
     }
@@ -69,7 +69,7 @@ export const createUserRewardSBT = async (props: {
 
     // Process reward creation
     const createRewardResult = await processRewardCreation(eventData, user_id, visitor);
-    console.log("createRewardResult", createRewardResult);
+    // console.log("createRewardResult", createRewardResult);
     // If reward creation was successful
     if (createRewardResult?.success) {
       reward = createRewardResult.data;
@@ -96,7 +96,7 @@ export const createUserRewardSBT = async (props: {
       data: null,
     };
   } catch (error) {
-    console.error(`Error in createUserRewardSBT:`, error);
+    // console.error(`Error in createUserRewardSBT:`, error);
     // Return a JSON response for any unexpected errors
     return {
       success: false,
@@ -142,7 +142,7 @@ export const processRewardCreation = async (eventData: any, user_id: number, vis
     };
   } catch (error) {
     // Catch any unexpected errors and return a failure response
-    console.error("Error in processRewardCreation:", error);
+    // console.error("Error in processRewardCreation:", error);
     return {
       success: false,
       data: reward,
@@ -187,7 +187,7 @@ export const createUserReward = async (props: {
 
     if (reward) {
       const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${props.event_uuid}`;
-      console.log(err_msg);
+      // console.log(err_msg);
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: err_msg,
@@ -269,7 +269,7 @@ export const createUserReward = async (props: {
 
       return res.data.data;
     } catch (error) {
-      console.error("error ehile creating reward link", error);
+      // console.error("error ehile creating reward link", error);
       if (error instanceof TRPCError) {
         throw error;
       }

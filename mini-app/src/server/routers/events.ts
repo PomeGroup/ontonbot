@@ -846,7 +846,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
         });
       } catch (err) {
-        console.error(`[eventRouter] update event failed id: ${opts.ctx.event.event_uuid}, error: `, err);
+        console.log(`[eventRouter]_update_event failed id: ${opts.ctx.event.event_uuid}, error: `, err);
 
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
