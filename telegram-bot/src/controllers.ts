@@ -342,6 +342,7 @@ export const handlePhotoMessage = async (
 		typeof message === "string"
 	) {
 		try {
+			console.log("<----------------------> handlePhotoMessage , ", id , user_id , message)
 			const event = await getEvent(id);
 			try {
 				await req.bot.api.sendPhoto(parseInt(user_id), event.image_url, {

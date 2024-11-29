@@ -71,7 +71,7 @@ export const sendEventPhoto = async (props: {
       `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-photo`,
       {
         id : props.event_id,
-        user_id: props.user_id,
+        user_id: String(props.user_id),
         message: props.message,
       }
     );
