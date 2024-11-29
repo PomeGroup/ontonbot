@@ -89,7 +89,6 @@ const UserRegisterForm = () => {
             outline
             label="LinkedIn"
             name="linkedin"
-            required
             error={formErrors?.position?.[0]}
             placeholder="www.linkedin.com/in/john"
           />
@@ -97,7 +96,6 @@ const UserRegisterForm = () => {
             outline
             label="Github"
             name="github"
-            required
             error={formErrors?.position?.[0]}
             placeholder="john_doe"
           />
