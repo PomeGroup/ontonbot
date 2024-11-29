@@ -39,7 +39,7 @@ export const usersRouter = router({
     .input(z.object({ wallet_address: z.string().optional() }))
     .query(async (opts) => {
       const res = await usersDB.selectWalletById(opts.ctx.user.user_id);
-      console.log(res);
+      // console.log(res);
 
       return res?.wallet;
     }),
@@ -97,7 +97,7 @@ export const usersRouter = router({
     )
     .query(async (opts) => {
       try {
-        console.log("context we found", opts.ctx);
+        // console.log("context we found", opts.ctx);
 
         await visitorService.addVisitor(opts);
         // Fetch the visitor from the database
@@ -133,7 +133,7 @@ export const usersRouter = router({
               } as const;
             }
           } else {
-            console.log(error);
+            // console.log(error);
           }
         }
 

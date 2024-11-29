@@ -39,7 +39,7 @@ export class TonProofService {
         return false;
       }
 
-      console.log("walletv11113445", payload);
+      // console.log("walletv11113445", payload);
       // 2.2. Check that TonAddressItemReply.publicKey equals to obtained public key
       const wantedPublicKey = Buffer.from(payload.public_key, "hex");
       if (!publicKey.equals(wantedPublicKey)) {

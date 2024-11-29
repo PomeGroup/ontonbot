@@ -42,9 +42,9 @@ const UserRegisterForm = () => {
       ...formObject,
     };
 
-    console.log({
-      registrationData,
-    });
+    // console.log({
+    //   registrationData,
+    // });
 
     const parsedData = EventRegisterSchema.safeParse(registrationData);
 

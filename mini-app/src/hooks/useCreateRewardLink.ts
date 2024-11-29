@@ -14,7 +14,7 @@ export function useCreateRewardLink(props: { eventHash: string; tasksCompleted: 
     },
     onError(error) {
       if (error instanceof TRPCClientError) {
-        console.log(error.message);
+        // console.log(error.message);
       }
     },
   });

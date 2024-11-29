@@ -129,8 +129,8 @@ export async function PUT(req: NextRequest, { params }: { params: { nftaddress: 
     // log user id ticket id and other info
     console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
     // Call the separate fetch function
-    const result = await dealRoomService.RefreshGuestList(configProtected?.dealRoomRefreshCode || "");
-    console.log(`route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`);
+    // const result = await dealRoomService.RefreshGuestList(configProtected?.dealRoomRefreshCode || "");
+    // console.log(`route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`);
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
     if (error instanceof SyntaxError)
