@@ -13,7 +13,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import axios from "axios";
 import dotenv from "dotenv";
-import { and, asc, count, desc, eq, ne ,or } from "drizzle-orm";
+import { and, asc, count, desc, eq, ne, or } from "drizzle-orm";
 import Papa from "papaparse";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -683,6 +683,8 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
           const oldEvent = await trx.select().from(events).where(eq(events.event_uuid, eventUuid!));
 
+          const canUpdateRegistraion = oldEvent[0].has_registration;
+
           const updatedEvent = await trx
             .update(events)
             .set({
@@ -706,9 +708,9 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
               /* ------------------------ Event Registration Update ----------------------- */
               // Updating has_registration is not allowed
-              has_approval: eventData.has_approval,
-              capacity: eventData.capacity,
-              has_waiting_list: eventData.has_waiting_list,
+              has_approval: canUpdateRegistraion ? eventData.has_approval : false,
+              capacity: canUpdateRegistraion ? eventData.capacity : null,
+              has_waiting_list: canUpdateRegistraion ? eventData.has_waiting_list : false,
               /* ------------------------ Event Registration Update ----------------------- */
             })
             .where(eq(events.event_uuid, eventUuid))
