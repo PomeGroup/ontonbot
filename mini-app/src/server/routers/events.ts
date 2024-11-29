@@ -462,7 +462,7 @@ export const eventsRouter = router({
             });
           }
           /* ------------------------- Event Duration > 1 Week ------------------------ */
-          //FIXME -  Discuss With Mike 
+          //FIXME -  Discuss With Mike
           // if (opts.input.eventData.end_date! - opts.input.eventData.start_date > 604801) {
           //   throw new TRPCError({
           //     code: "BAD_REQUEST",
@@ -640,7 +640,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         } as const;
       } catch (error) {
         console.error(`Error while adding event: ${Date.now()}`, error);
-        if(error instanceof TRPCError ){
+        if (error instanceof TRPCError) {
           throw error;
         }
         throw new TRPCError({
@@ -838,7 +838,16 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
           // if it was a fully local setup we don't want to update the activity_id
           if (process.env.ENV !== "local") {
-            await updateActivity(eventDraft, opts.ctx.event.activity_id as number);
+            try {
+              await updateActivity(eventDraft, opts.ctx.event.activity_id as number);
+            } catch (error) {
+              console.log("update_event_ton_society_failed", JSON.stringify(eventDraft));
+
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: `Failed to update ton Society activity_id : ${opts.ctx.event.activity_id}`,
+              });
+            }
           }
 
           await sendLogNotification({ message });
