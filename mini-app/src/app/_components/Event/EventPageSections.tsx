@@ -187,7 +187,6 @@ export const EventSections = () => {
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
   const userCompletedTasks =
-    !isAdminOrOrganizer &&
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) ||
       !eventData.data?.has_registration) &&
     user?.wallet_address;
@@ -206,6 +205,7 @@ export const EventSections = () => {
       <EventHead />
       <EventAttributes />
       <EventActions />
+      {isAdminOrOrganizer && <ManageEventButton />}
       <EventDescription />
 
       {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
@@ -216,7 +216,7 @@ export const EventSections = () => {
         />
       )}
 
-      {!isAdminOrOrganizer && isNotEnded && eventData.data?.has_registration && (
+      {isNotEnded && eventData.data?.has_registration && (
         <EventRegistrationStatus
           registrantStatus={eventData.data?.registrant_status ?? ""}
           capacityFilled={Boolean(eventData.data?.capacity_filled)}
@@ -254,8 +254,6 @@ export const EventSections = () => {
           color="secondary"
         />
       )}
-
-      {isAdminOrOrganizer && <ManageEventButton />}
 
       <Buttons.Support />
     </div>
