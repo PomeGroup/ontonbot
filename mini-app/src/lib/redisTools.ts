@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import { getRedisClient } from "./redisClient"; // Use getRedisClient to ensure a valid Redis client
 
 const CACHE_ENABLED = process.env.CACHE_ENABLED ? process.env.CACHE_ENABLED.toLowerCase() === "true" : true;
@@ -8,9 +7,7 @@ const CACHE_ENABLED = process.env.CACHE_ENABLED ? process.env.CACHE_ENABLED.toLo
  * @param key - The input key.
  * @returns The MD5 hash of the key.
  */
-const generateHash = (key: string): string => {
-  return crypto.createHash("md5").update(key).digest("hex");
-};
+
 
 /**
  * Sets a value in Redis cache.
@@ -276,6 +273,12 @@ export const cacheKeys = {
   jwtBlacklist: "auth:jwt:blacklist:",
   SBTRewardCollections: "SBTRewardCollections:",
   SBTRewardCollectionByHubID: "SBTRewardCollections:hubID:",
+  eventPoaTrigger: "eventPoaTrigger:",
+  eventPoaByEvent: "eventPoaByEvent:",
+  notification: "notification:",
+  notificationsByStatus: "notificationsByStatus:",
+  eventPoaResult: "eventPoaResult:",
+  eventPoaResultsByEvent: "eventPoaResultsByEvent:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
