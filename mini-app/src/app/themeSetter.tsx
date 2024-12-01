@@ -11,6 +11,7 @@ export default function ThemeSetter({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     webApp?.expand();
+    webApp?.disableVerticalSwipes();
 
     webApp?.setHeaderColor(theme === "dark" ? "#1C1C1E" : "#ffffff");
     webApp?.setBackgroundColor(theme === "dark" ? "#1C1C1E" : "#ffffff");
@@ -27,12 +28,6 @@ export default function ThemeSetter({ children }: { children: React.ReactNode })
       theme,
     });
   }, [theme]);
-
-  useEffect(() => {
-    // set html height to viewport height
-    // @ts-expect-error
-    document.querySelector("html").style.height = `${webApp?.viewportHeight}px`;
-  }, [webApp?.viewportHeight]);
 
   return <div>{children}</div>;
 }

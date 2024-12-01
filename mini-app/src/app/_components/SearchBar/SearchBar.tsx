@@ -1,7 +1,6 @@
 "use client";
 import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
 import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
-import { trpc } from "@/app/_trpc/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useSearchEvents } from "@/hooks/useSearchEvents";
@@ -20,6 +19,7 @@ import { z } from "zod";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
 import MainFilterDrawer from "./MainFilterDrawer";
+import { useGetHubs } from "@/hooks/events.hooks";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
@@ -87,7 +87,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const [searchIsFocused, setSearchIsFocused] = useState(false);
-  const hubsResponse = trpc.events.getHubs.useQuery();
+  const hubsResponse = useGetHubs();
   const [hubs, setHubs] = useState<Hub[]>([]);
   const [renderedFilterTags, setRenderedFilterTags] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -182,7 +182,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       setShowSuggestions(true);
       setShowFilterButton(false);
       handleFilterApply().then((r) => {
-        console.log(r);
+        // console.log(r);
       });
     } else {
       setAutoSuggestions([]);
@@ -272,7 +272,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setSortBy("start_date_desc");
     setRenderedFilterTags(!renderedFilterTags);
     handleFilterApply().then((r) => {
-      console.log(r);
+      // console.log(r);
       refetchEvents();
     });
     hapticFeedback?.selectionChanged();

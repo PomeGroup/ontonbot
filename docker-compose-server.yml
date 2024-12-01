@@ -383,7 +383,7 @@ services:
 #        tag: "${BRANCH_NAME}-participant-tma"
   nft-manager:
     hostname: nft-manager
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-microservice:${BRANCH_NAME}-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-manager:${BRANCH_NAME}-latest
     deploy:
       resources:
         limits:

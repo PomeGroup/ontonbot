@@ -75,7 +75,6 @@ services:
 
   registry-ui:
     image: joxit/docker-registry-ui:latest
-    container_name: registry-ui
     environment:
       REGISTRY_TITLE: "ONTON Docker Registry UI"
       NGINX_PROXY_PASS_URL: "http://registry:5000"

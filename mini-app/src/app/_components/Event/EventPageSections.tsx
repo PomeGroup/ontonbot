@@ -187,10 +187,8 @@ export const EventSections = () => {
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
   const userCompletedTasks =
-    !isAdminOrOrganizer &&
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) ||
       !eventData.data?.has_registration) &&
-    hasEnteredPassword &&
     user?.wallet_address;
 
   const isOnlineEvent = eventData.data?.participationType === "online";
@@ -201,16 +199,16 @@ export const EventSections = () => {
     <div className="space-y-2">
       <EventImage />
 
-      {((userCompletedTasks && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <EventPasswordAndWalletInput />
-      )}
+      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) ||
+        !user?.wallet_address) && <EventPasswordAndWalletInput />}
 
       <EventHead />
       <EventAttributes />
       <EventActions />
+      {isAdminOrOrganizer && <ManageEventButton />}
       <EventDescription />
 
-      {userCompletedTasks && isCheckedIn && (
+      {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
         <ClaimRewardButton
           initData={initData}
           eventId={eventData.data?.event_uuid ?? ""}
@@ -218,7 +216,7 @@ export const EventSections = () => {
         />
       )}
 
-      {!isAdminOrOrganizer && isNotEnded && eventData.data?.has_registration && (
+      {isNotEnded && eventData.data?.has_registration && (
         <EventRegistrationStatus
           registrantStatus={eventData.data?.registrant_status ?? ""}
           capacityFilled={Boolean(eventData.data?.capacity_filled)}
@@ -226,16 +224,20 @@ export const EventSections = () => {
         />
       )}
 
-      {userCompletedTasks && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
-        <MainButton
-          text="Check In"
-          onClick={() =>
-            router.push(
-              `/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`
-            )
-          }
-        />
-      )}
+      {userCompletedTasks &&
+        hasEnteredPassword &&
+        !isCheckedIn &&
+        isEventActive &&
+        eventData.data?.registrant_uuid && (
+          <MainButton
+            text="Check In"
+            onClick={() =>
+              router.push(
+                `/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`
+              )
+            }
+          />
+        )}
 
       {!isAdminOrOrganizer && !isStarted && isNotEnded && (
         <MainButton
@@ -252,8 +254,6 @@ export const EventSections = () => {
           color="secondary"
         />
       )}
-
-      {isAdminOrOrganizer && <ManageEventButton />}
 
       <Buttons.Support />
     </div>

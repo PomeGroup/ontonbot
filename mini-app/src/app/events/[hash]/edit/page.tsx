@@ -1,8 +1,8 @@
 "use client";
 
 import Alerts from "@/app/_components/molecules/alerts";
-import { ManageEvent } from "@/app/_components/organisms/events";
 import GuestList from "@/app/_components/organisms/events/GuestList";
+import ManageEvent from "@/app/_components/organisms/events/ManageEvent";
 import { useGetEvent } from "@/hooks/events.hooks";
 import useAuth from "@/hooks/useAuth";
 import { Block, Page, Segmented, SegmentedButton } from "konsta/react";
@@ -55,12 +55,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           </SegmentedButton>
         </Segmented>
       </Block>
-      {activeTab === "edit" && (
-        <ManageEvent
-          event={event.data}
-          eventHash={params.hash}
-        />
-      )}
+      {activeTab === "edit" && <ManageEvent event={event.data} />}
       {activeTab === "guest_list" && event.data && (
         <GuestList
           event={event.data}

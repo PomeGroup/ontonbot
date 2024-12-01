@@ -10,11 +10,15 @@ let lastToastId: string | number | null = null;
 
 export const GeneralStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
-  const setCurrentStep = useCreateEventStore((state) => state.setCurrentStep);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const clearGeneralErrors = useCreateEventStore((state) => state.clearGeneralStepErrors);
-  const setGeneralStepErrors = useCreateEventStore((state) => state.setGeneralStepErrors);
+
+  const { setCurrentStep, setEventData, eventData, clearGeneralErrors, setGeneralStepErrors } =
+    useCreateEventStore((state) => ({
+      setCurrentStep: state.setCurrentStep,
+      setEventData: state.setEventData,
+      eventData: state.eventData,
+      clearGeneralErrors: state.clearGeneralStepErrors,
+      setGeneralStepErrors: state.setGeneralStepErrors,
+    }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

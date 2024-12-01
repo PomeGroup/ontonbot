@@ -74,7 +74,7 @@ export const EventDataProvider = ({
   }, [eventData.data?.start_date, eventData.data?.end_date, eventData.data?.location]);
 
   const userEventPasswordField = useMemo(() => {
-    console.log(userEventFields.data);
+    // console.log(userEventFields.data);
     if (eventPasswordField?.id) {
       return userEventFields.data?.[eventPasswordField.id];
     }
