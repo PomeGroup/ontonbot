@@ -12,7 +12,6 @@ export const startNotificationWorker = async (io: Server): Promise<void> => {
       try {
         const content = msg.content.toString();
         const message = JSON.parse(content);
-
         console.log("Received notification:", message);
 
         emitNotification(io, message.userId, message);

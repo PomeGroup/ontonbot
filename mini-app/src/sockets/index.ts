@@ -3,38 +3,52 @@ import { Server } from "socket.io";
 import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { applyAuthMiddleware } from "./authMiddleware";
-import { handleNotifications } from "./notificationHandler";
+import { handleNotifications, emitNotification } from "./notificationHandler"; // Import these functions
 
-const REDIS_HOST = process.env.REDIS_HOST || "localhost";
-const REDIS_PORT = Number(process.env.REDIS_PORT) || 6379;
+const IP_REDIS = process.env.IP_REDIS;
+const REDIS_PORT = Number(process.env.REDIS_PORT);
+const SOCKET_PORT = Number(process.env.SOCKET_PORT);
 
 (async () => {
-  // Redis clients for the adapter
-  const pubClient = createClient({ url: `redis://${REDIS_HOST}:${REDIS_PORT}` });
-  const subClient = pubClient.duplicate(); // A separate client for subscriptions
+  try {
+    console.log("Starting socket server");
 
-  await pubClient.connect();
-  await subClient.connect();
+    if (!IP_REDIS || !REDIS_PORT) {
+      throw new Error("Missing IP_REDIS or REDIS_PORT environment variable.");
 
-  const httpServer = createServer();
-  const io = new Server(httpServer, {
-    cors: {
-      origin: "*",
-    },
-    transports: ["websocket", "polling"],
-  });
+    }
 
-  // Apply Redis adapter to Socket.IO
-  io.adapter(createAdapter(pubClient, subClient));
+    if (!SOCKET_PORT) {
+      throw new Error("Missing SOCKET_PORT environment variable.");
+    }
 
-  // Apply authentication middleware
-  applyAuthMiddleware(io);
+    // Redis clients for the adapter
+    const pubClient = createClient({ url: `redis://${IP_REDIS}:${REDIS_PORT}` });
+    const subClient = pubClient.duplicate();
 
-  // Handle socket events
-  handleNotifications(io);
+    await pubClient.connect();
+    await subClient.connect();
 
-  const PORT = process.env.SOCKET_PORT || 3000;
-  httpServer.listen(PORT, () => {
-    console.log(`Socket.IO server listening on port ${PORT}`);
-  });
+    const httpServer = createServer();
+    const io = new Server(httpServer, {
+      cors: { origin: "*" },
+      transports: ["websocket", "polling"],
+    });
+
+    io.adapter(createAdapter(pubClient, subClient));
+
+    applyAuthMiddleware(io);
+
+    // Handle user connections and manage notifications
+    handleNotifications(io);
+
+    httpServer.listen(SOCKET_PORT, () => {
+      console.log(`Socket.IO server listening on port ${SOCKET_PORT}`);
+    });
+
+
+  } catch (error) {
+    console.error("Error starting the socket server:", error);
+    process.exit(1);
+  }
 })();
