@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { applyAuthMiddleware } from "./authMiddleware";
-import { handleNotifications, emitNotification } from "./notificationHandler"; // Import these functions
+import { handleNotifications } from "./notificationHandler";
 
 const IP_REDIS = process.env.IP_REDIS;
 const REDIS_PORT = Number(process.env.REDIS_PORT);
@@ -40,7 +40,7 @@ const SOCKET_PORT = Number(process.env.SOCKET_PORT);
     applyAuthMiddleware(io);
 
     // Handle user connections and manage notifications
-    handleNotifications(io);
+    await handleNotifications(io);
 
     httpServer.listen(SOCKET_PORT, () => {
       console.log(`Socket.IO server listening on port ${SOCKET_PORT}`);

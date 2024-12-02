@@ -2,13 +2,18 @@ import { Server, Socket } from "socket.io";
 import { SocketEvents } from "./configs";
 import { z } from "zod";
 import { testEventSchema } from "@/zodSchema/SocketZodSchemas";
-
+import { startNotificationWorker } from "./notificationWorker";
+import { sanitizeInput } from "@/lib/sanitizeInput";
+import { Channel, Message } from "amqplib";
 // Track active user connections
 const userSockets: Map<number, Set<string>> = new Map();
 
 
 
-export const handleNotifications = (io: Server) => {
+export const handleNotifications = async (io: Server) => {
+  // Start the RabbitMQ Notification Worker
+  await startNotificationWorker(io);
+
   io.on("connection", (socket: Socket) => {
     const user = socket.data.user;
 
@@ -99,10 +104,18 @@ const handleDisconnection = (socket: Socket, sanitizedUsername: string, userId: 
 };
 
 // Emit a notification securely
-export const emitNotification = (io: Server, userId: number, message: any) => {
+export const emitNotification = (
+  io: Server,
+  userId: number,
+  message: any,
+  channel: Channel,
+  msg: Message
+) => {
   const sockets = userSockets.get(userId);
+
   if (!sockets || sockets.size === 0) {
-    console.warn(`No active connections for user ${userId}.`);
+    console.warn(`User ${userId} is not online. Re-queuing the message.`);
+    channel.nack(msg, false, true); // Requeue the message
     return;
   }
 
@@ -110,13 +123,19 @@ export const emitNotification = (io: Server, userId: number, message: any) => {
   const sanitizedMessage = {
     ...message,
     id: `${userId}-${Date.now()}`, // Unique notification ID
-    message: sanitizeString(message.message),
+    message: sanitizeInput(message.message),
   };
 
   sockets.forEach((socketId) => {
-    io.to(socketId).emit(SocketEvents.send.notification, sanitizedMessage);
-    console.log(`Notification sent to User ${userId} via Socket ${socketId}:`, sanitizedMessage);
+    io.to(socketId).emit("notification", sanitizedMessage);
+    console.log(
+      `Notification sent to User ${userId} via Socket ${socketId}:`,
+      sanitizedMessage
+    );
   });
+
+  // Acknowledge the message only after sending the notification
+  channel.ack(msg);
 };
 
 // Utility to sanitize strings

@@ -72,6 +72,9 @@ x-common-env: &common-env
   TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
   DOCKER_CONFIG: "/run/secrets/registry-onton-config"
+  MINI_APP_SOCKET_DOMAIN: ${MINI_APP_SOCKET_DOMAIN}
+  IP_SOCKET: ${IP_SOCKET}
+  SOCKET_PORT: ${SOCKET_PORT}
 
 services:
   minio:
