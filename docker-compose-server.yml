@@ -86,7 +86,7 @@ services:
       resources:
         limits:
           memory: 8000M
-          cpus: '3.0'
+          cpus: "3.0"
       mode: global
       update_config:
         failure_action: rollback
@@ -102,15 +102,15 @@ services:
         window: 300s
     volumes:
       - minio_data:/data
-      - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
-    entrypoint: ["/usr/bin/entrypoint.sh"]  # Use the custom entrypoint script
+      - ./devops/minio-init.sh:/usr/bin/entrypoint.sh # Mount the script into the container
+    entrypoint: ["/usr/bin/entrypoint.sh"] # Use the custom entrypoint script
     environment:
       <<: *common-env
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-minio"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-minio"
 
   postgres:
     hostname: postgres
@@ -121,7 +121,7 @@ services:
       resources:
         limits:
           memory: 8000M
-          cpus: '5.0'
+          cpus: "5.0"
       mode: global
       update_config:
         failure_action: rollback
@@ -143,16 +143,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - onton-network
-#    healthcheck:
-#      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h localhost -p ${POSTGRES_PORT} '"]
-#      interval: 30s
-#      timeout: 5s
-#      start_period: 20s
+  #    healthcheck:
+  #      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} -h localhost -p ${POSTGRES_PORT} '"]
+  #      interval: 30s
+  #      timeout: 5s
+  #      start_period: 20s
   #    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-postgres"
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-postgres"
 
   redis:
     image: redis:7.4.1-bookworm
@@ -166,7 +166,7 @@ services:
       resources:
         limits:
           memory: 3000M
-          cpus: '2.0'
+          cpus: "2.0"
       mode: global
       update_config:
         failure_action: rollback
@@ -183,19 +183,19 @@ services:
     stop_signal: SIGTERM
     stop_grace_period: 30s
     environment:
-        <<: *common-env
+      <<: *common-env
     networks:
       - onton-network
-#    healthcheck:
-#      test: ["CMD-SHELL", "redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT}  ping | grep PONG "]
-#      interval: 30s
-#      timeout: 5s
-#      start_period: 5s
+  #    healthcheck:
+  #      test: ["CMD-SHELL", "redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT}  ping | grep PONG "]
+  #      interval: 30s
+  #      timeout: 5s
+  #      start_period: 5s
   #    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-redis"
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-redis"
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
@@ -207,7 +207,7 @@ services:
       resources:
         limits:
           memory: 1000M
-          cpus: '5.0'
+          cpus: "5.0"
       replicas: 1
       update_config:
         failure_action: rollback
@@ -218,7 +218,7 @@ services:
         max_attempts: 20
         window: 300s
     volumes:
-      - clamav_data:/var/lib/clamav  # Persist virus definition database
+      - clamav_data:/var/lib/clamav # Persist virus definition database
     networks:
       - onton-network
 
@@ -244,7 +244,7 @@ services:
       resources:
         limits:
           memory: 3000M
-          cpus: '2.0'
+          cpus: "2.0"
       mode: global
       update_config:
         failure_action: rollback
@@ -266,11 +266,11 @@ services:
       - registry-onton-config
     networks:
       - onton-network
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-telegram-bot"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-telegram-bot"
 
   mini-app:
     hostname: mini-app
@@ -281,7 +281,7 @@ services:
       resources:
         limits:
           memory: 3000M
-          cpus: '2.0'
+          cpus: "2.0"
       replicas: ${SYS_MINI_APP_REPLICAS-2}
       update_config:
         failure_action: rollback
@@ -290,9 +290,9 @@ services:
         condition: any
         delay: 3s
     environment:
-        <<: *common-env
-        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
-        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+      <<: *common-env
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
     depends_on:
       - postgres
       - redis
@@ -304,15 +304,19 @@ services:
     secrets:
       - registry-onton-config
     healthcheck:
-      test: ["CMD-SHELL", "curl  http://localhost:${MINI_APP_PORT}/api/client/v1/public/ping | grep -q pong "]
+      test:
+        [
+          "CMD-SHELL",
+          "curl  http://localhost:${MINI_APP_PORT}/api/client/v1/public/ping | grep -q pong ",
+        ]
       interval: 15s
       timeout: 10s
       start_period: 15s
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-mini-app"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-mini-app"
   mini-app-cron:
     hostname: mini-app-cron
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -320,7 +324,7 @@ services:
       resources:
         limits:
           memory: 2000M
-          cpus: '2.0'
+          cpus: "2.0"
       mode: global
       update_config:
         failure_action: rollback
@@ -331,9 +335,9 @@ services:
         max_attempts: 20
         window: 300s
     environment:
-        <<: *common-env
-        TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
-        TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+      <<: *common-env
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
     depends_on:
       - postgres
       - redis
@@ -342,14 +346,14 @@ services:
       - drizzle_data_cron:/app/drizzle
     networks:
       - onton-network
-    command: ["pnpm","run", "start-cron"]
+    command: ["pnpm", "run", "start-cron"]
     secrets:
       - registry-onton-config
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-mini-app-cron"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-mini-app-cron"
 
   participant-tma:
     hostname: participant-tma
@@ -360,8 +364,8 @@ services:
       resources:
         limits:
           memory: 3000M
-          cpus: '2.0'
-      replicas: '${SYS_PARTICIPANT_TMA_REPLICAS-1}'
+          cpus: "2.0"
+      replicas: "${SYS_PARTICIPANT_TMA_REPLICAS-1}"
       update_config:
         failure_action: rollback
         order: start-first
@@ -371,24 +375,25 @@ services:
     depends_on:
       - mini-app
     environment:
-        <<: *common-env
+      <<: *common-env
     networks:
       - onton-network
     secrets:
       - registry-onton-config
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-participant-tma"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-participant-tma"
   nft-manager:
     hostname: nft-manager
+    <<: *default-extra-hosts
     image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-manager:${BRANCH_NAME}-latest
     deploy:
       resources:
         limits:
           memory: 3000M
-          cpus: '3.0'
+          cpus: "3.0"
       mode: global
       update_config:
         failure_action: rollback
@@ -412,11 +417,11 @@ services:
       - onton-network
     secrets:
       - registry-onton-config
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-nft-manager"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-nft-manager"
 
   giveaway-checker:
     image: ${REGISTRY_URL}/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
@@ -424,16 +429,16 @@ services:
     depends_on:
       - postgres
     environment:
-        <<: *common-env
+      <<: *common-env
     networks:
       - onton-network
     secrets:
       - registry-onton-config
-#    logging:
-#        driver: "gelf"
-#        options:
-#            gelf-address: "udp://logstash:5044"
-#            tag: "${BRANCH_NAME}-giveaway-checker"
+  #    logging:
+  #        driver: "gelf"
+  #        options:
+  #            gelf-address: "udp://logstash:5044"
+  #            tag: "${BRANCH_NAME}-giveaway-checker"
   website:
     hostname: website
     image: ${REGISTRY_URL}/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
@@ -443,8 +448,8 @@ services:
       resources:
         limits:
           memory: 2000M
-          cpus: '1.0'
-      replicas: '${SYS_WEB_SITE_REPLICAS-1}'
+          cpus: "1.0"
+      replicas: "${SYS_WEB_SITE_REPLICAS-1}"
       update_config:
         failure_action: rollback
         order: start-first
@@ -454,14 +459,14 @@ services:
         max_attempts: 20
         window: 300s
     environment:
-        <<: *common-env
+      <<: *common-env
     networks:
       - onton-network
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-website"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-website"
 
   golang-server:
     image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
@@ -472,11 +477,11 @@ services:
       <<: *common-env
     networks:
       - onton-network
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag:  "${BRANCH_NAME}-golang-server"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag:  "${BRANCH_NAME}-golang-server"
 
   golang-worker:
     image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
@@ -485,14 +490,14 @@ services:
       - redis
       - golang-server
     environment:
-        <<: *common-env
+      <<: *common-env
     networks:
       - onton-network
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-golang-worker"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-golang-worker"
 
   metabase:
     image: metabase/metabase:v0.50.18.3
@@ -503,7 +508,7 @@ services:
       resources:
         limits:
           memory: 2000M
-          cpus: '2.0'
+          cpus: "2.0"
       mode: global
       update_config:
         failure_action: rollback
@@ -538,11 +543,11 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-#    logging:
-#      driver: "gelf"
-#      options:
-#        gelf-address: "udp://logstash:5044"
-#        tag: "${BRANCH_NAME}-metabase"
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-metabase"
 
   client-web:
     hostname: client-web
@@ -551,11 +556,11 @@ services:
     ports:
       - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
     environment:
-      NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
-      CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
-      CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
-      CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
-      CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
+      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
+      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
+      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
       PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
     networks:
       - onton-network
@@ -635,35 +640,33 @@ services:
 #      onton-network:
 #        ipv4_address: "${IP_SWAGGER_UI}"
 
-
 networks:
   onton-network:
     name: onton-network-${BRANCH_NAME}
     driver: overlay
     external: true
 
-
 volumes:
-    pgadmin:
-      name: "${STAGE_NAME}_pgadmin"
-    clamav_data:
-      name: "${STAGE_NAME}_clamav_data"
-    minio_data:
-      driver: local
-      name: "${STAGE_NAME}_minio_data"
-    postgres_data:
-      driver: local
-      name: "${STAGE_NAME}_postgres_data"
-    redis_data:
-      driver: local
-      name: "${STAGE_NAME}_redis_data"
-    drizzle_data:
-        name: "${STAGE_NAME}_drizzle_data"
-    drizzle_data_cron:
-      name: "${STAGE_NAME}_drizzle_data_cron"
-    elasticsearch_data:
-        driver: local
-        name: "${STAGE_NAME}_elasticsearch_data"
+  pgadmin:
+    name: "${STAGE_NAME}_pgadmin"
+  clamav_data:
+    name: "${STAGE_NAME}_clamav_data"
+  minio_data:
+    driver: local
+    name: "${STAGE_NAME}_minio_data"
+  postgres_data:
+    driver: local
+    name: "${STAGE_NAME}_postgres_data"
+  redis_data:
+    driver: local
+    name: "${STAGE_NAME}_redis_data"
+  drizzle_data:
+    name: "${STAGE_NAME}_drizzle_data"
+  drizzle_data_cron:
+    name: "${STAGE_NAME}_drizzle_data_cron"
+  elasticsearch_data:
+    driver: local
+    name: "${STAGE_NAME}_elasticsearch_data"
 
 secrets:
   registry-onton-config:
