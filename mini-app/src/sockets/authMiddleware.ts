@@ -16,9 +16,9 @@ const TEST_INIT_DATA = process.env.TEST_INIT_DATA || ""; // Add your Telegram in
  */
 export const validateTelegramInitData = (initData: string): boolean => {
   try {
-    if(initData === undefined || BOT_TOKEN === undefined || BOT_TOKEN === "" || initData === "") {
+    if (initData === undefined || BOT_TOKEN === undefined || BOT_TOKEN === "" || initData === "") {
       console.log("initData:", initData);
-      console.error("Validation failed: Missing initData or botToken",initData);
+      console.error("Validation failed: Missing initData or botToken", initData);
       return false;
     }
     const secretKey = crypto.createHash("sha256").update(BOT_TOKEN).digest();

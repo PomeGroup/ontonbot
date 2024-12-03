@@ -10,7 +10,7 @@
     "dev:server": "dotenv -e .env -- cross-var node --inspect ./node_modules/next/dist/bin/next dev --port %MINI_APP_PORT%",
     "start:local:poa": "dotenv -e ../.env -- cross-var tsx src/workers/poaWorker.ts",
     "start:local:socket": "dotenv -e ../.env -- cross-var nodemon --watch src/sockets --ext ts --exec tsx src/sockets/index.ts",
-    "test:socket:client": "dotenv -e ../.env -- cross-var nodemon --watch src/sockets --ext ts --exec tsx src/sockets/test-client.ts",
+    "test:socket:client": "dotenv -e ../.env -- cross-var nodemon --watch src/sockets --ext ts --exec tsx src/sockets/tests/test-client.ts",
     "build": "next build",
     "build:local": "dotenv -e ../.env -- cross-var next build",
     "start-cron": "tsx ./src/start.ts",

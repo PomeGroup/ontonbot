@@ -5,15 +5,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
-      <change beforePath="$PROJECT_DIR$/.dockerignore" beforeDir="false" afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mini-app/src/sockets/handlers/handleDisconnection.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/mini-app/src/sockets/handlers/handleTestEvent.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/devops/generate-caddyfile.sh" beforeDir="false" afterPath="$PROJECT_DIR$/devops/generate-caddyfile.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hosts.txt" beforeDir="false" afterPath="$PROJECT_DIR$/hosts.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/lib/DateAndTime.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/lib/DateAndTime.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/lib/rabbitMQ.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/lib/rabbitMQ.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/lib/sanitizeInput.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/lib/sanitizer.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/server/db/notifications.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/db/notifications.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/authMiddleware.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/authMiddleware.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/configs.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/constants.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/notificationHandler.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/notificationHandler.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/notificationWorker.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/notificationWorker.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/test-client.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/test-client.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/workers/poaWorker.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/workers/poaWorker.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -199,6 +203,7 @@
       <workItem from="1731065440661" duration="113589000" />
       <workItem from="1731618826777" duration="219672000" />
       <workItem from="1732745005141" duration="70637000" />
+      <workItem from="1733200102994" duration="677000" />
     </task>
     <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
       <option name="closed" value="true" />

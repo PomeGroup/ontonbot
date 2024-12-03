@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { NotificationItemType, notifications, NotificationStatus, NotificationType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { and, eq, lt } from "drizzle-orm";
-import { QueueNames } from "@/lib/rabbitMQ";
+import { QueueNames } from "@/sockets/constants";
 import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
 
 

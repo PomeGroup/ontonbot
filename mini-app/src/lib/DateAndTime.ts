@@ -15,7 +15,21 @@ export const formatDate = (date: number): string => {
     year: "numeric",
   });
 };
+export const formatDateTime = (date: number): string => {
+  const eventDate = new Date(date * 1000);
+  return eventDate.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    second: "numeric",
+    timeZone : "UTC"
 
+
+  });
+};
 export const formatDateRange = (start: number, end: number, _timezone: string): string => {
   if (!start || !end) return "Date not available";
 

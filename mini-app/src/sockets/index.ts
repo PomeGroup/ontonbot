@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { applyAuthMiddleware } from "./authMiddleware";
-import { handleNotifications } from "./notificationHandler";
+import { handleNotifications } from "./handlers/notificationHandler";
 
 const IP_REDIS = process.env.IP_REDIS;
 const REDIS_PORT = Number(process.env.REDIS_PORT);

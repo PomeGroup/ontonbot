@@ -2,7 +2,7 @@ import { io } from "socket.io-client";
 
 // Socket configuration
 const SOCKET_URL = process.env.SOCKET_URL || "http://localhost:3022"; // Adjust the port if needed
-const TEST_INIT_DATA =  process.env.TEST_INIT_DATA || ""; // Add your Telegram initData here
+const TEST_INIT_DATA = process.env.TEST_INIT_DATA || ""; // Add your Telegram initData here
 
 // Initialize socket connection
 const socket = io(SOCKET_URL, {
