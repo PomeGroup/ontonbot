@@ -557,7 +557,7 @@ export class AppService {
     // this api will trigger a check on all order to update their satates
     axios
       .patch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/order`,
+        `http://${process.env.IP_RANGE_BASE + ":" + process.env.MINI_APP_PORT}/api/v1/order`,
         {},
         {
           headers: {
@@ -629,7 +629,7 @@ export class AppService {
   private async getOrder(orderId: string, txId: string) {
     try {
       const order = await axios.get<GetOrderResponse>(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/order/${orderId}`,
+        `http://${process.env.IP_RANGE_BASE + ":" + process.env.MINI_APP_PORT}/api/v1/order/${orderId}`,
         {
           headers: {
             "x-api-key": process.env.ONTON_API_KEY,
@@ -659,7 +659,7 @@ export class AppService {
     },
   ) {
     await axios.patch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/order/${orderId}`,
+      `${process.env.PTMA_API_BASE_URL}/order/${orderId}`,
       data,
       {
         headers: {
