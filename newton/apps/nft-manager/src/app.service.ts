@@ -534,20 +534,24 @@ export class AppService {
 
       for (const data of updateDate) {
         console.log(`Updating NFT data: ${JSON.stringify(await data)}`);
-        await this.prisma.$transaction(async (db) => {
-          const awaitedData = await data;
-          const nftData = await db.nFTItem.update(awaitedData);
+        try {
+          await this.prisma.$transaction(async (db) => {
+            const awaitedData = await data;
+            const nftData = await db.nFTItem.update(awaitedData);
 
-          if (nftData.state === "minted") {
-            console.log(`NFT minted successfully: ${nftData.id}`);
+            if (nftData.state === "minted") {
+              console.log(`NFT minted successfully: ${nftData.id}`);
 
-            await this.updateOrder(nftData.order_id, {
-              state: "minted",
-              nft_address: nftData.address,
-            });
-            console.log(`Updated order ${nftData.order_id} to minted state`);
-          }
-        });
+              await this.updateOrder(nftData.order_id, {
+                state: "minted",
+                nft_address: nftData.address,
+              });
+              console.log(`Updated order ${nftData.order_id} to minted state`);
+            }
+          });
+        } catch (error) {
+          console.log("update_order_error_", error?.message);
+        }
       }
     }
     console.log("Finished checkMintRequestStatus");
