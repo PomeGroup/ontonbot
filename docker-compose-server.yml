@@ -403,7 +403,7 @@ services:
           - node.role == manager
       restart_policy:
         condition: none
-        delay: 5s
+#        delay: 5s
     depends_on:
       - postgres
       - redis
