@@ -1,5 +1,5 @@
 import { QueueNames, dlxName, notificationQueueOptions, retryQueueOptions } from "@/sockets/constants";
-import amqp, { Connection, Channel, Message } from "amqplib";
+import amqp, { Connection, Channel, Message, Options } from "amqplib";
 
 export type QueueNamesType = typeof QueueNames[keyof typeof QueueNames];
 
@@ -118,14 +118,21 @@ export class RabbitMQ {
   /**
    * Push a message to a queue
    */
-  public async push(queue: QueueNamesType, message: Record<string, any>): Promise<void> {
+  public async push(
+    queue: QueueNamesType,
+    message: Record<string, any>,
+    options: Options.Publish = { persistent: true }
+  ): Promise<void> {
     try {
       const channel = await this.getChannel(queue);
       const buffer = Buffer.from(JSON.stringify(message));
-      const sent = channel.sendToQueue(queue, buffer, { persistent: true });
+      // Ensure persistent is always true unless overridden
+      const publishOptions: Options.Publish = { persistent: true, ...options };
+      console.log(`Pushing message to queue '${queue}' with options:`, publishOptions);
+      const sent = channel.sendToQueue(queue, buffer, publishOptions);
 
       if (sent) {
-        console.log(`Message sent to queue '${queue}':`, message);
+        console.log(`Message sent to queue '${queue}' with properties:`, publishOptions);
       } else {
         console.warn(`Message not sent to queue '${queue}':`, message);
       }
@@ -226,8 +233,8 @@ export class RabbitMQ {
 // Export utility functions
 const rabbit = RabbitMQ.getInstance();
 
-export const pushToQueue = async (queue: QueueNamesType, message: Record<string, any>) => {
-  await rabbit.push(queue, message);
+export const pushToQueue = async (queue: QueueNamesType, message: Record<string, any>, options: Options.Publish) => {
+  await rabbit.push(queue, message , options);
 };
 
 export const consumeFromQueue = async (

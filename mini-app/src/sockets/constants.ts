@@ -1,5 +1,6 @@
 // Description: Constants for the socket server.
 export const userSockets: Map<number, Set<string>> = new Map();
+export const prefetchCount = Number(process.env.PREFETCH_COUNT) || 10;
 // Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 after changing Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 you need to delete all queues and exchanges in RabbitMQ !!!!!!!!

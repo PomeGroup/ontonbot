@@ -1,5 +1,5 @@
 import { RabbitMQ } from "@/lib/rabbitMQ";
-import { QueueNames } from "@/sockets/constants";
+import { prefetchCount, QueueNames } from "@/sockets/constants";
 import { emitNotification } from "./emitters/emitNotification";
 import { Server } from "socket.io";
 import { Message, Channel } from "amqplib";
@@ -28,7 +28,6 @@ export const startNotificationWorker = async (io: Server): Promise<void> => {
           const content = msg.content.toString();
           console.log("Received message:", content);
           const message = JSON.parse(content);
-
           console.log("Received notification:", message);
 
           // Emit the notification or requeue it if the user is not online
@@ -38,7 +37,7 @@ export const startNotificationWorker = async (io: Server): Promise<void> => {
           channel.nack(msg, false, true); // Requeue the message
         }
       },
-      10, // Prefetch count
+      prefetchCount,
     )
     .catch((error) => {
       console.error("Error starting notification consumption:", error);
