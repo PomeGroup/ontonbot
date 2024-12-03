@@ -17,6 +17,7 @@ import {
 import { NFTService } from "./nft/nft.service";
 import { OnTon } from "./OnTon";
 import { FAIL_NFT_ITEM_TRY_COUNT } from "./utils/config";
+import { miniAppClient } from "./helper/miniClient.api";
 
 let CRONJOB_IS_RUNNING = false;
 
@@ -555,16 +556,8 @@ export class AppService {
   @Interval(60_000)
   async miniAppJobs() {
     // this api will trigger a check on all order to update their satates
-    axios
-      .patch(
-        `http://${process.env.IP_RANGE_BASE + ":" + process.env.MINI_APP_PORT}/api/v1/order`,
-        {},
-        {
-          headers: {
-            "x-api-key": process.env.ONTON_API_KEY,
-          },
-        },
-      )
+    miniAppClient
+      .patch(`/order`)
       .then(() => {})
       .catch(() => {
         console.error("updating dodders failed");
@@ -628,13 +621,8 @@ export class AppService {
 
   private async getOrder(orderId: string, txId: string) {
     try {
-      const order = await axios.get<GetOrderResponse>(
-        `http://${process.env.IP_RANGE_BASE + ":" + process.env.MINI_APP_PORT}/api/v1/order/${orderId}`,
-        {
-          headers: {
-            "x-api-key": process.env.ONTON_API_KEY,
-          },
-        },
+      const order = await miniAppClient.get<GetOrderResponse>(
+        `/order/${orderId}`,
       );
 
       return order.data;
@@ -658,15 +646,7 @@ export class AppService {
       nft_address?: string;
     },
   ) {
-    await axios.patch(
-      `${process.env.PTMA_API_BASE_URL}/order/${orderId}`,
-      data,
-      {
-        headers: {
-          "x-api-key": process.env.ONTON_API_KEY,
-        },
-      },
-    );
+    await miniAppClient.patch(`/order/${orderId}`, data);
   }
 }
 const timeout = (ms: number) =>
