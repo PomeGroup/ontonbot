@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "dotenv -e ../../../.env -- cross-var  next dev --port %PARTICIPANT_TMA_PORT%",
+    "dev:local": "next dev --port 3001",
     "build:local": "dotenv -e ../../../.env  -- cross-var next build",
     "build": "next build",
     "start": "next start",

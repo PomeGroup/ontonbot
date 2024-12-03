@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { unstable_noStore as noStore } from "next/cache";
 import Image from "next/image";
+import { Button } from "@ui/base/button";
 import { Section } from "@ui/base/section";
 import QueryState from "@ui/components/blocks/QueryState";
 import SectionCoverImage from "@ui/components/blocks/SectionCoverImage";
@@ -12,6 +13,7 @@ import EventContent from "~/components/event/EventContent";
 import EventHeader from "~/components/event/EventHeader";
 import EventTmaSettings from "~/components/event/EventTmaSettings";
 import GatewayAgenda from "~/components/event/GatewayAgenda";
+import ManageEventButton from "~/components/event/ManageEventButton";
 import WalletButton from "~/components/event/WalletButton";
 import WebsiteLink from "~/components/event/WebsiteLink";
 import { getEventDataOnly } from "~/services/event.services.ssr";
@@ -25,12 +27,11 @@ type EventParams = {
   searchParams: { [key: string]: string | undefined };
 };
 
-const Event = async ({ params, searchParams }: EventParams)  => {
+const Event = async ({ params, searchParams }: EventParams) => {
   noStore();
   const [userId, error] = getAuthenticatedUser();
 
-  
-  const page_utm = searchParams.utm_campaign || null ; 
+  const page_utm = searchParams.utm_campaign || null;
 
   if (error) {
     return (
@@ -52,8 +53,11 @@ const Event = async ({ params, searchParams }: EventParams)  => {
     return <QueryState isError text={`Event #${params.id} Not Found`} />;
   }
 
-  if(page_utm){
-        console.log("ptma_event_page_utm" , `utm_campaign=${page_utm} , user_id=${userId}`)
+  if (page_utm) {
+    console.log(
+      "ptma_event_page_utm",
+      `utm_campaign=${page_utm} , user_id=${userId}`,
+    );
   }
 
   const eventManagerRole =
@@ -104,6 +108,11 @@ const Event = async ({ params, searchParams }: EventParams)  => {
           data={attributes}
         />
       </Section>
+      {eventManagerRole && (
+        <Section variant={"rounded"} className={"py-6"}>
+          <ManageEventButton />
+        </Section>
+      )}
       <Section variant={"rounded"} className={"py-6"}>
         <WalletButton />
       </Section>
@@ -119,7 +128,6 @@ const Event = async ({ params, searchParams }: EventParams)  => {
       </Section>
       {/* Telegram Main Button */}
       <EventTmaSettings
-        eventManagerRole={eventManagerRole}
         requiresTicketToChekin={event.ticketToCheckIn}
         eventId={params.id}
         utm={page_utm}

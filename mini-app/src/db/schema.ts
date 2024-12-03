@@ -5,16 +5,29 @@ import {
   rewardStatus,
   rewardType,
   ticketStatus,
+  EventTriggerType,
+  eventTriggerType,
+  EventTriggerStatus,
+  eventTriggerStatus,
+  notificationType,
+  NotificationType,
+  notificationStatus,
+  NotificationStatus,
+  notificationItemType,
+  NotificationItemType,
 } from "@/db/enum";
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
 import { eventTicket } from "./schema/eventTicket";
 import { event_details_search_list } from "./schema/event_details_search_list";
+import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers.db";
+import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults.db";
 import { events } from "./schema/events";
 import { giataCity } from "./schema/giataCity";
 import { ontoSetting } from "./schema/ontoSetting";
 import { orders } from "./schema/orders";
+import { notifications } from "./schema/notifications.db";
 import { rewards } from "./schema/rewards";
 import { sbtRewardCollections } from "./schema/sbtRewardCollections";
 import { tickets, ticketsRelations } from "./schema/tickets";
@@ -25,8 +38,21 @@ import { visitors } from "./schema/visitors";
 import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 
+
 // export all the enums
-export { developmentEnvironment, eventParticipationType, orderState, rewardStatus, rewardType, ticketStatus };
+export {
+  developmentEnvironment,
+  eventParticipationType,
+  eventTriggerType,
+  eventTriggerStatus,
+  orderState,
+  rewardStatus,
+  rewardType,
+  ticketStatus,
+  notificationType,
+  notificationStatus,
+  notificationItemType,
+};
 
 // export all the tables and relations
 export {
@@ -36,8 +62,13 @@ export {
   eventFields,
   eventTicket,
   event_details_search_list,
+  eventPoaTriggers,
+  eventPoaTriggersIndexes,
+  eventPoaResults,
+  eventPoaResultsIndexes,
   events,
   giataCity,
+  notifications,
   ontoSetting,
   orders,
   rewards,
@@ -54,3 +85,11 @@ export {
   eventRegistrants,
   eventRegistrantStatus,
 };
+
+// Type Exports
+export type { EventTriggerType };
+export type { EventTriggerStatus };
+export type { NotificationStatus };
+export type { NotificationType };
+export type { NotificationItemType };
+

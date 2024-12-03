@@ -28,7 +28,28 @@ export const developmentEnvironment = pgEnum("development_environment", [
   "staging",
   "production",
 ]);
-
+export const eventTriggerType = pgEnum("event_trigger_type", ["simple", "multiple_choice", "question"]);
+export const eventTriggerStatus = pgEnum("event_trigger_status", [
+  "active",
+  "deactive",
+  "completed",
+  "sending",
+]);
+export const notificationType = pgEnum("notification_type", ["POA_SIMPLE", "MESSAGE_SIMPLE", "UNKNOWN"]);
+export const notificationStatus = pgEnum("notification_status", [
+  "WAITING_TO_SEND",
+  "DELIVERED",
+  "READ",
+  "REPLIED",
+  "EXPIRED",
+]);
+export const notificationItemType = pgEnum("notification_item_type", [
+  "POA_TRIGGER",
+  "EVENT",
+  "SBT_REWARD",
+  "TRANSACTION",
+  "UNKNOWN"
+]);
 // Type Exports
 export type EventParticipationType = (typeof eventParticipationType.enumValues)[number];
 export type RewardType = (typeof rewardType.enumValues)[number];
@@ -36,3 +57,10 @@ export type RewardStatus = (typeof rewardStatus.enumValues)[number];
 export type TicketStatus = (typeof ticketStatus.enumValues)[number];
 export type OrderState = (typeof orderState.enumValues)[number];
 export type DevelopmentEnvironment = (typeof developmentEnvironment.enumValues)[number];
+
+export type EventTriggerType = (typeof eventTriggerType.enumValues)[number];
+export type EventTriggerStatus = (typeof eventTriggerStatus.enumValues)[number];
+export type NotificationType = (typeof notificationType.enumValues)[number];
+export type NotificationStatus = (typeof notificationStatus.enumValues)[number];
+export type NotificationItemType = (typeof notificationItemType.enumValues)[number];
+

@@ -498,7 +498,7 @@ services:
     image: metabase/metabase:v0.50.18.3
     hostname: metabase
     ports:
-      - "${PORT_METABASE}:${PORT_METABASE}"
+      - "${PORT_METABASE}:3000"
     deploy:
       resources:
         limits:
@@ -521,14 +521,15 @@ services:
       - /dev/urandom:/dev/random:ro
     environment:
       MB_DB_TYPE: postgres
-      MB_DB_DBNAME: ${SECRET_POSTGRES_MINI_APP_DB}
+      MB_DB_DBNAME: ${POSTGRES_MINI_APP_DB}
       MB_DB_PORT: ${POSTGRES_PORT}
       MB_DB_USER: ${POSTGRES_USER}
       MB_DB_PASS: ${POSTGRES_PASSWORD}
-      MB_LOG_LEVEL: error
-      MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
+      MB_DB_HOST: postgres
+      MB_LOG_LEVEL: DEBUG
+      MB_ENCRYPTION_SECRET_KEY: "${MB_ENCRYPTION_SECRET_KEY}"
       MB_REDIRECT_ALL_REQUESTS_TO_HTTPS: ${MB_REDIRECT_ALL_REQUESTS_TO_HTTPS}
-      MB_JETTY_PORT: ${PORT_METABASE}
+#      MB_JETTY_PORT: ${PORT_METABASE}
     networks:
       - onton-network
     depends_on:
