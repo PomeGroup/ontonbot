@@ -387,7 +387,6 @@ services:
   #        tag: "${BRANCH_NAME}-participant-tma"
   nft-manager:
     hostname: nft-manager
-    <<: *default-extra-hosts
     image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-manager:${BRANCH_NAME}-latest
     deploy:
       resources:
@@ -403,7 +402,7 @@ services:
         constraints:
           - node.role == manager
       restart_policy:
-        condition: any
+        condition: none
         delay: 5s
     depends_on:
       - postgres
