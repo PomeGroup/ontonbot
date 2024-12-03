@@ -416,7 +416,7 @@ services:
       - onton-network
     secrets:
       - registry-onton-config
-    command: ["tail", "-f", "/dev/null"]
+#    command: ["tail", "-f", "/dev/null"]
   #    logging:
   #      driver: "gelf"
   #      options:
