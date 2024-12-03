@@ -147,10 +147,12 @@ export class AppService {
                   );
                 }
               } catch (error) {
+                console.log("ERROR_150", error);
+
                 if (error instanceof AxiosError) {
-                  console.error(error.response.data.message);
+                  console.error("ERROR_153", error.response?.data?.message);
                 } else if (error instanceof Error) {
-                  console.error(error.message);
+                  console.error("ERROR_153", error.message);
                 }
 
                 await this.saveFailedTransaction(
