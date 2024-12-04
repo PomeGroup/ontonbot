@@ -103,7 +103,7 @@ ${ONTON_DOMAIN} {
     ${LOG_CONFIG}
     # Allow CORS for all subdomains of onton.live
     header {
-        Access-Control-Allow-Origin https://*.onton.live, https://onton.live
+        Access-Control-Allow-Origin *
         Access-Control-Allow-Methods GET, POST, OPTIONS, PUT, DELETE
         Access-Control-Allow-Headers Content-Type, Authorization
         Access-Control-Allow-Credentials true
