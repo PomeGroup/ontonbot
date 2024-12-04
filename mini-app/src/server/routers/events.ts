@@ -555,10 +555,10 @@ export const eventsRouter = router({
                       title: opts.input.eventData.title,
                       description: opts.input.eventData.description,
                       image: {
-                        url: process.env.ENV !== "local" ? opts.input.eventData.image_url : PLACEHOLDER_IMAGE,
+                        url: process.env.ENV !== "local" ? opts.input.eventData.ts_reward_url : PLACEHOLDER_IMAGE,
                       },
                       cover: {
-                        url: process.env.ENV !== "local" ? opts.input.eventData.image_url : PLACEHOLDER_IMAGE,
+                        url: process.env.ENV !== "local" ? opts.input.eventData.ts_reward_url : PLACEHOLDER_IMAGE,
                       },
                       item_title: opts.input.eventData.title,
                       item_description: "Reward for participation",
