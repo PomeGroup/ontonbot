@@ -1,11 +1,12 @@
 "use client";
 
-import { useUtils } from "@tma.js/sdk-react"
-import { Button } from "@ui/base/button"
-import QueryState from "@ui/components/blocks/QueryState"
+import { useUtils } from "@tma.js/sdk-react";
+import { Button } from "@ui/base/button";
+import QueryState from "@ui/components/blocks/QueryState";
 
 export default function Page() {
   const tmaUtils = useUtils(true);
+
   return (
     <QueryState
       isError
@@ -18,7 +19,7 @@ export default function Page() {
             `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=6acf01ed-3122-498a-a937-329766b459aa`,
           );
         }}
-        className="text-white px-2 mt-6"
+        className="mt-6 px-2 text-white"
       >
         TON Gateway 2024
       </Button>
