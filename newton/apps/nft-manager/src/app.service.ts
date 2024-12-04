@@ -550,7 +550,14 @@ export class AppService {
             }
           });
         } catch (error) {
-          console.log("update_order_error_", error?.message);
+          if (error instanceof AxiosError) {
+            console.log(
+              "update_order_error_",
+              error?.message,
+              error.response.status,
+              error.response.data,
+            );
+          }
         }
       }
     }
