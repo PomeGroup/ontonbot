@@ -86,56 +86,69 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
   if (!order) {
     return Response.json({ message: "ordernot found" }, { status: 404 });
   }
+  try {
+    await db.transaction(async (tx) => {
+      if (body.data.state === "minted") {
+        const ticketExists = await tx
+          .select()
+          .from(tickets)
+          .where(eq(tickets.nftAddress, body.data.nft_address!));
 
-  await db.transaction(async (tx) => {
-    if (body.data.state === "minted") {
-      const ticketExists = await tx
-        .select()
-        .from(tickets)
-        .where(eq(tickets.nftAddress, body.data.nft_address!));
+        if (ticketExists.length) {
+          throw new Error("Ticket already exists");
+        }
 
-      if (ticketExists.length) {
-        throw new Error("Ticket already exists");
+        await tx.insert(tickets).values({
+          company: order.company,
+          name: order.full_name,
+          telegram: order.telegram,
+          status: "UNUSED",
+          position: order.position,
+          user_id: order.user_id,
+          order_uuid: order.uuid,
+          event_uuid: order.event_uuid,
+          ticket_id: order.event_ticket_id,
+          nftAddress: body.data.nft_address,
+          updatedBy: "system",
+        });
+
+        const user_id_str = order.user_id ? order.user_id.toString() : "";
+        await sendTicketLogNotification({
+          event_uuid: order.event_uuid as string,
+          username: order.telegram,
+          user_id: user_id_str,
+          event_ticket_id: order.event_ticket_id,
+        });
       }
 
-      await tx.insert(tickets).values({
-        company: order.company,
-        name: order.full_name,
-        telegram: order.telegram,
-        status: "UNUSED",
-        position: order.position,
-        user_id: order.user_id,
-        order_uuid: order.uuid,
-        event_uuid: order.event_uuid,
-        ticket_id: order.event_ticket_id,
-        nftAddress: body.data.nft_address,
-        updatedBy: "system",
-      });
+      await tx
+        .update(orders)
+        .set({
+          state: body.data.state,
+          transaction_id: body.data.transaction_id,
+          updatedBy: "system",
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.uuid, order.uuid));
+      return;
+    });
 
-      const user_id_str = order.user_id ? order.user_id.toString() : "";
-      await sendTicketLogNotification({
-        event_uuid: order.event_uuid as string,
-        username: order.telegram,
-        user_id: user_id_str,
-        event_ticket_id: order.event_ticket_id,
-      });
+    return Response.json({
+      message: "order updated",
+    });
+  } catch (e) {
+    const error = e as any;
+    if ("message" in error) {
+      return Response.json(
+        {
+          message: error.message,
+        },
+        {
+          status: 500,
+        }
+      );
     }
-
-    await tx
-      .update(orders)
-      .set({
-        state: body.data.state,
-        transaction_id: body.data.transaction_id,
-        updatedBy: "system",
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.uuid, order.uuid));
-    return;
-  });
-
-  return Response.json({
-    message: "order updated",
-  });
+  }
 }
 
 export const dynamic = "force-dynamic";
