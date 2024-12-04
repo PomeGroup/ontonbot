@@ -102,12 +102,12 @@ ${ONTON_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
     # Allow CORS for all subdomains of onton.live
-    header {
-        Access-Control-Allow-Origin https://*.onton.live, https://onton.live
-        Access-Control-Allow-Methods GET, POST, OPTIONS, PUT, DELETE
-        Access-Control-Allow-Headers Content-Type, Authorization
-        Access-Control-Allow-Credentials true
-    }
+#    header {
+#        Access-Control-Allow-Origin https://*.onton.live, https://onton.live
+#        Access-Control-Allow-Methods GET, POST, OPTIONS, PUT, DELETE
+#        Access-Control-Allow-Headers Content-Type, Authorization
+#        Access-Control-Allow-Credentials true
+#    }
     reverse_proxy /blog* ${IP_RANGE_BASE}:6600
     reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
 }
