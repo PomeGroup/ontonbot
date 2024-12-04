@@ -104,7 +104,7 @@ ${ONTON_DOMAIN} {
     handle_path /blog* {
         rewrite * /blog/{uri}
         rewrite /blog {
-            to {path} {path}/ /blog/index.php?{query}
+            to {path} {path}/ /index.php?{query}
         }
         reverse_proxy host.docker.internal:6600
     }
