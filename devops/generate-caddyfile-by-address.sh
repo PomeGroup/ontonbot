@@ -101,6 +101,7 @@ ${CLIENT_WEB_DOMAIN} {
 ${ONTON_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
+    reverse_proxy /blog* ${IP_RANGE_BASE}:6600
     reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
 }
 
