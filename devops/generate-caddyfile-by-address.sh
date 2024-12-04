@@ -102,7 +102,7 @@ ${ONTON_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
     # Allow CORS for all subdomains of onton.live
-        handle_path /blog* {
+
             reverse_proxy /blog* ${IP_RANGE_BASE}:6600
             header {
                 Access-Control-Allow-Origin *
@@ -110,7 +110,7 @@ ${ONTON_DOMAIN} {
                 Access-Control-Allow-Headers Content-Type, Authorization
                 Access-Control-Allow-Credentials true
             }
-        }
+
 
     reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
 }
