@@ -105,7 +105,7 @@ ${ONTON_DOMAIN} {
         handle_path /blog* {
             reverse_proxy /blog* ${IP_RANGE_BASE}:6600
             header {
-                Access-Control-Allow-Origin https://onton.live , https://blog.onton.live
+                Access-Control-Allow-Origin https://onton.live  https://blog.onton.live
                 Access-Control-Allow-Methods GET, POST, OPTIONS, PUT, DELETE
                 Access-Control-Allow-Headers Content-Type, Authorization
                 Access-Control-Allow-Credentials true
