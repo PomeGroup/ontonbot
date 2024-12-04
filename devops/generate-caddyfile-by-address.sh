@@ -102,11 +102,7 @@ ${ONTON_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
     handle_path /blog* {
-        rewrite * /blog/{uri}
-        rewrite /blog {
-            to {path} {path}/ /index.php?{query}
-        }
-        reverse_proxy host.docker.internal:6600
+        reverse_proxy ${IP_RANGE_BASE}:6600
     }
     reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
 }
