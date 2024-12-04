@@ -98,19 +98,23 @@ ${CLIENT_WEB_DOMAIN} {
     reverse_proxy ${PROXY_CLIENT_WEB}:${PORT_CLIENT_WEB}
 }
 
+# Replace ${ONTON_DOMAIN} with your actual domain, e.g., onton.live
 ${ONTON_DOMAIN} {
     ${TLS_CONFIG}
+
     ${LOG_CONFIG}
-    # Allow CORS for all subdomains of onton.live
-    header {
-        Access-Control-Allow-Origin *
-        Access-Control-Allow-Methods GET, POST, OPTIONS, PUT, DELETE
-        Access-Control-Allow-Headers Content-Type, Authorization
-        Access-Control-Allow-Credentials true
+
+    # Reverse proxy for /blog path to WordPress
+    handle_path /blog* {
+        reverse_proxy ${IP_RANGE_BASE}:6600
     }
-    reverse_proxy /blog* ${IP_RANGE_BASE}:6600
-    reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
+
+    # Reverse proxy for all other paths to Next.js
+    handle {
+        reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
+    }
 }
+
 
 " > "${CADDYFILE_PATH}"
 cat "${CADDYFILE_PATH}"
