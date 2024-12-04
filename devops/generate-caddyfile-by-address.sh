@@ -111,9 +111,7 @@ ${ONTON_DOMAIN} {
         Access-Control-Allow-Headers Content-Type, Authorization
         Access-Control-Allow-Credentials true
     }
-    handle_path /blog* {
-        reverse_proxy ${IP_RANGE_BASE}:6600
-    }
+    reverse_proxy /blog* ${IP_RANGE_BASE}:6600
     reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
 }
 
