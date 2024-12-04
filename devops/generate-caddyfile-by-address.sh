@@ -101,9 +101,17 @@ ${CLIENT_WEB_DOMAIN} {
 ${ONTON_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    handle_path /blog* {
-        reverse_proxy ${IP_RANGE_BASE}:6600
+    # Allow CORS for both onton.live and blog.onton.live
+    @cors_blog header Origin blog.onton.live
+    @cors_main header Origin onton.live
+
+    header {
+        Access-Control-Allow-Origin {http.request.header.origin}
+        Access-Control-Allow-Methods GET, POST, OPTIONS, PUT, DELETE
+        Access-Control-Allow-Headers Content-Type, Authorization
+        Access-Control-Allow-Credentials true
     }
+    reverse_proxy /blog* ${IP_RANGE_BASE}:6600
     reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
 }
 
