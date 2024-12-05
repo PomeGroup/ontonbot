@@ -138,8 +138,7 @@ export const EventDataSchema = z.object({
     .string()
     .url({
       message: "Please select a valid reward image URL",
-    })
-    .optional(), // This allows the field to be undefined
+    }), // This allows the field to be undefined
   society_hub: z.object({
     id: z.string({ required_error: "society_hub.id is required" }),
     name: z.string({ required_error: "society_hub.name is required" }),
