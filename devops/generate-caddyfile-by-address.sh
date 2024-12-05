@@ -9,10 +9,17 @@ fi
 # Define TLS configuration based on the USE_CLOUDFLARE variable
 echo "Generating Caddyfile... USE_CLOUDFLARE=${USE_CLOUDFLARE}"
 if [ -n "${USE_CLOUDFLARE}" ]; then
-    TLS_CONFIG="tls {
-        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-        protocols tls1.2 tls1.3
-    }"
+    if [ "${BRANCH_NAME}" = "main" ]; then
+        TLS_CONFIG="tls {
+            dns cloudflare {env.CLOUDFLARE_API_TOKEN_MAIN}
+            protocols tls1.2 tls1.3
+        }"
+    else
+        TLS_CONFIG="tls {
+            dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+            protocols tls1.2 tls1.3
+        }"
+    fi
 else
     TLS_CONFIG="tls /certs/fullchain.pem /certs/privkey.pem {
         protocols tls1.2 tls1.3

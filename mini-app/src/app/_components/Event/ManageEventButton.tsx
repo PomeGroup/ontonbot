@@ -1,7 +1,8 @@
 import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEventData } from "./eventPageContext";
-import MainButton from "../atoms/buttons/web-app/MainButton";
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
 
 export const ManageEventButton = () => {
   const { authorized, role, user } = useAuth();
@@ -10,12 +11,18 @@ export const ManageEventButton = () => {
 
   if (authorized && (role === "admin" || user?.user_id === eventData.data?.owner)) {
     return (
-      <MainButton
-        text="Manage Event"
+      <Button
         onClick={() => {
           router.push(`/events/${eventHash}/edit`);
         }}
-      />
+        variant={"primary"}
+        className="w-full"
+      >
+        <div className="flex gap-2 items-center">
+          <Pencil />
+          <span>Manage Event</span>
+        </div>
+      </Button>
     );
   }
   return null;
