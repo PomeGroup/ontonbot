@@ -1,5 +1,2 @@
 ### change this file if you want to trigger a full build ###
-rebuild for 0assigning ports
-full build 
-23 Nov Staging from scratch 1 am me and bros
-full build after change registry.
+

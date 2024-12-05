@@ -75,7 +75,7 @@ jobs:
           # Add 'giveaway-checker' if no services have changed
           if [ ${#services_to_build[@]} -eq 0 ]; then
             echo "No services have changed, defaulting to 'giveaway-checker'."
-          services_to_build+=("giveaway-checker")
+          services_to_build+=("telegram-bot")
           fi
           if [ ${#services_to_build[@]} -eq 0 ]; then
             echo "No services have changes, skipping build."
