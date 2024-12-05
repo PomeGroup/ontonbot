@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
@@ -17,7 +16,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { useTheme } from "next-themes";
-import { Block } from "konsta/react";
+import { Block, Segmented, SegmentedButton } from "konsta/react";
 
 // Define types for events
 type EventData = any[];
@@ -233,30 +232,27 @@ export default function Home() {
           />
 
           {/* Tabs Header */}
-          <Tabs
-            value={activeTab}
-            className="pt-2 flex-shrink-0"
-            onValueChange={handleTabClick}
+          <Segmented
+            strong
+            rounded
           >
-            <TabsList className="flex bg-gray-600 h-33 rounded-lg p-1">
-              <TabsTrigger
-                value="all-events"
-                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
-                  activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
-                }`}
-              >
-                All events
-              </TabsTrigger>
-              <TabsTrigger
-                value="my-events"
-                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
-                  activeTab === "my-events" ? "bg-blue-600" : "bg-transparent"
-                }`}
-              >
-                My events
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+            <SegmentedButton
+              rounded
+              strong
+              active={activeTab === "all-events"}
+              onClick={() => handleTabClick("all-events")}
+            >
+              All events
+            </SegmentedButton>
+            <SegmentedButton
+              rounded
+              strong
+              active={activeTab === "my-events"}
+              onClick={() => handleTabClick("my-events")}
+            >
+              My events
+            </SegmentedButton>
+          </Segmented>
         </div>
 
         {/* Scrollable Content */}
