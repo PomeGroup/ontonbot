@@ -14,3 +14,4 @@
 127.0.0.1 pgadmin.toncloud.observer
 127.0.0.1 monitoring.toncloud.observer
 127.0.0.1 rabbitmq.toncloud.observer
+127.0.0.1 socket.toncloud.observer

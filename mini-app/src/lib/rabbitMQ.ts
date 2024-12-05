@@ -1,15 +1,10 @@
-import amqp, { Connection, Channel, Message } from "amqplib";
-
-// Define the valid queue names using a TypeScript enum
-export const QueueNames = {
-  NOTIFICATIONS: `${process.env.STAGE_NAME || "onton"}-notifications`,
-  TG_MESSAGES: `${process.env.STAGE_NAME || "onton"}-tg_messages`,
-} as const;
+import { QueueNames, dlxName, notificationQueueOptions, retryQueueOptions } from "@/sockets/constants";
+import amqp, { Connection, Channel, Message, Options } from "amqplib";
 
 export type QueueNamesType = typeof QueueNames[keyof typeof QueueNames];
 
 // Singleton class for RabbitMQ
-class RabbitMQ {
+export class RabbitMQ {
   private static instance: RabbitMQ;
   private connection: Connection | null = null;
   private channels: Map<QueueNamesType, Channel> = new Map();
@@ -34,7 +29,7 @@ class RabbitMQ {
         process.env.RABBITMQ_URL || "localhost",
         process.env.RABBITMQ_DEFAULT_USER || "guest",
         process.env.RABBITMQ_DEFAULT_PASS || "guest",
-        parseInt(process.env.RABBITMQ_NODE_PORT!) || 5672
+        parseInt(process.env.RABBITMQ_NODE_PORT!) || 5672,
       );
     }
     return RabbitMQ.instance;
@@ -103,7 +98,14 @@ class RabbitMQ {
     try {
       const connection = await this.connect();
       const channel = await connection.createChannel();
-      await channel.assertQueue(queue, { durable: true });
+
+      // Use consistent queue options
+      let queueOptions = { durable: true };
+      if (queue === QueueNames.NOTIFICATIONS) {
+        queueOptions = notificationQueueOptions;
+      }
+
+      await channel.assertQueue(queue, queueOptions);
       this.channels.set(queue, channel);
       console.log(`Channel created for queue: '${queue}'`);
       return channel;
@@ -116,14 +118,21 @@ class RabbitMQ {
   /**
    * Push a message to a queue
    */
-  public async push(queue: QueueNamesType, message: Record<string, any>): Promise<void> {
+  public async push(
+    queue: QueueNamesType,
+    message: Record<string, any>,
+    options: Options.Publish = { persistent: true }
+  ): Promise<void> {
     try {
       const channel = await this.getChannel(queue);
       const buffer = Buffer.from(JSON.stringify(message));
-      const sent = channel.sendToQueue(queue, buffer, { persistent: true });
+      // Ensure persistent is always true unless overridden
+      const publishOptions: Options.Publish = { persistent: true, ...options };
+      console.log(`Pushing message to queue '${queue}' with options:`, publishOptions);
+      const sent = channel.sendToQueue(queue, buffer, publishOptions);
 
       if (sent) {
-        console.log(`Message sent to queue '${queue}':`, message);
+        console.log(`Message sent to queue '${queue}' with properties:`, publishOptions);
       } else {
         console.warn(`Message not sent to queue '${queue}':`, message);
       }
@@ -138,16 +147,19 @@ class RabbitMQ {
   public async consume(
     queue: QueueNamesType,
     onMessage: (_msg: Message, _channel: Channel) => Promise<void>,
-    prefetchCount = 1
+    prefetchCount = 1,
   ): Promise<void> {
     try {
       const channel = await this.getChannel(queue);
+      // Ensure the queue exists with the correct arguments
+      console.log(`Asserting queue '${queue}' before consuming with options:`, notificationQueueOptions);
+      await channel.assertQueue(queue, notificationQueueOptions);
       await channel.prefetch(prefetchCount);
-
       await channel.consume(queue, async (msg) => {
+
         if (msg) {
           try {
-            await onMessage(msg, channel); // Pass both `msg` and `channel` to the callback
+            await onMessage(msg, channel);
           } catch (error) {
             console.error(`Error processing message from queue '${queue}':`, error);
             channel.nack(msg); // Requeue the message
@@ -158,6 +170,7 @@ class RabbitMQ {
       console.log(`Consuming messages from queue '${queue}' with prefetch count ${prefetchCount}`);
     } catch (error) {
       console.error(`Error consuming messages from queue '${queue}':`, error);
+      throw error;
     }
   }
 
@@ -181,19 +194,53 @@ class RabbitMQ {
       console.error("Error closing RabbitMQ connection:", error);
     }
   }
+
+  /**
+   * Set up queues and exchanges
+   */
+  public async setupQueues(): Promise<void> {
+    await this.ensureConnection();
+
+    try {
+      const connection = await this.connect();
+      const channel = await connection.createChannel();
+
+      // Assert the DLX exchange
+      await channel.assertExchange(dlxName, "direct", { durable: true });
+
+      // Original Queue (notifications)
+      await channel.assertQueue(QueueNames.NOTIFICATIONS, notificationQueueOptions);
+
+      // Dead-Letter Queue (notifications-retry)
+      await channel.assertQueue(`${QueueNames.NOTIFICATIONS}-retry`, retryQueueOptions);
+
+      // Bind the DLX to the dead-letter queue
+      await channel.bindQueue(
+        `${QueueNames.NOTIFICATIONS}-retry`,
+        dlxName,
+        `${QueueNames.NOTIFICATIONS}-retry`,
+      );
+
+      console.log("Queues and exchanges setup completed.");
+    } catch (error) {
+      console.error("Error setting up queues:", error);
+      throw error;
+    }
+  }
+
 }
 
 // Export utility functions
 const rabbit = RabbitMQ.getInstance();
 
-export const pushToQueue = async (queue: QueueNamesType, message: Record<string, any>) => {
-  await rabbit.push(queue, message);
+export const pushToQueue = async (queue: QueueNamesType, message: Record<string, any>, options: Options.Publish) => {
+  await rabbit.push(queue, message , options);
 };
 
 export const consumeFromQueue = async (
   queue: QueueNamesType,
   onMessage: (_msg: Message, _channel: Channel) => Promise<void>,
-  prefetchCount = 1
+  prefetchCount = 1,
 ) => {
   await rabbit.consume(queue, onMessage, prefetchCount);
 };

@@ -5,6 +5,7 @@ import { eventRegistrants } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getEventsWithFilters } from "@/server/db/events";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import { formatDateTime } from "@/lib/DateAndTime";
 import { z } from "zod";
 
 const WORKER_INTERVAL = 5 * 1000; // 1 minute
@@ -41,7 +42,23 @@ const processOngoingEvents = async () => {
   try {
     const ongoingEvents = await fetchOngoingEvents();
     console.log(`Fetched ${ongoingEvents.length} ongoing events.`);
-    console.table(ongoingEvents);
+    // Extract the required fields for the table
+    const filteredEvents = ongoingEvents.map(({
+                                                title,
+                                                eventId,
+                                                eventUuid,
+                                                startDate,
+                                                endDate,
+                                              }) => ({
+      title,
+      eventId,
+      eventUuid,
+      startDate: formatDateTime(startDate),
+      endDate: formatDateTime(endDate),
+    }));
+
+// Display the filtered events in a table format
+    console.table(filteredEvents);
 
     for (const event of ongoingEvents) {
       if (!event?.eventId) {
@@ -145,7 +162,6 @@ const processOngoingEvents = async () => {
 
   console.log("Worker finished processing at:", new Date().toISOString());
 };
-
 
 
 // Worker Loop
