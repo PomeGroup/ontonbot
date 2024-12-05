@@ -17,7 +17,6 @@ import "swiper/css";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
-import { Separator } from "@/components/ui/separator";
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Block } from "konsta/react";
@@ -30,13 +29,7 @@ const Search: React.FC = () => {
     whereTo: "/",
   });
 
-  const { setTheme } = useTheme();
-  useEffect(() => {
-    setTheme("dark");
-    return () => {
-      setTheme("light");
-    };
-  }, [setTheme]);
+  const { setTheme, theme } = useTheme();
 
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();
@@ -186,10 +179,14 @@ const Search: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    setTheme("light");
+  }, [theme]);
+
   return (
     <Block className="!my-2 ">
       <div className="flex flex-col h-screen">
-        <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+        <div className="sticky top-0 z-50 w-full pb-1">
           <SearchBar
             includeQueryParam={true}
             showFilterTags={true}
@@ -206,7 +203,7 @@ const Search: React.FC = () => {
             refetchEvents={refetch}
           />
         </div>
-        <Separator className="my-0 bg-gray-700" />
+
         <TabTriggers
           tabs={tabItems}
           setTabValue={setTabValue}

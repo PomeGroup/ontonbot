@@ -9,13 +9,14 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { IoChevronBackOutline, IoChevronForwardOutline, IoCloseOutline } from "react-icons/io5";
+import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
 import { z } from "zod";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
 import MainFilterDrawer from "./MainFilterDrawer";
 import { useGetHubs } from "@/hooks/events.hooks";
 import { Searchbar } from "konsta/react";
+import StatusChip from "@/components/ui/status-chips";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
@@ -107,7 +108,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const { searchTerm, setSearchTerm, autoSuggestions, setAutoSuggestions } = useSearchEvents();
 
   const [initialHubsSet, setInitialHubsSet] = useState(false);
-  // const [pageInit, setPageInit] = useState(false);
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
@@ -348,32 +348,28 @@ const SearchBar: React.FC<SearchBarProps> = ({
         : []), // If empty, default to both
       sortBy !== "start_date_desc" ? "Most People Reached" : null,
     ].filter(Boolean); // Filter out falsy values
-    const filterButtons = filters.map((filter, index) => (
-      <Button
-        key={index}
-        variant="outline"
-        className="flex items-center text-gray-300 p-2 h-4 py-0 text-xs whitespace-nowrap"
-        onClick={() => clearFilter(filter!)}
-      >
-        <span className="text-sm">{filter}</span>
-        <IoCloseOutline className="ml-2 w-4 h-4" />
-      </Button>
-    ));
+    const filterButtons = filters
+      .filter((v) => Boolean(v))
+      .map((filter, index) => (
+        <StatusChip
+          key={index}
+          onDelete={() => clearFilter(filter!)}
+          label={filter as string}
+          showDeleteButton
+        />
+      ));
 
     if (selectedHubs.length > 0 && selectedHubs.length !== hubs.length) {
       selectedHubs.forEach((hubId, index) => {
         const hubName = hubs.find((hub) => hub.id === hubId)?.name;
         if (!hubName) return;
         filterButtons.push(
-          <Button
-            key={`hub-${index}`}
-            variant="outline"
-            className="flex items-center text-gray-300 p-2 h-4 py-0 text-xs  whitespace-nowrap"
-            onClick={() => clearFilter(hubId)}
-          >
-            <span className="text-sm">{hubName}</span>
-            <IoCloseOutline className="ml-2 w-4 h-4" />
-          </Button>
+          <StatusChip
+            key={index}
+            onDelete={() => clearFilter(hubId!)}
+            label={(hubName as string).split("_").join(" ")}
+            showDeleteButton
+          />
         );
       });
     }
@@ -422,7 +418,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [selectedHubs, participationType, sortBy]);
 
   return (
-    <div className="relative flex flex-col space-y-4">
+    <div className="relative border border-black flex flex-col space-y-4">
       <div className="relative flex items-center">
         <div
           className={`flex-grow transition-all duration-300 ${
@@ -487,6 +483,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   }
                 }}
               >
+                ⚠️
                 <IoChevronBackOutline className="w-4 h-4" />
               </Button>
             </div>
