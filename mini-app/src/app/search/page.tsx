@@ -185,6 +185,7 @@ const Search: React.FC = () => {
       scrollableDivRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+
   return (
     <Block className="!my-2 ">
       <div className="flex flex-col h-screen">

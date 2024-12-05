@@ -36,7 +36,7 @@ async function cronJobRunner() {
   new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
 }
 
-function cronJob(fn: (pushLockTTl: () => any) => any) {
+function cronJob(fn: (_: () => any) => any) {
   const name = fn.name; // Get function name automatically
   const cacheLockKey = redisTools.cacheKeys.cronJobLock + name;
 

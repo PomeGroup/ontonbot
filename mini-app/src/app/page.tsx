@@ -15,8 +15,8 @@ import MemoizedMainButton from "@/app/_components/Memoized/MemoizedMainButton";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
-import { useTheme } from "next-themes";
 import { Block, Segmented, SegmentedButton } from "konsta/react";
+import { useTheme } from "next-themes";
 
 // Define types for events
 type EventData = any[];
@@ -28,8 +28,6 @@ export default function Home() {
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
 
-  const { setTheme } = useTheme();
-
   const UserId = webApp?.initDataUnsafe?.user?.id;
 
   const router = useRouter();
@@ -37,6 +35,7 @@ export default function Home() {
   const [tabValueForSearchBar, setTabValueForSearchBar] = useState("All");
   const swiperRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null); // Ref for scrollable area
+  const { setTheme, theme } = useTheme();
 
   // Store the last scroll positions of each tab
   const scrollPositions = useRef<{ [key: string]: number }>({
@@ -192,13 +191,6 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    setTheme("dark");
-    return () => {
-      setTheme("light");
-    };
-  }, [setTheme]);
-
   // Handle swiper slide change
   const handleSlideChange = (swiper: any) => {
     const activeIndex = swiper.activeIndex;
@@ -219,11 +211,15 @@ export default function Home() {
     router.push("/events/create");
   }, [router]);
 
+  useEffect(() => {
+    setTheme("light");
+  }, [theme]);
+
   return (
     <Block margin="mt-2">
       <div className="flex flex-col h-screen">
         {/* Fixed Search Bar */}
-        <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+        <div className="sticky top-0 z-50 w-full pb-1">
           <SearchBar
             includeQueryParam={false}
             onUpdateResults={() => {}}

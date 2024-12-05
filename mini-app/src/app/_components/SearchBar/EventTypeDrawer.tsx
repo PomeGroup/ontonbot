@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { KSheet } from "@/components/ui/drawer";
 import { z } from "zod";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import { Button } from "konsta/react";
 
 // Extract the participationType from the Zod schema
 type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
@@ -58,55 +59,45 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
   };
 
   return (
-    <Drawer
+    <KSheet
+      hideTrigger
+      dontHandleMainButton
       open={isOpen}
       onOpenChange={onOpenChange}
     >
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Event Type</DrawerTitle>
-        </DrawerHeader>
-        <div className="p-4 space-y-4">
-          <div className="space-y-0">
-            {/* Online event row */}
-            <div
-              className={`flex justify-between items-center cursor-pointer p-2 border-b-2 border-b-gray-800 ${
-                localParticipationType.includes("online") ? "bg-gray-700" : ""
-              }`}
-              onClick={() => handleToggleType("online")}
-            >
-              <span className="text-zinc-400">Online</span>
-              <Checkbox
-                checked={localParticipationType.includes("online") || localParticipationType.length === 0}
-                className="h-6 w-6"
-              />
-            </div>
+      <div className="p-4 space-y-4">
+        <div className="space-y-0">
+          {/* Online event row */}
+          <div
+            className={`flex justify-between items-center cursor-pointer p-2 border-b-2 border-b-gray-800 ${
+              localParticipationType.includes("online") ? "bg-gray-700" : ""
+            }`}
+            onClick={() => handleToggleType("online")}
+          >
+            <span className="text-zinc-400">Online</span>
+            <Checkbox
+              checked={localParticipationType.includes("online") || localParticipationType.length === 0}
+              className="h-6 w-6"
+            />
+          </div>
 
-            {/* In-person event row */}
-            <div
-              className={`flex justify-between items-center cursor-pointer p-2 ${
-                localParticipationType.includes("in_person") ? "bg-gray-700" : ""
-              }`}
-              onClick={() => handleToggleType("in_person")}
-            >
-              <span className="text-zinc-400">In-person</span>
-              <Checkbox
-                checked={localParticipationType.includes("in_person") || localParticipationType.length === 0}
-                className="h-6 w-6"
-              />
-            </div>
+          {/* In-person event row */}
+          <div
+            className={`flex justify-between items-center cursor-pointer p-2 ${
+              localParticipationType.includes("in_person") ? "bg-gray-700" : ""
+            }`}
+            onClick={() => handleToggleType("in_person")}
+          >
+            <span className="text-zinc-400">In-person</span>
+            <Checkbox
+              checked={localParticipationType.includes("in_person") || localParticipationType.length === 0}
+              className="h-6 w-6"
+            />
           </div>
         </div>
-        <DrawerFooter className="flex justify-end space-x-4 p-4">
-          <button
-            className="bg-blue-100 w-20 m-auto text-blue-600 px-4 py-2 rounded-full hover:bg-blue-200"
-            onClick={handleDoneClick}
-          >
-            Done
-          </button>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
+        <Button onClick={handleDoneClick}>Done</Button>
+      </div>
+    </KSheet>
   );
 };
 
