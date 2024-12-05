@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
     );
   } catch (error) {
     console.error("==============================");
-    console.error("Error:", error);
+    // console.error("Error:", error);
     console.error("==============================");
 
     if (error instanceof ZodError) {

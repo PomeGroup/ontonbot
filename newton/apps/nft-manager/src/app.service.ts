@@ -17,6 +17,7 @@ import {
 import { NFTService } from "./nft/nft.service";
 import { OnTon } from "./OnTon";
 import { FAIL_NFT_ITEM_TRY_COUNT } from "./utils/config";
+import { miniAppClient } from "./helper/miniClient.api";
 
 let CRONJOB_IS_RUNNING = false;
 
@@ -147,10 +148,12 @@ export class AppService {
                   );
                 }
               } catch (error) {
+                console.log("ERROR_150", error);
+
                 if (error instanceof AxiosError) {
-                  console.error(error.response.data.message);
+                  console.error("ERROR_153", error.response?.data?.message);
                 } else if (error instanceof Error) {
-                  console.error(error.message);
+                  console.error("ERROR_153", error.message);
                 }
 
                 await this.saveFailedTransaction(
@@ -531,20 +534,31 @@ export class AppService {
 
       for (const data of updateDate) {
         console.log(`Updating NFT data: ${JSON.stringify(await data)}`);
-        await this.prisma.$transaction(async (db) => {
-          const awaitedData = await data;
-          const nftData = await db.nFTItem.update(awaitedData);
+        try {
+          await this.prisma.$transaction(async (db) => {
+            const awaitedData = await data;
+            const nftData = await db.nFTItem.update(awaitedData);
 
-          if (nftData.state === "minted") {
-            console.log(`NFT minted successfully: ${nftData.id}`);
+            if (nftData.state === "minted") {
+              console.log(`NFT minted successfully: ${nftData.id}`);
 
-            await this.updateOrder(nftData.order_id, {
-              state: "minted",
-              nft_address: nftData.address,
-            });
-            console.log(`Updated order ${nftData.order_id} to minted state`);
+              await this.updateOrder(nftData.order_id, {
+                state: "minted",
+                nft_address: nftData.address,
+              });
+              console.log(`Updated order ${nftData.order_id} to minted state`);
+            }
+          });
+        } catch (error) {
+          if (error instanceof AxiosError) {
+            console.log(
+              "update_order_error_",
+              error?.message,
+              error.response.status,
+              error.response.data,
+            );
           }
-        });
+        }
       }
     }
     console.log("Finished checkMintRequestStatus");
@@ -553,16 +567,8 @@ export class AppService {
   @Interval(60_000)
   async miniAppJobs() {
     // this api will trigger a check on all order to update their satates
-    axios
-      .patch(
-        `${process.env.PTMA_API_BASE_URL}/order`,
-        {},
-        {
-          headers: {
-            "x-api-key": process.env.ONTON_API_KEY,
-          },
-        },
-      )
+    miniAppClient
+      .patch(`/order`)
       .then(() => {})
       .catch(() => {
         console.error("updating dodders failed");
@@ -626,13 +632,8 @@ export class AppService {
 
   private async getOrder(orderId: string, txId: string) {
     try {
-      const order = await axios.get<GetOrderResponse>(
-        `${process.env.PTMA_API_BASE_URL}/order/${orderId}`,
-        {
-          headers: {
-            "x-api-key": process.env.ONTON_API_KEY,
-          },
-        },
+      const order = await miniAppClient.get<GetOrderResponse>(
+        `/order/${orderId}`,
       );
 
       return order.data;
@@ -656,15 +657,7 @@ export class AppService {
       nft_address?: string;
     },
   ) {
-    await axios.patch(
-      `${process.env.PTMA_API_BASE_URL}/order/${orderId}`,
-      data,
-      {
-        headers: {
-          "x-api-key": process.env.ONTON_API_KEY,
-        },
-      },
-    );
+    await miniAppClient.patch(`/order/${orderId}`, data);
   }
 }
 const timeout = (ms: number) =>

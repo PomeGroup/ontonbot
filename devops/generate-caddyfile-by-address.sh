@@ -38,6 +38,7 @@ if [ "${USE_MAIN_IP_TO_EXPOSE}" = "true" ]; then
     PROXY_PGADMIN=${IP_RANGE_BASE}
     PROXY_CLIENT_WEB=${IP_RANGE_BASE}
     PROXY_WEBSITE=${IP_RANGE_BASE}
+    PROXY_SOCKET=${IP_RANGE_BASE}
 else
     PROXY_MINI_APP=${IP_MINI_APP}
     PROXY_PARTICIPANT_TMA=${IP_PARTICIPANT_TMA}
@@ -46,6 +47,7 @@ else
     PROXY_PGADMIN=${IP_PGADMIN}
     PROXY_CLIENT_WEB=${IP_CLIENT_WEB}
     PROXY_WEBSITE=${IP_WEBSITE}
+    PROXY_SOCKET=${IP_SOCKET}
 fi
 
 # Define log configuration
@@ -68,6 +70,12 @@ ${METABASE_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
     reverse_proxy ${PROXY_METABASE}:${PORT_METABASE}
+}
+
+${MINI_APP_SOCKET_DOMAIN} {
+    ${TLS_CONFIG}
+    ${LOG_CONFIG}
+    reverse_proxy http://${PROXY_SOCKET}:${SOCKET_PORT}
 }
 
 ${MINIO_STORAGE_DOMAIN} {
@@ -105,11 +113,23 @@ ${CLIENT_WEB_DOMAIN} {
     reverse_proxy ${PROXY_CLIENT_WEB}:${PORT_CLIENT_WEB}
 }
 
+# Replace ${ONTON_DOMAIN} with your actual domain, e.g., onton.live
 ${ONTON_DOMAIN} {
     ${TLS_CONFIG}
+
     ${LOG_CONFIG}
-    reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
+
+    # Reverse proxy for /blog path to WordPress
+    handle_path /blog* {
+        reverse_proxy ${IP_RANGE_BASE}:6600
+    }
+
+    # Reverse proxy for all other paths to Next.js
+    handle {
+        reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
+    }
 }
+
 
 " > "${CADDYFILE_PATH}"
 cat "${CADDYFILE_PATH}"

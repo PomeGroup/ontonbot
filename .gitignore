@@ -5,6 +5,7 @@
 .env.local
 .env.main
 .idea
+.idea/*
 .vscode
 #sublime
 *.sublime-workspace
@@ -59,7 +60,7 @@ devops/env_stages/*
 .DS_Store
 
 node_modules
-
+*/node_modules
 .env
 .vscode/settings.json
 mini-app/onton.code-workspace

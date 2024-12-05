@@ -1,0 +1,48 @@
+// Description: Constants for the socket server.
+export const userSockets: Map<number, Set<string>> = new Map();
+export const prefetchCount = Number(process.env.PREFETCH_COUNT) || 10;
+// Retry interval for socket connections
+// 🚨🚨🚨🚨🚨🚨 after changing Retry interval for socket connections
+// 🚨🚨🚨🚨🚨🚨 you need to delete all queues and exchanges in RabbitMQ !!!!!!!!
+export const SOCKET_RETRY_INTERVAL =  30000;
+////////////////////////////////////////////////////////////////
+// Define the socket events using a TypeScript enum
+export const SocketEvents = {
+  receive: {
+    test: "test",
+  },
+  send: {
+    notification: "notification",
+    notFound: "404",
+    error: "error",
+  },
+};
+
+// Define the valid queue names using a TypeScript enum
+export const QueueNames = {
+  NOTIFICATIONS: `${process.env.STAGE_NAME || "onton"}-notifications`,
+  TG_MESSAGES: `${process.env.STAGE_NAME || "onton"}-tg_messages`,
+} as const;
+
+// Define the dead-letter exchange and queue names
+export const dlxName = `${QueueNames.NOTIFICATIONS}-dlx`;
+
+// Define the queue options
+export const notificationQueueOptions = {
+  durable: true,
+  arguments: {
+    "x-dead-letter-exchange": dlxName,
+    "x-dead-letter-routing-key": `${QueueNames.NOTIFICATIONS}-retry`,
+  },
+};
+
+// Define the retry queue options
+export const retryQueueOptions = {
+  durable: true,
+  arguments: {
+    "x-message-ttl": SOCKET_RETRY_INTERVAL,
+    "x-dead-letter-exchange": "", // Default exchange
+    "x-dead-letter-routing-key": QueueNames.NOTIFICATIONS,
+  },
+};
+

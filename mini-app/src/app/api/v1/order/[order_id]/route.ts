@@ -86,9 +86,8 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
   if (!order) {
     return Response.json({ message: "ordernot found" }, { status: 404 });
   }
-
-  await db.transaction(async (tx) => {
-    try {
+  try {
+    await db.transaction(async (tx) => {
       if (body.data.state === "minted") {
         const ticketExists = await tx
           .select()
@@ -122,7 +121,7 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
         });
       }
 
-      await db
+      await tx
         .update(orders)
         .set({
           state: body.data.state,
@@ -132,14 +131,24 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
         })
         .where(eq(orders.uuid, order.uuid));
       return;
-    } catch (error) {
-      tx.rollback();
-    }
-  });
+    });
 
-  return Response.json({
-    message: "order updated",
-  });
+    return Response.json({
+      message: "order updated",
+    });
+  } catch (e) {
+    const error = e as any;
+    if ("message" in error) {
+      return Response.json(
+        {
+          message: error.message,
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+  }
 }
 
 export const dynamic = "force-dynamic";
