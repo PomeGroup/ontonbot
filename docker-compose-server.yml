@@ -423,17 +423,17 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-nft-manager"
 
-  giveaway-checker:
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
-    hostname: giveaway-checker
-    depends_on:
-      - postgres
-    environment:
-      <<: *common-env
-    networks:
-      - onton-network
-    secrets:
-      - registry-onton-config
+#  giveaway-checker:
+#    image: ${REGISTRY_URL}/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
+#    hostname: giveaway-checker
+#    depends_on:
+#      - postgres
+#    environment:
+#      <<: *common-env
+#    networks:
+#      - onton-network
+#    secrets:
+#      - registry-onton-config
   #    logging:
   #        driver: "gelf"
   #        options:
@@ -468,31 +468,31 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-website"
 
-  golang-server:
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
-    hostname: golang-server
-    depends_on:
-      - redis
-    environment:
-      <<: *common-env
-    networks:
-      - onton-network
+#  golang-server:
+#    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
+#    hostname: golang-server
+#    depends_on:
+#      - redis
+#    environment:
+#      <<: *common-env
+#    networks:
+#      - onton-network
   #    logging:
   #      driver: "gelf"
   #      options:
   #        gelf-address: "udp://logstash:5044"
   #        tag:  "${BRANCH_NAME}-golang-server"
 
-  golang-worker:
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
-    hostname: golang-worker
-    depends_on:
-      - redis
-      - golang-server
-    environment:
-      <<: *common-env
-    networks:
-      - onton-network
+#  golang-worker:
+#    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
+#    hostname: golang-worker
+#    depends_on:
+#      - redis
+#      - golang-server
+#    environment:
+#      <<: *common-env
+#    networks:
+#      - onton-network
   #    logging:
   #      driver: "gelf"
   #      options:
@@ -550,21 +550,21 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-metabase"
 
-  client-web:
-    hostname: client-web
-    <<: *default-extra-hosts
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
-    ports:
-      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
-    environment:
-      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
-      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
-      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
-      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
-      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
-      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
-    networks:
-      - onton-network
+#  client-web:
+#    hostname: client-web
+#    <<: *default-extra-hosts
+#    image: ${REGISTRY_URL}/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
+#    ports:
+#      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
+#    environment:
+#      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+#      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
+#      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
+#      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
+#      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
+#      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
+#    networks:
+#      - onton-network
 #    logging:
 #        driver: "gelf"
 #        options:
