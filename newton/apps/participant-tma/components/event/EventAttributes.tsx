@@ -2,6 +2,7 @@
 
 import { FC, ReactNode } from "react";
 import AttributeItem from "@ui/components/blocks/AttributeItem";
+import { z } from "zod";
 
 import { formatDateRange, formatTimeRange } from "~/utils/date";
 
@@ -22,13 +23,16 @@ const EventAttributes: FC<Props> = ({ data, event }) => {
   attributes.push(["Time", time]);
 
   return (
-    <div className="-mt-2 grid">
+    <div className="-mt-2 w-[90vw]">
       {attributes.map((attribute) => {
         return (
           <AttributeItem
             key={attribute[0]}
             label={attribute[0]}
             value={attribute[1]}
+            variant={
+              z.string().url().safeParse(attribute[1]).success ? "link" : "base"
+            }
           />
         );
       })}

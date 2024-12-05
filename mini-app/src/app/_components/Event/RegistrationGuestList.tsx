@@ -54,7 +54,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       // This would typically be managed in the parent component's state
       setItemStatus("approved");
     } catch (error) {
-      console.error("Approval failed:", error);
+      // console.error("Approval failed:", error);
     } finally {
       setIsApproving(false);
     }
@@ -67,7 +67,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       // Optimistically update the status to "declined"
       setItemStatus("rejected");
     } catch (error) {
-      console.error("Reject failed:", error);
+      // console.error("Reject failed:", error);
     } finally {
       setIsDeclining(false);
     }

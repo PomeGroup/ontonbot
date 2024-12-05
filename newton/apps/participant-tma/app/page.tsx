@@ -6,6 +6,7 @@ import QueryState from "@ui/components/blocks/QueryState";
 
 export default function Page() {
   const tmaUtils = useUtils(true);
+
   return (
     <QueryState
       isError

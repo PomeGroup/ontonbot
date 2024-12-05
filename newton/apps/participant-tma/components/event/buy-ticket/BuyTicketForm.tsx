@@ -2,7 +2,7 @@
 
 import React, { FormEventHandler, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
-import { searchParams, useMainButton } from "@tma.js/sdk-react";
+import { useMainButton } from "@tma.js/sdk-react";
 import { beginCell, toNano } from "@ton/ton";
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { Card, CardContent } from "@ui/base/card";
@@ -26,8 +26,8 @@ type BuyTicketFormProps = {
   userHasTicket: boolean;
   orderAlreadyPlace: boolean;
   eventTicketId: number;
-  sendTo: string,
-  utm_tag : string | null
+  sendTo: string;
+  utm_tag: string | null;
 };
 
 interface BuyTicketFormElement extends HTMLFormElement {
