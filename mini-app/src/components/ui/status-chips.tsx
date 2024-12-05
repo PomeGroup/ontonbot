@@ -21,7 +21,7 @@ const StatusChip: React.FC<StatusChipProps> = (props) => {
       },
     },
     defaultVariants: {
-      variant: "primary",
+      variant: "default",
     },
   });
 

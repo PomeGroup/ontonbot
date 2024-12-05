@@ -69,12 +69,10 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
         <div className="space-y-0">
           {/* Online event row */}
           <div
-            className={`flex justify-between items-center cursor-pointer p-2 border-b-2 border-b-gray-800 ${
-              localParticipationType.includes("online") ? "bg-gray-700" : ""
-            }`}
+            className={`flex justify-between items-center cursor-pointer p-2 border-b-2 border-b-gray-800`}
             onClick={() => handleToggleType("online")}
           >
-            <span className="text-zinc-400">Online</span>
+            <span>Online</span>
             <Checkbox
               checked={localParticipationType.includes("online") || localParticipationType.length === 0}
               className="h-6 w-6"
@@ -83,12 +81,10 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
 
           {/* In-person event row */}
           <div
-            className={`flex justify-between items-center cursor-pointer p-2 ${
-              localParticipationType.includes("in_person") ? "bg-gray-700" : ""
-            }`}
+            className={`flex justify-between items-center cursor-pointer p-2`}
             onClick={() => handleToggleType("in_person")}
           >
-            <span className="text-zinc-400">In-person</span>
+            <span>In-person</span>
             <Checkbox
               checked={localParticipationType.includes("in_person") || localParticipationType.length === 0}
               className="h-6 w-6"

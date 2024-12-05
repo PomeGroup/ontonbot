@@ -103,26 +103,26 @@ export default function Home() {
   const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery(
     sliderEventParams,
     {
-      cacheTime: 10000,
+      staleTime: Infinity,
       enabled: sliderEventsState.length === 0,
     }
   );
   const { data: upcomingEventsData, isLoading: isLoadingUpcoming } =
     trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams, {
-      cacheTime: 10000,
+      staleTime: Infinity,
       enabled: upcomingEventsState.length === 0,
     });
   const { data: ongoingEventsData, isLoading: isLoadingOngoing } = trpc.events.getEventsWithFilters.useQuery(
     ongoingEventsParams,
     {
-      cacheTime: 10000,
+      staleTime: Infinity,
       enabled: ongoingEventsState.length === 0,
     }
   );
   const { data: pastEventsData, isLoading: isLoadingPast } = trpc.events.getEventsWithFilters.useQuery(
     pastEventsParams,
     {
-      cacheTime: 10000,
+      staleTime: Infinity,
       retryDelay: 5000,
       enabled: pastEventsState.length === 0,
     }
@@ -132,7 +132,7 @@ export default function Home() {
     isLoading: isLoadingMyEvents,
     refetch: refetchMyEvents,
   } = trpc.events.getEventsWithFilters.useQuery(myEventsParams, {
-    cacheTime: 10000,
+    staleTime: Infinity,
     enabled: false, // Disable auto-fetch for "My Events"
   });
 

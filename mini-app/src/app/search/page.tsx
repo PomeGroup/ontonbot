@@ -74,6 +74,7 @@ const Search: React.FC = () => {
     enabled: initialFetchDone,
     //   enabled: true,
     keepPreviousData: true,
+    staleTime: Infinity,
     retry: 2,
     queryKey: ["events.getEventsWithFilters", finalSearchInput],
 
@@ -123,9 +124,6 @@ const Search: React.FC = () => {
   }, [refetch, initialFetchDone, searchInput.offset, setSearchInput]);
 
   useEffect(() => {
-    //resetFilters();
-
-    // applyTabFilter(tabValue , searchInput.sortBy);
     applyTabFilter(tabValue, UserId);
     setResults([]);
     setOffset(0);

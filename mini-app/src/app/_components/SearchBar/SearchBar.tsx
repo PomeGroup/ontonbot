@@ -328,12 +328,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
     if ((userRole === "admin" || userRole === "organizer") && pathname === "/") {
       if (HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log("+++++HideMainButton isVisible", WebApp?.MainButton.isVisible);
         WebApp?.MainButton.hide();
         WebApp?.MainButton.hide();
       } else if (!HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log("++++ShowMainButton isVisible", WebApp?.MainButton.isVisible);
         WebApp?.MainButton.show();
         WebApp?.MainButton.show();
       }
@@ -354,7 +352,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         <StatusChip
           key={index}
           onDelete={() => clearFilter(filter!)}
-          label={filter as string}
+          label={(filter as string).split("_").join(" ")}
           showDeleteButton
         />
       ));
@@ -418,7 +416,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [selectedHubs, participationType, sortBy]);
 
   return (
-    <div className="relative border border-black flex flex-col space-y-4">
+    <div className="relative flex flex-col space-y-4">
       <div className="relative flex items-center">
         <div
           className={`flex-grow transition-all duration-300 ${
@@ -483,7 +481,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   }
                 }}
               >
-                ⚠️
                 <IoChevronBackOutline className="w-4 h-4" />
               </Button>
             </div>
