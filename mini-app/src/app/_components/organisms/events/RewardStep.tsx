@@ -59,7 +59,7 @@ export const RewardStep = () => {
     },
   });
 
-  const thirdStepDataSchema = rewardStepValidation(passwordDisabled);
+  const thirdStepDataSchema = rewardStepValidation(!!editOptions?.eventHash);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
