@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import StatusChip from "@/components/ui/status-chips";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
@@ -136,9 +137,9 @@ const EventCard: React.FC<EventCardProps> = memo(
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
-                    <Badge variant="ontonDark">hosted</Badge>
+                    <StatusChip label="hosted" />
                   ) : (
-                    <Badge variant="ontonDark">{ticketPrice > 0 ? ticketPrice : "free"}</Badge>
+                    <StatusChip label={ticketPrice > 0 ? String(ticketPrice) : "free"} />
                   )}
                 </div>
                 <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
@@ -156,7 +157,7 @@ const EventCard: React.FC<EventCardProps> = memo(
         <DropdownMenuContent
           key={`dropdown-show-${eventUuid}`}
           align="center"
-          className="mt-[-10px] w-[220px]  bg-black px-3 rounded-none border-spacing-1 border-2 border-gray-600"
+          className="mt-[-10px] w-[220px] px-3 rounded-none border-spacing-1 border-2 border-gray-600"
         >
           <DropdownMenuItem
             className="text-lg px-2 rounded-none "
