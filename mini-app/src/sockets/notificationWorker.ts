@@ -31,7 +31,7 @@ export const startNotificationWorker = async (io: Server): Promise<void> => {
           console.log("Received notification:", message);
 
           // Emit the notification or requeue it if the user is not online
-          emitNotification(io, message.userId, message, channel, msg);
+          await emitNotification(io, message.userId, message, channel, msg);
         } catch (error) {
           console.error("Error processing RabbitMQ message:", error);
           channel.nack(msg, false, true); // Requeue the message

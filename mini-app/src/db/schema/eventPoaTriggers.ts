@@ -26,4 +26,5 @@ export const eventPoaTriggersIndexes = {
     type: "btree",
   },
   startTimeIndex: { columns: [eventPoaTriggers.startTime], type: "hash" },
+  statusIndex: { columns: [eventPoaTriggers.status], type: "btree" },
 };

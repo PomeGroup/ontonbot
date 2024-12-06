@@ -31,7 +31,7 @@ import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { addVisitor } from "@/server/db/visitors";
-import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers";
+import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 
 
 dotenv.config();

@@ -12,6 +12,7 @@ import { handleNotificationReply } from "./notificationReply";
 
 export const handleNotifications = async (io: Server) => {
   // Start the RabbitMQ Notification Worker
+
   await startNotificationWorker(io);
 
   io.on("connection", (socket: Socket) => {
