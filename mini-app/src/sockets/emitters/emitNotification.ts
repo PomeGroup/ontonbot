@@ -1,24 +1,25 @@
 import { Server } from "socket.io";
 import { Channel, Message } from "amqplib";
-import { SocketEvents, userSockets } from "@/sockets/constants";
+import { SocketEvents, UserId, userSockets } from "@/sockets/constants";
 import { sanitizeInput } from "@/lib/sanitizer";
 import { notificationsDB } from "@/server/db/notifications.db";
 
 
 export const emitNotification = async (
   io: Server,
-  userId: number,
+  userId: UserId,// it must be number , if it was string and use casting them map will not work
   message: any,
   channel: Channel,
   msg: Message,
 ) => {
-  const sockets = userSockets.get(userId);
 
+  const sockets = userSockets.get(Number(userId));
+  console.log(`emitNotification - userId: ${userId}, type: ${typeof userId}`);
   // Extract notificationId and ensure it's a number
   const notificationIdNum = typeof message.notificationId === "string"
     ? parseInt(message.notificationId, 10)
     : message.notificationId;
-console.log("userIduserId",userId)
+
   if (!sockets || sockets.size === 0) {
     console.warn(`User ${userId} is not online. Message will be retried.`);
     console.log(msg);
@@ -30,7 +31,7 @@ console.log("userIduserId",userId)
     if (deathHeader.length > 0) {
       retryCount = deathHeader.reduce(
         (total, death) => total + (death.count || 0),
-        0
+        0,
       );
     } else {
       console.warn("x-death header not found. Assuming first attempt.");
@@ -39,7 +40,6 @@ console.log("userIduserId",userId)
     if (retryCount >= 5) {
       console.error(
         `Message dropped for User ${userId} after ${retryCount} retries:`,
-        message
       );
       // Update notification status to EXPIRED before acknowledging
       await notificationsDB.updateNotificationStatus(notificationIdNum, "EXPIRED");
@@ -63,8 +63,7 @@ console.log("userIduserId",userId)
   sockets.forEach((socketId) => {
     io.to(socketId).emit(SocketEvents.send.notification, sanitizedMessage);
     console.log(
-      `Notification sent to User ${userId} via Socket ${socketId}:`,
-      sanitizedMessage
+      `Notification sent to User ${userId} via Socket ${socketId}: ${sanitizedMessage.notificationId} - ${sanitizedMessage.sanitizedMessage}`,
     );
   });
 

@@ -1,8 +1,6 @@
-
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { EventTriggerStatus, NotificationItemType, NotificationStatus, NotificationType } from "@/db/schema";
-
 import { getEventsWithFilters } from "@/server/db/events";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
@@ -10,6 +8,19 @@ import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
 
 const WORKER_INTERVAL = 10 * 1000; // 10 seconds
 const PAGE_SIZE = 100; // Number of users to fetch per batch
+
+let isShuttingDown = false;
+
+// Listen for shutdown signals
+process.on('SIGINT', () => {
+  console.log('Received SIGINT. Initiating graceful shutdown...');
+  isShuttingDown = true;
+});
+
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM. Initiating graceful shutdown...');
+  isShuttingDown = true;
+});
 
 // Function to fetch ongoing events with online participation
 const fetchOngoingEvents = async () => {
@@ -69,6 +80,11 @@ const processOngoingEvents = async () => {
           let hasMore = true;
 
           while (hasMore) {
+            // Check for shutdown during batch processing
+            if (isShuttingDown) {
+              console.log('Shutdown requested during user processing. Exiting batch...');
+              return;
+            }
             const approvedUsers = await fetchApprovedUsers(
               eventUuid,
               trigger.id,
@@ -106,6 +122,8 @@ const processOngoingEvents = async () => {
 
             lastUserId = approvedUsers[approvedUsers.length - 1].userId;
             if (approvedUsers.length < PAGE_SIZE) hasMore = false;
+
+
           }
 
           try {
@@ -114,9 +132,21 @@ const processOngoingEvents = async () => {
           } catch (statusUpdateError) {
             console.error(`Failed to update status for POA Trigger ${trigger.id}:`, statusUpdateError);
           }
+
+          // Check for shutdown after completing a trigger
+          if (isShuttingDown) {
+            console.log('Shutdown requested after trigger processing. Exiting...');
+            return;
+          }
         }
       } catch (eventError) {
         console.error(`Error processing Event ${eventId}:`, eventError);
+      }
+
+      // Check for shutdown after processing an event
+      if (isShuttingDown) {
+        console.log('Shutdown requested after event processing. Exiting...');
+        return;
       }
     }
   } catch (error) {
@@ -129,16 +159,50 @@ const processOngoingEvents = async () => {
 // Worker Loop
 const runWorker = async () => {
   while (true) {
+    if (isShuttingDown) {
+      console.log('Shutdown flag detected. Exiting worker loop...');
+      break;
+    }
+
     try {
       await processOngoingEvents();
     } catch (error) {
       console.error("!!!!! Unhandled error in POA Worker:", error);
     }
+
+    if (isShuttingDown) {
+      console.log('Shutdown flag detected after processing. Exiting worker loop...');
+      break;
+    }
+
     console.log(
       `Waiting for ${WORKER_INTERVAL / 1000} seconds before the next run...`
     );
     await new Promise((resolve) => setTimeout(resolve, WORKER_INTERVAL));
   }
+
+  // After exiting the loop, perform any additional shutdown tasks if necessary
+  await shutdown();
+};
+
+// Shutdown Function to Clean Up Resources
+const shutdown = async () => {
+  console.log('Shutting down resources...');
+
+  const shutdownTimeout = setTimeout(() => {
+    console.warn('Shutdown timeout reached. Forcing exit.');
+    process.exit(1);
+  }, 10000); // 10 seconds timeout
+
+
+
+
+
+  // Add any additional cleanup tasks here
+
+  clearTimeout(shutdownTimeout);
+  console.log('Shutdown complete. Exiting process.');
+  process.exit(0);
 };
 
 // Start the Worker

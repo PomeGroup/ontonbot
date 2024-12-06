@@ -1,3 +1,5 @@
+// rabbitMQ.ts
+
 import {
   QueueNames,
   dlxName,
@@ -8,7 +10,7 @@ import {
   rabbitMQPass,
   rabbitMQPort,
 } from "@/sockets/constants";
-import amqp, { Connection, Channel, Message, Options } from "amqplib";
+import amqp, { Connection, Channel, Message, Options, ConsumeMessage } from "amqplib";
 
 export type QueueNamesType = typeof QueueNames[keyof typeof QueueNames];
 
@@ -132,7 +134,7 @@ export class RabbitMQ {
       const buffer = Buffer.from(JSON.stringify(message));
       // Ensure persistent is always true unless overridden
       const publishOptions: Options.Publish = { persistent: true, ...options };
-      console.log(`Pushing message to queue2 '${queue}' with options:`, publishOptions);
+      console.log(`Pushing message to queue '${queue}' with options:`, publishOptions);
       const sent = channel.sendToQueue(queue, buffer, publishOptions);
 
       if (sent) {
@@ -147,20 +149,21 @@ export class RabbitMQ {
 
   /**
    * Consume messages from a queue
+   * @returns The consumer tag for later cancellation
    */
   public async consume(
     queue: QueueNamesType,
     onMessage: (_msg: Message, _channel: Channel) => Promise<void>,
     prefetchCount = 1,
-  ): Promise<void> {
+  ): Promise<string> {
     try {
       const channel = await this.getChannel(queue);
       // Ensure the queue exists with the correct arguments
       console.log(`Asserting queue '${queue}' before consuming with options:`, notificationQueueOptions);
       await channel.assertQueue(queue, notificationQueueOptions);
       await channel.prefetch(prefetchCount);
-      await channel.consume(queue, async (msg) => {
 
+      const consumeResult = await channel.consume(queue, async (msg) => {
         if (msg) {
           try {
             await onMessage(msg, channel);
@@ -169,12 +172,35 @@ export class RabbitMQ {
             channel.nack(msg); // Requeue the message
           }
         }
-      });
+      }, { noAck: false });
 
       console.log(`Consuming messages from queue '${queue}' with prefetch count ${prefetchCount}`);
+      return consumeResult.consumerTag;
     } catch (error) {
       console.error(`Error consuming messages from queue '${queue}':`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Cancel a consumer using its consumer tag
+   */
+  public async cancelConsumer(queue: QueueNamesType, consumerTag: string): Promise<void> {
+    if (!this.connection) {
+      console.warn(`Attempted to cancel consumer for queue '${queue}' without an active connection.`);
+      return;
+    }
+
+    try {
+      const channel = this.channels.get(queue);
+      if (channel) {
+        await channel.cancel(consumerTag);
+        console.log(`Consumer with tag '${consumerTag}' for queue '${queue}' canceled successfully.`);
+      } else {
+        console.warn(`No channel found for queue '${queue}'.`);
+      }
+    } catch (error) {
+      console.error(`Error canceling consumer with tag '${consumerTag}' for queue '${queue}':`, error);
     }
   }
 
@@ -245,6 +271,6 @@ export const consumeFromQueue = async (
   queue: QueueNamesType,
   onMessage: (_msg: Message, _channel: Channel) => Promise<void>,
   prefetchCount = 1,
-) => {
-  await rabbit.consume(queue, onMessage, prefetchCount);
+): Promise<string> => {
+  return await rabbit.consume(queue, onMessage, prefetchCount);
 };

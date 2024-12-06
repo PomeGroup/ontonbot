@@ -12,12 +12,12 @@ import { handleNotificationReply } from "./notificationReply";
 
 export const handleNotifications = async (io: Server) => {
   // Start the RabbitMQ Notification Worker
-
   await startNotificationWorker(io);
+
 
   io.on("connection", (socket: Socket) => {
     const user = socket.data.user;
-
+    console.log(`Socket Handler - user.id: ${user.id}, type: ${typeof user.id}`);
     // Handle unauthorized connections
     if (!user) {
       console.warn("Unauthorized connection attempt.");
@@ -33,7 +33,10 @@ export const handleNotifications = async (io: Server) => {
     if (!userSockets.has(user.id)) {
       userSockets.set(user.id, new Set());
     }
+    const userSocketSet = userSockets.get(user.id);
     userSockets.get(user.id)?.add(socket.id);
+    console.log(`Updated userSockets for User ${user.id}:`, userSocketSet);
+
     // Handle notification reply event
     // Expecting client to emit: socket.emit("notificationReply", { notificationId: "123", answer: "yes" }, (response) => { ... });
     socket.on(SocketEvents.receive.notificationReply, (data, callback) => {
