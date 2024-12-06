@@ -2,7 +2,7 @@ import { Server } from "socket.io";
 import { Channel, Message } from "amqplib";
 import { SocketEvents, userSockets } from "@/sockets/constants";
 import { sanitizeInput } from "@/lib/sanitizer";
-import { notificationsDB } from "@/server/db/notifications";
+import { notificationsDB } from "@/server/db/notifications.db";
 
 
 export const emitNotification = async (
@@ -18,7 +18,7 @@ export const emitNotification = async (
   const notificationIdNum = typeof message.notificationId === "string"
     ? parseInt(message.notificationId, 10)
     : message.notificationId;
-
+console.log("userIduserId",userId)
   if (!sockets || sockets.size === 0) {
     console.warn(`User ${userId} is not online. Message will be retried.`);
     console.log(msg);

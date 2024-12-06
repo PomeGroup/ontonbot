@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventPoaTriggers, EventTriggerStatus,  EventTriggerType } from "@/db/schema";
+import { eventPoaTriggers, EventTriggerStatus, EventTriggerType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 
@@ -14,7 +14,7 @@ export const addEventPoaTrigger = async (poaData: {
   countOfSent: number;
   countOfSuccess: number;
   poaType: EventTriggerType; // "simple", "multiple_choice", or "question"
-  status: EventTriggerStatus; // "active", "deactive", etc.
+  status: EventTriggerStatus; // "active", "deactive", "completed", "sending"
   createdAt?: Date;
   updatedAt?: Date;
 }) => {
@@ -44,7 +44,7 @@ export const addEventPoaTrigger = async (poaData: {
 };
 
 // Update the status of a POA trigger by ID
-export const updateEventPoaStatus = async (poaId: number, newStatus:  EventTriggerStatus) => {
+export const updateEventPoaStatus = async (poaId: number, newStatus: EventTriggerStatus) => {
   try {
     await db
       .update(eventPoaTriggers)
@@ -52,7 +52,8 @@ export const updateEventPoaStatus = async (poaId: number, newStatus:  EventTrigg
       .where(eq(eventPoaTriggers.id, poaId))
       .execute();
 
-    await redisTools.deleteCache(getEventPoaCacheKey(poaId)); // Clear cache
+    // Clear cache for this POA trigger
+    await redisTools.deleteCache(getEventPoaCacheKey(poaId));
     console.log(`POA Trigger ${poaId} status updated to ${newStatus}`);
   } catch (error) {
     console.error("Error updating POA Trigger status:", error);
@@ -65,9 +66,10 @@ export const incrementCountOfSent = async (poaId: number, incrementBy = 1) => {
   try {
     // Execute raw SQL using sql tagged template
     await db.execute(
-      sql`UPDATE ${eventPoaTriggers} 
-          SET count_of_sent = count_of_sent + ${incrementBy}, updated_at = ${new Date()} 
-          WHERE id = ${poaId}`
+      sql`UPDATE ${eventPoaTriggers}
+          SET count_of_sent = count_of_sent + ${incrementBy},
+              updated_at = ${new Date()}
+          WHERE id = ${poaId}`,
     );
 
     await redisTools.deleteCache(getEventPoaCacheKey(poaId)); // Clear cache
@@ -81,11 +83,11 @@ export const incrementCountOfSent = async (poaId: number, incrementBy = 1) => {
 // Increment the count of success by ID
 export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) => {
   try {
-    // Execute raw SQL using sql tagged template
     await db.execute(
-      sql`UPDATE ${eventPoaTriggers} 
-          SET count_of_success = count_of_success + ${incrementBy}, updated_at = ${new Date()} 
-          WHERE id = ${poaId}`
+      sql`UPDATE ${eventPoaTriggers}
+          SET count_of_success = count_of_success + ${incrementBy},
+              updated_at = ${new Date()}
+          WHERE id = ${poaId}`,
     );
 
     await redisTools.deleteCache(getEventPoaCacheKey(poaId)); // Clear cache
@@ -97,7 +99,7 @@ export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) =>
 };
 
 // Get a list of active POAs by time
-export const getActivePoaForEventByTime = async (eventId : number,startTime: number, endTime: number) => {
+export const getActivePoaForEventByTime = async (eventId: number, startTime: number, endTime: number) => {
   try {
     console.log(`Getting active POAs by time: ${startTime} - ${endTime}`);
     const activePoa = await db
@@ -105,16 +107,13 @@ export const getActivePoaForEventByTime = async (eventId : number,startTime: num
       .from(eventPoaTriggers)
       .where(
         and(
-          eq(eventPoaTriggers.eventId, eventId), // Check the event ID
-          eq(eventPoaTriggers.status, "active" as const), // Match against the correct enum
-          gte(eventPoaTriggers.startTime, startTime), // Start time >= startTime
-          lte(eventPoaTriggers.startTime, endTime) // Start time <= endTime
-        )
+          eq(eventPoaTriggers.eventId, eventId),
+          eq(eventPoaTriggers.status, "active" as const),
+          lte(eventPoaTriggers.startTime, endTime),
+        ),
       )
       .execute();
 
-    // console.log("Active POAs by time:");
-    // console.table(activePoa);
     return activePoa;
   } catch (error) {
     console.error("Error getting active POAs by time:", error);
@@ -155,14 +154,12 @@ export const generatePoaForAddEvent = async (
     eventEndTime: number;
     poaCount: number;
     poaType: EventTriggerType;
-  }
+  },
 ) => {
   const { eventId, eventStartTime, eventEndTime, poaCount, poaType } = params;
 
-  // Buffer of 10 minutes (in seconds)
-  const buffer = 10 * 60;
+  const buffer = 10 * 60; // Buffer of 10 minutes in seconds
 
-  // Validate inputs
   if (eventStartTime >= eventEndTime) {
     throw new Error("Event start time must be less than end time.");
   }
@@ -171,23 +168,19 @@ export const generatePoaForAddEvent = async (
     throw new Error("POA count must be greater than zero.");
   }
 
-  // Adjust start and end times based on buffer
   const adjustedStartTime = eventStartTime + buffer;
   const adjustedEndTime = eventEndTime - buffer;
 
   if (adjustedStartTime >= adjustedEndTime) {
     throw new Error(
-      "Adjusted event times are invalid. Ensure the event duration is longer than the buffer."
+      "Adjusted event times are invalid. Ensure the event duration is longer than the buffer.",
     );
   }
 
-  // Calculate the interval between POAs
   const interval = Math.floor((adjustedEndTime - adjustedStartTime) / poaCount);
 
-  // Generate POA start times
   const poaStartTimes = Array.from({ length: poaCount }, (_, i) => adjustedStartTime + i * interval);
 
-  // Fetch the current maximum POA order for the event within the transaction
   const existingPoa = await trx
     .select({ poaOrder: eventPoaTriggers.poaOrder })
     .from(eventPoaTriggers)
@@ -196,26 +189,24 @@ export const generatePoaForAddEvent = async (
 
   const maxExistingOrder = existingPoa.reduce<number>(
     (max, poa) => (poa.poaOrder !== null && poa.poaOrder > max ? poa.poaOrder : max),
-    0
+    0,
   );
 
-  // Create POA triggers using addEventPoaTrigger
   try {
     for (let i = 0; i < poaStartTimes.length; i++) {
       const poaOrder = (maxExistingOrder ?? 0) + i + 1;
       const poaData = {
         eventId,
-        poaOrder, // Increment POA order
+        poaOrder,
         startTime: poaStartTimes[i],
         countOfSent: 0,
         countOfSuccess: 0,
         poaType,
-        status: "active" as const, // Default to active
+        status: "active" as const,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
 
-      // Insert into the database within the transaction
       await trx.insert(eventPoaTriggers).values(poaData).execute();
       console.log(`POA Trigger added for event ${eventId}:`, poaData);
     }
@@ -226,8 +217,6 @@ export const generatePoaForAddEvent = async (
   }
 };
 
-
-
 // Export all functions in a single object
 export const eventPoaTriggersDB = {
   addEventPoaTrigger,
@@ -236,5 +225,5 @@ export const eventPoaTriggersDB = {
   incrementCountOfSuccess,
   getActivePoaForEventByTime,
   getPoaByEventId,
-  generatePoaForAddEvent
+  generatePoaForAddEvent,
 };

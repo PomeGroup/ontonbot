@@ -1,7 +1,7 @@
 // handleNotificationReply.ts
 import { notificationReplySchema } from "@/zodSchema/SocketZodSchemas";
 import { z } from "zod";
-import { notificationsDB } from "@/server/db/notifications";
+import { notificationsDB } from "@/server/db/notifications.db";
 import { NotificationStatus } from "@/db/schema";
 
 type CallbackFunction = (response: { status: string; message: string }) => void;
