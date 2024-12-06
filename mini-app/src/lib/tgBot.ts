@@ -149,5 +149,6 @@ export const sendLogNotification = async (props: {
         props.topic === "ticket" ? TICKETS_TOPIC : props.topic === "event" ? EVENTS_TOPIC : SYSTEM_TOPIC
       ),
     },
+    parse_mode: "HTML",
   });
 };
