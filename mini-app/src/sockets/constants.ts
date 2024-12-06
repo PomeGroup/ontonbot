@@ -1,5 +1,6 @@
 // Description: Constants for the socket server.
 export const userSockets: Map<number, Set<string>> = new Map();
+export type UserId = number;
 export const prefetchCount = Number(process.env.PREFETCH_COUNT) || 10;
 export const rabbitMQUser = process.env.RABBITMQ_DEFAULT_USER || "";
 export const rabbitMQPass = process.env.RABBITMQ_DEFAULT_PASS || "";

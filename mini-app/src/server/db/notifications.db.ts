@@ -228,17 +228,44 @@ export const addNotifications = async (
         id: notifications.id,
         userId: notifications.userId,
         type: notifications.type,
+        title: notifications.title,
+        desc: notifications.desc,
+        priority: notifications.priority,
+        icon: notifications.icon,
+        image: notifications.image,
+        link: notifications.link,
+        actionTimeout: notifications.actionTimeout,
+        additionalData: notifications.additionalData,
+        status: notifications.status,
+        createdAt: notifications.createdAt,
+        readAt: notifications.readAt,
+        expiresAt: notifications.expiresAt,
+        itemId: notifications.itemId,
+        item_type: notifications.item_type,
       })
       .execute();
 
     console.log(`Added ${insertedNotifications.length} notifications.`);
 
-    // Prepare messages for RabbitMQ
+    // Prepare RabbitMQ messages with full notification data
     const rabbitMQMessages = insertedNotifications.map((notification) => ({
       notificationId: notification.id,
       userId: notification.userId,
       type: notification.type,
-      // Add additional fields if necessary
+      title: notification.title,
+      desc: notification.desc,
+      priority: notification.priority,
+      icon: notification.icon,
+      image: notification.image,
+      link: notification.link,
+      actionTimeout: notification.actionTimeout,
+      additionalData: notification.additionalData,
+      status: notification.status,
+      createdAt: notification.createdAt,
+      readAt: notification.readAt,
+      expiresAt: notification.expiresAt,
+      itemId: notification.itemId,
+      item_type: notification.item_type,
     }));
 
     // Enqueue all messages to RabbitMQ in parallel
