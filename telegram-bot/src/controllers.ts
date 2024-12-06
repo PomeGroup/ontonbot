@@ -372,7 +372,6 @@ interface SendRewardLinkBody {
   chat_id: number;
   link: string;
   custom_message: string;
-  reply_to_message_id?: string;
 }
 
 /**
@@ -389,12 +388,7 @@ export async function sendMessage(
 ): Promise<Response> {
   try {
     // Destructure the request body
-    const {
-      chat_id,
-      link,
-      custom_message,
-      reply_to_message_id,
-    }: SendRewardLinkBody = req.body;
+    const { chat_id, link, custom_message }: SendRewardLinkBody = req.body;
 
     // Input validation
     if (!chat_id || typeof Number(chat_id) !== "number") {
@@ -428,7 +422,6 @@ export async function sendMessage(
     await req.bot.api.sendMessage(chat_id, custom_message.trim(), {
       reply_markup,
       parse_mode: "HTML",
-      reply_to_message_id: Number(reply_to_message_id),
     });
 
     // Return a success response
