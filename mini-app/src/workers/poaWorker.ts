@@ -8,7 +8,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { formatDateTime } from "@/lib/DateAndTime";
 import { z } from "zod";
 
-const WORKER_INTERVAL = 5 * 1000; // 1 minute
+const WORKER_INTERVAL = 10 * 1000; // 1 minute
 
 // Function to fetch ongoing events with online participation
 const fetchOngoingEvents = async () => {
@@ -113,8 +113,8 @@ const processOngoingEvents = async () => {
                 const notification = {
                   userId: user.userId,
                   type: "POA_SIMPLE" as const,
-                  title: `Participation Approval Required for Event:  ${event.title}`,
-                  desc: "Please approve your participation in the event.",
+                  title: `${event.title}`,
+                  desc: "Please confirm your presence.",
                   actionTimeout: 60, // 1 minute
                   additionalData: {
                     eventId: eventId,

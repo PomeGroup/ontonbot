@@ -2,7 +2,7 @@
   "name": "next-js-project-template",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
+
   "scripts": {
     "dev": "dotenv -e ../.env -- cross-var node --inspect ./node_modules/next/dist/bin/next dev --port %MINI_APP_PORT%",
     "test-env": "dotenv -e ../.env -- cross-var  echo %MINI_APP_PORT%",

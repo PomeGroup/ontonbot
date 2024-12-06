@@ -13,7 +13,7 @@ import KonstaAppProvider from "./_components/KonstaAppProvider";
 import UserSaver from "./_components/UserSaver";
 import * as Sentry from "@sentry/nextjs";
 import ThemeToggleButton from "./_components/atoms/buttons/ThemeToggleButton";
-
+import NotificationProvider from "./_components/NotificationProvider";
 const Providers = ({ children, isDevStage }: { children: React.ReactNode; isDevStage: boolean }) => {
   useEffect(() => {
     isDevStage && import("eruda").then((lib) => lib.default.init());
@@ -39,7 +39,9 @@ const Providers = ({ children, isDevStage }: { children: React.ReactNode; isDevS
                 <ConfigProvider>
                   <KonstaAppProvider>
                     <ThemeSetter>
-                      <UserSaver>{children}</UserSaver>
+                      <NotificationProvider>
+                        <UserSaver>{children}</UserSaver>
+                      </NotificationProvider>
                     </ThemeSetter>
                     <Toaster />
                   </KonstaAppProvider>

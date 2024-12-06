@@ -359,7 +359,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
         WebApp?.MainButton.hide();
       } else if (!HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log("++++ShowMainButton isVisible", WebApp?.MainButton.isVisible);
         WebApp?.MainButton.show();
         WebApp?.MainButton.show();
       }
