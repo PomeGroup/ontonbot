@@ -1,24 +1,8 @@
 import { sql } from "drizzle-orm";
 import { users } from "@/db/schema/users";
-import {
-  bigint,
-  pgTable,
-  serial,
-  uuid,
-  text,
-  check,
-  uniqueIndex,
-  timestamp,
-  pgEnum,
-  jsonb,
-} from "drizzle-orm/pg-core";
+import { bigint, pgTable, serial, uuid, text, check, uniqueIndex, timestamp, pgEnum, jsonb } from "drizzle-orm/pg-core";
 
-export const eventRegistrantStatus = pgEnum("registrant_status", [
-  "pending",
-  "rejected",
-  "approved",
-  "checkedin",
-]);
+export const eventRegistrantStatus = pgEnum("registrant_status", ["pending", "rejected", "approved", "checkedin"]);
 
 export const eventRegistrants = pgTable(
   "event_registrants",
@@ -44,6 +28,6 @@ export const eventRegistrants = pgTable(
   },
   (table) => ({
     uniqueEventUser: uniqueIndex().on(table.event_uuid, table.user_id),
-    statusCheck: check("valid_status", sql`${table.status} IN ('pending', 'rejected', 'approved')`),
+    statusCheck: check("valid_status", sql`${table.status} IN ('pending', 'rejected', 'approved','checkedin')`),
   })
 );
