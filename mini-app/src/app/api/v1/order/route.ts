@@ -119,19 +119,19 @@ export async function POST(request: Request) {
 /**
  *  update orders that are older than 5min at created state to failed state
  */
-export async function PATCH() {
-  await db
-    .update(orders)
-    .set({
-      state: "failed",
-      updatedBy: "system",
-      updatedAt: new Date(),
-    })
-    .where(and(eq(orders.state, "created"), lt(orders.created_at, new Date(Date.now() - 1000 * 60 * 10))));
+// export async function PATCH() {
+//   await db
+//     .update(orders)
+//     .set({
+//       state: "failed",
+//       updatedBy: "system",
+//       updatedAt: new Date(),
+//     })
+//     .where(and(eq(orders.state, "created"), lt(orders.created_at, new Date(Date.now() - 1000 * 60 * 10))));
 
-  return Response.json({
-    message: "orders updated",
-  });
-}
+//   return Response.json({
+//     message: "orders updated",
+//   });
+// }
 
 export const dynamic = "force-dynamic";

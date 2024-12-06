@@ -1,8 +1,8 @@
 import { index, integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
 
-export const eventTicket = pgTable(
-  "event_tickets",
+export const eventPayment = pgTable(
+  "event_payment_info",
   {
     id: serial("id").primaryKey(),
     event_uuid: uuid("event_uuid").references(() => events.event_uuid),

@@ -13,14 +13,13 @@ export const rewardStatus = pgEnum("reward_status", [
   "failed",
   "fixed_failed",
 ]);
-export const ticketStatus = pgEnum("event_ticket_status", ["MINTING", "USED", "UNUSED"]);
+export const ticketStatus = pgEnum("event_ticket_status", ["USED", "UNUSED"]);
 
 export const orderState = pgEnum("order_state", [
   "created",
   "mint_request",
   "minted",
   "failed",
-  "validation_failed",
 ]);
 export const developmentEnvironment = pgEnum("development_environment", [
   "local",

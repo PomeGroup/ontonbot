@@ -55,7 +55,7 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
 
 // Continue from here
 const patchOrderBodySchema = z.object({
-  state: z.enum(["created", "mint_request", "minted", "failed", "validation_failed"]),
+  state: z.enum(["created", "mint_request", "minted", "failed"]),
   transaction_id: z.string().uuid().optional(),
   nft_address: z
     .string()
@@ -178,7 +178,7 @@ async function sendTicketLogNotification(props: {
 <b>${event.title}</b> sold
 
 User: ${props.username}
-UserId : ${props.user_id}
+UserId : <code>${props.user_id}</code>
 
 Ticket: ${eventTicket?.price} TON
 

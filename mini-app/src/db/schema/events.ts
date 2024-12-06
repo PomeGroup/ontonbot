@@ -51,6 +51,10 @@ export const events = pgTable(
     has_waiting_list: boolean("has_waiting_list").default(false),
     /* ------------------------- // Event Registration > ------------------------ */
 
+    /* ------------------------------- Paid Event ------------------------------- */
+    has_payment : boolean("has_payment"),
+    /* ------------------------------- Paid Event ------------------------------- */
+
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
       mode: "date",

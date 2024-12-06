@@ -1,3 +1,4 @@
+import { Address } from "@ton/core";
 import { z } from "zod";
 
 export type InputField = {
@@ -121,6 +122,40 @@ export const DynamicFieldsSchema = z.array(
   })
 );
 
+/* -------------------------------------------------------------------------- */
+/*                          💲💲Paid Event Schema💲💲                         */
+/* -------------------------------------------------------------------------- */
+const PaidEventSchema = z
+  .object({
+    has_payment: z.boolean().optional().default(false),
+
+    payment_recipient_address: z.string().optional().default(""),
+    payment_type: z.enum(["USDT", "TON"]).optional(),
+    payment_amount: z.number().optional(),
+
+    has_nft: z.boolean().optional().default(false),
+    nft_image_url: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.has_payment) {
+      // Validate that `payment_recipient_address` is not empty
+      if (!data.payment_recipient_address)
+        ctx.addIssue({ code: "custom", path: ["payment_recipient_address"], message: "Recipient address is Required" });
+      else if (!Address.isAddress(data.payment_recipient_address))
+        ctx.addIssue({ code: "custom", path: ["invalid_payment_recipient_address"], message: "Recipient address is Invalid!" });
+
+      // Validate that `payment_type` is present
+      if (!data.payment_type) ctx.addIssue({ code: "custom", path: ["payment_type"], message: "Payment type is required." });
+
+      // Validate that `payment_amount` is present and greater than 0
+      if (data.payment_amount === undefined || data.payment_amount <= 0)
+        ctx.addIssue({ code: "custom", path: ["payment_amount"], message: "Payment amount must be greater than 0" });
+
+      // Validate that `nft_image_url` is present
+      if (data.has_nft && !data.nft_image_url) ctx.addIssue({ code: "custom", path: ["nft_image_url"], message: "Nft image url is required" });
+    }
+  });
+
 //Create Event
 export const EventDataSchema = z.object({
   event_id: z.number().optional(),
@@ -130,15 +165,11 @@ export const EventDataSchema = z.object({
   subtitle: z.string({ required_error: "subtitle is required" }),
   description: z.string({ required_error: "description is required" }),
   location: z.string({ required_error: "location is required" }),
-  image_url: z
-    .string({ required_error: "event image is required" })
-    .url({ message: "Please upload a valid event image URL" }),
+  image_url: z.string({ required_error: "event image is required" }).url({ message: "Please upload a valid event image URL" }),
   video_url: z.string().url({ message: "Please select a valid reward video URL" }).optional(),
-  ts_reward_url: z
-    .string()
-    .url({
-      message: "Please select a valid reward image URL",
-    }), // This allows the field to be undefined
+  ts_reward_url: z.string().url({
+    message: "Please select a valid reward image URL",
+  }), // This allows the field to be undefined
   society_hub: z.object({
     id: z.string({ required_error: "society_hub.id is required" }),
     name: z.string({ required_error: "society_hub.name is required" }),
@@ -160,6 +191,10 @@ export const EventDataSchema = z.object({
   capacity: z.number().min(1).nullable(),
   has_waiting_list: z.boolean(),
   /* -------------------------- // Free Event Registration Creation ------------------------- */
+
+  /* ------------------------------- Paid Event Creation ------------------------------- */
+  paid_event: PaidEventSchema.optional(),
+  /* ------------------------------- Paid Event Creation ------------------------------- */
 });
 
 export const UpdateEventDataSchema = z.object({
@@ -170,9 +205,7 @@ export const UpdateEventDataSchema = z.object({
   subtitle: z.string({ required_error: "subtitle is required" }),
   description: z.string({ required_error: "description is required" }),
   location: z.string({ required_error: "location is required" }),
-  image_url: z
-    .string({ required_error: "event image is required" })
-    .url({ message: "Please upload a valid image URL" }),
+  image_url: z.string({ required_error: "event image is required" }).url({ message: "Please upload a valid image URL" }),
   video_url: z.string().url({ message: "Please upload a valid video URL" }).optional(),
   ts_reward_url: z
     .string()
@@ -200,6 +233,9 @@ export const UpdateEventDataSchema = z.object({
   capacity: z.number().min(1).nullable(),
   has_waiting_list: z.boolean(),
   /* -------------------------- // Free Event Registration Update ------------------------- */
+  /* ------------------------------- Paid Event Update ------------------------------- */
+  paid_event: PaidEventSchema.optional(),
+  /* ------------------------------- Paid Event Update ------------------------------- */
 });
 
 export const EventRegisterSchema = z.object({

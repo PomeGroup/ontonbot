@@ -19,7 +19,7 @@ import {
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
-import { eventTicket } from "./schema/eventTicket";
+import { eventPayment } from "./schema/eventPayment";
 import { event_details_search_list } from "./schema/event_details_search_list";
 import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers.db";
 import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults.db";
@@ -60,7 +60,7 @@ export {
   airdropRoutines,
   eventFieldRelations,
   eventFields,
-  eventTicket,
+  eventPayment,
   event_details_search_list,
   eventPoaTriggers,
   eventPoaTriggersIndexes,
