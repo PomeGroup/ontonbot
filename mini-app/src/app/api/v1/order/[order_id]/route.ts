@@ -86,6 +86,7 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
   if (!order) {
     return Response.json({ message: "ordernot found" }, { status: 404 });
   }
+
   try {
     await db.transaction(async (tx) => {
       if (body.data.state === "minted") {

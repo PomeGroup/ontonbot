@@ -428,7 +428,7 @@ export async function sendMessage(
     await req.bot.api.sendMessage(chat_id, custom_message.trim(), {
       reply_markup,
       parse_mode: "HTML",
-      reply_to_message_id,
+      reply_to_message_id: Number(reply_to_message_id),
     });
 
     // Return a success response
