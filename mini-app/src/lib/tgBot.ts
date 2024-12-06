@@ -1,4 +1,6 @@
+import { fetchOntonSettings } from "@/server/db/ontoSetting";
 import axios from "axios";
+import { Bot } from "grammy";
 
 const tgClient = axios.create({
   baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
@@ -10,7 +12,6 @@ export const sendTelegramMessage = async (props: {
   chat_id: string | number;
   message: string;
   link?: string;
-  reply_to?: string;
 }) => {
   try {
     const response = await tgClient.post(
@@ -19,7 +20,6 @@ export const sendTelegramMessage = async (props: {
         chat_id: props.chat_id,
         custom_message: props.message,
         link: props.link,
-        reply_to_message_id: props.reply_to,
       }
     );
 
@@ -117,18 +117,37 @@ export const sendEventPhoto = async (props: {
   }
 };
 
+// 🌳 ---- GLOBAL SETTINGS ---- 🌳
+let ONTON_SETTINGS: Awaited<ReturnType<typeof fetchOntonSettings>> | null = null;
+
+// 🌳 ---- INITIALIZE SETTINGS ---- 🌳
+const initializeOntonSettings = async () => {
+  ONTON_SETTINGS = await fetchOntonSettings();
+};
+
+// 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
 export const sendLogNotification = async (props: {
   message: string;
   topic: "event" | "ticket" | "system";
 }) => {
-  return await sendTelegramMessage({
-    chat_id: process.env.TG_LOGS_GROUP_ID!,
-    message: props.message,
-    reply_to:
-      props.topic === "ticket"
-        ? process.env.TG_TICKETS_TOPIC
-        : props.topic === "system"
-          ? process.env.TG_SYSTEM_TOPIC
-          : process.env.TG_EVENTS_TOPIC,
+  if (!ONTON_SETTINGS) {
+    await initializeOntonSettings();
+  }
+
+  const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = ONTON_SETTINGS?.config;
+  const {
+    events_topic: EVENTS_TOPIC,
+    system_topic: SYSTEM_TOPIC,
+    tickets_topic: TICKETS_TOPIC,
+  } = ONTON_SETTINGS?.config;
+
+  const logBot = new Bot(BOT_TOKEN_LOGS);
+
+  return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
+    reply_parameters: {
+      message_id: Number(
+        props.topic === "ticket" ? TICKETS_TOPIC : props.topic === "event" ? EVENTS_TOPIC : SYSTEM_TOPIC
+      ),
+    },
   });
 };
