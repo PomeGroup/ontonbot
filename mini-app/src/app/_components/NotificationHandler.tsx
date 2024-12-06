@@ -39,20 +39,17 @@ const NotificationHandler: React.FC = () => {
 
     // Find a POA_SIMPLE notification not in handledNotificationIds
     const newNotification = notifications.find(
-      (n) =>
-        n.type === "POA_SIMPLE" && !handledNotificationIds.has(n.notificationId)
+      (n) => n.type === "POA_SIMPLE" && !handledNotificationIds.has(n.notificationId)
     );
 
-    // If we found a new POA_SIMPLE notification
     if (newNotification) {
       console.log("New POA_SIMPLE notification found:", newNotification.notificationId);
       setNotificationToShow(newNotification);
-      setTimeLeft(Number(newNotification.actionTimeout));
-      // Mark this notification as handled so it won't be shown again
+      const timeoutValue = Number(newNotification.actionTimeout) || 0;
+      setTimeLeft(timeoutValue);
+      // Mark this notification as handled so it won't show again
       setHandledNotificationIds((prev) => new Set(prev).add(newNotification.notificationId));
     } else {
-      // If no new POA_SIMPLE notification found and currently showing one, do nothing.
-      // If currently not showing any notification, everything stays idle.
       console.log("No new POA_SIMPLE notification found.");
     }
   }, [notifications, handledNotificationIds]);
@@ -78,22 +75,38 @@ const NotificationHandler: React.FC = () => {
 
   const handleYes = () => {
     if (!socket || !notificationToShow) return;
-    socket.emit("poa_simple_answer", {
-      notificationId: notificationToShow.notificationId,
-      answer: "yes",
-    });
+    socket.emit(
+      "notification_reply",
+      {
+        notificationId: notificationToShow.notificationId,
+        answer: "yes",
+      },
+      (response: { status: string; message: string }) => {
+        console.log("Server responded to 'yes' reply:", response);
+      }
+    );
     handleClose();
   };
 
   const handleNo = () => {
-    // User declined or time expired, just close the dialog
+    if (!socket || !notificationToShow) return;
+    socket.emit(
+      "notification_reply",
+      {
+        notificationId: notificationToShow.notificationId,
+        answer: "no",
+      },
+      (response: { status: string; message: string }) => {
+        console.log("Server responded to 'no' reply:", response);
+      }
+    );
     handleClose();
   };
 
   const handleClose = () => {
     setNotificationToShow(undefined);
     setTimeLeft(0);
-    // Do NOT remove from handledNotificationIds, to avoid re-showing
+    // Do NOT remove from handledNotificationIds, so the same notification isn't re-shown.
   };
 
   const opened = !!notificationToShow;
@@ -102,13 +115,12 @@ const NotificationHandler: React.FC = () => {
     <Dialog
       opened={opened}
       onBackdropClick={handleNo}
-      title={ `Confirmation in ${timeLeft} seconds`}
+      title={`Confirmation in ${timeLeft} seconds`}
       content={
         notificationToShow ? (
           <>
-            <p>{notificationToShow?.title || ""}</p>
+            <p>{notificationToShow.title || ""}</p>
             <p>{notificationToShow.desc || ""}</p>
-
           </>
         ) : (
           <p>No new POA_SIMPLE notifications at the moment.</p>

@@ -14,6 +14,7 @@ export const SOCKET_RETRY_INTERVAL =  30000;
 export const SocketEvents = {
   receive: {
     test: "test",
+    notificationReply: "notification_reply",
   },
   send: {
     notification: "notification",

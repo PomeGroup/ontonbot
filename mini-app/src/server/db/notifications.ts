@@ -155,6 +155,24 @@ export const deleteNotificationsByExpiry = async (expiryDate: Date) => {
   }
 };
 
+
+export const getNotificationById = async (notificationId: number) => {
+  try {
+    const foundNotifications = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.id, notificationId))
+      .limit(1)
+      .execute();
+
+    return foundNotifications.length > 0 ? foundNotifications[0] : null;
+  } catch (error) {
+    console.error("Error getting notification by ID:", error);
+    throw error;
+  }
+};
+
+
 // Export all functions as a single object
 export const notificationsDB = {
   addNotification,
@@ -162,4 +180,5 @@ export const notificationsDB = {
   updateNotificationStatus,
   updateNotificationStatusAndReply,
   deleteNotificationsByExpiry,
+  getNotificationById,
 };

@@ -10,6 +10,7 @@ import { z } from "zod";
 
 const WORKER_INTERVAL = 10 * 1000; // 1 minute
 
+
 // Function to fetch ongoing events with online participation
 const fetchOngoingEvents = async () => {
   const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
@@ -115,7 +116,7 @@ const processOngoingEvents = async () => {
                   type: "POA_SIMPLE" as const,
                   title: `${event.title}`,
                   desc: "Please confirm your presence.",
-                  actionTimeout: 60, // 1 minute
+                  actionTimeout: 20, // 1 minute
                   additionalData: {
                     eventId: eventId,
                     poaId: trigger.id,
