@@ -15,7 +15,7 @@ export const emitNotification = (
   if (!sockets || sockets.size === 0) {
     console.warn(`User ${userId} is not online. Message will be retried.`);
     console.log(msg);
-    if (message.userId === 12345) {
+    if (message.userId === 548648769) {
       console.log("Simulating a processing failure for message:", message);
       channel.nack(msg, false, false); // Send to DLX
       return;

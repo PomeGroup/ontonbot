@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import Script from "next/script";
 import React from "react";
 import { isDevStage } from "@/constants";
+import NotificationHandler from "@/app/_components/NotificationHandler";
 
 const mainFont = Roboto({
   subsets: ["latin"],
@@ -33,7 +34,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       )}
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
       <body className={cn(mainFont.className)}>
-        <Providers isDevStage={isDevStage}>{children}</Providers>
+        <Providers isDevStage={isDevStage}>
+          <NotificationHandler />
+          {children}
+
+        </Providers>
         {process.env.NODE_ENV === "development" && (
           <script
             async

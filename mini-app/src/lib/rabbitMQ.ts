@@ -1,4 +1,13 @@
-import { QueueNames, dlxName, notificationQueueOptions, retryQueueOptions } from "@/sockets/constants";
+import {
+  QueueNames,
+  dlxName,
+  notificationQueueOptions,
+  retryQueueOptions,
+  rabbitMQUser,
+  rabbitMQUrl,
+  rabbitMQPass,
+  rabbitMQPort,
+} from "@/sockets/constants";
 import amqp, { Connection, Channel, Message, Options } from "amqplib";
 
 export type QueueNamesType = typeof QueueNames[keyof typeof QueueNames];
@@ -13,11 +22,11 @@ export class RabbitMQ {
   private readonly password: string;
   private readonly port: number;
 
-  private constructor(url: string, username: string, password: string, port: number) {
-    this.url = process.env.IP_RABBITMQ || url;
-    this.username = process.env.RABBITMQ_DEFAULT_USER || username;
-    this.password = process.env.RABBITMQ_DEFAULT_PASS || password;
-    this.port = parseInt(process.env.RABBITMQ_NODE_PORT!) || port;
+  private constructor() {
+    this.url = rabbitMQUrl;
+    this.username = rabbitMQUser;
+    this.password = rabbitMQPass;
+    this.port = rabbitMQPort;
   }
 
   /**
@@ -25,12 +34,7 @@ export class RabbitMQ {
    */
   public static getInstance(): RabbitMQ {
     if (!RabbitMQ.instance) {
-      RabbitMQ.instance = new RabbitMQ(
-        process.env.RABBITMQ_URL || "localhost",
-        process.env.RABBITMQ_DEFAULT_USER || "guest",
-        process.env.RABBITMQ_DEFAULT_PASS || "guest",
-        parseInt(process.env.RABBITMQ_NODE_PORT!) || 5672,
-      );
+      RabbitMQ.instance = new RabbitMQ();
     }
     return RabbitMQ.instance;
   }
@@ -128,7 +132,7 @@ export class RabbitMQ {
       const buffer = Buffer.from(JSON.stringify(message));
       // Ensure persistent is always true unless overridden
       const publishOptions: Options.Publish = { persistent: true, ...options };
-      console.log(`Pushing message to queue '${queue}' with options:`, publishOptions);
+      console.log(`Pushing message to queue2 '${queue}' with options:`, publishOptions);
       const sent = channel.sendToQueue(queue, buffer, publishOptions);
 
       if (sent) {

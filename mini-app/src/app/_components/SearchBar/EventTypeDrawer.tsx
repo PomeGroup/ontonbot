@@ -26,10 +26,7 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
   // Create local state to track the participation type selections
   const [localParticipationType, setLocalParticipationType] = useState<ParticipationType>([]);
 
-  // Log the incoming participation type from the parent for debugging
-  useEffect(() => {
-    console.log("Incoming participationType from parent:", participationType);
-  }, [participationType]);
+
 
   // When the drawer opens, reset the local state to the incoming participationType prop
   useEffect(() => {
