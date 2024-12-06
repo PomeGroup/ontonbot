@@ -10,6 +10,7 @@ export const sendTelegramMessage = async (props: {
   chat_id: string | number;
   message: string;
   link?: string;
+  reply_to?: string;
 }) => {
   try {
     const response = await tgClient.post(
@@ -18,6 +19,7 @@ export const sendTelegramMessage = async (props: {
         chat_id: props.chat_id,
         custom_message: props.message,
         link: props.link,
+        reply_to_message_id: props.reply_to,
       }
     );
 
@@ -61,16 +63,15 @@ export const sendTelegramMessage = async (props: {
   }
 };
 export const sendEventPhoto = async (props: {
-  event_id : string,
+  event_id: string;
   user_id: string | number;
   message: string;
-  
 }) => {
   try {
     const response = await tgClient.post(
       `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-photo`,
       {
-        id : props.event_id,
+        id: props.event_id,
         user_id: String(props.user_id),
         message: props.message,
       }
@@ -116,10 +117,18 @@ export const sendEventPhoto = async (props: {
   }
 };
 
-
-export const sendLogNotification = async (props: { message: string }) => {
+export const sendLogNotification = async (props: {
+  message: string;
+  topic: "event" | "ticket" | "system";
+}) => {
   return await sendTelegramMessage({
-    chat_id: process.env.TG_NOTIFICATION_CHANELL!,
+    chat_id: process.env.TG_LOGS_GROUP_ID!,
     message: props.message,
+    reply_to:
+      props.topic === "ticket"
+        ? process.env.TG_TICKETS_TOPIC
+        : props.topic === "system"
+          ? process.env.TG_SYSTEM_TOPIC
+          : process.env.TG_EVENTS_TOPIC,
   });
 };

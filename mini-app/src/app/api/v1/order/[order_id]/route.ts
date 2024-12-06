@@ -193,6 +193,7 @@ Total sold count for this event: ${
 
 #ticket_sold
 `,
+        topic: "ticket",
       });
     }
   } catch (error) {

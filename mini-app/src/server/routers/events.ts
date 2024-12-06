@@ -33,7 +33,6 @@ import rewardService from "@/server/routers/services/rewardsService";
 import { addVisitor } from "@/server/db/visitors";
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers";
 
-
 dotenv.config();
 
 const PLACEHOLDER_IMAGE = "https://storage.onton.live/ontonimage/test_image.png";
@@ -520,7 +519,7 @@ export const eventsRouter = router({
             });
           }
           // Generate POA for the event
-          if(opts.input.eventData.eventLocationType === "online") {
+          if (opts.input.eventData.eventLocationType === "online") {
             await eventPoaTriggersDB.generatePoaForAddEvent(trx, {
               eventId: newEvent[0].event_id,
               eventStartTime: newEvent[0].start_date || 0,
@@ -568,10 +567,16 @@ export const eventsRouter = router({
                       title: opts.input.eventData.title,
                       description: opts.input.eventData.description,
                       image: {
-                        url: process.env.ENV !== "local" ? opts.input.eventData.ts_reward_url : PLACEHOLDER_IMAGE,
+                        url:
+                          process.env.ENV !== "local"
+                            ? opts.input.eventData.ts_reward_url
+                            : PLACEHOLDER_IMAGE,
                       },
                       cover: {
-                        url: process.env.ENV !== "local" ? opts.input.eventData.ts_reward_url : PLACEHOLDER_IMAGE,
+                        url:
+                          process.env.ENV !== "local"
+                            ? opts.input.eventData.ts_reward_url
+                            : PLACEHOLDER_IMAGE,
                       },
                       item_title: opts.input.eventData.title,
                       item_description: "Reward for participation",
@@ -627,6 +632,7 @@ export const eventsRouter = router({
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
             `,
+            topic: "event",
           });
 
           // On local development environment, we skip the registration on ton society
@@ -834,8 +840,8 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           const oldChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
 
           const updateChanges = getObjectDifference(
-            updatedEventWithoutDescription,
-            oldEventWithoutDescription
+            oldEventWithoutDescription,
+            updatedEventWithoutDescription
           );
 
           const message = `
@@ -864,7 +870,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             }
           }
 
-          await sendLogNotification({ message });
+          await sendLogNotification({ message, topic: "event" });
 
           return { success: true, eventId: opts.ctx.event.event_uuid } as const;
         });

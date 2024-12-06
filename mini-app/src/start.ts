@@ -65,6 +65,7 @@ function cronJob(fn: (_: () => any) => any) {
     } catch (err) {
       await sendLogNotification({
         message: `Cron job ${name} error: ${getErrorMessages(err)}`,
+        topic: "system",
       });
     } finally {
       await redisTools.deleteCache(redisTools.cacheKeys.cronJobLock + name);
