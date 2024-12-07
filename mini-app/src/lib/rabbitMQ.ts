@@ -10,7 +10,7 @@ import {
   rabbitMQPass,
   rabbitMQPort,
 } from "@/sockets/constants";
-import amqp, { Connection, Channel, Message, Options, ConsumeMessage } from "amqplib";
+import amqp, { Connection, Channel, Message, Options } from "amqplib";
 
 export type QueueNamesType = typeof QueueNames[keyof typeof QueueNames];
 

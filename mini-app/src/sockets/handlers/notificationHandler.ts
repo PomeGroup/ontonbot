@@ -52,7 +52,10 @@ export const handleNotifications = async (io: Server) => {
     socket.onAny((event, ...args) => {
       handleUnknownEvent(socket, event, args);
     });
-
+    socket.on(SocketEvents.send.error, (error) => {
+      console.error(`Error on socket ${socket.id}:`, error.message);
+      socket.emit("error", "An unexpected error occurred.");
+    });
     // Handle disconnection
     socket.on("disconnect", () => {
       handleDisconnection(socket, sanitizedUsername, user.id);

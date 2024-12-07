@@ -237,7 +237,28 @@ export const generatePoaForAddEvent = async (
   }
 };
 
+export const getEventPoaTriggerById = async (poaId: number) => {
+  try {
+    const cacheKey = getEventPoaCacheKey(poaId);
+    const cachedResult = await redisTools.getCache(cacheKey);
 
+    if (cachedResult) {
+      return cachedResult; // Return cached data if available
+    }
+
+    const poaTrigger = await db
+      .select()
+      .from(eventPoaTriggers)
+      .where(eq(eventPoaTriggers.id, poaId))
+      .execute();
+    const result = poaTrigger[0];
+    await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.medium); // Cache the result
+    return result;
+  } catch (error) {
+    console.error("Error getting POA Trigger by ID:", error);
+    throw error;
+  }
+}
 // Export all functions in a single object
 export const eventPoaTriggersDB = {
   addEventPoaTrigger,
@@ -247,4 +268,5 @@ export const eventPoaTriggersDB = {
   getActivePoaForEventByTime,
   getPoaByEventId,
   generatePoaForAddEvent,
+  getEventPoaTriggerById,
 };

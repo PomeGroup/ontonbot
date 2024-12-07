@@ -2,7 +2,6 @@
   "name": "next-js-project-template",
   "version": "0.1.0",
   "private": true,
-
   "scripts": {
     "dev": "dotenv -e ../.env -- cross-var node --inspect ./node_modules/next/dist/bin/next dev --port %MINI_APP_PORT%",
     "test-env": "dotenv -e ../.env -- cross-var  echo %MINI_APP_PORT%",
@@ -79,6 +78,7 @@
     "embla-carousel-react": "^8.4.0",
     "eruda": "^3.4.1",
     "form-data": "^4.0.0",
+    "helmet": "^8.0.0",
     "https-browserify": "^1.0.0",
     "image-size": "^1.1.1",
     "jose": "^5.9.6",
