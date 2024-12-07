@@ -654,9 +654,15 @@ const updateEvent = eventManagementProtectedProcedure
 
         const hashedSecretPhrase = inputSecretPhrase ? await hashPassword(inputSecretPhrase) : undefined;
 
-        const oldEvent = await trx.select().from(events).where(eq(events.event_uuid, eventUuid!));
+        const oldEvent = (await trx.select().from(events).where(eq(events.event_uuid, eventUuid!)).execute()).pop();
+        if (!oldEvent) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Old Event Not Found",
+          });
+        }
 
-        const canUpdateRegistraion = oldEvent[0].has_registration;
+        const canUpdateRegistraionSetting = oldEvent.has_registration;
 
         const updatedEvent = await trx
           .update(events)
@@ -681,14 +687,23 @@ const updateEvent = eventManagementProtectedProcedure
 
             /* ------------------------ Event Registration Update ----------------------- */
             // Updating has_registration is not allowed
-            has_approval: canUpdateRegistraion ? eventData.has_approval : false,
-            capacity: canUpdateRegistraion ? eventData.capacity : null,
-            has_waiting_list: canUpdateRegistraion ? eventData.has_waiting_list : false,
+            has_approval: canUpdateRegistraionSetting ? eventData.has_approval : false,
+            capacity: canUpdateRegistraionSetting ? eventData.capacity : null,
+            has_waiting_list: canUpdateRegistraionSetting ? eventData.has_waiting_list : false,
             /* ------------------------ Event Registration Update ----------------------- */
           })
           .where(eq(events.event_uuid, eventUuid))
           .returning()
           .execute();
+
+        /* ----------------------------- IF HAS PAYMENT ----------------------------- */
+        if (oldEvent.has_payment) {
+          await trx.update(eventPayment).set({
+            recipient_address: eventData.paid_event?.payment_recipient_address,
+            price: eventData.paid_event?.payment_amount,
+            ticketImage: eventData.paid_event?.has_nft ? eventData.paid_event?.nft_image_url : null,
+          });
+        }
 
         const currentFields = await eventFieldsDB.selectEventFieldsByEventId(trx, eventId!);
 
@@ -706,7 +721,7 @@ const updateEvent = eventManagementProtectedProcedure
           .where(and(eq(eventFields.event_id, eventId!), eq(eventFields.title, "secret_phrase_onton_input")))
           .execute();
 
-        if (hashedSecretPhrase || (hashedSecretPhrase === undefined && oldEvent[0].ticketToCheckIn === false)) {
+        if (hashedSecretPhrase || (hashedSecretPhrase === undefined && oldEvent.ticketToCheckIn === false)) {
           if (secretPhraseTask.length > 0) {
             // Update the existing secret phrase task
             await eventFieldsDB.updateEventFieldLog(trx, secretPhraseTask[0].id, opts.ctx.user.user_id.toString());
@@ -748,7 +763,7 @@ const updateEvent = eventManagementProtectedProcedure
         // Remove the description key from updated Event
         const updatedEventWithoutDescription = removeKey(updatedEvent[0], "description");
         // Remove the description key from old Event
-        const oldEventWithoutDescription = removeKey(oldEvent[0], "description");
+        const oldEventWithoutDescription = removeKey(oldEvent, "description");
 
         const oldChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
 
