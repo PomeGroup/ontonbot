@@ -508,6 +508,51 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-metabase"
 
+  rabbitmq:
+    image: "rabbitmq:4.0.4-management-alpine"
+    hostname: rabbitmq
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1G"
+        max-file: "3"
+    ports:
+      - "${RABBITMQ_MANAGEMENT_PORT}:${RABBITMQ_MANAGEMENT_PORT}"
+      - "${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}"
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+      RABBITMQ_NODE_PORT: "${RABBITMQ_NODE_PORT}"
+      RABBITMQ_NODE_MANAGEMENT_PORT: "${RABBITMQ_MANAGEMENT_PORT}"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 4096M
+          cpus: "3.0"
+        reservations:
+          memory: 2048M
+          cpus: "1.0"
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 5
+        window: 30s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: stop-first
+      placement:
+        constraints:
+          - node.role == manager
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
+    networks:
+      - onton-network
+    tty: true
 #  client-web:
 #    hostname: client-web
 #    <<: *default-extra-hosts
