@@ -118,7 +118,7 @@ export const eventsRouter = router({
     // console.log("event_uuid", opts.input.event_uuid);
     const userId = opts.ctx.user.user_id;
     const event_uuid = opts.input.event_uuid;
-    const eventData = await selectEventByUuid(event_uuid);
+    const eventData = { ...(await selectEventByUuid(event_uuid)), payment_details: {} };
     let capacity_filled = false;
     let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
     let registrant_uuid = "";
@@ -141,10 +141,20 @@ export const eventsRouter = router({
     const userIsAdminOrOwner = eventData.owner == userId || opts.ctx.user.role == "admin";
     let mask_event_capacity = !userIsAdminOrOwner;
 
-    eventData.location = "Visible To Registered Users ";
+    eventData.location = "Visible To Registered Users";
 
     if (userIsAdminOrOwner) {
       eventData.location = event_location;
+      if (eventData.has_payment) {
+        const payment_details = (await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()).pop();
+        if (!payment_details) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Event Payment Data Not found (Corrupted Event)",
+          });
+        }
+        eventData.payment_details = { ...payment_details };
+      }
     }
 
     // Registrant Already has a request
@@ -404,7 +414,7 @@ export const eventsRouter = router({
   /* -------------------------------------------------------------------------- */
   /* -------------------------------------------------------------------------- */
   /* -------------------------------------------------------------------------- */
-  /*                                  Add Event                                 */
+  /*                                  🆕Add Event🆕                            */
   /* -------------------------------------------------------------------------- */
   // private
   addEvent: adminOrganizerProtectedProcedure
@@ -480,6 +490,7 @@ export const eventsRouter = router({
 
               //Paid Event
               has_payment: input_event_data.paid_event?.has_payment,
+              ticketToCheckIn : input_event_data.paid_event?.has_payment, // Duplicated Column same as has_payment 😐
             })
             .returning();
 
