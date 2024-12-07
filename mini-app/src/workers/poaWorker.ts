@@ -6,8 +6,8 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
 import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
 
-const WORKER_INTERVAL = 10 * 1000; // 10 seconds
-const PAGE_SIZE = 100; // Number of users to fetch per batch
+const WORKER_INTERVAL = 5 * 1000; // 10 seconds
+const PAGE_SIZE = 500; // Number of users to fetch per batch
 
 let isShuttingDown = false;
 
@@ -56,7 +56,7 @@ const processOngoingEvents = async () => {
     console.log(`Fetched ${ongoingEvents.length} ongoing events.`);
 
     for (const event of ongoingEvents) {
-      if (!event?.eventId) {
+      if (!event?.eventId || !event?.eventUuid) {
         console.warn("Invalid event data:", event);
         continue;
       }
@@ -64,10 +64,12 @@ const processOngoingEvents = async () => {
       const eventUuid = event.eventUuid;
 
       try {
+        const startTime = Math.floor(Date.now() / 1000);
+        const readableDate = new Date(startTime * 1000).toLocaleString();
+        console.log(`Processing Event ${eventId} at ${startTime} - ${readableDate}`);
         const activePoaTriggers = await eventPoaTriggersDB.getActivePoaForEventByTime(
           eventId,
-          0,
-          Math.floor(Date.now() / 1000)
+          startTime
         );
 
         if (activePoaTriggers.length === 0) {
@@ -112,18 +114,14 @@ const processOngoingEvents = async () => {
               readAt: undefined,
               expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000),
             }));
-
             try {
               const result = await notificationsDB.addNotifications(notificationsToAdd);
               console.log(`Created ${result.count} notifications for Trigger ${trigger.id}`);
             } catch (notificationError) {
               console.error(`Failed to create notifications:`, notificationError);
             }
-
             lastUserId = approvedUsers[approvedUsers.length - 1].userId;
             if (approvedUsers.length < PAGE_SIZE) hasMore = false;
-
-
           }
 
           try {
@@ -193,17 +191,14 @@ const shutdown = async () => {
     console.warn('Shutdown timeout reached. Forcing exit.');
     process.exit(1);
   }, 10000); // 10 seconds timeout
-
-
-
-
-
   // Add any additional cleanup tasks here
-
   clearTimeout(shutdownTimeout);
   console.log('Shutdown complete. Exiting process.');
   process.exit(0);
 };
 
 // Start the Worker
-runWorker();
+runWorker().catch((error) => {
+  console.error("!!!!! Unhandled error in POA Worker:", error);
+  process.exit(1);
+});

@@ -99,9 +99,9 @@ export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) =>
 };
 
 // Get a list of active POAs by time
-export const getActivePoaForEventByTime = async (eventId: number, startTime: number, endTime: number) => {
+export const getActivePoaForEventByTime = async (eventId: number, startTime: number ) => {
   try {
-    console.log(`Getting active POAs by time: ${startTime} - ${endTime}`);
+
     const activePoa = await db
       .select()
       .from(eventPoaTriggers)
@@ -109,7 +109,7 @@ export const getActivePoaForEventByTime = async (eventId: number, startTime: num
         and(
           eq(eventPoaTriggers.eventId, eventId),
           eq(eventPoaTriggers.status, "active" as const),
-          lte(eventPoaTriggers.startTime, endTime),
+          lte(eventPoaTriggers.startTime, startTime),
         ),
       )
       .execute();
@@ -154,11 +154,12 @@ export const generatePoaForAddEvent = async (
     eventEndTime: number;
     poaCount: number;
     poaType: EventTriggerType;
+    bufferMinutes?: number;
   },
 ) => {
   const { eventId, eventStartTime, eventEndTime, poaCount, poaType } = params;
 
-  const buffer = 10 * 60; // Buffer of 10 minutes in seconds
+  const buffer = (params.bufferMinutes ?? 10) * 60 ; // Buffer of minutes in seconds
 
   if (eventStartTime >= eventEndTime) {
     throw new Error("Event start time must be less than end time.");
@@ -177,14 +178,33 @@ export const generatePoaForAddEvent = async (
     );
   }
 
-  const interval = Math.floor((adjustedEndTime - adjustedStartTime) / poaCount);
+  let interval: number;
+  if (poaCount === 1) {
+    // If only one POA, place it in the middle of the adjusted time
+    interval = 0;
+  } else {
+    // Correct Interval Calculation:
+    // Divide the total adjusted duration by (poaCount - 1) to evenly distribute POAs
+    interval = Math.floor((adjustedEndTime - adjustedStartTime) / (poaCount - 1));
+  }
 
-  const poaStartTimes = Array.from({ length: poaCount }, (_, i) => adjustedStartTime + i * interval);
+  const poaStartTimes = Array.from({ length: poaCount }, (_, i) => {
+    if (poaCount === 1) {
+      // Place single POA in the middle
+      return Math.floor((adjustedStartTime + adjustedEndTime) / 2);
+    }
+    return adjustedStartTime + i * interval;
+  });
 
   const existingPoa = await trx
     .select({ poaOrder: eventPoaTriggers.poaOrder })
     .from(eventPoaTriggers)
-    .where(eq(eventPoaTriggers.eventId, eventId))
+    .where(
+      and (
+        eq(eventPoaTriggers.eventId, eventId) ,
+        eq(eventPoaTriggers.status, "active" as const)
+      )
+    )
     .execute();
 
   const maxExistingOrder = existingPoa.reduce<number>(
@@ -194,7 +214,7 @@ export const generatePoaForAddEvent = async (
 
   try {
     for (let i = 0; i < poaStartTimes.length; i++) {
-      const poaOrder = (maxExistingOrder ?? 0) + i + 1;
+      const poaOrder = maxExistingOrder + i + 1;
       const poaData = {
         eventId,
         poaOrder,
@@ -216,6 +236,7 @@ export const generatePoaForAddEvent = async (
     throw error;
   }
 };
+
 
 // Export all functions in a single object
 export const eventPoaTriggersDB = {
