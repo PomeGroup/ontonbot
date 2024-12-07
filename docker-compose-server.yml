@@ -75,11 +75,7 @@ x-common-env: &common-env
   MINI_APP_SOCKET_DOMAIN: ${MINI_APP_SOCKET_DOMAIN}
   IP_SOCKET: ${IP_SOCKET}
   SOCKET_PORT: ${SOCKET_PORT}
-  TG_LOG_BOT_TOKEN: ${TG_LOG_BOT_TOKEN}
-  TG_LOGS_GROUP_ID: ${TG_LOGS_GROUP_ID}
-  TG_TICKETS_TOPIC: ${TG_TICKETS_TOPIC}
-  TG_EVENTS_TOPIC: ${TG_EVENTS_TOPIC}
-  TG_SYSTEM_TOPIC: ${TG_SYSTEM_TOPIC}
+
 services:
   minio:
     hostname: minio
@@ -289,7 +285,7 @@ services:
         limits:
           memory: 3000M
           cpus: "2.0"
-      replicas: ${SYS_MINI_APP_REPLICAS-2}
+      replicas: ${SYS_MINI_APP_REPLICAS:-2}
       update_config:
         failure_action: rollback
         order: start-first
@@ -410,7 +406,7 @@ services:
           - node.role == manager
       restart_policy:
         condition: none
-#        delay: 5s
+        delay: 5s
     depends_on:
       - postgres
       - redis
@@ -430,22 +426,7 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-nft-manager"
 
-#  giveaway-checker:
-#    image: ${REGISTRY_URL}/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
-#    hostname: giveaway-checker
-#    depends_on:
-#      - postgres
-#    environment:
-#      <<: *common-env
-#    networks:
-#      - onton-network
-#    secrets:
-#      - registry-onton-config
-  #    logging:
-  #        driver: "gelf"
-  #        options:
-  #            gelf-address: "udp://logstash:5044"
-  #            tag: "${BRANCH_NAME}-giveaway-checker"
+
   website:
     hostname: website
     image: ${REGISTRY_URL}/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
@@ -475,36 +456,7 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-website"
 
-#  golang-server:
-#    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
-#    hostname: golang-server
-#    depends_on:
-#      - redis
-#    environment:
-#      <<: *common-env
-#    networks:
-#      - onton-network
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag:  "${BRANCH_NAME}-golang-server"
 
-#  golang-worker:
-#    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
-#    hostname: golang-worker
-#    depends_on:
-#      - redis
-#      - golang-server
-#    environment:
-#      <<: *common-env
-#    networks:
-#      - onton-network
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-golang-worker"
 
   metabase:
     image: metabase/metabase:v0.50.18.3
@@ -541,7 +493,6 @@ services:
       MB_LOG_LEVEL: DEBUG
       MB_ENCRYPTION_SECRET_KEY: "${MB_ENCRYPTION_SECRET_KEY}"
       MB_REDIRECT_ALL_REQUESTS_TO_HTTPS: ${MB_REDIRECT_ALL_REQUESTS_TO_HTTPS}
-    #      MB_JETTY_PORT: ${PORT_METABASE}
     networks:
       - onton-network
     depends_on:

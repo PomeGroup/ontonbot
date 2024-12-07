@@ -79,11 +79,7 @@ x-common-env: &common-env
   MINI_APP_SOCKET_DOMAIN: ${MINI_APP_SOCKET_DOMAIN}
   IP_SOCKET: ${IP_SOCKET}
   SOCKET_PORT: ${SOCKET_PORT}
-  TG_LOG_BOT_TOKEN: ${TG_LOG_BOT_TOKEN}
-  TG_LOGS_GROUP_ID: ${TG_LOGS_GROUP_ID}
-  TG_TICKETS_TOPIC: ${TG_TICKETS_TOPIC}
-  TG_EVENTS_TOPIC: ${TG_EVENTS_TOPIC}
-  TG_SYSTEM_TOPIC: ${TG_SYSTEM_TOPIC}
+
 services:
   caddy:
     image: caddy:latest
@@ -319,22 +315,6 @@ services:
       onton-network:
         ipv4_address: "${IP_NFT_MANAGER}"
 
-  giveaway-checker:
-    container_name: ${ENV}-giveaway-checker
-    build:
-      context: ./giveaway-checker
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    profiles:
-      - full
-    depends_on:
-      - postgres
-    environment:
-        <<: *common-env
-    networks:
-      onton-network:
-        ipv4_address: "${IP_GIVEAWAY_CHECKER}"
-
   website:
     hostname: website
     container_name: ${ENV}-website
@@ -355,41 +335,7 @@ services:
       onton-network:
         ipv4_address: ${IP_WEBSITE}
 
-  golang-server:
-    container_name: ${ENV}-golang-server
-    build:
-      context: ./golang-server
-      dockerfile: ./server/Dockerfile
-    restart: unless-stopped
-    ports:
-      - "${GOLANG_SERVER_PORT}:${GOLANG_SERVER_PORT}"
-    profiles:
-      - expecting-mini-app
-      - full
-    depends_on:
-      - redis
-    environment:
-      <<: *common-env
-    networks:
-      onton-network:
-        ipv4_address: ${IP_GOLANG_SERVER}
 
-  golang-worker:
-    container_name: ${ENV}-golang-worker
-    build:
-      context: ./golang-server
-      dockerfile: ./worker/Dockerfile
-    restart: unless-stopped
-    profiles:
-      - expecting-mini-app
-      - full
-    depends_on:
-      - redis
-    environment:
-        <<: *common-env
-    networks:
-      onton-network:
-        ipv4_address: ${IP_GOLANG_WORKER}
 
   metabase:
     image: metabase/metabase:v0.50.18.3
