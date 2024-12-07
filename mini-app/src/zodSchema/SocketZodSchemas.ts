@@ -7,3 +7,8 @@ export const testEventSchema = z.object({
     .max(200, "Message cannot exceed 200 characters")
     .transform((value) => value.replace(/</g, "&lt;").replace(/>/g, "&gt;")), // Basic sanitization
 });
+
+export const notificationReplySchema = z.object({
+  notificationId: z.string(),
+  answer: z.enum(["yes", "no"]),
+});

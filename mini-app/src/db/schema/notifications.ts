@@ -42,5 +42,17 @@ export const notifications = pgTable(
     ),
     // Define indexes
     userIdIndex: index("notifications_user_id_idx").on(table.userId),
+
+    expiresAtIndex: index("notifications_expires_at_idx").on(table.expiresAt),
+
+    itemIdItemTypeIndex: index("notifications_item_id_item_type_idx").on(
+      table.itemId,
+      table.item_type
+    ),
+
+    statusIndex: index("notifications_status_idx").on(table.status),
+
+    typeIndex: index("notifications_type_idx").on(table.type),
+
   }),
 );

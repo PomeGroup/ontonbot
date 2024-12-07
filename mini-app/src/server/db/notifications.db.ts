@@ -5,6 +5,28 @@ import { and, eq, lt } from "drizzle-orm";
 import { QueueNames } from "@/sockets/constants";
 import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
 
+/**
+ * Represents the shape of notification data required for insertion.
+ */
+type NotificationData = {
+  userId: number;
+  type: NotificationType;
+  title?: string;
+  desc?: string;
+  priority?: number;
+  icon?: string;
+  image?: string;
+  link?: string;
+  actionTimeout?: number;
+  actionReply?: object;
+  additionalData?: object;
+  status?: NotificationStatus; // Default: "WAITING_TO_SEND"
+  createdAt?: Date;
+  readAt?: Date;
+  expiresAt?: Date;
+  itemId?: number;
+  item_type?: NotificationItemType;
+};
 
 // Cache key generator for notifications
 const getNotificationCacheKey = (notificationId: number) => `${redisTools.cacheKeys.notification}${notificationId}`;
@@ -155,6 +177,123 @@ export const deleteNotificationsByExpiry = async (expiryDate: Date) => {
   }
 };
 
+
+export const getNotificationById = async (notificationId: number) => {
+  try {
+    const foundNotifications = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.id, notificationId))
+      .limit(1)
+      .execute();
+
+    return foundNotifications.length > 0 ? foundNotifications[0] : null;
+  } catch (error) {
+    console.error("Error getting notification by ID:", error);
+    throw error;
+  }
+};
+
+
+export const addNotifications = async (
+  notificationsToAdd: NotificationData[]
+): Promise<{ success: boolean; count: number }> => {
+  try {
+    // Prepare data for bulk insert, ensuring all required fields are present
+    const insertValues = notificationsToAdd.map((notification) => ({
+      userId: notification.userId,
+      type: notification.type,
+      title: notification.title ?? null,
+      desc: notification.desc ?? null,
+      priority: notification.priority ?? 1,
+      icon: notification.icon ?? null,
+      image: notification.image ?? null,
+      link: notification.link ?? null,
+      actionTimeout: notification.actionTimeout ?? undefined, // Convert null to undefined
+      actionReply: notification.actionReply ?? null,
+      additionalData: notification.additionalData ?? null,
+      status: notification.status ?? "WAITING_TO_SEND",
+      createdAt: notification.createdAt ?? new Date(),
+      readAt: notification.readAt ?? null,
+      expiresAt: notification.expiresAt ?? null,
+      itemId: notification.itemId ?? undefined, // Convert null to undefined
+      item_type: notification.item_type ?? "UNKNOWN",
+    }));
+
+    // Bulk insert notifications and retrieve inserted records
+    const insertedNotifications = await db
+      .insert(notifications)
+      .values(insertValues)
+      .returning({
+        id: notifications.id,
+        userId: notifications.userId,
+        type: notifications.type,
+        title: notifications.title,
+        desc: notifications.desc,
+        priority: notifications.priority,
+        icon: notifications.icon,
+        image: notifications.image,
+        link: notifications.link,
+        actionTimeout: notifications.actionTimeout,
+        additionalData: notifications.additionalData,
+        status: notifications.status,
+        createdAt: notifications.createdAt,
+        readAt: notifications.readAt,
+        expiresAt: notifications.expiresAt,
+        itemId: notifications.itemId,
+        item_type: notifications.item_type,
+      })
+      .execute();
+
+    console.log(`Added ${insertedNotifications.length} notifications.`);
+
+    // Prepare RabbitMQ messages with full notification data
+    const rabbitMQMessages = insertedNotifications.map((notification) => ({
+      notificationId: notification.id,
+      userId: notification.userId,
+      type: notification.type,
+      title: notification.title,
+      desc: notification.desc,
+      priority: notification.priority,
+      icon: notification.icon,
+      image: notification.image,
+      link: notification.link,
+      actionTimeout: notification.actionTimeout,
+      additionalData: notification.additionalData,
+      status: notification.status,
+      createdAt: notification.createdAt,
+      readAt: notification.readAt,
+      expiresAt: notification.expiresAt,
+      itemId: notification.itemId,
+      item_type: notification.item_type,
+    }));
+
+    // Enqueue all messages to RabbitMQ in parallel
+    const enqueuePromises = rabbitMQMessages.map(async (message) => {
+      try {
+        await rabbitMQService.pushMessageToQueue(QueueNames.NOTIFICATIONS, message);
+        console.log(
+          `Notification ID ${message.notificationId} enqueued to RabbitMQ successfully.`
+        );
+      } catch (mqError) {
+        console.error(
+          `Failed to enqueue Notification ID ${message.notificationId} to RabbitMQ:`,
+          mqError
+        );
+        // Optionally, implement retry logic or mark the notification for retry
+      }
+    });
+
+    // Wait for all enqueue operations to complete
+    await Promise.all(enqueuePromises);
+
+    return { success: true, count: insertedNotifications.length };
+  } catch (error) {
+    console.error("Error adding notifications:", error);
+    throw error; // Propagate the error to be handled by the caller
+  }
+};
+
 // Export all functions as a single object
 export const notificationsDB = {
   addNotification,
@@ -162,4 +301,6 @@ export const notificationsDB = {
   updateNotificationStatus,
   updateNotificationStatusAndReply,
   deleteNotificationsByExpiry,
+  getNotificationById,
+  addNotifications,
 };

@@ -1,6 +1,7 @@
 import { pushToQueue, consumeFromQueue ,QueueNamesType } from "@/lib/rabbitMQ";
 import { Options } from "amqplib";
 import { v4 as uuidv4 } from 'uuid';
+import {  rabbitMQUser } from "@/sockets/constants";
 /**
  * Push a message to a specified queue.
  *
@@ -12,12 +13,13 @@ export const pushMessageToQueue = async (queue: QueueNamesType, message: any): P
     const options: Options.Publish = {
       messageId: message.notificationId ? message.notificationId.toString() : uuidv4() ,
       appId: 'OnTon', // Replace with your actual app ID
-      userId: message.userId ? message.userId.toString() : undefined,
+      userId :rabbitMQUser, // Replace with your actual user ID
       contentType: 'application/json', // Optional but recommended
       timestamp: Date.now(),
       deliveryMode : 2,
-      // Add any other properties you need
+
     };
+
     await pushToQueue(queue, message, options);
     console.log(`Message pushed to queue '${queue}':`, message);
   } catch (error) {

@@ -54,7 +54,13 @@ ${MINI_APP_DOMAIN} {
 ${MINI_APP_SOCKET_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy http://${PROXY_SOCKET}:${SOCKET_PORT}
+    reverse_proxy /socket.io/*  http://${PROXY_SOCKET}:${SOCKET_PORT} {
+                                                                header_up Host {http.reverse_proxy.upstream.hostport}
+                                                                transport http {
+                                                                    read_buffer 65535
+                                                                    write_buffer 65535
+                                                                }
+                                                            }
 }
 
 ${METABASE_DOMAIN} {

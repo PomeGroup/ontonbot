@@ -31,7 +31,7 @@ import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { addVisitor } from "@/server/db/visitors";
-import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers";
+import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 
 dotenv.config();
 
@@ -561,59 +561,59 @@ export const eventsRouter = router({
             },
             ...(opts.input.eventData.ts_reward_url
               ? {
-                  rewards: {
-                    mint_type: "manual",
-                    collection: {
-                      title: opts.input.eventData.title,
-                      description: opts.input.eventData.description,
-                      image: {
-                        url:
-                          process.env.ENV !== "local"
-                            ? opts.input.eventData.ts_reward_url
-                            : PLACEHOLDER_IMAGE,
-                      },
-                      cover: {
-                        url:
-                          process.env.ENV !== "local"
-                            ? opts.input.eventData.ts_reward_url
-                            : PLACEHOLDER_IMAGE,
-                      },
-                      item_title: opts.input.eventData.title,
-                      item_description: "Reward for participation",
-                      item_image: {
-                        url:
-                          process.env.ENV !== "local"
-                            ? opts.input.eventData.ts_reward_url
-                            : PLACEHOLDER_IMAGE,
-                      },
-                      ...(opts.input.eventData.video_url
-                        ? {
-                            item_video: {
-                              url:
-                                process.env.ENV !== "local"
-                                  ? new URL(opts.input.eventData.video_url).origin +
-                                    new URL(opts.input.eventData.video_url).pathname
-                                  : PLACEHOLDER_VIDEO,
-                            },
-                          }
-                        : {}),
-                      item_metadata: {
-                        activity_type: "event",
-                        place: {
-                          type: opts.input.eventData.eventLocationType === "online" ? "Online" : "Offline",
-                          ...(country && country?.abbreviatedCode
-                            ? {
-                                country_code_iso: country.abbreviatedCode,
-                                venue_name: opts.input.eventData.location,
-                              }
-                            : {
-                                venue_name: opts.input.eventData.location, // Use location regardless of country
-                              }),
+                rewards: {
+                  mint_type: "manual",
+                  collection: {
+                    title: opts.input.eventData.title,
+                    description: opts.input.eventData.description,
+                    image: {
+                      url:
+                        process.env.ENV !== "local"
+                          ? opts.input.eventData.ts_reward_url
+                          : PLACEHOLDER_IMAGE,
+                    },
+                    cover: {
+                      url:
+                        process.env.ENV !== "local"
+                          ? opts.input.eventData.ts_reward_url
+                          : PLACEHOLDER_IMAGE,
+                    },
+                    item_title: opts.input.eventData.title,
+                    item_description: "Reward for participation",
+                    item_image: {
+                      url:
+                        process.env.ENV !== "local"
+                          ? opts.input.eventData.ts_reward_url
+                          : PLACEHOLDER_IMAGE,
+                    },
+                    ...(opts.input.eventData.video_url
+                      ? {
+                        item_video: {
+                          url:
+                            process.env.ENV !== "local"
+                              ? new URL(opts.input.eventData.video_url).origin +
+                              new URL(opts.input.eventData.video_url).pathname
+                              : PLACEHOLDER_VIDEO,
                         },
+                      }
+                      : {}),
+                    item_metadata: {
+                      activity_type: "event",
+                      place: {
+                        type: opts.input.eventData.eventLocationType === "online" ? "Online" : "Offline",
+                        ...(country && country?.abbreviatedCode
+                          ? {
+                            country_code_iso: country.abbreviatedCode,
+                            venue_name: opts.input.eventData.location,
+                          }
+                          : {
+                            venue_name: opts.input.eventData.location, // Use location regardless of country
+                          }),
                       },
                     },
                   },
-                }
+                },
+              }
               : {}),
           };
 

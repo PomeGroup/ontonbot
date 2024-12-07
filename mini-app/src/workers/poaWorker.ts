@@ -1,14 +1,26 @@
-import { db } from "@/db/db";
-import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers";
-import { notificationsDB } from "@/server/db/notifications";
-import { eventRegistrants } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
+import { notificationsDB } from "@/server/db/notifications.db";
+import { EventTriggerStatus, NotificationItemType, NotificationStatus, NotificationType } from "@/db/schema";
 import { getEventsWithFilters } from "@/server/db/events";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { formatDateTime } from "@/lib/DateAndTime";
 import { z } from "zod";
+import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
 
-const WORKER_INTERVAL = 5 * 1000; // 1 minute
+const WORKER_INTERVAL = 5 * 1000; // 10 seconds
+const PAGE_SIZE = 500; // Number of users to fetch per batch
+
+let isShuttingDown = false;
+
+// Listen for shutdown signals
+process.on('SIGINT', () => {
+  console.log('Received SIGINT. Initiating graceful shutdown...');
+  isShuttingDown = true;
+});
+
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM. Initiating graceful shutdown...');
+  isShuttingDown = true;
+});
 
 // Function to fetch ongoing events with online participation
 const fetchOngoingEvents = async () => {
@@ -37,123 +49,102 @@ const fetchOngoingEvents = async () => {
 // Worker Function
 const processOngoingEvents = async () => {
   console.log("===================================");
-  console.log("POA Worker(👙) started at:", new Date().toISOString());
+  console.log("POA Worker started at:", new Date().toISOString());
 
   try {
     const ongoingEvents = await fetchOngoingEvents();
     console.log(`Fetched ${ongoingEvents.length} ongoing events.`);
-    // Extract the required fields for the table
-    const filteredEvents = ongoingEvents.map(({
-                                                title,
-                                                eventId,
-                                                eventUuid,
-                                                startDate,
-                                                endDate,
-                                              }) => ({
-      title,
-      eventId,
-      eventUuid,
-      startDate: formatDateTime(startDate),
-      endDate: formatDateTime(endDate),
-    }));
-
-// Display the filtered events in a table format
-    console.table(filteredEvents);
 
     for (const event of ongoingEvents) {
-      if (!event?.eventId) {
+      if (!event?.eventId || !event?.eventUuid) {
         console.warn("Invalid event data:", event);
         continue;
       }
       const eventId = event.eventId;
       const eventUuid = event.eventUuid;
-      console.log("--------------------------------------------------");
-      console.log(`Processing Event ${eventId} - ${eventUuid}: ${event.title} to send POA notifications`);
 
       try {
-        // Fetch active POA triggers where the trigger time has passed
+        const startTime = Math.floor(Date.now() / 1000);
+        const readableDate = new Date(startTime * 1000).toLocaleString();
+        console.log(`Processing Event ${eventId} at ${startTime} - ${readableDate}`);
         const activePoaTriggers = await eventPoaTriggersDB.getActivePoaForEventByTime(
           eventId,
-          0,
-          Date.now(),
+          startTime
         );
 
         if (activePoaTriggers.length === 0) {
-          console.warn(`No active POA triggers for Event ${eventId} - ${eventUuid} - ${event.title}`);
-          continue; // Skip if no active triggers
+          console.warn(`No active POA triggers for Event ${eventId}`);
+          continue;
         }
-        console.log(`Active POA Triggers for Event ${eventId} - ${eventUuid} - ${event.title}:`);
-        console.table(activePoaTriggers);
-        // Fetch approved users for the event
-        // @todo: Add a limit to the number of users fetched also fetch only users has not been sent the notification
-        const approvedUsers = await db
-          .select({ userId: eventRegistrants.user_id })
-          .from(eventRegistrants)
-          .where(
-            and(
-              eq(eventRegistrants.event_uuid, eventUuid),
-              eq(eventRegistrants.status, "approved"),
-            ),
-          )
-          .execute();
-        if (approvedUsers.length === 0) {
-          console.warn(`No approved users for Event ${eventId} `);
-          continue; // Skip if no approved users
-        }
-        console.log(`Cont of Approved Users for Event ${eventId}  :`, approvedUsers.length);
 
         for (const trigger of activePoaTriggers) {
-          try {
-            for (const user of approvedUsers) {
-              if (!user?.userId) {
-                console.warn(`Skipped invalid user for Event ${eventId} and Trigger ${trigger.id}`);
-                continue;
-              }
-              try {
-                const notification = {
-                  userId: user.userId,
-                  type: "POA_SIMPLE" as const,
-                  title: `Participation Approval Required for Event:  ${event.title}`,
-                  desc: "Please approve your participation in the event.",
-                  actionTimeout: 60, // 1 minute
-                  additionalData: {
-                    eventId: eventId,
-                    poaId: trigger.id,
-                  },
-                  priority: 1,
-                  itemId: trigger.id,
-                  item_type: "POA_TRIGGER" as const,
-                  status: "WAITING_TO_SEND" as const,
-                  createdAt: new Date(),
-                  expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 1 month
-                };
+          let lastUserId = 0;
+          let hasMore = true;
 
-                await notificationsDB.addNotification(notification);
+          while (hasMore) {
+            // Check for shutdown during batch processing
+            if (isShuttingDown) {
+              console.log('Shutdown requested during user processing. Exiting batch...');
+              return;
+            }
+            const approvedUsers = await fetchApprovedUsers(
+              eventUuid,
+              trigger.id,
+              lastUserId,
+              PAGE_SIZE
+            );
 
-                console.log(
-                  `Created notification for POA Trigger ${trigger.id} of Event ${eventId} - ${eventUuid} for User ${user.userId}`,
-                );
-
-              } catch (notificationError) {
-                console.error(
-                  `Failed to create notification for User ${user.userId} in Event ${eventId} - ${eventUuid}  for Trigger ${trigger.id}:`,
-                  notificationError,
-                );
-              }
+            if (approvedUsers.length === 0) {
+              hasMore = false;
+              break;
             }
 
-            console.log(
-              `Completed notifications for POA Trigger ${trigger.id} of Event ${eventId} - ${eventUuid} `,
-            );
-          } catch (triggerError) {
-            console.error(
-              `Error processing Trigger ${trigger.id} for Event ${eventId}:`,
-              triggerError,
-            );
+            const notificationsToAdd = approvedUsers.map((user) => ({
+              userId: user.userId,
+              type: "POA_SIMPLE" as NotificationType,
+              title: `${event.title}`,
+              desc: "Please confirm your presence.",
+              actionTimeout: 20,
+              additionalData: { eventId, poaId: trigger.id },
+              priority: 1,
+              itemId: trigger.id,
+              item_type: "POA_TRIGGER" as NotificationItemType,
+              status: "WAITING_TO_SEND" as NotificationStatus,
+              createdAt: new Date(),
+              readAt: undefined,
+              expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000),
+            }));
+            try {
+              const result = await notificationsDB.addNotifications(notificationsToAdd);
+              console.log(`Created ${result.count} notifications for Trigger ${trigger.id}`);
+            } catch (notificationError) {
+              console.error(`Failed to create notifications:`, notificationError);
+            }
+            lastUserId = approvedUsers[approvedUsers.length - 1].userId;
+            if (approvedUsers.length < PAGE_SIZE) hasMore = false;
+          }
+
+          try {
+            await eventPoaTriggersDB.updateEventPoaStatus(trigger.id, "completed" as EventTriggerStatus);
+            console.log(`Completed notifications for POA Trigger ${trigger.id}`);
+          } catch (statusUpdateError) {
+            console.error(`Failed to update status for POA Trigger ${trigger.id}:`, statusUpdateError);
+          }
+
+          // Check for shutdown after completing a trigger
+          if (isShuttingDown) {
+            console.log('Shutdown requested after trigger processing. Exiting...');
+            return;
           }
         }
       } catch (eventError) {
         console.error(`Error processing Event ${eventId}:`, eventError);
+      }
+
+      // Check for shutdown after processing an event
+      if (isShuttingDown) {
+        console.log('Shutdown requested after event processing. Exiting...');
+        return;
       }
     }
   } catch (error) {
@@ -163,19 +154,51 @@ const processOngoingEvents = async () => {
   console.log("Worker finished processing at:", new Date().toISOString());
 };
 
-
 // Worker Loop
 const runWorker = async () => {
   while (true) {
+    if (isShuttingDown) {
+      console.log('Shutdown flag detected. Exiting worker loop...');
+      break;
+    }
+
     try {
       await processOngoingEvents();
     } catch (error) {
       console.error("!!!!! Unhandled error in POA Worker:", error);
     }
-    console.log(`Waiting for ${WORKER_INTERVAL / 1000} seconds before the next run...`);
+
+    if (isShuttingDown) {
+      console.log('Shutdown flag detected after processing. Exiting worker loop...');
+      break;
+    }
+
+    console.log(
+      `Waiting for ${WORKER_INTERVAL / 1000} seconds before the next run...`
+    );
     await new Promise((resolve) => setTimeout(resolve, WORKER_INTERVAL));
   }
+
+  // After exiting the loop, perform any additional shutdown tasks if necessary
+  await shutdown();
+};
+
+// Shutdown Function to Clean Up Resources
+const shutdown = async () => {
+  console.log('Shutting down resources...');
+
+  const shutdownTimeout = setTimeout(() => {
+    console.warn('Shutdown timeout reached. Forcing exit.');
+    process.exit(1);
+  }, 10000); // 10 seconds timeout
+  // Add any additional cleanup tasks here
+  clearTimeout(shutdownTimeout);
+  console.log('Shutdown complete. Exiting process.');
+  process.exit(0);
 };
 
 // Start the Worker
-runWorker();
+runWorker().catch((error) => {
+  console.error("!!!!! Unhandled error in POA Worker:", error);
+  process.exit(1);
+});

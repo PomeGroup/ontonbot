@@ -190,6 +190,7 @@ const EventCard: React.FC<EventCardProps> = memo(
           <div
             onClick={handleEventClick}
             className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+            key={`normal-${eventUuid}`}
           >
             <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
               {!imageLoaded && renderImageSkeleton()}
@@ -248,6 +249,7 @@ const EventCard: React.FC<EventCardProps> = memo(
       <div
         className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
         onClick={handleEventClick}
+        key={`detailed-${eventUuid}`}
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
@@ -272,6 +274,7 @@ const EventCard: React.FC<EventCardProps> = memo(
         <div
           onClick={handleEventClick}
           className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+          key={`small-${eventUuid}`}
         >
           <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
             {!imageLoaded && renderImageSkeleton()}

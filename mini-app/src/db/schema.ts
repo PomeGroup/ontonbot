@@ -15,19 +15,21 @@ import {
   NotificationStatus,
   notificationItemType,
   NotificationItemType,
+  eventPoaResultStatus,
+  EventPoaResultStatus,
 } from "@/db/enum";
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
 import { eventTicket } from "./schema/eventTicket";
 import { event_details_search_list } from "./schema/event_details_search_list";
-import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers.db";
-import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults.db";
+import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers";
+import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults";
 import { events } from "./schema/events";
 import { giataCity } from "./schema/giataCity";
 import { ontoSetting } from "./schema/ontoSetting";
 import { orders } from "./schema/orders";
-import { notifications } from "./schema/notifications.db";
+import { notifications } from "./schema/notifications";
 import { rewards } from "./schema/rewards";
 import { sbtRewardCollections } from "./schema/sbtRewardCollections";
 import { tickets, ticketsRelations } from "./schema/tickets";
@@ -52,6 +54,7 @@ export {
   notificationType,
   notificationStatus,
   notificationItemType,
+  eventPoaResultStatus,
 };
 
 // export all the tables and relations
@@ -92,4 +95,5 @@ export type { EventTriggerStatus };
 export type { NotificationStatus };
 export type { NotificationType };
 export type { NotificationItemType };
+export type { EventPoaResultStatus };
 

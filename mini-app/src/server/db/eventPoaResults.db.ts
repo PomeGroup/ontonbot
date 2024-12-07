@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventPoaResults } from "@/db/schema";
+import { eventPoaResults, EventPoaResultStatus, eventPoaResultStatus } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { eq, and } from "drizzle-orm";
 
@@ -36,7 +36,7 @@ export const getPoaResultsByUserIdAndEventId = async (userId: number, eventId: n
 export const getPoaResultsByUserIdEventIdAndStatus = async (
   userId: number,
   eventId: number,
-  status: string
+  status: EventPoaResultStatus
 ) => {
   try {
     const results = await db
@@ -59,6 +59,64 @@ export const getPoaResultsByUserIdEventIdAndStatus = async (
   }
 };
 
+// Insert a new POA result
+export const insertPoaResult = async (params: {
+  userId: number;
+  poaId: number;
+  eventId: number;
+  poaAnswer: string;
+  status: EventPoaResultStatus; // Use the TypeScript enum type
+  repliedAt?: Date; // Optional
+  notificationId?: number; // Optional
+}) => {
+  try {
+    const {
+      userId,
+      poaId,
+      eventId,
+      poaAnswer,
+      status,
+      repliedAt = null, // Default to null if not provided
+      notificationId = null, // Default to null if not provided
+    } = params;
+
+    // Optional: Validate that 'status' is a valid enum value
+    if (!eventPoaResultStatus.enumValues.includes(status)) {
+      throw new Error(`Invalid status value: ${status}`);
+    }
+
+    // Insert the new POA result
+    const insertedResult = await db
+      .insert(eventPoaResults)
+      .values({
+        userId,
+        poaId,
+        eventId,
+        poaAnswer,
+        status,
+        repliedAt,
+        notificationId,
+      })
+      .returning(); // Returns the inserted record
+
+    // Invalidate relevant caches
+    const cacheKeysToInvalidate = [
+      getPoaResultCacheKey(userId, eventId),
+      `${redisTools.cacheKeys.eventPoaResultsByEvent}${eventId}`,
+    ];
+
+    await Promise.all(
+      cacheKeysToInvalidate.map((key) => redisTools.deleteCache(key))
+    );
+
+    console.log(`Inserted POA Result for User ${userId}, Event ${eventId}:`, insertedResult);
+
+    return insertedResult;
+  } catch (error) {
+    console.error("Error inserting POA result:", error);
+    throw error;
+  }
+};
 // Get POA results by event ID
 export const getPoaResultsByEventId = async (eventId: number) => {
   try {
@@ -89,4 +147,5 @@ export const eventPoaResultsDB = {
   getPoaResultsByUserIdAndEventId,
   getPoaResultsByUserIdEventIdAndStatus,
   getPoaResultsByEventId,
+  insertPoaResult,
 };
