@@ -84,16 +84,10 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
     };
   }, [onClose]);
 
-  // const handleNavigate = useCallback(() => {
-  //     if (router) {
-  //         router.push(`/search?query=${searchTerm}`);
-  //     }
-  // }, [searchTerm, router]);
-
   return (
     <div
       ref={suggestionBoxRef}
-      className="absolute pt-4  mt-1 w-full border-0 rounded-t-3xl shadow-lg bg-[rgba(51,51,51,0.98)] z-10"
+      className="absolute pt-4 w-full bg-white border-cn-muted border rounded-xl shadow-lg z-50"
     >
       {searchLoading ? (
         <div className="p-2">
@@ -114,7 +108,7 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
             />
           ))}
           <button
-            className="w-full text-s text-center py-2 bg-zinc-400 text-zinc-100 h-8 flex items-center justify-center"
+            className="w-full text-s text-center py-2 h-8 flex items-center justify-center"
             onClick={handleAutoSuggestionAllResults as any}
           >
             <span>All Results</span>
@@ -123,11 +117,8 @@ const EventSearchSuggestion: React.FC<EventSearchSuggestionProps> = ({
       ) : (
         <>
           <div className="flex items-center justify-between p-2">
-            <div className="text-white text-sm">No Results Found</div>
-            <button
-              className="text-white"
-              onClick={onClose}
-            >
+            <div className="text-sm">No Results Found</div>
+            <button onClick={onClose}>
               <FaTimes />
             </button>
           </div>

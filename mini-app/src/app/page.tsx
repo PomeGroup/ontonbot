@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
@@ -16,8 +15,8 @@ import MemoizedMainButton from "@/app/_components/Memoized/MemoizedMainButton";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
+import { Block, Segmented, SegmentedButton } from "konsta/react";
 import { useTheme } from "next-themes";
-import { Block } from "konsta/react";
 
 // Define types for events
 type EventData = any[];
@@ -29,8 +28,6 @@ export default function Home() {
   const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
 
-  const { setTheme } = useTheme();
-
   const UserId = webApp?.initDataUnsafe?.user?.id;
 
   const router = useRouter();
@@ -38,6 +35,7 @@ export default function Home() {
   const [tabValueForSearchBar, setTabValueForSearchBar] = useState("All");
   const swiperRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null); // Ref for scrollable area
+  const { setTheme, theme } = useTheme();
 
   // Store the last scroll positions of each tab
   const scrollPositions = useRef<{ [key: string]: number }>({
@@ -105,26 +103,26 @@ export default function Home() {
   const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery(
     sliderEventParams,
     {
-      cacheTime: 10000,
+      staleTime: Infinity,
       enabled: sliderEventsState.length === 0,
     }
   );
   const { data: upcomingEventsData, isLoading: isLoadingUpcoming } =
     trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams, {
-      cacheTime: 10000,
+      staleTime: Infinity,
       enabled: upcomingEventsState.length === 0,
     });
   const { data: ongoingEventsData, isLoading: isLoadingOngoing } = trpc.events.getEventsWithFilters.useQuery(
     ongoingEventsParams,
     {
-      cacheTime: 10000,
+      staleTime: Infinity,
       enabled: ongoingEventsState.length === 0,
     }
   );
   const { data: pastEventsData, isLoading: isLoadingPast } = trpc.events.getEventsWithFilters.useQuery(
     pastEventsParams,
     {
-      cacheTime: 10000,
+      staleTime: Infinity,
       retryDelay: 5000,
       enabled: pastEventsState.length === 0,
     }
@@ -134,7 +132,7 @@ export default function Home() {
     isLoading: isLoadingMyEvents,
     refetch: refetchMyEvents,
   } = trpc.events.getEventsWithFilters.useQuery(myEventsParams, {
-    cacheTime: 10000,
+    staleTime: Infinity,
     enabled: false, // Disable auto-fetch for "My Events"
   });
 
@@ -193,13 +191,6 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    setTheme("dark");
-    return () => {
-      setTheme("light");
-    };
-  }, [setTheme]);
-
   // Handle swiper slide change
   const handleSlideChange = (swiper: any) => {
     const activeIndex = swiper.activeIndex;
@@ -220,11 +211,15 @@ export default function Home() {
     router.push("/events/create");
   }, [router]);
 
+  useEffect(() => {
+    setTheme("light");
+  }, [theme]);
+
   return (
     <Block margin="mt-2">
       <div className="flex flex-col h-screen">
         {/* Fixed Search Bar */}
-        <div className="sticky top-0 z-50 w-full bg-[#1C1C1E] pb-1">
+        <div className="sticky top-0 z-50 w-full pb-1">
           <SearchBar
             includeQueryParam={false}
             onUpdateResults={() => {}}
@@ -233,30 +228,27 @@ export default function Home() {
           />
 
           {/* Tabs Header */}
-          <Tabs
-            value={activeTab}
-            className="pt-2 flex-shrink-0"
-            onValueChange={handleTabClick}
+          <Segmented
+            strong
+            rounded
           >
-            <TabsList className="flex bg-gray-600 h-33 rounded-lg p-1">
-              <TabsTrigger
-                value="all-events"
-                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
-                  activeTab === "all-events" ? "bg-blue-600" : "bg-transparent"
-                }`}
-              >
-                All events
-              </TabsTrigger>
-              <TabsTrigger
-                value="my-events"
-                className={`flex-1 p-2 rounded-lg text-center font-medium text-white focus:outline-none ${
-                  activeTab === "my-events" ? "bg-blue-600" : "bg-transparent"
-                }`}
-              >
-                My events
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+            <SegmentedButton
+              rounded
+              strong
+              active={activeTab === "all-events"}
+              onClick={() => handleTabClick("all-events")}
+            >
+              All events
+            </SegmentedButton>
+            <SegmentedButton
+              rounded
+              strong
+              active={activeTab === "my-events"}
+              onClick={() => handleTabClick("my-events")}
+            >
+              My events
+            </SegmentedButton>
+          </Segmented>
         </div>
 
         {/* Scrollable Content */}

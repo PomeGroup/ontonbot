@@ -1,4 +1,6 @@
+import { fetchOntonSettings } from "@/server/db/ontoSetting";
 import axios from "axios";
+import { Bot } from "grammy";
 
 const tgClient = axios.create({
   baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
@@ -61,16 +63,15 @@ export const sendTelegramMessage = async (props: {
   }
 };
 export const sendEventPhoto = async (props: {
-  event_id : string,
+  event_id: string;
   user_id: string | number;
   message: string;
-  
 }) => {
   try {
     const response = await tgClient.post(
       `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-photo`,
       {
-        id : props.event_id,
+        id: props.event_id,
         user_id: String(props.user_id),
         message: props.message,
       }
@@ -116,10 +117,38 @@ export const sendEventPhoto = async (props: {
   }
 };
 
+// 🌳 ---- GLOBAL SETTINGS ---- 🌳
+let ONTON_SETTINGS: Awaited<ReturnType<typeof fetchOntonSettings>> | null = null;
 
-export const sendLogNotification = async (props: { message: string }) => {
-  return await sendTelegramMessage({
-    chat_id: process.env.TG_NOTIFICATION_CHANELL!,
-    message: props.message,
+// 🌳 ---- INITIALIZE SETTINGS ---- 🌳
+const initializeOntonSettings = async () => {
+  ONTON_SETTINGS = await fetchOntonSettings();
+};
+
+// 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
+export const sendLogNotification = async (props: {
+  message: string;
+  topic: "event" | "ticket" | "system";
+}) => {
+  if (!ONTON_SETTINGS) {
+    await initializeOntonSettings();
+  }
+
+  const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = ONTON_SETTINGS?.config;
+  const {
+    events_topic: EVENTS_TOPIC,
+    system_topic: SYSTEM_TOPIC,
+    tickets_topic: TICKETS_TOPIC,
+  } = ONTON_SETTINGS?.config;
+
+  const logBot = new Bot(BOT_TOKEN_LOGS);
+
+  return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
+    reply_parameters: {
+      message_id: Number(
+        props.topic === "ticket" ? TICKETS_TOPIC : props.topic === "event" ? EVENTS_TOPIC : SYSTEM_TOPIC
+      ),
+    },
+    parse_mode: "HTML",
   });
 };

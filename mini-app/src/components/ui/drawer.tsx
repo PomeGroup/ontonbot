@@ -5,6 +5,9 @@ import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
+import { Button, Sheet } from "konsta/react";
+import { createPortal } from "react-dom";
+import useWebApp from "@/hooks/useWebApp";
 
 const Drawer = ({
   shouldScaleBackground = false,
@@ -104,6 +107,66 @@ const DrawerDescription = React.forwardRef<
   />
 ));
 DrawerDescription.displayName = DrawerPrimitive.Description.displayName;
+
+interface KSheeProps {
+  children?: React.ReactNode | ((_: boolean, __: (_: boolean) => void) => React.ReactNode);
+  trigger?: React.ReactNode | ((_: boolean, __: (_: boolean) => void) => React.ReactNode);
+  hideTrigger?: boolean;
+  open?: boolean;
+  onOpenChange?: (_: boolean) => void;
+  dontHandleMainButton?: boolean;
+}
+
+export const KSheet = (props: KSheeProps) => {
+  const [open, setOpen] = React.useState(false);
+  // this state is used to check if we have made the main button hidden after showing the sheet
+  const [mainButtonHidden, setMainButtonHidden] = React.useState(false);
+
+  const webApp = useWebApp();
+
+  React.useEffect(() => {
+    if (!props.dontHandleMainButton) {
+      if (webApp?.MainButton.isVisible && !mainButtonHidden) {
+        webApp?.MainButton.hide();
+        setMainButtonHidden(true);
+      }
+
+      if (mainButtonHidden) {
+        setMainButtonHidden(false);
+        webApp?.MainButton.show();
+      }
+    }
+  }, [open, webApp]);
+
+  React.useEffect(() => {
+    typeof props.open === "boolean" && setOpen(props.open);
+  }, [props.open]);
+
+  React.useEffect(() => {
+    props.onOpenChange && props.onOpenChange(open);
+  }, [open]);
+
+  return (
+    <>
+      {!props.hideTrigger &&
+        (typeof props.trigger === "function" ? (
+          props.trigger(open, setOpen)
+        ) : (
+          <Button onClick={() => setOpen(true)}>{props.trigger || "Open"}</Button>
+        ))}
+      {createPortal(
+        <Sheet
+          onBackdropClick={() => setOpen(false)}
+          className="w-full"
+          opened={open}
+        >
+          {typeof props.children === "function" ? props.children(open, setOpen) : props.children}
+        </Sheet>,
+        document.body
+      )}
+    </>
+  );
+};
 
 export {
   Drawer,

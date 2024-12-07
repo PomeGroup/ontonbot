@@ -3,7 +3,7 @@ import { KButton } from "@/components/ui/button";
 import { useGetEvent, useGetEventRegistrants } from "@/hooks/events.hooks";
 import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
-import { List, BlockTitle, ListItem, Chip, BlockHeader, Sheet, BlockFooter, Block } from "konsta/react";
+import { List, BlockTitle, ListItem, BlockHeader, Sheet, BlockFooter, Block } from "konsta/react";
 import { Check, FileUser, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
@@ -14,6 +14,7 @@ import EventImage from "../atoms/images/EventImage";
 import { useMainButton } from "@/hooks/useMainButton";
 import useWebApp from "@/hooks/useWebApp";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
+import StatusChip from "@/components/ui/status-chips";
 
 interface CustomListItemProps {
   name: string;
@@ -249,29 +250,6 @@ const Button: React.FC<ButtonProps> = ({ variant, icon, label, onClick, isLoadin
       {label && <span>{label}</span>}
     </KButton>
   );
-};
-
-interface StatusChipProps {
-  variant: "primary" | "success" | "danger";
-  label: string;
-  className?: string;
-}
-
-const StatusChip: React.FC<StatusChipProps> = ({ variant, label, className }) => {
-  const variantStyles = cva("capitalize", {
-    variants: {
-      variant: {
-        primary: "bg-blue-500 text-blue-600",
-        success: "bg-green-500 text-green-700",
-        danger: "bg-red-500 text-red-600",
-      },
-    },
-    defaultVariants: {
-      variant: "primary",
-    },
-  });
-
-  return <Chip className={cn(variantStyles({ variant, className }))}>{label}</Chip>;
 };
 
 const RegistrationGuestlist = () => {
