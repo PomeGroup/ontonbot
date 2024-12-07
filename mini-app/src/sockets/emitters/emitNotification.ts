@@ -1,9 +1,10 @@
 import { Server } from "socket.io";
 import { Channel, Message } from "amqplib";
-import { SocketEvents, UserId, userSockets } from "@/sockets/constants";
+import { retryLimit, SocketEvents, UserId, userSockets } from "@/sockets/constants";
 import { sanitizeInput } from "@/lib/sanitizer";
 import { notificationsDB } from "@/server/db/notifications.db";
-
+import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
+import { eventPoaResultsDB } from "@/server/db/eventPoaResults.db";
 
 export const emitNotification = async (
   io: Server,
@@ -37,12 +38,27 @@ export const emitNotification = async (
       console.warn("x-death header not found. Assuming first attempt.");
     }
 
-    if (retryCount >= 5) {
+    if (retryCount >= retryLimit) {
       console.error(
         `Message dropped for User ${userId} after ${retryCount} retries:`,
       );
       // Update notification status to EXPIRED before acknowledging
       await notificationsDB.updateNotificationStatus(notificationIdNum, "EXPIRED");
+      if (message.item_type === "POA_TRIGGER") {
+        // If the notification is for a POA trigger, insert a new POA result
+        const eventPoaTrigger = await eventPoaTriggersDB.getEventPoaTriggerById(message.itemId);
+        console.log(eventPoaTrigger);
+        console.log(`Inserting POA result for User ${userId} and Event ${eventPoaTrigger.eventId}`);
+        await eventPoaResultsDB.insertPoaResult({
+          userId,
+          eventId: eventPoaTrigger.eventId,
+          poaId: message.itemId,
+          poaAnswer: "EXPIRED" ,
+          status: "EXPIRED" ,
+          repliedAt: new Date(),
+          notificationId: message,
+        });
+      }
       channel.ack(msg); // Acknowledge the message, no further retries
       return;
     }

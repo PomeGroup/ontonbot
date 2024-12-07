@@ -3,6 +3,8 @@ import { notificationReplySchema } from "@/zodSchema/SocketZodSchemas";
 import { z } from "zod";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { NotificationStatus } from "@/db/schema";
+import { eventPoaResultsDB } from "@/server/db/eventPoaResults.db";
+import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 
 type CallbackFunction = (response: { status: string; message: string }) => void;
 
@@ -10,7 +12,7 @@ export const handleNotificationReply = async (
   data: any,
   callback: CallbackFunction,
   sanitizedUsername: string,
-  userId: number // userId of current user
+  userId: number, // userId of current user
 ) => {
   try {
     // Validate input
@@ -18,10 +20,10 @@ export const handleNotificationReply = async (
     const { notificationId, answer } = validatedData;
 
     console.log(
-      `Received notification_reply from ${sanitizedUsername}: notificationId=${notificationId}, answer=${answer}`
+      `Received notification_reply from ${sanitizedUsername}: notificationId=${notificationId}, answer=${answer}`,
     );
 
-    const notifIdNum =   Number(notificationId);
+    const notifIdNum = Number(notificationId);
     if (isNaN(notifIdNum)) {
       callback({ status: "error", message: "Invalid notification ID" });
     }
@@ -47,7 +49,7 @@ export const handleNotificationReply = async (
 
     if (foundNotificationUserId !== userId) {
       console.warn(
-        `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to a notification they don't own (Notification ID: ${notificationId}).`
+        `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to a notification they don't own (Notification ID: ${notificationId}).`,
       );
       if (callback) {
         callback({
@@ -63,7 +65,22 @@ export const handleNotificationReply = async (
     const newStatus: NotificationStatus = "REPLIED";
     const actionReply = { answer };
     console.log(`Updating notification ${notificationId} status to ${newStatus} with reply:`, actionReply);
+    // Update the notification status and reply
     await notificationsDB.updateNotificationStatusAndReply(notifIdNum, newStatus, actionReply);
+    if (foundNotification.item_type === "POA_TRIGGER") {
+      // If the notification is for a POA trigger, insert a new POA result
+      const eventPoaTrigger = await eventPoaTriggersDB.getEventPoaTriggerById(foundNotification.itemId);
+      console.log(`Inserting POA result for User ${userId} and Event ${eventPoaTrigger.eventId}`);
+      await eventPoaResultsDB.insertPoaResult({
+        userId,
+        eventId: eventPoaTrigger.eventId,
+        poaId: foundNotification.itemId,
+        poaAnswer: answer,
+        status: "REPLIED",
+        repliedAt: new Date(),
+        notificationId: notifIdNum,
+      });
+    }
 
     if (callback) {
       callback({

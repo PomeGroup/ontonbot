@@ -6,12 +6,20 @@ export const rabbitMQUser = process.env.RABBITMQ_DEFAULT_USER || "";
 export const rabbitMQPass = process.env.RABBITMQ_DEFAULT_PASS || "";
 export const rabbitMQUrl = process.env.IP_RABBITMQ || "";
 export const rabbitMQPort = Number(process.env.RABBITMQ_NODE_PORT) || 0;
+// Notification constants
+export const retryLimit = 10;
 // Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 after changing Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 you need to delete all queues and exchanges in RabbitMQ !!!!!!!!
 export const SOCKET_RETRY_INTERVAL =  30000;
 ////////////////////////////////////////////////////////////////
 // Define the socket events using a TypeScript enum
+export const allowedOrigins = [
+  process.env.NEXT_PUBLIC_APP_BASE_URL  ,
+];
+// rateLimit:  requests per second
+export const RATE_LIMIT_WINDOW_MS = 1000;
+export const RATE_LIMIT_MAX = 10;
 export const SocketEvents = {
   receive: {
     test: "test",

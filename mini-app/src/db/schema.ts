@@ -15,6 +15,8 @@ import {
   NotificationStatus,
   notificationItemType,
   NotificationItemType,
+  eventPoaResultStatus,
+  EventPoaResultStatus,
 } from "@/db/enum";
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
@@ -52,6 +54,7 @@ export {
   notificationType,
   notificationStatus,
   notificationItemType,
+  eventPoaResultStatus,
 };
 
 // export all the tables and relations
@@ -92,4 +95,5 @@ export type { EventTriggerStatus };
 export type { NotificationStatus };
 export type { NotificationType };
 export type { NotificationItemType };
+export type { EventPoaResultStatus };
 
