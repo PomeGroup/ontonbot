@@ -469,13 +469,12 @@ services:
         max-size: "1G"
         max-file: "2"
     ports:
-      - '${RABBITMQ_MANAGEMENT_PORT}:${RABBITMQ_MANAGEMENT_PORT}' # Management console
+      - '${RABBITMQ_MANAGEMENT_PORT}:15672' # Management console
       - '${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}' # AMQP port
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
       - RABBITMQ_NODE_PORT=${RABBITMQ_NODE_PORT}
-      - RABBITMQ_NODE_MANAGEMENT_PORT=${RABBITMQ_MANAGEMENT_PORT}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq  # Persist data
     restart: unless-stopped
