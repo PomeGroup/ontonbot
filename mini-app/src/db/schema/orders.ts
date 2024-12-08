@@ -2,7 +2,7 @@ import { bigint, index, integer, pgTable, text, timestamp, uuid } from "drizzle-
 import { orderState } from "@/db/schema";
 import { events } from "@/db/schema/events";
 import { users } from "@/db/schema/users";
-import { eventTicket } from "@/db/schema/eventTicket";
+import { eventPayment } from "@/db/schema/eventPayment";
 import { relations } from "drizzle-orm";
 import { tickets } from "@/db/schema/tickets";
 export const orders = pgTable(
@@ -12,7 +12,7 @@ export const orders = pgTable(
     event_uuid: uuid("event_uuid").references(() => events.event_uuid),
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
     event_ticket_id: bigint("event_ticket_id", { mode: "number" })
-      .references(() => eventTicket.id)
+      .references(() => eventPayment.id)
       .notNull(),
     transaction_id: text("transaction_id"),
     count: integer("count"),
@@ -57,9 +57,9 @@ export const orderRelations = relations(orders, ({ one, many }) => ({
     fields: [orders.user_id],
     references: [users.user_id],
   }),
-  eventTicket: one(eventTicket, {
+  eventPayment: one(eventPayment, {
     fields: [orders.event_ticket_id],
-    references: [eventTicket.id],
+    references: [eventPayment.id],
   }),
   tickets: many(tickets),
 }));
