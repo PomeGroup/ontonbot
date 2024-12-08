@@ -62,6 +62,11 @@ x-common-env: &common-env
   POSTGRES_PORT: ${POSTGRES_PORT}
   POSTGRES_USER: ${POSTGRES_USER}
   NFT_MANAGER_PORT: ${NFT_MANAGER_PORT}
+  RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+  RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+  RABBITMQ_DOMAIN: ${RABBITMQ_DOMAIN}
+  RABBITMQ_MANAGEMENT_PORT: ${RABBITMQ_MANAGEMENT_PORT}
+  RABBITMQ_NODE_PORT: ${RABBITMQ_NODE_PORT}
   REDIS_DATABASES: ${REDIS_DATABASES}
   REDIS_HOST: ${IP_REDIS}
   REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -73,8 +78,10 @@ x-common-env: &common-env
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
   DOCKER_CONFIG: "/run/secrets/registry-onton-config"
   MINI_APP_SOCKET_DOMAIN: ${MINI_APP_SOCKET_DOMAIN}
+  NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL}
   IP_SOCKET: ${IP_SOCKET}
   SOCKET_PORT: ${SOCKET_PORT}
+  JWT_SECRET_SOCKET: ${JWT_SECRET_SOCKET}
 
 services:
   minio:
@@ -320,8 +327,8 @@ services:
   #      options:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-mini-app"
-  mini-app-cron:
-    hostname: mini-app-cron
+  mini-app-sbt-worker:
+    hostname: mini-app-sbt-worker
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     deploy:
       resources:
@@ -356,7 +363,88 @@ services:
   #      driver: "gelf"
   #      options:
   #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app-cron"
+  #        tag: "${BRANCH_NAME}-mini-app-sbt-worker"
+
+  mini-app-poa-worker:
+    hostname: mini-app-poa-worker
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: "2.0"
+      mode: global
+      update_config:
+        failure_action: rollback
+        order: stop-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: none
+        delay: 10s
+    environment:
+      <<: *common-env
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - rabbitmq
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      - onton-network
+    command: ["pnpm", "run", "start:poa"]
+    secrets:
+      - registry-onton-config
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+
+  mini-app-notification-socket:
+    hostname: mini-app-notification-socket
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    ports:
+      - "${SOCKET_PORT}:${SOCKET_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: "2.0"
+      replicas: 3
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 20s
+    environment:
+      <<: *common-env
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - rabbitmq
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      - onton-network
+    command: ["pnpm", "run", "start:socket"]
+    secrets:
+      - registry-onton-config
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+
 
   participant-tma:
     hostname: participant-tma
@@ -508,6 +596,51 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-metabase"
 
+  rabbitmq:
+    image: "rabbitmq:4.0.4-management-alpine"
+    hostname: rabbitmq
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1G"
+        max-file: "3"
+    ports:
+      - "${RABBITMQ_MANAGEMENT_PORT}:${RABBITMQ_MANAGEMENT_PORT}"
+      - "${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}"
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+      RABBITMQ_NODE_PORT: "${RABBITMQ_NODE_PORT}"
+      RABBITMQ_NODE_MANAGEMENT_PORT: "${RABBITMQ_MANAGEMENT_PORT}"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 4096M
+          cpus: "3.0"
+        reservations:
+          memory: 2048M
+          cpus: "1.0"
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 5
+        window: 30s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: stop-first
+      placement:
+        constraints:
+          - node.role == manager
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
+    networks:
+      - onton-network
+    tty: true
 #  client-web:
 #    hostname: client-web
 #    <<: *default-extra-hosts
@@ -626,7 +759,9 @@ volumes:
   elasticsearch_data:
     driver: local
     name: "${STAGE_NAME}_elasticsearch_data"
-
+  rabbitmq_data:
+    driver: local
+    name: "${STAGE_NAME}_rabbitmq_data"
 secrets:
   registry-onton-config:
     external: true

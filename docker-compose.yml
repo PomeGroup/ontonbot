@@ -23,6 +23,7 @@ x-common-env: &common-env
   IP_WEBSITE: ${IP_WEBSITE}
   IP_NFT_MANAGER: ${IP_NFT_MANAGER}
   IP_RABBITMQ: ${IP_RABBITMQ}
+  IP_REDIS: ${IP_REDIS}
   LOCAL_DOMAIN: ${LOCAL_DOMAIN}
   METABASE_DOMAIN: ${METABASE_DOMAIN}
   MINI_APP_DOMAIN: ${MINI_APP_DOMAIN}
@@ -77,6 +78,7 @@ x-common-env: &common-env
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
   USE_MAIN_IP_TO_EXPOSE: ${USE_MAIN_IP_TO_EXPOSE}
   MINI_APP_SOCKET_DOMAIN: ${MINI_APP_SOCKET_DOMAIN}
+  NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL}
   IP_SOCKET: ${IP_SOCKET}
   SOCKET_PORT: ${SOCKET_PORT}
 
@@ -252,9 +254,9 @@ services:
       onton-network:
         ipv4_address: ${IP_MINI_APP}
 
-  mini-app-cron:
-    hostname: mini-app
-    container_name: ${ENV}-mini-app-cron
+  mini-app-sbt-worker:
+    hostname: mini-app-sbt-worker
+    container_name: ${ENV}-mini-app-sbt-worker
     build:
       context: ./mini-app
       target: production
@@ -274,6 +276,57 @@ services:
       onton-network:
         ipv4_address: "${IP_MINI_APP_CRON}"
     command: ["pnpm","run", "start-cron"]
+
+  mini-app-poa-worker:
+    hostname: mini-app-poa-worker
+    container_name: ${ENV}-mini-app-poa-worker
+    build:
+      context: ./mini-app
+      target: production
+      args:
+        <<: *common-env
+    restart: "unless-stopped"
+    profiles:
+      - full
+    environment:
+      <<: *common-env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - ./data/drizzle_data:/app/drizzle
+    networks:
+      onton-network:
+        ipv4_address: "${IP_POA_WORKER}"
+    command: ["pnpm","run", "start:poa"]
+
+  mini-app-notification-socket:
+    hostname: mini-app-notification-socket
+    container_name: ${ENV}-mini-app-notification-socket
+    ports:
+      - "${SOCKET_PORT}:${SOCKET_PORT}"
+    build:
+      context: ./mini-app
+      target: production
+      args:
+        <<: *common-env
+    restart: "unless-stopped"
+    profiles:
+      - full
+    environment:
+      <<: *common-env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - ./data/drizzle_data:/app/drizzle
+    networks:
+      onton-network:
+        ipv4_address: "${IP_SOCKET}"
+    command: ["pnpm","run", "start:socket"]
+
 
   participant-tma:
     hostname: participant-tma
