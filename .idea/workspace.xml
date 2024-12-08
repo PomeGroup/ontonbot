@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose-server.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose-server.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,7 +43,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "feature/poa",
     "js.last.introduce.type": "CONST",
-    "last_opened_file_path": "/home/inanloo/MyProject/ontonBotProjects/ontonbot/devops",
+    "last_opened_file_path": "/home/inanloo/MyProject/ontonBotProjects/ontonbot/devops/env_stages",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -65,11 +67,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/devops/env_stages" />
       <recent name="$PROJECT_DIR$/devops" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/website" />
       <recent name="$PROJECT_DIR$/mini-app" />
-      <recent name="$PROJECT_DIR$/newton/apps/nft-manager" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/mini-app/src/server/db" />

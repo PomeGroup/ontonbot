@@ -78,8 +78,10 @@ x-common-env: &common-env
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
   DOCKER_CONFIG: "/run/secrets/registry-onton-config"
   MINI_APP_SOCKET_DOMAIN: ${MINI_APP_SOCKET_DOMAIN}
+  NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL}
   IP_SOCKET: ${IP_SOCKET}
   SOCKET_PORT: ${SOCKET_PORT}
+  JWT_SECRET_SOCKET: ${JWT_SECRET_SOCKET}
 
 services:
   minio:
@@ -325,8 +327,8 @@ services:
   #      options:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-mini-app"
-  mini-app-cron:
-    hostname: mini-app-cron
+  mini-app-sbt-worker:
+    hostname: mini-app-sbt-worker
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     deploy:
       resources:
@@ -361,7 +363,88 @@ services:
   #      driver: "gelf"
   #      options:
   #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app-cron"
+  #        tag: "${BRANCH_NAME}-mini-app-sbt-worker"
+
+  mini-app-poa-worker:
+    hostname: mini-app-poa-worker
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: "2.0"
+      mode: global
+      update_config:
+        failure_action: rollback
+        order: stop-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: none
+        delay: 10s
+    environment:
+      <<: *common-env
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - rabbitmq
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      - onton-network
+    command: ["pnpm", "run", "start:poa"]
+    secrets:
+      - registry-onton-config
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+
+  mini-app-notification-socket:
+    hostname: mini-app-notification-socket
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    ports:
+      - "${SOCKET_PORT}:${SOCKET_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: "2.0"
+      replicas: 3
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 20s
+    environment:
+      <<: *common-env
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - rabbitmq
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      - onton-network
+    command: ["pnpm", "run", "start:socket"]
+    secrets:
+      - registry-onton-config
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+
 
   participant-tma:
     hostname: participant-tma
@@ -676,7 +759,9 @@ volumes:
   elasticsearch_data:
     driver: local
     name: "${STAGE_NAME}_elasticsearch_data"
-
+  rabbitmq_data:
+    driver: local
+    name: "${STAGE_NAME}_rabbitmq_data"
 secrets:
   registry-onton-config:
     external: true
