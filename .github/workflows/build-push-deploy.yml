@@ -9,7 +9,7 @@ on:
       - "devops"
       - "main"
     paths:
-      - 'client-web-panel/**'
+#      - 'client-web-panel/**'
       - 'devops/**'
       - 'docker-compose-server.yml'
       - 'mini-app/**'
@@ -47,8 +47,8 @@ jobs:
           echo "Changed files: $changed_files"
           declare -a services_to_build=()
           # Define service directory mappings
+          #  ["client-web"]="client-web-panel"
           declare -A service_dirs=(
-            ["client-web"]="client-web-panel"
             ["mini-app"]="mini-app"
             ["nft-manager"]="newton/apps/nft-manager"
             ["participant-tma"]="newton/apps/participant-tma"
@@ -156,10 +156,10 @@ jobs:
       - name: Build and push image for ${{ matrix.service }}
 
         run: |
+          #["client-web"]="client-web-panel"
           declare -A services=(
             ["nft-manager"]="newton/apps/nft-manager"
             ["participant-tma"]="newton/apps/participant-tma"
-            ["client-web"]="client-web-panel"
             ["mini-app-sbt-worker"]="mini-app"
             ["mini-app"]="mini-app"
             ["telegram-bot"]="telegram-bot"
