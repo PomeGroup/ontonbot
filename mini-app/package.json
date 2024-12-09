@@ -80,6 +80,7 @@
     "form-data": "^4.0.0",
     "https-browserify": "^1.0.0",
     "image-size": "^1.1.1",
+    "immer": "^10.1.1",
     "jose": "^5.9.6",
     "jsonwebtoken": "^9.0.2",
     "konsta": "^4.0.1",
@@ -127,6 +128,7 @@
     "zustand": "^4.5.1"
   },
   "devDependencies": {
+    "@redux-devtools/extension": "^3.3.0",
     "@sentry/utils": "^8.30.0",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",

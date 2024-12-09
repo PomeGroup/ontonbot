@@ -7,12 +7,9 @@ import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import { Button, Sheet } from "konsta/react";
 import { createPortal } from "react-dom";
-import useWebApp from "@/hooks/useWebApp";
+import { useSheetStack } from "@/zustand/sheet-stack";
 
-const Drawer = ({
-  shouldScaleBackground = false,
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
+const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
   <DrawerPrimitive.Root
     shouldScaleBackground={shouldScaleBackground}
     {...props}
@@ -48,10 +45,7 @@ const DrawerContent = React.forwardRef<
     <DrawerOverlay />
     <DrawerPrimitive.Content
       ref={ref}
-      className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-cn-background p-4",
-        className
-      )}
+      className={cn("fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-3xl bg-cn-background p-4", className)}
       {...props}
     >
       {/* Conditionally render the DrawerClose button */}
@@ -84,16 +78,15 @@ const DrawerFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 );
 DrawerFooter.displayName = "DrawerFooter";
 
-const DrawerTitle = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DrawerPrimitive.Title
-    ref={ref}
-    className={cn("text-xl font-bold leading-none tracking-tight", className)}
-    {...props}
-  />
-));
+const DrawerTitle = React.forwardRef<React.ElementRef<typeof DrawerPrimitive.Title>, React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Title>>(
+  ({ className, ...props }, ref) => (
+    <DrawerPrimitive.Title
+      ref={ref}
+      className={cn("text-xl font-bold leading-none tracking-tight", className)}
+      {...props}
+    />
+  )
+);
 DrawerTitle.displayName = DrawerPrimitive.Title.displayName;
 
 const DrawerDescription = React.forwardRef<
@@ -118,33 +111,23 @@ interface KSheeProps {
 }
 
 export const KSheet = (props: KSheeProps) => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpenState] = React.useState(false);
   // this state is used to check if we have made the main button hidden after showing the sheet
-  const [mainButtonHidden, setMainButtonHidden] = React.useState(false);
+  const { openedOneSheet, closedOneSheet } = useSheetStack();
 
-  const webApp = useWebApp();
-
-  React.useEffect(() => {
-    if (!props.dontHandleMainButton) {
-      if (webApp?.MainButton.isVisible && !mainButtonHidden) {
-        webApp?.MainButton.hide();
-        setMainButtonHidden(true);
-      }
-
-      if (mainButtonHidden) {
-        setMainButtonHidden(false);
-        webApp?.MainButton.show();
-      }
+  const setOpen = (state: boolean) => {
+    if (state && !open) {
+      openedOneSheet();
+      setOpenState(true);
+    } else if (open) {
+      closedOneSheet();
+      setOpenState(false);
     }
-  }, [open, webApp]);
+  };
 
   React.useEffect(() => {
     typeof props.open === "boolean" && setOpen(props.open);
   }, [props.open]);
-
-  React.useEffect(() => {
-    props.onOpenChange && props.onOpenChange(open);
-  }, [open]);
 
   return (
     <>
@@ -168,15 +151,4 @@ export const KSheet = (props: KSheeProps) => {
   );
 };
 
-export {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
-  DrawerPortal,
-  DrawerTitle,
-  DrawerTrigger,
-};
+export { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerOverlay, DrawerPortal, DrawerTitle, DrawerTrigger };
