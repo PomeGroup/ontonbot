@@ -1,0 +1,72 @@
+import { Server, Socket } from "socket.io";
+import { SocketEvents, userSockets } from "../constants";
+import { startNotificationWorker } from "../notificationWorker";
+import { sanitizeString } from "@/lib/sanitizer";
+
+import { handleDisconnection } from "./handleDisconnection";
+import { handleTestEvent } from "./handleTestEvent";
+import { handleUnknownEvent } from "./handleUnknownEvent";
+import { handleNotificationReply } from "./notificationReply";
+// Track active user connections
+
+
+export const handleNotifications = async (io: Server) => {
+  // Start the RabbitMQ Notification Worker
+  await startNotificationWorker(io);
+
+
+  io.on("connection", (socket: Socket) => {
+    const user = socket.data.user;
+    console.log(`Socket Handler - user.id: ${user.id}, type: ${typeof user.id}`);
+    // Handle unauthorized connections
+    if (!user) {
+      console.warn("Unauthorized connection attempt.");
+      socket.disconnect();
+      return;
+    }
+
+    // Log sanitized user information
+    const sanitizedUsername = sanitizeString(user.username);
+    console.log(`User ${sanitizedUsername} (ID: ${user.id}) connected.`);
+
+    // Track user connections
+    if (!userSockets.has(user.id)) {
+      userSockets.set(user.id, new Set());
+    }
+    const userSocketSet = userSockets.get(user.id);
+    userSockets.get(user.id)?.add(socket.id);
+    console.log(`Updated userSockets for User ${user.id}:`, userSocketSet);
+
+    // Handle notification reply event
+    // Expecting client to emit: socket.emit("notificationReply", { notificationId: "123", answer: "yes" }, (response) => { ... });
+    socket.on(SocketEvents.receive.notificationReply, (data, callback) => {
+      // Use the handler to validate and process the reply
+      handleNotificationReply(data, callback, sanitizedUsername , user.id);
+    });
+    // Test event handler
+    socket.on(SocketEvents.receive.test, (data, callback) => {
+      handleTestEvent(data, callback, sanitizedUsername);
+    });
+
+    // Handle unknown events securely
+    socket.onAny((event, ...args) => {
+      handleUnknownEvent(socket, event, args);
+    });
+    socket.on(SocketEvents.send.error, (error) => {
+      console.error(`Error on socket ${socket.id}:`, error.message);
+      socket.emit("error", "An unexpected error occurred.");
+    });
+    // Handle disconnection
+    socket.on("disconnect", () => {
+      handleDisconnection(socket, sanitizedUsername, user.id);
+    });
+  });
+};
+
+
+
+
+
+
+
+

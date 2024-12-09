@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import StatusChip from "@/components/ui/status-chips";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
@@ -136,9 +137,9 @@ const EventCard: React.FC<EventCardProps> = memo(
                     )}
                   </span>
                   {currentUserId === organizerUserId ? (
-                    <Badge variant="ontonDark">hosted</Badge>
+                    <StatusChip label="hosted" />
                   ) : (
-                    <Badge variant="ontonDark">{ticketPrice > 0 ? ticketPrice : "free"}</Badge>
+                    <StatusChip label={ticketPrice > 0 ? String(ticketPrice) : "free"} />
                   )}
                 </div>
                 <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
@@ -156,7 +157,7 @@ const EventCard: React.FC<EventCardProps> = memo(
         <DropdownMenuContent
           key={`dropdown-show-${eventUuid}`}
           align="center"
-          className="mt-[-10px] w-[220px]  bg-black px-3 rounded-none border-spacing-1 border-2 border-gray-600"
+          className="mt-[-10px] w-[220px] px-3 rounded-none border-spacing-1 border-2 border-gray-600"
         >
           <DropdownMenuItem
             className="text-lg px-2 rounded-none "
@@ -189,6 +190,7 @@ const EventCard: React.FC<EventCardProps> = memo(
           <div
             onClick={handleEventClick}
             className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+            key={`normal-${eventUuid}`}
           >
             <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
               {!imageLoaded && renderImageSkeleton()}
@@ -247,6 +249,7 @@ const EventCard: React.FC<EventCardProps> = memo(
       <div
         className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
         onClick={handleEventClick}
+        key={`detailed-${eventUuid}`}
       >
         {!imageLoaded && renderImageSkeleton()}
         <Image
@@ -271,6 +274,7 @@ const EventCard: React.FC<EventCardProps> = memo(
         <div
           onClick={handleEventClick}
           className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
+          key={`small-${eventUuid}`}
         >
           <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
             {!imageLoaded && renderImageSkeleton()}

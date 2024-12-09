@@ -9,17 +9,14 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  IoChevronBackOutline,
-  IoChevronForwardOutline,
-  IoCloseOutline,
-  IoSearchOutline,
-} from "react-icons/io5";
+import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
 import { z } from "zod";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
 import MainFilterDrawer from "./MainFilterDrawer";
 import { useGetHubs } from "@/hooks/events.hooks";
+import { Searchbar } from "konsta/react";
+import StatusChip from "@/components/ui/status-chips";
 
 interface SearchBarProps {
   includeQueryParam?: boolean;
@@ -111,7 +108,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const { searchTerm, setSearchTerm, autoSuggestions, setAutoSuggestions } = useSearchEvents();
 
   const [initialHubsSet, setInitialHubsSet] = useState(false);
-  // const [pageInit, setPageInit] = useState(false);
 
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
@@ -139,22 +135,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
       }
 
       setInitialHubsSet(true);
-      // setTimeout(() => {
-      //   setPageInit(true);
-      // }, 0);
     } else if (hubs.length > 0 && !includeQueryParam && !initialHubsSet) {
       setSelectedHubs(hubs.map((hub: Hub) => hub.id));
       setInitialHubsSet(true);
-      // setTimeout(() => {
-      //   setPageInit(true);
-      // });
     }
   }, [searchParams, hubs, includeQueryParam, initialHubsSet]);
 
   useEffect(() => {
     if (selectedHubs.length === 0 || selectedHubs.length === hubs.length) {
       setHubText("All");
-      // setSelectedHubs(hubs.map((hub: Hub) => hub.id));
     } else {
       const selectedHubNames = selectedHubs
         .map((hubId) => hubs.find((hub: Hub) => hub.id === hubId)?.name)
@@ -181,9 +170,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     if (searchValue.length > 2) {
       setShowSuggestions(true);
       setShowFilterButton(false);
-      handleFilterApply().then((r) => {
-        // console.log(r);
-      });
     } else {
       setAutoSuggestions([]);
       setShowSuggestions(false);
@@ -271,8 +257,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     setSelectedHubs(allHubs);
     setSortBy("start_date_desc");
     setRenderedFilterTags(!renderedFilterTags);
-    handleFilterApply().then((r) => {
-      // console.log(r);
+    handleFilterApply().then(() => {
       refetchEvents();
     });
     hapticFeedback?.selectionChanged();
@@ -324,18 +309,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     } else {
       setSelectedHubs(hubs);
     }
-    //setApplyingFilters(true);
   };
-  // const selectAllHubs = () => {
-  //   const allHubs = hubs.map((hub: Hub) => hub.id);
-  //   setSelectedHubs(allHubs);
-  //   hapticFeedback?.selectionChanged();
-  // };
-  //
-  // const deselectAllHubs = () => {
-  //   setSelectedHubs([]);
-  //   hapticFeedback?.selectionChanged();
-  // };
 
   const clearFilter = (filter: string) => {
     // @ts-ignore
@@ -354,12 +328,10 @@ const SearchBar: React.FC<SearchBarProps> = ({
     if ((userRole === "admin" || userRole === "organizer") && pathname === "/") {
       if (HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log("+++++HideMainButton isVisible", WebApp?.MainButton.isVisible);
         WebApp?.MainButton.hide();
         WebApp?.MainButton.hide();
       } else if (!HideMainButton) {
         setTimeout(() => {}, 100);
-        console.log("++++ShowMainButton isVisible", WebApp?.MainButton.isVisible);
         WebApp?.MainButton.show();
         WebApp?.MainButton.show();
       }
@@ -374,32 +346,28 @@ const SearchBar: React.FC<SearchBarProps> = ({
         : []), // If empty, default to both
       sortBy !== "start_date_desc" ? "Most People Reached" : null,
     ].filter(Boolean); // Filter out falsy values
-    const filterButtons = filters.map((filter, index) => (
-      <Button
-        key={index}
-        variant="outline"
-        className="flex items-center text-gray-300 p-2 h-4 py-0 text-xs whitespace-nowrap"
-        onClick={() => clearFilter(filter!)}
-      >
-        <span className="text-sm">{filter}</span>
-        <IoCloseOutline className="ml-2 w-4 h-4" />
-      </Button>
-    ));
+    const filterButtons = filters
+      .filter((v) => Boolean(v))
+      .map((filter, index) => (
+        <StatusChip
+          key={index}
+          onDelete={() => clearFilter(filter!)}
+          label={(filter as string).split("_").join(" ")}
+          showDeleteButton
+        />
+      ));
 
     if (selectedHubs.length > 0 && selectedHubs.length !== hubs.length) {
       selectedHubs.forEach((hubId, index) => {
         const hubName = hubs.find((hub) => hub.id === hubId)?.name;
         if (!hubName) return;
         filterButtons.push(
-          <Button
-            key={`hub-${index}`}
-            variant="outline"
-            className="flex items-center text-gray-300 p-2 h-4 py-0 text-xs  whitespace-nowrap"
-            onClick={() => clearFilter(hubId)}
-          >
-            <span className="text-sm">{hubName}</span>
-            <IoCloseOutline className="ml-2 w-4 h-4" />
-          </Button>
+          <StatusChip
+            key={index}
+            onDelete={() => clearFilter(hubId!)}
+            label={(hubName as string).split("_").join(" ")}
+            showDeleteButton
+          />
         );
       });
     }
@@ -455,30 +423,19 @@ const SearchBar: React.FC<SearchBarProps> = ({
             searchTerm ? "animate-grow" : "animate-shrink"
           }`}
         >
-          <input
-            type="text"
+          <Searchbar
             placeholder={tabValue === "" ? "Search All Events" : `Search ${tabValue} `}
-            className="w-full pl-10 pr-10 p-2 rounded-2xl bg-gray-800 text-gray-200 placeholder-gray-400 focus:ring-2 focus:ring-blue-600 focus:outline-none transition-width duration-300"
             onChange={handleSearchInputChange}
             onKeyDown={handleKeyDown}
             value={searchTerm}
             onFocus={handleSearchInputChange}
             onBlur={handleSearchInputChange}
           />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <IoSearchOutline className="text-gray-500 w-5 h-5" />
-          </div>
           <ParticipantErrorDialog
             open={showDialogParticipantError}
             onClose={() => setShowDialogParticipantError(false)}
             onConfirm={handleShowAll}
           />
-          {!showFilterButton && (
-            <IoCloseOutline
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer text-white w-4 h-4 p-1 rounded-full bg-gray-600"
-              onClick={handleCloseSuggestions}
-            />
-          )}
           {showSuggestions && (
             <EventSearchSuggestion
               searchTerm={searchTerm}

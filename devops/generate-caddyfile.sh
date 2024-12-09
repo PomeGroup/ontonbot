@@ -21,6 +21,8 @@ if [ "${USE_MAIN_IP_TO_EXPOSE}" = "true" ]; then
     PROXY_PGADMIN=${IP_RANGE_BASE}
     PROXY_CLIENT_WEB=${IP_RANGE_BASE}
     PROXY_WEBSITE=${IP_RANGE_BASE}
+    PROXY_RABBITMQ=${IP_RANGE_BASE}
+    PROXY_SOCKET=${IP_RANGE_BASE}
 else
     PROXY_MINI_APP=${IP_MINI_APP}
     PROXY_PARTICIPANT_TMA=${IP_PARTICIPANT_TMA}
@@ -29,6 +31,8 @@ else
     PROXY_PGADMIN=${IP_PGADMIN}
     PROXY_CLIENT_WEB=${IP_CLIENT_WEB}
     PROXY_WEBSITE=${IP_WEBSITE}
+    PROXY_RABBITMQ=${IP_RABBITMQ}
+    PROXY_SOCKET=${IP_SOCKET}
 fi
 
 # Define log configuration
@@ -47,6 +51,18 @@ ${MINI_APP_DOMAIN} {
     reverse_proxy http://${PROXY_MINI_APP}:${MINI_APP_PORT}
 }
 
+${MINI_APP_SOCKET_DOMAIN} {
+    ${TLS_CONFIG}
+    ${LOG_CONFIG}
+    reverse_proxy /socket.io/*  http://${PROXY_SOCKET}:${SOCKET_PORT} {
+                                                                header_up Host {http.reverse_proxy.upstream.hostport}
+                                                                transport http {
+                                                                    read_buffer 65535
+                                                                    write_buffer 65535
+                                                                }
+                                                            }
+}
+
 ${METABASE_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
@@ -57,6 +73,12 @@ ${MINIO_STORAGE_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
     reverse_proxy http://${PROXY_MINIO}:${MINIO_PORT}
+}
+
+${RABBITMQ_DOMAIN} {
+    ${TLS_CONFIG}
+    ${LOG_CONFIG}
+    reverse_proxy http://${PROXY_RABBITMQ}:${RABBITMQ_MANAGEMENT_PORT}
 }
 
 ${MINIO_STORAGE_ADMIN_DOMAIN} {

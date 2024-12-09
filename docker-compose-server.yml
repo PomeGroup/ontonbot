@@ -61,9 +61,16 @@ x-common-env: &common-env
   POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
   POSTGRES_PORT: ${POSTGRES_PORT}
   POSTGRES_USER: ${POSTGRES_USER}
+  IP_RABBITMQ: ${IP_RABBITMQ}
   NFT_MANAGER_PORT: ${NFT_MANAGER_PORT}
+  RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+  RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+  RABBITMQ_DOMAIN: ${RABBITMQ_DOMAIN}
+  RABBITMQ_MANAGEMENT_PORT: ${RABBITMQ_MANAGEMENT_PORT}
+  RABBITMQ_NODE_PORT: ${RABBITMQ_NODE_PORT}
   REDIS_DATABASES: ${REDIS_DATABASES}
   REDIS_HOST: ${IP_REDIS}
+  IP_REDIS: ${IP_REDIS}
   REDIS_PASSWORD: ${REDIS_PASSWORD}
   REDIS_PORT: ${REDIS_PORT}
   TELEGRAM_BOT_PORT: ${TELEGRAM_BOT_PORT}
@@ -72,6 +79,11 @@ x-common-env: &common-env
   TON_CENTER_TOKEN: ${TON_CENTER_TOKEN}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
   DOCKER_CONFIG: "/run/secrets/registry-onton-config"
+  MINI_APP_SOCKET_DOMAIN: ${MINI_APP_SOCKET_DOMAIN}
+  NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL}
+  IP_SOCKET: ${IP_SOCKET}
+  SOCKET_PORT: ${SOCKET_PORT}
+  JWT_SECRET_SOCKET: ${JWT_SECRET_SOCKET}
 
 services:
   minio:
@@ -282,7 +294,7 @@ services:
         limits:
           memory: 3000M
           cpus: "2.0"
-      replicas: ${SYS_MINI_APP_REPLICAS-2}
+      replicas: ${SYS_MINI_APP_REPLICAS:-2}
       update_config:
         failure_action: rollback
         order: start-first
@@ -317,8 +329,8 @@ services:
   #      options:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-mini-app"
-  mini-app-cron:
-    hostname: mini-app-cron
+  mini-app-sbt-worker:
+    hostname: mini-app-sbt-worker
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     deploy:
       resources:
@@ -353,7 +365,89 @@ services:
   #      driver: "gelf"
   #      options:
   #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app-cron"
+  #        tag: "${BRANCH_NAME}-mini-app-sbt-worker"
+
+  mini-app-poa-worker:
+    hostname: mini-app-poa-worker
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: "2.0"
+      mode: global
+      update_config:
+        failure_action: rollback
+        order: stop-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: none
+        delay: 10s
+    environment:
+      <<: *common-env
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - rabbitmq
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      - onton-network
+    command: ["pnpm", "run", "start:poa"]
+    secrets:
+      - registry-onton-config
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+
+  mini-app-notification-socket:
+    hostname: mini-app-notification-socket
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    ports:
+      - "${SOCKET_PORT}:${SOCKET_PORT}"
+    deploy:
+      resources:
+        limits:
+          memory: 3000M
+          cpus: "2.0"
+      replicas: 3
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 20s
+    environment:
+      <<: *common-env
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - rabbitmq
+      - mini-app-poa-worker
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      - onton-network
+    command: ["pnpm", "run", "start:socket"]
+    secrets:
+      - registry-onton-config
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+
 
   participant-tma:
     hostname: participant-tma
@@ -403,7 +497,7 @@ services:
           - node.role == manager
       restart_policy:
         condition: none
-#        delay: 5s
+        delay: 5s
     depends_on:
       - postgres
       - redis
@@ -423,22 +517,7 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-nft-manager"
 
-  giveaway-checker:
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
-    hostname: giveaway-checker
-    depends_on:
-      - postgres
-    environment:
-      <<: *common-env
-    networks:
-      - onton-network
-    secrets:
-      - registry-onton-config
-  #    logging:
-  #        driver: "gelf"
-  #        options:
-  #            gelf-address: "udp://logstash:5044"
-  #            tag: "${BRANCH_NAME}-giveaway-checker"
+
   website:
     hostname: website
     image: ${REGISTRY_URL}/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
@@ -468,36 +547,7 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-website"
 
-  golang-server:
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
-    hostname: golang-server
-    depends_on:
-      - redis
-    environment:
-      <<: *common-env
-    networks:
-      - onton-network
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag:  "${BRANCH_NAME}-golang-server"
 
-  golang-worker:
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
-    hostname: golang-worker
-    depends_on:
-      - redis
-      - golang-server
-    environment:
-      <<: *common-env
-    networks:
-      - onton-network
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-golang-worker"
 
   metabase:
     image: metabase/metabase:v0.50.18.3
@@ -534,7 +584,6 @@ services:
       MB_LOG_LEVEL: DEBUG
       MB_ENCRYPTION_SECRET_KEY: "${MB_ENCRYPTION_SECRET_KEY}"
       MB_REDIRECT_ALL_REQUESTS_TO_HTTPS: ${MB_REDIRECT_ALL_REQUESTS_TO_HTTPS}
-    #      MB_JETTY_PORT: ${PORT_METABASE}
     networks:
       - onton-network
     depends_on:
@@ -550,21 +599,65 @@ services:
   #        gelf-address: "udp://logstash:5044"
   #        tag: "${BRANCH_NAME}-metabase"
 
-  client-web:
-    hostname: client-web
-    <<: *default-extra-hosts
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
+  rabbitmq:
+    image: "rabbitmq:4.0.4-management-alpine"
+    hostname: rabbitmq
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1G"
+        max-file: "3"
     ports:
-      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+      - "${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}"
     environment:
-      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
-      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
-      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
-      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
-      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
-      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
+      RABBITMQ_NODE_PORT: "${RABBITMQ_NODE_PORT}"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+    deploy:
+      mode: global
+      resources:
+        limits:
+          memory: 4096M
+          cpus: "3.0"
+        reservations:
+          memory: 2048M
+          cpus: "1.0"
+      restart_policy:
+        condition: on-failure
+        delay: 15s
+        max_attempts: 5
+        window: 30s
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: stop-first
+      placement:
+        constraints:
+          - node.role == manager
+    stop_grace_period: 30s
+    stop_signal: SIGTERM
     networks:
       - onton-network
+    tty: true
+#  client-web:
+#    hostname: client-web
+#    <<: *default-extra-hosts
+#    image: ${REGISTRY_URL}/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
+#    ports:
+#      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
+#    environment:
+#      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+#      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
+#      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
+#      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
+#      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
+#      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
+#    networks:
+#      - onton-network
 #    logging:
 #        driver: "gelf"
 #        options:
@@ -668,7 +761,9 @@ volumes:
   elasticsearch_data:
     driver: local
     name: "${STAGE_NAME}_elasticsearch_data"
-
+  rabbitmq_data:
+    driver: local
+    name: "${STAGE_NAME}_rabbitmq_data"
 secrets:
   registry-onton-config:
     external: true

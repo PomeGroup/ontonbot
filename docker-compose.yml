@@ -22,6 +22,8 @@ x-common-env: &common-env
   IP_TELEGRAM_BOT: ${IP_TELEGRAM_BOT}
   IP_WEBSITE: ${IP_WEBSITE}
   IP_NFT_MANAGER: ${IP_NFT_MANAGER}
+  IP_RABBITMQ: ${IP_RABBITMQ}
+  IP_REDIS: ${IP_REDIS}
   LOCAL_DOMAIN: ${LOCAL_DOMAIN}
   METABASE_DOMAIN: ${METABASE_DOMAIN}
   MINI_APP_DOMAIN: ${MINI_APP_DOMAIN}
@@ -62,6 +64,11 @@ x-common-env: &common-env
   POSTGRES_PORT: ${POSTGRES_PORT}
   POSTGRES_USER: ${POSTGRES_USER}
   NFT_MANAGER_PORT: ${NFT_MANAGER_PORT}
+  RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+  RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+  RABBITMQ_DOMAIN: ${RABBITMQ_DOMAIN}
+  RABBITMQ_MANAGEMENT_PORT: ${RABBITMQ_MANAGEMENT_PORT}
+  RABBITMQ_NODE_PORT: ${RABBITMQ_NODE_PORT}
   REDIS_DATABASES: ${REDIS_DATABASES}
   REDIS_HOST: ${IP_REDIS}
   REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -70,6 +77,10 @@ x-common-env: &common-env
   TG_NOTIFICATION_CHANELL: ${TG_NOTIFICATION_CHANELL}
   TON_CENTER_ENDPOINT: ${TON_CENTER_ENDPOINT}
   USE_MAIN_IP_TO_EXPOSE: ${USE_MAIN_IP_TO_EXPOSE}
+  MINI_APP_SOCKET_DOMAIN: ${MINI_APP_SOCKET_DOMAIN}
+  NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL}
+  IP_SOCKET: ${IP_SOCKET}
+  SOCKET_PORT: ${SOCKET_PORT}
 
 services:
   caddy:
@@ -243,9 +254,9 @@ services:
       onton-network:
         ipv4_address: ${IP_MINI_APP}
 
-  mini-app-cron:
-    hostname: mini-app
-    container_name: ${ENV}-mini-app-cron
+  mini-app-sbt-worker:
+    hostname: mini-app-sbt-worker
+    container_name: ${ENV}-mini-app-sbt-worker
     build:
       context: ./mini-app
       target: production
@@ -265,6 +276,57 @@ services:
       onton-network:
         ipv4_address: "${IP_MINI_APP_CRON}"
     command: ["pnpm","run", "start-cron"]
+
+  mini-app-poa-worker:
+    hostname: mini-app-poa-worker
+    container_name: ${ENV}-mini-app-poa-worker
+    build:
+      context: ./mini-app
+      target: production
+      args:
+        <<: *common-env
+    restart: "unless-stopped"
+    profiles:
+      - full
+    environment:
+      <<: *common-env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - ./data/drizzle_data:/app/drizzle
+    networks:
+      onton-network:
+        ipv4_address: "${IP_POA_WORKER}"
+    command: ["pnpm","run", "start:poa"]
+
+  mini-app-notification-socket:
+    hostname: mini-app-notification-socket
+    container_name: ${ENV}-mini-app-notification-socket
+    ports:
+      - "${SOCKET_PORT}:${SOCKET_PORT}"
+    build:
+      context: ./mini-app
+      target: production
+      args:
+        <<: *common-env
+    restart: "unless-stopped"
+    profiles:
+      - full
+    environment:
+      <<: *common-env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    volumes:
+      - ./data/drizzle_data:/app/drizzle
+    networks:
+      onton-network:
+        ipv4_address: "${IP_SOCKET}"
+    command: ["pnpm","run", "start:socket"]
+
 
   participant-tma:
     hostname: participant-tma
@@ -306,22 +368,6 @@ services:
       onton-network:
         ipv4_address: "${IP_NFT_MANAGER}"
 
-  giveaway-checker:
-    container_name: ${ENV}-giveaway-checker
-    build:
-      context: ./giveaway-checker
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    profiles:
-      - full
-    depends_on:
-      - postgres
-    environment:
-        <<: *common-env
-    networks:
-      onton-network:
-        ipv4_address: "${IP_GIVEAWAY_CHECKER}"
-
   website:
     hostname: website
     container_name: ${ENV}-website
@@ -342,41 +388,7 @@ services:
       onton-network:
         ipv4_address: ${IP_WEBSITE}
 
-  golang-server:
-    container_name: ${ENV}-golang-server
-    build:
-      context: ./golang-server
-      dockerfile: ./server/Dockerfile
-    restart: unless-stopped
-    ports:
-      - "${GOLANG_SERVER_PORT}:${GOLANG_SERVER_PORT}"
-    profiles:
-      - expecting-mini-app
-      - full
-    depends_on:
-      - redis
-    environment:
-      <<: *common-env
-    networks:
-      onton-network:
-        ipv4_address: ${IP_GOLANG_SERVER}
 
-  golang-worker:
-    container_name: ${ENV}-golang-worker
-    build:
-      context: ./golang-server
-      dockerfile: ./worker/Dockerfile
-    restart: unless-stopped
-    profiles:
-      - expecting-mini-app
-      - full
-    depends_on:
-      - redis
-    environment:
-        <<: *common-env
-    networks:
-      onton-network:
-        ipv4_address: ${IP_GOLANG_WORKER}
 
   metabase:
     image: metabase/metabase:v0.50.18.3
@@ -442,6 +454,34 @@ services:
     networks:
       onton-network:
         ipv4_address: ${IP_CLIENT_WEB}
+  rabbitmq:
+    image: "rabbitmq:4.0.4-management-alpine"
+    container_name:  ${ENV}-rabbitmq
+    hostname: rabbitmq
+    profiles:
+      - front-end-development
+      - expecting-mini-app
+      - full
+      - minimal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1G"
+        max-file: "2"
+    ports:
+      - '${RABBITMQ_MANAGEMENT_PORT}:15672' # Management console
+      - '${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}' # AMQP port
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_NODE_PORT=${RABBITMQ_NODE_PORT}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+    restart: unless-stopped
+    tty: true
+    networks:
+      onton-network:
+        ipv4_address: ${IP_RABBITMQ}
 
 #  swagger-ui:
 #    image: swaggerapi/swagger-ui
@@ -464,4 +504,5 @@ networks:
 volumes:
     pgadmin:
     clamav_data:
+    rabbitmq_data:
 

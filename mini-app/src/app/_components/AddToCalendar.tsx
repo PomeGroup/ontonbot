@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { FaGoogle, FaYahoo, FaCalendarPlus } from "react-icons/fa";
-import { SiMicrosoftoutlook } from "react-icons/si";
+import { PiMicrosoftOutlookLogoThin } from "react-icons/pi";
 import { Button, KButton } from "@/components/ui/button";
 import { createPortal } from "react-dom";
 import { Block, Sheet } from "konsta/react";
@@ -88,7 +88,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
                 className="flex rounded-none items-center w-full"
                 onClick={() => openInOSBrowser(outlookLink)}
               >
-                <SiMicrosoftoutlook className="mr-2" />
+                <PiMicrosoftOutlookLogoThin className="mr-2" />
                 Add to Outlook Calendar
               </Button>
               <Button

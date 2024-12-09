@@ -1,6 +1,7 @@
 import React from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Segmented, SegmentedButton } from "konsta/react";
 
 interface TabItem {
   value: string;
@@ -28,18 +29,19 @@ const TabTriggers: React.FC<TabTriggersProps> = ({ tabs, setTabValue, tabValue =
       onValueChange={(value) => setTabValue(value)}
     >
       <ScrollArea className="w-full whitespace-nowrap border-0 h-12">
-        <TabsList className="bg-transparent px-0">
+        <Segmented strong>
           {tabs.map((tab, index) => (
-            <TabsTrigger
+            <SegmentedButton
+              strong
+              rounded
               key={tab.value}
-              value={tab.value}
+              active={tab.value === tabValue}
               onClick={() => handleTabClick(tab.value, index)}
-              className={`px-3 py-2    text-gray-500 text-sm data-[state=active]:text-gray-100 data-[state=active]:font-bold data-[state=active]:border-b-indigo-50 data-[state=active]:border-b-2   rounded-none `}
             >
               {tab.label}
-            </TabsTrigger>
+            </SegmentedButton>
           ))}
-        </TabsList>
+        </Segmented>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </Tabs>

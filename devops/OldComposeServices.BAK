@@ -1,0 +1,47 @@
+#  golang-server:
+#    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-server:${BRANCH_NAME}-latest
+#    hostname: golang-server
+#    depends_on:
+#      - redis
+#    environment:
+#      <<: *common-env
+#    networks:
+#      - onton-network
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag:  "${BRANCH_NAME}-golang-server"
+
+#  golang-worker:
+#    image: ${REGISTRY_URL}/${GITHUB_REPO}/golang-worker:${BRANCH_NAME}-latest
+#    hostname: golang-worker
+#    depends_on:
+#      - redis
+#      - golang-server
+#    environment:
+#      <<: *common-env
+#    networks:
+#      - onton-network
+  #    logging:
+  #      driver: "gelf"
+  #      options:
+  #        gelf-address: "udp://logstash:5044"
+  #        tag: "${BRANCH_NAME}-golang-worker"
+
+  #  giveaway-checker:
+  #    image: ${REGISTRY_URL}/${GITHUB_REPO}/giveaway-checker:${BRANCH_NAME}-latest
+  #    hostname: giveaway-checker
+  #    depends_on:
+  #      - postgres
+  #    environment:
+  #      <<: *common-env
+  #    networks:
+  #      - onton-network
+  #    secrets:
+  #      - registry-onton-config
+    #    logging:
+    #        driver: "gelf"
+    #        options:
+    #            gelf-address: "udp://logstash:5044"
+    #            tag: "${BRANCH_NAME}-giveaway-checker"
