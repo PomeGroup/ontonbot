@@ -12,8 +12,6 @@ on:
       - 'client-web-panel/**'
       - 'devops/**'
       - 'docker-compose-server.yml'
-      - 'giveaway-checker/**'
-      - 'golang-server/**'
       - 'mini-app/**'
       - 'newton/**'
       - 'telegram-bot/**'
@@ -51,14 +49,11 @@ jobs:
           # Define service directory mappings
           declare -A service_dirs=(
             ["client-web"]="client-web-panel"
-            ["giveaway-checker"]="giveaway-checker"
-            ["golang-server"]="golang-server"
             ["mini-app"]="mini-app"
             ["nft-manager"]="newton/apps/nft-manager"
             ["participant-tma"]="newton/apps/participant-tma"
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
-            ["golang-worker"]="golang-server/worker"
             ["caddy"]="devops/caddy"
           )
           # If Trigger-full-build.txt has changed, add all services
@@ -72,9 +67,9 @@ jobs:
               fi
             done
           fi
-          # Add 'giveaway-checker' if no services have changed
+          # Add 'telegram-bot' if no services have changed
           if [ ${#services_to_build[@]} -eq 0 ]; then
-            echo "No services have changed, defaulting to 'giveaway-checker'."
+            echo "No services have changed, defaulting to 'telegram-bot'."
           services_to_build+=("telegram-bot")
           fi
           if [ ${#services_to_build[@]} -eq 0 ]; then
@@ -165,10 +160,7 @@ jobs:
             ["nft-manager"]="newton/apps/nft-manager"
             ["participant-tma"]="newton/apps/participant-tma"
             ["client-web"]="client-web-panel"
-            ["mini-app-cron"]="mini-app"
-            ["giveaway-checker"]="giveaway-checker"
-            ["golang-server"]="golang-server"
-            ["golang-worker"]="golang-server/worker"
+            ["mini-app-sbt-worker"]="mini-app"
             ["mini-app"]="mini-app"
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
@@ -196,12 +188,6 @@ jobs:
           elif [ "$service" == "caddy" ]; then
             dockerfile_path="devops/caddy/Dockerfile"
             build_context="./devops/caddy/"
-          elif [ "$service" == "golang-server" ]; then
-            dockerfile_path="golang-server/server/Dockerfile"
-            build_context="./golang-server"
-          elif [ "$service" == "golang-worker" ]; then
-            dockerfile_path="golang-server/worker/Dockerfile"
-            build_context="./golang-server"
           else
             dockerfile_path="$build_path/Dockerfile"
             build_context="$build_path"
@@ -492,7 +478,9 @@ jobs:
             ssh -o StrictHostKeyChecking=no -p "$ssh_port" tonont@$ssh_ip  << EOF
             mkdir -p /home/tonont/$branch_name
             mkdir -p /home/tonont/$branch_name/mini-app
-            mkdir -p /home/tonont/$branch_name/mini-app-cron
+            mkdir -p /home/tonont/$branch_name/mini-app-sbt-worker
+            mkdir -p /home/tonont/$branch_name/mini-app-poa-worker
+            mkdir -p /home/tonont/$branch_name/mini-app-notification-socket
             mkdir -p /home/tonont/$branch_name/telegram-bot
             mkdir -p /home/tonont/$branch_name/client-web
             mkdir -p /home/tonont/$branch_name/participant-tma
@@ -624,7 +612,7 @@ jobs:
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
             Hi there! 
-            🔄 Deployment Started for ${{ github.repository }}
+            🔄 Deployment Finnished for ${{ github.repository }}
           
             🧑 ‍💻Actor: ${{ github.actor }}
             📝 branch: ${{ github.ref }}
@@ -646,7 +634,7 @@ jobs:
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
             Hi there! 
-            🔄 Deployment Started for ${{ github.repository }}
+            🔄 Deployment Finished for ${{ github.repository }}
           
             🧑 ‍💻Actor: ${{ github.actor }}
           

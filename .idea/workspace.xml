@@ -5,26 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
-      <change afterPath="$PROJECT_DIR$/mini-app/src/sockets/helpers/validateNotificationReply.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/build-push-deploy.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/build-push-deploy.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose-server.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose-server.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/pnpm-lock.yaml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/app/_components/NotificationHandler.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/app/_components/NotificationHandler.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/app/_components/NotificationProvider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/app/_components/NotificationProvider.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/lib/logSQLQuery.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/lib/logSQLQuery.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/server/db/eventPoaResults.db.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/db/eventPoaResults.db.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/server/db/eventPoaTriggers.db.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/db/eventPoaTriggers.db.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/server/db/events.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/db/events.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/server/db/notifications.db.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/server/db/notifications.db.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/authMiddleware.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/authMiddleware.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/constants.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/constants.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/emitters/emitNotification.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/emitters/emitNotification.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/handlers/notificationReply.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/handlers/notificationReply.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/notificationWorker.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/notificationWorker.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/workers/poaWorker.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/workers/poaWorker.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/zodSchema/SocketZodSchemas.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/zodSchema/SocketZodSchemas.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/telegram-bot/.yarnrc.yml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/telegram-bot/pnpm-lock.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Trigger-full-build.txt" beforeDir="false" afterPath="$PROJECT_DIR$/Trigger-full-build.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -205,7 +188,7 @@
       <workItem from="1731618826777" duration="219672000" />
       <workItem from="1733551139862" duration="2721000" />
       <workItem from="1733631664037" duration="7765000" />
-      <workItem from="1733684629478" duration="15459000" />
+      <workItem from="1733684629478" duration="17384000" />
     </task>
     <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
       <option name="closed" value="true" />
