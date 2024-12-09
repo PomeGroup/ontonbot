@@ -34,40 +34,22 @@ const Stepper = ({ steps, currentStep }: StepperProps) => {
               className={cn(
                 "flex w-full justify-center relative",
                 {
-                  "text-primary after:bg-cn-primary": [
-                    "completed",
-                    "in-progress",
-                    "in-progress-last",
-                  ].includes(stepState),
+                  "text-primary after:bg-cn-primary": ["completed", "in-progress", "in-progress-last"].includes(stepState),
                   "text-cn-muted-foreground after:bg-cn-muted-foreground": stepState === "not-active",
                   "text-cn-muted-foreground": stepState === "last",
                 },
-                stepState === "last" || stepState === "in-progress-last"
-                  ? "after:hidden"
-                  : "after:inline-block",
+                stepState === "last" || stepState === "in-progress-last" ? "after:hidden" : "after:inline-block",
                 "after:content-[''] after:w-full after:h-0.5 after:absolute lg:after:top-2.5 after:top-2 after:left-1/2"
               )}
             >
               <div className="block text-xs font-semibold text-center z-10">
                 <span
-                  className={cn(
-                    "w-4 h-4 text-[10px] flex justify-center items-center mx-auto mb-2 rounded-full lg:w-8 lg:h-8",
-                    {
-                      "bg-cn-primary text-white border-transparent": [
-                        "completed",
-                        "in-progress",
-                        "in-progress-last",
-                      ].includes(stepState),
-                      "bg-cn-muted text-cn-muted-foreground border-cn-muted":
-                        stepState === "not-active" || stepState === "last",
-                    }
-                  )}
+                  className={cn("w-5 h-5 text-sm flex justify-center items-center mx-auto mb-2 rounded-full lg:w-10 lg:h-10", {
+                    "bg-cn-primary text-white border-transparent": ["completed", "in-progress", "in-progress-last"].includes(stepState),
+                    "bg-cn-muted text-cn-muted-foreground border-cn-muted": stepState === "not-active" || stepState === "last",
+                  })}
                 >
-                  {stepState === "completed" ? (
-                    <IoIosCheckmark className="text-4xl" />
-                  ) : (
-                    step.icon || index + 1
-                  )}
+                  {stepState === "completed" ? <IoIosCheckmark className="text-4xl" /> : step.icon || index + 1}
                 </span>
                 {step.label}
               </div>
