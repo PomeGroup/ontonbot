@@ -129,6 +129,13 @@ export const KSheet = (props: KSheeProps) => {
     typeof props.open === "boolean" && setOpen(props.open);
   }, [props.open]);
 
+  React.useEffect(() => {
+    return () => {
+      closedOneSheet();
+      setOpenState(false);
+    };
+  }, []);
+
   return (
     <>
       {!props.hideTrigger &&

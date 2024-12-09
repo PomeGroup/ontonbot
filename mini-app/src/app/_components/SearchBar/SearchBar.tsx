@@ -112,8 +112,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
       const participantFromQuery = searchParams.get("participationType")?.split(",") || [];
-      const participationType =
-        participantFromQuery.length > 0 && participantFromQuery.length !== 2 ? participantFromQuery : [];
+      const participationType = participantFromQuery.length > 0 && participantFromQuery.length !== 2 ? participantFromQuery : [];
 
       const selectedHubsFromParams = searchParams.get("selectedHubs")?.split(",") || [];
       const sortBy = searchParams.get("sortBy") || "start_date_desc";
@@ -188,9 +187,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   useEffect(() => {
     if (applyingFilters) {
       // Ensure participationType is only ["online", "in_person"]
-      const participationTypeStore = participationType?.filter((type) =>
-        allParticipationTypes.includes(type)
-      );
+      const participationTypeStore = participationType?.filter((type) => allParticipationTypes.includes(type));
 
       // Ensure selectedHubs are converted from string[] to number[]
       const society_hub_id: SocietyHubId = selectedHubs.map(Number).filter((id) => !isNaN(id)); // Ensure only valid numbers are included
@@ -226,10 +223,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     // @ts-ignore
     return new URLSearchParams({
       query: searchTerm,
-      participationType:
-        participationType && participationType.length
-          ? participationType.join(",")
-          : allParticipationTypes.join(","),
+      participationType: participationType && participationType.length ? participationType.join(",") : allParticipationTypes.join(","),
       selectedHubs: selectedHubs.join(","),
       sortBy: sortBy,
     });
@@ -276,15 +270,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
     hapticFeedback?.selectionChanged();
     console.log("-----***", participationType);
     //@ts-ignore
-    const updated = participationType.includes(type)
-      ? participationType.filter((t) => t !== type)
-      : [...participationType, type];
+    const updated = participationType.includes(type) ? participationType.filter((t) => t !== type) : [...participationType, type];
     setParticipationType(["online", "in_person"]);
-    if (
-      updated.length === 0 &&
-      participationType.includes("online") &&
-      participationType.includes("in_person")
-    ) {
+    if (updated.length === 0 && participationType.includes("online") && participationType.includes("in_person")) {
       return;
     }
 
@@ -324,19 +312,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
     hapticFeedback?.selectionChanged();
   };
 
-  useEffect(() => {
-    if ((userRole === "admin" || userRole === "organizer") && pathname === "/") {
-      if (HideMainButton) {
-        setTimeout(() => {}, 100);
-        WebApp?.MainButton.hide();
-        WebApp?.MainButton.hide();
-      } else if (!HideMainButton) {
-        setTimeout(() => {}, 100);
-        WebApp?.MainButton.show();
-        WebApp?.MainButton.show();
-      }
-    }
-  }, [HideMainButton, WebApp?.MainButton?.isVisible]);
   const renderFilterButtons = useCallback(() => {
     let filters;
 
@@ -418,11 +393,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <div className="relative flex flex-col space-y-4">
       <div className="relative flex items-center">
-        <div
-          className={`flex-grow transition-all duration-300 ${
-            searchTerm ? "animate-grow" : "animate-shrink"
-          }`}
-        >
+        <div className={`flex-grow transition-all duration-300 ${searchTerm ? "animate-grow" : "animate-shrink"}`}>
           <Searchbar
             placeholder={tabValue === "" ? "Search All Events" : `Search ${tabValue} `}
             onChange={handleSearchInputChange}

@@ -6,6 +6,7 @@ import type {} from "@redux-devtools/extension"; // required for devtools typing
 interface State {
   anyOpen: boolean; // if there is any sheet open currently
   openCount: number; // number of open sheets
+  wasMainButtonVisible: boolean;
 }
 
 interface Actions {
@@ -25,20 +26,26 @@ export const useSheetStack = create<SheetStackState>()(
       return {
         anyOpen: false,
         openCount: 0,
+        wasMainButtonVisible: false,
         openedOneSheet: () =>
           set((state) => {
             state.openCount++;
             state.anyOpen = true;
             const isVisible = window.Telegram.WebApp.MainButton.isVisible;
-            isVisible && window.Telegram.WebApp.MainButton.hide();
+            if (isVisible) {
+              state.wasMainButtonVisible = true;
+              window.Telegram.WebApp.MainButton.hide();
+            } else {
+              state.wasMainButtonVisible = false;
+            }
           }),
         closedOneSheet: () => {
           set((state) => {
-            console.log("open count", state.openCount);
-            state.openCount--;
-            console.log("open count", state.openCount);
-            state.anyOpen = state.openCount > 0;
-            !state.anyOpen && window.Telegram.WebApp.MainButton.show();
+            if (state.anyOpen) {
+              state.openCount--;
+              state.anyOpen = state.openCount > 0;
+              !state.anyOpen && state.wasMainButtonVisible && window.Telegram.WebApp.MainButton.show();
+            }
           });
         },
       };
