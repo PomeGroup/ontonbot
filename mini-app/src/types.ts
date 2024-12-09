@@ -134,6 +134,8 @@ const PaidEventSchema = z
     payment_amount: z.number().optional(),
 
     has_nft: z.boolean().optional().default(false),
+    nft_title: z.string().optional().default(""),
+    nft_description: z.string().optional().default(""),
     nft_image_url: z.string().optional(),
   })
   .superRefine((data, ctx) => {
@@ -151,8 +153,14 @@ const PaidEventSchema = z
       if (data.payment_amount === undefined || data.payment_amount <= 0)
         ctx.addIssue({ code: "custom", path: ["payment_amount"], message: "Payment amount must be greater than 0" });
 
-      // Validate that `nft_image_url` is present
-      if (data.has_nft && !data.nft_image_url) ctx.addIssue({ code: "custom", path: ["nft_image_url"], message: "Nft image url is required" });
+      // Validate that `nft` is present
+      if (data.has_nft) {
+        if (!data.nft_image_url) ctx.addIssue({ code: "custom", path: ["nft_image_url"], message: "Nft image url is required" });
+
+        if (!data.nft_title) ctx.addIssue({ code: "custom", path: ["nft_title"], message: "Nft title is required" });
+
+        if (!data.nft_description) ctx.addIssue({ code: "custom", path: ["nft_description"], message: "Nft description is required" });
+      }
     }
   });
 
