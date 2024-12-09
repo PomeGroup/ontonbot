@@ -60,3 +60,6 @@ export const retryQueueOptions = {
   },
 };
 
+//  Define Notification Related Constants
+export const NOTIFICATION_TIMEOUT_MARGIN = 10; // 10 seconds
+

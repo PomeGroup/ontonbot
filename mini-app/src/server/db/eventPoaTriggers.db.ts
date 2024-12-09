@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { eventPoaTriggers, EventTriggerStatus, EventTriggerType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, lte, sql } from "drizzle-orm";
 
 // Cache key prefix for event POA triggers
 const getEventPoaCacheKey = (poaId: number) => `${redisTools.cacheKeys.eventPoaTrigger}${poaId}`;
@@ -68,7 +68,7 @@ export const incrementCountOfSent = async (poaId: number, incrementBy = 1) => {
     await db.execute(
       sql`UPDATE ${eventPoaTriggers}
           SET count_of_sent = count_of_sent + ${incrementBy},
-              updated_at = ${new Date()}
+              updated_at    = ${new Date()}
           WHERE id = ${poaId}`,
     );
 
@@ -86,7 +86,7 @@ export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) =>
     await db.execute(
       sql`UPDATE ${eventPoaTriggers}
           SET count_of_success = count_of_success + ${incrementBy},
-              updated_at = ${new Date()}
+              updated_at       = ${new Date()}
           WHERE id = ${poaId}`,
     );
 
@@ -99,10 +99,10 @@ export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) =>
 };
 
 // Get a list of active POAs by time
-export const getActivePoaForEventByTime = async (eventId: number, startTime: number ) => {
+export const getActivePoaForEventByTime = async (eventId: number, startTime: number) => {
   try {
 
-    const activePoa = await db
+    return await db
       .select()
       .from(eventPoaTriggers)
       .where(
@@ -114,7 +114,6 @@ export const getActivePoaForEventByTime = async (eventId: number, startTime: num
       )
       .execute();
 
-    return activePoa;
   } catch (error) {
     console.error("Error getting active POAs by time:", error);
     throw error;
@@ -159,7 +158,7 @@ export const generatePoaForAddEvent = async (
 ) => {
   const { eventId, eventStartTime, eventEndTime, poaCount, poaType } = params;
 
-  const buffer = (params.bufferMinutes ?? 10) * 60 ; // Buffer of minutes in seconds
+  const buffer = (params.bufferMinutes ?? 10) * 60; // Buffer of minutes in seconds
 
   if (eventStartTime >= eventEndTime) {
     throw new Error("Event start time must be less than end time.");
@@ -200,10 +199,10 @@ export const generatePoaForAddEvent = async (
     .select({ poaOrder: eventPoaTriggers.poaOrder })
     .from(eventPoaTriggers)
     .where(
-      and (
-        eq(eventPoaTriggers.eventId, eventId) ,
-        eq(eventPoaTriggers.status, "active" as const)
-      )
+      and(
+        eq(eventPoaTriggers.eventId, eventId),
+        eq(eventPoaTriggers.status, "active" as const),
+      ),
     )
     .execute();
 
@@ -258,7 +257,7 @@ export const getEventPoaTriggerById = async (poaId: number) => {
     console.error("Error getting POA Trigger by ID:", error);
     throw error;
   }
-}
+};
 // Export all functions in a single object
 export const eventPoaTriggersDB = {
   addEventPoaTrigger,

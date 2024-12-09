@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import useNotificationStore from "@/zustand/useNotificationStore";
 import { useSocketStore } from "@/zustand/useSocketStore";
 import { Dialog, DialogButton } from "konsta/react";
+import useWebApp from "@/hooks/useWebApp";
 
 type Notification = {
   notificationId: string;
@@ -26,6 +27,9 @@ type Notification = {
 };
 
 const NotificationHandler: React.FC = () => {
+  const WebApp = useWebApp();
+
+  const hapticFeedback = WebApp?.HapticFeedback;
   const notifications = useNotificationStore((state) => state.notifications);
   const socket = useSocketStore((state) => state.socket);
 
@@ -47,6 +51,8 @@ const NotificationHandler: React.FC = () => {
       setNotificationToShow(newNotification);
       const timeoutValue = Number(newNotification.actionTimeout) || 0;
       setTimeLeft(timeoutValue);
+      // Trigger haptic feedback for notification
+      hapticFeedback?.impactOccurred("heavy");
       // Mark this notification as handled so it won't show again
       setHandledNotificationIds((prev) => new Set(prev).add(newNotification.notificationId));
     } else {
@@ -114,7 +120,7 @@ const NotificationHandler: React.FC = () => {
   return (
     <Dialog
       opened={opened}
-      onBackdropClick={handleNo}
+      // onBackdropClick={handleNo}
       title={`Confirmation in ${timeLeft} seconds`}
       content={
         notificationToShow ? (
@@ -123,7 +129,7 @@ const NotificationHandler: React.FC = () => {
             <p>{notificationToShow.desc || ""}</p>
           </>
         ) : (
-          <p>No new POA_SIMPLE notifications at the moment.</p>
+          <p>your response has been saved.</p>
         )
       }
       buttons={

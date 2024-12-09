@@ -1,5 +1,6 @@
 import { Server, Socket } from "socket.io";
 import crypto from "crypto";
+import { validateMiniAppData } from "@/utils";
 
 const BOT_TOKEN = process.env.BOT_TOKEN || ""; // Use your bot token here
 const TEST_INIT_DATA = process.env.TEST_INIT_DATA || ""; // Add your Telegram initData here
@@ -21,37 +22,18 @@ export const validateTelegramInitData = (initData: string): boolean => {
       console.error("Validation failed: Missing initData or botToken", initData);
       return false;
     }
-    const secretKey = crypto.createHash("sha256").update(BOT_TOKEN).digest();
+    const  validationResponse = validateMiniAppData(initData);
+    if (!validationResponse.valid) {
+      console.error(`Validation failed: Invalid initData for user ${validationResponse.initDataJson.user.id}`);
+      return false;
+    }
+    else if( validationResponse.valid) {
+      console.log(`Validation passed: Valid initData for user ${validationResponse.initDataJson.user.id}`);
+      return true;
+    }
+    // it should never reach here but just in case it does it mean validation failed
+    return false;
 
-    const params = new URLSearchParams(initData);
-
-    // Remove the `hash` field
-    const hash = params.get("hash");
-    params.delete("hash");
-
-    // Generate data check string
-    const sortedKeys = Array.from(params.keys()).sort();
-    const dataCheckString = sortedKeys
-      .map((key) => `${key}=${params.get(key)}`)
-      .join("\n");
-
-    console.log("dataCheckString:", dataCheckString);
-
-    // Calculate expected hash
-    const hmac = crypto.createHmac("sha256", secretKey);
-    const expectedHash = hmac.update(dataCheckString).digest("hex");
-
-    console.log("expectedHash:", expectedHash);
-    console.log("receivedHash:", hash);
-
-    // Compare hashes
-
-    // if (expectedHash !== hash && initData !== TEST_INIT_DATA) {
-    //   console.error("Validation failed: Hash mismatch");
-    //   return false;
-    // }
-
-    return true;
   } catch (error) {
     console.error("Error during validation:", error);
     return false;

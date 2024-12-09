@@ -140,6 +140,23 @@ export const updateNotificationStatus = async (notificationId: number, newStatus
   }
 };
 
+export const updateNotificationAsRead = async (notificationId: number, ) => {
+  try {
+    const status : NotificationStatus = "READ";
+    await db
+      .update(notifications)
+      .set({ status: status , readAt: new Date() })
+      .where(eq(notifications.id, notificationId))
+      .execute();
+
+    await redisTools.deleteCache(getNotificationCacheKey(notificationId)); // Clear cache
+    console.log(`Notification ${notificationId} status updated to ${status}`);
+  } catch (error) {
+    console.error("Error updating notification status:", error);
+    throw error;
+  }
+};
+
 // Update notification status and action reply
 export const updateNotificationStatusAndReply = async (
   notificationId: number,
@@ -303,4 +320,5 @@ export const notificationsDB = {
   deleteNotificationsByExpiry,
   getNotificationById,
   addNotifications,
+  updateNotificationAsRead,
 };

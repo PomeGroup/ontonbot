@@ -60,7 +60,6 @@ const consumeMessages = async (rabbit: RabbitMQ, io: Server, queue: QueueNamesTy
         const content = msg.content.toString();
         console.log("Received message:", content);
         const message = JSON.parse(content);
-        console.log("Received notification:", message);
         const userId: UserId = Number(message.userId);
 
         // Emit the notification or requeue it if the user is not online

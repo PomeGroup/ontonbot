@@ -55,8 +55,6 @@ const NotificationProvider: React.FC<NotificationProviderProps> = ({ children })
 
     socket.on("connect", () => {
       console.log("Socket connected successfully.");
-      console.log("Telegram init data:", telegramInitData);
-
       if (reconnectTimer) {
         clearTimeout(reconnectTimer);
         reconnectTimer = null;

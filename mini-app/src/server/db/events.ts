@@ -234,12 +234,12 @@ export const getOrganizerEvents = async (
 
 export const getEventsWithFilters = async (params: z.infer<typeof searchEventsInputZod>): Promise<any[]> => {
   const { limit = 10, offset = 0, search, filter, sortBy = "default", useCache = false } = params;
-  const roundMinutesInMs = 2000; // 10 minutes in milliseconds
+  const roundMinutesInMs = 60; // don't touch this fucking value it will break the cache or made unexpected results
 
-  if (filter?.startDate) {
+  if (filter?.startDate && useCache) {
     filter.startDate = roundDateToInterval(filter?.startDate, roundMinutesInMs);
   }
-  if (filter?.endDate) {
+  if (filter?.endDate && useCache) {
     filter.endDate = roundDateToInterval(filter?.endDate, roundMinutesInMs);
   }
   const stringToHash = JSON.stringify({

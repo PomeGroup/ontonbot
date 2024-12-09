@@ -9,6 +9,6 @@ export const testEventSchema = z.object({
 });
 
 export const notificationReplySchema = z.object({
-  notificationId: z.number() ,
+  notificationId: z.union([z.number(), z.string()]),
   answer: z.enum(["yes", "no"]),
 });
