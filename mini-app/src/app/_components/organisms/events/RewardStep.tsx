@@ -59,7 +59,7 @@ export const RewardStep = () => {
     },
   });
 
-  const thirdStepDataSchema = rewardStepValidation(!!editOptions?.eventHash);
+  const thirdStepDataSchema = rewardStepValidation(passwordDisabled);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +100,7 @@ export const RewardStep = () => {
     if (!formDataParsed.success) {
       setRewardStepErrors(formDataParsed.error.flatten().fieldErrors);
       const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
+
       const errorMessages = [
         flattenedErrors.secret_phrase ? (
           <div
