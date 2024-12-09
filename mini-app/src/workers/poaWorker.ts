@@ -62,18 +62,18 @@ const processOngoingEvents = async () => {
       }
       const eventId = event.eventId;
       const eventUuid = event.eventUuid;
-
+      const eventTitle = event.title;
       try {
         const startTime = Math.floor(Date.now() / 1000);
         const readableDate = new Date(startTime * 1000).toLocaleString();
-        console.log(`Processing Event ${eventId} at ${startTime} - ${readableDate}`);
+        console.log(`Processing Event ${eventId} : ${eventTitle} at ${startTime} - ${readableDate}`);
         const activePoaTriggers = await eventPoaTriggersDB.getActivePoaForEventByTime(
           eventId,
           startTime
         );
 
         if (activePoaTriggers.length === 0) {
-          console.warn(`No active POA triggers for Event ${eventId}`);
+          console.warn(`No active POA triggers for Event ${eventId} at ${startTime}`);
           continue;
         }
 

@@ -20,7 +20,6 @@ export const emitNotification = async (
   const notificationIdNum = typeof message.notificationId === "string"
     ? parseInt(message.notificationId, 10)
     : message.notificationId;
-
   if (!sockets || sockets.size === 0) {
     console.warn(`User ${userId} is not online. Message will be retried.`);
     console.log(msg);
@@ -53,10 +52,10 @@ export const emitNotification = async (
           userId,
           eventId: eventPoaTrigger.eventId,
           poaId: message.itemId,
-          poaAnswer: "EXPIRED" ,
+          poaAnswer: "NO" ,
           status: "EXPIRED" ,
           repliedAt: new Date(),
-          notificationId: message,
+          notificationId: notificationIdNum,
         });
       }
       channel.ack(msg); // Acknowledge the message, no further retries
@@ -79,12 +78,12 @@ export const emitNotification = async (
   sockets.forEach((socketId) => {
     io.to(socketId).emit(SocketEvents.send.notification, sanitizedMessage);
     console.log(
-      `Notification sent to User ${userId} via Socket ${socketId}: ${sanitizedMessage.notificationId} - ${sanitizedMessage.sanitizedMessage}`,
+      `Notification sent to User ${userId} via Socket ${socketId}: ${sanitizedMessage.notificationId} `,
     );
   });
 
   // Since notification is successfully delivered, update its status to READ
-  await notificationsDB.updateNotificationStatus(notificationIdNum, "READ");
+  await notificationsDB.updateNotificationAsRead(notificationIdNum);
 
   // Acknowledge successful message delivery
   channel.ack(msg);

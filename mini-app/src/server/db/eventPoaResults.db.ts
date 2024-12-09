@@ -109,8 +109,6 @@ export const insertPoaResult = async (params: {
       cacheKeysToInvalidate.map((key) => redisTools.deleteCache(key))
     );
 
-    console.log(`Inserted POA Result for User ${userId}, Event ${eventId}:`, insertedResult);
-
     return insertedResult;
   } catch (error) {
     console.error("Error inserting POA result:", error);

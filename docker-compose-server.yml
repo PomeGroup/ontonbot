@@ -434,6 +434,7 @@ services:
       - redis
       - minio
       - rabbitmq
+      - mini-app-poa-worker
     volumes:
       - drizzle_data_cron:/app/drizzle
     networks:
