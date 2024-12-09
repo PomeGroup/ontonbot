@@ -643,26 +643,26 @@ services:
     networks:
       - onton-network
     tty: true
-#  client-web:
-#    hostname: client-web
-#    <<: *default-extra-hosts
-#    image: ${REGISTRY_URL}/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
-#    ports:
-#      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
-#    environment:
-#      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
-#      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
-#      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
-#      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
-#      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
-#      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
-#    networks:
-#      - onton-network
-#    logging:
-#        driver: "gelf"
-#        options:
-#            gelf-address: "udp://logstash:5044"
-#            tag: "${BRANCH_NAME}-client-web"
+  client-web:
+    hostname: client-web
+    <<: *default-extra-hosts
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
+    ports:
+      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
+    environment:
+      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
+      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
+      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
+      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
+      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
+    networks:
+      - onton-network
+    logging:
+        driver: "gelf"
+        options:
+            gelf-address: "udp://logstash:5044"
+            tag: "${BRANCH_NAME}-client-web"
 
 #  elasticsearch:
 #    image: elasticsearch:8.16.1
