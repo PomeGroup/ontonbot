@@ -1,0 +1,187 @@
+import React from "react";
+import FormBlock from "../../atoms/cards/FormBlock";
+import { ListInput, ListItem, Segmented, SegmentedButton, Toggle } from "konsta/react";
+import { useCreateEventStore } from "@/zustand/createEventStore";
+import { SiTether, SiTon } from "react-icons/si";
+import { cn } from "@/utils";
+import { UploadImageFile } from "@/components/ui/upload-file";
+
+function SelectPayment() {
+  const { payment, changePaymentType } = useCreateEventStore((state) => ({
+    payment: state.eventData?.paid_event,
+    changePaymentType: state.changePaymentType,
+  }));
+
+  return (
+    <ListItem
+      title="Payment Type"
+      footer={
+        <>
+          <p>Your ticket payment method, users will pay either TON or ton USDT.</p>
+          <Segmented strong>
+            <SegmentedButton
+              strong
+              onClick={() => changePaymentType("USDT")}
+              active={payment.payment_type === "USDT"}
+            >
+              <p
+                className={cn("flex gap-1 items-center text-cn-muted-foreground", {
+                  "text-green-600 font-extrabold": payment.payment_type === "USDT",
+                })}
+              >
+                <span>USDT</span> <SiTether />
+              </p>
+            </SegmentedButton>
+            <SegmentedButton
+              strong
+              active={payment.payment_type === "TON"}
+            >
+              <p
+                className={cn("flex gap-1 items-center text-cn-muted-foreground", {
+                  "text-sky-600 font-extrabold": payment.payment_type === "TON",
+                })}
+              >
+                <span>TON</span> <SiTon />
+              </p>
+            </SegmentedButton>
+          </Segmented>
+        </>
+      }
+    />
+  );
+}
+
+function PaymentAmount() {
+  const { payment, changePaymentAmount } = useCreateEventStore((state) => ({
+    payment: state.eventData?.paid_event,
+    changePaymentAmount: state.changePaymentAmount,
+  }));
+
+  return (
+    <>
+      <ListInput
+        outline
+        required
+        title="Payment Amount"
+        type="number"
+        inputMode="number"
+        placeholder={`Payment amount in ${payment.payment_type}`}
+        min={payment.payment_type === "USDT" ? 5 : 1}
+        value={payment.payment_amount}
+        onChange={(e) => {
+          changePaymentAmount(Number(e.target.value));
+        }}
+      />
+    </>
+  );
+}
+
+function PaymentsRecepient() {
+  const { payment, changeRecepientAddress } = useCreateEventStore((state) => ({
+    payment: state.eventData?.paid_event,
+    changeRecepientAddress: state.changeRecepientAddress,
+  }));
+
+  return (
+    <ListInput
+      outline
+      required
+      title="Recepient"
+      placeholder={"Copy and paste the recepient wallet address"}
+      inputClassName="text-sm"
+      value={payment.payment_recipient_address}
+      onChange={(e) => {
+        changeRecepientAddress(e.target.value);
+      }}
+    />
+  );
+}
+
+function NFTImage() {
+  const { changeNFTImage } = useCreateEventStore((state) => ({
+    changeNFTImage: state.changeNFTImage,
+  }));
+
+  return (
+    <div className="p-4">
+      <UploadImageFile
+        infoText="This image is used as the NFT ticket"
+        changeText="Change Ticket Image"
+        triggerText="Upload Ticket Image"
+        onImageChange={changeNFTImage}
+      />
+    </div>
+  );
+}
+
+function NFTInfo() {
+  const { payment, changeTitle, changeDescription } = useCreateEventStore((state) => ({
+    payment: state.eventData?.paid_event,
+    changeTitle: state.changeNFTTitle,
+    changeDescription: state.changeNFTDescription,
+  }));
+
+  return (
+    <>
+      <ListInput
+        outline
+        required
+        placeholder="Title used for NFT ticket"
+        title="NFT Title"
+        value={payment.nft_title}
+        onChange={(e) => {
+          changeTitle(e.target.value);
+        }}
+      />
+      <ListInput
+        outline
+        required
+        placeholder="Description used for NFT ticket"
+        title="NFT Description"
+        value={payment.nft_description}
+        onChange={(e) => {
+          changeDescription(e.target.value);
+        }}
+      />
+    </>
+  );
+}
+
+/* ---------------------------------
+ * ----- ☀️  MAIN COMPONENT ☀️  ------
+ * ---------------------------------
+ * The default export and this is used to combine all other above ones
+ */
+const PaidEventCreationInputs = () => {
+  const { payment, toggleIsPaidEvent } = useCreateEventStore((state) => ({
+    payment: state.eventData?.paid_event,
+    toggleIsPaidEvent: state.togglePaidEvent,
+  }));
+
+  return (
+    <FormBlock title="Paid Event">
+      <ListItem
+        title="Is Paid"
+        after={
+          <Toggle
+            checked={payment?.has_payment}
+            onChange={() => {
+              toggleIsPaidEvent();
+            }}
+          />
+        }
+      />
+      {payment.has_payment && (
+        <>
+          <SelectPayment />
+          <PaymentAmount />
+          <PaymentsRecepient />
+          <NFTImage />
+          <NFTInfo />
+        </>
+      )}
+    </FormBlock>
+  );
+};
+
+export default PaidEventCreationInputs;

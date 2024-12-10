@@ -267,39 +267,6 @@ export const AgendaHeaderSchema = z.object({
   header: z.string().min(1, "Header is required"),
   items: z.array(AgendaItemSchema), // each header can have multiple items
 });
-export const EventDataSchemaAllOptional = z.object({
-  title: z.string().optional(),
-  subtitle: z.string().optional(),
-  description: z.string().optional(),
-  location: z.string().optional(),
-  image_url: z.string().url().optional(),
-  video_url: z.string().url().optional(),
-  ts_reward_url: z.string().url().optional(),
-  type: z.number().optional(),
-  society_hub: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-    })
-    .optional(),
-  secret_phrase: z.string().optional(),
-  start_date: z.number().optional(),
-  end_date: z.number().nullable().optional(),
-  owner: z.number().optional(),
-  activity_id: z.number().optional(),
-  timezone: z.string().optional(),
-  dynamic_fields: DynamicFieldsSchema.optional(),
-  eventLocationType: z.enum(["online", "in_person"]).optional(),
-  countryId: z.number().optional(),
-  cityId: z.number().optional(),
-  agenda: z.array(AgendaHeaderSchema).optional(),
-  // -----------------
-  // free event registration
-  has_registration: z.boolean().optional(),
-  has_approval: z.boolean().optional(),
-  has_waiting_list: z.boolean().optional(),
-  capacity: z.number().min(1).nullable().optional(),
-});
 
 export type EventData = z.infer<typeof EventDataSchema>;
 
@@ -383,3 +350,6 @@ export type TelegramUser = {
 };
 
 export type ValueOf<T> = T[keyof T];
+
+export type EventDataSchemaAllOptional = Partial<z.infer<typeof EventDataSchema>>;
+export type PaidEventType = z.infer<typeof PaidEventSchema>;

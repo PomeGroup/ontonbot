@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import { Button, Sheet } from "konsta/react";
 import { createPortal } from "react-dom";
-import { useSheetStack } from "@/zustand/sheet-stack";
+import { useSheetStackStore } from "@/zustand/sheet-stack.store";
 
 const Drawer = ({ shouldScaleBackground = false, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
   <DrawerPrimitive.Root
@@ -113,7 +113,7 @@ interface KSheeProps {
 export const KSheet = (props: KSheeProps) => {
   const [open, setOpenState] = React.useState(false);
   // this state is used to check if we have made the main button hidden after showing the sheet
-  const { openedOneSheet, closedOneSheet } = useSheetStack();
+  const { openedOneSheet, closedOneSheet } = useSheetStackStore();
 
   const setOpen = (state: boolean) => {
     if (state && !open) {
