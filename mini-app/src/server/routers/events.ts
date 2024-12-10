@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events, eventRegistrants, users, EventTriggerType, eventPayment } from "@/db/schema";
+import { eventFields, events, eventRegistrants, users, EventTriggerType, eventPayment, orders } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
 
 import { hashPassword } from "@/lib/bcrypt";
@@ -78,6 +78,91 @@ async function getNotRejectedRequestsCount(event_uuid: string) {
         .execute()
     ).pop()?.count || 0;
   return notrejected_requests_count;
+}
+
+// Define a narrowed type for input_event_data
+interface TonSocietyDraftSchema {
+  location: string;
+  countryId: number | null;
+  title: string;
+  subtitle: string;
+  description: string;
+  society_hub: { id: string };
+  start_date: number;
+  end_date: number;
+  ts_reward_url: string | null;
+  video_url: string | null;
+  eventLocationType: string;
+}
+// Original function with overloads
+export function CreateTonSocietyDraft(input_event_data: z.infer<typeof EventDataSchema>, event_uuid: string): Promise<TonSocietyRegisterActivityT>;
+export function CreateTonSocietyDraft(input_event_data: TonSocietyDraftSchema, event_uuid: string): Promise<TonSocietyRegisterActivityT>;
+
+export async function CreateTonSocietyDraft(input_event_data: z.infer<typeof EventDataSchema> | TonSocietyDraftSchema, event_uuid: string) {
+  const additional_info = z.string().url().safeParse(input_event_data.location).success ? "Online" : input_event_data.location;
+  const countryId = input_event_data.countryId;
+  const country = countryId ? await fetchCountryById(countryId) : undefined;
+
+  const eventDraft: TonSocietyRegisterActivityT = {
+    title: input_event_data.title,
+    subtitle: input_event_data.subtitle,
+    description: input_event_data.description,
+    hub_id: parseInt(input_event_data.society_hub.id),
+    start_date: timestampToIsoString(input_event_data.start_date),
+    end_date: timestampToIsoString(input_event_data.end_date!),
+    additional_info,
+    cta_button: {
+      link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`,
+      label: "Enter Event",
+    },
+    ...(input_event_data.ts_reward_url
+      ? {
+          rewards: {
+            mint_type: "manual",
+            collection: {
+              title: input_event_data.title,
+              description: input_event_data.description,
+              image: {
+                url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
+              },
+              cover: {
+                url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
+              },
+              item_title: input_event_data.title,
+              item_description: "Reward for participation",
+              item_image: {
+                url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
+              },
+              ...(input_event_data.video_url
+                ? {
+                    item_video: {
+                      url:
+                        process.env.ENV !== "local"
+                          ? new URL(input_event_data.video_url).origin + new URL(input_event_data.video_url).pathname
+                          : PLACEHOLDER_VIDEO,
+                    },
+                  }
+                : {}),
+              item_metadata: {
+                activity_type: "event",
+                place: {
+                  type: input_event_data.eventLocationType === "online" ? "Online" : "Offline",
+                  ...(country && country?.abbreviatedCode
+                    ? {
+                        country_code_iso: country.abbreviatedCode,
+                        venue_name: input_event_data.location,
+                      }
+                    : {
+                        venue_name: input_event_data.location, // Use location regardless of country
+                      }),
+                },
+              },
+            },
+          },
+        }
+      : {}),
+  };
+  return eventDraft;
 }
 
 /* --------------------------------- ROUTES --------------------------------- */
@@ -195,7 +280,7 @@ const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
     });
   }
 
-  return eventsData.map((restEventData) => removeKey(restEventData, "wallet_seed_phrase"));
+  return eventsData;
 });
 
 /* -------------------------------------------------------------------------- */
@@ -389,249 +474,190 @@ const checkinRegistrantRequest = eventManagementProtectedProcedure
 /*                                  🆕Add Event🆕                            */
 /* -------------------------------------------------------------------------- */
 // private
-const addEvent = adminOrganizerProtectedProcedure
-  .input(
-    z.object({
-      eventData: EventDataSchema,
-    })
-  )
-  .mutation(async (opts) => {
-    const input_event_data = opts.input.eventData;
-    try {
-      const result = await db.transaction(async (trx) => {
-        const countryId = input_event_data.countryId;
-        const country = countryId ? await fetchCountryById(countryId) : undefined;
+const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: EventDataSchema })).mutation(async (opts) => {
+  const input_event_data = opts.input.eventData;
+  try {
+    const result = await db.transaction(async (trx) => {
+      const countryId = input_event_data.countryId;
 
-        const inputSecretPhrase = input_event_data.secret_phrase.trim().toLowerCase();
+      const inputSecretPhrase = input_event_data.secret_phrase.trim().toLowerCase();
+      const hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
 
-        const hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
+      if (!hashedSecretPhrase) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid secret phrase" });
 
-        if (!hashedSecretPhrase) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Invalid secret phrase",
-          });
-        }
+      /* ------------------------------ Invalid Dates ----------------------------- */
+      if (!input_event_data.end_date || !input_event_data.start_date) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid start-date/end-date" });
+      }
+      /* ------------------------- Event Duration > 1 Week ------------------------ */
+      //FIXME -  Discuss With Mike
 
-        /* ------------------------------ Invalid Dates ----------------------------- */
-        if (!input_event_data.end_date || !input_event_data.start_date) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Invalid start-date/end-date",
-          });
-        }
-        /* ------------------------- Event Duration > 1 Week ------------------------ */
-        //FIXME -  Discuss With Mike
+      // if (input_event_data.end_date! - input_event_data.start_date > 604801) {
+      //   throw new TRPCError({
+      //     code: "BAD_REQUEST",
+      //     message: "Event Duration Can't be more than 1 week",
+      //   });
+      // }
 
-        // if (input_event_data.end_date! - input_event_data.start_date > 604801) {
-        //   throw new TRPCError({
-        //     code: "BAD_REQUEST",
-        //     message: "Event Duration Can't be more than 1 week",
-        //   });
-        // }
-
-        const newEvent = await trx
-          .insert(events)
-          .values({
-            type: input_event_data.type,
-            event_uuid: uuidv4(),
-            title: input_event_data.title,
-            subtitle: input_event_data.subtitle,
-            description: input_event_data.description,
-            image_url: input_event_data.image_url,
-            society_hub: input_event_data.society_hub.name,
-            society_hub_id: input_event_data.society_hub.id,
-            secret_phrase: hashedSecretPhrase,
-            start_date: input_event_data.start_date,
-            end_date: input_event_data.end_date,
-            timezone: input_event_data.timezone,
-            location: input_event_data.location,
-            owner: opts.ctx.user.user_id,
-            participationType: input_event_data.eventLocationType,
-            countryId: input_event_data.countryId,
-            tsRewardImage: input_event_data.ts_reward_url,
-            tsRewardVideo: input_event_data.video_url,
-            cityId: input_event_data.cityId,
-
-            //Event Registration
-            has_registration: input_event_data.has_registration,
-            has_approval: input_event_data.has_approval,
-            capacity: input_event_data.capacity,
-            has_waiting_list: input_event_data.has_waiting_list,
-            //Event Registration
-
-            //Paid Event
-            has_payment: input_event_data.paid_event?.has_payment,
-            ticketToCheckIn: input_event_data.paid_event?.has_payment, // Duplicated Column same as has_payment 😐
-          })
-          .returning();
-
-        /* -------------------------------------------------------------------------- */
-        /*                     Paid Event : Insert PayMent Details                    */
-        /* -------------------------------------------------------------------------- */
-        if (input_event_data.paid_event && input_event_data.paid_event.has_payment) {
-          await trx.insert(eventPayment).values({
-            event_uuid: newEvent[0].event_uuid,
-            /* -------------------------------------------------------------------------- */
-            payment_type: input_event_data.paid_event.payment_type || "TON",
-            price: input_event_data.paid_event.payment_amount || 1,
-            recipient_address: input_event_data.paid_event.payment_recipient_address,
-            /* -------------------------------------------------------------------------- */
-            ticket_type: input_event_data.paid_event.has_nft ? "NFT" : "OFFCHAIN",
-            ticketImage: input_event_data.paid_event.nft_image_url,
-            collectionAddress: null,
-          });
-        }
-
-        // Insert dynamic fields
-        for (let i = 0; i < input_event_data.dynamic_fields.length; i++) {
-          const field = input_event_data.dynamic_fields[i];
-          await eventFieldsDB.insertEventField(trx, {
-            emoji: field.emoji,
-            title: field.title,
-            description: field.description,
-            placeholder: field.type === "button" ? field.url : field.placeholder,
-            type: field.type,
-            order_place: i,
-            event_id: newEvent[0].event_id,
-            updatedBy: opts.ctx.user.user_id.toString(),
-          });
-        }
-        // Generate POA for the event
-        if (input_event_data.eventLocationType === "online") {
-          await eventPoaTriggersDB.generatePoaForAddEvent(trx, {
-            eventId: newEvent[0].event_id,
-            eventStartTime: newEvent[0].start_date || 0,
-            eventEndTime: newEvent[0].end_date || 0,
-            poaCount: 3,
-            poaType: "simple" as EventTriggerType,
-          });
-        }
-
-        // Insert secret phrase field if applicable
-        if (inputSecretPhrase) {
-          await eventFieldsDB.insertEventField(trx, {
-            emoji: "🔒",
-            title: "secret_phrase_onton_input",
-            description: "Enter the event password",
-            placeholder: "Enter the event password",
-            type: "input",
-            order_place: input_event_data.dynamic_fields.length,
-            event_id: newEvent[0].event_id,
-            updatedBy: opts.ctx.user.user_id.toString(),
-          });
-        }
-
-        const additional_info = z.string().url().safeParse(input_event_data.location).success ? "Online" : input_event_data.location;
-
-        const eventDraft: TonSocietyRegisterActivityT = {
+      const newEvent = await trx
+        .insert(events)
+        .values({
+          type: input_event_data.type,
+          event_uuid: uuidv4(),
           title: input_event_data.title,
           subtitle: input_event_data.subtitle,
           description: input_event_data.description,
-          hub_id: parseInt(input_event_data.society_hub.id),
-          start_date: timestampToIsoString(input_event_data.start_date),
-          end_date: timestampToIsoString(input_event_data.end_date!),
-          additional_info,
-          cta_button: {
-            link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}`,
-            label: "Enter Event",
-          },
-          ...(input_event_data.ts_reward_url
-            ? {
-                rewards: {
-                  mint_type: "manual",
-                  collection: {
-                    title: input_event_data.title,
-                    description: input_event_data.description,
-                    image: {
-                      url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
-                    },
-                    cover: {
-                      url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
-                    },
-                    item_title: input_event_data.title,
-                    item_description: "Reward for participation",
-                    item_image: {
-                      url: process.env.ENV !== "local" ? input_event_data.ts_reward_url : PLACEHOLDER_IMAGE,
-                    },
-                    ...(input_event_data.video_url
-                      ? {
-                          item_video: {
-                            url:
-                              process.env.ENV !== "local"
-                                ? new URL(input_event_data.video_url).origin + new URL(input_event_data.video_url).pathname
-                                : PLACEHOLDER_VIDEO,
-                          },
-                        }
-                      : {}),
-                    item_metadata: {
-                      activity_type: "event",
-                      place: {
-                        type: input_event_data.eventLocationType === "online" ? "Online" : "Offline",
-                        ...(country && country?.abbreviatedCode
-                          ? {
-                              country_code_iso: country.abbreviatedCode,
-                              venue_name: input_event_data.location,
-                            }
-                          : {
-                              venue_name: input_event_data.location, // Use location regardless of country
-                            }),
-                      },
-                    },
-                  },
-                },
-              }
-            : {}),
-        };
+          image_url: input_event_data.image_url,
+          society_hub: input_event_data.society_hub.name,
+          society_hub_id: input_event_data.society_hub.id,
+          secret_phrase: hashedSecretPhrase,
+          start_date: input_event_data.start_date,
+          end_date: input_event_data.end_date,
+          timezone: input_event_data.timezone,
+          location: input_event_data.location,
+          owner: opts.ctx.user.user_id,
+          participationType: input_event_data.eventLocationType,
+          countryId: input_event_data.countryId,
+          tsRewardImage: input_event_data.ts_reward_url,
+          tsRewardVideo: input_event_data.video_url,
+          cityId: input_event_data.cityId,
 
-        console.log("eventDraft", JSON.stringify(eventDraft));
-        // Ensure eventDataUpdated is accessed correctly as an object
-        const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
-        console.log("eventData", eventData);
+          //Event Registration
+          has_registration: input_event_data.has_registration,
+          has_approval: input_event_data.has_approval,
+          capacity: input_event_data.capacity,
+          has_waiting_list: input_event_data.has_waiting_list,
+          //Event Registration
 
-        // Remove the description key
-        const eventDataWithoutDescription = removeKey(eventData, "description");
-        await sendLogNotification({
-          message: `
+          /* ------------------------------- Paid Event ------------------------------- */
+          enabled: !input_event_data.paid_event?.has_payment,
+          hidden: input_event_data.paid_event?.has_payment,
+          has_payment: input_event_data.paid_event?.has_payment,
+          ticketToCheckIn: input_event_data.paid_event?.has_payment, // Duplicated Column same as has_payment 😐
+          /* ------------------------------- Paid Event ------------------------------- */
+        })
+        .returning();
+
+      const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
+      /* -------------------------------------------------------------------------- */
+      /*                     Paid Event : Insert PayMent Details                    */
+      /* -------------------------------------------------------------------------- */
+      if (input_event_data.paid_event && input_event_data.paid_event.has_payment) {
+        if (!input_event_data.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
+        const price = 10 + 0.055 * input_event_data.capacity;
+        await trx.insert(orders).values({
+          event_uuid: eventData.event_uuid,
+          user_id: opts.ctx.user.user_id,
+          total_price: BigInt(price),
+          payment_type: "TON",
+          state: "created",
+          order_type: "event_creation",
+          owner_address: "",
+        });
+        await trx.insert(eventPayment).values({
+          event_uuid: newEvent[0].event_uuid,
+          /* -------------------------------------------------------------------------- */
+          payment_type: input_event_data.paid_event.payment_type || "TON",
+          price: input_event_data.paid_event.payment_amount || 1,
+          recipient_address: input_event_data.paid_event.payment_recipient_address,
+          /* -------------------------------------------------------------------------- */
+          ticket_type: input_event_data.paid_event.has_nft ? "NFT" : "OFFCHAIN",
+          ticketImage: input_event_data.paid_event.nft_image_url,
+          title: input_event_data.paid_event.nft_title,
+          description: input_event_data.paid_event.nft_description,
+          collectionAddress: null,
+        });
+      }
+
+      // Insert dynamic fields
+      for (let i = 0; i < input_event_data.dynamic_fields.length; i++) {
+        const field = input_event_data.dynamic_fields[i];
+        await eventFieldsDB.insertEventField(trx, {
+          emoji: field.emoji,
+          title: field.title,
+          description: field.description,
+          placeholder: field.type === "button" ? field.url : field.placeholder,
+          type: field.type,
+          order_place: i,
+          event_id: newEvent[0].event_id,
+          updatedBy: opts.ctx.user.user_id.toString(),
+        });
+      }
+      // Generate POA for the event
+      if (input_event_data.eventLocationType === "online") {
+        await eventPoaTriggersDB.generatePoaForAddEvent(trx, {
+          eventId: newEvent[0].event_id,
+          eventStartTime: newEvent[0].start_date || 0,
+          eventEndTime: newEvent[0].end_date || 0,
+          poaCount: 3,
+          poaType: "simple" as EventTriggerType,
+        });
+      }
+
+      // Insert secret phrase field if applicable
+      if (inputSecretPhrase) {
+        await eventFieldsDB.insertEventField(trx, {
+          emoji: "🔒",
+          title: "secret_phrase_onton_input",
+          description: "Enter the event password",
+          placeholder: "Enter the event password",
+          type: "input",
+          order_place: input_event_data.dynamic_fields.length,
+          event_id: newEvent[0].event_id,
+          updatedBy: opts.ctx.user.user_id.toString(),
+        });
+      }
+
+      const eventDraft = await CreateTonSocietyDraft(input_event_data, eventData.event_uuid);
+
+      console.log("eventDraft", JSON.stringify(eventDraft));
+      console.log("eventData", eventData);
+
+      // Remove the description key
+      const eventDataWithoutDescription = removeKey(eventData, "description");
+      await sendLogNotification({
+        message: `
 @${opts.ctx.user.username} <b>Added</b> a new event <code>${newEvent[0].event_uuid}</code> successfully
 
 <pre><code>${formatChanges(eventDataWithoutDescription)}</code></pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
             `,
-        });
-
-        // On local development environment, we skip the registration on ton society
-        if (process.env.ENV !== "local") {
-          const res = await registerActivity(eventDraft);
-
-          await trx
-            .update(events)
-            .set({
-              activity_id: res.data.activity_id,
-              updatedBy: opts.ctx.user.user_id.toString(),
-              updatedAt: new Date(),
-            })
-            .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
-            .execute();
-        }
-
-        return newEvent;
       });
 
-      return {
-        success: true,
-        eventId: result[0].event_id,
-        eventHash: result[0].event_uuid,
-      } as const;
-    } catch (error) {
-      console.error(`Error while adding event: ${Date.now()} , ${error}`);
-      if (error instanceof TRPCError) {
-        throw error;
+      // On local development skip  registration to ton society || paid event will be registered when organizer pays initial payment
+      const register_to_ts = process.env.ENV !== "local" || !eventData.has_payment;
+
+      if (register_to_ts) {
+        const res = await registerActivity(eventDraft);
+
+        await trx
+          .update(events)
+          .set({
+            activity_id: res.data.activity_id,
+            updatedBy: opts.ctx.user.user_id.toString(),
+            updatedAt: new Date(),
+          })
+          .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
+          .execute();
       }
-      internal_server_error(error, "Internal Error while adding event");
+
+      return newEvent;
+    });
+
+    return {
+      success: true,
+      eventId: result[0].event_id,
+      eventHash: result[0].event_uuid,
+    } as const;
+  } catch (error) {
+    console.error(`Error while adding event: ${Date.now()} , ${error}`);
+    if (error instanceof TRPCError) {
+      throw error;
     }
-  });
+    internal_server_error(error, "Internal Error while adding event");
+  }
+});
 
 /* -------------------------------------------------------------------------- */
 /*                                Update Event                                */

@@ -1,7 +1,7 @@
 import { index, integer, pgEnum, pgTable, serial, text, timestamp, uuid, uniqueIndex } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
+import { paymentTypes } from "../enum";
 
-export const paymentTypes = pgEnum("payment_types", ["USDT", "TON"]);
 export const ticketTypes = pgEnum("ticket_types", ["OFFCHAIN", "NFT"]);
 
 export const eventPayment = pgTable(
@@ -9,9 +9,8 @@ export const eventPayment = pgTable(
   {
     id: serial("id").primaryKey(),
     event_uuid: uuid("event_uuid").references(() => events.event_uuid),
-    // title: text("title"),
-    // description: text("description"),
 
+    
     /* -------------------------- Payment Core Columns -------------------------- */
     payment_type: paymentTypes("payment_type").notNull(),
     price: integer("price").notNull(),
@@ -21,6 +20,8 @@ export const eventPayment = pgTable(
     /* ----------------------------- USED IF HAS NFT ---------------------------- */
     ticketImage: text("ticket_image"),
     collectionAddress: text("collection_address"),
+    title: text("title"),
+    description: text("description"),
 
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),

@@ -227,7 +227,7 @@ export const UpdateEventDataSchema = z.object({
   }),
   secret_phrase: z.string().optional(),
   start_date: z.number({ required_error: "start_date is required" }),
-  end_date: z.number().nullable(),
+  end_date: z.number(),
   owner: z.number({ required_error: "owner is required" }),
   activity_id: z.number().optional(),
   timezone: z.string({ required_error: "timezone is required" }),

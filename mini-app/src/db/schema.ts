@@ -2,6 +2,8 @@ import {
   developmentEnvironment,
   eventParticipationType,
   orderState,
+  orderTypes,
+  paymentTypes,
   rewardStatus,
   rewardType,
   ticketStatus,
@@ -38,7 +40,6 @@ import { visitors } from "./schema/visitors";
 import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 
-
 // export all the enums
 export {
   developmentEnvironment,
@@ -46,6 +47,8 @@ export {
   eventTriggerType,
   eventTriggerStatus,
   orderState,
+  orderTypes,
+  paymentTypes,
   rewardStatus,
   rewardType,
   ticketStatus,
@@ -92,4 +95,3 @@ export type { EventTriggerStatus };
 export type { NotificationStatus };
 export type { NotificationType };
 export type { NotificationItemType };
-
