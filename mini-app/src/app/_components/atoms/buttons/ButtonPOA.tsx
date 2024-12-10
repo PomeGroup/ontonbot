@@ -3,7 +3,7 @@
 import { trpc } from "@/app/_trpc/client";
 import { Button } from "@/components/ui/button";
 import useWebApp from "@/hooks/useWebApp";
-import { cn, wait } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { LoaderIcon } from "lucide-react";
 import { SiGoogleclassroom } from "react-icons/si";
 
@@ -28,8 +28,8 @@ const ButtonPOA = ({ event_uuid }: { event_uuid: string; }) => {
         });
 
         hapticFeedback?.impactOccurred("medium");
-        await wait(500);
-        WebApp?.close();
+
+
       }}
     >
       <SiGoogleclassroom />

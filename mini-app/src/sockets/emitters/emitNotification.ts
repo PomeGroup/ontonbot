@@ -5,10 +5,12 @@ import { sanitizeInput } from "@/lib/sanitizer";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { eventPoaResultsDB } from "@/server/db/eventPoaResults.db";
+import { getEventById } from "@/server/db/events";
+import { NotificationItemType, NotificationStatus, NotificationType } from "@/db/enum"; // Ensure this import is present
 
 export const emitNotification = async (
   io: Server,
-  userId: UserId,// it must be number , if it was string and use casting them map will not work
+  userId: UserId, // it must be number, if it was string and use casting them map will not work
   message: any,
   channel: Channel,
   msg: Message,
@@ -16,10 +18,12 @@ export const emitNotification = async (
 
   const sockets = userSockets.get(Number(userId));
   console.log(`emitNotification - userId: ${userId}, type: ${typeof userId}`);
+
   // Extract notificationId and ensure it's a number
   const notificationIdNum = typeof message.notificationId === "string"
     ? parseInt(message.notificationId, 10)
     : message.notificationId;
+
   if (!sockets || sockets.size === 0) {
     console.warn(`User ${userId} is not online. Message will be retried.`);
     console.log(msg);
@@ -46,17 +50,21 @@ export const emitNotification = async (
       if (message.item_type === "POA_TRIGGER") {
         // If the notification is for a POA trigger, insert a new POA result
         const eventPoaTrigger = await eventPoaTriggersDB.getEventPoaTriggerById(message.itemId);
-        console.log(eventPoaTrigger);
-        console.log(`Inserting POA result for User ${userId} and Event ${eventPoaTrigger.eventId}`);
-        await eventPoaResultsDB.insertPoaResult({
-          userId,
-          eventId: eventPoaTrigger.eventId,
-          poaId: message.itemId,
-          poaAnswer: "NO" ,
-          status: "EXPIRED" ,
-          repliedAt: new Date(),
-          notificationId: notificationIdNum,
-        });
+        if (eventPoaTrigger) {
+          console.log(eventPoaTrigger);
+          console.log(`Inserting POA result for User ${userId} and Event ${eventPoaTrigger.eventId}`);
+          await eventPoaResultsDB.insertPoaResult({
+            userId,
+            eventId: eventPoaTrigger.eventId,
+            poaId: message.itemId,
+            poaAnswer: "NO",
+            status: "EXPIRED",
+            repliedAt: new Date(),
+            notificationId: notificationIdNum,
+          });
+        } else {
+          console.warn(`Event POA Trigger not found for ID ${message.itemId}`);
+        }
       }
       channel.ack(msg); // Acknowledge the message, no further retries
       return;
@@ -82,8 +90,49 @@ export const emitNotification = async (
     );
   });
 
-  // Since notification is successfully delivered, update its status to READ
-  await notificationsDB.updateNotificationAsRead(notificationIdNum);
+  try {
+    // Since notification is successfully delivered, update its status to READ
+    await notificationsDB.updateNotificationAsRead(notificationIdNum);
+    console.log(`Notification ID ${notificationIdNum} marked as READ for User ${userId}`);
+  } catch (updateError) {
+    console.error(`Failed to update notification status for Notification ID ${notificationIdNum}:`, updateError);
+  }
+
+  try {
+    // After successfully sending the notification to the user,
+    // create a USER_RECEIVED_POA notification for the organizer
+    if (message.type === "POA_SIMPLE" && message.additionalData && message.additionalData.eventId) {
+      const eventId = message.additionalData.eventId;
+      const eventDetails = await getEventById(eventId);
+
+      if (!eventDetails || !eventDetails.owner) {
+        console.warn(`Event details or owner not found for Event ID ${eventId}`);
+      } else {
+        const ownerId = eventDetails.owner;
+        const organizerNotification = {
+          userId: ownerId,
+          type: "USER_RECEIVED_POA" as NotificationType,
+          title: `User ${userId} has received a POA for Event ID ${eventId}`,
+          desc: `User with ID ${userId} has successfully received a POA.`,
+          actionTimeout: 0, // Adjust as needed
+          additionalData: { participant_id : userId,event_id : eventId, notification_id: notificationIdNum },
+          priority: 2, // Adjust priority as needed
+          itemId: message.itemId,
+          item_type: "POA_TRIGGER" as NotificationItemType,
+          status: "WAITING_TO_SEND" as NotificationStatus,
+          createdAt: new Date(),
+          readAt: undefined,
+          expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days from now
+        };
+
+        // Add the organizer notification to the database
+        await notificationsDB.addNotifications([organizerNotification]);
+        console.log(`Created USER_RECEIVED_POA notification for Organizer ${ownerId} `);
+      }
+    }
+  } catch (organizerNotificationError) {
+    console.error(`Failed to create USER_RECEIVED_POA notification for Organizer:`, organizerNotificationError);
+  }
 
   // Acknowledge successful message delivery
   channel.ack(msg);

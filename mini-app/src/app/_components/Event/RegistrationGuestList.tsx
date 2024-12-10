@@ -16,6 +16,7 @@ import useWebApp from "@/hooks/useWebApp";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
 import StatusChip from "@/components/ui/status-chips";
 import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
+import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
 
 interface CustomListItemProps {
   name: string;
@@ -325,6 +326,8 @@ const RegistrationGuestlist = () => {
           hub={eventData.data?.society_hub.name!}
         />
         <ButtonPOA event_uuid={params.hash}  />
+        {/* Organizer Notification Handler */}
+        <OrganizerNotificationHandler />
       </Block>
       <BlockTitle medium>
         <span>Guest List</span>
