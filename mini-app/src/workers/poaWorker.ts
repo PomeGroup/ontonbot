@@ -1,12 +1,12 @@
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { EventTriggerStatus, NotificationItemType, NotificationStatus, NotificationType } from "@/db/schema";
-import { getEventsWithFilters } from "@/server/db/events";
+import { getEventsWithFilters, getEventById } from "@/server/db/events";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
 import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
 
-const WORKER_INTERVAL = 5 * 1000; // 10 seconds
+const WORKER_INTERVAL = 5 * 1000; // 5 seconds
 const PAGE_SIZE = 500; // Number of users to fetch per batch
 
 let isShuttingDown = false;
@@ -46,6 +46,32 @@ const fetchOngoingEvents = async () => {
   return getEventsWithFilters(params);
 };
 
+// Function to create a notification for the event owner
+const notifyEventOwner = async (eventId: number, ownerId: number, notificationCount: number , triggerId : number) => {
+  const notification = {
+    userId: ownerId,
+    type: "POA_CREATION_FOR_ORGANIZER" as NotificationType, // Define a suitable notification type
+    title: `All notifications created for Event ID ${eventId}`,
+    desc: `A total of ${notificationCount} notifications have been created.`,
+    actionTimeout: 0,
+    additionalData: { owner_id : ownerId , event_id : eventId , notification_count : notificationCount },
+    priority: 2,
+    itemId: triggerId,
+    item_type: "POA_TRIGGER" as NotificationItemType,
+    status: "WAITING_TO_SEND" as NotificationStatus,
+    createdAt: new Date(),
+    readAt: undefined,
+    expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days from now
+  };
+  console.log(`Creating notification for Event ${eventId} to Owner ${ownerId}: Count = ${notificationCount}`);
+  try {
+    await notificationsDB.addNotifications([notification]);
+    console.log(`Created notification for Event ${eventId} to Owner ${ownerId}: Count = ${notificationCount}`);
+  } catch (error) {
+    console.error(`Failed to create notification for Event Owner ${ownerId}:`, error);
+  }
+};
+
 // Worker Function
 const processOngoingEvents = async () => {
   console.log("===================================");
@@ -63,6 +89,8 @@ const processOngoingEvents = async () => {
       const eventId = event.eventId;
       const eventUuid = event.eventUuid;
       const eventTitle = event.title;
+      let totalNotificationsCreated = 0; // Initialize counter for the event
+
       try {
         const startTime = Math.floor(Date.now() / 1000);
         const readableDate = new Date(startTime * 1000).toLocaleString();
@@ -117,6 +145,7 @@ const processOngoingEvents = async () => {
             try {
               const result = await notificationsDB.addNotifications(notificationsToAdd);
               console.log(`Created ${result.count} notifications for Trigger ${trigger.id}`);
+              totalNotificationsCreated += result.count; // Accumulate count
             } catch (notificationError) {
               console.error(`Failed to create notifications:`, notificationError);
             }
@@ -127,6 +156,14 @@ const processOngoingEvents = async () => {
           try {
             await eventPoaTriggersDB.updateEventPoaStatus(trigger.id, "completed" as EventTriggerStatus);
             console.log(`Completed notifications for POA Trigger ${trigger.id}`);
+            // After processing all triggers for the event, notify the event owner
+            const eventDetails = await getEventById(eventId);
+            if (!eventDetails || !eventDetails.owner) {
+              console.warn(`Event details or owner data not found for Event ID ${eventId}`);
+            } else {
+              const ownerId = eventDetails.owner;
+              await notifyEventOwner(eventId, ownerId, totalNotificationsCreated,trigger.id);
+            }
           } catch (statusUpdateError) {
             console.error(`Failed to update status for POA Trigger ${trigger.id}:`, statusUpdateError);
           }
@@ -137,6 +174,9 @@ const processOngoingEvents = async () => {
             return;
           }
         }
+
+
+
       } catch (eventError) {
         console.error(`Error processing Event ${eventId}:`, eventError);
       }

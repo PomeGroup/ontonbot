@@ -5,8 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
+      <change afterPath="$PROJECT_DIR$/mini-app/src/app/_components/OrganizerNotificationHandler.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose-server.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose-server.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/app/_components/Event/RegistrationGuestList.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/app/_components/Event/RegistrationGuestList.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/app/_components/atoms/buttons/ButtonPOA.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/app/_components/atoms/buttons/ButtonPOA.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/db/enum.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/db/enum.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/emitters/emitNotification.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/emitters/emitNotification.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/sockets/handlers/notificationReply.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/sockets/handlers/notificationReply.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mini-app/src/workers/poaWorker.ts" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/workers/poaWorker.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,9 +46,9 @@
     &quot;Attach to Node.js/Chrome.Unnamed.executor&quot;: &quot;Debug&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/poa&quot;,
     &quot;js.last.introduce.type&quot;: &quot;CONST&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/inanloo/MyProject/ontonBotProjects/ontonbot/devops/env_stages&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/inanloo/MyProject/ontonBotProjects/ontonbot/mini-app/src/app/_components/atoms/buttons&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -66,11 +72,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/mini-app/src/app/_components/atoms/buttons" />
       <recent name="$PROJECT_DIR$/devops/env_stages" />
       <recent name="$PROJECT_DIR$/devops" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/website" />
-      <recent name="$PROJECT_DIR$/mini-app" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/mini-app/src/server/db" />
@@ -188,6 +194,7 @@
       <workItem from="1733551139862" duration="2721000" />
       <workItem from="1733631664037" duration="7765000" />
       <workItem from="1733684629478" duration="18798000" />
+      <workItem from="1733805054867" duration="7494000" />
     </task>
     <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
       <option name="closed" value="true" />

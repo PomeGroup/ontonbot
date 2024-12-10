@@ -35,7 +35,14 @@ export const eventTriggerStatus = pgEnum("event_trigger_status", [
   "completed",
   "sending",
 ]);
-export const notificationType = pgEnum("notification_type", ["POA_SIMPLE", "MESSAGE_SIMPLE", "UNKNOWN"]);
+export const notificationType = pgEnum("notification_type", [
+  "POA_SIMPLE",
+  "POA_CREATION_FOR_ORGANIZER",
+  "USER_RECEIVED_POA",
+  "USER_ANSWER_POA",
+  "MESSAGE_SIMPLE",
+  "UNKNOWN"
+]);
 export const notificationStatus = pgEnum("notification_status", [
   "WAITING_TO_SEND",
   "DELIVERED",
