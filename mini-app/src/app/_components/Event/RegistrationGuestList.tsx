@@ -15,6 +15,7 @@ import { useMainButton } from "@/hooks/useMainButton";
 import useWebApp from "@/hooks/useWebApp";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
 import StatusChip from "@/components/ui/status-chips";
+import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
 
 interface CustomListItemProps {
   name: string;
@@ -323,6 +324,7 @@ const RegistrationGuestlist = () => {
           url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${params.hash}`}
           hub={eventData.data?.society_hub.name!}
         />
+        <ButtonPOA event_uuid={params.hash}  />
       </Block>
       <BlockTitle medium>
         <span>Guest List</span>

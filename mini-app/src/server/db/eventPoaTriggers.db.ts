@@ -33,8 +33,8 @@ export const addEventPoaTrigger = async (poaData: {
         updatedAt: poaData.updatedAt || new Date(),
       })
       .onConflictDoNothing()
+      .returning()
       .execute();
-
     console.log("POA Trigger added:", result);
     return result;
   } catch (error) {

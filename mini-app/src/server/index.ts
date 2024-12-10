@@ -11,6 +11,7 @@ import { usersRouter } from "./routers/users";
 import { visitorsRouter } from "./routers/visitors";
 import { router } from "./trpc";
 import { sbtRewardCollectionRouter } from "@/server/routers/sbtRewardCollectionRouter";
+import { POARouter } from "@/server/routers/POA";
 
 export const appRouter = router({
   users: usersRouter,
@@ -24,6 +25,7 @@ export const appRouter = router({
   eventTicket: eventTicketRouter,
   orders: ordersRouter,
   sbtRewardCollection: sbtRewardCollectionRouter,
+  EventPOA: POARouter,
 });
 
 export type AppRouter = typeof appRouter;
