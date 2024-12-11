@@ -1,16 +1,17 @@
 import { db } from "@/db/db";
-import { rewards } from "@/db/schema/rewards";
-import { RewardType, RewardStatus } from "@/db/enum";
-import { eq, sql } from "drizzle-orm";
+import { RewardStatus, RewardType } from "@/db/enum";
 import { visitors } from "@/db/schema";
+import { rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
+import { Maybe } from "@trpc/server";
+import { eq, sql } from "drizzle-orm";
 
 // Utility function to generate cache keys
 const generateCacheKey = (visitor_id: number, reward_id?: string) => {
   return `reward:${visitor_id}${reward_id ? `:${reward_id}` : ""}`;
 };
 // Function to check if a reward already exists for a visitor
-const checkExistingReward = async (visitor_id: number) => {
+const checkExistingReward = async (visitor_id: number): Promise<Maybe<RewardsSelectType>> => {
   const cacheKey = generateCacheKey(visitor_id);
   const cachedReward = await redisTools.getCache(cacheKey);
   if (cachedReward) return cachedReward; // Return from cache if exists
@@ -22,17 +23,12 @@ const checkExistingReward = async (visitor_id: number) => {
   });
 
   if (dbReward) await redisTools.setCache(cacheKey, dbReward, redisTools.cacheLvl.long); // Cache the result
+
   return dbReward;
 };
 
 // Function to insert a reward for a visitor
-const insert = async (
-  visitor_id: number,
-  data: any,
-  user_id: number,
-  type: RewardType,
-  status: RewardStatus
-) => {
+const insert = async (visitor_id: number, data: any, user_id: number, type: RewardType, status: RewardStatus) => {
   const visitor = await db.query.visitors.findFirst({
     where: (fields, ops) => {
       return ops.eq(fields.id, visitor_id);
@@ -116,13 +112,7 @@ const updateReward = async (reward_id: string, data: any) => {
     updatedBy: "system", // Updated by 'system'
   });
 };
-const insertRewardWithData = async (
-  visitor_id: number,
-  user_id: string,
-  type: RewardType,
-  data: any,
-  status: RewardStatus
-) => {
+const insertRewardWithData = async (visitor_id: number, user_id: string, type: RewardType, data: any, status: RewardStatus) => {
   return await rewardDB.insert(
     visitor_id,
     data, // Data from response or any other source

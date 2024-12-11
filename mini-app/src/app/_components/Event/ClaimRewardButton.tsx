@@ -40,11 +40,7 @@ function ClaimRewardButtonChild(props: { link: string | null; isNotified: boolea
   );
 }
 
-export function ClaimRewardButton(props: {
-  eventId: string;
-  initData: string;
-  isWalletConnected: boolean | undefined;
-}) {
+export function ClaimRewardButton(props: { eventId: string; initData: string; isWalletConnected: boolean | undefined }) {
   const visitorReward = trpc.users.getVisitorReward.useQuery(
     {
       event_uuid: props.eventId,
@@ -60,7 +56,8 @@ export function ClaimRewardButton(props: {
     return visitorReward.isSuccess && props.isWalletConnected ? (
       <ClaimRewardButtonChild
         isNotified={
-          visitorReward.data.type === "reward_link_generated" && visitorReward.data.status === "notified"
+          visitorReward.data.type === "reward_link_generated" &&
+          (visitorReward.data.status === "notified" || visitorReward.data.status === "notified_by_ui")
         }
         link={visitorReward.data.data}
       />

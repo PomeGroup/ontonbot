@@ -6,12 +6,7 @@ import { findVisitorByUserAndEventUuid } from "../db/visitors";
 
 import { default as rewardDB } from "@/server/db/rewards.db";
 import { usersDB } from "@/server/db/users";
-import {
-  adminOrganizerProtectedProcedure,
-  initDataProtectedProcedure,
-  publicProcedure,
-  router,
-} from "../trpc";
+import { adminOrganizerProtectedProcedure, initDataProtectedProcedure, publicProcedure, router } from "../trpc";
 
 import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
@@ -35,14 +30,12 @@ export const usersRouter = router({
   }),
 
   // private
-  getWallet: initDataProtectedProcedure
-    .input(z.object({ wallet_address: z.string().optional() }))
-    .query(async (opts) => {
-      const res = await usersDB.selectWalletById(opts.ctx.user.user_id);
-      // console.log(res);
+  getWallet: initDataProtectedProcedure.input(z.object({ wallet_address: z.string().optional() })).query(async (opts) => {
+    const res = await usersDB.selectWalletById(opts.ctx.user.user_id);
+    // console.log(res);
 
-      return res?.wallet;
-    }),
+    return res?.wallet;
+  }),
 
   // private
   addWallet: initDataProtectedProcedure
@@ -119,16 +112,10 @@ export const usersRouter = router({
         } catch (error) {
           if (error instanceof TRPCError) {
             if (error.code === "CONFLICT") {
-              await rewardDB.insertReward(
-                visitor.id,
-                opts.ctx.user.user_id.toString(),
-                "pending_creation",
-                "ton_society_sbt"
-              );
+              await rewardDB.insertReward(visitor.id, opts.ctx.user.user_id.toString(), "pending_creation", "ton_society_sbt");
               return {
                 type: "wait_for_reward",
-                message:
-                  "We successfully collected your data, you'll receive your reward link through a bot message.",
+                message: "We successfully collected your data, you'll receive your reward link through a bot message.",
                 data: null,
               } as const;
             }
@@ -151,8 +138,7 @@ export const usersRouter = router({
         if (reward.status === "pending_creation") {
           return {
             type: "wait_for_reward",
-            message:
-              "We successfully collected your data, you'll receive your reward link through a bot message.",
+            message: "We successfully collected your data, you'll receive your reward link through a bot message.",
             data: null,
           } as const;
         }
@@ -166,11 +152,8 @@ export const usersRouter = router({
           });
         }
 
-        return {
-          ...reward,
-          data: dataValidation.data.reward_link,
-          type: "reward_link_generated",
-        } as const;
+        reward.data = dataValidation.data.reward_link;
+        return reward;
       } catch (error) {
         console.error("Error in getVisitorReward query:", error);
         if (error instanceof TRPCError) {

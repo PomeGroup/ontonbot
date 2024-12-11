@@ -1,6 +1,7 @@
 import { index, integer, json, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { rewardStatus, rewardType } from "@/db/schema";
 import { visitors } from "@/db/schema/visitors";
+import { InferSelectModel } from "drizzle-orm";
 
 export const rewards = pgTable(
   "rewards",
@@ -30,3 +31,5 @@ export const rewards = pgTable(
     updatedAtIdx: index("rewards_updated_at_idx").on(table.updatedAt),
   })
 );
+
+export type RewardsSelectType = InferSelectModel<typeof rewards>;
