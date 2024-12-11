@@ -14,21 +14,11 @@ import { rewardStepValidation } from "@/zodSchema/event/validation";
 import { useMainButton } from "@/hooks/useMainButton";
 
 export const RewardStep = () => {
-  const {
-    setEventData,
-    eventData,
-    edit: editOptions,
-    setRewardStepErrors,
-    clearRewardStepErrors,
-  } = useCreateEventStore();
+  const { setEventData, eventData, edit: editOptions, setRewardStepErrors, clearRewardStepErrors } = useCreateEventStore();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [passwordDisabled, setPasswordDisabled] = useState(
-    !!editOptions?.eventHash || eventData?.eventLocationType === "in_person"
-  );
-  const [passwordValue, setPasswordValue] = useState(
-    editOptions?.eventHash ? "{** click to change password **}" : ""
-  );
+  const [passwordDisabled, setPasswordDisabled] = useState(!!editOptions?.eventHash || eventData?.eventLocationType === "in_person");
+  const [passwordValue, setPasswordValue] = useState(editOptions?.eventHash ? "{** click to change password **}" : "");
   const [sbtOption, setSbtOption] = useState<"custom" | "default">("default");
 
   const addEvent = trpc.events.addEvent.useMutation({
@@ -38,7 +28,7 @@ export const RewardStep = () => {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
-      router.push(`/events/${data.eventHash}/edit`);
+      router.push(`/events/${data?.eventHash}/edit`);
     },
     onError(error) {
       toast.error(error.message);
@@ -52,7 +42,7 @@ export const RewardStep = () => {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
-      router.push(`/events/${data.eventId}`);
+      router.push(`/events/${data?.eventId}`);
     },
     onError(error) {
       toast.error(error.message);
@@ -75,11 +65,7 @@ export const RewardStep = () => {
       secret_phrase: passwordDisabled ? undefined : formDataObject.secret_phrase,
     };
 
-    if (
-      sbtOption === "custom" &&
-      (!eventData?.ts_reward_url || !eventData?.video_url) &&
-      !editOptions?.eventHash
-    ) {
+    if (sbtOption === "custom" && (!eventData?.ts_reward_url || !eventData?.video_url) && !editOptions?.eventHash) {
       setRewardStepErrors({
         ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
         video_url: !eventData?.video_url ? ["Please upload a video."] : undefined,
@@ -114,8 +100,7 @@ export const RewardStep = () => {
             key="ts_reward_url"
             className="flex items-center"
           >
-            <FiAlertCircle className="mr-2" />{" "}
-            {flattenedErrors.ts_reward_url[0] || "Please upload a reward image"}
+            <FiAlertCircle className="mr-2" /> {flattenedErrors.ts_reward_url[0] || "Please upload a reward image"}
           </div>
         ) : null,
       ].filter(Boolean);
