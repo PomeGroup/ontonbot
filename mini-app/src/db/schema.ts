@@ -95,3 +95,4 @@ export type { EventTriggerStatus };
 export type { NotificationStatus };
 export type { NotificationType };
 export type { NotificationItemType };
+export type { EventPoaResultStatus };
