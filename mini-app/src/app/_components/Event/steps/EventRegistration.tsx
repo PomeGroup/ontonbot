@@ -2,6 +2,7 @@ import React, { useLayoutEffect } from "react";
 import { UserRegistrationForm } from "./UserRegistrationForm";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useMainButton } from "@/hooks/useMainButton";
+import PaidEventCreationInputs from "./PaidEventCreationInputs";
 
 const RegistrationStep = () => {
   const { eventData, setEventData, setCurrentStep } = useCreateEventStore((state) => ({
@@ -20,7 +21,12 @@ const RegistrationStep = () => {
     setCurrentStep(4);
   }, "Next Step");
 
-  return <UserRegistrationForm />;
+  return (
+    <>
+      <UserRegistrationForm />;
+      <PaidEventCreationInputs />
+    </>
+  );
 };
 
 export default RegistrationStep;

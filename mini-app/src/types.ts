@@ -1,3 +1,4 @@
+import { Address } from "@ton/core";
 import { z } from "zod";
 
 export type InputField = {
@@ -121,6 +122,48 @@ export const DynamicFieldsSchema = z.array(
   })
 );
 
+/* -------------------------------------------------------------------------- */
+/*                          💲💲Paid Event Schema💲💲                         */
+/* -------------------------------------------------------------------------- */
+const PaidEventSchema = z
+  .object({
+    has_payment: z.boolean().optional().default(false),
+
+    payment_recipient_address: z.string().optional().default(""),
+    payment_type: z.enum(["USDT", "TON"]).optional(),
+    payment_amount: z.number().optional(),
+
+    has_nft: z.boolean().optional().default(false),
+    nft_title: z.string().optional().default(""),
+    nft_description: z.string().optional().default(""),
+    nft_image_url: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.has_payment) {
+      // Validate that `payment_recipient_address` is not empty
+      if (!data.payment_recipient_address)
+        ctx.addIssue({ code: "custom", path: ["payment_recipient_address"], message: "Recipient address is Required" });
+      else if (!Address.isAddress(data.payment_recipient_address))
+        ctx.addIssue({ code: "custom", path: ["invalid_payment_recipient_address"], message: "Recipient address is Invalid!" });
+
+      // Validate that `payment_type` is present
+      if (!data.payment_type) ctx.addIssue({ code: "custom", path: ["payment_type"], message: "Payment type is required." });
+
+      // Validate that `payment_amount` is present and greater than 0
+      if (data.payment_amount === undefined || data.payment_amount <= 0)
+        ctx.addIssue({ code: "custom", path: ["payment_amount"], message: "Payment amount must be greater than 0" });
+
+      // Validate that `nft` is present
+      if (data.has_nft) {
+        if (!data.nft_image_url) ctx.addIssue({ code: "custom", path: ["nft_image_url"], message: "Nft image url is required" });
+
+        if (!data.nft_title) ctx.addIssue({ code: "custom", path: ["nft_title"], message: "Nft title is required" });
+
+        if (!data.nft_description) ctx.addIssue({ code: "custom", path: ["nft_description"], message: "Nft description is required" });
+      }
+    }
+  });
+
 //Create Event
 export const EventDataSchema = z.object({
   event_id: z.number().optional(),
@@ -130,15 +173,11 @@ export const EventDataSchema = z.object({
   subtitle: z.string({ required_error: "subtitle is required" }),
   description: z.string({ required_error: "description is required" }),
   location: z.string({ required_error: "location is required" }),
-  image_url: z
-    .string({ required_error: "event image is required" })
-    .url({ message: "Please upload a valid event image URL" }),
+  image_url: z.string({ required_error: "event image is required" }).url({ message: "Please upload a valid event image URL" }),
   video_url: z.string().url({ message: "Please select a valid reward video URL" }).optional(),
-  ts_reward_url: z
-    .string()
-    .url({
-      message: "Please select a valid reward image URL",
-    }), // This allows the field to be undefined
+  ts_reward_url: z.string().url({
+    message: "Please select a valid reward image URL",
+  }), // This allows the field to be undefined
   society_hub: z.object({
     id: z.string({ required_error: "society_hub.id is required" }),
     name: z.string({ required_error: "society_hub.name is required" }),
@@ -160,6 +199,10 @@ export const EventDataSchema = z.object({
   capacity: z.number().min(1).nullable(),
   has_waiting_list: z.boolean(),
   /* -------------------------- // Free Event Registration Creation ------------------------- */
+
+  /* ------------------------------- Paid Event Creation ------------------------------- */
+  paid_event: PaidEventSchema.optional(),
+  /* ------------------------------- Paid Event Creation ------------------------------- */
 });
 
 export const UpdateEventDataSchema = z.object({
@@ -170,9 +213,7 @@ export const UpdateEventDataSchema = z.object({
   subtitle: z.string({ required_error: "subtitle is required" }),
   description: z.string({ required_error: "description is required" }),
   location: z.string({ required_error: "location is required" }),
-  image_url: z
-    .string({ required_error: "event image is required" })
-    .url({ message: "Please upload a valid image URL" }),
+  image_url: z.string({ required_error: "event image is required" }).url({ message: "Please upload a valid image URL" }),
   video_url: z.string().url({ message: "Please upload a valid video URL" }).optional(),
   ts_reward_url: z
     .string()
@@ -186,7 +227,7 @@ export const UpdateEventDataSchema = z.object({
   }),
   secret_phrase: z.string().optional(),
   start_date: z.number({ required_error: "start_date is required" }),
-  end_date: z.number().nullable(),
+  end_date: z.number(),
   owner: z.number({ required_error: "owner is required" }),
   activity_id: z.number().optional(),
   timezone: z.string({ required_error: "timezone is required" }),
@@ -200,6 +241,9 @@ export const UpdateEventDataSchema = z.object({
   capacity: z.number().min(1).nullable(),
   has_waiting_list: z.boolean(),
   /* -------------------------- // Free Event Registration Update ------------------------- */
+  /* ------------------------------- Paid Event Update ------------------------------- */
+  paid_event: PaidEventSchema.optional(),
+  /* ------------------------------- Paid Event Update ------------------------------- */
 });
 
 export const EventRegisterSchema = z.object({
@@ -222,39 +266,6 @@ export const AgendaItemSchema = z.object({
 export const AgendaHeaderSchema = z.object({
   header: z.string().min(1, "Header is required"),
   items: z.array(AgendaItemSchema), // each header can have multiple items
-});
-export const EventDataSchemaAllOptional = z.object({
-  title: z.string().optional(),
-  subtitle: z.string().optional(),
-  description: z.string().optional(),
-  location: z.string().optional(),
-  image_url: z.string().url().optional(),
-  video_url: z.string().url().optional(),
-  ts_reward_url: z.string().url().optional(),
-  type: z.number().optional(),
-  society_hub: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-    })
-    .optional(),
-  secret_phrase: z.string().optional(),
-  start_date: z.number().optional(),
-  end_date: z.number().nullable().optional(),
-  owner: z.number().optional(),
-  activity_id: z.number().optional(),
-  timezone: z.string().optional(),
-  dynamic_fields: DynamicFieldsSchema.optional(),
-  eventLocationType: z.enum(["online", "in_person"]).optional(),
-  countryId: z.number().optional(),
-  cityId: z.number().optional(),
-  agenda: z.array(AgendaHeaderSchema).optional(),
-  // -----------------
-  // free event registration
-  has_registration: z.boolean().optional(),
-  has_approval: z.boolean().optional(),
-  has_waiting_list: z.boolean().optional(),
-  capacity: z.number().min(1).nullable().optional(),
 });
 
 export type EventData = z.infer<typeof EventDataSchema>;
@@ -339,3 +350,6 @@ export type TelegramUser = {
 };
 
 export type ValueOf<T> = T[keyof T];
+
+export type EventDataSchemaAllOptional = Partial<z.infer<typeof EventDataSchema>>;
+export type PaidEventType = z.infer<typeof PaidEventSchema>;

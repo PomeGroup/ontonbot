@@ -1,7 +1,7 @@
 declare global {
-  // interface Window {
-  //   Telegram: Telegram;
-  // }
+  interface Window {
+    Telegram: Telegram;
+  }
 
   interface WebAppUser {
     id: number;
@@ -62,28 +62,12 @@ declare global {
   }
 
   interface CloudStorage {
-    setItem: (
-      _key: CloudStorageKey,
-      _value: CloudStorageValue,
-      _callback?: (_error: string | null, _result?: boolean) => void
-    ) => void;
-    getItem: (
-      _key: CloudStorageKey,
-      _callback?: (_error: string | null, _result?: CloudStorageValue) => void
-    ) => void;
-    getItems: (
-      _keys: Array<CloudStorageKey>,
-      _callback?: (_error: string | null, _result?: CloudStorageItems) => void
-    ) => void;
+    setItem: (_key: CloudStorageKey, _value: CloudStorageValue, _callback?: (_error: string | null, _result?: boolean) => void) => void;
+    getItem: (_key: CloudStorageKey, _callback?: (_error: string | null, _result?: CloudStorageValue) => void) => void;
+    getItems: (_keys: Array<CloudStorageKey>, _callback?: (_error: string | null, _result?: CloudStorageItems) => void) => void;
     getKeys: (_callback?: (_error: string | null, _result?: Array<CloudStorageKey>) => void) => void;
-    removeItem: (
-      _key: CloudStorageKey,
-      _callback?: (_error: string | null, _result?: boolean) => void
-    ) => void;
-    removeItems: (
-      _key: Array<CloudStorageKey>,
-      _callback?: (_error: string | null, _result?: boolean) => void
-    ) => void;
+    removeItem: (_key: CloudStorageKey, _callback?: (_error: string | null, _result?: boolean) => void) => void;
+    removeItems: (_key: Array<CloudStorageKey>, _callback?: (_error: string | null, _result?: boolean) => void) => void;
   }
 
   interface BackButton {
@@ -110,13 +94,7 @@ declare global {
     onClick: (_callback: VoidFunction) => void;
     offClick: (_callback: VoidFunction) => void;
     setText: (_text: string) => void;
-    setParams: (_params: {
-      color?: string;
-      text?: string;
-      text_color?: string;
-      is_active?: boolean;
-      is_visible?: boolean;
-    }) => void;
+    setParams: (_params: { color?: string; text?: string; text_color?: string; is_active?: boolean; is_visible?: boolean }) => void;
   }
 
   type InvoiceStatuses = "pending" | "failed" | "cancelled" | "paid";
@@ -170,16 +148,7 @@ declare global {
     text?: string;
   };
 
-  type Platforms =
-    | "android"
-    | "android_x"
-    | "ios"
-    | "macos"
-    | "tdesktop"
-    | "weba"
-    | "webk"
-    | "unigram"
-    | "unknown";
+  type Platforms = "android" | "android_x" | "ios" | "macos" | "tdesktop" | "weba" | "webk" | "unigram" | "unknown";
 
   export interface WebApp {
     isExpanded: boolean;
@@ -218,18 +187,15 @@ declare global {
     closeScanQrPopup: () => void;
     readTextFromClipboard: (_callback?: (_text: string) => unknown) => void;
     ready: VoidFunction;
-    switchInlineQuery: (
-      _query: string,
-      _chooseChatTypes?: Array<"users" | "bots" | "groups" | "channels">
-    ) => void;
+    switchInlineQuery: (_query: string, _chooseChatTypes?: Array<"users" | "bots" | "groups" | "channels">) => void;
     requestWriteAccess: (_callback?: (_access: boolean) => unknown) => void;
     requestContact: (_callback?: (_access: boolean) => unknown) => void;
     disableVerticalSwipes: () => void;
   }
 
-  // export interface Telegram {
-  //   WebApp: WebApp;
-  // }
+  export interface Telegram {
+    WebApp: WebApp;
+  }
 }
 
 export {};

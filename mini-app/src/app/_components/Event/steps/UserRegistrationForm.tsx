@@ -56,9 +56,7 @@ export function UserRegistrationForm() {
             title={
               <p className="space-x-4">
                 <span>Capacity</span>
-                <small className={"dark:text-zinc-400"}>
-                  {eventData.capacity ? eventData.capacity : "unlimited"}
-                </small>
+                <small className={"dark:text-zinc-400"}>{eventData.capacity ? eventData.capacity : "unlimited"}</small>
               </p>
             }
             media={<ArrowUpToLine />}

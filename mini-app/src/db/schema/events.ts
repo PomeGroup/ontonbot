@@ -1,42 +1,36 @@
 import { eventParticipationType, giataCity } from "@/db/schema";
 import { users } from "@/db/schema/users";
-import {
-  bigint,
-  boolean,
-  index,
-  integer,
-  json,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { bigint, boolean, index, integer, json, pgTable, serial, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const events = pgTable(
   "events",
   {
     event_id: serial("event_id").primaryKey(),
     event_uuid: uuid("event_uuid").notNull(),
-    type: integer("type"),
-    title: text("title"),
-    subtitle: text("subtitle"),
-    description: text("description"),
+
+    enabled: boolean("enabled").default(true),
+    hidden: boolean("hidden").default(false),
+
+    type: integer("type").notNull(),
+    title: text("title").notNull(),
+    subtitle: text("subtitle").notNull(),
+    description: text("description").notNull(),
     image_url: text("image_url"),
     wallet_address: text("wallet_address"),
-    wallet_seed_phrase: text("wallet_seed_phrase"),
+
     society_hub: text("society_hub"),
-    society_hub_id: text("society_hub_id"),
+    society_hub_id: text("society_hub_id").notNull(),
     activity_id: integer("activity_id"),
     collection_address: text("collection_address"),
     secret_phrase: text("secret_phrase").default(""),
-    start_date: integer("start_date"),
-    end_date: integer("end_date").default(0),
+    start_date: integer("start_date").notNull(),
+    end_date: integer("end_date").notNull(),
     timezone: text("timezone"),
+
     location: text("location"),
     website: json("website"),
     owner: bigint("owner", { mode: "number" }).references(() => users.user_id),
-    hidden: boolean("hidden").default(false),
+
     ticketToCheckIn: boolean("ticketToCheckIn").default(false),
     participationType: eventParticipationType("participation_type").default("online").notNull(),
     cityId: integer("city_id").references(() => giataCity.id),
@@ -50,6 +44,10 @@ export const events = pgTable(
     capacity: integer("capacity"),
     has_waiting_list: boolean("has_waiting_list").default(false),
     /* ------------------------- // Event Registration > ------------------------ */
+
+    /* ------------------------------- Paid Event ------------------------------- */
+    has_payment: boolean("has_payment"),
+    /* ------------------------------- Paid Event ------------------------------- */
 
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
@@ -71,5 +69,7 @@ export const events = pgTable(
     createdAtIdx: index("events_created_at_idx").on(table.created_at),
     updatedAtIdx: index("events_updated_at_idx").on(table.updatedAt),
     participationTypeIdx: index("events_participation_type_idx").on(table.participationType),
+    /* -------------------------------------------------------------------------- */
+    event_uuid_unique: uniqueIndex().on(table.event_uuid),
   })
 );
