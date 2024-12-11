@@ -19,13 +19,7 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { getEventByUuid, getEventsWithFilters, selectEventByUuid } from "../db/events";
 import { selectVisitorsByEventUuid } from "../db/visitors";
-import {
-  adminOrganizerProtectedProcedure,
-  eventManagementProtectedProcedure,
-  initDataProtectedProcedure,
-  publicProcedure,
-  router,
-} from "../trpc";
+import { adminOrganizerProtectedProcedure, eventManagementProtectedProcedure, initDataProtectedProcedure, publicProcedure, router } from "../trpc";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
@@ -46,8 +40,7 @@ function timestampToIsoString(timestamp: number) {
   return date.toISOString();
 }
 
-const formatChanges = (changes: any) =>
-  JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
+const formatChanges = (changes: any) => JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
 
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
   const result = (
@@ -67,10 +60,7 @@ async function getApprovedRequestsCount(event_uuid: string) {
         .select({ count: count() })
         .from(eventRegistrants)
         .where(
-          and(
-            or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
-            eq(eventRegistrants.event_uuid, event_uuid)
-          )
+          and(or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")), eq(eventRegistrants.event_uuid, event_uuid))
         )
         .execute()
     ).pop()?.count || 0;
@@ -205,12 +195,7 @@ export const eventsRouter = router({
     let eventsData = [];
 
     if (opts.ctx.userRole === "admin") {
-      eventsData = await db
-        .select()
-        .from(events)
-        .where(eq(events.hidden, false))
-        .orderBy(desc(events.created_at))
-        .execute();
+      eventsData = await db.select().from(events).where(eq(events.hidden, false)).orderBy(desc(events.created_at)).execute();
     } else if (opts.ctx.userRole === "organizer") {
       eventsData = await db
         .select()
@@ -291,35 +276,33 @@ export const eventsRouter = router({
   /* -------------------------------------------------------------------------- */
   /*                            Get Event Registrant 👨‍👩‍👧                        */
   /* -------------------------------------------------------------------------- */
-  getEventRegistrants: eventManagementProtectedProcedure
-    .input(z.object({ event_uuid: z.string() }))
-    .query(async (opts) => {
-      const event_uuid = opts.input.event_uuid;
-      const event = await selectEventByUuid(event_uuid);
+  getEventRegistrants: eventManagementProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
+    const event_uuid = opts.input.event_uuid;
+    const event = await selectEventByUuid(event_uuid);
 
-      if (!event) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
-      }
+    if (!event) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+    }
 
-      const registrants = await db
-        .select({
-          event_uuid: eventRegistrants.event_uuid,
-          user_id: eventRegistrants.user_id,
-          username: users.username,
-          first_name: users.first_name,
-          last_name: users.last_name,
-          status: eventRegistrants.status,
-          created_at: eventRegistrants.created_at,
-          regisrtant_info: eventRegistrants.register_info,
-        })
-        .from(eventRegistrants)
-        .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
-        .where(eq(eventRegistrants.event_uuid, event_uuid))
-        .orderBy(asc(eventRegistrants.created_at))
-        .execute();
+    const registrants = await db
+      .select({
+        event_uuid: eventRegistrants.event_uuid,
+        user_id: eventRegistrants.user_id,
+        username: users.username,
+        first_name: users.first_name,
+        last_name: users.last_name,
+        status: eventRegistrants.status,
+        created_at: eventRegistrants.created_at,
+        regisrtant_info: eventRegistrants.register_info,
+      })
+      .from(eventRegistrants)
+      .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
+      .where(eq(eventRegistrants.event_uuid, event_uuid))
+      .orderBy(asc(eventRegistrants.created_at))
+      .execute();
 
-      return registrants;
-    }),
+    return registrants;
+  }),
 
   /* -------------------------------------------------------------------------- */
   /*              Process Registrant Request (Approve✅ / Reject ❌)           */
@@ -346,13 +329,7 @@ export const eventsRouter = router({
         .set({
           status: opts.input.status,
         })
-        .where(
-          and(
-            eq(eventRegistrants.event_uuid, event_uuid),
-            eq(eventRegistrants.user_id, user_id),
-            ne(eventRegistrants.status, "checkedin")
-          )
-        )
+        .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, user_id), ne(eventRegistrants.status, "checkedin")))
         .execute();
 
       if (opts.input.status === "approved") {
@@ -392,13 +369,7 @@ export const eventsRouter = router({
           message: "Check-in only for in_person events with registration",
         });
       }
-      const registrant = (
-        await db
-          .select()
-          .from(eventRegistrants)
-          .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
-          .execute()
-      ).pop();
+      const registrant = (await db.select().from(eventRegistrants).where(eq(eventRegistrants.registrant_uuid, registrant_uuid)).execute()).pop();
 
       if (!registrant) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Registrant Not Found/Invalid" });
@@ -444,9 +415,7 @@ export const eventsRouter = router({
 
           const inputSecretPhrase = opts.input.eventData.secret_phrase.trim().toLowerCase();
 
-          const hashedSecretPhrase = Boolean(inputSecretPhrase)
-            ? await hashPassword(inputSecretPhrase)
-            : undefined;
+          const hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
 
           if (!hashedSecretPhrase) {
             throw new TRPCError({
@@ -543,9 +512,7 @@ export const eventsRouter = router({
             });
           }
 
-          const additional_info = z.string().url().safeParse(opts.input.eventData.location).success
-            ? "Online"
-            : opts.input.eventData.location;
+          const additional_info = z.string().url().safeParse(opts.input.eventData.location).success ? "Online" : opts.input.eventData.location;
 
           const eventDraft: TonSocietyRegisterActivityT = {
             title: opts.input.eventData.title,
@@ -561,59 +528,49 @@ export const eventsRouter = router({
             },
             ...(opts.input.eventData.ts_reward_url
               ? {
-                rewards: {
-                  mint_type: "manual",
-                  collection: {
-                    title: opts.input.eventData.title,
-                    description: opts.input.eventData.description,
-                    image: {
-                      url:
-                        process.env.ENV !== "local"
-                          ? opts.input.eventData.ts_reward_url
-                          : PLACEHOLDER_IMAGE,
-                    },
-                    cover: {
-                      url:
-                        process.env.ENV !== "local"
-                          ? opts.input.eventData.ts_reward_url
-                          : PLACEHOLDER_IMAGE,
-                    },
-                    item_title: opts.input.eventData.title,
-                    item_description: "Reward for participation",
-                    item_image: {
-                      url:
-                        process.env.ENV !== "local"
-                          ? opts.input.eventData.ts_reward_url
-                          : PLACEHOLDER_IMAGE,
-                    },
-                    ...(opts.input.eventData.video_url
-                      ? {
-                        item_video: {
-                          url:
-                            process.env.ENV !== "local"
-                              ? new URL(opts.input.eventData.video_url).origin +
-                              new URL(opts.input.eventData.video_url).pathname
-                              : PLACEHOLDER_VIDEO,
-                        },
-                      }
-                      : {}),
-                    item_metadata: {
-                      activity_type: "event",
-                      place: {
-                        type: opts.input.eventData.eventLocationType === "online" ? "Online" : "Offline",
-                        ...(country && country?.abbreviatedCode
-                          ? {
-                            country_code_iso: country.abbreviatedCode,
-                            venue_name: opts.input.eventData.location,
+                  rewards: {
+                    mint_type: "manual",
+                    collection: {
+                      title: opts.input.eventData.title,
+                      description: opts.input.eventData.description,
+                      image: {
+                        url: process.env.ENV !== "local" ? opts.input.eventData.ts_reward_url : PLACEHOLDER_IMAGE,
+                      },
+                      cover: {
+                        url: process.env.ENV !== "local" ? opts.input.eventData.ts_reward_url : PLACEHOLDER_IMAGE,
+                      },
+                      item_title: opts.input.eventData.title,
+                      item_description: "Reward for participation",
+                      item_image: {
+                        url: process.env.ENV !== "local" ? opts.input.eventData.ts_reward_url : PLACEHOLDER_IMAGE,
+                      },
+                      ...(opts.input.eventData.video_url
+                        ? {
+                            item_video: {
+                              url:
+                                process.env.ENV !== "local"
+                                  ? new URL(opts.input.eventData.video_url).origin + new URL(opts.input.eventData.video_url).pathname
+                                  : PLACEHOLDER_VIDEO,
+                            },
                           }
-                          : {
-                            venue_name: opts.input.eventData.location, // Use location regardless of country
-                          }),
+                        : {}),
+                      item_metadata: {
+                        activity_type: "event",
+                        place: {
+                          type: opts.input.eventData.eventLocationType === "online" ? "Online" : "Offline",
+                          ...(country && country?.abbreviatedCode
+                            ? {
+                                country_code_iso: country.abbreviatedCode,
+                                venue_name: opts.input.eventData.location,
+                              }
+                            : {
+                                venue_name: opts.input.eventData.location, // Use location regardless of country
+                              }),
+                        },
                       },
                     },
                   },
-                },
-              }
+                }
               : {}),
           };
 
@@ -714,9 +671,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
       try {
         return await db.transaction(async (trx) => {
-          const inputSecretPhrase = eventData.secret_phrase
-            ? eventData.secret_phrase.trim().toLowerCase()
-            : undefined;
+          const inputSecretPhrase = eventData.secret_phrase ? eventData.secret_phrase.trim().toLowerCase() : undefined;
 
           const hashedSecretPhrase = inputSecretPhrase ? await hashPassword(inputSecretPhrase) : undefined;
 
@@ -759,9 +714,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           const currentFields = await eventFieldsDB.selectEventFieldsByEventId(trx, eventId!);
 
           const fieldsToDelete = currentFields.filter(
-            (field) =>
-              !eventData.dynamic_fields.some((newField) => newField.id === field.id) &&
-              field.title !== "secret_phrase_onton_input"
+            (field) => !eventData.dynamic_fields.some((newField) => newField.id === field.id) && field.title !== "secret_phrase_onton_input"
           );
 
           for (const field of fieldsToDelete) {
@@ -771,22 +724,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           const secretPhraseTask = await trx
             .select()
             .from(eventFields)
-            .where(
-              and(eq(eventFields.event_id, eventId!), eq(eventFields.title, "secret_phrase_onton_input"))
-            )
+            .where(and(eq(eventFields.event_id, eventId!), eq(eventFields.title, "secret_phrase_onton_input")))
             .execute();
 
-          if (
-            hashedSecretPhrase ||
-            (hashedSecretPhrase === undefined && oldEvent[0].ticketToCheckIn === false)
-          ) {
+          if (hashedSecretPhrase || (hashedSecretPhrase === undefined && oldEvent[0].ticketToCheckIn === false)) {
             if (secretPhraseTask.length > 0) {
               // Update the existing secret phrase task
-              await eventFieldsDB.updateEventFieldLog(
-                trx,
-                secretPhraseTask[0].id,
-                opts.ctx.user.user_id.toString()
-              );
+              await eventFieldsDB.updateEventFieldLog(trx, secretPhraseTask[0].id, opts.ctx.user.user_id.toString());
             } else {
               // Insert a new secret phrase task
               await eventFieldsDB.insertEventField(trx, {
@@ -802,21 +746,11 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
             }
           }
 
-          for (const [index, field] of eventData.dynamic_fields
-            .filter((f) => f.title !== "secret_phrase_onton_input")
-            .entries()) {
-            await eventFieldsDB.upsertEventField(
-              trx,
-              field,
-              index,
-              opts.ctx.user.user_id.toString(),
-              eventId
-            );
+          for (const [index, field] of eventData.dynamic_fields.filter((f) => f.title !== "secret_phrase_onton_input").entries()) {
+            await eventFieldsDB.upsertEventField(trx, field, index, opts.ctx.user.user_id.toString(), eventId);
           }
 
-          const additional_info = z.string().url().safeParse(eventData).success
-            ? "Online"
-            : opts.input.eventData.location;
+          const additional_info = z.string().url().safeParse(eventData).success ? "Online" : opts.input.eventData.location;
 
           const eventDraft: TonSocietyRegisterActivityT = {
             title: eventData.title,
@@ -839,10 +773,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
           const oldChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
 
-          const updateChanges = getObjectDifference(
-            oldEventWithoutDescription,
-            updatedEventWithoutDescription
-          );
+          const updateChanges = getObjectDifference(oldEventWithoutDescription, updatedEventWithoutDescription);
 
           const message = `
 @${opts.ctx.user.username} <b>Updated</b> an event <code>${eventUuid}</code> successfully
@@ -942,10 +873,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
         const { event_uuid } = event;
         // Step 2: Make the request to share the event
-        const result = await telegramService.shareEventRequest(
-          opts.ctx.user.user_id.toString(),
-          event_uuid.toString()
-        );
+        const result = await telegramService.shareEventRequest(opts.ctx.user.user_id.toString(), event_uuid.toString());
 
         if (result.success) {
           // console.log("Event shared successfully:", result.data);
@@ -1027,19 +955,13 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       formData.append("message", customMessage);
       formData.append("fileName", eventData?.title || "visitors");
       const userId = opts.ctx.user.user_id;
-      const response = await axios.post(
-        `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-file?id=${userId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await axios.post(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-file?id=${userId}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-      return response.status === 200
-        ? { status: "success", data: null }
-        : { status: "fail", data: response.data };
+      return response.status === 200 ? { status: "success", data: null } : { status: "fail", data: response.data };
     } catch (error) {
       console.error("Error while sending file: ", error);
       return { status: "fail", data: null };
@@ -1055,20 +977,15 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     )
     .mutation(async (opts) => {
       try {
-        const response = await axios.get(
-          `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/generate-qr`,
-          {
-            params: {
-              id: opts.ctx.user.user_id,
-              url: opts.input.url,
-              hub: opts.input.hub,
-            },
-          }
-        );
+        const response = await axios.get(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/generate-qr`, {
+          params: {
+            id: opts.ctx.user.user_id,
+            url: opts.input.url,
+            hub: opts.input.hub,
+          },
+        });
 
-        return response.status === 200
-          ? { status: "success", data: null }
-          : { status: "fail", data: response.data };
+        return response.status === 200 ? { status: "success", data: null } : { status: "fail", data: response.data };
       } catch (error) {
         console.error("Error while generating QR Code: ", error);
         return { status: "fail", data: null };
