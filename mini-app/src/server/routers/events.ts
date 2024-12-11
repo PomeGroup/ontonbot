@@ -204,6 +204,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
 
   if (userIsAdminOrOwner) {
     eventData.location = event_location;
+    //event payment info
     if (eventData.has_payment) {
       const payment_details = (await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()).pop();
       if (!payment_details) {
@@ -232,7 +233,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     };
   }
 
-  // no status for registran
+  // no status for registrant
   if (eventData.capacity) {
     const approved_requests_count = await getApprovedRequestsCount(event_uuid);
     if (approved_requests_count >= eventData.capacity) {
@@ -478,8 +479,6 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
   const input_event_data = opts.input.eventData;
   try {
     const result = await db.transaction(async (trx) => {
-      const countryId = input_event_data.countryId;
-
       const inputSecretPhrase = input_event_data.secret_phrase.trim().toLowerCase();
       const hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
 
@@ -560,6 +559,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           payment_type: input_event_data.paid_event.payment_type || "TON",
           price: input_event_data.paid_event.payment_amount || 1,
           recipient_address: input_event_data.paid_event.payment_recipient_address,
+          bought_capacity: input_event_data.capacity,
           /* -------------------------------------------------------------------------- */
           ticket_type: input_event_data.paid_event.has_nft ? "NFT" : "OFFCHAIN",
           ticketImage: input_event_data.paid_event.nft_image_url,
@@ -673,6 +673,7 @@ const updateEvent = eventManagementProtectedProcedure
     const eventData = opts.input.eventData;
     const eventUuid = opts.ctx.event.event_uuid;
     const eventId = opts.ctx.event.event_id;
+    const user_id = opts.ctx.user.user_id;
 
     try {
       return await db.transaction(async (trx) => {
@@ -689,6 +690,51 @@ const updateEvent = eventManagementProtectedProcedure
         }
 
         const canUpdateRegistraionSetting = oldEvent.has_registration;
+
+        //can't have capacity null if it's paid event
+        //should create order for increasing capacity
+        if (oldEvent.has_payment) {
+          /* -------------------------------------------------------------------------- */
+          //can't have capacity null if it's paid event
+          if (!eventData.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Paid Events Must have capacity" });
+          /* -------------------------------------------------------------------------- */
+          const paymentInfo = (await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()).pop();
+          if (eventData.capacity > paymentInfo!.bought_capacity) {
+            // Increase in event capacity
+            // create an update_capacity_order if not exists otherwise just update it
+            const update_order = (
+              await trx
+                .select()
+                .from(orders)
+                .where(and(eq(orders.event_uuid, eventUuid), eq(orders.order_type, "event_capacity_increment")))
+                .execute()
+            ).pop();
+            /* -------------------- update order exists and its paid -------------------- */
+            if (update_order && update_order.state == "processing") {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "You Already have a Paid Capacity Update pending ... please try again in few minutes ",
+              });
+            }
+            /* -------------------------------------------------------------------------- */
+            /* ---------------------------- Update OR Insert ---------------------------- */
+            const upsert_data = {
+              event_uuid: eventUuid,
+              order_type: "event_capacity_increment" as const,
+              state: "created" as const,
+              payment_type: "TON" as const,
+              total_price: BigInt(0.055 * (eventData.capacity - paymentInfo!.bought_capacity)),
+              user_id: user_id,
+            };
+            if (update_order && update_order.state == "created") {
+              await trx.update(orders).set(upsert_data).where(eq(orders.uuid, update_order.uuid));
+            } else {
+              await trx.insert(orders).values(upsert_data);
+            }
+          }
+          //can't update capacity unless it's lower than before
+          eventData.capacity = Math.min(eventData.capacity, oldEvent.capacity!);
+        }
 
         const updatedEvent = await trx
           .update(events)
@@ -721,6 +767,14 @@ const updateEvent = eventManagementProtectedProcedure
           .where(eq(events.event_uuid, eventUuid))
           .returning()
           .execute();
+
+        if (eventData.paid_event?.has_payment) {
+          //Only recipient_address and price can be updated
+          await trx.update(eventPayment).set({
+            recipient_address: eventData.paid_event.payment_recipient_address,
+            price: eventData.paid_event.payment_amount,
+          });
+        }
 
         /* ----------------------------- IF HAS PAYMENT ----------------------------- */
         if (oldEvent.has_payment) {

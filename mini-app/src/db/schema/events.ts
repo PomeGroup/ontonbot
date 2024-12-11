@@ -1,6 +1,6 @@
 import { eventParticipationType, giataCity } from "@/db/schema";
 import { users } from "@/db/schema/users";
-import { bigint, boolean, index, integer, json, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, index, integer, json, pgTable, serial, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 export const events = pgTable(
   "events",
@@ -69,5 +69,7 @@ export const events = pgTable(
     createdAtIdx: index("events_created_at_idx").on(table.created_at),
     updatedAtIdx: index("events_updated_at_idx").on(table.updatedAt),
     participationTypeIdx: index("events_participation_type_idx").on(table.participationType),
+    /* -------------------------------------------------------------------------- */
+    event_uuid_unique: uniqueIndex().on(table.event_uuid),
   })
 );

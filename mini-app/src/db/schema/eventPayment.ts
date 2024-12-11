@@ -10,11 +10,11 @@ export const eventPayment = pgTable(
     id: serial("id").primaryKey(),
     event_uuid: uuid("event_uuid").references(() => events.event_uuid),
 
-    
     /* -------------------------- Payment Core Columns -------------------------- */
     payment_type: paymentTypes("payment_type").notNull(),
     price: integer("price").notNull(),
     recipient_address: text("recipient_address").notNull(),
+    bought_capacity: integer("bought_capacity").notNull(),
     /* -------------------------------------------------------------------------- */
     ticket_type: ticketTypes("ticket_type").notNull(),
     /* ----------------------------- USED IF HAS NFT ---------------------------- */
@@ -30,10 +30,5 @@ export const eventPayment = pgTable(
   (table) => ({
     uniqueEven: uniqueIndex().on(table.event_uuid),
     eventUuidIdx: index("eventt_event_uuid_idx").on(table.event_uuid),
-    // titleIdx: index("eventt_title_idx").on(table.title),
-    priceIdx: index("eventt_price_idx").on(table.price),
-    collectionAddressIdx: index("eventt_collection_address_idx").on(table.collectionAddress),
-    createdAtIdx: index("eventt_created_at_idx").on(table.created_at),
-    updatedAtIdx: index("eventt_updated_at_idx").on(table.updatedAt),
   })
 );
