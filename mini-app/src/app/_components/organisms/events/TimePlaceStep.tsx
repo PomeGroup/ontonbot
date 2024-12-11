@@ -39,12 +39,7 @@ export const TimePlaceStep = () => {
       formDataObject.location = formDataObject.location ? formDataObject?.location?.toLowerCase() : undefined;
     }
 
-    const secondStepDataSchema = timeplaceStepValidation(
-      editOptions,
-      startDateLimit,
-      eventData,
-      formDataObject
-    );
+    const secondStepDataSchema = timeplaceStepValidation(editOptions, startDateLimit, eventData, formDataObject);
 
     const formDataParsed = secondStepDataSchema.safeParse(formDataObject);
 

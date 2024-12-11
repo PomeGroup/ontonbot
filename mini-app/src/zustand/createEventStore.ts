@@ -27,7 +27,7 @@ export type CreateEventStoreType = {
   edit?: {
     eventHash?: string;
   };
-  setEventData: (_data: EventDataSchemaAllOptional) => void;
+  setEventData: (_data: StoreEventData) => void;
   setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
   // form errors
@@ -125,16 +125,15 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
         }));
       },
       setCurrentStep: (step: number) => set((state) => ({ ...state, currentStep: step })),
-      setEventData: (data: EventDataSchemaAllOptional) =>
+      setEventData: (data) =>
         set((state) => {
-          return {
-            ...state,
-            eventData: {
-              ...state.eventData,
-              hasEnded: !!(state.edit?.eventHash && state?.eventData?.end_date && state.eventData.end_date < Date.now() / 1000),
-              ...data,
-            },
+          const newData = {
+            ...state.eventData,
+            ...data,
           };
+
+          state.eventData = newData;
+          state.eventData.hasEnded = !!(state.edit?.eventHash && state?.eventData?.end_date && state.eventData.end_date < Date.now() / 1000);
         }),
       setEdit: (edit: { eventHash?: string }) => set((state) => ({ ...state, edit })),
 
