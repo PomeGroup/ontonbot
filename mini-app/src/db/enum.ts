@@ -13,9 +13,11 @@ export const rewardStatus = pgEnum("reward_status", [
   "failed",
   "fixed_failed",
 ]);
-export const ticketStatus = pgEnum("event_ticket_status", ["MINTING", "USED", "UNUSED"]);
+export const ticketStatus = pgEnum("event_ticket_status", ["USED", "UNUSED"]);
 
-export const orderState = pgEnum("order_state", ["created", "mint_request", "minted", "failed", "validation_failed"]);
+export const orderState = pgEnum("order_state", ["created", "processing", "completed", "failed"]);
+export const orderTypes = pgEnum("order_types", ["nft_mint", "offchain_ticket", "event_creation", "event_capacity_increment"]);
+export const paymentTypes = pgEnum("payment_types", ["USDT", "TON"]);
 export const developmentEnvironment = pgEnum("development_environment", ["local", "development", "staging", "production"]);
 export const eventTriggerType = pgEnum("event_trigger_type", ["simple", "multiple_choice", "question"]);
 export const eventTriggerStatus = pgEnum("event_trigger_status", ["active", "deactive", "completed", "sending"]);
@@ -30,6 +32,7 @@ export const notificationType = pgEnum("notification_type", [
 export const notificationStatus = pgEnum("notification_status", ["WAITING_TO_SEND", "DELIVERED", "READ", "REPLIED", "EXPIRED"]);
 export const notificationItemType = pgEnum("notification_item_type", ["POA_TRIGGER", "EVENT", "SBT_REWARD", "TRANSACTION", "UNKNOWN"]);
 export const eventPoaResultStatus = pgEnum("event_poa_result_status", ["REPLIED", "EXPIRED"]);
+
 // Type Exports
 export type EventParticipationType = (typeof eventParticipationType.enumValues)[number];
 export type RewardType = (typeof rewardType.enumValues)[number];
@@ -43,4 +46,3 @@ export type EventTriggerStatus = (typeof eventTriggerStatus.enumValues)[number];
 export type NotificationType = (typeof notificationType.enumValues)[number];
 export type NotificationStatus = (typeof notificationStatus.enumValues)[number];
 export type NotificationItemType = (typeof notificationItemType.enumValues)[number];
-export type EventPoaResultStatus = (typeof eventPoaResultStatus.enumValues)[number];
