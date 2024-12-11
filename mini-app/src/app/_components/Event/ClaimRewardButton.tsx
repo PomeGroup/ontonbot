@@ -40,7 +40,7 @@ function ClaimRewardButtonChild(props: { link: string | null; isNotified: boolea
   );
 }
 
-export function ClaimRewardButton(props: { eventId: string; initData: string; isWalletConnected: boolean | undefined }) {
+export function ClaimRewardButton(props: { eventId: string; initData: string }) {
   const visitorReward = trpc.users.getVisitorReward.useQuery(
     {
       event_uuid: props.eventId,
@@ -53,7 +53,7 @@ export function ClaimRewardButton(props: { eventId: string; initData: string; is
 
   // Conditional rendering of the button or child component
   if (props.initData) {
-    return visitorReward.isSuccess && props.isWalletConnected ? (
+    return visitorReward.isSuccess ? (
       <ClaimRewardButtonChild
         isNotified={
           visitorReward.data.type === "reward_link_generated" &&

@@ -152,8 +152,11 @@ export const usersRouter = router({
           });
         }
 
-        reward.data = dataValidation.data.reward_link;
-        return reward;
+        return {
+          ...reward,
+          data: dataValidation.data.reward_link,
+          type: "reward_link_generated",
+        } as const;
       } catch (error) {
         console.error("Error in getVisitorReward query:", error);
         if (error instanceof TRPCError) {
