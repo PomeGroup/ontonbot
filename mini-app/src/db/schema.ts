@@ -40,7 +40,6 @@ import { visitors } from "./schema/visitors";
 import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 
-
 // export all the enums
 export {
   developmentEnvironment,
@@ -96,4 +95,3 @@ export type { NotificationStatus };
 export type { NotificationType };
 export type { NotificationItemType };
 export type { EventPoaResultStatus };
-

@@ -15,52 +15,21 @@ export const rewardStatus = pgEnum("reward_status", [
 ]);
 export const ticketStatus = pgEnum("event_ticket_status", ["MINTING", "USED", "UNUSED"]);
 
-export const orderState = pgEnum("order_state", [
-  "created",
-  "mint_request",
-  "minted",
-  "failed",
-  "validation_failed",
-]);
-export const developmentEnvironment = pgEnum("development_environment", [
-  "local",
-  "development",
-  "staging",
-  "production",
-]);
+export const orderState = pgEnum("order_state", ["created", "mint_request", "minted", "failed", "validation_failed"]);
+export const developmentEnvironment = pgEnum("development_environment", ["local", "development", "staging", "production"]);
 export const eventTriggerType = pgEnum("event_trigger_type", ["simple", "multiple_choice", "question"]);
-export const eventTriggerStatus = pgEnum("event_trigger_status", [
-  "active",
-  "deactive",
-  "completed",
-  "sending",
-]);
+export const eventTriggerStatus = pgEnum("event_trigger_status", ["active", "deactive", "completed", "sending"]);
 export const notificationType = pgEnum("notification_type", [
   "POA_SIMPLE",
   "POA_CREATION_FOR_ORGANIZER",
   "USER_RECEIVED_POA",
   "USER_ANSWER_POA",
   "MESSAGE_SIMPLE",
-  "UNKNOWN"
+  "UNKNOWN",
 ]);
-export const notificationStatus = pgEnum("notification_status", [
-  "WAITING_TO_SEND",
-  "DELIVERED",
-  "READ",
-  "REPLIED",
-  "EXPIRED",
-]);
-export const notificationItemType = pgEnum("notification_item_type", [
-  "POA_TRIGGER",
-  "EVENT",
-  "SBT_REWARD",
-  "TRANSACTION",
-  "UNKNOWN"
-]);
-export const eventPoaResultStatus = pgEnum("event_poa_result_status", [
-  "REPLIED",
-  "EXPIRED",
-]);
+export const notificationStatus = pgEnum("notification_status", ["WAITING_TO_SEND", "DELIVERED", "READ", "REPLIED", "EXPIRED"]);
+export const notificationItemType = pgEnum("notification_item_type", ["POA_TRIGGER", "EVENT", "SBT_REWARD", "TRANSACTION", "UNKNOWN"]);
+export const eventPoaResultStatus = pgEnum("event_poa_result_status", ["REPLIED", "EXPIRED"]);
 // Type Exports
 export type EventParticipationType = (typeof eventParticipationType.enumValues)[number];
 export type RewardType = (typeof rewardType.enumValues)[number];
