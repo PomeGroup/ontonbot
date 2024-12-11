@@ -11,7 +11,7 @@ export const events = pgTable(
     enabled: boolean("enabled").default(true),
     hidden: boolean("hidden").default(false),
 
-    type: integer("type").notNull(),
+    type: integer("type"),
     title: text("title").notNull(),
     subtitle: text("subtitle").notNull(),
     description: text("description").notNull(),
@@ -19,7 +19,7 @@ export const events = pgTable(
     wallet_address: text("wallet_address"),
 
     society_hub: text("society_hub"),
-    society_hub_id: text("society_hub_id").notNull(),
+    society_hub_id: text("society_hub_id"),
     activity_id: integer("activity_id"),
     collection_address: text("collection_address"),
     secret_phrase: text("secret_phrase").default(""),

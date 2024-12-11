@@ -1,3 +1,14 @@
+CREATE UNIQUE INDEX IF NOT EXISTS "events_event_uuid_index" ON "events" USING btree ("event_uuid");--> statement-breakpoint
+
+
+DO $$ BEGIN
+ CREATE TYPE "public"."ticket_types" AS ENUM('OFFCHAIN', 'NFT');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+
+
 DO $$ BEGIN
  CREATE TYPE "public"."order_types" AS ENUM('nft_mint', 'offchain_ticket', 'event_creation', 'event_capacity_increment');
 EXCEPTION
@@ -45,11 +56,11 @@ DROP INDEX IF EXISTS "orders_full_name_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "orders_company_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "orders_created_at_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "orders_updated_at_idx";--> statement-breakpoint
-ALTER TABLE "events" ALTER COLUMN "type" SET NOT NULL;--> statement-breakpoint
+-- ALTER TABLE "events" ALTER COLUMN "type" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "events" ALTER COLUMN "title" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "events" ALTER COLUMN "subtitle" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "events" ALTER COLUMN "description" SET NOT NULL;--> statement-breakpoint
-ALTER TABLE "events" ALTER COLUMN "society_hub_id" SET NOT NULL;--> statement-breakpoint
+-- ALTER TABLE "events" ALTER COLUMN "society_hub_id" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "events" ALTER COLUMN "start_date" SET NOT NULL;--> statement-breakpoint
 ALTER TABLE "events" ALTER COLUMN "end_date" DROP DEFAULT;--> statement-breakpoint
 ALTER TABLE "events" ALTER COLUMN "end_date" SET NOT NULL;--> statement-breakpoint
@@ -59,8 +70,8 @@ ALTER TABLE "orders" ALTER COLUMN "owner_address" DROP NOT NULL;--> statement-br
 ALTER TABLE "orders" ALTER COLUMN "utm_source" SET DEFAULT '';--> statement-breakpoint
 ALTER TABLE "events" ADD COLUMN "enabled" boolean DEFAULT true;--> statement-breakpoint
 ALTER TABLE "events" ADD COLUMN "has_payment" boolean;--> statement-breakpoint
-ALTER TABLE "orders" ADD COLUMN "payment_type" "payment_types" NOT NULL;--> statement-breakpoint
-ALTER TABLE "orders" ADD COLUMN "order_type" "order_types" NOT NULL;--> statement-breakpoint
+ALTER TABLE "orders" ADD COLUMN "payment_type" "payment_types" NOT NULL DEFAULT 'TON'::payment_types;--> statement-breakpoint
+ALTER TABLE "orders" ADD COLUMN "order_type" "order_types" NOT NULL DEFAULT 'nft_mint'::order_types;--> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "event_payment_info" ADD CONSTRAINT "event_payment_info_event_uuid_events_event_uuid_fk" FOREIGN KEY ("event_uuid") REFERENCES "public"."events"("event_uuid") ON DELETE no action ON UPDATE no action;
 EXCEPTION
@@ -69,14 +80,13 @@ END $$;
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "event_payment_info_event_uuid_index" ON "event_payment_info" USING btree ("event_uuid");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "eventt_event_uuid_idx" ON "event_payment_info" USING btree ("event_uuid");--> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "tickets" ADD CONSTRAINT "tickets_event_ticket_id_event_payment_info_id_fk" FOREIGN KEY ("event_ticket_id") REFERENCES "public"."event_payment_info"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
+-- DO $$ BEGIN
+--  ALTER TABLE "tickets" ADD CONSTRAINT "tickets_event_ticket_id_event_payment_info_id_fk" FOREIGN KEY ("event_ticket_id") REFERENCES "public"."event_payment_info"("id") ON DELETE no action ON UPDATE no action;
+-- EXCEPTION
+--  WHEN duplicate_object THEN null;
+-- END $$;
 --> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "events_event_uuid_index" ON "events" USING btree ("event_uuid");--> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "unique_event_creation" ON "orders" USING btree ("event_uuid","order_type") WHERE "orders"."order_type" = $1;--> statement-breakpoint
+-- CREATE UNIQUE INDEX IF NOT EXISTS "unique_event_creation" ON "orders" USING btree ("event_uuid","order_type") WHERE "orders"."order_type" = $1;--> statement-breakpoint
 ALTER TABLE "events" DROP COLUMN IF EXISTS "wallet_seed_phrase";--> statement-breakpoint
 ALTER TABLE "orders" DROP COLUMN IF EXISTS "event_ticket_id";--> statement-breakpoint
 ALTER TABLE "orders" DROP COLUMN IF EXISTS "transaction_id";--> statement-breakpoint
