@@ -66,17 +66,13 @@ export const TimePlaceStep = () => {
 
     const data = formDataParsed.data;
 
-    setEventData({
-      ...eventData,
-      ...data,
-    });
+    setEventData(data);
     clearErrors();
     setCurrentStep(3);
   };
 
   useEffect(() => {
     setEventData({
-      ...eventData,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       eventLocationType: eventData?.eventLocationType || "online",
     });

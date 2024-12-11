@@ -27,7 +27,7 @@ export type CreateEventStoreType = {
   edit?: {
     eventHash?: string;
   };
-  setEventData: (_data: StoreEventData) => void;
+  setEventData: (_data: Partial<StoreEventData>) => void;
   setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
   // form errors
