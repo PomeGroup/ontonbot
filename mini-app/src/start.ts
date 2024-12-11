@@ -269,7 +269,7 @@ async function CreateEventOrders() {
         description: eventData.description,
         location: eventData.location!,
         countryId: eventData.countryId,
-        society_hub: { id: eventData.society_hub_id },
+        society_hub: { id: eventData.society_hub_id! },
         start_date: eventData.start_date,
         end_date: eventData.end_date,
         ts_reward_url: eventData.tsRewardImage,
