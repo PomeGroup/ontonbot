@@ -25,7 +25,7 @@ import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { addVisitor } from "@/server/db/visitors";
-import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers";
+import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { internal_server_error } from "../utils/error_utils";
 
 dotenv.config();
@@ -623,6 +623,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${newEvent[0].event_uuid}
             `,
+        topic: "event",
       });
 
       // On local development skip  registration to ton society || paid event will be registered when organizer pays initial payment
@@ -875,7 +876,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           }
         }
 
-        await sendLogNotification({ message });
+        await sendLogNotification({ message , topic: "event" });
 
         return { success: true, eventId: opts.ctx.event.event_uuid } as const;
       });
