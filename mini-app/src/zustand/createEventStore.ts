@@ -70,7 +70,7 @@ const defaultState = {
       has_payment: false,
     },
   },
-  step: 3,
+  step: 1,
 };
 
 export const useCreateEventStore = create<CreateEventStoreType>()(
