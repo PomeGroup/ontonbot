@@ -171,6 +171,23 @@ async function fetchTransactions({
   }
 }
 
+async function fetchAllTransactions({
+  account,
+  start_utime,
+  limit,
+  sort,
+  start_lt,
+  offset = 0,
+  retries = 3, // Default retry count
+}: FetchTransactionsParams): Promise<any> {
+
+  // const transactions = [];
+  // const now = 
+  // while(true){
+  //   await fetchTransactions(account ,)
+  // }
+
+}
 /* -------------------------------------------------------------------------- */
 /*                                     END                                    */
 /* -------------------------------------------------------------------------- */
