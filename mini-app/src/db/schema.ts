@@ -3,6 +3,7 @@ import {
   eventParticipationType,
   orderState,
   orderTypes,
+  ticketTypes,
   paymentTypes,
   rewardStatus,
   rewardType,
@@ -58,6 +59,7 @@ export {
   notificationStatus,
   notificationItemType,
   eventPoaResultStatus,
+  ticketTypes
 };
 
 // export all the tables and relations

@@ -47,3 +47,5 @@ export type NotificationType = (typeof notificationType.enumValues)[number];
 export type NotificationStatus = (typeof notificationStatus.enumValues)[number];
 export type NotificationItemType = (typeof notificationItemType.enumValues)[number];
 export type EventPoaResultStatus = (typeof eventPoaResultStatus.enumValues)[number];
+
+export const ticketTypes = pgEnum("ticket_types", ["OFFCHAIN", "NFT"]);

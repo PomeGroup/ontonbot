@@ -1,8 +1,7 @@
 import { index, integer, pgEnum, pgTable, serial, text, timestamp, uuid, uniqueIndex } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
-import { paymentTypes } from "../enum";
+import { paymentTypes, ticketTypes } from "../enum";
 
-export const ticketTypes = pgEnum("ticket_types", ["OFFCHAIN", "NFT"]);
 
 export const eventPayment = pgTable(
   "event_payment_info",

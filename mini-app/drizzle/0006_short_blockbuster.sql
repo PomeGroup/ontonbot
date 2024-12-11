@@ -32,11 +32,11 @@ CREATE TABLE IF NOT EXISTS "event_payment_info" (
 	"updated_by" text DEFAULT 'system' NOT NULL
 );
 --> statement-breakpoint
-DROP TABLE "event_tickets";--> statement-breakpoint
+-- DROP TABLE "event_tickets";--> statement-breakpoint
 ALTER TABLE "orders" RENAME COLUMN "utm" TO "utm_source";--> statement-breakpoint
-ALTER TABLE "orders" DROP CONSTRAINT "orders_event_ticket_id_event_tickets_id_fk";
+-- ALTER TABLE "orders" DROP CONSTRAINT "orders_event_ticket_id_event_tickets_id_fk";
 --> statement-breakpoint
-ALTER TABLE "tickets" DROP CONSTRAINT "tickets_event_ticket_id_event_tickets_id_fk";
+-- ALTER TABLE "tickets" DROP CONSTRAINT "tickets_event_ticket_id_event_tickets_id_fk";
 --> statement-breakpoint
 DROP INDEX IF EXISTS "orders_event_ticket_id_idx";--> statement-breakpoint
 DROP INDEX IF EXISTS "orders_transaction_id_idx";--> statement-breakpoint
