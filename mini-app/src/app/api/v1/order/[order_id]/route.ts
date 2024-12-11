@@ -1,165 +1,161 @@
-// import { db } from "@/db/db";
-// import { orders, tickets } from "@/db/schema";
-// import { sendLogNotification } from "@/lib/tgBot";
-// import { apiKeyAuthentication, getAuthenticatedUser } from "@/server/auth";
-// import { Address } from "@ton/core";
-// import { eq, sql } from "drizzle-orm";
-// import { NextRequest } from "next/server";
-// import { z } from "zod";
+import { db } from "@/db/db";
+import { orders, tickets } from "@/db/schema";
+import { sendLogNotification } from "@/lib/tgBot";
+import { apiKeyAuthentication, getAuthenticatedUser } from "@/server/auth";
+import { Address } from "@ton/core";
+import { eq, sql } from "drizzle-orm";
+import { NextRequest } from "next/server";
+import { z } from "zod";
 
-// type OptionsProps = {
-//   params: {
-//     order_id: string;
-//   };
-// };
+type OptionsProps = {
+  params: {
+    order_id: string;
+  };
+};
 
-// export async function GET(req: NextRequest, { params }: OptionsProps) {
-//   const orderId = params.order_id;
+export async function GET(req: NextRequest, { params }: OptionsProps) {
+  return Response.json({});
+  // const orderId = params.order_id;
 
-//   const [, error] = getAuthenticatedUser();
-//   const apiKeyError = apiKeyAuthentication(req);
-//   if (error && apiKeyError) return error || apiKeyError;
+  // const [, error] = getAuthenticatedUser();
+  // const apiKeyError = apiKeyAuthentication(req);
+  // if (error && apiKeyError) return error || apiKeyError;
 
-//   const order = await db.query.orders.findFirst({
-//     where(fields, { eq }) {
-//       return eq(fields.uuid, orderId);
-//     },
-//   });
+  // const order = await db.query.orders.findFirst({
+  //   where(fields, { eq }) {
+  //     return eq(fields.uuid, orderId);
+  //   },
+  // });
 
-//   if (!order) {
-//     return Response.json({ message: "order_not_found" }, { status: 404 });
-//   }
+  // if (!order) {
+  //   return Response.json({ message: "order_not_found" }, { status: 404 });
+  // }
 
-//   const tickets = await db.query.tickets.findMany({
-//     where(fields, { eq }) {
-//       return eq(fields.order_uuid, order.uuid);
-//     },
-//   });
+  // const tickets = await db.query.tickets.findMany({
+  //   where(fields, { eq }) {
+  //     return eq(fields.order_uuid, order.uuid);
+  //   },
+  // });
 
-//   // get event ticket and if not found return event ticket not found
-//   const eventTicketData = await db.query.eventTicket.findFirst({
-//     where(fields, { eq }) {
-//       return eq(fields.id, order.event_ticket_id);
-//     },
-//   });
+  // // get event ticket and if not found return event ticket not found
+  // const eventTicketData = await db.query.eventTicket.findFirst({
+  //   where(fields, { eq }) {
+  //     return eq(fields.id, order.event_ticket_id);
+  //   },
+  // });
 
-//   if (!eventTicketData) return Response.json({ message: "event_ticket_not_found" }, { status: 404 });
+  // if (!eventTicketData) return Response.json({ message: "event_ticket_not_found" }, { status: 404 });
 
-//   return Response.json({
-//     ...order,
-//     total_price: BigInt(order.total_price as bigint).toString(),
-//     nft_collection_address: eventTicketData.collectionAddress,
-//     tickets,
-//   });
-// }
+  // return Response.json({
+  //   ...order,
+  //   total_price: BigInt(order.total_price as bigint).toString(),
+  //   nft_collection_address: eventTicketData.collectionAddress,
+  //   tickets,
+  // });
+}
 
-// // Continue from here
-// const patchOrderBodySchema = z.object({
-//   state: z.enum(["created", "mint_request", "minted", "failed"]),
-//   transaction_id: z.string().uuid().optional(),
-//   nft_address: z
-//     .string()
-//     .refine((d) => Address.isAddress(Address.parse(d)))
-//     .optional(),
-// });
-// export async function PATCH(req: NextRequest, { params }: OptionsProps) {
-//   const orderId = params.order_id;
+// Continue from here
+const patchOrderBodySchema = z.object({
+  state: z.enum(["created", "mint_request", "minted", "failed"]),
+  transaction_id: z.string().uuid().optional(),
+  nft_address: z
+    .string()
+    .refine((d) => Address.isAddress(Address.parse(d)))
+    .optional(),
+});
+export async function PATCH(req: NextRequest, { params }: OptionsProps) {
+  return Response.json({});
+  // const orderId = params.order_id;
 
-//   const rawBody = await req.json();
-//   const body = patchOrderBodySchema.safeParse(rawBody);
+  // const rawBody = await req.json();
+  // const body = patchOrderBodySchema.safeParse(rawBody);
 
-//   if (!body.success) {
-//     return Response.json(
-//       { message: "invalid body" },
-//       {
-//         status: 400,
-//       }
-//     );
-//   }
+  // if (!body.success) {
+  //   return Response.json(
+  //     { message: "invalid body" },
+  //     {
+  //       status: 400,
+  //     }
+  //   );
+  // }
 
-//   const order = await db.query.orders.findFirst({
-//     where(fields, { eq }) {
-//       return eq(fields.uuid, orderId);
-//     },
-//   });
+  // const order = await db.query.orders.findFirst({
+  //   where(fields, { eq }) {
+  //     return eq(fields.uuid, orderId);
+  //   },
+  // });
 
-//   if (!order) {
-//     return Response.json({ message: "ordernot found" }, { status: 404 });
-//   }
+  // if (!order) {
+  //   return Response.json({ message: "ordernot found" }, { status: 404 });
+  // }
 
-//   try {
-//     await db.transaction(async (tx) => {
-//       if (body.data.state === "minted") {
-//         const ticketExists = await tx
-//           .select()
-//           .from(tickets)
-//           .where(eq(tickets.nftAddress, body.data.nft_address!));
+  // try {
+  //   await db.transaction(async (tx) => {
+  //     if (body.data.state === "minted") {
+  //       const ticketExists = await tx.select().from(tickets).where(eq(tickets.nftAddress, body.data.nft_address!));
 
-//         if (ticketExists.length) {
-//           throw new Error("Ticket already exists");
-//         }
+  //       if (ticketExists.length) {
+  //         throw new Error("Ticket already exists");
+  //       }
 
-//         await tx.insert(tickets).values({
-//           company: order.company,
-//           name: order.full_name,
-//           telegram: order.telegram,
-//           status: "UNUSED",
-//           position: order.position,
-//           user_id: order.user_id,
-//           order_uuid: order.uuid,
-//           event_uuid: order.event_uuid,
-//           ticket_id: order.event_ticket_id,
-//           nftAddress: body.data.nft_address,
-//           updatedBy: "system",
-//         });
+  //       await tx.insert(tickets).values({
+  //         company: order.company,
+  //         name: order.full_name,
+  //         telegram: order.telegram,
+  //         status: "UNUSED",
+  //         position: order.position,
+  //         user_id: order.user_id,
+  //         order_uuid: order.uuid,
+  //         event_uuid: order.event_uuid,
+  //         ticket_id: order.event_ticket_id,
+  //         nftAddress: body.data.nft_address,
+  //         updatedBy: "system",
+  //       });
 
-//         const user_id_str = order.user_id ? order.user_id.toString() : "";
-//         await sendTicketLogNotification({
-//           event_uuid: order.event_uuid as string,
-//           username: order.telegram,
-//           user_id: user_id_str,
-//           event_ticket_id: order.event_ticket_id,
-//         });
-//       }
+  //       const user_id_str = order.user_id ? order.user_id.toString() : "";
+  //       await sendTicketLogNotification({
+  //         event_uuid: order.event_uuid as string,
+  //         username: order.telegram,
+  //         user_id: user_id_str,
+  //         event_ticket_id: order.event_ticket_id,
+  //       });
+  //     }
 
-//       await tx
-//         .update(orders)
-//         .set({
-//           state: body.data.state,
-//           transaction_id: body.data.transaction_id,
-//           updatedBy: "system",
-//           updatedAt: new Date(),
-//         })
-//         .where(eq(orders.uuid, order.uuid));
-//       return;
-//     });
+  //     await tx
+  //       .update(orders)
+  //       .set({
+  //         state: body.data.state,
+  //         transaction_id: body.data.transaction_id,
+  //         updatedBy: "system",
+  //         updatedAt: new Date(),
+  //       })
+  //       .where(eq(orders.uuid, order.uuid));
+  //     return;
+  //   });
 
-//     return Response.json({
-//       message: "order updated",
-//     });
-//   } catch (e) {
-//     const error = e as any;
-//     if ("message" in error) {
-//       return Response.json(
-//         {
-//           message: error.message,
-//         },
-//         {
-//           status: 500,
-//         }
-//       );
-//     }
-//   }
-// }
+  //   return Response.json({
+  //     message: "order updated",
+  //   });
+  // } catch (e) {
+  //   const error = e as any;
+  //   if ("message" in error) {
+  //     return Response.json(
+  //       {
+  //         message: error.message,
+  //       },
+  //       {
+  //         status: 500,
+  //       }
+  //     );
+  //   }
+  
+  // }
+}
 
-// export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
-// async function sendTicketLogNotification(props: {
-//   event_uuid: string;
-//   username: string;
-//   user_id: string;
-//   event_ticket_id: number;
-// }) {
+async function sendTicketLogNotification(props: { event_uuid: string; username: string; user_id: string; event_ticket_id: number }) {
+  return Response.json({});
 //   try {
 //     const event = await db.query.events.findFirst({
 //       where(fields, { eq }) {
@@ -200,4 +196,4 @@
 //   } catch (error) {
 //     console.log("error in notification", error);
 //   }
-// }
+}
