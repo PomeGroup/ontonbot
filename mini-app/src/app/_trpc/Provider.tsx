@@ -19,7 +19,7 @@ const initDataExpirationAlert = () => {
     window.Telegram.WebApp.showPopup(
       {
         message: "Your session has expired. Please restart the app.",
-        buttons: [{ text: "OK", type: "close" }],
+        buttons: [{  type: "close" }],
       },
       () => {
         window.Telegram.WebApp.close();

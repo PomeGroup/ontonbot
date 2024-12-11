@@ -5,13 +5,7 @@ import zod from "zod";
 import { EventDataContext } from "./eventPageContext";
 import { useGetEvent } from "@/hooks/events.hooks";
 
-export const EventDataProvider = ({
-  children,
-  eventHash,
-}: {
-  children: React.ReactNode;
-  eventHash: string;
-}) => {
+export const EventDataProvider = ({ children, eventHash }: { children: React.ReactNode; eventHash: string }) => {
   const webApp = useWebApp();
   const [isInitialized, setIsInitialized] = useState(false);
   const [initData, setInitData] = useState<string>("");
@@ -48,8 +42,8 @@ export const EventDataProvider = ({
   const eventData = useGetEvent();
 
   const eventPasswordField = useMemo(() => {
-    return eventData.data?.dynamic_fields.find((v) => v.title === "secret_phrase_onton_input");
-  }, [eventData.data?.dynamic_fields.length]);
+    return eventData.data?.dynamic_fields?.find((v) => v.title === "secret_phrase_onton_input");
+  }, [eventData.data?.dynamic_fields?.length]);
 
   const { isLocationUrl, endUTC, startUTC, location } = useMemo(() => {
     if (!eventData.data) {
@@ -87,9 +81,7 @@ export const EventDataProvider = ({
         isNotEnded: Boolean(eventData.data?.isNotEnded),
         isStarted: Boolean(eventData.data?.isStarted),
         endUTC,
-        hasEnteredPassword: Boolean(
-          eventData.data?.participationType === "in_person" || userEventPasswordField?.completed
-        ),
+        hasEnteredPassword: Boolean(eventData.data?.participationType === "in_person" || userEventPasswordField?.completed),
         startUTC,
         location,
         initData,

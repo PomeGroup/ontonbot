@@ -93,7 +93,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
     return null;
   }
 
-  const { wallet_seed_phrase, ...restEventData } = removeKey(eventData, "secret_phrase");
+  const restEventData  = removeKey(eventData, "secret_phrase");
 
   const dynamicFields = await db
     .select()

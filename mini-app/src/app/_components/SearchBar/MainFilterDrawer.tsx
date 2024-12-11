@@ -40,7 +40,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
     <KSheet
       trigger={(open, setOpen) => (
         <button
-          onClick={() => setOpen(!open)}
+          onClick={() => setOpen(true)}
           className="p-2 rounded-md text-gray-500 hover:text-gray-700"
         >
           <IoOptionsOutline className="w-7 h-7" />

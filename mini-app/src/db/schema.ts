@@ -2,6 +2,9 @@ import {
   developmentEnvironment,
   eventParticipationType,
   orderState,
+  orderTypes,
+  ticketTypes,
+  paymentTypes,
   rewardStatus,
   rewardType,
   ticketStatus,
@@ -21,7 +24,7 @@ import {
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
-import { eventTicket } from "./schema/eventTicket";
+import { eventPayment } from "./schema/eventPayment";
 import { event_details_search_list } from "./schema/event_details_search_list";
 import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers";
 import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults";
@@ -40,7 +43,6 @@ import { visitors } from "./schema/visitors";
 import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 
-
 // export all the enums
 export {
   developmentEnvironment,
@@ -48,6 +50,8 @@ export {
   eventTriggerType,
   eventTriggerStatus,
   orderState,
+  orderTypes,
+  paymentTypes,
   rewardStatus,
   rewardType,
   ticketStatus,
@@ -55,6 +59,7 @@ export {
   notificationStatus,
   notificationItemType,
   eventPoaResultStatus,
+  ticketTypes
 };
 
 // export all the tables and relations
@@ -63,7 +68,7 @@ export {
   airdropRoutines,
   eventFieldRelations,
   eventFields,
-  eventTicket,
+  eventPayment,
   event_details_search_list,
   eventPoaTriggers,
   eventPoaTriggersIndexes,
@@ -96,4 +101,3 @@ export type { NotificationStatus };
 export type { NotificationType };
 export type { NotificationItemType };
 export type { EventPoaResultStatus };
-

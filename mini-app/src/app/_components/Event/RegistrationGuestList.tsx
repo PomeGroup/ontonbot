@@ -29,16 +29,7 @@ interface CustomListItemProps {
   handleReject: (_: number) => Promise<void>;
 }
 
-const CustomListItem: React.FC<CustomListItemProps> = ({
-  name,
-  username,
-  date,
-  status,
-  user_id,
-  registrantInfo,
-  handleApprove,
-  handleReject,
-}) => {
+const CustomListItem: React.FC<CustomListItemProps> = ({ name, username, date, status, user_id, registrantInfo, handleApprove, handleReject }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [itemStatus, setItemStatus] = useState(status);
@@ -323,9 +314,9 @@ const RegistrationGuestlist = () => {
         <QrCodeButton
           event_uuid={params.hash}
           url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${params.hash}`}
-          hub={eventData.data?.society_hub.name!}
+          hub={eventData.data?.society_hub?.name!}
         />
-        <ButtonPOA event_uuid={params.hash}  />
+        <ButtonPOA event_uuid={params.hash} />
         {/* Organizer Notification Handler */}
         <OrganizerNotificationHandler />
       </Block>

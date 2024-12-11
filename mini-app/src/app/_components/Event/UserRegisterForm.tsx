@@ -109,7 +109,7 @@ const UserRegisterForm = () => {
             placeholder="I will be 30min late"
             name="notes"
             error={formErrors?.notes?.[0]}
-            label="Tel me about yourself"
+            label="Additional information"
           />
         </List>
       </form>

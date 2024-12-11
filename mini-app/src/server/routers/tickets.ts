@@ -3,8 +3,7 @@ import { z } from "zod";
 import ticketDB from "@/server/db/ticket.db";
 import { TRPCError } from "@trpc/server";
 import rewardsService from "@/server/routers/services/rewardsService";
-import dealRoomService from "@/server/routers/services/DealRoomService";
-import { configProtected } from "@/server/config";
+
 
 // Type guard to check if result is alreadyCheckedIn type
 function isAlreadyCheckedIn(result: any): result is { alreadyCheckedIn: boolean } {
@@ -64,13 +63,11 @@ export const ticketRouter = router({
           return { alreadyCheckedIn: true, result: result };
         }
 
-        const dealRoomResult = await dealRoomService.RefreshGuestList(
-          configProtected?.dealRoomRefreshCode || ""
-        );
+
         return {
           checkInSuccess: true,
           result: result,
-          dealRoomResult: dealRoomResult,
+
           rewardResult: rewardResult,
         };
       }

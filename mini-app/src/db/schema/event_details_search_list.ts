@@ -1,4 +1,4 @@
-import { eventTicket, eventTicket as tickets } from "@/db/schema/eventTicket";
+import { eventPayment, eventPayment as tickets } from "@/db/schema/eventPayment";
 import { events } from "@/db/schema/events";
 import { giataCity } from "@/db/schema/giataCity";
 import { users } from "@/db/schema/users";
@@ -88,12 +88,12 @@ export const event_details_search_list = pgView("event_details_search_list", {
     ${giataCity} country ON e.country_id = country.id
   LEFT JOIN
     LATERAL (SELECT et.id,
-                    et.title,
-                    et.description,
+                    
+                    
                     et.price,
                     et.ticket_image,
-                    et.count
-             FROM ${eventTicket} et
+                    
+             FROM ${eventPayment} et
              WHERE et.event_uuid = e.event_uuid
              ORDER BY et.price
              LIMIT 1) min_tickets ON true
