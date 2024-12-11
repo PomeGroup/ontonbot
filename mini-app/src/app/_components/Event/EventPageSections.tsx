@@ -187,9 +187,7 @@ export const EventSections = () => {
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
   const userCompletedTasks =
-    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) ||
-      !eventData.data?.has_registration) &&
-    user?.wallet_address;
+    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) && user?.wallet_address;
 
   const isOnlineEvent = eventData.data?.participationType === "online";
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
@@ -199,8 +197,7 @@ export const EventSections = () => {
     <div className="space-y-2">
       <EventImage />
 
-      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) ||
-        !user?.wallet_address) && <EventPasswordAndWalletInput />}
+      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && <EventPasswordAndWalletInput />}
 
       <EventHead />
       <EventAttributes />
@@ -212,7 +209,6 @@ export const EventSections = () => {
         <ClaimRewardButton
           initData={initData}
           eventId={eventData.data?.event_uuid ?? ""}
-          isWalletConnected={Boolean(user.wallet_address)}
         />
       )}
 
@@ -224,20 +220,12 @@ export const EventSections = () => {
         />
       )}
 
-      {userCompletedTasks &&
-        hasEnteredPassword &&
-        !isCheckedIn &&
-        isEventActive &&
-        eventData.data?.registrant_uuid && (
-          <MainButton
-            text="Check In"
-            onClick={() =>
-              router.push(
-                `/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`
-              )
-            }
-          />
-        )}
+      {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
+        <MainButton
+          text="Check In"
+          onClick={() => router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)}
+        />
+      )}
 
       {!isAdminOrOrganizer && !isStarted && isNotEnded && (
         <MainButton
