@@ -52,9 +52,10 @@ function SelectPayment() {
 }
 
 function PaymentAmount() {
-  const { payment, changePaymentAmount } = useCreateEventStore((state) => ({
+  const { payment, changePaymentAmount, paid_info_errors } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     changePaymentAmount: state.changePaymentAmount,
+    paid_info_errors: state.paid_info_errors,
   }));
 
   return (
@@ -71,15 +72,17 @@ function PaymentAmount() {
         onChange={(e) => {
           changePaymentAmount(Number(e.target.value));
         }}
+        error={paid_info_errors.payment_amount?.[0]}
       />
     </>
   );
 }
 
 function PaymentsRecepient() {
-  const { payment, changeRecepientAddress } = useCreateEventStore((state) => ({
+  const { payment, changeRecepientAddress, paid_info_errors } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     changeRecepientAddress: state.changeRecepientAddress,
+    paid_info_errors: state.paid_info_errors,
   }));
 
   return (
@@ -93,13 +96,15 @@ function PaymentsRecepient() {
       onChange={(e) => {
         changeRecepientAddress(e.target.value);
       }}
+      error={paid_info_errors.payment_recipient_address?.[0]}
     />
   );
 }
 
 function NFTImage() {
-  const { changeNFTImage } = useCreateEventStore((state) => ({
+  const { changeNFTImage, paid_info_errors } = useCreateEventStore((state) => ({
     changeNFTImage: state.changeNFTImage,
+    paid_info_errors: state.paid_info_errors,
   }));
 
   return (
@@ -109,16 +114,18 @@ function NFTImage() {
         changeText="Change Ticket Image"
         triggerText="Upload Ticket Image"
         onImageChange={changeNFTImage}
+        isError={Boolean(paid_info_errors.nft_image_url?.[0])}
       />
     </div>
   );
 }
 
 function NFTInfo() {
-  const { payment, changeTitle, changeDescription } = useCreateEventStore((state) => ({
+  const { payment, changeTitle, changeDescription, paid_info_errors } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     changeTitle: state.changeNFTTitle,
     changeDescription: state.changeNFTDescription,
+    paid_info_errors: state.paid_info_errors,
   }));
 
   return (
@@ -132,6 +139,7 @@ function NFTInfo() {
         onChange={(e) => {
           changeTitle(e.target.value);
         }}
+        error={paid_info_errors.nft_title?.[0]}
       />
       <ListInput
         outline
@@ -142,8 +150,31 @@ function NFTInfo() {
         onChange={(e) => {
           changeDescription(e.target.value);
         }}
+        error={paid_info_errors.nft_description?.[0]}
       />
     </>
+  );
+}
+
+function Capacity() {
+  const { capacity, setEventData, paid_info_errors } = useCreateEventStore((state) => ({
+    capacity: state.eventData?.capacity,
+    setEventData: state.setEventData,
+    paid_info_errors: state.paid_info_errors,
+  }));
+
+  return (
+    <ListInput
+      outline
+      inputMode="number"
+      type="number"
+      min={1}
+      error={paid_info_errors.capacity?.[0]}
+      value={capacity}
+      onChange={(e) => setEventData({ capacity: Number(e.target.value || 5) })}
+      label="Capacity"
+      info="Number users who can buy your NFT, 0.055 TON for each NFT (minting fee)"
+    />
   );
 }
 
@@ -178,6 +209,7 @@ const PaidEventCreationInputs = () => {
           <PaymentsRecepient />
           <NFTImage />
           <NFTInfo />
+          <Capacity />
         </>
       )}
     </FormBlock>

@@ -5,9 +5,12 @@ import { useCreateEventStore } from "@/zustand/createEventStore";
 import { cn } from "@/utils";
 
 export function UserRegistrationForm() {
-  const eventData = useCreateEventStore((state) => state.eventData);
-  const editOtions = useCreateEventStore((state) => state.edit);
-  const setEventData = useCreateEventStore((state) => state.setEventData);
+  const { setEventData, eventData, editOtions, toggleHasRegistration } = useCreateEventStore((state) => ({
+    setEventData: state.setEventData,
+    editOtions: state.edit,
+    eventData: state.eventData,
+    toggleHasRegistration: state.toggleHasRegistration,
+  }));
 
   return (
     <FormBlock
@@ -26,7 +29,7 @@ export function UserRegistrationForm() {
         footer="Enable user registration to allow attendees to fill out details like name, company, position, and notes during the event sign-up."
         after={
           <Toggle
-            onChange={() => setEventData({ has_registration: !eventData?.has_registration })}
+            onChange={() => toggleHasRegistration()}
             className={cn({
               "opacity-50": editOtions?.eventHash || eventData?.eventLocationType === "in_person",
             })}

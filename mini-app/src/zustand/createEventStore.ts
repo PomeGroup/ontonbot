@@ -1,5 +1,5 @@
 import { GeneralFormErrors, RewardFormErrors, TimePlaceFormErorrs } from "@/app/_components/Event/steps/types";
-import { EventDataSchemaAllOptional, PaidEventType } from "@/types";
+import { EventDataSchemaAllOptional, PaidEventSchema, PaidEventType } from "@/types";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
@@ -20,6 +20,18 @@ export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
 
 type PaymentType = "USDT" | "TON";
 
+type PaidInfoErrors = {
+  has_payment?: string[] | undefined;
+  payment_recipient_address?: string[] | undefined;
+  payment_type?: string[] | undefined;
+  payment_amount?: string[] | undefined;
+  has_nft?: string[] | undefined;
+  nft_title?: string[] | undefined;
+  nft_description?: string[] | undefined;
+  nft_image_url?: string[] | undefined;
+  capacity?: string[] | undefined;
+};
+
 export type CreateEventStoreType = {
   currentStep: number;
   setCurrentStep: (_step: number) => void;
@@ -30,14 +42,17 @@ export type CreateEventStoreType = {
   setEventData: (_data: Partial<StoreEventData>) => void;
   setEdit: (_edit: { eventHash?: string }) => void;
   resetState: () => void;
+
   // form errors
   generalStepErrors?: GeneralFormErrors;
   timeplaceStepErrors?: TimePlaceFormErorrs;
   rewardStepErrors?: RewardFormErrors;
+
   // set errors
   setGeneralStepErrors: (_: GeneralFormErrors) => void;
   setTimePlaceStepErrors: (_: TimePlaceFormErorrs) => void;
   setRewardStepErrors: (_: RewardFormErrors) => void;
+
   // clear errors
   clearGeneralStepErrors: () => void;
   clearRewardStepErrors: () => void;
@@ -45,7 +60,12 @@ export type CreateEventStoreType = {
   clearImageErrors: () => void;
   resetReward: () => void;
 
-  // PAID EVENT CREATION ACTIONS
+  // REGISTRATION
+  toggleHasRegistration: () => void;
+
+  /**
+   * PAID EVENT CREATION ACTIONS
+   */
   togglePaidEvent: () => void;
   changePaymentType: (_: PaymentType) => void;
   changePaymentAmount: (_: number) => void;
@@ -54,6 +74,13 @@ export type CreateEventStoreType = {
   changeNFTImage: (_: string) => void;
   changeNFTTitle: (_title: string) => void;
   changeNFTDescription: (_desc: string) => void;
+
+  /**** REGISTRATION STEP MAIN BUTTON CLICK ****/
+  registrationStepMainButtonClick: () => void;
+
+  /**** ⭕ PAID EVENT INPUT ERRORS ⭕ ****/
+  paid_info_errors: PaidInfoErrors;
+  setPaidInfoErrors: (_key: keyof PaidInfoErrors, _value: any) => void;
 };
 
 const defaultState = {
@@ -75,9 +102,10 @@ const defaultState = {
 
 export const useCreateEventStore = create<CreateEventStoreType>()(
   devtools(
-    immer((set) => ({
+    immer((set, get) => ({
       currentStep: defaultState.step,
       eventData: defaultState.event,
+      paid_info_errors: {},
       clearImageErrors: () => {
         set((state) => ({
           ...state,
@@ -158,6 +186,15 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           },
         }));
       },
+      toggleHasRegistration: () => {
+        set((state) => {
+          state.eventData.has_registration = !state.eventData.has_registration;
+          if (state.eventData.has_registration) {
+            state.eventData.paid_event.has_payment = false;
+            state.eventData.capacity = null;
+          }
+        });
+      },
       togglePaidEvent: () => {
         set((state) => {
           const paidEventInfo = {
@@ -171,18 +208,27 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
            * Handle Confirmation and Notifying user that they need to pay to create a paid event
            */
           if (!state.eventData.paid_event.has_payment) {
-            window.Telegram.WebApp.showConfirm(
-              "You will need pay 10 TON to create a paid event + 0.055 TON for each person buying the ticket (minting fees)",
-              (confirmed) => {
-                if (confirmed) {
-                  set((state) => {
-                    state.eventData.paid_event = paidEventInfo;
-                  });
+            try {
+              window.Telegram.WebApp.showConfirm(
+                "You will need pay 10 TON to create a paid event + 0.055 TON for each person buying the ticket (minting fees)",
+                (confirmed) => {
+                  if (confirmed) {
+                    set((state) => {
+                      state.eventData.paid_event = paidEventInfo;
+                      state.eventData.has_registration = false;
+                    });
+                  }
                 }
-              }
-            );
+              );
+            } catch {
+              state.eventData.paid_event = paidEventInfo;
+              state.eventData.has_registration = false;
+            }
+
+            state.eventData.capacity = 5;
           } else {
             state.eventData.paid_event = paidEventInfo;
+            state.eventData.capacity = null;
           }
         });
       },
@@ -222,6 +268,27 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
         set((state) => {
           state.eventData.paid_event.nft_description = desc;
         });
+      },
+      setPaidInfoErrors: (key, value) => {
+        set((state) => {
+          state.paid_info_errors[key] = value;
+        });
+      },
+      registrationStepMainButtonClick: () => {
+        const hasPayment = get().eventData.paid_event.has_payment;
+        if (hasPayment) {
+          const paymentParsed = PaidEventSchema.safeParse(get().eventData.paid_event);
+          if (paymentParsed.error) {
+            set((state) => {
+              state.paid_info_errors = paymentParsed.error.flatten().fieldErrors;
+            });
+          } else if (paymentParsed.success) {
+            get().setCurrentStep(4);
+            set((state) => {
+              state.paid_info_errors = {};
+            });
+          }
+        }
       },
     }))
   )

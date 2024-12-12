@@ -125,7 +125,7 @@ export const DynamicFieldsSchema = z.array(
 /* -------------------------------------------------------------------------- */
 /*                          💲💲Paid Event Schema💲💲                         */
 /* -------------------------------------------------------------------------- */
-const PaidEventSchema = z
+export const PaidEventSchema = z
   .object({
     has_payment: z.boolean().optional().default(false),
 
@@ -143,8 +143,16 @@ const PaidEventSchema = z
       // Validate that `payment_recipient_address` is not empty
       if (!data.payment_recipient_address)
         ctx.addIssue({ code: "custom", path: ["payment_recipient_address"], message: "Recipient address is Required" });
-      else if (!Address.isAddress(data.payment_recipient_address))
-        ctx.addIssue({ code: "custom", path: ["invalid_payment_recipient_address"], message: "Recipient address is Invalid!" });
+      else {
+        try {
+          /*
+           * This will throw if invalid address is passed
+           */
+          Address.parse(data.payment_recipient_address);
+        } catch (error) {
+          ctx.addIssue({ code: "custom", path: ["invalid_payment_recipient_address"], message: "Recipient address is Invalid!" });
+        }
+      }
 
       // Validate that `payment_type` is present
       if (!data.payment_type) ctx.addIssue({ code: "custom", path: ["payment_type"], message: "Payment type is required." });
