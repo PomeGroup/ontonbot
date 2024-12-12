@@ -177,7 +177,7 @@ export async function CreateTonSocietyDraft(input_event_data: z.infer<typeof Eve
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const event_uuid = opts.input.event_uuid;
-  const eventData = { ...(await selectEventByUuid(event_uuid)), payment_details: {} };
+  const eventData = { payment_details: {} , ...await selectEventByUuid(event_uuid) };
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
@@ -481,6 +481,8 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
     const result = await db.transaction(async (trx) => {
       const inputSecretPhrase = input_event_data.secret_phrase.trim().toLowerCase();
       const hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
+      const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
+      
 
       if (!hashedSecretPhrase) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid secret phrase" });
 
@@ -497,6 +499,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       //     message: "Event Duration Can't be more than 1 week",
       //   });
       // }
+      /* -------------------------------------------------------------------------- */
+      
+      /* ------------------- paid events must have registration ------------------- */
+      input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration
 
       const newEvent = await trx
         .insert(events)
@@ -541,7 +547,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       /* -------------------------------------------------------------------------- */
       /*                     Paid Event : Insert PayMent Details                    */
       /* -------------------------------------------------------------------------- */
-      const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
+      
       if (input_event_data.paid_event && event_has_payment) {
         if (!input_event_data.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
         const price = 10 + 0.055 * input_event_data.capacity;
