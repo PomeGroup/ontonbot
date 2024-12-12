@@ -66,6 +66,15 @@ const ManageEvent = (props: ManageEventProps) => {
           has_approval: Boolean(props.event.has_approval),
           capacity: props.event.capacity || null,
           has_waiting_list: Boolean(props.event.has_waiting_list),
+          paid_event: {
+            payment_type: props.event.payment_details?.payment_type,
+            payment_recipient_address: props.event?.payment_details.recipient_address,
+            nft_description: props.event.payment_details?.description || undefined,
+            nft_title: props.event.payment_details?.title || undefined,
+            has_payment: Boolean(props.event.payment_details?.payment_type),
+            payment_amount: props.event.payment_details?.price,
+            nft_image_url: props.event.payment_details?.ticketImage || undefined,
+          },
         });
       }
     }

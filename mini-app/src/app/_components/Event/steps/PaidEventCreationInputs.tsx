@@ -63,7 +63,7 @@ function PaymentAmount() {
       <ListInput
         outline
         required
-        title="Payment Amount"
+        title="Price"
         type="number"
         inputMode="number"
         placeholder={`Payment amount in ${payment.payment_type}`}
@@ -102,9 +102,11 @@ function PaymentsRecepient() {
 }
 
 function NFTImage() {
-  const { changeNFTImage, paid_info_errors } = useCreateEventStore((state) => ({
+  const { changeNFTImage, paid_info_errors, nft_image, isEdit } = useCreateEventStore((state) => ({
     changeNFTImage: state.changeNFTImage,
     paid_info_errors: state.paid_info_errors,
+    nft_image: state.eventData.paid_event.nft_image_url,
+    isEdit: Boolean(state.edit?.eventHash),
   }));
 
   return (
@@ -112,8 +114,10 @@ function NFTImage() {
       <UploadImageFile
         infoText="This image is used as the NFT ticket"
         changeText="Change Ticket Image"
+        disabled={isEdit}
         triggerText="Upload Ticket Image"
         onImageChange={changeNFTImage}
+        defaultImage={nft_image}
         isError={Boolean(paid_info_errors.nft_image_url?.[0])}
       />
     </div>
@@ -121,11 +125,12 @@ function NFTImage() {
 }
 
 function NFTInfo() {
-  const { payment, changeTitle, changeDescription, paid_info_errors } = useCreateEventStore((state) => ({
+  const { payment, changeTitle, changeDescription, paid_info_errors, isEdit } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     changeTitle: state.changeNFTTitle,
     changeDescription: state.changeNFTDescription,
     paid_info_errors: state.paid_info_errors,
+    isEdit: Boolean(state.edit?.eventHash),
   }));
 
   return (
@@ -135,21 +140,27 @@ function NFTInfo() {
         required
         placeholder="Title used for NFT ticket"
         title="NFT Title"
+        inputClassName={cn(isEdit && "cursor-not-allowed opacity-50")}
         value={payment.nft_title}
         onChange={(e) => {
           changeTitle(e.target.value);
         }}
+        info="You will not be able to change this information about your nft collection later after event creation."
+        disabled={isEdit}
         error={paid_info_errors.nft_title?.[0]}
       />
       <ListInput
         outline
         required
         placeholder="Description used for NFT ticket"
+        inputClassName={cn(isEdit && "cursor-not-allowed opacity-50")}
+        info="You will not be able to change this information about your nft collection later after event creation."
         title="NFT Description"
         value={payment.nft_description}
         onChange={(e) => {
           changeDescription(e.target.value);
         }}
+        disabled={isEdit}
         error={paid_info_errors.nft_description?.[0]}
       />
     </>
@@ -164,17 +175,27 @@ function Capacity() {
   }));
 
   return (
-    <ListInput
-      outline
-      inputMode="number"
-      type="number"
-      min={1}
-      error={paid_info_errors.capacity?.[0]}
-      value={capacity}
-      onChange={(e) => setEventData({ capacity: Number(e.target.value || 5) })}
-      label="Capacity"
-      info="Number users who can buy your NFT, 0.055 TON for each NFT (minting fee)"
-    />
+    <>
+      <ListInput
+        outline
+        inputMode="number"
+        type="number"
+        min={1}
+        error={paid_info_errors.capacity?.[0]}
+        value={capacity}
+        onChange={(e) => setEventData({ capacity: Number(e.target.value || 5) })}
+        label="Capacity"
+        info="Number users who can buy your NFT, 0.055 TON for each NFT (minting fee)"
+      />
+      {/*
+       * FIXME: This is wrong and bought capacity should be used instead from get event
+       */}
+      <ListItem
+        title="Bought Capacity"
+        footer="The maximum capacity you can change without extra payment is the bought capacity. If the input capacity exceeds this, you'll need to pay for the extra."
+        after={<b>{capacity}</b>}
+      />
+    </>
   );
 }
 

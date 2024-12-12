@@ -27,6 +27,7 @@ import rewardService from "@/server/routers/services/rewardsService";
 import { addVisitor } from "@/server/db/visitors";
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { internal_server_error } from "../utils/error_utils";
+import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 
 dotenv.config();
 
@@ -177,7 +178,7 @@ export async function CreateTonSocietyDraft(input_event_data: z.infer<typeof Eve
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const event_uuid = opts.input.event_uuid;
-  const eventData = { payment_details: {}, ...(await selectEventByUuid(event_uuid)) };
+  const eventData = { ...(await selectEventByUuid(event_uuid)), payment_details: {} as EventPaymentSelectType };
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
