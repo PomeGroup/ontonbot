@@ -548,7 +548,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
           user_id: opts.ctx.user.user_id,
-          total_price: BigInt(price),
+          total_price: price,
           payment_type: "TON",
           state: "created",
           order_type: "event_creation",
@@ -725,7 +725,7 @@ const updateEvent = eventManagementProtectedProcedure
               order_type: "event_capacity_increment" as const,
               state: "created" as const,
               payment_type: "TON" as const,
-              total_price: BigInt(0.055 * (eventData.capacity - paymentInfo!.bought_capacity)),
+              total_price: 0.055 * (eventData.capacity - paymentInfo!.bought_capacity),
               user_id: user_id,
             };
             if (update_order && update_order.state == "created") {
