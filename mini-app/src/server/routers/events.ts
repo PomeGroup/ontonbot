@@ -541,7 +541,8 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       /* -------------------------------------------------------------------------- */
       /*                     Paid Event : Insert PayMent Details                    */
       /* -------------------------------------------------------------------------- */
-      if (input_event_data.paid_event && input_event_data.paid_event.has_payment) {
+      const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
+      if (input_event_data.paid_event && event_has_payment) {
         if (!input_event_data.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
         const price = 10 + 0.055 * input_event_data.capacity;
         await trx.insert(orders).values({
@@ -584,7 +585,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         });
       }
       // Generate POA for the event
-      if (input_event_data.eventLocationType === "online") {
+      if (input_event_data.eventLocationType === "online" && !event_has_payment) {
         await eventPoaTriggersDB.generatePoaForAddEvent(trx, {
           eventId: newEvent[0].event_id,
           eventStartTime: newEvent[0].start_date || 0,
