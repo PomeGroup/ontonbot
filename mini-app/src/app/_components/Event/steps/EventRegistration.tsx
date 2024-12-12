@@ -5,10 +5,13 @@ import { useMainButton } from "@/hooks/useMainButton";
 import PaidEventCreationInputs from "./PaidEventCreationInputs";
 
 const RegistrationStep = () => {
-  const { eventData, setEventData, setCurrentStep } = useCreateEventStore((state) => ({
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  const { eventData, setEventData, submitMainbutton } = useCreateEventStore((state) => ({
     eventData: state.eventData,
     setEventData: state.setEventData,
     setCurrentStep: state.setCurrentStep,
+    submitMainbutton: state.registrationStepMainButtonClick,
   }));
 
   useLayoutEffect(() => {
@@ -18,14 +21,20 @@ const RegistrationStep = () => {
   }, []);
 
   useMainButton(() => {
-    setCurrentStep(4);
+    formRef.current?.requestSubmit();
   }, "Next Step");
 
   return (
-    <>
+    <form
+      ref={formRef}
+      onSubmit={(e) => {
+        e.preventDefault();
+        submitMainbutton();
+      }}
+    >
       <UserRegistrationForm />;
       <PaidEventCreationInputs />
-    </>
+    </form>
   );
 };
 

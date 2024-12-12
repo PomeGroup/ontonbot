@@ -1,4 +1,4 @@
-import { index, integer, pgEnum, pgTable, serial, text, timestamp, uuid, uniqueIndex } from "drizzle-orm/pg-core";
+import { index, integer, pgEnum, pgTable, serial, text, timestamp, uuid, uniqueIndex, decimal, real } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
 import { paymentTypes, ticketTypes } from "../enum";
 
@@ -11,7 +11,7 @@ export const eventPayment = pgTable(
 
     /* -------------------------- Payment Core Columns -------------------------- */
     payment_type: paymentTypes("payment_type").notNull(),
-    price: integer("price").notNull(),
+    price: real("price").notNull(),
     recipient_address: text("recipient_address").notNull(),
     bought_capacity: integer("bought_capacity").notNull(),
     /* -------------------------------------------------------------------------- */

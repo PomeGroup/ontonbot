@@ -1,4 +1,4 @@
-import { bigint, index, integer, pgTable, text, timestamp, uuid, uniqueIndex } from "drizzle-orm/pg-core";
+import { bigint, index, integer, pgTable, text, timestamp, uuid, uniqueIndex, real } from "drizzle-orm/pg-core";
 import { orderState, orderTypes, paymentTypes } from "@/db/schema";
 import { events } from "@/db/schema/events";
 import { users } from "@/db/schema/users";
@@ -10,7 +10,7 @@ export const orders = pgTable(
     event_uuid: uuid("event_uuid").references(() => events.event_uuid),
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
 
-    total_price: bigint("total_price", { mode: "bigint" }).notNull(),
+    total_price: real("total_price").notNull(),
     payment_type: paymentTypes("payment_type").notNull(),
 
     state: orderState("state").notNull(),

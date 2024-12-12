@@ -63,7 +63,7 @@ export function ClaimRewardButton(props: { eventId: string; initData: string }) 
       />
     ) : (
       <MainButton
-        text="Claim Reward"
+        text="Something Went Wrong"
         color={"secondary"}
       />
     );

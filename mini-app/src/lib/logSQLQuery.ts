@@ -15,6 +15,6 @@ export const logSQLQuery = (sql: string, params: SQLParams): void => {
 
     return String(param);
   });
-  console.log(fullQuery);
+  console.log("Sql_Query___ : ",fullQuery);
   
 };
