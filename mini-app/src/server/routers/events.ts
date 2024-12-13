@@ -19,7 +19,13 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { getEventByUuid, getEventsWithFilters as DBgetEventsWithFilters, selectEventByUuid } from "../db/events";
 import { selectVisitorsByEventUuid } from "../db/visitors";
-import { adminOrganizerProtectedProcedure, eventManagementProtectedProcedure, initDataProtectedProcedure, publicProcedure, router } from "../trpc";
+import {
+  adminOrganizerProtectedProcedure,
+  eventManagementProtectedProcedure as evntManagerPP,
+  initDataProtectedProcedure,
+  publicProcedure,
+  router,
+} from "../trpc";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
@@ -62,7 +68,10 @@ async function getApprovedRequestsCount(event_uuid: string) {
         .select({ count: count() })
         .from(eventRegistrants)
         .where(
-          and(or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")), eq(eventRegistrants.event_uuid, event_uuid))
+          and(
+            or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
+            eq(eventRegistrants.event_uuid, event_uuid)
+          )
         )
         .execute()
     ).pop()?.count || 0;
@@ -96,11 +105,22 @@ interface TonSocietyDraftSchema {
   eventLocationType: string;
 }
 // Original function with overloads
-export function CreateTonSocietyDraft(input_event_data: z.infer<typeof EventDataSchema>, event_uuid: string): Promise<TonSocietyRegisterActivityT>;
-export function CreateTonSocietyDraft(input_event_data: TonSocietyDraftSchema, event_uuid: string): Promise<TonSocietyRegisterActivityT>;
+export function CreateTonSocietyDraft(
+  input_event_data: z.infer<typeof EventDataSchema>,
+  event_uuid: string
+): Promise<TonSocietyRegisterActivityT>;
+export function CreateTonSocietyDraft(
+  input_event_data: TonSocietyDraftSchema,
+  event_uuid: string
+): Promise<TonSocietyRegisterActivityT>;
 
-export async function CreateTonSocietyDraft(input_event_data: z.infer<typeof EventDataSchema> | TonSocietyDraftSchema, event_uuid: string) {
-  const additional_info = z.string().url().safeParse(input_event_data.location).success ? "Online" : input_event_data.location;
+export async function CreateTonSocietyDraft(
+  input_event_data: z.infer<typeof EventDataSchema> | TonSocietyDraftSchema,
+  event_uuid: string
+) {
+  const additional_info = z.string().url().safeParse(input_event_data.location).success
+    ? "Online"
+    : input_event_data.location;
   const countryId = input_event_data.countryId;
   const country = countryId ? await fetchCountryById(countryId) : undefined;
 
@@ -207,7 +227,9 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     eventData.location = event_location;
     //event payment info
     if (eventData.has_payment) {
-      const payment_details = (await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()).pop();
+      const payment_details = (
+        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+      ).pop();
       if (!payment_details) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -347,7 +369,7 @@ const eventRegister = initDataProtectedProcedure.input(EventRegisterSchema).muta
 /* -------------------------------------------------------------------------- */
 /*                            Get Event Registrant 👨‍👩‍👧                        */
 /* -------------------------------------------------------------------------- */
-const getEventRegistrants = eventManagementProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
+const getEventRegistrants = evntManagerPP.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const event_uuid = opts.input.event_uuid;
   const event = await selectEventByUuid(event_uuid);
 
@@ -378,7 +400,7 @@ const getEventRegistrants = eventManagementProtectedProcedure.input(z.object({ e
 /* -------------------------------------------------------------------------- */
 /*              Process Registrant Request (Approve✅ / Reject ❌)           */
 /* -------------------------------------------------------------------------- */
-const processRegistrantRequest = eventManagementProtectedProcedure
+const processRegistrantRequest = evntManagerPP
   .input(
     z.object({
       event_uuid: z.string(),
@@ -400,7 +422,13 @@ const processRegistrantRequest = eventManagementProtectedProcedure
       .set({
         status: opts.input.status,
       })
-      .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, user_id), ne(eventRegistrants.status, "checkedin")))
+      .where(
+        and(
+          eq(eventRegistrants.event_uuid, event_uuid),
+          eq(eventRegistrants.user_id, user_id),
+          ne(eventRegistrants.status, "checkedin")
+        )
+      )
       .execute();
 
     if (opts.input.status === "approved") {
@@ -419,7 +447,7 @@ const processRegistrantRequest = eventManagementProtectedProcedure
 /* -------------------------------------------------------------------------- */
 /*                  Check-in Registrant Request (🙋‍♂️💁‍♂️)                  */
 /* -------------------------------------------------------------------------- */
-const checkinRegistrantRequest = eventManagementProtectedProcedure
+const checkinRegistrantRequest = evntManagerPP
   .input(
     z.object({
       event_uuid: z.string().uuid(),
@@ -440,7 +468,9 @@ const checkinRegistrantRequest = eventManagementProtectedProcedure
         message: "Check-in only for in_person events with registration",
       });
     }
-    const registrant = (await db.select().from(eventRegistrants).where(eq(eventRegistrants.registrant_uuid, registrant_uuid)).execute()).pop();
+    const registrant = (
+      await db.select().from(eventRegistrants).where(eq(eventRegistrants.registrant_uuid, registrant_uuid)).execute()
+    ).pop();
 
     if (!registrant) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Registrant Not Found/Invalid" });
@@ -549,7 +579,8 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       /* -------------------------------------------------------------------------- */
 
       if (input_event_data.paid_event && event_has_payment) {
-        if (!input_event_data.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
+        if (!input_event_data.capacity)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
         const price = 10 + 0.055 * input_event_data.capacity;
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
@@ -668,10 +699,10 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 });
 
 /* -------------------------------------------------------------------------- */
-/*                                Update Event                                */
+/*                                🐳🦞Update Event🐳🦞                      */
 /* -------------------------------------------------------------------------- */
 
-const updateEvent = eventManagementProtectedProcedure
+const updateEvent = evntManagerPP
   .input(
     z.object({
       eventData: UpdateEventDataSchema,
@@ -699,6 +730,9 @@ const updateEvent = eventManagementProtectedProcedure
 
         const canUpdateRegistraionSetting = oldEvent.has_registration;
 
+        /* -------------------------------------------------------------------------- */
+        /*                                 Paid Event                                 */
+        /* -------------------------------------------------------------------------- */
         //can't have capacity null if it's paid event
         //should create order for increasing capacity
         if (oldEvent.has_payment) {
@@ -706,7 +740,9 @@ const updateEvent = eventManagementProtectedProcedure
           //can't have capacity null if it's paid event
           if (!eventData.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Paid Events Must have capacity" });
           /* -------------------------------------------------------------------------- */
-          const paymentInfo = (await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()).pop();
+          const paymentInfo = (
+            await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
+          ).pop();
           if (eventData.capacity > paymentInfo!.bought_capacity) {
             // Increase in event capacity
             // create an update_capacity_order if not exists otherwise just update it
@@ -776,7 +812,7 @@ const updateEvent = eventManagementProtectedProcedure
           .returning()
           .execute();
 
-        if (eventData.paid_event?.has_payment) {
+        if (eventData.paid_event?.has_payment && oldEvent.has_payment) {
           //Only recipient_address and price can be updated
           await trx.update(eventPayment).set({
             recipient_address: eventData.paid_event.payment_recipient_address,
@@ -784,19 +820,12 @@ const updateEvent = eventManagementProtectedProcedure
           });
         }
 
-        /* ----------------------------- IF HAS PAYMENT ----------------------------- */
-        if (oldEvent.has_payment) {
-          await trx.update(eventPayment).set({
-            recipient_address: eventData.paid_event?.payment_recipient_address,
-            price: eventData.paid_event?.payment_amount,
-            ticketImage: eventData.paid_event?.has_nft ? eventData.paid_event?.nft_image_url : null,
-          });
-        }
-
         const currentFields = await eventFieldsDB.selectEventFieldsByEventId(trx, eventId!);
 
         const fieldsToDelete = currentFields.filter(
-          (field) => !eventData.dynamic_fields.some((newField) => newField.id === field.id) && field.title !== "secret_phrase_onton_input"
+          (field) =>
+            !eventData.dynamic_fields.some((newField) => newField.id === field.id) &&
+            field.title !== "secret_phrase_onton_input"
         );
 
         for (const field of fieldsToDelete) {
@@ -828,7 +857,9 @@ const updateEvent = eventManagementProtectedProcedure
           }
         }
 
-        for (const [index, field] of eventData.dynamic_fields.filter((f) => f.title !== "secret_phrase_onton_input").entries()) {
+        for (const [index, field] of eventData.dynamic_fields
+          .filter((f) => f.title !== "secret_phrase_onton_input")
+          .entries()) {
           await eventFieldsDB.upsertEventField(trx, field, index, opts.ctx.user.user_id.toString(), eventId);
         }
 
@@ -894,6 +925,28 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
     }
   });
 
+/* -------------------------------------------------------------------------- */
+/*                              Get Event Orders                              */
+/* -------------------------------------------------------------------------- */
+const getEventOrders = evntManagerPP.input(z.object({ event_uuid: z.string().uuid() })).query(async (opts) => {
+  const event_uuid = opts.input.event_uuid;
+
+  const event_orders = db
+    .select()
+    .from(orders)
+    .where(
+      and(
+        eq(orders.event_uuid, event_uuid),
+        or(eq(orders.order_type, "event_creation"), eq(orders.order_type, "event_capacity_increment")),
+        eq(orders.state, "created")
+      )
+    );
+  return event_orders;
+});
+
+/* -------------------------------------------------------------------------- */
+/*                                  Get Hubs                                  */
+/* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 const getHubs = publicProcedure.query(async () => {
   try {
@@ -976,7 +1029,7 @@ const requestShareEvent = initDataProtectedProcedure
   });
 
 /* -------------------------------------------------------------------------- */
-const requestExportFile = eventManagementProtectedProcedure.mutation(async (opts) => {
+const requestExportFile = evntManagerPP.mutation(async (opts) => {
   const event = opts.ctx.event;
   const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
 
@@ -1034,11 +1087,15 @@ const requestExportFile = eventManagementProtectedProcedure.mutation(async (opts
     formData.append("message", customMessage);
     formData.append("fileName", eventData?.title || "visitors");
     const userId = opts.ctx.user.user_id;
-    const response = await axios.post(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-file?id=${userId}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await axios.post(
+      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-file?id=${userId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
 
     return response.status === 200 ? { status: "success", data: null } : { status: "fail", data: response.data };
   } catch (error) {
@@ -1047,17 +1104,20 @@ const requestExportFile = eventManagementProtectedProcedure.mutation(async (opts
   }
 });
 /* -------------------------------------------------------------------------- */
-const requestSendQRcode = eventManagementProtectedProcedure
+const requestSendQRcode = evntManagerPP
   .input(z.object({ url: z.string(), hub: z.string().optional() }))
   .mutation(async (opts) => {
     try {
-      const response = await axios.get(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/generate-qr`, {
-        params: {
-          id: opts.ctx.user.user_id,
-          url: opts.input.url,
-          hub: opts.input.hub,
-        },
-      });
+      const response = await axios.get(
+        `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/generate-qr`,
+        {
+          params: {
+            id: opts.ctx.user.user_id,
+            url: opts.input.url,
+            hub: opts.input.hub,
+          },
+        }
+      );
 
       return response.status === 200 ? { status: "success", data: null } : { status: "fail", data: response.data };
     } catch (error) {
@@ -1080,19 +1140,6 @@ const getEventsWithFilters = publicProcedure.input(searchEventsInputZod).query(a
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
 export const eventsRouter = router({
-  // // private
-  // getVisitorsWithWalletsNumber: eventManagementProtectedProcedure.query(
-  //   async (opts) => {
-  //     return (
-  //       (await selectVisitorsWithWalletAddress(opts.ctx.event.event_uuid))
-  //         .length || 0
-  //     );
-  //   }
-  // ),
-
-  // getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
-  //   return await fetchBalance(opts.input);
-  // }),
   getEvent,
   getEvents, // private
   eventRegister, // private
@@ -1109,8 +1156,21 @@ export const eventsRouter = router({
 });
 
 // Commented Routes
+// // private
+// getVisitorsWithWalletsNumber: evntManagerPP.query(
+//   async (opts) => {
+//     return (
+//       (await selectVisitorsWithWalletAddress(opts.ctx.event.event_uuid))
+//         .length || 0
+//     );
+//   }
+// ),
+
+// getWalletBalance: publicProcedure.input(z.string()).query(async (opts) => {
+//   return await fetchBalance(opts.input);
+// }),
 // private
-//   deleteEvent: eventManagementProtectedProcedure.mutation(async (opts) => {
+//   deleteEvent: evntManagerPP.mutation(async (opts) => {
 //     try {
 //       return await db.transaction(async (trx) => {
 //         const deletedEvent = await trx
