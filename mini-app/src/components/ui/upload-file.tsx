@@ -52,7 +52,7 @@ type UploadFileProps = {
    */
   drawerDescriptionText?: string;
 
-  disabled: boolean;
+  disabled?: boolean;
 };
 
 /**
