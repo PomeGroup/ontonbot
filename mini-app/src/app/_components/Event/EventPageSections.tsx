@@ -197,7 +197,7 @@ export const EventSections = () => {
     <div className="space-y-2">
       <EventImage />
 
-      {/*{((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && <EventPasswordAndWalletInput />}*/}
+      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && <EventPasswordAndWalletInput />}
 
       <EventHead />
       <EventAttributes />
