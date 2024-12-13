@@ -1,7 +1,7 @@
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import React, { useState, useEffect } from "react";
 import { Chip, ListItem } from "konsta/react";
-import FormBlock from "../../atoms/cards/FormBlock";
+import ListLayout from "../../atoms/cards/ListLayout";
 import EventDateInput from "./EventDateInput";
 
 export const EventDateManager = () => {
@@ -15,18 +15,14 @@ export const EventDateManager = () => {
 
   useEffect(() => {
     if (eventData?.start_date) {
-      const formattedStartDate = new Date(
-        new Date(eventData.start_date * 1000).toString().split("GMT")[0] + " UTC"
-      )
+      const formattedStartDate = new Date(new Date(eventData.start_date * 1000).toString().split("GMT")[0] + " UTC")
         .toISOString()
         .split(".")[0];
       setStartDate(formattedStartDate);
     }
 
     if (eventData?.end_date) {
-      const formattedEndDate = new Date(
-        new Date(eventData.end_date * 1000).toString().split("GMT")[0] + " UTC"
-      )
+      const formattedEndDate = new Date(new Date(eventData.end_date * 1000).toString().split("GMT")[0] + " UTC")
         .toISOString()
         .split(".")[0];
       setEndDate(formattedEndDate);
@@ -43,7 +39,7 @@ export const EventDateManager = () => {
   }, [startDate, endDate]);
 
   return (
-    <FormBlock title="Event Date">
+    <ListLayout title="Event Date">
       <EventDateInput
         isStart={true}
         date={startDate}
@@ -67,6 +63,6 @@ export const EventDateManager = () => {
         title="Timezone"
         after={<Chip>{eventData?.timezone}</Chip>}
       />
-    </FormBlock>
+    </ListLayout>
   );
 };

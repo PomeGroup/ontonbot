@@ -1,5 +1,5 @@
 import React from "react";
-import FormBlock from "../../atoms/cards/FormBlock";
+import ListLayout from "../../atoms/cards/ListLayout";
 import { ListInput } from "konsta/react";
 import TonHubPicker from "../../molecules/pickers/TonHubpicker";
 import { ImageUpload } from "./ImageUpload";
@@ -14,7 +14,7 @@ const BasicEventInputs = () => {
   const hubsResponse = useGetHubs();
 
   return (
-    <FormBlock
+    <ListLayout
       title="Basic"
       isLoading={hubsResponse.isLoading}
     >
@@ -57,7 +57,7 @@ const BasicEventInputs = () => {
         isError={Boolean(errors?.image_url)}
         clearError={clearImageError}
       />
-    </FormBlock>
+    </ListLayout>
   );
 };
 

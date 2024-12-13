@@ -46,3 +46,7 @@ export function useGetHubs() {
     queryKey: ["events.getHubs", undefined],
   });
 }
+
+export funciton useEventOrders() {
+  return trpc.events
+}

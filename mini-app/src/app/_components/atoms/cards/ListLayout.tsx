@@ -10,7 +10,7 @@ interface FormBlockProps {
   isLoading?: boolean;
 }
 
-const FormBlock = (props: FormBlockProps) => {
+const ListLayout = (props: FormBlockProps) => {
   return (
     <>
       <BlockTitle className="!mt-4 capitalize">{props.title}</BlockTitle>
@@ -41,4 +41,4 @@ const FormBlock = (props: FormBlockProps) => {
   );
 };
 
-export default FormBlock;
+export default ListLayout;
