@@ -19,10 +19,11 @@ export const orderState = pgEnum("order_state", ["created", "processing", "compl
 export const orderTypes = pgEnum("order_types", ["nft_mint", "offchain_ticket", "event_creation", "event_capacity_increment"]);
 export const paymentTypes = pgEnum("payment_types", ["USDT", "TON"]);
 export const developmentEnvironment = pgEnum("development_environment", ["local", "development", "staging", "production"]);
-export const eventTriggerType = pgEnum("event_trigger_type", ["simple", "multiple_choice", "question"]);
+export const eventTriggerType = pgEnum("event_trigger_type", ["simple", "multiple_choice", "question", "password"]);
 export const eventTriggerStatus = pgEnum("event_trigger_status", ["active", "deactive", "completed", "sending"]);
 export const notificationType = pgEnum("notification_type", [
   "POA_SIMPLE",
+  "POA_PASSWORD",
   "POA_CREATION_FOR_ORGANIZER",
   "USER_RECEIVED_POA",
   "USER_ANSWER_POA",

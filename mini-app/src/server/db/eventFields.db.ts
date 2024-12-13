@@ -54,13 +54,7 @@ const deleteEventFieldById = async (trx: typeof db, fieldId: number, eventId: nu
 };
 
 // Upsert (update or insert) event field based on field existence
-const upsertEventField = async (
-  trx: typeof db,
-  field: any,
-  index: number,
-  userId: string,
-  eventId: number
-) => {
+const upsertEventField = async (trx: typeof db, field: any, index: number, userId: string, eventId: number) => {
   const fieldData = {
     emoji: field.emoji,
     title: field.title,
@@ -95,6 +89,15 @@ const handleDynamicFields = async (trx: typeof db, eventData: any, userId: strin
     await upsertEventField(trx, field, index, userId, eventId);
   }
 };
+// Function to get event field of secret_phrase_onton_input
+const getEventFieldByTitleAndEventId = async (title: string, eventId: number) => {
+  const result = await db
+    .select()
+    .from(eventFields)
+    .where(and(eq(eventFields.title, title), eq(eventFields.event_id, eventId)))
+    .execute();
+  return result[0];
+};
 // export module
 const eventFieldsDB = {
   getEventFields,
@@ -104,5 +107,6 @@ const eventFieldsDB = {
   deleteEventFieldById,
   upsertEventField,
   handleDynamicFields,
+  getEventFieldByTitleAndEventId,
 };
 export default eventFieldsDB;

@@ -101,7 +101,7 @@ export const emitNotification = async (
   try {
     // After successfully sending the notification to the user,
     // create a USER_RECEIVED_POA notification for the organizer
-    if (message.type === "POA_SIMPLE" && message.additionalData && message.additionalData.eventId) {
+    if (( message.type === "POA_SIMPLE" || message.type === "POA_PASSWORD") && message.additionalData && message.additionalData.eventId) {
       const eventId = message.additionalData.eventId;
       const eventDetails = await getEventById(eventId);
 

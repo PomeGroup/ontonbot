@@ -15,7 +15,9 @@ export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
   /*
    * These type are corrected to work with the schema
    */
-  paid_event: Partial<PaidEventType>;
+  paid_event: Partial<PaidEventType> & {
+    bought_capacity?: number;
+  };
 };
 
 type PaymentType = "USDT" | "TON";
@@ -161,7 +163,11 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           };
 
           state.eventData = newData;
-          state.eventData.hasEnded = !!(state.edit?.eventHash && state?.eventData?.end_date && state.eventData.end_date < Date.now() / 1000);
+          state.eventData.hasEnded = !!(
+            state.edit?.eventHash &&
+            state?.eventData?.end_date &&
+            state.eventData.end_date < Date.now() / 1000
+          );
         }),
       setEdit: (edit: { eventHash?: string }) => set((state) => ({ ...state, edit })),
 

@@ -19,10 +19,16 @@ export class RabbitMQ {
   private static instance: RabbitMQ;
   private connection: Connection | null = null;
   private channels: Map<QueueNamesType, Channel> = new Map();
+
   private readonly url: string;
   private readonly username: string;
   private readonly password: string;
   private readonly port: number;
+
+  /**
+   * Prevents setupQueues() from running more than once.
+   */
+  private queuesAreSetup: boolean = false;
 
   private constructor() {
     this.url = rabbitMQUrl;
@@ -66,6 +72,12 @@ export class RabbitMQ {
         });
 
         console.log("RabbitMQ connection established successfully.");
+
+        // Call setupQueues() once, right after establishing the initial connection
+        if (!this.queuesAreSetup) {
+          await this.setupQueues();
+          this.queuesAreSetup = true;
+        }
       } catch (error) {
         console.error("Error connecting to RabbitMQ:", error);
         throw error;
@@ -127,7 +139,7 @@ export class RabbitMQ {
   public async push(
     queue: QueueNamesType,
     message: Record<string, any>,
-    options: Options.Publish = { persistent: true }
+    options: Options.Publish = { persistent: true },
   ): Promise<void> {
     try {
       const channel = await this.getChannel(queue);
@@ -163,16 +175,20 @@ export class RabbitMQ {
       await channel.assertQueue(queue, notificationQueueOptions);
       await channel.prefetch(prefetchCount);
 
-      const consumeResult = await channel.consume(queue, async (msg) => {
-        if (msg) {
-          try {
-            await onMessage(msg, channel);
-          } catch (error) {
-            console.error(`Error processing message from queue '${queue}':`, error);
-            channel.nack(msg); // Requeue the message
+      const consumeResult = await channel.consume(
+        queue,
+        async (msg) => {
+          if (msg) {
+            try {
+              await onMessage(msg, channel);
+            } catch (error) {
+              console.error(`Error processing message from queue '${queue}':`, error);
+              channel.nack(msg); // Requeue the message
+            }
           }
-        }
-      }, { noAck: false });
+        },
+        { noAck: false },
+      );
 
       console.log(`Consuming messages from queue '${queue}' with prefetch count ${prefetchCount}`);
       return consumeResult.consumerTag;
@@ -248,7 +264,7 @@ export class RabbitMQ {
       await channel.bindQueue(
         `${QueueNames.NOTIFICATIONS}-retry`,
         dlxName,
-        `${QueueNames.NOTIFICATIONS}-retry`,
+        `${QueueNames.NOTIFICATIONS}-retry`
       );
 
       console.log("Queues and exchanges setup completed.");
@@ -257,14 +273,17 @@ export class RabbitMQ {
       throw error;
     }
   }
-
 }
 
 // Export utility functions
 const rabbit = RabbitMQ.getInstance();
 
-export const pushToQueue = async (queue: QueueNamesType, message: Record<string, any>, options: Options.Publish) => {
-  await rabbit.push(queue, message , options);
+export const pushToQueue = async (
+  queue: QueueNamesType,
+  message: Record<string, any>,
+  options: Options.Publish,
+) => {
+  await rabbit.push(queue, message, options);
 };
 
 export const consumeFromQueue = async (

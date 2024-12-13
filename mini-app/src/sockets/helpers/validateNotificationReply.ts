@@ -1,9 +1,11 @@
-import { notificationReplySchema } from "@/zodSchema/SocketZodSchemas";
+import {notificationReplyPOASimpleSchema ,notificationReplyPasswordSchema} from "@/zodSchema/SocketZodSchemas";
+import {ZodError} from "zod";
 
 type ValidatedNotificationReply = {
   valid: true;
   notificationId: string | number;
-  answer: "yes" | "no";
+  answer: "yes" | "no" | string;
+  type: "POA_SIMPLE" | "POA_PASSWORD";
 };
 
 type InvalidNotificationReply = {
@@ -13,19 +15,33 @@ type InvalidNotificationReply = {
 
 type NotificationReplyValidationResult = ValidatedNotificationReply | InvalidNotificationReply;
 
-export const validateNotificationReply = (data: unknown): NotificationReplyValidationResult => {
+export const validateNotificationReply = (data: any): NotificationReplyValidationResult => {
   try {
-    const validatedData = notificationReplySchema.parse(data);
+    console.log("Validating notification reply data:", data);
+    if(typeof data !== "object" || data === null || !data?.type) {
+        return {
+            valid: false,
+            error: "Invalid data object",
+        };
+    }
+    const schemaToUse = data.type === "POA_SIMPLE" ? notificationReplyPOASimpleSchema : notificationReplyPasswordSchema;
+    const validatedData = schemaToUse.parse(data);
     return {
       valid: true,
       notificationId: validatedData.notificationId,
       answer: validatedData.answer,
+      type: validatedData.type,
     };
-  } catch (error) {
-    console.error("Validation error:", error);
+  } catch (error: unknown) {
+    let errorMsg = "Unknown validation error";
+    if (error instanceof ZodError) {
+      // Extract just the error messages
+      errorMsg = error.issues.map((issue) => issue.message).join(", ");
+    }
+    console.error("Validation error:", errorMsg);
     return {
       valid: false,
-      error: error instanceof Error ? error.message : "Unknown validation error",
+      error: errorMsg,
     };
   }
 };

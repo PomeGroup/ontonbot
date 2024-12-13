@@ -51,6 +51,8 @@ type UploadFileProps = {
    * The text to display in the drawer description.
    */
   drawerDescriptionText?: string;
+
+  disabled?: boolean;
 };
 
 /**
@@ -107,9 +109,10 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
       <Button
         className={cn(
           "w-full h-auto flex flex-col border border-cn-primary gap-3.5 border-dashed rounded-xl p-3",
-          props.isError ? "border-red-300 bg-red-400/10" : "border-cn-primary"
+          props.isError ? "border-red-300 bg-red-400/10" : "border-cn-primary",
+          props.disabled && "cursor-not-allowed opacity-50"
         )}
-        onClick={() => setIsSheetOpen(true)}
+        onClick={() => !props.disabled && setIsSheetOpen(true)}
         type="button"
         variant={props.isError ? "destructive" : "outline"}
       >
@@ -133,9 +136,7 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
               <CircleArrowUp className="w-5" />
               {props.triggerText}
             </p>
-            {props.infoText && (
-              <p className="text-cn-muted-foreground text-sm w-full text-balance">{props.infoText}</p>
-            )}
+            {props.infoText && <p className="text-cn-muted-foreground text-sm w-full text-balance">{props.infoText}</p>}
           </>
         )}
       </Button>

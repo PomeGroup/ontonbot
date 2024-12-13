@@ -7,11 +7,12 @@ import PaidEventCreationInputs from "./PaidEventCreationInputs";
 const RegistrationStep = () => {
   const formRef = React.useRef<HTMLFormElement>(null);
 
-  const { eventData, setEventData, submitMainbutton } = useCreateEventStore((state) => ({
+  const { eventData, setEventData, submitMainbutton, isEdit } = useCreateEventStore((state) => ({
     eventData: state.eventData,
     setEventData: state.setEventData,
     setCurrentStep: state.setCurrentStep,
     submitMainbutton: state.registrationStepMainButtonClick,
+    isEdit: Boolean(state.edit?.eventHash),
   }));
 
   useLayoutEffect(() => {
@@ -32,8 +33,8 @@ const RegistrationStep = () => {
         submitMainbutton();
       }}
     >
-      <UserRegistrationForm />;
-      <PaidEventCreationInputs />
+      {((isEdit && !eventData.paid_event.has_payment) || !isEdit) && <UserRegistrationForm />}
+      {((isEdit && eventData.paid_event.has_payment) || !isEdit) && <PaidEventCreationInputs />}
     </form>
   );
 };

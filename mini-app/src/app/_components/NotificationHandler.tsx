@@ -28,41 +28,50 @@ type Notification = {
 
 const NotificationHandler: React.FC = () => {
   const WebApp = useWebApp();
-
   const hapticFeedback = WebApp?.HapticFeedback;
   const notifications = useNotificationStore((state) => state.notifications);
   const socket = useSocketStore((state) => state.socket);
 
   const [handledNotificationIds, setHandledNotificationIds] = useState<Set<string>>(new Set());
   const [notificationToShow, setNotificationToShow] = useState<Notification | undefined>(undefined);
+
   const [timeLeft, setTimeLeft] = useState<number>(0);
 
-  // On notifications update, look for a new POA_SIMPLE notification not handled before
-  useEffect(() => {
-    console.log("Checking for new POA_SIMPLE notifications...");
+  // For POA_PASSWORD
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
-    // Find a POA_SIMPLE notification not in handledNotificationIds
+  // Listen for notifications
+  useEffect(() => {
+    console.log("Checking for new notifications...");
+
+    // Check for POA_PASSWORD or POA_SIMPLE
     const newNotification = notifications.find(
-      (n) => n.type === "POA_SIMPLE" && !handledNotificationIds.has(n.notificationId)
+      (n) =>
+        (n.type === "POA_PASSWORD" || n.type === "POA_SIMPLE") &&
+        !handledNotificationIds.has(n.notificationId)
     );
 
     if (newNotification) {
-      console.log("New POA_SIMPLE notification found:", newNotification.notificationId);
+      console.log("New notification found:", newNotification.notificationId);
       setNotificationToShow(newNotification);
+
+      // For both POA_SIMPLE and POA_PASSWORD, set the countdown (actionTimeout)
       const timeoutValue = Number(newNotification.actionTimeout) || 0;
       setTimeLeft(timeoutValue);
-      // Trigger haptic feedback for notification
+
+      // Trigger haptic feedback
       hapticFeedback?.impactOccurred("heavy");
-      // Mark this notification as handled so it won't show again
+
+      // Mark this notification as handled
       setHandledNotificationIds((prev) => new Set(prev).add(newNotification.notificationId));
     } else {
-      console.log("No new POA_SIMPLE notification found.");
+      console.log("No new applicable notification found.");
     }
-  }, [notifications, handledNotificationIds]);
+  }, [notifications, handledNotificationIds, hapticFeedback]);
 
+  // Countdown effect for both POA_SIMPLE and POA_PASSWORD
   useEffect(() => {
-    console.log("timeLeft changed:", timeLeft, "notificationToShow:", notificationToShow);
-
     if (!notificationToShow || timeLeft <= 0) return;
 
     const interval = setInterval(() => {
@@ -72,12 +81,39 @@ const NotificationHandler: React.FC = () => {
     return () => clearInterval(interval);
   }, [notificationToShow, timeLeft]);
 
+  // When time runs out, close the dialog automatically
   useEffect(() => {
-    if (timeLeft <= 0 && notificationToShow) {
-      // Time expired: treat as if user said "No"
-      handleNo();
+    if (notificationToShow && timeLeft === 0) {
+      handleClose();
     }
   }, [timeLeft, notificationToShow]);
+
+  const handleConfirmPassword = () => {
+    if (!socket || !notificationToShow) return;
+
+    // Reset any previous error messages before sending
+    setPasswordError("");
+
+    socket.emit(
+      "notification_reply",
+      {
+        notificationId: notificationToShow.notificationId,
+        answer: password,
+        type: "POA_PASSWORD",
+      },
+      (response: { status: string; message: string }) => {
+        console.log("Server responded to password confirmation:", response);
+
+        if (response.status === "password_error" || response.status === "error") {
+          // Keep dialog open and show the error
+          setPasswordError(response.message);
+        } else {
+          // If success or any other status, close the dialog
+          handleClose();
+        }
+      }
+    );
+  };
 
   const handleYes = () => {
     if (!socket || !notificationToShow) return;
@@ -86,6 +122,7 @@ const NotificationHandler: React.FC = () => {
       {
         notificationId: notificationToShow.notificationId,
         answer: "yes",
+        type: "POA_SIMPLE",
       },
       (response: { status: string; message: string }) => {
         console.log("Server responded to 'yes' reply:", response);
@@ -101,6 +138,7 @@ const NotificationHandler: React.FC = () => {
       {
         notificationId: notificationToShow.notificationId,
         answer: "no",
+        type: "POA_SIMPLE",
       },
       (response: { status: string; message: string }) => {
         console.log("Server responded to 'no' reply:", response);
@@ -112,32 +150,64 @@ const NotificationHandler: React.FC = () => {
   const handleClose = () => {
     setNotificationToShow(undefined);
     setTimeLeft(0);
-    // Do NOT remove from handledNotificationIds, so the same notification isn't re-shown.
+    setPassword("");
+    setPasswordError("");
   };
 
   const opened = !!notificationToShow;
+  const isPoaPassword = notificationToShow?.type === "POA_PASSWORD";
+
+  // Show countdown for both types
+  const title = notificationToShow
+    ? `${notificationToShow.title || ""} (${timeLeft}s left)`
+    : "Notification";
 
   return (
     <Dialog
       opened={opened}
-      // onBackdropClick={handleNo}
-      title={`Confirmation in ${timeLeft} seconds`}
+      title={title}
       content={
         notificationToShow ? (
           <>
-            <p>{notificationToShow.title || ""}</p>
             <p>{notificationToShow.desc || ""}</p>
+            {isPoaPassword && (
+              <div style={{ marginTop: "1rem" }}>
+                <input
+                  type="password"
+                  placeholder="Enter Password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordError("");
+                  }}
+                />
+                {passwordError && (
+                  <p style={{ color: "red", marginTop: "0.5rem" }}>{passwordError}</p>
+                )}
+              </div>
+            )}
           </>
         ) : (
-          <p>your response has been saved.</p>
+          <p>Your response has been saved.</p>
         )
       }
       buttons={
         notificationToShow ? (
-          <>
-            <DialogButton onClick={handleNo}>No</DialogButton>
-            <DialogButton strong onClick={handleYes}>Yes</DialogButton>
-          </>
+          notificationToShow.type === "POA_SIMPLE" ? (
+            <>
+              <DialogButton onClick={handleNo}>No</DialogButton>
+              <DialogButton strong onClick={handleYes}>
+                Yes
+              </DialogButton>
+            </>
+          ) : (
+            // POA_PASSWORD
+            <>
+              <DialogButton strong onClick={handleConfirmPassword} disabled={!password}>
+                Confirm
+              </DialogButton>
+            </>
+          )
         ) : null
       }
     />

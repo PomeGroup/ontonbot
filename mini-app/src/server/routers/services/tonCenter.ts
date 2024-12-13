@@ -150,9 +150,11 @@ async function fetchTransactions({
   retries = 3, // Default retry count
 }: FetchTransactionsParams): Promise<any> {
   const endpoint = `${BASE_URL}/transactions`;
-  const params: Record<string, any> = { account, start_utime, limit, offset, sort };
+  const params: Record<string, any> = { account, limit, offset, sort };
   if (start_lt) {
     params.start_lt = start_lt;
+  } else if (start_utime) {
+    params.start_utime = start_utime;
   }
 
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -171,23 +173,30 @@ async function fetchTransactions({
   }
 }
 
-async function fetchAllTransactions({
-  account,
-  start_utime,
-  limit,
-  sort,
-  start_lt,
-  offset = 0,
-  retries = 3, // Default retry count
-}: FetchTransactionsParams): Promise<any> {
+async function fetchAllTransactions(account: string, start_utime: number, limit = 100, sort = "asc") {
+  let allTransactions = [];
+  let offset = 0;
+  while (true) {
+    const response = await fetchTransactions({
+      account,
+      start_utime: start_utime,
+      limit,
+      sort: sort as "asc" | "desc",
+      offset: offset,
+    });
 
-  // const transactions = [];
-  // const now = 
-  // while(true){
-  //   await fetchTransactions(account ,)
-  // }
+    if (!response || !response.transactions || response.transactions.length === 0) {
+      break;
+    }
 
+    allTransactions.push(...response.transactions);
+
+    offset += limit;
+  }
+
+  return allTransactions;
 }
+
 /* -------------------------------------------------------------------------- */
 /*                                     END                                    */
 /* -------------------------------------------------------------------------- */
@@ -195,6 +204,7 @@ async function fetchAllTransactions({
 const tonCenter = {
   fetchNFTItemsWithRetry,
   fetchTransactions,
+  fetchAllTransactions
 };
 
 export default tonCenter;

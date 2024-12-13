@@ -1,7 +1,7 @@
-import { index, integer, pgEnum, pgTable, serial, text, timestamp, uuid, uniqueIndex, decimal, real } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, serial, text, timestamp, uuid, uniqueIndex, real } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
 import { paymentTypes, ticketTypes } from "../enum";
-
+import { InferSelectModel } from "drizzle-orm";
 
 export const eventPayment = pgTable(
   "event_payment_info",
@@ -31,3 +31,5 @@ export const eventPayment = pgTable(
     eventUuidIdx: index("eventt_event_uuid_idx").on(table.event_uuid),
   })
 );
+
+export type EventPaymentSelectType = InferSelectModel<typeof eventPayment>;
