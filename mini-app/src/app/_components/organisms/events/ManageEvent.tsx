@@ -74,6 +74,7 @@ const ManageEvent = (props: ManageEventProps) => {
             has_payment: Boolean(props.event.payment_details?.payment_type),
             payment_amount: props.event.payment_details?.price,
             nft_image_url: props.event.payment_details?.ticketImage || undefined,
+            bought_capacity: props.event.payment_details?.bought_capacity,
           },
         });
       }

@@ -168,10 +168,12 @@ function NFTInfo() {
 }
 
 function Capacity() {
-  const { capacity, setEventData, paid_info_errors } = useCreateEventStore((state) => ({
+  const { capacity, setEventData, paid_info_errors, isEdit, bought_capacity } = useCreateEventStore((state) => ({
     capacity: state.eventData?.capacity,
     setEventData: state.setEventData,
     paid_info_errors: state.paid_info_errors,
+    isEdit: Boolean(state.edit?.eventHash),
+    bought_capacity: state.eventData.paid_event.bought_capacity,
   }));
 
   return (
@@ -183,18 +185,17 @@ function Capacity() {
         min={1}
         error={paid_info_errors.capacity?.[0]}
         value={capacity}
-        onChange={(e) => setEventData({ capacity: Number(e.target.value || 5) })}
+        onChange={(e) => setEventData({ capacity: e.target.value ? Number(e.target.value) : undefined })}
         label="Capacity"
         info="Number users who can buy your NFT, 0.055 TON for each NFT (minting fee)"
       />
-      {/*
-       * FIXME: This is wrong and bought capacity should be used instead from get event
-       */}
-      <ListItem
-        title="Bought Capacity"
-        footer="The maximum capacity you can change without extra payment is the bought capacity. If the input capacity exceeds this, you'll need to pay for the extra."
-        after={<b>{capacity}</b>}
-      />
+      {isEdit && (
+        <ListItem
+          title="Bought Capacity"
+          footer="The maximum capacity you can change without extra payment is the bought capacity. If the input capacity exceeds this, you'll need to pay for the extra."
+          after={<b className="font-extrabold">{bought_capacity}</b>}
+        />
+      )}
     </>
   );
 }
