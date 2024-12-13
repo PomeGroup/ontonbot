@@ -67,12 +67,12 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
     };
   }, [eventData.data?.start_date, eventData.data?.end_date, eventData.data?.location]);
 
-  // const userEventPasswordField = useMemo(() => {
-  //   // console.log(userEventFields.data);
-  //   if (eventPasswordField?.id) {
-  //     return userEventFields.data?.[eventPasswordField.id];
-  //   }
-  // }, [eventPasswordField?.id, userEventFields.isFetching, userEventFields.isSuccess]);
+  const userEventPasswordField = useMemo(() => {
+    // console.log(userEventFields.data);
+    if (eventPasswordField?.id) {
+      return userEventFields.data?.[eventPasswordField.id];
+    }
+  }, [eventPasswordField?.id, userEventFields.isFetching, userEventFields.isSuccess]);
 
   return (
     <EventDataContext.Provider
@@ -81,7 +81,7 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
         isNotEnded: Boolean(eventData.data?.isNotEnded),
         isStarted: Boolean(eventData.data?.isStarted),
         endUTC,
-        // hasEnteredPassword: Boolean(eventData.data?.participationType === "in_person" || userEventPasswordField?.completed),
+        hasEnteredPassword: Boolean(eventData.data?.participationType === "in_person" || userEventPasswordField?.completed),
         startUTC,
         location,
         initData,
