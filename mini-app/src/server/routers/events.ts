@@ -1153,6 +1153,7 @@ export const eventsRouter = router({
   requestExportFile, //private
   requestSendQRcode, //private
   getEventsWithFilters,
+  getEventOrders,
 });
 
 // Commented Routes

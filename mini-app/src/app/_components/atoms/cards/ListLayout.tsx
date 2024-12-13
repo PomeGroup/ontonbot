@@ -1,6 +1,7 @@
 import { cn } from "@/utils";
 import { Block, BlockHeader, BlockTitle, List, Preloader } from "konsta/react";
 import React, { ReactNode } from "react";
+import DataStatus from "../../molecules/alerts/DataStatus";
 
 interface FormBlockProps {
   children?: ReactNode;
@@ -8,6 +9,7 @@ interface FormBlockProps {
   description?: ReactNode;
   inset?: boolean;
   isLoading?: boolean;
+  isEmpty?: boolean;
 }
 
 const ListLayout = (props: FormBlockProps) => {
@@ -29,12 +31,25 @@ const ListLayout = (props: FormBlockProps) => {
         )}
 
         {!props.isLoading && (
-          <List
-            margin="!my-1"
-            className="dark:hairline-zinc-700"
-          >
-            {props.children}
-          </List>
+          <>
+            {!props.isEmpty && (
+              <List
+                margin="!my-1"
+                className="dark:hairline-zinc-700"
+              >
+                {props.children}
+              </List>
+            )}
+
+            {props.isEmpty && (
+              <div className="my-4">
+                <DataStatus
+                  title="Empty List"
+                  status="not_found"
+                />
+              </div>
+            )}
+          </>
         )}
       </Block>
     </>
