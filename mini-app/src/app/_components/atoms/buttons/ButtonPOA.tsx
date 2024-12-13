@@ -6,10 +6,13 @@ import useWebApp from "@/hooks/useWebApp";
 import { cn } from "@/lib/utils";
 import { LoaderIcon } from "lucide-react";
 import { SiGoogleclassroom } from "react-icons/si";
+import {EventTriggerType} from "@/db/enum";
 
-const ButtonPOA = ({ event_uuid }: { event_uuid: string; }) => {
+const ButtonPOA = ({ event_uuid , poa_type }: { event_uuid: string;  poa_type?: EventTriggerType }) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
+  console.log("poa_type", poa_type);
+  const POAType = poa_type || 'simple';
   const hapticFeedback = WebApp?.HapticFeedback;
   const CreatePOAMutation = trpc.EventPOA.Create.useMutation();
 
@@ -25,6 +28,7 @@ const ButtonPOA = ({ event_uuid }: { event_uuid: string; }) => {
         if (!initData) return;
         await CreatePOAMutation.mutateAsync({
           event_uuid,
+          poa_type: POAType,
         });
 
         hapticFeedback?.impactOccurred("medium");

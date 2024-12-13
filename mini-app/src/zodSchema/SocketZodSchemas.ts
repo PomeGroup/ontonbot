@@ -8,7 +8,14 @@ export const testEventSchema = z.object({
     .transform((value) => value.replace(/</g, "&lt;").replace(/>/g, "&gt;")), // Basic sanitization
 });
 
-export const notificationReplySchema = z.object({
+export const notificationReplyPOASimpleSchema = z.object({
   notificationId: z.union([z.number(), z.string()]),
   answer: z.enum(["yes", "no"]),
+  type: z.literal("POA_SIMPLE"),
+});
+
+export const notificationReplyPasswordSchema = z.object({
+  notificationId: z.union([z.number(), z.string()]),
+  answer: z.string().min(1, "Password cannot be empty"),
+  type: z.literal("POA_PASSWORD"),
 });

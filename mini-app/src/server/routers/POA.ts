@@ -1,12 +1,16 @@
-import { z } from "zod";
 import { eventManagementProtectedProcedure, router } from "../trpc";
 import { addEventPoaTrigger } from "@/server/db/eventPoaTriggers.db";
-import { EventTriggerStatus, EventTriggerType } from "@/db/enum";
+import {EventTriggerStatus, eventTriggerType, EventTriggerType} from "@/db/enum";
 import { getEventByUuid } from "@/server/db/events";
+import {z} from "zod";
 
 export const POARouter = router({
   Create: eventManagementProtectedProcedure
-
+      .input(
+          z.object({
+              poa_type: z.enum(eventTriggerType.enumValues).optional(),
+          })
+      )
     .mutation(async (opts) => {
 
       const eventUuid =opts.ctx.event.event_uuid;
@@ -14,6 +18,11 @@ export const POARouter = router({
         const event = await getEventByUuid(eventUuid);
         if (!event) {
           return { success: false, message: "event not found" };
+        }
+        // poa type to uppercase
+          const poaType = opts.input.poa_type  as EventTriggerType;
+        if (!opts.input?.poa_type || !eventTriggerType.enumValues.includes(poaType)) {
+            return { success: false, message: "Invalid POA Type" };
         }
         // numeric timestamp in seconds
         const currentTimestamp = Math.floor(new Date().getTime() / 1000);
@@ -23,8 +32,8 @@ export const POARouter = router({
           startTime: currentTimestamp,
           countOfSent: 0,
           countOfSuccess: 0,
-          poaType: "simple" as EventTriggerType , // "simple", "multiple_choice", or "question"
-          status: "active" as EventTriggerStatus, // "active", "deactive", "completed", "sending"
+          poaType:  poaType ,
+          status: "active" as EventTriggerStatus,
         };
 
         const POAResult = await addEventPoaTrigger(poaData);

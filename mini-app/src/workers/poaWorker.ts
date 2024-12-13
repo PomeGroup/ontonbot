@@ -129,9 +129,9 @@ const processOngoingEvents = async () => {
 
             const notificationsToAdd = approvedUsers.map((user) => ({
               userId: user.userId,
-              type: "POA_SIMPLE" as NotificationType,
+              type:  (trigger.poaType === "simple") ? "POA_SIMPLE" : "POA_PASSWORD" as NotificationType,
               title: `${event.title}`,
-              desc: "Please confirm your presence.",
+              desc:  (trigger.poaType === "simple") ? `Please respond to the POA for Event ${event.title}` : `Please enter the password for Event ${event.title}`,
               actionTimeout: 20,
               additionalData: { eventId, poaId: trigger.id },
               priority: 1,

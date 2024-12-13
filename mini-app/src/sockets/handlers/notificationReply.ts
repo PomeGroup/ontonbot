@@ -1,12 +1,15 @@
-// handleNotificationReply.ts
 import { z } from "zod";
 import { notificationsDB } from "@/server/db/notifications.db";
-import { NotificationStatus, NotificationType, NotificationItemType } from "@/db/schema"; // Ensure enums are correctly imported
+import { NotificationStatus, NotificationType, NotificationItemType } from "@/db/schema";
 import { eventPoaResultsDB } from "@/server/db/eventPoaResults.db";
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { NOTIFICATION_TIMEOUT_MARGIN } from "@/sockets/constants";
 import { validateNotificationReply } from "@/sockets/helpers/validateNotificationReply";
 import { getEventById } from "@/server/db/events";
+import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
+import eventFieldsDB from "@/server/db/eventFields.db";
+import bcryptLib from "@/lib/bcrypt";
+import userEventFieldsDB from "@/server/db/userEventFields.db";
 
 type CallbackFunction = (response: { status: string; message: string }) => void;
 
@@ -26,19 +29,17 @@ export const handleNotificationReply = async (
     }
 
     // Destructure notificationId and answer directly
-    const { notificationId, answer } = validatedData;
+    const { notificationId, answer, type } = validatedData;
     const notificationIdNumber = Number(notificationId);
-    console.log(
-      `Received notification_reply from ${sanitizedUsername}: notificationId=${notificationId}, answer=${answer}`,
-    );
+    console.log(`Received notification_reply from ${sanitizedUsername}: notificationId=${notificationId}, answer=${answer} type=${type}`);
     if (isNaN(notificationIdNumber)) {
       callback({ status: "error", message: "Invalid notification ID" });
       return;
     }
     // Fetch the notification by ID using the notificationsDB helper
     const foundNotification = await notificationsDB.getNotificationById(notificationIdNumber);
-    const currentTime = Math.floor(Date.now() / 1000);
 
+    const currentTime = Math.floor(Date.now() / 1000);
 
     // Check if the notification was found
     if (!foundNotification) {
@@ -77,12 +78,13 @@ export const handleNotificationReply = async (
       });
       return;
     }
-
     // Check if the notification is expired
     const readAtTimestamp = Math.floor(new Date(foundNotification.readAt).getTime() / 1000);
     const timeoutToCheck = foundNotification.actionTimeout ? Number(foundNotification.actionTimeout) : 0;
     const notificationTimeout = readAtTimestamp + timeoutToCheck + NOTIFICATION_TIMEOUT_MARGIN;
-    console.log(`readAtTimestamp: ${readAtTimestamp}, foundNotification.actionTimeout: ${foundNotification.actionTimeout}, currentTime: ${currentTime}, notificationTimeout: ${notificationTimeout}`);
+    console.log(
+      `readAtTimestamp: ${readAtTimestamp}, foundNotification.actionTimeout: ${foundNotification.actionTimeout}, currentTime: ${currentTime}, notificationTimeout: ${notificationTimeout}`,
+    );
     if (notificationTimeout < currentTime) {
       console.warn(
         `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to a notification after timeout (Notification ID: ${notificationIdNumber}).`,
@@ -93,7 +95,95 @@ export const handleNotificationReply = async (
       });
       return;
     }
+    const relatedPOATrigger = await eventPoaTriggersDB.getEventPoaTriggerById(foundNotification.itemId);
+    // Check if the related POA Trigger is found
+    if (!relatedPOATrigger) {
+      console.warn(`Event POA Trigger not found for ID ${foundNotification.itemId}`);
+      callback({
+        status: "error",
+        message: `Event POA Trigger not found for ID ${foundNotification.itemId}`,
+      });
+      return;
+    } else {
+      console.log(`Found related POA Trigger:`, relatedPOATrigger);
+    }
+    const eventData = await getEventById(relatedPOATrigger.eventId);
+    // Check if the related Event is found
+    if (!eventData) {
+      console.warn(`Event not found for ID ${relatedPOATrigger.eventId}`);
+      callback({
+        status: "error",
+        message: `Event not found for ID ${relatedPOATrigger.eventId}`,
+      });
+      return;
+    } else {
+      console.log(`Found related Event:`, eventData);
+    }
+    const startDate = Number(eventData.start_date) * 1000;
+    const endDate = Number(eventData.end_date) * 1000;
+    // Check if the event is active
+    if (Date.now() < startDate || Date.now() > endDate) {
+      console.warn(
+        `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to a notification for an event that is not active (Notification ID: ${notificationIdNumber}).`,
+      );
+      callback({
+        status: "error",
+        message: `You can't reply to this notification for an event that is not active.`,
+      });
+    }
+    const getRegisteredUser = await eventRegistrantsDB.getByEventUuidAndUserId(eventData.event_uuid, userId);
+    if (!getRegisteredUser) {
+      console.warn(
+        `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to a notification for an event they are not registered (Notification ID: ${notificationIdNumber}).`,
+      );
+      callback({
+        status: "error",
+        message: `You can't reply to this notification for an event you are not registered.`,
+      });
+      return;
+    }
 
+    if (foundNotification.type === "POA_PASSWORD") {
+      const inputField = await eventFieldsDB.getEventFieldByTitleAndEventId("secret_phrase_onton_input", relatedPOATrigger.eventId);
+      if (!inputField) {
+        console.warn(`Event Field not found for ID ${relatedPOATrigger.eventId}`);
+        callback({
+          status: "error",
+          message: `Event Field not found for ID ${relatedPOATrigger.eventId}`,
+        });
+        return;
+      }
+      // Generate the fixed password based on the current date
+      const today = new Date();
+      const dayOfMonth = today.getDate(); // Current day of the month
+      const monthNameShort = today.toLocaleString("en-US", { month: "short" }); // Abbreviated month name
+      // Fixed password format: <dayOfMonth>ShahKey@<monthNameShort>
+      // [day_of_month]ShahKey@[month_name_short]
+      const fixedPassword = `${dayOfMonth}ShahKey@${monthNameShort}`;
+
+      // Compare the entered password against both the fixed password and the real password
+      const enteredPassword = answer.trim().toLowerCase();
+
+      const isFixedPasswordCorrect = enteredPassword === fixedPassword.toLowerCase();
+
+      const isRealPasswordCorrect = eventData.secret_phrase ? await bcryptLib.comparePassword(enteredPassword, eventData.secret_phrase) : false;
+
+      if (!isFixedPasswordCorrect && !isRealPasswordCorrect) {
+        console.warn(
+          `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to a notification with wrong password (Notification ID: ${notificationIdNumber}).`,
+        );
+        callback({
+          status: "password_error",
+          message: "Password incorrect, try again",
+        });
+        return;
+      }
+
+      // Hash the entered password and store it
+      const hashPassword = await bcryptLib.hashPassword(enteredPassword);
+
+      await userEventFieldsDB.upsertUserEventFields(userId, relatedPOATrigger.eventId, inputField.id, hashPassword);
+    }
     // User is authorized, update the notification
     const newStatus: NotificationStatus = "REPLIED";
     const actionReply = { answer };
@@ -117,7 +207,7 @@ export const handleNotificationReply = async (
           repliedAt: new Date(),
           notificationId: notificationIdNumber,
         });
-        const eventId =  eventPoaTrigger.eventId;
+        const eventId = eventPoaTrigger.eventId;
         const eventDetails = await getEventById(eventId);
         // Emit a USER_ANSWER_POA notification to the organizer
         const organizerId = eventDetails?.owner;
@@ -130,7 +220,11 @@ export const handleNotificationReply = async (
             title: `User ${userId} has responded to your POA`,
             desc: `User with ID ${userId} has replied with '${answer}' to your POA for Event ID ${eventPoaTrigger.eventId}.`,
             actionTimeout: 0,
-            additionalData: { participant_id: userId, event_id: eventPoaTrigger.eventId, poa_id: foundNotification.itemId },
+            additionalData: {
+              participant_id: userId,
+              event_id: eventPoaTrigger.eventId,
+              poa_id: foundNotification.itemId,
+            },
             priority: 2,
             itemId: foundNotification.itemId,
             item_type: "POA_TRIGGER" as NotificationItemType,

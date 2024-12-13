@@ -1,13 +1,6 @@
 import { db } from "@/db/db";
 import { eventRegistrants, notifications } from "@/db/schema";
-import {
-  and,
-  eq,
-  not,
-  inArray,
-  asc, gt,
-} from "drizzle-orm";
-
+import { and, eq, not, inArray, asc, gt } from "drizzle-orm";
 
 export const fetchApprovedUsers = async (
   eventUuid: string,
@@ -28,14 +21,9 @@ export const fetchApprovedUsers = async (
             inArray(
               eventRegistrants.user_id,
               db
-                .select( { userId: notifications.userId } )
+                .select({ userId: notifications.userId })
                 .from(notifications)
-                .where(
-                  and(
-                    eq(notifications.item_type, "POA_TRIGGER"),
-                    eq(notifications.itemId, triggerId)
-                  )
-                )
+                .where(and(eq(notifications.item_type, "POA_TRIGGER"), eq(notifications.itemId, triggerId)))
             )
           ),
           // Keyset pagination: fetch users with ID greater than the last processed ID
@@ -48,14 +36,24 @@ export const fetchApprovedUsers = async (
 
     return approvedUsers as { userId: number }[];
   } catch (error) {
-    console.error(
-      `Error fetching approved users for Event UUID ${eventUuid} and Trigger ID ${triggerId}:`,
-      error
-    );
+    console.error(`Error fetching approved users for Event UUID ${eventUuid} and Trigger ID ${triggerId}:`, error);
     throw error; // Propagate the error to be handled by the caller
   }
 };
-
+export const getByEventUuidAndUserId = async (eventUuid: string, userId: number) => {
+  try {
+    const result = await db
+      .select()
+      .from(eventRegistrants)
+      .where(and(eq(eventRegistrants.event_uuid, eventUuid), eq(eventRegistrants.user_id, userId)))
+      .execute();
+    return result[0];
+  } catch (error) {
+    console.error(`Error fetching Event Registrant for Event UUID ${eventUuid} and User ID ${userId}:`, error);
+    throw error; // Propagate the error to be handled by the caller
+  }
+};
 export const eventRegistrantsDB = {
   fetchApprovedUsers,
-}
+  getByEventUuidAndUserId,
+};

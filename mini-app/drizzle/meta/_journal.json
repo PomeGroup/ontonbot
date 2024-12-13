@@ -57,6 +57,13 @@
       "when": 1733931194827,
       "tag": "0007_far_rocket_raccoon",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1734027427347,
+      "tag": "0008_late_warhawk",
+      "breakpoints": true
     }
   ]
 }
