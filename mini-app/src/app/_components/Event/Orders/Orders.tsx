@@ -3,7 +3,7 @@ import React from "react";
 import ListLayout from "../../atoms/cards/ListLayout";
 import { useGetEventOrders } from "@/hooks/events.hooks";
 import { SiTon } from "react-icons/si";
-import { useTonConnectUI } from "@tonconnect/ui-react";
+import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { useConfig } from "@/context/ConfigContext";
 import { toNano } from "@ton/core";
 import { toast } from "sonner";
@@ -11,9 +11,14 @@ import { trpc } from "@/app/_trpc/client";
 
 const EventOrders = () => {
   const orders = useGetEventOrders();
-  const [tonConnectUI] = useTonConnectUI();
   const { config } = useConfig();
   const trpcUtils = trpc.useUtils();
+
+  /**
+   * TON Connect
+   */
+  const [tonConnectUI] = useTonConnectUI();
+  const tonWallet = useTonWallet();
 
   return (
     <ListLayout
@@ -52,34 +57,36 @@ const EventOrders = () => {
                 {order.state === "created" && (
                   <Button
                     onClick={() => {
-                      tonConnectUI
-                        .sendTransaction({
-                          validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
-                          messages: [
-                            {
-                              amount: toNano(order.total_price).toString(),
-                              address: config.ONTON_WALLET_ADDRESS!,
-                              payload: `onton_order=${order.uuid}`,
-                            },
-                          ],
-                        })
-                        .then(() => {
-                          toast("Please wait until we confirm the transaction and do not pay again");
-                          trpcUtils.events.getEventOrders.setData(
-                            {
-                              event_uuid: order.uuid,
-                            },
-                            (oldData) => {
-                              if (!oldData) return oldData;
-                              return oldData.map((item) =>
-                                item.uuid === order.uuid ? { ...item, state: "processing" } : item
+                      tonWallet?.account.address
+                        ? tonConnectUI
+                            .sendTransaction({
+                              validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
+                              messages: [
+                                {
+                                  amount: toNano(order.total_price).toString(),
+                                  address: config.ONTON_WALLET_ADDRESS!,
+                                  payload: `onton_order=${order.uuid}`,
+                                },
+                              ],
+                            })
+                            .then(() => {
+                              toast("Please wait until we confirm the transaction and do not pay again");
+                              trpcUtils.events.getEventOrders.setData(
+                                {
+                                  event_uuid: order.uuid,
+                                },
+                                (oldData) => {
+                                  if (!oldData) return oldData;
+                                  return oldData.map((item) =>
+                                    item.uuid === order.uuid ? { ...item, state: "processing" } : item
+                                  );
+                                }
                               );
-                            }
-                          );
-                        });
+                            })
+                        : tonConnectUI.openModal();
                     }}
                   >
-                    Pay
+                    {tonConnectUI.account?.address ? "Pay" : "Connect Wallet"}
                   </Button>
                 )}
               </div>
