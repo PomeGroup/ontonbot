@@ -5,7 +5,7 @@ import { useGetEventOrders } from "@/hooks/events.hooks";
 import { SiTon } from "react-icons/si";
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { useConfig } from "@/context/ConfigContext";
-import { toNano } from "@ton/core";
+import { beginCell, toNano } from "@ton/core";
 import { toast } from "sonner";
 import { trpc } from "@/app/_trpc/client";
 
@@ -65,7 +65,12 @@ const EventOrders = () => {
                                 {
                                   amount: toNano(order.total_price).toString(),
                                   address: config.ONTON_WALLET_ADDRESS!,
-                                  payload: `onton_order=${order.uuid}`,
+                                  payload: beginCell()
+                                    .storeUint(0, 32)
+                                    .storeStringTail(`onton_order=${order.uuid}`)
+                                    .endCell()
+                                    .toBoc()
+                                    .toString("base64"),
                                 },
                               ],
                             })
