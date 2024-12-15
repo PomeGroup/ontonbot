@@ -58,7 +58,8 @@ const EventOrders = () => {
                   <Button
                     onClick={() => {
                       tonWallet?.account.address
-                        ? tonConnectUI
+                        ? // FIXME: support for usdt
+                          tonConnectUI
                             .sendTransaction({
                               validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
                               messages: [

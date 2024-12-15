@@ -78,6 +78,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         })
         .then((data) => {
           // User wallet connected
+          // FIXME: support for usdt
           tonconnectUI
             .sendTransaction({
               messages: [
