@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { NotificationItemType, notifications, NotificationStatus, NotificationType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { and, eq, lt } from "drizzle-orm";
+import { and, eq, inArray, lt, ne, sql } from "drizzle-orm";
 import { QueueNames } from "@/sockets/constants";
 import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
 import { v4 as uuidv4 } from 'uuid';
@@ -351,6 +351,25 @@ export const addNotifications = async (
   }
 };
 
+export async function getRepliedPoaPasswordNotificationsForEvent(
+  eventId: number,
+  userIds: number[]
+) {
+  return await db
+    .select()
+    .from(notifications)
+    .where(
+        and(
+          eq(notifications.type, "POA_PASSWORD"),
+          eq(notifications.status, "REPLIED"),
+          inArray(notifications.userId, userIds),
+          sql`((${notifications.additionalData})->>'eventId')::int = ${eventId}`
+        ),
+      )
+    .execute();
+
+
+}
 // Export all functions as a single object
 export const notificationsDB = {
   addNotification,
@@ -361,4 +380,5 @@ export const notificationsDB = {
   getNotificationById,
   addNotifications,
   updateNotificationAsRead,
+  getRepliedPoaPasswordNotificationsForEvent,
 };

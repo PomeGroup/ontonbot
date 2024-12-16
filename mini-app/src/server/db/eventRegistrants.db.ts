@@ -1,12 +1,13 @@
 import { db } from "@/db/db";
 import { eventRegistrants, notifications } from "@/db/schema";
-import { and, eq, not, inArray, asc, gt } from "drizzle-orm";
+import { and, eq, not, inArray, asc, gt, ne } from "drizzle-orm";
 
 export const fetchApprovedUsers = async (
   eventUuid: string,
   triggerId: number,
   lastUserId: number,
   pageSize: number
+
 ): Promise<{ userId: number }[]> => {
   try {
     const approvedUsers = await db
@@ -23,7 +24,7 @@ export const fetchApprovedUsers = async (
               db
                 .select({ userId: notifications.userId })
                 .from(notifications)
-                .where(and(eq(notifications.item_type, "POA_TRIGGER"), eq(notifications.itemId, triggerId)))
+                .where(and(eq(notifications.item_type, "POA_TRIGGER"), eq(notifications.itemId, triggerId) , ne(notifications.status, "REPLIED")))
             )
           ),
           // Keyset pagination: fetch users with ID greater than the last processed ID

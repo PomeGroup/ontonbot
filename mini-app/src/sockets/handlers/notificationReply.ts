@@ -228,7 +228,7 @@ export const handleNotificationReply = async (
 
     // If it's not POA_PASSWORD, or password check was correct, continue
     const newStatus: NotificationStatus = "REPLIED";
-    const actionReply = { answer };
+    const actionReply = { answer: (foundNotification.type === "POA_PASSWORD") ? await bcryptLib.hashPassword(answer) : answer };
     console.log(`Updating notification ${notificationIdNumber} status to ${newStatus} with reply:`, actionReply);
     await notificationsDB.updateNotificationStatusAndReply(notificationIdNumber, newStatus, actionReply);
 
@@ -275,7 +275,7 @@ export const handleNotificationReply = async (
             expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
           };
 
-          await notificationsDB.addNotification(userAnswerNotification);
+          await notificationsDB.addNotifications([userAnswerNotification] , false);
           console.log(`USER_ANSWER_POA notification created for Organizer ID ${organizerId}`);
         }
       }

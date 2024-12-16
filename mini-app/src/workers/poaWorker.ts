@@ -127,14 +127,38 @@ const processOngoingEvents = async () => {
               hasMore = false;
               break;
             }
+            let finalUsers = approvedUsers; // default: no filtering
 
-            const notificationsToAdd = approvedUsers.map((user) => ({
+            if (trigger.poaType === "password") {
+              const userIds = approvedUsers.map((u) => u.userId);
+
+              // Now we fetch REPLIED notifications for these users & event
+              const replied = await notificationsDB.getRepliedPoaPasswordNotificationsForEvent(eventId, userIds);
+              console.log(`Found ${replied.length} replied password notifications for Event ${eventId}`, replied);
+
+              // Convert userId to number if needed
+              const userIdsWhoAlreadyReplied = new Set(replied.map((n: any) => parseInt(n.userId, 10)));
+
+              // Filter out the users who have REPLIED (so we don't send them new notifications)
+              finalUsers = approvedUsers.filter((u) => !userIdsWhoAlreadyReplied.has(u.userId));
+              console.log(
+                `Filtered out ${approvedUsers.length - finalUsers.length} users who already replied`,
+                finalUsers
+              );
+            }
+            const notificationsToAdd = finalUsers.map((user) => ({
               userId: user.userId,
-              type:  (trigger.poaType === "simple") ? "POA_SIMPLE" : "POA_PASSWORD" as NotificationType,
-              title: `${event.title}`,
-              desc:  (trigger.poaType === "simple") ? `Please respond to the POA for Event ${event.title}` : `Please enter the password for Event ${event.title}`,
-              actionTimeout: (trigger.poaType === "simple") ? ACTION_TIMEOUTS.POA_SIMPLE : ACTION_TIMEOUTS.POA_PASSWORD,
-              additionalData: { eventId, poaId: trigger.id , maxTry : PASSWORD_RETRY_LIMIT},
+              type: trigger.poaType === "simple" ? "POA_SIMPLE" : ("POA_PASSWORD" as NotificationType),
+              title: event.title,
+              desc:
+                trigger.poaType === "simple"
+                  ? `Please respond to the POA for Event ${event.title}`
+                  : `Please enter the password for Event ${event.title}`,
+              actionTimeout:
+                trigger.poaType === "simple"
+                  ? ACTION_TIMEOUTS.POA_SIMPLE
+                  : ACTION_TIMEOUTS.POA_PASSWORD,
+              additionalData: { eventId, poaId: trigger.id, maxTry: PASSWORD_RETRY_LIMIT },
               priority: 1,
               itemId: trigger.id,
               item_type: "POA_TRIGGER" as NotificationItemType,
@@ -143,6 +167,7 @@ const processOngoingEvents = async () => {
               readAt: undefined,
               expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000),
             }));
+
             try {
               const result = await notificationsDB.addNotifications(notificationsToAdd);
               console.log(`Created ${result.count} notifications for Trigger ${trigger.id}`);
