@@ -126,7 +126,7 @@ export const emitNotification = async (
         };
 
         // Add the organizer notification to the database
-        await notificationsDB.addNotifications([organizerNotification]);
+        await notificationsDB.addNotifications([organizerNotification], false);
         console.log(`Created USER_RECEIVED_POA notification for Organizer ${ownerId} `);
       }
     }

@@ -63,3 +63,13 @@ export const retryQueueOptions = {
 //  Define Notification Related Constants
 export const NOTIFICATION_TIMEOUT_MARGIN = 10; // 10 seconds
 
+// action timeout in seconds
+export const ACTION_TIMEOUTS = {
+  POA_SIMPLE: 30,
+  POA_PASSWORD: 60,
+}
+
+// Define the maximum number of retries for a password notification
+export const PASSWORD_RETRY_LIMIT = 3;
+
+

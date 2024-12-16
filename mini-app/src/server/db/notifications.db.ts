@@ -4,7 +4,7 @@ import { redisTools } from "@/lib/redisTools";
 import { and, eq, lt } from "drizzle-orm";
 import { QueueNames } from "@/sockets/constants";
 import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
-
+import { v4 as uuidv4 } from 'uuid';
 /**
  * Represents the shape of notification data required for insertion.
  */
@@ -212,102 +212,142 @@ export const getNotificationById = async (notificationId: number) => {
 };
 
 
+
+
 export const addNotifications = async (
-  notificationsToAdd: NotificationData[]
+  notificationsToAdd: NotificationData[],
+  persist = true // or `storeInDB = true`, or `isTransient = false` etc.
 ): Promise<{ success: boolean; count: number }> => {
   try {
-    // Prepare data for bulk insert, ensuring all required fields are present
-    const insertValues = notificationsToAdd.map((notification) => ({
-      userId: notification.userId,
-      type: notification.type,
-      title: notification.title ?? null,
-      desc: notification.desc ?? null,
-      priority: notification.priority ?? 1,
-      icon: notification.icon ?? null,
-      image: notification.image ?? null,
-      link: notification.link ?? null,
-      actionTimeout: notification.actionTimeout ?? undefined, // Convert null to undefined
-      actionReply: notification.actionReply ?? null,
-      additionalData: notification.additionalData ?? null,
-      status: notification.status ?? "WAITING_TO_SEND",
-      createdAt: notification.createdAt ?? new Date(),
-      readAt: notification.readAt ?? null,
-      expiresAt: notification.expiresAt ?? null,
-      itemId: notification.itemId ?? undefined, // Convert null to undefined
-      item_type: notification.item_type ?? "UNKNOWN",
-    }));
+    if (!persist) {
+      /**
+       * 1) Generate unique IDs for each notification since they're NOT going to be stored in DB
+       * 2) Enqueue them to RabbitMQ without inserting into the database
+       */
+      const rabbitMQMessages = notificationsToAdd.map((notification) => {
+        const generatedId = uuidv4(); // or some other unique ID logic
+        return {
+          notificationId: generatedId,
+          userId: notification.userId,
+          type: notification.type,
+          title: notification.title ?? null,
+          desc: notification.desc ?? null,
+          priority: notification.priority ?? 1,
+          icon: notification.icon ?? null,
+          image: notification.image ?? null,
+          link: notification.link ?? null,
+          actionTimeout: notification.actionTimeout ?? undefined,
+          actionReply: notification.actionReply ?? null,
+          additionalData: notification.additionalData ?? null,
+          status: notification.status ?? "WAITING_TO_SEND",
+          createdAt: notification.createdAt ?? new Date(),
+          readAt: notification.readAt ?? null,
+          expiresAt: notification.expiresAt ?? null,
+          itemId: notification.itemId ?? undefined,
+          item_type: notification.item_type ?? "UNKNOWN",
+        };
+      });
 
-    // Bulk insert notifications and retrieve inserted records
-    const insertedNotifications = await db
-      .insert(notifications)
-      .values(insertValues)
-      .returning({
-        id: notifications.id,
-        userId: notifications.userId,
-        type: notifications.type,
-        title: notifications.title,
-        desc: notifications.desc,
-        priority: notifications.priority,
-        icon: notifications.icon,
-        image: notifications.image,
-        link: notifications.link,
-        actionTimeout: notifications.actionTimeout,
-        additionalData: notifications.additionalData,
-        status: notifications.status,
-        createdAt: notifications.createdAt,
-        readAt: notifications.readAt,
-        expiresAt: notifications.expiresAt,
-        itemId: notifications.itemId,
-        item_type: notifications.item_type,
-      })
-      .execute();
+      // Enqueue all messages
+      const enqueuePromises = rabbitMQMessages.map(async (msg) => {
+        try {
+          await rabbitMQService.pushMessageToQueue(QueueNames.NOTIFICATIONS, msg);
+          console.log(`Notification ID ${msg.notificationId} enqueued successfully.`);
+        } catch (mqError) {
+          console.error(`Failed to enqueue ID ${msg.notificationId}:`, mqError);
+        }
+      });
 
-    console.log(`Added ${insertedNotifications.length} notifications.`);
+      await Promise.all(enqueuePromises);
 
-    // Prepare RabbitMQ messages with full notification data
-    const rabbitMQMessages = insertedNotifications.map((notification) => ({
-      notificationId: notification.id,
-      userId: notification.userId,
-      type: notification.type,
-      title: notification.title,
-      desc: notification.desc,
-      priority: notification.priority,
-      icon: notification.icon,
-      image: notification.image,
-      link: notification.link,
-      actionTimeout: notification.actionTimeout,
-      additionalData: notification.additionalData,
-      status: notification.status,
-      createdAt: notification.createdAt,
-      readAt: notification.readAt,
-      expiresAt: notification.expiresAt,
-      itemId: notification.itemId,
-      item_type: notification.item_type,
-    }));
+      return { success: true, count: rabbitMQMessages.length };
+    } else {
+      /**
+       *  If persist = true, store them in DB, then enqueue them.
+       */
+      const insertValues = notificationsToAdd.map((notification) => ({
+        userId: notification.userId,
+        type: notification.type,
+        title: notification.title ?? null,
+        desc: notification.desc ?? null,
+        priority: notification.priority ?? 1,
+        icon: notification.icon ?? null,
+        image: notification.image ?? null,
+        link: notification.link ?? null,
+        actionTimeout: notification.actionTimeout ?? undefined,
+        actionReply: notification.actionReply ?? null,
+        additionalData: notification.additionalData ?? null,
+        status: notification.status ?? "WAITING_TO_SEND",
+        createdAt: notification.createdAt ?? new Date(),
+        readAt: notification.readAt ?? null,
+        expiresAt: notification.expiresAt ?? null,
+        itemId: notification.itemId ?? undefined,
+        item_type: notification.item_type ?? "UNKNOWN",
+      }));
 
-    // Enqueue all messages to RabbitMQ in parallel
-    const enqueuePromises = rabbitMQMessages.map(async (message) => {
-      try {
-        await rabbitMQService.pushMessageToQueue(QueueNames.NOTIFICATIONS, message);
-        console.log(
-          `Notification ID ${message.notificationId} enqueued to RabbitMQ successfully.`
-        );
-      } catch (mqError) {
-        console.error(
-          `Failed to enqueue Notification ID ${message.notificationId} to RabbitMQ:`,
-          mqError
-        );
-        // Optionally, implement retry logic or mark the notification for retry
-      }
-    });
+      const insertedNotifications = await db
+        .insert(notifications)
+        .values(insertValues)
+        .returning({
+          id: notifications.id,
+          userId: notifications.userId,
+          type: notifications.type,
+          title: notifications.title,
+          desc: notifications.desc,
+          priority: notifications.priority,
+          icon: notifications.icon,
+          image: notifications.image,
+          link: notifications.link,
+          actionTimeout: notifications.actionTimeout,
+          additionalData: notifications.additionalData,
+          status: notifications.status,
+          createdAt: notifications.createdAt,
+          readAt: notifications.readAt,
+          expiresAt: notifications.expiresAt,
+          itemId: notifications.itemId,
+          item_type: notifications.item_type,
+        })
+        .execute();
 
-    // Wait for all enqueue operations to complete
-    await Promise.all(enqueuePromises);
+      console.log(`Added ${insertedNotifications.length} notifications to DB.`);
 
-    return { success: true, count: insertedNotifications.length };
+      const rabbitMQMessages = insertedNotifications.map((notification) => ({
+        notificationId: notification.id,
+        userId: notification.userId,
+        type: notification.type,
+        title: notification.title,
+        desc: notification.desc,
+        priority: notification.priority,
+        icon: notification.icon,
+        image: notification.image,
+        link: notification.link,
+        actionTimeout: notification.actionTimeout,
+        additionalData: notification.additionalData,
+        status: notification.status,
+        createdAt: notification.createdAt,
+        readAt: notification.readAt,
+        expiresAt: notification.expiresAt,
+        itemId: notification.itemId,
+        item_type: notification.item_type,
+      }));
+
+      // Enqueue all inserted notifications
+      const enqueuePromises = rabbitMQMessages.map(async (msg) => {
+        try {
+          await rabbitMQService.pushMessageToQueue(QueueNames.NOTIFICATIONS, msg);
+          console.log(`Notification ID ${msg.notificationId} enqueued successfully.`);
+        } catch (mqError) {
+          console.error(`Failed to enqueue ID ${msg.notificationId}:`, mqError);
+        }
+      });
+
+      await Promise.all(enqueuePromises);
+
+      return { success: true, count: insertedNotifications.length };
+    }
   } catch (error) {
     console.error("Error adding notifications:", error);
-    throw error; // Propagate the error to be handled by the caller
+    throw error;
   }
 };
 

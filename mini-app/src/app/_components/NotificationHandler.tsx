@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import useNotificationStore from "@/zustand/useNotificationStore";
+import { Input } from "@/components/ui/input";
 import { useSocketStore } from "@/zustand/useSocketStore";
 import { Dialog, DialogButton } from "konsta/react";
 import useWebApp from "@/hooks/useWebApp";
@@ -40,6 +41,8 @@ const NotificationHandler: React.FC = () => {
   // For POA_PASSWORD
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  /** NEW: Track if user has exceeded attempts */
+  const [hasExceededAttempts, setHasExceededAttempts] = useState(false);
 
   // Listen for notifications
   useEffect(() => {
@@ -91,7 +94,7 @@ const NotificationHandler: React.FC = () => {
   const handleConfirmPassword = () => {
     if (!socket || !notificationToShow) return;
 
-    // Reset any previous error messages before sending
+    // Reset any previous error before sending
     setPasswordError("");
 
     socket.emit(
@@ -105,8 +108,11 @@ const NotificationHandler: React.FC = () => {
         console.log("Server responded to password confirmation:", response);
 
         if (response.status === "password_error" || response.status === "error") {
-          // Keep dialog open and show the error
           setPasswordError(response.message);
+        } else if (response.status === "password_attempts_error") {
+          // EXCEEDED ATTEMPTS → hide input & disable resubmit
+          setPasswordError(response.message);
+          setHasExceededAttempts(true);
         } else {
           // If success or any other status, close the dialog
           handleClose();
@@ -152,6 +158,7 @@ const NotificationHandler: React.FC = () => {
     setTimeLeft(0);
     setPassword("");
     setPasswordError("");
+    setHasExceededAttempts(false);
   };
 
   const opened = !!notificationToShow;
@@ -169,20 +176,25 @@ const NotificationHandler: React.FC = () => {
       content={
         notificationToShow ? (
           <>
-            <p>{notificationToShow.desc || ""}</p>
+            <p className={"text-left"} >{notificationToShow.desc || ""}</p>
             {isPoaPassword && (
               <div style={{ marginTop: "1rem" }}>
-                <input
-                  type="password"
-                  placeholder="Enter Password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setPasswordError("");
-                  }}
-                />
+                {/* Hide input if attempts exceeded */}
+                {!hasExceededAttempts && (
+                  <Input
+                    type="password"
+                    placeholder="Enter Password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setPasswordError("");
+                    }}
+                  />
+                )}
                 {passwordError && (
-                  <p style={{ color: "red", marginTop: "0.5rem" }}>{passwordError}</p>
+                  <p style={{ color: "red", marginTop: "0.5rem" ,textAlign: "left" }}>
+                    {passwordError}
+                  </p>
                 )}
               </div>
             )}
@@ -203,7 +215,12 @@ const NotificationHandler: React.FC = () => {
           ) : (
             // POA_PASSWORD
             <>
-              <DialogButton strong onClick={handleConfirmPassword} disabled={!password}>
+              {/* If attempts exceeded, clicking Confirm only closes the dialog */}
+              <DialogButton
+                strong
+                onClick={hasExceededAttempts ? handleClose : handleConfirmPassword}
+                disabled={!hasExceededAttempts && !password}
+              >
                 Confirm
               </DialogButton>
             </>

@@ -5,6 +5,7 @@ import { getEventsWithFilters, getEventById } from "@/server/db/events";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
 import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
+import { ACTION_TIMEOUTS, PASSWORD_RETRY_LIMIT} from "@/sockets/constants";
 
 const WORKER_INTERVAL = 5 * 1000; // 5 seconds
 const PAGE_SIZE = 500; // Number of users to fetch per batch
@@ -65,7 +66,7 @@ const notifyEventOwner = async (eventId: number, ownerId: number, notificationCo
   };
   console.log(`Creating notification for Event ${eventId} to Owner ${ownerId}: Count = ${notificationCount}`);
   try {
-    await notificationsDB.addNotifications([notification]);
+    await notificationsDB.addNotifications([notification], false);
     console.log(`Created notification for Event ${eventId} to Owner ${ownerId}: Count = ${notificationCount}`);
   } catch (error) {
     console.error(`Failed to create notification for Event Owner ${ownerId}:`, error);
@@ -132,8 +133,8 @@ const processOngoingEvents = async () => {
               type:  (trigger.poaType === "simple") ? "POA_SIMPLE" : "POA_PASSWORD" as NotificationType,
               title: `${event.title}`,
               desc:  (trigger.poaType === "simple") ? `Please respond to the POA for Event ${event.title}` : `Please enter the password for Event ${event.title}`,
-              actionTimeout: 20,
-              additionalData: { eventId, poaId: trigger.id },
+              actionTimeout: (trigger.poaType === "simple") ? ACTION_TIMEOUTS.POA_SIMPLE : ACTION_TIMEOUTS.POA_PASSWORD,
+              additionalData: { eventId, poaId: trigger.id , maxTry : PASSWORD_RETRY_LIMIT},
               priority: 1,
               itemId: trigger.id,
               item_type: "POA_TRIGGER" as NotificationItemType,
