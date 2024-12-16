@@ -12,7 +12,7 @@ import AuthenticationProvider from "./AuthenticationProvider";
 import FontLoader from "./FontLoader";
 import TonProofProvider from "./TonProofProvider";
 import { useTransferTon } from "~/hooks/ton.hooks";
-import { TonConnectButton, useTonWallet } from "@tonconnect/ui-react";
+import { TonConnectButton, TonConnectUIProvider, useTonWallet } from "@tonconnect/ui-react";
 import { Button } from "@ui/base/button";
 import { Address } from "@ton/ton";
 
@@ -27,7 +27,9 @@ const Providers = ({ children }: PropsWithChildren) => {
             <Suspense fallback={<QueryState text="Authenticating" />}>
               <AuthenticationProvider>
                 <TonProofProvider>
-                  <TestPayment />
+                  <TonConnectUIProvider manifestUrl="https://storage.onton.live/onton/manifest.json">
+                    <TestPayment />
+                  </TonConnectUIProvider>
                   {children}
                   <Toaster
                     position={"bottom-center"}
@@ -56,13 +58,13 @@ const TestPayment = () => {
         onChange={(e) => setAddress(e.target.value)}
       />
       <Button
-        onClick={async () => {
+        onClick={() => {
           const destination = Address.parse(address);
-          await transfer(destination.toString(), 12, "USDT", {
+          transfer(destination.toString(), 12, "USDT", {
             comment: "pashmak",
+          }).then(() => {
+            alert("Done");
           });
-
-          alert("Done");
         }}
       >
         send some usdt
