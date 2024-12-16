@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events, eventRegistrants, users, EventTriggerType, eventPayment, orders } from "@/db/schema";
+import { eventFields, events, eventRegistrants, users, eventPayment, orders } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
 
 import { hashPassword } from "@/lib/bcrypt";
@@ -31,7 +31,6 @@ import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { addVisitor } from "@/server/db/visitors";
-import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { internal_server_error } from "../utils/error_utils";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 
@@ -621,16 +620,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           updatedBy: opts.ctx.user.user_id.toString(),
         });
       }
-      // Generate POA for the event
-      if (input_event_data.eventLocationType === "online" && !event_has_payment) {
-        await eventPoaTriggersDB.generatePoaForAddEvent(trx, {
-          eventId: newEvent[0].event_id,
-          eventStartTime: newEvent[0].start_date || 0,
-          eventEndTime: newEvent[0].end_date || 0,
-          poaCount: 3,
-          poaType: "simple" as EventTriggerType,
-        });
-      }
+
 
       // Insert secret phrase field if applicable
       if (inputSecretPhrase) {
