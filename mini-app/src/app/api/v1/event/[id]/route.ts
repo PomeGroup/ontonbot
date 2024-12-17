@@ -77,203 +77,201 @@ async function getValidNfts(
 }
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  return Response.json({})
+  try {
+    const eventId = params.id;
+    const searchParams = req.nextUrl.searchParams;
+    const dataOnly = searchParams.get("data_only") as "true" | undefined;
 
-  // try {
-  //   const eventId = params.id;
-  //   const searchParams = req.nextUrl.searchParams;
-  //   const dataOnly = searchParams.get("data_only") as "true" | undefined;
+    const unsafeEvent = await db.query.events.findFirst({
+      where(fields, { eq }) {
+        return eq(fields.event_uuid, eventId);
+      },
+    });
 
-  //   const unsafeEvent = await db.query.events.findFirst({
-  //     where(fields, { eq }) {
-  //       return eq(fields.event_uuid, eventId);
-  //     },
-  //   });
+    if (!unsafeEvent?.event_uuid) {
+      return Response.json({ error: "Event not found" }, { status: 400 });
+    }
 
-  //   if (!unsafeEvent?.event_uuid) {
-  //     return Response.json({ error: "Event not found" }, { status: 400 });
-  //   }
+    const event = removeKey(unsafeEvent, "secret_phrase");
 
-  //   const event = removeKey(unsafeEvent, "secret_phrase");
+    const organizer = await usersDB.selectUserById(event.owner as number);
 
-  //   const organizer = await usersDB.selectUserById(event.owner as number);
+    if (!organizer) {
+      console.error(`Organizer not found for event ID: ${eventId}`);
+      return Response.json({ error: `Organizer not found for event ID: ${eventId}` }, { status: 400 });
+    }
 
-  //   if (!organizer) {
-  //     console.error(`Organizer not found for event ID: ${eventId}`);
-  //     return Response.json({ error: `Organizer not found for event ID: ${eventId}` }, { status: 400 });
-  //   }
+    let event_payment_info;
+    if (event.ticketToCheckIn) {
+      event_payment_info = await db.query.eventPayment.findFirst({
+        where(fields, { eq }) {
+          return eq(fields.event_uuid, event.event_uuid as string);
+        },
+      });
+      if (!event_payment_info) {
+        console.warn(`Ticket not found for event ID: ${eventId}`);
+      }
+    }
 
-  //   let event_payment_info;
-  //   if (event.ticketToCheckIn) {
-  //     event_payment_info = await db.query.eventPayment.findFirst({
-  //       where(fields, { eq }) {
-  //         return eq(fields.event_uuid, event.event_uuid as string);
-  //       },
-  //     });
-  //     if (!event_payment_info) {
-  //       console.warn(`Ticket not found for event ID: ${eventId}`);
-  //     }
-  //   }
+    const soldTicketsCount = await db
+      .select({ count: sql`count(*)`.mapWith(Number) })
+      .from(eventRegistrants)
+      .where(
+        and(
+          eq(eventRegistrants.event_uuid, event.event_uuid),
+          or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin"))
+        )
+      )
+      .execute();
 
-  //   const soldTicketsCount = await db
-  //     .select({ count: sql`count(*)`.mapWith(Number) })
-  //     .from(eventRegistrants)
-  //     .where(
-  //       and(
-  //         eq(eventRegistrants.event_uuid, event.event_uuid),
-  //         or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin"))
-  //       )
-  //     )
-  //     .execute();
+    const isSoldOut = (soldTicketsCount[0].count as unknown as number) >= (event.capacity || 0);
 
-  //   const isSoldOut = (soldTicketsCount[0].count as unknown as number) >= (event.capacity || 0);
+    if (dataOnly === "true") {
+      return Response.json(
+        {
+          ...event,
+          organizer,
+          eventTicket: event_payment_info,
+          isSoldOut,
+        },
+        {
+          status: 200,
+        }
+      );
+    }
 
-  //   if (dataOnly === "true") {
-  //     return Response.json(
-  //       {
-  //         ...event,
-  //         organizer,
-  //         eventTicket: event_payment_info,
-  //         isSoldOut,
-  //       },
-  //       {
-  //         status: 200,
-  //       }
-  //     );
-  //   }
+    const [userId, unauthorized] = getAuthenticatedUser();
 
-  //   const [userId, unauthorized] = getAuthenticatedUser();
+    if (unauthorized) {
+      console.warn(`Unauthorized access attempt for event ID: ${eventId}`);
+      return unauthorized;
+    }
 
-  //   if (unauthorized) {
-  //     console.warn(`Unauthorized access attempt for event ID: ${eventId}`);
-  //     return unauthorized;
-  //   }
+    const proof_token = searchParams.get("proof_token");
 
-  //   const proof_token = searchParams.get("proof_token");
+    if (!proof_token) {
+      return Response.json(
+        {
+          message: "Uer wallet ton proof is missing",
+          code: "proof_token_required",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
-  //   if (!proof_token) {
-  //     return Response.json(
-  //       {
-  //         message: "Uer wallet ton proof is missing",
-  //         code: "proof_token_required",
-  //       },
-  //       {
-  //         status: 400,
-  //       }
-  //     );
-  //   }
+    let decoded;
+    try {
+      if (!(await verifyToken(proof_token))) {
+        return Response.json(
+          {
+            message: "invalid token",
+            code: "invalid_proof_token",
+          },
+          {
+            status: 401,
+          }
+        );
+      }
 
-  //   let decoded;
-  //   try {
-  //     if (!(await verifyToken(proof_token))) {
-  //       return Response.json(
-  //         {
-  //           message: "invalid token",
-  //           code: "invalid_proof_token",
-  //         },
-  //         {
-  //           status: 401,
-  //         }
-  //       );
-  //     }
+      decoded = {
+        address: decodePayloadToken(proof_token)?.address,
+      };
+    } catch {
+      return Response.json(
+        {
+          message: "invalid token",
+          code: "invalid_proof_token",
+        },
+        {
+          status: 401,
+        }
+      );
+    }
 
-  //     decoded = {
-  //       address: decodePayloadToken(proof_token)?.address,
-  //     };
-  //   } catch {
-  //     return Response.json(
-  //       {
-  //         message: "invalid token",
-  //         code: "invalid_proof_token",
-  //       },
-  //       {
-  //         status: 401,
-  //       }
-  //     );
-  //   }
+    if (!decoded.address) {
+      return Response.json(
+        {
+          message: "address is missing in token",
+          code: "token_address_missing",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
-  //   if (!decoded.address) {
-  //     return Response.json(
-  //       {
-  //         message: "address is missing in token",
-  //         code: "token_address_missing",
-  //       },
-  //       {
-  //         status: 400,
-  //       }
-  //     );
-  //   }
+    const ownerAddress = decoded.address;
 
-  //   const ownerAddress = decoded.address;
+    const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
+      ownerAddress,
+      event_payment_info?.collectionAddress!,
+      userId
+    );
 
-  //   const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
-  //     ownerAddress,
-  //     event_payment_info?.collectionAddress!,
-  //     userId
-  //   );
+    const userHasTicket = !!valid_nfts_no_info.length || !!valid_nfts_with_info.length;
+    // const userHasTicket = (
+    //   await db
+    //     .select()
+    //     .from(tickets)
+    //     .where(
+    //       and(
+    //         eq(tickets.event_uuid, event.event_uuid as string),
+    //         eq(tickets.user_id, userId)
+    //       )
+    //     )
+    //     .orderBy(asc(tickets.created_at))
+    //     .execute()
+    // ).pop();
 
-  //   const userHasTicket = !!valid_nfts_no_info.length || !!valid_nfts_with_info.length;
-  //   // const userHasTicket = (
-  //   //   await db
-  //   //     .select()
-  //   //     .from(tickets)
-  //   //     .where(
-  //   //       and(
-  //   //         eq(tickets.event_uuid, event.event_uuid as string),
-  //   //         eq(tickets.user_id, userId)
-  //   //       )
-  //   //     )
-  //   //     .orderBy(asc(tickets.created_at))
-  //   //     .execute()
-  //   // ).pop();
+    const userOrder = (
+      await db
+        .select()
+        .from(orders)
+        .where(
+          and(
+            eq(orders.user_id, userId),
+            eq(orders.event_uuid, eventId),
+            or(eq(orders.state, "created"), eq(orders.state, "processing"), eq(orders.state, "completed"))
+          )
+        )
+        .execute()
+    ).pop();
 
-  //   const userOrder = (
-  //     await db
-  //       .select()
-  //       .from(orders)
-  //       .where(
-  //         and(
-  //           eq(orders.user_id, userId),
-  //           eq(orders.event_uuid, eventId),
-  //           or(eq(orders.state, "created"), eq(orders.state, "processing"), eq(orders.state, "completed"))
-  //         )
-  //       )
-  //       .execute()
-  //   ).pop();
+    const needToUpdateTicket = !valid_nfts_with_info.length;
 
-  //   const needToUpdateTicket = !valid_nfts_with_info.length;
+    let chosenNFTaddress = "";
+    if (userHasTicket && needToUpdateTicket) {
+      chosenNFTaddress = valid_nfts_no_info[0].address;
+      console.log(`User ${userId} can claim ${chosenNFTaddress} `);
+    } else if (userHasTicket) {
+      chosenNFTaddress = valid_nfts_with_info[0].address;
+    }
 
-  //   let chosenNFTaddress = "";
-  //   if (userHasTicket && needToUpdateTicket) {
-  //     chosenNFTaddress = valid_nfts_no_info[0].address;
-  //     console.log(`User ${userId} can claim ${chosenNFTaddress} `);
-  //   } else if (userHasTicket) {
-  //     chosenNFTaddress = valid_nfts_with_info[0].address;
-  //   }
+    const data = {
+      ...event,
+      userHasTicket: userHasTicket,
+      needToUpdateTicket: userHasTicket && needToUpdateTicket,
+      chosenNFTaddress,
+      orderAlreadyPlace: !!userOrder,
+      organizer,
+      eventTicket: event_payment_info,
+      isSoldOut,
 
-  //   const data = {
-  //     ...event,
-  //     userHasTicket: userHasTicket,
-  //     needToUpdateTicket: userHasTicket && needToUpdateTicket,
-  //     chosenNFTaddress,
-  //     orderAlreadyPlace: !!userOrder,
-  //     organizer,
-  //     eventTicket: event_payment_info,
-  //     isSoldOut,
+      ownerAddress,
+      usedCollectionAddress: event_payment_info?.collectionAddress!,
+      valid_nfts_no_info,
+      valid_nfts_with_info,
+    };
 
-  //     ownerAddress,
-  //     usedCollectionAddress: event_payment_info?.collectionAddress!,
-  //     valid_nfts_no_info,
-  //     valid_nfts_with_info,
-  //   };
-
-  //   return Response.json(data, {
-  //     status: 200,
-  //   });
-  // } catch (error) {
-  //   console.error(`Error processing request for event ID: ${params.id}`, error);
-  //   return Response.json({ error: "Internal server error" }, { status: 500 });
-  // }
+    return Response.json(data, {
+      status: 200,
+    });
+  } catch (error) {
+    console.error(`Error processing request for event ID: ${params.id}`, error);
+    return Response.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export const dynamic = "force-dynamic";
