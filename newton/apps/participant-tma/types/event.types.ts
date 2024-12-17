@@ -33,11 +33,11 @@ export interface EventType extends EventDataOnlyType {
     nftAddress: string | null;
     ticket_id: number;
   };
-  userHasTicket: boolean,
-  needToUpdateTicket: boolean,
-  chosenNFTaddress: string,
-  orderAlreadyPlace: boolean,
-  isSoldOut: boolean,
+  userHasTicket: boolean;
+  needToUpdateTicket: boolean;
+  chosenNFTaddress: string;
+  orderAlreadyPlace: boolean;
+  isSoldOut: boolean;
 }
 
 export interface EventDataOnlyType {
@@ -45,7 +45,7 @@ export interface EventDataOnlyType {
     label: string;
     link: string;
   };
-  organizer: {
+  organizer?: {
     user_id: number;
     username: string;
     first_name: string;
