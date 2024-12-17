@@ -17,6 +17,7 @@ import BuyTicketTmaSettings from "~/components/event/buy-ticket/BuyTicketTmaSett
 import { useAddOrderMutation } from "~/hooks/useAddOrderMutation";
 import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
 import { useUserStore } from "~/store/user.store";
+import { getLatestUTMCampaign } from "~/utils/localstorage.utils";
 import BuyTicketTxQueryState from "./BuyTicketTxQueryState";
 
 type BuyTicketFormProps = {
@@ -50,7 +51,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   const [tonconnectUI] = useTonConnectUI();
   const mainButton = useMainButton(true);
 
-  const utm = params.utm_tag || null;
+  const utm = getLatestUTMCampaign();
 
   const buyTicketOnClick: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
