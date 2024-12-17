@@ -1,3 +1,4 @@
+export type PaymentType = "TON" | "USDT";
 export interface GetOrderResponse {
   user_id: number | null;
   created_at: Date | null;
@@ -9,11 +10,7 @@ export interface GetOrderResponse {
   state: UpdateOrderState | null;
   failed_reason: string | null;
   nft_collection_address: string;
+  payment_type: PaymentType;
 }
 
-export type UpdateOrderState =
-  | "created"
-  | "mint_request"
-  | "minted"
-  | "failed"
-  | "validation_failed";
+export type UpdateOrderState = "created" | "mint_request" | "minted" | "failed" | "validation_failed";

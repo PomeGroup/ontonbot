@@ -52,7 +52,7 @@ export function useTransferTon() {
         .endCell()
         .toBoc();
 
-      tonConnectUI.sendTransaction({
+      await tonConnectUI.sendTransaction({
         validUntil: Math.floor(Date.now() / 1000) + 360,
         messages: [
           {

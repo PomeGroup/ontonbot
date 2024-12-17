@@ -1,8 +1,8 @@
-import { bigint, index, integer, pgTable, text, timestamp, uuid, uniqueIndex, real } from "drizzle-orm/pg-core";
+import { bigint, index, pgTable, text, timestamp, uuid, real } from "drizzle-orm/pg-core";
 import { orderState, orderTypes, paymentTypes } from "@/db/schema";
 import { events } from "@/db/schema/events";
 import { users } from "@/db/schema/users";
-import { and, eq, or, relations } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 export const orders = pgTable(
   "orders",
   {
@@ -32,7 +32,6 @@ export const orders = pgTable(
     ownerAddressIdx: index("orders_owner_address_idx").on(table.owner_address),
     //One event_creation per event_uuid
     // uniqueEventCreation: uniqueIndex("unique_event_creation").on(table.event_uuid, table.order_type).where(eq(table.order_type, "event_creation")),
-
   })
 );
 
