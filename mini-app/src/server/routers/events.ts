@@ -197,7 +197,7 @@ export async function CreateTonSocietyDraft(
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const event_uuid = opts.input.event_uuid;
-  const eventData = { ...(await selectEventByUuid(event_uuid)), payment_details: {} as Partial<EventPaymentSelectType> };
+  const eventData = { payment_details: {} as Partial<EventPaymentSelectType>  , ...(await selectEventByUuid(event_uuid))};
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
