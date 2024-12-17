@@ -32,9 +32,9 @@ export async function middleware(req: NextRequest) {
       const isMysteryUtm =
         tgAppStartParam.length >= 8 && tgAppStartParam.length <= 12;
       if (isMysteryUtm) {
-        console.log("redirecting to mystery " + tgAppStartParam);
-        const mysteryUUID = "43d33878-a1ba-4209-9169-4845066004c6";
-        const url = new URL(`/ptma/event/${mysteryUUID}`, req.nextUrl.origin);
+        
+        const targetUUID = "3063de72-b5de-4cdc-b831-ff8242bcd5d5";
+        const url = new URL(`/ptma/event/${targetUUID}`, req.nextUrl.origin);
         url.searchParams.set("not_authenticated", userToken ? "false" : "true");
 
         url.searchParams.set("utm_source", "telegram");
