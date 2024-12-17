@@ -41,14 +41,12 @@ const NotificationHandler: React.FC = () => {
   // For POA_PASSWORD
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  /** NEW: Track if user has exceeded attempts */
   const [hasExceededAttempts, setHasExceededAttempts] = useState(false);
 
   // Listen for notifications
   useEffect(() => {
     console.log("Checking for new notifications...");
 
-    // Check for POA_PASSWORD or POA_SIMPLE
     const newNotification = notifications.find(
       (n) =>
         (n.type === "POA_PASSWORD" || n.type === "POA_SIMPLE") &&
@@ -59,21 +57,17 @@ const NotificationHandler: React.FC = () => {
       console.log("New notification found:", newNotification.notificationId);
       setNotificationToShow(newNotification);
 
-      // For both POA_SIMPLE and POA_PASSWORD, set the countdown (actionTimeout)
       const timeoutValue = Number(newNotification.actionTimeout) || 0;
       setTimeLeft(timeoutValue);
 
-      // Trigger haptic feedback
       hapticFeedback?.impactOccurred("heavy");
-
-      // Mark this notification as handled
       setHandledNotificationIds((prev) => new Set(prev).add(newNotification.notificationId));
     } else {
       console.log("No new applicable notification found.");
     }
   }, [notifications, handledNotificationIds, hapticFeedback]);
 
-  // Countdown effect for both POA_SIMPLE and POA_PASSWORD
+  // Countdown effect
   useEffect(() => {
     if (!notificationToShow || timeLeft <= 0) return;
 
@@ -84,7 +78,7 @@ const NotificationHandler: React.FC = () => {
     return () => clearInterval(interval);
   }, [notificationToShow, timeLeft]);
 
-  // When time runs out, close the dialog automatically
+  // Auto-close when timer hits 0
   useEffect(() => {
     if (notificationToShow && timeLeft === 0) {
       handleClose();
@@ -93,8 +87,6 @@ const NotificationHandler: React.FC = () => {
 
   const handleConfirmPassword = () => {
     if (!socket || !notificationToShow) return;
-
-    // Reset any previous error before sending
     setPasswordError("");
 
     socket.emit(
@@ -110,11 +102,9 @@ const NotificationHandler: React.FC = () => {
         if (response.status === "password_error" || response.status === "error") {
           setPasswordError(response.message);
         } else if (response.status === "password_attempts_error") {
-          // EXCEEDED ATTEMPTS → hide input & disable resubmit
           setPasswordError(response.message);
           setHasExceededAttempts(true);
         } else {
-          // If success or any other status, close the dialog
           handleClose();
         }
       }
@@ -164,66 +154,87 @@ const NotificationHandler: React.FC = () => {
   const opened = !!notificationToShow;
   const isPoaPassword = notificationToShow?.type === "POA_PASSWORD";
 
-  // Show countdown for both types
-  const title = notificationToShow
-    ? `${notificationToShow.title || ""} (${timeLeft}s left)`
-    : "Notification";
+  const dialogTitle = notificationToShow?.title || "NOTIFICATION";
+  // Format timeLeft to mm:ss
+  const formattedTime = timeLeft > 0 ? `(${new Date(timeLeft * 1000).toISOString().slice(14, 19)})` : "(00:00)";
 
   return (
     <Dialog
       opened={opened}
-      title={title}
+      title=""
+      // Ensures the dialog container has a max width, centered horizontally:
+      className="myDialog max-w-[400px] w-full p-0 mx-auto bg-white bg-opacity-100"
+      // Add a white background to the main content container:
+      colors={{ bgIos: "bg-white" , bgMaterial: "bg-white" ,}}
+
+      translucent={false}
       content={
         notificationToShow ? (
-          <>
-            <p className={"text-left"} >{notificationToShow.desc || ""}</p>
+          <div className="flex flex-col  p-0 text-center space-y-3 relative ">
+            {/* Dialog Title */}
+            <h2 className="text-lg font-semibold">{dialogTitle}</h2>
+
             {isPoaPassword && (
-              <div style={{ marginTop: "1rem" }}>
-                {/* Hide input if attempts exceeded */}
-                {!hasExceededAttempts && (
-                  <Input
-                    type="password"
-                    placeholder="Enter Password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setPasswordError("");
-                    }}
-                  />
-                )}
-                {passwordError && (
-                  <p style={{ color: "red", marginTop: "0.5rem" ,textAlign: "left" }}>
-                    {passwordError}
-                  </p>
-                )}
+              <div>
+                <p className="text-base font-medium">
+                  Enter the event password in <span className="font-semibold">{formattedTime}</span>
+                </p>
+                <p className="text-gray-500 text-sm mt-2">
+                  Enter the SBT claim code that the organizer shared <br /> with you on the event page.
+                </p>
               </div>
             )}
-          </>
+
+            {/* If attempts exceeded, hide input */}
+            {isPoaPassword  && (
+              <div className="w-full mt-3">
+                <Input
+                  type="password"
+                  placeholder="SBT password"
+                  className="rounded-md border-0 w-full"
+                  value={password}
+                  disabled={hasExceededAttempts}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setPasswordError("");
+                  }}
+                />
+              </div>
+            )}
+            {/* Show error if any */}
+            {passwordError && (
+              <p className="text-red-500 text-sm mt-1 text-left">{passwordError}</p>
+            )}
+          </div>
         ) : (
-          <p>Your response has been saved.</p>
+          <div className="p-4">
+            <p>Your response has been saved.</p>
+          </div>
         )
       }
       buttons={
         notificationToShow ? (
           notificationToShow.type === "POA_SIMPLE" ? (
-            <>
-              <DialogButton onClick={handleNo}>No</DialogButton>
-              <DialogButton strong onClick={handleYes}>
+            <div className="flex justify-end space-x-0 px-0 pb-0 bg-white">
+              <DialogButton onClick={handleNo} className="w-1/2">
+                No
+              </DialogButton>
+              <DialogButton strong onClick={handleYes} className="w-1/2">
                 Yes
               </DialogButton>
-            </>
+            </div>
           ) : (
             // POA_PASSWORD
-            <>
-              {/* If attempts exceeded, clicking Confirm only closes the dialog */}
+            <div className="p-0 bg-white w-full flex justify-center">
               <DialogButton
                 strong
+                className="bg-blue-500 text-white w-full "
                 onClick={hasExceededAttempts ? handleClose : handleConfirmPassword}
                 disabled={!hasExceededAttempts && !password}
               >
-                Confirm
+                {hasExceededAttempts   ? "Close" : "Confirm"}
               </DialogButton>
-            </>
+            </div>
           )
         ) : null
       }
