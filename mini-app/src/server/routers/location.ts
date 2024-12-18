@@ -2,13 +2,14 @@
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc";
 import { fetchCountries, fetchCities, fetchCityById } from "@/server/db/giataCity.db";
+import { fetchCoordsByName } from "@/server/routers/services/openStreetService";
 
 export const locationRouter = router({
   getCountries: publicProcedure
     .input(
       z.object({
         search: z.string().optional(),
-      })
+      }),
     )
     .query(async (opts) => {
       return await fetchCountries(opts.input.search);
@@ -22,5 +23,13 @@ export const locationRouter = router({
 
   getCityById: publicProcedure.input(z.object({ cityId: z.number() })).query(async (opts) => {
     return await fetchCityById(opts.input.cityId);
+  }),
+
+  getCoordsByName: publicProcedure.input(z.object({
+    countryName: z.string(),
+    cityName: z.string(),
+  })).query(async (opts) => {
+    console.log(opts.input.countryName);
+    return await fetchCoordsByName(opts.input.countryName, opts.input.cityName);
   }),
 });
