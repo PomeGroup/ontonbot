@@ -56,7 +56,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           >
             <div className="relative inline">
               <span>Orders</span>
-              {Number(eventOrders.data?.filter((o) => o.state === "created").length) > 0 && (
+              {Number(eventOrders.data?.filter((o) => o.state === "new").length) > 0 && (
                 <LucideDot className="text-red-500 animate-pulse -top-1/2 -right-4 absolute" />
               )}
             </div>
