@@ -586,7 +586,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           user_id: opts.ctx.user.user_id,
           total_price: price,
           payment_type: "TON",
-          state: "created",
+          state: "new",
           order_type: "event_creation",
           owner_address: "",
         });
@@ -755,12 +755,12 @@ const updateEvent = evntManagerPP
             const upsert_data = {
               event_uuid: eventUuid,
               order_type: "event_capacity_increment" as const,
-              state: "created" as const,
+              state: "new" as const,
               payment_type: "TON" as const,
               total_price: 0.055 * (eventData.capacity - paymentInfo!.bought_capacity),
               user_id: user_id,
             };
-            if (update_order && update_order.state == "created") {
+            if (update_order && update_order.state == "new") {
               await trx.update(orders).set(upsert_data).where(eq(orders.uuid, update_order.uuid));
             } else {
               await trx.insert(orders).values(upsert_data);
@@ -928,7 +928,6 @@ const getEventOrders = evntManagerPP.input(z.object({ event_uuid: z.string().uui
       and(
         eq(orders.event_uuid, event_uuid),
         or(eq(orders.order_type, "event_creation"), eq(orders.order_type, "event_capacity_increment")),
-        eq(orders.state, "created")
       )
     );
   return event_orders;

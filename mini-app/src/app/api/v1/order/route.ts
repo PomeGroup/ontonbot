@@ -76,9 +76,9 @@ export async function POST(request: Request) {
   ).pop();
 
   if (userOrder) {
-    if (userOrder.state === "failed") {
+    if (userOrder.state === "failed" || userOrder.state === "cancelled") {
       // Reactivate Order
-      await db.update(orders).set({ state: "created" }).where(eq(orders.uuid, userOrder.uuid));
+      await db.update(orders).set({ state: "new" }).where(eq(orders.uuid, userOrder.uuid));
       return Response.json({
         order_id: userOrder.uuid,
         message: "order reactivated successfully",
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
         total_price: eventPaymentInfo.price,
         payment_type: eventPaymentInfo.payment_type,
 
-        state: "created",
+        state: "confirming",
         order_type: "nft_mint",
 
         utm_source: body.data.utm,
