@@ -7,37 +7,22 @@ import { TonConnectButton, useTonConnectUI, useTonWallet } from "@tonconnect/ui-
 import { useConfig } from "@/context/ConfigContext";
 import { beginCell, toNano } from "@ton/core";
 import { toast } from "sonner";
-import { trpc } from "@/app/_trpc/client";
+import { useUpdateOrder } from "@/hooks/orders.hooks";
+import { useParams } from "next/navigation";
 
 const EventOrders = () => {
+  const params = useParams<{ hash: string }>();
+
+  const updateOrder = useUpdateOrder({ event_uuid: params.hash });
   const orders = useGetEventOrders();
-  const updateOrder = {
-    mutate: async () => undefined,
-  };
 
   const { config } = useConfig();
-  const trpcUtils = trpc.useUtils();
 
   /**
    * TON Connect
    */
   const [tonConnectUI] = useTonConnectUI();
   const tonWallet = useTonWallet();
-
-  const changeOrderState = (order_uuid: string) => {
-    // update state server side
-    updateOrder.mutate();
-    // update state client side (optimistic)
-    trpcUtils.events.getEventOrders.setData(
-      {
-        event_uuid: order_uuid,
-      },
-      (oldData) => {
-        if (!oldData) return oldData;
-        return oldData.map((item) => (item.uuid === order_uuid ? { ...item, state: "confirming" } : item));
-      }
-    );
-  };
 
   return (
     <>
@@ -107,7 +92,10 @@ const EventOrders = () => {
                                 })
                                 .then(() => {
                                   toast("Please wait until we confirm the transaction and do not pay again");
-                                  changeOrderState(order.uuid);
+                                  updateOrder.mutate({
+                                    state: "confirming",
+                                    order_uuid: order.uuid,
+                                  });
                                 })
                             : tonConnectUI.openModal();
                         }}
