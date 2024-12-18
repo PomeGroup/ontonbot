@@ -2,6 +2,7 @@ import { cn } from "@/utils";
 import { Block, BlockHeader, BlockTitle, List, Preloader } from "konsta/react";
 import React, { ReactNode } from "react";
 import DataStatus from "../../molecules/alerts/DataStatus";
+import StatusChip, { StatusChipProps } from "@/components/ui/status-chips";
 
 interface FormBlockProps {
   children?: ReactNode;
@@ -10,12 +11,24 @@ interface FormBlockProps {
   inset?: boolean;
   isLoading?: boolean;
   isEmpty?: boolean;
+  label?: {
+    text: string;
+    variant?: StatusChipProps["variant"];
+  };
 }
 
 const ListLayout = (props: FormBlockProps) => {
   return (
     <>
-      <BlockTitle className="!mt-4 capitalize">{props.title}</BlockTitle>
+      <BlockTitle className="!mt-4 capitalize">
+        {props.title}
+        {props.label && (
+          <StatusChip
+            label={props.label.text}
+            variant={props.label.variant}
+          />
+        )}
+      </BlockTitle>
       {props.description && <BlockHeader>{props.description}</BlockHeader>}
       <Block
         inset

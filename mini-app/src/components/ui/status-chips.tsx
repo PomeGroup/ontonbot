@@ -2,7 +2,7 @@ import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
 import { Chip } from "konsta/react";
 
-interface StatusChipProps {
+export interface StatusChipProps {
   variant?: "primary" | "success" | "danger" | "default";
   label: string;
   className?: string;
