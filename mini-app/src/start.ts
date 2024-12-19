@@ -38,12 +38,12 @@ async function MainCronJob() {
   }
 
   // Create Rewards Cron Job
-  new CronJob("*/30 * * * *", cronJob(createRewards), null, true);
+  // new CronJob("*/30 * * * *", cronJob(createRewards), null, true);
 
   // Notify Users Cron Job
-  new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
+  // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  new CronJob("*/30 * * * * *", cronJob(CheckTransactions), null, true);
+  // new CronJob("*/30 * * * * *", cronJob(CheckTransactions), null, true);
 
   new CronJob("*/30 * * * * *", cronJob(UpdateEventCapacity), null, true);
 
@@ -386,11 +386,14 @@ async function CreateEventOrders(pushLockTTl: () => any) {
   }
 }
 async function UpdateEventCapacity(pushLockTTl: () => any) {
+  console.log("UpdateEventCapacity")
   const results = await db
     .select()
     .from(orders)
     .where(and(eq(orders.state, "processing"), eq(orders.order_type, "event_capacity_increment")))
     .execute();
+
+    console.log("Update : ",  results.length)
 
   /* -------------------------------------------------------------------------- */
   /*                               Event UPDATE                                 */
