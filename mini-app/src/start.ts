@@ -386,22 +386,16 @@ async function CreateEventOrders(pushLockTTl: () => any) {
   }
 }
 async function UpdateEventCapacity(pushLockTTl: () => any) {
-  console.log("UpdateEventCapacity")
   const results = await db
     .select()
     .from(orders)
     .where(and(eq(orders.state, "processing"), eq(orders.order_type, "event_capacity_increment")))
     .execute();
 
-    console.log("Update : ",  results.length)
-
   /* -------------------------------------------------------------------------- */
   /*                               Event UPDATE                                 */
   /* -------------------------------------------------------------------------- */
   for (const order of results) {
-    console.log('====================================')
-    console.log('order ..... ' , order);
-    
     const event_uuid = order.event_uuid;
     if (!event_uuid) {
       console.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
@@ -422,17 +416,16 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
       console.error("what the fuck : ", "event Does not have payment !!!");
     }
 
-    console.log('updating ..... ');
-    
-    db.transaction(async (trx) => {
-      const newCapacity = Number(eventData.capacity! + order.total_price / 0.055);
-      
-      await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid));
+    await db.transaction(async (trx) => {
+      const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.055);
+
+      await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid)).execute();
       await trx
         .update(eventPayment)
         .set({ bought_capacity: newCapacity })
-        .where(eq(events.event_uuid, eventData.event_uuid));
-      await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, order.uuid));
+        .where(eq(eventPayment.event_uuid, eventData.event_uuid))
+        .execute();
+      await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, order.uuid)).execute();
     });
   }
 }
