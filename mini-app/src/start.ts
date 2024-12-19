@@ -75,10 +75,11 @@ function cronJob(fn: (_: () => any) => any) {
       await fn(pushLockTTl);
       console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
-      await sendLogNotification({
-        message: `Cron job ${name} error: ${getErrorMessages(err)}`,
-        topic: "system",
-      });
+      console.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n` , err)
+      // await sendLogNotification({
+      //   message: `Cron job ${name} error: ${getErrorMessages(err)}`,
+      //   topic: "system",
+      // });
     } finally {
       await redisTools.deleteCache(redisTools.cacheKeys.cronJobLock + name);
     }
