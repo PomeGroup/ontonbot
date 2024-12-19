@@ -418,8 +418,12 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
 
     db.transaction(async (trx) => {
       const newCapacity = Number(eventData.capacity! + order.total_price / 0.055);
-      await trx.update(events).set({ capacity: newCapacity });
-      await trx.update(eventPayment).set({ bought_capacity: newCapacity });
+      await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid));
+      await trx
+        .update(eventPayment)
+        .set({ bought_capacity: newCapacity })
+        .where(eq(events.event_uuid, eventData.event_uuid));
+      await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, order.uuid));
     });
   }
 }
