@@ -399,6 +399,9 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
   /*                               Event UPDATE                                 */
   /* -------------------------------------------------------------------------- */
   for (const order of results) {
+    console.log('====================================')
+    console.log('order ..... ' , order);
+    
     const event_uuid = order.event_uuid;
     if (!event_uuid) {
       console.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
@@ -419,8 +422,11 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
       console.error("what the fuck : ", "event Does not have payment !!!");
     }
 
+    console.log('updating ..... ');
+    
     db.transaction(async (trx) => {
       const newCapacity = Number(eventData.capacity! + order.total_price / 0.055);
+      
       await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid));
       await trx
         .update(eventPayment)
