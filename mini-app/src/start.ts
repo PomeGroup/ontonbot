@@ -18,6 +18,8 @@ import tonCenter from "@/server/routers/services/tonCenter";
 import { is_mainnet } from "@/server/routers/services/tonCenter";
 import { deployNftCollection } from "./lib/tonAssetSdk";
 import { Cell } from "@ton/core";
+import axios from "axios";
+import FormData from "form-data";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -259,6 +261,31 @@ async function CheckTransactions(pushLockTTl: () => any) {
   }
 }
 
+const uploadJsonToMinio = async (jsonData: object) => {
+  const bucketName = "ontonitem";
+
+  const jsonFilename = `metadata.json`;
+
+  const formData = new FormData();
+  formData.append("json", JSON.stringify(jsonData), {
+    filename: jsonFilename,
+    contentType: "application/json",
+  });
+
+  formData.append("bucketName", bucketName);
+  const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload`;
+
+  const res = await axios.post(url, formData, {
+    headers: formData.getHeaders(),
+  });
+
+  if (!res.data || !res.data.jsonUrl) {
+    throw new Error("JSON upload failed");
+  }
+
+  return res.data as { jsonUrl: string };
+};
+
 async function CreateEventOrders(pushLockTTl: () => any) {
   // Get Pending(paid) Orders to create event
   // Register ton society activity
@@ -312,7 +339,15 @@ async function CreateEventOrders(pushLockTTl: () => any) {
       console.error("what the fuck : ", "event Does not have payment !!!");
     }
 
-    let collectionAddress = "someCollectionAddress";
+    const metaDataUrl = await uploadJsonToMinio({
+      name: paymentInfo?.title,
+      description: paymentInfo?.description,
+      image: paymentInfo?.ticketImage,
+      cover_image: paymentInfo?.ticketImage,
+    });
+
+    console.log("MetaDataUrl", metaDataUrl);
+    let collectionAddress = "c";
     if (paymentInfo && !paymentInfo?.collectionAddress) {
       collectionAddress = (
         await deployNftCollection(paymentInfo.title!, paymentInfo.description!, paymentInfo.ticketImage!)
@@ -433,4 +468,3 @@ async function MintNFTforPaid_Orders() {
 
 // Run the Cron Jobs
 MainCronJob();
-
