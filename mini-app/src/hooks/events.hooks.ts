@@ -46,3 +46,17 @@ export function useGetHubs() {
     queryKey: ["events.getHubs", undefined],
   });
 }
+
+export function useGetEventOrders() {
+  const params = useParams<{ hash: string }>();
+
+  return trpc.events.getEventOrders.useQuery(
+    {
+      event_uuid: params.hash,
+    },
+    {
+      staleTime: Infinity,
+      queryKey: ["events.getEventOrders", { event_uuid: params.hash }],
+    }
+  );
+}

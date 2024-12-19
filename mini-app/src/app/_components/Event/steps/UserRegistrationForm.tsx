@@ -1,6 +1,6 @@
 import { ListItem, Toggle, ListInput } from "konsta/react";
 import { UserRoundCheck, ArrowUpToLine, FileUser, Clock } from "lucide-react";
-import FormBlock from "../../atoms/cards/FormBlock";
+import ListLayout from "../../atoms/cards/ListLayout";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { cn } from "@/utils";
 
@@ -13,7 +13,7 @@ export function UserRegistrationForm() {
   }));
 
   return (
-    <FormBlock
+    <ListLayout
       inset={false}
       title="Registration"
       description={
@@ -114,6 +114,6 @@ export function UserRegistrationForm() {
           )}
         </>
       )}
-    </FormBlock>
+    </ListLayout>
   );
 }

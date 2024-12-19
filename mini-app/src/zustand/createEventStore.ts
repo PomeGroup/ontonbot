@@ -281,6 +281,9 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
         });
       },
       registrationStepMainButtonClick: () => {
+        /**
+         * 🦄 Handle Paid Event 🦄
+         */
         const hasPayment = get().eventData.paid_event.has_payment;
         if (hasPayment) {
           const paymentParsed = PaidEventSchema.safeParse(get().eventData.paid_event);
@@ -294,6 +297,12 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
               state.paid_info_errors = {};
             });
           }
+        } else {
+          /*
+           * 🌳 Handle Only Registration 🌳
+           * it does not need validation
+           */
+          get().setCurrentStep(4);
         }
       },
     }))

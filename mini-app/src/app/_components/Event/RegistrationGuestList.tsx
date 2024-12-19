@@ -17,7 +17,7 @@ import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
 import StatusChip from "@/components/ui/status-chips";
 import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
 import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
-import {EventTriggerType} from "@/db/enum";
+import { EventTriggerType } from "@/db/enum";
 
 interface CustomListItemProps {
   name: string;
@@ -30,7 +30,16 @@ interface CustomListItemProps {
   handleReject: (_: number) => Promise<void>;
 }
 
-const CustomListItem: React.FC<CustomListItemProps> = ({ name, username, date, status, user_id, registrantInfo, handleApprove, handleReject }) => {
+const CustomListItem: React.FC<CustomListItemProps> = ({
+  name,
+  username,
+  date,
+  status,
+  user_id,
+  registrantInfo,
+  handleApprove,
+  handleReject,
+}) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [itemStatus, setItemStatus] = useState(status);
@@ -317,18 +326,24 @@ const RegistrationGuestlist = () => {
           url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${params.hash}`}
           hub={eventData.data?.society_hub?.name!}
         />
-        <ButtonPOA event_uuid={params.hash} poa_type={'password'  as EventTriggerType} />
-        {/* Organizer Notification Handler */}
-        <OrganizerNotificationHandler />
+
+        {!eventData.data?.payment_details.id && (
+          <>
+            <ButtonPOA
+              event_uuid={params.hash}
+              poa_type={"password" as EventTriggerType}
+            />
+            {/* Organizer Notification Handler */}
+            <OrganizerNotificationHandler />
+          </>
+        )}
       </Block>
+
       <BlockTitle medium>
         <span>Guest List</span>
         {eventData.data?.participationType === "in_person" && <ScanRegistrantQRCode />}
       </BlockTitle>
 
-      {/* <BlockHeader className="!px-2"> */}
-      {/*   <Searchbar clearButton /> */}
-      {/* </BlockHeader> */}
       <BlockHeader className="font-bold">
         {registrants.isSuccess && !registrants.data?.length && (
           <DataStatus
@@ -360,6 +375,7 @@ const RegistrationGuestlist = () => {
       </BlockHeader>
       <List
         strong
+        className={"z-0"}
         title="Guest List"
       >
         {registrants.data?.map((registrant, idx) => (

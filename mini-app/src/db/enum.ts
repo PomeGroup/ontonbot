@@ -15,7 +15,7 @@ export const rewardStatus = pgEnum("reward_status", [
 ]);
 export const ticketStatus = pgEnum("event_ticket_status", ["USED", "UNUSED"]);
 
-export const orderState = pgEnum("order_state", ["created", "processing", "completed", "failed"]);
+export const orderState = pgEnum("order_state", ["new", "confirming", "processing", "completed",'cancelled' , "failed"]);
 export const orderTypes = pgEnum("order_types", ["nft_mint", "offchain_ticket", "event_creation", "event_capacity_increment"]);
 export const paymentTypes = pgEnum("payment_types", ["USDT", "TON"]);
 export const developmentEnvironment = pgEnum("development_environment", ["local", "development", "staging", "production"]);

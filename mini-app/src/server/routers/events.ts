@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events, eventRegistrants, users, EventTriggerType, eventPayment, orders } from "@/db/schema";
+import { eventFields, events, eventRegistrants, users, eventPayment, orders } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
 
 import { hashPassword } from "@/lib/bcrypt";
@@ -31,7 +31,6 @@ import eventFieldsDB from "@/server/db/eventFields.db";
 import telegramService from "@/server/routers/services/telegramService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { addVisitor } from "@/server/db/visitors";
-import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { internal_server_error } from "../utils/error_utils";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 
@@ -198,7 +197,7 @@ export async function CreateTonSocietyDraft(
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const event_uuid = opts.input.event_uuid;
-  const eventData = { ...(await selectEventByUuid(event_uuid)), payment_details: {} as EventPaymentSelectType };
+  const eventData = { payment_details: {} as Partial<EventPaymentSelectType>  , ...(await selectEventByUuid(event_uuid))};
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
@@ -587,7 +586,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           user_id: opts.ctx.user.user_id,
           total_price: price,
           payment_type: "TON",
-          state: "created",
+          state: "new",
           order_type: "event_creation",
           owner_address: "",
         });
@@ -621,16 +620,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           updatedBy: opts.ctx.user.user_id.toString(),
         });
       }
-      // Generate POA for the event
-      if (input_event_data.eventLocationType === "online" && !event_has_payment) {
-        await eventPoaTriggersDB.generatePoaForAddEvent(trx, {
-          eventId: newEvent[0].event_id,
-          eventStartTime: newEvent[0].start_date || 0,
-          eventEndTime: newEvent[0].end_date || 0,
-          poaCount: 3,
-          poaType: "simple" as EventTriggerType,
-        });
-      }
+
 
       // Insert secret phrase field if applicable
       if (inputSecretPhrase) {
@@ -765,12 +755,12 @@ const updateEvent = evntManagerPP
             const upsert_data = {
               event_uuid: eventUuid,
               order_type: "event_capacity_increment" as const,
-              state: "created" as const,
+              state: "new" as const,
               payment_type: "TON" as const,
               total_price: 0.055 * (eventData.capacity - paymentInfo!.bought_capacity),
               user_id: user_id,
             };
-            if (update_order && update_order.state == "created") {
+            if (update_order && update_order.state == "new") {
               await trx.update(orders).set(upsert_data).where(eq(orders.uuid, update_order.uuid));
             } else {
               await trx.insert(orders).values(upsert_data);
@@ -938,7 +928,6 @@ const getEventOrders = evntManagerPP.input(z.object({ event_uuid: z.string().uui
       and(
         eq(orders.event_uuid, event_uuid),
         or(eq(orders.order_type, "event_creation"), eq(orders.order_type, "event_capacity_increment")),
-        eq(orders.state, "created")
       )
     );
   return event_orders;
@@ -1153,6 +1142,7 @@ export const eventsRouter = router({
   requestExportFile, //private
   requestSendQRcode, //private
   getEventsWithFilters,
+  getEventOrders,
 });
 
 // Commented Routes

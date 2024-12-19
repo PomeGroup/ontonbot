@@ -1,7 +1,7 @@
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { Radio, ListInput, ListItem, Block, BlockTitle } from "konsta/react";
 import React from "react";
-import FormBlock from "../../atoms/cards/FormBlock";
+import ListLayout from "../../atoms/cards/ListLayout";
 import { SelectLocation } from "./SelectLocation";
 import { cn } from "@/utils";
 
@@ -24,7 +24,7 @@ const EventLocationManager = () => {
         </>
       )}
 
-      <FormBlock
+      <ListLayout
         inset={false}
         title="Location"
       >
@@ -71,7 +71,7 @@ const EventLocationManager = () => {
             defaultValue={eventData?.location}
           />
         )}
-      </FormBlock>
+      </ListLayout>
     </>
   );
 };

@@ -9,22 +9,14 @@ import { useAtom } from "jotai";
 import { useGetOrder } from "~/hooks/useGetOrderQuery";
 import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
 
-type BuyTicketTxQueryStateProps = {};
-
-const BuyTicketTxQueryState = (props: BuyTicketTxQueryStateProps) => {
+const BuyTicketTxQueryState = () => {
   const mainButton = useMainButton(true);
   const tma = useMiniApp(true);
   const [isRequestingTicket] = useAtom(isRequestingTicketAtom);
-  const order = useGetOrder(
-    isRequestingTicket.state ? isRequestingTicket.orderId : "",
-  );
+  const order = useGetOrder(isRequestingTicket.state ? isRequestingTicket.orderId : "");
   const tmaUtils = useUtils(true);
-  const isError =
-    order.data?.state === "validation_failed" || order.data?.state === "failed";
-  const isPending =
-    order.isPending ||
-    order.data?.state === "created" ||
-    order.data?.state === "mint_request";
+  const isError = order.data?.state === "validation_failed" || order.data?.state === "failed";
+  const isPending = order.isPending || order.data?.state === "created" || order.data?.state === "mint_request";
 
   // BG color
   useEffect(() => {
@@ -65,13 +57,8 @@ const BuyTicketTxQueryState = (props: BuyTicketTxQueryStateProps) => {
           alt="Processing Payment"
         />
         <div className="space-y-2">
-          <h2 className="type-title-2 text-telegram-text-color mb-2 font-semibold">
-            Payment in process
-          </h2>
-          <p className="type-body">
-            Hold on a second, we need to make sure the payment went through
-            successfully.
-          </p>
+          <h2 className="type-title-2 text-telegram-text-color mb-2 font-semibold">Payment in process</h2>
+          <p className="type-body">Hold on a second, we need to make sure the payment went through successfully.</p>
         </div>
       </div>
     );
@@ -89,18 +76,11 @@ const BuyTicketTxQueryState = (props: BuyTicketTxQueryStateProps) => {
           alt="event image"
         />
         <div>
-          <h2 className="type-title-2 text-telegram-text-color mb-2 font-semibold">
-            Invalid transaction
-          </h2>
-          <p className="type-body mb-7">
-            Your payment method was rejected, try again later or contact our
-            support.
-          </p>
+          <h2 className="type-title-2 text-telegram-text-color mb-2 font-semibold">Invalid transaction</h2>
+          <p className="type-body mb-7">Your payment method was rejected, try again later or contact our support.</p>
           <Link
             href={"#"}
-            onClick={() =>
-              tmaUtils?.openTelegramLink("https://t.me/challenquizer")
-            }
+            onClick={() => tmaUtils?.openTelegramLink("https://t.me/challenquizer")}
             className="text-telegram-6-10-accent-text-color type-body mt-5 block"
           >
             Contact Support
@@ -124,8 +104,7 @@ const BuyTicketTxQueryState = (props: BuyTicketTxQueryStateProps) => {
       <div className="space-y-2">
         <h2 className="text-[22px] font-semibold">Ticket successfully paid!</h2>
         <p className="text-[17px]">
-          The purchase was completed successfully, your ticket is available by
-          clicking the button below or in your wallet.
+          The purchase was completed successfully, your ticket is available by clicking the button below or in your wallet.
         </p>
       </div>
       <SuccessMainButton id={order.data?.uuid as string} />

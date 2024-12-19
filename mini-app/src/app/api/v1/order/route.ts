@@ -1,12 +1,13 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
+import { selectEventByUuid } from "@/server/db/events";
 import { Address, toNano } from "@ton/core";
 import { and, eq, lt, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 const addOrderSchema = z.object({
-  event_ticket_id: z.number(),
+  event_uuid: z.string().uuid(),
   // count: z.number(),
   // form fields
   full_name: z.string(),
@@ -18,103 +19,120 @@ const addOrderSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  return Response.json({});
-  // const [userId, error] = getAuthenticatedUser();
-  // if (error) {
-  //   return error;
-  // }
+  const [userId, error] = getAuthenticatedUser();
+  if (error) {
+    return error;
+  }
 
-  // const rawBody = await request.json();
+  const rawBody = await request.json();
 
-  // const body = addOrderSchema.safeParse(rawBody);
+  const body = addOrderSchema.safeParse(rawBody);
 
-  // if (!body.success) {
-  //   return Response.json(body.error.flatten(), {
-  //     status: 400,
-  //   });
-  // }
+  if (!body.success) {
+    return Response.json(body.error.flatten(), {
+      status: 400,
+    });
+  }
+  const eventData = await selectEventByUuid(body.data.event_uuid);
+  if (!eventData) {
+    return Response.json({ message: "event not found" }, { status: 400 });
+  }
 
-  // const eventPaymentInfo = await db.query.eventTicket.findFirst({
-  //   where(fields, { eq }) {
-  //     return eq(fields.id, body.data.event_ticket_id);
-  //   },
-  // });
+  const eventPaymentInfo = await db.query.eventPayment.findFirst({
+    where(fields, { eq }) {
+      return eq(fields.event_uuid, body.data.event_uuid);
+    },
+  });
 
-  // const mintedTicketsCount = await db
-  //   .select({ count: sql`count(*)`.mapWith(Number) })
-  //   .from(orders)
-  //   .where(
-  //     and(
-  //       eq(orders.event_ticket_id, body.data.event_ticket_id),
-  //       or(eq(orders.state, "minted"), eq(orders.state, "created"), eq(orders.state, "mint_request"))
-  //     )
-  //   )
-  //   .execute();
+  if (!eventPaymentInfo) {
+    return Response.json(
+      {
+        message: "Event payment info does not exist",
+      },
+      {
+        status: 404,
+      }
+    );
+  }
 
-  // if (!eventTicket || !mintedTicketsCount.length) {
-  //   return Response.json(
-  //     {
-  //       message: "Event ticket does not exist",
-  //     },
-  //     {
-  //       status: 404,
-  //     }
-  //   );
-  // }
+  const TicketsCount = await db
+    .select({ count: sql`count(*)`.mapWith(Number) })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.event_uuid, body.data.event_uuid),
+        or(eq(orders.state, "completed"), eq(orders.state, "processing")),
+        eq(orders.order_type, "nft_mint")
+      )
+    )
+    .execute();
 
-  // const userOrder = await db.query.orders.findFirst({
-  //   where(fields, { eq, and, or }) {
-  //     return and(
-  //       eq(fields.user_id, userId),
-  //       eq(fields.event_ticket_id, eventTicket.id),
-  //       or(eq(fields.state, "created"), eq(fields.state, "minted"), eq(fields.state, "mint_request"))
-  //     );
-  //   },
-  // });
+  const userOrder = (
+    await db
+      .select()
+      .from(orders)
+      .where(and(eq(orders.user_id, userId), eq(orders.order_type, "nft_mint")))
+      .execute()
+  ).pop();
 
-  // if (userOrder) {
-  //   return Response.json(
-  //     {
-  //       message: "An order is already being proccessed",
-  //     },
-  //     {
-  //       status: 409,
-  //     }
-  //   );
-  // }
+  if (userOrder) {
+    if (userOrder.state === "failed" || userOrder.state === "cancelled") {
+      // Reactivate Order
+      await db.update(orders).set({ state: "new" }).where(eq(orders.uuid, userOrder.uuid));
+      return Response.json({
+        order_id: userOrder.uuid,
+        message: "order reactivated successfully",
+        payment_type: userOrder.payment_type,
+        utm_tag: body.data.utm,
+      });
+    }
 
-  // if (mintedTicketsCount[0].count >= (eventTicket.count || 0)) {
-  //   return Response.json(
-  //     {
-  //       message: "Event tickets are sold out",
-  //     },
-  //     {
-  //       status: 410,
-  //     }
-  //   );
-  // }
+    return Response.json(
+      {
+        message: "An order is already being proccessed",
+      },
+      {
+        status: 409,
+      }
+    );
+  }
 
-  // const new_order = (
-  //   await db
-  //     .insert(orders)
-  //     .values({
-  //       // TODO: change for multiple tickets
-  //       count: 1,
-  //       event_uuid: eventTicket.event_uuid,
-  //       state: "created",
-  //       total_price: toNano(eventTicket.price),
-  //       user_id: userId,
-  //       ...body.data,
-  //       updatedBy: "system",
-  //     })
-  //     .returning()
-  // ).pop();
+  if (TicketsCount[0].count >= (eventData.capacity || 0)) {
+    return Response.json(
+      {
+        message: "Event tickets are sold out",
+      },
+      {
+        status: 410,
+      }
+    );
+  }
 
-  // return Response.json({
-  //   order_id: new_order?.uuid,
-  //   message: "order created successfully",
-  //   utm_tag: body.data.utm,
-  // });
+  const new_order = (
+    await db
+      .insert(orders)
+      .values({
+        // TODO: change for multiple tickets
+        event_uuid: body.data.event_uuid,
+        user_id: userId,
+
+        total_price: eventPaymentInfo.price,
+        payment_type: eventPaymentInfo.payment_type,
+
+        state: "confirming",
+        order_type: "nft_mint",
+
+        utm_source: body.data.utm,
+        updatedBy: "system",
+      })
+      .returning()
+  ).pop();
+
+  return Response.json({
+    order_id: new_order?.uuid,
+    message: "order created successfully",
+    utm_tag: body.data.utm,
+  });
 }
 
 export const dynamic = "force-dynamic";

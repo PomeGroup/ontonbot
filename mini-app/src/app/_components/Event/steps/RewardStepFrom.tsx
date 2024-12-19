@@ -1,6 +1,6 @@
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { SbtOptionContent } from "../../organisms/events/SbtOptionContent";
-import FormBlock from "../../atoms/cards/FormBlock";
+import ListLayout from "../../atoms/cards/ListLayout";
 import { ListInput, ListItem, Preloader, Toggle } from "konsta/react";
 import { cn } from "@/utils";
 import { useEffect } from "react";
@@ -49,7 +49,7 @@ export const RewardForm = ({
   return (
     <>
       {eventData?.eventLocationType !== "in_person" && (
-        <FormBlock
+        <ListLayout
           inset={false}
           title="Event password"
         >
@@ -61,8 +61,8 @@ export const RewardForm = ({
               <div className="space-y-1">
                 <p>Password is case-insensitive and must be at least 4 characters.</p>
                 <p>
-                  By setting a password for the event, you can prevent checking-in unexpectedly and receiving
-                  a reward without attending the event.
+                  By setting a password for the event, you can prevent checking-in unexpectedly and receiving a reward
+                  without attending the event.
                 </p>
               </div>
             }
@@ -80,12 +80,12 @@ export const RewardForm = ({
             }}
             error={errors?.secret_phrase?.[0]}
           />
-        </FormBlock>
+        </ListLayout>
       )}
 
       {editOptions?.eventHash && (
         <>
-          <FormBlock title="SBT Reward">
+          <ListLayout title="SBT Reward">
             {eventDataRes.isSuccess ? (
               <div className="flex flex-col gap-6 p-6">
                 <div className="flex flex-col gap-2">
@@ -114,12 +114,12 @@ export const RewardForm = ({
             ) : (
               <Preloader />
             )}
-          </FormBlock>
+          </ListLayout>
         </>
       )}
 
       {!editOptions?.eventHash && (
-        <FormBlock title="Choose SBT Option">
+        <ListLayout title="Choose SBT Option">
           <ListItem
             title="Custom Reward"
             after={
@@ -143,7 +143,7 @@ export const RewardForm = ({
             clearImageError={clearImageError}
             clearVideoError={clearVideoError}
           />
-        </FormBlock>
+        </ListLayout>
       )}
     </>
   );

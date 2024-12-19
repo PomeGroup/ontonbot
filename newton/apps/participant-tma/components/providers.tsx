@@ -24,7 +24,10 @@ const Providers = ({ children }: PropsWithChildren) => {
               <AuthenticationProvider>
                 <TonProofProvider>
                   {children}
-                  <Toaster position={"bottom-center"} closeButton={false} />
+                  <Toaster
+                    position={"bottom-center"}
+                    closeButton={false}
+                  />
                 </TonProofProvider>
               </AuthenticationProvider>
             </Suspense>

@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { unstable_noStore as noStore } from "next/cache";
 import Image from "next/image";
-import { Button } from "@ui/base/button";
 import { Section } from "@ui/base/section";
 import QueryState from "@ui/components/blocks/QueryState";
 import SectionCoverImage from "@ui/components/blocks/SectionCoverImage";
@@ -45,30 +44,36 @@ const Event = async ({ params, searchParams }: EventParams) => {
 
   const user = await getUser(userId);
   if (!user) {
-    return <QueryState isError text={`User #${userId} Not Found`} />;
+    return (
+      <QueryState
+        isError
+        text={`User #${userId} Not Found`}
+      />
+    );
   }
 
   const event = await getEventDataOnly(params.id);
   if (!event) {
-    return <QueryState isError text={`Event #${params.id} Not Found`} />;
-  }
-
-  if (page_utm) {
-    console.log(
-      "ptma_event_page_utm",
-      `utm_campaign=${page_utm} , user_id=${userId}`,
+    return (
+      <QueryState
+        isError
+        text={`Event #${params.id} Not Found`}
+      />
     );
   }
 
-  const eventManagerRole =
-    user?.role === "admin" || user?.user_id === event?.owner;
+  if (page_utm) {
+    console.log("ptma_event_page_utm", `utm_campaign=${page_utm} , user_id=${userId}`);
+  }
+
+  const eventManagerRole = user?.role === "admin" || user?.user_id === event?.owner;
   const websiteLink = event?.website?.link;
   const websiteLabel = event?.website?.label;
 
   const attributes: [string, ReactNode][] = [];
 
   attributes.push(["Location", event.location]);
-  attributes.push(["Organizer", event.organizer.first_name]);
+  attributes.push(["Organizer", event.organizer?.first_name]);
 
   if (event.eventTicket) {
     attributes.push(["Ticket Price", `${event.eventTicket?.price} TON`]);
@@ -77,13 +82,19 @@ const Event = async ({ params, searchParams }: EventParams) => {
   if (event?.website && websiteLabel && websiteLink) {
     attributes.push([
       "Website",
-      <WebsiteLink label={websiteLabel} link={websiteLink} />,
+      <WebsiteLink
+        label={websiteLabel}
+        link={websiteLink}
+      />,
     ]);
   }
 
   return (
     <PageTma variant={"withSections"}>
-      <Section variant={"bottomRounded"} className={"pb-2"}>
+      <Section
+        variant={"bottomRounded"}
+        className={"pb-2"}
+      >
         <SectionCoverImage>
           <Image
             priority
@@ -109,21 +120,33 @@ const Event = async ({ params, searchParams }: EventParams) => {
         />
       </Section>
       {eventManagerRole && (
-        <Section variant={"rounded"} className={"py-6"}>
+        <Section
+          variant={"rounded"}
+          className={"py-6"}
+        >
           <ManageEventButton />
         </Section>
       )}
-      <Section variant={"rounded"} className={"py-6"}>
+      <Section
+        variant={"rounded"}
+        className={"py-6"}
+      >
         <WalletButton />
       </Section>
       {/* Just Agenda Section Only For gateway event */}
       {event?.event_uuid === "6acf01ed-3122-498a-a937-329766b459aa" && (
-        <Section variant={"rounded"} className={"py-6"}>
+        <Section
+          variant={"rounded"}
+          className={"py-6"}
+        >
           <GatewayAgenda />
         </Section>
       )}
       {/* Agenda Section END */}
-      <Section variant={"topRounded"} className={"py-6"}>
+      <Section
+        variant={"topRounded"}
+        className={"py-6"}
+      >
         <EventContent content={event.description} />
       </Section>
       {/* Telegram Main Button */}

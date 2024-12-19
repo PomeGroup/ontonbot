@@ -9,13 +9,17 @@ import telegramService from "@/server/routers/services/telegramService";
 import { RewardType } from "@/types/event.types";
 import { CronJob } from "cron";
 import "dotenv/config";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, or } from "drizzle-orm";
 import { db } from "./db/db";
 import { sleep } from "./utils";
 import { CreateTonSocietyDraft } from "@/server/routers/events";
 import { registerActivity } from "@/lib/ton-society-api";
 import tonCenter from "@/server/routers/services/tonCenter";
+import { is_mainnet } from "@/server/routers/services/tonCenter";
 import { deployNftCollection } from "./lib/tonAssetSdk";
+import { Cell } from "@ton/core";
+import axios from "axios";
+import FormData from "form-data";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -38,6 +42,12 @@ async function MainCronJob() {
 
   // Notify Users Cron Job
   new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
+
+  new CronJob("*/30 * * * * *", cronJob(CheckTransactions), null, true);
+
+  new CronJob("*/30 * * * * *", cronJob(UpdateEventCapacity), null, true);
+
+  // new CronJob("*/5 * * * *", cronJob(CreateEventOrders), null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
@@ -67,10 +77,11 @@ function cronJob(fn: (_: () => any) => any) {
       await fn(pushLockTTl);
       console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
-      await sendLogNotification({
-        message: `Cron job ${name} error: ${getErrorMessages(err)}`,
-        topic: "system",
-      });
+      console.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
+      // await sendLogNotification({
+      //   message: `Cron job ${name} error: ${getErrorMessages(err)}`,
+      //   topic: "system",
+      // });
     } finally {
       await redisTools.deleteCache(redisTools.cacheKeys.cronJobLock + name);
     }
@@ -225,22 +236,69 @@ async function handleRewardError(reward: RewardType, error: any) {
 /* -------------------------------------------------------------------------- */
 /*                        Orders & Transaction Checker                        */
 /* -------------------------------------------------------------------------- */
-async function CheckTransactions() {
+async function CheckTransactions(pushLockTTl: () => any) {
   // Get Orders to be Checked (Sort By Order.TicketDetails.Id)
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
-  const wallet_address = "";
-  while (true) {}
+  const wallet_address = is_mainnet
+    ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
+    : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW";
+  const start_utime = Math.floor((Date.now() - 3 * 60 * 1000) / 1000);
+  console.log(wallet_address, start_utime);
+  const transactions = await tonCenter.fetchAllTransactions(wallet_address, 1734393600);
+  console.log("Trx Len", transactions.length);
+  const parsed_orders = await tonCenter.parseTransactions(transactions);
+  for (const o of parsed_orders) {
+    if (o.verfied) {
+      console.log("cron_trx", o.order_uuid, o.order_type, o.value);
+      await db
+        .update(orders)
+        .set({ state: "processing" })
+        .where(
+          and(
+            eq(orders.uuid, o.order_uuid),
+            or(eq(orders.state, "new"), eq(orders.state, "confirming")),
+            eq(orders.total_price, o.value)
+          )
+        );
+    }
+  }
 }
 
-async function CreateEventOrders() {
+const uploadJsonToMinio = async (jsonData: object) => {
+  const bucketName = "ontonitem";
+
+  const jsonFilename = `metadata.json`;
+
+  const formData = new FormData();
+  formData.append("json", JSON.stringify(jsonData), {
+    filename: jsonFilename,
+    contentType: "application/json",
+  });
+
+  formData.append("bucketName", bucketName);
+  const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload`;
+
+  const res = await axios.post(url, formData, {
+    headers: formData.getHeaders(),
+  });
+
+  if (!res.data || !res.data.jsonUrl) {
+    throw new Error("JSON upload failed");
+  }
+
+  return res.data as { jsonUrl: string };
+};
+
+async function CreateEventOrders(pushLockTTl: () => any) {
   // Get Pending(paid) Orders to create event
   // Register ton society activity
   // create collection
   // Update (DB) Event (tonSociety data)
   // Update (DB) EventPayment (Collection Address)
   // Update (DB) Orders (mark order as completed)
+  //todo : Minter Wallet Check
   const results = await db
     .select()
     .from(orders)
@@ -278,15 +336,27 @@ async function CreateEventOrders() {
       },
       event_uuid
     );
-    const paymentInfo = (await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()).pop();
+    const paymentInfo = (
+      await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+    ).pop();
     // deployNftCollection
     if (!paymentInfo) {
       console.error("what the fuck : ", "event Does not have payment !!!");
     }
 
-    let collectionAddress = "";
+    const metaDataUrl = await uploadJsonToMinio({
+      name: paymentInfo?.title,
+      description: paymentInfo?.description,
+      image: paymentInfo?.ticketImage,
+      cover_image: paymentInfo?.ticketImage,
+    });
+
+    console.log("MetaDataUrl", metaDataUrl);
+    let collectionAddress = "c";
     if (paymentInfo && !paymentInfo?.collectionAddress) {
-      collectionAddress = (await deployNftCollection(paymentInfo.title!, paymentInfo.description!, paymentInfo.ticketImage!)).toRawString();
+      collectionAddress = (
+        await deployNftCollection(paymentInfo.title!, paymentInfo.description!, paymentInfo.ticketImage!)
+      ).toRawString();
     }
 
     let ton_society_result = null;
@@ -300,10 +370,60 @@ async function CreateEventOrders() {
           .execute();
       }
       if (paymentInfo && collectionAddress) {
-        await trx.update(eventPayment).set({ collectionAddress: collectionAddress }).where(eq(eventPayment.id, paymentInfo.id)).execute();
+        await trx
+          .update(eventPayment)
+          .set({ collectionAddress: collectionAddress })
+          .where(eq(eventPayment.id, paymentInfo.id))
+          .execute();
       }
 
-      await trx.update(orders).set({ state: "completed", updatedBy: "cronjob", updatedAt: new Date() }).where(eq(orders.uuid, order.uuid)).execute();
+      await trx
+        .update(orders)
+        .set({ state: "completed", updatedBy: "cronjob", updatedAt: new Date() })
+        .where(eq(orders.uuid, order.uuid))
+        .execute();
+    });
+  }
+}
+async function UpdateEventCapacity(pushLockTTl: () => any) {
+  const results = await db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "event_capacity_increment")))
+    .execute();
+
+  /* -------------------------------------------------------------------------- */
+  /*                               Event UPDATE                                 */
+  /* -------------------------------------------------------------------------- */
+  for (const order of results) {
+    const event_uuid = order.event_uuid;
+    if (!event_uuid) {
+      console.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
+      continue;
+    }
+    const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+    if (!event) {
+      console.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
+      continue;
+    }
+    const eventData = event[0];
+
+    const paymentInfo = (
+      await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+    ).pop();
+
+    if (!paymentInfo) {
+      console.error("what the fuck : ", "event Does not have payment !!!");
+    }
+
+    db.transaction(async (trx) => {
+      const newCapacity = Number(eventData.capacity! + order.total_price / 0.055);
+      await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid));
+      await trx
+        .update(eventPayment)
+        .set({ bought_capacity: newCapacity })
+        .where(eq(events.event_uuid, eventData.event_uuid));
+      await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, order.uuid));
     });
   }
 }

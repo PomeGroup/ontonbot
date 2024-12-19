@@ -7,7 +7,7 @@ export const rabbitMQPass = process.env.RABBITMQ_DEFAULT_PASS || "";
 export const rabbitMQUrl = process.env.IP_RABBITMQ || "";
 export const rabbitMQPort = Number(process.env.RABBITMQ_NODE_PORT) || 0;
 // Notification constants
-export const retryLimit = 10;
+export const retryLimit = 1;
 // Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 after changing Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 you need to delete all queues and exchanges in RabbitMQ !!!!!!!!
@@ -62,4 +62,19 @@ export const retryQueueOptions = {
 
 //  Define Notification Related Constants
 export const NOTIFICATION_TIMEOUT_MARGIN = 10; // 10 seconds
+
+// action timeout in seconds
+export const ACTION_TIMEOUTS = {
+  POA_SIMPLE: 30,
+  POA_PASSWORD: 60,
+}
+
+// Define the maximum number of retries for a password notification
+export const PASSWORD_RETRY_LIMIT = 3;
+
+// POA Worker Constants
+export const WORKER_INTERVAL = 5 * 1000; // 5 seconds
+export const PAGE_SIZE = 500; // Number of users to fetch per batch
+export const POA_CREATION_LIMIT = 30; // Maximum number of POA creation notifications to send per batch
+export const POA_CREATION_TIME_DISTANCE = 2 * 60; // 2 minutes
 

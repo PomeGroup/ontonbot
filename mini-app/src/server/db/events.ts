@@ -85,7 +85,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
     await db
       .select()
       .from(events)
-      .where(and(eq(events.event_uuid, eventUuid), eq(events.hidden, false)))
+      .where(eq(events.event_uuid, eventUuid))
       .execute()
   ).pop();
 

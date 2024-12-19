@@ -1,20 +1,22 @@
 import { create } from "zustand";
-
+import { NotificationType, NotificationStatus, NotificationItemType } from "@/db/schema";
 type Notification = {
   notificationId: string;
   userId: number;
-  type: string;
+  type: NotificationType;
   title: string;
   desc: string;
   actionTimeout: number;
   additionalData: {
-    eventId: number;
-    poaId: string;
+    participant_id?: number;
+    event_id?: number;
+    poa_id?: string;
+    notification_id?: number;
   };
   priority: number;
   itemId: string;
-  item_type: string;
-  status: string;
+  item_type: NotificationItemType;
+  status: NotificationStatus;
   createdAt: string;
   expiresAt: string;
   id: string; // appears to be the same as notificationId, but included for completeness

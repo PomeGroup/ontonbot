@@ -3,8 +3,7 @@
 import React, { FormEventHandler, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useMainButton } from "@tma.js/sdk-react";
-import { beginCell, toNano } from "@ton/ton";
-import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
+import { useTonWallet } from "@tonconnect/ui-react";
 import { Card, CardContent } from "@ui/base/card";
 import { Input } from "@ui/base/input";
 import { Section } from "@ui/base/section";
@@ -18,6 +17,7 @@ import { useAddOrderMutation } from "~/hooks/useAddOrderMutation";
 import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
 import { useUserStore } from "~/store/user.store";
 import BuyTicketTxQueryState from "./BuyTicketTxQueryState";
+import { useTransferTon } from "~/hooks/ton.hooks";
 
 type BuyTicketFormProps = {
   id: string;
@@ -47,8 +47,8 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   const setIsRequestingTicket = useSetAtom(isRequestingTicketAtom);
   const wallet = useTonWallet();
   const addOrder = useAddOrderMutation();
-  const [tonconnectUI] = useTonConnectUI();
   const mainButton = useMainButton(true);
+  const transfer = useTransferTon();
 
   const utm = params.utm_tag || null;
 
@@ -78,22 +78,9 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         })
         .then((data) => {
           // User wallet connected
-          tonconnectUI
-            .sendTransaction({
-              messages: [
-                {
-                  address: params.sendTo,
-                  amount: toNano(params.price).toString(),
-                  payload: beginCell()
-                    .storeUint(0, 32)
-                    .storeStringTail(`order=${data.order_id}`)
-                    .endCell()
-                    .toBoc()
-                    .toString("base64"),
-                },
-              ],
-              validUntil: Math.floor(Date.now() / 1000) + 300,
-            })
+          transfer(params.sendTo, Number(params.price), data.payment_type, {
+            comment: `onton_order=${data.order_id}`,
+          })
             .then(() => {
               setIsRequestingTicket({ state: true, orderId: data.order_id });
             })
@@ -107,7 +94,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         });
       // if not connected
     },
-    [mainButton?.isEnabled],
+    [mainButton?.isEnabled]
   );
 
   const validateForm = useCallback(() => {
@@ -140,13 +127,17 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   }, []);
 
   return (
-    <Section variant={"plain"} className="grid gap-2">
-      <h4 className="text-telegram-6-10-section-header-text-color type-footnote font-normal">
-        YOUR INFO
-      </h4>
+    <Section
+      variant={"plain"}
+      className="grid gap-2"
+    >
+      <h4 className="text-telegram-6-10-section-header-text-color type-footnote font-normal">YOUR INFO</h4>
       <Card className="divide-y">
         <CardContent className={"py-0 pr-0"}>
-          <form ref={form} onSubmit={buyTicketOnClick}>
+          <form
+            ref={form}
+            onSubmit={buyTicketOnClick}
+          >
             <CheckoutInput
               defaultValue={`${user?.first_name} ${user?.last_name}`}
               label="Name"
@@ -190,8 +181,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         validateForm={validateForm}
         eventId={params.id}
       />
-      {typeof window !== "undefined" &&
-        createPortal(<BuyTicketTxQueryState />, document.body)}
+      {typeof window !== "undefined" && createPortal(<BuyTicketTxQueryState />, document.body)}
     </Section>
   );
 };
@@ -218,16 +208,14 @@ type CheckoutInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
 };
 
-function CheckoutInput({
-  label,
-  name,
-  placeholder,
-  ...props
-}: CheckoutInputProps) {
+function CheckoutInput({ label, name, placeholder, ...props }: CheckoutInputProps) {
   return (
     <div className="grid grid-cols-3 items-center p-2.5 px-4 pl-0">
       <div className="col-span-1">
-        <label className={"type-body opacity-80"} htmlFor={name}>
+        <label
+          className={"type-body opacity-80"}
+          htmlFor={name}
+        >
           {label}
         </label>
       </div>

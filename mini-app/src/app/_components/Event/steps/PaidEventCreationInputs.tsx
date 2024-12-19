@@ -1,5 +1,5 @@
 import React from "react";
-import FormBlock from "../../atoms/cards/FormBlock";
+import ListLayout from "../../atoms/cards/ListLayout";
 import { ListInput, ListItem, Segmented, SegmentedButton, Toggle } from "konsta/react";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { SiTether, SiTon } from "react-icons/si";
@@ -212,7 +212,7 @@ const PaidEventCreationInputs = () => {
   }));
 
   return (
-    <FormBlock title="Paid Event">
+    <ListLayout title="Paid Event">
       <ListItem
         title="Is Paid"
         after={
@@ -234,7 +234,7 @@ const PaidEventCreationInputs = () => {
           <Capacity />
         </>
       )}
-    </FormBlock>
+    </ListLayout>
   );
 };
 
