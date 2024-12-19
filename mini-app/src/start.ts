@@ -45,7 +45,9 @@ async function MainCronJob() {
 
   new CronJob("*/30 * * * * *", cronJob(CheckTransactions), null, true);
 
-  new CronJob("*/5 * * * *", cronJob(CreateEventOrders), null, true);
+  new CronJob("*/30 * * * * *", cronJob(UpdateEventCapacity), null, true);
+
+  // new CronJob("*/5 * * * *", cronJob(CreateEventOrders), null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
@@ -75,7 +77,7 @@ function cronJob(fn: (_: () => any) => any) {
       await fn(pushLockTTl);
       console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
-      console.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n` , err)
+      console.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
       // await sendLogNotification({
       //   message: `Cron job ${name} error: ${getErrorMessages(err)}`,
       //   topic: "system",
@@ -391,7 +393,7 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
     .execute();
 
   /* -------------------------------------------------------------------------- */
-  /*                               Event Creation                               */
+  /*                               Event UPDATE                                 */
   /* -------------------------------------------------------------------------- */
   for (const order of results) {
     const event_uuid = order.event_uuid;
@@ -405,60 +407,19 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
       continue;
     }
     const eventData = event[0];
-    const eventDraft = await CreateTonSocietyDraft(
-      {
-        title: eventData.title,
-        subtitle: eventData.subtitle,
-        description: eventData.description,
-        location: eventData.location!,
-        countryId: eventData.countryId,
-        society_hub: { id: eventData.society_hub_id! },
-        start_date: eventData.start_date,
-        end_date: eventData.end_date,
-        ts_reward_url: eventData.tsRewardImage,
-        video_url: eventData.tsRewardVideo,
-        eventLocationType: eventData.participationType,
-      },
-      event_uuid
-    );
+
     const paymentInfo = (
       await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
     ).pop();
-    // deployNftCollection
+
     if (!paymentInfo) {
       console.error("what the fuck : ", "event Does not have payment !!!");
     }
 
-    let collectionAddress = "someCollectionAddress";
-    if (paymentInfo && !paymentInfo?.collectionAddress) {
-      collectionAddress = (
-        await deployNftCollection(paymentInfo.title!, paymentInfo.description!, paymentInfo.ticketImage!)
-      ).toRawString();
-    }
-
-    let ton_society_result = null;
-    if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
     db.transaction(async (trx) => {
-      if (ton_society_result) {
-        await trx
-          .update(events)
-          .set({ activity_id: ton_society_result.data.activity_id, updatedBy: "cronjob", updatedAt: new Date() })
-          .where(eq(events.event_uuid, event_uuid))
-          .execute();
-      }
-      if (paymentInfo && collectionAddress) {
-        await trx
-          .update(eventPayment)
-          .set({ collectionAddress: collectionAddress })
-          .where(eq(eventPayment.id, paymentInfo.id))
-          .execute();
-      }
-
-      await trx
-        .update(orders)
-        .set({ state: "completed", updatedBy: "cronjob", updatedAt: new Date() })
-        .where(eq(orders.uuid, order.uuid))
-        .execute();
+      const newCapacity = Number(eventData.capacity! + order.total_price / 0.055);
+      await trx.update(events).set({ capacity: newCapacity });
+      await trx.update(eventPayment).set({ bought_capacity: newCapacity });
     });
   }
 }
