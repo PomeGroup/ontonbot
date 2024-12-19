@@ -6,25 +6,28 @@ import { Input } from "@/components/ui/input";
 import { useSocketStore } from "@/zustand/useSocketStore";
 import { Dialog, DialogButton } from "konsta/react";
 import useWebApp from "@/hooks/useWebApp";
+import { NotificationItemType, NotificationStatus, NotificationType } from "@/db/enum";
 
 type Notification = {
   notificationId: string;
   userId: number;
-  type: string;
+  type: NotificationType;
   title: string;
   desc: string;
-  actionTimeout: number | string;
+  actionTimeout: number;
   additionalData: {
-    eventId: number;
-    poaId: string;
+    participant_id?: number;
+    event_id?: number;
+    poa_id?: string;
+    notification_id?: number;
   };
   priority: number;
   itemId: string;
-  item_type: string;
-  status: string;
+  item_type: NotificationItemType;
+  status: NotificationStatus;
   createdAt: string;
   expiresAt: string;
-  id: string;
+  id: string; // appears to be the same as notificationId, but included for completeness
 };
 
 const NotificationHandler: React.FC = () => {
@@ -162,9 +165,7 @@ const NotificationHandler: React.FC = () => {
     <Dialog
       opened={opened}
       title=""
-      // Ensures the dialog container has a max width, centered horizontally:
-      className="myDialog max-w-[400px] w-full p-0 mx-auto bg-white bg-opacity-100"
-      // Add a white background to the main content container:
+      className="myDialog max-w-[400px] w-11/12  p-0 mx-auto bg-white bg-opacity-100"
       colors={{ bgIos: "bg-white" , bgMaterial: "bg-white" ,}}
 
       translucent={false}
@@ -172,15 +173,15 @@ const NotificationHandler: React.FC = () => {
         notificationToShow ? (
           <div className="flex flex-col  p-0 text-center space-y-3 relative ">
             {/* Dialog Title */}
-            <h2 className="text-lg font-semibold">{dialogTitle}</h2>
+            <h2 className="text-sm font-semibold">{dialogTitle}</h2>
 
             {isPoaPassword && (
               <div>
-                <p className="text-base font-medium">
+                <p className="text-sm font-medium">
                   Enter the event password in <span className="font-semibold">{formattedTime}</span>
                 </p>
-                <p className="text-gray-500 text-sm mt-2">
-                  Enter the SBT claim code that the organizer shared <br /> with you on the event page.
+                <p className="text-gray-500 text-xs mt-2">
+                  Enter the SBT claim code that the organizer shared  with you on the event page.
                 </p>
               </div>
             )}

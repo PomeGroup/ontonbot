@@ -5,21 +5,19 @@ import { getEventsWithFilters, getEventById } from "@/server/db/events";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
 import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
-import { ACTION_TIMEOUTS, PASSWORD_RETRY_LIMIT} from "@/sockets/constants";
+import { ACTION_TIMEOUTS, PASSWORD_RETRY_LIMIT, WORKER_INTERVAL, PAGE_SIZE } from "@/sockets/constants";
 
-const WORKER_INTERVAL = 5 * 1000; // 5 seconds
-const PAGE_SIZE = 500; // Number of users to fetch per batch
 
 let isShuttingDown = false;
 
 // Listen for shutdown signals
-process.on('SIGINT', () => {
-  console.log('Received SIGINT. Initiating graceful shutdown...');
+process.on("SIGINT", () => {
+  console.log("Received SIGINT. Initiating graceful shutdown...");
   isShuttingDown = true;
 });
 
-process.on('SIGTERM', () => {
-  console.log('Received SIGTERM. Initiating graceful shutdown...');
+process.on("SIGTERM", () => {
+  console.log("Received SIGTERM. Initiating graceful shutdown...");
   isShuttingDown = true;
 });
 
@@ -48,14 +46,14 @@ const fetchOngoingEvents = async () => {
 };
 
 // Function to create a notification for the event owner
-const notifyEventOwner = async (eventId: number, ownerId: number, notificationCount: number , triggerId : number) => {
+const notifyEventOwner = async (eventId: number, ownerId: number, notificationCount: number, triggerId: number) => {
   const notification = {
     userId: ownerId,
     type: "POA_CREATION_FOR_ORGANIZER" as NotificationType, // Define a suitable notification type
     title: `All notifications created for Event ID ${eventId}`,
     desc: `A total of ${notificationCount} notifications have been created.`,
     actionTimeout: 0,
-    additionalData: { owner_id : ownerId , event_id : eventId , notification_count : notificationCount },
+    additionalData: { owner_id: ownerId, event_id: eventId, notification_count: notificationCount },
     priority: 2,
     itemId: triggerId,
     item_type: "POA_TRIGGER" as NotificationItemType,
@@ -76,9 +74,12 @@ const notifyEventOwner = async (eventId: number, ownerId: number, notificationCo
 // Worker Function
 const processOngoingEvents = async () => {
   console.log("===================================");
+
   console.log("POA Worker started at:", new Date().toISOString());
 
   try {
+    await notificationsDB.expireReadNotifications(); // Expire read notifications
+    console.log("Expired read notifications.");
     const ongoingEvents = await fetchOngoingEvents();
     console.log(`Fetched ${ongoingEvents.length} ongoing events.`);
 
@@ -98,7 +99,7 @@ const processOngoingEvents = async () => {
         console.log(`Processing Event ${eventId} : ${eventTitle} at ${startTime} - ${readableDate}`);
         const activePoaTriggers = await eventPoaTriggersDB.getActivePoaForEventByTime(
           eventId,
-          startTime
+          startTime,
         );
 
         if (activePoaTriggers.length === 0) {
@@ -113,14 +114,14 @@ const processOngoingEvents = async () => {
           while (hasMore) {
             // Check for shutdown during batch processing
             if (isShuttingDown) {
-              console.log('Shutdown requested during user processing. Exiting batch...');
+              console.log("Shutdown requested during user processing. Exiting batch...");
               return;
             }
             const approvedUsers = await fetchApprovedUsers(
               eventUuid,
               trigger.id,
               lastUserId,
-              PAGE_SIZE
+              PAGE_SIZE,
             );
 
             if (approvedUsers.length === 0) {
@@ -143,7 +144,7 @@ const processOngoingEvents = async () => {
               finalUsers = approvedUsers.filter((u) => !userIdsWhoAlreadyReplied.has(u.userId));
               console.log(
                 `Filtered out ${approvedUsers.length - finalUsers.length} users who already replied`,
-                finalUsers
+                finalUsers,
               );
             }
             const notificationsToAdd = finalUsers.map((user) => ({
@@ -188,7 +189,7 @@ const processOngoingEvents = async () => {
               console.warn(`Event details or owner data not found for Event ID ${eventId}`);
             } else {
               const ownerId = eventDetails.owner;
-              await notifyEventOwner(eventId, ownerId, totalNotificationsCreated,trigger.id);
+              await notifyEventOwner(eventId, ownerId, totalNotificationsCreated, trigger.id);
             }
           } catch (statusUpdateError) {
             console.error(`Failed to update status for POA Trigger ${trigger.id}:`, statusUpdateError);
@@ -196,11 +197,10 @@ const processOngoingEvents = async () => {
 
           // Check for shutdown after completing a trigger
           if (isShuttingDown) {
-            console.log('Shutdown requested after trigger processing. Exiting...');
+            console.log("Shutdown requested after trigger processing. Exiting...");
             return;
           }
         }
-
 
 
       } catch (eventError) {
@@ -209,7 +209,7 @@ const processOngoingEvents = async () => {
 
       // Check for shutdown after processing an event
       if (isShuttingDown) {
-        console.log('Shutdown requested after event processing. Exiting...');
+        console.log("Shutdown requested after event processing. Exiting...");
         return;
       }
     }
@@ -224,7 +224,7 @@ const processOngoingEvents = async () => {
 const runWorker = async () => {
   while (true) {
     if (isShuttingDown) {
-      console.log('Shutdown flag detected. Exiting worker loop...');
+      console.log("Shutdown flag detected. Exiting worker loop...");
       break;
     }
 
@@ -235,12 +235,12 @@ const runWorker = async () => {
     }
 
     if (isShuttingDown) {
-      console.log('Shutdown flag detected after processing. Exiting worker loop...');
+      console.log("Shutdown flag detected after processing. Exiting worker loop...");
       break;
     }
 
     console.log(
-      `Waiting for ${WORKER_INTERVAL / 1000} seconds before the next run...`
+      `Waiting for ${WORKER_INTERVAL / 1000} seconds before the next run...`,
     );
     await new Promise((resolve) => setTimeout(resolve, WORKER_INTERVAL));
   }
@@ -251,15 +251,15 @@ const runWorker = async () => {
 
 // Shutdown Function to Clean Up Resources
 const shutdown = async () => {
-  console.log('Shutting down resources...');
+  console.log("Shutting down resources...");
 
   const shutdownTimeout = setTimeout(() => {
-    console.warn('Shutdown timeout reached. Forcing exit.');
+    console.warn("Shutdown timeout reached. Forcing exit.");
     process.exit(1);
   }, 10000); // 10 seconds timeout
   // Add any additional cleanup tasks here
   clearTimeout(shutdownTimeout);
-  console.log('Shutdown complete. Exiting process.');
+  console.log("Shutdown complete. Exiting process.");
   process.exit(0);
 };
 

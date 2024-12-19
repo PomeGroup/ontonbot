@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import useNotificationStore from "@/zustand/useNotificationStore";
 import { NotificationType, NotificationStatus, NotificationItemType } from "@/db/schema";
-import { Card, Block, List, ListItem, Badge } from "konsta/react"; // Using available Konsta UI components
+import { Card, List, ListItem, Badge, Dialog, Button } from "konsta/react";
 
 type OrganizerNotification = {
   notificationId: string;
@@ -32,18 +32,16 @@ const OrganizerNotificationHandler: React.FC = () => {
 
   const [poaCreatedCount, setPoaCreatedCount] = useState<number>(0);
   const [poaSentCount, setPoaSentCount] = useState<number>(0);
-  const [userAnswerPoaCount, setUserAnswerPoaCount] = useState<number>(0); // New state for USER_ANSWER_POA
+  const [userAnswerPoaCount, setUserAnswerPoaCount] = useState<number>(0);
 
-  // Helper Sets to track unique notifications
   const [handledPoaCreationIds, setHandledPoaCreationIds] = useState<Set<string>>(new Set());
   const [handledPoaSentIds, setHandledPoaSentIds] = useState<Set<string>>(new Set());
-  const [handledUserAnswerPoaIds, setHandledUserAnswerPoaIds] = useState<Set<string>>(new Set()); // New Set for USER_ANSWER_POA
+  const [handledUserAnswerPoaIds, setHandledUserAnswerPoaIds] = useState<Set<string>>(new Set());
 
-  // Effect to handle POA_CREATION_FOR_ORGANIZER notifications
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+
   useEffect(() => {
     console.log("Checking for new POA_CREATION_FOR_ORGANIZER notifications...");
-
-    // Filter notifications of type POA_CREATION_FOR_ORGANIZER
     const newPoaCreations = notifications.filter(
       (n) =>
         n.type === "POA_CREATION_FOR_ORGANIZER" &&
@@ -54,20 +52,19 @@ const OrganizerNotificationHandler: React.FC = () => {
       console.log(`Found ${newPoaCreations.length} new POA_CREATION_FOR_ORGANIZER notifications.`);
       setPoaCreatedCount((prev) => prev + newPoaCreations.length);
 
-      // Update handled IDs
       const newHandledIds = new Set(handledPoaCreationIds);
       newPoaCreations.forEach((n) => newHandledIds.add(n.notificationId));
       setHandledPoaCreationIds(newHandledIds);
+
+      // Show the dialog when new POA creation notifications arrive
+      setDialogOpen(true);
     } else {
       console.log("No new POA_CREATION_FOR_ORGANIZER notifications found.");
     }
   }, [notifications, handledPoaCreationIds]);
 
-  // Effect to handle USER_RECEIVED_POA notifications
   useEffect(() => {
     console.log("Checking for new USER_RECEIVED_POA notifications...");
-
-    // Filter notifications of type USER_RECEIVED_POA
     const newPoaSent = notifications.filter(
       (n) =>
         n.type === "USER_RECEIVED_POA" &&
@@ -78,7 +75,6 @@ const OrganizerNotificationHandler: React.FC = () => {
       console.log(`Found ${newPoaSent.length} new USER_RECEIVED_POA notifications.`);
       setPoaSentCount((prev) => prev + newPoaSent.length);
 
-      // Update handled IDs
       const newHandledIds = new Set(handledPoaSentIds);
       newPoaSent.forEach((n) => newHandledIds.add(n.notificationId));
       setHandledPoaSentIds(newHandledIds);
@@ -87,11 +83,8 @@ const OrganizerNotificationHandler: React.FC = () => {
     }
   }, [notifications, handledPoaSentIds]);
 
-  // New Effect to handle USER_ANSWER_POA notifications
   useEffect(() => {
     console.log("Checking for new USER_ANSWER_POA notifications...");
-
-    // Filter notifications of type USER_ANSWER_POA
     const newUserAnswerPoa = notifications.filter(
       (n) =>
         n.type === "USER_ANSWER_POA" &&
@@ -102,7 +95,6 @@ const OrganizerNotificationHandler: React.FC = () => {
       console.log(`Found ${newUserAnswerPoa.length} new USER_ANSWER_POA notifications.`);
       setUserAnswerPoaCount((prev) => prev + newUserAnswerPoa.length);
 
-      // Update handled IDs
       const newHandledIds = new Set(handledUserAnswerPoaIds);
       newUserAnswerPoa.forEach((n) => newHandledIds.add(n.notificationId));
       setHandledUserAnswerPoaIds(newHandledIds);
@@ -111,36 +103,54 @@ const OrganizerNotificationHandler: React.FC = () => {
     }
   }, [notifications, handledUserAnswerPoaIds]);
 
+  const handleCloseDialog = () => {
+    // Reset counts when dialog closes
+    setPoaCreatedCount(0);
+    setPoaSentCount(0);
+    setUserAnswerPoaCount(0);
+
+    // Optionally reset handled IDs if you want to handle future notifications again
+
+
+
+    setDialogOpen(false);
+  };
+
   return (
-    <Block>
-      <Card>
-        <List>
-          {/* POAs Created */}
-          <ListItem>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-              <strong>POAs Created</strong>
-              <Badge color="primary">{poaCreatedCount}</Badge>
-            </div>
-          </ListItem>
+    <Dialog
+      opened={dialogOpen}
+      onBackdropClick={handleCloseDialog}
+      title="Attendance Summary"
+      className="myDialog max-w-[400px] w-11/12 p-0 mx-auto bg-white bg-opacity-100"
+      colors={{ bgIos: "bg-white", bgMaterial: "bg-white" }}
+      translucent={false}
+    >
+      <List className={"p-0 my-0"} dividers={false}>
+        {/* If you want to show POAs Created again, just uncomment below */}
+        {/* <ListItem>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <strong>POAs Created</strong>
+            <Badge color="primary">{poaCreatedCount}</Badge>
+          </div>
+        </ListItem> */}
+        <ListItem className={"p-0"}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <strong>Sent to Users</strong>
+            <Badge color="secondary">{poaSentCount}</Badge>
+          </div>
+        </ListItem>
+        <ListItem>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+            <strong>User Answers</strong>
+            <Badge color="warning">{userAnswerPoaCount}</Badge>
+          </div>
+        </ListItem>
+      </List>
 
-          {/* POAs Sent to Users */}
-          <ListItem>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-              <strong>POAs Sent to Users</strong>
-              <Badge color="secondary">{poaSentCount}</Badge>
-            </div>
-          </ListItem>
-
-          {/* USER_ANSWER_POA Notifications */}
-          <ListItem>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-              <strong>User POA Answers</strong>
-              <Badge color="warning">{userAnswerPoaCount}</Badge>
-            </div>
-          </ListItem>
-        </List>
-      </Card>
-    </Block>
+      <div style={{ marginTop: '1rem', textAlign: 'right' }}>
+        <Button onClick={handleCloseDialog}>Close</Button>
+      </div>
+    </Dialog>
   );
 };
 

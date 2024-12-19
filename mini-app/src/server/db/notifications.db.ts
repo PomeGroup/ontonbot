@@ -1,8 +1,8 @@
 import { db } from "@/db/db";
 import { NotificationItemType, notifications, NotificationStatus, NotificationType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { and, eq, inArray, lt, ne, sql } from "drizzle-orm";
-import { QueueNames } from "@/sockets/constants";
+import { and, eq, inArray, lt, sql } from "drizzle-orm";
+import { QueueNames, NOTIFICATION_TIMEOUT_MARGIN } from "@/sockets/constants";
 import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
 import { v4 as uuidv4 } from 'uuid';
 /**
@@ -135,14 +135,19 @@ export const updateNotificationStatus = async (notificationId: number, newStatus
     await redisTools.deleteCache(getNotificationCacheKey(notificationId)); // Clear cache
     console.log(`Notification ${notificationId} status updated to ${newStatus}`);
   } catch (error) {
-    console.error("Error updating notification status:", error);
+    console.error(`Error updating notification ${notificationId} status updated to ${newStatus}:`, error);
     throw error;
   }
 };
 
 export const updateNotificationAsRead = async (notificationId: number, ) => {
+  const status : NotificationStatus = "READ";
+  if(Number.isNaN(notificationId )|| notificationId === undefined){
+    throw new Error("Notification ID is required to update notification as read");
+
+  }
   try {
-    const status : NotificationStatus = "READ";
+
     await db
       .update(notifications)
       .set({ status: status , readAt: new Date() })
@@ -152,7 +157,7 @@ export const updateNotificationAsRead = async (notificationId: number, ) => {
     await redisTools.deleteCache(getNotificationCacheKey(notificationId)); // Clear cache
     console.log(`Notification ${notificationId} status updated to ${status}`);
   } catch (error) {
-    console.error("Error updating notification status:", error);
+    console.error(`Error updating notification ${notificationId} status updated to ${status}:`, error);
     throw error;
   }
 };
@@ -370,6 +375,34 @@ export async function getRepliedPoaPasswordNotificationsForEvent(
 
 
 }
+//
+export const expireReadNotifications = async () => {
+  try {
+    // Update notifications that are READ and whose readAt + actionTimeout is in the past
+    console.log("Expiring read notifications that exceeded their action timeout...");
+    const expiredNotifications =  await db
+      .update(notifications)
+      .set({ status: "EXPIRED" })
+      .where(
+        and(
+          eq(notifications.status, "READ"),
+          sql`${notifications.readAt} IS NOT NULL`,
+          sql`${notifications.actionTimeout} IS NOT NULL`,
+          sql`${notifications.readAt} + ((${
+                  notifications.actionTimeout
+          } + ${NOTIFICATION_TIMEOUT_MARGIN}) * INTERVAL '1 second') < NOW()`
+        )
+      )
+      .returning({ id: notifications.id })
+      .execute();
+
+    console.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
+    return { success: true, count: expiredNotifications.length };
+  } catch (error) {
+    console.error("Error expiring read notifications:", error);
+    throw error;
+  }
+};
 // Export all functions as a single object
 export const notificationsDB = {
   addNotification,
@@ -381,4 +414,5 @@ export const notificationsDB = {
   addNotifications,
   updateNotificationAsRead,
   getRepliedPoaPasswordNotificationsForEvent,
+  expireReadNotifications
 };

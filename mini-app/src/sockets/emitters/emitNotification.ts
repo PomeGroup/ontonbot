@@ -92,8 +92,15 @@ export const emitNotification = async (
 
   try {
     // Since notification is successfully delivered, update its status to READ
-    await notificationsDB.updateNotificationAsRead(notificationIdNum);
-    console.log(`Notification ID ${notificationIdNum} marked as READ for User ${userId}`);
+    if(Number(notificationIdNum) > 0) {
+      await notificationsDB.updateNotificationAsRead(notificationIdNum);
+      console.log(`Notification ID ${notificationIdNum} marked as READ for User ${userId}`);
+    }
+    else
+    {
+      console.warn(`Notification ID ${notificationIdNum} is non-persist for User ${userId}`);
+    }
+
   } catch (updateError) {
     console.error(`Failed to update notification status for Notification ID ${notificationIdNum}:`, updateError);
   }

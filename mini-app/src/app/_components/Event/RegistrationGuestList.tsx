@@ -375,6 +375,7 @@ const RegistrationGuestlist = () => {
       </BlockHeader>
       <List
         strong
+        className={"z-0"}
         title="Guest List"
       >
         {registrants.data?.map((registrant, idx) => (
