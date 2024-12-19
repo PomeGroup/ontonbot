@@ -3,6 +3,18 @@ import { eventPoaTriggers, EventTriggerStatus, EventTriggerType } from "@/db/sch
 import { redisTools } from "@/lib/redisTools";
 import { eq, and, lte, sql } from "drizzle-orm";
 
+export type EventPoaTrigger = {
+  id: number;
+  eventId: number;
+  poaOrder: number ;
+  startTime: number;
+  countOfSent: number;
+  countOfSuccess: number;
+  poaType: "simple" | "multiple_choice" | "question" | "password";
+  status: "active" | "deactive" | "completed" | "sending";
+  createdAt: Date | null;
+  updatedAt: Date | null;
+};
 // Cache key prefix for event POA triggers
 const getEventPoaCacheKey = (poaId: number) => `${redisTools.cacheKeys.eventPoaTrigger}${poaId}`;
 
@@ -124,11 +136,11 @@ export const getActivePoaForEventByTime = async (eventId: number, startTime: num
 export const getPoaByEventId = async (eventId: number) => {
   try {
     const cacheKey = `${redisTools.cacheKeys.eventPoaByEvent}${eventId}`;
-    const cachedResult = await redisTools.getCache(cacheKey);
+    // const cachedResult = await redisTools.getCache(cacheKey);
 
-    if (cachedResult) {
-      return cachedResult; // Return cached data if available
-    }
+    // if (cachedResult) {
+    //   return cachedResult; // Return cached data if available
+    // }
 
     const poaTriggers = await db
       .select()
@@ -137,7 +149,6 @@ export const getPoaByEventId = async (eventId: number) => {
       .execute();
 
     await redisTools.setCache(cacheKey, poaTriggers, redisTools.cacheLvl.short); // Cache the result
-    console.log("POAs for event ID:", eventId, poaTriggers);
     return poaTriggers;
   } catch (error) {
     console.error("Error getting POAs by event ID:", error);
@@ -268,4 +279,5 @@ export const eventPoaTriggersDB = {
   getPoaByEventId,
   generatePoaForAddEvent,
   getEventPoaTriggerById,
+
 };
