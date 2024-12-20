@@ -43,7 +43,7 @@ export const handleNotifications = async (io: Server) => {
     // Expecting client to emit: socket.emit("notificationReply", { notificationId: "123", answer: "yes" }, (response) => { ... });
     socket.on(SocketEvents.receive.notificationReply, (data, callback) => {
       // Use the handler to validate and process the reply
-      handleNotificationReply(data, callback, sanitizedUsername , user.id);
+      handleNotificationReply(io, data, callback, sanitizedUsername , user.id);
     });
     // Test event handler
     socket.on(SocketEvents.receive.test, (data, callback) => {
