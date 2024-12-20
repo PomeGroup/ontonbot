@@ -16,7 +16,8 @@ export const emitNotification = async (
   msg: Message,
 ) => {
 
-  const sockets = userSockets.get(Number(userId));
+  const roomName = `user_${userId}`;
+  const room = io.sockets.adapter.rooms.get(roomName);
   console.log(`emitNotification - userId: ${userId}, type: ${typeof userId}`);
 
   // Extract notificationId and ensure it's a number
@@ -24,7 +25,7 @@ export const emitNotification = async (
     ? parseInt(message.notificationId, 10)
     : message.notificationId;
 
-  if (!sockets || sockets.size === 0) {
+  if (!room || room.size === 0) {
     console.warn(`User ${userId} is not online. Message will be retried.`);
     console.log(msg);
 
@@ -83,12 +84,9 @@ export const emitNotification = async (
     message: sanitizeInput(message.message),
   };
 
-  sockets.forEach((socketId) => {
-    io.to(socketId).emit(SocketEvents.send.notification, sanitizedMessage);
-    console.log(
-      `Notification sent to User ${userId} via Socket ${socketId}: ${sanitizedMessage.notificationId} `,
-    );
-  });
+  io.to(roomName).emit(SocketEvents.send.notification, sanitizedMessage);
+  console.log(`Notification sent to User ${userId} in room ${roomName}: ${sanitizedMessage.notificationId}`);
+
 
   try {
     // Since notification is successfully delivered, update its status to READ

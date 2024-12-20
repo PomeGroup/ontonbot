@@ -29,14 +29,16 @@ export const handleNotifications = async (io: Server) => {
     const sanitizedUsername = sanitizeString(user.username);
     console.log(`User ${sanitizedUsername} (ID: ${user.id}) connected.`);
 
-    // Track user connections
-    if (!userSockets.has(user.id)) {
-      userSockets.set(user.id, new Set());
-    }
-    const userSocketSet = userSockets.get(user.id);
-    userSockets.get(user.id)?.add(socket.id);
-    console.log(`Updated userSockets for User ${user.id}:`, userSocketSet);
-
+    // // Track user connections
+    // if (!userSockets.has(user.id)) {
+    //   userSockets.set(user.id, new Set());
+    // }
+    // const userSocketSet = userSockets.get(user.id);
+    // userSockets.get(user.id)?.add(socket.id);
+    // console.log(`Updated userSockets for User ${user.id}:`, userSocketSet);
+    // Join the user to a room based on user ID
+    socket.join(`user_${user.id}`);
+    console.log(`User ${user.id} joined room user_${user.id}`);
     // Handle notification reply event
     // Expecting client to emit: socket.emit("notificationReply", { notificationId: "123", answer: "yes" }, (response) => { ... });
     socket.on(SocketEvents.receive.notificationReply, (data, callback) => {
