@@ -37,7 +37,7 @@ export const event_details_search_list = pgView("event_details_search_list", {
   ticketDescription: text("ticket_description"),
   ticketPrice: text("ticket_price"),
   ticketImage: text("ticket_image"),
-  ticketCount: integer("ticket_count"),
+  // ticketCount: integer("ticket_count"),
 }).as(sql`
   SELECT
     e.event_id,
@@ -76,8 +76,7 @@ export const event_details_search_list = pgView("event_details_search_list", {
     min_tickets.title AS ticket_title,
     min_tickets.description AS ticket_description,
     min_tickets.price AS ticket_price,
-    min_tickets.ticket_image,
-    min_tickets.count AS ticket_count
+    min_tickets.ticket_image
   FROM
     ${events} e
   LEFT JOIN
