@@ -52,11 +52,18 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
-ALTER TYPE "order_state" ADD VALUE 'new';--> statement-breakpoint
-ALTER TYPE "order_state" ADD VALUE 'confirming';--> statement-breakpoint
-ALTER TYPE "order_state" ADD VALUE 'processing';--> statement-breakpoint
-ALTER TYPE "order_state" ADD VALUE 'completed';--> statement-breakpoint
-ALTER TYPE "order_state" ADD VALUE 'cancelled';--> statement-breakpoint
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."order_state" AS ENUM('new', 'confirming','processing', 'completed' ,'failed','cancelled');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+
+ALTER TABLE "public"."orders"
+ALTER COLUMN "state" TYPE "public"."order_state"
+USING "state"::"public"."order_state";
+
+
 CREATE TABLE IF NOT EXISTS "event_poa_results" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" bigint NOT NULL,
