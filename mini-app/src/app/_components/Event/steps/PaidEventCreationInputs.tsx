@@ -21,8 +21,12 @@ function SelectPayment() {
           <Segmented strong>
             <SegmentedButton
               strong
-              onClick={() => changePaymentType("USDT")}
+              onClick={(e) => {
+                e.preventDefault();
+                changePaymentType("USDT");
+              }}
               active={payment.payment_type === "USDT"}
+              itemType="button"
             >
               <p
                 className={cn("flex gap-1 items-center text-cn-muted-foreground", {
@@ -35,6 +39,11 @@ function SelectPayment() {
             <SegmentedButton
               strong
               active={payment.payment_type === "TON"}
+              onClick={(e) => {
+                e.preventDefault();
+                changePaymentType("TON");
+              }}
+              itemType="button"
             >
               <p
                 className={cn("flex gap-1 items-center text-cn-muted-foreground", {
