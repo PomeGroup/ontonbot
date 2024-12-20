@@ -1,6 +1,6 @@
-import { fetchOntonSettings } from "@/server/db/ontoSetting";
 import axios from "axios";
 import { Bot } from "grammy";
+import {configProtected} from "@/server/config";
 
 const tgClient = axios.create({
   baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
@@ -117,29 +117,23 @@ export const sendEventPhoto = async (props: {
   }
 };
 
-// 🌳 ---- GLOBAL SETTINGS ---- 🌳
-let ONTON_SETTINGS: Awaited<ReturnType<typeof fetchOntonSettings>> | null = null;
-
-// 🌳 ---- INITIALIZE SETTINGS ---- 🌳
-const initializeOntonSettings = async () => {
-  ONTON_SETTINGS = await fetchOntonSettings();
-};
-
 // 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
 export const sendLogNotification = async (props: {
   message: string;
   topic: "event" | "ticket" | "system";
 }) => {
-  if (!ONTON_SETTINGS) {
-    await initializeOntonSettings();
+
+  if(!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
+    console.error("Bot token or logs group ID not found in configProtected for this environment");
+    throw new Error("Bot token or logs group ID not found in configProtected for this environment");
   }
 
-  const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = ONTON_SETTINGS?.config;
+  const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
   const {
     events_topic: EVENTS_TOPIC,
     system_topic: SYSTEM_TOPIC,
     tickets_topic: TICKETS_TOPIC,
-  } = ONTON_SETTINGS?.config;
+  } = configProtected;
 
   const logBot = new Bot(BOT_TOKEN_LOGS);
 
