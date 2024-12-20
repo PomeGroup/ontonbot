@@ -5,6 +5,7 @@ import { useCreateEventStore } from "@/zustand/createEventStore";
 import { SiTether, SiTon } from "react-icons/si";
 import { cn } from "@/utils";
 import { UploadImageFile } from "@/components/ui/upload-file";
+import { TonConnectButton } from "@tonconnect/ui-react";
 
 function SelectPayment() {
   const { payment, changePaymentType } = useCreateEventStore((state) => ({
@@ -85,24 +86,23 @@ function PaymentAmount() {
 }
 
 function PaymentsRecepient() {
-  const { payment, changeRecepientAddress, paid_info_errors } = useCreateEventStore((state) => ({
-    payment: state.eventData?.paid_event,
-    changeRecepientAddress: state.changeRecepientAddress,
-    paid_info_errors: state.paid_info_errors,
+  const { recepient_error_messages } = useCreateEventStore((state) => ({
+    recepient_error_messages: state.paid_info_errors.payment_recipient_address,
   }));
 
   return (
-    <ListInput
-      outline
-      required
+    <ListItem
       title="Recepient"
-      placeholder={"Copy and paste the recepient wallet address"}
-      inputClassName="text-sm"
-      value={payment.payment_recipient_address}
-      onChange={(e) => {
-        changeRecepientAddress(e.target.value);
-      }}
-      error={paid_info_errors.payment_recipient_address?.[0]}
+      footer={
+        <>
+          {/* The Current Connected Wallet will be used as the Recepient */}
+          <div className="flex justify-center items-center py-1">
+            <TonConnectButton />
+          </div>
+          {/* Error masseges will be showen bellow */}
+          {recepient_error_messages?.length && <p className="text-red-500">{recepient_error_messages[0]}</p>}
+        </>
+      }
     />
   );
 }

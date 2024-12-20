@@ -4,7 +4,6 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import type {} from "@redux-devtools/extension"; // required for devtools typing
-import { Address } from "@ton/core";
 
 export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
   /*
@@ -71,14 +70,13 @@ export type CreateEventStoreType = {
   togglePaidEvent: () => void;
   changePaymentType: (_: PaymentType) => void;
   changePaymentAmount: (_: number) => void;
-  changeRecepientAddress: (_: string) => void;
   // --- // nft info
   changeNFTImage: (_: string) => void;
   changeNFTTitle: (_title: string) => void;
   changeNFTDescription: (_desc: string) => void;
 
   /**** REGISTRATION STEP MAIN BUTTON CLICK ****/
-  registrationStepMainButtonClick: () => void;
+  registrationStepMainButtonClick: (_recepient: string | null) => void;
 
   /**** ⭕ PAID EVENT INPUT ERRORS ⭕ ****/
   paid_info_errors: PaidInfoErrors;
@@ -249,17 +247,6 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           state.eventData.paid_event.payment_amount = isNaN(amount) || !amount ? undefined : Math.abs(amount);
         });
       },
-      changeRecepientAddress(address) {
-        set((state) => {
-          try {
-            Address.parse(address);
-          } catch (error) {
-            state.eventData.paid_event.payment_recipient_address = address;
-            // handle error here
-            state.eventData.paid_event.payment_recipient_address = "";
-          }
-        });
-      },
       changeNFTImage(image) {
         set((state) => {
           state.eventData.paid_event.nft_image_url = image;
@@ -280,13 +267,19 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           state.paid_info_errors[key] = value;
         });
       },
-      registrationStepMainButtonClick: () => {
+      registrationStepMainButtonClick: (recepient) => {
         /**
          * 🦄 Handle Paid Event 🦄
          */
         const hasPayment = get().eventData.paid_event.has_payment;
 
         if (hasPayment) {
+          set((state) => {
+            // The reason we are not using undefiend for the input as a union type is that we want to be explicit
+            // Also typescript will force us to input null
+            const valid_recepient = recepient ? recepient : undefined;
+            state.eventData.paid_event.payment_recipient_address = valid_recepient;
+          });
           const capacity = get().eventData.capacity;
           const paymentParsed = PaidEventSchema.safeParse(get().eventData.paid_event);
 
