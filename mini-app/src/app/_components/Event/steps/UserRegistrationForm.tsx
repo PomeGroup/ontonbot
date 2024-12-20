@@ -40,7 +40,7 @@ export function UserRegistrationForm() {
           />
         }
       />
-      {eventData?.has_registration && (
+      {!eventData.paid_event.has_payment && eventData?.has_registration && (
         <>
           <ListItem
             label

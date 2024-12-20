@@ -219,14 +219,14 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
                   if (confirmed) {
                     set((state) => {
                       state.eventData.paid_event = paidEventInfo;
-                      state.eventData.has_registration = false;
+                      state.eventData.has_registration = true;
                     });
                   }
                 }
               );
             } catch {
               state.eventData.paid_event = paidEventInfo;
-              state.eventData.has_registration = false;
+              state.eventData.has_registration = true;
             }
 
             state.eventData.capacity = 5;
