@@ -6,6 +6,7 @@ import {
   timestamp,
   varchar,
   index,
+  bigint,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { notificationStatus, notificationType, notificationItemType } from "@/db/enum";
@@ -14,7 +15,7 @@ export const notifications = pgTable(
   "notifications",
   {
     id: serial("id").primaryKey(),
-    userId: serial("user_id"),
+    userId: bigint("user_id", { mode: "number" }).notNull(),
     type: notificationType("type").default("UNKNOWN"),
     title: varchar("title", { length: 255 }),
     desc: varchar("desc", { length: 255 }),
