@@ -1,5 +1,5 @@
 {
-  "id": "446d95a6-62b9-4d36-81f8-67bc59712778",
+  "id": "5d436a00-ff41-4a65-8f1b-afa31e477df4",
   "prevId": "2cab34b5-f402-43c2-9661-a9e50a8c4322",
   "version": "7",
   "dialect": "postgresql",
@@ -307,6 +307,149 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "public.event_payment_info": {
+      "name": "event_payment_info",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_uuid": {
+          "name": "event_uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_type": {
+          "name": "payment_type",
+          "type": "payment_types",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "recipient_address": {
+          "name": "recipient_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bought_capacity": {
+          "name": "bought_capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticket_type": {
+          "name": "ticket_type",
+          "type": "ticket_types",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ticket_image": {
+          "name": "ticket_image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "collection_address": {
+          "name": "collection_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'system'"
+        }
+      },
+      "indexes": {
+        "event_payment_info_event_uuid_index": {
+          "name": "event_payment_info_event_uuid_index",
+          "columns": [
+            {
+              "expression": "event_uuid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "eventt_event_uuid_idx": {
+          "name": "eventt_event_uuid_idx",
+          "columns": [
+            {
+              "expression": "event_uuid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "event_payment_info_event_uuid_events_event_uuid_fk": {
+          "name": "event_payment_info_event_uuid_events_event_uuid_fk",
+          "tableFrom": "event_payment_info",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_uuid"
+          ],
+          "columnsTo": [
+            "event_uuid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.event_poa_results": {
       "name": "event_poa_results",
       "schema": "",
@@ -343,7 +486,8 @@
         },
         "status": {
           "name": "status",
-          "type": "text",
+          "type": "event_poa_result_status",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
         },
@@ -607,189 +751,6 @@
         }
       }
     },
-    "public.event_tickets": {
-      "name": "event_tickets",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "event_uuid": {
-          "name": "event_uuid",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "price": {
-          "name": "price",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "ticket_image": {
-          "name": "ticket_image",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "count": {
-          "name": "count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "collection_address": {
-          "name": "collection_address",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp (3)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_by": {
-          "name": "updated_by",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'system'"
-        }
-      },
-      "indexes": {
-        "eventt_event_uuid_idx": {
-          "name": "eventt_event_uuid_idx",
-          "columns": [
-            {
-              "expression": "event_uuid",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "eventt_title_idx": {
-          "name": "eventt_title_idx",
-          "columns": [
-            {
-              "expression": "title",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "eventt_price_idx": {
-          "name": "eventt_price_idx",
-          "columns": [
-            {
-              "expression": "price",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "eventt_collection_address_idx": {
-          "name": "eventt_collection_address_idx",
-          "columns": [
-            {
-              "expression": "collection_address",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "eventt_created_at_idx": {
-          "name": "eventt_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "eventt_updated_at_idx": {
-          "name": "eventt_updated_at_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "event_tickets_event_uuid_events_event_uuid_fk": {
-          "name": "event_tickets_event_uuid_events_event_uuid_fk",
-          "tableFrom": "event_tickets",
-          "tableTo": "events",
-          "columnsFrom": [
-            "event_uuid"
-          ],
-          "columnsTo": [
-            "event_uuid"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
     "public.events": {
       "name": "events",
       "schema": "",
@@ -806,6 +767,20 @@
           "primaryKey": false,
           "notNull": true
         },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "hidden": {
+          "name": "hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
         "type": {
           "name": "type",
           "type": "integer",
@@ -816,19 +791,19 @@
           "name": "title",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "subtitle": {
           "name": "subtitle",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "description": {
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "image_url": {
           "name": "image_url",
@@ -838,12 +813,6 @@
         },
         "wallet_address": {
           "name": "wallet_address",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "wallet_seed_phrase": {
-          "name": "wallet_seed_phrase",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -883,14 +852,13 @@
           "name": "start_date",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "end_date": {
           "name": "end_date",
           "type": "integer",
           "primaryKey": false,
-          "notNull": false,
-          "default": 0
+          "notNull": true
         },
         "timezone": {
           "name": "timezone",
@@ -915,13 +883,6 @@
           "type": "bigint",
           "primaryKey": false,
           "notNull": false
-        },
-        "hidden": {
-          "name": "hidden",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": false,
-          "default": false
         },
         "ticketToCheckIn": {
           "name": "ticketToCheckIn",
@@ -988,6 +949,12 @@
           "primaryKey": false,
           "notNull": false,
           "default": false
+        },
+        "has_payment": {
+          "name": "has_payment",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -1187,6 +1154,21 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "events_event_uuid_index": {
+          "name": "events_event_uuid_index",
+          "columns": [
+            {
+              "expression": "event_uuid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -1477,7 +1459,122 @@
           "default": "'UNKNOWN'"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "notifications_user_id_type_item_id_item_type_key": {
+          "name": "notifications_user_id_type_item_id_item_type_key",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "item_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notifications_user_id_idx": {
+          "name": "notifications_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notifications_expires_at_idx": {
+          "name": "notifications_expires_at_idx",
+          "columns": [
+            {
+              "expression": "expires_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notifications_item_id_item_type_idx": {
+          "name": "notifications_item_id_item_type_idx",
+          "columns": [
+            {
+              "expression": "item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "item_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notifications_status_idx": {
+          "name": "notifications_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "notifications_type_idx": {
+          "name": "notifications_type_idx",
+          "columns": [
+            {
+              "expression": "type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
@@ -1556,64 +1653,30 @@
           "primaryKey": false,
           "notNull": false
         },
-        "event_ticket_id": {
-          "name": "event_ticket_id",
-          "type": "bigint",
+        "total_price": {
+          "name": "total_price",
+          "type": "real",
           "primaryKey": false,
           "notNull": true
         },
-        "transaction_id": {
-          "name": "transaction_id",
-          "type": "text",
+        "payment_type": {
+          "name": "payment_type",
+          "type": "payment_types",
+          "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false
-        },
-        "count": {
-          "name": "count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "total_price": {
-          "name": "total_price",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "state": {
           "name": "state",
           "type": "order_state",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false
-        },
-        "failed_reason": {
-          "name": "failed_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "telegram": {
-          "name": "telegram",
-          "type": "text",
-          "primaryKey": false,
           "notNull": true
         },
-        "full_name": {
-          "name": "full_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "company": {
-          "name": "company",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "position": {
-          "name": "position",
-          "type": "text",
+        "order_type": {
+          "name": "order_type",
+          "type": "order_types",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
         },
@@ -1621,13 +1684,14 @@
           "name": "owner_address",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "utm": {
-          "name": "utm",
+        "utm_source": {
+          "name": "utm_source",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "''"
         },
         "created_at": {
           "name": "created_at",
@@ -1681,36 +1745,6 @@
           "method": "btree",
           "with": {}
         },
-        "orders_event_ticket_id_idx": {
-          "name": "orders_event_ticket_id_idx",
-          "columns": [
-            {
-              "expression": "event_ticket_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "orders_transaction_id_idx": {
-          "name": "orders_transaction_id_idx",
-          "columns": [
-            {
-              "expression": "transaction_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "orders_state_idx": {
           "name": "orders_state_idx",
           "columns": [
@@ -1726,86 +1760,11 @@
           "method": "btree",
           "with": {}
         },
-        "orders_telegram_idx": {
-          "name": "orders_telegram_idx",
-          "columns": [
-            {
-              "expression": "telegram",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "orders_full_name_idx": {
-          "name": "orders_full_name_idx",
-          "columns": [
-            {
-              "expression": "full_name",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "orders_company_idx": {
-          "name": "orders_company_idx",
-          "columns": [
-            {
-              "expression": "company",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "orders_owner_address_idx": {
           "name": "orders_owner_address_idx",
           "columns": [
             {
               "expression": "owner_address",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "orders_created_at_idx": {
-          "name": "orders_created_at_idx",
-          "columns": [
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "orders_updated_at_idx": {
-          "name": "orders_updated_at_idx",
-          "columns": [
-            {
-              "expression": "updated_at",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1840,19 +1799,6 @@
           ],
           "columnsTo": [
             "user_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "orders_event_ticket_id_event_tickets_id_fk": {
-          "name": "orders_event_ticket_id_event_tickets_id_fk",
-          "tableFrom": "orders",
-          "tableTo": "event_tickets",
-          "columnsFrom": [
-            "event_ticket_id"
-          ],
-          "columnsTo": [
-            "id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -2488,10 +2434,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "tickets_event_ticket_id_event_tickets_id_fk": {
-          "name": "tickets_event_ticket_id_event_tickets_id_fk",
+        "tickets_event_ticket_id_event_payment_info_id_fk": {
+          "name": "tickets_event_ticket_id_event_payment_info_id_fk",
           "tableFrom": "tickets",
-          "tableTo": "event_tickets",
+          "tableTo": "event_payment_info",
           "columnsFrom": [
             "event_ticket_id"
           ],
@@ -3068,6 +3014,14 @@
         "online"
       ]
     },
+    "public.event_poa_result_status": {
+      "name": "event_poa_result_status",
+      "schema": "public",
+      "values": [
+        "REPLIED",
+        "EXPIRED"
+      ]
+    },
     "public.registrant_status": {
       "name": "registrant_status",
       "schema": "public",
@@ -3094,7 +3048,8 @@
       "values": [
         "simple",
         "multiple_choice",
-        "question"
+        "question",
+        "password"
       ]
     },
     "public.notification_item_type": {
@@ -3124,6 +3079,10 @@
       "schema": "public",
       "values": [
         "POA_SIMPLE",
+        "POA_PASSWORD",
+        "POA_CREATION_FOR_ORGANIZER",
+        "USER_RECEIVED_POA",
+        "USER_ANSWER_POA",
         "MESSAGE_SIMPLE",
         "UNKNOWN"
       ]
@@ -3132,11 +3091,30 @@
       "name": "order_state",
       "schema": "public",
       "values": [
-        "created",
-        "mint_request",
-        "minted",
-        "failed",
-        "validation_failed"
+        "new",
+        "confirming",
+        "processing",
+        "completed",
+        "cancelled",
+        "failed"
+      ]
+    },
+    "public.order_types": {
+      "name": "order_types",
+      "schema": "public",
+      "values": [
+        "nft_mint",
+        "offchain_ticket",
+        "event_creation",
+        "event_capacity_increment"
+      ]
+    },
+    "public.payment_types": {
+      "name": "payment_types",
+      "schema": "public",
+      "values": [
+        "USDT",
+        "TON"
       ]
     },
     "public.reward_status": {
@@ -3165,9 +3143,16 @@
       "name": "event_ticket_status",
       "schema": "public",
       "values": [
-        "MINTING",
         "USED",
         "UNUSED"
+      ]
+    },
+    "public.ticket_types": {
+      "name": "ticket_types",
+      "schema": "public",
+      "values": [
+        "OFFCHAIN",
+        "NFT"
       ]
     }
   },

@@ -38,10 +38,10 @@ async function MainCronJob() {
   }
 
   // Create Rewards Cron Job
-  new CronJob("*/30 * * * *", cronJob(createRewards), null, true);
+  // new CronJob("*/30 * * * *", cronJob(createRewards), null, true);
 
   // Notify Users Cron Job
-  new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
+  // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
 
   new CronJob("*/30 * * * * *", cronJob(CheckTransactions), null, true);
 
@@ -266,29 +266,37 @@ async function CheckTransactions(pushLockTTl: () => any) {
   }
 }
 
-const uploadJsonToMinio = async (jsonData: object) => {
-  const bucketName = "ontonitem";
-
-  const jsonFilename = `metadata.json`;
-
+const uploadJsonToMinio = async (jsonData: Record<string, any>, bucketName: string, subfolder: string = "") => {
+  const buffer = Buffer.from(JSON.stringify(jsonData));
+  const fullFilename = `${subfolder}/metadata.json`;
+  // Create form data for the upload
   const formData = new FormData();
-  formData.append("json", JSON.stringify(jsonData), {
-    filename: jsonFilename,
+  formData.append("json", buffer, {
+    filename: fullFilename,
     contentType: "application/json",
   });
 
+  // Append the bucket name to the form data
   formData.append("bucketName", bucketName);
-  const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload`;
 
-  const res = await axios.post(url, formData, {
-    headers: formData.getHeaders(),
-  });
+  // Send the JSON data to the upload service (MinIO)
+  const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-json`;
+  console.log("URL: ", url);
+  try {
+    const res = await axios.post(url, formData, {
+      headers: formData.getHeaders(),
+    });
+    console.log("Response: ", res.data);
 
-  if (!res.data || !res.data.jsonUrl) {
-    throw new Error("JSON upload failed");
+    if (!res.data || !res.data.jsonUrl) {
+      throw new Error("JSON upload failed");
+    }
+
+    return res.data.jsonUrl;
+  } catch (error) {
+    console.error("Error during JSON upload:", error);
+    throw new Error("An error occurred during JSON upload");
   }
-
-  return res.data as { jsonUrl: string };
 };
 
 async function CreateEventOrders(pushLockTTl: () => any) {
@@ -344,14 +352,30 @@ async function CreateEventOrders(pushLockTTl: () => any) {
       console.error("what the fuck : ", "event Does not have payment !!!");
     }
 
-    const metaDataUrl = await uploadJsonToMinio({
-      name: paymentInfo?.title,
-      description: paymentInfo?.description,
-      image: paymentInfo?.ticketImage,
-      cover_image: paymentInfo?.ticketImage,
-    });
+    /* -------------------------------------------------------------------------- */
+    /*                              Create Collection                             */
+    /* -------------------------------------------------------------------------- */
 
-    console.log("MetaDataUrl", metaDataUrl);
+    /* -------------------------------------------------------------------------- */
+    /* ----------------------------- MetaData Upload ---------------------------- */
+    let metaDataUrl = "";
+    try {
+      metaDataUrl = await uploadJsonToMinio(
+        {
+          name: paymentInfo?.title,
+          description: paymentInfo?.description,
+          image: paymentInfo?.ticketImage,
+          cover_image: paymentInfo?.ticketImage,
+        },
+        "ontoncollection"
+      );
+      if (!metaDataUrl) continue; //failed
+    } catch (error) {
+      continue; //failed
+    }
+    console.log("MetaDataUrl_CreateEvent_CronJob", metaDataUrl);
+
+    /* ---------------------------- Collection Deploy --------------------------- */
     let collectionAddress = "c";
     if (paymentInfo && !paymentInfo?.collectionAddress) {
       collectionAddress = (
@@ -359,9 +383,17 @@ async function CreateEventOrders(pushLockTTl: () => any) {
       ).toRawString();
     }
 
+    /* -------------------------------------------------------------------------- */
+    /*                          Create Ton Society Event                          */
+    /* -------------------------------------------------------------------------- */
     let ton_society_result = null;
     if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
+
+    /* -------------------------------------------------------------------------- */
+    /*                                  Update DB                                 */
+    /* -------------------------------------------------------------------------- */
     db.transaction(async (trx) => {
+      /* --------------------------- Update Activity Id --------------------------- */
       if (ton_society_result) {
         await trx
           .update(events)
@@ -369,6 +401,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
           .where(eq(events.event_uuid, event_uuid))
           .execute();
       }
+      /* ------------------------ Update Collection Address ----------------------- */
       if (paymentInfo && collectionAddress) {
         await trx
           .update(eventPayment)
@@ -377,11 +410,14 @@ async function CreateEventOrders(pushLockTTl: () => any) {
           .execute();
       }
 
-      await trx
-        .update(orders)
-        .set({ state: "completed", updatedBy: "cronjob", updatedAt: new Date() })
-        .where(eq(orders.uuid, order.uuid))
-        .execute();
+      /* ------------------------- Mark Order as Completed ------------------------ */
+      if (paymentInfo && collectionAddress && ton_society_result) {
+        await trx
+          .update(orders)
+          .set({ state: "completed", updatedBy: "cronjob", updatedAt: new Date() })
+          .where(eq(orders.uuid, order.uuid))
+          .execute();
+      }
     });
   }
 }
@@ -416,14 +452,16 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
       console.error("what the fuck : ", "event Does not have payment !!!");
     }
 
-    db.transaction(async (trx) => {
-      const newCapacity = Number(eventData.capacity! + order.total_price / 0.055);
-      await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid));
+    await db.transaction(async (trx) => {
+      const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.055);
+
+      await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid)).execute();
       await trx
         .update(eventPayment)
         .set({ bought_capacity: newCapacity })
-        .where(eq(events.event_uuid, eventData.event_uuid));
-      await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, order.uuid));
+        .where(eq(eventPayment.event_uuid, eventData.event_uuid))
+        .execute();
+      await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, order.uuid)).execute();
     });
   }
 }

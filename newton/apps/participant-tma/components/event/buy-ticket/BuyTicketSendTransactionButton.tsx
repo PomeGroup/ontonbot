@@ -1,17 +1,15 @@
 import { useCallback, useEffect } from "react";
 import { useMainButton } from "@tma.js/sdk-react";
 
-const BuyTicketSendTransactionButton = ({
-  price,
-  validateForm,
-}: {
+const BuyTicketSendTransactionButton = (props: {
   price: string | number;
   validateForm: () => boolean;
+  paymentType: "USDT" | "TON";
 }) => {
   const mainButton = useMainButton(true);
 
   const buyTicketOnClick = useCallback(async () => {
-    const isFormValid = validateForm();
+    const isFormValid = props.validateForm();
 
     if (!isFormValid) {
       return;
@@ -20,7 +18,7 @@ const BuyTicketSendTransactionButton = ({
 
   useEffect(() => {
     mainButton?.setBgColor("#007AFF");
-    mainButton?.setTextColor("#ffffff").setText(`Pay ${price} TON`);
+    mainButton?.setTextColor("#ffffff").setText(`Pay ${props.price} ${props.paymentType}`);
     mainButton?.enable().show();
     mainButton?.hideLoader();
 

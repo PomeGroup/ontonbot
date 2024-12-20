@@ -179,6 +179,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         orderAlreadyPlace={params.orderAlreadyPlace}
         price={params.price}
         validateForm={validateForm}
+        paymentType={addOrder.data?.payment_type || null}
         eventId={params.id}
       />
       {typeof window !== "undefined" && createPortal(<BuyTicketTxQueryState />, document.body)}

@@ -16,6 +16,7 @@ import {
   getCache, setCache, deleteCache,
   cacheKeys
 } from "@/lib/redisTools";
+import { Server } from "socket.io";
 
 type CallbackFunction = (response: { status: string; message: string }) => void;
 
@@ -23,6 +24,7 @@ type CallbackFunction = (response: { status: string; message: string }) => void;
  * handleNotificationReply - Extended to check password attempts via Redis
  */
 export const handleNotificationReply = async (
+  io: Server,
   data: any,
   callback: CallbackFunction,
   sanitizedUsername: string,
@@ -234,6 +236,7 @@ export const handleNotificationReply = async (
 
     // If item_type === "POA_TRIGGER", handle POA result insertion
     if (foundNotification.item_type === "POA_TRIGGER") {
+
       const eventPoaTrigger = await eventPoaTriggersDB.getEventPoaTriggerById(foundNotification.itemId);
       if (!eventPoaTrigger) {
         console.warn(`Event POA Trigger not found for ID ${foundNotification.itemId}`);
@@ -243,7 +246,7 @@ export const handleNotificationReply = async (
           userId,
           eventId: eventPoaTrigger.eventId,
           poaId: foundNotification.itemId,
-          poaAnswer: answer,
+          poaAnswer:  (foundNotification.type === "POA_PASSWORD") ? "correct_password" : answer,
           status: "REPLIED",
           repliedAt: new Date(),
           notificationId: notificationIdNumber,
@@ -281,6 +284,11 @@ export const handleNotificationReply = async (
       }
     }
 
+    // Emit an event to all user devices to close the POA notification
+    // This is triggered after successfully replying with the correct password.
+    if (foundNotification.type === "POA_PASSWORD") {
+      io.to(`user_${userId}`).emit("notification_close", { notificationId: notificationIdNumber });
+    }
     // Finally, respond to the user
     if (callback) {
       callback({
