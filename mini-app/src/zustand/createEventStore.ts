@@ -99,7 +99,7 @@ const defaultState = {
       has_payment: false,
     },
   },
-  step: 1,
+  step: 3,
 };
 
 export const useCreateEventStore = create<CreateEventStoreType>()(
@@ -246,15 +246,15 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
       },
       changePaymentAmount(amount) {
         set((state) => {
-          state.eventData.paid_event.payment_amount = amount;
+          state.eventData.paid_event.payment_amount = isNaN(amount) || !amount ? undefined : Math.abs(amount);
         });
       },
       changeRecepientAddress(address) {
         set((state) => {
           try {
             Address.parse(address);
-            state.eventData.paid_event.payment_recipient_address = address;
           } catch (error) {
+            state.eventData.paid_event.payment_recipient_address = address;
             // handle error here
             state.eventData.paid_event.payment_recipient_address = "";
           }
@@ -285,11 +285,26 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
          * 🦄 Handle Paid Event 🦄
          */
         const hasPayment = get().eventData.paid_event.has_payment;
+
         if (hasPayment) {
+          const capacity = get().eventData.capacity;
           const paymentParsed = PaidEventSchema.safeParse(get().eventData.paid_event);
+
           if (paymentParsed.error) {
             set((state) => {
               state.paid_info_errors = paymentParsed.error.flatten().fieldErrors;
+            });
+          } else if (!capacity) {
+            set((state) => {
+              state.paid_info_errors = {
+                capacity: ["Capacity is required."],
+              };
+            });
+          } else if (capacity < 1) {
+            set((state) => {
+              state.paid_info_errors = {
+                capacity: ["Capacity must be greater than 0."],
+              };
             });
           } else if (paymentParsed.success) {
             get().setCurrentStep(4);

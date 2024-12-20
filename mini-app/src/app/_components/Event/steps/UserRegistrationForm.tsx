@@ -80,8 +80,12 @@ export function UserRegistrationForm() {
                 type="number"
                 name="capacity"
                 inputMode="number"
-                min={1}
-                onChange={(e) => setEventData({ capacity: Number(e.target.value) })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numValue = Number(value);
+                  setEventData({ capacity: value === "" ? undefined : numValue >= 1 ? numValue : 1 });
+                }}
+                value={eventData.capacity}
                 defaultValue={eventData.capacity}
                 inputClassName={cn("placeholder:tracking-[.2rem] tracking-widest")}
                 placeholder={"100"}
