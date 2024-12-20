@@ -11,11 +11,11 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import {MinioClientService} from "./minio.service";
 
 
-@Controller('files')
+Controller('files')
 export class MinioController {
   constructor(private readonly minio: MinioClientService) {}
 
-  @UseInterceptors(FileInterceptor('image')) // Handle the file upload
+  @UseInterceptors(FileInterceptor('image')) // Handle the image upload
   @Post('upload')
   async uploadFile(
     @UploadedFile() image: Express.Multer.File, // Uploaded file
@@ -32,7 +32,7 @@ export class MinioController {
       image.originalname,
       image.buffer,
       image.size,
-      { mimetype: image.mimetype ,'Content-Type': image.mimetype}, // Metadata
+      { mimetype: image.mimetype, 'Content-Type': image.mimetype }, // Metadata
       subfolder || '', // Subfolder if provided
     );
 
@@ -68,6 +68,41 @@ export class MinioController {
     );
 
     return { videoUrl };
+  }
+
+  @UseInterceptors(FileInterceptor('json')) // Handle the JSON file upload
+  @Post('upload-json')
+  async uploadJson(
+    @UploadedFile() jsonFile: Express.Multer.File,
+    @Body('bucketName') bucketName: string, // Extract bucketName from the form data
+    @Body('subfolder') subfolder: string, // Extract subfolder from the form data
+  ) {
+    // Check file type and size constraints for JSON
+    if (jsonFile.mimetype !== "application/json") {
+      throw new HttpException(
+        "Only JSON format is allowed.",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (jsonFile.size > 25 * 1024) { // 25 KB size limit
+      throw new HttpException(
+        "JSON file size exceeds the 25 KB limit.",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Upload the JSON file using MinIO service
+    const jsonUrl = await this.minio.uploadFile(
+      bucketName || process.env.MINIO_ITEM_BUCKET || 'onton', // Use the bucketName from the request or fallback to env variable
+      jsonFile.originalname,
+      jsonFile.buffer,
+      jsonFile.size,
+      { mimetype: jsonFile.mimetype, 'Content-Type': jsonFile.mimetype }, // Metadata
+      subfolder || '', // Subfolder if provided
+    );
+
+    // Return the public URL of the uploaded JSON file
+    return { jsonUrl };
   }
 }
 
