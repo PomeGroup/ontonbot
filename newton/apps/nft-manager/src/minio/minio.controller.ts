@@ -11,7 +11,7 @@ import { FileInterceptor } from "@nestjs/platform-express";
 import {MinioClientService} from "./minio.service";
 
 
-Controller('files')
+@Controller('files')
 export class MinioController {
   constructor(private readonly minio: MinioClientService) {}
 
