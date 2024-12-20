@@ -43,7 +43,7 @@ async function MainCronJob() {
   // Notify Users Cron Job
   // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  // new CronJob("*/30 * * * * *", cronJob(CheckTransactions), null, true);
+  new CronJob("*/30 * * * * *", cronJob(CheckTransactions), null, true);
 
   new CronJob("*/30 * * * * *", cronJob(UpdateEventCapacity), null, true);
 
