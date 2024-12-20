@@ -53,15 +53,32 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 --> statement-breakpoint
-DO $$ BEGIN
- CREATE TYPE "public"."order_state" AS ENUM('new', 'confirming','processing', 'completed' ,'failed','cancelled');
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
 
-ALTER TABLE "public"."orders"
-ALTER COLUMN "state" TYPE "public"."order_state"
-USING "state"::"public"."order_state";
+/* -------------------------------------------------------------------------- */
+/*                             Create ORDER STATE                             */
+/* -------------------------------------------------------------------------- */
+ALTER TABLE orders ALTER COLUMN state TYPE TEXT USING state::TEXT;
+UPDATE orders
+SET state = CASE
+    WHEN state = 'created' THEN 'new'
+    WHEN state = 'mint_request' THEN 'processing'
+    WHEN state = 'minted' THEN 'completed'
+    WHEN state = 'failed' THEN 'failed'
+    WHEN state = 'validation_failed' THEN 'cancelled'
+    ELSE state
+END;
+CREATE TYPE "public"."order_state_new" AS ENUM(
+    'new',
+    'confirming',
+    'processing',
+    'completed',
+    'failed',
+    'cancelled'
+);
+ALTER TABLE orders ALTER COLUMN state TYPE "public"."order_state_new" USING state::TEXT::"public"."order_state_new";
+DROP TYPE "public"."order_state";
+ALTER TYPE "public"."order_state_new" RENAME TO "order_state";
+
 
 
 CREATE TABLE IF NOT EXISTS "event_poa_results" (
