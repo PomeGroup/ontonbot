@@ -76,11 +76,8 @@ function PaymentAmount() {
         type="number"
         inputMode="number"
         placeholder={`Payment amount in ${payment.payment_type}`}
-        min={payment.payment_type === "USDT" ? 5 : 1}
         value={payment.payment_amount}
-        onChange={(e) => {
-          changePaymentAmount(Number(e.target.value));
-        }}
+        onChange={(e) => changePaymentAmount(Number(e.target.value))}
         error={paid_info_errors.payment_amount?.[0]}
       />
     </>
@@ -191,13 +188,18 @@ function Capacity() {
         outline
         inputMode="number"
         type="number"
-        min={1}
         error={paid_info_errors.capacity?.[0]}
         value={capacity}
-        onChange={(e) => setEventData({ capacity: e.target.value ? Number(e.target.value) : undefined })}
+        onChange={(e) => {
+          const value = e.target.value;
+          const numValue = Number(value);
+          setEventData({ capacity: value === "" ? undefined : numValue >= 1 ? numValue : 1 });
+        }}
         label="Capacity"
+        required
         info="Number users who can buy your NFT, 0.055 TON for each NFT (minting fee)"
       />
+
       {isEdit && (
         <ListItem
           title="Bought Capacity"
