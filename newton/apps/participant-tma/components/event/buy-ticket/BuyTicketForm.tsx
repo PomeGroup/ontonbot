@@ -54,50 +54,47 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
 
   const utm = params.utm_tag || null;
 
-  const buyTicketOnClick: FormEventHandler<HTMLFormElement> = useCallback(
-    async (e) => {
-      e.preventDefault();
-      if (!form.current) {
-        throw new Error("form is not defined");
-      }
-      const formdata = new FormData(form.current);
-      const data = Object.fromEntries(formdata) as {
-        full_name: string;
-        telegram: string;
-        company: string;
-        position: string;
-        owner_address: string;
-      };
+  const buyTicketOnClick: FormEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    if (!form.current) {
+      throw new Error("form is not defined");
+    }
+    const formdata = new FormData(form.current);
+    const data = Object.fromEntries(formdata) as {
+      full_name: string;
+      telegram: string;
+      company: string;
+      position: string;
+      owner_address: string;
+    };
 
-      mainButton?.hide().disable();
-      mainButton?.hideLoader();
+    mainButton?.hide().disable();
+    mainButton?.hideLoader();
 
-      await addOrder
-        .mutateAsync({
-          event_uuid: params.event_uuid,
-          utm,
-          ...data,
+    await addOrder
+      .mutateAsync({
+        event_uuid: params.event_uuid,
+        utm,
+        ...data,
+      })
+      .then(async (data) => {
+        // User wallet connected
+        await transfer(params.sendTo, Number(params.price), data.payment_type, {
+          comment: `onton_order=${data.order_id}`,
         })
-        .then(async (data) => {
-          // User wallet connected
-          await transfer(params.sendTo, Number(params.price), data.payment_type, {
-            comment: `onton_order=${data.order_id}`,
+          .then(() => {
+            setIsRequestingTicket({ state: true, orderId: data.order_id });
           })
-            .then(() => {
-              setIsRequestingTicket({ state: true, orderId: data.order_id });
-            })
-            .catch(() => {
-              mainButton?.show().enable();
-            });
-        })
-        .catch(() => {
-          toast.error("There was an error adding a new order");
-          mainButton?.show().enable();
-        });
-      // if not connected
-    },
-    [mainButton?.isEnabled]
-  );
+          .catch(() => {
+            mainButton?.show().enable();
+          });
+      })
+      .catch(() => {
+        toast.error("There was an error adding a new order");
+        mainButton?.show().enable();
+      });
+    // if not connected
+  };
 
   const validateForm = useCallback(() => {
     const fields = ["full_name", "telegram", "company", "position"];
