@@ -164,52 +164,48 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     let decoded;
     try {
       if (!(await verifyToken(proof_token))) {
-        // FIXME: this should be uncommented
-        // return Response.json(
-        //   {
-        //     message: "invalid token",
-        //     code: "invalid_proof_token",
-        //   },
-        //   {
-        //     status: 401,
-        //   }
-        // );
+        return Response.json(
+          {
+            message: "invalid token",
+            code: "invalid_proof_token",
+          },
+          {
+            status: 401,
+          }
+        );
       }
 
       decoded = {
         address: decodePayloadToken(proof_token)?.address,
       };
     } catch {
-      decoded = {
-        address: decodePayloadToken(proof_token)?.address,
-      };
-      // return Response.json(
-      //   {
-      //     message: "invalid token",
-      //     code: "invalid_proof_token",
-      //   },
-      //   {
-      //     status: 401,
-      //   }
-      // );
+      return Response.json(
+        {
+          message: "invalid token",
+          code: "invalid_proof_token",
+        },
+        {
+          status: 401,
+        }
+      );
     }
 
-    // if (!decoded.address) {
-    //   return Response.json(
-    //     message: "address is missing in token",
-    //     {
-    //       code: "token_address_missing",
-    //     },
-    //     {
-    //       status: 400,
-    //     }
-    //   );
-    // }
+    if (!decoded.address) {
+      return Response.json(
+        {
+          message: "address is missing in token",
+          code: "token_address_missing",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
 
     const ownerAddress = decoded.address;
 
     const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
-      ownerAddress!,
+      ownerAddress,
       event_payment_info?.collectionAddress!,
       userId
     );
