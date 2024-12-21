@@ -135,7 +135,7 @@ const processOngoingEvents = async () => {
 
               // Now we fetch REPLIED notifications for these users & event
               const replied = await notificationsDB.getRepliedPoaPasswordNotificationsForEvent(eventId, userIds);
-              console.log(`Found ${replied.length} replied password notifications for Event ${eventId}`, replied);
+              console.log(`Found ${replied.length} replied password notifications for Event ${eventId}`);
 
               // Convert userId to number if needed
               const userIdsWhoAlreadyReplied = new Set(replied.map((n: any) => parseInt(n.userId, 10)));
@@ -143,8 +143,7 @@ const processOngoingEvents = async () => {
               // Filter out the users who have REPLIED (so we don't send them new notifications)
               finalUsers = approvedUsers.filter((u) => !userIdsWhoAlreadyReplied.has(u.userId));
               console.log(
-                `Filtered out ${approvedUsers.length - finalUsers.length} users who already replied`,
-                finalUsers,
+                `Filtered out ${approvedUsers.length - finalUsers.length} users who already replied`
               );
             }
             const notificationsToAdd = finalUsers.map((user) => ({
@@ -159,7 +158,7 @@ const processOngoingEvents = async () => {
                 trigger.poaType === "simple"
                   ? ACTION_TIMEOUTS.POA_SIMPLE
                   : ACTION_TIMEOUTS.POA_PASSWORD,
-              additionalData: { eventId, poaId: trigger.id, maxTry: PASSWORD_RETRY_LIMIT },
+              additionalData: { eventId, eventUuid: event.eventUuid , poaId: trigger.id, maxTry: PASSWORD_RETRY_LIMIT },
               priority: 1,
               itemId: trigger.id,
               item_type: "POA_TRIGGER" as NotificationItemType,
@@ -168,11 +167,16 @@ const processOngoingEvents = async () => {
               readAt: undefined,
               expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000),
             }));
-
+            console.log(`Adding ${notificationsToAdd.length} notifications for Trigger ${trigger.id}`,notificationsToAdd);
             try {
-              const result = await notificationsDB.addNotifications(notificationsToAdd);
-              console.log(`Created ${result.count} notifications for Trigger ${trigger.id}`);
-              totalNotificationsCreated += result.count; // Accumulate count
+              if(notificationsToAdd.length > 0) {
+                const result = await notificationsDB.addNotifications(notificationsToAdd);
+                console.log(`Created ${result.count} notifications for Trigger ${trigger.id}`);
+                totalNotificationsCreated += result.count; // Accumulate count
+              }
+              else {
+                console.log(`No notifications to create for Trigger ${trigger.id}`);
+              }
             } catch (notificationError) {
               console.error(`Failed to create notifications:`, notificationError);
             }
@@ -201,8 +205,6 @@ const processOngoingEvents = async () => {
             return;
           }
         }
-
-
       } catch (eventError) {
         console.error(`Error processing Event ${eventId}:`, eventError);
       }

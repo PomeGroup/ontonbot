@@ -50,11 +50,9 @@ export const EventPasswordAndWalletInput = () => {
 
   const submitPassword: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
-
     // Get password field in the form
     const formData = new FormData(e.currentTarget);
     const password = formData.get("event_password") as string;
-
     if (initData && eventPasswordField && eventPasswordField.event_id) {
       if (password) {
         upsertUserEventFieldMutation.mutate({
@@ -82,7 +80,6 @@ export const EventPasswordAndWalletInput = () => {
     <>
       {
         !hasRegistration && (
-
           <form
             className="mt-2 space-y-1"
             ref={formRef}
