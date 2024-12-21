@@ -21,6 +21,7 @@ import { Cell } from "@ton/core";
 import axios from "axios";
 import FormData from "form-data";
 import wlg from "@/server/utils/logger";
+import { deployCollection } from "./lib/nft";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -44,7 +45,7 @@ async function MainCronJob() {
   // Notify Users Cron Job
   // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  new CronJob("*/30 * * * * *", CheckTransactions, null, true);
+  new CronJob("*/20 * * * * *", CheckTransactions, null, true);
 
   new CronJob("*/10 * * * * *", UpdateEventCapacity, null, true);
 
@@ -242,11 +243,11 @@ async function CheckTransactions() {
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
-  wlg.warn("CheckTransactions ===>>>>>");
+  wlg.warn("CheckTransactions ==================>>>>>");
   const wallet_address = is_mainnet
     ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
     : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW";
-  const start_utime = Math.floor((Date.now() - 3 * 60 * 1000) / 1000);
+  const start_utime = Math.floor((Date.now() - 10 * 60 * 1000) / 1000);
   wlg.info(wallet_address, start_utime);
   const transactions = await tonCenter.fetchAllTransactions(wallet_address, 1734393600);
   wlg.info("Trx Len", transactions.length);
@@ -377,33 +378,30 @@ async function CreateEventOrders() {
       } catch (error) {
         continue; //failed
       }
-      wlg.warn("MetaDataUrl_CreateEvent_CronJob", metaDataUrl);
+      wlg.warn("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
 
       /* ---------------------------- Collection Deploy --------------------------- */
       collection_address_in_db = false;
-      // collectionAddress = "await deploy();
-      collectionAddress = "abar collection";
+      collectionAddress = await deployCollection(metaDataUrl);
     }
 
     /* -------------------------------------------------------------------------- */
     /*                          Create Ton Society Event                          */
     /* -------------------------------------------------------------------------- */
-    let ton_society_result = null;
+    let ton_society_result = undefined;
     if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
-
-    wlg.info(ton_society_result);
 
     /* -------------------------------------------------------------------------- */
     /*                                  Update DB                                 */
     /* -------------------------------------------------------------------------- */
     await db.transaction(async (trx) => {
       /* --------------------------- Update Activity Id --------------------------- */
-      if (ton_society_result) {
-        wlg.info(`Activity ID ${ton_society_result.data.activity_id}`);
+      if (eventData.activity_id || ton_society_result) {
+        const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
         await trx
           .update(events)
           .set({
-            activity_id: ton_society_result.data.activity_id,
+            activity_id: activity_id,
             hidden: false,
             enabled: true,
             updatedBy: "cronjob",
