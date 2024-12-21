@@ -99,6 +99,8 @@ const BuyTicketTmaSettings = (props: BuyTicketTmaSettingsProps) => {
     tma?.setHeaderColor("#EFEFF4");
   }, [tma?.bgColor]);
 
+  console.log("wow", props);
+
   return (
     <>
       {props.userHasTicket || isRequestingTicket.state || props.isSoldOut ? (

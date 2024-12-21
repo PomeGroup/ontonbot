@@ -18,6 +18,7 @@ import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
 import { useUserStore } from "~/store/user.store";
 import BuyTicketTxQueryState from "./BuyTicketTxQueryState";
 import { useTransferTon } from "~/hooks/ton.hooks";
+import { PaymentType } from "~/types/order.types";
 
 type BuyTicketFormProps = {
   id: string;
@@ -28,6 +29,7 @@ type BuyTicketFormProps = {
   eventTicketId: number;
   sendTo: string;
   utm_tag: string | null;
+  paymentType: PaymentType;
 };
 
 interface BuyTicketFormElement extends HTMLFormElement {
@@ -179,7 +181,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         orderAlreadyPlace={params.orderAlreadyPlace}
         price={params.price}
         validateForm={validateForm}
-        paymentType={addOrder.data?.payment_type || null}
+        paymentType={params.paymentType}
         eventId={params.id}
       />
       {typeof window !== "undefined" && createPortal(<BuyTicketTxQueryState />, document.body)}

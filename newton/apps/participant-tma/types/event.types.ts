@@ -1,3 +1,5 @@
+import { PaymentType } from "./order.types";
+
 export interface EventType extends EventDataOnlyType {
   organizer: {
     user_id: number;
@@ -8,17 +10,6 @@ export interface EventType extends EventDataOnlyType {
     language_code: string;
     role: "organizer" | "admin" | "user";
     created_at: string;
-  };
-  eventTicket?: {
-    created_at: Date | null;
-    event_id: number;
-    title: string;
-    description: string;
-    id: number;
-    price: number;
-    ticketImage: string;
-    count: number;
-    collectionAddress: string | null;
   };
   userTicket?: {
     status: "USED" | "UNUSED" | null;
@@ -65,6 +56,7 @@ export interface EventDataOnlyType {
     ticketImage: string;
     count: number;
     collectionAddress: string | null;
+    payment_type: PaymentType;
   };
   event_id: number;
   event_uuid: string;
