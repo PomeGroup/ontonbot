@@ -46,9 +46,9 @@ async function MainCronJob() {
 
   new CronJob("*/30 * * * * *", CheckTransactions, null, true);
 
-  // new CronJob("*/30 * * * * *", cronJob(UpdateEventCapacity), null, true);
+  new CronJob("*/10 * * * * *", UpdateEventCapacity, null, true);
 
-  // new CronJob("*/5 * * * *", cronJob(CreateEventOrders), null, true);
+  new CronJob("*/10 * * * *", CreateEventOrders, null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
@@ -237,7 +237,7 @@ async function handleRewardError(reward: RewardType, error: any) {
 /* -------------------------------------------------------------------------- */
 /*                        Orders & Transaction Checker                        */
 /* -------------------------------------------------------------------------- */
-async function CheckTransactions(pushLockTTl: () => any) {
+async function CheckTransactions() {
   // Get Orders to be Checked (Sort By Order.TicketDetails.Id)
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
@@ -349,7 +349,7 @@ async function CreateEventOrders() {
     const paymentInfo = (
       await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
     ).pop();
-    // deployNftCollection
+
     if (!paymentInfo) {
       console.error("what the fuck : ", "event Does not have payment !!!");
     }
@@ -357,41 +357,37 @@ async function CreateEventOrders() {
     /* -------------------------------------------------------------------------- */
     /*                              Create Collection                             */
     /* -------------------------------------------------------------------------- */
+    let collectionAddress = paymentInfo?.collectionAddress || null;
+    let collection_address_in_db = true;
+    if (paymentInfo && !paymentInfo?.collectionAddress) {
+      /* -------------------------------------------------------------------------- */
+      /* ----------------------------- MetaData Upload ---------------------------- */
+      let metaDataUrl = "";
+      try {
+        metaDataUrl = await uploadJsonToMinio(
+          {
+            name: paymentInfo?.title,
+            description: paymentInfo?.description,
+            image: paymentInfo?.ticketImage,
+            cover_image: paymentInfo?.ticketImage,
+          },
+          "ontoncollection"
+        );
+        if (!metaDataUrl) continue; //failed
+      } catch (error) {
+        continue; //failed
+      }
+      wlg.warn("MetaDataUrl_CreateEvent_CronJob", metaDataUrl);
 
-    /* -------------------------------------------------------------------------- */
-    /* ----------------------------- MetaData Upload ---------------------------- */
-    let metaDataUrl = "";
-    try {
-      metaDataUrl = await uploadJsonToMinio(
-        {
-          name: paymentInfo?.title,
-          description: paymentInfo?.description,
-          image: paymentInfo?.ticketImage,
-          cover_image: paymentInfo?.ticketImage,
-        },
-        "ontoncollection"
-      );
-      if (!metaDataUrl) continue; //failed
-    } catch (error) {
-      continue; //failed
+      /* ---------------------------- Collection Deploy --------------------------- */
+      collection_address_in_db = false;
+      // collectionAddress = "await deploy();
+      collectionAddress = "abar collection";
     }
-    wlg.warn("MetaDataUrl_CreateEvent_CronJob", metaDataUrl);
-
-    /* ---------------------------- Collection Deploy --------------------------- */
-    let collectionAddress = "some collection address";
-    // if (paymentInfo && !paymentInfo?.collectionAddress) {
-    //   collectionAddress = (
-    //     await deployNftCollection(paymentInfo.title!, paymentInfo.description!, paymentInfo.ticketImage!)
-    //   ).toRawString();
-    // }
 
     /* -------------------------------------------------------------------------- */
     /*                          Create Ton Society Event                          */
     /* -------------------------------------------------------------------------- */
-    wlg.info("collection");
-    wlg.info(collectionAddress);
-
-    wlg.info(eventDraft);
     let ton_society_result = null;
     if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
 
@@ -418,16 +414,16 @@ async function CreateEventOrders() {
       }
       /* ------------------------ Update Collection Address ----------------------- */
       if (paymentInfo && collectionAddress) {
-        wlg.info(`collectionAddress ${collectionAddress}`);
         await trx
           .update(eventPayment)
           .set({ collectionAddress: collectionAddress })
           .where(eq(eventPayment.id, paymentInfo.id))
           .execute();
+        collection_address_in_db = true;
       }
 
       /* ------------------------- Mark Order as Completed ------------------------ */
-      if (paymentInfo && collectionAddress && ton_society_result) {
+      if (paymentInfo && collection_address_in_db && (ton_society_result || eventData.activity_id)) {
         await trx
           .update(orders)
           .set({ state: "completed", updatedBy: "cronjob", updatedAt: new Date() })
@@ -437,7 +433,7 @@ async function CreateEventOrders() {
     });
   }
 }
-async function UpdateEventCapacity(pushLockTTl: () => any) {
+async function UpdateEventCapacity() {
   const results = await db
     .select()
     .from(orders)
