@@ -21,7 +21,7 @@ export async function openWallet(mnemonic: string[], testnet: boolean) {
 
   const client = new TonClient({
     endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
-    apiKey: process.env.TONCENTER_API_KEY,
+    apiKey: "1dd90a08cac83c13d27078fdb5f73752b393c8db47d9bf959d288fe486b9bcd1",
   });
   const wallet = WalletContractV4.create({
     workchain: 0,
@@ -239,7 +239,7 @@ export class NftItem {
   static async getAddressByIndex(collectionAddress: Address, itemIndex: number): Promise<Address> {
     const client = new TonClient({
       endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
-      apiKey: "5481fc1517a904264da06f24f66c1b7a67ff11b4f5847f3942e3526c998bb9f1",
+      apiKey: "1dd90a08cac83c13d27078fdb5f73752b393c8db47d9bf959d288fe486b9bcd1",
     });
     const response = await client.runMethod(collectionAddress, "get_nft_address_by_index", [
       { type: "int", value: BigInt(itemIndex) },
@@ -286,6 +286,5 @@ export async function deployCollection(collectio_metadata_url: string) {
   await waitSeqno(seqno, wallet);
   console.log(`Collection deployed Completely ..... `);
 
-  return collection.address.toString()
+  return collection.address.toString();
 }
-

@@ -250,14 +250,14 @@ async function CheckTransactions() {
   const start_utime = Math.floor((Date.now() - 10 * 60 * 1000) / 1000);
   wlg.info(wallet_address, start_utime);
   const transactions = await tonCenter.fetchAllTransactions(wallet_address, 1734393600);
-  wlg.info("Trx Len", transactions.length);
+  console.log("Trx Len", transactions.length);
   const parsed_orders = await tonCenter.parseTransactions(transactions);
   for (const o of parsed_orders) {
     if (o.verfied) {
-      wlg.info("cron_trx", o.order_uuid, o.order_type, o.value);
+      console.log("cron_trx", o.order_uuid, o.order_type, o.value);
       await db
         .update(orders)
-        .set({ state: "processing" })
+        .set({ state: "processing" , owner_address : o.owner.toString()})
         .where(
           and(
             eq(orders.uuid, o.order_uuid),
