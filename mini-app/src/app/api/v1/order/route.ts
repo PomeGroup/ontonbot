@@ -71,7 +71,12 @@ export async function POST(request: Request) {
     await db
       .select()
       .from(orders)
-      .where(and(eq(orders.user_id, userId), eq(orders.order_type, "nft_mint")))
+      .where(and(
+        eq(orders.user_id, userId), 
+        eq(orders.order_type, "nft_mint"),
+        eq(orders.event_uuid, eventData.event_uuid),
+      
+      ))
       .execute()
   ).pop();
 
