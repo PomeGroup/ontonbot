@@ -78,9 +78,9 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
           utm,
           ...data,
         })
-        .then((data) => {
+        .then(async (data) => {
           // User wallet connected
-          transfer(params.sendTo, Number(params.price), data.payment_type, {
+          await transfer(params.sendTo, Number(params.price), data.payment_type, {
             comment: `onton_order=${data.order_id}`,
           })
             .then(() => {
