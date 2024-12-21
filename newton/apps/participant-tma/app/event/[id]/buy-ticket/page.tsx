@@ -61,7 +61,9 @@ const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
                 src={event.eventTicket.ticketImage as string}
               />
               <div className={"flex flex-col"}>
-                <h5 className="type-headline font-semibold">{event.eventTicket.price} TON</h5>
+                <h5 className="type-headline font-semibold">
+                  {event.eventTicket.price} {event.eventTicket.payment_type}
+                </h5>
                 <p className="type-subtitle-2 text-telegram-hint-color font-normal">{event.eventTicket.title}</p>
               </div>
             </div>
