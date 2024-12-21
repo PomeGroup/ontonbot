@@ -26,7 +26,7 @@ type BuyTicketFormProps = {
   isSoldOut: boolean;
   userHasTicket: boolean;
   orderAlreadyPlace: boolean;
-  eventTicketId: number;
+  event_uuid: string;
   sendTo: string;
   utm_tag: string | null;
   paymentType: PaymentType;
@@ -74,7 +74,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
 
       addOrder
         .mutateAsync({
-          event_ticket_id: params.eventTicketId,
+          event_uuid: params.event_uuid,
           utm,
           ...data,
         })

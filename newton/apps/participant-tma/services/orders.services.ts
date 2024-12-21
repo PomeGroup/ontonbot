@@ -7,7 +7,7 @@ export async function addOrder(body: {
   company: string;
   position: string;
   owner_address: string;
-  event_ticket_id: number;
+  event_uuid: string;
   utm: string | null;
 }) {
   const eventResponse = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/order`, {

@@ -103,7 +103,7 @@ const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
         orderAlreadyPlace={event.orderAlreadyPlace}
         id={params.id}
         sendTo={event.wallet_address}
-        eventTicketId={event.eventTicket.id}
+        event_uuid={event.event_uuid}
         price={event.eventTicket.price}
         utm_tag={utm_tag}
         paymentType={event.eventTicket.payment_type}
