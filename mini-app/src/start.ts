@@ -16,10 +16,11 @@ import { CreateTonSocietyDraft } from "@/server/routers/events";
 import { registerActivity } from "@/lib/ton-society-api";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { is_mainnet } from "@/server/routers/services/tonCenter";
-import { deployNftCollection } from "./lib/tonAssetSdk";
+
 import { Cell } from "@ton/core";
 import axios from "axios";
 import FormData from "form-data";
+import wlg  from "@/server/utils/logger";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -29,12 +30,12 @@ process.on("unhandledRejection", (err) => {
 const CACHE_TTL = 40_000;
 
 async function MainCronJob() {
+  console.info("====> RUNNING Cron jobs on", process.env.ENV);
   if (process.env.ENV?.toLocaleLowerCase() !== "production") {
-    console.info("RUNNING Cron jobs on", process.env.ENV);
-    await createRewards(() => null);
-    console.info("RUNNING Cron jobs: createRewards done");
-    await notifyUsersForRewards(() => null);
-    console.info("RUNNING Cron jobs: notifyUsersForRewards done");
+    // await createRewards(() => null);
+    // console.info("RUNNING Cron jobs: createRewards done");
+    // await notifyUsersForRewards(() => null);
+    // console.info("RUNNING Cron jobs: notifyUsersForRewards done");
   }
 
   // Create Rewards Cron Job
@@ -373,15 +374,15 @@ async function CreateEventOrders(pushLockTTl: () => any) {
     } catch (error) {
       continue; //failed
     }
-    console.log("MetaDataUrl_CreateEvent_CronJob", metaDataUrl);
+    wlg.warn("MetaDataUrl_CreateEvent_CronJob", metaDataUrl);
 
     /* ---------------------------- Collection Deploy --------------------------- */
-    let collectionAddress = "c";
-    if (paymentInfo && !paymentInfo?.collectionAddress) {
-      collectionAddress = (
-        await deployNftCollection(paymentInfo.title!, paymentInfo.description!, paymentInfo.ticketImage!)
-      ).toRawString();
-    }
+    let collectionAddress = "some collection address";
+    // if (paymentInfo && !paymentInfo?.collectionAddress) {
+    //   collectionAddress = (
+    //     await deployNftCollection(paymentInfo.title!, paymentInfo.description!, paymentInfo.ticketImage!)
+    //   ).toRawString();
+    // }
 
     /* -------------------------------------------------------------------------- */
     /*                          Create Ton Society Event                          */

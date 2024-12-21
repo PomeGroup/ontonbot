@@ -15,6 +15,7 @@
     "build": "next build",
     "build:local": "dotenv -e ../.env -- cross-var next build",
     "start-cron": "tsx ./src/start.ts",
+    "nft": "tsx ./src/lib/nft.ts",
     "start": "next start",
     "start:local": "dotenv -e ../.env -- cross-var next start --port %MINI_APP_PORT%",
     "lint": "next lint",
@@ -128,6 +129,7 @@
     "uuid": "^9.0.1",
     "validator": "^13.12.0",
     "vaul": "^1.1.1",
+    "winston": "^3.17.0",
     "zod": "^3.22.4",
     "zod-form-data": "^2.0.2",
     "zustand": "^4.5.1"
