@@ -91,11 +91,9 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN_FOR_DEPLOYMENT/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID_FOR_DEPLOYMENT" \
             -d text="
-            Hi there! 
             🔄 Build Started for ${{ github.repository }}
-          
-            🧑 ‍💻Actor: ${{ github.actor }}
-            🧐 Changed services:  $services_json  
+            🧑Actor: ${{ github.actor }}
+            >> Changed services:  $services_json  
             📝 branch: ${{ github.ref }}
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
@@ -127,14 +125,10 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
-            Hi there!
-            🔄 Build Started for ${{ github.repository }}
+            🔄Build Start for ${{ github.repository }}
             📝 branch: ${{ github.ref }}
-
             🧑 ‍💻Actor: ${{ github.actor }}
-
             🖊   message: ${{ github.event.head_commit.message }}
-
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
       - name: Checkout Code
@@ -298,15 +292,10 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
-            Hi there!
-            ✔🔄✔ Build was successful for ${{ github.repository }}
-
+            😂😃Build ok for ${{ github.repository }}
             📝 branch: ${{ github.ref }}
-
             🧑 ‍💻Actor: ${{ github.actor }}
-
             🖊   message: ${{ github.event.head_commit.message }}
-
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
       - name: Send Telegram Message - Build Failure
         if: failure()
@@ -324,17 +313,10 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
-            Hi there!
-            🔄 Build was NOT successful for ${{ github.repository }}
-
+            ❌❌Build was NOT successful for ${{ github.repository }}
             📝 branch: ${{ github.ref }}
-
             🧑 ‍💻Actor: ${{ github.actor }}
-
-            
-
-            ❌ ❌ Build failed ❌ ❌
-
+            ❌❌Build failed❌❌
             🔍 See Changes: https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
 
   
@@ -611,13 +593,10 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
             -d chat_id="$TELEGRAM_CHAT_ID" \
             -d text="
-            Hi there! 
-            🔄 Deployment Finnished for ${{ github.repository }}
-          
+            ✅Deployed Finnished for ${{ github.repository }}
             🧑 ‍💻Actor: ${{ github.actor }}
             📝 branch: ${{ github.ref }}
-          
-            ✅✅✅✅✅✅✅✅✅ deployment completed successfully ✅✅✅✅✅✅✅✅
+            ✅✅✅deployment completed✅✅✅
             "
       - name: Send Telegram Message - Deployment Failure
         if: failure()

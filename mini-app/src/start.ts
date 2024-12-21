@@ -20,7 +20,7 @@ import { is_mainnet } from "@/server/routers/services/tonCenter";
 import { Cell } from "@ton/core";
 import axios from "axios";
 import FormData from "form-data";
-import wlg  from "@/server/utils/logger";
+import wlg from "@/server/utils/logger";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -44,7 +44,7 @@ async function MainCronJob() {
   // Notify Users Cron Job
   // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  // new CronJob("*/30 * * * * *", CheckTransactions, null, true);
+  new CronJob("*/30 * * * * *", CheckTransactions, null, true);
 
   // new CronJob("*/30 * * * * *", cronJob(UpdateEventCapacity), null, true);
 
@@ -242,7 +242,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
-  wlg.warn("CheckTransactions ===>>>>>")
+  wlg.warn("CheckTransactions ===>>>>>");
   const wallet_address = is_mainnet
     ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
     : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW";
@@ -301,7 +301,7 @@ const uploadJsonToMinio = async (jsonData: Record<string, any>, bucketName: stri
   }
 };
 
-async function CreateEventOrders(pushLockTTl: () => any) {
+async function CreateEventOrders() {
   // Get Pending(paid) Orders to create event
   // Register ton society activity
   // create collection
@@ -388,23 +388,37 @@ async function CreateEventOrders(pushLockTTl: () => any) {
     /* -------------------------------------------------------------------------- */
     /*                          Create Ton Society Event                          */
     /* -------------------------------------------------------------------------- */
+    wlg.info("collection");
+    wlg.info(collectionAddress);
+
+    wlg.info(eventDraft);
     let ton_society_result = null;
     if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
+
+    wlg.info(ton_society_result);
 
     /* -------------------------------------------------------------------------- */
     /*                                  Update DB                                 */
     /* -------------------------------------------------------------------------- */
-    db.transaction(async (trx) => {
+    await db.transaction(async (trx) => {
       /* --------------------------- Update Activity Id --------------------------- */
       if (ton_society_result) {
+        wlg.info(`Activity ID ${ton_society_result.data.activity_id}`);
         await trx
           .update(events)
-          .set({ activity_id: ton_society_result.data.activity_id, updatedBy: "cronjob", updatedAt: new Date() })
+          .set({
+            activity_id: ton_society_result.data.activity_id,
+            hidden: false,
+            enabled: true,
+            updatedBy: "cronjob",
+            updatedAt: new Date(),
+          })
           .where(eq(events.event_uuid, event_uuid))
           .execute();
       }
       /* ------------------------ Update Collection Address ----------------------- */
       if (paymentInfo && collectionAddress) {
+        wlg.info(`collectionAddress ${collectionAddress}`);
         await trx
           .update(eventPayment)
           .set({ collectionAddress: collectionAddress })
