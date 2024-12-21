@@ -21,7 +21,7 @@ import { Cell } from "@ton/core";
 import axios from "axios";
 import FormData from "form-data";
 import wlg from "@/server/utils/logger";
-import { deployCollection } from "./lib/nft";
+import { deployCollection, mintNFT } from "@/lib/nft";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -257,7 +257,7 @@ async function CheckTransactions() {
       console.log("cron_trx", o.order_uuid, o.order_type, o.value);
       await db
         .update(orders)
-        .set({ state: "processing" , owner_address : o.owner.toString()})
+        .set({ state: "processing", owner_address: o.owner.toString() })
         .where(
           and(
             eq(orders.uuid, o.order_uuid),
@@ -460,6 +460,7 @@ async function UpdateEventCapacity() {
 
     if (!paymentInfo) {
       console.error("what the fuck : ", "event Does not have payment !!!");
+      continue;
     }
 
     await db.transaction(async (trx) => {
@@ -480,7 +481,61 @@ async function MintNFTforPaid_Orders() {
   // Get Orders to be Minted
   // Mint NFT
   // Update (DB) Successful Minted Orders as Minted
+  const results = await db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "nft_mint")))
+    .execute();
+
+  /* -------------------------------------------------------------------------- */
+  /*                               ORDER PROCCESS                               */
+  /* -------------------------------------------------------------------------- */
+  for (const ordr of results) {
+    const event_uuid = ordr.event_uuid;
+    if (!event_uuid) {
+      console.error("CronJob--MintNFTforPaid_Orders---eventUUID is null order=", ordr.uuid);
+      continue;
+    }
+
+    if (!ordr.owner_address) {
+      console.error("wtf : no owner address");
+      continue;
+    }
+
+    const paymentInfo = (
+      await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+    ).pop();
+
+    if (!paymentInfo) {
+      console.error("what the fuck : ", "event Does not have payment !!!", event_uuid);
+      continue;
+    }
+    if (!paymentInfo.collectionAddress) {
+      console.error(" no colleciton address right now");
+      continue;
+    }
+    const meta_data_url = await uploadJsonToMinio(
+      {
+        name: paymentInfo.title,
+        description: paymentInfo.description,
+        image: paymentInfo?.ticketImage,
+        attributes: {
+          order_id: ordr.uuid,
+          ref: ordr.utm_source || "onton",
+        },
+        buttons: [
+          {
+            label: "Join The Onton Event",
+            uri: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`,
+          },
+        ],
+      },
+      "ontonitem"
+    );
+    mintNFT(paymentInfo?.collectionAddress, 0, meta_data_url);
+  }
 }
 
 // Run the Cron Jobs
 MainCronJob();
+// CreateEventOrders().finally(() => console.log("well done ........"));

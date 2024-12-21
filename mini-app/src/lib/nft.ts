@@ -220,7 +220,7 @@ export class NftItem {
     this.collection = collection;
   }
 
-  public async deploy(wallet: OpenedWallet, params: mintParams): Promise<number> {
+  public async deploy(wallet: OpenedWallet, params: mintParams, collection_address: string): Promise<number> {
     const seqno = await wallet.contract.getSeqno();
     await wallet.contract.sendTransfer({
       seqno,
@@ -228,7 +228,7 @@ export class NftItem {
       messages: [
         internal({
           value: "0.05",
-          to: this.collection.address,
+          to: collection_address,
           body: this.collection.createMintBody(params),
         }),
       ],
@@ -248,24 +248,30 @@ export class NftItem {
   }
 }
 
-async function mint(collection: NftCollection) {
-  for (let index = 0; index < 1; index++) {
-    const wallet = await openWallet(process.env.MNEMONIC!.split(" "), true);
-    console.log(`Start deploy of ${index + 1} NFT`);
-    const mintParams = {
-      queryId: 0,
-      itemOwnerAddress: wallet.contract.address,
-      itemIndex: index,
-      amount: toNano("0.05"),
-      commonContentUrl: "https://storage.onton.live/onton/1IwPV_1718889569852_metadata.json",
-    };
+export async function mintNFT(collection_address: string, nftIndex: number, nft_metadata_url: string) {
+  const wallet = await openWallet(process.env.MNEMONIC!.split(" "), true);
+  const collectionData = {
+    ownerAddress: wallet.contract.address,
+    royaltyPercent: 0.1, // 0.1 = 10%
+    royaltyAddress: wallet.contract.address,
+    nextItemIndex: nftIndex,
+    collectionContentUrl: "",
+    commonContentUrl: "",
+  };
+  const collection = new NftCollection(collectionData);
+  const mintParams = {
+    queryId: 0,
+    itemOwnerAddress: wallet.contract.address,
+    itemIndex: nftIndex,
+    amount: toNano("0.05"),
+    commonContentUrl: nft_metadata_url,
+  };
 
-    const nftItem = new NftItem(collection);
-    const seqno = await nftItem.deploy(wallet, mintParams);
-    console.log(`Successfully deployed ${index + 1} NFT`);
-    await waitSeqno(seqno, wallet);
-    // index++;
-  }
+  const nftItem = new NftItem(collection);
+  const seqno = await nftItem.deploy(wallet, mintParams, collection_address);
+  console.log(`Successfully deployed ${nftIndex + 1} NFT`);
+  await waitSeqno(seqno, wallet);
+  // index++;
 }
 
 export async function deployCollection(collectio_metadata_url: string) {
