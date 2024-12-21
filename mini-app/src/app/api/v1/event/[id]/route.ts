@@ -233,7 +233,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           and(
             eq(orders.user_id, userId),
             eq(orders.event_uuid, eventId),
-            or(eq(orders.state, "new"),eq(orders.state, "confirming"), eq(orders.state, "processing"), eq(orders.state, "completed"))
+            eq(orders.order_type, "nft_mint"),
+            eq(orders.state, "processing")
           )
         )
         .execute()
