@@ -9,7 +9,8 @@ import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect
 import { useUserStore } from "@/context/store/user.store";
 
 export const EventPasswordAndWalletInput = () => {
-  const { initData, eventPasswordField, eventHash } = useEventData();
+  const { initData, eventPasswordField, eventHash, eventData } = useEventData();
+
   const trpcUtils = trpc.useUtils();
   const { user } = useUserStore();
   const formRef = useRef<HTMLFormElement>(null);
@@ -43,6 +44,9 @@ export const EventPasswordAndWalletInput = () => {
       });
     }
   }, [user?.wallet_address, tonWalletAddress, initData]);
+  useEffect(() => {
+
+  }, []);
 
   const submitPassword: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
@@ -63,7 +67,7 @@ export const EventPasswordAndWalletInput = () => {
       }
     }
   };
-
+  const hasRegistration = eventData.data?.has_registration ?? false;
   return !user?.wallet_address ? (
     <>
       <TonConnectButton className="mx-auto" />
@@ -75,35 +79,42 @@ export const EventPasswordAndWalletInput = () => {
       />
     </>
   ) : (
-    <></>
-    // <form
-    //   className="mt-2 space-y-1"
-    //   ref={formRef}
-    //   onSubmit={submitPassword}
-    // >
-    //   <Input
-    //     placeholder="Event password"
-    //     name="event_password"
-    //     autoFocus
-    //     type="text"
-    //     className="bg-cn-muted border-secondary-foreground/40 border"
-    //     minLength={4}
-    //     errors={
-    //       upsertUserEventFieldMutation.error?.message
-    //         ? [upsertUserEventFieldMutation.error?.message]
-    //         : undefined
-    //     }
-    //     prefix_icon={<PasscodeIcon />}
-    //   />
-    //   <p className="text-cn-muted-foreground text-xs">
-    //     Enter the Event Password that the organizer shared to confirm your participation in the event.
-    //   </p>
-    //   <MainButton
-    //     progress={upsertUserEventFieldMutation.isLoading}
-    //     text="Enter Password"
-    //     onClick={() => formRef.current?.requestSubmit()}
-    //     disabled={upsertUserEventFieldMutation.isLoading}
-    //   />
-    // </form>
+    <>
+      {
+        !hasRegistration && (
+
+          <form
+            className="mt-2 space-y-1"
+            ref={formRef}
+            onSubmit={submitPassword}
+          >
+            <Input
+              placeholder="Event password"
+              name="event_password"
+              autoFocus
+              type="text"
+              className="bg-cn-muted border-secondary-foreground/40 border"
+              minLength={4}
+              errors={
+                upsertUserEventFieldMutation.error?.message
+                  ? [upsertUserEventFieldMutation.error?.message]
+                  : undefined
+              }
+              prefix_icon={<PasscodeIcon />}
+            />
+            <p className="text-cn-muted-foreground text-xs">
+              Enter the Event Password that the organizer shared to confirm your participation in the event.
+            </p>
+            <MainButton
+              progress={upsertUserEventFieldMutation.isLoading}
+              text="Enter Password"
+              onClick={() => formRef.current?.requestSubmit()}
+              disabled={upsertUserEventFieldMutation.isLoading}
+            />
+          </form>
+        )
+      }
+    </>
+
   );
 };
