@@ -250,7 +250,7 @@ export class NftItem {
 
 async function mint(collection: NftCollection) {
   for (let index = 0; index < 1; index++) {
-    const wallet = await openWallet(process.env.MNEMONIC!.split(" "), false);
+    const wallet = await openWallet(process.env.MNEMONIC!.split(" "), true);
     console.log(`Start deploy of ${index + 1} NFT`);
     const mintParams = {
       queryId: 0,
@@ -269,7 +269,7 @@ async function mint(collection: NftCollection) {
 }
 
 export async function deployCollection(collectio_metadata_url: string) {
-  const wallet = await openWallet(process.env.MNEMONIC!.split(" "), false);
+  const wallet = await openWallet(process.env.MNEMONIC!.split(" "), true);
 
   console.log("Start deploy of nft collection...");
   const collectionData = {
