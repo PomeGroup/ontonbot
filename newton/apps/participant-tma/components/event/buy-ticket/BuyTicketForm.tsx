@@ -77,6 +77,10 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         ...data,
       });
 
+      console.log("asdasd", params.sendTo, Number(params.price), orderData.payment_type, {
+        comment: `onton_order=${orderData.order_id}`,
+      });
+
       try {
         await transfer(params.sendTo, Number(params.price), orderData.payment_type, {
           comment: `onton_order=${orderData.order_id}`,
