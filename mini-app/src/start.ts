@@ -30,12 +30,12 @@ process.on("unhandledRejection", (err) => {
 const CACHE_TTL = 40_000;
 
 async function MainCronJob() {
-  console.info("====> RUNNING Cron jobs on", process.env.ENV);
+  wlg.info("====> RUNNING Cron jobs on", process.env.ENV);
   if (process.env.ENV?.toLocaleLowerCase() !== "production") {
     // await createRewards(() => null);
-    // console.info("RUNNING Cron jobs: createRewards done");
+    // wlg.info("RUNNING Cron jobs: createRewards done");
     // await notifyUsersForRewards(() => null);
-    // console.info("RUNNING Cron jobs: notifyUsersForRewards done");
+    // wlg.info("RUNNING Cron jobs: notifyUsersForRewards done");
   }
 
   // Create Rewards Cron Job
@@ -44,9 +44,9 @@ async function MainCronJob() {
   // Notify Users Cron Job
   // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  new CronJob("*/30 * * * * *", cronJob(CheckTransactions), null, true);
+  // new CronJob("*/30 * * * * *", CheckTransactions, null, true);
 
-  new CronJob("*/30 * * * * *", cronJob(UpdateEventCapacity), null, true);
+  // new CronJob("*/30 * * * * *", cronJob(UpdateEventCapacity), null, true);
 
   // new CronJob("*/5 * * * *", cronJob(CreateEventOrders), null, true);
 }
@@ -59,7 +59,7 @@ function cronJob(fn: (_: () => any) => any) {
     const cronLock = await redisTools.getCache(redisTools.cacheKeys.cronJobLock + name);
 
     if (cronLock) {
-      console.log(`Cron job ${name} is already running`);
+      wlg.info(`Cron job ${name} is already running`);
       return;
     }
 
@@ -78,7 +78,7 @@ function cronJob(fn: (_: () => any) => any) {
       await fn(pushLockTTl);
       console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
-      console.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
+      wlg.info(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
       // await sendLogNotification({
       //   message: `Cron job ${name} error: ${getErrorMessages(err)}`,
       //   topic: "system",
@@ -242,17 +242,18 @@ async function CheckTransactions(pushLockTTl: () => any) {
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
+  wlg.warn("CheckTransactions ===>>>>>")
   const wallet_address = is_mainnet
     ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
     : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW";
   const start_utime = Math.floor((Date.now() - 3 * 60 * 1000) / 1000);
-  console.log(wallet_address, start_utime);
+  wlg.info(wallet_address, start_utime);
   const transactions = await tonCenter.fetchAllTransactions(wallet_address, 1734393600);
-  console.log("Trx Len", transactions.length);
+  wlg.info("Trx Len", transactions.length);
   const parsed_orders = await tonCenter.parseTransactions(transactions);
   for (const o of parsed_orders) {
     if (o.verfied) {
-      console.log("cron_trx", o.order_uuid, o.order_type, o.value);
+      wlg.info("cron_trx", o.order_uuid, o.order_type, o.value);
       await db
         .update(orders)
         .set({ state: "processing" })
@@ -282,12 +283,12 @@ const uploadJsonToMinio = async (jsonData: Record<string, any>, bucketName: stri
 
   // Send the JSON data to the upload service (MinIO)
   const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-json`;
-  console.log("URL: ", url);
+  wlg.info("URL: ", url);
   try {
     const res = await axios.post(url, formData, {
       headers: formData.getHeaders(),
     });
-    console.log("Response: ", res.data);
+    wlg.info("Response: ", res.data);
 
     if (!res.data || !res.data.jsonUrl) {
       throw new Error("JSON upload failed");
