@@ -70,29 +70,28 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
 
     mainButton?.hide().disable();
     mainButton?.hideLoader();
-
-    await addOrder
-      .mutateAsync({
+    try {
+      const orderData = await addOrder.mutateAsync({
         event_uuid: params.event_uuid,
         utm,
         ...data,
-      })
-      .then(async (data) => {
-        // User wallet connected
-        await transfer(params.sendTo, Number(params.price), data.payment_type, {
-          comment: `onton_order=${data.order_id}`,
-        })
-          .then(() => {
-            setIsRequestingTicket({ state: true, orderId: data.order_id });
-          })
-          .catch(() => {
-            mainButton?.show().enable();
-          });
-      })
-      .catch(() => {
-        toast.error("There was an error adding a new order");
-        mainButton?.show().enable();
       });
+
+      try {
+        await transfer(params.sendTo, Number(params.price), orderData.payment_type, {
+          comment: `onton_order=${orderData.order_id}`,
+        });
+        setIsRequestingTicket({ state: true, orderId: orderData.order_id });
+      } catch (error) {
+        mainButton?.show().enable();
+        console.error("Error during transfer:", error);
+      }
+    } catch (error) {
+      toast.error("There was an error adding a new order");
+      mainButton?.show().enable();
+      console.error("Error adding order:", error);
+    }
+
     // if not connected
   };
 
