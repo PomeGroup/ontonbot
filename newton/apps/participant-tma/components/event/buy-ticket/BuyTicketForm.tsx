@@ -72,7 +72,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
       mainButton?.hide().disable();
       mainButton?.hideLoader();
 
-      addOrder
+      await addOrder
         .mutateAsync({
           event_uuid: params.event_uuid,
           utm,
