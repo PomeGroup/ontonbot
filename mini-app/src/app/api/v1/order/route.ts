@@ -2,8 +2,8 @@ import { db } from "@/db/db";
 import { orders } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
 import { selectEventByUuid } from "@/server/db/events";
-import { Address, toNano } from "@ton/core";
-import { and, eq, lt, or, sql } from "drizzle-orm";
+import { Address } from "@ton/core";
+import { and, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 const addOrderSchema = z.object({
