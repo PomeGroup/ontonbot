@@ -310,6 +310,8 @@ const RegistrationGuestlist = () => {
     }
   );
 
+  const showPOAButton = Boolean(  eventData.data?.isNotEnded && eventData.data?.isStarted );
+
   return (
     <>
       <BlockTitle medium>{eventData.data?.title}</BlockTitle>
@@ -327,11 +329,12 @@ const RegistrationGuestlist = () => {
           hub={eventData.data?.society_hub?.name!}
         />
 
-        {!eventData.data?.payment_details.id && (
+        {  (
           <>
             <ButtonPOA
               event_uuid={params.hash}
               poa_type={"password" as EventTriggerType}
+              showPOAButton={showPOAButton}
             />
             {/* Organizer Notification Handler */}
             <OrganizerNotificationHandler />
