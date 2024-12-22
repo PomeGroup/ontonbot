@@ -76,5 +76,5 @@ export const PASSWORD_RETRY_LIMIT = 3;
 export const WORKER_INTERVAL = 4 * 1000; // 5 seconds
 export const PAGE_SIZE = 500; // Number of users to fetch per batch
 export const POA_CREATION_LIMIT = 3; // Maximum number of POA creation notifications to send per batch
-export const POA_CREATION_TIME_DISTANCE = 10000; // 2 minutes
+export const POA_CREATION_TIME_DISTANCE = 10 * 60; // 10 minutes
 
