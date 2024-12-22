@@ -89,7 +89,7 @@ const BuyTicketTxQueryState = () => {
             The purchase was completed successfully, your ticket is available by clicking the button below or in your wallet.
           </p>
         </div>
-        <SuccessMainButton id={order.data?.uuid as string} />
+        <SuccessMainButton id={order.data?.event_uuid as string} />
       </div>
     );
   }
