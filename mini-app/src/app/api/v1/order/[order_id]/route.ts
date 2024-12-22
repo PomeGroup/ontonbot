@@ -1,11 +1,6 @@
 import { db } from "@/db/db";
-import { orders, tickets } from "@/db/schema";
-import { sendLogNotification } from "@/lib/tgBot";
 import { apiKeyAuthentication, getAuthenticatedUser } from "@/server/auth";
 import { NextRequest } from "next/server";
-import { z } from "zod";
-
-
 
 type OptionsProps = {
   params: {
@@ -56,9 +51,4 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
   });
 }
 
-
-
 export const dynamic = "force-dynamic";
-
-
-
