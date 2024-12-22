@@ -10,16 +10,13 @@ export async function getTicketData(id: string) {
     return null;
   }
 
-  const eventResponse = await fetch(
-    `${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}/ticket`,
-    {
-      method: "GET",
-      headers: {
-        Cookie: `token=${userToken.value}`,
-        "x-api-key": env.ONTON_API_KEY
-      },
+  const eventResponse = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}/ticket`, {
+    method: "GET",
+    headers: {
+      Cookie: `token=${userToken.value}`,
+      "x-api-key": env.ONTON_API_KEY,
     },
-  );
+  });
 
   if (!eventResponse.ok) {
     return null;

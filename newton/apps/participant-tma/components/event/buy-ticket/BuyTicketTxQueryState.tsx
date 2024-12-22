@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMainButton, useMiniApp, useUtils } from "@tma.js/sdk-react";
 import { toast } from "@ui/base/sonner";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 
 import { useGetOrder } from "~/hooks/useGetOrderQuery";
 import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
@@ -141,7 +141,7 @@ function SuccessMainButton({ id }: { id: string | number }) {
  */
 function ErrorMainButton() {
   const mainButton = useMainButton(true);
-  const [, setIsRequestingTicket] = useAtom(isRequestingTicketAtom);
+  const setIsRequestingTicket = useSetAtom(isRequestingTicketAtom);
 
   useEffect(() => {
     mainButton?.show().enable();
