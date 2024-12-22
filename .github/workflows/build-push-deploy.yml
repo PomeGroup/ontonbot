@@ -564,7 +564,7 @@ jobs:
                 docker service update --force caddy_caddy
               else
                 echo "docker service update --force $branch_name\_\$service"
-                docker service update --force $branch_name\_\$service
+                docker service update --update-failure-action rollback --update-max-failure-ratio 0.2  --force $branch_name\_\$service
               fi
             done
             echo "Services deployed successfully."         
