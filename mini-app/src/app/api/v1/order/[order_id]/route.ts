@@ -45,7 +45,7 @@ export async function GET(req: NextRequest, { params }: OptionsProps) {
 
   return Response.json({
     ...order,
-    total_price: BigInt(order.total_price).toString(),
+    total_price: order.total_price,
     nft_collection_address: eventPaymentInfo.collectionAddress,
     tickets,
   });
