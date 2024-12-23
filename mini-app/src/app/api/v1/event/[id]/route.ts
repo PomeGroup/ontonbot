@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventRegistrants, orders, tickets } from "@/db/schema";
+import { orders, tickets } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import { and, eq, or, sql } from "drizzle-orm";
@@ -49,7 +49,11 @@ async function getValidNfts(
           continue;
         }
         // Query the tickets database for this NFT address
-        const ticketsResult = await db.select().from(tickets).where(eq(tickets.nftAddress, nft.address)).execute();
+        const ticketsResult = await db
+          .select()
+          .from(tickets)
+          .where(eq(tickets.nftAddress, nft.address))
+          .execute();
 
         // Check if there's exactly one ticket for this NFT
         if (ticketsResult.length !== 1) {
@@ -101,37 +105,38 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return Response.json({ error: `Organizer not found for event ID: ${eventId}` }, { status: 400 });
     }
 
-    let event_payment_info;
+    let ticket;
     if (event.ticketToCheckIn) {
-      event_payment_info = await db.query.eventPayment.findFirst({
+      ticket = await db.query.eventTicket.findFirst({
         where(fields, { eq }) {
           return eq(fields.event_uuid, event.event_uuid as string);
         },
       });
-      if (!event_payment_info) {
+      if (!ticket) {
         console.warn(`Ticket not found for event ID: ${eventId}`);
       }
     }
 
     const soldTicketsCount = await db
       .select({ count: sql`count(*)`.mapWith(Number) })
-      .from(eventRegistrants)
+      .from(orders)
       .where(
         and(
-          eq(eventRegistrants.event_uuid, event.event_uuid),
-          or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin"))
+          eq(orders.event_uuid, event.event_uuid as string),
+          or(eq(orders.state, "minted"), eq(orders.state, "created"), eq(orders.state, "mint_request"))
         )
       )
       .execute();
 
-    const isSoldOut = (soldTicketsCount[0].count as unknown as number) >= (event.capacity || 0);
+    const isSoldOut =
+      (soldTicketsCount[0].count as unknown as number) >= (ticket?.count as unknown as number);
 
     if (dataOnly === "true") {
       return Response.json(
         {
           ...event,
           organizer,
-          eventTicket: event_payment_info,
+          eventTicket: ticket,
           isSoldOut,
         },
         {
@@ -206,7 +211,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
       ownerAddress,
-      event_payment_info?.collectionAddress!,
+      ticket?.collectionAddress!,
       userId
     );
 
@@ -232,9 +237,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         .where(
           and(
             eq(orders.user_id, userId),
-            eq(orders.event_uuid, eventId),
-            eq(orders.order_type, "nft_mint"),
-            eq(orders.state, "processing")
+            eq(orders.event_ticket_id, ticket?.id as number),
+            or(eq(orders.state, "created"), eq(orders.state, "mint_request"))
           )
         )
         .execute()
@@ -257,11 +261,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       chosenNFTaddress,
       orderAlreadyPlace: !!userOrder,
       organizer,
-      eventTicket: event_payment_info,
+      eventTicket: ticket,
       isSoldOut,
 
       ownerAddress,
-      usedCollectionAddress: event_payment_info?.collectionAddress!,
+      usedCollectionAddress: ticket?.collectionAddress!,
       valid_nfts_no_info,
       valid_nfts_with_info,
     };

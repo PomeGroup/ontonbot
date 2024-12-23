@@ -5,6 +5,7 @@
 .env.local
 .env.main
 .idea
+*/.idea/*
 .idea/*
 .vscode
 #sublime
