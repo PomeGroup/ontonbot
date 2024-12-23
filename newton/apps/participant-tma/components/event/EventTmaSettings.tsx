@@ -16,18 +16,21 @@ import {
 } from "@tonconnect/ui-react";
 import { toast } from "@ui/base/sonner";
 
+import { env } from "~/env.mjs";
 import { useEventData } from "~/hooks/queries/useEventData";
 import { RequestError } from "~/utils/custom-error";
 
 type EventMainButtonProps = {
   eventId: string;
   requiresTicketToChekin: boolean;
+  eventManagerRole: boolean;
   utm: string | null;
 };
 
 const EventTmaSettings = ({
   eventId,
   requiresTicketToChekin,
+  eventManagerRole,
   utm,
 }: EventMainButtonProps) => {
   const mainButton = useMainButton(true);
@@ -62,6 +65,12 @@ const EventTmaSettings = ({
 
   useEffect(() => {
     if (isLoading) return;
+
+    const manageEventBtnOnClick = () => {
+      tmaUtils?.openTelegramLink(
+        `https://t.me/${env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=edit_${eventId}`,
+      );
+    };
 
     const goToTicketPage = () => router.push(`/ticket/${eventId}`);
     const goToUpdateInfoPage = () =>
@@ -102,6 +111,18 @@ const EventTmaSettings = ({
     if (!event) return;
 
     const { userHasTicket, orderAlreadyPlace, isSoldOut } = event;
+
+    if (eventManagerRole) {
+      setupMainButton(
+        "#007AFF",
+        "#ffffff",
+        "Manage Event",
+        manageEventBtnOnClick,
+      );
+      return () => {
+        mainButton?.hide().off("click", manageEventBtnOnClick);
+      };
+    }
 
     if (userHasTicket && needsInfoUpdate) {
       setupMainButton(
@@ -163,6 +184,7 @@ const EventTmaSettings = ({
   }, [
     mainButton,
     event,
+    eventManagerRole,
     needsInfoUpdate,
     requiresTicketToChekin,
     router,
@@ -185,6 +207,23 @@ const EventTmaSettings = ({
     tma?.setBgColor("#ffffff");
     tma?.setHeaderColor("#ffffff");
   }, [tma]);
+
+  useEffect(() => {
+    if (utm) {
+      // Store the UTM in localStorage with a timestamped key
+      localStorage.setItem(`utm_campaign--${Date.now()}`, utm);
+    } else {
+      // Remove expired UTM items
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("utm_campaign--")) {
+          const timestamp = key.split("--")[1];
+          if (Date.now() - Number(timestamp) > 24 * 60 * 60 * 1000) {
+            localStorage.removeItem(key);
+          }
+        }
+      });
+    }
+  }, [utm]);
 
   return <></>;
 };

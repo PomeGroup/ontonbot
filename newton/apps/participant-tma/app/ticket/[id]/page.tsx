@@ -12,7 +12,7 @@ import SectionContent from "~/components/ticket/SectionContent";
 import TicketAttributes from "~/components/ticket/TicketAttributes";
 import TicketTmaSettings from "~/components/ticket/TicketTmaSettings";
 import UserAvatar from "~/components/ticket/UserAvatar";
-import { getTicketByEventUuid } from "~/services/ticket.services.ssr";
+import { getTicketData } from "~/services/ticket.services.ssr";
 import { TicketAttributes as TicketAttributesType } from "~/types/ticket.types";
 import { contractAddressShortner } from "~/utils/contractAddressShortner";
 import { getAuthenticatedUser } from "~/utils/getAuthenticatedUser";
@@ -28,18 +28,13 @@ const Ticket = async ({ params }: TicketParams) => {
   const [, error] = getAuthenticatedUser();
 
   if (error) {
-    return (
-      <QueryState
-        text={(await error.json()).error}
-        isError
-      />
-    );
+    return <QueryState text={(await error.json()).error} isError />;
   }
 
-  const ticket = await getTicketByEventUuid(params.id);
+  const ticket = await getTicketData(params.id);
 
   if (ticket === null) return "Token not found";
-  if (ticket.needsInfoUpdate) redirect(`/ticket/${params.id}/claim`);
+  if (ticket.needsInfoUpdate) redirect(`/ticket/${params.id}/claim`)
 
   const attributes: TicketAttributesType = [];
 
@@ -48,12 +43,18 @@ const Ticket = async ({ params }: TicketParams) => {
       "Owner",
       <div className={"inline-flex gap-2"}>
         <UserAvatar />
-        <span>{ticket.telegram.startsWith("@") ? ticket.telegram : `@${ticket.telegram}`}</span>
+        <span>
+          {ticket.telegram.startsWith("@")
+            ? ticket.telegram
+            : `@${ticket.telegram}`}
+        </span>
       </div>,
     ]);
   if (ticket.nftAddress && ticket.ticketData.collectionAddress) {
     const ticketAddress = Address.parse(ticket.nftAddress).toString();
-    const collectionAddress = Address.parse(ticket.ticketData.collectionAddress).toString();
+    const collectionAddress = Address.parse(
+      ticket.ticketData.collectionAddress,
+    ).toString();
 
     attributes.push([
       "Contract address",

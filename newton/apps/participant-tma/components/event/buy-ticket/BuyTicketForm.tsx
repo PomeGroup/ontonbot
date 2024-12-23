@@ -3,7 +3,8 @@
 import React, { FormEventHandler, useCallback, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useMainButton } from "@tma.js/sdk-react";
-import { useTonWallet } from "@tonconnect/ui-react";
+import { beginCell, toNano } from "@ton/ton";
+import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { Card, CardContent } from "@ui/base/card";
 import { Input } from "@ui/base/input";
 import { Section } from "@ui/base/section";
@@ -16,9 +17,8 @@ import BuyTicketTmaSettings from "~/components/event/buy-ticket/BuyTicketTmaSett
 import { useAddOrderMutation } from "~/hooks/useAddOrderMutation";
 import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
 import { useUserStore } from "~/store/user.store";
+import { getLatestUTMCampaign } from "~/utils/localstorage.utils";
 import BuyTicketTxQueryState from "./BuyTicketTxQueryState";
-import { useTransferTon } from "~/hooks/ton.hooks";
-import { PaymentType } from "~/types/order.types";
 
 type BuyTicketFormProps = {
   id: string;
@@ -26,10 +26,9 @@ type BuyTicketFormProps = {
   isSoldOut: boolean;
   userHasTicket: boolean;
   orderAlreadyPlace: boolean;
-  event_uuid: string;
+  eventTicketId: number;
   sendTo: string;
   utm_tag: string | null;
-  paymentType: PaymentType;
 };
 
 interface BuyTicketFormElement extends HTMLFormElement {
@@ -49,55 +48,68 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   const setIsRequestingTicket = useSetAtom(isRequestingTicketAtom);
   const wallet = useTonWallet();
   const addOrder = useAddOrderMutation();
+  const [tonconnectUI] = useTonConnectUI();
   const mainButton = useMainButton(true);
-  const transfer = useTransferTon();
 
-  const utm = params.utm_tag || null;
+  const utm = getLatestUTMCampaign();
 
-  const buyTicketOnClick: FormEventHandler<HTMLFormElement> = async (e) => {
-    e.preventDefault();
-    if (!form.current) {
-      throw new Error("form is not defined");
-    }
-    const formdata = new FormData(form.current);
-    const data = Object.fromEntries(formdata) as {
-      full_name: string;
-      telegram: string;
-      company: string;
-      position: string;
-      owner_address: string;
-    };
-
-    mainButton?.hide().disable();
-    mainButton?.hideLoader();
-    try {
-      const orderData = await addOrder.mutateAsync({
-        event_uuid: params.event_uuid,
-        utm,
-        ...data,
-      });
-
-      console.log("asdasd", params.sendTo, Number(params.price), orderData.payment_type, {
-        comment: `onton_order=${orderData.order_id}`,
-      });
-
-      try {
-        await transfer(params.sendTo, Number(params.price), orderData.payment_type, {
-          comment: `onton_order=${orderData.order_id}`,
-        });
-        setIsRequestingTicket({ state: true, orderId: orderData.order_id });
-      } catch (error) {
-        mainButton?.show().enable();
-        console.error("Error during transfer:", error);
+  const buyTicketOnClick: FormEventHandler<HTMLFormElement> = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!form.current) {
+        throw new Error("form is not defined");
       }
-    } catch (error) {
-      toast.error("There was an error adding a new order");
-      mainButton?.show().enable();
-      console.error("Error adding order:", error);
-    }
+      const formdata = new FormData(form.current);
+      const data = Object.fromEntries(formdata) as {
+        full_name: string;
+        telegram: string;
+        company: string;
+        position: string;
+        owner_address: string;
+      };
 
-    // if not connected
-  };
+      mainButton?.hide().disable();
+      mainButton?.hideLoader();
+
+      addOrder
+        .mutateAsync({
+          event_ticket_id: params.eventTicketId,
+          utm,
+          ...data,
+        })
+        .then((data) => {
+          // User wallet connected
+          tonconnectUI
+            .sendTransaction({
+              messages: [
+                {
+                  address: params.sendTo,
+                  amount: toNano(params.price).toString(),
+                  payload: beginCell()
+                    .storeUint(0, 32)
+                    .storeStringTail(`order=${data.order_id}`)
+                    .endCell()
+                    .toBoc()
+                    .toString("base64"),
+                },
+              ],
+              validUntil: Math.floor(Date.now() / 1000) + 300,
+            })
+            .then(() => {
+              setIsRequestingTicket({ state: true, orderId: data.order_id });
+            })
+            .catch(() => {
+              mainButton?.show().enable();
+            });
+        })
+        .catch(() => {
+          toast.error("There was an error adding a new order");
+          mainButton?.show().enable();
+        });
+      // if not connected
+    },
+    [mainButton?.isEnabled],
+  );
 
   const validateForm = useCallback(() => {
     const fields = ["full_name", "telegram", "company", "position"];
@@ -129,17 +141,13 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   }, []);
 
   return (
-    <Section
-      variant={"plain"}
-      className="grid gap-2"
-    >
-      <h4 className="text-telegram-6-10-section-header-text-color type-footnote font-normal">YOUR INFO</h4>
+    <Section variant={"plain"} className="grid gap-2">
+      <h4 className="text-telegram-6-10-section-header-text-color type-footnote font-normal">
+        YOUR INFO
+      </h4>
       <Card className="divide-y">
         <CardContent className={"py-0 pr-0"}>
-          <form
-            ref={form}
-            onSubmit={buyTicketOnClick}
-          >
+          <form ref={form} onSubmit={buyTicketOnClick}>
             <CheckoutInput
               defaultValue={`${user?.first_name} ${user?.last_name}`}
               label="Name"
@@ -181,10 +189,10 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         orderAlreadyPlace={params.orderAlreadyPlace}
         price={params.price}
         validateForm={validateForm}
-        paymentType={params.paymentType}
         eventId={params.id}
       />
-      {typeof window !== "undefined" && createPortal(<BuyTicketTxQueryState />, document.body)}
+      {typeof window !== "undefined" &&
+        createPortal(<BuyTicketTxQueryState />, document.body)}
     </Section>
   );
 };
@@ -211,14 +219,16 @@ type CheckoutInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   label: string;
 };
 
-function CheckoutInput({ label, name, placeholder, ...props }: CheckoutInputProps) {
+function CheckoutInput({
+  label,
+  name,
+  placeholder,
+  ...props
+}: CheckoutInputProps) {
   return (
     <div className="grid grid-cols-3 items-center p-2.5 px-4 pl-0">
       <div className="col-span-1">
-        <label
-          className={"type-body opacity-80"}
-          htmlFor={name}
-        >
+        <label className={"type-body opacity-80"} htmlFor={name}>
           {label}
         </label>
       </div>
