@@ -9,6 +9,7 @@
     "build:local": "dotenv -e ../../../.env  -- cross-var next build",
     "build": "next build",
     "type:check": "tsc --noEmit",
+    "start": "next start",
     "start:local": "dotenv -e ../../../.env -- cross-var  next start --port %PARTICIPANT_TMA_PORT%",
     "lint": "eslint . --max-warnings 0"
   },
