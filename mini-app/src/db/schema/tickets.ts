@@ -3,7 +3,7 @@ import { ticketStatus } from "@/db/schema";
 import { orders } from "@/db/schema/orders";
 import { events } from "@/db/schema/events";
 import { users } from "@/db/schema/users";
-import { eventPayment } from "@/db/schema/eventPayment";
+import { eventTicket } from "@/db/schema/eventTicket";
 import { relations } from "drizzle-orm";
 
 export const tickets = pgTable(
@@ -19,7 +19,7 @@ export const tickets = pgTable(
     nftAddress: text("nft_address"),
     event_uuid: uuid("event_uuid").references(() => events.event_uuid),
     ticket_id: integer("event_ticket_id")
-      .references(() => eventPayment.id)
+      .references(() => eventTicket.id)
       .notNull(),
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
     created_at: timestamp("created_at").defaultNow(),
@@ -56,9 +56,9 @@ export const ticketsRelations = relations(tickets, ({ one }) => ({
     fields: [tickets.event_uuid],
     references: [events.event_uuid],
   }),
-  eventPayment: one(eventPayment, {
+  eventTicket: one(eventTicket, {
     fields: [tickets.ticket_id],
-    references: [eventPayment.id],
+    references: [eventTicket.id],
   }),
   user: one(users, {
     fields: [tickets.user_id],

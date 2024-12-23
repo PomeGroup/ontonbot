@@ -217,15 +217,19 @@ function Capacity() {
  * The default export and this is used to combine all other above ones
  */
 const PaidEventCreationInputs = () => {
-  const { payment, toggleIsPaidEvent } = useCreateEventStore((state) => ({
+  const { payment, toggleIsPaidEvent, isEdit } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     toggleIsPaidEvent: state.togglePaidEvent,
+    isEdit: Boolean(state.edit?.eventHash),
   }));
 
   return (
     <ListLayout title="Paid Event">
       <ListItem
         title="Is Paid"
+        className={cn({
+          "opacity-50": isEdit,
+        })}
         after={
           <Toggle
             checked={payment?.has_payment}

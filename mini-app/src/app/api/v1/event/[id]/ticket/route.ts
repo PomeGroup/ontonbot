@@ -1,11 +1,11 @@
 import { db } from "@/db/db";
-import { eventPayment, tickets } from "@/db/schema";
+import { eventTicket, tickets } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
-import { and, eq, desc } from "drizzle-orm";
+import { and, eq, or, desc, asc } from "drizzle-orm";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   const eventId = params.id;
-  // return Response.json({})
+
   const [userId, unauthorized] = getAuthenticatedUser();
 
   if (unauthorized) {
@@ -27,18 +27,18 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     return Response.json({ error: "Ticket not found" }, { status: 404 });
   }
 
-  const eventPaymentinfo = (
-    await db.select().from(eventPayment).where(eq(eventPayment.id, ticket.ticket_id)).execute()
+  const eventTicketData = (
+    await db.select().from(eventTicket).where(eq(eventTicket.id, ticket.ticket_id)).execute()
   ).pop();
 
-  if (!eventPaymentinfo) {
+  if (!eventTicketData) {
     // ticket not found error
     return Response.json({ error: "Ticket data not found" }, { status: 400 });
   }
 
   const data = {
     ...ticket,
-    ticketData: eventPaymentinfo,
+    ticketData: eventTicketData,
   };
 
   return Response.json(data);

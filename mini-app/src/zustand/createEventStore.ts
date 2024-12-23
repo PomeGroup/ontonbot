@@ -200,41 +200,44 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
         });
       },
       togglePaidEvent: () => {
-        set((state) => {
-          const paidEventInfo = {
-            has_payment: !state.eventData?.paid_event?.has_payment,
-            has_nft: true,
-            payment_type: "TON",
-            payment_amount: 1,
-          } as Partial<PaidEventType>;
+        const isEdit = Boolean(get().edit?.eventHash);
 
-          /*
-           * Handle Confirmation and Notifying user that they need to pay to create a paid event
-           */
-          if (!state.eventData.paid_event.has_payment) {
-            try {
-              window.Telegram.WebApp.showConfirm(
-                "You will need pay 10 TON to create a paid event + 0.055 TON for each person buying the ticket (minting fees)",
-                (confirmed) => {
-                  if (confirmed) {
-                    set((state) => {
-                      state.eventData.paid_event = paidEventInfo;
-                      state.eventData.has_registration = true;
-                    });
+        !isEdit &&
+          set((state) => {
+            const paidEventInfo = {
+              has_payment: !state.eventData?.paid_event?.has_payment,
+              payment_type: "TON",
+              has_nft: true,
+              payment_amount: 1,
+            } as Partial<PaidEventType>;
+
+            /*
+             * Handle Confirmation and Notifying user that they need to pay to create a paid event
+             */
+            if (!state.eventData.paid_event.has_payment) {
+              try {
+                window.Telegram.WebApp.showConfirm(
+                  "You will need pay 10 TON to create a paid event + 0.055 TON for each person buying the ticket (minting fees)",
+                  (confirmed) => {
+                    if (confirmed) {
+                      set((state) => {
+                        state.eventData.paid_event = paidEventInfo;
+                        state.eventData.has_registration = true;
+                      });
+                    }
                   }
-                }
-              );
-            } catch {
-              state.eventData.paid_event = paidEventInfo;
-              state.eventData.has_registration = true;
-            }
+                );
+              } catch {
+                state.eventData.paid_event = paidEventInfo;
+                state.eventData.has_registration = true;
+              }
 
-            state.eventData.capacity = 5;
-          } else {
-            state.eventData.paid_event = paidEventInfo;
-            state.eventData.capacity = null;
-          }
-        });
+              state.eventData.capacity = 5;
+            } else {
+              state.eventData.paid_event = paidEventInfo;
+              state.eventData.capacity = null;
+            }
+          });
       },
       changePaymentType(payment_type) {
         set((state) => {
