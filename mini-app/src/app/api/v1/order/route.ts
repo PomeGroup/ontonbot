@@ -2,8 +2,8 @@ import { db } from "@/db/db";
 import { orders } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
 import { selectEventByUuid } from "@/server/db/events";
-import { Address, toNano } from "@ton/core";
-import { and, eq, lt, or, sql } from "drizzle-orm";
+import { Address } from "@ton/core";
+import { and, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 const addOrderSchema = z.object({
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     await db
       .select()
       .from(orders)
-      .where(and(eq(orders.user_id, userId), eq(orders.order_type, "nft_mint")))
+      .where(and(eq(orders.user_id, userId), eq(orders.order_type, "nft_mint"), eq(orders.event_uuid, eventData.event_uuid)))
       .execute()
   ).pop();
 
@@ -87,14 +87,11 @@ export async function POST(request: Request) {
       });
     }
 
-    return Response.json(
-      {
-        message: "An order is already being proccessed",
-      },
-      {
-        status: 409,
-      }
-    );
+    return Response.json({
+      order_id: userOrder.uuid,
+      message: "An order is already being proccessed",
+      payment_type: userOrder.payment_type,
+    });
   }
 
   if (TicketsCount[0].count >= (eventData.capacity || 0)) {

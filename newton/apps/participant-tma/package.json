@@ -8,7 +8,7 @@
     "dev:local": "next dev --port 3001",
     "build:local": "dotenv -e ../../../.env  -- cross-var next build",
     "build": "next build",
-    "start": "next start",
+    "type:check": "tsc --noEmit",
     "start:local": "dotenv -e ../../../.env -- cross-var  next start --port %PARTICIPANT_TMA_PORT%",
     "lint": "eslint . --max-warnings 0"
   },

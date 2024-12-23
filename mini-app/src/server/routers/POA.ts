@@ -15,14 +15,23 @@ export const POARouter = router({
     .mutation(async (opts) => {
 
       const eventUuid = opts.ctx.event.event_uuid;
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+
       try {
         const event = await getEventByUuid(eventUuid);
         if (!event) {
+          console.error(`Event not found for UUID: ${eventUuid} in POA.Create`);
           return { success: false, message: "Event not found" };
+        }
+
+        if (event.start_date > currentTimestamp || event.end_date < currentTimestamp) {
+          console.error(`Event not active for UUID: ${eventUuid} in POA.Create`);
+          return { success: false, message: "you can create POA only during the event" };
         }
 
         const poaType = opts.input.poa_type as EventTriggerType;
         if (!opts.input?.poa_type || !eventTriggerType.enumValues.includes(poaType)) {
+          console.error(`Invalid POA Type: ${opts.input.poa_type}`);
           return { success: false, message: "Invalid POA Type" };
         }
 
@@ -31,6 +40,7 @@ export const POARouter = router({
 
         // 1) Check if POA_CREATION_LIMIT reached
         if (existingPOAs.length >= POA_CREATION_LIMIT) {
+          console.error(`POA_CREATION_LIMIT reached for event: ${eventUuid}`);
           return {
             success: false,
             message: `You have reached the maximum POA creation limit of ${POA_CREATION_LIMIT} for this event.`,
@@ -46,8 +56,9 @@ export const POARouter = router({
           return prev;
         }, null);
 
-        const currentTimestamp = Math.floor(Date.now() / 1000);
+
         if (lastPoa && (currentTimestamp - lastPoa.startTime < POA_CREATION_TIME_DISTANCE)) {
+          console.error(`POA_CREATION_TIME_DISTANCE not met for event: ${eventUuid}`);
           return {
             success: false,
             message: `Please wait ${POA_CREATION_TIME_DISTANCE} seconds between creating POAs.`,
@@ -66,6 +77,12 @@ export const POARouter = router({
         };
 
         const POAResult = await addEventPoaTrigger(poaData);
+        if(!POAResult || POAResult.length === 0){
+          console.error(`Error adding POA Trigger for event: ${eventUuid}`);
+          return { success: false, message: "Error adding POA Trigger" };
+        }
+
+        console.log(`POA Trigger added for event: ${eventUuid} with ID: ${POAResult[0].id}`);
         return { success: true, message: "POA Trigger added", POAResult };
       } catch (error) {
         console.error("Error adding POA Trigger:", error);

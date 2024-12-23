@@ -65,3 +65,6 @@ node_modules
 .vscode/settings.json
 mini-app/onton.code-workspace
 mini-app/Onton.session.sql
+
+
+*/pnpm-lock.yaml

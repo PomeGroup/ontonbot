@@ -10,7 +10,11 @@ import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { Dialog } from "konsta/react"; // Import Konsta UI Dialog
 
-const ButtonPOA = ({ event_uuid, poa_type }: { event_uuid: string; poa_type?: EventTriggerType }) => {
+const ButtonPOA = ({ event_uuid, poa_type, showPOAButton }: {
+  event_uuid: string;
+  poa_type?: EventTriggerType,
+  showPOAButton: boolean
+}) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
   const POAType = poa_type || "simple";
@@ -96,8 +100,10 @@ const ButtonPOA = ({ event_uuid, poa_type }: { event_uuid: string; poa_type?: Ev
   // Determine button state and text
   let buttonText = "Get Attendance";
   let disabled = !initData || isCreating;
-
-  if (remainingPOA === 0 && poaInfo?.success) {
+  if (!showPOAButton) {
+    buttonText = "Get Attendance (During Event)";
+    disabled = true;
+  } else if (remainingPOA === 0 && poaInfo?.success) {
     buttonText = "No POA remaining";
     disabled = true;
   } else if (countdown > 0) {
@@ -117,9 +123,9 @@ const ButtonPOA = ({ event_uuid, poa_type }: { event_uuid: string; poa_type?: Ev
         title="Error"
       >
         {errorMessage && (
-          <div style={{ padding: '1rem' }}>
+          <div style={{ padding: "1rem" }}>
             <p>{errorMessage}</p>
-            <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ marginTop: "1rem", display: "flex", justifyContent: "flex-end" }}>
               <Button onClick={() => setDialogOpen(false)}>Close</Button>
             </div>
           </div>

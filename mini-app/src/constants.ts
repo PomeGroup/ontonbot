@@ -593,6 +593,7 @@ export const DOMAINS = [
   "localhost:3000",
   "localhost:3001",
   "t.me",
+  "samyar.local",
 ];
 export const PAYLOAD_TTL = 3600 * 24 * 7; // 7 days
 export const CHAIN = {

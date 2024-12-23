@@ -18,6 +18,7 @@ import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
 import { useUserStore } from "~/store/user.store";
 import BuyTicketTxQueryState from "./BuyTicketTxQueryState";
 import { useTransferTon } from "~/hooks/ton.hooks";
+import { PaymentType } from "~/types/order.types";
 
 type BuyTicketFormProps = {
   id: string;
@@ -25,9 +26,10 @@ type BuyTicketFormProps = {
   isSoldOut: boolean;
   userHasTicket: boolean;
   orderAlreadyPlace: boolean;
-  eventTicketId: number;
+  event_uuid: string;
   sendTo: string;
   utm_tag: string | null;
+  paymentType: PaymentType;
 };
 
 interface BuyTicketFormElement extends HTMLFormElement {
@@ -52,50 +54,50 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
 
   const utm = params.utm_tag || null;
 
-  const buyTicketOnClick: FormEventHandler<HTMLFormElement> = useCallback(
-    async (e) => {
-      e.preventDefault();
-      if (!form.current) {
-        throw new Error("form is not defined");
-      }
-      const formdata = new FormData(form.current);
-      const data = Object.fromEntries(formdata) as {
-        full_name: string;
-        telegram: string;
-        company: string;
-        position: string;
-        owner_address: string;
-      };
+  const buyTicketOnClick: FormEventHandler<HTMLFormElement> = async (e) => {
+    e.preventDefault();
+    if (!form.current) {
+      throw new Error("form is not defined");
+    }
+    const formdata = new FormData(form.current);
+    const data = Object.fromEntries(formdata) as {
+      full_name: string;
+      telegram: string;
+      company: string;
+      position: string;
+      owner_address: string;
+    };
 
-      mainButton?.hide().disable();
-      mainButton?.hideLoader();
+    mainButton?.hide().disable();
+    mainButton?.hideLoader();
+    try {
+      const orderData = await addOrder.mutateAsync({
+        event_uuid: params.event_uuid,
+        utm,
+        ...data,
+      });
 
-      addOrder
-        .mutateAsync({
-          event_ticket_id: params.eventTicketId,
-          utm,
-          ...data,
-        })
-        .then((data) => {
-          // User wallet connected
-          transfer(params.sendTo, Number(params.price), data.payment_type, {
-            comment: `onton_order=${data.order_id}`,
-          })
-            .then(() => {
-              setIsRequestingTicket({ state: true, orderId: data.order_id });
-            })
-            .catch(() => {
-              mainButton?.show().enable();
-            });
-        })
-        .catch(() => {
-          toast.error("There was an error adding a new order");
-          mainButton?.show().enable();
+      console.log("asdasd", params.sendTo, Number(params.price), orderData.payment_type, {
+        comment: `onton_order=${orderData.order_id}`,
+      });
+
+      try {
+        await transfer(params.sendTo, Number(params.price), orderData.payment_type, {
+          comment: `onton_order=${orderData.order_id}`,
         });
-      // if not connected
-    },
-    [mainButton?.isEnabled]
-  );
+        setIsRequestingTicket({ state: true, orderId: orderData.order_id });
+      } catch (error) {
+        mainButton?.show().enable();
+        console.error("Error during transfer:", error);
+      }
+    } catch (error) {
+      toast.error("There was an error adding a new order");
+      mainButton?.show().enable();
+      console.error("Error adding order:", error);
+    }
+
+    // if not connected
+  };
 
   const validateForm = useCallback(() => {
     const fields = ["full_name", "telegram", "company", "position"];
@@ -179,7 +181,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         orderAlreadyPlace={params.orderAlreadyPlace}
         price={params.price}
         validateForm={validateForm}
-        paymentType={addOrder.data?.payment_type || null}
+        paymentType={params.paymentType}
         eventId={params.id}
       />
       {typeof window !== "undefined" && createPortal(<BuyTicketTxQueryState />, document.body)}

@@ -12,6 +12,9 @@ export function UserRegistrationForm() {
     toggleHasRegistration: state.toggleHasRegistration,
   }));
 
+  const isRegistrationDisabled =
+    Boolean(editOtions?.eventHash) || eventData?.eventLocationType === "in_person" || eventData.paid_event.has_payment;
+
   return (
     <ListLayout
       inset={false}
@@ -31,16 +34,16 @@ export function UserRegistrationForm() {
           <Toggle
             onChange={() => toggleHasRegistration()}
             className={cn({
-              "opacity-50": editOtions?.eventHash || eventData?.eventLocationType === "in_person",
+              "opacity-50": isRegistrationDisabled,
             })}
             readOnly={Boolean(editOtions?.eventHash)}
-            disabled={Boolean(editOtions?.eventHash) || eventData?.eventLocationType === "in_person"}
+            disabled={isRegistrationDisabled}
             component="div"
             checked={eventData?.has_registration}
           />
         }
       />
-      {eventData?.has_registration && (
+      {!eventData.paid_event.has_payment && eventData?.has_registration && (
         <>
           <ListItem
             label

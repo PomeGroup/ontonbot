@@ -1,45 +1,45 @@
 import { db } from "@/db/db";
-// import { eventTicket, tickets } from "@/db/schema";
+import { eventPayment, tickets } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
-import { and, eq, or, desc, asc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   const eventId = params.id;
-  return Response.json({})
-  // const [userId, unauthorized] = getAuthenticatedUser();
+  // return Response.json({})
+  const [userId, unauthorized] = getAuthenticatedUser();
 
-  // if (unauthorized) {
-  //   return unauthorized;
-  // }
+  if (unauthorized) {
+    return unauthorized;
+  }
 
-  // const ticket = (
-  //   await db
-  //     .select()
-  //     .from(tickets)
-  //     .where(and(eq(tickets.event_uuid, eventId), eq(tickets.user_id, userId), eq(tickets.status, "UNUSED")))
-  //     .orderBy(desc(tickets.updatedAt))
+  const ticket = (
+    await db
+      .select()
+      .from(tickets)
+      .where(and(eq(tickets.event_uuid, eventId), eq(tickets.user_id, userId), eq(tickets.status, "UNUSED")))
+      .orderBy(desc(tickets.updatedAt))
 
-  //     .execute()
-  // ).pop();
+      .execute()
+  ).pop();
 
-  // if (!ticket) {
-  //   // ticket not found error
-  //   return Response.json({ error: "Ticket not found" }, { status: 404 });
-  // }
+  if (!ticket) {
+    // ticket not found error
+    return Response.json({ error: "Ticket not found" }, { status: 404 });
+  }
 
-  // const eventTicketData = (
-  //   await db.select().from(eventTicket).where(eq(eventTicket.id, ticket.ticket_id)).execute()
-  // ).pop();
+  const eventPaymentinfo = (
+    await db.select().from(eventPayment).where(eq(eventPayment.id, ticket.ticket_id)).execute()
+  ).pop();
 
-  // if (!eventTicketData) {
-  //   // ticket not found error
-  //   return Response.json({ error: "Ticket data not found" }, { status: 400 });
-  // }
+  if (!eventPaymentinfo) {
+    // ticket not found error
+    return Response.json({ error: "Ticket data not found" }, { status: 400 });
+  }
 
-  // const data = {
-  //   ...ticket,
-  //   ticketData: eventTicketData,
-  // };
+  const data = {
+    ...ticket,
+    ticketData: eventPaymentinfo,
+  };
 
-  // return Response.json(data);
+  return Response.json(data);
 }

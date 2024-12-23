@@ -3,9 +3,12 @@ import { UserRegistrationForm } from "./UserRegistrationForm";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useMainButton } from "@/hooks/useMainButton";
 import PaidEventCreationInputs from "./PaidEventCreationInputs";
+import { useTonWallet } from "@tonconnect/ui-react";
 
 const RegistrationStep = () => {
   const formRef = React.useRef<HTMLFormElement>(null);
+
+  const tonWallet = useTonWallet();
 
   const { eventData, setEventData, submitMainbutton, isEdit } = useCreateEventStore((state) => ({
     eventData: state.eventData,
@@ -30,7 +33,7 @@ const RegistrationStep = () => {
       ref={formRef}
       onSubmit={(e) => {
         e.preventDefault();
-        submitMainbutton();
+        submitMainbutton(tonWallet?.account.address || null);
       }}
     >
       {((isEdit && !eventData.paid_event.has_payment) || !isEdit) && <UserRegistrationForm />}

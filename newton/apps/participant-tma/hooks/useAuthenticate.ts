@@ -4,6 +4,7 @@ import { useLaunchParams } from "@tma/hooks";
 
 import { useUserStore } from "~/store/user.store";
 import { UserType } from "~/types/user.types";
+import { env } from "~/env.mjs";
 
 const useAuthenticate = () => {
   const lunchParams = useLaunchParams();
@@ -21,7 +22,7 @@ const useAuthenticate = () => {
         init_data: lunchParams?.initDataRaw,
       });
 
-      const res = await fetch(`/api/v1/auth?${searchParams.toString()}`, {
+      const res = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/auth?${searchParams.toString()}`, {
         headers: { Accept: "application/json" },
         method: "GET",
       });

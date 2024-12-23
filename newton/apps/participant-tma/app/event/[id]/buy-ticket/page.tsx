@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import Image from "next/image";
 import { Card, CardContent } from "@ui/base/card";
 import { Section } from "@ui/base/section";
@@ -18,19 +18,20 @@ type BuyTicketProps = {
 };
 
 const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
-  const { data: event, isError, isLoading } = useEventData(params.id)
+  const { data: event, isError, isLoading } = useEventData(params.id);
 
-  const utm_tag = searchParams.utm_campaign || null ;
+  const utm_tag = searchParams.utm_campaign || null;
 
   if (isLoading) {
-    return <QueryState />
+    return <QueryState />;
   }
-  if(utm_tag){
-    console.log("ptma_buy_ticket_page_utm" , `utm_campaign = ${utm_tag}`)
+
+  if (utm_tag) {
+    console.log("ptma_buy_ticket_page_utm", `utm_campaign = ${utm_tag}`);
   }
 
   if (isError || !event) {
-    return <QueryState isError={isError} />
+    return <QueryState isError={isError} />;
   }
 
   if (!event.eventTicket || !event.ticketToCheckIn) {
@@ -42,10 +43,11 @@ const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
   }
 
   return (
-    <PageTma
-      className={"bg-telegram-secondary-bg-color flex flex-col gap-6 pt-0"}
-    >
-      <Section className="grid gap-4 pt-7" variant={"plain"}>
+    <PageTma className={"bg-telegram-secondary-bg-color flex flex-col gap-6 pt-0"}>
+      <Section
+        className="grid gap-4 pt-7"
+        variant={"plain"}
+      >
         <h2 className="type-title-3 font-bold">Checkout</h2>
         <Card>
           <CardContent className="flex items-center justify-between">
@@ -60,11 +62,9 @@ const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
               />
               <div className={"flex flex-col"}>
                 <h5 className="type-headline font-semibold">
-                  {event.eventTicket.price} TON
+                  {event.eventTicket.price} {event.eventTicket.payment_type}
                 </h5>
-                <p className="type-subtitle-2 text-telegram-hint-color font-normal">
-                  {event.eventTicket.title}
-                </p>
+                <p className="type-subtitle-2 text-telegram-hint-color font-normal">{event.eventTicket.title}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -103,9 +103,10 @@ const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
         orderAlreadyPlace={event.orderAlreadyPlace}
         id={params.id}
         sendTo={event.wallet_address}
-        eventTicketId={event.eventTicket.id}
+        event_uuid={event.event_uuid}
         price={event.eventTicket.price}
         utm_tag={utm_tag}
+        paymentType={event.eventTicket.payment_type}
       />
     </PageTma>
   );

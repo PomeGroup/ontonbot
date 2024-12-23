@@ -16,10 +16,12 @@ import { CreateTonSocietyDraft } from "@/server/routers/events";
 import { registerActivity } from "@/lib/ton-society-api";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { is_mainnet } from "@/server/routers/services/tonCenter";
-import { deployNftCollection } from "./lib/tonAssetSdk";
+
 import { Cell } from "@ton/core";
 import axios from "axios";
 import FormData from "form-data";
+import wlg from "@/server/utils/logger";
+import { deployCollection, mintNFT } from "@/lib/nft";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -29,12 +31,12 @@ process.on("unhandledRejection", (err) => {
 const CACHE_TTL = 40_000;
 
 async function MainCronJob() {
+  wlg.info("====> RUNNING Cron jobs on", process.env.ENV);
   if (process.env.ENV?.toLocaleLowerCase() !== "production") {
-    console.info("RUNNING Cron jobs on", process.env.ENV);
-    await createRewards(() => null);
-    console.info("RUNNING Cron jobs: createRewards done");
-    await notifyUsersForRewards(() => null);
-    console.info("RUNNING Cron jobs: notifyUsersForRewards done");
+    // await createRewards(() => null);
+    // wlg.info("RUNNING Cron jobs: createRewards done");
+    // await notifyUsersForRewards(() => null);
+    // wlg.info("RUNNING Cron jobs: notifyUsersForRewards done");
   }
 
   // Create Rewards Cron Job
@@ -43,11 +45,11 @@ async function MainCronJob() {
   // Notify Users Cron Job
   // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  new CronJob("*/30 * * * * *", cronJob(CheckTransactions), null, true);
+  new CronJob("*/20 * * * * *", CheckTransactions, null, true);
 
-  new CronJob("*/30 * * * * *", cronJob(UpdateEventCapacity), null, true);
+  new CronJob("*/10 * * * * *", UpdateEventCapacity, null, true);
 
-  // new CronJob("*/5 * * * *", cronJob(CreateEventOrders), null, true);
+  new CronJob("*/10 * * * *", CreateEventOrders, null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
@@ -58,7 +60,7 @@ function cronJob(fn: (_: () => any) => any) {
     const cronLock = await redisTools.getCache(redisTools.cacheKeys.cronJobLock + name);
 
     if (cronLock) {
-      console.log(`Cron job ${name} is already running`);
+      wlg.info(`Cron job ${name} is already running`);
       return;
     }
 
@@ -77,7 +79,7 @@ function cronJob(fn: (_: () => any) => any) {
       await fn(pushLockTTl);
       console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
-      console.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
+      wlg.info(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
       // await sendLogNotification({
       //   message: `Cron job ${name} error: ${getErrorMessages(err)}`,
       //   topic: "system",
@@ -236,16 +238,17 @@ async function handleRewardError(reward: RewardType, error: any) {
 /* -------------------------------------------------------------------------- */
 /*                        Orders & Transaction Checker                        */
 /* -------------------------------------------------------------------------- */
-async function CheckTransactions(pushLockTTl: () => any) {
+async function CheckTransactions() {
   // Get Orders to be Checked (Sort By Order.TicketDetails.Id)
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
+  wlg.warn("CheckTransactions ==================>>>>>");
   const wallet_address = is_mainnet
     ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
     : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW";
-  const start_utime = Math.floor((Date.now() - 3 * 60 * 1000) / 1000);
-  console.log(wallet_address, start_utime);
+  const start_utime = Math.floor((Date.now() - 10 * 60 * 1000) / 1000);
+  wlg.info(wallet_address, start_utime);
   const transactions = await tonCenter.fetchAllTransactions(wallet_address, 1734393600);
   console.log("Trx Len", transactions.length);
   const parsed_orders = await tonCenter.parseTransactions(transactions);
@@ -254,7 +257,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
       console.log("cron_trx", o.order_uuid, o.order_type, o.value);
       await db
         .update(orders)
-        .set({ state: "processing" })
+        .set({ state: "processing", owner_address: o.owner.toString() })
         .where(
           and(
             eq(orders.uuid, o.order_uuid),
@@ -281,12 +284,12 @@ const uploadJsonToMinio = async (jsonData: Record<string, any>, bucketName: stri
 
   // Send the JSON data to the upload service (MinIO)
   const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-json`;
-  console.log("URL: ", url);
+  wlg.info("URL: ", url);
   try {
     const res = await axios.post(url, formData, {
       headers: formData.getHeaders(),
     });
-    console.log("Response: ", res.data);
+    wlg.info("Response: ", res.data);
 
     if (!res.data || !res.data.jsonUrl) {
       throw new Error("JSON upload failed");
@@ -299,7 +302,7 @@ const uploadJsonToMinio = async (jsonData: Record<string, any>, bucketName: stri
   }
 };
 
-async function CreateEventOrders(pushLockTTl: () => any) {
+async function CreateEventOrders() {
   // Get Pending(paid) Orders to create event
   // Register ton society activity
   // create collection
@@ -347,7 +350,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
     const paymentInfo = (
       await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
     ).pop();
-    // deployNftCollection
+
     if (!paymentInfo) {
       console.error("what the fuck : ", "event Does not have payment !!!");
     }
@@ -355,49 +358,55 @@ async function CreateEventOrders(pushLockTTl: () => any) {
     /* -------------------------------------------------------------------------- */
     /*                              Create Collection                             */
     /* -------------------------------------------------------------------------- */
-
-    /* -------------------------------------------------------------------------- */
-    /* ----------------------------- MetaData Upload ---------------------------- */
-    let metaDataUrl = "";
-    try {
-      metaDataUrl = await uploadJsonToMinio(
-        {
-          name: paymentInfo?.title,
-          description: paymentInfo?.description,
-          image: paymentInfo?.ticketImage,
-          cover_image: paymentInfo?.ticketImage,
-        },
-        "ontoncollection"
-      );
-      if (!metaDataUrl) continue; //failed
-    } catch (error) {
-      continue; //failed
-    }
-    console.log("MetaDataUrl_CreateEvent_CronJob", metaDataUrl);
-
-    /* ---------------------------- Collection Deploy --------------------------- */
-    let collectionAddress = "c";
+    let collectionAddress = paymentInfo?.collectionAddress || null;
+    let collection_address_in_db = true;
     if (paymentInfo && !paymentInfo?.collectionAddress) {
-      collectionAddress = (
-        await deployNftCollection(paymentInfo.title!, paymentInfo.description!, paymentInfo.ticketImage!)
-      ).toRawString();
+      /* -------------------------------------------------------------------------- */
+      /* ----------------------------- MetaData Upload ---------------------------- */
+      let metaDataUrl = "";
+      try {
+        metaDataUrl = await uploadJsonToMinio(
+          {
+            name: paymentInfo?.title,
+            description: paymentInfo?.description,
+            image: paymentInfo?.ticketImage,
+            cover_image: paymentInfo?.ticketImage,
+          },
+          "ontoncollection"
+        );
+        if (!metaDataUrl) continue; //failed
+      } catch (error) {
+        continue; //failed
+      }
+      wlg.warn("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
+
+      /* ---------------------------- Collection Deploy --------------------------- */
+      collection_address_in_db = false;
+      collectionAddress = await deployCollection(metaDataUrl);
     }
 
     /* -------------------------------------------------------------------------- */
     /*                          Create Ton Society Event                          */
     /* -------------------------------------------------------------------------- */
-    let ton_society_result = null;
+    let ton_society_result = undefined;
     if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
 
     /* -------------------------------------------------------------------------- */
     /*                                  Update DB                                 */
     /* -------------------------------------------------------------------------- */
-    db.transaction(async (trx) => {
+    await db.transaction(async (trx) => {
       /* --------------------------- Update Activity Id --------------------------- */
-      if (ton_society_result) {
+      if (eventData.activity_id || ton_society_result) {
+        const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
         await trx
           .update(events)
-          .set({ activity_id: ton_society_result.data.activity_id, updatedBy: "cronjob", updatedAt: new Date() })
+          .set({
+            activity_id: activity_id,
+            hidden: false,
+            enabled: true,
+            updatedBy: "cronjob",
+            updatedAt: new Date(),
+          })
           .where(eq(events.event_uuid, event_uuid))
           .execute();
       }
@@ -408,10 +417,11 @@ async function CreateEventOrders(pushLockTTl: () => any) {
           .set({ collectionAddress: collectionAddress })
           .where(eq(eventPayment.id, paymentInfo.id))
           .execute();
+        collection_address_in_db = true;
       }
 
       /* ------------------------- Mark Order as Completed ------------------------ */
-      if (paymentInfo && collectionAddress && ton_society_result) {
+      if (paymentInfo && collection_address_in_db && (ton_society_result || eventData.activity_id)) {
         await trx
           .update(orders)
           .set({ state: "completed", updatedBy: "cronjob", updatedAt: new Date() })
@@ -421,7 +431,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
     });
   }
 }
-async function UpdateEventCapacity(pushLockTTl: () => any) {
+async function UpdateEventCapacity() {
   const results = await db
     .select()
     .from(orders)
@@ -450,6 +460,7 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
 
     if (!paymentInfo) {
       console.error("what the fuck : ", "event Does not have payment !!!");
+      continue;
     }
 
     await db.transaction(async (trx) => {
@@ -470,7 +481,61 @@ async function MintNFTforPaid_Orders() {
   // Get Orders to be Minted
   // Mint NFT
   // Update (DB) Successful Minted Orders as Minted
+  const results = await db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "nft_mint")))
+    .execute();
+
+  /* -------------------------------------------------------------------------- */
+  /*                               ORDER PROCCESS                               */
+  /* -------------------------------------------------------------------------- */
+  for (const ordr of results) {
+    const event_uuid = ordr.event_uuid;
+    if (!event_uuid) {
+      console.error("CronJob--MintNFTforPaid_Orders---eventUUID is null order=", ordr.uuid);
+      continue;
+    }
+
+    if (!ordr.owner_address) {
+      console.error("wtf : no owner address");
+      continue;
+    }
+
+    const paymentInfo = (
+      await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+    ).pop();
+
+    if (!paymentInfo) {
+      console.error("what the fuck : ", "event Does not have payment !!!", event_uuid);
+      continue;
+    }
+    if (!paymentInfo.collectionAddress) {
+      console.error(" no colleciton address right now");
+      continue;
+    }
+    const meta_data_url = await uploadJsonToMinio(
+      {
+        name: paymentInfo.title,
+        description: paymentInfo.description,
+        image: paymentInfo?.ticketImage,
+        attributes: {
+          order_id: ordr.uuid,
+          ref: ordr.utm_source || "onton",
+        },
+        buttons: [
+          {
+            label: "Join The Onton Event",
+            uri: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`,
+          },
+        ],
+      },
+      "ontonitem"
+    );
+    mintNFT(paymentInfo?.collectionAddress, 0, meta_data_url);
+  }
 }
 
 // Run the Cron Jobs
 MainCronJob();
+// CreateEventOrders().finally(() => console.log("well done ........"));

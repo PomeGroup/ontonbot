@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMainButton, useMiniApp, useUtils } from "@tma.js/sdk-react";
 import { toast } from "@ui/base/sonner";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 
 import { useGetOrder } from "~/hooks/useGetOrderQuery";
 import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
@@ -15,8 +15,8 @@ const BuyTicketTxQueryState = () => {
   const [isRequestingTicket] = useAtom(isRequestingTicketAtom);
   const order = useGetOrder(isRequestingTicket.state ? isRequestingTicket.orderId : "");
   const tmaUtils = useUtils(true);
-  const isError = order.data?.state === "validation_failed" || order.data?.state === "failed";
-  const isPending = order.isPending || order.data?.state === "created" || order.data?.state === "mint_request";
+  const isError = order.data?.state === "failed";
+  const isPending = order.isPending || order.data?.state === "new" || order.data?.state === "processing";
 
   // BG color
   useEffect(() => {
@@ -34,34 +34,15 @@ const BuyTicketTxQueryState = () => {
 
   // State
   useEffect(() => {
-    if (order.data?.state === "mint_request") {
+    if (order.data?.state === "confirming") {
       toast.success("Transaction Validated soon your ticket will be minted", {
-        duration: 2500,
+        duration: 5_000,
       });
     }
   }, [order.data?.state]);
 
   if (!isRequestingTicket.state) {
     return <></>;
-  }
-
-  if (isPending) {
-    return (
-      <div className="absolute top-0 z-50 flex h-screen w-screen flex-col items-center justify-center space-y-2.5 bg-white px-7 text-center">
-        <Image
-          priority
-          className="h-28 w-28"
-          width={112}
-          height={112}
-          src={"/ptma/duck-thinking.gif"}
-          alt="Processing Payment"
-        />
-        <div className="space-y-2">
-          <h2 className="type-title-2 text-telegram-text-color mb-2 font-semibold">Payment in process</h2>
-          <p className="type-body">Hold on a second, we need to make sure the payment went through successfully.</p>
-        </div>
-      </div>
-    );
   }
 
   if (isError) {
@@ -91,6 +72,28 @@ const BuyTicketTxQueryState = () => {
     );
   }
 
+  if (order.data?.state === "completed") {
+    return (
+      <div className="absolute top-0 z-50 flex h-screen w-screen flex-col items-center justify-center space-y-2.5 bg-white px-7 text-center">
+        <Image
+          priority
+          className="h-28 w-28"
+          width={112}
+          height={112}
+          src={"/ptma/success.gif"}
+          alt="event image"
+        />
+        <div className="space-y-2">
+          <h2 className="text-[22px] font-semibold">Ticket successfully paid!</h2>
+          <p className="text-[17px]">
+            The purchase was completed successfully, your ticket is available by clicking the button below or in your wallet.
+          </p>
+        </div>
+        <SuccessMainButton id={order.data?.event_uuid as string} />
+      </div>
+    );
+  }
+
   return (
     <div className="absolute top-0 z-50 flex h-screen w-screen flex-col items-center justify-center space-y-2.5 bg-white px-7 text-center">
       <Image
@@ -98,16 +101,13 @@ const BuyTicketTxQueryState = () => {
         className="h-28 w-28"
         width={112}
         height={112}
-        src={"/ptma/success.gif"}
-        alt="event image"
+        src={"/ptma/duck-thinking.gif"}
+        alt="Processing Payment"
       />
       <div className="space-y-2">
-        <h2 className="text-[22px] font-semibold">Ticket successfully paid!</h2>
-        <p className="text-[17px]">
-          The purchase was completed successfully, your ticket is available by clicking the button below or in your wallet.
-        </p>
+        <h2 className="type-title-2 text-telegram-text-color mb-2 font-semibold">Payment in process</h2>
+        <p className="type-body">Hold on a second, we need to make sure the payment went through successfully.</p>
       </div>
-      <SuccessMainButton id={order.data?.uuid as string} />
     </div>
   );
 };
@@ -141,7 +141,7 @@ function SuccessMainButton({ id }: { id: string | number }) {
  */
 function ErrorMainButton() {
   const mainButton = useMainButton(true);
-  const [, setIsRequestingTicket] = useAtom(isRequestingTicketAtom);
+  const setIsRequestingTicket = useSetAtom(isRequestingTicketAtom);
 
   useEffect(() => {
     mainButton?.show().enable();
