@@ -71,7 +71,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         </Segmented>
       </Block>
       {activeTab === "edit" && <ManageEvent event={event.data} />}
-      {activeTab === "event_orders" && <EventOrders />}
+      {/* {activeTab === "event_orders" && <EventOrders />} */}
       {activeTab === "guest_list" && event.data && (
         <GuestList
           event={event.data}
