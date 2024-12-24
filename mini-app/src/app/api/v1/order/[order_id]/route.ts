@@ -89,10 +89,7 @@ export async function PATCH(req: NextRequest, { params }: OptionsProps) {
   try {
     await db.transaction(async (tx) => {
       if (body.data.state === "minted") {
-        const ticketExists = await tx
-          .select()
-          .from(tickets)
-          .where(eq(tickets.nftAddress, body.data.nft_address!));
+        const ticketExists = await tx.select().from(tickets).where(eq(tickets.nftAddress, body.data.nft_address!));
 
         if (ticketExists.length) {
           throw new Error("Ticket already exists");
@@ -193,6 +190,7 @@ Total sold count for this event: ${
 
 #ticket_sold
 `,
+        topic: "event",
       });
     }
   } catch (error) {

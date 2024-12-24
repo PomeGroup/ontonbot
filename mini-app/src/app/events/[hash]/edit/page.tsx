@@ -1,6 +1,6 @@
 "use client";
 
-import EventOrders from "@/app/_components/Event/Orders/Orders";
+// import EventOrders from "@/app/_components/Event/Orders/Orders";
 import Alerts from "@/app/_components/molecules/alerts";
 import GuestList from "@/app/_components/organisms/events/GuestList";
 import ManageEvent from "@/app/_components/organisms/events/ManageEvent";
@@ -18,7 +18,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const { setTheme } = useTheme();
 
   const event = useGetEvent();
-  const eventOrders = useGetEventOrders();
+  // const eventOrders = useGetEventOrders();
 
   const { authorized, isLoading } = useAuth();
 
@@ -49,18 +49,18 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
           >
             Guests List
           </SegmentedButton>
-          <SegmentedButton
-            strong
-            active={activeTab === "event_orders"}
-            onClick={() => setActiveTab("event_orders")}
-          >
-            <div className="relative inline">
-              <span>Orders</span>
-              {Number(eventOrders.data?.filter((o) => o.state === "new").length) > 0 && (
-                <LucideDot className="text-red-500 animate-pulse -top-1/2 -right-4 absolute" />
-              )}
-            </div>
-          </SegmentedButton>
+          {/* <SegmentedButton */}
+          {/*   strong */}
+          {/*   active={activeTab === "event_orders"} */}
+          {/*   onClick={() => setActiveTab("event_orders")} */}
+          {/* > */}
+          {/*   <div className="relative inline"> */}
+          {/*     <span>Orders</span> */}
+          {/*     {Number(eventOrders.data?.filter((o) => o?.state === "new").length) > 0 && ( */}
+          {/*       <LucideDot className="text-red-500 animate-pulse -top-1/2 -right-4 absolute" /> */}
+          {/*     )} */}
+          {/*   </div> */}
+          {/* </SegmentedButton> */}
           <SegmentedButton
             active={activeTab === "edit"}
             strong
