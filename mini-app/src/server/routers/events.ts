@@ -226,18 +226,18 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   if (userIsAdminOrOwner) {
     eventData.location = event_location;
     //event payment info
-    if (eventData.has_payment) {
-      const payment_details = (
-        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
-      ).pop();
-      if (!payment_details) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Event Payment Data Not found (Corrupted Event)",
-        });
-      }
-      eventData.payment_details = { ...payment_details };
-    }
+    // if (eventData.has_payment) {
+    //   const payment_details = (
+    //     await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+    //   ).pop();
+    //   if (!payment_details) {
+    //     throw new TRPCError({
+    //       code: "BAD_REQUEST",
+    //       message: "Event Payment Data Not found (Corrupted Event)",
+    //     });
+    //   }
+    //   eventData.payment_details = { ...payment_details };
+    // }
   }
 
   // Registrant Already has a request
@@ -512,7 +512,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
     const result = await db.transaction(async (trx) => {
       const inputSecretPhrase = input_event_data.secret_phrase.trim().toLowerCase();
       const hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
-      const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
+      // const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
 
       if (!hashedSecretPhrase) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid secret phrase" });
 
@@ -532,7 +532,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       /* -------------------------------------------------------------------------- */
 
       /* ------------------- paid events must have registration ------------------- */
-      input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
+      // input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
 
       const newEvent = await trx
         .insert(events)
@@ -565,10 +565,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           //Event Registration
 
           /* ------------------------------- Paid Event ------------------------------- */
-          enabled: !input_event_data.paid_event?.has_payment,
-          hidden: input_event_data.paid_event?.has_payment,
-          has_payment: input_event_data.paid_event?.has_payment,
-          ticketToCheckIn: input_event_data.paid_event?.has_payment, // Duplicated Column same as has_payment 😐
+          // enabled: !input_event_data.paid_event?.has_payment,
+          // hidden: input_event_data.paid_event?.has_payment,
+          // has_payment: input_event_data.paid_event?.has_payment,
+          // ticketToCheckIn: input_event_data.paid_event?.has_payment, // Duplicated Column same as has_payment 😐
           /* ------------------------------- Paid Event ------------------------------- */
         })
         .returning();
@@ -578,35 +578,35 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       /*                     Paid Event : Insert PayMent Details                    */
       /* -------------------------------------------------------------------------- */
 
-      if (input_event_data.paid_event && event_has_payment) {
-        if (!input_event_data.capacity)
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
-        const price = is_dev_env() ? 0.0055 * input_event_data.capacity + 0.01 :10 + 0.055 * input_event_data.capacity;
+      // if (input_event_data.paid_event && event_has_payment) {
+      //   if (!input_event_data.capacity)
+      //     throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
+      //   const price = is_dev_env() ? 0.0055 * input_event_data.capacity + 0.01 :10 + 0.055 * input_event_data.capacity;
 
-        await trx.insert(orders).values({
-          event_uuid: eventData.event_uuid,
-          user_id: opts.ctx.user.user_id,
-          total_price: price,
-          payment_type: "TON",
-          state: "new",
-          order_type: "event_creation",
-          owner_address: "",
-        });
-        await trx.insert(eventPayment).values({
-          event_uuid: newEvent[0].event_uuid,
-          /* -------------------------------------------------------------------------- */
-          payment_type: input_event_data.paid_event.payment_type || "TON",
-          price: input_event_data.paid_event.payment_amount || 1,
-          recipient_address: input_event_data.paid_event.payment_recipient_address,
-          bought_capacity: input_event_data.capacity,
-          /* -------------------------------------------------------------------------- */
-          ticket_type: input_event_data.paid_event.has_nft ? "NFT" : "OFFCHAIN",
-          ticketImage: input_event_data.paid_event.nft_image_url,
-          title: input_event_data.paid_event.nft_title,
-          description: input_event_data.paid_event.nft_description,
-          collectionAddress: null,
-        });
-      }
+      //   await trx.insert(orders).values({
+      //     event_uuid: eventData.event_uuid,
+      //     user_id: opts.ctx.user.user_id,
+      //     total_price: price,
+      //     payment_type: "TON",
+      //     state: "new",
+      //     order_type: "event_creation",
+      //     owner_address: "",
+      //   });
+      //   await trx.insert(eventPayment).values({
+      //     event_uuid: newEvent[0].event_uuid,
+      //     /* -------------------------------------------------------------------------- */
+      //     payment_type: input_event_data.paid_event.payment_type || "TON",
+      //     price: input_event_data.paid_event.payment_amount || 1,
+      //     recipient_address: input_event_data.paid_event.payment_recipient_address,
+      //     bought_capacity: input_event_data.capacity,
+      //     /* -------------------------------------------------------------------------- */
+      //     ticket_type: input_event_data.paid_event.has_nft ? "NFT" : "OFFCHAIN",
+      //     ticketImage: input_event_data.paid_event.nft_image_url,
+      //     title: input_event_data.paid_event.nft_title,
+      //     description: input_event_data.paid_event.nft_description,
+      //     collectionAddress: null,
+      //   });
+      // }
 
       // Insert dynamic fields
       for (let i = 0; i < input_event_data.dynamic_fields.length; i++) {
@@ -657,7 +657,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       });
 
       // On local development skip  registration to ton society || paid event will be registered when organizer pays initial payment
-      const register_to_ts = process.env.ENV !== "local" || !eventData.has_payment;
+      const register_to_ts = process.env.ENV !== "local" ;
 
       if (register_to_ts) {
         const res = await registerActivity(eventDraft);
@@ -727,50 +727,50 @@ const updateEvent = evntManagerPP
         /* -------------------------------------------------------------------------- */
         //can't have capacity null if it's paid event
         //should create order for increasing capacity
-        if (oldEvent.has_payment) {
-          /* -------------------------------------------------------------------------- */
-          //can't have capacity null if it's paid event
-          if (!eventData.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Paid Events Must have capacity" });
-          /* -------------------------------------------------------------------------- */
-          const paymentInfo = (
-            await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
-          ).pop();
-          if (eventData.capacity > paymentInfo!.bought_capacity) {
-            // Increase in event capacity
-            // create an update_capacity_order if not exists otherwise just update it
-            const update_order = (
-              await trx
-                .select()
-                .from(orders)
-                .where(and(eq(orders.event_uuid, eventUuid), eq(orders.order_type, "event_capacity_increment")))
-                .execute()
-            ).pop();
-            /* -------------------- update order exists and its paid -------------------- */
-            if (update_order && update_order.state == "processing") {
-              throw new TRPCError({
-                code: "BAD_REQUEST",
-                message: "You Already have a Paid Capacity Update pending ... please try again in few minutes ",
-              });
-            }
-            /* -------------------------------------------------------------------------- */
-            /* ---------------------------- Update OR Insert ---------------------------- */
-            const upsert_data = {
-              event_uuid: eventUuid,
-              order_type: "event_capacity_increment" as const,
-              state: "new" as const,
-              payment_type: "TON" as const,
-              total_price: 0.055 * (eventData.capacity - paymentInfo!.bought_capacity),
-              user_id: user_id,
-            };
-            if (update_order && update_order.state == "new") {
-              await trx.update(orders).set(upsert_data).where(eq(orders.uuid, update_order.uuid));
-            } else {
-              await trx.insert(orders).values(upsert_data);
-            }
-            //can't update capacity unless organizer pays
-            eventData.capacity = oldEvent.capacity!;
-          }
-        }
+        // if (oldEvent.has_payment) {
+        //   /* -------------------------------------------------------------------------- */
+        //   //can't have capacity null if it's paid event
+        //   if (!eventData.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Paid Events Must have capacity" });
+        //   /* -------------------------------------------------------------------------- */
+        //   const paymentInfo = (
+        //     await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
+        //   ).pop();
+        //   if (eventData.capacity > paymentInfo!.bought_capacity) {
+        //     // Increase in event capacity
+        //     // create an update_capacity_order if not exists otherwise just update it
+        //     const update_order = (
+        //       await trx
+        //         .select()
+        //         .from(orders)
+        //         .where(and(eq(orders.event_uuid, eventUuid), eq(orders.order_type, "event_capacity_increment")))
+        //         .execute()
+        //     ).pop();
+        //     /* -------------------- update order exists and its paid -------------------- */
+        //     if (update_order && update_order.state == "processing") {
+        //       throw new TRPCError({
+        //         code: "BAD_REQUEST",
+        //         message: "You Already have a Paid Capacity Update pending ... please try again in few minutes ",
+        //       });
+        //     }
+        //     /* -------------------------------------------------------------------------- */
+        //     /* ---------------------------- Update OR Insert ---------------------------- */
+        //     const upsert_data = {
+        //       event_uuid: eventUuid,
+        //       order_type: "event_capacity_increment" as const,
+        //       state: "new" as const,
+        //       payment_type: "TON" as const,
+        //       total_price: 0.055 * (eventData.capacity - paymentInfo!.bought_capacity),
+        //       user_id: user_id,
+        //     };
+        //     if (update_order && update_order.state == "new") {
+        //       await trx.update(orders).set(upsert_data).where(eq(orders.uuid, update_order.uuid));
+        //     } else {
+        //       await trx.insert(orders).values(upsert_data);
+        //     }
+        //     //can't update capacity unless organizer pays
+        //     eventData.capacity = oldEvent.capacity!;
+        //   }
+        // }
 
         const updatedEvent = await trx
           .update(events)
@@ -804,13 +804,13 @@ const updateEvent = evntManagerPP
           .returning()
           .execute();
 
-        if (eventData.paid_event?.has_payment && oldEvent.has_payment) {
-          //Only recipient_address and price can be updated
-          await trx.update(eventPayment).set({
-            recipient_address: eventData.paid_event.payment_recipient_address,
-            price: eventData.paid_event.payment_amount,
-          });
-        }
+        // if (eventData.paid_event?.has_payment && oldEvent.has_payment) {
+        //   //Only recipient_address and price can be updated
+        //   await trx.update(eventPayment).set({
+        //     recipient_address: eventData.paid_event.payment_recipient_address,
+        //     price: eventData.paid_event.payment_amount,
+        //   });
+        // }
 
         const currentFields = await eventFieldsDB.selectEventFieldsByEventId(trx, eventId!);
 
@@ -923,16 +923,16 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 const getEventOrders = evntManagerPP.input(z.object({ event_uuid: z.string().uuid() })).query(async (opts) => {
   const event_uuid = opts.input.event_uuid;
 
-  const event_orders = db
-    .select()
-    .from(orders)
-    .where(
-      and(
-        eq(orders.event_uuid, event_uuid),
-        or(eq(orders.order_type, "event_creation"), eq(orders.order_type, "event_capacity_increment")),
-      )
-    );
-  return event_orders;
+  // const event_orders = db
+  //   .select()
+  //   .from(orders)
+  //   .where(
+  //     and(
+  //       eq(orders.event_uuid, event_uuid),
+  //       or(eq(orders.order_type, "event_creation"), eq(orders.order_type, "event_capacity_increment")),
+  //     )
+  //   );
+  return [];
 });
 
 /* -------------------------------------------------------------------------- */
