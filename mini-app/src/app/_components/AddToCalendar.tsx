@@ -40,9 +40,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
 
   const yahooLink = `https://calendar.yahoo.com/?v=60&view=d&type=20&title=${encodeURIComponent(
     title
-  )}&st=${new Date(startDate).toISOString()}&et=${new Date(
-    endDate
-  ).toISOString()}&desc=${encodeURIComponent(description)}`;
+  )}&st=${new Date(startDate).toISOString()}&et=${new Date(endDate).toISOString()}&desc=${encodeURIComponent(description)}`;
 
   // Function to open the link using Telegram Web App API and close drawer
   const openInOSBrowser = (url: string) => {

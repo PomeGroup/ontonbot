@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Bot } from "grammy";
-import {configProtected} from "@/server/config";
+import { configProtected } from "@/server/config";
 
 const tgClient = axios.create({
   baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
@@ -8,11 +8,7 @@ const tgClient = axios.create({
 
 import { AxiosError } from "axios";
 
-export const sendTelegramMessage = async (props: {
-  chat_id: string | number;
-  message: string;
-  link?: string;
-}) => {
+export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
   try {
     const response = await tgClient.post(
       `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-message`,
@@ -62,11 +58,7 @@ export const sendTelegramMessage = async (props: {
     };
   }
 };
-export const sendEventPhoto = async (props: {
-  event_id: string;
-  user_id: string | number;
-  message: string;
-}) => {
+export const sendEventPhoto = async (props: { event_id: string; user_id: string | number; message: string }) => {
   try {
     const response = await tgClient.post(
       `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-photo`,
@@ -118,30 +110,23 @@ export const sendEventPhoto = async (props: {
 };
 
 // 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
-export const sendLogNotification = async (props: {
-  message: string;
-  topic: "event" | "ticket" | "system";
-}) => {
+export const sendLogNotification = async (props: { message: string; topic: "event" | "ticket" | "system" }) => {
+  // __AUTO_GENERATED_PRINT_VAR_START__
+  console.log("sendLogNotification configProtected: %s", configProtected); // __AUTO_GENERATED_PRINT_VAR_END__
 
-  if(!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
+  if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     console.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");
   }
 
   const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
-  const {
-    events_topic: EVENTS_TOPIC,
-    system_topic: SYSTEM_TOPIC,
-    tickets_topic: TICKETS_TOPIC,
-  } = configProtected;
+  const { events_topic: EVENTS_TOPIC, system_topic: SYSTEM_TOPIC, tickets_topic: TICKETS_TOPIC } = configProtected;
 
   const logBot = new Bot(BOT_TOKEN_LOGS);
 
   return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
     reply_parameters: {
-      message_id: Number(
-        props.topic === "ticket" ? TICKETS_TOPIC : props.topic === "event" ? EVENTS_TOPIC : SYSTEM_TOPIC
-      ),
+      message_id: Number(props.topic === "ticket" ? TICKETS_TOPIC : props.topic === "event" ? EVENTS_TOPIC : SYSTEM_TOPIC),
     },
     parse_mode: "HTML",
   });
