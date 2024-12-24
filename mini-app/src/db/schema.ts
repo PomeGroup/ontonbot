@@ -42,7 +42,7 @@ import { userRelations, users } from "./schema/users";
 import { visitors } from "./schema/visitors";
 import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
-import { eventPayment } from "./schema/eventPayment";
+// import { eventPayment } from "./schema/eventPayment";
 
 // export all the enums
 export {
@@ -70,7 +70,7 @@ export {
   eventFieldRelations,
   eventFields,
   eventTicket,
-  eventPayment,
+  // eventPayment,
   event_details_search_list,
   eventPoaTriggers,
   eventPoaTriggersIndexes,

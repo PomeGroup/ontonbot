@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events, eventRegistrants, users, eventPayment, orders } from "@/db/schema";
+import { eventFields, events, eventRegistrants, users, orders } from "@/db/schema";
 import { fetchCountryById } from "@/server/db/giataCity.db";
 
 import { hashPassword } from "@/lib/bcrypt";
@@ -32,7 +32,7 @@ import telegramService from "@/server/routers/services/telegramService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { addVisitor } from "@/server/db/visitors";
 import { internal_server_error } from "../utils/error_utils";
-import { EventPaymentSelectType } from "@/db/schema/eventPayment";
+// import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { is_dev_env } from "../utils/evnutils";
 
 dotenv.config();
@@ -198,7 +198,7 @@ export async function CreateTonSocietyDraft(
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const event_uuid = opts.input.event_uuid;
-  const eventData = { payment_details: {} as Partial<EventPaymentSelectType>  , ...(await selectEventByUuid(event_uuid))};
+  const eventData = { payment_details: {} as any  , ...(await selectEventByUuid(event_uuid))};
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
