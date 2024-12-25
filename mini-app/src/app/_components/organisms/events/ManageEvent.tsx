@@ -18,18 +18,25 @@ type ManageEventProps = {
 
 const ManageEvent = (props: ManageEventProps) => {
   const params = useParams<{ hash: string }>();
-  const { currentStep, setCurrentStep, setEdit, setEventData, resetState } = useCreateEventStore((state) => ({
-    currentStep: state.currentStep,
-    setCurrentStep: state.setCurrentStep,
-    setEdit: state.setEdit,
-    setEventData: state.setEventData,
-    resetState: state.resetState,
-  }));
+  const { currentStep, setCurrentStep, setEdit, setEventData, resetState, clearGeneralErrors } = useCreateEventStore(
+    (state) => ({
+      currentStep: state.currentStep,
+      setCurrentStep: state.setCurrentStep,
+      setEdit: state.setEdit,
+      setEventData: state.setEventData,
+      resetState: state.resetState,
+      clearGeneralErrors: state.clearGeneralStepErrors,
+    })
+  );
 
   const [isReset, setIsReset] = useState(false);
 
   const webApp = useWebApp();
   const router = useRouter();
+
+  useEffect(() => {
+    clearGeneralErrors();
+  }, []);
 
   useLayoutEffect(() => {
     resetState();

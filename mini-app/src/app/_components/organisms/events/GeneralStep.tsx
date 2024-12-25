@@ -3,22 +3,23 @@ import { toast } from "sonner";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { generalStepDataSchema } from "@/zodSchema/event/validation";
 import { ErrorMessage } from "@/app/_components/molecules/alerts/ErrorMessage";
-import { EventGeneralInfoFormFields } from "@/app/_components/Event/steps/GeneralInfoForm";
 import { useMainButton } from "@/hooks/useMainButton";
+import BasicEventInputs from "../../Event/steps/BasicEventInputs";
 
 let lastToastId: string | number | null = null;
 
 export const GeneralStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
 
-  const { setCurrentStep, setEventData, eventData, clearGeneralErrors, setGeneralStepErrors } =
-    useCreateEventStore((state) => ({
+  const { setCurrentStep, setEventData, eventData, clearGeneralErrors, setGeneralStepErrors } = useCreateEventStore(
+    (state) => ({
       setCurrentStep: state.setCurrentStep,
       setEventData: state.setEventData,
       eventData: state.eventData,
       clearGeneralErrors: state.clearGeneralStepErrors,
       setGeneralStepErrors: state.setGeneralStepErrors,
-    }));
+    })
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +66,7 @@ export const GeneralStep = () => {
       ref={formRef}
       onSubmit={handleSubmit}
     >
-      <EventGeneralInfoFormFields />
+      <BasicEventInputs />
     </form>
   );
 };
