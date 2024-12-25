@@ -2,7 +2,6 @@ import React, { useLayoutEffect } from "react";
 import { UserRegistrationForm } from "./UserRegistrationForm";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useMainButton } from "@/hooks/useMainButton";
-import PaidEventCreationInputs from "./PaidEventCreationInputs";
 import { useTonWallet } from "@tonconnect/ui-react";
 
 const RegistrationStep = () => {
@@ -37,7 +36,7 @@ const RegistrationStep = () => {
       }}
     >
       {((isEdit && !eventData.paid_event.has_payment) || !isEdit) && <UserRegistrationForm />}
-      {((isEdit && eventData.paid_event.has_payment) || !isEdit) && <PaidEventCreationInputs />}
+      {/* {((isEdit && eventData.paid_event.has_payment) || !isEdit) && <PaidEventCreationInputs />} */}
     </form>
   );
 };

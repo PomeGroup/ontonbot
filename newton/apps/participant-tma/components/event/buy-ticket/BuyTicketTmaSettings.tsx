@@ -9,19 +9,24 @@ import { useAtomValue } from "jotai";
 import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
 import BuyTicketConnectWalletButton from "./BuyTicketConnectWalletButton";
 import BuyTicketSendTransactionButton from "./BuyTicketSendTransactionButton";
-import { PaymentType } from "~/types/order.types";
 
 type BuyTicketTmaSettingsProps = {
   eventId: string;
   price: string | number;
-  paymentType: PaymentType | null;
   isSoldOut: boolean;
   userHasTicket: boolean;
   orderAlreadyPlace: boolean;
   validateForm: () => boolean;
 };
 
-const BuyTicketTmaSettings = (props: BuyTicketTmaSettingsProps) => {
+const BuyTicketTmaSettings = ({
+  eventId,
+  price,
+  isSoldOut,
+  userHasTicket,
+  orderAlreadyPlace,
+  validateForm,
+}: BuyTicketTmaSettingsProps) => {
   const mainButton = useMainButton(true);
   const backButton = useBackButton(true);
   const tma = useMiniApp(true);
@@ -33,9 +38,9 @@ const BuyTicketTmaSettings = (props: BuyTicketTmaSettingsProps) => {
 
   // main button
   useEffect(() => {
-    if (props.userHasTicket) {
+    if (userHasTicket) {
       if (!isRequestingTicket.state) {
-        router.push(`/ticket/${props.eventId}`);
+        router.push(`/ticket/${eventId}`);
       }
       mainButton?.hideLoader();
 
@@ -45,7 +50,7 @@ const BuyTicketTmaSettings = (props: BuyTicketTmaSettingsProps) => {
       };
     }
 
-    if (props.orderAlreadyPlace) {
+    if (orderAlreadyPlace) {
       mainButton?.setBgColor("#007AFF");
       mainButton?.setTextColor("#ffffff").setText("Pending...");
       mainButton?.showLoader();
@@ -56,7 +61,7 @@ const BuyTicketTmaSettings = (props: BuyTicketTmaSettingsProps) => {
           // reload full application
           window.location.reload();
         },
-        1000 * 60 * 5
+        1000 * 60 * 5,
       );
       return () => {
         mainButton?.hide().disable();
@@ -64,7 +69,7 @@ const BuyTicketTmaSettings = (props: BuyTicketTmaSettingsProps) => {
       };
     }
 
-    if (props.isSoldOut) {
+    if (isSoldOut) {
       mainButton?.setBgColor("#E9E8E8");
       mainButton?.setTextColor("#BABABA").setText(`SOLD OUT`);
       mainButton?.disable().show();
@@ -84,7 +89,7 @@ const BuyTicketTmaSettings = (props: BuyTicketTmaSettingsProps) => {
   // back button
   useEffect(() => {
     backButton?.on("click", () => {
-      router.push(`/event/${props.eventId}`);
+      router.push(`/event/${eventId}`);
     });
 
     backButton?.show();
@@ -101,16 +106,13 @@ const BuyTicketTmaSettings = (props: BuyTicketTmaSettingsProps) => {
 
   return (
     <>
-      {props.userHasTicket || isRequestingTicket.state || props.isSoldOut ? (
+      {userHasTicket || isRequestingTicket.state || isSoldOut ? (
         <></>
       ) : tonconnectUI.account?.address ? (
-        props.paymentType && (
-          <BuyTicketSendTransactionButton
-            validateForm={props.validateForm}
-            price={props.price}
-            paymentType={props.paymentType}
-          />
-        )
+        <BuyTicketSendTransactionButton
+          validateForm={validateForm}
+          price={price}
+        />
       ) : (
         <BuyTicketConnectWalletButton />
       )}
