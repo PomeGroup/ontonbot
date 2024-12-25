@@ -6,7 +6,7 @@ interface EventCardSkeletonProps {
 
 const EventCardSkeleton: React.FC<EventCardSkeletonProps> = ({ mode = "normal" }) => {
   const renderNormalModeSkeleton = () => (
-    <div className="flex w-full pt-4 pr-4 pb-4 pl-0 gap-4 items-start flex-nowrap relative overflow-hidden animate-pulse">
+    <div className="flex w-full pt-4 pr-4 pb-4 pl-0 gap-4 items-start flex-nowrap relative overflow-hidden animate-pulse mb-4">
       <div className="w-24 h-24 shrink-0 rounded-lg relative overflow-hidden bg-gray-200 dark:bg-gray-700"></div>
       <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
         <div className="flex pt-1 pr-0 pb-3 pl-0 flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
@@ -40,7 +40,7 @@ const EventCardSkeleton: React.FC<EventCardSkeletonProps> = ({ mode = "normal" }
   );
 
   const renderDetailedModeSkeleton = () => (
-    <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg animate-pulse">
+    <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg animate-pulse mb-4">
       <div className="absolute inset-0 w-full h-full bg-gray-200 dark:bg-gray-700"></div>
       <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-between p-6">
         <div>
