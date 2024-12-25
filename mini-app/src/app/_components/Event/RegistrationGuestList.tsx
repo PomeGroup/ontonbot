@@ -310,7 +310,7 @@ const RegistrationGuestlist = () => {
     }
   );
 
-  const showPOAButton = Boolean(  eventData.data?.isNotEnded && eventData.data?.isStarted );
+  const showPOAButton = Boolean(  eventData.data?.isNotEnded && eventData.data?.isStarted && eventData.data?.participationType === "online"  );
 
   return (
     <>
