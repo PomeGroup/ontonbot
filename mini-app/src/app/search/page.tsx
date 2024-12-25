@@ -183,12 +183,14 @@ const Search: React.FC = () => {
 
   return (
     <Block className="!my-2 ">
-      <div className="flex flex-col h-screen">
-        <div className="sticky top-0 z-50 w-full pb-1">
+      <div className="flex flex-col">
+        <div className="sticky top-0 z-50 w-full pb-1 bg-white pt-2">
           <SearchBar
             includeQueryParam={true}
-            showFilterTags={true}
             onUpdateResults={setResults}
+            tabValue={tabValue}
+            userRole={authorized ? userRole : "user"}
+            showFilterTags={true}
             offset={searchInput.offset}
             setOffset={(newOffset) => setSearchInput({ offset: newOffset })}
             searchParamsParsed={searchInput}
@@ -196,18 +198,16 @@ const Search: React.FC = () => {
             refetch={refetch}
             setFinalSearchInput={setFinalSearchInput}
             applyTabFilter={applyTabFilter}
-            tabValue={tabValue}
-            userRole={authorized ? userRole : "user"}
             refetchEvents={refetch}
           />
-        </div>
 
-        <TabTriggers
-          tabs={tabItems}
-          setTabValue={setTabValue}
-          tabValue={tabValue}
-          swiperRef={swiperRef}
-        />
+          <TabTriggers
+            tabs={tabItems}
+            setTabValue={setTabValue}
+            tabValue={tabValue}
+            swiperRef={swiperRef}
+          />
+        </div>
 
         <div
           ref={scrollableDivRef}

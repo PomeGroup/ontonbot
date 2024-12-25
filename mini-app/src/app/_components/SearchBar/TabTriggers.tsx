@@ -28,7 +28,7 @@ const TabTriggers: React.FC<TabTriggersProps> = ({ tabs, setTabValue, tabValue =
       className="bg-transparent px-0 py-0 "
       onValueChange={(value) => setTabValue(value)}
     >
-      <ScrollArea className="w-full whitespace-nowrap border-0 h-12">
+      <ScrollArea className="w-full whitespace-nowrap border-0 pb-2">
         <Segmented strong>
           {tabs.map((tab, index) => (
             <SegmentedButton
