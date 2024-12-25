@@ -29,15 +29,20 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      {process.env.NODE_ENV === "production" && (
-        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
-      )}
+      <head>
+        {process.env.ENV !== "production" && (
+          <meta
+            name="robots"
+            content="noindex"
+          />
+        )}
+      </head>
+      {process.env.ENV === "production" && <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />}
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
       <body className={cn(mainFont.className)}>
         <Providers isDevStage={isDevStage}>
           <NotificationHandler />
           {children}
-
         </Providers>
         {process.env.NODE_ENV === "development" && (
           <script

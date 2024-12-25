@@ -1,12 +1,12 @@
-import "@repo/ui/globals.css"
+import "@repo/ui/globals.css";
 
-import { GoogleTagManager } from "@next/third-parties/google"
-import { cn } from "@ui/lib/utils"
-import type { Metadata } from "next"
-import React from "react"
+import React from "react";
+import type { Metadata } from "next";
+import { GoogleTagManager } from "@next/third-parties/google";
+import { cn } from "@ui/lib/utils";
 
-import Providers from "~/components/providers"
-import { env } from "~/env.mjs"
+import Providers from "~/components/providers";
+import { env } from "~/env.mjs";
 
 export const metadata: Metadata = {
   title: "Onton",
@@ -20,7 +20,12 @@ export default function RootLayout({
 }): JSX.Element {
   return (
     <html lang="en" className={cn("theme-light platform-ios")}>
-      {process.env.NODE_ENV === "production" && (
+      <head>
+        {process.env.ENV !== "production" && (
+          <meta name="robots" content="noindex" />
+        )}
+      </head>
+      {process.env.ENV === "production" && (
         <GoogleTagManager gtmId={env.NEXT_PUBLIC_GTM as string} />
       )}
       <body>
