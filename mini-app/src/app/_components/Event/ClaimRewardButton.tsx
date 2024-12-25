@@ -23,9 +23,9 @@ function ClaimRewardButtonChild(props: { link: string | null; isNotified: boolea
     <>
       {!isRewardModalOpen && (
         <MainButton
-          text={props.isNotified ? "Reward claimed!" : "Claim Reward"}
+          text={props.isNotified ? "Click to Claim" : "Claim Reward"}
           onClick={openRewardLink}
-          color={props.isNotified ? "secondary" : "primary"}
+          // color={props.isNotified ? "secondary" : "primary"}
         />
       )}
 

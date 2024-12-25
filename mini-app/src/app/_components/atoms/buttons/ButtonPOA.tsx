@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { Dialog } from "konsta/react"; // Import Konsta UI Dialog
 
-const ButtonPOA = ({ event_uuid, poa_type, showPOAButton }: {
+const ButtonPOA = ({ event_uuid, poa_type, disablePOAButton }: {
   event_uuid: string;
   poa_type?: EventTriggerType,
-  showPOAButton: boolean
+  disablePOAButton: boolean
 }) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
@@ -100,7 +100,7 @@ const ButtonPOA = ({ event_uuid, poa_type, showPOAButton }: {
   // Determine button state and text
   let buttonText = "Get Attendance";
   let disabled = !initData || isCreating;
-  if (!showPOAButton) {
+  if (disablePOAButton) {
     buttonText = "Get Attendance (During Event)";
     disabled = true;
   } else if (remainingPOA === 0 && poaInfo?.success) {
