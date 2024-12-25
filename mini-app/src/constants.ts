@@ -594,7 +594,7 @@ export const DOMAINS = [
   "localhost:3001",
   "t.me",
 ];
-export const PAYLOAD_TTL = 3600 * 24 * 7; // 7 days
+export const PAYLOAD_TTL = 3600 * 24 * 30 * 2 ; // 2 month
 export const CHAIN = {
   MAINNET: "-239",
   TESTNET: "-3",
