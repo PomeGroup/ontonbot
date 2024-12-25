@@ -378,8 +378,8 @@ const RegistrationGuestlist = () => {
       </BlockHeader>
       <List
         strong
-        className={"z-0"}
-        title="Guest List"
+        className={"!z-0"}
+        title="Guest List3"
       >
         {registrants.data?.map((registrant, idx) => (
           <CustomListItem
