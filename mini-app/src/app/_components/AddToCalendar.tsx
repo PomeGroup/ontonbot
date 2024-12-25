@@ -74,7 +74,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
           className={cn("w-full")}
         >
           <Block className="flex flex-col gap-2 justify-between">
-            <div className="space-y-2 p-4 divide-black divide-y-2 w-full">
+            <div className="p-4 divide-black divide-y-2 w-full flex flex-col gap-1">
               <Button
                 variant="link"
                 className="flex rounded-none items-center w-full"
