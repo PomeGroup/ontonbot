@@ -26,7 +26,8 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-      - /home/tonont/caddy/:/etc/caddy/
+      - /home/inanloo/caddy/:/etc/caddy/
+      - /home/inanloo/MyProject/ontonBotProjects/ontonbot/devops/cert/:/certs
     networks:
       - caddy-network
     environment:
