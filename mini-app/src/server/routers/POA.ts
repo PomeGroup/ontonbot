@@ -31,6 +31,11 @@ export const POARouter = router({
           return { success: false, message: "you can create POA only during the event" };
         }
 
+        if(event?.participationType !== "online") {
+          console.error(`Event not online for UUID: ${eventUuid} in POA.Create`);
+          return { success: false, message: "you can create POA only for online events" };
+        }
+
         const poaType = opts.input.poa_type as EventTriggerType;
         if (!opts.input?.poa_type || !eventTriggerType.enumValues.includes(poaType)) {
           console.error(`Invalid POA Type: ${opts.input.poa_type}`);
