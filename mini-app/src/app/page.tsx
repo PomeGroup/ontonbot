@@ -160,7 +160,7 @@ export default function Home() {
   // Restore scroll position or scroll to top when tab changes
   useEffect(() => {
     const lastScrollPosition = scrollPositions.current[activeTab] || 0;
-    setTabValueForSearchBar(activeTab === "all-events" ? "All" : "MyEvents");
+    setTabValueForSearchBar(activeTab === "all-events" ? "All" : "My Events");
     applyTabFilter(activeTab === "all-events" ? "All" : "MyEvents", UserId);
     if (scrollRef.current) {
       scrollRef.current.scrollTo({

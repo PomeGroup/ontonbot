@@ -68,7 +68,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           }}
         >
           <div className="flex-1 space-y-3">
-            <p className="font-medium">Ton hub</p>
+            <p className="font-medium">Ton Hub</p>
             <div className="text-sm line-clamp-1 w-11/12 overflow-hidden">{hubText}</div>
           </div>
 
