@@ -17,7 +17,9 @@ export const RewardStep = () => {
   const { setEventData, eventData, edit: editOptions, setRewardStepErrors, clearRewardStepErrors } = useCreateEventStore();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [passwordDisabled, setPasswordDisabled] = useState(!!editOptions?.eventHash || eventData?.eventLocationType === "in_person");
+  const [passwordDisabled, setPasswordDisabled] = useState(
+    !!editOptions?.eventHash || eventData?.eventLocationType === "in_person"
+  );
   const [passwordValue, setPasswordValue] = useState(editOptions?.eventHash ? "{** click to change password **}" : "");
   const [sbtOption, setSbtOption] = useState<"custom" | "default">("default");
 
@@ -129,6 +131,8 @@ export const RewardStep = () => {
       // flattenedErrors and show toast
       if (updateParsedData.error) {
         const flattenedErrors = updateParsedData.error?.flatten().fieldErrors;
+        console.error("updateParsedData error:", updateParsedData.error);
+
         const errorMessages = Object.values(flattenedErrors)
           .flat()
           .map((v, i) => <div key={i}>* {v}</div>);
@@ -145,6 +149,7 @@ export const RewardStep = () => {
     }
     if (parsedEventData.error) {
       const flattenedErrors = parsedEventData.error?.flatten().fieldErrors;
+      console.error("parsedEventData.error:", parsedEventData.error);
       const errorMessages = Object.values(flattenedErrors)
         .flat()
         .map((v, i) => <div key={i}>* {v}</div>);
