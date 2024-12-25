@@ -7,6 +7,7 @@ import { getAuthenticatedUser } from "@/server/auth";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { configProtected } from "@/server/config";
+import dealRoomService from "@/server/routers/services/DealRoomService";
 
 const updateTicketSchema = z.object({
   data: z.object({

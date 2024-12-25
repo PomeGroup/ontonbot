@@ -85,7 +85,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
     await db
       .select()
       .from(events)
-      .where(eq(events.event_uuid, eventUuid))
+      .where(and(eq(events.event_uuid, eventUuid), eq(events.hidden, false)))
       .execute()
   ).pop();
 
@@ -93,7 +93,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
     return null;
   }
 
-  const restEventData  = removeKey(eventData, "secret_phrase");
+  const { wallet_seed_phrase, ...restEventData } = removeKey(eventData, "secret_phrase");
 
   const dynamicFields = await db
     .select()

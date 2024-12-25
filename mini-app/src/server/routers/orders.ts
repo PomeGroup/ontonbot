@@ -4,50 +4,91 @@ import { Address, toNano } from "@ton/core";
 import { TRPCError } from "@trpc/server";
 import { and, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { getEventByUuid, getEventsWithFilters as DBgetEventsWithFilters, selectEventByUuid } from "../db/events";
-import {
-  adminOrganizerProtectedProcedure,
-  eventManagementProtectedProcedure as evntManagerPP,
-  initDataProtectedProcedure,
-  publicProcedure,
-  router,
-} from "../trpc";
+import { initDataProtectedProcedure, router } from "../trpc";
 
 export const ordersRouter = router({
-  updateOrderState: initDataProtectedProcedure
+  createOrder: initDataProtectedProcedure
     .input(
       z.object({
-        order_uuid: z.string().uuid(),
-        state: z.enum(["cancelled", "confirming"]),
+        event_ticket_id: z.number(),
+        full_name: z.string(),
+        telegram: z.string(),
+        company: z.string(),
+        position: z.string(),
+        owner_address: z.string().refine((data) => Address.isAddress(Address.parse(data))),
       })
     )
-    .mutation(async (opts) => {
-      const user_id = opts.ctx.user.user_id;
-      const state = opts.input.state;
-      const order_uuid = opts.input.order_uuid;
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.user.user_id;
 
-      try {
-        const updatedRows = await db
-          .update(orders)
-          .set({ state: state })
-          .where(
-            and(
-              eq(orders.uuid, order_uuid),
-              eq(orders.user_id, user_id),
-              or(eq(orders.state, "new"), eq(orders.state, "confirming"), eq(orders.state, "cancelled"))
-            )
+      const body = input;
+      const eventTicket = await db.query.eventTicket.findFirst({
+        where(fields, { eq }) {
+          return eq(fields.id, body.event_ticket_id);
+        },
+      });
+
+      const mintedTicketsCount = await db
+        .select({ count: sql`count(*)`.mapWith(Number) })
+        .from(orders)
+        .where(
+          and(
+            eq(orders.event_ticket_id, body.event_ticket_id),
+            or(eq(orders.state, "minted"), eq(orders.state, "created"), eq(orders.state, "mint_request"))
           )
-          .returning({ uuid: orders.uuid })
-          .execute();
+        )
+        .execute();
 
-        if (updatedRows.length > 0) {
-          return { code: 200, message: "Order State Updated" };
-        } else {
-          return { code: 200, message: "nothing to update" };
-        }
-      } catch (error) {
-        console.log("order_updateOrderState_internal_error", error);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "internal server error" });
+      if (!eventTicket || !mintedTicketsCount.length) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Event ticket does not exist",
+        });
       }
+
+      const userOrder = await db.query.orders.findFirst({
+        where(fields, { eq, and, or }) {
+          return and(
+            eq(fields.user_id, userId),
+            eq(fields.event_ticket_id, eventTicket.id),
+            or(eq(fields.state, "created"), eq(fields.state, "minted"), eq(fields.state, "mint_request"))
+          );
+        },
+      });
+
+      if (userOrder) {
+        throw new TRPCError({
+          message: "An order is already being proccessed",
+          code: "CONFLICT",
+        });
+      }
+
+      if (mintedTicketsCount[0].count >= (eventTicket.count || 0)) {
+        throw new TRPCError({
+          message: "Event tickets are sold out",
+          code: "NOT_FOUND",
+        });
+      }
+
+      const new_order = (
+        await db
+          .insert(orders)
+          .values({
+            // TODO: change for multiple tickets
+            count: 1,
+            event_uuid: eventTicket.event_uuid,
+            state: "created",
+            total_price: toNano(eventTicket.price),
+            user_id: userId,
+            ...body,
+            updatedBy: "system",
+          })
+          .returning()
+      ).pop();
+
+      return {
+        order_id: new_order?.uuid,
+        message: "order created successfully",
+      };
     }),
 });
