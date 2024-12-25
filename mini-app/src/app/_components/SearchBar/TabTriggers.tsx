@@ -33,6 +33,7 @@ const TabTriggers: React.FC<TabTriggersProps> = ({ tabs, setTabValue, tabValue =
           {tabs.map((tab, index) => (
             <SegmentedButton
               strong
+              className="text-ellipsis overflow-hidden !block"
               rounded
               key={tab.value}
               active={tab.value === tabValue}
