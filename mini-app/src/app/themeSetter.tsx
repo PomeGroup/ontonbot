@@ -29,5 +29,5 @@ export default function ThemeSetter({ children }: { children: React.ReactNode })
     });
   }, [theme]);
 
-  return <div>{children}</div>;
+  return children;
 }
