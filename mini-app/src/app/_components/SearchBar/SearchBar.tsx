@@ -112,7 +112,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   useEffect(() => {
     if (includeQueryParam && hubs.length > 0 && !initialHubsSet) {
       const participantFromQuery = searchParams.get("participationType")?.split(",") || [];
-      const participationType = participantFromQuery.length > 0 && participantFromQuery.length !== 2 ? participantFromQuery : [];
+      const participationType =
+        participantFromQuery.length > 0 && participantFromQuery.length !== 2 ? participantFromQuery : [];
 
       const selectedHubsFromParams = searchParams.get("selectedHubs")?.split(",") || [];
       const sortBy = searchParams.get("sortBy") || "start_date_desc";
@@ -223,7 +224,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
     // @ts-ignore
     return new URLSearchParams({
       query: searchTerm,
-      participationType: participationType && participationType.length ? participationType.join(",") : allParticipationTypes.join(","),
+      participationType:
+        participationType && participationType.length ? participationType.join(",") : allParticipationTypes.join(","),
       selectedHubs: selectedHubs.join(","),
       sortBy: sortBy,
     });
@@ -270,7 +272,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
     hapticFeedback?.selectionChanged();
     console.log("-----***", participationType);
     //@ts-ignore
-    const updated = participationType.includes(type) ? participationType.filter((t) => t !== type) : [...participationType, type];
+    const updated = participationType.includes(type)
+      ? participationType.filter((t) => t !== type)
+      : [...participationType, type];
     setParticipationType(["online", "in_person"]);
     if (updated.length === 0 && participationType.includes("online") && participationType.includes("in_person")) {
       return;
@@ -391,7 +395,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   }, [selectedHubs, participationType, sortBy]);
 
   return (
-    <div className="relative flex flex-col space-y-4">
+    <div className="relative flex flex-col">
       <div className="relative flex items-center">
         <div className={`flex-grow transition-all duration-300 ${searchTerm ? "animate-grow" : "animate-shrink"}`}>
           <Searchbar
