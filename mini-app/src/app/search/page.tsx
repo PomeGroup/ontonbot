@@ -59,7 +59,7 @@ const Search: React.FC = () => {
     { value: "Past", label: "Past" },
     {
       value: "OnGoing",
-      label: "OnGoing",
+      label: "Ongoing",
       borderClass: "border-x-2 border-x-gray-600",
     },
     { value: "MyEvents", label: "My Events" },
@@ -127,7 +127,6 @@ const Search: React.FC = () => {
     applyTabFilter(tabValue, UserId);
     setResults([]);
     setOffset(0);
-    console.log("tabValue", tabValue);
     setTimeout(() => {
       refetch();
     }, 200);
