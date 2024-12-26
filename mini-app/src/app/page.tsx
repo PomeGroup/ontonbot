@@ -107,11 +107,13 @@ export default function Home() {
       enabled: sliderEventsState.length === 0,
     }
   );
-  const { data: upcomingEventsData, isLoading: isLoadingUpcoming } =
-    trpc.events.getEventsWithFilters.useQuery(upcomingEventsParams, {
+  const { data: upcomingEventsData, isLoading: isLoadingUpcoming } = trpc.events.getEventsWithFilters.useQuery(
+    upcomingEventsParams,
+    {
       staleTime: Infinity,
       enabled: upcomingEventsState.length === 0,
-    });
+    }
+  );
   const { data: ongoingEventsData, isLoading: isLoadingOngoing } = trpc.events.getEventsWithFilters.useQuery(
     ongoingEventsParams,
     {
@@ -119,14 +121,11 @@ export default function Home() {
       enabled: ongoingEventsState.length === 0,
     }
   );
-  const { data: pastEventsData, isLoading: isLoadingPast } = trpc.events.getEventsWithFilters.useQuery(
-    pastEventsParams,
-    {
-      staleTime: Infinity,
-      retryDelay: 5000,
-      enabled: pastEventsState.length === 0,
-    }
-  );
+  const { data: pastEventsData, isLoading: isLoadingPast } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams, {
+    staleTime: Infinity,
+    retryDelay: 5000,
+    enabled: pastEventsState.length === 0,
+  });
   const {
     data: myEventsData,
     isLoading: isLoadingMyEvents,
@@ -142,24 +141,21 @@ export default function Home() {
 
   // Set local state when data is fetched
   useEffect(() => {
-    if (sliderEventData?.data && sliderEventData?.data?.length > 0)
-      setSliderEventsState(sliderEventData.data);
-    if (upcomingEventsData?.data && upcomingEventsData?.data?.length > 0)
-      setUpcomingEventsState(upcomingEventsData.data);
-    if (ongoingEventsData?.data && ongoingEventsData?.data?.length > 0)
-      setOngoingEventsState(ongoingEventsData.data);
+    if (sliderEventData?.data && sliderEventData?.data?.length > 0) setSliderEventsState(sliderEventData.data);
+    if (upcomingEventsData?.data && upcomingEventsData?.data?.length > 0) setUpcomingEventsState(upcomingEventsData.data);
+    if (ongoingEventsData?.data && ongoingEventsData?.data?.length > 0) setOngoingEventsState(ongoingEventsData.data);
     if (pastEventsData?.data && pastEventsData?.data?.length > 0) setPastEventsState(pastEventsData.data);
   }, [sliderEventData, upcomingEventsData, ongoingEventsData, pastEventsData]);
 
   // Disable body scroll with inline styles
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    document.body.style.height = "100vh";
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.height = "";
-    };
-  }, []);
+  // useEffect(() => {
+  //   document.body.style.overflow = "hidden";
+  //   document.body.style.height = "100vh";
+  //   return () => {
+  //     document.body.style.overflow = "";
+  //     document.body.style.height = "";
+  //   };
+  // }, []);
 
   // Restore scroll position or scroll to top when tab changes
   useEffect(() => {
@@ -216,10 +212,10 @@ export default function Home() {
   }, [theme]);
 
   return (
-    <Block margin="mt-2">
-      <div className="flex flex-col h-screen">
+    <Block margin="0">
+      <div className="flex flex-col pt-2">
         {/* Fixed Search Bar */}
-        <div className="sticky top-0 z-50 w-full pb-1">
+        <div className="sticky top-0 z-50 w-full pb-1 bg-white">
           <SearchBar
             includeQueryParam={false}
             onUpdateResults={() => {}}
@@ -258,13 +254,14 @@ export default function Home() {
             slidesPerView={1}
             spaceBetween={30}
             pagination={{ clickable: true }}
+            autoHeight
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
             }}
           >
             {/* All Events Slide */}
             <SwiperSlide>
-              <div className="pt-2 flex-grow overflow-y-auto h-screen pb-[120px]">
+              <div className="pt-2 flex-grow pb-4">
                 {/* Slider Event */}
                 {isLoadingSlider && sliderEventsState.length === 0 ? (
                   <>
@@ -273,11 +270,13 @@ export default function Home() {
                   </>
                 ) : (
                   sliderEventsState.length > 0 && (
-                    <EventCard
-                      event={sliderEventsState[0]}
-                      mode={"detailed"}
-                      currentUserId={UserId}
-                    />
+                    <div className="mb-4">
+                      <EventCard
+                        event={sliderEventsState[0]}
+                        mode={"detailed"}
+                        currentUserId={UserId}
+                      />
+                    </div>
                   )
                 )}
 
@@ -373,11 +372,11 @@ export default function Home() {
 
             {/* My Events Slide */}
             <SwiperSlide>
-              <div className="pt-2 flex-grow overflow-y-auto h-screen pb-[120px]">
+              <div className="pt-2 flex-grow overflow-y-auto pb-4 min-h-[calc(100vh-10rem)]">
                 {isLoadingMyEvents ? (
                   [1, 2, 3, 4, 5].map((index) => <EventCardSkeleton key={index} />)
                 ) : myEventsData?.data?.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+                  <div className="flex flex-col items-center justify-center text-center flex-grow h-[calc(100vh-10rem)] gap-4">
                     <Image
                       src={"/template-images/my-event-empty-list-msg.png"}
                       alt={"No Events"}
@@ -393,11 +392,7 @@ export default function Home() {
                         key={event.event_uuid}
                         event={event}
                         currentUserId={UserId}
-                        mode={
-                          currentDateTime > event.startDate && currentDateTime < event.endDate
-                            ? "ongoing"
-                            : "normal"
-                        }
+                        mode={currentDateTime > event.startDate && currentDateTime < event.endDate ? "ongoing" : "normal"}
                       />
                     </>
                   ))

@@ -7,17 +7,7 @@ import React, { ReactNode } from "react";
 const KonstaAppProvider = ({ children }: { children: ReactNode }) => {
   const webApp = useWebApp();
 
-  return (
-    <App
-      theme={"ios"}
-      safeAreas={false}
-      style={{
-        minHeight: webApp?.viewportStableHeight,
-      }}
-    >
-      {children}
-    </App>
-  );
+  return <App theme={"ios"}>{children}</App>;
 };
 
 export default KonstaAppProvider;
