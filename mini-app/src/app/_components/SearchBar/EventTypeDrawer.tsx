@@ -26,8 +26,6 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
   // Create local state to track the participation type selections
   const [localParticipationType, setLocalParticipationType] = useState<ParticipationType>([]);
 
-
-
   // When the drawer opens, reset the local state to the incoming participationType prop
   useEffect(() => {
     if (isOpen) {
@@ -38,9 +36,9 @@ const EventTypeDrawer: React.FC<EventTypeDrawerProps> = ({
 
   // Handle toggling participation type locally
   const handleToggleType = (type: string) => {
-    //@ts-ignore
+    // @ts-expect-error
     setLocalParticipationType((prev) => {
-      //@ts-ignore
+      // @ts-expect-error
       if (prev.includes(type)) {
         return prev.filter((t) => t !== type);
       } else {
