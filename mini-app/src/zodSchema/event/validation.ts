@@ -5,13 +5,16 @@ import { StoreEventData } from "@/zustand/createEventStore";
 export const generalStepDataSchema = z.object({
   title: z
     .string({ required_error: "Please enter a title" })
-    .min(5, { message: "Title must be at least 5 characters" }),
+    .min(5, { message: "Title must be at least 5 characters" })
+    .refine(value => value.trim().length >= 5, { message: 'Title must be at least 5 characters' }),
   subtitle: z
     .string({ required_error: "Please enter a subtitle" })
-    .min(1, { message: "Subtitle must be at least 1 characters" }),
+    .min(1, { message: "Subtitle cannot be empty" })
+    .refine(value => value.trim().length >= 1, { message: 'Subtitle cannot be empty' }),
   description: z
     .string({ required_error: "Please enter a description" })
-    .min(20, { message: "Description must be at least 20 character" }),
+    .min(20, { message: "Description must be at least 20 characters" })
+    .refine(value => value.trim().length >= 20, { message: 'Description must be at least 20 characters' }),
   image_url: z
     .string({ required_error: "Please select an image" })
     .url({ message: "Please select a valid image" }),
@@ -23,29 +26,29 @@ export function rewardStepValidation(editing: boolean) {
     secret_phrase: editing
       ? z.string().optional()
       : z
-          .string()
-          .min(4, { message: "Password must be at least 4 characters" })
-          .max(20, { message: "Password must be less than 20 characters" }),
+        .string()
+        .min(4, { message: "Password must be at least 4 characters" })
+        .max(20, { message: "Password must be less than 20 characters" }),
     ts_reward_url: editing
       ? z
-          .string()
-          .url({
-            message: "please select a valid reward image url",
-          })
-          .optional()
-      : z.string().url({
+        .string()
+        .url({
           message: "please select a valid reward image url",
-        }),
+        })
+        .optional()
+      : z.string().url({
+        message: "please select a valid reward image url",
+      }),
     video_url: editing
       ? z
-          .string()
-          .url({
-            message: "please select a valid reward video url",
-          })
-          .optional()
-      : z.string().url({
+        .string()
+        .url({
           message: "please select a valid reward video url",
-        }),
+        })
+        .optional()
+      : z.string().url({
+        message: "please select a valid reward video url",
+      }),
   });
 }
 
@@ -59,13 +62,13 @@ export function timeplaceStepValidation(
     .object({
       // if it was an update we let users enter whenever time they want
       start_date: z
-        .number()
+        .number({ invalid_type_error: 'Start date cannot be empty' })
         .positive("Start date must be a valid positive timestamp")
         .refine((data) => Boolean(editOptions?.eventHash) || data > startDateLimit, {
           message: "Start date must be in the future",
         }),
       end_date: z
-        .number()
+        .number({ invalid_type_error: 'End date cannot be empty' })
         .positive("End date must be a valid positive timestamp")
         // End date must be greater than now
         .min((Date.now() + 1000 * 60 * 4) / 1000, {
@@ -73,8 +76,6 @@ export function timeplaceStepValidation(
         })
         .refine(
           (data) => {
-            console.log("asdahsdjahskdjhasjdkh", data, eventData?.start_date!);
-
             return Boolean(editOptions?.eventHash) || data > formDataObject?.start_date!;
           },
           {
