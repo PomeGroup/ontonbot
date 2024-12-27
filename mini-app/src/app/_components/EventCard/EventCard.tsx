@@ -5,6 +5,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { memo, useState } from "react";
 import { IoIosPlayCircle } from "react-icons/io";
 
@@ -65,11 +66,12 @@ const EventCard: React.FC<EventCardProps> = memo(
 
     const isOnline = participationType === "online" ? "Online" : participationType === "in_person" ? geoLocation : "unknown";
 
+    const router = useRouter();
     const handleEventClick = () => {
       if (ticketToCheckIn) {
         webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`);
       } else {
-        window.location.href = `/events/${eventUuid}`;
+        router.push(`/events/${eventUuid}`);
         return false;
       }
     };
@@ -113,9 +115,9 @@ const EventCard: React.FC<EventCardProps> = memo(
                   )}
                 </span>
                 {currentUserId === organizerUserId ? (
-                  <Badge variant="ontonDark">hosted</Badge>
+                  <Badge variant="ontonDark">Hosted</Badge>
                 ) : (
-                  <Badge variant="ontonDark">{ticketPrice > 0 ? ticketPrice : "free"}</Badge>
+                  <Badge variant="ontonDark">{ticketPrice > 0 ? ticketPrice : "Free"}</Badge>
                 )}
               </div>
               <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
@@ -125,7 +127,7 @@ const EventCard: React.FC<EventCardProps> = memo(
               </div>
 
               <span className="grow font-sans text-left line-clamp-1 text-xs leading-4">
-                by {organizerFirstName} {organizerLastName}
+                By {organizerFirstName} {organizerLastName}
               </span>
             </div>
           </div>
