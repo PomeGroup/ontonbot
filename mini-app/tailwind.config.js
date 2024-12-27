@@ -11,15 +11,11 @@ module.exports = konstaConfig({
       "brand-green": "#10b210",
       "brand-gray": "#888888",
       "brand-purple": "#6d28d9",
+      "light-grey": "#E8E8E9",
     },
   },
   darkMode: ["class"],
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-  ],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   theme: {
     fontFamily: {
       ios: "-apple-system, Roboto ,SF Pro Text, SF UI Text, system-ui, Helvetica Neue, Helvetica, Arial, sans-serif",
