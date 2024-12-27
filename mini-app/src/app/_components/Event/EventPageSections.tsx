@@ -126,10 +126,12 @@ const EventRegistrationStatus = ({
   registrantStatus,
   capacityFilled,
   hasWaitingList,
+  ownsEvent,
 }: {
   registrantStatus: "" | "approved" | "rejected" | "pending" | "checkedin";
   capacityFilled: boolean;
   hasWaitingList: boolean;
+  ownsEvent: boolean;
 }) => {
   const statusConfigs = {
     "": () => <UserRegisterForm />,
@@ -159,6 +161,10 @@ const EventRegistrationStatus = ({
     },
   };
 
+  if (ownsEvent) {
+    return null;
+  }
+
   if (capacityFilled && !hasWaitingList) {
     return (
       <>
@@ -187,7 +193,8 @@ export const EventSections = () => {
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
   const userCompletedTasks =
-    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) && user?.wallet_address;
+    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
+    user?.wallet_address;
 
   const isOnlineEvent = eventData.data?.participationType === "online";
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
@@ -197,7 +204,9 @@ export const EventSections = () => {
     <div className="space-y-2">
       <EventImage />
 
-      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && <EventPasswordAndWalletInput />}
+      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
+        <EventPasswordAndWalletInput />
+      )}
 
       <EventHead />
       <EventAttributes />
@@ -214,6 +223,7 @@ export const EventSections = () => {
 
       {isNotEnded && eventData.data?.has_registration && (
         <EventRegistrationStatus
+          ownsEvent={isAdminOrOrganizer}
           registrantStatus={eventData.data?.registrant_status ?? ""}
           capacityFilled={Boolean(eventData.data?.capacity_filled)}
           hasWaitingList={Boolean(eventData.data?.has_waiting_list)}
@@ -223,7 +233,9 @@ export const EventSections = () => {
       {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
         <MainButton
           text="Check In"
-          onClick={() => router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)}
+          onClick={() =>
+            router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)
+          }
         />
       )}
 
