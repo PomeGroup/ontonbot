@@ -1,4 +1,4 @@
-import { eventPayment, events, orders, rewards } from "@/db/schema";
+import { eventPayment, events, orders, rewards, walletChecks } from "@/db/schema";
 import { getErrorMessages } from "@/lib/error";
 import { redisTools } from "@/lib/redisTools";
 import { sendLogNotification } from "@/lib/tgBot";
@@ -17,11 +17,9 @@ import { registerActivity } from "@/lib/ton-society-api";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { is_mainnet } from "@/server/routers/services/tonCenter";
 
-import { Cell } from "@ton/core";
-import axios from "axios";
-import FormData from "form-data";
 import wlg from "@/server/utils/logger";
 import { deployCollection, mintNFT } from "@/lib/nft";
+import { uploadJsonToMinio } from "@/lib/minioTools";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -38,18 +36,6 @@ async function MainCronJob() {
     // await notifyUsersForRewards(() => null);
     // wlg.info("RUNNING Cron jobs: notifyUsersForRewards done");
   }
-
-  // Create Rewards Cron Job
-  // new CronJob("*/30 * * * *", cronJob(createRewards), null, true);
-
-  // Notify Users Cron Job
-  // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
-
-  new CronJob("*/20 * * * * *", CheckTransactions, null, true);
-
-  new CronJob("*/10 * * * * *", UpdateEventCapacity, null, true);
-
-  new CronJob("*/10 * * * *", CreateEventOrders, null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
@@ -243,15 +229,28 @@ async function CheckTransactions() {
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
-  wlg.warn("CheckTransactions ==================>>>>>");
+
   const wallet_address = is_mainnet
     ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
     : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW";
-  const start_utime = Math.floor((Date.now() - 10 * 60 * 1000) / 1000);
-  wlg.info(wallet_address, start_utime);
-  const transactions = await tonCenter.fetchAllTransactions(wallet_address, 1734393600);
-  console.log("Trx Len", transactions.length);
+  const hour_ago = Math.floor((Date.now() - 3600 * 1000) / 1000);
+  const start_utime = wallet_address ? null : hour_ago;
+  const wallet_checks_details = await db
+    .select({ checked_lt: walletChecks.checked_lt })
+    .from(walletChecks)
+    .where(eq(walletChecks.wallet_address, wallet_address || ""))
+    .execute();
+
+  let start_lt = null;
+  if (wallet_checks_details) {
+    if (wallet_checks_details[0].checked_lt) {
+      start_lt = wallet_checks_details[0].checked_lt + BigInt(1);
+    }
+  }
+
+  const transactions = await tonCenter.fetchAllTransactions(wallet_address, start_utime, start_lt);
   const parsed_orders = await tonCenter.parseTransactions(transactions);
+
   for (const o of parsed_orders) {
     if (o.verfied) {
       console.log("cron_trx", o.order_uuid, o.order_type, o.value);
@@ -267,40 +266,17 @@ async function CheckTransactions() {
         );
     }
   }
-}
 
-const uploadJsonToMinio = async (jsonData: Record<string, any>, bucketName: string, subfolder: string = "") => {
-  const buffer = Buffer.from(JSON.stringify(jsonData));
-  const fullFilename = `${subfolder}/metadata.json`;
-  // Create form data for the upload
-  const formData = new FormData();
-  formData.append("json", buffer, {
-    filename: fullFilename,
-    contentType: "application/json",
-  });
-
-  // Append the bucket name to the form data
-  formData.append("bucketName", bucketName);
-
-  // Send the JSON data to the upload service (MinIO)
-  const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-json`;
-  wlg.info("URL: ", url);
-  try {
-    const res = await axios.post(url, formData, {
-      headers: formData.getHeaders(),
-    });
-    wlg.info("Response: ", res.data);
-
-    if (!res.data || !res.data.jsonUrl) {
-      throw new Error("JSON upload failed");
-    }
-
-    return res.data.jsonUrl;
-  } catch (error) {
-    console.error("Error during JSON upload:", error);
-    throw new Error("An error occurred during JSON upload");
+  //-- Finished Checking
+  if (transactions) {
+    const last_lt = BigInt(transactions[transactions.length - 1].lt);
+    await db
+      .update(walletChecks)
+      .set({ checked_lt: last_lt })
+      .where(eq(walletChecks.wallet_address, wallet_address))
+      .execute();
   }
-};
+}
 
 async function CreateEventOrders() {
   // Get Pending(paid) Orders to create event
@@ -320,51 +296,54 @@ async function CreateEventOrders() {
   /*                               Event Creation                               */
   /* -------------------------------------------------------------------------- */
   for (const order of results) {
-    const event_uuid = order.event_uuid;
-    if (!event_uuid) {
-      console.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
-      continue;
-    }
-    const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
-    if (!event) {
-      console.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
-      continue;
-    }
-    const eventData = event[0];
-    const eventDraft = await CreateTonSocietyDraft(
-      {
-        title: eventData.title,
-        subtitle: eventData.subtitle,
-        description: eventData.description,
-        location: eventData.location!,
-        countryId: eventData.countryId,
-        society_hub: { id: eventData.society_hub_id! },
-        start_date: eventData.start_date,
-        end_date: eventData.end_date,
-        ts_reward_url: eventData.tsRewardImage,
-        video_url: eventData.tsRewardVideo,
-        eventLocationType: eventData.participationType,
-      },
-      event_uuid
-    );
-    const paymentInfo = (
-      await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
-    ).pop();
+    try {
+      const event_uuid = order.event_uuid;
+      if (!event_uuid) {
+        //NOTE - tg log
+        console.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
+        continue;
+      }
+      const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      if (!event) {
+        //NOTE - tg log
+        console.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
+        continue;
+      }
+      const eventData = event[0];
+      const eventDraft = await CreateTonSocietyDraft(
+        {
+          title: eventData.title,
+          subtitle: eventData.subtitle,
+          description: eventData.description,
+          location: eventData.location!,
+          countryId: eventData.countryId,
+          society_hub: { id: eventData.society_hub_id! },
+          start_date: eventData.start_date,
+          end_date: eventData.end_date,
+          ts_reward_url: eventData.tsRewardImage,
+          video_url: eventData.tsRewardVideo,
+          eventLocationType: eventData.participationType,
+        },
+        event_uuid
+      );
+      const paymentInfo = (
+        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+      ).pop();
 
-    if (!paymentInfo) {
-      console.error("what the fuck : ", "event Does not have payment !!!");
-    }
+      if (!paymentInfo) {
+        //NOTE - tg log
+        console.error("what the fuck : ", "event Does not have payment !!!");
+      }
 
-    /* -------------------------------------------------------------------------- */
-    /*                              Create Collection                             */
-    /* -------------------------------------------------------------------------- */
-    let collectionAddress = paymentInfo?.collectionAddress || null;
-    let collection_address_in_db = true;
-    if (paymentInfo && !paymentInfo?.collectionAddress) {
       /* -------------------------------------------------------------------------- */
-      /* ----------------------------- MetaData Upload ---------------------------- */
-      let metaDataUrl = "";
-      try {
+      /*                              Create Collection                             */
+      /* -------------------------------------------------------------------------- */
+      let collectionAddress = paymentInfo?.collectionAddress || null;
+      let collection_address_in_db = true;
+      if (paymentInfo && !paymentInfo?.collectionAddress) {
+        /* -------------------------------------------------------------------------- */
+        /* ----------------------------- MetaData Upload ---------------------------- */
+        let metaDataUrl = "";
         metaDataUrl = await uploadJsonToMinio(
           {
             name: paymentInfo?.title,
@@ -375,62 +354,64 @@ async function CreateEventOrders() {
           "ontoncollection"
         );
         if (!metaDataUrl) continue; //failed
-      } catch (error) {
-        continue; //failed
-      }
-      wlg.warn("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
 
-      /* ---------------------------- Collection Deploy --------------------------- */
-      collection_address_in_db = false;
-      collectionAddress = await deployCollection(metaDataUrl);
+        wlg.warn("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
+
+        /* ---------------------------- Collection Deploy --------------------------- */
+        collection_address_in_db = false;
+        collectionAddress = await deployCollection(metaDataUrl);
+      }
+
+      /* -------------------------------------------------------------------------- */
+      /*                          Create Ton Society Event                          */
+      /* -------------------------------------------------------------------------- */
+      let ton_society_result = undefined;
+      if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
+
+      /* -------------------------------------------------------------------------- */
+      /*                                  Update DB                                 */
+      /* -------------------------------------------------------------------------- */
+      await db.transaction(async (trx) => {
+        /* --------------------------- Update Activity Id --------------------------- */
+        if (eventData.activity_id || ton_society_result) {
+          const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
+          await trx
+            .update(events)
+            .set({
+              activity_id: activity_id,
+              hidden: false,
+              enabled: true,
+              updatedBy: "CreateEventOrders-JOB",
+              updatedAt: new Date(),
+            })
+            .where(eq(events.event_uuid, event_uuid))
+            .execute();
+        }
+        /* ------------------------ Update Collection Address ----------------------- */
+        if (paymentInfo && collectionAddress) {
+          await trx
+            .update(eventPayment)
+            .set({ collectionAddress: collectionAddress, updatedBy: "CreateEventOrders", updatedAt: new Date() })
+            .where(eq(eventPayment.id, paymentInfo.id))
+            .execute();
+          collection_address_in_db = true;
+        }
+
+        /* ------------------------- Mark Order as Completed ------------------------ */
+        if (paymentInfo && collection_address_in_db && (ton_society_result || eventData.activity_id)) {
+          await trx
+            .update(orders)
+            .set({ state: "completed", updatedBy: "CreateEventOrders", updatedAt: new Date() })
+            .where(eq(orders.uuid, order.uuid))
+            .execute();
+        }
+      });
+    } catch (error) {
+      console.log(`event_creation_error ${error}`);
     }
-
-    /* -------------------------------------------------------------------------- */
-    /*                          Create Ton Society Event                          */
-    /* -------------------------------------------------------------------------- */
-    let ton_society_result = undefined;
-    if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
-
-    /* -------------------------------------------------------------------------- */
-    /*                                  Update DB                                 */
-    /* -------------------------------------------------------------------------- */
-    await db.transaction(async (trx) => {
-      /* --------------------------- Update Activity Id --------------------------- */
-      if (eventData.activity_id || ton_society_result) {
-        const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
-        await trx
-          .update(events)
-          .set({
-            activity_id: activity_id,
-            hidden: false,
-            enabled: true,
-            updatedBy: "cronjob",
-            updatedAt: new Date(),
-          })
-          .where(eq(events.event_uuid, event_uuid))
-          .execute();
-      }
-      /* ------------------------ Update Collection Address ----------------------- */
-      if (paymentInfo && collectionAddress) {
-        await trx
-          .update(eventPayment)
-          .set({ collectionAddress: collectionAddress })
-          .where(eq(eventPayment.id, paymentInfo.id))
-          .execute();
-        collection_address_in_db = true;
-      }
-
-      /* ------------------------- Mark Order as Completed ------------------------ */
-      if (paymentInfo && collection_address_in_db && (ton_society_result || eventData.activity_id)) {
-        await trx
-          .update(orders)
-          .set({ state: "completed", updatedBy: "cronjob", updatedAt: new Date() })
-          .where(eq(orders.uuid, order.uuid))
-          .execute();
-      }
-    });
   }
 }
+
 async function UpdateEventCapacity() {
   const results = await db
     .select()
@@ -442,38 +423,45 @@ async function UpdateEventCapacity() {
   /*                               Event UPDATE                                 */
   /* -------------------------------------------------------------------------- */
   for (const order of results) {
-    const event_uuid = order.event_uuid;
-    if (!event_uuid) {
-      console.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
-      continue;
+    try {
+      const event_uuid = order.event_uuid;
+      if (!event_uuid) {
+        //NOTE - tg log
+        console.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
+        continue;
+      }
+      const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      if (!event) {
+        //NOTE - tg log
+        console.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
+        continue;
+      }
+      const eventData = event[0];
+
+      const paymentInfo = (
+        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+      ).pop();
+
+      if (!paymentInfo) {
+        //NOTE - tg log
+        console.error("what the fuck : ", "event Does not have payment !!!");
+        continue;
+      }
+
+      await db.transaction(async (trx) => {
+        const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.055);
+
+        await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid)).execute();
+        await trx
+          .update(eventPayment)
+          .set({ bought_capacity: newCapacity })
+          .where(eq(eventPayment.event_uuid, eventData.event_uuid))
+          .execute();
+        await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, order.uuid)).execute();
+      });
+    } catch (error) {
+      console.error(`UpdateEventCapacity_error ${error}`);
     }
-    const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
-    if (!event) {
-      console.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
-      continue;
-    }
-    const eventData = event[0];
-
-    const paymentInfo = (
-      await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
-    ).pop();
-
-    if (!paymentInfo) {
-      console.error("what the fuck : ", "event Does not have payment !!!");
-      continue;
-    }
-
-    await db.transaction(async (trx) => {
-      const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.055);
-
-      await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid)).execute();
-      await trx
-        .update(eventPayment)
-        .set({ bought_capacity: newCapacity })
-        .where(eq(eventPayment.event_uuid, eventData.event_uuid))
-        .execute();
-      await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, order.uuid)).execute();
-    });
   }
 }
 

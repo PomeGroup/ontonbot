@@ -1,3 +1,4 @@
+import { v2_client } from "@/server/routers/services/tonCenter";
 import { Address, Cell, internal, beginCell, contractAddress, StateInit, SendMode, OpenedContract, toNano } from "@ton/core";
 
 import { KeyPair, mnemonicToPrivateKey } from "@ton/crypto";
@@ -14,15 +15,11 @@ export type OpenedWallet = {
   keyPair: KeyPair;
 };
 
-export async function openWallet(mnemonic: string[], testnet: boolean) {
+export async function openWallet(mnemonic: string[]) {
   const keyPair = await mnemonicToPrivateKey(mnemonic);
 
-  const toncenterBaseEndpoint: string = testnet ? "https://testnet.toncenter.com" : "https://toncenter.com";
+  const client = v2_client();
 
-  const client = new TonClient({
-    endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
-    apiKey: "1dd90a08cac83c13d27078fdb5f73752b393c8db47d9bf959d288fe486b9bcd1",
-  });
   const wallet = WalletContractV4.create({
     workchain: 0,
     publicKey: keyPair.publicKey,
@@ -154,7 +151,6 @@ export class NftCollection {
 
   public async deploy(wallet: OpenedWallet) {
     const seqno = await wallet.contract.getSeqno();
-    console.log("seqno", seqno);
 
     await wallet.contract.sendTransfer({
       seqno,
@@ -194,11 +190,13 @@ export class NftCollection {
 }
 
 export async function waitSeqno(seqno: number, wallet: OpenedWallet) {
+  let seqnoAfter = -1;
   for (let attempt = 0; attempt < 10; attempt++) {
     await sleep(2000);
-    const seqnoAfter = await wallet.contract.getSeqno();
+    seqnoAfter = await wallet.contract.getSeqno();
     if (seqnoAfter == seqno + 1) break;
   }
+  return seqnoAfter;
 }
 
 export function sleep(ms: number): Promise<void> {
@@ -237,10 +235,7 @@ export class NftItem {
     return seqno;
   }
   static async getAddressByIndex(collectionAddress: Address, itemIndex: number): Promise<Address> {
-    const client = new TonClient({
-      endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
-      apiKey: "1dd90a08cac83c13d27078fdb5f73752b393c8db47d9bf959d288fe486b9bcd1",
-    });
+    const client = v2_client();
     const response = await client.runMethod(collectionAddress, "get_nft_address_by_index", [
       { type: "int", value: BigInt(itemIndex) },
     ]);
@@ -249,7 +244,8 @@ export class NftItem {
 }
 
 export async function mintNFT(collection_address: string, nftIndex: number, nft_metadata_url: string) {
-  const wallet = await openWallet(process.env.MNEMONIC!.split(" "), true);
+  const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
+
   const collectionData = {
     ownerAddress: wallet.contract.address,
     royaltyPercent: 0.1, // 0.1 = 10%
@@ -267,15 +263,17 @@ export async function mintNFT(collection_address: string, nftIndex: number, nft_
     commonContentUrl: nft_metadata_url,
   };
 
+  console.log("]]]]]]]]]]]]]: ", await wallet.contract.getSeqno());
   const nftItem = new NftItem(collection);
   const seqno = await nftItem.deploy(wallet, mintParams, collection_address);
   console.log(`Successfully deployed ${nftIndex + 1} NFT`);
-  await waitSeqno(seqno, wallet);
+  const seqnoAfter = await waitSeqno(seqno, wallet);
+  console.log("]]]]]]]]]]]]]: ", seqnoAfter);
   // index++;
 }
 
 export async function deployCollection(collectio_metadata_url: string) {
-  const wallet = await openWallet(process.env.MNEMONIC!.split(" "), true);
+  const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
 
   console.log("Start deploy of nft collection...");
   const collectionData = {
@@ -294,3 +292,15 @@ export async function deployCollection(collectio_metadata_url: string) {
 
   return collection.address.toString();
 }
+
+async function main() {
+  // const url =  await uploadJsonToMinio({} , 'ontonitem');
+  // await deployCollection("https://s.getgems.io/nft/c/626e630d4c1921ba7a0e3b4e/edit/meta-1683207247829.json");
+  // const nft = await mintNFT(
+  //   "EQBw2_yccujzsJoGOhgt24gmWmKYvXYBjha_g8cx7laaj5wq",
+  //   11,
+  //   "https://s.getgems.io/nft/b/c/13da60f71d1556fffffffd06/olivander.json"
+  // );
+}
+
+main().finally(() => console.log("done"));

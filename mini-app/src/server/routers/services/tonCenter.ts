@@ -1,5 +1,7 @@
 import { Address, Cell } from "@ton/core";
 import axios from "axios";
+import { TonClient} from "@ton/ton";
+
 
 export const is_mainnet = process.env.ENV?.toLowerCase() == "production" || process.env.ENV?.toLowerCase() == "staging";
 // export const is_mainnet = false;
@@ -30,7 +32,7 @@ const ORDER_PREFIX = "onton_order=";
 /* -------------------------------------------------------------------------- */
 
 // Function to cycle through API keys
-const getApiKey = (() => {
+export const getApiKey = (() => {
   let index = 0;
 
   return function () {
@@ -39,6 +41,17 @@ const getApiKey = (() => {
     return apiKey;
   };
 })();
+
+export function v2_client(){
+  const toncenterBaseEndpoint: string = !is_mainnet ? "https://testnet.toncenter.com" : "https://toncenter.com";
+
+  const client = new TonClient({
+    endpoint: `${toncenterBaseEndpoint}/api/v2/jsonRPC`,
+    apiKey: getApiKey(),
+  });
+
+  return client;
+}
 
 /* -------------------------------------------------------------------------- */
 /*                                  FETCH NFT                                 */
@@ -173,10 +186,10 @@ async function getJettonWallet(address: string, retries: number = 3, limit = 1, 
 /* -------------------------------------------------------------------------- */
 interface FetchTransactionsParams {
   account: string;
-  start_utime: number;
+  start_utime: number | null;
   limit: number;
   sort: "asc" | "desc";
-  start_lt?: bigint;
+  start_lt: bigint | null;
   retries?: number;
   offset?: number;
 }
@@ -216,13 +229,20 @@ async function fetchTransactions({
   }
 }
 
-async function fetchAllTransactions(account: string, start_utime: number, limit = 100, sort = "asc") {
+async function fetchAllTransactions(
+  account: string,
+  start_utime: number | null = null,
+  start_lt: bigint | null = null,
+  limit = 100,
+  sort = "asc"
+) {
   let allTransactions = [];
   let offset = 0;
   while (true) {
     const response = await fetchTransactions({
       account,
-      start_utime: start_utime,
+      start_utime,
+      start_lt,
       limit,
       sort: sort as "asc" | "desc",
       offset: offset,
