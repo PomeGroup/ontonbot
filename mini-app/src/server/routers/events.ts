@@ -950,15 +950,48 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
   // private
   requestExportFile: eventManagementProtectedProcedure.mutation(async (opts) => {
-    const event = opts.ctx.event;
-    const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
+    const event_uuid = opts.input.event_uuid;
+  const event = opts.ctx.event;
+  const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
 
+  const eventData = await selectEventByUuid(event_uuid);
+
+  let csvString = "";
+  let count = 0;
+  if (eventData?.has_registration) {
+    const result = await db
+      .select()
+      .from(eventRegistrants)
+      .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
+      .where(eq(eventRegistrants.event_uuid, event_uuid))
+      .execute();
+
+    count = result.length;
+    /* -------------------------------------------------------------------------- */
+    const dataForCsv = result.map((row) => {
+      const registerInfo =
+        typeof row.event_registrants.register_info === "object"
+          ? row.event_registrants.register_info
+          : JSON.parse(String(row.event_registrants.register_info || "{}"));
+
+      const expandedRow = {
+        ...row.event_registrants, // Include all fields from eventRegistrants
+        ...row.users, // Include all fields from users
+        ...registerInfo, // Expand fields from register_info
+      };
+
+      // Remove the original register_info field
+      delete expandedRow.register_info;
+
+      return expandedRow;
+    });
+
+    /* -------------------------------------------------------------------------- */
+    csvString = Papa.unparse(dataForCsv || [], {
+      header: true,
+    });
+  } else {
     const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
-    const eventData = await selectEventByUuid(opts.input.event_uuid);
-
-    console.log("====================visitors================== >> ", visitors, opts.input.event_uuid);
-    // Map the data and conditionally remove fields
-
     const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
       // Explicitly define wallet_address type and handle other optional fields
       //@ts-ignore
@@ -984,46 +1017,45 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       };
     });
 
-    const csvString = Papa.unparse(dataForCsv || [], {
+    csvString = Papa.unparse(dataForCsv || [], {
       header: true,
     });
+    count = visitors.visitorsWithDynamicFields?.length || 0;
+  }
+  try {
+    const formData = new FormData();
 
-    try {
-      const formData = new FormData();
+    // Add BOM at the beginning of the CSV string for UTF-8 encoding
+    const bom = "\uFEFF";
+    const csvContentWithBom = bom + csvString;
 
-      // Add BOM at the beginning of the CSV string for UTF-8 encoding
-      const bom = "\uFEFF";
-      const csvContentWithBom = bom + csvString;
-
-      const fileBlob = new Blob([csvContentWithBom], {
-        type: "text/csv;charset=utf-8;",
-      });
-      formData.append("file", fileBlob, "visitors.csv");
-      // Include the custom message in the form data
-      let customMessage = "Here is the guest list for your event.";
-      if (eventData && eventData?.title) {
-        customMessage = `📂 Download Guest List Report \n\n🟢 ${eventData?.title} \n\n👤 Count of Guests ${visitors.visitorsWithDynamicFields?.length}`;
-      }
-      formData.append("message", customMessage);
-      formData.append("fileName", eventData?.title || "visitors");
-      const userId = opts.ctx.user.user_id;
-      const response = await axios.post(
-        `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-file?id=${userId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      return response.status === 200
-        ? { status: "success", data: null }
-        : { status: "fail", data: response.data };
-    } catch (error) {
-      console.error("Error while sending file: ", error);
-      return { status: "fail", data: null };
+    const fileBlob = new Blob([csvContentWithBom], {
+      type: "text/csv;charset=utf-8;",
+    });
+    formData.append("file", fileBlob, "visitors.csv");
+    // Include the custom message in the form data
+    let customMessage = "Here is the guest list for your event.";
+    if (eventData && eventData?.title) {
+      customMessage = `📂 Download Guest List Report \n\n🟢 ${eventData?.title} \n\n👤 Count of Guests ${count}`;
     }
+    formData.append("message", customMessage);
+    formData.append("fileName", eventData?.title || "visitors");
+    const userId = opts.ctx.user.user_id;
+    const response = await axios.post(
+      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-file?id=${userId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    return response.status === 200 ? { status: "success", data: null } : { status: "fail", data: response.data };
+  } catch (error) {
+    console.error("Error while sending file: ", error);
+    return { status: "fail", data: null };
+  }
   }),
   // private
   requestSendQRcode: eventManagementProtectedProcedure
