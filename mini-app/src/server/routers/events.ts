@@ -198,7 +198,7 @@ export async function CreateTonSocietyDraft(
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const event_uuid = opts.input.event_uuid;
-  const eventData = { payment_details: {} as Partial<EventPaymentSelectType>  , ...(await selectEventByUuid(event_uuid))};
+  const eventData = { payment_details: {} as Partial<EventPaymentSelectType>, ...(await selectEventByUuid(event_uuid)) };
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
@@ -581,7 +581,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       if (input_event_data.paid_event && event_has_payment) {
         if (!input_event_data.capacity)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
-        const price = is_dev_env() ? 0.0055 * input_event_data.capacity + 0.01 :10 + 0.055 * input_event_data.capacity;
+        const price = is_dev_env() ? 0.0055 * input_event_data.capacity + 0.01 : 10 + 0.055 * input_event_data.capacity;
 
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
@@ -622,7 +622,6 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           updatedBy: opts.ctx.user.user_id.toString(),
         });
       }
-
 
       // Insert secret phrase field if applicable
       if (inputSecretPhrase) {
@@ -929,7 +928,7 @@ const getEventOrders = evntManagerPP.input(z.object({ event_uuid: z.string().uui
     .where(
       and(
         eq(orders.event_uuid, event_uuid),
-        or(eq(orders.order_type, "event_creation"), eq(orders.order_type, "event_capacity_increment")),
+        or(eq(orders.order_type, "event_creation"), eq(orders.order_type, "event_capacity_increment"))
       )
     );
   return event_orders;
@@ -1021,44 +1020,78 @@ const requestShareEvent = initDataProtectedProcedure
 
 /* -------------------------------------------------------------------------- */
 const requestExportFile = evntManagerPP.mutation(async (opts) => {
+  const event_uuid = opts.input.event_uuid;
   const event = opts.ctx.event;
   const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
 
-  const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
-  const eventData = await selectEventByUuid(opts.input.event_uuid);
+  const eventData = await selectEventByUuid(event_uuid);
 
-  console.log("====================visitors================== >> ", visitors, opts.input.event_uuid);
-  // Map the data and conditionally remove fields
+  let csvString = "";
+  let count = 0;
+  if (eventData?.has_registration) {
+    const result = await db
+      .select()
+      .from(eventRegistrants)
+      .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
+      .where(eq(eventRegistrants.event_uuid, event_uuid))
+      .execute();
 
-  const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
-    // Explicitly define wallet_address type and handle other optional fields
-    //@ts-ignore
-    const visitorData: Partial<VisitorsWithDynamicFields> = {
-      ...visitor,
-      ticket_status: "ticket_status" in visitor ? (visitor.ticket_status ?? undefined) : undefined,
-      wallet_address: visitor.wallet_address as string | null | undefined,
-      username: visitor.username === "null" ? null : visitor.username,
-    };
-    // Copy the visitor object without modifying dynamicFields directly
+    count = result.length;
+    /* -------------------------------------------------------------------------- */
+    const dataForCsv = result.map((row) => {
+      const registerInfo =
+        typeof row.event_registrants.register_info === "object"
+          ? row.event_registrants.register_info
+          : JSON.parse(String(row.event_registrants.register_info || "{}"));
 
-    // If ticketToCheckIn is false, remove specific fields
-    if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
-      delete visitorData.has_ticket;
-      delete visitorData.ticket_status;
-      delete visitorData.ticket_id;
-    }
+      const expandedRow = {
+        ...row.event_registrants, // Include all fields from eventRegistrants
+        ...row.users, // Include all fields from users
+        ...registerInfo, // Expand fields from register_info
+      };
 
-    // Generate a new object for CSV with stringified dynamicFields
-    return {
-      ...visitorData,
-      dynamicFields: JSON.stringify(visitor.dynamicFields),
-    };
-  });
+      // Remove the original register_info field
+      delete expandedRow.register_info;
 
-  const csvString = Papa.unparse(dataForCsv || [], {
-    header: true,
-  });
+      return expandedRow;
+    });
 
+    /* -------------------------------------------------------------------------- */
+    csvString = Papa.unparse(dataForCsv || [], {
+      header: true,
+    });
+  } else {
+    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
+    const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
+      // Explicitly define wallet_address type and handle other optional fields
+      //@ts-ignore
+      const visitorData: Partial<VisitorsWithDynamicFields> = {
+        ...visitor,
+        ticket_status: "ticket_status" in visitor ? (visitor.ticket_status ?? undefined) : undefined,
+        wallet_address: visitor.wallet_address as string | null | undefined,
+        username: visitor.username === "null" ? null : visitor.username,
+      };
+      // Copy the visitor object without modifying dynamicFields directly
+
+      // If ticketToCheckIn is false, remove specific fields
+      if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
+        delete visitorData.has_ticket;
+        delete visitorData.ticket_status;
+        delete visitorData.ticket_id;
+      }
+
+      // Generate a new object for CSV with stringified dynamicFields
+      return {
+        ...visitorData,
+        dynamicFields: JSON.stringify(visitor.dynamicFields),
+      };
+    });
+
+    csvString = Papa.unparse(dataForCsv || [], {
+      header: true,
+    });
+    count = visitors.visitorsWithDynamicFields?.length || 0;
+  }
   try {
     const formData = new FormData();
 
@@ -1073,7 +1106,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
     // Include the custom message in the form data
     let customMessage = "Here is the guest list for your event.";
     if (eventData && eventData?.title) {
-      customMessage = `📂 Download Guest List Report \n\n🟢 ${eventData?.title} \n\n👤 Count of Guests ${visitors.visitorsWithDynamicFields?.length}`;
+      customMessage = `📂 Download Guest List Report \n\n🟢 ${eventData?.title} \n\n👤 Count of Guests ${count}`;
     }
     formData.append("message", customMessage);
     formData.append("fileName", eventData?.title || "visitors");
