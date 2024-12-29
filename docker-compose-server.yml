@@ -89,6 +89,8 @@ services:
   minio:
     hostname: minio
     image: minio/minio
+    depends_on:
+      - fluentd
     networks:
       - onton-network
     ports:
@@ -108,7 +110,7 @@ services:
         constraints:
           - node.role == manager
       restart_policy:
-        condition: none
+        condition: on-failure
         delay: 5s
         max_attempts: 20
         window: 300s
@@ -127,6 +129,8 @@ services:
   postgres:
     hostname: postgres
     image: postgres:16.3-alpine3.20
+    depends_on:
+      - fluentd
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     deploy:
@@ -171,6 +175,8 @@ services:
     hostname: redis
     volumes:
       - redis_data:/data
+    depends_on:
+      - fluentd
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
     command: redis-server  --port ${REDIS_PORT}
@@ -189,7 +195,7 @@ services:
           - node.role == manager
       restart_policy:
         condition: on-failure
-        delay: 15s
+        delay: 10s
         max_attempts: 20
         window: 30s
     stop_signal: SIGTERM
@@ -274,6 +280,8 @@ services:
       <<: *common-env
     depends_on:
       - postgres
+      - fluentd
+      - redis
     secrets:
       - registry-onton-config
     networks:
@@ -309,6 +317,7 @@ services:
       - postgres
       - redis
       - minio
+      - fluentd
     volumes:
       - drizzle_data:/app/drizzle
     networks:
@@ -354,6 +363,7 @@ services:
       - postgres
       - redis
       - minio
+      - fluentd
     volumes:
       - drizzle_data_cron:/app/drizzle
     networks:
@@ -384,8 +394,8 @@ services:
         constraints:
           - node.role == manager
       restart_policy:
-        condition: none
-        delay: 10s
+        condition: on-failure
+        delay: 5s
     environment:
       <<: *common-env
       TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -395,6 +405,7 @@ services:
       - redis
       - minio
       - rabbitmq
+      - fluentd
     volumes:
       - drizzle_data_cron:/app/drizzle
     networks:
@@ -436,6 +447,7 @@ services:
       - minio
       - rabbitmq
       - mini-app-poa-worker
+      - fluentd
     volumes:
       - drizzle_data_cron:/app/drizzle
     networks:
@@ -469,6 +481,7 @@ services:
         delay: 3s
     depends_on:
       - mini-app
+      - fluentd
     environment:
       <<: *common-env
     networks:
@@ -497,13 +510,14 @@ services:
         constraints:
           - node.role == manager
       restart_policy:
-        condition: none
-        delay: 5s
+        condition: on-failure
+        delay: 10s
     depends_on:
       - postgres
       - redis
       - minio
       - mini-app
+      - fluentd
     environment:
       <<: *common-env
       MNEMONIC: ${MNEMONIC}
@@ -523,6 +537,8 @@ services:
     image: ${REGISTRY_URL}/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
     ports:
       - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
+    depends_on:
+      - fluentd
     deploy:
       resources:
         limits:
@@ -569,7 +585,7 @@ services:
           - node.role == manager
       restart_policy:
         condition: on-failure
-        delay: 30s
+        delay: 15s
         max_attempts: 20
         window: 300s
     volumes:
@@ -588,25 +604,21 @@ services:
       - onton-network
     depends_on:
       - postgres
+      - fluentd
     healthcheck:
       test: curl --fail -I http://localhost:3000/api/health || exit 1
       interval: 15s
       timeout: 5s
       retries: 5
-  #    logging:
-  #      driver: "fluentd"
-  #      options:
-  #        syslog-address: "logstash:5044"
-  #        tag: "docker.${BRANCH_NAME}-metabase"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-metabase"
 
   rabbitmq:
     image: "rabbitmq:4.0.4-management-alpine"
     hostname: rabbitmq
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1G"
-        max-file: "3"
     ports:
       - "${RABBITMQ_MANAGEMENT_PORT}:15672"
       - "${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}"
@@ -616,6 +628,8 @@ services:
       RABBITMQ_NODE_PORT: "${RABBITMQ_NODE_PORT}"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+    depends_on:
+      - fluentd
     deploy:
       mode: global
       resources:
@@ -643,6 +657,12 @@ services:
     networks:
       - onton-network
     tty: true
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-rabbitmq"
+
 #  client-web:
 #    hostname: client-web
 #    <<: *default-extra-hosts
@@ -665,7 +685,6 @@ services:
 #            tag: "docker.${BRANCH_NAME}-client-web"
 
   elasticsearch:
-
     image: elasticsearch:8.16.1
     environment:
       - discovery.type=single-node
@@ -676,38 +695,63 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
-          cpus: '2.0'
+          memory: 12g
+          cpus: '4.0'
       replicas: 1
       restart_policy:
         condition: on-failure
     ports:
       - "9200:9200"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+#    volumes:
+#      - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - onton-network
 
-  logstash:
-    image: logstash:8.16.1
-    volumes:
-      - ./devops/logstash/pipeline:/usr/share/logstash/pipeline
-    environment:
-      - xpack.monitoring.enabled=false
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-          cpus: '1.0'
-      replicas: 1
-      restart_policy:
-        condition: on-failure
+  fluentd:
+    image: fluent/fluentd:v1.18-debian-1
+    user: root # Run as root to install plugins
     ports:
-      - "5044:5044/udp"
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./devops/fluent/fluent.conf:/fluentd/etc/fluent.conf
+    entrypoint: >
+      /bin/sh -c "
+      apt-get update -y &&
+      apt-get install curl -y &&
+      gem install fluent-plugin-concat &&
+      gem install fluent-plugin-elasticsearch &&
+      gem install fluent-plugin-prometheus &&
+      fluentd -c /fluentd/etc/fluent.conf -v
+      "
+    environment:
+      FLUENT_ELASTICSEARCH_HOST: elasticsearch
+      FLUENT_ELASTICSEARCH_PORT: 9200
     depends_on:
       - elasticsearch
     networks:
       - onton-network
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:24224/api/plugins.json"]
+#      interval: 3s
+#      timeout: 5s
+#      retries: 30
+#  fluent-bit:
+#    image: fluent/fluent-bit:latest-debug
+#    hostname: fluent-bit
+#    environment:
+#      - FLUENT_ELASTICSEARCH_HOST=elasticsearch
+#      - FLUENT_ELASTICSEARCH_PORT=9200
+#    volumes:
+#      - ./devops/fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+#      - ./devops/fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf
+#    ports:
+#      - "24224:24224"
+#      - "24224:24224/udp"
+#    networks:
+#      - onton-network
+#    depends_on:
+#      - elasticsearch
 
   kibana:
     image: kibana:8.16.1
@@ -727,28 +771,6 @@ services:
       - onton-network
 
 
-  fluentd:
-    image: fluent/fluentd:v1.15-1
-    user: root # Run as root to install plugins
-    ports:
-      - "24224:24224"
-      - "24224:24224/udp"
-    volumes:
-      - ./devops/fluent/fluent.conf:/fluentd/etc/fluent.conf
-    entrypoint: >
-      /bin/sh -c "
-      gem install curl &&
-      gem install fluent-plugin-concat &&
-      gem install fluent-plugin-elasticsearch &&
-      fluentd -c /fluentd/etc/fluent.conf -v
-      "
-    environment:
-      FLUENT_ELASTICSEARCH_HOST: elasticsearch
-      FLUENT_ELASTICSEARCH_PORT: 9200
-    depends_on:
-      - elasticsearch
-    networks:
-        - onton-network
 #  swagger-ui:
 #    image: swaggerapi/swagger-ui
 #    environment:
