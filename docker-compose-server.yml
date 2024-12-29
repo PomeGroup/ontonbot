@@ -118,11 +118,11 @@ services:
     entrypoint: ["/usr/bin/entrypoint.sh"] # Use the custom entrypoint script
     environment:
       <<: *common-env
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-minio"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-minio"
 
   postgres:
     hostname: postgres
@@ -160,11 +160,11 @@ services:
   #      interval: 30s
   #      timeout: 5s
   #      start_period: 20s
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-postgres"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-postgres"
 
   redis:
     image: redis:7.4.1-bookworm
@@ -203,11 +203,11 @@ services:
   #      interval: 30s
   #      timeout: 5s
   #      start_period: 5s
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-redis"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-redis"
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
@@ -278,11 +278,11 @@ services:
       - registry-onton-config
     networks:
       - onton-network
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-telegram-bot"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-telegram-bot"
 
   mini-app:
     hostname: mini-app
@@ -324,11 +324,11 @@ services:
       interval: 15s
       timeout: 10s
       start_period: 15s
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app"
   mini-app-sbt-worker:
     hostname: mini-app-sbt-worker
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -361,11 +361,11 @@ services:
     command: ["pnpm", "run", "start-cron"]
     secrets:
       - registry-onton-config
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app-sbt-worker"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app-sbt-worker"
 
   mini-app-poa-worker:
     hostname: mini-app-poa-worker
@@ -403,10 +403,11 @@ services:
     secrets:
       - registry-onton-config
     logging:
-      driver: "gelf"
+      driver: "fluentd"
       options:
-        gelf-address: "udp://host.docker.internal:5044"
-        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app-poa-worker"
+
 
   mini-app-notification-socket:
     hostname: mini-app-notification-socket
@@ -442,11 +443,11 @@ services:
     command: ["pnpm", "run", "start:socket"]
     secrets:
       - registry-onton-config
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app-notification-socket"
 
 
   participant-tma:
@@ -474,11 +475,11 @@ services:
       - onton-network
     secrets:
       - registry-onton-config
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-participant-tma"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-participant-tma"
   nft-manager:
     hostname: nft-manager
     image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-manager:${BRANCH_NAME}-latest
@@ -510,12 +511,11 @@ services:
       - onton-network
     secrets:
       - registry-onton-config
-#    command: ["tail", "-f", "/dev/null"]
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-nft-manager"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-nft-manager"
 
 
   website:
@@ -541,11 +541,11 @@ services:
       <<: *common-env
     networks:
       - onton-network
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-website"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-website"
 
 
 
@@ -594,10 +594,10 @@ services:
       timeout: 5s
       retries: 5
   #    logging:
-  #      driver: "gelf"
+  #      driver: "fluentd"
   #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-metabase"
+  #        syslog-address: "logstash:5044"
+  #        tag: "docker.${BRANCH_NAME}-metabase"
 
   rabbitmq:
     image: "rabbitmq:4.0.4-management-alpine"
@@ -659,10 +659,10 @@ services:
 #    networks:
 #      - onton-network
 #    logging:
-#        driver: "gelf"
+#        driver: "fluentd"
 #        options:
-#            gelf-address: "udp://logstash:5044"
-#            tag: "${BRANCH_NAME}-client-web"
+#            syslog-address: "logstash:5044"
+#            tag: "docker.${BRANCH_NAME}-client-web"
 
   elasticsearch:
 
@@ -703,7 +703,7 @@ services:
       restart_policy:
         condition: on-failure
     ports:
-      - "5044:5044"
+      - "5044:5044/udp"
     depends_on:
       - elasticsearch
     networks:
@@ -725,6 +725,30 @@ services:
       - "5601:5601"
     networks:
       - onton-network
+
+
+  fluentd:
+    image: fluent/fluentd:v1.15-1
+    user: root # Run as root to install plugins
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      - ./devops/fluent/fluent.conf:/fluentd/etc/fluent.conf
+    entrypoint: >
+      /bin/sh -c "
+      gem install curl &&
+      gem install fluent-plugin-concat &&
+      gem install fluent-plugin-elasticsearch &&
+      fluentd -c /fluentd/etc/fluent.conf -v
+      "
+    environment:
+      FLUENT_ELASTICSEARCH_HOST: elasticsearch
+      FLUENT_ELASTICSEARCH_PORT: 9200
+    depends_on:
+      - elasticsearch
+    networks:
+        - onton-network
 #  swagger-ui:
 #    image: swaggerapi/swagger-ui
 #    environment:
