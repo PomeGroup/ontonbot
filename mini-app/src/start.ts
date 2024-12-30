@@ -39,18 +39,18 @@ async function MainCronJob() {
   }
 
   // Create Rewards Cron Job
-  new CronJob("*/30 * * * *", cronJob(createRewards), null, true);
+  new CronJob("*/6 * * * *", cronJob(createRewards), null, true);
 
   // Notify Users Cron Job
-  //new CronJob("*/5 ** * * *", cronJob(notifyUsersForRewards), null, true);
+  new CronJob("*/3 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  // new CronJob("*/5 * * * * *", CheckTransactions, null, true);
+  new CronJob("*/5 * * * * *", CheckTransactions, null, true);
 
-  // new CronJob("*/8 * * * * *", cronJob(UpdateEventCapacity), null, true);
+  new CronJob("*/8 * * * * *", cronJob(UpdateEventCapacity), null, true);
 
-  // new CronJob("*/12 * * * * *", cronJob(CreateEventOrders), null, true);
+  new CronJob("*/13 * * * * *", cronJob(CreateEventOrders), null, true);
 
-  // new CronJob("*/6 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
+  new CronJob("*/7 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
@@ -244,6 +244,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
+  console.log(">>> >>> >>> @@@@ CheckTransactions--------------------------------------------------");
 
   const wallet_address = is_mainnet
     ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
@@ -301,6 +302,8 @@ async function CreateEventOrders(pushLockTTl: () => any) {
   // Update (DB) EventPayment (Collection Address)
   // Update (DB) Orders (mark order as completed)
   //todo : Minter Wallet Check
+  console.log("!!! CreateEventOrders--------------------------------------------------");
+
   const results = await db
     .select()
     .from(orders)
@@ -559,7 +562,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       // )
       const nft_index = null;
 
-      const nft_address = mintNFT(paymentInfo?.collectionAddress, nft_index, meta_data_url);
+      const nft_address = await mintNFT(paymentInfo?.collectionAddress, nft_index, meta_data_url);
       if (!nft_address) {
         return;
       }
