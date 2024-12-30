@@ -42,15 +42,15 @@ async function MainCronJob() {
   new CronJob("*/30 * * * *", cronJob(createRewards), null, true);
 
   // Notify Users Cron Job
-  // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
+  //new CronJob("*/5 ** * * *", cronJob(notifyUsersForRewards), null, true);
 
-  // new CronJob("*/10 * * * * *", CheckTransactions, null, true);
+  // new CronJob("*/5 * * * * *", CheckTransactions, null, true);
 
-  // new CronJob("*/10 * * * * *", cronJob(UpdateEventCapacity), null, true);
+  // new CronJob("*/8 * * * * *", cronJob(UpdateEventCapacity), null, true);
 
-  // new CronJob("*/10 * * * *", cronJob(CreateEventOrders), null, true);
+  // new CronJob("*/12 * * * * *", cronJob(CreateEventOrders), null, true);
 
-  // new CronJob("*/10 * * * *", cronJob(MintNFTforPaid_Orders), null, true);
+  // new CronJob("*/6 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
@@ -257,7 +257,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
     .execute();
 
   let start_lt = null;
-  if (wallet_checks_details) {
+  if (wallet_checks_details && wallet_checks_details.length) {
     if (wallet_checks_details[0].checked_lt) {
       start_lt = wallet_checks_details[0].checked_lt + BigInt(1);
     }
@@ -283,7 +283,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
   }
 
   //-- Finished Checking
-  if (transactions) {
+  if (transactions && transactions.length) {
     const last_lt = BigInt(transactions[transactions.length - 1].lt);
     await db
       .update(walletChecks)
@@ -389,13 +389,16 @@ async function CreateEventOrders(pushLockTTl: () => any) {
       await db.transaction(async (trx) => {
         /* --------------------------- Update Activity Id --------------------------- */
         if (eventData.activity_id || ton_society_result) {
+          const wallet_address = is_mainnet
+            ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
+            : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW";
           const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
           await trx
             .update(events)
             .set({
               activity_id: activity_id,
               hidden: false,
-              wallet_address : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW",
+              wallet_address: wallet_address,
               enabled: true,
               updatedBy: "CreateEventOrders-JOB",
               updatedAt: new Date(),
