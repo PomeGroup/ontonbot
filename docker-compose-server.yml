@@ -348,6 +348,7 @@ services:
         window: 300s
     environment:
       <<: *common-env
+      MNEMONIC: ${MNEMONIC}
       TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
       TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
     depends_on:

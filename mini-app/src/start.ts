@@ -44,13 +44,13 @@ async function MainCronJob() {
   // Notify Users Cron Job
   // new CronJob("*/5 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  new CronJob("*/10 * * * * *", CheckTransactions, null, true);
+  // new CronJob("*/10 * * * * *", CheckTransactions, null, true);
 
-  new CronJob("*/10 * * * * *", cronJob(UpdateEventCapacity), null, true);
+  // new CronJob("*/10 * * * * *", cronJob(UpdateEventCapacity), null, true);
 
-  new CronJob("*/10 * * * *", cronJob(CreateEventOrders), null, true);
+  // new CronJob("*/10 * * * *", cronJob(CreateEventOrders), null, true);
 
-  new CronJob("*/10 * * * *", cronJob(MintNFTforPaid_Orders), null, true);
+  // new CronJob("*/10 * * * *", cronJob(MintNFTforPaid_Orders), null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
