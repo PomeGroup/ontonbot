@@ -1,7 +1,6 @@
 import { Address, Cell } from "@ton/core";
 import axios from "axios";
-import { TonClient} from "@ton/ton";
-
+import { TonClient } from "@ton/ton";
 
 export const is_mainnet = process.env.ENV?.toLowerCase() == "production" || process.env.ENV?.toLowerCase() == "staging";
 // export const is_mainnet = false;
@@ -42,7 +41,7 @@ export const getApiKey = (() => {
   };
 })();
 
-export function v2_client(){
+export function v2_client() {
   const toncenterBaseEndpoint: string = !is_mainnet ? "https://testnet.toncenter.com" : "https://toncenter.com";
 
   const client = new TonClient({
@@ -98,14 +97,19 @@ async function fetchNFTItems(
   ownerAddress: string,
   collectionAddress: string,
   nft_address: string = "",
+  index: number = -1,
   limit: number = 100,
   offset: number = 0
 ): Promise<TonCenterResponse> {
   let url: string = "";
-  if (!nft_address) {
+  if (ownerAddress) {
     url = `${BASE_URL}/nft/items?owner_address=${ownerAddress}&collection_address=${collectionAddress}&limit=${limit}&offset=${offset}`;
-  } else {
+  } else if (nft_address) {
     url = `${BASE_URL}/nft/items?address=${nft_address}&owner_address=${ownerAddress}`;
+  } else if (index > -1) {
+    url = `${BASE_URL}/nft/items?index=${index}&collection_address=${collectionAddress}`;
+  } else {
+    throw Error("Wrong Params");
   }
 
   const apiKey = getApiKey();
@@ -134,6 +138,7 @@ async function fetchNFTItemsWithRetry(
   ownerAddress: string,
   collectionAddress: string,
   nft_address: string = "",
+  index: number = -1,
   limit: number = 100,
   offset: number = 0,
   retries: number = 3, // Number of retries
@@ -144,7 +149,7 @@ async function fetchNFTItemsWithRetry(
   while (attempt < retries) {
     try {
       // Call fetchNFTItems function
-      const result = await fetchNFTItems(ownerAddress, collectionAddress, nft_address, limit, offset);
+      const result = await fetchNFTItems(ownerAddress, collectionAddress, nft_address, index, limit, offset);
       return result; // Return the result if successful
     } catch (error) {
       attempt++;
@@ -153,6 +158,28 @@ async function fetchNFTItemsWithRetry(
       }
       console.log(`Retrying... Attempt ${attempt} of ${retries}`);
       await delay(delayMs); // Wait before retrying
+    }
+  }
+}
+
+async function fetchCollection(collection_address: string, limit: number = 100, retries = 3): Promise<any> {
+  const endpoint = `${BASE_URL}/nft/collections`;
+  const params: Record<string, any> = { collection_address, limit };
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const apiKey = getApiKey();
+      const response = await axios.get(endpoint, {
+        params,
+        headers: { accept: "application/json", "X-Api-Key": apiKey },
+      });
+      return response.data;
+    } catch (error) {
+      await delay(50);
+      if (attempt === retries) {
+        throw error;
+        throw new Error(`fetchTransactions Failed after ${retries} attempts`);
+      }
     }
   }
 }
@@ -376,6 +403,7 @@ const tonCenter = {
   fetchTransactions,
   fetchAllTransactions,
   parseTransactions,
+  fetchCollection
 };
 
 export default tonCenter;

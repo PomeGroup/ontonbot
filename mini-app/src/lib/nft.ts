@@ -1,4 +1,4 @@
-import { v2_client } from "@/server/routers/services/tonCenter";
+import tonCenter, { v2_client } from "@/server/routers/services/tonCenter";
 import { Address, Cell, internal, beginCell, contractAddress, StateInit, SendMode, OpenedContract, toNano } from "@ton/core";
 
 import { KeyPair, mnemonicToPrivateKey } from "@ton/crypto";
@@ -8,7 +8,7 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-console.log(process.env.MNEMONIC);
+// console.log(process.env.MNEMONIC);
 
 export type OpenedWallet = {
   contract: OpenedContract<WalletContractV4>;
@@ -234,16 +234,25 @@ export class NftItem {
     });
     return seqno;
   }
-  static async getAddressByIndex(collectionAddress: Address, itemIndex: number): Promise<Address> {
-    const client = v2_client();
-    const response = await client.runMethod(collectionAddress, "get_nft_address_by_index", [
-      { type: "int", value: BigInt(itemIndex) },
-    ]);
-    return response.stack.readAddress();
+  static async getAddressByIndex(collectionAddress: string, itemIndex: number) {
+    const response = await tonCenter.fetchNFTItemsWithRetry("", collectionAddress, "", itemIndex);
+
+    if (response?.nft_items && response?.nft_items.length) {
+      return response?.nft_items[0].address;
+    }
+    return null;
   }
 }
 
-export async function mintNFT(collection_address: string, nftIndex: number, nft_metadata_url: string) {
+export async function mintNFT(collection_address: string, nftIndex: number | null, nft_metadata_url: string) {
+  if (nftIndex === null) {
+    const result = await tonCenter.fetchCollection(collection_address);
+    nftIndex = Number(result?.nft_collections?.next_item_index);
+  }
+
+  let nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);
+  if (nft_addres) return nft_addres;
+
   const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
 
   const collectionData = {
@@ -266,10 +275,15 @@ export async function mintNFT(collection_address: string, nftIndex: number, nft_
   console.log("]]]]]]]]]]]]]: ", await wallet.contract.getSeqno());
   const nftItem = new NftItem(collection);
   const seqno = await nftItem.deploy(wallet, mintParams, collection_address);
-  console.log(`Successfully deployed ${nftIndex + 1} NFT`);
+  console.log(`Successfully deployed the ${nftIndex + 1}th NFT`);
   const seqnoAfter = await waitSeqno(seqno, wallet);
   console.log("]]]]]]]]]]]]]: ", seqnoAfter);
-  // index++;
+
+  await sleep(6000); // just wait to make sure nft is minted
+  nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);
+  if (nft_addres) return nft_addres;
+
+  return null;
 }
 
 export async function deployCollection(collectio_metadata_url: string) {
@@ -293,14 +307,17 @@ export async function deployCollection(collectio_metadata_url: string) {
   return collection.address.toString();
 }
 
-async function main() {
-  // const url =  await uploadJsonToMinio({} , 'ontonitem');
-  // await deployCollection("https://s.getgems.io/nft/c/626e630d4c1921ba7a0e3b4e/edit/meta-1683207247829.json");
-  // const nft = await mintNFT(
-  //   "EQBw2_yccujzsJoGOhgt24gmWmKYvXYBjha_g8cx7laaj5wq",
-  //   11,
-  //   "https://s.getgems.io/nft/b/c/13da60f71d1556fffffffd06/olivander.json"
-  // );
-}
+// async function main() {
+//   // const url =  await uploadJsonToMinio({} , 'ontonitem');
+//   // await deployCollection("https://s.getgems.io/nft/c/626e630d4c1921ba7a0e3b4e/edit/meta-1683207247829.json");
+//   const nft = await mintNFT(
+//     "kQBw2_yccujzsJoGOhgt24gmWmKYvXYBjha_g8cx7laajyeg",
+//     4,
+//     "https://bafybeib57q2gh4tlmzbvqd3i2etytfgzbekxrqkwxkg3apyqoko6xag3se.ipfs.w3s.link/3492.json"
+//   );
+//   // const c = "kQBw2_yccujzsJoGOhgt24gmWmKYvXYBjha_g8cx7laajyeg";
+//   // const nft_addres = await NftItem.getAddressByIndex(c, 10);
+//   console.log("Addres ", nft);
+// }
 
-main().finally(() => console.log("done"));
+// main().finally(() => console.log("done"));
