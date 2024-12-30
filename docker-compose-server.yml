@@ -68,6 +68,7 @@ x-common-env: &common-env
   RABBITMQ_DOMAIN: ${RABBITMQ_DOMAIN}
   RABBITMQ_MANAGEMENT_PORT: ${RABBITMQ_MANAGEMENT_PORT}
   RABBITMQ_NODE_PORT: ${RABBITMQ_NODE_PORT}
+  KIBANA_PORT: ${KIBANA_PORT}
   REDIS_DATABASES: ${REDIS_DATABASES}
   REDIS_HOST: ${IP_REDIS}
   IP_REDIS: ${IP_REDIS}
@@ -125,6 +126,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-minio"
+        fluentd-async-connect: "true"
 
   postgres:
     hostname: postgres
@@ -169,6 +171,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-postgres"
+        fluentd-async-connect: "true"
 
   redis:
     image: redis:7.4.1-bookworm
@@ -214,6 +217,8 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-redis"
+        fluentd-async-connect: "true"
+
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
@@ -291,6 +296,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-telegram-bot"
+        fluentd-async-connect: "true"
 
   mini-app:
     hostname: mini-app
@@ -338,6 +344,8 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app"
+        fluentd-async-connect: "true"
+
   mini-app-sbt-worker:
     hostname: mini-app-sbt-worker
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -376,6 +384,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-sbt-worker"
+        fluentd-async-connect: "true"
 
   mini-app-poa-worker:
     hostname: mini-app-poa-worker
@@ -418,6 +427,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-poa-worker"
+        fluentd-async-connect: "true"
 
 
   mini-app-notification-socket:
@@ -460,6 +470,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-notification-socket"
+        fluentd-async-connect: "true"
 
 
   participant-tma:
@@ -493,6 +504,8 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-participant-tma"
+        fluentd-async-connect: "true"
+
   nft-manager:
     hostname: nft-manager
     image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-manager:${BRANCH_NAME}-latest
@@ -530,6 +543,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-nft-manager"
+        fluentd-async-connect: "true"
 
 
   website:
@@ -562,8 +576,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-website"
-
-
+        fluentd-async-connect: "true"
 
   metabase:
     image: metabase/metabase:v0.50.18.3
@@ -586,7 +599,7 @@ services:
       restart_policy:
         condition: on-failure
         delay: 15s
-        max_attempts: 20
+        max_attempts: 5
         window: 300s
     volumes:
       - /dev/urandom:/dev/random:ro
@@ -615,6 +628,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-metabase"
+        fluentd-async-connect: "true"
 
   rabbitmq:
     image: "rabbitmq:4.0.4-management-alpine"
@@ -662,6 +676,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-rabbitmq"
+        fluentd-async-connect: "true"
 
 #  client-web:
 #    hostname: client-web
@@ -683,92 +698,7 @@ services:
 #        options:
 #            syslog-address: "logstash:5044"
 #            tag: "docker.${BRANCH_NAME}-client-web"
-
-  elasticsearch:
-    image: elasticsearch:8.16.1
-    environment:
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - xpack.security.enabled=false
-      - xpack.security.enrollment.enabled=true
-      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
-    deploy:
-      resources:
-        limits:
-          memory: 12g
-          cpus: '4.0'
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    ports:
-      - "9200:9200"
-#    volumes:
-#      - elasticsearch_data:/usr/share/elasticsearch/data
-    networks:
-      - onton-network
-
-  fluentd:
-    image: fluent/fluentd:v1.18-debian-1
-    user: root # Run as root to install plugins
-    ports:
-      - "24224:24224"
-      - "24224:24224/udp"
-    volumes:
-      - ./devops/fluent/fluent.conf:/fluentd/etc/fluent.conf
-    entrypoint: >
-      /bin/sh -c "
-      apt-get update -y &&
-      apt-get install curl -y &&
-      gem install fluent-plugin-concat &&
-      gem install fluent-plugin-elasticsearch &&
-      gem install fluent-plugin-prometheus &&
-      fluentd -c /fluentd/etc/fluent.conf -v
-      "
-    environment:
-      FLUENT_ELASTICSEARCH_HOST: elasticsearch
-      FLUENT_ELASTICSEARCH_PORT: 9200
-    depends_on:
-      - elasticsearch
-    networks:
-      - onton-network
-#    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://localhost:24224/api/plugins.json"]
-#      interval: 3s
-#      timeout: 5s
-#      retries: 30
-#  fluent-bit:
-#    image: fluent/fluent-bit:latest-debug
-#    hostname: fluent-bit
-#    environment:
-#      - FLUENT_ELASTICSEARCH_HOST=elasticsearch
-#      - FLUENT_ELASTICSEARCH_PORT=9200
-#    volumes:
-#      - ./devops/fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
-#      - ./devops/fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf
-#    ports:
-#      - "24224:24224"
-#      - "24224:24224/udp"
-#    networks:
-#      - onton-network
-#    depends_on:
-#      - elasticsearch
-
-  kibana:
-    image: kibana:8.16.1
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-          cpus: '1.0'
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    ports:
-      - "5601:5601"
-    networks:
-      - onton-network
+#            fluentd-async-connect: "true"
 
 
 #  swagger-ui:
@@ -805,9 +735,6 @@ volumes:
     name: "${STAGE_NAME}_drizzle_data"
   drizzle_data_cron:
     name: "${STAGE_NAME}_drizzle_data_cron"
-  elasticsearch_data:
-    driver: local
-    name: "${STAGE_NAME}_elasticsearch_data"
   rabbitmq_data:
     driver: local
     name: "${STAGE_NAME}_rabbitmq_data"

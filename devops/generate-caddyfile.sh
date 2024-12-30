@@ -23,6 +23,7 @@ if [ "${USE_MAIN_IP_TO_EXPOSE}" = "true" ]; then
     PROXY_WEBSITE=${IP_RANGE_BASE}
     PROXY_RABBITMQ=${IP_RANGE_BASE}
     PROXY_SOCKET=${IP_RANGE_BASE}
+    PROXY_KIBANA=${IP_RANGE_BASE}
 else
     PROXY_MINI_APP=${IP_MINI_APP}
     PROXY_PARTICIPANT_TMA=${IP_PARTICIPANT_TMA}
@@ -33,6 +34,7 @@ else
     PROXY_WEBSITE=${IP_WEBSITE}
     PROXY_RABBITMQ=${IP_RABBITMQ}
     PROXY_SOCKET=${IP_SOCKET}
+    PROXY_KIBANA=${IP_KIBANA}
 fi
 
 # Define log configuration
@@ -90,7 +92,10 @@ ${MINIO_STORAGE_ADMIN_DOMAIN} {
 ${MONITORING_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy grafana:3000
+    basicauth / {
+        ${KIBANA_USERNAME} ${KIBANA_HASHED_PASSWORD}
+    }
+    reverse_proxy http://${PROXY_KIBANA}:${KIBANA_PORT}
 }
 
 ${PGADMIN_DOMAIN} {

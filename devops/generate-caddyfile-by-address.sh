@@ -108,7 +108,10 @@ ${MINIO_STORAGE_ADMIN_DOMAIN} {
 ${MONITORING_DOMAIN} {
     ${TLS_CONFIG}
     ${LOG_CONFIG}
-    reverse_proxy grafana:3000
+    basicauth / {
+        ${KIBANA_USERNAME} ${KIBANA_HASHED_PASSWORD}
+    }
+    reverse_proxy http://${PROXY_KIBANA}:${KIBANA_PORT}
 }
 
 ${PGADMIN_DOMAIN} {
