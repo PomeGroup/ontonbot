@@ -20,3 +20,4 @@ export class MinioModule implements OnModuleInit {
     }
   }
 }
+
