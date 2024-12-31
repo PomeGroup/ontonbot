@@ -87,11 +87,12 @@ export async function POST(request: Request) {
       });
     }
 
-    return Response.json({
-      order_id: userOrder.uuid,
-      message: "An order is already being proccessed",
-      payment_type: userOrder.payment_type,
-    });
+    if (userOrder.state === "new" || userOrder.state === "confirming")
+      return Response.json({
+        order_id: userOrder.uuid,
+        message: "An order is already being proccessed",
+        payment_type: userOrder.payment_type,
+      });
   }
 
   if (TicketsCount[0].count >= (eventData.capacity || 0)) {
