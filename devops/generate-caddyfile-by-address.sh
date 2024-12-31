@@ -105,11 +105,7 @@ ${MINIO_STORAGE_ADMIN_DOMAIN} {
     reverse_proxy http://${PROXY_MINIO}:${MINIO_DASHBOARD_PORT}
 }
 
-${MONITORING_DOMAIN} {
-    ${TLS_CONFIG}
-    ${LOG_CONFIG}
-    reverse_proxy grafana:3000
-}
+
 
 ${PGADMIN_DOMAIN} {
     ${TLS_CONFIG}

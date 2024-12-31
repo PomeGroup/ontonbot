@@ -1,0 +1,10 @@
+server.host: "0.0.0.0"
+server.port: 5601
+server.shutdownTimeout: "5s"
+elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+monitoring.ui.container.elasticsearch.enabled: true
+
+# Encryption keys for Kibana
+xpack.security.encryptionKey: "3viboL2RqdrBl+i6M1VHrXNqaJNhQgdoGhykt6ufSi8="
+xpack.encryptedSavedObjects.encryptionKey: "3viboL2RqdrBl+i6M1VHrXNqaJNhQgdoGhykt6ufSi8="
+xpack.reporting.encryptionKey: "3viboL2RqdrBl+i6M1VHrXNqaJNhQgdoGhykt6ufSi8="

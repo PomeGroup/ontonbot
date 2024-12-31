@@ -1,0 +1,21 @@
+filebeat.inputs:
+  # 1) Collect container logs from the Docker host
+  - type: container
+    # If your Docker Swarm hosts store logs in /var/lib/docker/containers
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    # (Optional) If logs are multiline (like stack traces):
+    multiline.pattern: '^\s'
+    multiline.negate: false
+    multiline.match: after
+    multiline.flush_pattern: '^}'
+
+# 2) Send collected logs to Logstash
+output.logstash:
+  hosts: ["logstash:5044"]
+  protocol: "udp"
+  # 'logstash' must match the service name or network hostname of your Logstash container
+  # If your Logstash container is named 'logstash' and is on the same overlay network,
+  # this should work fine.
+
+# 3) (Optional) If you want to drop certain logs or do advanced filters, refer to Filebeat docs.
