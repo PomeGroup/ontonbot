@@ -9,7 +9,7 @@ export const nftItems = pgTable(
     event_uuid: uuid("event_uuid"),
     order_uuid: uuid("order_uuid").references(() => orders.uuid),
     // user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
-    nft_address: jsonb("register_info").notNull().default({}),
+    nft_address: text("nft_address").notNull(),
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
       mode: "date",

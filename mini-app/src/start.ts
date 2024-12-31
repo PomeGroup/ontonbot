@@ -573,6 +573,8 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
       const nft_index = nft_count_result[0].count || 0;
 
+      console.log("nft_index ", nft_index);
+
       const nft_address = await mintNFT(paymentInfo?.collectionAddress, nft_index, meta_data_url);
       if (!nft_address) {
         console.log("Nft Address Missed");
@@ -592,7 +594,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
           })
           .execute();
 
-        // await trx.insert(tickets).values({
+        // await trx.update(evenregisttra).values({
 
         // })
       });
