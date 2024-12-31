@@ -43,6 +43,7 @@ import { visitors } from "./schema/visitors";
 import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 import { walletChecks } from "./schema/walletChecks";
+import { nftItems } from "./schema/nft_items";
 
 // export all the enums
 export {
@@ -60,7 +61,7 @@ export {
   notificationStatus,
   notificationItemType,
   eventPoaResultStatus,
-  ticketTypes
+  ticketTypes,
 };
 
 // export all the tables and relations
@@ -93,7 +94,8 @@ export {
   sbtRewardCollections,
   eventRegistrants,
   eventRegistrantStatus,
-  walletChecks
+  walletChecks,
+  nftItems,
 };
 
 // Type Exports

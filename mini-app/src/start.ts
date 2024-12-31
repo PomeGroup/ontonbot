@@ -1,4 +1,4 @@
-import { eventPayment, eventRegistrants, events, orders, rewards, tickets, walletChecks } from "@/db/schema";
+import { eventPayment, eventRegistrants, events, nftItems, orders, rewards, tickets, walletChecks } from "@/db/schema";
 import { getErrorMessages } from "@/lib/error";
 import { redisTools } from "@/lib/redisTools";
 import { sendLogNotification } from "@/lib/tgBot";
@@ -9,7 +9,7 @@ import telegramService from "@/server/routers/services/telegramService";
 import { RewardType } from "@/types/event.types";
 import { CronJob } from "cron";
 import "dotenv/config";
-import { and, asc, eq, or } from "drizzle-orm";
+import { and, asc, eq, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
 import { sleep } from "./utils";
 import { CreateTonSocietyDraft } from "@/server/routers/events";
@@ -45,13 +45,13 @@ async function MainCronJob() {
   // Notify Users Cron Job
   new CronJob("*/3 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  new CronJob("*/5 * * * * *", CheckTransactions, null, true);
+  new CronJob("*/7 * * * * *", CheckTransactions, null, true);
 
-  new CronJob("*/8 * * * * *", cronJob(UpdateEventCapacity), null, true);
+  new CronJob("*/24 * * * * *", cronJob(UpdateEventCapacity), null, true);
 
-  new CronJob("*/13 * * * * *", cronJob(CreateEventOrders), null, true);
+  new CronJob("*/26 * * * * *", cronJob(CreateEventOrders), null, true);
 
-  new CronJob("*/7 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
+  new CronJob("*/9 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
@@ -245,7 +245,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
-  console.log(">>> >>> >>> @@@@ CheckTransactions--------------------------------------------------");
+  console.log("@@@@ CheckTransactions @@@@");
 
   const wallet_address = config?.ONTON_WALLET_ADDRESS;
 
@@ -262,7 +262,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
 
   let start_lt = null;
   if (wallet_checks_details && wallet_checks_details.length) {
-    if (wallet_checks_details[0].checked_lt) {
+    if (wallet_checks_details[0]?.checked_lt) {
       start_lt = wallet_checks_details[0].checked_lt + BigInt(1);
     }
   }
@@ -311,7 +311,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
   // Update (DB) EventPayment (Collection Address)
   // Update (DB) Orders (mark order as completed)
   //todo : Minter Wallet Check
-  console.log("!!! CreateEventOrders--------------------------------------------------");
+  console.log("!!! CreateEventOrders !!! ");
 
   const results = await db
     .select()
@@ -496,7 +496,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   // Get Orders to be Minted
   // Mint NFT
   // Update (DB) Successful Minted Orders as Minted
-  console.log("MintNFTforPaid_Orders--------------------------------------------------");
+  console.log("&&&& MintNFT &&&&");
   const results = await db
     .select()
     .from(orders)
@@ -565,22 +565,39 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       //     eq(eventRegistrants)
       //   )
       // )
-      const nft_index = null;
+      const nft_count_result = await db
+        .select({ count: sql`count(*)`.mapWith(Number) })
+        .from(nftItems)
+        .where(eq(nftItems.event_uuid, event_uuid))
+        .execute();
+
+      const nft_index = nft_count_result[0].count || 0;
 
       const nft_address = await mintNFT(paymentInfo?.collectionAddress, nft_index, meta_data_url);
       if (!nft_address) {
+        console.log("Nft Address Missed");
         return;
       }
+      console.log("Nft Adress is :: ", nft_address);
 
       await db.transaction(async (trx) => {
         await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
 
-        // await trx.update(event registrants )
+        await trx
+          .insert(nftItems)
+          .values({
+            event_uuid: event_uuid,
+            order_uuid: ordr.uuid,
+            nft_address: nft_address,
+          })
+          .execute();
 
         // await trx.insert(tickets).values({
 
         // })
       });
+
+      // await pushLockTTl();
     } catch (error) {
       console.log(`nft_mint_error , ${error}`);
     }
