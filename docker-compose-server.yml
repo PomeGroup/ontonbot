@@ -68,6 +68,7 @@ x-common-env: &common-env
   RABBITMQ_DOMAIN: ${RABBITMQ_DOMAIN}
   RABBITMQ_MANAGEMENT_PORT: ${RABBITMQ_MANAGEMENT_PORT}
   RABBITMQ_NODE_PORT: ${RABBITMQ_NODE_PORT}
+  KIBANA_PORT: ${KIBANA_PORT}
   REDIS_DATABASES: ${REDIS_DATABASES}
   REDIS_HOST: ${IP_REDIS}
   IP_REDIS: ${IP_REDIS}
@@ -89,6 +90,8 @@ services:
   minio:
     hostname: minio
     image: minio/minio
+    depends_on:
+      - fluentd
     networks:
       - onton-network
     ports:
@@ -108,7 +111,7 @@ services:
         constraints:
           - node.role == manager
       restart_policy:
-        condition: none
+        condition: on-failure
         delay: 5s
         max_attempts: 20
         window: 300s
@@ -118,15 +121,18 @@ services:
     entrypoint: ["/usr/bin/entrypoint.sh"] # Use the custom entrypoint script
     environment:
       <<: *common-env
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-minio"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-minio"
+        fluentd-async-connect: "true"
 
   postgres:
     hostname: postgres
     image: postgres:16.3-alpine3.20
+    depends_on:
+      - fluentd
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     deploy:
@@ -160,17 +166,20 @@ services:
   #      interval: 30s
   #      timeout: 5s
   #      start_period: 20s
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-postgres"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-postgres"
+        fluentd-async-connect: "true"
 
   redis:
     image: redis:7.4.1-bookworm
     hostname: redis
     volumes:
       - redis_data:/data
+    depends_on:
+      - fluentd
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
     command: redis-server  --port ${REDIS_PORT}
@@ -189,7 +198,7 @@ services:
           - node.role == manager
       restart_policy:
         condition: on-failure
-        delay: 15s
+        delay: 10s
         max_attempts: 20
         window: 30s
     stop_signal: SIGTERM
@@ -203,11 +212,13 @@ services:
   #      interval: 30s
   #      timeout: 5s
   #      start_period: 5s
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-redis"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-redis"
+        fluentd-async-connect: "true"
+
   clamav:
     image: mkodockx/docker-clamav
     hostname: clamav
@@ -274,15 +285,18 @@ services:
       <<: *common-env
     depends_on:
       - postgres
+      - fluentd
+      - redis
     secrets:
       - registry-onton-config
     networks:
       - onton-network
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-telegram-bot"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-telegram-bot"
+        fluentd-async-connect: "true"
 
   mini-app:
     hostname: mini-app
@@ -309,6 +323,7 @@ services:
       - postgres
       - redis
       - minio
+      - fluentd
     volumes:
       - drizzle_data:/app/drizzle
     networks:
@@ -324,11 +339,13 @@ services:
       interval: 15s
       timeout: 10s
       start_period: 15s
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app"
+        fluentd-async-connect: "true"
+
   mini-app-sbt-worker:
     hostname: mini-app-sbt-worker
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -355,6 +372,7 @@ services:
       - postgres
       - redis
       - minio
+      - fluentd
     volumes:
       - drizzle_data_cron:/app/drizzle
     networks:
@@ -362,11 +380,12 @@ services:
     command: ["pnpm", "run", "start-cron"]
     secrets:
       - registry-onton-config
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app-sbt-worker"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app-sbt-worker"
+        fluentd-async-connect: "true"
 
   mini-app-poa-worker:
     hostname: mini-app-poa-worker
@@ -385,8 +404,8 @@ services:
         constraints:
           - node.role == manager
       restart_policy:
-        condition: none
-        delay: 10s
+        condition: on-failure
+        delay: 5s
     environment:
       <<: *common-env
       TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -396,6 +415,7 @@ services:
       - redis
       - minio
       - rabbitmq
+      - fluentd
     volumes:
       - drizzle_data_cron:/app/drizzle
     networks:
@@ -403,11 +423,13 @@ services:
     command: ["pnpm", "run", "start:poa"]
     secrets:
       - registry-onton-config
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app-poa-worker"
+        fluentd-async-connect: "true"
+
 
   mini-app-notification-socket:
     hostname: mini-app-notification-socket
@@ -436,6 +458,7 @@ services:
       - minio
       - rabbitmq
       - mini-app-poa-worker
+      - fluentd
     volumes:
       - drizzle_data_cron:/app/drizzle
     networks:
@@ -443,11 +466,12 @@ services:
     command: ["pnpm", "run", "start:socket"]
     secrets:
       - registry-onton-config
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-mini-app-notification-socket"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app-notification-socket"
+        fluentd-async-connect: "true"
 
 
   participant-tma:
@@ -469,17 +493,20 @@ services:
         delay: 3s
     depends_on:
       - mini-app
+      - fluentd
     environment:
       <<: *common-env
     networks:
       - onton-network
     secrets:
       - registry-onton-config
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-participant-tma"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-participant-tma"
+        fluentd-async-connect: "true"
+
   nft-manager:
     hostname: nft-manager
     image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-manager:${BRANCH_NAME}-latest
@@ -497,13 +524,14 @@ services:
         constraints:
           - node.role == manager
       restart_policy:
-        condition: none
-        delay: 5s
+        condition: on-failure
+        delay: 10s
     depends_on:
       - postgres
       - redis
       - minio
       - mini-app
+      - fluentd
     environment:
       <<: *common-env
       MNEMONIC: ${MNEMONIC}
@@ -511,12 +539,12 @@ services:
       - onton-network
     secrets:
       - registry-onton-config
-#    command: ["tail", "-f", "/dev/null"]
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-nft-manager"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-nft-manager"
+        fluentd-async-connect: "true"
 
 
   website:
@@ -524,6 +552,8 @@ services:
     image: ${REGISTRY_URL}/${GITHUB_REPO}/website:${BRANCH_NAME}-latest
     ports:
       - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
+    depends_on:
+      - fluentd
     deploy:
       resources:
         limits:
@@ -542,13 +572,12 @@ services:
       <<: *common-env
     networks:
       - onton-network
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-website"
-
-
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-website"
+        fluentd-async-connect: "true"
 
   metabase:
     image: metabase/metabase:v0.50.18.3
@@ -570,8 +599,8 @@ services:
           - node.role == manager
       restart_policy:
         condition: on-failure
-        delay: 30s
-        max_attempts: 20
+        delay: 15s
+        max_attempts: 5
         window: 300s
     volumes:
       - /dev/urandom:/dev/random:ro
@@ -589,25 +618,22 @@ services:
       - onton-network
     depends_on:
       - postgres
+      - fluentd
     healthcheck:
       test: curl --fail -I http://localhost:3000/api/health || exit 1
       interval: 15s
       timeout: 5s
       retries: 5
-  #    logging:
-  #      driver: "gelf"
-  #      options:
-  #        gelf-address: "udp://logstash:5044"
-  #        tag: "${BRANCH_NAME}-metabase"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-metabase"
+        fluentd-async-connect: "true"
 
   rabbitmq:
     image: "rabbitmq:4.0.4-management-alpine"
     hostname: rabbitmq
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1G"
-        max-file: "3"
     ports:
       - "${RABBITMQ_MANAGEMENT_PORT}:15672"
       - "${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}"
@@ -617,6 +643,8 @@ services:
       RABBITMQ_NODE_PORT: "${RABBITMQ_NODE_PORT}"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+    depends_on:
+      - fluentd
     deploy:
       mode: global
       resources:
@@ -644,6 +672,13 @@ services:
     networks:
       - onton-network
     tty: true
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-rabbitmq"
+        fluentd-async-connect: "true"
+
 #  client-web:
 #    hostname: client-web
 #    <<: *default-extra-hosts
@@ -660,71 +695,13 @@ services:
 #    networks:
 #      - onton-network
 #    logging:
-#        driver: "gelf"
+#        driver: "fluentd"
 #        options:
-#            gelf-address: "udp://logstash:5044"
-#            tag: "${BRANCH_NAME}-client-web"
+#            syslog-address: "logstash:5044"
+#            tag: "docker.${BRANCH_NAME}-client-web"
+#            fluentd-async-connect: "true"
 
-#  elasticsearch:
-#    image: elasticsearch:8.16.1
-#    environment:
-#      - discovery.type=single-node
-#      - bootstrap.memory_lock=true
-#      - xpack.security.enabled=false
-#      - xpack.security.enrollment.enabled=true
-#      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 4g
-#          cpus: '2.0'
-#      replicas: 1
-#      restart_policy:
-#        condition: on-failure
-#    ports:
-#      - "9200:9200"
-#    volumes:
-#      - elasticsearch_data:/usr/share/elasticsearch/data
-#    networks:
-#      - onton-network
-#
-#  logstash:
-#    image: logstash:8.16.1
-#    volumes:
-#      - ./devops/logstash/pipeline:/usr/share/logstash/pipeline
-#    environment:
-#      - xpack.monitoring.enabled=false
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 2g
-#          cpus: '1.0'
-#      replicas: 1
-#      restart_policy:
-#        condition: on-failure
-#    ports:
-#      - "5044:5044"
-#    depends_on:
-#      - elasticsearch
-#    networks:
-#      - onton-network
-#
-#  kibana:
-#    image: kibana:8.16.1
-#    environment:
-#      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 2g
-#          cpus: '1.0'
-#      replicas: 1
-#      restart_policy:
-#        condition: on-failure
-#    ports:
-#      - "5601:5601"
-#    networks:
-#      - onton-network
+
 #  swagger-ui:
 #    image: swaggerapi/swagger-ui
 #    environment:
@@ -759,9 +736,6 @@ volumes:
     name: "${STAGE_NAME}_drizzle_data"
   drizzle_data_cron:
     name: "${STAGE_NAME}_drizzle_data_cron"
-  elasticsearch_data:
-    driver: local
-    name: "${STAGE_NAME}_elasticsearch_data"
   rabbitmq_data:
     driver: local
     name: "${STAGE_NAME}_rabbitmq_data"
