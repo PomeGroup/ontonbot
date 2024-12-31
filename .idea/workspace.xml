@@ -5,16 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
-      <change afterPath="$PROJECT_DIR$/devops/container-monitoring/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/devops/container-monitoring/dashboard.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/devops/container-monitoring/datasources.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/devops/container-monitoring/default.yaml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/devops/container-monitoring/docker-compose.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/devops/container-monitoring/prometheus.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/devops/prometheus/prometheus.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/devops/caddyServer/docker-compose-caddy.yml" beforeDir="false" afterPath="$PROJECT_DIR$/devops/caddyServer/docker-compose-caddy.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/devops/fluent/fluent.conf" beforeDir="false" afterPath="$PROJECT_DIR$/devops/fluent/fluent.conf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -214,7 +206,7 @@
       <workItem from="1733805054867" duration="7494000" />
       <workItem from="1735386138898" duration="36000" />
       <workItem from="1735386183879" duration="9853000" />
-      <workItem from="1735410524367" duration="108310000" />
+      <workItem from="1735410524367" duration="110615000" />
     </task>
     <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
       <option name="closed" value="true" />

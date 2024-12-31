@@ -90,6 +90,7 @@ services:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.registry-central"
         fluentd-async-connect: "true"
+
   registry-ui:
     image: joxit/docker-registry-ui:latest
     hostname: registry-ui
@@ -199,7 +200,7 @@ services:
       restart_policy:
         condition: on-failure
     ports:
-      - "${KIBANA_PORT}:5601"
+      - "5601:5601"
     networks:
       - caddy-network
 
