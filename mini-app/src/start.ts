@@ -245,7 +245,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
-  console.log("@@@@ CheckTransactions @@@@");
+  console.log("@@@@ CheckTransactions  @@@@");
 
   const wallet_address = config?.ONTON_WALLET_ADDRESS;
 
