@@ -34,7 +34,7 @@ import { addVisitor } from "@/server/db/visitors";
 import { internal_server_error } from "../utils/error_utils";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { is_dev_env } from "../utils/evnutils";
-import { configProtected } from "../config";
+import { config } from "../config";
 
 dotenv.config();
 
@@ -534,6 +534,9 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
 
       /* ------------------- paid events must have registration ------------------- */
       input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
+      const is_paid = input_event_data.paid_event?.has_payment;
+      if (is_paid && !config?.ONTON_WALLET_ADDRESS)
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "ONTON_WALLET_ADDRESS NOT SET error" });
 
       const newEvent = await trx
         .insert(events)
@@ -566,11 +569,11 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           //Event Registration
 
           /* ------------------------------- Paid Event ------------------------------- */
-          enabled: !input_event_data.paid_event?.has_payment,
-          hidden: input_event_data.paid_event?.has_payment,
-          has_payment: input_event_data.paid_event?.has_payment,
-          ticketToCheckIn: input_event_data.paid_event?.has_payment, // Duplicated Column same as has_payment 😐
-          wallet_address: input_event_data.paid_event ? configProtected?.ONTON_WALLET_ADDRESS : null,
+          enabled: !is_paid,
+          hidden: is_paid,
+          has_payment: is_paid,
+          ticketToCheckIn: is_paid, // Duplicated Column same as has_payment 😐
+          wallet_address: is_paid ? config?.ONTON_WALLET_ADDRESS : null,
           /* ------------------------------- Paid Event ------------------------------- */
         })
         .returning();

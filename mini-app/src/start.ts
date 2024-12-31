@@ -21,6 +21,7 @@ import wlg from "@/server/utils/logger";
 import { deployCollection, mintNFT } from "@/lib/nft";
 import { uploadJsonToMinio } from "@/lib/minioTools";
 import { Address } from "@ton/core";
+import { config } from "./server/config";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -246,11 +247,13 @@ async function CheckTransactions(pushLockTTl: () => any) {
   // Update (DB) Paid Ones as paid others as failed
   console.log(">>> >>> >>> @@@@ CheckTransactions--------------------------------------------------");
 
-  const wallet_address = is_mainnet
-    ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
-    : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW";
+  const wallet_address = config?.ONTON_WALLET_ADDRESS;
+
+  if (!wallet_address) {
+    console.error("ONTON_WALLET_ADDRESS NOT SET");
+    return;
+  }
   const hour_ago = Math.floor((Date.now() - 3600 * 1000) / 1000);
-  const start_utime = wallet_address ? null : hour_ago;
   const wallet_checks_details = await db
     .select({ checked_lt: walletChecks.checked_lt })
     .from(walletChecks)
@@ -264,12 +267,14 @@ async function CheckTransactions(pushLockTTl: () => any) {
     }
   }
 
+  const start_utime = start_lt ? null : hour_ago;
+
   const transactions = await tonCenter.fetchAllTransactions(wallet_address, start_utime, start_lt);
   const parsed_orders = await tonCenter.parseTransactions(transactions);
 
   for (const o of parsed_orders) {
     if (o.verfied) {
-      console.log("cron_trx", o.order_uuid, o.order_type, o.value);
+      console.log("cron_trx_", o.order_uuid, o.order_type, o.value);
       await db
         .update(orders)
         .set({ state: "processing", owner_address: o.owner.toString() })
@@ -286,11 +291,15 @@ async function CheckTransactions(pushLockTTl: () => any) {
   //-- Finished Checking
   if (transactions && transactions.length) {
     const last_lt = BigInt(transactions[transactions.length - 1].lt);
-    await db
-      .update(walletChecks)
-      .set({ checked_lt: last_lt })
-      .where(eq(walletChecks.wallet_address, wallet_address))
-      .execute();
+    if (start_lt) {
+      await db
+        .update(walletChecks)
+        .set({ checked_lt: last_lt })
+        .where(eq(walletChecks.wallet_address, wallet_address))
+        .execute();
+    } else {
+      await db.insert(walletChecks).values({ wallet_address: wallet_address, checked_lt: last_lt }).execute();
+    }
   }
 }
 
@@ -392,16 +401,12 @@ async function CreateEventOrders(pushLockTTl: () => any) {
       await db.transaction(async (trx) => {
         /* --------------------------- Update Activity Id --------------------------- */
         if (eventData.activity_id || ton_society_result) {
-          const wallet_address = is_mainnet
-            ? "0:39C29CE7E12B0EC24EF13FEC3FDEB677FE6A9202C4BA3B7DA77E893BF8A3BCE5"
-            : "0QB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYCqW";
           const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
           await trx
             .update(events)
             .set({
               activity_id: activity_id,
               hidden: false,
-              wallet_address: wallet_address,
               enabled: true,
               updatedBy: "CreateEventOrders-JOB",
               updatedAt: new Date(),
