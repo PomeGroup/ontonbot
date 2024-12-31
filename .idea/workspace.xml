@@ -5,6 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/devops/caddyServer/docker-compose-caddy.yml" beforeDir="false" afterPath="$PROJECT_DIR$/devops/caddyServer/docker-compose-caddy.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/devops/generate-caddyfile-by-address.sh" beforeDir="false" afterPath="$PROJECT_DIR$/devops/generate-caddyfile-by-address.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/devops/generate-caddyfile.sh" beforeDir="false" afterPath="$PROJECT_DIR$/devops/generate-caddyfile.sh" afterDir="false" />
     </list>
@@ -55,7 +57,7 @@
     "Attach to Node.js/Chrome.Unnamed.executor": "Debug",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "feature/poa",
+    "git-widget-placeholder": "dev",
     "js.last.introduce.type": "CONST",
     "last_opened_file_path": "/home/inanloo/MyProject/ontonBotProjects/ontonbot/devops/container-monitoring",
     "node.js.detected.package.eslint": "true",
