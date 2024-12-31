@@ -130,6 +130,7 @@ export async function POST(request: Request) {
     order_id: new_order?.uuid,
     message: "order created successfully",
     utm_tag: body.data.utm,
+    payment_type: eventPaymentInfo.payment_type,
   });
 }
 
