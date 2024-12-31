@@ -5,6 +5,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { memo, useState } from "react";
 import { IoIosPlayCircle } from "react-icons/io";
 
@@ -65,11 +66,12 @@ const EventCard: React.FC<EventCardProps> = memo(
 
     const isOnline = participationType === "online" ? "Online" : participationType === "in_person" ? geoLocation : "unknown";
 
+    const router = useRouter();
     const handleEventClick = () => {
       if (ticketToCheckIn) {
         webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`);
       } else {
-        window.location.href = `/events/${eventUuid}`;
+        router.push(`/events/${eventUuid}`);
         return false;
       }
     };
