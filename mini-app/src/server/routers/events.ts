@@ -34,6 +34,7 @@ import { addVisitor } from "@/server/db/visitors";
 import { internal_server_error } from "../utils/error_utils";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { is_dev_env } from "../utils/evnutils";
+import { configProtected } from "../config";
 
 dotenv.config();
 
@@ -569,6 +570,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           hidden: input_event_data.paid_event?.has_payment,
           has_payment: input_event_data.paid_event?.has_payment,
           ticketToCheckIn: input_event_data.paid_event?.has_payment, // Duplicated Column same as has_payment 😐
+          wallet_address: input_event_data.paid_event ? configProtected?.ONTON_WALLET_ADDRESS : null,
           /* ------------------------------- Paid Event ------------------------------- */
         })
         .returning();

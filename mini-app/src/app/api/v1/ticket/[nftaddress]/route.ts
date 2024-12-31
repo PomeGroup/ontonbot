@@ -6,7 +6,6 @@ import { type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/server/auth";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
-import { configProtected } from "@/server/config";
 
 const updateTicketSchema = z.object({
   data: z.object({
@@ -128,7 +127,7 @@ export async function PUT(req: NextRequest, { params }: { params: { nftaddress: 
     // log user id ticket id and other info
     console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
     // Call the separate fetch function
-    // const result = await dealRoomService.RefreshGuestList(configProtected?.dealRoomRefreshCode || "");
+    
     // console.log(`route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`);
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {

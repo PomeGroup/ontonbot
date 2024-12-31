@@ -1,14 +1,6 @@
 import { db } from "@/db/db";
 import crypto from "crypto";
-import {
-  event_details_search_list,
-  eventFields,
-  events,
-  rewards,
-  tickets,
-  users,
-  visitors,
-} from "@/db/schema";
+import { event_details_search_list, eventFields, events, rewards, tickets, users, visitors } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
@@ -81,19 +73,13 @@ export const selectEventByUuid = async (eventUuid: string) => {
     return null;
   }
 
-  const eventData = (
-    await db
-      .select()
-      .from(events)
-      .where(eq(events.event_uuid, eventUuid))
-      .execute()
-  ).pop();
+  const eventData = (await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute()).pop();
 
   if (!eventData) {
     return null;
   }
 
-  const restEventData  = removeKey(eventData, "secret_phrase");
+  const restEventData = removeKey(eventData, "secret_phrase");
 
   const dynamicFields = await db
     .select()
@@ -269,9 +255,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   if (filter?.participationType?.length) {
     conditions.push(
       or(
-        filter.participationType.includes("online")
-          ? eq(event_details_search_list.participationType, "online")
-          : sql`false`,
+        filter.participationType.includes("online") ? eq(event_details_search_list.participationType, "online") : sql`false`,
         filter.participationType.includes("in_person")
           ? eq(event_details_search_list.participationType, "in_person")
           : sql`false`
@@ -291,19 +275,15 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   }
   // Apply date filters
   if (filter?.startDate && filter?.startDateOperator) {
-    conditions.push(
-      sql`${event_details_search_list.startDate} ${sql.raw(filter.startDateOperator)} ${filter.startDate}`
-    );
+    conditions.push(sql`${event_details_search_list.startDate} ${sql.raw(filter.startDateOperator)} ${filter.startDate}`);
   }
 
   if (filter?.endDate && filter?.endDateOperator) {
-    conditions.push(
-      sql`${event_details_search_list.endDate} ${sql.raw(filter.endDateOperator)} ${filter.endDate}`
-    );
+    conditions.push(sql`${event_details_search_list.endDate} ${sql.raw(filter.endDateOperator)} ${filter.endDate}`);
   }
 
   // Apply hidden condition
-  conditions.push(sql`${event_details_search_list.hidden} = ${false}`);
+  if (!filter?.user_id) conditions.push(sql`${event_details_search_list.hidden} = ${false}`);
 
   // Apply organizer_user_id filter
   if (filter?.organizer_user_id) {
@@ -320,10 +300,8 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   }
   // Apply event_uuids filter
   if (filter?.event_uuids && filter.event_uuids.length) {
-    const validEventUuids = filter.event_uuids.filter(
-      (uuid) => uuid !== null && uuid !== undefined && uuid.length === 36
-    );
-    
+    const validEventUuids = filter.event_uuids.filter((uuid) => uuid !== null && uuid !== undefined && uuid.length === 36);
+
     if (validEventUuids.length) {
       conditions.push(inArray(event_details_search_list.eventUuid, validEventUuids));
     }
