@@ -282,7 +282,8 @@ async function CheckTransactions(pushLockTTl: () => any) {
           and(
             eq(orders.uuid, o.order_uuid),
             or(eq(orders.state, "new"), eq(orders.state, "confirming")),
-            eq(orders.total_price, o.value)
+            eq(orders.total_price, o.value),
+            eq(orders.payment_type , o.order_type)
           )
         );
     }
