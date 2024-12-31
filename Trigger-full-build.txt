@@ -3,3 +3,4 @@ Trigger-full-build for check deployment after deleting unused services  : golang
 
 
 full build
+full
