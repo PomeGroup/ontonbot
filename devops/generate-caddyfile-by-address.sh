@@ -105,14 +105,14 @@ ${MINIO_STORAGE_ADMIN_DOMAIN} {
     reverse_proxy http://${PROXY_MINIO}:${MINIO_DASHBOARD_PORT}
 }
 
-${MONITORING_DOMAIN} {
-    ${TLS_CONFIG}
-    ${LOG_CONFIG}
-    basicauth / {
-        ${KIBANA_USERNAME} ${KIBANA_HASHED_PASSWORD}
-    }
-    reverse_proxy http://${PROXY_KIBANA}:${KIBANA_PORT}
-}
+#${MONITORING_DOMAIN} {
+#    ${TLS_CONFIG}
+#    ${LOG_CONFIG}
+#    basicauth / {
+#        ${KIBANA_USERNAME} ${KIBANA_HASHED_PASSWORD}
+#    }
+#    reverse_proxy http://${PROXY_KIBANA}:${KIBANA_PORT}
+#}
 
 ${PGADMIN_DOMAIN} {
     ${TLS_CONFIG}
