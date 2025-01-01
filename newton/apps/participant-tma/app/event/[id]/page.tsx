@@ -66,7 +66,8 @@ const Event = async ({ params, searchParams }: EventParams) => {
     console.log("ptma_event_page_utm", `utm_campaign=${page_utm} , user_id=${userId}`);
   }
 
-  const eventManagerRole = user?.role === "admin" || user?.user_id === event?.owner;
+  const eventManagerRole =
+    (user?.role && user?.role === "admin") || (user?.user_id && event?.owner && user.user_id === event.owner);
   const websiteLink = event?.website?.link;
   const websiteLabel = event?.website?.label;
 
