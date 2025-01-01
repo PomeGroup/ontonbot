@@ -535,7 +535,7 @@ jobs:
             cd /home/tonont/sentry/self-hosted/sentry
             docker-compose up -d
             docker-compose up -d --scale worker=10
-            docker network connect caddy-network sentry-self-hosted-nginx-1
+            docker network connect caddy-network sentry-self-hosted-nginx-1 || true
             cd /home/tonont/$branch_name
             ls -la
             echo "Sourcing .env file..."
