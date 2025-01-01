@@ -54,12 +54,17 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     ...user_registration,
   };
 
+  const register_info_object =
+    typeof user_registration.register_info === "object"
+      ? user_registration.register_info
+      : JSON.parse(String(user_registration.register_info || "{}"));
+
   const data = {
     ...ticket,
     nft_address: "nft_address",
     order_uuid: user_registration.registrant_uuid,
     ticketData: eventPaymentinfo,
-    ...JSON.parse(String(user_registration.register_info)),
+    ...register_info_object,
   };
 
   return Response.json(data);
