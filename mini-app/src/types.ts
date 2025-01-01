@@ -127,16 +127,14 @@ export const DynamicFieldsSchema = z.array(
 /* -------------------------------------------------------------------------- */
 export const PaidEventSchema = z
   .object({
-    has_payment: z.boolean().optional().default(false),
-
-    payment_recipient_address: z.string().optional().default(""),
-    payment_type: z.enum(["USDT", "TON"]).optional(),
-    payment_amount: z.number().optional(),
-
-    has_nft: z.boolean().optional().default(false),
-    nft_title: z.string().optional().default(""),
-    nft_description: z.string().optional().default(""),
-    nft_image_url: z.string().optional(),
+    has_payment: z.boolean({ required_error: "payment status is required" }).optional().default(false),
+    payment_recipient_address: z.string({ required_error: "recipient address is required" }).optional().default(""),
+    payment_type: z.enum(["USDT", "TON"], { required_error: "payment type is required" }).optional(),
+    payment_amount: z.number({ required_error: "payment amount is required" }).optional(),
+    has_nft: z.boolean({ required_error: "NFT status is required" }).optional().default(false),
+    nft_title: z.string({ required_error: "NFT title is required" }).optional().default(""),
+    nft_description: z.string({ required_error: "NFT description is required" }).optional().default(""),
+    nft_image_url: z.string({ required_error: "NFT image URL is required" }).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.has_payment) {
@@ -150,7 +148,11 @@ export const PaidEventSchema = z
            */
           Address.parse(data.payment_recipient_address);
         } catch (error) {
-          ctx.addIssue({ code: "custom", path: ["invalid_payment_recipient_address"], message: "Recipient address is Invalid!" });
+          ctx.addIssue({
+            code: "custom",
+            path: ["invalid_payment_recipient_address"],
+            message: "Recipient address is Invalid!",
+          });
         }
       }
 
@@ -163,49 +165,69 @@ export const PaidEventSchema = z
 
       // Validate that `nft` is present
       if (data.has_nft) {
-        if (!data.nft_image_url) ctx.addIssue({ code: "custom", path: ["nft_image_url"], message: "Nft image url is required" });
+        if (!data.nft_image_url)
+          ctx.addIssue({ code: "custom", path: ["nft_image_url"], message: "Nft image url is required" });
 
         if (!data.nft_title) ctx.addIssue({ code: "custom", path: ["nft_title"], message: "Nft title is required" });
 
-        if (!data.nft_description) ctx.addIssue({ code: "custom", path: ["nft_description"], message: "Nft description is required" });
+        if (!data.nft_description)
+          ctx.addIssue({ code: "custom", path: ["nft_description"], message: "Nft description is required" });
       }
     }
   });
 
 //Create Event
 export const EventDataSchema = z.object({
-  event_id: z.number().optional(),
-  event_uuid: z.string().optional(),
+  /* -------------------------- Event Basic Info ------------------------- */
+  event_id: z.number({ required_error: "event ID is required" }).optional(),
+  event_uuid: z.string({ required_error: "event UUID is required" }).optional(),
   type: z.number({ required_error: "type is required" }),
   title: z.string({ required_error: "title is required" }),
   subtitle: z.string({ required_error: "subtitle is required" }),
   description: z.string({ required_error: "description is required" }),
+
+  /* -------------------------- Location Info ------------------------- */
   location: z.string({ required_error: "location is required" }),
-  image_url: z.string({ required_error: "event image is required" }).url({ message: "Please upload a valid event image URL" }),
-  video_url: z.string().url({ message: "Please select a valid reward video URL" }).optional(),
-  ts_reward_url: z.string().url({
-    message: "Please select a valid reward image URL",
-  }), // This allows the field to be undefined
+  eventLocationType: z
+    .enum(["online", "in_person"], {
+      required_error: "event location type is required",
+    })
+    .optional(),
+  countryId: z.number({ required_error: "country ID is required" }).optional(),
+  cityId: z.number({ required_error: "city ID is required" }).optional(),
+
+  /* -------------------------- Media URLs ------------------------- */
+  image_url: z
+    .string({ required_error: "event image is required" })
+    .url({ message: "Please upload a valid event image URL" }),
+  video_url: z
+    .string({ required_error: "video URL is required" })
+    .url({ message: "Please select a valid reward video URL" })
+    .optional(),
+  ts_reward_url: z
+    .string({ required_error: "reward URL is required" })
+    .url({ message: "Please select a valid reward image URL" }),
+
+  /* -------------------------- Organization Info ------------------------- */
   society_hub: z.object({
     id: z.string({ required_error: "society_hub.id is required" }),
     name: z.string({ required_error: "society_hub.name is required" }),
   }),
+  owner: z.number({ required_error: "owner is required" }),
+  activity_id: z.number({ required_error: "activity ID is required" }).optional(),
+
+  /* -------------------------- Event Settings ------------------------- */
   secret_phrase: z.string({ required_error: "secret_phrase is required" }),
   start_date: z.number({ required_error: "start_date is required" }),
-  end_date: z.number().nullable(),
-  owner: z.number({ required_error: "owner is required" }),
-  activity_id: z.number().optional(),
+  end_date: z.number({ required_error: "end date is required" }).nullable(),
   timezone: z.string({ required_error: "timezone is required" }),
   dynamic_fields: DynamicFieldsSchema, // Assuming DynamicFieldsSchema is defined elsewhere
-  eventLocationType: z.enum(["online", "in_person"]).optional(),
-  countryId: z.number().optional(),
-  cityId: z.number().optional(),
 
   /* -------------------------- // Free Event Registration Creation ------------------------- */
-  has_registration: z.boolean(),
-  has_approval: z.boolean(),
-  capacity: z.number().min(1).nullable(),
-  has_waiting_list: z.boolean(),
+  has_registration: z.boolean({ required_error: "registration status is required" }),
+  has_approval: z.boolean({ required_error: "approval status is required" }),
+  capacity: z.number({ required_error: "capacity is required" }).min(1).nullable(),
+  has_waiting_list: z.boolean({ required_error: "waiting list status is required" }),
   /* -------------------------- // Free Event Registration Creation ------------------------- */
 
   /* ------------------------------- Paid Event Creation ------------------------------- */
@@ -214,13 +236,33 @@ export const EventDataSchema = z.object({
 });
 
 export const UpdateEventDataSchema = z.object({
+  /* -------------------------- Event Basic Info ------------------------- */
   event_id: z.number().optional(),
   event_uuid: z.string().optional(),
   type: z.number({ required_error: "type is required" }),
   title: z.string({ required_error: "title is required" }),
   subtitle: z.string({ required_error: "subtitle is required" }),
   description: z.string({ required_error: "description is required" }),
+
+  /* -------------------------- Location Info ------------------------- */
   location: z.string({ required_error: "location is required" }),
+  eventLocationType: z
+    .enum(["online", "in_person"], {
+      required_error: "event location type is required",
+    })
+    .optional(),
+  countryId: z
+    .number({
+      required_error: "country ID is required",
+    })
+    .optional(),
+  cityId: z
+    .number({
+      required_error: "city ID is required",
+    })
+    .optional(),
+
+  /* -------------------------- Media URLs ------------------------- */
   image_url: z.string({ required_error: "event image is required" }).url({ message: "Please upload a valid image URL" }),
   video_url: z.string().url({ message: "Please upload a valid video URL" }).optional(),
   ts_reward_url: z
@@ -228,51 +270,64 @@ export const UpdateEventDataSchema = z.object({
     .url({
       message: "Please upload a valid reward image URL",
     })
-    .optional(), // This allows the field to be undefined
+    .optional(),
+
+  /* -------------------------- Organization Info ------------------------- */
   society_hub: z.object({
     id: z.string({ required_error: "society_hub.id is required" }),
     name: z.string({ required_error: "society_hub.name is required" }),
   }),
-  secret_phrase: z.string().optional(),
-  start_date: z.number({ required_error: "start_date is required" }),
-  end_date: z.number(),
   owner: z.number({ required_error: "owner is required" }),
   activity_id: z.number().optional(),
-  timezone: z.string({ required_error: "timezone is required" }),
-  dynamic_fields: DynamicFieldsSchema, // Assuming DynamicFieldsSchema is defined elsewhere
-  eventLocationType: z.enum(["online", "in_person"]).optional(),
-  countryId: z.number().optional(),
-  cityId: z.number().optional(),
 
-  /* -------------------------- // Free Event Registration Update ------------------------- */
-  has_approval: z.boolean(),
-  capacity: z.number().min(1).nullable(),
-  has_waiting_list: z.boolean(),
-  /* -------------------------- // Free Event Registration Update ------------------------- */
+  /* -------------------------- Event Settings ------------------------- */
+  secret_phrase: z.string({ required_error: "password is required" }).optional(),
+  start_date: z.number({ required_error: "start_date is required" }),
+  end_date: z.number({ required_error: "end_date is required" }),
+  timezone: z.string({ required_error: "timezone is required" }),
+  dynamic_fields: DynamicFieldsSchema,
+
+  /* -------------------------- Free Event Registration Update ------------------------- */
+  has_approval: z.boolean({
+    required_error: "approval status is required",
+  }),
+  capacity: z
+    .number({
+      required_error: "capacity is required",
+    })
+    .min(1)
+    .nullable(),
+  has_waiting_list: z.boolean({
+    required_error: "waiting list status is required",
+  }),
+  /* -------------------------- Free Event Registration Update ------------------------- */
+
   /* ------------------------------- Paid Event Update ------------------------------- */
   paid_event: PaidEventSchema.optional(),
   /* ------------------------------- Paid Event Update ------------------------------- */
 });
 
 export const EventRegisterSchema = z.object({
-  event_uuid: z.string().uuid(),
-  full_name: z.string().min(1).max(40),
-  company: z.string().min(1).max(40),
-  position: z.string().min(1).max(40),
-  // optional
-  linkedin: z.string().max(100).optional(),
-  github: z.string().max(100).optional(),
-  notes: z.string().max(512).optional(),
+  /* -------------------------- Basic Info ------------------------- */
+  event_uuid: z.string({ required_error: "event UUID is required" }).uuid(),
+  full_name: z.string({ required_error: "full name is required" }).min(1).max(40),
+  company: z.string({ required_error: "company is required" }).min(1).max(40),
+  position: z.string({ required_error: "position is required" }).min(1).max(40),
+
+  /* -------------------------- Optional Fields ------------------------- */
+  linkedin: z.string({ required_error: "LinkedIn URL is required" }).max(100).optional(),
+  github: z.string({ required_error: "GitHub URL is required" }).max(100).optional(),
+  notes: z.string({ required_error: "notes are required" }).max(512).optional(),
 });
 
 export const AgendaItemSchema = z.object({
-  time: z.string(), // assuming time is a string, e.g., "10:00 AM"
-  title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  time: z.string({ required_error: "time is required" }), // assuming time is a string, e.g., "10:00 AM"
+  title: z.string({ required_error: "title is required" }).min(1, "Title is required"),
+  description: z.string({ required_error: "description is required" }).optional(),
 });
 
 export const AgendaHeaderSchema = z.object({
-  header: z.string().min(1, "Header is required"),
+  header: z.string({ required_error: "header is required" }).min(1, "Header is required"),
   items: z.array(AgendaItemSchema), // each header can have multiple items
 });
 
@@ -280,31 +335,36 @@ export type EventData = z.infer<typeof EventDataSchema>;
 
 export const RequiredEventFieldsSchema = z
   .object({
-    title: z.string().min(1, { message: "Required" }),
-    subtitle: z.string().min(1, { message: "Required" }),
-    description: z.string().min(1, { message: "Required" }),
-    location: z.string().min(1, { message: "Required" }),
+    /* -------------------------- Basic Event Info ------------------------- */
+    title: z.string({ required_error: "title is required" }).min(1, { message: "Required" }),
+    subtitle: z.string({ required_error: "subtitle is required" }).min(1, { message: "Required" }),
+    description: z.string({ required_error: "description is required" }).min(1, { message: "Required" }),
+    location: z.string({ required_error: "location is required" }).min(1, { message: "Required" }),
+
+    /* -------------------------- Media ------------------------- */
     image_url: z
-      .string()
+      .string({ required_error: "image URL is required" })
       .url()
       .refine((url) => url.includes("telegra.ph"), {
         message: "URL must be from the 'telegra.ph' domain",
       }),
+
+    /* -------------------------- Event Settings ------------------------- */
     secret_phrase: z
-      .string()
+      .string({ required_error: "secret phrase is required" })
       .transform((phrase) => phrase.trim().toLowerCase())
       .refine((phrase) => phrase.length >= 4 && phrase.length <= 20, "Length must be between 4 and 20"),
     start_date: z
-      .number()
+      .number({ required_error: "start date is required" })
       .min(new Date("2023-01-01").getTime() / 1000)
       .max(new Date("2033-12-31").getTime() / 1000),
     end_date: z
-      .number()
+      .number({ required_error: "end date is required" })
       .min(new Date("2023-01-01").getTime() / 1000)
       .max(new Date("2033-12-31").getTime() / 1000)
       .nullable()
       .optional(),
-    timezone: z.string(),
+    timezone: z.string({ required_error: "timezone is required" }),
   })
   .refine(
     (data) => {
@@ -321,22 +381,15 @@ export const RequiredEventFieldsSchema = z
 
 export type TRequiredEventFieldsSchema = z.infer<typeof RequiredEventFieldsSchema>;
 
-// user_id: opts.input.user.id,
-// username: opts.input.user.username,
-// first_name: opts.input.user.first_name,
-// last_name: opts.input.user.last_name,
-// language_code: opts.input.user.language_code,
-
-// make zod schema for user
-
 export const UserSchema = z.object({
-  id: z.number(),
-  username: z.string(),
-  first_name: z.string(),
-  last_name: z.string(),
-  language_code: z.string(),
-  role: z.string(),
-  wallet_address: z.string().optional(),
+  /* -------------------------- Basic User Info ------------------------- */
+  id: z.number({ required_error: "user ID is required" }),
+  username: z.string({ required_error: "username is required" }),
+  first_name: z.string({ required_error: "first name is required" }),
+  last_name: z.string({ required_error: "last name is required" }),
+  language_code: z.string({ required_error: "language code is required" }),
+  role: z.string({ required_error: "role is required" }),
+  wallet_address: z.string({ required_error: "wallet address is required" }).optional(),
 });
 
 export type TelegramInitDataJson = {

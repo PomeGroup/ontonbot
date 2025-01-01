@@ -17,7 +17,9 @@ export const RewardStep = () => {
   const { setEventData, eventData, edit: editOptions, setRewardStepErrors, clearRewardStepErrors } = useCreateEventStore();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
-  const [passwordDisabled, setPasswordDisabled] = useState(!!editOptions?.eventHash || eventData?.eventLocationType === "in_person");
+  const [passwordDisabled, setPasswordDisabled] = useState(
+    !!editOptions?.eventHash || eventData?.eventLocationType === "in_person"
+  );
   const [passwordValue, setPasswordValue] = useState(editOptions?.eventHash ? "{** click to change password **}" : "");
   const [sbtOption, setSbtOption] = useState<"custom" | "default">("default");
 
@@ -54,10 +56,8 @@ export const RewardStep = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formRef.current) return;
-
     const formData = new FormData(formRef.current);
     const formDataObject = Object.fromEntries(formData.entries());
-
     const stepInputsObject = {
       ...formDataObject,
       ts_reward_url: eventData?.ts_reward_url,
@@ -66,11 +66,12 @@ export const RewardStep = () => {
     };
 
     if (sbtOption === "custom" && (!eventData?.ts_reward_url || !eventData?.video_url) && !editOptions?.eventHash) {
-      setRewardStepErrors({
+      const errors = {
         ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
         video_url: !eventData?.video_url ? ["Please upload a video."] : undefined,
-      });
-
+      };
+      console.error("SBT validation errors:", errors);
+      setRewardStepErrors(errors);
       toast.error(
         <div className="flex items-center">
           <FiAlertCircle className="mr-2" />
@@ -82,35 +83,33 @@ export const RewardStep = () => {
     }
 
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
-
     if (!formDataParsed.success) {
-      setRewardStepErrors(formDataParsed.error.flatten().fieldErrors);
-      const flattenedErrors = formDataParsed.error.flatten().fieldErrors;
+      const errors = formDataParsed.error.flatten().fieldErrors;
+      console.error("Third step validation errors:", errors);
+      setRewardStepErrors(errors);
       const errorMessages = [
-        flattenedErrors.secret_phrase ? (
+        errors.secret_phrase ? (
           <div
             key="secret_phrase"
             className="flex items-center"
           >
-            <FiAlertCircle className="mr-2" /> {flattenedErrors.secret_phrase[0]}
+            <FiAlertCircle className="mr-2" /> {errors.secret_phrase[0]}
           </div>
         ) : null,
-        flattenedErrors.ts_reward_url ? (
+        errors.ts_reward_url ? (
           <div
             key="ts_reward_url"
             className="flex items-center"
           >
-            <FiAlertCircle className="mr-2" /> {flattenedErrors.ts_reward_url[0] || "Please upload a reward image"}
+            <FiAlertCircle className="mr-2" /> {errors.ts_reward_url[0] || "Please upload a reward image"}
           </div>
         ) : null,
       ].filter(Boolean);
-
       toast.error(errorMessages);
       return;
     }
 
     clearRewardStepErrors();
-
     const dataToSubmit = {
       ...eventData,
       ...formDataParsed.data,
@@ -124,12 +123,10 @@ export const RewardStep = () => {
           event_uuid: editOptions.eventHash,
           eventData: updateParsedData.data,
         });
-      }
-
-      // flattenedErrors and show toast
-      if (updateParsedData.error) {
-        const flattenedErrors = updateParsedData.error?.flatten().fieldErrors;
-        const errorMessages = Object.values(flattenedErrors)
+      } else {
+        const errors = updateParsedData.error.flatten().fieldErrors;
+        console.error("Update event validation errors:", errors);
+        const errorMessages = Object.values(errors)
           .flat()
           .map((v, i) => <div key={i}>* {v}</div>);
         toast.error(errorMessages);
@@ -142,10 +139,10 @@ export const RewardStep = () => {
       addEvent.mutate({
         eventData: parsedEventData.data,
       });
-    }
-    if (parsedEventData.error) {
-      const flattenedErrors = parsedEventData.error?.flatten().fieldErrors;
-      const errorMessages = Object.values(flattenedErrors)
+    } else {
+      const errors = parsedEventData.error.flatten().fieldErrors;
+      console.error("Create event validation errors:", errors);
+      const errorMessages = Object.values(errors)
         .flat()
         .map((v, i) => <div key={i}>* {v}</div>);
       toast.error(errorMessages);
