@@ -244,7 +244,7 @@ export class NftItem {
   }
 }
 
-export async function mintNFT(collection_address: string, nftIndex: number | null, nft_metadata_url: string) {
+export async function mintNFT(owner_address : string , collection_address: string, nftIndex: number | null, nft_metadata_url: string) {
   if (nftIndex === null) {
     const result = await tonCenter.fetchCollection(collection_address);
     nftIndex = Number(result?.nft_collections[0]?.next_item_index);
@@ -266,18 +266,18 @@ export async function mintNFT(collection_address: string, nftIndex: number | nul
   const collection = new NftCollection(collectionData);
   const mintParams = {
     queryId: 0,
-    itemOwnerAddress: wallet.contract.address,
+    itemOwnerAddress: Address.parse(owner_address),
     itemIndex: nftIndex,
     amount: toNano("0.05"),
     commonContentUrl: nft_metadata_url,
   };
 
-  console.log("]]]]]]]]]]]]]: ", await wallet.contract.getSeqno());
+  console.log("seq befor mint : ", await wallet.contract.getSeqno());
   const nftItem = new NftItem(collection);
   const seqno = await nftItem.deploy(wallet, mintParams, collection_address);
   console.log(`Successfully deployed the ${nftIndex + 1}th NFT`);
   const seqnoAfter = await waitSeqno(seqno, wallet);
-  console.log("]]]]]]]]]]]]]: ", seqnoAfter);
+  console.log("seq after mint : ", seqnoAfter);
 
   await sleep(7000); // just wait to make sure nft is minted
   nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);

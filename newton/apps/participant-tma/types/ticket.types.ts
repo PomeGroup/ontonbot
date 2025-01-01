@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 export type TicketType = {
   id: number;
-  name: string;
+  full_name: string;
   telegram: string;
   company: string;
   position: string;

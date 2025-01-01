@@ -588,7 +588,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       if (input_event_data.paid_event && event_has_payment) {
         if (!input_event_data.capacity)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
-        const price = is_dev_env() || is_stage_env() ? 0.0055 * input_event_data.capacity + 0.01 : 10 + 0.055 * input_event_data.capacity;
+        const price = is_dev_env() || is_stage_env() ? 0.00055 * input_event_data.capacity + 0.001 : 10 + 0.055 * input_event_data.capacity;
 
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,

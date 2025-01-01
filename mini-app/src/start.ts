@@ -277,7 +277,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
       console.log("cron_trx_", o.order_uuid, o.order_type, o.value);
       await db
         .update(orders)
-        .set({ state: "processing", owner_address: o.owner.toString() })
+        .set({ state: "processing", owner_address: o.owner.toString(), trx_hash: o.trx_hash })
         .where(
           and(
             eq(orders.uuid, o.order_uuid),
@@ -517,6 +517,11 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
         continue;
       }
 
+      if (!ordr.user_id) {
+        console.error("CronJob--MintNFTforPaid_Orders---user_id is null order=", ordr.uuid);
+        continue;
+      }
+
       if (!ordr.owner_address) {
         //NOTE -  tg error
         console.error("wtf : no owner address");
@@ -576,7 +581,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
       console.log("nft_index ", nft_index);
 
-      const nft_address = await mintNFT(paymentInfo?.collectionAddress, nft_index, meta_data_url);
+      const nft_address = await mintNFT(ordr.owner_address, paymentInfo?.collectionAddress, nft_index, meta_data_url);
       if (!nft_address) {
         console.log("Nft Address Missed");
         return;
@@ -595,9 +600,16 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
           })
           .execute();
 
-        // await trx.update(evenregisttra).values({
-
-        // })
+        await trx
+          .update(eventRegistrants)
+          .set({ status: "approved" })
+          .where(
+            and(
+              eq(eventRegistrants.event_uuid, ordr.event_uuid!),
+              eq(eventRegistrants.user_id, ordr.user_id!),
+              or(eq(eventRegistrants.status, "pending"), eq(eventRegistrants.status, "rejected"))
+            )
+          );
       });
 
       // await pushLockTTl();

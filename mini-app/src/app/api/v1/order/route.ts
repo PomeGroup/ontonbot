@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { orders } from "@/db/schema";
+import { eventRegistrants, orders } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
 import { selectEventByUuid } from "@/server/db/events";
 import { Address } from "@ton/core";
@@ -8,8 +8,6 @@ import { z } from "zod";
 
 const addOrderSchema = z.object({
   event_uuid: z.string().uuid(),
-  // count: z.number(),
-  // form fields
   full_name: z.string(),
   telegram: z.string(),
   company: z.string(),
@@ -106,32 +104,64 @@ export async function POST(request: Request) {
     );
   }
 
-  const new_order = (
-    await db
-      .insert(orders)
-      .values({
-        // TODO: change for multiple tickets
+  let new_order = undefined;
+  let new_order_uuid = undefined;
+  await db.transaction(async (trx) => {
+    new_order = (
+      await trx
+        .insert(orders)
+        .values({
+          // TODO: change for multiple tickets
+          event_uuid: body.data.event_uuid,
+          user_id: userId,
+
+          total_price: eventPaymentInfo.price,
+          payment_type: eventPaymentInfo.payment_type,
+
+          state: "confirming",
+          order_type: "nft_mint",
+
+          utm_source: body.data.utm,
+          updatedBy: "system",
+        })
+        .returning()
+        .execute()
+    ).pop();
+
+    const user_registrant = await trx
+      .select()
+      .from(eventRegistrants)
+      .where(and(eq(eventRegistrants.event_uuid, body.data.event_uuid), eq(eventRegistrants.user_id, userId)))
+      .execute();
+
+    if (user_registrant && user_registrant.length) {
+      //User Registration Exist
+      //
+    } else {
+      const { event_uuid, ...register_info } = body.data;
+      await trx.insert(eventRegistrants).values({
         event_uuid: body.data.event_uuid,
+        status: "pending",
+        register_info: register_info,
         user_id: userId,
+      });
+    }
 
-        total_price: eventPaymentInfo.price,
-        payment_type: eventPaymentInfo.payment_type,
-
-        state: "confirming",
-        order_type: "nft_mint",
-
-        utm_source: body.data.utm,
-        updatedBy: "system",
-      })
-      .returning()
-  ).pop();
-
-  return Response.json({
-    order_id: new_order?.uuid,
-    message: "order created successfully",
-    utm_tag: body.data.utm,
-    payment_type: eventPaymentInfo.payment_type,
+    new_order_uuid = new_order?.uuid;
   });
+
+  if (new_order && new_order_uuid) {
+    return Response.json({
+      order_id: new_order_uuid,
+      message: "order created successfully",
+      utm_tag: body.data.utm,
+      payment_type: eventPaymentInfo.payment_type,
+    });
+  } else {
+    return Response.json({
+      message: "failed to insert the order",
+    });
+  }
 }
 
 export const dynamic = "force-dynamic";
