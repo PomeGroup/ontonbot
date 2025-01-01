@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
-import { tickets } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eventRegistrants, nftItems, orders, tickets } from "@/db/schema";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/server/auth";
@@ -110,23 +110,42 @@ export async function PUT(req: NextRequest, { params }: { params: { nftaddress: 
       );
     }
 
-    await db
-      .update(tickets)
-      .set({
-        telegram: parsedData.data.data.telegram,
-        name: parsedData.data.data.full_name,
-        company: parsedData.data.data.company,
-        position: parsedData.data.data.position,
+    const order_data = await db
+      .select()
+      .from(nftItems)
+      .innerJoin(orders, eq(nftItems.order_uuid, orders.uuid))
+      .where(eq(nftItems.nft_address, nft_address));
 
-        user_id: userId,
-        updatedBy: `${userId}`,
-        updatedAt: new Date(),
-      })
-      .where(eq(tickets.nftAddress, nft_address))
-      .execute();
-    // log user id ticket id and other info
-    console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
-    // Call the separate fetch function
+    
+    // await db.update(eventRegistrants).set(
+    //   {
+    //     status : "rejected",
+
+    //   }
+    // ).where(
+    //   and(
+    //     eq(eventRegistrants.event_uuid , order_data[0].nft_items.event_uuid),
+    //     eq(eventRegistrants.user_id , order_data[0].orders.user_id),
+    //   )
+    // )
+    // await db
+    //   .update(tickets)
+    //   .set({
+    //     telegram: parsedData.data.data.telegram,
+    //     name: parsedData.data.data.full_name,
+    //     company: parsedData.data.data.company,
+    //     position: parsedData.data.data.position,
+
+    //     user_id: userId,
+    //     updatedBy: `${userId}`,
+    //     updatedAt: new Date(),
+    //   })
+    //   .where(eq(tickets.nftAddress, nft_address))
+    //   .execute();
+    
+    
+      console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
+
     
     // console.log(`route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`);
     return Response.json({ message: "user ticket info updated" });

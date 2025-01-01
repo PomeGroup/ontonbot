@@ -312,6 +312,7 @@ type OrderTransaction = {
   order_type: "TON" | "USDT";
   verfied: boolean;
   owner: Address;
+  trx_hash: string;
 };
 
 async function parseTransactions(transactions: Transaction[]) {
@@ -342,6 +343,7 @@ async function parseTransactions(transactions: Transaction[]) {
             order_type: "TON",
             verfied: true,
             owner: Address.parse(source),
+            trx_hash: trx?.hash,
           });
         }
       }
@@ -383,6 +385,7 @@ async function parseTransactions(transactions: Transaction[]) {
               order_type: "USDT",
               verfied: jetton_master === USDT_CADDRESS,
               owner: Address.parse(jettonSender?.toString()!),
+              trx_hash: trx?.hash,
             });
           }
         }
@@ -403,7 +406,7 @@ const tonCenter = {
   fetchTransactions,
   fetchAllTransactions,
   parseTransactions,
-  fetchCollection
+  fetchCollection,
 };
 
 export default tonCenter;

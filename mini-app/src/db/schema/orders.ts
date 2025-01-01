@@ -17,6 +17,8 @@ export const orders = pgTable(
     order_type: orderTypes("order_type").notNull(),
     owner_address: text("owner_address"),
 
+    trx_hash: text("trx_hash"),
+
     utm_source: text("utm_source").default(""),
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
