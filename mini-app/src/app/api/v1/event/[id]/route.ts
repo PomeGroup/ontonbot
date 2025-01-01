@@ -32,12 +32,19 @@ async function getRequestWithRetry(uri: string, retries: number = 3): Promise<an
 async function getValidNfts(
   ownerAddress: string,
   collectionAddress: string,
-  userId: number
+  userId: number,
+  event_uuid: string
 ): Promise<{ valid_nfts_no_info: NFTItem[]; valid_nfts_with_info: NFTItem[] }> {
   const wallet_nfts = await tonCenter.fetchNFTItemsWithRetry(ownerAddress, collectionAddress);
 
   const valid_nfts_no_info: NFTItem[] = [];
   const valid_nfts_with_info: NFTItem[] = [];
+
+  const event_registered = await db
+    .select()
+    .from(eventRegistrants)
+    .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, userId)))
+    .execute();
 
   if (wallet_nfts?.nft_items) {
     for (const nft of wallet_nfts.nft_items) {
@@ -49,23 +56,36 @@ async function getValidNfts(
           continue;
         }
         // Query the tickets database for this NFT address
-        const ticketsResult = await db.select().from(tickets).where(eq(tickets.nftAddress, nft.address)).execute();
+        // const ticketsResult = await db.select().from(tickets).where(eq(tickets.nftAddress, nft.address)).execute();
 
         // Check if there's exactly one ticket for this NFT
-        if (ticketsResult.length !== 1) {
-          console.error(`Unexpected number of tickets found for NFT ${nft.address}`);
-          continue;
-        }
+        // if (ticketsResult.length !== 1) {
+        //   console.error(`Unexpected number of tickets found for NFT ${nft.address}`);
+        //   continue;
+        // }
 
-        const ticket = ticketsResult[0];
+        // const ticket = ticketsResult[0];
 
         // Ensure the ticket is UNUSED and the NFT is not revoked
-        if (ticket && ticket.status === "UNUSED" && !name.toLowerCase().includes("revoked")) {
-          if (ticket.user_id === userId) {
-            valid_nfts_with_info.push(nft);
-          } else {
-            valid_nfts_no_info.push(nft);
-          }
+        // if (ticket && ticket.status === "UNUSED" && !name.toLowerCase().includes("revoked")) {
+        //   if (ticket.user_id === userId) {
+        //     valid_nfts_with_info.push(nft);
+        //   } else {
+        //     valid_nfts_no_info.push(nft);
+        //   }
+        // }
+
+        /* -------------------------------------------------------------------------- */
+        /*                                 NEW LOGIC🐈                                */
+        /* -------------------------------------------------------------------------- */
+
+        if (
+          event_registered.length &&
+          (event_registered[0].status === "approved" || event_registered[0].status === "checkedin")
+        ) {
+          valid_nfts_with_info.push(nft);
+        } else {
+          valid_nfts_no_info.push(nft);
         }
       } catch (error) {
         console.error(`Error fetching NFT data or querying database: ${error}`);
@@ -78,13 +98,13 @@ async function getValidNfts(
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const eventId = params.id;
+    const event_uuid = params.id;
     const searchParams = req.nextUrl.searchParams;
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
 
     const unsafeEvent = await db.query.events.findFirst({
       where(fields, { eq }) {
-        return eq(fields.event_uuid, eventId);
+        return eq(fields.event_uuid, event_uuid);
       },
     });
 
@@ -97,8 +117,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const organizer = await usersDB.selectUserById(event.owner as number);
 
     if (!organizer) {
-      console.error(`Organizer not found for event ID: ${eventId}`);
-      return Response.json({ error: `Organizer not found for event ID: ${eventId}` }, { status: 400 });
+      console.error(`Organizer not found for event ID: ${event_uuid}`);
+      return Response.json({ error: `Organizer not found for event ID: ${event_uuid}` }, { status: 400 });
     }
 
     let event_payment_info;
@@ -109,7 +129,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         },
       });
       if (!event_payment_info) {
-        console.warn(`Ticket not found for event ID: ${eventId}`);
+        console.warn(`Ticket not found for event ID: ${event_uuid}`);
       }
     }
 
@@ -143,7 +163,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const [userId, unauthorized] = getAuthenticatedUser();
 
     if (unauthorized) {
-      console.warn(`Unauthorized access attempt for event ID: ${eventId}`);
+      console.warn(`Unauthorized access attempt for event ID: ${event_uuid}`);
       return unauthorized;
     }
 
@@ -207,7 +227,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
       ownerAddress,
       event_payment_info?.collectionAddress!,
-      userId
+      userId,
+      event_uuid
     );
 
     const userHasTicket = !!valid_nfts_no_info.length || !!valid_nfts_with_info.length;
@@ -232,7 +253,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         .where(
           and(
             eq(orders.user_id, userId),
-            eq(orders.event_uuid, eventId),
+            eq(orders.event_uuid, event_uuid),
             eq(orders.order_type, "nft_mint"),
             eq(orders.state, "processing")
           )
