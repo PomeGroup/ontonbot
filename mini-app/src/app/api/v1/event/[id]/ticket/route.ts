@@ -56,6 +56,8 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
   const data = {
     ...ticket,
+    nft_address: "nft_address",
+    order_uuid: "order_is_uuid",
     ticketData: eventPaymentinfo,
   };
 
