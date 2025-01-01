@@ -38,7 +38,7 @@ const Ticket = async ({ params }: TicketParams) => {
 
   const ticket = await getTicketByEventUuid(params.id);
 
-  if (ticket === null) return "Token not found";
+  if (ticket === null) return "ticket not found";
   if (ticket.needsInfoUpdate) redirect(`/ticket/${params.id}/claim`);
 
   const attributes: TicketAttributesType = [];
