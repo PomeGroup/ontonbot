@@ -57,8 +57,9 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   const data = {
     ...ticket,
     nft_address: "nft_address",
-    order_uuid: "order_is_uuid",
+    order_uuid: user_registration.registrant_uuid,
     ticketData: eventPaymentinfo,
+    ...JSON.parse(String(user_registration.register_info)),
   };
 
   return Response.json(data);

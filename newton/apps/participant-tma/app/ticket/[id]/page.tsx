@@ -43,7 +43,7 @@ const Ticket = async ({ params }: TicketParams) => {
 
   const attributes: TicketAttributesType = [];
 
-  if (ticket.name !== undefined)
+  if (ticket.full_name !== undefined)
     attributes.push([
       "Owner",
       <div className={"inline-flex gap-2"}>
