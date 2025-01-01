@@ -8,9 +8,10 @@ import { UploadImageFile } from "@/components/ui/upload-file";
 import { TonConnectButton } from "@tonconnect/ui-react";
 
 function SelectPayment() {
-  const { payment, changePaymentType } = useCreateEventStore((state) => ({
+  const { payment, changePaymentType, isEdit } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     changePaymentType: state.changePaymentType,
+    isEdit: Boolean(state.edit?.eventHash),
   }));
 
   return (
@@ -24,7 +25,7 @@ function SelectPayment() {
               strong
               onClick={(e) => {
                 e.preventDefault();
-                changePaymentType("USDT");
+                !isEdit && changePaymentType("USDT");
               }}
               active={payment.payment_type === "USDT"}
               itemType="button"
@@ -42,7 +43,7 @@ function SelectPayment() {
               active={payment.payment_type === "TON"}
               onClick={(e) => {
                 e.preventDefault();
-                changePaymentType("TON");
+                !isEdit && changePaymentType("TON");
               }}
               itemType="button"
             >
