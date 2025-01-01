@@ -531,7 +531,11 @@ jobs:
           ssh  -p "$ssh_port" -o StrictHostKeyChecking=no tonont@$ssh_ip << EOF
             set -o errexit
             set -o pipefail
-            echo "Listing files in branch directory..."        
+            echo "Listing files in branch directory..."     
+            cd /home/tonont/sentry/self-hosted/sentry
+            docker-compose up -d
+            docker compose up -d --scale worker=10
+            docker network connect caddy-network sentry-self-hosted-nginx-1
             cd /home/tonont/$branch_name
             ls -la
             echo "Sourcing .env file..."
@@ -566,11 +570,6 @@ jobs:
                 echo "docker service update --force $branch_name\_\$service"
                 docker service update --update-failure-action rollback --update-max-failure-ratio 0.2  --force $branch_name\_\$service
               fi
-              cd /home/tonont/sentry/self-hosted/sentry
-              docker-compose up -d
-              docker compose up -d --scale worker=10
-              docker network connect caddy-network sentry-self-hosted-nginx-1
-              cd /home/tonont/$branch_name
             done
             echo "Services deployed successfully."         
           EOF
