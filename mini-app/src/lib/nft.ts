@@ -244,7 +244,7 @@ export class NftItem {
   }
 }
 
-export async function mintNFT(collection_address: string, nftIndex: number | null, nft_metadata_url: string) {
+export async function mintNFT(owner_address : string , collection_address: string, nftIndex: number | null, nft_metadata_url: string) {
   if (nftIndex === null) {
     const result = await tonCenter.fetchCollection(collection_address);
     nftIndex = Number(result?.nft_collections[0]?.next_item_index);
@@ -256,7 +256,7 @@ export async function mintNFT(collection_address: string, nftIndex: number | nul
   const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
 
   const collectionData = {
-    ownerAddress: wallet.contract.address,
+    ownerAddress: Address.parse(owner_address),
     royaltyPercent: 0.1, // 0.1 = 10%
     royaltyAddress: wallet.contract.address,
     nextItemIndex: nftIndex,
