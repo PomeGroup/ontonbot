@@ -35,6 +35,8 @@ export function useTransferTon() {
 
       const sdk = await assetsSdk(tonConnectUI);
 
+      alert(`wwwww USDT_MASTER_ADDRESS ${USDT_MASTER_ADDRESS}`);
+
       const jetton = sdk.openJetton(USDT_MASTER_ADDRESS);
       /*
        * TRANSFER
