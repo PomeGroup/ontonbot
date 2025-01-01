@@ -487,18 +487,21 @@ const checkinRegistrantRequest = evntManagerPP
       throw new TRPCError({ code: "CONFLICT", message: "Registrant Not Approved" });
     }
 
-    await db
-      .update(eventRegistrants)
-      .set({
-        status: "checkedin",
-      })
-      .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
-      .execute();
 
     await rewardService.createUserReward({
       user_id: registrant.user_id as number,
       event_uuid: event_uuid,
     });
+
+    await db
+    .update(eventRegistrants)
+    .set({
+      status: "checkedin",
+    })
+    .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
+    .execute();
+
+    
     return { code: 200, message: "ok" };
   });
 
