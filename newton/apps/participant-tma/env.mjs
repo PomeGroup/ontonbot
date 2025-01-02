@@ -9,7 +9,7 @@ export const env = createEnv({
    */
   server: {
     BOT_TOKEN: z.string().min(1),
-    ONTON_API_KEY: z.string().min(1)
+    ONTON_API_KEY: z.string().min(1),
   },
   /*
    * Environment variables available on the client (and server).
@@ -20,7 +20,8 @@ export const env = createEnv({
     NEXT_PUBLIC_BOT_USERNAME: z.string().min(1),
     NEXT_PUBLIC_GTM: z.string().min(1).optional(),
     NEXT_PUBLIC_API_BASE_URL: z.string().min(1),
-    NEXT_PUBLIC_TON_NETWROK: z.enum(['testnet', 'mainnet']).optional(),
+    NEXT_PUBLIC_TON_NETWROK: z.enum(["testnet", "mainnet"]).optional(),
+    NEXT_PUBLIC_ENV: z.enum(["staging", "production", "development", "local"]),
   },
   /*
    * Due to how Next.js bundles environment variables on Edge and Client,
@@ -33,6 +34,7 @@ export const env = createEnv({
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
     NEXT_PUBLIC_TON_NETWROK: process.env.NEXT_PUBLIC_TON_NETWROK,
     NEXT_PUBLIC_GTM: process.env.NEXT_PUBLIC_GTM,
+    NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV,
     BOT_TOKEN: process.env.BOT_TOKEN,
     ONTON_API_KEY: process.env.ONTON_API_KEY,
   },
