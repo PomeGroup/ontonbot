@@ -283,20 +283,7 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
             set((state) => {
               state.paid_info_errors = fieldErrors;
             });
-          } else if (!capacity) {
-            // Validate capacity
-            set((state) => {
-              state.paid_info_errors = {
-                capacity: ["Capacity is required."],
-              };
-            });
-          } else if (capacity < 1) {
-            set((state) => {
-              state.paid_info_errors = {
-                capacity: ["Capacity must be greater than 0."],
-              };
-            });
-          } else {
+          }  else {
             // Validation successful, proceed to the next step
             set((state) => {
               state.paid_info_errors = {};

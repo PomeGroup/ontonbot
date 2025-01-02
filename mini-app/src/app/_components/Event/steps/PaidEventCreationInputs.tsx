@@ -104,7 +104,7 @@ function PaymentsRecepient() {
   }));
 
   const handleInputChange = (value: string) => {
-    console.log("valuevaluevalue", value);
+
     setEventData({
       paid_event: {
         ...eventData.paid_event,
@@ -244,12 +244,16 @@ function Capacity() {
  * The default export and this is used to combine all other above ones
  */
 const PaidEventCreationInputs = () => {
-  const { payment, toggleIsPaidEvent, editOptions } = useCreateEventStore((state) => ({
+  const { payment, toggleIsPaidEvent, editOptions, eventData } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     toggleIsPaidEvent: state.togglePaidEvent,
-     editOptions: state.edit,
+    editOptions: state.edit,
+    eventData: state.eventData,
   }));
-
+  if(eventData?.eventLocationType === "online") {
+    return null;
+  }
+  const disablePaidToggle = Boolean(editOptions?.eventHash)  ;
   return (
     <ListLayout title="Paid Event">
       <ListItem
@@ -260,11 +264,10 @@ const PaidEventCreationInputs = () => {
             onChange={() => {
               toggleIsPaidEvent();
             }}
-            disabled={Boolean(editOptions?.eventHash)}
-            colors={{
-              checkedBgIos: editOptions?.eventHash ? "bg-blue-300" : "primary",
-              checkedBgMaterial: editOptions?.eventHash ? "bg-blue-300" : "primary",
-            }}
+            disabled={disablePaidToggle}
+            className={cn({
+              "opacity-50": disablePaidToggle,
+            })}
           />
         }
         footer={<p >Cannot be changed after the event is created.</p>}

@@ -244,14 +244,7 @@ export const EventDataSchema = z
       });
     }
 
-    // Ensure capacity is greater than 0 when has_registration is true
-    if (data.has_registration && (data.capacity === null || data.capacity < 1)) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["capacity"],
-        message: "Capacity must be greater than 0.",
-      });
-    }
+
   });
 
 export const UpdateEventDataSchema = z.object({
