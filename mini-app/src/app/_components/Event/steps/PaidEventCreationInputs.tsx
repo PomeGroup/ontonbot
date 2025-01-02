@@ -75,10 +75,15 @@ function PaymentAmount() {
         required
         title="Price"
         type="number"
-        inputMode="number"
+        inputMode="decimal" // Allows decimals on mobile devices
+        step="0.001"
         placeholder={`Payment amount in ${payment.payment_type}`}
-        value={payment.payment_amount}
-        onChange={(e) => changePaymentAmount(Number(e.target.value))}
+        value={payment.payment_amount?.toString() || ""} // Display as a string
+        onChange={(e) => {
+          const inputValue = e.target.value; // Get the string value from the input
+          const parsedValue = parseFloat(inputValue); // Parse as a float when needed
+          changePaymentAmount(isNaN(parsedValue) ? 0 : parsedValue); // Update the state
+        }}
         error={paid_info_errors.payment_amount?.[0]}
       />
     </>
