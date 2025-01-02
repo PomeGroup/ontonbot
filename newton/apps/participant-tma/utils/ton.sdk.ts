@@ -78,6 +78,7 @@ class TonConnectSender implements Sender {
     });
   }
 }
+
 const NETWORK = isTestnet ? "testnet" : "mainnet";
 
 export const assetsSdk = async (provider: TonConnectUI) => {
