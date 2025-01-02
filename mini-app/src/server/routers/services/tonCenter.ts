@@ -1,8 +1,9 @@
 import { Address, Cell } from "@ton/core";
 import axios from "axios";
 import { TonClient } from "@ton/ton";
+import { is_prod_env, is_stage_env } from "@/server/utils/evnutils";
 
-export const is_mainnet = process.env.ENV?.toLowerCase() == "production" || process.env.ENV?.toLowerCase() == "staging";
+export const is_mainnet = is_prod_env() || is_stage_env();
 // export const is_mainnet = false;
 /* -------------------------------------------------------------------------- */
 /*                                   API KEY                                  */
