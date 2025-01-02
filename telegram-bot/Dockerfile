@@ -4,6 +4,8 @@ FROM node:22-alpine3.19 AS base
 ARG TELEGRAM_BOT_PORT
 # Export arguments as environment variables
 ENV TELEGRAM_BOT_PORT=${TELEGRAM_BOT_PORT}
+RUN apk update
+RUN apk add nano
 # Install pnpm globally
 RUN npm install -g pnpm
 # Set the working directory
