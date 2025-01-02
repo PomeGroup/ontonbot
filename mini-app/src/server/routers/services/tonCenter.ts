@@ -20,13 +20,15 @@ const apiKeys = is_mainnet
       "1dd90a08cac83c13d27078fdb5f73752b393c8db47d9bf959d288fe486b9bcd1",
     ];
 
+/* --------------------------- ONTON ORDER PREFIX --------------------------- */
+const ORDER_PREFIX = "onton_order=";
+
 const BASE_URL = is_mainnet ? "https://toncenter.com/api/v3" : "https://testnet.toncenter.com/api/v3";
 //user contract address
 const USDT_CADDRESS = is_mainnet
   ? "0:B113A994B5024A16719F69139328EB759596C38A25F59028B146FECDC3621DFE"
   : "0:F418A04CF196EBC959366844A6CDF53A6FD6FFF1EADAFC892F05210BBA31593E";
 
-const ORDER_PREFIX = "onton_order=";
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
