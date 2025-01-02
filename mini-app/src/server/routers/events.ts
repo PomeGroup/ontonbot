@@ -525,11 +525,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
       let hashedSecretPhrase = undefined;
       let inputSecretPhrase = undefined;
-      if(event_has_payment && input_event_data?.secret_phrase ) {
-        inputSecretPhrase =  input_event_data?.secret_phrase.trim().toLowerCase() ;
+      if (event_has_payment && input_event_data?.secret_phrase) {
+        inputSecretPhrase = input_event_data?.secret_phrase.trim().toLowerCase();
         hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
-        if (!hashedSecretPhrase)
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid secret phrase" });
+        if (!hashedSecretPhrase) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid secret phrase" });
       }
       /* ------------------------------ Invalid Dates ----------------------------- */
       if (!input_event_data.end_date || !input_event_data.start_date) {
@@ -602,7 +601,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       if (input_event_data.paid_event && event_has_payment) {
         if (!input_event_data.capacity)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
-        const price =
+        const order_price =
           is_dev_env() || is_stage_env()
             ? 0.00055 * input_event_data.capacity + 0.001
             : 10 + 0.055 * input_event_data.capacity;
@@ -610,17 +609,21 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
           user_id: opts.ctx.user.user_id,
-          total_price: price,
+          total_price: order_price,
           payment_type: "TON",
           state: "new",
           order_type: "event_creation",
           owner_address: "",
         });
+
+        let event_price = Math.max(input_event_data.paid_event.payment_amount || 0, 0.001); // Price > 0.001
+        event_price = Math.round(event_price * 1000) / 1000; // Round to 3 Decimals
+
         await trx.insert(eventPayment).values({
           event_uuid: newEvent[0].event_uuid,
           /* -------------------------------------------------------------------------- */
           payment_type: input_event_data.paid_event.payment_type || "TON",
-          price: input_event_data.paid_event.payment_amount || 1,
+          price: event_price,
           recipient_address: input_event_data.paid_event.payment_recipient_address,
           bought_capacity: input_event_data.capacity,
           /* -------------------------------------------------------------------------- */
@@ -830,9 +833,12 @@ const updateEvent = evntManagerPP
 
         //Only recipient_address and price can be updated
         if (eventData.paid_event?.has_payment && oldEvent.has_payment) {
+          let price = Math.max(eventData.paid_event.payment_amount || 0, 0.001); // Price > 0.001
+          price = Math.round(price * 1000) / 1000; // Round to 3 Decimals
+
           await trx.update(eventPayment).set({
             recipient_address: eventData.paid_event.payment_recipient_address,
-            price: eventData.paid_event.payment_amount,
+            price: price,
           });
         }
 
