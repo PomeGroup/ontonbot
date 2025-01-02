@@ -310,7 +310,7 @@ const RegistrationGuestlist = () => {
     }
   );
 
-  const showPOAButton = Boolean(  eventData.data?.isNotEnded && eventData.data?.isStarted );
+  const disablePOAButton = Boolean(  eventData.data?.isNotEnded && eventData.data?.isStarted );
 
   return (
     <>
@@ -329,12 +329,13 @@ const RegistrationGuestlist = () => {
           hub={eventData.data?.society_hub?.name!}
         />
 
-        {  (
+        { eventData.data?.has_payment === false
+          && (
           <>
             <ButtonPOA
               event_uuid={params.hash}
               poa_type={"password" as EventTriggerType}
-              showPOAButton={showPOAButton}
+              showPOAButton={disablePOAButton}
             />
             {/* Organizer Notification Handler */}
             <OrganizerNotificationHandler />

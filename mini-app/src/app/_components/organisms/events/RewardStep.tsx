@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
 import { useCreateEventStore } from "@/zustand/createEventStore";
@@ -11,6 +11,7 @@ import { FiAlertCircle } from "react-icons/fi";
 import { trpc } from "@/app/_trpc/client";
 import { RewardForm } from "../../Event/steps/RewardStepFrom";
 import { rewardStepValidation } from "@/zodSchema/event/validation";
+import UpdateEventSuccessDialog from "../../Event/steps/UpdateEventSuccessDialog";
 import { useMainButton } from "@/hooks/useMainButton";
 
 export const RewardStep = () => {
@@ -20,6 +21,7 @@ export const RewardStep = () => {
   const [passwordDisabled, setPasswordDisabled] = useState(
     !!editOptions?.eventHash || eventData?.eventLocationType === "in_person"
   );
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [passwordValue, setPasswordValue] = useState(editOptions?.eventHash ? "{** click to change password **}" : "");
   const [sbtOption, setSbtOption] = useState<"custom" | "default">("default");
 
@@ -44,6 +46,12 @@ export const RewardStep = () => {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
+      console.log("Event updated successfully",   editOptions?.eventHash);
+      // if (eventData?.paid_event?.has_payment) {
+      //   setShowSuccessDialog(true);
+      // } else {
+      //   router.push(`/events/${data?.eventId}`);
+      // }
       router.push(`/events/${data?.eventId}`);
     },
     onError(error) {
@@ -79,12 +87,14 @@ export const RewardStep = () => {
       );
       return;
     }
-
-    const thirdStepDataSchema = rewardStepValidation(Boolean(editOptions?.eventHash));
+    const isPaid = eventData?.paid_event?.has_payment ?? false;
+    const thirdStepDataSchema = rewardStepValidation(isPaid, Boolean(editOptions?.eventHash))
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
 
     if (!formDataParsed.success) {
+
       const errors = formDataParsed.error.flatten().fieldErrors;
+
       console.error("Third step validation errors:", errors);
       setRewardStepErrors(errors);
       const errorMessages = [
@@ -169,6 +179,7 @@ export const RewardStep = () => {
   );
 
   return (
+    <>
     <form
       ref={formRef}
       onSubmit={handleSubmit}
@@ -183,6 +194,14 @@ export const RewardStep = () => {
         clearImageError={clearImageError}
         clearVideoError={clearVideoError}
       />
+
     </form>
+    <UpdateEventSuccessDialog
+      open={showSuccessDialog}
+
+      eventUuid={editOptions?.eventHash}
+      onClose={() => setShowSuccessDialog(false)}
+    />
+    </>
   );
 };

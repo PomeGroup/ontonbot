@@ -18,36 +18,25 @@ export const generalStepDataSchema = z.object({
   hub: z.string({ required_error: "Please select a hub" }).min(1, { message: "Please select a hub" }),
 });
 
-export function rewardStepValidation(editing: boolean) {
+export function rewardStepValidation(isPaid: boolean, editing: boolean) {
   return z.object({
-    secret_phrase: editing
-      ? z.string().optional()
-      : z
-          .string()
-          .min(4, { message: "Password must be at least 4 characters" })
-          .max(20, { message: "Password must be less than 20 characters" }),
+    secret_phrase: isPaid
+      ? z.string().optional() // Not required when the event is paid
+      : editing
+        ? z.string().optional()
+        : z
+            .string()
+            .min(4, { message: "Password must be at least 4 characters" })
+            .max(20, { message: "Password must be less than 20 characters" }),
     ts_reward_url: editing
-      ? z
-          .string()
-          .url({
-            message: "please select a valid reward image url",
-          })
-          .optional()
-      : z.string().url({
-          message: "please select a valid reward image url",
-        }),
+      ? z.string().url({ message: "Please select a valid reward image URL" }).optional()
+      : z.string().url({ message: "Please select a valid reward image URL" }),
     video_url: editing
-      ? z
-          .string()
-          .url({
-            message: "please select a valid reward video url",
-          })
-          .optional()
-      : z.string().url({
-          message: "please select a valid reward video url",
-        }),
+      ? z.string().url({ message: "Please select a valid reward video URL" }).optional()
+      : z.string().url({ message: "Please select a valid reward video URL" }),
   });
 }
+
 
 export function timeplaceStepValidation(
   editOptions: { eventHash?: string } | undefined,

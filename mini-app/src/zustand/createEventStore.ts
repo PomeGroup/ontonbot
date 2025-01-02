@@ -267,27 +267,24 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           state.paid_info_errors[key] = value;
         });
       },
-      registrationStepMainButtonClick: (recepient) => {
-        /**
-         * 🦄 Handle Paid Event 🦄
-         */
-        const hasPayment = get().eventData.paid_event.has_payment;
+      registrationStepMainButtonClick: () => {
+        const { eventData, setCurrentStep } = get();
+        const { paid_event, capacity } = eventData;
+
+        const hasPayment = paid_event?.has_payment;
 
         if (hasPayment) {
-          set((state) => {
-            // The reason we are not using undefiend for the input as a union type is that we want to be explicit
-            // Also typescript will force us to input null
-            const valid_recepient = recepient ? recepient : undefined;
-            state.eventData.paid_event.payment_recipient_address = valid_recepient;
-          });
-          const capacity = get().eventData.capacity;
-          const paymentParsed = PaidEventSchema.safeParse(get().eventData.paid_event);
+          // Validate Paid Event Data
+          const paymentParsed = PaidEventSchema.safeParse(paid_event);
 
           if (paymentParsed.error) {
+            const fieldErrors = paymentParsed.error.flatten().fieldErrors;
+            console.log("Validation Errors:", fieldErrors);
             set((state) => {
-              state.paid_info_errors = paymentParsed.error.flatten().fieldErrors;
+              state.paid_info_errors = fieldErrors;
             });
           } else if (!capacity) {
+            // Validate capacity
             set((state) => {
               state.paid_info_errors = {
                 capacity: ["Capacity is required."],
@@ -299,20 +296,23 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
                 capacity: ["Capacity must be greater than 0."],
               };
             });
-          } else if (paymentParsed.success) {
-            get().setCurrentStep(4);
+          } else {
+            // Validation successful, proceed to the next step
             set((state) => {
               state.paid_info_errors = {};
             });
+            console.log("Recipient Address:", paid_event.payment_recipient_address);
+            console.log("Capacity:", capacity);
+            setCurrentStep(4);
           }
         } else {
-          /*
-           * 🌳 Handle Only Registration 🌳
-           * it does not need validation
-           */
-          get().setCurrentStep(4);
+          // Handle Registration Only (No Payment)
+          set((state) => {
+            state.paid_info_errors = {};
+          });
+          setCurrentStep(4);
         }
-      },
+      }
     }))
   )
 );

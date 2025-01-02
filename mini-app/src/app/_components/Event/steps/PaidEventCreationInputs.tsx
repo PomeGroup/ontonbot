@@ -1,11 +1,10 @@
-import React from "react";
 import ListLayout from "../../atoms/cards/ListLayout";
-import { ListInput, ListItem, Segmented, SegmentedButton, Toggle } from "konsta/react";
-import { useCreateEventStore } from "@/zustand/createEventStore";
+import { Segmented, SegmentedButton, Toggle } from "konsta/react";
 import { SiTether, SiTon } from "react-icons/si";
 import { cn } from "@/utils";
 import { UploadImageFile } from "@/components/ui/upload-file";
-import { TonConnectButton } from "@tonconnect/ui-react";
+import { ListInput, ListItem } from "konsta/react";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 
 function SelectPayment() {
   const { payment, changePaymentType, isEdit } = useCreateEventStore((state) => ({
@@ -87,21 +86,37 @@ function PaymentAmount() {
 }
 
 function PaymentsRecepient() {
-  const { recepient_error_messages } = useCreateEventStore((state) => ({
+  const { eventData, setEventData, recepient_error_messages } = useCreateEventStore((state) => ({
+    eventData: state.eventData,
+    setEventData: state.setEventData,
     recepient_error_messages: state.paid_info_errors.payment_recipient_address,
   }));
 
+  const handleInputChange = (value: string) => {
+    console.log("valuevaluevalue", value);
+    setEventData({
+      paid_event: {
+        ...eventData.paid_event,
+        payment_recipient_address: value || undefined,
+      },
+    });
+  };
+
   return (
     <ListItem
-      title="Recepient"
+      title="Recipient"
       footer={
         <>
-          {/* The Current Connected Wallet will be used as the Recepient */}
-          <div className="flex justify-center items-center py-1">
-            <TonConnectButton />
-          </div>
-          {/* Error masseges will be showen bellow */}
-          {recepient_error_messages?.length && <p className="text-red-500">{recepient_error_messages[0]}</p>}
+          {/* Text Input for Wallet Address */}
+          <ListInput
+            outline
+            required
+            label="Wallet Address"
+            placeholder="Enter wallet address"
+            value={eventData.paid_event?.payment_recipient_address || ""}
+            onChange={(e) => handleInputChange(e.target.value)}
+            error={recepient_error_messages?.length  && recepient_error_messages?.[0]}
+          />
         </>
       }
     />
@@ -218,9 +233,10 @@ function Capacity() {
  * The default export and this is used to combine all other above ones
  */
 const PaidEventCreationInputs = () => {
-  const { payment, toggleIsPaidEvent } = useCreateEventStore((state) => ({
+  const { payment, toggleIsPaidEvent, editOptions } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     toggleIsPaidEvent: state.togglePaidEvent,
+     editOptions: state.edit,
   }));
 
   return (
@@ -233,8 +249,14 @@ const PaidEventCreationInputs = () => {
             onChange={() => {
               toggleIsPaidEvent();
             }}
+            disabled={Boolean(editOptions?.eventHash)}
+            colors={{
+              checkedBgIos: editOptions?.eventHash ? "bg-blue-300" : "primary",
+              checkedBgMaterial: editOptions?.eventHash ? "bg-blue-300" : "primary",
+            }}
           />
         }
+        footer={<p >Cannot be changed after the event is created.</p>}
       />
       {payment.has_payment && (
         <>

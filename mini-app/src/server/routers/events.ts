@@ -522,12 +522,15 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
   const input_event_data = opts.input.eventData;
   try {
     const result = await db.transaction(async (trx) => {
-      const inputSecretPhrase = input_event_data.secret_phrase.trim().toLowerCase();
-      const hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
       const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
-
-      if (!hashedSecretPhrase) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid secret phrase" });
-
+      let hashedSecretPhrase = undefined;
+      let inputSecretPhrase = undefined;
+      if(event_has_payment && input_event_data?.secret_phrase ) {
+        inputSecretPhrase =  input_event_data?.secret_phrase.trim().toLowerCase() ;
+        hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
+        if (!hashedSecretPhrase)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid secret phrase" });
+      }
       /* ------------------------------ Invalid Dates ----------------------------- */
       if (!input_event_data.end_date || !input_event_data.start_date) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid start-date/end-date" });
@@ -645,7 +648,8 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       }
 
       // Insert secret phrase field if applicable
-      if (inputSecretPhrase) {
+
+      if (event_has_payment && input_event_data?.secret_phrase && inputSecretPhrase) {
         await eventFieldsDB.insertEventField(trx, {
           emoji: "🔒",
           title: "secret_phrase_onton_input",

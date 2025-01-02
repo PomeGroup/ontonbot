@@ -150,7 +150,7 @@ export const PaidEventSchema = z
         } catch (error) {
           ctx.addIssue({
             code: "custom",
-            path: ["invalid_payment_recipient_address"],
+            path: ["payment_recipient_address"],
             message: "Recipient address is Invalid!",
           });
         }
@@ -177,63 +177,82 @@ export const PaidEventSchema = z
   });
 
 //Create Event
-export const EventDataSchema = z.object({
-  /* -------------------------- Event Basic Info ------------------------- */
-  event_id: z.number({ required_error: "event ID is required" }).optional(),
-  event_uuid: z.string({ required_error: "event UUID is required" }).optional(),
-  type: z.number({ required_error: "type is required" }),
-  title: z.string({ required_error: "title is required" }),
-  subtitle: z.string({ required_error: "subtitle is required" }),
-  description: z.string({ required_error: "description is required" }),
+export const EventDataSchema = z
+  .object({
+    /* -------------------------- Event Basic Info ------------------------- */
+    event_id: z.number({ required_error: "event ID is required" }).optional(),
+    event_uuid: z.string({ required_error: "event UUID is required" }).optional(),
+    type: z.number({ required_error: "type is required" }),
+    title: z.string({ required_error: "title is required" }),
+    subtitle: z.string({ required_error: "subtitle is required" }),
+    description: z.string({ required_error: "description is required" }),
 
-  /* -------------------------- Location Info ------------------------- */
-  location: z.string({ required_error: "location is required" }),
-  eventLocationType: z
-    .enum(["online", "in_person"], {
-      required_error: "event location type is required",
-    })
-    .optional(),
-  countryId: z.number({ required_error: "country ID is required" }).optional(),
-  cityId: z.number({ required_error: "city ID is required" }).optional(),
+    /* -------------------------- Location Info ------------------------- */
+    location: z.string({ required_error: "location is required" }),
+    eventLocationType: z
+      .enum(["online", "in_person"], {
+        required_error: "event location type is required",
+      })
+      .optional(),
+    countryId: z.number({ required_error: "country ID is required" }).optional(),
+    cityId: z.number({ required_error: "city ID is required" }).optional(),
 
-  /* -------------------------- Media URLs ------------------------- */
-  image_url: z
-    .string({ required_error: "event image is required" })
-    .url({ message: "Please upload a valid event image URL" }),
-  video_url: z
-    .string({ required_error: "video URL is required" })
-    .url({ message: "Please select a valid reward video URL" })
-    .optional(),
-  ts_reward_url: z
-    .string({ required_error: "reward URL is required" })
-    .url({ message: "Please select a valid reward image URL" }),
+    /* -------------------------- Media URLs ------------------------- */
+    image_url: z
+      .string({ required_error: "event image is required" })
+      .url({ message: "Please upload a valid event image URL" }),
+    video_url: z
+      .string({ required_error: "video URL is required" })
+      .url({ message: "Please select a valid reward video URL" })
+      .optional(),
+    ts_reward_url: z
+      .string({ required_error: "reward URL is required" })
+      .url({ message: "Please select a valid reward image URL" }),
 
-  /* -------------------------- Organization Info ------------------------- */
-  society_hub: z.object({
-    id: z.string({ required_error: "society_hub.id is required" }),
-    name: z.string({ required_error: "society_hub.name is required" }),
-  }),
-  owner: z.number({ required_error: "owner is required" }),
-  activity_id: z.number({ required_error: "activity ID is required" }).optional(),
+    /* -------------------------- Organization Info ------------------------- */
+    society_hub: z.object({
+      id: z.string({ required_error: "society_hub.id is required" }),
+      name: z.string({ required_error: "society_hub.name is required" }),
+    }),
+    owner: z.number({ required_error: "owner is required" }),
+    activity_id: z.number({ required_error: "activity ID is required" }).optional(),
 
-  /* -------------------------- Event Settings ------------------------- */
-  secret_phrase: z.string({ required_error: "secret_phrase is required" }),
-  start_date: z.number({ required_error: "start_date is required" }),
-  end_date: z.number({ required_error: "end date is required" }).nullable(),
-  timezone: z.string({ required_error: "timezone is required" }),
-  dynamic_fields: DynamicFieldsSchema, // Assuming DynamicFieldsSchema is defined elsewhere
+    /* -------------------------- Event Settings ------------------------- */
+    secret_phrase: z.string().optional(), // Made optional initially
+    start_date: z.number({ required_error: "start_date is required" }),
+    end_date: z.number({ required_error: "end date is required" }).nullable(),
+    timezone: z.string({ required_error: "timezone is required" }),
+    dynamic_fields: DynamicFieldsSchema, // Assuming DynamicFieldsSchema is defined elsewhere
 
-  /* -------------------------- // Free Event Registration Creation ------------------------- */
-  has_registration: z.boolean({ required_error: "registration status is required" }),
-  has_approval: z.boolean({ required_error: "approval status is required" }),
-  capacity: z.number({ required_error: "capacity is required" }).min(1).nullable(),
-  has_waiting_list: z.boolean({ required_error: "waiting list status is required" }),
-  /* -------------------------- // Free Event Registration Creation ------------------------- */
+    /* -------------------------- Free Event Registration Creation ------------------------- */
+    has_registration: z.boolean({ required_error: "registration status is required" }),
+    has_approval: z.boolean({ required_error: "approval status is required" }),
+    capacity: z.number({ required_error: "capacity is required" }).min(1).nullable(),
+    has_waiting_list: z.boolean({ required_error: "waiting list status is required" }),
 
-  /* ------------------------------- Paid Event Creation ------------------------------- */
-  paid_event: PaidEventSchema.optional(),
-  /* ------------------------------- Paid Event Creation ------------------------------- */
-});
+    /* ------------------------------- Paid Event Creation ------------------------------- */
+    paid_event: PaidEventSchema.optional(),
+    /* ------------------------------- Paid Event Creation ------------------------------- */
+  })
+  .superRefine((data, ctx) => {
+    // Validate secret_phrase is required for non-paid events
+    if (!data.paid_event?.has_payment && !data.secret_phrase) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["secret_phrase"],
+        message: "Secret phrase is required for free events.",
+      });
+    }
+
+    // Ensure capacity is greater than 0 when has_registration is true
+    if (data.has_registration && (data.capacity === null || data.capacity < 1)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["capacity"],
+        message: "Capacity must be greater than 0.",
+      });
+    }
+  });
 
 export const UpdateEventDataSchema = z.object({
   /* -------------------------- Event Basic Info ------------------------- */
