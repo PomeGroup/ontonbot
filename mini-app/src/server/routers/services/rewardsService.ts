@@ -5,7 +5,7 @@ import { getAndValidateVisitor } from "@/server/routers/services/visitorService"
 
 import { db } from "@/db/db";
 import rewardsDb from "@/server/db/rewards.db";
-import { findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/server/db/visitors";
+import { addVisitor, findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/server/db/visitors";
 import { validateEventData, validateEventDates } from "@/server/routers/services/eventService";
 import { sendRewardNotification } from "@/server/routers/services/telegramService";
 import { TRPCError } from "@trpc/server";
@@ -117,9 +117,7 @@ export const processRewardCreation = async (eventData: any, user_id: number, vis
 
     const res = await createUserRewardLink(eventData.activity_id, {
       telegram_user_id: user_id,
-      attributes: eventData.society_hub
-        ? [{ trait_type: "Organizer", value: eventData.society_hub }]
-        : undefined,
+      attributes: eventData.society_hub ? [{ trait_type: "Organizer", value: eventData.society_hub }] : undefined,
     });
 
     // Ensure the result is successful and has the expected data structure
@@ -151,20 +149,22 @@ export const processRewardCreation = async (eventData: any, user_id: number, vis
   }
 };
 
-export const createUserReward = async (props: {
-  user_id: number;
-  event_uuid: string;
-}) => {
+export const createUserReward = async (props: { user_id: number; event_uuid: string; add_visitor: boolean }) => {
   try {
     // Fetch the visitor from the database
-    const visitor = await findVisitorByUserAndEventUuid(props.user_id, props.event_uuid);
+    let visitor = await findVisitorByUserAndEventUuid(props.user_id, props.event_uuid);
 
     // Check if visitor exists
     if (!visitor) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Visitor not found with the provided user ID and event UUID.",
-      });
+      if (props.add_visitor) {
+        await addVisitor(props.user_id, props.event_uuid);
+        visitor = await findVisitorByUserAndEventUuid(props.user_id, props.event_uuid);
+      } else {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Visitor not found with the provided user ID and event UUID.",
+        });
+      }
     }
 
     const eventData = await db.query.events.findFirst({
@@ -194,7 +194,6 @@ export const createUserReward = async (props: {
       });
     }
 
-
     if (!eventData?.activity_id || eventData.activity_id < 0) {
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -215,13 +214,10 @@ export const createUserReward = async (props: {
           code: "FORBIDDEN",
           message: `Online Event with registration needs approval`,
         });
-      } else if (
-        eventRegistrantRequest.status !== "checkedin" &&
-        eventData.participationType == "in_person"
-      ) {
+      } else if (eventRegistrantRequest.status !== "approved" && eventData.participationType == "in_person") {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: `In-Persion Event with registration needs Check-in`,
+          message: `In-Persion Event with registration needs approval`,
         });
       }
     }

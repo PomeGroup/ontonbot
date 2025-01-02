@@ -79,6 +79,7 @@ export const usersRouter = router({
       return await rewardService.createUserReward({
         user_id: opts.ctx.user?.user_id as number,
         event_uuid: opts.input.event_uuid,
+        add_visitor: false,
       });
     }),
 
@@ -108,11 +109,17 @@ export const usersRouter = router({
           await rewardService.createUserReward({
             user_id: opts.ctx.user?.user_id as number,
             event_uuid: opts.input.event_uuid,
+            add_visitor: false,
           });
         } catch (error) {
           if (error instanceof TRPCError) {
             if (error.code === "CONFLICT") {
-              await rewardDB.insertReward(visitor.id, opts.ctx.user.user_id.toString(), "pending_creation", "ton_society_sbt");
+              await rewardDB.insertReward(
+                visitor.id,
+                opts.ctx.user.user_id.toString(),
+                "pending_creation",
+                "ton_society_sbt"
+              );
               return {
                 type: "wait_for_reward",
                 message: "We successfully collected your data, you'll receive your reward link through a bot message.",

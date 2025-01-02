@@ -487,21 +487,20 @@ const checkinRegistrantRequest = evntManagerPP
       throw new TRPCError({ code: "CONFLICT", message: "Registrant Not Approved" });
     }
 
-
     await rewardService.createUserReward({
       user_id: registrant.user_id as number,
       event_uuid: event_uuid,
+      add_visitor: true,
     });
 
     await db
-    .update(eventRegistrants)
-    .set({
-      status: "checkedin",
-    })
-    .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
-    .execute();
+      .update(eventRegistrants)
+      .set({
+        status: "checkedin",
+      })
+      .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
+      .execute();
 
-    
     return { code: 200, message: "ok" };
   });
 
@@ -538,8 +537,8 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       /* ------------------- paid events must have registration ------------------- */
       input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
       const is_paid = input_event_data.paid_event?.has_payment;
-      if (is_paid && !config?.ONTON_WALLET_ADDRESS){
-        console.log("event_add_Config : " , config)
+      if (is_paid && !config?.ONTON_WALLET_ADDRESS) {
+        console.log("event_add_Config : ", config);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "ONTON_WALLET_ADDRESS NOT SET error" });
       }
 
@@ -560,7 +559,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           timezone: input_event_data.timezone,
           location: input_event_data.location,
           owner: opts.ctx.user.user_id,
-          participationType: input_event_data.eventLocationType,
+          participationType: is_paid ? "in_person" : input_event_data.eventLocationType, // right now paid event only can be in_person
           countryId: input_event_data.countryId,
           tsRewardImage: input_event_data.ts_reward_url,
           tsRewardVideo: input_event_data.video_url,
@@ -591,7 +590,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       if (input_event_data.paid_event && event_has_payment) {
         if (!input_event_data.capacity)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
-        const price = is_dev_env() || is_stage_env() ? 0.00055 * input_event_data.capacity + 0.001 : 10 + 0.055 * input_event_data.capacity;
+        const price =
+          is_dev_env() || is_stage_env()
+            ? 0.00055 * input_event_data.capacity + 0.001
+            : 10 + 0.055 * input_event_data.capacity;
 
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,

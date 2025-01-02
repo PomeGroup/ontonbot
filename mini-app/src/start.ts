@@ -587,6 +587,11 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
         return;
       }
       console.log("Nft Adress is :: ", nft_address);
+      try {
+        await sendLogNotification({ message: `NFT ${nft_index + 1} Minted for ${event_uuid} `, topic: "ticket" });
+      } catch (error) {
+        console.error("MintNFTforPaid_Orders-sendLogNotification-error--:", error);
+      }
 
       await db.transaction(async (trx) => {
         await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
