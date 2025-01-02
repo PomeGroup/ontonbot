@@ -50,17 +50,13 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     return Response.json({ error: "Ticket data not found" }, { status: 400 });
   }
 
-  const ticket = {
-    ...user_registration,
-  };
-
   const register_info_object =
     typeof user_registration.register_info === "object"
       ? user_registration.register_info
       : JSON.parse(String(user_registration.register_info || "{}"));
 
   const data = {
-    ...ticket,
+    ...user_registration,
     nft_address: "nft_address",
     order_uuid: user_registration.registrant_uuid,
     ticketData: eventPaymentinfo,
