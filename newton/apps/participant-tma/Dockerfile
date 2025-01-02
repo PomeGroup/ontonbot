@@ -1,6 +1,7 @@
 # minimum required version of Node.js
 FROM node:22-alpine3.19 AS minimum-image
 RUN apk update
+RUN apk nano
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable

@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/app/_components/Event/steps/PaidEventCreationInputs.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/app/_components/Event/steps/PaidEventCreationInputs.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/app/_components/Event/steps/UpdateEventSuccessDialog.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/app/_components/Event/steps/UpdateEventSuccessDialog.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mini-app/src/app/_components/organisms/events/RewardStep.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/mini-app/src/app/_components/organisms/events/RewardStep.tsx" afterDir="false" />
-    </list>
+    <list default="true" id="1de93747-85b4-4422-8ba0-152a260e5475" name="Changes" comment="edit package json of participant-tma to run with base env - update env.example" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -209,7 +204,7 @@
       <workItem from="1735386138898" duration="36000" />
       <workItem from="1735386183879" duration="9853000" />
       <workItem from="1735410524367" duration="110820000" />
-      <workItem from="1735736672050" duration="42620000" />
+      <workItem from="1735736672050" duration="43152000" />
     </task>
     <task id="LOCAL-00001" summary="Merge SBT Checkin Offline To Dev">
       <option name="closed" value="true" />

@@ -1,6 +1,7 @@
 # minimum-image
 FROM node:22-alpine3.19 AS minimum-image
 RUN apk update
+RUN apk nano
 RUN npm i -g pnpm
 
 # Base image

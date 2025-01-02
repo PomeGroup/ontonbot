@@ -566,6 +566,19 @@ jobs:
                 echo "Special handling for caddy service"
                 echo "docker service update --force caddy_caddy"
                 docker service update --force caddy_caddy
+              elif [ "$service" == "mini-app" ]; then
+                echo "Special handling for mini-app service"
+                echo "Updating $branch_name_mini-app"
+                docker service update --update-failure-action rollback --update-max-failure-ratio 0.2 --force $branch_name\_\mini-app
+                
+                echo "Updating $branch_name_mini-app-notification-socket"
+                docker service update --update-failure-action rollback --update-max-failure-ratio 0.2 --force $branch_name\_\mini-app-notification-socket
+                
+                echo "Updating $branch_name_mini-app-poa-worker"
+                docker service update --update-failure-action rollback --update-max-failure-ratio 0.2 --force $branch_name\_\mini-app-poa-worker
+                
+                echo "Updating $branch_name_mini-app-sbt-worker"
+                docker service update --update-failure-action rollback --update-max-failure-ratio 0.2 --force $branch_name\_\mini-app-sbt-worker
               else
                 echo "docker service update --force $branch_name\_\$service"
                 docker service update --update-failure-action rollback --update-max-failure-ratio 0.2  --force $branch_name\_\$service
