@@ -47,12 +47,12 @@ export const RewardStep = () => {
         duration: 4000,
       });
       console.log("Event updated successfully",   editOptions?.eventHash);
-      // if (eventData?.paid_event?.has_payment) {
-      //   setShowSuccessDialog(true);
-      // } else {
-      //   router.push(`/events/${data?.eventId}`);
-      // }
-      router.push(`/events/${data?.eventId}`);
+      if (eventData?.paid_event?.has_payment) {
+        setShowSuccessDialog(true);
+      } else {
+        router.push(`/events/${data?.eventId}/edit`);
+      }
+
     },
     onError(error) {
       toast.error(error.message);

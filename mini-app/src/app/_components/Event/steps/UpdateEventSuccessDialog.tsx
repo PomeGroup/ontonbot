@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Dialog, DialogButton } from "konsta/react";
-import { useRouter } from "next/navigation";
 import useWebApp from "@/hooks/useWebApp";
 
 interface UpdateEventSuccessDialogProps {
@@ -10,30 +9,28 @@ interface UpdateEventSuccessDialogProps {
   eventUuid: string | undefined;
   onClose: () => void;
 }
-
 const UpdateEventSuccessDialog: React.FC<UpdateEventSuccessDialogProps> = ({
                                                                              open,
                                                                              eventUuid,
                                                                              onClose,
                                                                            }) => {
-  const router = useRouter();
   const webApp = useWebApp(); // Hook for Telegram Mini App integration
 
   const handleGuestList = () => {
-    console.log("handleGuestList", eventUuid);
     if (eventUuid) {
-      console.log("handleGuestLists2", eventUuid);
-      router.push(`/events/${eventUuid}/edit#guest-list`);
+      window.location.reload();
+      return;
     }
     onClose();
   };
 
   const handleViewEvent = () => {
     if (eventUuid) {
-      console.log("handleViewEvent", eventUuid);
       webApp?.openTelegramLink(
         `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
       );
+      window.location.reload();
+      return;
     }
     onClose();
   };

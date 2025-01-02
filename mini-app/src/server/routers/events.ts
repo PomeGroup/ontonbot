@@ -548,10 +548,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       /* ------------------- paid events must have registration ------------------- */
       input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
       const is_paid = input_event_data.paid_event?.has_payment;
-      // if (is_paid && !config?.ONTON_WALLET_ADDRESS) {
-      //   console.log("event_add_Config : ", config);
-      //   throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "ONTON_WALLET_ADDRESS NOT SET error" });
-      // }
+      if (is_paid && !config?.ONTON_WALLET_ADDRESS) {
+        console.log("event_add_Config : ", config);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "ONTON_WALLET_ADDRESS NOT SET error" });
+      }
 
       const newEvent = await trx
         .insert(events)

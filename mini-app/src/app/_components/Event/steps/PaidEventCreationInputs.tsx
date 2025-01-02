@@ -80,9 +80,15 @@ function PaymentAmount() {
         placeholder={`Payment amount in ${payment.payment_type}`}
         value={payment.payment_amount?.toString() || ""} // Display as a string
         onChange={(e) => {
-          const inputValue = e.target.value; // Get the string value from the input
-          const parsedValue = parseFloat(inputValue); // Parse as a float when needed
-          changePaymentAmount(isNaN(parsedValue) ? 0 : parsedValue); // Update the state
+          const inputValue = e.target.value;
+
+          // Match up to 3 decimal places using regex
+          const formattedValue = inputValue.match(/^\d*\.?\d{0,3}/)?.[0] || "";
+
+          // Parse as a float if valid; otherwise, 0
+          const parsedValue = formattedValue ? parseFloat(formattedValue) : 0;
+
+          changePaymentAmount(parsedValue);
         }}
         error={paid_info_errors.payment_amount?.[0]}
       />
