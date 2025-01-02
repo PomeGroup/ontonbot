@@ -184,12 +184,9 @@ export async function PUT(req: NextRequest, { params }: { params: { nftaddress: 
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
     if (error instanceof SyntaxError)
-      return Response.json(
-        {
-          error: "invalid_body",
-          message: "invalid json body provided",
-        },
-        { status: 400 }
-      );
+      return Response.json({ error: "invalid_body", message: "invalid json body provided" }, { status: 400 });
+
+    console.error("nft claim update error ", error);
+    return Response.json({ error: "internal_server_error", message: "internal_server_error" }, { status: 500 });
   }
 }
