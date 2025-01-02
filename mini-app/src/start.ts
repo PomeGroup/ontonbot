@@ -82,10 +82,10 @@ function cronJob(fn: (_: () => any) => any) {
       console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
       wlg.info(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
-      // await sendLogNotification({
-      //   message: `Cron job ${name} error: ${getErrorMessages(err)}`,
-      //   topic: "system",
-      // });
+      await sendLogNotification({
+        message: `Cron job ${name} error: ${getErrorMessages(err)}`,
+        topic: "system",
+      });
     } finally {
       await redisTools.deleteCache(redisTools.cacheKeys.cronJobLock + name);
     }
@@ -510,6 +510,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   /*                               ORDER PROCCESS                               */
   /* -------------------------------------------------------------------------- */
   for (const ordr of results) {
+    await pushLockTTl();
     try {
       const event_uuid = ordr.event_uuid;
 
