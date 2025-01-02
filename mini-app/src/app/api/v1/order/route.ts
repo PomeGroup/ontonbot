@@ -64,7 +64,11 @@ export async function POST(request: Request) {
   if (userOrder) {
     if (userOrder.state === "failed" || userOrder.state === "cancelled") {
       // Reactivate Order
-      await db.update(orders).set({ state: "new" }).where(eq(orders.uuid, userOrder.uuid));
+      await db
+        .update(orders)
+        .set({ state: "new", updatedAt: new Date(), total_price: eventPaymentInfo.price })
+        .where(eq(orders.uuid, userOrder.uuid))
+        .execute();
       return Response.json({
         order_id: userOrder.uuid,
         message: "order reactivated successfully",
@@ -73,12 +77,18 @@ export async function POST(request: Request) {
       });
     }
 
-    if (userOrder.state === "new" || userOrder.state === "confirming")
+    if (userOrder.state === "new" || userOrder.state === "confirming") {
+      await db
+        .update(orders)
+        .set({ state: "new", updatedAt: new Date(), total_price: eventPaymentInfo.price })
+        .where(eq(orders.uuid, userOrder.uuid))
+        .execute();
       return Response.json({
         order_id: userOrder.uuid,
-        message: "An order is already being proccessed",
+        message: "order is placed",
         payment_type: userOrder.payment_type,
       });
+    }
   }
   const TicketsCount = await db
     .select({ count: sql`count(*)`.mapWith(Number) })
@@ -133,18 +143,23 @@ export async function POST(request: Request) {
       .where(and(eq(eventRegistrants.event_uuid, body.data.event_uuid), eq(eventRegistrants.user_id, userId)))
       .execute();
 
-    if (user_registrant && user_registrant.length) {
-      //User Registration Exist
-      //
-    } else {
-      const { event_uuid, ...register_info } = body.data;
-      await trx.insert(eventRegistrants).values({
+    const { event_uuid, ...register_info } = body.data;
+    await trx
+      .insert(eventRegistrants)
+      .values({
         event_uuid: body.data.event_uuid,
         status: "pending",
         register_info: register_info,
         user_id: userId,
-      });
-    }
+      })
+      .onConflictDoUpdate({
+        target: [eventRegistrants.event_uuid, eventRegistrants.user_id],
+        set: {
+          status: "pending",
+          register_info: register_info,
+        },
+      })
+      .execute();
 
     new_order_uuid = new_order?.uuid;
   });
