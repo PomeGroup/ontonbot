@@ -1,1 +1,1 @@
-export const calculateUsdtAmount = (usd: number) => BigInt(usd * 1000000);
+export const calculateUsdtAmount = (usd: number) => usd * 1_000_000;
