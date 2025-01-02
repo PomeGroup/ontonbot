@@ -29,7 +29,7 @@ services:
     volumes:
       - caddy_data:/data
       - caddy_config:/config
-      - /home/inanloo/caddy/:/etc/caddy/
+      - /home/tonont/caddy/:/etc/caddy/
       - ../cert/:/certs
     networks:
       - caddy-network
