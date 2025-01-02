@@ -378,33 +378,43 @@ const eventRegister = initDataProtectedProcedure.input(EventRegisterSchema).muta
 /* -------------------------------------------------------------------------- */
 /*                            Get Event Registrant 👨‍👩‍👧                        */
 /* -------------------------------------------------------------------------- */
-const getEventRegistrants = evntManagerPP.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
-  const event_uuid = opts.input.event_uuid;
-  const event = await selectEventByUuid(event_uuid);
-
-  if (!event) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
-  }
-
-  const registrants = await db
-    .select({
-      event_uuid: eventRegistrants.event_uuid,
-      user_id: eventRegistrants.user_id,
-      username: users.username,
-      first_name: users.first_name,
-      last_name: users.last_name,
-      status: eventRegistrants.status,
-      created_at: eventRegistrants.created_at,
-      regisrtant_info: eventRegistrants.register_info,
+const getEventRegistrants = evntManagerPP
+  .input(
+    z.object({
+      event_uuid: z.string(),
+      offset: z.number().default(0),
+      limit: z.number().default(10),
     })
-    .from(eventRegistrants)
-    .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
-    .where(eq(eventRegistrants.event_uuid, event_uuid))
-    .orderBy(asc(eventRegistrants.created_at))
-    .execute();
+  )
+  .query(async (opts) => {
+    const { event_uuid, offset, limit } = opts.input;
 
-  return registrants;
-});
+    const event = await selectEventByUuid(event_uuid);
+    if (!event) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
+    }
+
+    const registrants = await db
+      .select({
+        event_uuid: eventRegistrants.event_uuid,
+        user_id: eventRegistrants.user_id,
+        username: users.username,
+        first_name: users.first_name,
+        last_name: users.last_name,
+        status: eventRegistrants.status,
+        created_at: eventRegistrants.created_at,
+        registrant_info: eventRegistrants.register_info,
+      })
+      .from(eventRegistrants)
+      .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
+      .where(eq(eventRegistrants.event_uuid, event_uuid))
+      .orderBy(desc(eventRegistrants.created_at))
+      .limit(limit)
+      .offset(offset)
+      .execute();
+
+    return registrants;
+  });
 
 /* -------------------------------------------------------------------------- */
 /*              Process Registrant Request (Approve✅ / Reject ❌)           */

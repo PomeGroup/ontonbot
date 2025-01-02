@@ -6,7 +6,7 @@ import { cva } from "class-variance-authority";
 import { List, BlockTitle, ListItem, BlockHeader, Sheet, BlockFooter, Block } from "konsta/react";
 import { Check, FileUser, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
@@ -28,6 +28,7 @@ interface CustomListItemProps {
   registrantInfo: any;
   handleApprove: (_: number) => Promise<void>;
   handleReject: (_: number) => Promise<void>;
+  className?: string;
 }
 
 const CustomListItem: React.FC<CustomListItemProps> = ({
@@ -39,11 +40,14 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   registrantInfo,
   handleApprove,
   handleReject,
+  className,
 }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [itemStatus, setItemStatus] = useState(status);
   const [showRegistrantInfo, setShowRegistrantInfo] = useState<any>(null);
+
+
 
   const handleEdit = () => {
     // Change status to "pending"
@@ -177,7 +181,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   return (
     <>
       <ListItem
-        className="!ps-0"
+        className={`!ps-0 ${className || ""}`}
         title={
           <div className="w-44">
             <h4 className="truncate">{name}</h4>
@@ -255,7 +259,7 @@ const Button: React.FC<ButtonProps> = ({ variant, icon, label, onClick, isLoadin
   );
 };
 
-const RegistrationGuestlist = () => {
+const RegistrationGuestList = () => {
   /*
    * Get Event Registrants
    */
@@ -263,11 +267,17 @@ const RegistrationGuestlist = () => {
   const registrants = useGetEventRegistrants();
   const eventData = useGetEvent();
   const webApp = useWebApp();
-
+  //// pagination logic
+  const LIMIT = 10; // Adjust the limit as needed
+  const [results, setResults] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [offset, setOffset] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   /*
    * Process Registrant (Approve ✅ / Reject ❌)
    */
   const processRegistrantRequest = trpc.events.processRegistrantRequest.useMutation();
+
 
   /*
    * Export visitor list
@@ -311,6 +321,46 @@ const RegistrationGuestlist = () => {
   );
 
   const disablePOAButton = Boolean(  eventData.data?.isNotEnded && eventData.data?.isStarted );
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMoreResults();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    const lastElement = document.querySelector(".last-guest-item");
+    if (lastElement) observer.observe(lastElement);
+
+    return () => {
+      if (lastElement) observer.unobserve(lastElement);
+    };
+  }, [results]);
+
+  // Fetch registrants dynamically based on offset
+  const { data, isFetching } = trpc.events.getEventRegistrants.useQuery(
+    { event_uuid: params.hash, offset, limit: LIMIT },
+    {
+      keepPreviousData: true, // Keeps existing data while fetching new data
+      onSuccess: (newData) => {
+        if (newData) {
+          setResults((prev) => [...prev, ...newData]);
+          setHasMore(newData.length === LIMIT); // Check if more results are available
+        }
+        setIsLoading(false);
+      },
+    }
+  );
+
+  const loadMoreResults = () => {
+    if (hasMore && !isFetching && !isLoading) {
+      setIsLoading(true);
+      setOffset((prevOffset) => prevOffset + LIMIT);
+    }
+  };
 
   return (
     <>
@@ -377,34 +427,33 @@ const RegistrationGuestlist = () => {
             />
           ))}
       </BlockHeader>
-      <List
-        strong
-        className={"z-0"}
-        title="Guest List"
-      >
-        {registrants.data?.map((registrant, idx) => (
+      <List>
+        {results.map((registrant, idx) => (
           <CustomListItem
-            key={"registrant_" + idx}
+            key={`registrant_${idx}`}
             name={registrant.first_name || "No Name"}
             username={registrant.username || "no username"}
             date={
               registrant.created_at
                 ? new Date(registrant.created_at).toLocaleString("default", {
-                    month: "short",
-                    day: "numeric",
-                  })
+                  month: "short",
+                  day: "numeric",
+                })
                 : "no_date"
             }
-            registrantInfo={registrant.regisrtant_info}
+            registrantInfo={registrant?.registrant_info}
             user_id={registrant.user_id!}
             status={registrant.status}
-            handleApprove={handleApprove}
-            handleReject={handleReject}
+            handleApprove={() => handleApprove(registrant.user_id!)}
+            handleReject={() => handleReject(registrant.user_id!)}
+            className={idx === results.length - 1 ? "last-guest-item" : ""}
           />
         ))}
+
+        {isFetching && offset !== 0 && <DataStatus status="pending" title="Loading more registrants..." />}
       </List>
     </>
   );
 };
 
-export default RegistrationGuestlist;
+export default RegistrationGuestList;

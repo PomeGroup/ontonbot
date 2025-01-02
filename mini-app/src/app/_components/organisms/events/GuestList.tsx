@@ -1,6 +1,6 @@
 import { RouterOutput } from "@/server";
 import { useWithBackButton } from "../../atoms/buttons/web-app/useWithBackButton";
-import RegistrationGuestlist from "../../Event/RegistrationGuestList";
+import RegistrationGuestList from "../../Event/RegistrationGuestList";
 import NonRegistrationGuestList from "../../Event/NonRegistrationGuestList";
 import { useGetEvent } from "@/hooks/events.hooks";
 
@@ -19,7 +19,7 @@ const GuestList = (props: Props) => {
   // this will not refetch (it will fetch once)
   const event = useGetEvent();
 
-  return event.data?.has_registration ? <RegistrationGuestlist /> : <NonRegistrationGuestList {...props} />;
+  return event.data?.has_registration ? <RegistrationGuestList /> : <NonRegistrationGuestList {...props} />;
 };
 
 export default GuestList;

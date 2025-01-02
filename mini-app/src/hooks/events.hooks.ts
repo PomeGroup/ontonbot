@@ -3,18 +3,22 @@ import { useParams } from "next/navigation";
 
 /**
  * @param event_hash - if not provided will use current page hash for the event_uuid
+ * @param offset
+ * @param limit
  */
-export function useGetEventRegistrants(event_hash?: string) {
+export function useGetEventRegistrants(event_hash?: string, offset = 0, limit = 10) {
   const params = useParams<{ hash: string }>();
   const event_uuid = event_hash ?? params.hash;
 
   return trpc.events.getEventRegistrants.useQuery(
     {
       event_uuid,
+      offset,
+      limit,
     },
     {
       staleTime: 10_000,
-      queryKey: ["events.getEventRegistrants", { event_uuid }],
+      queryKey: ["events.getEventRegistrants", { event_uuid, offset, limit }],
     }
   );
 }
