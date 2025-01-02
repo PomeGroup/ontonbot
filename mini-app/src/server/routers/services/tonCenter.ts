@@ -102,11 +102,11 @@ async function fetchNFTItems(
   offset: number = 0
 ): Promise<TonCenterResponse> {
   let url: string = "";
-  if (ownerAddress) {
+  if (ownerAddress && collectionAddress) {
     url = `${BASE_URL}/nft/items?owner_address=${ownerAddress}&collection_address=${collectionAddress}&limit=${limit}&offset=${offset}`;
-  } else if (nft_address) {
+  } else if (nft_address && ownerAddress) {
     url = `${BASE_URL}/nft/items?address=${nft_address}&owner_address=${ownerAddress}`;
-  } else if (index > -1) {
+  } else if (index > -1 && collectionAddress) {
     url = `${BASE_URL}/nft/items?index=${index}&collection_address=${collectionAddress}`;
   } else {
     throw Error("Wrong Params");
