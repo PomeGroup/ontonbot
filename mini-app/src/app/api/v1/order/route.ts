@@ -53,18 +53,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const TicketsCount = await db
-    .select({ count: sql`count(*)`.mapWith(Number) })
-    .from(orders)
-    .where(
-      and(
-        eq(orders.event_uuid, body.data.event_uuid),
-        or(eq(orders.state, "completed"), eq(orders.state, "processing")),
-        eq(orders.order_type, "nft_mint")
-      )
-    )
-    .execute();
-
   const userOrder = (
     await db
       .select()
@@ -92,6 +80,17 @@ export async function POST(request: Request) {
         payment_type: userOrder.payment_type,
       });
   }
+  const TicketsCount = await db
+    .select({ count: sql`count(*)`.mapWith(Number) })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.event_uuid, body.data.event_uuid),
+        or(eq(orders.state, "completed"), eq(orders.state, "processing")),
+        eq(orders.order_type, "nft_mint")
+      )
+    )
+    .execute();
 
   if (TicketsCount[0].count >= (eventData.capacity || 0)) {
     return Response.json(

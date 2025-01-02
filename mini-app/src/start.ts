@@ -512,15 +512,6 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   for (const ordr of results) {
     try {
       const event_uuid = ordr.event_uuid;
-      if (!event_uuid) {
-        console.error("CronJob--MintNFTforPaid_Orders---eventUUID is null order=", ordr.uuid);
-        continue;
-      }
-
-      if (!ordr.user_id) {
-        console.error("CronJob--MintNFTforPaid_Orders---user_id is null order=", ordr.uuid);
-        continue;
-      }
 
       if (!ordr.owner_address) {
         //NOTE -  tg error
@@ -602,19 +593,24 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
             event_uuid: event_uuid,
             order_uuid: ordr.uuid,
             nft_address: nft_address,
+            owner: ordr.user_id,
           })
           .execute();
 
-        await trx
-          .update(eventRegistrants)
-          .set({ status: "approved" })
-          .where(
-            and(
-              eq(eventRegistrants.event_uuid, ordr.event_uuid!),
-              eq(eventRegistrants.user_id, ordr.user_id!),
-              or(eq(eventRegistrants.status, "pending"), eq(eventRegistrants.status, "rejected"))
+        if (ordr.user_id) {
+          // if ordr.user_id === null order is manual mint(Gift)
+          await trx
+            .update(eventRegistrants)
+            .set({ status: "approved" })
+            .where(
+              and(
+                eq(eventRegistrants.event_uuid, ordr.event_uuid),
+                eq(eventRegistrants.user_id, ordr.user_id),
+                or(eq(eventRegistrants.status, "pending"), eq(eventRegistrants.status, "rejected"))
+              )
             )
-          );
+            .execute();
+        }
       });
 
       // await pushLockTTl();

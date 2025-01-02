@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventRegistrants, orders, tickets } from "@/db/schema";
+import { eventRegistrants, nftItems, orders, tickets } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import { and, eq, or, sql } from "drizzle-orm";
@@ -78,12 +78,19 @@ async function getValidNfts(
         /* -------------------------------------------------------------------------- */
         /*                                 NEW LOGIC🐈                                */
         /* -------------------------------------------------------------------------- */
+        const nft_db = (await db.select().from(nftItems).where(eq(nftItems.nft_address, nft.address)).execute()).pop();
+
+        if (!nft_db) {
+          console.error("Critical_API_V1_event NFT not found in our db ", nft.address);
+        }
 
         if (
           event_registered.length &&
-          (event_registered[0].status === "approved" || event_registered[0].status === "checkedin")
+          (event_registered[0].status === "approved" || event_registered[0].status === "checkedin") &&
+          nft_db?.owner === userId
         ) {
           valid_nfts_with_info.push(nft);
+          return { valid_nfts_no_info, valid_nfts_with_info };
         } else {
           valid_nfts_no_info.push(nft);
         }
@@ -135,11 +142,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const soldTicketsCount = await db
       .select({ count: sql`count(*)`.mapWith(Number) })
-      .from(eventRegistrants)
+      .from(orders)
       .where(
         and(
-          eq(eventRegistrants.event_uuid, event.event_uuid),
-          or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin"))
+          eq(orders.event_uuid, event_uuid),
+          or(eq(orders.state, "completed"), eq(orders.state, "processing")),
+          eq(orders.order_type, "nft_mint")
         )
       )
       .execute();

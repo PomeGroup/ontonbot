@@ -7,7 +7,7 @@ export const orders = pgTable(
   "orders",
   {
     uuid: uuid("uuid").defaultRandom().primaryKey(),
-    event_uuid: uuid("event_uuid").references(() => events.event_uuid),
+    event_uuid: uuid("event_uuid").references(() => events.event_uuid).notNull(),
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
 
     total_price: real("total_price").notNull(),
