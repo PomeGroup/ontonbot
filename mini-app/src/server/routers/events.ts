@@ -509,9 +509,7 @@ const checkinRegistrantRequest = evntManagerPP
       .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
       .execute();
 
-    const final_message = event.has_payment
-      ? "Reward Link will be sent to user"
-      : "User can claim reward on the event page";
+    const final_message = event.has_payment ? "Reward Link will be sent to user" : "User can claim reward on the event page";
     return { code: 200, message: final_message };
   });
 
@@ -826,8 +824,8 @@ const updateEvent = evntManagerPP
           .returning()
           .execute();
 
+        //Only recipient_address and price can be updated
         if (eventData.paid_event?.has_payment && oldEvent.has_payment) {
-          //Only recipient_address and price can be updated
           await trx.update(eventPayment).set({
             recipient_address: eventData.paid_event.payment_recipient_address,
             price: eventData.paid_event.payment_amount,

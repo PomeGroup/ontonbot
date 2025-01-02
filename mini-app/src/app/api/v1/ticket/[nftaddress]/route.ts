@@ -110,13 +110,48 @@ export async function PUT(req: NextRequest, { params }: { params: { nftaddress: 
       );
     }
 
-    const order_data = await db
-      .select()
-      .from(nftItems)
-      .innerJoin(orders, eq(nftItems.order_uuid, orders.uuid))
-      .where(eq(nftItems.nft_address, nft_address));
+    const nft_db = (await db.select().from(nftItems).where(eq(nftItems.nft_address, nft_address)).execute()).pop();
 
-    
+    if (!nft_db) {
+      return Response.json(
+        {
+          error: "nft_not_found",
+          message: "nft not found",
+        },
+        { status: 404 }
+      );
+    }
+    await db.transaction(async (trx) => {
+      if (nft_db.owner) {
+        // Nft Belongs To Someone else and we have to transfer ownership
+        /* ---------------------- Reject Last owner Registrant ---------------------- */
+        await trx
+          .update(eventRegistrants)
+          .set({ status: "rejected" })
+          .where(and(eq(eventRegistrants.event_uuid, nft_db.event_uuid), eq(eventRegistrants.user_id, nft_db.owner!)))
+          .execute();
+      }
+      /* ------------------------ Add/Update New Registrant ----------------------- */
+      await trx
+        .insert(eventRegistrants)
+        .values({
+          event_uuid: nft_db.event_uuid,
+          user_id: userId, // new user
+          register_info: parsedData.data.data,
+          status: "approved",
+        })
+        .onConflictDoUpdate({
+          target: [eventRegistrants.event_uuid, eventRegistrants.user_id],
+          set: {
+            register_info: parsedData.data.data,
+            status: "approved",
+          },
+        })
+        .execute();
+      /* ------------------------- Transfer NFT OwnerShip ------------------------- */
+      await trx.update(nftItems).set({ owner: userId }).where(eq(nftItems.nft_address, nft_address)).execute();
+    });
+
     // await db.update(eventRegistrants).set(
     //   {
     //     status : "rejected",
@@ -142,11 +177,9 @@ export async function PUT(req: NextRequest, { params }: { params: { nftaddress: 
     //   })
     //   .where(eq(tickets.nftAddress, nft_address))
     //   .execute();
-    
-    
-      console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
 
-    
+    console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
+
     // console.log(`route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`);
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
