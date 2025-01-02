@@ -1,5 +1,5 @@
 {
-  "id": "5d436a00-ff41-4a65-8f1b-afa31e477df4",
+  "id": "ef657018-16b4-4488-8e0a-4ffb939e40d5",
   "prevId": "2cab34b5-f402-43c2-9661-a9e50a8c4322",
   "version": "7",
   "dialect": "postgresql",
@@ -462,7 +462,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         },
@@ -499,7 +499,7 @@
         },
         "notification_id": {
           "name": "notification_id",
-          "type": "integer",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         }
@@ -669,10 +669,10 @@
         },
         "register_info": {
           "name": "register_info",
-          "type": "jsonb",
+          "type": "json",
           "primaryKey": false,
           "notNull": true,
-          "default": "'{}'::jsonb"
+          "default": "'{}'::json"
         },
         "registrant_uuid": {
           "name": "registrant_uuid",
@@ -1340,6 +1340,109 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "public.nft_items": {
+      "name": "nft_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_uuid": {
+          "name": "event_uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "order_uuid": {
+          "name": "order_uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nft_address": {
+          "name": "nft_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "owner": {
+          "name": "owner",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_by": {
+          "name": "updated_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'system'"
+        }
+      },
+      "indexes": {
+        "nft_items_order_uuid_index": {
+          "name": "nft_items_order_uuid_index",
+          "columns": [
+            {
+              "expression": "order_uuid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "nft_items_order_uuid_orders_uuid_fk": {
+          "name": "nft_items_order_uuid_orders_uuid_fk",
+          "tableFrom": "nft_items",
+          "tableTo": "orders",
+          "columnsFrom": [
+            "order_uuid"
+          ],
+          "columnsTo": [
+            "uuid"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "nft_items_owner_users_user_id_fk": {
+          "name": "nft_items_owner_users_user_id_fk",
+          "tableFrom": "nft_items",
+          "tableTo": "users",
+          "columnsFrom": [
+            "owner"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.notifications": {
       "name": "notifications",
       "schema": "",
@@ -1352,7 +1455,7 @@
         },
         "user_id": {
           "name": "user_id",
-          "type": "serial",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": true
         },
@@ -1645,7 +1748,7 @@
           "name": "event_uuid",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "user_id": {
           "name": "user_id",
@@ -1682,6 +1785,12 @@
         },
         "owner_address": {
           "name": "owner_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "trx_hash": {
+          "name": "trx_hash",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -2991,6 +3100,50 @@
           "onUpdate": "no action"
         }
       },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.wallet_checks": {
+      "name": "wallet_checks",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "wallet_address": {
+          "name": "wallet_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "checked_lt": {
+          "name": "checked_lt",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "wallet_checks_wallet_address_index": {
+          "name": "wallet_checks_wallet_address_index",
+          "columns": [
+            {
+              "expression": "wallet_address",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     }
