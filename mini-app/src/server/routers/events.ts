@@ -328,6 +328,14 @@ const eventRegister = initDataProtectedProcedure.input(EventRegisterSchema).muta
       message: "event is not registrable",
     });
   }
+
+  if (event.has_payment) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "event has payment buy the ticket",
+    });
+  }
+
   const user_request = await getRegistrantRequest(event_uuid, userId);
 
   if (user_request) {
@@ -501,7 +509,10 @@ const checkinRegistrantRequest = evntManagerPP
       .where(eq(eventRegistrants.registrant_uuid, registrant_uuid))
       .execute();
 
-    return { code: 200, message: "ok" };
+    const final_message = event.has_payment
+      ? "Reward Link will be sent to user"
+      : "User can claim reward on the event page";
+    return { code: 200, message: final_message };
   });
 
 /* -------------------------------------------------------------------------- */
