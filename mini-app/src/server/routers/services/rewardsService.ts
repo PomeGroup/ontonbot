@@ -260,7 +260,7 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
         props.user_id.toString(),
         "ton_society_sbt",
         res.data.data,
-        "notified_by_ui"
+        props.add_visitor ? "created" : "notified_by_ui"
       );
 
       return res.data.data;
