@@ -78,10 +78,15 @@ class TonConnectSender implements Sender {
     });
   }
 }
+
 const NETWORK = isTestnet ? "testnet" : "mainnet";
 
 export const assetsSdk = async (provider: TonConnectUI) => {
+  // __AUTO_GENERATED_PRINT_VAR_START__
+  console.log("assetsSdk NETWORK: %s", NETWORK); // __AUTO_GENERATED_PRINT_VAR_END__
   const api = await createApi(NETWORK);
+  // __AUTO_GENERATED_PRINT_VAR_START__
+  console.log("assetsSdk api: %s", api); // __AUTO_GENERATED_PRINT_VAR_END__
   const sender = new TonConnectSender(provider);
 
   return AssetsSDK.create({
