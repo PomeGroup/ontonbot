@@ -322,13 +322,29 @@ export const UpdateEventDataSchema = z.object({
 export const EventRegisterSchema = z.object({
   /* -------------------------- Basic Info ------------------------- */
   event_uuid: z.string({ required_error: "event UUID is required" }).uuid(),
-  full_name: z.string({ required_error: "full name is required" }).min(1).max(40),
-  company: z.string({ required_error: "company is required" }).min(1).max(40),
-  position: z.string({ required_error: "position is required" }).min(1).max(40),
+  full_name: z
+    .string({ required_error: "Full name is required" })
+    .min(2, { message: "Full name must be at least 2 characters long" })
+    .max(40, { message: "Full name must be at most 40 characters long" }),
+  company: z
+    .string({ required_error: "Company name is required" })
+    .min(2, { message: "Company name must be at least 2 characters long" })
+    .max(40, { message: "Company name must be at most 40 characters long" }),
+  position: z
+    .string({ required_error: "Position is required" })
+    .min(2, { message: "Position must be at least 2 characters long" })
+    .max(40, { message: "Position must be at most 40 characters long" }),
 
   /* -------------------------- Optional Fields ------------------------- */
-  linkedin: z.string({ required_error: "LinkedIn URL is required" }).max(100).optional(),
-  github: z.string({ required_error: "GitHub URL is required" }).max(100).optional(),
+  linkedin: z
+    .string()
+    .max(100)
+    .optional()
+    .refine(
+      (value) => !value || /^(https?:\/\/)?([\w]+\.)?linkedin\.com\/.+/.test(value),
+      { message: "Please enter a valid LinkedIn URL" }
+    ),
+  github: z.string({ required_error: "GitHub URL is required" }).max(30).optional(),
   notes: z.string({ required_error: "notes are required" }).max(512).optional(),
 });
 

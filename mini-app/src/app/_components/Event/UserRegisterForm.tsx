@@ -1,5 +1,5 @@
 import { trpc } from "@/app/_trpc/client";
-import { KButton } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { EventRegisterSchema } from "@/types";
 import { ListInput, List, BlockTitle, BlockFooter, Preloader } from "konsta/react";
 import { useParams } from "next/navigation";
@@ -42,10 +42,6 @@ const UserRegisterForm = () => {
       ...formObject,
     };
 
-    // console.log({
-    //   registrationData,
-    // });
-
     const parsedData = EventRegisterSchema.safeParse(registrationData);
 
     if (parsedData.error) {
@@ -69,7 +65,6 @@ const UserRegisterForm = () => {
             outline
             label="Full Name"
             name="full_name"
-            required
             error={formErrors?.full_name?.[0]}
             placeholder="John Doe"
           />
@@ -77,7 +72,6 @@ const UserRegisterForm = () => {
             outline
             label="Company"
             name="company"
-            required
             error={formErrors?.company?.[0]}
             placeholder="Example Company"
           />
@@ -85,7 +79,6 @@ const UserRegisterForm = () => {
             outline
             label="Position"
             name="position"
-            required
             error={formErrors?.position?.[0]}
             placeholder="Designer"
           />
@@ -94,7 +87,7 @@ const UserRegisterForm = () => {
             label="LinkedIn"
             name="linkedin"
             error={formErrors?.linkedin?.[0]}
-            placeholder="www.linkedin.com/in/john"
+            placeholder="https://www.linkedin.com/in/john"
           />
           <ListInput
             outline
@@ -112,10 +105,9 @@ const UserRegisterForm = () => {
             label="Additional information"
           />
         </List>
-      </form>
-      <BlockFooter>
-        <KButton
-          className="bg-primary"
+        <Button
+          variant={"primary"}
+          className="w-full"
           title="Submit"
           itemType="button"
           disabled={registerUser.isLoading}
@@ -125,8 +117,9 @@ const UserRegisterForm = () => {
           }}
         >
           {registerUser.isLoading ? <Preloader size="w-4 h-4" /> : "Request to Join"}
-        </KButton>
-      </BlockFooter>
+        </Button>
+      </form>
+
     </>
   );
 };
