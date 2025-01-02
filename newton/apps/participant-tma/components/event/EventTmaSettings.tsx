@@ -47,7 +47,10 @@ const EventTmaSettings = ({
     isSuccess,
     error,
   } = useEventData(eventId);
+
   const needsInfoUpdate = event?.needToUpdateTicket;
+
+  const isEnded = event?.end_date !== undefined && event.end_date < Date.now() / 1000;
 
   useEffect(() => {
     if (
@@ -141,6 +144,13 @@ const EventTmaSettings = ({
 
     if (!requiresTicketToChekin) {
       mainButton?.hide();
+      return () => {
+        mainButton?.hide();
+      };
+    }
+
+    if(isEnded) {
+      setupMainButton("#E9E8E8", "#BABABA", "Event Ended", () => {});
       return () => {
         mainButton?.hide();
       };
