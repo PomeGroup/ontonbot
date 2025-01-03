@@ -70,7 +70,7 @@ export const RewardStep = () => {
       video_url: eventData?.video_url,
       secret_phrase: passwordDisabled ? undefined : formDataObject.secret_phrase,
     };
-
+    console.log("stepInputsObject", stepInputsObject);
     if (sbtOption === "custom" && (!eventData?.ts_reward_url || !eventData?.video_url) && !editOptions?.eventHash) {
       const errors = {
         ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
@@ -88,7 +88,8 @@ export const RewardStep = () => {
       return;
     }
     const isPaid = eventData?.paid_event?.has_payment ?? false;
-    const thirdStepDataSchema = rewardStepValidation(isPaid, Boolean(editOptions?.eventHash))
+    const hasRegistration = eventData?.has_registration ?? false;
+    const thirdStepDataSchema = rewardStepValidation(isPaid, hasRegistration, Boolean(editOptions?.eventHash))
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
 
     if (!formDataParsed.success) {

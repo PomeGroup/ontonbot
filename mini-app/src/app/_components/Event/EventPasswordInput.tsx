@@ -66,6 +66,7 @@ export const EventPasswordAndWalletInput = () => {
     }
   };
   const hasRegistration = eventData.data?.has_registration ?? false;
+
   return !user?.wallet_address ? (
     <>
       <TonConnectButton className="mx-auto" />
@@ -105,7 +106,7 @@ export const EventPasswordAndWalletInput = () => {
             <MainButton
               progress={upsertUserEventFieldMutation.isLoading}
               text="Enter Password"
-              onClick={() => formRef.current?.requestSubmit()}
+              onClick={() => {formRef.current?.requestSubmit()}}
               disabled={upsertUserEventFieldMutation.isLoading}
             />
           </form>

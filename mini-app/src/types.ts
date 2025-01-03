@@ -236,7 +236,7 @@ export const EventDataSchema = z
   })
   .superRefine((data, ctx) => {
     // Validate secret_phrase is required for non-paid events
-    if (!data.paid_event?.has_payment && !data.secret_phrase) {
+    if (!data.paid_event?.has_payment && !data.has_registration && !data.secret_phrase) {
       ctx.addIssue({
         code: "custom",
         path: ["secret_phrase"],

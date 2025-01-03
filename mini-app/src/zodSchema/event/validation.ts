@@ -18,9 +18,9 @@ export const generalStepDataSchema = z.object({
   hub: z.string({ required_error: "Please select a hub" }).min(1, { message: "Please select a hub" }),
 });
 
-export function rewardStepValidation(isPaid: boolean, editing: boolean) {
+export function rewardStepValidation(isPaid: boolean, hasRegistration:boolean, editing: boolean) {
   return z.object({
-    secret_phrase: isPaid
+    secret_phrase: isPaid || hasRegistration
       ? z.string().optional() // Not required when the event is paid
       : editing
         ? z.string().optional()
