@@ -149,13 +149,13 @@ export const processRewardCreation = async (eventData: any, user_id: number, vis
   }
 };
 
-export const createUserReward = async (props: { user_id: number; event_uuid: string }, in_person: boolean = false) => {
+export const createUserReward = async (props: { user_id: number; event_uuid: string }, force: boolean = false) => {
   try {
     /* -------------------------------------------------------------------------- */
     /*                              Fetch the visitor                             */
     /* -------------------------------------------------------------------------- */
     let visitor = null;
-    if (in_person) {
+    if (force) {
       //Force Add Visitor
       visitor = await addVisitor(props.user_id, props.event_uuid);
     } else {
@@ -179,10 +179,10 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
     /*                            1. Validate the visitor                            */
     /* -------------------------------------------------------------------------- */
     /* -------------------------------------------------------------------------- */
-    /*                               2. Only For Online                              */
+    /*                               2. Only For Online(Not Forced)                              */
     /* -------------------------------------------------------------------------- */
     const isValidVisitor = await selectValidVisitorById(visitor.id);
-    if (!isValidVisitor.length && eventData?.participationType === "online") {
+    if (!isValidVisitor.length && eventData?.participationType === "online" && !force) {
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "Invalid visitor: please complete the tasks.",
@@ -266,7 +266,7 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
         props.user_id.toString(),
         "ton_society_sbt",
         res.data.data,
-        in_person ? "created" : "notified_by_ui"
+        force ? "created" : "notified_by_ui"
       );
 
       return res.data.data;
