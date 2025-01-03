@@ -1,5 +1,4 @@
 import React from "react";
-import Buttons from "@/app/_components/atoms/buttons";
 import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
 import EventDates from "@/app/_components/EventDates";
@@ -15,6 +14,7 @@ import MainButton from "../atoms/buttons/web-app/MainButton";
 import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
+import SupportButton from "../atoms/buttons/SupportButton";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -187,7 +187,8 @@ export const EventSections = () => {
 
   const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
   const userCompletedTasks =
-    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) && user?.wallet_address;
+    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
+    user?.wallet_address;
 
   const isOnlineEvent = eventData.data?.participationType === "online";
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
@@ -197,7 +198,9 @@ export const EventSections = () => {
     <div className="space-y-2">
       <EventImage />
 
-      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && <EventPasswordAndWalletInput />}
+      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
+        <EventPasswordAndWalletInput />
+      )}
 
       <EventHead />
       <EventAttributes />
@@ -223,7 +226,9 @@ export const EventSections = () => {
       {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
         <MainButton
           text="Check In"
-          onClick={() => router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)}
+          onClick={() =>
+            router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)
+          }
         />
       )}
 
@@ -243,7 +248,7 @@ export const EventSections = () => {
         />
       )}
 
-      <Buttons.Support />
+      <SupportButton />
     </div>
   );
 };
