@@ -582,7 +582,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           timezone: input_event_data.timezone,
           location: input_event_data.location,
           owner: opts.ctx.user.user_id,
-          participationType: is_paid ? "in_person" : input_event_data.eventLocationType, // right now paid event only can be in_person
+          participationType: input_event_data.eventLocationType, // right now paid event only can be in_person
           countryId: input_event_data.countryId,
           tsRewardImage: input_event_data.ts_reward_url,
           tsRewardVideo: input_event_data.video_url,
