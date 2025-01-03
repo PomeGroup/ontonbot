@@ -379,7 +379,7 @@ const RegistrationGuestList = () => {
           hub={eventData.data?.society_hub?.name!}
         />
 
-        { eventData.data?.has_payment === false
+        { eventData.data?.participationType === "online"
           && (
           <>
             <ButtonPOA

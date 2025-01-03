@@ -11,6 +11,7 @@ import { sendRewardNotification } from "@/server/routers/services/telegramServic
 import { TRPCError } from "@trpc/server";
 import { eventRegistrants } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { selectEventByUuid } from "@/server/db/events";
 
 //TODO - Put this in db functions files
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
@@ -149,44 +150,66 @@ export const processRewardCreation = async (eventData: any, user_id: number, vis
   }
 };
 
-export const createUserReward = async (props: { user_id: number; event_uuid: string; add_visitor: boolean }) => {
+export const createUserReward = async (
+  props: { user_id: number; event_uuid?: string; event_id?: number },
+  force: boolean = false
+) => {
   try {
-    // Fetch the visitor from the database
-    let visitor = await findVisitorByUserAndEventUuid(props.user_id, props.event_uuid);
-
-    // Check if visitor exists
-    if (!visitor) {
-      if (props.add_visitor) {
-        await addVisitor(props.user_id, props.event_uuid);
-        visitor = await findVisitorByUserAndEventUuid(props.user_id, props.event_uuid);
-      } else {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Visitor not found with the provided user ID and event UUID.",
-        });
-      }
+    if (!props.event_uuid && !props.event_id) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "event UUID or event id is required." });
     }
 
-    const eventData = await db.query.events.findFirst({
-      where(fields, { eq }) {
-        return eq(fields.event_uuid, props.event_uuid);
-      },
-    });
+    let eventData = null;
+    if (props.event_uuid) {
+      eventData = await selectEventByUuid(props.event_uuid);
+    } else if (props.event_id) {
+      eventData = await db.query.events.findFirst({
+        where(fields, { eq }) {
+          return eq(fields.event_id, props.event_id!);
+        },
+      });
+    }
 
-    // Validate the visitor
+    const event_uuid = eventData?.event_uuid!;
+    if (!eventData || !event_uuid) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "event not found." });
+    }
+    /* -------------------------------------------------------------------------- */
+    /*                              Fetch the visitor                             */
+    /* -------------------------------------------------------------------------- */
+    let visitor = null;
+    if (force) {
+      //Force Add Visitor
+      visitor = await addVisitor(props.user_id, event_uuid);
+    } else {
+      // Find the Visitor
+      visitor = await findVisitorByUserAndEventUuid(props.user_id, event_uuid);
+    }
+
+    // Check if visitor exists
+    if (!visitor)
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Visitor not found with the provided user ID and event UUID." });
+
+    /* -------------------------------------------------------------------------- */
+
+    /* -------------------------------------------------------------------------- */
+    /*                            1. Validate the visitor                            */
+    /* -------------------------------------------------------------------------- */
+    /* -------------------------------------------------------------------------- */
+    /*                               2. Only For Online(Not Forced)                              */
+    /* -------------------------------------------------------------------------- */
     const isValidVisitor = await selectValidVisitorById(visitor.id);
-    if (!isValidVisitor.length && eventData?.participationType === "online") {
+    if (!isValidVisitor.length && eventData?.participationType === "online" && !force) {
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "Invalid visitor: please complete the tasks.",
       });
     }
 
-    // check if the user already does not own the reward
     const reward = await rewardDB.findRewardByVisitorId(visitor.id);
 
     if (reward) {
-      const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${props.event_uuid}`;
+      const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${event_uuid}`;
       // console.log(err_msg);
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -202,7 +225,7 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
     }
 
     if (eventData.has_registration) {
-      const eventRegistrantRequest = await getRegistrantRequest(props.event_uuid, props.user_id);
+      const eventRegistrantRequest = await getRegistrantRequest(event_uuid, props.user_id);
 
       if (!eventRegistrantRequest) {
         throw new TRPCError({
@@ -217,7 +240,7 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
       } else if (eventRegistrantRequest.status !== "approved" && eventData.participationType == "in_person") {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: `In-Persion Event with registration needs approval`,
+          message: `In-Person Event with registration needs approval`,
         });
       }
     }
@@ -234,13 +257,16 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
 
     try {
       // Create the user reward link
+      const society_hub_value =
+        typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
+        
       const res = await createUserRewardLink(eventData.activity_id, {
         telegram_user_id: props.user_id,
-        attributes: eventData.society_hub
+        attributes: eventData?.society_hub
           ? [
               {
                 trait_type: "Organizer",
-                value: eventData.society_hub,
+                value: society_hub_value,
               },
             ]
           : undefined,
@@ -260,7 +286,7 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
         props.user_id.toString(),
         "ton_society_sbt",
         res.data.data,
-        props.add_visitor ? "created" : "notified_by_ui"
+        force ? "created" : "notified_by_ui"
       );
 
       return res.data.data;

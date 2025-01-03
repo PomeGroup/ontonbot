@@ -37,6 +37,9 @@ export const event_details_search_list = pgView("event_details_search_list", {
   ticketDescription: text("ticket_description"),
   ticketPrice: text("ticket_price"),
   ticketImage: text("ticket_image"),
+  hasPayment: boolean("has_payment"),
+  hasRegistration: boolean("has_registration"),
+  hasApproval: boolean("has_approval"),
   // ticketCount: integer("ticket_count"),
 }).as(sql`
   SELECT

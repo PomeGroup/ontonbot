@@ -106,7 +106,10 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
           className="py-5 rounded-3xl"
           onClick={() => {
             setApplyingFilters(!applyingFilters);
+            // close the drawer
+            onOpenChange(false);
           }}
+
         >
           Apply filters
         </KButton>

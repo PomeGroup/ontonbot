@@ -91,6 +91,7 @@ const processOngoingEvents = async () => {
       const eventId = event.eventId;
       const eventUuid = event.eventUuid;
       const eventTitle = event.title;
+      const eventHasPayment = event.hasPayment || false;
       let totalNotificationsCreated = 0; // Initialize counter for the event
 
       try {
@@ -135,6 +136,8 @@ const processOngoingEvents = async () => {
 
               // Now we fetch REPLIED notifications for these users & event
               const replied = await notificationsDB.getRepliedPoaPasswordNotificationsForEvent(eventId, userIds);
+
+
               console.log(`Found ${replied.length} replied password notifications for Event ${eventId}`);
 
               // Convert userId to number if needed
@@ -146,6 +149,7 @@ const processOngoingEvents = async () => {
                 `Filtered out ${approvedUsers.length - finalUsers.length} users who already replied`
               );
             }
+
             const notificationsToAdd = finalUsers.map((user) => ({
               userId: user.userId,
               type: trigger.poaType === "simple" ? "POA_SIMPLE" : ("POA_PASSWORD" as NotificationType),
@@ -158,7 +162,7 @@ const processOngoingEvents = async () => {
                 trigger.poaType === "simple"
                   ? ACTION_TIMEOUTS.POA_SIMPLE
                   : ACTION_TIMEOUTS.POA_PASSWORD,
-              additionalData: { eventId, eventUuid: event.eventUuid , poaId: trigger.id, maxTry: PASSWORD_RETRY_LIMIT },
+              additionalData: { eventId, eventUuid: event.eventUuid , has_payment : eventHasPayment , poaId: trigger.id, maxTry: PASSWORD_RETRY_LIMIT },
               priority: 1,
               itemId: trigger.id,
               item_type: "POA_TRIGGER" as NotificationItemType,

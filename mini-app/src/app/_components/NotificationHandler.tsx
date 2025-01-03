@@ -23,6 +23,7 @@ type Notification = {
     poa_id?: string;
     notification_id?: number;
     eventUuid?: string; // Important for POA_PASSWORD to link back to event
+    has_payment?: boolean;
   };
   priority: number;
   itemId: string;
@@ -52,6 +53,7 @@ const NotificationHandler: React.FC = () => {
   // States for success dialog
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successEventUuid, setSuccessEventUuid] = useState<string | undefined>();
+  const [successEventHasPayment, setSuccessEventHasPayment] = useState<boolean>(false);
 
   // 5-second countdown after showing success dialog
   const [redirectCountdown, setRedirectCountdown] = useState<number>(0);
@@ -165,6 +167,7 @@ const NotificationHandler: React.FC = () => {
         } else if (response.status === "success") {
           // Password is correct => show success dialog
           setSuccessEventUuid(notificationToShow.additionalData.eventUuid);
+          setSuccessEventHasPayment(notificationToShow.additionalData?.has_payment || false);
           handleClose(); // close the password entry dialog
           setShowSuccessDialog(true); // open success dialog
         } else {
@@ -215,7 +218,7 @@ const NotificationHandler: React.FC = () => {
 
   const closeSuccessDialogAndRedirect = () => {
     setShowSuccessDialog(false);
-    if (successEventUuid) {
+    if (successEventUuid && !successEventHasPayment) {
       router.push(`/events/${successEventUuid}`);
     }
   };
@@ -245,12 +248,9 @@ const NotificationHandler: React.FC = () => {
               {isPoaPassword && (
                 <>
                   <p className="text-sm font-medium">
-                    Enter the event password in{" "}
-                    <span className="font-semibold">{formattedTime}</span>
+                    Enter the event password in <span className="font-semibold">{formattedTime}</span>
                   </p>
-                  <p className="text-gray-500 text-xs mt-2">
-                    Enter the SBT claim code shared by the organizer.
-                  </p>
+                  <p className="text-gray-500 text-xs mt-2">Enter the SBT claim code shared by the organizer.</p>
                   <div className="w-full mt-3">
                     <Input
                       type="password"
@@ -264,15 +264,11 @@ const NotificationHandler: React.FC = () => {
                       }}
                     />
                   </div>
-                  {passwordError && (
-                    <p className="text-red-500 text-sm mt-1 text-left">{passwordError}</p>
-                  )}
+                  {passwordError && <p className="text-red-500 text-sm mt-1 text-left">{passwordError}</p>}
                 </>
               )}
 
-              {notificationToShow.type === "POA_SIMPLE" && (
-                <p className="text-sm">{notificationToShow.desc}</p>
-              )}
+              {notificationToShow.type === "POA_SIMPLE" && <p className="text-sm">{notificationToShow.desc}</p>}
             </div>
           ) : (
             <div className="p-4">
@@ -284,10 +280,17 @@ const NotificationHandler: React.FC = () => {
           notificationToShow ? (
             notificationToShow.type === "POA_SIMPLE" ? (
               <div className="flex justify-end space-x-0 px-0 pb-0 bg-white">
-                <DialogButton onClick={handleNo} className="w-1/2">
+                <DialogButton
+                  onClick={handleNo}
+                  className="w-1/2"
+                >
                   No
                 </DialogButton>
-                <DialogButton strong onClick={handleYes} className="w-1/2">
+                <DialogButton
+                  strong
+                  onClick={handleYes}
+                  className="w-1/2"
+                >
                   Yes
                 </DialogButton>
               </div>
@@ -317,17 +320,40 @@ const NotificationHandler: React.FC = () => {
         translucent={false}
         content={
           <div className="p-4 text-center">
-            <p className="inline-flex text-left text-sm mb-2">
-              You have entered the correct password. Now you must check the event page to get your SBT reward.
-            </p>
-            {successEventUuid && redirectCountdown > 0 && (
-              <p className="text-xs text-gray-600">
-                Redirecting in {redirectCountdown} second
-                {redirectCountdown > 1 ? "s" : ""}...
-              </p>
-            )}
-          </div>
-        }
+
+
+              {successEventUuid &&
+                successEventHasPayment ?
+                (
+                  <p className="inline-flex text-left text-sm mb-2">
+                    You have successfully entered the correct password. we will send you the reward link soon.
+                  </p>
+                )
+                : (
+                  <p className="inline-flex text-left text-sm mb-2">
+                    You have entered the correct password. Now you must check the event page to get your SBT reward.
+
+                  </p>
+                )
+              }
+
+
+              {successEventUuid && redirectCountdown > 0 && (
+                <>
+              {successEventHasPayment ? (
+                  <p className="text-xs text-gray-600">
+                    check your telegram later
+                  </p>
+                    ) : (
+                    <p className="text-xs text-gray-600">
+                      Redirecting in {redirectCountdown} second
+                      {redirectCountdown > 1 ? "s" : ""}...
+                    </p>
+                    )}
+                  </>
+                )}
+              </div>
+            }
         buttons={
           <div className="flex justify-center bg-white p-0 w-full">
             {successEventUuid ? (
@@ -336,7 +362,8 @@ const NotificationHandler: React.FC = () => {
                 className="bg-blue-500 text-white text-sm w-full"
                 onClick={closeSuccessDialogAndRedirect}
               >
-                Go to Event Page
+                {successEventHasPayment ? "Close" : "Go to Event Page"}
+
               </DialogButton>
             ) : (
               <DialogButton

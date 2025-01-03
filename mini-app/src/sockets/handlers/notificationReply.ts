@@ -17,6 +17,7 @@ import {
   cacheKeys
 } from "@/lib/redisTools";
 import { Server } from "socket.io";
+import { createUserReward } from "@/server/routers/services/rewardsService";
 
 type CallbackFunction = (response: { status: string; message: string }) => void;
 
@@ -226,6 +227,15 @@ export const handleNotificationReply = async (
       // Hash & store the entered password as userEventField
       const hashedPassword = await bcryptLib.hashPassword(enteredPassword);
       await userEventFieldsDB.upsertUserEventFields(userId, relatedPOATrigger.eventId, inputField.id, hashedPassword);
+      try{
+        console.log(`SBT::Reward::Creating user reward for user ${userId} and event ${relatedPOATrigger.eventId}`);
+        const SBTResult = await createUserReward( { event_id: relatedPOATrigger.eventId,  user_id: userId } , true);
+        console.log(`SBT::Reward::Created user reward for user ${userId} and event ${relatedPOATrigger.eventId} with result:`, SBTResult?.reward_link);
+      }
+      catch(e){
+        console.error(`SBT::Reward::Error creating user reward for user ${userId} and event ID ${relatedPOATrigger.eventId}`);
+        console.error(e);
+      }
     }
 
     // If it's not POA_PASSWORD, or password check was correct, continue
