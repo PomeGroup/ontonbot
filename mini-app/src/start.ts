@@ -17,7 +17,6 @@ import { registerActivity } from "@/lib/ton-society-api";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { is_mainnet } from "@/server/routers/services/tonCenter";
 
-import wlg from "@/server/utils/logger";
 import { deployCollection, mintNFT } from "@/lib/nft";
 import { uploadJsonToMinio } from "@/lib/minioTools";
 import { Address } from "@ton/core";
@@ -31,12 +30,12 @@ process.on("unhandledRejection", (err) => {
 const CACHE_TTL = 40_000;
 
 async function MainCronJob() {
-  wlg.info("====> RUNNING Cron jobs on", process.env.ENV);
+  console.log("====> RUNNING Cron jobs on", process.env.ENV);
   if (process.env.ENV?.toLocaleLowerCase() !== "production") {
     // await createRewards(() => null);
-    // wlg.info("RUNNING Cron jobs: createRewards done");
+    // console.log.info("RUNNING Cron jobs: createRewards done");
     // await notifyUsersForRewards(() => null);
-    // wlg.info("RUNNING Cron jobs: notifyUsersForRewards done");
+    // console.log.info("RUNNING Cron jobs: notifyUsersForRewards done");
   }
 
   // Create Rewards Cron Job
@@ -49,7 +48,7 @@ async function MainCronJob() {
 
   new CronJob("*/24 * * * * *", cronJob(UpdateEventCapacity), null, true);
 
-  new CronJob("*/26 * * * * *", cronJob(CreateEventOrders), null, true);
+  new CronJob("*/19 * * * * *", cronJob(CreateEventOrders), null, true);
 
   new CronJob("*/9 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
 }
@@ -62,7 +61,7 @@ function cronJob(fn: (_: () => any) => any) {
     const cronLock = await redisTools.getCache(redisTools.cacheKeys.cronJobLock + name);
 
     if (cronLock) {
-      wlg.info(`Cron job ${name} is already running`);
+      console.log(`Cron job ${name} is already running`);
       return;
     }
 
@@ -81,7 +80,7 @@ function cronJob(fn: (_: () => any) => any) {
       await fn(pushLockTTl);
       console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
-      wlg.info(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
+      console.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
       await sendLogNotification({
         message: `Cron job ${name} error: ${getErrorMessages(err)}`,
         topic: "system",
@@ -383,11 +382,13 @@ async function CreateEventOrders(pushLockTTl: () => any) {
         );
         if (!metaDataUrl) continue; //failed
 
-        wlg.warn("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
+        console.log("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
 
         /* ---------------------------- Collection Deploy --------------------------- */
+        console.log(`paid_event_deploy_collection_${eventData.event_uuid}`);
         collection_address_in_db = false;
         collectionAddress = await deployCollection(metaDataUrl);
+        console.log(`paid_event_deployed_collection_${eventData.event_uuid}_${collectionAddress}`);
       }
 
       /* -------------------------------------------------------------------------- */
@@ -414,6 +415,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
             })
             .where(eq(events.event_uuid, event_uuid))
             .execute();
+          console.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
         }
         /* ------------------------ Update Collection Address ----------------------- */
         if (paymentInfo && collectionAddress) {
@@ -423,6 +425,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
             .where(eq(eventPayment.id, paymentInfo.id))
             .execute();
           collection_address_in_db = true;
+          console.log(`paid_event_add_collection_${eventData.event_uuid}_${collectionAddress}`);
         }
 
         /* ------------------------- Mark Order as Completed ------------------------ */
@@ -432,6 +435,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
             .set({ state: "completed", updatedBy: "CreateEventOrders", updatedAt: new Date() })
             .where(eq(orders.uuid, order.uuid))
             .execute();
+          console.log(`paid_event_cration_completed_${eventData.event_uuid}`);
         }
       });
     } catch (error) {
@@ -516,14 +520,14 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
       if (!ordr.owner_address) {
         //NOTE -  tg error
-        console.error("wtf : no owner address");
+        console.error("wtf : no owner address", "order_id=", ordr.uuid);
         continue;
       }
       try {
         Address.parse(ordr.owner_address);
       } catch {
         //NOTE - tg error
-        console.error("uparsable addres : ", ordr.owner_address);
+        console.error("uparsable address : ", ordr.owner_address, "order_id=", ordr.uuid);
         continue;
       }
 
@@ -571,23 +575,27 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
       const nft_index = nft_count_result[0].count || 0;
 
-      console.log("nft_index ", nft_index);
+      console.log(`minting_nft_${ordr.event_uuid}_${nft_index}`);
 
       const nft_address = await mintNFT(ordr.owner_address, paymentInfo?.collectionAddress, nft_index, meta_data_url);
       if (!nft_address) {
-        console.log("Nft Address Missed");
+        console.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_miss`);
         return;
       }
-      console.log("Nft Adress is :: ", nft_address);
+      console.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_${nft_address}`);
       try {
-        await sendLogNotification({ message: `NFT ${nft_index + 1} Minted for ${event_uuid} `, topic: "ticket" });
+        await sendLogNotification({
+          message: `NFT ${nft_index + 1} Minted for 
+          ${event_uuid} || order = ${ordr.uuid}`,
+          topic: "ticket",
+        });
       } catch (error) {
         console.error("MintNFTforPaid_Orders-sendLogNotification-error--:", error);
       }
 
       await db.transaction(async (trx) => {
         await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
-
+        console.log(`nft_mint_order_completed_${ordr.uuid}`);
         await trx
           .insert(nftItems)
           .values({
@@ -597,6 +605,8 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
             owner: ordr.user_id,
           })
           .execute();
+
+        console.log(`nft_mint_nftitem_add_${ordr.user_id}_${nft_address}`);
 
         if (ordr.user_id) {
           // if ordr.user_id === null order is manual mint(Gift)
@@ -611,6 +621,8 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
               )
             )
             .execute();
+
+          console.log(`nft_mint_user_approved_${ordr.user_id}`);
         }
       });
 
