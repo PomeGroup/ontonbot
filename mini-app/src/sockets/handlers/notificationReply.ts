@@ -229,10 +229,11 @@ export const handleNotificationReply = async (
       await userEventFieldsDB.upsertUserEventFields(userId, relatedPOATrigger.eventId, inputField.id, hashedPassword);
       try{
         console.log(`SBT::Reward::Creating user reward for user ${userId} and event ${relatedPOATrigger.eventId}`);
-        const SBTResult = await createUserReward( { event_uuid: eventUuid,  user_id: userId } , true);
+        const SBTResult = await createUserReward( { event_id: relatedPOATrigger.eventId,  user_id: userId } , true);
+        console.log(`SBT::Reward::Created user reward for user ${userId} and event ${relatedPOATrigger.eventId} with result:`, SBTResult?.reward_link);
       }
       catch(e){
-        console.error(`Error creating user reward for user ${userId} and event ${eventUuid}`);
+        console.error(`SBT::Reward::Error creating user reward for user ${userId} and event ID ${relatedPOATrigger.eventId}`);
       }
     }
 
