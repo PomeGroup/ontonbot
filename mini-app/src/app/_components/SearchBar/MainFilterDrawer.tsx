@@ -103,6 +103,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
 
       <div className="flex gap-1 p-4 flex-col">
         <KButton
+          className="py-5 rounded-3xl"
           onClick={() => {
             setApplyingFilters(!applyingFilters);
           }}
@@ -111,6 +112,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
         </KButton>
         <KButton
           tonal
+          className="py-5 rounded-3xl"
           onClick={() => {
             resetFilters();
             // close the drawer
