@@ -244,15 +244,19 @@ function Capacity() {
  * The default export and this is used to combine all other above ones
  */
 const PaidEventCreationInputs = () => {
-  const { payment, toggleIsPaidEvent, editOptions, eventData } = useCreateEventStore((state) => ({
+  const { payment, toggleIsPaidEvent, editOptions, eventData ,has_registration  } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     toggleIsPaidEvent: state.togglePaidEvent,
     editOptions: state.edit,
     eventData: state.eventData,
+    has_registration: state.eventData?.has_registration,
   }));
-  if(eventData?.eventLocationType === "online") {
+  if(!has_registration) {
     return null;
   }
+  // if(eventData?.eventLocationType === "online") {
+  //   return null;
+  // }
   const disablePaidToggle = Boolean(editOptions?.eventHash)  ;
   return (
     <ListLayout title="Paid Event">
