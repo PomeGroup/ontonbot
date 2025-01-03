@@ -533,11 +533,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
   try {
     const result = await db.transaction(async (trx) => {
       const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
-      const event_has_registration = input_event_data.has_registration;
-      const event_is_online = input_event_data.eventLocationType === "online";
+      const event_in_person = input_event_data.eventLocationType === "in_person";
       let hashedSecretPhrase = undefined;
       let inputSecretPhrase = undefined;
-      if (!event_has_payment && (event_has_registration || event_is_online ) && input_event_data?.secret_phrase  ) {
+      if (!event_in_person && input_event_data?.secret_phrase  ) {
         inputSecretPhrase = input_event_data?.secret_phrase.trim().toLowerCase();
         hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
         if (!hashedSecretPhrase) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid secret phrase" });
@@ -664,7 +663,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
 
       // Insert secret phrase field if applicable
 
-      if (!event_has_payment && (event_has_registration || event_is_online) && input_event_data?.secret_phrase && input_event_data?.secret_phrase && inputSecretPhrase) {
+      if (!event_in_person && input_event_data?.secret_phrase && input_event_data?.secret_phrase && inputSecretPhrase) {
         await eventFieldsDB.insertEventField(trx, {
           emoji: "🔒",
           title: "secret_phrase_onton_input",
