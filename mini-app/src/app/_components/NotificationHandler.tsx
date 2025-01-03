@@ -362,7 +362,8 @@ const NotificationHandler: React.FC = () => {
                 className="bg-blue-500 text-white text-sm w-full"
                 onClick={closeSuccessDialogAndRedirect}
               >
-                Go to Event Page
+                {successEventHasPayment ? "Close" : "Go to Event Page"}
+
               </DialogButton>
             ) : (
               <DialogButton

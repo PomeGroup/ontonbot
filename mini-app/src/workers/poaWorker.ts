@@ -150,8 +150,6 @@ const processOngoingEvents = async () => {
               );
             }
 
-
-
             const notificationsToAdd = finalUsers.map((user) => ({
               userId: user.userId,
               type: trigger.poaType === "simple" ? "POA_SIMPLE" : ("POA_PASSWORD" as NotificationType),

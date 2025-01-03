@@ -234,6 +234,7 @@ export const handleNotificationReply = async (
       }
       catch(e){
         console.error(`SBT::Reward::Error creating user reward for user ${userId} and event ID ${relatedPOATrigger.eventId}`);
+        console.error(e);
       }
     }
 

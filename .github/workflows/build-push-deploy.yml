@@ -566,7 +566,7 @@ jobs:
                 echo "Special handling for caddy service"
                 echo "docker service update --force caddy_caddy"
                 docker service update --force caddy_caddy
-              elif [ "$service" == "mini-app" ]; then
+              elif [ "\$service" == "mini-app" ]; then
                 echo "Special handling for mini-app service"
                 echo "Updating $branch_name_mini-app"
                 docker service update --update-failure-action rollback --update-max-failure-ratio 0.2 --force $branch_name\_\mini-app
