@@ -508,8 +508,7 @@ const checkinRegistrantRequest = evntManagerPP
     await rewardService.createUserReward({
       user_id: registrant.user_id as number,
       event_uuid: event_uuid,
-      add_visitor: true,
-    });
+    } , true);
 
     await db
       .update(eventRegistrants)

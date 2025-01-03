@@ -149,23 +149,23 @@ export const processRewardCreation = async (eventData: any, user_id: number, vis
   }
 };
 
-export const createUserReward = async (props: { user_id: number; event_uuid: string; add_visitor: boolean }) => {
+export const createUserReward = async (props: { user_id: number; event_uuid: string }, in_person: boolean = false) => {
   try {
-    // Fetch the visitor from the database
-    let visitor = await findVisitorByUserAndEventUuid(props.user_id, props.event_uuid);
+    /* -------------------------------------------------------------------------- */
+    /*                              Fetch the visitor                             */
+    /* -------------------------------------------------------------------------- */
+    let visitor = null;
+    if (in_person) {
+      //Force Add Visitor
+      visitor = await addVisitor(props.user_id, props.event_uuid);
+    } else {
+      // Find the Visitor
+      visitor = await findVisitorByUserAndEventUuid(props.user_id, props.event_uuid);
+    }
 
     // Check if visitor exists
-    if (!visitor) {
-      if (props.add_visitor) {
-        await addVisitor(props.user_id, props.event_uuid);
-        visitor = await findVisitorByUserAndEventUuid(props.user_id, props.event_uuid);
-      } else {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Visitor not found with the provided user ID and event UUID.",
-        });
-      }
-    }
+    if (!visitor)
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Visitor not found with the provided user ID and event UUID." });
 
     const eventData = await db.query.events.findFirst({
       where(fields, { eq }) {
@@ -173,7 +173,14 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
       },
     });
 
-    // Validate the visitor
+    /* -------------------------------------------------------------------------- */
+
+    /* -------------------------------------------------------------------------- */
+    /*                            1. Validate the visitor                            */
+    /* -------------------------------------------------------------------------- */
+    /* -------------------------------------------------------------------------- */
+    /*                               2. Only For Online                              */
+    /* -------------------------------------------------------------------------- */
     const isValidVisitor = await selectValidVisitorById(visitor.id);
     if (!isValidVisitor.length && eventData?.participationType === "online") {
       throw new TRPCError({
@@ -182,7 +189,6 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
       });
     }
 
-    // check if the user already does not own the reward
     const reward = await rewardDB.findRewardByVisitorId(visitor.id);
 
     if (reward) {
@@ -260,7 +266,7 @@ export const createUserReward = async (props: { user_id: number; event_uuid: str
         props.user_id.toString(),
         "ton_society_sbt",
         res.data.data,
-        props.add_visitor ? "created" : "notified_by_ui"
+        in_person ? "created" : "notified_by_ui"
       );
 
       return res.data.data;

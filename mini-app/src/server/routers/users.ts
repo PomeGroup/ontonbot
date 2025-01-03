@@ -78,8 +78,7 @@ export const usersRouter = router({
     .mutation(async (opts) => {
       return await rewardService.createUserReward({
         user_id: opts.ctx.user?.user_id as number,
-        event_uuid: opts.input.event_uuid,
-        add_visitor: false,
+        event_uuid: opts.input.event_uuid
       });
     }),
 
@@ -109,7 +108,6 @@ export const usersRouter = router({
           await rewardService.createUserReward({
             user_id: opts.ctx.user?.user_id as number,
             event_uuid: opts.input.event_uuid,
-            add_visitor: false,
           });
         } catch (error) {
           if (error instanceof TRPCError) {
