@@ -92,15 +92,7 @@ const processOngoingEvents = async () => {
       const eventUuid = event.eventUuid;
       const eventTitle = event.title;
       let totalNotificationsCreated = 0; // Initialize counter for the event
-      try{
-        if(event.has_payment ) {
-          console.log(`$$$Event ${eventId} has payment enabled, checking for SBT allocations`);
 
-        }
-      }
-      catch(error){
-        console.error(`Error processing Event ${eventId}:`, error);
-      }
       try {
         const startTime = Math.floor(Date.now() / 1000);
         const readableDate = new Date(startTime * 1000).toLocaleString();
@@ -143,6 +135,8 @@ const processOngoingEvents = async () => {
 
               // Now we fetch REPLIED notifications for these users & event
               const replied = await notificationsDB.getRepliedPoaPasswordNotificationsForEvent(eventId, userIds);
+
+
               console.log(`Found ${replied.length} replied password notifications for Event ${eventId}`);
 
               // Convert userId to number if needed
@@ -154,6 +148,9 @@ const processOngoingEvents = async () => {
                 `Filtered out ${approvedUsers.length - finalUsers.length} users who already replied`
               );
             }
+
+
+
             const notificationsToAdd = finalUsers.map((user) => ({
               userId: user.userId,
               type: trigger.poaType === "simple" ? "POA_SIMPLE" : ("POA_PASSWORD" as NotificationType),
