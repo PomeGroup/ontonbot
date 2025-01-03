@@ -92,7 +92,15 @@ const processOngoingEvents = async () => {
       const eventUuid = event.eventUuid;
       const eventTitle = event.title;
       let totalNotificationsCreated = 0; // Initialize counter for the event
+      try{
+        if(event.has_payment ) {
+          console.log(`$$$Event ${eventId} has payment enabled, checking for SBT allocations`);
 
+        }
+      }
+      catch(error){
+        console.error(`Error processing Event ${eventId}:`, error);
+      }
       try {
         const startTime = Math.floor(Date.now() / 1000);
         const readableDate = new Date(startTime * 1000).toLocaleString();
