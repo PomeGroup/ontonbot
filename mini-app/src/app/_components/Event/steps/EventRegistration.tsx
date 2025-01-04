@@ -36,8 +36,8 @@ const RegistrationStep = () => {
         submitMainbutton(tonWallet?.account.address || null);
       }}
     >
-      {(/*(isEdit && !eventData.paid_event.has_payment) || */!isEdit) && <UserRegistrationForm />}
-      {(/*(isEdit && eventData.paid_event.has_payment) ||*/ !isEdit) && <PaidEventCreationInputs />}
+      { <UserRegistrationForm />}
+      { <PaidEventCreationInputs />}
     </form>
   );
 };
