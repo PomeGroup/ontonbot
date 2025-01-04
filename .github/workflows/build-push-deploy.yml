@@ -584,6 +584,8 @@ jobs:
                 docker service update --update-failure-action rollback --update-max-failure-ratio 0.2  --force $branch_name\_\$service
               fi
             done
+            # bidar kardane fluentd :))
+            docker service update --update-failure-action rollback --update-max-failure-ratio 0.5 --force caddy_fluentd
             echo "Services deployed successfully."         
           EOF
 
