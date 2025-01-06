@@ -47,84 +47,88 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
         </button>
       )}
     >
-      <div className="p-4 py-4 space-y-2 cursor-pointer">
-        <div
-          className="space-y-3 border-b-[1px] pb-1"
-          onClick={() => setIsEventTypeDrawerOpen(true)}
-        >
-          <p className=" font-medium">Event Type</p>
-          <div className="cursor-pointer text-sm flex items-center">
-            {participationType.length === 0 || participationType.length == allParticipationTypes.length
-              ? "All"
-              : participationType.join(", ").replace("_", " ")}
-            <IoIosArrowForward className="ml-auto" />
+      {(open, setOpen) => (
+        <>
+          <div className="p-4 py-4 space-y-2 cursor-pointer">
+            <div
+              className="space-y-3 border-b-[1px] pb-1"
+              onClick={() => setIsEventTypeDrawerOpen(true)}
+            >
+              <p className=" font-medium">Event Type</p>
+              <div className="cursor-pointer text-sm flex items-center">
+                {participationType.length === 0 || participationType.length == allParticipationTypes.length
+                  ? "All"
+                  : participationType.join(", ").replace("_", " ")}
+                <IoIosArrowForward className="ml-auto" />
+              </div>
+            </div>
+            <div
+              className="flex items-center cursor-pointer border-b pb-1"
+              onClick={() => {
+                setIsHubDrawerOpen(true);
+              }}
+            >
+              <div className="flex-1 space-y-3">
+                <p className="font-medium">Ton Hub</p>
+                <div className="text-sm line-clamp-1 w-11/12 overflow-hidden">{hubText}</div>
+              </div>
+
+              <IoIosArrowForward className="text-sm ml-2 mt-8" />
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm font-medium pt-2">Sort By</p>
+              <RadioGroup
+                orientation="vertical"
+                value={sortBy}
+                onValueChange={(value) => setSortBy(value)}
+              >
+                <label className="flex justify-between items-center  border-b-[1px] pb-2">
+                  <span className="text-sm">Time</span>
+                  <RadioGroupItem
+                    value="start_date_desc"
+                    className="h-4 w-4"
+                  />
+                </label>
+
+                <label className="flex justify-between items-center">
+                  <span className="text-sm">Most People Reached</span>
+                  <RadioGroupItem
+                    value="most_people_reached"
+                    className="h-4 w-4"
+                  />
+                </label>
+              </RadioGroup>
+            </div>
           </div>
-        </div>
-        <div
-          className="flex items-center cursor-pointer border-b pb-1"
-          onClick={() => {
-            setIsHubDrawerOpen(true);
-            console.log("clickde");
-          }}
-        >
-          <div className="flex-1 space-y-3">
-            <p className="font-medium">Ton Hub</p>
-            <div className="text-sm line-clamp-1 w-11/12 overflow-hidden">{hubText}</div>
+
+          <div className="flex gap-1 p-4 flex-col">
+            <KButton
+              className="py-5 rounded-3xl"
+              onClick={() => {
+                setApplyingFilters(!applyingFilters);
+                // close the drawer
+                onOpenChange(false);
+                setOpen(false);
+              }}
+            >
+              Apply filters
+            </KButton>
+            <KButton
+              tonal
+              className="py-5 rounded-3xl"
+              onClick={() => {
+                resetFilters();
+                // close the drawer
+                onOpenChange(false);
+                setOpen(false);
+              }}
+            >
+              Reset filters
+            </KButton>
           </div>
-
-          <IoIosArrowForward className="text-sm ml-2 mt-8" />
-        </div>
-
-        <div className="space-y-4">
-          <p className="text-sm font-medium pt-2">Sort By</p>
-          <RadioGroup
-            orientation="vertical"
-            value={sortBy}
-            onValueChange={(value) => setSortBy(value)}
-          >
-            <label className="flex justify-between items-center  border-b-[1px] pb-2">
-              <span className="text-sm">Time</span>
-              <RadioGroupItem
-                value="start_date_desc"
-                className="h-4 w-4"
-              />
-            </label>
-
-            <label className="flex justify-between items-center">
-              <span className="text-sm">Most People Reached</span>
-              <RadioGroupItem
-                value="most_people_reached"
-                className="h-4 w-4"
-              />
-            </label>
-          </RadioGroup>
-        </div>
-      </div>
-
-      <div className="flex gap-1 p-4 flex-col">
-        <KButton
-          className="py-5 rounded-3xl"
-          onClick={() => {
-            setApplyingFilters(!applyingFilters);
-            // close the drawer
-            onOpenChange(false);
-          }}
-
-        >
-          Apply filters
-        </KButton>
-        <KButton
-          tonal
-          className="py-5 rounded-3xl"
-          onClick={() => {
-            resetFilters();
-            // close the drawer
-            onOpenChange(false);
-          }}
-        >
-          Reset filters
-        </KButton>
-      </div>
+        </>
+      )}
     </KSheet>
   );
 };
