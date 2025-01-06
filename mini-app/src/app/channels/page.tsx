@@ -3,6 +3,7 @@
 import { Block } from "konsta/react";
 import Image from "next/image";
 import Typography from "../_components/atoms/typography";
+import BottomNavigation from "../_components/BottomNavigation";
 
 let lastId = 1;
 
@@ -81,6 +82,7 @@ export default function ChannelsPage() {
           data={channel}
         />
       ))}
+      <BottomNavigation active="Channels" />
     </Block>
   );
 }

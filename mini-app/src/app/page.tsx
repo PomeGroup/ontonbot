@@ -11,12 +11,12 @@ import { trpc } from "./_trpc/client";
 import "./page.css";
 import { useConfig } from "@/context/ConfigContext";
 import Image from "next/image";
-import MemoizedMainButton from "@/app/_components/Memoized/MemoizedMainButton";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
-import { Block, Segmented, SegmentedButton } from "konsta/react";
+import { Block } from "konsta/react";
 import { useTheme } from "next-themes";
+import BottomNavigation from "./_components/BottomNavigation";
 
 // Define types for events
 type EventData = any[];
@@ -224,7 +224,7 @@ export default function Home() {
           />
 
           {/* Tabs Header */}
-          <Segmented
+          {/* <Segmented
             strong
             rounded
           >
@@ -244,7 +244,7 @@ export default function Home() {
             >
               My events
             </SegmentedButton>
-          </Segmented>
+          </Segmented> */}
         </div>
 
         {/* Scrollable Content */}
@@ -402,13 +402,14 @@ export default function Home() {
           </Swiper>
         </div>
       </div>
+      <BottomNavigation active="Events" />
 
-      {!useAuthLoading && (userRole === "admin" || userRole === "organizer") && authorized && (
+      {/* {!useAuthLoading && (userRole === "admin" || userRole === "organizer") && authorized && (
         <MemoizedMainButton
           text="Create new event"
           onClick={handleCreateEvent}
         />
-      )}
+      )} */}
     </Block>
   );
 }
