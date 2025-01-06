@@ -157,7 +157,7 @@ export class NftCollection {
       secretKey: wallet.keyPair.secretKey,
       messages: [
         internal({
-          value: "0.05",
+          value: "0.055",
           to: this.address,
           init: this.stateInit,
         }),
@@ -225,7 +225,7 @@ export class NftItem {
       secretKey: wallet.keyPair.secretKey,
       messages: [
         internal({
-          value: "0.05",
+          value: "0.055",
           to: collection_address,
           body: this.collection.createMintBody(params),
         }),
@@ -268,7 +268,7 @@ export async function mintNFT(owner_address : string , collection_address: strin
     queryId: 0,
     itemOwnerAddress: Address.parse(owner_address),
     itemIndex: nftIndex,
-    amount: toNano("0.056"),
+    amount: toNano("0.055"),
     commonContentUrl: nft_metadata_url,
   };
 
