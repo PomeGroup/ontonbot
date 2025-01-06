@@ -575,7 +575,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
       const nft_index = nft_count_result[0].count || 0;
 
-      console.log(`minting_nft_${ordr.event_uuid}_${nft_index}`);
+      console.log(`minting_nft_${ordr.event_uuid}_${nft_index}_${paymentInfo?.collectionAddress}_${meta_data_url}`);
 
       const nft_address = await mintNFT(ordr.owner_address, paymentInfo?.collectionAddress, nft_index, meta_data_url);
       if (!nft_address) {

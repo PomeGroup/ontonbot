@@ -268,7 +268,7 @@ export async function mintNFT(owner_address : string , collection_address: strin
     queryId: 0,
     itemOwnerAddress: Address.parse(owner_address),
     itemIndex: nftIndex,
-    amount: toNano("0.05"),
+    amount: toNano("0.056"),
     commonContentUrl: nft_metadata_url,
   };
 

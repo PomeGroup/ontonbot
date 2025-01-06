@@ -450,12 +450,17 @@ const processRegistrantRequest = evntManagerPP
       )
       .execute();
 
-    if (opts.input.status === "approved") {
+    if (opts.input.status === "approved" || opts.input.status === "rejected") {
       const share_link = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${event_uuid}`;
+
+      const approved_message = `✅ Your request has been approved for the event : <b>${event.title}</b> \n${share_link}`;
+      const rejected_message = `❌ Your request has been rejected for the event : <b>${event.title}</b> \n${share_link}`;
+      const message = opts.input.status === "approved" ? approved_message : rejected_message;
+
       const response = await telegramService.sendEventPhoto({
         event_id: event.event_uuid,
         user_id: user_id,
-        message: `✅ Your request has been approved for the event : <b>${event.title}</b> \n${share_link}`,
+        message,
       });
       console.log("*******approved_guest", response.status, response.message);
     }
@@ -505,10 +510,13 @@ const checkinRegistrantRequest = evntManagerPP
       throw new TRPCError({ code: "CONFLICT", message: "Registrant Not Approved" });
     }
 
-    await rewardService.createUserReward({
-      user_id: registrant.user_id as number,
-      event_uuid: event_uuid,
-    } , true);
+    await rewardService.createUserReward(
+      {
+        user_id: registrant.user_id as number,
+        event_uuid: event_uuid,
+      },
+      true
+    );
 
     await db
       .update(eventRegistrants)
@@ -535,7 +543,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       const event_in_person = input_event_data.eventLocationType === "in_person";
       let hashedSecretPhrase = undefined;
       let inputSecretPhrase = undefined;
-      if (!event_in_person && input_event_data?.secret_phrase  ) {
+      if (!event_in_person && input_event_data?.secret_phrase) {
         inputSecretPhrase = input_event_data?.secret_phrase.trim().toLowerCase();
         hashedSecretPhrase = Boolean(inputSecretPhrase) ? await hashPassword(inputSecretPhrase) : undefined;
         if (!hashedSecretPhrase) throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid secret phrase" });
