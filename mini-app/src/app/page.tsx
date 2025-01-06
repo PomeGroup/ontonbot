@@ -17,6 +17,9 @@ import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { Block, Segmented, SegmentedButton } from "konsta/react";
 import { useTheme } from "next-themes";
+import initTelegram from "@/lib/initTelegram";
+
+initTelegram();
 
 // Define types for events
 type EventData = any[];
