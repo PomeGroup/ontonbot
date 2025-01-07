@@ -15,6 +15,9 @@ import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
 import SupportButton from "../atoms/buttons/SupportButton";
+import initTelegram from "@/lib/initTelegram";
+
+initTelegram();
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -135,7 +138,7 @@ const EventRegistrationStatus = ({
     "": () => <UserRegisterForm />,
     pending: () => (
       <DataStatus
-        status="pending"
+        status="sent"
         title="Request Pending"
         description="Your request to join this event is pending to be approved."
       />

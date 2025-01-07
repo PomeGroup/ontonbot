@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventPayment, eventRegistrants, tickets } from "@/db/schema";
+import { eventPayment, eventRegistrants, nftItems, tickets } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
 import { and, eq, desc, or } from "drizzle-orm";
 
@@ -49,6 +49,13 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
     // ticket not found error
     return Response.json({ error: "Ticket data not found" }, { status: 400 });
   }
+  const nft_address = (
+    await db
+      .select()
+      .from(nftItems)
+      .where(and(eq(nftItems.event_uuid, event_uuid), eq(nftItems.owner, userId)))
+      .execute()
+  ).pop()?.nft_address;
 
   const register_info_object =
     typeof user_registration.register_info === "object"
@@ -57,7 +64,7 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
 
   const data = {
     ...user_registration,
-    nft_address: "nft_address",
+    nftAddress: nft_address,
     order_uuid: user_registration.registrant_uuid,
     ticketData: eventPaymentinfo,
     ...register_info_object,

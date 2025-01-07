@@ -1,4 +1,4 @@
-import { validate } from "@tma.js/init-data-node";
+import { validate } from "@telegram-apps/init-data-node";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { TelegramInitDataJson, TelegramUser } from "./types";

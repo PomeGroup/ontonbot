@@ -60,7 +60,7 @@ const Ticket = async ({ params }: TicketParams) => {
       <Link
         href={`https://${process.env.NODE_ENV === "development" ? "testnet." : ""}getgems.io/collection/${collectionAddress}/${ticketAddress}`}
         target="_blank"
-        className="text-accent-foreground flex items-center gap-2"
+        className="text-accent-foreground inline-flex  items-center gap-2"
       >
         <FiExternalLink />
         {contractAddressShortner(ticketAddress)}

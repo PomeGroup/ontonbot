@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { users } from "@/db/schema";
-import { validate } from "@tma.js/init-data-node";
+import { validate } from "@telegram-apps/init-data-node";
 import { eq } from "drizzle-orm";
 import * as jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
