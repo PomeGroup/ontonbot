@@ -5,6 +5,7 @@ import Image from "next/image";
 import Typography from "../_components/atoms/typography";
 import BottomNavigation from "../_components/BottomNavigation";
 import Link from "next/link";
+import { Channel } from "@/types";
 
 let lastId = 1;
 
@@ -71,7 +72,6 @@ const channels = [
   },
 ];
 
-console.log(channels);
 export default function ChannelsPage() {
   return (
     <Block
@@ -89,13 +89,6 @@ export default function ChannelsPage() {
   );
 }
 
-interface Channel {
-  id: number;
-  avatar: string;
-  title: string;
-  eventCount: number;
-}
-
 interface ChannelCardProps {
   data: Channel;
 }
@@ -107,7 +100,7 @@ function ChannelCard({ data }: ChannelCardProps) {
       className="p-4 bg-white rounded-md flex-1 min-w-[40%]"
     >
       <Image
-        className="rounded-sm mb-3"
+        className="rounded-md mb-3"
         src={data.avatar}
         width={300}
         height={300}

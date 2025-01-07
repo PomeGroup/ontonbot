@@ -442,3 +442,10 @@ export type ValueOf<T> = T[keyof T];
 
 export type EventDataSchemaAllOptional = Partial<z.infer<typeof EventDataSchema>>;
 export type PaidEventType = z.infer<typeof PaidEventSchema>;
+
+export interface Channel {
+  id: number;
+  avatar: string;
+  title: string;
+  eventCount: number;
+}
