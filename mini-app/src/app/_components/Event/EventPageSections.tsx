@@ -15,6 +15,9 @@ import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
 import SupportButton from "../atoms/buttons/SupportButton";
+import initTelegram from "@/lib/initTelegram";
+
+initTelegram();
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
