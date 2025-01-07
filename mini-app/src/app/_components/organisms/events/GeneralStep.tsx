@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { generalStepDataSchema } from "@/zodSchema/event/validation";
@@ -21,9 +21,22 @@ export const GeneralStep = () => {
     })
   );
 
+  const [termsChecked, _setTermsChecked] = useState(false);
+  const [showTermsError, setShowTermsError] = useState(false);
+
+  const setTermsChecked = (checked: boolean) => {
+    if (checked) setShowTermsError(false);
+    _setTermsChecked(checked);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formRef.current) return;
+
+    if (!termsChecked) {
+      setShowTermsError(true);
+      return;
+    }
 
     const formData = new FormData(formRef.current);
     formData.append("image_url", eventData?.image_url || "");
@@ -66,7 +79,11 @@ export const GeneralStep = () => {
       ref={formRef}
       onSubmit={handleSubmit}
     >
-      <BasicEventInputs />
+      <BasicEventInputs
+        showTermsError={showTermsError}
+        termsChecked={termsChecked}
+        setTermsChecked={setTermsChecked}
+      />
     </form>
   );
 };
