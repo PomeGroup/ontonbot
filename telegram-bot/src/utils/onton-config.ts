@@ -4,8 +4,6 @@ import { fetchOntonSetting } from "../db/db";
 let config: { [key: string]: string | null } = {};
 let configProtected: { [key: string]: string | null } = {};
 
-console.log("-asdasd----------------------");
-
 (async () => {
   try {
     // Fetch the settings and restructure into config and configProtected
