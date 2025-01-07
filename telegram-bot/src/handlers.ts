@@ -39,7 +39,7 @@ export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
 
       await changeRole(role, username)
         .then(async () => {
-          const changeMessage = `Role for ${username} changed to ${role}.`;
+          const changeMessage = `Role for @${username} changed to ${role}.`;
 
           await sendTopicMessage("organizers_topic", changeMessage);
 
