@@ -31,9 +31,13 @@ export const sendTopicMessage = async (
   text: string,
 ) => {
   try {
-    await logsBot.api.sendMessage(configProtected["bot_token_logs"], text, {
-      reply_to_message_id: Number(configProtected[topic]),
-    });
+    await logsBot.api.sendMessage(
+      Number(configProtected["logs_group_id"]),
+      text,
+      {
+        reply_to_message_id: Number(configProtected[topic]),
+      },
+    );
   } catch (error) {
     // __AUTO_GENERATED_PRINT_VAR_START__
     console.error("telegram bot sendTopicMessage error: %s", error); // __AUTO_GENERATED_PRINT_VAR_END__
