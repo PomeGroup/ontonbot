@@ -1,7 +1,20 @@
 import { Bot } from "grammy";
 import { configProtected } from "./onton-config";
+import { sleep } from "./utils";
 
-export const logsBot = new Bot(configProtected["bot_token_logs"]);
+let logsBot: undefined | Bot;
+
+const getLogsBot = async (): Promise<Bot> => {
+  try {
+    if (!logsBot) {
+      logsBot = new Bot(configProtected["bot_token_logs"]);
+    }
+    return logsBot;
+  } catch (error) {
+    await sleep(1000);
+    return await getLogsBot();
+  }
+};
 
 const logs_topics = [
   "events_topic",
@@ -16,7 +29,9 @@ export const sendTopicMessage = async (
   text: string,
 ) => {
   try {
-    await logsBot.api.sendMessage(configProtected["bot_token_logs"], text, {
+    await (
+      await getLogsBot()
+    ).api.sendMessage(configProtected["bot_token_logs"], text, {
       reply_to_message_id: Number(configProtected[topic]),
     });
   } catch (error) {
