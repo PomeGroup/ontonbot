@@ -1,16 +1,17 @@
 import { Context } from "grammy";
-import { changeRole, isUserAdmin } from "./db/db"
-import { editOrSend } from "./utils/utils"
+import { changeRole, isUserAdmin } from "./db/db";
+import { editOrSend } from "./utils/utils";
 import { startKeyboard } from "./markups";
+import { configProtected } from "./utils/onton-config";
+import { sendTopicMessage } from "./utils/logs-bot";
 
 export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
   // get user from database
-  const { isAdmin } = await isUserAdmin(ctx.from.id.toString())
+  const { isAdmin } = await isUserAdmin(ctx.from.id.toString());
 
   if (!isAdmin) {
-    return await ctx.reply(`You are not authorized to perform this operation.`)
+    return await ctx.reply(`You are not authorized to perform this operation.`);
   }
-
 
   try {
     // @ts-ignore
@@ -31,44 +32,44 @@ export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
           ctx,
           `Invalid role. Must be one of: user, admin, organizer.`,
           startKeyboard(),
-        )
+        );
 
-        next()
-        return
+        next();
+        return;
       }
 
-      await changeRole(role, username).then(async () => {
-        await editOrSend(
-          ctx,
-          `Role for ${username} changed to ${role}.`,
-          startKeyboard(),
-        );
-      }).catch(async (error) => {
-        if (error instanceof Error) {
-          if (error.message === 'user_not_found') {
-            await editOrSend(
-              ctx,
-              `User with username: ${username} does not exist.`,
-              startKeyboard(),
-            );
-          }
+      await changeRole(role, username)
+        .then(async () => {
+          const changeMessage = `Role for ${username} changed to ${role}.`;
 
-          if (error.message === 'nothing_to_update') {
-            await editOrSend(
-              ctx,
-              `Nothing to update user already is an ${role}.`,
-              startKeyboard(),
-            );
-          }
-        }
-      })
+          await sendTopicMessage("organizers_topic", changeMessage);
 
+          await editOrSend(ctx, changeMessage, startKeyboard());
+        })
+        .catch(async (error) => {
+          if (error instanceof Error) {
+            if (error.message === "user_not_found") {
+              await editOrSend(
+                ctx,
+                `User with username: ${username} does not exist.`,
+                startKeyboard(),
+              );
+            }
+
+            if (error.message === "nothing_to_update") {
+              await editOrSend(
+                ctx,
+                `Nothing to update user already is an ${role}.`,
+                startKeyboard(),
+              );
+            }
+          }
+        });
     } else {
       await editOrSend(ctx, `Invalid command.`, startKeyboard());
     }
-  } catch (error) { }
+  } catch (error) {}
 };
-
 
 export const startHandler = async (ctx: Context) => {
   try {
@@ -88,7 +89,7 @@ export const startHandler = async (ctx: Context) => {
       `<b>Please click the link below to ‘Discover the App’</b>`,
       startKeyboard(),
       undefined,
-      false
+      false,
     );
   } catch (error) {
     console.log(error);
