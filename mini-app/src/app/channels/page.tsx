@@ -4,6 +4,7 @@ import { Block } from "konsta/react";
 import Image from "next/image";
 import Typography from "../_components/atoms/typography";
 import BottomNavigation from "../_components/BottomNavigation";
+import Link from "next/link";
 
 let lastId = 1;
 
@@ -70,6 +71,7 @@ const channels = [
   },
 ];
 
+console.log(channels);
 export default function ChannelsPage() {
   return (
     <Block
@@ -88,6 +90,7 @@ export default function ChannelsPage() {
 }
 
 interface Channel {
+  id: number;
   avatar: string;
   title: string;
   eventCount: number;
@@ -99,7 +102,10 @@ interface ChannelCardProps {
 
 function ChannelCard({ data }: ChannelCardProps) {
   return (
-    <div className="p-4 bg-white rounded-md flex-1 min-w-[40%]">
+    <Link
+      href={`/channels/${data.id}`}
+      className="p-4 bg-white rounded-md flex-1 min-w-[40%]"
+    >
       <Image
         className="rounded-sm mb-3"
         src={data.avatar}
@@ -119,6 +125,6 @@ function ChannelCard({ data }: ChannelCardProps) {
           <Typography variant="subheadline2">&nbsp;Events</Typography>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
