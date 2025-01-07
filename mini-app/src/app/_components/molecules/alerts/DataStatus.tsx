@@ -3,7 +3,7 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { cn } from "@/utils";
 
 interface DataStatusProps {
-  status: "pending" | "success" | "danger" | "not_found" | "approved" | "rejected";
+  status: "pending" | "success" | "danger" | "not_found" | "approved" | "rejected" | "sent";
   title?: ReactNode;
   description?: ReactNode;
   size?: "sm" | "md" | "lg";
@@ -17,6 +17,7 @@ const DATA_STATUS_ANIMATIONS: Record<DataStatusProps["status"], string> = {
   success: "https://storage.onton.live/ontonimage/assertive_duck.lottie",
   danger: "https://storage.onton.live/ontonimage/crying_duck.lottie",
   pending: "https://storage.onton.live/ontonimage/pending_duck.lottie",
+  sent: "https://storage.onton.live/ontonimage/send-flying-paper-dart.lottie",
 };
 
 // @ts-expect-error
