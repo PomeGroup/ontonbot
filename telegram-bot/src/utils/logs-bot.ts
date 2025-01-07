@@ -16,6 +16,8 @@ const getLogsBot = async (): Promise<Bot> => {
   }
 };
 
+getLogsBot();
+
 const logs_topics = [
   "events_topic",
   "general",
@@ -29,9 +31,7 @@ export const sendTopicMessage = async (
   text: string,
 ) => {
   try {
-    await (
-      await getLogsBot()
-    ).api.sendMessage(configProtected["bot_token_logs"], text, {
+    await logsBot.api.sendMessage(configProtected["bot_token_logs"], text, {
       reply_to_message_id: Number(configProtected[topic]),
     });
   } catch (error) {

@@ -291,28 +291,33 @@ export async function getEventTickets(uuid: string) {
 }
 
 export async function fetchOntonSetting() {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  });
+  try {
+    const client = new Client({ connectionString: process.env.DATABASE_URL });
+    await client.connect();
 
-  await client.connect();
+    const settings = await client.query(
+      `SELECT * FROM onton_setting where env = $1`,
+      [process.env.ENV],
+    );
 
-  const settings = await client.query(`SELECT * FROM onton_setting`);
-  await client.end();
+    await client.end();
 
-  let config: { [key: string]: string | null } = {};
-  let configProtected: { [key: string]: string | null } = {};
+    let config: { [key: string]: string | null } = {};
+    let configProtected: { [key: string]: string | null } = {};
 
-  settings.rows.forEach((setting) => {
-    const key = `${setting.var}`;
-    if (setting.protected === true) {
-      configProtected[key] = setting.value;
-    } else {
-      config[key] = setting.value;
-    }
-  });
+    settings.rows.forEach((setting) => {
+      const key = `${setting.var}`;
+      if (setting.protected === true) {
+        configProtected[key] = setting.value;
+      } else {
+        config[key] = setting.value;
+      }
+    });
 
-  return { config, configProtected };
+    return { config, configProtected };
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 createDatabase(); // Call to initialize the database

@@ -4,14 +4,19 @@ import { fetchOntonSetting } from "../db/db";
 let config: { [key: string]: string | null } = {};
 let configProtected: { [key: string]: string | null } = {};
 
+console.log("-asdasd----------------------");
+
 (async () => {
   try {
     // Fetch the settings and restructure into config and configProtected
-    const { config: cfg, configProtected: cfgProtected } =
-      await fetchOntonSetting();
+    const ontonConfig = await fetchOntonSetting();
 
-    config = cfg;
-    configProtected = cfgProtected;
+    console.log({
+      ontonConfig,
+    });
+
+    config = ontonConfig.config;
+    configProtected = ontonConfig.configProtected;
   } catch (error) {
     console.error("Error fetching Onton settings:", error);
     // Handle the error or use default configurations

@@ -2,7 +2,6 @@ import { Context } from "grammy";
 import { changeRole, isUserAdmin } from "./db/db";
 import { editOrSend } from "./utils/utils";
 import { startKeyboard } from "./markups";
-import { configProtected } from "./utils/onton-config";
 import { sendTopicMessage } from "./utils/logs-bot";
 
 export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
