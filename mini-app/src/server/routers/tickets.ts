@@ -3,7 +3,7 @@ import { z } from "zod";
 import ticketDB from "@/server/db/ticket.db";
 import { TRPCError } from "@trpc/server";
 import rewardsService from "@/server/routers/services/rewardsService";
-
+import { logger } from "../utils/logger";
 
 // Type guard to check if result is alreadyCheckedIn type
 function isAlreadyCheckedIn(result: any): result is { alreadyCheckedIn: boolean } {
@@ -39,7 +39,7 @@ export const ticketRouter = router({
     .mutation(async (opts) => {
       const result = await ticketDB.checkInTicket(opts.input.ticketUuid);
 
-      console.log("result", result);
+      logger.log("result", result);
       if (!result) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -57,7 +57,7 @@ export const ticketRouter = router({
           ticketOrderUuid: ticketData.order_uuid,
         });
         if (!rewardResult.success) {
-          console.log("rewardResult", rewardResult);
+          logger.log("rewardResult", rewardResult);
         }
         if (isAlreadyCheckedIn(result)) {
           return { alreadyCheckedIn: true, result: result };

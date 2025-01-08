@@ -62,8 +62,6 @@ export function timeplaceStepValidation(
         })
         .refine(
           (data) => {
-            console.log("asdahsdjahskdjhasjdkh", data, eventData?.start_date!);
-
             return Boolean(editOptions?.eventHash) || data > formDataObject?.start_date!;
           },
           {

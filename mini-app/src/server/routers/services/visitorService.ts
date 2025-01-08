@@ -3,6 +3,7 @@ import visitorsDB from "@/server/db/visitors";
 import { selectEventByUuid } from "@/server/db/events";
 import { TRPCError } from "@trpc/server";
 import userEventFieldsDB from "@/server/db/userEventFields.db";
+import { logger } from "@/server/utils/logger";
 
 export const getAndValidateVisitor = async (
   user_id: number,
@@ -41,7 +42,7 @@ export const getAndValidateVisitor = async (
   } catch (error) {
     // Catch any unexpected errors and return them
     const errorMsg = error instanceof Error ? error.message : "An unexpected error occurred";
-    console.error(`getAndValidateVisitor Unexpected Error:`, error);
+    logger.error(`getAndValidateVisitor Unexpected Error:`, error);
     return {
       success: false,
       error: errorMsg,
@@ -61,9 +62,9 @@ export const addVisitor = async (opts: any) => {
       message: "Event not found",
     });
   }
-  // console.log(`Event: `, event);
+  // logger.log(`Event: `, event);
   if (event.ticketToCheckIn) {
-    console.error(`Event requires ticket to check in: ${event_uuid}`);
+    logger.error(`Event requires ticket to check in: ${event_uuid}`);
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "This event requires a ticket to add user as visitor to the event",

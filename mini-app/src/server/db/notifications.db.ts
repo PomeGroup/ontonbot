@@ -5,6 +5,7 @@ import { and, eq, inArray, lt, sql } from "drizzle-orm";
 import { QueueNames, NOTIFICATION_TIMEOUT_MARGIN } from "@/sockets/constants";
 import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from "@/server/utils/logger";
 /**
  * Represents the shape of notification data required for insertion.
  */
@@ -79,7 +80,7 @@ export const addNotification = async (notificationData: {
 
     // Check if the result is empty, indicating the record already existed
     if (result.length === 0) {
-      console.log("Notification already exists.");
+      logger.log("Notification already exists.");
       return { success: false, message: "Record already exists." };
     }
     // add to rabbitMQ
@@ -92,10 +93,10 @@ export const addNotification = async (notificationData: {
     };
 
     await rabbitMQService.pushMessageToQueue(QueueNames.NOTIFICATIONS, message);
-    console.log(`Notification added for User ${notificationData.userId} with ID ${notificationId} and type ${notificationData.type}`);
+    logger.log(`Notification added for User ${notificationData.userId} with ID ${notificationId} and type ${notificationData.type}`);
     return { success: true, notificationId: result[0].id }; // Return the ID of the inserted notification
   } catch (error) {
-    console.error("Error adding notification:", error);
+    logger.error("Error adding notification:", error);
     throw error;
   }
 };
@@ -115,10 +116,10 @@ export const getNotificationsByStatusAndItemId = async (itemId: number, status: 
       )
       .execute();
 
-    console.log(`Notifications with status "${status}" retrieved:`, result);
+    logger.log(`Notifications with status "${status}" retrieved:`, result);
     return result;
   } catch (error) {
-    console.error("Error getting notifications by status:", error);
+    logger.error("Error getting notifications by status:", error);
     throw error;
   }
 };
@@ -133,9 +134,9 @@ export const updateNotificationStatus = async (notificationId: number, newStatus
       .execute();
 
     await redisTools.deleteCache(getNotificationCacheKey(notificationId)); // Clear cache
-    console.log(`Notification ${notificationId} status updated to ${newStatus}`);
+    logger.log(`Notification ${notificationId} status updated to ${newStatus}`);
   } catch (error) {
-    console.error(`Error updating notification ${notificationId} status updated to ${newStatus}:`, error);
+    logger.error(`Error updating notification ${notificationId} status updated to ${newStatus}:`, error);
     throw error;
   }
 };
@@ -155,9 +156,9 @@ export const updateNotificationAsRead = async (notificationId: number, ) => {
       .execute();
 
     await redisTools.deleteCache(getNotificationCacheKey(notificationId)); // Clear cache
-    console.log(`Notification ${notificationId} status updated to ${status}`);
+    logger.log(`Notification ${notificationId} status updated to ${status}`);
   } catch (error) {
-    console.error(`Error updating notification ${notificationId} status updated to ${status}:`, error);
+    logger.error(`Error updating notification ${notificationId} status updated to ${status}:`, error);
     throw error;
   }
 };
@@ -176,9 +177,9 @@ export const updateNotificationStatusAndReply = async (
       .execute();
 
     await redisTools.deleteCache(getNotificationCacheKey(notificationId)); // Clear cache
-    console.log(`Notification ${notificationId} status updated to ${newStatus} with action reply`);
+    logger.log(`Notification ${notificationId} status updated to ${newStatus} with action reply`);
   } catch (error) {
-    console.error("Error updating notification status and reply:", error);
+    logger.error("Error updating notification status and reply:", error);
     throw error;
   }
 };
@@ -191,10 +192,10 @@ export const deleteNotificationsByExpiry = async (expiryDate: Date) => {
       .where(lt(notifications.expiresAt, expiryDate))
       .execute();
 
-    console.log(`Deleted notifications with expiry date less than ${expiryDate}:`, result);
+    logger.log(`Deleted notifications with expiry date less than ${expiryDate}:`, result);
     return result;
   } catch (error) {
-    console.error("Error deleting expired notifications:", error);
+    logger.error("Error deleting expired notifications:", error);
     throw error;
   }
 };
@@ -211,7 +212,7 @@ export const getNotificationById = async (notificationId: number) => {
 
     return foundNotifications.length > 0 ? foundNotifications[0] : null;
   } catch (error) {
-    console.error("Error getting notification by ID:", error);
+    logger.error("Error getting notification by ID:", error);
     throw error;
   }
 };
@@ -257,9 +258,9 @@ export const addNotifications = async (
       const enqueuePromises = rabbitMQMessages.map(async (msg) => {
         try {
           await rabbitMQService.pushMessageToQueue(QueueNames.NOTIFICATIONS, msg);
-          console.log(`Notification ID ${msg.notificationId} enqueued successfully.`);
+          logger.log(`Notification ID ${msg.notificationId} enqueued successfully.`);
         } catch (mqError) {
-          console.error(`Failed to enqueue ID ${msg.notificationId}:`, mqError);
+          logger.error(`Failed to enqueue ID ${msg.notificationId}:`, mqError);
         }
       });
 
@@ -314,7 +315,7 @@ export const addNotifications = async (
         })
         .execute();
 
-      console.log(`Added ${insertedNotifications.length} notifications to DB.`);
+      logger.log(`Added ${insertedNotifications.length} notifications to DB.`);
 
       const rabbitMQMessages = insertedNotifications.map((notification) => ({
         notificationId: notification.id,
@@ -340,9 +341,9 @@ export const addNotifications = async (
       const enqueuePromises = rabbitMQMessages.map(async (msg) => {
         try {
           await rabbitMQService.pushMessageToQueue(QueueNames.NOTIFICATIONS, msg);
-          console.log(`Notification ID ${msg.notificationId} enqueued successfully.`);
+          logger.log(`Notification ID ${msg.notificationId} enqueued successfully.`);
         } catch (mqError) {
-          console.error(`Failed to enqueue ID ${msg.notificationId}:`, mqError);
+          logger.error(`Failed to enqueue ID ${msg.notificationId}:`, mqError);
         }
       });
 
@@ -351,7 +352,7 @@ export const addNotifications = async (
       return { success: true, count: insertedNotifications.length };
     }
   } catch (error) {
-    console.error("Error adding notifications:", error);
+    logger.error("Error adding notifications:", error);
     throw error;
   }
 };
@@ -379,7 +380,7 @@ export async function getRepliedPoaPasswordNotificationsForEvent(
 export const expireReadNotifications = async () => {
   try {
     // Update notifications that are READ and whose readAt + actionTimeout is in the past
-    console.log("Expiring read notifications that exceeded their action timeout...");
+    logger.log("Expiring read notifications that exceeded their action timeout...");
     const expiredNotifications =  await db
       .update(notifications)
       .set({ status: "EXPIRED" })
@@ -396,10 +397,10 @@ export const expireReadNotifications = async () => {
       .returning({ id: notifications.id })
       .execute();
 
-    console.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
+    logger.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
     return { success: true, count: expiredNotifications.length };
   } catch (error) {
-    console.error("Error expiring read notifications:", error);
+    logger.error("Error expiring read notifications:", error);
     throw error;
   }
 };

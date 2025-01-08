@@ -35,6 +35,7 @@ import { internal_server_error } from "../utils/error_utils";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { is_dev_env, is_stage_env } from "../utils/evnutils";
 import { config } from "../config";
+import { logger } from "@/server/utils/logger";
 
 dotenv.config();
 
@@ -316,7 +317,7 @@ const eventRegister = initDataProtectedProcedure.input(EventRegisterSchema).muta
   const { event_uuid, ...registerInfo } = opts.input;
   const event = await selectEventByUuid(event_uuid);
 
-  // console.log("event_register", event_uuid, userId);
+  // logger.log("event_register", event_uuid, userId);
 
   if (!event) {
     throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
@@ -462,7 +463,7 @@ const processRegistrantRequest = evntManagerPP
         user_id: user_id,
         message,
       });
-      console.log("*******approved_guest", response.status, response.message);
+      logger.log("*******approved_guest", response.status, response.message);
     }
 
     return { code: 201, message: "ok" };
@@ -567,7 +568,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
       const is_paid = input_event_data.paid_event?.has_payment;
       if (is_paid && !config?.ONTON_WALLET_ADDRESS) {
-        console.log("event_add_Config : ", config);
+
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "ONTON_WALLET_ADDRESS NOT SET error" });
       }
 
@@ -685,8 +686,8 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
 
       const eventDraft = await CreateTonSocietyDraft(input_event_data, eventData.event_uuid);
 
-      console.log("eventDraft", JSON.stringify(eventDraft));
-      console.log("eventData", eventData);
+      logger.log("eventDraft", JSON.stringify(eventDraft));
+      logger.log("eventData", eventData);
 
       // Remove the description key
       const eventDataWithoutDescription = removeKey(eventData, "description");
@@ -727,7 +728,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
       eventHash: result[0].event_uuid,
     } as const;
   } catch (error) {
-    console.error(`Error while adding event: ${Date.now()} , ${error}`);
+    logger.error(`Error while adding event: ${Date.now()} , ${error}`);
     if (error instanceof TRPCError) {
       throw error;
     }
@@ -945,7 +946,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           try {
             await updateActivity(eventDraft, opts.ctx.event.activity_id as number);
           } catch (error) {
-            console.log("update_event_ton_society_failed", JSON.stringify(eventDraft));
+            logger.log("update_event_ton_society_failed", JSON.stringify(eventDraft));
 
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
@@ -959,7 +960,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         return { success: true, eventId: opts.ctx.event.event_uuid } as const;
       });
     } catch (err) {
-      console.log(`[eventRouter]_update_event failed id: ${opts.ctx.event.event_uuid}, error: ${err}`);
+      logger.log(`[eventRouter]_update_event failed id: ${opts.ctx.event.event_uuid}, error: ${err}`);
 
       internal_server_error(err, `Failed to update event ${opts.ctx.event.event_uuid}`);
     }
@@ -1015,7 +1016,7 @@ const getHubs = publicProcedure.query(async () => {
       });
     }
   } catch (error) {
-    console.error("hub fetch failed", error);
+    logger.error("hub fetch failed", error);
 
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
@@ -1039,7 +1040,10 @@ const requestShareEvent = initDataProtectedProcedure
       const event = await getEventByUuid(eventUuid);
 
       if (!event) {
-        console.error(`Event not found  ${eventUuid} for user ${opts.ctx.user.user_id}  ` ,opts.input);
+        logger.log(
+          `Event not found ${eventUuid} for user ${opts.ctx.user.user_id}`,
+          opts
+        );
         return { status: "fail", data:  `Event not found  ${eventUuid}` };
       }
 
@@ -1048,10 +1052,10 @@ const requestShareEvent = initDataProtectedProcedure
       const result = await telegramService.shareEventRequest(opts.ctx.user.user_id.toString(), event_uuid.toString());
 
       if (result.success) {
-        // console.log("Event shared successfully:", result.data);
+        // logger.log("Event shared successfully:", result.data);
         return { status: "success", data: null };
       } else {
-        console.error("Failed to share the event:", result.error);
+        logger.error("Failed to share the event:", result.error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to share the event",
@@ -1059,7 +1063,7 @@ const requestShareEvent = initDataProtectedProcedure
         });
       }
     } catch (error) {
-      console.error("Error while sharing event: ", error);
+      logger.error("Error while sharing event: ", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to share the event",
@@ -1173,7 +1177,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
 
     return response.status === 200 ? { status: "success", data: null } : { status: "fail", data: response.data };
   } catch (error) {
-    console.error("Error while sending file: ", error);
+    logger.error("Error while sending file: ", error);
     return { status: "fail", data: null };
   }
 });
@@ -1195,7 +1199,7 @@ const requestSendQRcode = evntManagerPP
 
       return response.status === 200 ? { status: "success", data: null } : { status: "fail", data: response.data };
     } catch (error) {
-      console.error("Error while generating QR Code: ", error);
+      logger.error("Error while generating QR Code: ", error);
       return { status: "fail", data: null };
     }
   });
@@ -1205,7 +1209,7 @@ const getEventsWithFilters = publicProcedure.input(searchEventsInputZod).query(a
     const events = await DBgetEventsWithFilters(opts.input);
     return { status: "success", data: events };
   } catch (error) {
-    console.error("Error fetching events:", error);
+    logger.error("Error fetching events:", error);
     return { status: "fail", data: null };
   }
 });
@@ -1269,7 +1273,7 @@ export const eventsRouter = router({
 //         return { success: true };
 //       });
 //     } catch (error) {
-//       console.error(error);
+//       logger.error(error);
 //       return { success: false };
 //     }
 //   }),

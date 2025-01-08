@@ -7,6 +7,7 @@ import { handleNotifications } from "./handlers/notificationHandler";
 import helmet from "helmet";
 import { allowedOrigins } from "@/sockets/constants";
 import { applyRateLimiting } from "@/sockets/rateLimiter";
+import { logger } from "@/server/utils/logger";
 
 const IP_REDIS = process.env.IP_REDIS;
 const REDIS_PORT = Number(process.env.REDIS_PORT);
@@ -14,7 +15,7 @@ const SOCKET_PORT = Number(process.env.SOCKET_PORT);
 
 (async () => {
   try {
-    console.log("Starting socket server");
+    logger.log("Starting socket server");
 
     if (!IP_REDIS || !REDIS_PORT) {
       throw new Error("Missing IP_REDIS or REDIS_PORT environment variable.");
@@ -38,7 +39,7 @@ const SOCKET_PORT = Number(process.env.SOCKET_PORT);
     const io = new Server(httpServer, {
       cors: {
         origin: (origin, callback) => {
-          console.log("Origin:", origin);
+          logger.log("Origin:", origin);
           if (!origin) return callback(null, false); // Disallow requests without origin
           if (allowedOrigins.includes(origin)) {
             return callback(null, true);
@@ -68,16 +69,16 @@ const SOCKET_PORT = Number(process.env.SOCKET_PORT);
     await handleNotifications(io);
     // Global error handling
     io.on("error", (error) => {
-      console.error("Socket.IO Server Error:", error.message);
+      logger.error("Socket.IO Server Error:", error.message);
     });
 
     httpServer.listen(SOCKET_PORT, () => {
-      console.log(`Socket.IO server listening on port ${SOCKET_PORT}`);
+      logger.log(`Socket.IO server listening on port ${SOCKET_PORT}`);
     });
 
 
   } catch (error) {
-    console.error("Error starting the socket server:", error);
+    logger.error("Error starting the socket server:", error);
     process.exit(1);
   }
 })();

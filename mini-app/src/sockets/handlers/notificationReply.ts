@@ -10,7 +10,7 @@ import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import eventFieldsDB from "@/server/db/eventFields.db";
 import bcryptLib from "@/lib/bcrypt";
 import userEventFieldsDB from "@/server/db/userEventFields.db";
-
+import { logger } from "@/server/utils/logger";
 
 import {
   getCache, setCache, deleteCache,
@@ -41,7 +41,7 @@ export const handleNotificationReply = async (
 
     const { notificationId, answer, type } = validatedData;
     const notificationIdNumber = Number(notificationId);
-    console.log(
+    logger.log(
       `Received notification_reply from ${sanitizedUsername}: notificationId=${notificationId}, answer=${answer} type=${type}`
     );
 
@@ -54,20 +54,20 @@ export const handleNotificationReply = async (
     const foundNotification = await notificationsDB.getNotificationById(notificationIdNumber);
     if (!foundNotification) {
       callback({ status: "error", message: "Notification not found" });
-      console.warn(`Notification ${notificationIdNumber} not found.`);
+      logger.warn(`Notification ${notificationIdNumber} not found.`);
       return;
     }
 
     const foundNotificationUserId = Number(foundNotification.userId);
     if (isNaN(foundNotificationUserId)) {
       callback({ status: "error", message: "Invalid notification owner" });
-      console.warn(`Notification ${notificationIdNumber} has invalid owner.`);
+      logger.warn(`Notification ${notificationIdNumber} has invalid owner.`);
       return;
     }
 
     // Check ownership
     if (foundNotificationUserId !== userId) {
-      console.warn(
+      logger.warn(
         `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to a notification they don't own (Notification ID: ${notificationIdNumber}).`
       );
       callback({ status: "error", message: "Unauthorized: You do not own this notification." });
@@ -76,7 +76,7 @@ export const handleNotificationReply = async (
 
     // Check if notification is unread
     if (foundNotification.readAt === null) {
-      console.warn(
+      logger.warn(
         `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to an unread notification (Notification ID: ${notificationIdNumber}).`
       );
       callback({ status: "error", message: `You can't reply to an unread notification.` });
@@ -88,11 +88,11 @@ export const handleNotificationReply = async (
     const readAtTimestamp = Math.floor(new Date(foundNotification.readAt).getTime() / 1000);
     const timeoutToCheck = foundNotification.actionTimeout ? Number(foundNotification.actionTimeout) : 0;
     const notificationTimeout = readAtTimestamp + timeoutToCheck + NOTIFICATION_TIMEOUT_MARGIN;
-    console.log(
+    logger.log(
       `readAtTimestamp: ${readAtTimestamp}, foundNotification.actionTimeout: ${foundNotification.actionTimeout}, currentTime: ${currentTime}, notificationTimeout: ${notificationTimeout}`
     );
     if (notificationTimeout < currentTime) {
-      console.warn(
+      logger.warn(
         `User ${sanitizedUsername} (ID: ${userId}) attempted to reply after timeout (Notification ID: ${notificationIdNumber}).`
       );
       callback({ status: "error", message: `You can't reply to this notification after the timeout.` });
@@ -102,7 +102,7 @@ export const handleNotificationReply = async (
     // Check the related POA trigger
     const relatedPOATrigger = await eventPoaTriggersDB.getEventPoaTriggerById(foundNotification.itemId);
     if (!relatedPOATrigger) {
-      console.warn(`Event POA Trigger not found for ID ${foundNotification.itemId}`);
+      logger.warn(`Event POA Trigger not found for ID ${foundNotification.itemId}`);
       callback({ status: "error", message: `Event POA Trigger not found for ID ${foundNotification.itemId}` });
       return;
     }
@@ -110,7 +110,7 @@ export const handleNotificationReply = async (
     // Fetch the event
     const eventData = await getEventById(relatedPOATrigger.eventId);
     if (!eventData) {
-      console.warn(`Event not found for ID ${relatedPOATrigger.eventId}`);
+      logger.warn(`Event not found for ID ${relatedPOATrigger.eventId}`);
       callback({ status: "error", message: `Event not found for ID ${relatedPOATrigger.eventId}` });
       return;
     }
@@ -119,7 +119,7 @@ export const handleNotificationReply = async (
     const startDate = Number(eventData.start_date) * 1000;
     const endDate = Number(eventData.end_date) * 1000;
     if (Date.now() < startDate || Date.now() > endDate) {
-      console.warn(
+      logger.warn(
         `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to an inactive event (Notification ID: ${notificationIdNumber}).`
       );
       callback({
@@ -132,7 +132,7 @@ export const handleNotificationReply = async (
     // Check if the user is registered in the event
     const getRegisteredUser = await eventRegistrantsDB.getByEventUuidAndUserId(eventData.event_uuid, userId);
     if (!getRegisteredUser) {
-      console.warn(
+      logger.warn(
         `User ${sanitizedUsername} (ID: ${userId}) attempted to reply to a notification for an event they are not registered (Notification ID: ${notificationIdNumber}).`
       );
       callback({
@@ -174,7 +174,7 @@ export const handleNotificationReply = async (
       // If not yet exceeded, check the password
       const inputField = await eventFieldsDB.getEventFieldByTitleAndEventId("secret_phrase_onton_input", relatedPOATrigger.eventId);
       if (!inputField) {
-        console.warn(`Event Field not found for ID ${relatedPOATrigger.eventId}`);
+        logger.warn(`Event Field not found for ID ${relatedPOATrigger.eventId}`);
         callback({
           status: "error",
           message: `Event Field not found for ID ${relatedPOATrigger.eventId}`,
@@ -211,7 +211,7 @@ export const handleNotificationReply = async (
           return;
         }
 
-        console.warn(
+        logger.warn(
           `User ${sanitizedUsername} (ID: ${userId}) wrong password attempt ${currentTries}/${maxTry} (Notification ID: ${notificationIdNumber}).`
         );
         callback({
@@ -228,20 +228,20 @@ export const handleNotificationReply = async (
       const hashedPassword = await bcryptLib.hashPassword(enteredPassword);
       await userEventFieldsDB.upsertUserEventFields(userId, relatedPOATrigger.eventId, inputField.id, hashedPassword);
       try{
-        console.log(`SBT::Reward::Creating user reward for user ${userId} and event ${relatedPOATrigger.eventId}`);
+        logger.log(`SBT::Reward::Creating user reward for user ${userId} and event ${relatedPOATrigger.eventId}`);
         const SBTResult = await createUserReward( { event_id: relatedPOATrigger.eventId,  user_id: userId } , true);
-        console.log(`SBT::Reward::Created user reward for user ${userId} and event ${relatedPOATrigger.eventId} with result:`, SBTResult?.reward_link);
+        logger.log(`SBT::Reward::Created user reward for user ${userId} and event ${relatedPOATrigger.eventId} with result:`, SBTResult?.reward_link);
       }
       catch(e){
-        console.error(`SBT::Reward::Error creating user reward for user ${userId} and event ID ${relatedPOATrigger.eventId}`);
-        console.error(e);
+        logger.error(`SBT::Reward::Error creating user reward for user ${userId} and event ID ${relatedPOATrigger.eventId}`);
+        logger.error(e);
       }
     }
 
     // If it's not POA_PASSWORD, or password check was correct, continue
     const newStatus: NotificationStatus = "REPLIED";
     const actionReply = { answer: (foundNotification.type === "POA_PASSWORD") ? await bcryptLib.hashPassword(answer) : answer };
-    console.log(`Updating notification ${notificationIdNumber} status to ${newStatus} with reply:`, actionReply);
+    logger.log(`Updating notification ${notificationIdNumber} status to ${newStatus} with reply:`, actionReply);
     await notificationsDB.updateNotificationStatusAndReply(notificationIdNumber, newStatus, actionReply);
 
     // If item_type === "POA_TRIGGER", handle POA result insertion
@@ -249,9 +249,9 @@ export const handleNotificationReply = async (
 
       const eventPoaTrigger = await eventPoaTriggersDB.getEventPoaTriggerById(foundNotification.itemId);
       if (!eventPoaTrigger) {
-        console.warn(`Event POA Trigger not found for ID ${foundNotification.itemId}`);
+        logger.warn(`Event POA Trigger not found for ID ${foundNotification.itemId}`);
       } else {
-        console.log(`Inserting POA result for User ${userId} and Event ${eventPoaTrigger.eventId}`);
+        logger.log(`Inserting POA result for User ${userId} and Event ${eventPoaTrigger.eventId}`);
         await eventPoaResultsDB.insertPoaResult({
           userId,
           eventId: eventPoaTrigger.eventId,
@@ -267,7 +267,7 @@ export const handleNotificationReply = async (
         const eventDetails = await getEventById(eventId);
         const organizerId = eventDetails?.owner;
         if (!organizerId) {
-          console.warn(`Organizer ID not found for Event POA Trigger ID ${eventPoaTrigger.id}`);
+          logger.warn(`Organizer ID not found for Event POA Trigger ID ${eventPoaTrigger.id}`);
         } else {
           const userAnswerNotification = {
             userId: organizerId,
@@ -289,7 +289,7 @@ export const handleNotificationReply = async (
           };
 
           await notificationsDB.addNotifications([userAnswerNotification] , false);
-          console.log(`USER_ANSWER_POA notification created for Organizer ID ${organizerId}`);
+          logger.log(`USER_ANSWER_POA notification created for Organizer ID ${organizerId}`);
         }
       }
     }
@@ -307,7 +307,7 @@ export const handleNotificationReply = async (
       });
     }
   } catch (error) {
-    console.error("Error processing notification_reply:", error);
+    logger.error("Error processing notification_reply:", error);
 
     let errorMessage = "An unexpected error occurred.";
     if (error instanceof z.ZodError && error.errors.length > 0) {

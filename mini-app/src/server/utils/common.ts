@@ -1,5 +1,6 @@
 import { redisTools } from "@/lib/redisTools";
 import { setTimeout as sleep } from "timers/promises";
+import { logger } from "@/server/utils/logger";
 
 async function runWithLock(
   task: () => Promise<any>, // The async task to execute
@@ -22,28 +23,28 @@ async function runWithLock(
   while (executions < runCount) {
     const lockValue = await redisTools.getCache(lockKey);
     if (lockValue) {
-      console.log(`[${taskName}] Task skipped. Lock is active.`);
+      logger.log(`[${taskName}] Task skipped. Lock is active.`);
       await sleep(sleepDuration);
       continue;
     }
 
     await redisTools.setCache(lockKey, true, ttl);
-    console.log(`[${taskName}] Lock set. Task execution started.`);
+    logger.log(`[${taskName}] Lock set. Task execution started.`);
 
     try {
       const startTime = Date.now();
       await task();
-      console.log(`[${taskName}] Task completed successfully in ${Date.now() - startTime}ms.`);
+      logger.log(`[${taskName}] Task completed successfully in ${Date.now() - startTime}ms.`);
     } catch (error) {
-      console.error(`[${taskName}] Task failed: ${error}`, error);
+      logger.error(`[${taskName}] Task failed: ${error}`, error);
     } finally {
       await redisTools.deleteCache(lockKey);
-      console.log(`[${taskName}] Lock cleared. Task cycle completed.`);
+      logger.log(`[${taskName}] Lock cleared. Task cycle completed.`);
     }
 
     executions++;
     if (executions < runCount) await sleep(sleepDuration);
   }
 
-  console.log(`[${taskName}] Task execution finished after ${executions} iterations.`);
+  logger.log(`[${taskName}] Task execution finished after ${executions} iterations.`);
 }

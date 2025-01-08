@@ -1,6 +1,7 @@
 import { Server, Socket } from "socket.io";
 import crypto from "crypto";
 import { validateMiniAppData } from "@/utils";
+import { logger } from "@/server/utils/logger";
 
 const BOT_TOKEN = process.env.BOT_TOKEN || ""; // Use your bot token here
 const TEST_INIT_DATA = process.env.TEST_INIT_DATA || ""; // Add your Telegram initData here
@@ -18,24 +19,24 @@ const TEST_INIT_DATA = process.env.TEST_INIT_DATA || ""; // Add your Telegram in
 export const validateTelegramInitData = (initData: string): boolean => {
   try {
     if (initData === undefined || BOT_TOKEN === undefined || BOT_TOKEN === "" || initData === "") {
-      console.log("initData:", initData);
-      console.error("Validation failed: Missing initData or botToken", initData);
+      logger.log("initData:", initData);
+      logger.error("Validation failed: Missing initData or botToken", initData);
       return false;
     }
     const  validationResponse = validateMiniAppData(initData);
     if (!validationResponse.valid) {
-      console.error(`Validation failed: Invalid initData for user ${validationResponse.initDataJson.user.id}`);
+      logger.error(`Validation failed: Invalid initData for user ${validationResponse.initDataJson.user.id}`);
       return false;
     }
     else if( validationResponse.valid) {
-      console.log(`Validation passed: Valid initData for user ${validationResponse.initDataJson.user.id}`);
+      logger.log(`Validation passed: Valid initData for user ${validationResponse.initDataJson.user.id}`);
       return true;
     }
     // it should never reach here but just in case it does it mean validation failed
     return false;
 
   } catch (error) {
-    console.error("Error during validation:", error);
+    logger.error("Error during validation:", error);
     return false;
   }
 };
@@ -71,7 +72,7 @@ export const applyAuthMiddleware = (io: Server) => {
       socket.data.user = user; // Attach user data to the socket
       next();
     } catch (error) {
-      console.error("Socket authentication error:", error);
+      logger.error("Socket authentication error:", error);
       next(new Error("Authentication failed."));
     }
   });

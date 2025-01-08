@@ -2,7 +2,7 @@ import { sendTelegramMessage , sendEventPhoto } from "@/lib/tgBot";
 import { EventTypeSecure, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
 import axios from "axios";
-
+import { logger } from "@/server/utils/logger";
 // Send reward notification to visitors
 export const sendRewardNotification = async (
   reward: RewardType,
@@ -35,7 +35,7 @@ export const sendRewardNotification = async (
     };
   } catch (error) {
     // Handle the error and log it
-    console.error("Error sending reward notification:", error);
+    logger.error("Error sending reward notification:", error);
 
     // Return structured error response instead of throwing
     return {
@@ -69,7 +69,7 @@ export const sendCode = async (telegramUserId: number, code: string) => {
     };
   } catch (error) {
     // Handle the error and log it
-    console.error("Error sending OTP code:", error);
+    logger.error("Error sending OTP code:", error);
 
     // Return structured error response instead of throwing
     return {
@@ -87,7 +87,7 @@ export const sendTelegramMessageNoLink = async (chat_id: string | number, messag
     });
 
     if (!response.success) {
-      console.error("Failed to send message:", response.error);
+      logger.error("Failed to send message:", response.error);
       return {
         success: false,
         error: response.error || "Failed to send message",
@@ -98,7 +98,7 @@ export const sendTelegramMessageNoLink = async (chat_id: string | number, messag
       message: "Message sent successfully",
     };
   } catch (error) {
-    console.error("Error sending Telegram message:", error);
+    logger.error("Error sending Telegram message:", error);
     return {
       success: false,
       error: (error as Error).message || "An unexpected error occurred",
@@ -136,7 +136,7 @@ export const shareEventRequest = async (
       data: response.data,
     };
   } catch (error) {
-    console.error("Error sharing event: ", error);
+    logger.error("Error sharing event: ", error);
 
     // Return error response with appropriate message
     return {

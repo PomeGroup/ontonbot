@@ -12,6 +12,7 @@ import {
 import { and, between, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { checkEventTicketToCheckIn } from "@/server/db/events";
 import { redisTools } from "@/lib/redisTools";
+import { logger } from "@/server/utils/logger";
 
 const getVisitorCacheKey = (user_id: number, event_uuid: string) => `visitor:${user_id}:${event_uuid}`;
 
@@ -20,7 +21,7 @@ const findVisitorByUserAndEvent = async (user_id: number, event_uuid: string) =>
   const cachedVisitor = await redisTools.getCache(cacheKey);
 
   if (cachedVisitor) {
-    // console.log("Cache hit for:", cacheKey);
+    // logger.log("Cache hit for:", cacheKey);
     return JSON.parse(cachedVisitor);
   }
 
@@ -302,7 +303,7 @@ export const selectVisitorsByEventUuid = async (
     } else {
       visitorsData = ticketDataResults;
     }
-    // console.log(ticketDataResults);
+    // logger.log(ticketDataResults);
   }
 
   const moreRecordsAvailable = typeof limit === "number" ? visitorsData.length === limit : false;
@@ -373,7 +374,7 @@ export const addVisitor = async (user_id: number, event_uuid: string) => {
     // Insert new visitor
     return await insertNewVisitor(user_id, event_uuid);
   } catch (error) {
-    console.error("Error adding visitor:", error);
+    logger.error("Error adding visitor:", error);
     throw new Error("Failed to add visitor.");
   }
 };
@@ -392,7 +393,7 @@ export const findVisitorByUserAndEventUuid = async (user_id: number, event_uuid:
   const cachedVisitor = await redisTools.getCache(cacheKey);
 
   if (cachedVisitor) {
-    // console.log("Cache hit for:", cacheKey);
+    // logger.log("Cache hit for:", cacheKey);
     return JSON.parse(cachedVisitor);
   }
 
