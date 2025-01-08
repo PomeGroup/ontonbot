@@ -80,7 +80,7 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
             className="mr-4"
             label
             titleWrapClassName="text-sm font-bold"
-            title="I Agree to the terms & conditions"
+            title="I Agree to the terms of service"
             media={
               <Checkbox
                 name="terms-and-conditions"
@@ -102,29 +102,39 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
         {(open, setOpen) => (
           <>
             <Toolbar top>
-              <div className="text-center flex-1 font-bold">Terms And Conditions</div>
+              <div className="text-center flex-1 font-bold">Terms of Service</div>
             </Toolbar>
             <Block>
-              <ul>
+              <b>Compliance with Terms of Service</b>
+              <ul className="list-disc ml-4">
+                <li>Ensure your events and materials comply with ONton’s Terms of Service.</li>
                 <li>
-                  Lorem ipsum dolor sit, amet consectetur adipisicing elit. Harum ad excepturi nesciunt nobis aliquam.
-                  Quibusdam ducimus neque necessitatibus, molestias cupiditate velit nihil alias incidunt, excepturi
-                  voluptatem dolore itaque sapiente dolores!
+                  Avoid content that is illegal, harmful, or infringes on intellectual property rights. Examples of
+                  prohibited content include:
+                  <ul className="list-circle ml-4">
+                    <li>Pornographic material</li>
+                    <li>Activities related to organized crime, terrorism, or illicit drugs</li>
+                    <li>Discrimination, hate speech, or other harmful conduct</li>
+                  </ul>
                 </li>
+              </ul>
+              <b className="block mt-1">Respect User Privacy</b>
+              <ul className="list-disc ml-4">
+                <li>Do not engage in activities that compromise the privacy of other users.</li>
+                <li>Avoid actions that disrupt the functionality of the platform.</li>
+              </ul>
+              <b className="block mt-1">Engage Participants</b>
+              <ul className="list-disc ml-4">
                 <li>
-                  Lorem ipsum dolor sit, amet consectetur adipisicing elit. Harum ad excepturi nesciunt nobis aliquam.
-                  Quibusdam ducimus neque necessitatibus, molestias cupiditate velit nihil alias incidunt, excepturi
-                  voluptatem dolore itaque sapiente dolores!
+                  Enable participants to check in during your events. This allows them to receive SBT awards as proof of
+                  attendance.
                 </li>
+              </ul>
+              <b className="block mt-1">Foster a Positive Experience</b>
+              <ul className="list-disc ml-4">
                 <li>
-                  Lorem ipsum dolor sit, amet consectetur adipisicing elit. Harum ad excepturi nesciunt nobis aliquam.
-                  Quibusdam ducimus neque necessitatibus, molestias cupiditate velit nihil alias incidunt, excepturi
-                  voluptatem dolore itaque sapiente dolores!
-                </li>
-                <li>
-                  Lorem ipsum dolor sit, amet consectetur adipisicing elit. Harum ad excepturi nesciunt nobis aliquam.
-                  Quibusdam ducimus neque necessitatibus, molestias cupiditate velit nihil alias incidunt, excepturi
-                  voluptatem dolore itaque sapiente dolores!
+                  Create events that are inclusive, respectful, and aligned with ONton&lsquo;s values to ensure a great
+                  experience for all users.
                 </li>
               </ul>
               <div className="mt-6">
