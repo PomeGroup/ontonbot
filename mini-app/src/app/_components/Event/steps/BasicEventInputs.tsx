@@ -80,7 +80,7 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
             className="mr-4"
             label
             titleWrapClassName="text-sm font-bold"
-            title="I Agree to the terms of service"
+            title="I Agree to the terms and conditions"
             media={
               <Checkbox
                 name="terms-and-conditions"
@@ -102,12 +102,21 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
         {(open, setOpen) => (
           <>
             <Toolbar top>
-              <div className="text-center flex-1 font-bold">Terms of Service</div>
+              <div className="text-center flex-1 font-bold">Terms and Conditions</div>
             </Toolbar>
             <Block>
               <b>Compliance with Terms of Service</b>
               <ul className="list-disc ml-4">
-                <li>Ensure your events and materials comply with ONton’s Terms of Service.</li>
+                <li>
+                  Ensure your events and materials comply with &nbsp;
+                  <a
+                    className="text-primary font-bold"
+                    target="blank"
+                    href="https://onton.live/tos"
+                  >
+                    ONton’s Terms of Service.
+                  </a>
+                </li>
                 <li>
                   Avoid content that is illegal, harmful, or infringes on intellectual property rights. Examples of
                   prohibited content include:
@@ -139,12 +148,13 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
               </ul>
               <div className="mt-6">
                 <Button
+                  className="py-5 rounded-3xl"
                   onClick={() => {
                     setTermsChecked(true);
                     setOpen(false);
                   }}
                 >
-                  agreed
+                  I agree to the terms and conditions
                 </Button>
               </div>
             </Block>
