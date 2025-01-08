@@ -138,7 +138,7 @@ const EventRegistrationStatus = ({
     "": () => <UserRegisterForm />,
     pending: () => (
       <DataStatus
-        status="pending"
+        status="sent"
         title="Request Pending"
         description="Your request to join this event is pending to be approved."
       />

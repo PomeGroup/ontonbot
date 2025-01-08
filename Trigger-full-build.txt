@@ -7,3 +7,4 @@ full
 even worse than befor
 tets full build
 full build
+full build test before production
