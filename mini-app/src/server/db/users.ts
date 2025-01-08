@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { users } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { InferSelectModel, eq } from "drizzle-orm";
-
+import { logger } from "@/server/utils/logger";
 // Cache key prefix
 
 // Function to generate cache key for user
@@ -47,7 +47,7 @@ export const selectUserById = async (userId: number): Promise<InferSelectModel<t
     }
     return null;
   } catch (e) {
-    console.log("get user error: ", e);
+    logger.log("get user error: ", e);
     return null;
   }
 };
@@ -79,10 +79,10 @@ const insertUser = async (initDataJson: {
         .onConflictDoNothing() // Avoid conflict on duplicate entries
         .execute();
 
-      // console.log(`User ${initDataJson.user.username} ${initDataJson.user.id} added`);
+      // logger.log(`User ${initDataJson.user.username} ${initDataJson.user.id} added`);
       return await selectUserById(initDataJson.user.id);
     } catch (e) {
-      console.log("add user error: ", e);
+      logger.log("add user error: ", e);
     }
   } else {
     return user;
@@ -148,7 +148,7 @@ export const selectUserByUsername = async (username: string) => {
     .from(users)
     .where(eq(users.username, username.replace(/^@/, "")))
     .execute();
-  console.log("selectUserByUsername", userInfo);
+  logger.log("selectUserByUsername", userInfo);
   if (userInfo.length > 0) {
     return userInfo[0];
   }

@@ -12,6 +12,7 @@ import {
   publicProcedure,
   router,
 } from "../trpc";
+import { logger } from "../utils/logger";
 
 export const ordersRouter = router({
   updateOrderState: initDataProtectedProcedure
@@ -46,7 +47,7 @@ export const ordersRouter = router({
           return { code: 200, message: "nothing to update" };
         }
       } catch (error) {
-        console.log("order_updateOrderState_internal_error", error);
+        logger.log("order_updateOrderState_internal_error", error);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "internal server error" });
       }
     }),

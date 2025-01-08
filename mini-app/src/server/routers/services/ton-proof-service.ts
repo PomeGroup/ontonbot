@@ -5,7 +5,7 @@ import { randomBytes, sign } from "tweetnacl";
 import { CheckProofRequestDto } from "@/types/ton-proof";
 import { tryParsePublicKey } from "@/server/utils/wallets-data";
 import { DOMAINS, PAYLOAD_TTL } from "@/constants";
-
+import { logger } from "@/server/utils/logger";
 const tonProofPrefix = "ton-proof-item-v2/";
 const tonConnectPrefix = "ton-connect";
 const allowedDomains = DOMAINS;
@@ -39,7 +39,7 @@ export class TonProofService {
         return false;
       }
 
-      // console.log("walletv11113445", payload);
+      // logger.log("walletv11113445", payload);
       // 2.2. Check that TonAddressItemReply.publicKey equals to obtained public key
       const wantedPublicKey = Buffer.from(payload.public_key, "hex");
       if (!publicKey.equals(wantedPublicKey)) {

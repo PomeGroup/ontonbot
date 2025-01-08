@@ -1,5 +1,6 @@
 import { validateMiniAppData } from "@/utils";
 import { usersDB } from "./db/users";
+import { logger } from "@/server/utils/logger";
 
 export async function createContext({ req }: { req: Request }) {
   // get user from init data passed as authorization header
@@ -16,11 +17,13 @@ export async function createContext({ req }: { req: Request }) {
       const { valid, initDataJson } = validateMiniAppData(initData);
 
       if (!valid) {
+        logger.info("Invalid init data", { initData });
         return null;
       }
 
       const user = await usersDB.insertUser(initDataJson);
       if (!user) {
+        logger.info("User not found", { initDataJson });
         return null;
       }
 

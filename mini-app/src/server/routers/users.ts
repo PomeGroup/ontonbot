@@ -10,6 +10,7 @@ import { adminOrganizerProtectedProcedure, initDataProtectedProcedure, publicPro
 
 import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
+import { logger } from "../utils/logger";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure.input(z.string()).query(async (opts) => {
@@ -32,7 +33,7 @@ export const usersRouter = router({
   // private
   getWallet: initDataProtectedProcedure.input(z.object({ wallet_address: z.string().optional() })).query(async (opts) => {
     const res = await usersDB.selectWalletById(opts.ctx.user.user_id);
-    // console.log(res);
+    // logger.log(res);
 
     return res?.wallet;
   }),
@@ -90,7 +91,7 @@ export const usersRouter = router({
     )
     .query(async (opts) => {
       try {
-        // console.log("context we found", opts.ctx);
+        // logger.log("context we found", opts.ctx);
 
         await visitorService.addVisitor(opts);
         // Fetch the visitor from the database
@@ -125,7 +126,7 @@ export const usersRouter = router({
               } as const;
             }
           } else {
-            // console.log(error);
+            // logger.log(error);
           }
         }
 
@@ -163,7 +164,7 @@ export const usersRouter = router({
           type: "reward_link_generated",
         } as const;
       } catch (error) {
-        console.error("Error in getVisitorReward query:", error);
+        logger.error("Error in getVisitorReward query:", error);
         if (error instanceof TRPCError) {
           throw error;
         } else {

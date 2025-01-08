@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { eventPoaResults, EventPoaResultStatus, eventPoaResultStatus } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { eq, and } from "drizzle-orm";
-
+import { logger } from "@/server/utils/logger";
 // Cache key generator for POA results
 const getPoaResultCacheKey = (userId: number, eventId: number) =>
   `${redisTools.cacheKeys.eventPoaResult}${userId}:${eventId}`;
@@ -24,10 +24,10 @@ export const getPoaResultsByUserIdAndEventId = async (userId: number, eventId: n
       .execute();
 
     await redisTools.setCache(cacheKey, results, redisTools.cacheLvl.short); // Cache the result
-    console.log(`POA Results for User ${userId} and Event ${eventId} retrieved:`, results);
+    logger.log(`POA Results for User ${userId} and Event ${eventId} retrieved:`, results);
     return results;
   } catch (error) {
-    console.error("Error getting POA results by user ID and event ID:", error);
+    logger.error("Error getting POA results by user ID and event ID:", error);
     throw error;
   }
 };
@@ -51,10 +51,10 @@ export const getPoaResultsByUserIdEventIdAndStatus = async (
       )
       .execute();
 
-    console.log(`POA Results for User ${userId}, Event ${eventId}, and Status "${status}" retrieved:`, results);
+    logger.log(`POA Results for User ${userId}, Event ${eventId}, and Status "${status}" retrieved:`, results);
     return results;
   } catch (error) {
-    console.error("Error getting POA results by user ID, event ID, and status:", error);
+    logger.error("Error getting POA results by user ID, event ID, and status:", error);
     throw error;
   }
 };
@@ -111,7 +111,7 @@ export const insertPoaResult = async (params: {
 
     return insertedResult;
   } catch (error) {
-    console.error("Error inserting POA result:", error);
+    logger.error("Error inserting POA result:", error);
     throw error;
   }
 };
@@ -132,10 +132,10 @@ export const getPoaResultsByEventId = async (eventId: number) => {
       .execute();
 
     await redisTools.setCache(cacheKey, results, redisTools.cacheLvl.short); // Cache the result
-    console.log(`POA Results for Event ${eventId} retrieved:`, results);
+    logger.log(`POA Results for Event ${eventId} retrieved:`, results);
     return results;
   } catch (error) {
-    console.error("Error getting POA results by event ID:", error);
+    logger.error("Error getting POA results by event ID:", error);
     throw error;
   }
 };

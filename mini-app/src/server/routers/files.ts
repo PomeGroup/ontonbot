@@ -5,6 +5,7 @@ import { adminOrganizerProtectedProcedure, router } from "../trpc";
 import { validateMimeType } from "@/lib/validateMimeType";
 import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
 import FormData from "form-data";
+import { logger } from "@/server/utils/logger";
 
 export const fieldsRouter = router({
   uploadImage: adminOrganizerProtectedProcedure
@@ -40,7 +41,7 @@ export const fieldsRouter = router({
             if (!data || typeof data !== "string") {
               throw new Error("Invalid base64 data");
             }
-            console.log("Base64 Data: ", data.slice(0, 100)); // Logging only the first 100 characters for readability
+            logger.log("Base64 Data: ", data.slice(0, 100)); // Logging only the first 100 characters for readability
             // Check if the base64 data contains the data URL scheme
             const mimeTypeMatch = data.match(/^data:(.*?);base64,/);
             if (!mimeTypeMatch || !mimeTypeMatch[1]) {
@@ -98,12 +99,12 @@ export const fieldsRouter = router({
       formData.append("bucketName", bucketName);
       // Send the image data to the upload service (MinIO)
       const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload`;
-      console.log("URL: ", url);
+      logger.log("URL: ", url);
       try {
         const res = await axios.post(url, formData, {
           headers: formData.getHeaders(),
         });
-        console.log("Response: ", res.data);
+        logger.log("Response: ", res.data);
 
         if (!res.data || !res.data.imageUrl) {
           throw new Error("File upload failed");
@@ -111,7 +112,7 @@ export const fieldsRouter = router({
 
         return res.data as { imageUrl: string };
       } catch (error) {
-        console.error("Error during file upload:", error);
+        logger.error("Error during file upload:", error);
         throw new Error("An error occurred during file upload");
       }
     }),

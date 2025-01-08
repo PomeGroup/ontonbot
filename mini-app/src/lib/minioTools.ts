@@ -1,6 +1,6 @@
 import axios from "axios";
 import FormData from "form-data";
-
+import { logger } from "@/server/utils/logger";
 export const uploadJsonToMinio = async (jsonData: Record<string, any>, bucketName: string, subfolder: string = "") => {
     const buffer = Buffer.from(JSON.stringify(jsonData));
     const fullFilename = `${subfolder}/metadata.json`;
@@ -28,7 +28,7 @@ export const uploadJsonToMinio = async (jsonData: Record<string, any>, bucketNam
   
       return res.data.jsonUrl;
     } catch (error) {
-      console.error("Error during JSON upload:", error);
+      logger.error("Error during JSON upload:", error);
       throw new Error("An error occurred during JSON upload");
     }
   };

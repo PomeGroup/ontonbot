@@ -2,6 +2,7 @@ import { pushToQueue, consumeFromQueue ,QueueNamesType } from "@/lib/rabbitMQ";
 import { Options } from "amqplib";
 import { v4 as uuidv4 } from 'uuid';
 import {  rabbitMQUser } from "@/sockets/constants";
+import { logger } from "@/server/utils/logger";
 /**
  * Push a message to a specified queue.
  *
@@ -21,9 +22,9 @@ export const pushMessageToQueue = async (queue: QueueNamesType, message: any): P
     };
 
     await pushToQueue(queue, message, options);
-    console.log(`Message pushed to queue '${queue}':`, message);
+    logger.log(`Message pushed to queue '${queue}':`, message);
   } catch (error) {
-    console.error(`Error pushing message to queue '${queue}':`, error);
+    logger.error(`Error pushing message to queue '${queue}':`, error);
     throw error;
   }
 };
@@ -42,9 +43,9 @@ export const consumeQueueMessages = async (
 ): Promise<void> => {
   try {
     await consumeFromQueue(queue, onMessage, prefetchCount);
-    console.log(`Started consuming messages from queue '${queue}' with prefetch count ${prefetchCount}`);
+    logger.log(`Started consuming messages from queue '${queue}' with prefetch count ${prefetchCount}`);
   } catch (error) {
-    console.error(`Error consuming messages from queue '${queue}':`, error);
+    logger.error(`Error consuming messages from queue '${queue}':`, error);
     throw error;
   }
 };
