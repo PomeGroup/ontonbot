@@ -92,8 +92,8 @@ export default function ProfilePage() {
           </div>
         </div>
       </Card>
-      <Button className="mb-12 mx-4 w-[calc(100%-2rem)] py-6">Create New Event</Button>
-      <BottomNavigation active="MyONTON" />
+      <Button className="mb-12 mx-4 !w-[calc(100%-2rem)] py-6">Create New Event</Button>
+      <BottomNavigation active="My ONTON" />
     </div>
   );
 }
