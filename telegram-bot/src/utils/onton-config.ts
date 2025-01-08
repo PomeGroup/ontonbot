@@ -9,10 +9,6 @@ let configProtected: { [key: string]: string | null } = {};
     // Fetch the settings and restructure into config and configProtected
     const ontonConfig = await fetchOntonSetting();
 
-    console.log({
-      ontonConfig,
-    });
-
     config = ontonConfig.config;
     configProtected = ontonConfig.configProtected;
   } catch (error) {
