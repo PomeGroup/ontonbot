@@ -1039,7 +1039,8 @@ const requestShareEvent = initDataProtectedProcedure
       const event = await getEventByUuid(eventUuid);
 
       if (!event) {
-        return { status: "fail", data: "Event not found" };
+        console.error(`Event not found  ${eventUuid} for user ${opts.ctx.user.user_id}  ` ,opts.input);
+        return { status: "fail", data:  `Event not found  ${eventUuid}` };
       }
 
       const { event_uuid } = event;
