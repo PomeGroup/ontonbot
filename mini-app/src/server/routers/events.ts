@@ -395,6 +395,13 @@ const getEventRegistrants = evntManagerPP
       throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
     }
 
+    const condition = event.has_payment
+      ? and(
+          or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
+          eq(eventRegistrants.event_uuid, event_uuid)
+        )
+      : eq(eventRegistrants.event_uuid, event_uuid);
+
     const registrants = await db
       .select({
         event_uuid: eventRegistrants.event_uuid,
@@ -408,7 +415,7 @@ const getEventRegistrants = evntManagerPP
       })
       .from(eventRegistrants)
       .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
-      .where(eq(eventRegistrants.event_uuid, event_uuid))
+      .where(condition)
       .orderBy(desc(eventRegistrants.created_at))
       .limit(limit)
       .offset(offset)
@@ -568,7 +575,6 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
       const is_paid = input_event_data.paid_event?.has_payment;
       if (is_paid && !config?.ONTON_WALLET_ADDRESS) {
-
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "ONTON_WALLET_ADDRESS NOT SET error" });
       }
 
@@ -1040,11 +1046,8 @@ const requestShareEvent = initDataProtectedProcedure
       const event = await getEventByUuid(eventUuid);
 
       if (!event) {
-        logger.log(
-          `Event not found ${eventUuid} for user ${opts.ctx.user.user_id}`,
-          opts
-        );
-        return { status: "fail", data:  `Event not found  ${eventUuid}` };
+        logger.log(`Event not found ${eventUuid} for user ${opts.ctx.user.user_id}`, opts);
+        return { status: "fail", data: `Event not found  ${eventUuid}` };
       }
 
       const { event_uuid } = event;

@@ -302,6 +302,7 @@ export async function deployCollection(collectio_metadata_url: string) {
   let seqno = await collection.deploy(wallet);
   console.log(`Collection deployed: ${collection.address}`);
   await waitSeqno(seqno, wallet);
+  await sleep(1500);
   console.log(`Collection deployed Completely ..... `);
 
   return collection.address.toString();
