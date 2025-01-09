@@ -146,12 +146,13 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
                     icon={<Pencil size={18} />}
                     onClick={handleEdit}
                   />
-                  <StatusChip
-                    variant={itemStatus === "checkedin" ? "primary" : "success"}
-                    label={itemStatus}
-                  />
+
                 </>
             )}
+            <StatusChip
+              variant={itemStatus === "checkedin" ? "primary" : "success"}
+              label={itemStatus}
+            />
           </div>
         );
         footerContent = hasPayment || !isEditing ? null : (
