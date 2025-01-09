@@ -6,7 +6,7 @@ import { type NextRequest } from "next/server";
 import { getAuthenticatedUser } from "@/server/auth";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
-
+import { logger } from "@/server/utils/logger";
 const updateTicketSchema = z.object({
   data: z.object({
     full_name: z.string(),
@@ -38,7 +38,7 @@ export async function PUT(req: NextRequest, { params }: { params: { nftaddress: 
     /* -------------------------------------------------------------------------- */
 
     if (unauthorized) {
-      console.warn(`Unauthorized access attempt for ticket update: ${nft_address}`);
+      logger.warn(`Unauthorized access attempt for ticket update: ${nft_address}`);
       return unauthorized;
     }
 
@@ -178,15 +178,15 @@ export async function PUT(req: NextRequest, { params }: { params: { nftaddress: 
     //   .where(eq(tickets.nftAddress, nft_address))
     //   .execute();
 
-    console.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
+    logger.log(`route api ticket nft address : User ${userId} claimed ticket info for NFT ${nft_address}`);
 
-    // console.log(`route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`);
+    // logger.log(`route api ticket nft address : Deal room refresh result ${JSON.stringify(result)}`);
     return Response.json({ message: "user ticket info updated" });
   } catch (error) {
     if (error instanceof SyntaxError)
       return Response.json({ error: "invalid_body", message: "invalid json body provided" }, { status: 400 });
 
-    console.error("nft claim update error ", error);
+    logger.error("nft claim update error ", error);
     return Response.json({ error: "internal_server_error", message: "internal_server_error" }, { status: 500 });
   }
 }
