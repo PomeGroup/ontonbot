@@ -289,7 +289,7 @@ export async function mintNFT(owner_address : string , collection_address: strin
 export async function deployCollection(collectio_metadata_url: string) {
   const wallet = await openWallet(process.env.MNEMONIC!.split(" "));
 
-  console.log("Start deploy of nft collection...");
+  logger.log("Start deploy of nft collection...");
   const collectionData = {
     ownerAddress: wallet.contract.address,
     royaltyPercent: 0.1, // 0.1 = 10%
