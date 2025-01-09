@@ -315,7 +315,7 @@ const RegistrationGuestList = () => {
   /*
    * Process Registrant (Approve ✅ / Reject ❌)
    */
-  const processRegistrantRequest = trpc.events.processRegistrantRequest.useMutation();
+  const processRegistrantRequest = trpc.registrant.processRegistrantRequest.useMutation();
 
   /*
     * Check if the event has payment enabled
@@ -325,7 +325,7 @@ const RegistrationGuestList = () => {
   /*
    * Export visitor list
    */
-  const exportVisitorList = trpc.events.requestExportFile.useMutation({
+  const exportVisitorList = trpc.telegramInteractions.requestExportFile.useMutation({
     onSuccess: () => {
       webApp?.HapticFeedback.impactOccurred("soft");
       webApp?.close();
@@ -384,7 +384,7 @@ const RegistrationGuestList = () => {
   }, [results]);
 
   // Fetch registrants dynamically based on offset
-  const { data, isFetching } = trpc.events.getEventRegistrants.useQuery(
+  const { data, isFetching } = trpc.registrant.getEventRegistrants.useQuery(
     { event_uuid: params.hash, offset, limit: LIMIT },
     {
       keepPreviousData: true, // Keeps existing data while fetching new data

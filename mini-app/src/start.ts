@@ -12,7 +12,7 @@ import "dotenv/config";
 import { and, asc, eq, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
 import { sleep } from "./utils";
-import { CreateTonSocietyDraft } from "@/server/routers/events";
+import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
 import { registerActivity } from "@/lib/ton-society-api";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { is_mainnet } from "@/server/routers/services/tonCenter";

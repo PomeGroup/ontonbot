@@ -1,13 +1,12 @@
 import { db } from "@/db/db";
 import { eventRegistrants, notifications } from "@/db/schema";
-import { and, eq, not, inArray, asc, gt, ne } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, ne, not, or } from "drizzle-orm";
 
 export const fetchApprovedUsers = async (
   eventUuid: string,
   triggerId: number,
   lastUserId: number,
   pageSize: number
-
 ): Promise<{ userId: number }[]> => {
   try {
     const approvedUsers = await db
@@ -24,7 +23,13 @@ export const fetchApprovedUsers = async (
               db
                 .select({ userId: notifications.userId })
                 .from(notifications)
-                .where(and(eq(notifications.item_type, "POA_TRIGGER"), eq(notifications.itemId, triggerId) , ne(notifications.status, "REPLIED")))
+                .where(
+                  and(
+                    eq(notifications.item_type, "POA_TRIGGER"),
+                    eq(notifications.itemId, triggerId),
+                    ne(notifications.status, "REPLIED")
+                  )
+                )
             )
           ),
           // Keyset pagination: fetch users with ID greater than the last processed ID
@@ -54,7 +59,50 @@ export const getByEventUuidAndUserId = async (eventUuid: string, userId: number)
     throw error; // Propagate the error to be handled by the caller
   }
 };
+
+export const getRegistrantRequest = async (event_uuid: string, user_id: number) => {
+  return (
+    await db
+      .select()
+      .from(eventRegistrants)
+      .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, user_id)))
+      .execute()
+  ).pop();
+};
+
+export const getApprovedRequestsCount = async (event_uuid: string) => {
+  return (
+    (
+      await db
+        .select({ count: count() })
+        .from(eventRegistrants)
+        .where(
+          and(
+            or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
+            eq(eventRegistrants.event_uuid, event_uuid)
+          )
+        )
+        .execute()
+    ).pop()?.count || 0
+  );
+};
+
+export const getNotRejectedRequestsCount = async (event_uuid: string) => {
+  return (
+    (
+      await db
+        .select({ count: count() })
+        .from(eventRegistrants)
+        .where(and(ne(eventRegistrants.status, "rejected"), eq(eventRegistrants.event_uuid, event_uuid)))
+        .execute()
+    ).pop()?.count || 0
+  );
+};
+
 export const eventRegistrantsDB = {
   fetchApprovedUsers,
   getByEventUuidAndUserId,
+  getNotRejectedRequestsCount,
+  getApprovedRequestsCount,
+  getRegistrantRequest,
 };

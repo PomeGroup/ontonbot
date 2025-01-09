@@ -46,3 +46,8 @@ export const formatDateRange = (start: number, end: number, _timezone: string): 
     sameDay ? "" : ` - ${endDate.toLocaleDateString("en-US", endOptions)}`
   } `;
 };
+
+export const timestampToIsoString = (timestamp: number) => {
+  const date = new Date(timestamp * 1000);
+  return date.toISOString();
+};

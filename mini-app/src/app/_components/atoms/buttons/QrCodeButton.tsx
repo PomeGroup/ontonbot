@@ -10,19 +10,19 @@ const QrCodeButton = ({ url, hub, event_uuid }: { event_uuid: string; url: strin
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
   const hapticFeedback = WebApp?.HapticFeedback;
-  const requestSendQRcodeMutation = trpc.events.requestSendQRcode.useMutation();
+  const requestSendQRCodeMutation = trpc.telegramInteractions.requestSendQRCode.useMutation();
 
   return (
     <Button
       className={cn(
         "w-full text-sm xs:text-md space-x-2 mb-4 mt-2",
-        requestSendQRcodeMutation.isLoading && Boolean(initData) && "opacity-50"
+        requestSendQRCodeMutation.isLoading && Boolean(initData) && "opacity-50"
       )}
       variant={"secondary"}
-      disabled={!initData || requestSendQRcodeMutation.isLoading}
+      disabled={!initData || requestSendQRCodeMutation.isLoading}
       onClick={async () => {
         if (!initData) return;
-        await requestSendQRcodeMutation.mutateAsync({
+        await requestSendQRCodeMutation.mutateAsync({
           url,
           hub,
           event_uuid,
@@ -35,7 +35,7 @@ const QrCodeButton = ({ url, hub, event_uuid }: { event_uuid: string; url: strin
     >
       <QrCode />
       <span>Get Event Link and QR</span>
-      {requestSendQRcodeMutation.isLoading && <LoaderIcon className="h-5 animate-spin" />}
+      {requestSendQRCodeMutation.isLoading && <LoaderIcon className="h-5 animate-spin" />}
     </Button>
   );
 };

@@ -7,6 +7,7 @@ const tgClient = axios.create({
 });
 
 import { AxiosError } from "axios";
+import { removeKey, removeSecretKey } from "@/lib/utils";
 
 export const sendTelegramMessage = async (props: {
   chat_id: string | number;
@@ -145,4 +146,40 @@ export const sendLogNotification = async (props: {
     },
     parse_mode: "HTML",
   });
+};
+
+/// 🌳 ---- render the update event message ---- 🌳
+export const renderUpdateEventMessage = (
+  username: string | number,
+  eventUuid: string,
+  oldChanges: any,
+  updateChanges: any
+): string => {
+  return `
+@${username} <b>Updated</b> an event <code>${eventUuid}</code> successfully
+
+Before:
+<pre><code>${removeSecretKey(oldChanges)}</code></pre>
+
+After:
+<pre><code>${removeSecretKey(updateChanges)}</code></pre>
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
+`;
+};
+
+/// 🌳 ---- render the add event message ---- 🌳
+export const renderAddEventMessage = (
+  username: string | number,
+  eventUuid: string,
+  eventData:  any,
+): string => {
+  const eventDataWithoutDescription = removeKey(eventData, "description");
+  return `
+@${username} <b>Added</b> a new event <code>${eventUuid}</code> successfully
+
+<pre><code>${removeSecretKey(eventDataWithoutDescription)}</code></pre>
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
+  `;
 };
