@@ -33,8 +33,9 @@ export const GeneralStep = () => {
     e.preventDefault();
     if (!formRef.current) return;
 
-    if (!termsChecked) {
+    if (!termsChecked && !eventData.event_id) {
       setShowTermsError(true);
+      toast.error("Please agree to the terms and conditions to continue.");
       return;
     }
 
