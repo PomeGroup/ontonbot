@@ -69,11 +69,12 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
           className={cn("w-full")}
         >
           <Block className="flex flex-col gap-2 justify-between">
-            <div className="p-4 divide-black divide-y-2 w-full flex flex-col gap-1">
+            <div className="p-4 w-full flex flex-col gap-1">
               <Button
                 className="w-full"
                 itemType="button"
                 rounded
+                outline
                 onClick={() => openInOSBrowser(googleCalendarLink)}
               >
                 <FaGoogle className="mr-2" />
@@ -82,6 +83,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
               <Button
                 className="w-full"
                 rounded
+                outline
                 onClick={() => openInOSBrowser(outlookLink)}
                 itemType="button"
               >
@@ -91,6 +93,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
               <Button
                 className="w-full"
                 rounded
+                outline
                 itemType="button"
                 onClick={() => openInOSBrowser(yahooLink)}
               >
