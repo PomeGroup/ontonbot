@@ -10,7 +10,7 @@ const ScanRegistrantQRCode = () => {
   const webApp = useWebApp();
 
   // TRPC
-  const checkInRegistrant = trpc.events.checkinRegistrantRequest.useMutation({
+  const checkInRegistrant = trpc.registrant.checkinRegistrantRequest.useMutation({
     onSuccess: (data) => {
       webApp?.showPopup({
         title: "Check-In Success ✅",

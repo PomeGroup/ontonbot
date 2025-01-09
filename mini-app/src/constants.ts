@@ -602,3 +602,6 @@ export const CHAIN = {
 } as const;
 
 export const isDevStage = process.env.ENV === "development" || process.env.NODE_ENV === "development";
+
+export const PLACEHOLDER_IMAGE = "https://storage.onton.live/ontonimage/test_image.png";
+export const PLACEHOLDER_VIDEO = "https://storage.onton.live/ontonvideo/event/dCsiY_1731355946593_event_video.mp4";

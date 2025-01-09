@@ -5,11 +5,11 @@ export const useUpdateOrder = (props: { event_uuid: string }) => {
 
   return trpc.orders.updateOrderState.useMutation({
     onMutate: async ({ order_uuid }) => {
-      trpcUtils.orders.invalidate();
-      await trpcUtils.events.getEventOrders.cancel();
-      const previuesData = trpcUtils.events.getEventOrders.getData();
+      await trpcUtils.orders.invalidate();
+      await trpcUtils.orders.getEventOrders.cancel();
+      const previuesData = trpcUtils.orders.getEventOrders.getData();
 
-      trpcUtils.events.getEventOrders.setData({ event_uuid: props.event_uuid }, (oldData) => {
+      trpcUtils.orders.getEventOrders.setData({ event_uuid: props.event_uuid }, (oldData) => {
         if (!oldData) {
           return oldData;
         }
@@ -20,10 +20,10 @@ export const useUpdateOrder = (props: { event_uuid: string }) => {
       return { previuesData };
     },
     onError: (_err, _newState, context) => {
-      trpcUtils.events.getEventOrders.setData({ event_uuid: props.event_uuid }, context?.previuesData);
+      trpcUtils.orders.getEventOrders.setData({ event_uuid: props.event_uuid }, context?.previuesData);
     },
     onSettled: () => {
-      void trpcUtils.events.getEventOrders.invalidate();
+      void trpcUtils.orders.getEventOrders.invalidate();
     },
   });
 };

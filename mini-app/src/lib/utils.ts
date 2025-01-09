@@ -68,3 +68,6 @@ export const msToTime = (duration: number): string => {
 export const roundDateToInterval = (date: number | undefined, interval: number): number | undefined => {
   return date ? Math.floor(date / interval) * interval : date;
 };
+
+export const removeSecretKey = (changes: any) => JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
+

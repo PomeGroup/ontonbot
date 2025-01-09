@@ -13,6 +13,7 @@ import {
   router,
 } from "../trpc";
 import { logger } from "../utils/logger";
+import ordersDB from "@/server/db/orders.db";
 
 export const ordersRouter = router({
   updateOrderState: initDataProtectedProcedure
@@ -50,5 +51,9 @@ export const ordersRouter = router({
         logger.log("order_updateOrderState_internal_error", error);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "internal server error" });
       }
+    }),
+
+    getEventOrders : evntManagerPP.input(z.object({ event_uuid: z.string().uuid() })).query(async (opts) => {
+      return await ordersDB.getEventOrders(opts.input.event_uuid);
     }),
 });

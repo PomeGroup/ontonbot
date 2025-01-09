@@ -13,47 +13,76 @@ const LOG_FORMAT: LogFormatType =
 
 const isSingleLineFormat = LOG_FORMAT === 'single_line';
 
+// The helper from step (2):
+function replicateArgsAsFields(args: any[]): Record<string, any> {
+  const fields: Record<string, any> = {};
+
+  args.forEach((arg, idx) => {
+    const key = `logParam_${idx + 1}`;
+    if (typeof arg === 'object' && arg !== null) {
+      try {
+        // Attempt JSON.stringify for objects
+        fields[key] = JSON.stringify(arg);
+      } catch {
+        // Handle circular references
+        fields[key] = '[Circular]';
+      }
+    } else {
+      // Convert all non-objects to string
+      fields[key] = String(arg);
+    }
+  });
+
+  return fields;
+}
+
+
 export const logger = {
-  debug: (message?: any, ...meta: any[]) => {
+  debug: (...args: any[]) => {
     if (isSingleLineFormat) {
-      // Route to Winston (JSON logs)
-      (winstonLogger as any).debug(message, ...meta);
+      // Convert all arguments into { msg1, msg2, ... }
+      const fields = replicateArgsAsFields(args);
+      // Winston merges these into the log output
+      winstonLogger.debug(fields);
     } else {
-      // Route to native console.debug
-      console.debug(message, ...meta);
+      console.debug(...args);
     }
   },
 
-  info: (message?: any, ...meta: any[]) => {
+  info: (...args: any[]) => {
     if (isSingleLineFormat) {
-      (winstonLogger as any).info(message, ...meta);
+      const fields = replicateArgsAsFields(args);
+      winstonLogger.info(fields);
     } else {
-      console.info(message, ...meta);
+      console.info(...args);
     }
   },
 
-  warn: (message?: any, ...meta: any[]) => {
+  warn: (...args: any[]) => {
     if (isSingleLineFormat) {
-      (winstonLogger as any).warn(message, ...meta);
+      const fields = replicateArgsAsFields(args);
+      winstonLogger.warn(fields);
     } else {
-      console.warn(message, ...meta);
+      console.warn(...args);
     }
   },
 
-  error: (message?: any, ...meta: any[]) => {
+  error: (...args: any[]) => {
     if (isSingleLineFormat) {
-      (winstonLogger as any).error(message, ...meta);
+      const fields = replicateArgsAsFields(args);
+      winstonLogger.error(fields);
     } else {
-      console.error(message, ...meta);
+      console.error(...args);
     }
   },
 
-  // For a standard "log" call, we default Winston to 'info' level in single-line mode
-  log: (message?: any, ...meta: any[]) => {
+  // log(...) will map to 'info' in single-line mode
+  log: (...args: any[]) => {
     if (isSingleLineFormat) {
-      (winstonLogger as any).info(message, ...meta);
+      const fields = replicateArgsAsFields(args);
+      winstonLogger.info(fields);
     } else {
-      console.log(message, ...meta);
+      console.log(...args);
     }
   },
 };
