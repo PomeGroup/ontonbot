@@ -11,6 +11,7 @@ import { TmaSDKLoader } from "@repo/tma/TmaSDKLoader";
 import AuthenticationProvider from "./AuthenticationProvider";
 import FontLoader from "./FontLoader";
 import TonProofProvider from "./TonProofProvider";
+import { KonstaProvider } from "konsta/react";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +24,7 @@ const Providers = ({ children }: PropsWithChildren) => {
             <Suspense fallback={<QueryState text="Authenticating" />}>
               <AuthenticationProvider>
                 <TonProofProvider>
-                  {children}
+                  <KonstaProvider theme="ios">{children}</KonstaProvider>
                   <Toaster
                     position={"bottom-center"}
                     closeButton={false}

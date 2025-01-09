@@ -1,5 +1,6 @@
 import {notificationReplyPOASimpleSchema ,notificationReplyPasswordSchema} from "@/zodSchema/SocketZodSchemas";
 import {ZodError} from "zod";
+import { logger } from "@/server/utils/logger";
 
 type ValidatedNotificationReply = {
   valid: true;
@@ -17,7 +18,7 @@ type NotificationReplyValidationResult = ValidatedNotificationReply | InvalidNot
 
 export const validateNotificationReply = (data: any): NotificationReplyValidationResult => {
   try {
-    console.log("Validating notification reply data:", data);
+    logger.log("Validating notification reply data:", data);
     if(typeof data !== "object" || data === null || !data?.type) {
         return {
             valid: false,
@@ -38,7 +39,7 @@ export const validateNotificationReply = (data: any): NotificationReplyValidatio
       // Extract just the error messages
       errorMsg = error.issues.map((issue) => issue.message).join(", ");
     }
-    console.error("Validation error:", errorMsg);
+    logger.error("Validation error:", errorMsg);
     return {
       valid: false,
       error: errorMsg,

@@ -29,7 +29,6 @@ export const locationRouter = router({
     countryName: z.string(),
     cityName: z.string(),
   })).query(async (opts) => {
-    console.log(opts.input.countryName);
     return await fetchCoordsByName(opts.input.countryName, opts.input.cityName);
   }),
 });

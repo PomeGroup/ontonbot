@@ -23,7 +23,7 @@ const NonRegistrationGuestList = (props: Props) => {
   const [needRefresh, setNeedRefresh] = useState(false);
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
-  const requestExportFileMutation = trpc.events.requestExportFile.useMutation();
+  const requestExportFileMutation = trpc.telegramInteractions.requestExportFile.useMutation();
   const handleVisitorsExport = async () => {
     await requestExportFileMutation.mutateAsync({
       event_uuid: props.params.hash,

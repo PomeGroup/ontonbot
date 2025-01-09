@@ -2,6 +2,7 @@ import { Address, Cell } from "@ton/core";
 import axios from "axios";
 import { TonClient } from "@ton/ton";
 import { is_prod_env, is_stage_env } from "@/server/utils/evnutils";
+import { logger } from "@/server/utils/logger";
 
 export const is_mainnet = is_prod_env() || is_stage_env();
 // export const is_mainnet = false;
@@ -159,7 +160,7 @@ async function fetchNFTItemsWithRetry(
       if (attempt >= retries) {
         throw new Error(`Failed after ${retries} retries: ${error}`);
       }
-      console.log(`Retrying... Attempt ${attempt} of ${retries}`);
+      logger.log(`Retrying... Attempt ${attempt} of ${retries}`);
       await delay(delayMs); // Wait before retrying
     }
   }
@@ -321,7 +322,7 @@ type OrderTransaction = {
 async function parseTransactions(transactions: Transaction[]) {
   const orders: OrderTransaction[] = [];
   for (const trx of transactions) {
-    // console.log(trx.hash);
+    // logger.log(trx.hash);
     const in_msg: InMsg | null = trx?.in_msg;
     if (!in_msg) continue;
 
@@ -338,7 +339,7 @@ async function parseTransactions(transactions: Transaction[]) {
       const decoded = message_content.decoded;
       if (decoded) {
         const comment = decoded.comment;
-        // console.log(comment);
+        // logger.log(comment);
         if (comment.startsWith(ORDER_PREFIX)) {
           orders.push({
             order_uuid: comment.replace(ORDER_PREFIX, ""),
@@ -372,15 +373,15 @@ async function parseTransactions(transactions: Transaction[]) {
           jetton_master = jetton_wallet_data.jetton_wallets[0].jetton;
         }
       }
-      // console.log("jetton_master" , jetton_master)
+      // logger.log("jetton_master" , jetton_master)
 
       if (forwardPayload.remainingBits > 32) {
         const forwardOp = forwardPayload.loadUint(32);
         if (forwardOp == 0) {
           // if forward payload opcode is 0: it's a simple Jetton transfer with comment
           const comment = forwardPayload.loadStringTail();
-          // console.log('jetton commnet ====>' , comment , comment.startsWith(ORDER_PREFIX))
-          // console.log(jetton_master , USDT_CADDRESS)
+          // logger.log('jetton commnet ====>' , comment , comment.startsWith(ORDER_PREFIX))
+          // logger.log(jetton_master , USDT_CADDRESS)
           if (comment.startsWith(ORDER_PREFIX)) {
             orders.push({
               order_uuid: comment.replace(ORDER_PREFIX, ""),

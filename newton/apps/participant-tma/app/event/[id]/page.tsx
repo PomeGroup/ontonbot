@@ -18,6 +18,7 @@ import WebsiteLink from "~/components/event/WebsiteLink";
 import { getEventDataOnly } from "~/services/event.services.ssr";
 import { getUser } from "~/services/user.services";
 import { getAuthenticatedUser } from "~/utils/getAuthenticatedUser";
+import AddToCalendar from "~/components/event/AddToCalendar";
 
 type EventParams = {
   params: {
@@ -120,14 +121,18 @@ const Event = async ({ params, searchParams }: EventParams) => {
           data={attributes}
         />
       </Section>
-      {eventManagerRole && (
-        <Section
-          variant={"rounded"}
-          className={"py-6"}
-        >
-          <ManageEventButton />
-        </Section>
-      )}
+      <Section
+        variant={"rounded"}
+        className={"py-6 space-y-2"}
+      >
+        {eventManagerRole && <ManageEventButton />}
+        <AddToCalendar
+          description={event.subtitle}
+          title={event.title}
+          startDate={Number(event.start_date) * 1000}
+          endDate={Number(event.end_date) * 1000}
+        />
+      </Section>
       <Section
         variant={"rounded"}
         className={"py-6"}

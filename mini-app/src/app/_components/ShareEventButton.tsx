@@ -11,7 +11,7 @@ const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
   const initData = WebApp?.initData || "";
   const hapticFeedback = WebApp?.HapticFeedback;
 
-  const shareEventMutation = trpc.events.requestShareEvent.useMutation();
+  const shareEventMutation = trpc.telegramInteractions.requestShareEvent.useMutation();
 
   return (
     <button

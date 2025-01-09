@@ -11,6 +11,7 @@ import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logSQLQuery } from "@/lib/logSQLQuery";
+import {  logger } from "../utils/logger";
 
 export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) => {
   const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData);
@@ -174,7 +175,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     })
     .from(tickets)
     .where(eq(tickets.user_id, userId!));
-  // console.log("rewardQuery", ticketsQuery.toSQL().sql);
+  // logger.log("rewardQuery", ticketsQuery.toSQL().sql);
   // Use unionAll to combine the results, apply orderBy, limit, and offset
   //@ts-ignore
   const combinedResultsQuery = unionAll(rewardQuery, eventQuery, ticketsQuery)
@@ -242,7 +243,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   const cachedResult = await redisTools.getCache(cacheKey);
   if (cachedResult && useCache) {
     /// show return from cache and time
-    //console.log("👙👙 cachedResult 👙👙" + Date.now());
+    //logger.log("👙👙 cachedResult 👙👙" + Date.now());
     return cachedResult;
   }
 
@@ -377,7 +378,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
 
 export const getEventByUuid = async (eventUuid: string, removeSecret: boolean = true) => {
   const event = await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute();
-  if (event === undefined || event.length === 0) {
+  if (event === undefined || event.length === 0 ) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: `Event not found  ${eventUuid}`,
@@ -393,3 +394,37 @@ export const getEventById = async (eventId: number) => {
 
   return event === undefined || event.length === 0 ? null : event[0];
 };
+
+export const getEventsForSpecialRole = async (userRole: string, userId?: number) => {
+  if (userRole === "admin") {
+    return await db
+      .select()
+      .from(events)
+      .where(eq(events.hidden, false))
+      .orderBy(desc(events.created_at))
+      .execute();
+  } else if (userRole === "organizer" && userId) {
+    return await db
+      .select()
+      .from(events)
+      .where(and(eq(events.hidden, false), eq(events.owner, userId)))
+      .orderBy(desc(events.created_at))
+      .execute();
+  } else {
+    return [];
+  }
+};
+
+const eventDB = {
+  checkIsEventOwner,
+  checkIsAdminOrOrganizer,
+  checkEventTicketToCheckIn,
+  selectEventByUuid,
+  getUserEvents,
+  getOrganizerEvents,
+  getEventsWithFilters,
+  getEventByUuid,
+  getEventById,
+  getEventsForSpecialRole,
+};
+export default eventDB;

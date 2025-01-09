@@ -1,22 +1,19 @@
-
 import { cookies } from "next/headers";
-import { env } from "~/env.mjs"
-import { EventDataOnlyType, EventType } from "~/types/event.types"
+import { env } from "~/env.mjs";
+import { EventDataOnlyType, EventType } from "~/types/event.types";
 
-export async function getEventDataOnly(
-  id: string,
-): Promise<EventDataOnlyType | null> {
-  console.log("getEventDataOnly", id , env.NEXT_PUBLIC_API_BASE_URL);
+export async function getEventDataOnly(id: string): Promise<EventDataOnlyType | null> {
+  console.log("getEventDataOnly", id, env.NEXT_PUBLIC_API_BASE_URL);
   const eventResponse = await fetch(
     `${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}?data_only=true`,
     {
       method: "GET",
       headers: {
-        'x-api-key': env.ONTON_API_KEY
-      }
-    },
+        "x-api-key": env.ONTON_API_KEY,
+      },
+    }
   );
-  console.log(eventResponse);
+
   if (!eventResponse.ok) {
     return null;
   }
@@ -26,7 +23,6 @@ export async function getEventDataOnly(
   return event;
 }
 
-
 // NOTE: use this inn server only
 export async function getEventWithUserDataSSRAuth(id: string) {
   const userToken = cookies().get("token");
@@ -35,21 +31,17 @@ export async function getEventWithUserDataSSRAuth(id: string) {
     return null;
   }
 
-  const eventResponse = await fetch(
-    `${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}`,
-    {
-      method: "GET",
-      headers: {
-        Cookie: `token=${userToken.value}`,
-      },
+  const eventResponse = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}`, {
+    method: "GET",
+    headers: {
+      Cookie: `token=${userToken.value}`,
     },
-  );
+  });
 
   console.log({
     ok: eventResponse.ok,
-    stat: eventResponse.status
+    stat: eventResponse.status,
   });
-
 
   if (!eventResponse.ok) {
     return undefined;
@@ -59,4 +51,3 @@ export async function getEventWithUserDataSSRAuth(id: string) {
 
   return event;
 }
-

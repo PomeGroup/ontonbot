@@ -2,6 +2,7 @@ import { db } from "@/db/db";
 import { eventPoaTriggers, EventTriggerStatus, EventTriggerType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { eq, and, lte, sql } from "drizzle-orm";
+import { logger } from "@/server/utils/logger";
 
 export type EventPoaTrigger = {
   id: number;
@@ -47,10 +48,10 @@ export const addEventPoaTrigger = async (poaData: {
       .onConflictDoNothing()
       .returning()
       .execute();
-    console.log("POA Trigger added:", result);
+    logger.log("POA Trigger added:", result);
     return result;
   } catch (error) {
-    console.error("Error adding POA Trigger:", error);
+    logger.error("Error adding POA Trigger:", error);
     throw error;
   }
 };
@@ -66,9 +67,9 @@ export const updateEventPoaStatus = async (poaId: number, newStatus: EventTrigge
 
     // Clear cache for this POA trigger
     await redisTools.deleteCache(getEventPoaCacheKey(poaId));
-    console.log(`POA Trigger ${poaId} status updated to ${newStatus}`);
+    logger.log(`POA Trigger ${poaId} status updated to ${newStatus}`);
   } catch (error) {
-    console.error("Error updating POA Trigger status:", error);
+    logger.error("Error updating POA Trigger status:", error);
     throw error;
   }
 };
@@ -85,9 +86,9 @@ export const incrementCountOfSent = async (poaId: number, incrementBy = 1) => {
     );
 
     await redisTools.deleteCache(getEventPoaCacheKey(poaId)); // Clear cache
-    console.log(`Incremented countOfSent for POA Trigger ${poaId}`);
+    logger.log(`Incremented countOfSent for POA Trigger ${poaId}`);
   } catch (error) {
-    console.error("Error incrementing countOfSent:", error);
+    logger.error("Error incrementing countOfSent:", error);
     throw error;
   }
 };
@@ -103,9 +104,9 @@ export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) =>
     );
 
     await redisTools.deleteCache(getEventPoaCacheKey(poaId)); // Clear cache
-    console.log(`Incremented countOfSuccess for POA Trigger ${poaId}`);
+    logger.log(`Incremented countOfSuccess for POA Trigger ${poaId}`);
   } catch (error) {
-    console.error("Error incrementing countOfSuccess:", error);
+    logger.error("Error incrementing countOfSuccess:", error);
     throw error;
   }
 };
@@ -127,7 +128,7 @@ export const getActivePoaForEventByTime = async (eventId: number, startTime: num
       .execute();
 
   } catch (error) {
-    console.error("Error getting active POAs by time:", error);
+    logger.error("Error getting active POAs by time:", error);
     throw error;
   }
 };
@@ -151,7 +152,7 @@ export const getPoaByEventId = async (eventId: number) => {
     await redisTools.setCache(cacheKey, poaTriggers, redisTools.cacheLvl.short); // Cache the result
     return poaTriggers;
   } catch (error) {
-    console.error("Error getting POAs by event ID:", error);
+    logger.error("Error getting POAs by event ID:", error);
     throw error;
   }
 };
@@ -238,11 +239,11 @@ export const generatePoaForAddEvent = async (
       };
 
       await trx.insert(eventPoaTriggers).values(poaData).execute();
-      console.log(`POA Trigger added for event ${eventId}:`, poaData);
+      logger.log(`POA Trigger added for event ${eventId}:`, poaData);
     }
-    console.log(`Generated ${poaStartTimes.length} POA triggers for event ${eventId}.`);
+    logger.log(`Generated ${poaStartTimes.length} POA triggers for event ${eventId}.`);
   } catch (error) {
-    console.error("Error generating POA triggers:", error);
+    logger.error("Error generating POA triggers:", error);
     throw error;
   }
 };
@@ -265,7 +266,7 @@ export const getEventPoaTriggerById = async (poaId: number) => {
     await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.medium); // Cache the result
     return result;
   } catch (error) {
-    console.error("Error getting POA Trigger by ID:", error);
+    logger.error("Error getting POA Trigger by ID:", error);
     throw error;
   }
 };

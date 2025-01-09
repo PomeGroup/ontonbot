@@ -14,12 +14,7 @@ module.exports = konstaConfig({
     },
   },
   darkMode: ["class"],
-  content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-  ],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   theme: {
     fontFamily: {
       ios: "-apple-system, Roboto ,SF Pro Text, SF UI Text, system-ui, Helvetica Neue, Helvetica, Arial, sans-serif",
@@ -30,6 +25,10 @@ module.exports = konstaConfig({
       screens: {
         "2xl": "1400px",
       },
+    },
+    listStyleType: {
+      disc: "disc",
+      circle: "circle",
     },
     extend: {
       screens: {

@@ -50,7 +50,9 @@ export const RewardStep = () => {
       if (eventData?.paid_event?.has_payment) {
         setShowSuccessDialog(true);
       } else {
+        console.log("PUSH Event updated successfully",   editOptions?.eventHash);
         router.push(`/events/${data?.eventId}/edit`);
+        window.location.reload();
       }
 
     },

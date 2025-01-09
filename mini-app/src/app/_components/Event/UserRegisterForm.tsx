@@ -20,7 +20,7 @@ const UserRegisterForm = () => {
   }>();
 
   const trpcUtils = trpc.useUtils();
-  const registerUser = trpc.events.eventRegister.useMutation({
+  const registerUser = trpc.registrant.eventRegister.useMutation({
     onError: (error) => {
       toast.error(error.data?.code + ": " + error.message);
     },

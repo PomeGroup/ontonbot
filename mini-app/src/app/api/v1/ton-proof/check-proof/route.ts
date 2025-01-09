@@ -3,7 +3,7 @@ import { TonApiService } from "@/server/routers/services/ton-api-service";
 import { TonProofService } from "@/server/routers/services/ton-proof-service";
 import { createAuthToken, verifyToken } from "@/server/utils/jwt";
 import { NextResponse } from "next/server";
-
+import { logger } from "@/server/utils/logger";
 /**
  * Checks the proof and returns an access token.
  *
@@ -43,7 +43,7 @@ export const POST = async (req: Request) => {
 
     return NextResponse.json({ token });
   } catch (e) {
-    console.log("err", e);
+    logger.log("err", e);
     return NextResponse.json({ error: "Invalid request", trace: e }, { status: 500 });
   }
 };

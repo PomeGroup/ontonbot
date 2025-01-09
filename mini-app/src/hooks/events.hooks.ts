@@ -10,7 +10,7 @@ export function useGetEventRegistrants(event_hash?: string, offset = 0, limit = 
   const params = useParams<{ hash: string }>();
   const event_uuid = event_hash ?? params.hash;
 
-  return trpc.events.getEventRegistrants.useQuery(
+  return trpc.registrant.getEventRegistrants.useQuery(
     {
       event_uuid,
       offset,
@@ -18,7 +18,7 @@ export function useGetEventRegistrants(event_hash?: string, offset = 0, limit = 
     },
     {
       staleTime: 10_000,
-      queryKey: ["events.getEventRegistrants", { event_uuid, offset, limit }],
+      queryKey: ["registrant.getEventRegistrants", { event_uuid, offset, limit }],
     }
   );
 }
@@ -45,22 +45,22 @@ export function useGetEvent(event_hash?: string) {
  * get hubs
  */
 export function useGetHubs() {
-  return trpc.events.getHubs.useQuery(undefined, {
+  return trpc.hubs.getHubs.useQuery(undefined, {
     staleTime: Infinity,
-    queryKey: ["events.getHubs", undefined],
+    queryKey: ["hubs.getHubs", undefined],
   });
 }
 
 export function useGetEventOrders() {
   const params = useParams<{ hash: string }>();
 
-  return trpc.events.getEventOrders.useQuery(
+  return trpc.orders.getEventOrders.useQuery(
     {
       event_uuid: params.hash,
     },
     {
       staleTime: Infinity,
-      queryKey: ["events.getEventOrders", { event_uuid: params.hash }],
+      queryKey: ["orders.getEventOrders", { event_uuid: params.hash }],
     }
   );
 }

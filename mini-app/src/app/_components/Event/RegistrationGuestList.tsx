@@ -29,6 +29,7 @@ interface CustomListItemProps {
   handleApprove: (_: number) => Promise<void>;
   handleReject: (_: number) => Promise<void>;
   className?: string;
+  hasPayment: boolean;
 }
 
 const CustomListItem: React.FC<CustomListItemProps> = ({
@@ -41,17 +42,19 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   handleApprove,
   handleReject,
   className,
+  hasPayment,
 }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [itemStatus, setItemStatus] = useState(status);
-  const [showRegistrantInfo, setShowRegistrantInfo] = useState<any>(null);
 
+  const [showRegistrantInfo, setShowRegistrantInfo] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
 
   const handleEdit = () => {
     // Change status to "pending"
-    setItemStatus("pending");
+    setIsEditing(true);
   };
 
   const handleApproveClick = async () => {
@@ -61,6 +64,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       // Optimistically update the status to "approved"
       // This would typically be managed in the parent component's state
       setItemStatus("approved");
+      setIsEditing(false);
     } catch (error) {
       // console.error("Approval failed:", error);
     } finally {
@@ -74,6 +78,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       await handleReject(user_id);
       // Optimistically update the status to "declined"
       setItemStatus("rejected");
+      setIsEditing(false);
     } catch (error) {
       // console.error("Reject failed:", error);
     } finally {
@@ -95,6 +100,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
               onClick={() => {
                 setShowRegistrantInfo(registrantInfo);
               }}
+
             />
 
             <div className="flex flex-col text-end text-xs">
@@ -103,7 +109,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
             </div>
           </div>
         );
-        footerContent = (
+        footerContent = hasPayment ? null : (
           <div className="flex space-x-2">
             <Button
               variant="danger"
@@ -126,10 +132,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       case "approved":
         afterContent = (
           <div className="flex space-x-2">
-            <Button
-              icon={<Pencil size={18} />}
-              onClick={handleEdit}
-            />
+
             <Button
               icon={<FileUser size={18} />}
               variant="purple"
@@ -137,22 +140,39 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
                 setShowRegistrantInfo(registrantInfo);
               }}
             />
+            {!hasPayment && (
+                <>
+                  <Button
+                    icon={<Pencil size={18} />}
+                    onClick={handleEdit}
+                  />
+
+                </>
+            )}
             <StatusChip
               variant={itemStatus === "checkedin" ? "primary" : "success"}
               label={itemStatus}
             />
           </div>
         );
-        footerContent = null;
+        footerContent = hasPayment || !isEditing ? null : (
+          <div className="flex space-x-2">
+            <Button
+              variant="danger"
+              icon={<X size={18} />}
+              label="Reject"
+              onClick={handleRejectClick}
+              isLoading={isDeclining}
+            />
+          </div>
+        );
+
         break;
 
       case "rejected":
         afterContent = (
           <div className="flex space-x-2">
-            <Button
-              icon={<Pencil size={18} />}
-              onClick={handleEdit}
-            />
+
             <Button
               icon={<FileUser size={18} />}
               variant="purple"
@@ -160,13 +180,31 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
                 setShowRegistrantInfo(registrantInfo);
               }}
             />
-            <StatusChip
-              variant="danger"
-              label="Rejected"
+            {!hasPayment && (
+              <>
+                <Button
+                  icon={<Pencil size={18} />}
+                  onClick={handleEdit}
+                />
+                <StatusChip
+                  variant="danger"
+                  label="Rejected"
+                />
+              </>
+            )}
+          </div>
+        );
+        footerContent = hasPayment || !isEditing ? null : (
+          <div className="flex space-x-2">
+            <Button
+              variant="success"
+              icon={<Check size={19} />}
+              label="Approve"
+              onClick={handleApproveClick}
+              isLoading={isApproving}
             />
           </div>
         );
-        footerContent = null;
         break;
       default:
         afterContent = null;
@@ -176,7 +214,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       afterContent,
       footerContent,
     };
-  }, [itemStatus]);
+  }, [itemStatus, registrantInfo, date, hasPayment, isDeclining, isApproving, isEditing]);
 
   return (
     <>
@@ -273,16 +311,21 @@ const RegistrationGuestList = () => {
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
   /*
    * Process Registrant (Approve ✅ / Reject ❌)
    */
-  const processRegistrantRequest = trpc.events.processRegistrantRequest.useMutation();
+  const processRegistrantRequest = trpc.registrant.processRegistrantRequest.useMutation();
 
+  /*
+    * Check if the event has payment enabled
+   */
+  const hasPayment = eventData.data?.has_payment || false;
 
   /*
    * Export visitor list
    */
-  const exportVisitorList = trpc.events.requestExportFile.useMutation({
+  const exportVisitorList = trpc.telegramInteractions.requestExportFile.useMutation({
     onSuccess: () => {
       webApp?.HapticFeedback.impactOccurred("soft");
       webApp?.close();
@@ -341,7 +384,7 @@ const RegistrationGuestList = () => {
   }, [results]);
 
   // Fetch registrants dynamically based on offset
-  const { data, isFetching } = trpc.events.getEventRegistrants.useQuery(
+  const { data, isFetching } = trpc.registrant.getEventRegistrants.useQuery(
     { event_uuid: params.hash, offset, limit: LIMIT },
     {
       keepPreviousData: true, // Keeps existing data while fetching new data
@@ -379,7 +422,10 @@ const RegistrationGuestList = () => {
           hub={eventData.data?.society_hub?.name!}
         />
 
-        { eventData.data?.participationType === "online"
+        {
+          eventData.data?.participationType === "online"
+          &&
+          ((eventData.data?.enabled && eventData.data?.has_payment) || !eventData.data?.has_payment)
           && (
           <>
             <ButtonPOA
@@ -447,6 +493,8 @@ const RegistrationGuestList = () => {
             handleApprove={() => handleApprove(registrant.user_id!)}
             handleReject={() => handleReject(registrant.user_id!)}
             className={idx === results.length - 1 ? "last-guest-item" : ""}
+            hasPayment={hasPayment}
+
           />
         ))}
 

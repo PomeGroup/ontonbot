@@ -15,7 +15,9 @@ import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { Block } from "konsta/react";
 import { useTheme } from "next-themes";
+
 import BottomNavigation from "./_components/BottomNavigation";
+
 
 // Define types for events
 type EventData = any[];

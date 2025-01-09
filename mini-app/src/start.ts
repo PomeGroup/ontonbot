@@ -12,7 +12,7 @@ import "dotenv/config";
 import { and, asc, eq, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
 import { sleep } from "./utils";
-import { CreateTonSocietyDraft } from "@/server/routers/events";
+import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
 import { registerActivity } from "@/lib/ton-society-api";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { is_mainnet } from "@/server/routers/services/tonCenter";
@@ -389,6 +389,14 @@ async function CreateEventOrders(pushLockTTl: () => any) {
         collection_address_in_db = false;
         collectionAddress = await deployCollection(metaDataUrl);
         console.log(`paid_event_deployed_collection_${eventData.event_uuid}_${collectionAddress}`);
+        try {
+          await sendLogNotification({
+            message: `deployed collection for ${eventData.title}\n ${collectionAddress}`,
+            topic: "event",
+          });
+        } catch (error) {
+          console.log(`paid_event_deployed_collection_send_error_${event_uuid}_${error}`);
+        }
       }
 
       /* -------------------------------------------------------------------------- */
