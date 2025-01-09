@@ -1,8 +1,9 @@
-import Typography from "@tailwindcss/typography"
-import type { Config } from "tailwindcss"
-import tailwindcssAnimate from "tailwindcss-animate"
+import Typography from "@tailwindcss/typography";
+import tailwindcssAnimate from "tailwindcss-animate";
 
-const config = {
+const konstaConfig = require("konsta/config");
+
+const config = konstaConfig({
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -10,7 +11,7 @@ const config = {
     "./app/**/*.{ts,tsx}",
     "./src/**/*.{ts,tsx}",
     "../../packages/ui/src/**/*.{ts,tsx}",
-    './**/*.ts'
+    "./**/*.ts",
   ],
   theme: {
     container: {
@@ -110,6 +111,6 @@ const config = {
     },
   },
   plugins: [tailwindcssAnimate, Typography({ className: "type" })],
-} satisfies Config;
+});
 
 export default config;

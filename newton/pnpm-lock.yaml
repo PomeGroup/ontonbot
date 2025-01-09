@@ -217,6 +217,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      konsta:
+        specifier: ^4.0.1
+        version: 4.0.1
       next:
         specifier: ^14.2.7
         version: 14.2.7(@babel/core@7.24.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -4169,6 +4172,10 @@ packages:
   kleur@3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
+
+  konsta@4.0.1:
+    resolution: {integrity: sha512-GMk/3yJ4ov9mLRwkr+ffbTtlyGMd+HMMPks8+/kZWJyIfD3Esy+cSVLN8wX+iJRQXNZfPfOBxaqQpxXA0AHLEA==}
+    engines: {node: '>= 4.7.0'}
 
   language-subtag-registry@0.3.22:
     resolution: {integrity: sha512-tN0MCzyWnoz/4nHS6uxdlFWoUZT7ABptwKPQ52Ea7URk6vll88bWBVhodtnlfEuCcKWNGoc+uGbw1cwa9IKh/w==}
@@ -11254,6 +11261,8 @@ snapshots:
       json-buffer: 3.0.1
 
   kleur@3.0.3: {}
+
+  konsta@4.0.1: {}
 
   language-subtag-registry@0.3.22: {}
 
