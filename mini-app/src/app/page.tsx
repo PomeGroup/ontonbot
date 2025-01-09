@@ -1,22 +1,23 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { useRouter } from "next/navigation";
 import { trpc } from "./_trpc/client";
 import "./page.css";
 import { useConfig } from "@/context/ConfigContext";
 import Image from "next/image";
-import MemoizedMainButton from "@/app/_components/Memoized/MemoizedMainButton";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
-import { Block, Segmented, SegmentedButton } from "konsta/react";
+import { Block } from "konsta/react";
 import { useTheme } from "next-themes";
+
+import BottomNavigation from "./_components/BottomNavigation";
+
 
 // Define types for events
 type EventData = any[];
@@ -25,12 +26,11 @@ export default function Home() {
   const { config } = useConfig();
   const SliderEventUUID = config?.homeSliderEventUUID || "";
   const webApp = useWebApp();
-  const { authorized, isLoading: useAuthLoading, role: userRole } = useAuth();
+  const { authorized, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
 
   const UserId = webApp?.initDataUnsafe?.user?.id;
 
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState("all-events");
   const [tabValueForSearchBar, setTabValueForSearchBar] = useState("All");
   const swiperRef = useRef<any>(null);
@@ -170,23 +170,6 @@ export default function Home() {
     }
   }, [activeTab]);
 
-  // Handle tab click and data fetching logic
-  const handleTabClick = (value: string) => {
-    // Save the current scroll position before switching tabs
-    if (scrollRef.current) {
-      scrollPositions.current[activeTab] = scrollRef.current.scrollTop;
-    }
-
-    setActiveTab(value);
-    const slideIndex = value === "all-events" ? 0 : 1;
-    swiperRef.current?.slideTo(slideIndex);
-
-    // Fetch data when switching tabs
-    if (value === "my-events") {
-      refetchMyEvents();
-    }
-  };
-
   // Handle swiper slide change
   const handleSlideChange = (swiper: any) => {
     const activeIndex = swiper.activeIndex;
@@ -202,10 +185,6 @@ export default function Home() {
       refetchMyEvents();
     }
   };
-  // Memoized handler for the "Create Event" button
-  const handleCreateEvent = useCallback(() => {
-    router.push("/events/create");
-  }, [router]);
 
   useEffect(() => {
     setTheme("light");
@@ -224,7 +203,7 @@ export default function Home() {
           />
 
           {/* Tabs Header */}
-          <Segmented
+          {/* <Segmented
             strong
             rounded
           >
@@ -244,7 +223,7 @@ export default function Home() {
             >
               My events
             </SegmentedButton>
-          </Segmented>
+          </Segmented> */}
         </div>
 
         {/* Scrollable Content */}
@@ -402,13 +381,7 @@ export default function Home() {
           </Swiper>
         </div>
       </div>
-
-      {!useAuthLoading && (userRole === "admin" || userRole === "organizer") && authorized && (
-        <MemoizedMainButton
-          text="Create new event"
-          onClick={handleCreateEvent}
-        />
-      )}
+      <BottomNavigation active="Events" />
     </Block>
   );
 }

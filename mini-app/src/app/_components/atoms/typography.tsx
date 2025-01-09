@@ -1,3 +1,4 @@
+import { cn } from "@/utils";
 import { ReactNode } from "react";
 
 const classNameMappings = {
@@ -18,13 +19,9 @@ interface TypographyProps {
   variant: keyof typeof classNameMappings;
   children: ReactNode;
   bold?: boolean;
+  className?: string;
 }
 
-export default function Typography({ variant, bold, children }: TypographyProps) {
-  let className = classNameMappings[variant];
-
-  if (bold) {
-    className += " !font-bold";
-  }
-  return <span className={className}>{children}</span>;
+export default function Typography({ variant, bold, children, className }: TypographyProps) {
+  return <span className={cn(classNameMappings[variant], bold && "!font-bold", className)}>{children}</span>;
 }
