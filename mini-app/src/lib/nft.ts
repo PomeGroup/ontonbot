@@ -3,12 +3,12 @@ import { Address, Cell, internal, beginCell, contractAddress, StateInit, SendMod
 
 import { KeyPair, mnemonicToPrivateKey } from "@ton/crypto";
 import { TonClient, WalletContractV4 } from "@ton/ton";
-
+import { logger } from "@/server/utils/logger";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
-// console.log(process.env.MNEMONIC);
+// logger.log(process.env.MNEMONIC);
 
 export type OpenedWallet = {
   contract: OpenedContract<WalletContractV4>;
@@ -272,12 +272,12 @@ export async function mintNFT(owner_address : string , collection_address: strin
     commonContentUrl: nft_metadata_url,
   };
 
-  console.log("seq befor mint : ", await wallet.contract.getSeqno());
+  logger.log("seq befor mint : ", await wallet.contract.getSeqno());
   const nftItem = new NftItem(collection);
   const seqno = await nftItem.deploy(wallet, mintParams, collection_address);
-  console.log(`Successfully deployed the ${nftIndex + 1}th NFT`);
+  logger.log(`Successfully deployed the ${nftIndex + 1}th NFT`);
   const seqnoAfter = await waitSeqno(seqno, wallet);
-  console.log("seq after mint : ", seqnoAfter);
+  logger.log("seq after mint : ", seqnoAfter);
 
   await sleep(7000); // just wait to make sure nft is minted
   nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);
@@ -300,10 +300,10 @@ export async function deployCollection(collectio_metadata_url: string) {
   };
   const collection = new NftCollection(collectionData);
   let seqno = await collection.deploy(wallet);
-  console.log(`Collection deployed: ${collection.address}`);
+  logger.log(`Collection deployed: ${collection.address}`);
   await waitSeqno(seqno, wallet);
   await sleep(1500);
-  console.log(`Collection deployed Completely ..... `);
+  logger.log(`Collection deployed Completely ..... `);
 
   return collection.address.toString();
 }
@@ -318,7 +318,7 @@ export async function deployCollection(collectio_metadata_url: string) {
 //   );
 //   // const c = "kQBw2_yccujzsJoGOhgt24gmWmKYvXYBjha_g8cx7laajyeg";
 //   // const nft_addres = await NftItem.getAddressByIndex(c, 10);
-//   console.log("Addres ", nft);
+//   logger.log("Addres ", nft);
 // }
 
-// main().finally(() => console.log("done"));
+// main().finally(() => logger.log("done"));
