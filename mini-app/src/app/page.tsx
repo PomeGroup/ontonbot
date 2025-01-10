@@ -24,7 +24,9 @@ type EventData = any[];
 
 export default function Home() {
   const { config } = useConfig();
-  const SliderEventUUID = config?.homeSliderEventUUID || "";
+  const SliderEventUUID = Array.isArray(config?.homeSliderEventUUID)
+    ? config.homeSliderEventUUID[0]
+    : "";
   const webApp = useWebApp();
   const { authorized, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
