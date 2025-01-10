@@ -1,6 +1,6 @@
 import { Card } from "konsta/react";
 import Image from "next/image";
-import Typography from "../atoms/typography";
+import Typography from "../../../components/Typography";
 import { PropsWithChildren } from "react";
 import Link from "next/link";
 import xPlatformIcon from "./xplatform.svg";
@@ -8,7 +8,7 @@ import telegramIcon from "./telegram.svg";
 import shareIcon from "./share.svg";
 import { Channel } from "@/types";
 
-export default function ChannelInfoCard({ data, children }: PropsWithChildren<{ data: Channel }>) {
+export default function ChannelInfoCard({ data }: { data: Channel }) {
   return (
     <Card className="mt-0">
       <Image
@@ -57,7 +57,6 @@ export default function ChannelInfoCard({ data, children }: PropsWithChildren<{ 
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquid blanditiis placeat voluptatibus rem soluta, in
         cumque alias quia quos fugiat iste laborum saepe sequi facilis at amet laudantium recusandae iure!
       </Typography>
-      {children}
     </Card>
   );
 }

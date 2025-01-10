@@ -23,5 +23,5 @@ interface TypographyProps {
 }
 
 export default function Typography({ variant, bold, children, className }: TypographyProps) {
-  return <span className={cn(classNameMappings[variant], bold && "!font-bold", className)}>{children}</span>;
+  return <div className={cn(classNameMappings[variant], bold && "!font-bold", className)}>{children}</div>;
 }

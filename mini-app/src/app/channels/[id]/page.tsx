@@ -2,7 +2,7 @@
 
 import { Card } from "konsta/react";
 import Image from "next/image";
-import Typography from "../../_components/atoms/typography";
+import Typography from "../../../components/Typography";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
 import { ArrowRight } from "lucide-react";
 import ChannelInfoCard from "@/app/_components/channels/ChannelInfoCard";
