@@ -595,9 +595,9 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
         const prefix = is_mainnet ? "" : "testnet.";
         await sendLogNotification({
           message: `NFT ${nft_index + 1} Minted for 
-          <b>${eventPayment.title}</b>
+          <b>${paymentInfo.title}</b>
           user_id : <code>${ordr.user_id}</code>
-          <a href='https://${prefix}getgems.io/collection/${eventPayment.collectionAddress}'>Collection🎨</a>
+          <a href='https://${prefix}getgems.io/collection/${paymentInfo.collectionAddress}'>Collection🎨</a>
           <a href='https://${prefix}tonviewer.com/${ordr.trx_hash}'>TRX💰</a>
           `,
           topic: "ticket",
