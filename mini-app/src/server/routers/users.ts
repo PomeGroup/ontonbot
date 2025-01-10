@@ -27,6 +27,7 @@ export const usersRouter = router({
 
   // private
   syncUser: initDataProtectedProcedure.query(async (opts) => {
+    logger.log("syncUser", opts.ctx.user);
     return opts.ctx.user;
   }),
 
