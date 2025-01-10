@@ -592,9 +592,14 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       }
       console.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_${nft_address}`);
       try {
+        const prefix = is_mainnet ? "" : "testnet.";
         await sendLogNotification({
           message: `NFT ${nft_index + 1} Minted for 
-          ${event_uuid} || order = ${ordr.uuid}`,
+          <b>${eventPayment.title}</b>
+          user_id : <code>${ordr.user_id}</code>
+          <a href='https://${prefix}getgems.io/collection/${eventPayment.collectionAddress}'>Collection🎨</a>
+          <a href='https://${prefix}tonviewer.com/${ordr.trx_hash}'>TRX💰</a>
+          `,
           topic: "ticket",
         });
       } catch (error) {
@@ -644,4 +649,3 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 // Run the Cron Jobs
 MainCronJob();
 // CreateEventOrders().finally(() => console.log("well done ........"));
-
