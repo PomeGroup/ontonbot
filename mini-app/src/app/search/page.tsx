@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
@@ -14,94 +14,102 @@ import { useSearchParams } from "next/navigation";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
 import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
-
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Block } from "konsta/react";
 import { useTheme } from "next-themes";
 
+/** The maximum number of items per page */
 const LIMIT = 5;
 
 const Search: React.FC = () => {
-  useWithBackButton({
-    whereTo: "/",
-  });
-
-  const { setTheme, theme } = useTheme();
+  useWithBackButton({ whereTo: "/" });
+  const { setTheme } = useTheme();
 
   const searchStore = useSearchEventsStore();
   const searchParams = useSearchParams();
-  const { searchInput, setSearchInput, setFilter, setOffset } = searchStore;
-  const [finalSearchInput, setFinalSearchInput] = useState(searchEventsInputZod.parse(searchInput));
+  const { searchInput } = searchStore;
+
+  // We no longer track offset; we'll rely on a cursor-based approach
+  // that is handled automatically by the infiniteQuery below.
+  const [finalSearchInput, setFinalSearchInput] = useState(
+    searchEventsInputZod.parse(searchInput)
+  );
+
   const webApp = useWebApp();
   const { authorized, role: userRole } = useAuth();
   const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
 
-  const [results, setResults] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [initialFetchDone, setInitialFetchDone] = useState(false);
-  const [currentTabIndex, setCurrentTabIndex] = useState(0);
-  const [observingTab, setObservingTab] = useState(0);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  // We track the active tab separately
   const tabParam = searchParams.get("tab") || "All";
   const [tabValue, setTabValue] = useState(tabParam);
+  const [currentTabIndex, setCurrentTabIndex] = useState(0);
+  const [observingTab, setObservingTab] = useState(0);
+
+  // For the infinite scroll observer
+  const observerRef = useRef<IntersectionObserver | null>(null);
   const swiperRef = useRef<any>(null);
   const scrollableDivRef = useRef<HTMLDivElement | null>(null);
+
+  // Example tab items
   const tabItems = [
     { value: "All", label: "All" },
-    {
-      value: "Upcoming",
-      label: "Upcoming",
-      borderClass: "border-x-2 border-x-gray-600",
-    },
+    { value: "Upcoming", label: "Upcoming", borderClass: "border-x-2 border-x-gray-600" },
     { value: "Past", label: "Past" },
-    {
-      value: "OnGoing",
-      label: "Ongoing",
-      borderClass: "border-x-2 border-x-gray-600",
-    },
+    { value: "OnGoing", label: "Ongoing", borderClass: "border-x-2 border-x-gray-600" },
     { value: "MyEvents", label: "My Events" },
   ];
 
+  /**
+   * 1) Use Infinite Query instead of a normal useQuery
+   * 2) We pass in our search/filter input
+   * 3) getNextPageParam looks at `lastPage.nextCursor`
+   */
   const {
-    isLoading: isLoadingSearchResults,
-    isFetching: isFetchingSearchResults,
-    isRefetching: isRefetchingSearchResults,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
     refetch,
-  } = trpc.events.getEventsWithFilters.useQuery(finalSearchInput, {
-    enabled: initialFetchDone,
-    //   enabled: true,
-    keepPreviousData: true,
-    staleTime: Infinity,
-    retry: 2,
-    queryKey: ["events.getEventsWithFilters", finalSearchInput],
-
-    onSuccess: (data) => {
-      if (!initialFetchDone || searchInput.offset === 0) {
-        setResults([]);
-      }
-      setResults((prev) => [...prev, ...(data.data || [])]);
-      setHasMore(data?.data?.length === LIMIT);
+  } = trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
+    {
+      ...finalSearchInput,
+      limit: LIMIT,
+      // We can add more fields if needed:
+      // filter: finalSearchInput.filter
+      // search: finalSearchInput.search
     },
-  });
-
-  const loadMoreResults = useCallback(() => {
-    if (hasMore && !isFetchingSearchResults) {
-      setOffset(searchInput?.offset ? searchInput?.offset + LIMIT : LIMIT);
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      keepPreviousData: true,
+      // If you only want to fetch once "initial fetch done," you can
+      // conditionally enable or pass `enabled: true/false`
     }
-  }, [hasMore, isFetchingSearchResults, searchInput.offset, setOffset]);
+  );
 
+  // Combine all pages of data into one array
+  const allEvents = data?.pages.flatMap((page) => page.items) ?? [];
+
+  /**
+   * IntersectionObserver that triggers fetchNextPage()
+   * whenever the user scrolls near the bottom
+   */
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect();
 
     observerRef.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && currentTabIndex === observingTab) {
-        loadMoreResults();
+      if (
+        entries[0].isIntersecting &&
+        currentTabIndex === observingTab &&
+        hasNextPage &&
+        !isFetchingNextPage
+      ) {
+        fetchNextPage();
       }
     });
 
+    // Mark the last event in the UI with a unique class so we can attach observer
     const lastElement = document.querySelector(`.last-event-card-${observingTab}`);
     if (lastElement) {
       observerRef.current.observe(lastElement);
@@ -110,94 +118,63 @@ const Search: React.FC = () => {
     return () => {
       if (observerRef.current) observerRef.current.disconnect();
     };
-  }, [results, currentTabIndex, observingTab]);
+  }, [allEvents, currentTabIndex, observingTab, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  useEffect(() => {
-    if (!initialFetchDone) {
-      refetch().then(() => {
-        setInitialFetchDone(true);
-        setSearchInput({
-          offset: searchInput?.offset ? searchInput?.offset + LIMIT : 0,
-        });
-      });
-    }
-  }, [refetch, initialFetchDone, searchInput.offset, setSearchInput]);
-
-  useEffect(() => {
-    applyTabFilter(tabValue, UserId);
-    setResults([]);
-    setOffset(0);
-    setTimeout(() => {
-      refetch();
-    }, 200);
-  }, [tabValue, setFilter, UserId]);
-
-  useEffect(() => {
-    setFinalSearchInput(searchEventsInputZod.parse(searchInput));
-  }, [searchInput, searchStore]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (scrollableDivRef.current) {
-        const { scrollTop, scrollHeight, clientHeight } = scrollableDivRef.current;
-        // Check if user has scrolled to the bottom
-        if (scrollTop + clientHeight >= scrollHeight - 50) {
-          loadMoreResults();
-        }
-      }
-    };
-
-    const scrollableDiv = scrollableDivRef.current;
-
-    if (scrollableDiv) {
-      scrollableDiv.addEventListener("scroll", handleScroll);
-    }
-
-    // Cleanup event listener on component unmount
-    return () => {
-      if (scrollableDiv) {
-        scrollableDiv.removeEventListener("scroll", handleScroll);
-      }
-    };
-  }, [loadMoreResults]);
-
+  /**
+   * If user changes the tab, apply the tab filter,
+   * reset the entire infinite query by calling refetch,
+   * and forcibly scroll to top.
+   */
   const handleSlideChange = (swiper: any) => {
     const activeIndex = swiper.activeIndex;
     const newTab = tabItems[activeIndex]?.value || "All";
     setTabValue(newTab);
     setCurrentTabIndex(activeIndex);
-    setOffset(0);
-    setResults([]);
     setObservingTab(activeIndex);
 
-    // Reset scroll to top
+    applyTabFilter(newTab, UserId);
+
+    // If you want a "fresh" start for the new tab, you can:
+    // 1) Update finalSearchInput with new filter
+    // 2) refetch() with the new data, letting TRQ do a new fetch
+    setFinalSearchInput((prev) => ({
+      ...prev,
+      // maybe reset the cursor if you store it in state
+      // but we rely on TRQ to handle from scratch
+    }));
+
+    // Scroll to top
     if (scrollableDivRef.current) {
       scrollableDivRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
+  /**
+   * Listen for changes in your zustand store; if `searchInput` changes,
+   * update finalSearchInput so the query re-runs with the new filters.
+   */
+  useEffect(() => {
+    setFinalSearchInput(searchEventsInputZod.parse(searchInput));
+  }, [searchInput]);
+
   useEffect(() => {
     setTheme("light");
-  }, [theme]);
+  }, [setTheme]);
 
   return (
-    <Block className="!my-2 ">
+    <Block className="!my-2">
       <div className="flex flex-col">
+        {/* Sticky top bar with SearchBar & TabTriggers */}
         <div className="sticky top-0 z-50 w-full pb-1 bg-white pt-2">
           <SearchBar
             includeQueryParam={true}
-            onUpdateResults={setResults}
             tabValue={tabValue}
             userRole={authorized ? userRole : "user"}
             showFilterTags={true}
-            offset={searchInput.offset}
-            setOffset={(newOffset) => setSearchInput({ offset: newOffset })}
-            searchParamsParsed={searchInput}
-            setSearchParamsParsed={setSearchInput}
+
             refetch={refetch}
             setFinalSearchInput={setFinalSearchInput}
             applyTabFilter={applyTabFilter}
-            refetchEvents={refetch}
           />
 
           <TabTriggers
@@ -208,10 +185,8 @@ const Search: React.FC = () => {
           />
         </div>
 
-        <div
-          ref={scrollableDivRef}
-          className="overflow-y-auto  flex-grow"
-        >
+        {/* Scrollable area containing the Swiper slides */}
+        <div ref={scrollableDivRef} className="overflow-y-auto flex-grow">
           <Swiper
             onSlideChange={handleSlideChange}
             slidesPerView={1}
@@ -225,67 +200,60 @@ const Search: React.FC = () => {
               <SwiperSlide key={tab.value}>
                 <ScrollArea
                   key={`${tab.value}-div`}
-                  className="  w-full   whitespace-nowrap border-0 min-h-[calc(100vh-11rem)]"
+                  className="w-full whitespace-nowrap border-0 min-h-[calc(100vh-11rem)]"
                 >
-                  {!isLoadingSearchResults &&
-                    !isFetchingSearchResults &&
-                    !isRefetchingSearchResults &&
-                    !initialFetchDone &&
-                    results.length === 0 && (
-                      <div className="flex flex-col items-center justify-center min-h-screen  text-center space-y-4">
-                        <div>
+                  {/* Show skeleton if loading and no data */}
+                  {isLoading && allEvents.length === 0 ? (
+                    <div className="flex flex-col gap-2">
+                      {Array.from({ length: LIMIT }).map((_, i) => (
+                        <EventCardSkeleton key={i} mode="normal" />
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      {/* Show no results if done loading, no data */}
+                      {!isLoading && !isFetchingNextPage && allEvents.length === 0 && (
+                        <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
                           <Image
-                            src={"/template-images/no-search-result.gif"}
-                            alt={"No search results found"}
+                            src="/template-images/no-search-result.gif"
+                            alt="No search results found"
                             width={180}
                             height={180}
                           />
-                        </div>
-                        <div className="text-gray-500 max-w-md">
-                          No Events were found <br />
-                          matching your Search.
-                        </div>
-                      </div>
-                    )}
-                  <div className="pt-4 ">
-                    {isLoadingSearchResults && results.length === 0 ? (
-                      <div className="flex flex-col gap-2">
-                        {Array.from({ length: LIMIT }).map((_, index) => (
-                          <EventCardSkeleton
-                            key={index}
-                            mode="normal"
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <>
-                        {results.map((event, eventIndex) => (
-                          <div
-                            key={event.event_uuid}
-                            className={
-                              eventIndex === results.length - 2 || eventIndex === results.length - 1
-                                ? `last-event-card-${index}`
-                                : ""
-                            }
-                          >
-                            <EventCard
-                              event={event}
-                              currentUserId={UserId}
-                            />
+                          <div className="text-gray-500 max-w-md">
+                            No Events were found
+                            <br />
+                            matching your Search.
                           </div>
-                        ))}
-                      </>
-                    )}
+                        </div>
+                      )}
 
-                    {isFetchingSearchResults && hasMore && results.length !== 0 && (
-                      <div className="text-center py-4 pb-5 w-full">
-                        <div className="loader">Loading results...</div>
-                      </div>
-                    )}
-                    <div className="text-center py-4 pb-5 ">
-                      <div className="loader"> &nbsp; </div>
+                      {/* Otherwise, render the events */}
+                      {allEvents.map((event, eventIndex) => {
+                        // Mark the last 1-2 events with a special class for IntersectionObserver
+                        const isNearEnd =
+                          eventIndex === allEvents.length - 1 ||
+                          eventIndex === allEvents.length - 2;
+
+                        return (
+                          <div
+                            key={event.eventId}
+                            className={isNearEnd ? `last-event-card-${index}` : ""}
+                          >
+                            <EventCard event={event} currentUserId={UserId} />
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  {/* "Loading more" indicator, if we're currently fetching the next page */}
+                  {isFetchingNextPage && hasNextPage && allEvents.length !== 0 && (
+                    <div className="text-center py-4 pb-5 w-full">
+                      <div className="loader">Loading results...</div>
                     </div>
-                  </div>
+                  )}
+
                   <ScrollBar orientation="horizontal" />
                 </ScrollArea>
               </SwiperSlide>

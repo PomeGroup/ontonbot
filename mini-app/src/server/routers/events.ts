@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events, eventPayment, orders } from "@/db/schema";
+import { eventFields, events, eventPayment, orders, event_details_search_list } from "@/db/schema";
 import { hashPassword } from "@/lib/bcrypt";
 import { renderAddEventMessage, renderUpdateEventMessage, sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
@@ -8,7 +8,7 @@ import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
-import { and, eq} from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import eventDB from "@/server/db/events";
@@ -550,6 +550,28 @@ const getEventsWithFilters = publicProcedure.input(searchEventsInputZod).query(a
   }
 });
 
+export const getEventsWithFiltersInfinite = publicProcedure
+  .input(searchEventsInputZod)
+  .query(async ({ input }) => {
+    // Instead of passing `limit`, pass `limit + 1`
+    const dbResult = await eventDB.getEventsWithFilters({
+      ...input,
+      // tell the DB function: fetch an extra row
+      limit: (input.limit ?? 10) + 1,
+    });
+
+    const actualLimit = input.limit ?? 10;
+    let nextCursor: number | null = null;
+
+    if (dbResult.length > actualLimit) {
+       nextCursor = input.cursor + 1;
+    }
+
+    return {
+      items: dbResult,
+      nextCursor,
+    };
+  });
 /* -------------------------------------------------------------------------- */
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
@@ -559,6 +581,7 @@ export const eventsRouter = router({
   addEvent, //private
   updateEvent, //private
   getEventsWithFilters,
+  getEventsWithFiltersInfinite,
 });
 
 

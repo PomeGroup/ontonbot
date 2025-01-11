@@ -20,7 +20,7 @@ export async function createContext({ req }: { req: Request }) {
         logger.info("Invalid init data", { initData });
         return null;
       }
-      logger.info("Valid init data", { initDataJson });
+
       const user = await usersDB.insertUser(initDataJson);
       if (!user) {
         logger.info("User not found", { initDataJson });

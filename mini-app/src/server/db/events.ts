@@ -220,7 +220,7 @@ export const getOrganizerEvents = async (
 };
 
 export const getEventsWithFilters = async (params: z.infer<typeof searchEventsInputZod>): Promise<any[]> => {
-  const { limit = 10, offset = 0, search, filter, sortBy = "default", useCache = false } = params;
+  const { limit = 10, cursor = 0, search, filter, sortBy = "default", useCache = false } = params;
   const roundMinutesInMs = 60; // don't touch this fucking value it will break the cache or made unexpected results
 
   if (filter?.startDate && useCache) {
@@ -231,7 +231,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   }
   const stringToHash = JSON.stringify({
     limit,
-    offset,
+    cursor,
     search,
     filter,
     sortBy,
@@ -366,7 +366,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
 
   if (limit) {
     // @ts-expect-error
-    query = query.limit(limit).offset(offset);
+    query = query.limit(limit).offset(cursor * limit);
   }
 
   logSQLQuery(query.toSQL().sql, query.toSQL().params);
