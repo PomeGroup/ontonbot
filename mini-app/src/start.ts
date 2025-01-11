@@ -21,6 +21,7 @@ import { deployCollection, mintNFT } from "@/lib/nft";
 import { uploadJsonToMinio } from "@/lib/minioTools";
 import { Address } from "@ton/core";
 import { config } from "./server/config";
+import { selectUserById } from "./server/db/users";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -467,13 +468,13 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
       const event_uuid = order.event_uuid;
       if (!event_uuid) {
         //NOTE - tg log
-        console.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
+        console.error("error_CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
         continue;
       }
       const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
       if (!event) {
         //NOTE - tg log
-        console.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
+        console.error("error_CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
         continue;
       }
       const eventData = event[0];
@@ -484,7 +485,7 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
 
       if (!paymentInfo) {
         //NOTE - tg log
-        console.error("what the fuck : ", "event Does not have payment !!!");
+        console.error("error_what the fuck : ", "event Does not have payment !!!");
         continue;
       }
 
@@ -528,14 +529,14 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
       if (!ordr.owner_address) {
         //NOTE -  tg error
-        console.error("wtf : no owner address", "order_id=", ordr.uuid);
+        console.error("error_wtf : no owner address", "order_id=", ordr.uuid);
         continue;
       }
       try {
         Address.parse(ordr.owner_address);
       } catch {
         //NOTE - tg error
-        console.error("uparsable address : ", ordr.owner_address, "order_id=", ordr.uuid);
+        console.error("error_uparsable address : ", ordr.owner_address, "order_id=", ordr.uuid);
         continue;
       }
 
@@ -544,7 +545,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       ).pop();
 
       if (!paymentInfo) {
-        console.error("what the fuck : ", "event Does not have payment !!!", event_uuid);
+        console.error("error_what the fuck : ", "event Does not have payment !!!", event_uuid);
         continue;
       }
       if (!paymentInfo.collectionAddress) {
@@ -591,16 +592,24 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
         return;
       }
       console.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_${nft_address}`);
+      /* -------------------------------------------------------------------------- */
       try {
         const prefix = is_mainnet ? "" : "testnet.";
+        let username = "GIFT-USER";
+        if(ordr.user_id)
+          username = (await selectUserById(ordr.user_id!))?.username || username ;
+          
         await sendLogNotification({
-          message: `NFT ${nft_index + 1} <b>${paymentInfo.title}</b>
-          user_id : <code>${ordr.user_id}</code>
-          <a href='https://${prefix}getgems.io/collection/${paymentInfo.collectionAddress}'>Collection🎨</a>
-          <a href='https://${prefix}tonviewer.com/${ordr.trx_hash}'>TRX💰</a>
+          message: `NFT ${nft_index + 1}
+<b>${paymentInfo.title}</b>
+👤user_id : <code>${ordr.user_id}</code>
+👤username : <code>${username}</code>
+          <a href='https://${prefix}getgems.io/collection/${paymentInfo.collectionAddress}'>🎨Collection</a>
+          <a href='https://${prefix}tonviewer.com/${ordr.trx_hash}'>💰TRX</a>
           `,
           topic: "ticket",
         });
+        /* -------------------------------------------------------------------------- */
       } catch (error) {
         console.error("MintNFTforPaid_Orders-sendLogNotification-error--:", error);
       }
