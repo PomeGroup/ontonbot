@@ -9,7 +9,7 @@ import telegramService from "@/server/routers/services/telegramService";
 import { RewardType } from "@/types/event.types";
 import { CronJob } from "cron";
 import "dotenv/config";
-import { and, asc, eq, or, sql } from "drizzle-orm";
+import { and, asc, eq, isNotNull, lt, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
 import { sleep } from "./utils";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
@@ -44,6 +44,8 @@ async function MainCronJob() {
 
   // Notify Users Cron Job
   new CronJob("*/3 * * * *", cronJob(notifyUsersForRewards), null, true);
+
+  new CronJob("*/1 * * * *", sendPaymentReminder, null, true);
 
   new CronJob("*/7 * * * * *", CheckTransactions, null, true);
 
@@ -240,12 +242,15 @@ async function handleRewardError(reward: RewardType, error: any) {
 /* -------------------------------------------------------------------------- */
 /*                        Orders & Transaction Checker                        */
 /* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+/*                                Transactions                                */
+/* -------------------------------------------------------------------------- */
 async function CheckTransactions(pushLockTTl: () => any) {
   // Get Orders to be Checked (Sort By Order.TicketDetails.Id)
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
-  console.log("@@@@ CheckTransactions  @@@@");
+  // console.log("@@@@ CheckTransactions  @@@@");
 
   const wallet_address = config?.ONTON_WALLET_ADDRESS;
 
@@ -304,6 +309,9 @@ async function CheckTransactions(pushLockTTl: () => any) {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                             Create Event Orders                            */
+/* -------------------------------------------------------------------------- */
 async function CreateEventOrders(pushLockTTl: () => any) {
   // Get Pending(paid) Orders to create event
   // Register ton society activity
@@ -312,7 +320,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
   // Update (DB) EventPayment (Collection Address)
   // Update (DB) Orders (mark order as completed)
   //todo : Minter Wallet Check
-  console.log("!!! CreateEventOrders !!! ");
+  // console.log("!!! CreateEventOrders !!! ");
 
   const results = await db
     .select()
@@ -453,6 +461,9 @@ async function CreateEventOrders(pushLockTTl: () => any) {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                            Event Update Capacity                           */
+/* -------------------------------------------------------------------------- */
 async function UpdateEventCapacity(pushLockTTl: () => any) {
   const results = await db
     .select()
@@ -506,11 +517,14 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                 NFT Minter                                 */
+/* -------------------------------------------------------------------------- */
 async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   // Get Orders to be Minted
   // Mint NFT
   // Update (DB) Successful Minted Orders as Minted
-  console.log("&&&& MintNFT &&&&");
+  // console.log("&&&& MintNFT &&&&");
   const results = await db
     .select()
     .from(orders)
@@ -596,9 +610,8 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       try {
         const prefix = is_mainnet ? "" : "testnet.";
         let username = "GIFT-USER";
-        if(ordr.user_id)
-          username = (await selectUserById(ordr.user_id!))?.username || username ;
-          
+        if (ordr.user_id) username = (await selectUserById(ordr.user_id!))?.username || username;
+
         await sendLogNotification({
           message: `NFT ${nft_index + 1}
 <b>${paymentInfo.title}</b>
@@ -654,6 +667,69 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                        Payment to Organizer Reminder                       */
+/* -------------------------------------------------------------------------- */
+async function sendPaymentReminder() {
+  console.log("sendPaymentReminder");
+  const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+  const oneDayInSeconds = 24 * 60 * 60;
+
+  const events_need_of_remind = await db
+    .select()
+    .from(eventPayment)
+    .innerJoin(events, eq(eventPayment.event_uuid, events.event_uuid))
+    .where(
+      and(eq(eventPayment.organizer_payment_status, "not_payed"), lt(events.end_date, currentTimestamp - oneDayInSeconds))
+    )
+    .execute();
+
+  for (const event of events_need_of_remind) {
+    const title = event.events.title;
+    const recipient_address = event.event_payment_info.recipient_address;
+    console.log("event ", title);
+    const totalAmount = await db
+      .select({
+        totalPrice: sql`SUM(${orders.total_price})`, // Calculates the sum of total_price
+      })
+      .from(orders)
+      .where(
+        and(
+          isNotNull(orders.trx_hash), // Ensures trx_hash is not null
+          eq(orders.event_uuid, event.events.event_uuid),
+          eq(orders.order_type, "nft_mint"),
+          eq(orders.state, "completed")
+        )
+      )
+      .execute();
+
+    let payment_amount = 0;
+    let commission = 0;
+    let total = 0;
+    if (totalAmount.length > 0 && totalAmount[0].totalPrice) {
+      total = Number(totalAmount[0].totalPrice!);
+      commission = total * 0.05; // The 5% Commistion
+      payment_amount = total - commission;
+    }
+    const message_result = await sendLogNotification({
+      message: `Payment For Event
+<b>${title}</b>
+Total Sold : $<total>
+Commision : <code>$<commission></code>
+
+Organizer Payment : <code>${payment_amount}</code>
+Recipient : <code>${recipient_address}</code>
+`,
+      topic: "system",
+    });
+
+    if (message_result.message_id) {
+      //success
+    }
+
+    await sleep(1000);
+  }
+}
 // Run the Cron Jobs
 MainCronJob();
 // CreateEventOrders().finally(() => console.log("well done ........"));
