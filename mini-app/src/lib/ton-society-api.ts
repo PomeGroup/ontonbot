@@ -29,17 +29,12 @@ export async function createUserRewardLink(
     );
   } catch (error) {
     try {
-      return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(
-        `/activities/${activityId}/rewards`,
-        data
-      );
+      return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(`/activities/${activityId}/rewards`, data);
     } catch (error) {
       if (
         error instanceof AxiosError &&
-        (error.response?.data?.message ===
-          "reward link with such activity id and wallet address already created" ||
-          error.response?.data?.message ===
-            "reward link with such activity id and telegram user id already created")
+        (error.response?.data?.message === "reward link with such activity id and wallet address already created" ||
+          error.response?.data?.message === "reward link with such activity id and telegram user id already created")
       ) {
         return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
           `/activities/${activityId}/rewards/${data.telegram_user_id}`
@@ -70,8 +65,7 @@ export async function registerActivity(
   return response.data as TonSocietyRegisterActivityResponse;
 }
 
-export type CreateActivityRequestBody =
-  TSAPIoperations["createEvent"]["requestBody"]["content"]["application/json"];
+export type CreateActivityRequestBody = TSAPIoperations["createEvent"]["requestBody"]["content"]["application/json"];
 
 /**
  * An endpoint that allows to create a new activity of the "Events" activity group.
@@ -88,4 +82,18 @@ export async function updateActivity(
     });
   const response = await tonSocietyClient.patch(`/activities/${activity_id}`, activityDetails);
   return response.data as { status: "success"; data: {} };
+}
+
+export async function getSBTClaimedStaus(activity_id: number, user_id: number | string) {
+  user_id = String(user_id);
+  try {
+    const result = await tonSocietyClient.get(`/activities/${activity_id}/rewards/${user_id}/status`);
+    return result.data as {
+      status: "NOT_CLAIMED" | "CLAIMED" | "RECEIVED";
+    };
+  } catch (error) {
+    return {
+      status: "NOT_CLAIMED",
+    };
+  }
 }
