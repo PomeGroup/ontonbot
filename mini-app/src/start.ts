@@ -603,9 +603,9 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
           message: `NFT ${nft_index + 1}
 <b>${paymentInfo.title}</b>
 👤user_id : <code>${ordr.user_id}</code>
-👤username : <code>${username}</code>
-          <a href='https://${prefix}getgems.io/collection/${paymentInfo.collectionAddress}'>🎨Collection</a>
-          <a href='https://${prefix}tonviewer.com/${ordr.trx_hash}'>💰TRX</a>
+👤username : @${username}
+<a href='https://${prefix}getgems.io/collection/${paymentInfo.collectionAddress}'>🎨Collection</a>
+<a href='https://${prefix}tonviewer.com/${ordr.trx_hash}'>💰TRX</a>
           `,
           topic: "ticket",
         });
