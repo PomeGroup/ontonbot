@@ -8,7 +8,7 @@ import { router } from "@/server/trpc";
 import { db } from "@/db/db";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { users } from "@/db/schema/users";
-import { eq } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import Papa from "papaparse";
 import { selectVisitorsByEventUuid } from "@/server/db/visitors";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
@@ -68,11 +68,18 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
   let csvString = "";
   let count = 0;
   if (eventData?.has_registration) {
+    const condition = eventData.has_payment
+      ? and(
+          or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
+          eq(eventRegistrants.event_uuid, event_uuid)
+        )
+      : eq(eventRegistrants.event_uuid, event_uuid);
+
     const result = await db
       .select()
       .from(eventRegistrants)
       .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
-      .where(eq(eventRegistrants.event_uuid, event_uuid))
+      .where(condition)
       .execute();
 
     count = result.length;
@@ -188,7 +195,7 @@ const requestSendQRCode = evntManagerPP
       return { status: "fail", data: null };
     }
   });
-export const  telegramInteractionsRouter = router({
+export const telegramInteractionsRouter = router({
   requestShareEvent,
   requestExportFile,
   requestSendQRCode,
