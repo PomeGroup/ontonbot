@@ -29,6 +29,7 @@ import { logger } from "@/server/utils/logger";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import { timestampToIsoString } from "@/lib/DateAndTime";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
+import { usersDB } from "../db/users";
 dotenv.config();
 
 
@@ -46,10 +47,27 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       message: "event not found",
     });
   }
-  if (!eventData.has_registration) {
-    return { capacity_filled, registrant_status, ...eventData, registrant_uuid };
-  }
 
+  //    Fetch user data for event owner
+  //    We'll rename org_* fields to 'organizer: { ... }' in the returned object.
+  const ownerUserId = eventData.owner; // This is the user_id who created the event
+  const ownerUser = await usersDB.selectUserById(Number(ownerUserId));
+
+  // Build an organizer object with the org_* fields (or null if no user found)
+  const organizer = ownerUser
+    ? {
+      org_channel_name: ownerUser.org_channel_name === null ? ownerUser.first_name : ownerUser.org_channel_name,
+      org_support_telegram_user_name: ownerUser.org_support_telegram_user_name,
+      org_x_link: ownerUser.org_x_link,
+      org_bio: ownerUser.org_bio,
+      org_image: ownerUser.org_image === null ? ownerUser.photo_url : ownerUser.org_image,
+    }
+    : null;
+
+  // If the event does NOT require registration, just return data
+  if (!eventData.has_registration) {
+    return { capacity_filled, registrant_status, organizer, ...eventData, registrant_uuid };
+  }
   /* ------------------------ Event Needs Registration ------------------------ */
 
   const user_request = await eventRegistrantsDB.getRegistrantRequest(event_uuid, userId);
@@ -87,6 +105,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     return {
       capacity_filled,
       registrant_status,
+      organizer,
       ...eventData,
       registrant_uuid,
       capacity: mask_event_capacity ? 99 : eventData.capacity,
@@ -102,6 +121,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       return {
         capacity_filled,
         registrant_status,
+        organizer,
         ...eventData,
         registrant_uuid,
         capacity: mask_event_capacity ? 99 : eventData.capacity,
@@ -113,6 +133,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   return {
     capacity_filled,
     registrant_status,
+    organizer,
     ...eventData,
     registrant_uuid,
     capacity: mask_event_capacity ? 99 : eventData.capacity,

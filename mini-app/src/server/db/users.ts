@@ -1,9 +1,10 @@
 import { db } from "@/db/db";
 import { users } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { InferSelectModel, eq } from "drizzle-orm";
+import { InferSelectModel, eq, sql, and } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
-
+import xss from "xss";
+import { logSQLQuery } from "@/lib/logSQLQuery";
 // User data from the init data
 interface InitUserData {
   user: {
@@ -23,6 +24,147 @@ const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}${userI
 
 // Function to generate cache key for wallet
 const getWalletCacheKey = (userId: number) => `${redisTools.cacheKeys.userWallet}${userId}`;
+
+
+// For convenience, define a response type
+interface UpdateOrgFieldsResponse {
+  success: boolean;
+  data: Awaited<ReturnType<typeof selectUserById>>; // This will be the updated user or null
+  error: string | null;
+}
+
+
+/**
+ * Updates the org_* fields for a given user by userId, with basic XSS sanitization.
+ */
+export const updateOrganizerFieldsByUserId = async (
+  userId: number,
+  orgData: Partial<{
+    org_channel_name: string;
+    org_support_telegram_user_name: string;
+    org_x_link: string;
+    org_bio: string;
+    org_image: string;
+  }>
+): Promise<UpdateOrgFieldsResponse> => {
+  try {
+    // 1) Check if the user exists
+    const existingUser = await selectUserById(userId);
+    if (!existingUser) {
+      return {
+        success: false,
+        data: null,
+        error: `User with ID ${userId} not found.`,
+      };
+    }
+
+    // 2) Build the updateData with sanitized values
+    const updateData: Partial<typeof users.$inferSelect> = {};
+
+    // Only update org_channel_name if it exists in orgData
+    if (orgData.org_channel_name !== undefined) {
+      updateData.org_channel_name = xss(orgData.org_channel_name);
+    }
+
+    if (orgData.org_support_telegram_user_name !== undefined) {
+      updateData.org_support_telegram_user_name = xss(
+        orgData.org_support_telegram_user_name
+      );
+    }
+
+    if (orgData.org_x_link !== undefined) {
+      updateData.org_x_link = xss(orgData.org_x_link);
+    }
+
+    if (orgData.org_bio !== undefined) {
+      updateData.org_bio = xss(orgData.org_bio);
+    }
+
+    if (orgData.org_image !== undefined) {
+      updateData.org_image = xss(orgData.org_image);
+    }
+
+    // If nothing needs updating, return the existing user
+    if (Object.keys(updateData).length === 0) {
+      return {
+        success: true,
+        data: existingUser,
+        error: null,
+      };
+    }
+
+    // 3) Perform the update in the database
+    await db
+      .update(users)
+      .set(updateData)
+      .where(eq(users.user_id, userId))
+      .execute();
+
+    // 4) Clear the user cache so it will be reloaded next time
+    await redisTools.deleteCache(getUserCacheKey(userId));
+
+    // 5) Return the updated user
+    const updatedUser = await selectUserById(userId);
+    return {
+      success: true,
+      data: updatedUser,
+      error: null,
+    };
+  } catch (err: any) {
+    logger.error(`Error updating org fields for user ID=${userId}:`, err);
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+};
+
+/**
+ * Select organizers by optional search string (with offset + limit).
+ */
+export const searchOrganizers = async (params: {
+  searchString?: string;
+  offset: number;
+  limit: number;
+}) => {
+  const { searchString, offset, limit } = params;
+
+  // Always require role='organizer'
+  const conditions = [eq(users.role, "organizer")];
+  // If a search string is provided, add a case-insensitive condition on `org_channel_name`
+  if (searchString) {
+    // Drizzle doesn't have a built-in "ilike" for all dialects, so we use raw SQL:
+    conditions.push(
+      sql`LOWER(${users.org_channel_name}) LIKE LOWER(${`%${searchString}%`})`
+    );
+  }
+
+  // Now pass all conditions to a single `.where(and(...conditions))`
+  // Build the query but don't execute yet
+  const query = db
+    .select({
+      user_id: users.user_id,
+      first_name: users.first_name,
+      last_name: users.last_name,
+      photo_url: users.photo_url,
+      org_support_telegram_user_name: users.org_support_telegram_user_name,
+      org_channel_name: users.org_channel_name,
+      org_bio: users.org_bio,
+      org_image: users.org_image,
+      org_x_link: users.org_x_link,
+    })
+    .from(users)
+    .where(and(...conditions))
+    .offset(offset)
+    .limit(limit);
+
+  // Convert to SQL + parameters
+  logSQLQuery(query.toSQL().sql, query.toSQL().params);
+
+  // Now execute
+  return await query.execute();
+};
 
 export const selectUserById = async (
   userId: number
@@ -173,6 +315,7 @@ export const insertUser = async (
   }
 };
 
+
 const selectWalletById: (user_id: number) => Promise<{ wallet: string | null }> =
   async (user_id: number) => {
     const cacheKey = getWalletCacheKey(user_id);
@@ -263,4 +406,6 @@ export const usersDB = {
   selectWalletById,
   updateWallet,
   selectUserByUsername,
+  updateOrganizerFieldsByUserId,
+  searchOrganizers,
 };
