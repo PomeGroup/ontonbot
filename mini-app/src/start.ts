@@ -687,6 +687,9 @@ async function sendPaymentReminder() {
   for (const event of events_need_of_remind) {
     const title = event.events.title;
     const recipient_address = event.event_payment_info.recipient_address;
+    const payment_type = event.event_payment_info.payment_type;
+    const payment_type_emojis = payment_type == "TON" ? "🔹" : "💲"; 
+
     console.log("event ", title);
     const totalAmount = await db
       .select({
@@ -714,17 +717,23 @@ async function sendPaymentReminder() {
     const message_result = await sendLogNotification({
       message: `Payment For Event
 <b>${title}</b>
-Total Sold : $<total>
-Commision : <code>$<commission></code>
+Total Sold : ${total}
+Commision : <code>${commission}</code>
 
+Payment Type : <b>${payment_type}</b>${payment_type_emojis}
 Organizer Payment : <code>${payment_amount}</code>
 Recipient : <code>${recipient_address}</code>
 `,
-      topic: "system",
+      topic: "ticket",
     });
 
     if (message_result.message_id) {
-      //success
+      //Successful Message send
+      await db
+        .update(eventPayment)
+        .set({ organizer_payment_status: "payed_to_organizer" })
+        .where(eq(eventPayment.id, event.event_payment_info.id))
+        .execute();
     }
 
     await sleep(1000);
