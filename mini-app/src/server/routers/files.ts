@@ -1,11 +1,20 @@
 import axios from "axios";
 import sizeOf from "image-size";
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { adminOrganizerProtectedProcedure, router } from "../trpc";
 import { validateMimeType } from "@/lib/validateMimeType";
 import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
 import FormData from "form-data";
 import { logger } from "@/server/utils/logger";
+import jwt from "jsonwebtoken";
+import { checkRateLimit } from "@/lib/checkRateLimit";
+import { UPLOAD_IMAGE_RATE_LIMIT, UPLOAD_VIDEO_RATE_LIMIT } from "@/constants";
+// Base URL for Next.js API routes
+const API_BASE_URL = (process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000") + "/api/";
+
+// JWT secret from env
+const JWT_SECRET = process.env.ONTON_API_SECRET ?? "fallback-secret";
 
 export const fieldsRouter = router({
   uploadImage: adminOrganizerProtectedProcedure
@@ -21,101 +30,123 @@ export const fieldsRouter = router({
 
               // Check if the image is square
               if (image.width !== image.height) {
-                throw new Error("Only square images are allowed");
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: "Only square images are allowed",
+                });
               }
 
-              // Limit the size of the file
-              const MAX_BASE64_SIZE = 10 * 1024 * 1024; // 10 MB
+              // Limit the size of the file (10 MB)
+              const MAX_BASE64_SIZE = 10 * 1024 * 1024;
               if (base64Data.length > MAX_BASE64_SIZE) {
-                throw new Error("File is too large");
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: "File is too large",
+                });
               }
 
               return true;
             },
-            {
-              message: "Invalid image data",
-            }
+            { message: "Invalid image data" }
           )
           .transform(async (data) => {
-            // Check if the data string is defined and has the correct format
-            if (!data || typeof data !== "string") {
-              throw new Error("Invalid base64 data");
+            if (!data ) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Invalid base64 data",
+              });
             }
-            logger.log("Base64 Data: ", data.slice(0, 100)); // Logging only the first 100 characters for readability
-            // Check if the base64 data contains the data URL scheme
+
+
             const mimeTypeMatch = data.match(/^data:(.*?);base64,/);
             if (!mimeTypeMatch || !mimeTypeMatch[1]) {
-              throw new Error("Invalid base64 image data format");
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Invalid base64 image data format",
+              });
             }
 
-            // Extract the MIME type
             const mimeType = mimeTypeMatch[1];
-
-            // Remove the base64 prefix and get the image data
             const base64Data = data.replace(/^data:image\/\w+;base64,/, "");
 
-            // Validate the MIME type
             if (!validateMimeType(mimeType)) {
-              throw new Error("Invalid file type");
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Invalid file type",
+              });
             }
 
-            // Convert base64 to Buffer for malware scanning
+            // Convert base64 -> Buffer -> scan for malware
             const buffer = Buffer.from(base64Data, "base64");
-
-            // Scan the file for malware using ClamAV
             const isClean = await scanFileWithClamAV(buffer);
             if (!isClean) {
-              throw new Error("Malicious file detected");
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Malicious file detected",
+              });
             }
 
-            // Return the buffer and MIME type
             return { buffer, mimeType };
           }),
-
-        subfolder: z.enum(["event", "sbt"]), // Added subfolder to the schema
+        subfolder: z.enum(["event", "sbt"]),
       })
     )
     .mutation(async (opts) => {
-      // Set the bucket name from environment variable or default to 'onton'
-      const bucketName = process.env.MINIO_IMAGE_BUCKET || "onton";
+      // 1. Rate-limit check
+      const userId = opts.ctx.user.user_id;
+      const { allowed, remaining } = await checkRateLimit(String(userId) , "uploadImage", UPLOAD_IMAGE_RATE_LIMIT.max, UPLOAD_IMAGE_RATE_LIMIT.window);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Rate limit exceeded. Please wait a minute.",
+        });
+      }
 
-      // Choose subfolder based on eventType ('event' or 'sbt')
-      const subfolder = opts.input.subfolder; // Use eventType to determine subfolder
+      // 2. Build the endpoint + form data
+      const uploadEndpoint = `${API_BASE_URL}/files/upload`;
+      const { buffer, mimeType } = opts.input.image;
+      const subfolder = opts.input.subfolder;
+      const extension = mimeType.split("/")[1] || "png";
+      const fullFilename = `event_image.${extension}`;
 
-      // Make sure the mimeType is extracted from the transformed data
-      const { buffer, mimeType } = opts.input.image; // Correctly reference the returned mimeType and buffer
-
-      // Create the full file path including the subfolder
-      const fullFilename = `${subfolder}/event_image.${mimeType.split("/")[1]}`; // Ensure mimeType is split correctly
-
-      // Create form data for the upload
       const formData = new FormData();
       formData.append("image", buffer, {
         filename: fullFilename,
         contentType: mimeType,
       });
+      formData.append("subfolder", subfolder);
 
-      // Append the bucket name to the form data
-      formData.append("bucketName", bucketName);
-      // Send the image data to the upload service (MinIO)
-      const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload`;
-      logger.log("URL: ", url);
+      // 3. Generate JWT
+      const token = jwt.sign({ scope: "uploadImage" }, JWT_SECRET, { expiresIn: "1h" });
+
+      // 4. Make the request
       try {
-        const res = await axios.post(url, formData, {
-          headers: formData.getHeaders(),
+        const res = await axios.post(uploadEndpoint, formData, {
+          headers: {
+            ...formData.getHeaders(),
+            Authorization: `Bearer ${token}`,
+          },
         });
-        logger.log("Response: ", res.data);
 
         if (!res.data || !res.data.imageUrl) {
-          throw new Error("File upload failed");
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "File upload failed (no imageUrl in response)",
+          });
         }
 
-        return res.data as { imageUrl: string };
+        // 5. Return result + remaining limit
+        return { imageUrl: res.data.imageUrl, remainingRateLimit: remaining };
       } catch (error) {
-        logger.error("Error during file upload:", error);
-        throw new Error("An error occurred during file upload");
+        logger.error("Error during image upload:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An error occurred during image upload",
+          cause: error,
+        });
       }
     }),
+
   uploadVideo: adminOrganizerProtectedProcedure
     .input(
       z.object({
@@ -123,69 +154,107 @@ export const fieldsRouter = router({
           .string()
           .refine(
             (file) => {
-              // Remove base64 header and get the video data
+              // Remove base64 prefix
               const base64Data = file.replace(/^data:video\/\w+;base64,/, "");
-
-              // Limit the size of the file
-              const MAX_BASE64_SIZE = 5 * 1024 * 1024; // 5 MB
+              // Ensure under 5 MB
+              const MAX_BASE64_SIZE = 5 * 1024 * 1024;
               if (base64Data.length > MAX_BASE64_SIZE) {
-                throw new Error("File is too large");
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: "File is too large",
+                });
               }
-
               return true;
             },
-            {
-              message: "Invalid video data",
-            }
+            { message: "Invalid video data" }
           )
           .transform(async (data) => {
             if (!data || typeof data !== "string") {
-              throw new Error("Invalid base64 data");
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Invalid base64 data",
+              });
             }
+
             const mimeTypeMatch = data.match(/^data:(.*?);base64,/);
             if (!mimeTypeMatch || mimeTypeMatch[1] !== "video/mp4") {
-              throw new Error("Only MP4 format is allowed");
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Only MP4 format is allowed",
+              });
             }
 
             const mimeType = mimeTypeMatch[1];
             const base64Data = data.replace(/^data:video\/\w+;base64,/, "");
             const buffer = Buffer.from(base64Data, "base64");
 
-            // Scan the file for malware
+            // Scan for malware
             const isClean = await scanFileWithClamAV(buffer);
             if (!isClean) {
-              throw new Error("Malicious file detected");
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Malicious file detected",
+              });
             }
-
             return { buffer, mimeType };
           }),
-
         subfolder: z.enum(["event", "sbt"]),
       })
     )
     .mutation(async (opts) => {
-      const bucketName = process.env.MINIO_VIDEO_BUCKET || "ontonvideo";
-      const subfolder = opts.input.subfolder;
+      // 1. Rate-limit check
+      const userId = opts.ctx.user.user_id;
+      const { allowed, remaining } = await checkRateLimit(String(userId), "uploadVideo", UPLOAD_VIDEO_RATE_LIMIT.max, UPLOAD_VIDEO_RATE_LIMIT.window);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Rate limit exceeded. Please wait a minute.",
+        });
+      }
 
+      // 2. Build the endpoint + form data
+      const uploadVideoEndpoint = `${API_BASE_URL}/files/upload-video`;
       const { buffer, mimeType } = opts.input.video;
-      const fullFilename = `${subfolder}/event_video.${mimeType.split("/")[1]}`;
+      const subfolder = opts.input.subfolder;
+      const extension = mimeType.split("/")[1] || "mp4";
+      const fullFilename = `event_video.${extension}`;
 
       const formData = new FormData();
       formData.append("video", buffer, {
         filename: fullFilename,
         contentType: mimeType,
       });
+      formData.append("subfolder", subfolder);
 
-      formData.append("bucketName", bucketName);
-      const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-video`;
-      const res = await axios.post(url, formData, {
-        headers: formData.getHeaders(),
-      });
+      logger.log("Uploading video to: ", uploadVideoEndpoint);
 
-      if (!res.data || !res.data.videoUrl) {
-        throw new Error("File upload failed");
+      // 3. Generate JWT
+      const token = jwt.sign({ scope: "uploadVideo" }, JWT_SECRET, { expiresIn: "1h" });
+
+      // 4. Make the request
+      try {
+        const res = await axios.post(uploadVideoEndpoint, formData, {
+          headers: {
+            ...formData.getHeaders(),
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.data || !res.data.videoUrl) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "File upload failed (no videoUrl in response)",
+          });
+        }
+
+        // 5. Return result + remaining limit
+        return { videoUrl: res.data.videoUrl, remainingRateLimit: remaining };
+      } catch (error) {
+        logger.error("Error during video upload:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An error occurred during video upload",
+          cause: error,
+        });
       }
-
-      return res.data as { videoUrl: string };
     }),
 });
