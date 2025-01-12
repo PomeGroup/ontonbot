@@ -173,6 +173,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
               delete visitorData.has_ticket;
               delete visitorData.ticket_status;
               delete visitorData.ticket_id;
+              delete visitorData.dynamicFields;
             }
 
             const sbtClaimStatus = await getSBTClaimedStaus(eventData?.activity_id!, visitorData.user_id!);
