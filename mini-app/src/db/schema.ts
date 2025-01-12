@@ -24,7 +24,7 @@ import {
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
-import { eventPayment } from "./schema/eventPayment";
+import { eventPayment, organizerPaymentStatus } from "./schema/eventPayment";
 import { event_details_search_list } from "./schema/event_details_search_list";
 import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers";
 import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults";
@@ -94,6 +94,7 @@ export {
   sbtRewardCollections,
   eventRegistrants,
   eventRegistrantStatus,
+  organizerPaymentStatus,
   walletChecks,
   nftItems,
 };

@@ -13,6 +13,7 @@ import Papa from "papaparse";
 import { selectVisitorsByEventUuid } from "@/server/db/visitors";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import axios from "axios";
+import { getSBTClaimedStaus } from "@/lib/ton-society-api";
 
 const requestShareEvent = initDataProtectedProcedure
   .input(
@@ -67,6 +68,10 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
 
   let csvString = "";
   let count = 0;
+
+  /* -------------------------------------------------------------------------- */
+  /*                              EVENT REGISTRANTS                             */
+  /* -------------------------------------------------------------------------- */
   if (eventData?.has_registration) {
     const condition = eventData.has_payment
       ? and(
@@ -84,60 +89,121 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
 
     count = result.length;
     /* -------------------------------------------------------------------------- */
-    const dataForCsv = result.map((row) => {
-      const registerInfo =
-        typeof row.event_registrants.register_info === "object"
-          ? row.event_registrants.register_info
-          : JSON.parse(String(row.event_registrants.register_info || "{}"));
 
-      const expandedRow = {
-        ...row.event_registrants, // Include all fields from eventRegistrants
-        ...row.users, // Include all fields from users
-        ...registerInfo, // Expand fields from register_info
-      };
+    /* ------------------------ Get Sbt Claims In Chunks ------------------------ */
+    const chunkArray = (array: any, size: any) => {
+      const chunks = [];
+      for (let i = 0; i < array.length; i += size) {
+        chunks.push(array.slice(i, i + size));
+      }
+      return chunks;
+    };
 
-      // Remove the original register_info field
-      delete expandedRow.register_info;
+    const processInBatches = async (data: any, batchSize: any) => {
+      const chunks = chunkArray(data, batchSize);
+      const result = [];
 
-      return expandedRow;
-    });
+      for (const chunk of chunks) {
+        const batchResult = await Promise.all(
+          chunk.map(async (row: any) => {
+            const registerInfo =
+              typeof row.event_registrants.register_info === "object"
+                ? row.event_registrants.register_info
+                : JSON.parse(String(row.event_registrants.register_info || "{}"));
 
+            const sbtClaimStatus = await getSBTClaimedStaus(eventData.activity_id!, row.users.user_id);
+
+            const expandedRow = {
+              ...row.event_registrants,
+              ...row.users,
+              ...registerInfo,
+              sbt_claim_status: sbtClaimStatus.status,
+            };
+
+            delete expandedRow.register_info;
+
+            return expandedRow;
+          })
+        );
+        result.push(...batchResult);
+      }
+
+      return result;
+    };
+
+    // Call the function with a batch size
+    const batchSize = 50; // Adjust based on API limits
+    const dataForCsv = await processInBatches(result, batchSize);
+    /* ----------------------------------- END ---------------------------------- */
+
+    /* -------------------------------------------------------------------------- */
+    /*                                 CSV CREATE                                 */
+    /* -------------------------------------------------------------------------- */
     /* -------------------------------------------------------------------------- */
     csvString = Papa.unparse(dataForCsv || [], {
       header: true,
     });
   } else {
-    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
-    const dataForCsv = visitors.visitorsWithDynamicFields?.map((visitor) => {
-      // Explicitly define wallet_address type and handle other optional fields
-      //@ts-ignore
-      const visitorData: Partial<VisitorsWithDynamicFields> = {
-        ...visitor,
-        ticket_status: "ticket_status" in visitor ? (visitor.ticket_status ?? undefined) : undefined,
-        wallet_address: visitor.wallet_address as string | null | undefined,
-        username: visitor.username === "null" ? null : visitor.username,
-      };
-      // Copy the visitor object without modifying dynamicFields directly
+    /* -------------------------------------------------------------------------- */
+    /*                                  VISITORS                                  */
+    /* -------------------------------------------------------------------------- */
+    const chunkArray = (array: any, size: number) => {
+      const chunks = [];
+      for (let i = 0; i < array.length; i += size) {
+        chunks.push(array.slice(i, i + size));
+      }
+      return chunks;
+    };
 
-      // If ticketToCheckIn is false, remove specific fields
-      if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
-        delete visitorData.has_ticket;
-        delete visitorData.ticket_status;
-        delete visitorData.ticket_id;
+    const processVisitorsInBatches = async (visitors: any, batchSize: any) => {
+      const chunks = chunkArray(visitors, batchSize);
+      const result = [];
+
+      for (const chunk of chunks) {
+        const batchResult = await Promise.all(
+          chunk.map(async (visitor: any) => {
+            const visitorData: Partial<VisitorsWithDynamicFields> = {
+              ...visitor,
+              ticket_status: "ticket_status" in visitor ? (visitor.ticket_status ?? undefined) : undefined,
+              wallet_address: visitor.wallet_address as string | null | undefined,
+              username: visitor.username === "null" ? null : visitor.username,
+            };
+
+            if (!eventData?.ticketToCheckIn && "has_ticket" in visitorData) {
+              delete visitorData.has_ticket;
+              delete visitorData.ticket_status;
+              delete visitorData.ticket_id;
+            }
+
+            const sbtClaimStatus = await getSBTClaimedStaus(eventData?.activity_id!, visitorData.user_id!);
+
+
+            delete visitorData.dynamicFields;
+            return {
+              ...visitorData,
+              // dynamicFields: JSON.stringify(visitor.dynamicFields),
+              sbt_claim_status: sbtClaimStatus.status,
+            };
+          })
+        );
+        result.push(...batchResult);
       }
 
-      // Generate a new object for CSV with stringified dynamicFields
-      return {
-        ...visitorData,
-        dynamicFields: JSON.stringify(visitor.dynamicFields),
-      };
-    });
+      return result;
+    };
+
+    const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
+    const batchSize = 50; // Adjust batch size as needed
+    const dataForCsv = await processVisitorsInBatches(visitors.visitorsWithDynamicFields, batchSize);
 
     csvString = Papa.unparse(dataForCsv || [], {
       header: true,
     });
     count = visitors.visitorsWithDynamicFields?.length || 0;
   }
+  /* -------------------------------------------------------------------------- */
+  /*                                  SEND CSV                                  */
+  /* -------------------------------------------------------------------------- */
   try {
     const formData = new FormData();
 

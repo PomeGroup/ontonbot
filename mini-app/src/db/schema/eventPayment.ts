@@ -1,7 +1,21 @@
-import { index, integer, pgTable, serial, text, timestamp, uuid, uniqueIndex, real } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uuid,
+  uniqueIndex,
+  real,
+  boolean,
+  pgEnum,
+} from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
 import { paymentTypes, ticketTypes } from "../enum";
 import { InferSelectModel } from "drizzle-orm";
+
+export const organizerPaymentStatus = pgEnum("organizer_payment_status", ["not_payed", "payed_to_organizer", "refunded"]);
 
 export const eventPayment = pgTable(
   "event_payment_info",
@@ -21,6 +35,8 @@ export const eventPayment = pgTable(
     collectionAddress: text("collection_address"),
     title: text("title"),
     description: text("description"),
+
+    organizer_payment_status: organizerPaymentStatus("organizer_payment_status").default("not_payed").notNull(),
 
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),
