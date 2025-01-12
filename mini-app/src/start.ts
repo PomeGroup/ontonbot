@@ -45,7 +45,7 @@ async function MainCronJob() {
   // Notify Users Cron Job
   new CronJob("*/3 * * * *", cronJob(notifyUsersForRewards), null, true);
 
-  new CronJob("*/1 * * * *", sendPaymentReminder, null, true);
+  new CronJob("0 */4 * * *", sendPaymentReminder, null, true);
 
   new CronJob("*/7 * * * * *", CheckTransactions, null, true);
 
@@ -688,7 +688,7 @@ async function sendPaymentReminder() {
     const title = event.events.title;
     const recipient_address = event.event_payment_info.recipient_address;
     const payment_type = event.event_payment_info.payment_type;
-    const payment_type_emojis = payment_type == "TON" ? "🔹" : "💲"; 
+    const payment_type_emojis = payment_type == "TON" ? "🔹" : "💲";
 
     console.log("event ", title);
     const totalAmount = await db

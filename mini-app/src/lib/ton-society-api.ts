@@ -85,6 +85,10 @@ export async function updateActivity(
 }
 
 export async function getSBTClaimedStaus(activity_id: number, user_id: number | string) {
+  if (!user_id || !activity_id) {
+    return { status: "Wrong_Input" };
+  }
+
   user_id = String(user_id);
   try {
     const result = await tonSocietyClient.get(`/activities/${activity_id}/rewards/${user_id}/status`);
@@ -93,7 +97,7 @@ export async function getSBTClaimedStaus(activity_id: number, user_id: number | 
     };
   } catch (error) {
     return {
-      status: "NOT_CLAIMED",
+      status: "",
     };
   }
 }
