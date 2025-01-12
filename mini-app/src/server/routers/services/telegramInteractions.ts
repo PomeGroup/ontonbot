@@ -132,7 +132,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
     };
 
     // Call the function with a batch size
-    const batchSize = 10; // Adjust based on API limits
+    const batchSize = 50; // Adjust based on API limits
     const dataForCsv = await processInBatches(result, batchSize);
     /* ----------------------------------- END ---------------------------------- */
 
@@ -191,7 +191,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
     };
 
     const visitors = await selectVisitorsByEventUuid(opts.input.event_uuid, -1, 0, dynamic_fields, "");
-    const batchSize = 5; // Adjust batch size as needed
+    const batchSize = 50; // Adjust batch size as needed
     const dataForCsv = await processVisitorsInBatches(visitors.visitorsWithDynamicFields, batchSize);
 
     csvString = Papa.unparse(dataForCsv || [], {

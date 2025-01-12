@@ -92,7 +92,7 @@ export async function getSBTClaimedStaus(activity_id: number, user_id: number | 
   user_id = String(user_id);
   try {
     const result = await tonSocietyClient.get(`/activities/${activity_id}/rewards/${user_id}/status`);
-    return result.data as {
+    return result.data.data as {
       status: "NOT_CLAIMED" | "CLAIMED" | "RECEIVED";
     };
   } catch (error) {
