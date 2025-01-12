@@ -86,20 +86,20 @@ export async function updateActivity(
 
 export async function getSBTClaimedStaus(activity_id: number, user_id: number | string) {
   if (!user_id || !activity_id) {
-    return { status: "Wrong_Input" };
+    return { status: `Wrong_avtivity_${activity_id}` };
   }
 
   user_id = String(user_id);
   try {
     const result = await tonSocietyClient.get(`/activities/${activity_id}/rewards/${user_id}/status`);
-    console.log("result at getSBTClaimedStaus ", activity_id, user_id, result.data);
+    // console.log("result at getSBTClaimedStaus ", activity_id, user_id, result.data);
     return result.data.data as {
       status: "NOT_CLAIMED" | "CLAIMED" | "RECEIVED";
     };
   } catch (error) {
-    console.log("error at getSBTClaimedStaus ", activity_id, user_id);
+    // console.log("error at getSBTClaimedStaus ", activity_id, user_id);
     return {
-      status: "err",
+      status: "NOT_ELIGBLE",
     };
   }
 }

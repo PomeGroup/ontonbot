@@ -179,7 +179,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
 
             return {
               ...visitorData,
-              dynamicFields: JSON.stringify(visitor.dynamicFields),
+              // dynamicFields: JSON.stringify(visitor.dynamicFields),
               sbt_claim_status: sbtClaimStatus.status,
             };
           })
