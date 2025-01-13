@@ -167,14 +167,18 @@ export const searchOrganizers = async (params: {
 };
 
 export const selectUserById = async (
-  userId: number
+  userId: number,
+  use_cached_user : boolean = true,
+  update_cache : boolean = true
 ): Promise<InferSelectModel<typeof users> | null> => {
   const cacheKey = getUserCacheKey(userId);
 
   // Try to get the user from cache
-  const cachedUser = await redisTools.getCache(cacheKey);
-  if (cachedUser) {
-    return cachedUser; // Return cached user if found
+  if(use_cached_user){
+    const cachedUser = await redisTools.getCache(cacheKey);
+    if (cachedUser) {
+      return cachedUser; // Return cached user if found
+    }
   }
 
   // If not found in cache, query the database
@@ -207,7 +211,7 @@ export const selectUserById = async (
       .where(eq(users.user_id, userId))
       .execute();
 
-    if (userInfo.length > 0) {
+    if (userInfo.length > 0 && update_cache) {
       await redisTools.setCache(cacheKey, userInfo[0], redisTools.cacheLvl.short); // Cache the user
       return userInfo[0];
     }
