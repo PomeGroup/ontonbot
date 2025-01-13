@@ -98,4 +98,14 @@ export const ordersRouter = router({
 
     return new_order;
   }),
+
+  getPromoteToOrganizerOrder: initDataProtectedProcedure.input({}).query(async (opts) => {
+    const user_id = opts.ctx.user.user_id;
+    const result_order = await db.query.orders.findFirst({
+      where: and(eq(orders.user_id, user_id), eq(orders.order_type, "promote_to_organizer")),
+    });
+
+    if (result_order) return result_order;
+    else return null;
+  }),
 });
