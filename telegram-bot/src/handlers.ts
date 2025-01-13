@@ -4,6 +4,11 @@ import { editOrSend } from "./utils/utils";
 import { startKeyboard } from "./markups";
 import { sendTopicMessage } from "./utils/logs-bot";
 
+/* -------------------------------------------------------------------------- */
+/*                                 ORG Handler                                */
+/* -------------------------------------------------------------------------- */
+/* ---------------------------------- /org ---------------------------------- */
+/* -------------------------------------------------------------------------- */
 export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
   // get user from database
   const { isAdmin } = await isUserAdmin(ctx.from.id.toString());
@@ -38,8 +43,9 @@ export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
       }
 
       await changeRole(role, username)
-        .then(async () => {
-          const changeMessage = `Role for @${username} changed to ${role}.`;
+        .then(async (response) => {
+          
+          const changeMessage = `Role for @${response.username} with userId : ${response.user_id} changed to ${role}.`;
 
           await sendTopicMessage("organizers_topic", changeMessage);
 
@@ -70,6 +76,10 @@ export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
   } catch (error) {}
 };
 
+
+/* -------------------------------------------------------------------------- */
+/*                                START COMMAND                               */
+/* -------------------------------------------------------------------------- */
 export const startHandler = async (ctx: Context) => {
   try {
     const messageText = ctx.message?.text;

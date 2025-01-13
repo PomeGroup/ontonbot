@@ -236,6 +236,11 @@ export async function changeRole(newRole: string, username: string) {
     );
 
     await client.end();
+
+    return {
+      username : userExists.rows[0].username, 
+      user_id : userExists.rows[0].user_id, 
+    }
   } catch (error) {
     console.error("Error in changeRole:", error);
     await client.end();
