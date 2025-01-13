@@ -528,7 +528,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   const results = await db
     .select()
     .from(orders)
-    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "nft_mint")))
+    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "nft_mint"),isNotNull(orders.event_uuid)))
     .orderBy(asc(orders.created_at))
     .limit(100)
     .execute();
@@ -555,7 +555,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       }
 
       const paymentInfo = (
-        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid!)).execute()
       ).pop();
 
       if (!paymentInfo) {
@@ -593,7 +593,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       const nft_count_result = await db
         .select({ count: sql`count(*)`.mapWith(Number) })
         .from(nftItems)
-        .where(eq(nftItems.event_uuid, event_uuid))
+        .where(eq(nftItems.event_uuid, event_uuid!))
         .execute();
 
       const nft_index = nft_count_result[0].count || 0;
@@ -633,7 +633,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
         await trx
           .insert(nftItems)
           .values({
-            event_uuid: event_uuid,
+            event_uuid: event_uuid!,
             order_uuid: ordr.uuid,
             nft_address: nft_address,
             owner: ordr.user_id,
@@ -649,7 +649,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
             .set({ status: "approved" })
             .where(
               and(
-                eq(eventRegistrants.event_uuid, ordr.event_uuid),
+                eq(eventRegistrants.event_uuid, ordr.event_uuid!),
                 eq(eventRegistrants.user_id, ordr.user_id),
                 or(eq(eventRegistrants.status, "pending"), eq(eventRegistrants.status, "rejected"))
               )
