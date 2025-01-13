@@ -399,8 +399,9 @@ async function CreateEventOrders(pushLockTTl: () => any) {
         collectionAddress = await deployCollection(metaDataUrl);
         console.log(`paid_event_deployed_collection_${eventData.event_uuid}_${collectionAddress}`);
         try {
+          const prefix = is_mainnet ? "" : "testnet.";
           await sendLogNotification({
-            message: `deployed collection for ${eventData.title}\n ${collectionAddress}`,
+            message: `Deployed collection for <b>${eventData.title}</b>\n\n🎈<a href='https://${prefix}getgems.io/collection/${collectionAddress}'>Collection</a>\n\n👤Capacity: ${eventData.capacity}`,
             topic: "event",
           });
         } catch (error) {
