@@ -682,7 +682,11 @@ async function sendPaymentReminder() {
     .from(eventPayment)
     .innerJoin(events, eq(eventPayment.event_uuid, events.event_uuid))
     .where(
-      and(eq(eventPayment.organizer_payment_status, "not_payed"), lt(events.end_date, currentTimestamp - oneDayInSeconds))
+      and(
+        eq(eventPayment.organizer_payment_status, "not_payed"),
+        lt(events.end_date, currentTimestamp - oneDayInSeconds),
+        isNotNull(eventPayment.collectionAddress)
+      )
     )
     .execute();
 
@@ -692,7 +696,7 @@ async function sendPaymentReminder() {
     const payment_type = event.event_payment_info.payment_type;
     const payment_type_emojis = payment_type == "TON" ? "🔹" : "💲";
 
-    logger.log("event ", title);
+    logger.log("event_payment_reminder", event.events.event_uuid);
     const totalAmount = await db
       .select({
         totalPrice: sql`SUM(${orders.total_price})`, // Calculates the sum of total_price
