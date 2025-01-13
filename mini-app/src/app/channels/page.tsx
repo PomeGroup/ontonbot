@@ -6,83 +6,50 @@ import Typography from "../../components/Typography";
 import BottomNavigation from "../_components/BottomNavigation";
 import Link from "next/link";
 import { Channel } from "@/types";
-
-let lastId = 1;
-
-const channels = [
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-  {
-    id: lastId++,
-    avatar: "/sq.jpg",
-    title: "Test",
-    eventCount: 12,
-  },
-];
+import usePaginatedChannels from "./usePaginatedChannels";
+import channelAvatar from "./channel-avatar.svg";
+import { ForwardedRef, forwardRef, Fragment, useCallback, useRef } from "react";
+import { noop } from "lodash";
 
 export default function ChannelsPage() {
+  const { data, isFetchingNextPage, fetchNextPage, hasNextPage, status } = usePaginatedChannels();
+
+  const observer = useRef<IntersectionObserver>();
+  const lastItemRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (isFetchingNextPage) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [isFetchingNextPage, fetchNextPage, hasNextPage]
+  );
+
+  if (status === "loading") return <p>Loading...</p>;
+  if (status === "error") return <p>Error fetching data</p>;
+
   return (
     <Block
       margin="0"
-      className="flex flex-wrap gap-4 bg-[rgba(239,239,244,1)] pt-8"
+      className="flex flex-wrap gap-4 bg-[rgba(239,239,244,1)] pt-8 pb-16"
     >
-      {channels.map((channel) => (
-        <ChannelCard
-          key={channel.id}
-          data={channel}
-        />
+      {data?.pages.map((page, pageIndex) => (
+        <Fragment key={pageIndex}>
+          {page.items.map((item, index) => {
+            const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.length - 1;
+            return (
+              <ChannelCard
+                key={item.user_id}
+                data={item}
+                ref={isLastItem ? lastItemRef : noop}
+              />
+            );
+          })}
+        </Fragment>
       ))}
       <BottomNavigation active="Channels" />
     </Block>
@@ -93,27 +60,44 @@ interface ChannelCardProps {
   data: Channel;
 }
 
-function ChannelCard({ data }: ChannelCardProps) {
+const ChannelCard = forwardRef(UnforwardedChannelCard);
+
+function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HTMLAnchorElement> | null) {
   return (
     <Link
-      href={`/channels/${data.id}`}
+      ref={ref}
+      href={`/channels/${data.user_id}`}
       className="p-4 bg-white rounded-md flex-1 min-w-[40%]"
     >
-      <Image
-        className="rounded-md mb-3"
-        src={data.avatar}
-        width={300}
-        height={300}
-        alt={data.title}
-      />
+      {data.org_image ? (
+        <Image
+          className="rounded-md mb-3"
+          src={data.org_image}
+          width={300}
+          height={300}
+          alt={data.org_channel_name || ""}
+        />
+      ) : (
+        <div className="bg-[#DEDEDE] rounded-md">
+          <Image
+            className="rounded-md mb-3"
+            src={channelAvatar}
+            width={300}
+            height={300}
+            alt={data.org_channel_name || ""}
+          />
+        </div>
+      )}
       <div className="text-center">
-        <div className="font-[590] mb-2 text-[17px] leading-[22px] tracking">{data.title}</div>
+        <div className="font-[590] mb-2 text-[17px] leading-[22px] tracking">
+          {data.org_channel_name || "Untitled channel"}
+        </div>
         <div>
           <Typography
             variant="subheadline2"
             bold
           >
-            {data.eventCount}
+            {data.eventCount || ""}
           </Typography>
           <Typography variant="subheadline2">&nbsp;Events</Typography>
         </div>

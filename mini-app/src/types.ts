@@ -444,8 +444,13 @@ export type EventDataSchemaAllOptional = Partial<z.infer<typeof EventDataSchema>
 export type PaidEventType = z.infer<typeof PaidEventSchema>;
 
 export interface Channel {
-  id: number;
-  avatar: string;
-  title: string;
-  eventCount: number;
+  user_id: number;
+  first_name: string | null;
+  last_name: string | null;
+  photo_url: string | null;
+  org_channel_name: string | null;
+  org_support_telegram_user_name: string | null;
+  org_x_link: string | null;
+  org_bio: string | null;
+  org_image: string | null;
 }
