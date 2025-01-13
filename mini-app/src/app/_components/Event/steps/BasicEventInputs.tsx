@@ -60,7 +60,7 @@ function BasicEventInputs(props: Props) {
         error={errors?.description?.join(". ")}
         defaultValue={eventData?.description}
       />
-      <TermsCheckbox {...props} />
+      {!eventData.event_id && <TermsCheckbox {...props} />}
       <ImageUpload
         isError={Boolean(errors?.image_url)}
         clearError={clearImageError}
