@@ -490,11 +490,11 @@ export const handleShareOrganizer = async (
 
     // Build the caption text. You can style it with HTML if you want
     const caption = `
-<b>${org_channel_name || "Organizer Profile"}</b>
+<b>🔸${org_channel_name || "Organizer Profile"}</b>
 
-🔸 Bio: ${org_bio || "N/A"}
+Take a look at my events in my channel on ONTON
 
-🔸 Link:  ${share_link}
+Address:  ${share_link}
 `;
 
     // If you have an org_image, try sending it. Otherwise, fallback
