@@ -7,7 +7,6 @@ import telegramIcon from "./telegram.svg";
 import shareIcon from "./share.svg";
 import { Channel } from "@/types";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
-import { useRouter } from "next/navigation";
 
 export default function ChannelInfoCard({ data }: { data: Channel }) {
   const share = () => {};
@@ -43,22 +42,30 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
           {data.org_channel_name}
         </Typography>
         <div className="flex gap-3">
-          <IconBg url={`https://x.com/${data.org_x_link}`}>
-            <Image
-              src={xPlatformIcon}
-              width={16}
-              height={16}
-              alt={`${data.org_channel_name} on X`}
-            />
-          </IconBg>
-          <IconBg url={`https://t.me/@${data.org_support_telegram_user_name}`}>
-            <Image
-              src={telegramIcon}
-              width={16}
-              height={16}
-              alt={`${data.org_channel_name} on Telegram`}
-            />
-          </IconBg>
+          {data.org_x_link && (
+            <IconBg onClick={() => window.Telegram.WebApp.openLink(data.org_x_link as string, { try_instant_view: true })}>
+              <Image
+                src={xPlatformIcon}
+                width={16}
+                height={16}
+                alt={`${data.org_channel_name} on X`}
+              />
+            </IconBg>
+          )}
+          {data.org_support_telegram_user_name && (
+            <IconBg
+              onClick={() =>
+                window.Telegram.WebApp.openTelegramLink(`https://t.me/${data.org_support_telegram_user_name?.substring(1)}`)
+              }
+            >
+              <Image
+                src={telegramIcon}
+                width={16}
+                height={16}
+                alt={`${data.org_channel_name} on Telegram`}
+              />
+            </IconBg>
+          )}
           <IconBg onClick={share}>
             <Image
               src={shareIcon}
@@ -77,17 +84,11 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
   );
 }
 
-function IconBg({ url, onClick, children }: PropsWithChildren<{ onClick?: () => void; url?: string | null }>) {
-  const router = useRouter();
-  const handleClick = () => {
-    if (onClick) return onClick();
-
-    if (url) router.push(url);
-  };
+function IconBg({ onClick, children }: PropsWithChildren<{ onClick: () => void }>) {
   return (
     <button
       className="w-8 h-8 bg-[#efeff4] rounded-[10px] p-2"
-      onClick={handleClick}
+      onClick={onClick}
     >
       {children}
     </button>
