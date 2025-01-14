@@ -47,7 +47,7 @@ export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
           
           const changeMessage = `Role for @${response.username} with userId : ${response.user_id} changed to ${role}.`;
 
-          await sendTopicMessage("organizers_topic", changeMessage);
+          await sendTopicMessage("organizers_topic", changeMessage + `\n` + `Total Organizers : ${response.total_organizers_count}`);
 
           await editOrSend(ctx, changeMessage, startKeyboard());
         })
