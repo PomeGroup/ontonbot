@@ -7,48 +7,41 @@ import greenCheckIcon from "./green-check.svg";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { cn } from "@/utils";
 import useDisableScrollbar from "@/hooks/ui/useDisableScrollbar";
+import { trpc } from "../_trpc/client";
+import useTransferTon from "./useTransfer";
+import { useConfig } from "@/context/ConfigContext";
 
 export default function PaymentCard({ visible, onPayFinished }: { visible: boolean; onPayFinished: () => void }) {
   const [confirmPayDialogOpen, setConfirmPayDialogOpen] = useState(false);
   const [loadingPopupOpen, setLoadingPopupOpen] = useState(false);
   const [congratsDrawerOpen, setCongratsDrawerOpen] = useState(false);
   // const api = useAddOrder();
-  // const transfer = useTransferTon();
+  const transfer = useTransferTon();
+  const userToOrganizerMutation = trpc.orders.addPromoteToOrganizerOrder.useMutation();
 
+  const { config } = useConfig();
   const handlePay = async () => {
     setConfirmPayDialogOpen(false);
-    setTimeout(() => {
+    const responsePromise = userToOrganizerMutation.mutateAsync({});
+    setTimeout(async () => {
       setLoadingPopupOpen(true);
-      setTimeout(() => {
+      const response: any = await responsePromise;
+
+      try {
+        await transfer(config.ONTON_WALLET_ADDRESS as string, Number(response.total_price), response.payment_type, {
+          comment: `organizer_order=${response.uuid}`,
+        });
+        // setIsRequestingTicket({ state: true, orderId: response[0].order_id });
         setLoadingPopupOpen(false);
         onPayFinished();
         setTimeout(() => {
           setCongratsDrawerOpen(true);
         }, 300);
-      }, 3000);
-    }, 300);
-
-    // const sendTo = "";
-    // const price = "";
-    // try {
-    //   const orderData = await api.mutateAsync();
-    //   console.log("transfer data", sendTo, Number(price), orderData.payment_type, {
-    //     comment: `onton_order=${orderData.order_id}`,
-    //   });
-    //   try {
-    //     await transfer(sendTo, Number(price), orderData.payment_type, {
-    //       comment: `onton_order=${orderData.order_id}`,
-    //     });
-    //     setIsRequestingTicket({ state: true, orderId: orderData.order_id });
-    //   } catch (error) {
-    //     mainButton?.show().enable();
-    //     console.error("Error during transfer:", error);
-    //   }
-    // } catch (error) {
-    //   toast.error("There was an error adding a new order");
-    //   mainButton?.show().enable();
-    //   console.error("Error adding order:", error);
-    // }
+      } catch (error) {
+        // mainButton?.show().enable();
+        console.error("Error during transfer:", error);
+      }
+    });
   };
 
   return (

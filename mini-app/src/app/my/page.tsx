@@ -9,7 +9,7 @@ import BottomNavigation from "../_components/BottomNavigation";
 import tonIcon from "@/components/icons/ton.svg";
 import { useEffect, useState } from "react";
 import { cn } from "@/utils";
-import { useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
+import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
 import { trpc } from "../_trpc/client";
 import { useUserStore } from "@/context/store/user.store";
 import arrowDownIcon from "@/components/icons/arrow-down.svg";
@@ -36,9 +36,15 @@ export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!user?.wallet_address;
 
-  const [paid, setPaid] = useState(false);
+  const [paid, setPaid] = useState(true);
 
   const router = useRouter();
+  useEffect(() => {
+    if (!window.location.search.includes("saved=true")) return;
+
+    toast.success("Information updated successfully.");
+    router.replace("/my");
+  }, []);
 
   return (
     <div className="bg-[#EFEFF4] pt-4 pb-4 min-h-screen">
@@ -231,7 +237,7 @@ function ConnectWalletCard() {
       />
 
       {hasWallet ? (
-        <WalletDropdown />
+        <TonConnectButton className="mx-auto" />
       ) : (
         <Button
           className="py-6 rounded-[10px]"

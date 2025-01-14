@@ -21,7 +21,7 @@ export const organizerRouter = router({
 
       // 3) If the update failed, throw an error
       if (!success) {
-        logger.error(`Failed to update org fields: ${userId}` , { input : opts.input, error });
+        logger.error(`Failed to update org fields: ${userId}`, { input: opts.input, error });
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: error ?? "Failed to update org fields.",
@@ -58,10 +58,15 @@ export const organizerRouter = router({
       };
     }),
   getOrganizer: publicProcedure
-    .input(z.object({ user_id: z.number() }))
-    .query(async ({ input }) => {
+    .input(z.object({ user_id: z.number().optional() }))
+    .query(async ({ input, ctx }) => {
       try {
-        const { user_id } = input;
+        const user_id = input.user_id ?? ctx.user?.user_id ?? null
+
+        if (!user_id) throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'ID not provided.'
+        })
         // 1) Query the user by ID
         const user = await usersDB.getOrganizerById(user_id);
 
@@ -73,11 +78,7 @@ export const organizerRouter = router({
           });
         }
         // 4) Return success shape
-        return {
-          success: true,
-          data: user.data,
-          error: null,
-        };
+        return user.data
       } catch (err) {
         // If it's already a TRPCError, re-throw it
         if (err instanceof TRPCError) {
