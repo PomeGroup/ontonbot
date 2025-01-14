@@ -14,6 +14,7 @@ import {
 } from "../trpc";
 import { logger } from "../utils/logger";
 import ordersDB from "@/server/db/orders.db";
+import { selectUserById } from "../db/users";
 
 export const ordersRouter = router({
   updateOrderState: initDataProtectedProcedure
@@ -53,7 +54,58 @@ export const ordersRouter = router({
       }
     }),
 
-    getEventOrders : evntManagerPP.input(z.object({ event_uuid: z.string().uuid() })).query(async (opts) => {
-      return await ordersDB.getEventOrders(opts.input.event_uuid);
-    }),
+  getEventOrders: evntManagerPP.input(z.object({ event_uuid: z.string().uuid() })).query(async (opts) => {
+    return await ordersDB.getEventOrders(opts.input.event_uuid);
+  }),
+
+  addPromoteToOrganizerOrder: initDataProtectedProcedure.input({}).mutation(async (opts) => {
+    const user_id = opts.ctx.user.user_id;
+    const user = await selectUserById(user_id, false);
+    if (user?.role === "organizer") throw new TRPCError({ code: "CONFLICT", message: "user is already an organizer" });
+
+    const user_order = (
+      await db
+        .select()
+        .from(orders)
+        .where(and(eq(orders.user_id, user_id), eq(orders.order_type, "promote_to_organizer")))
+        .execute()
+    ).pop();
+
+    if (user_order) {
+      if (user_order.state === "processing") {
+        throw new TRPCError({ code: "CONFLICT", message: "user already has processing order" });
+      }
+
+      //Since We Don't have the ban feature currently this can prevent a user from becomming organizer more than once
+      if (user_order.state === "completed") {
+        throw new TRPCError({ code: "CONFLICT", message: "user has a completed promote to organizer order " });
+      }
+
+      return user_order;
+    }
+
+    const new_order = await db
+      .insert(orders)
+      .values({
+        order_type: "promote_to_organizer",
+        user_id: user_id,
+        payment_type: "TON",
+        total_price: 10,
+        state: "new",
+      })
+      .returning()
+      .execute();
+
+    return new_order;
+  }),
+
+  getPromoteToOrganizerOrder: initDataProtectedProcedure.input({}).query(async (opts) => {
+    const user_id = opts.ctx.user.user_id;
+    const result_order = await db.query.orders.findFirst({
+      where: and(eq(orders.user_id, user_id), eq(orders.order_type, "promote_to_organizer")),
+    });
+
+    if (result_order) return result_order;
+    else return null;
+  }),
 });

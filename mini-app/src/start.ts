@@ -22,21 +22,22 @@ import { uploadJsonToMinio } from "@/lib/minioTools";
 import { Address } from "@ton/core";
 import { config } from "./server/config";
 import { selectUserById } from "./server/db/users";
+import { logger } from "./server/utils/logger";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
-  console.error("UNHANDLED ERROR", messages);
+  logger.error("UNHANDLED ERROR", messages);
 });
 
 const CACHE_TTL = 40_000;
 
 async function MainCronJob() {
-  console.log("====> RUNNING Cron jobs on", process.env.ENV);
+  logger.log("====> RUNNING Cron jobs on", process.env.ENV);
   if (process.env.ENV?.toLocaleLowerCase() !== "production") {
     // await createRewards(() => null);
-    // console.log.info("RUNNING Cron jobs: createRewards done");
+    // logger.log.info("RUNNING Cron jobs: createRewards done");
     // await notifyUsersForRewards(() => null);
-    // console.log.info("RUNNING Cron jobs: notifyUsersForRewards done");
+    // logger.log.info("RUNNING Cron jobs: notifyUsersForRewards done");
   }
 
   // Create Rewards Cron Job
@@ -64,7 +65,7 @@ function cronJob(fn: (_: () => any) => any) {
     const cronLock = await redisTools.getCache(redisTools.cacheKeys.cronJobLock + name);
 
     if (cronLock) {
-      console.log(`Cron job ${name} is already running`);
+      logger.log(`Cron job ${name} is already running`);
       return;
     }
 
@@ -74,7 +75,7 @@ function cronJob(fn: (_: () => any) => any) {
       try {
         return await redisTools.setRedisKeyTTL(cacheLockKey, CACHE_TTL);
       } catch (error) {
-        console.error("REDIS_ERROR", getErrorMessages(error));
+        logger.error("REDIS_ERROR", getErrorMessages(error));
       }
     }
 
@@ -83,7 +84,7 @@ function cronJob(fn: (_: () => any) => any) {
       await fn(pushLockTTl);
       console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
-      console.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
+      logger.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
       await sendLogNotification({
         message: `Cron job ${name} error: ${getErrorMessages(err)}`,
         topic: "system",
@@ -192,7 +193,7 @@ async function sendRewardNotification(createdReward: RewardType) {
 
     await updateRewardStatus(createdReward.id, "notified");
   } catch (error) {
-    console.error("BOT_API_ERROR", getErrorMessages(error));
+    logger.error("BOT_API_ERROR", getErrorMessages(error));
     await handleRewardError(createdReward, error);
   }
 }
@@ -227,7 +228,7 @@ async function handleRewardError(reward: RewardType, error: any) {
   const newStatus = shouldFail ? "notification_failed" : undefined;
   const newData = shouldFail ? { fail_reason: error.message } : undefined;
 
-  // console.error("handleRewardError", getErrorMessages(error), reward, shouldFail, newStatus, newData);
+  // logger.error("handleRewardError", getErrorMessages(error), reward, shouldFail, newStatus, newData);
 
   try {
     await updateRewardStatus(reward.id, newStatus, {
@@ -235,7 +236,7 @@ async function handleRewardError(reward: RewardType, error: any) {
       data: newData,
     });
   } catch (dbError) {
-    console.error("DB_ERROR", dbError);
+    logger.error("DB_ERROR", dbError);
   }
 }
 
@@ -250,12 +251,12 @@ async function CheckTransactions(pushLockTTl: () => any) {
   // Get Order.TicketDetails Wallet
   // Get Transactions From Past 30 Minutes
   // Update (DB) Paid Ones as paid others as failed
-  // console.log("@@@@ CheckTransactions  @@@@");
+  // logger.log("@@@@ CheckTransactions  @@@@");
 
   const wallet_address = config?.ONTON_WALLET_ADDRESS;
 
   if (!wallet_address) {
-    console.error("ONTON_WALLET_ADDRESS NOT SET");
+    logger.error("ONTON_WALLET_ADDRESS NOT SET");
     return;
   }
   const hour_ago = Math.floor((Date.now() - 3600 * 1000) / 1000);
@@ -279,7 +280,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
 
   for (const o of parsed_orders) {
     if (o.verfied) {
-      console.log("cron_trx_", o.order_uuid, o.order_type, o.value);
+      logger.log("cron_trx_", o.order_uuid, o.order_type, o.value);
       await db
         .update(orders)
         .set({ state: "processing", owner_address: o.owner.toString(), trx_hash: o.trx_hash })
@@ -320,7 +321,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
   // Update (DB) EventPayment (Collection Address)
   // Update (DB) Orders (mark order as completed)
   //todo : Minter Wallet Check
-  // console.log("!!! CreateEventOrders !!! ");
+  // logger.log("!!! CreateEventOrders !!! ");
 
   const results = await db
     .select()
@@ -336,13 +337,13 @@ async function CreateEventOrders(pushLockTTl: () => any) {
       const event_uuid = order.event_uuid;
       if (!event_uuid) {
         //NOTE - tg log
-        console.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
+        logger.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
         continue;
       }
       const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
       if (!event) {
         //NOTE - tg log
-        console.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
+        logger.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
         continue;
       }
       const eventData = event[0];
@@ -368,7 +369,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
 
       if (!paymentInfo) {
         //NOTE - tg log
-        console.error("what the fuck : ", "event Does not have payment !!!");
+        logger.error("what the fuck : ", "event Does not have payment !!!");
       }
 
       /* -------------------------------------------------------------------------- */
@@ -391,20 +392,21 @@ async function CreateEventOrders(pushLockTTl: () => any) {
         );
         if (!metaDataUrl) continue; //failed
 
-        console.log("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
+        logger.log("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
 
         /* ---------------------------- Collection Deploy --------------------------- */
-        console.log(`paid_event_deploy_collection_${eventData.event_uuid}`);
+        logger.log(`paid_event_deploy_collection_${eventData.event_uuid}`);
         collection_address_in_db = false;
         collectionAddress = await deployCollection(metaDataUrl);
-        console.log(`paid_event_deployed_collection_${eventData.event_uuid}_${collectionAddress}`);
+        logger.log(`paid_event_deployed_collection_${eventData.event_uuid}_${collectionAddress}`);
         try {
+          const prefix = is_mainnet ? "" : "testnet.";
           await sendLogNotification({
-            message: `deployed collection for ${eventData.title}\n ${collectionAddress}`,
+            message: `Deployed collection for <b>${eventData.title}</b>\n\n🎈<a href='https://${prefix}getgems.io/collection/${collectionAddress}'>Collection</a>\n\n👤Capacity: ${eventData.capacity}`,
             topic: "event",
           });
         } catch (error) {
-          console.log(`paid_event_deployed_collection_send_error_${event_uuid}_${error}`);
+          logger.log(`paid_event_deployed_collection_send_error_${event_uuid}_${error}`);
         }
       }
 
@@ -432,7 +434,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
             })
             .where(eq(events.event_uuid, event_uuid))
             .execute();
-          console.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
+          logger.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
         }
         /* ------------------------ Update Collection Address ----------------------- */
         if (paymentInfo && collectionAddress) {
@@ -442,7 +444,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
             .where(eq(eventPayment.id, paymentInfo.id))
             .execute();
           collection_address_in_db = true;
-          console.log(`paid_event_add_collection_${eventData.event_uuid}_${collectionAddress}`);
+          logger.log(`paid_event_add_collection_${eventData.event_uuid}_${collectionAddress}`);
         }
 
         /* ------------------------- Mark Order as Completed ------------------------ */
@@ -452,11 +454,11 @@ async function CreateEventOrders(pushLockTTl: () => any) {
             .set({ state: "completed", updatedBy: "CreateEventOrders", updatedAt: new Date() })
             .where(eq(orders.uuid, order.uuid))
             .execute();
-          console.log(`paid_event_cration_completed_${eventData.event_uuid}`);
+          logger.log(`paid_event_cration_completed_${eventData.event_uuid}`);
         }
       });
     } catch (error) {
-      console.log(`event_creation_error ${error}`);
+      logger.log(`event_creation_error ${error}`);
     }
   }
 }
@@ -479,13 +481,13 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
       const event_uuid = order.event_uuid;
       if (!event_uuid) {
         //NOTE - tg log
-        console.error("error_CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
+        logger.error("error_CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
         continue;
       }
       const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
       if (!event) {
         //NOTE - tg log
-        console.error("error_CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
+        logger.error("error_CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
         continue;
       }
       const eventData = event[0];
@@ -496,7 +498,7 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
 
       if (!paymentInfo) {
         //NOTE - tg log
-        console.error("error_what the fuck : ", "event Does not have payment !!!");
+        logger.error("error_what the fuck : ", "event Does not have payment !!!");
         continue;
       }
 
@@ -512,7 +514,7 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
         await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, order.uuid)).execute();
       });
     } catch (error) {
-      console.error(`UpdateEventCapacity_error ${error}`);
+      logger.error(`UpdateEventCapacity_error ${error}`);
     }
   }
 }
@@ -524,7 +526,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   // Get Orders to be Minted
   // Mint NFT
   // Update (DB) Successful Minted Orders as Minted
-  // console.log("&&&& MintNFT &&&&");
+  // logger.log("&&&& MintNFT &&&&");
   const results = await db
     .select()
     .from(orders)
@@ -543,14 +545,14 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
       if (!ordr.owner_address) {
         //NOTE -  tg error
-        console.error("error_wtf : no owner address", "order_id=", ordr.uuid);
+        logger.error("error_wtf : no owner address", "order_id=", ordr.uuid);
         continue;
       }
       try {
         Address.parse(ordr.owner_address);
       } catch {
         //NOTE - tg error
-        console.error("error_uparsable address : ", ordr.owner_address, "order_id=", ordr.uuid);
+        logger.error("error_uparsable address : ", ordr.owner_address, "order_id=", ordr.uuid);
         continue;
       }
 
@@ -559,11 +561,11 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       ).pop();
 
       if (!paymentInfo) {
-        console.error("error_what the fuck : ", "event Does not have payment !!!", event_uuid);
+        logger.error("error_what the fuck : ", "event Does not have payment !!!", event_uuid);
         continue;
       }
       if (!paymentInfo.collectionAddress) {
-        console.error(" no colleciton address right now");
+        logger.error(" no colleciton address right now");
         continue;
       }
       const meta_data_url = await uploadJsonToMinio(
@@ -598,14 +600,14 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
       const nft_index = nft_count_result[0].count || 0;
 
-      console.log(`minting_nft_${ordr.event_uuid}_${nft_index}_${paymentInfo?.collectionAddress}_${meta_data_url}`);
+      logger.log(`minting_nft_${ordr.event_uuid}_${nft_index}_${paymentInfo?.collectionAddress}_${meta_data_url}`);
 
       const nft_address = await mintNFT(ordr.owner_address, paymentInfo?.collectionAddress, nft_index, meta_data_url);
       if (!nft_address) {
-        console.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_miss`);
+        logger.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_miss`);
         return;
       }
-      console.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_${nft_address}`);
+      logger.log(`minting_nft_${ordr.event_uuid}_${nft_index}_address_${nft_address}`);
       /* -------------------------------------------------------------------------- */
       try {
         const prefix = is_mainnet ? "" : "testnet.";
@@ -624,12 +626,12 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
         });
         /* -------------------------------------------------------------------------- */
       } catch (error) {
-        console.error("MintNFTforPaid_Orders-sendLogNotification-error--:", error);
+        logger.error("MintNFTforPaid_Orders-sendLogNotification-error--:", error);
       }
 
       await db.transaction(async (trx) => {
         await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
-        console.log(`nft_mint_order_completed_${ordr.uuid}`);
+        logger.log(`nft_mint_order_completed_${ordr.uuid}`);
         await trx
           .insert(nftItems)
           .values({
@@ -640,7 +642,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
           })
           .execute();
 
-        console.log(`nft_mint_nftitem_add_${ordr.user_id}_${nft_address}`);
+        logger.log(`nft_mint_nftitem_add_${ordr.user_id}_${nft_address}`);
 
         if (ordr.user_id) {
           // if ordr.user_id === null order is manual mint(Gift)
@@ -656,13 +658,13 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
             )
             .execute();
 
-          console.log(`nft_mint_user_approved_${ordr.user_id}`);
+          logger.log(`nft_mint_user_approved_${ordr.user_id}`);
         }
       });
 
       // await pushLockTTl();
     } catch (error) {
-      console.log(`nft_mint_error , ${error}`);
+      logger.log(`nft_mint_error , ${error}`);
     }
   }
 }
@@ -671,7 +673,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 /*                        Payment to Organizer Reminder                       */
 /* -------------------------------------------------------------------------- */
 async function sendPaymentReminder() {
-  console.log("sendPaymentReminder");
+  logger.log("sendPaymentReminder");
   const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
   const oneDayInSeconds = 24 * 60 * 60;
 
@@ -680,7 +682,11 @@ async function sendPaymentReminder() {
     .from(eventPayment)
     .innerJoin(events, eq(eventPayment.event_uuid, events.event_uuid))
     .where(
-      and(eq(eventPayment.organizer_payment_status, "not_payed"), lt(events.end_date, currentTimestamp - oneDayInSeconds))
+      and(
+        eq(eventPayment.organizer_payment_status, "not_payed"),
+        lt(events.end_date, currentTimestamp - oneDayInSeconds),
+        isNotNull(eventPayment.collectionAddress)
+      )
     )
     .execute();
 
@@ -690,7 +696,7 @@ async function sendPaymentReminder() {
     const payment_type = event.event_payment_info.payment_type;
     const payment_type_emojis = payment_type == "TON" ? "🔹" : "💲";
 
-    console.log("event ", title);
+    logger.log("event_payment_reminder", event.events.event_uuid);
     const totalAmount = await db
       .select({
         totalPrice: sql`SUM(${orders.total_price})`, // Calculates the sum of total_price
@@ -741,4 +747,4 @@ Recipient : <code>${recipient_address}</code>
 }
 // Run the Cron Jobs
 MainCronJob();
-// CreateEventOrders().finally(() => console.log("well done ........"));
+// CreateEventOrders().finally(() => logger.log("well done ........"));

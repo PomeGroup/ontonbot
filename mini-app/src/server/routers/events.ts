@@ -8,7 +8,7 @@ import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
-import { and, asc, eq, gt } from "drizzle-orm";
+import { and, asc, eq, gt  , ne} from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import eventDB from "@/server/db/events";
@@ -31,6 +31,13 @@ import { timestampToIsoString } from "@/lib/DateAndTime";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
 import { usersDB } from "../db/users";
 dotenv.config();
+
+
+function get_paid_event_price(capacity : number ){
+  const reduced_price = is_dev_env() || is_stage_env();
+  
+  return reduced_price ? (0.001 + 0.00055 * capacity) : (10 + 0.055 * capacity) ;
+}
 
 
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
@@ -235,11 +242,9 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       if (input_event_data.paid_event && event_has_payment) {
         if (!input_event_data.capacity)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
-        const order_price =
-          is_dev_env() || is_stage_env()
-            ? 0.00055 * input_event_data.capacity + 0.001
-            : 10 + 0.055 * input_event_data.capacity;
-
+        
+        const order_price = get_paid_event_price(input_event_data.capacity);
+        
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
           user_id: opts.ctx.user.user_id,
@@ -250,14 +255,15 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           owner_address: "",
         });
 
-        let event_price = Math.max(input_event_data.paid_event.payment_amount || 0, 0.001); // Price > 0.001
-        event_price = Math.round(event_price * 1000) / 1000; // Round to 3 Decimals
+        let event_ticket_price = Math.max(input_event_data.paid_event.payment_amount || 0, 0.001); // Price > 0.001
+        event_ticket_price = Math.round(event_ticket_price * 1000) / 1000; // Round to 3 Decimals
+        event_ticket_price = event_ticket_price || 0.001;
 
         await trx.insert(eventPayment).values({
           event_uuid: newEvent[0].event_uuid,
           /* -------------------------------------------------------------------------- */
           payment_type: input_event_data.paid_event.payment_type || "TON",
-          price: event_price,
+          price: event_ticket_price,
           recipient_address: input_event_data.paid_event.payment_recipient_address,
           bought_capacity: input_event_data.capacity,
           /* -------------------------------------------------------------------------- */
@@ -386,6 +392,27 @@ const updateEvent = eventManagerPP
           const paymentInfo = (
             await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
           ).pop();
+
+          if(!paymentInfo) throw new TRPCError({ code: "BAD_REQUEST", message: `error: paymentInfo not found for ${eventUuid}` });
+          
+          // Update Create Order If Event is not published yet
+          if(!oldEvent.enabled && eventData.capacity < paymentInfo!.bought_capacity){
+            const where_condition = and(
+                                        eq(orders.event_uuid, eventUuid),
+                                        eq(orders.order_type, "event_creation"),
+                                        ne(orders.state, "processing"),
+                                        ne(orders.state, "completed"),
+                                      );
+            const createEventOrder = await trx.query.orders.findFirst({where: where_condition});
+
+            if(createEventOrder){
+              await trx.update(orders).set({total_price : get_paid_event_price(eventData.capacity) }).where(where_condition).execute();
+              await trx.update(eventPayment).set({bought_capacity : eventData.capacity})
+            }
+            
+          }
+
+          /* ------------------- Create Order For Increase Capacity ------------------- */
           if (eventData.capacity > paymentInfo!.bought_capacity) {
             // Increase in event capacity
             // create an update_capacity_order if not exists otherwise just update it
@@ -413,7 +440,7 @@ const updateEvent = eventManagerPP
               total_price: 0.055 * (eventData.capacity - paymentInfo!.bought_capacity),
               user_id: user_id,
             };
-            if (update_order && update_order.state == "new") {
+            if (update_order && (update_order.state === "new" || update_order.state === "confirming")) {
               await trx.update(orders).set(upsert_data).where(eq(orders.uuid, update_order.uuid));
             } else {
               await trx.insert(orders).values(upsert_data);
