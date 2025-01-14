@@ -11,15 +11,50 @@ import { trpc } from "@/app/_trpc/client";
 import { Channel } from "@/types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Formik } from "formik";
+import { useFormik } from "formik";
 
 export default function EditForm({ data }: { data: Channel }) {
-  const [title, setTitle] = useState(data.org_channel_name || "");
-
   const editApi = trpc.organizers.updateOrganizer.useMutation();
   const router = useRouter();
 
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const { errors, touched, values, handleChange, handleSubmit, isSubmitting, setFieldValue } = useFormik<{
+    org_channel_name: string;
+    org_support_telegram_user_name: string;
+    org_x_link: string;
+    org_bio: string;
+    org_image: string;
+  }>({
+    initialValues: {
+      org_channel_name: data.org_channel_name || "",
+      org_support_telegram_user_name: data.org_support_telegram_user_name || "",
+      org_x_link: data.org_x_link || "",
+      org_bio: data.org_bio || "",
+      org_image: data.org_image || "",
+    },
+    validate(values) {
+      const newErrors: any = {};
+
+      if (!values.org_channel_name.trim()) {
+        newErrors.org_channel_name = "Channel name cannot be empty.";
+      }
+
+      if (values.org_support_telegram_user_name && !/^@[a-zA-Z0-9_]{5,32}$/.test(values.org_support_telegram_user_name)) {
+        newErrors.org_support_telegram_user_name = "Must start with @ and be 5-32 characters long.";
+      }
+
+      if (values.org_x_link && !/^https?:\/\/[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}\/.*$/.test(values.org_x_link)) {
+        newErrors.org_x_link = "Invalid X handle URL. It should be like https://x.com/ontonlive";
+      }
+      return newErrors;
+    },
+    async onSubmit(values) {
+      const response = await editApi.mutateAsync(values);
+      toast.success("Information updated successfully.");
+      router.push("/my?saved=true");
+    },
+  });
 
   const uploadApi = trpc.files.uploadImage.useMutation();
 
@@ -30,182 +65,147 @@ export default function EditForm({ data }: { data: Channel }) {
     setUploading(true);
     try {
       const response = await uploadApi.mutateAsync({ image: await toBase64(files[0]), subfolder: "channels" });
-      setAvatar(response.imageUrl);
+      setFieldValue("org_image", response.imageUrl);
     } finally {
       setUploading(false);
     }
   };
-  const [tg, setTg] = useState(data.org_support_telegram_user_name || "");
-  const [x, setX] = useState(data.org_x_link || "");
-  const [bio, setBio] = useState(data.org_bio || "");
-  const [avatar, setAvatar] = useState(data.org_image || data.photo_url || "");
 
   return (
-    <Formik
-      initialValues={{
-        org_channel_name: data.org_channel_name || "",
-        org_support_telegram_user_name: data.org_support_telegram_user_name || "",
-        org_x_link: data.org_x_link || "",
-        org_bio: data.org_bio || "",
-        org_image: data.org_image || "",
-      }}
-      validate={(values) => {
-        const newErrors: any = {};
-
-        if (!values.org_channel_name.trim()) {
-          newErrors.org_channel_name = "Channel name cannot be empty.";
-        }
-
-        if (values.org_support_telegram_user_name && !/^@[a-zA-Z0-9_]{5,32}$/.test(values.org_support_telegram_user_name)) {
-          newErrors.org_support_telegram_user_name = "Must start with @ and be 5-32 characters long.";
-        }
-
-        if (values.org_x_link && !/^https?:\/\/[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}\/.*$/.test(values.org_x_link)) {
-          newErrors.org_x_link = "Invalid X handle URL. It should be like https://x.com/ontonlive";
-        }
-        return newErrors;
-      }}
-      onSubmit={async (values) => {
-        const response = await editApi.mutateAsync(values);
-        toast.success("Information updated successfully.");
-        router.push("/my?saved=true");
-      }}
-    >
-      {({ touched, errors, values, handleChange, submitForm, isSubmitting }) => (
-        <div className="p-4">
-          <div className="relative">
-            <div
-              className={cn(
-                "absolute z-2 inset-0 opacity-50 bg-white items-center justify-center hidden",
-                isUploading && "!flex"
-              )}
-            >
-              <Preloader size="w-16 h-16" />
-            </div>
-            <Image
-              className="mb-4 w-full h-auto !rounded-[10px] aspect-square"
-              sizes="100vw"
-              src={avatar}
-              width={0}
-              height={0}
-              alt="Avatar"
-            />
-          </div>
-          <div className="flex align-center justify-between mb-2">
-            <Typography
-              variant="title3"
-              bold
-            >
-              Editing Profile
-            </Typography>
-            <Button
-              outline
-              className="!w-auto py-4 px-3 rounded-[6px]"
-              onClick={() => {
-                if (isUploading) return;
-                imageInputRef.current?.click();
-              }}
-            >
-              <Image
-                src={cameraIcon}
-                width={20}
-                height={20}
-                alt=""
-              />
-              Edit Image
-              <input
-                ref={imageInputRef}
-                type="file"
-                name="image"
-                accept="image/*"
-                onChange={(e) => {
-                  e.preventDefault();
-                  uploadImage(e.target.files);
-                }}
-                id="event_image_input"
-                className="hidden"
-              />
-            </Button>
-          </div>
-          <Typography
-            className="mb-3"
-            variant="footnote"
+    <form onSubmit={handleSubmit}>
+      <div className="p-4">
+        <div className="relative">
+          <div
+            className={cn(
+              "absolute z-2 inset-0 opacity-50 bg-white items-center justify-center hidden",
+              isUploading && "!flex"
+            )}
           >
-            You can edit your information and manage how it is showed to the participants.
-          </Typography>
-          <OntonInput
-            className="mb-3"
-            label="Channel Name"
-            name="org_channel_name"
-            value={values.org_channel_name}
-            error={(errors.org_channel_name && touched.org_channel_name && errors.org_channel_name) || undefined}
-            onChange={handleChange}
-          />
-          <OntonInput
-            className="mb-3"
-            label="Telegram Handle"
-            name="org_support_telegram_user_name"
-            value={values.org_support_telegram_user_name}
-            error={
-              (errors.org_support_telegram_user_name &&
-                touched.org_support_telegram_user_name &&
-                errors.org_support_telegram_user_name) ||
-              undefined
-            }
-            onChange={handleChange}
-            startAdornment={
-              <div className="p-4 bg-[#EEEEF0] !rounded-[10px]">
-                <Image
-                  src={telegramIcon}
-                  width={16}
-                  height={16}
-                  alt="X"
-                />
-              </div>
-            }
-          />
-          <OntonInput
-            className="mb-3"
-            label="X Handle"
-            name="org_x_link"
-            value={values.org_x_link}
-            error={(errors.org_x_link && touched.org_x_link && errors.org_x_link) || undefined}
-            onChange={handleChange}
-            startAdornment={
-              <div className="p-4 bg-[#EEEEF0] !rounded-[10px]">
-                <Image
-                  src={xPlatformIcon}
-                  width={16}
-                  height={16}
-                  alt="X"
-                />
-              </div>
-            }
-          />
-          <OntonExpandableInput
-            label="Bio"
-            name="org_bio"
-            value={values.org_bio}
-            onChange={handleChange}
-          />
-          <div className="mt-4 pt-2 -mx-4 px-3 shadow-[0px_-1px_4px_0px_#0000001A]">
-            <Button
-              className="py-5 mb-3 !rounded-[10px]"
-              onClick={submitForm}
-              disabled={isSubmitting}
-            >
-              Save Changes
-            </Button>
-            <Button
-              className="py-5 !rounded-[10px]"
-              outline
-            >
-              Discard
-            </Button>
+            <Preloader size="w-16 h-16" />
           </div>
+          <Image
+            className="mb-4 w-full h-auto !rounded-[10px] aspect-square"
+            sizes="100vw"
+            src={values.org_image}
+            width={0}
+            height={0}
+            alt="Avatar"
+          />
         </div>
-      )}
-    </Formik>
+        <div className="flex align-center justify-between mb-2">
+          <Typography
+            variant="title3"
+            bold
+          >
+            Editing Profile
+          </Typography>
+          <Button
+            outline
+            itemType="button"
+            className="!w-auto py-4 px-3 rounded-[6px] relative"
+            // onClick={(e) => {
+            //   e.preventDefault();
+            //   if (isUploading) return;
+            //   imageInputRef.current?.click();
+            // }}
+          >
+            <Image
+              src={cameraIcon}
+              width={20}
+              height={20}
+              alt=""
+            />
+            Edit Image
+            <input
+              ref={imageInputRef}
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={(e) => {
+                uploadImage(e.target.files);
+              }}
+              className="opacity-0 absolute inset-0 z-2"
+            />
+          </Button>
+        </div>
+        <Typography
+          className="mb-3"
+          variant="footnote"
+        >
+          You can edit your information and manage how it is showed to the participants.
+        </Typography>
+        <OntonInput
+          className="mb-3"
+          label="Channel Name"
+          name="org_channel_name"
+          value={values.org_channel_name}
+          error={(errors.org_channel_name && touched.org_channel_name && errors.org_channel_name) || undefined}
+          onChange={handleChange}
+        />
+        <OntonInput
+          className="mb-3"
+          label="Telegram Handle"
+          name="org_support_telegram_user_name"
+          value={values.org_support_telegram_user_name}
+          error={
+            (errors.org_support_telegram_user_name &&
+              touched.org_support_telegram_user_name &&
+              errors.org_support_telegram_user_name) ||
+            undefined
+          }
+          onChange={handleChange}
+          startAdornment={
+            <div className="p-4 bg-[#EEEEF0] !rounded-[10px]">
+              <Image
+                src={telegramIcon}
+                width={16}
+                height={16}
+                alt="X"
+              />
+            </div>
+          }
+        />
+        <OntonInput
+          className="mb-3"
+          label="X Handle"
+          name="org_x_link"
+          value={values.org_x_link}
+          error={(errors.org_x_link && touched.org_x_link && errors.org_x_link) || undefined}
+          onChange={handleChange}
+          startAdornment={
+            <div className="p-4 bg-[#EEEEF0] !rounded-[10px]">
+              <Image
+                src={xPlatformIcon}
+                width={16}
+                height={16}
+                alt="X"
+              />
+            </div>
+          }
+        />
+        <OntonExpandableInput
+          label="Bio"
+          name="org_bio"
+          value={values.org_bio}
+          onChange={handleChange}
+        />
+        <div className="mt-4 pt-2 -mx-4 px-3 shadow-[0px_-1px_4px_0px_#0000001A]">
+          <Button
+            className="py-5 mb-3 !rounded-[10px]"
+            onClick={() => handleSubmit()}
+            disabled={isSubmitting}
+          >
+            Save Changes
+          </Button>
+          <Button
+            className="py-5 !rounded-[10px]"
+            outline
+          >
+            Discard
+          </Button>
+        </div>
+      </div>
+    </form>
   );
 }
 

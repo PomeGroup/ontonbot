@@ -5,7 +5,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
-import React, { memo, useState } from "react";
+import React, { ForwardedRef, forwardRef, memo, useState } from "react";
 import { IoIosPlayCircle } from "react-icons/io";
 
 interface EventCardProps {
@@ -36,7 +36,7 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = memo(
-  ({ event, mode = "normal", currentUserId = 0 }) => {
+  forwardRef(({ event, mode = "normal", currentUserId = 0 }, ref: ForwardedRef<HTMLDivElement> | null) => {
     const {
       eventUuid,
       title = "No Title",
@@ -81,6 +81,7 @@ const EventCard: React.FC<EventCardProps> = memo(
     const renderNormalMode = () => (
       <>
         <div
+          ref={ref}
           onClick={handleEventClick}
           className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer"
         >
@@ -124,7 +125,7 @@ const EventCard: React.FC<EventCardProps> = memo(
                 </span>
               </div>
 
-              <span className="grow font-sans text-left line-clamp-1 text-xs leading-4">
+              <span className="font-sans text-left line-clamp-1 text-xs leading-4">
                 by {organizerFirstName} {organizerLastName}
               </span>
             </div>
@@ -207,7 +208,7 @@ const EventCard: React.FC<EventCardProps> = memo(
     } else {
       return renderNormalMode();
     }
-  },
+  }),
   (prevProps, nextProps) => {
     // Customize comparison to avoid unnecessary re-renders
     return prevProps.event.eventUuid === nextProps.event.eventUuid;

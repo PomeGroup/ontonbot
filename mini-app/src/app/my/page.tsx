@@ -12,7 +12,6 @@ import { cn } from "@/utils";
 import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
 import { trpc } from "../_trpc/client";
 import { useUserStore } from "@/context/store/user.store";
-import arrowDownIcon from "@/components/icons/arrow-down.svg";
 import { toast } from "sonner";
 import OntonDialog from "@/components/OntonDialog";
 import PaymentCard from "./PaymentCard";
@@ -28,24 +27,19 @@ export default function ProfilePage() {
   const [paid, setPaid] = useState(true);
   const { data } = trpc.organizers.getOrganizer.useQuery({});
 
-  // const router = useRouter();
-  // useEffect(() => {
-  //   if (!window.location.search.includes("saved=true")) return;
-
-  //   router.replace("/my");
-  // }, []);
+  const router = useRouter();
 
   if (!data) return "loading";
   return (
     <div className="bg-[#EFEFF4] pt-4 pb-4 min-h-screen">
       {paid ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <Link
-        className="my-3 py-3 text-center w-full"
+        className="my-3 py-3 text-center block"
         href={`/channels/${data.user_id}/`}
       >
         My Public Page
       </Link>
-      <Card>
+      <Card onClick={() => router.push("/my/participated/")}>
         <div className="flex gap-3 align-stretch">
           <div className="bg-[#efeff4] p-4 rounded-[10px]">
             <Image
@@ -68,11 +62,11 @@ export default function ProfilePage() {
               className="mt-auto flex gap-4"
             >
               <div>
-                <b>{data.eventCount || "0"}</b> Events
+                <b>{data.participated_event_count || "0"}</b> Events
               </div>
-              <div>
-                <b>{data.eventCount || "0"}</b> SBTs
-              </div>
+              {/* <div>
+                <b>{data.sbt_count || "0"}</b> SBTs
+              </div> */}
             </Typography>
           </div>
           <div className="self-center">
@@ -80,7 +74,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </Card>
-      <Card>
+      <Card onClick={() => router.push("/my/hosted/")}>
         <div className="flex gap-3 align-stretch">
           <div className="bg-[#efeff4] p-4 rounded-[10px]">
             <Image
@@ -104,7 +98,7 @@ export default function ProfilePage() {
             >
               {paid ? (
                 <>
-                  <b>{data.eventCount || "0"}</b> Events
+                  <b>{data.hosted_event_count || "0"}</b> Events
                 </>
               ) : (
                 "Become an organizer first"
@@ -152,7 +146,7 @@ function InlineChannelCard({ data }: { data: Channel }) {
         {data.org_image || data.photo_url ? (
           <Image
             className="rounded-[10px]"
-            src={data.org_image || data.photo_url}
+            src={data.org_image || data.photo_url || ""}
             width={80}
             height={80}
             alt="Avatar"
@@ -313,37 +307,5 @@ function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () =>
         Maybe Later
       </Button>
     </OntonDialog>
-  );
-}
-
-function WalletDropdown() {
-  const [popoverOpened, setPopoverOpened] = useState(false);
-  const { user } = useUserStore();
-
-  const openPopover = () => {
-    setPopoverOpened(true);
-  };
-
-  return (
-    <>
-      <div
-        className="wallet-dropdown p-4 rounded-[10px] bg-[#EEEEF0] flex"
-        onClick={() => openPopover()}
-      >
-        <Typography
-          variant="body"
-          bold
-          className="text-ellipsis overflow-hidden"
-        >
-          {user?.wallet_address}
-        </Typography>
-        <Image
-          src={arrowDownIcon}
-          width={10}
-          height={5}
-          alt=""
-        />
-      </div>
-    </>
   );
 }

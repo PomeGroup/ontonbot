@@ -7,11 +7,14 @@ import ticketIcon from "@/app/_components/icons/ticket.svg";
 import { ArrowRight } from "lucide-react";
 import ChannelInfoCard from "@/app/_components/channels/ChannelInfoCard";
 import { trpc } from "@/app/_trpc/client";
+import { useRouter } from "next/navigation";
 
 type Props = { params: { id: string } };
 
 export default function ChannelPage({ params }: Props) {
   const { data, isLoading, isError } = trpc.organizers.getOrganizer.useQuery({ user_id: Number(params.id) });
+
+  const router = useRouter();
 
   if (isLoading) return "loading...";
   if (isError) return "something went wrong...";
@@ -19,7 +22,10 @@ export default function ChannelPage({ params }: Props) {
   return (
     <div className="bg-[#EFEFF4] py-4">
       <ChannelInfoCard data={data} />
-      <Card className="p-4 mb-0">
+      <Card
+        className="p-4 mb-0"
+        onClick={() => router.push(`/channels/${params.id}/events`)}
+      >
         <div className="flex gap-3 align-stretch">
           <div className="bg-[#efeff4] p-4 rounded-lg">
             <Image
@@ -41,7 +47,7 @@ export default function ChannelPage({ params }: Props) {
               variant="caption1"
               className="mt-auto"
             >
-              <b>{data.eventCount}</b> Events
+              <b>{data.hosted_event_count}</b> Events
             </Typography>
           </div>
           <div className="self-center">

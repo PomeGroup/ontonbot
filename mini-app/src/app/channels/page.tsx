@@ -67,7 +67,7 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
     <Link
       ref={ref}
       href={`/channels/${data.user_id}`}
-      className="p-4 bg-white rounded-md flex-1 min-w-[40%]"
+      className="p-4 bg-white rounded-md flex-1 min-w-[40%] max-w-[50%]"
     >
       {data.org_image ? (
         <Image
@@ -89,7 +89,10 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
         </div>
       )}
       <div className="text-center">
-        <div className="font-[590] mb-2 text-[17px] leading-[22px] tracking">
+        <div
+          className="font-[590] mb-2 text-[17px] leading-[22px] tracking h-11 overflow-hidden"
+          style={{ WebkitBoxOrient: "vertical", WebkitLineClamp: 2, display: "-webkit-box" }}
+        >
           {data.org_channel_name || "Untitled channel"}
         </div>
         <div className="flex gap-1 justify-center">
@@ -97,7 +100,7 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
             variant="subheadline2"
             bold
           >
-            {data.eventCount || "0"}
+            {data.hosted_event_count || "0"}
           </Typography>
           <Typography variant="subheadline2">&nbsp;Events</Typography>
         </div>
