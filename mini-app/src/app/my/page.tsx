@@ -18,28 +18,34 @@ import OntonDialog from "@/components/OntonDialog";
 import PaymentCard from "./PaymentCard";
 import { useRouter } from "next/navigation";
 import { Channel } from "@/types";
+import channelAvatar from "@/components/icons/channel-avatar.svg";
 
 const data = {
-  id: 15,
-  avatar: "/sq.jpg",
-  title: "TON Network",
-  eventCount: 223,
+  user_id: 428313379,
+  first_name: "Nichita",
+  last_name: "",
+  photo_url: null,
+  org_support_telegram_user_name: null,
+  org_channel_name: null,
+  org_bio: null,
+  org_image: null,
+  org_x_link: null,
 };
 
 export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!user?.wallet_address;
 
-  const [paid, setPaid] = useState(true);
+  const [paid, setPaid] = useState(false);
 
   const router = useRouter();
 
   return (
-    <div className="bg-[#EFEFF4] py-4">
+    <div className="bg-[#EFEFF4] pt-4 pb-4 min-h-screen">
       {paid ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <Card>
         <div className="flex gap-3 align-stretch">
-          <div className="bg-[#efeff4] p-4 rounded-lg">
+          <div className="bg-[#efeff4] p-4 rounded-[10px]">
             <Image
               src={ticketIcon}
               width={48}
@@ -47,7 +53,7 @@ export default function ProfilePage() {
               alt="ticket icon"
             />
           </div>
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col flex-1 gap-1">
             <Typography
               bold
               variant="title3"
@@ -60,10 +66,10 @@ export default function ProfilePage() {
               className="mt-auto flex gap-4"
             >
               <div>
-                <b>{data.eventCount}</b> Events
+                <b>{data.eventCount || "0"}</b> Events
               </div>
               <div>
-                <b>{data.eventCount}</b> SBTs
+                <b>{data.eventCount || "0"}</b> SBTs
               </div>
             </Typography>
           </div>
@@ -74,7 +80,7 @@ export default function ProfilePage() {
       </Card>
       <Card>
         <div className="flex gap-3 align-stretch">
-          <div className="bg-[#efeff4] p-4 rounded-lg">
+          <div className="bg-[#efeff4] p-4 rounded-[10px]">
             <Image
               src={calendarStarIcon}
               width={48}
@@ -82,7 +88,7 @@ export default function ProfilePage() {
               alt="Calendar icon"
             />
           </div>
-          <div className="flex flex-col flex-1">
+          <div className="flex flex-col flex-1 gap-1">
             <Typography
               bold
               variant="title3"
@@ -94,7 +100,13 @@ export default function ProfilePage() {
               variant="caption1"
               className="mt-auto"
             >
-              Become an organizer first
+              {paid ? (
+                <>
+                  <b>{data.eventCount || "0"}</b> Events
+                </>
+              ) : (
+                "Become an organizer first"
+              )}
             </Typography>
           </div>
           <div className="self-center">
@@ -103,16 +115,16 @@ export default function ProfilePage() {
         </div>
       </Card>
       <ConnectWalletCard />
-      {hasWallet && !paid && (
-        <PaymentCard
-          onPayFinished={() => {
-            setPaid(true);
-          }}
-        />
-      )}
+      <PaymentCard
+        visible={hasWallet && !paid}
+        onPayFinished={() => {
+          setPaid(true);
+        }}
+      />
+
       {paid && (
         <Button
-          className="py-6 mb-12 max-w-[calc(100%-2rem)] mx-auto"
+          className="py-6 mb-12 max-w-[calc(100%-2rem)] mx-auto rounded-[10px]"
           onClick={() => {
             router.push("/events/create");
           }}
@@ -135,19 +147,31 @@ function InlineChannelCard({ data }: { data: Channel }) {
       }}
     >
       <div className="flex gap-3">
-        <Image
-          className="rounded-lg"
-          src={data.avatar}
-          width={80}
-          height={80}
-          alt="Avatar"
-        />
-        <div className="flex flex-col flex-1">
+        {data.org_image ? (
+          <Image
+            className="rounded-[10px]"
+            src={data.org_image || ""}
+            width={80}
+            height={80}
+            alt="Avatar"
+          />
+        ) : (
+          <div className="bg-[#EFEFF4] rounded-md p-1">
+            <Image
+              className="rounded-md"
+              src={channelAvatar}
+              width={72}
+              height={72}
+              alt={data.org_channel_name || ""}
+            />
+          </div>
+        )}
+        <div className="flex flex-col flex-1 gap-1">
           <Typography
             variant="title3"
             bold
           >
-            {data.title}
+            {data.org_channel_name ?? "No Title"}
           </Typography>
           <Typography variant="subheadline2">Edit your information</Typography>
         </div>
@@ -210,7 +234,7 @@ function ConnectWalletCard() {
         <WalletDropdown />
       ) : (
         <Button
-          className="py-5 rounded-lg"
+          className="py-6 rounded-[10px]"
           onClick={() => setOpen(true)}
         >
           <Image
@@ -262,23 +286,24 @@ function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () =>
     <OntonDialog
       open={open}
       onClose={onClose}
-      title="Your wallet is not connected"
+      title="Connect your wallet"
     >
       <Typography
-        variant="footnote"
-        className="text-[#8E8E93] text-center mb-6 font-normal"
+        variant="body"
+        className="text-center mb-6 font-normal"
       >
-        You are becoming a precious organizer of ONTON. In order to do so, you need to pay 10 TON and create your channel and
-        your first Event afterwards.
+        <b>You are becoming an ONTON organizer.</b>
+        <br />
+        To create a channel and use special event publishing features, you need to pay 10 TON
       </Typography>
       <Button
-        className="py-6 rounded-lg mb-3"
+        className="py-6 rounded-[10px] mb-3"
         onClick={handleConnect}
       >
         Connect Wallet
       </Button>
       <Button
-        className="py-6 rounded-lg"
+        className="py-6 rounded-[10px]"
         outline
         onClick={onClose}
       >
@@ -299,11 +324,12 @@ function WalletDropdown() {
   return (
     <>
       <div
-        className="wallet-dropdown p-4 rounded-lg bg-[#EEEEF0] flex"
+        className="wallet-dropdown p-4 rounded-[10px] bg-[#EEEEF0] flex"
         onClick={() => openPopover()}
       >
         <Typography
           variant="body"
+          bold
           className="text-ellipsis overflow-hidden"
         >
           {user?.wallet_address}

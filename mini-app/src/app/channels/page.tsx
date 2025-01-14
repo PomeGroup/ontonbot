@@ -7,7 +7,7 @@ import BottomNavigation from "../_components/BottomNavigation";
 import Link from "next/link";
 import { Channel } from "@/types";
 import usePaginatedChannels from "./usePaginatedChannels";
-import channelAvatar from "./channel-avatar.svg";
+import channelAvatar from "@/components/icons/channel-avatar.svg";
 import { ForwardedRef, forwardRef, Fragment, useCallback, useRef } from "react";
 import { noop } from "lodash";
 
@@ -78,7 +78,7 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
           alt={data.org_channel_name || ""}
         />
       ) : (
-        <div className="bg-[#DEDEDE] rounded-md">
+        <div className="bg-[#EFEFF4] rounded-md">
           <Image
             className="rounded-md mb-3"
             src={channelAvatar}
@@ -92,12 +92,12 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
         <div className="font-[590] mb-2 text-[17px] leading-[22px] tracking">
           {data.org_channel_name || "Untitled channel"}
         </div>
-        <div>
+        <div className="flex gap-1 justify-center">
           <Typography
             variant="subheadline2"
             bold
           >
-            {data.eventCount || ""}
+            {data.eventCount || "0"}
           </Typography>
           <Typography variant="subheadline2">&nbsp;Events</Typography>
         </div>
