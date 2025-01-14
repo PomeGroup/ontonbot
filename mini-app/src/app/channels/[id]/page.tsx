@@ -6,15 +6,16 @@ import Typography from "../../../components/Typography";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
 import { ArrowRight } from "lucide-react";
 import ChannelInfoCard from "@/app/_components/channels/ChannelInfoCard";
+import { trpc } from "@/app/_trpc/client";
 
-const data = {
-  id: 15,
-  avatar: "/sq.jpg",
-  title: "TON Network",
-  eventCount: 223,
-};
+type Props = { params: { id: string } };
 
-export default function ChannelPage() {
+export default function ChannelPage({ params }: Props) {
+  const { data, isLoading, isError } = trpc.organizers.getOrganizer.useQuery({ user_id: Number(params.id) });
+
+  if (isLoading) return "loading...";
+  if (isError) return "something went wrong...";
+
   return (
     <div className="bg-[#EFEFF4] py-4">
       <ChannelInfoCard data={data} />

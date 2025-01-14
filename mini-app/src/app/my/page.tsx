@@ -19,12 +19,14 @@ import PaymentCard from "./PaymentCard";
 import { useRouter } from "next/navigation";
 import { Channel } from "@/types";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
+import Link from "next/link";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!user?.wallet_address;
 
   const [paid, setPaid] = useState(true);
+  const { data } = trpc.organizers.getOrganizer.useQuery({});
 
   // const router = useRouter();
   // useEffect(() => {
@@ -33,9 +35,16 @@ export default function ProfilePage() {
   //   router.replace("/my");
   // }, []);
 
+  if (!data) return "loading";
   return (
     <div className="bg-[#EFEFF4] pt-4 pb-4 min-h-screen">
       {paid ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
+      <Link
+        className="my-3 py-3 text-center w-full"
+        href={`/channels/${data.user_id}/`}
+      >
+        My Public Page
+      </Link>
       <Card>
         <div className="flex gap-3 align-stretch">
           <div className="bg-[#efeff4] p-4 rounded-[10px]">
@@ -140,10 +149,10 @@ function InlineChannelCard({ data }: { data: Channel }) {
       }}
     >
       <div className="flex gap-3">
-        {data.org_image ? (
+        {data.org_image || data.photo_url ? (
           <Image
             className="rounded-[10px]"
-            src={data.org_image || ""}
+            src={data.org_image || data.photo_url}
             width={80}
             height={80}
             alt="Avatar"
@@ -159,10 +168,11 @@ function InlineChannelCard({ data }: { data: Channel }) {
             />
           </div>
         )}
-        <div className="flex flex-col flex-1 gap-1">
+        <div className="flex flex-col flex-1 gap-1 overflow-hidden">
           <Typography
             variant="title3"
             bold
+            className="text-ellipsis whitespace-nowrap overflow-hidden"
           >
             {data.org_channel_name ?? "No Title"}
           </Typography>

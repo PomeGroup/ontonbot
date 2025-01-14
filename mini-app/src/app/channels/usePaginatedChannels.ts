@@ -3,7 +3,7 @@ import { trpc } from "../_trpc/client";
 const limit = 20
 
 export default function usePaginatedChannels(q = '') {
-  return trpc.users.searchOrganizers.useInfiniteQuery({
+  return trpc.organizers.searchOrganizers.useInfiniteQuery({
     searchString: q,
     limit,
   }, {
