@@ -1,4 +1,4 @@
-import { Button, Card } from "konsta/react";
+import { Card } from "konsta/react";
 import Image from "next/image";
 import Typography from "../../../components/Typography";
 import { PropsWithChildren } from "react";
@@ -7,14 +7,9 @@ import telegramIcon from "./telegram.svg";
 import shareIcon from "./share.svg";
 import { Channel } from "@/types";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
-import useAuth from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
 
 export default function ChannelInfoCard({ data }: { data: Channel }) {
-  const { user } = useAuth();
   const share = () => {};
-
-  const router = useRouter();
 
   return (
     <Card className="mt-0">
@@ -87,7 +82,7 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
       >
         <span dangerouslySetInnerHTML={{ __html: data.org_bio?.replaceAll("\n", "<br/>") as string }} />
       </Typography>
-      {user?.user_id === data.user_id && (
+      {/* {user?.user_id === data.user_id && (
         <Button
           className="mt-3 py-4 rounded-[10px]"
           outline
@@ -95,7 +90,7 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
         >
           Edit Profile
         </Button>
-      )}
+      )} */}
     </Card>
   );
 }

@@ -52,7 +52,7 @@ export default function EditForm({ data }: { data: Channel }) {
     async onSubmit(values) {
       const response = await editApi.mutateAsync(values);
       toast.success("Information updated successfully.");
-      router.push("/my?saved=true");
+      goBack();
     },
   });
 
@@ -69,6 +69,10 @@ export default function EditForm({ data }: { data: Channel }) {
     } finally {
       setUploading(false);
     }
+  };
+
+  const goBack = () => {
+    router.replace("/my");
   };
 
   return (
@@ -200,6 +204,7 @@ export default function EditForm({ data }: { data: Channel }) {
           <Button
             className="py-5 !rounded-[10px]"
             outline
+            onClick={() => goBack()}
           >
             Discard
           </Button>
