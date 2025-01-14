@@ -1,20 +1,18 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema";
-import { Address, toNano } from "@ton/core";
 import { TRPCError } from "@trpc/server";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { z } from "zod";
-import { getEventByUuid, getEventsWithFilters as DBgetEventsWithFilters, selectEventByUuid } from "../db/events";
 import {
-  adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure as evntManagerPP,
   initDataProtectedProcedure,
-  publicProcedure,
   router,
 } from "../trpc";
 import { logger } from "../utils/logger";
 import ordersDB from "@/server/db/orders.db";
 import { selectUserById } from "../db/users";
+
+const hardCodedEventUuid = '4e76c66c-ef3d-483c-9836-a3e12815b044'
 
 export const ordersRouter = router({
   updateOrderState: initDataProtectedProcedure
@@ -58,7 +56,7 @@ export const ordersRouter = router({
     return await ordersDB.getEventOrders(opts.input.event_uuid);
   }),
 
-  addPromoteToOrganizerOrder: initDataProtectedProcedure.input({}).mutation(async (opts) => {
+  addPromoteToOrganizerOrder: initDataProtectedProcedure.input(z.object({ user_id: z.string().optional() })).mutation(async (opts) => {
     const user_id = opts.ctx.user.user_id;
     const user = await selectUserById(user_id, false);
     if (user?.role === "organizer") throw new TRPCError({ code: "CONFLICT", message: "user is already an organizer" });
@@ -92,6 +90,7 @@ export const ordersRouter = router({
         payment_type: "TON",
         total_price: 10,
         state: "new",
+        event_uuid: hardCodedEventUuid
       })
       .returning()
       .execute();
@@ -99,7 +98,7 @@ export const ordersRouter = router({
     return new_order;
   }),
 
-  getPromoteToOrganizerOrder: initDataProtectedProcedure.input({}).query(async (opts) => {
+  getPromoteToOrganizerOrder: initDataProtectedProcedure.input(z.object({ user_id: z.string().optional() })).query(async (opts) => {
     const user_id = opts.ctx.user.user_id;
     const result_order = await db.query.orders.findFirst({
       where: and(eq(orders.user_id, user_id), eq(orders.order_type, "promote_to_organizer")),
