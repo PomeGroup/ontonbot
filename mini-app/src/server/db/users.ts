@@ -146,16 +146,15 @@ export const searchOrganizers = async (params: {
 
   // Always require role='organizer'
   const conditions = [eq(users.role, "organizer")];
+
   // If a search string is provided, add a case-insensitive condition on `org_channel_name`
   if (searchString) {
-    // Drizzle doesn't have a built-in "ilike" for all dialects, so we use raw SQL:
     conditions.push(
       sql`LOWER(${users.org_channel_name}) LIKE LOWER(${`%${searchString}%`})`
     );
   }
 
-  // Now pass all conditions to a single `.where(and(...conditions))`
-  // Build the query but don't execute yet
+  // Build the query
   const query = db
     .select({
       user_id: users.user_id,
@@ -164,19 +163,26 @@ export const searchOrganizers = async (params: {
       photo_url: users.photo_url,
       org_support_telegram_user_name: users.org_support_telegram_user_name,
       org_channel_name: users.org_channel_name,
+      hosted_event_count: users.hosted_event_count,
       org_bio: users.org_bio,
       org_image: users.org_image,
       org_x_link: users.org_x_link,
     })
     .from(users)
     .where(and(...conditions))
+    // 1) Put those with a photo_url first (CASE returns 1 if photo_url is valid, otherwise 0)
+    // 2) Then sort by hosted_event_count in descending order
+    .orderBy(
+      sql`CASE WHEN ${users.photo_url} IS NOT NULL AND ${users.photo_url} <> '' THEN 1 ELSE 0 END DESC`,
+      sql`${users.hosted_event_count} DESC`
+    )
     .offset(offset)
     .limit(limit);
 
-  // Convert to SQL + parameters
+  // Convert to SQL + parameters for debugging/logging
   logSQLQuery(query.toSQL().sql, query.toSQL().params);
 
-  // Now execute
+  // Execute and return
   return await query.execute();
 };
 
