@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventFields, events, eventPayment, orders, event_details_search_list } from "@/db/schema";
+import { eventFields, events, eventPayment, orders } from "@/db/schema";
 import { hashPassword } from "@/lib/bcrypt";
 import { renderAddEventMessage, renderUpdateEventMessage, sendLogNotification } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";

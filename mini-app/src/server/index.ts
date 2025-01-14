@@ -15,6 +15,7 @@ import { POARouter } from "@/server/routers/POA";
 import { hubsRouter } from "@/server/routers/services/hubs";
 import { telegramInteractionsRouter } from "@/server/routers/services/telegramInteractions";
 import { registrantRouter } from "@/server/routers/registrant";
+import { organizerRouter } from "@/server/routers/organizers";
 
 export const appRouter = router({
   users: usersRouter,
@@ -27,6 +28,7 @@ export const appRouter = router({
   ticket: ticketRouter,
   eventTicket: eventTicketRouter,
   orders: ordersRouter,
+  organizers: organizerRouter,
   sbtRewardCollection: sbtRewardCollectionRouter,
   EventPOA: POARouter,
   hubs: hubsRouter,

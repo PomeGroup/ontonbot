@@ -18,6 +18,21 @@ interface InitUserData {
     photo_url?: string;
   };
 }
+
+export interface MinimalOrganizerData {
+  user_id: number;
+  photo_url: string | null;
+  participated_event_count: number | null;
+  hosted_event_count: number | null;
+  has_blocked_the_bot: boolean | null;
+  org_channel_name: string | null;
+  org_support_telegram_user_name: string | null;
+  org_x_link: string | null;
+  org_bio: string | null;
+  org_image: string | null;
+  role: string;
+}
+
 // Cache key prefix
 // Function to generate cache key for user
 const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}${userId}`;
@@ -404,6 +419,84 @@ export const selectUserByUsername = async (username: string) => {
   return null; // Return null if user not found
 };
 
+export const selectMinimalOrganizerFieldsById = async (
+  userId: number
+): Promise<MinimalOrganizerData | null> => {
+  try {
+    // Query the DB for the exact columns we need
+    const result = await db
+      .select({
+        user_id: users.user_id,
+        photo_url: users.photo_url,
+        participated_event_count: users.participated_event_count,
+        hosted_event_count: users.hosted_event_count,
+        has_blocked_the_bot: users.has_blocked_the_bot,
+        org_channel_name: users.org_channel_name,
+        org_support_telegram_user_name: users.org_support_telegram_user_name,
+        org_x_link: users.org_x_link,
+        org_bio: users.org_bio,
+        org_image: users.org_image,
+        role: users.role, // we need role to check if they're an organizer
+      })
+      .from(users)
+      .where(eq(users.user_id, userId))
+      .execute();
+
+    if (result.length === 0) {
+      return null;
+    }
+    return result[0];
+  } catch (error) {
+    logger.error(`selectMinimalOrganizerFieldsById failed for userId=${userId}`, error);
+    return null;
+  }
+}
+
+export const getOrganizerById = async (
+  userId: number
+): Promise<{
+  success: boolean;
+  data: Omit<MinimalOrganizerData, "role"> | null; // We won't return `role` in `data`
+  error: string | null;
+}> => {
+  try {
+    // 1) Query only the minimal organizer fields + role
+    const organizerRecord = await selectMinimalOrganizerFieldsById(userId);
+
+    // 2) Check if user exists
+    if (!organizerRecord) {
+      return {
+        success: false,
+        data: null,
+        error: `User with ID=${userId} not found.`,
+      };
+    }
+
+    // 3) Check if user is indeed organizer
+    if (organizerRecord.role !== "organizer") {
+      return {
+        success: false,
+        data: null,
+        error: `User with ID=${userId} is not an organizer.`,
+      };
+    }
+
+    // 4) Remove role from the returned data, since we only need the other fields
+    const { role, ...data } = organizerRecord;
+
+    return {
+      success: true,
+      data,
+      error: null,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+};
 export const usersDB = {
   selectUserById,
   insertUser,
@@ -412,4 +505,5 @@ export const usersDB = {
   selectUserByUsername,
   updateOrganizerFieldsByUserId,
   searchOrganizers,
+  getOrganizerById,
 };

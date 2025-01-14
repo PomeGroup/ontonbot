@@ -3,15 +3,13 @@ import { validateMiniAppData } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { findVisitorByUserAndEventUuid } from "../db/visitors";
-
 import { default as rewardDB } from "@/server/db/rewards.db";
-import { searchOrganizers, updateOrganizerFieldsByUserId, usersDB } from "@/server/db/users";
+import { usersDB } from "@/server/db/users";
 import { adminOrganizerProtectedProcedure, initDataProtectedProcedure, publicProcedure, router } from "../trpc";
-
 import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { logger } from "../utils/logger";
-import { orgFieldsSchema, searchOrganizersInput } from "@/zodSchema/OrganizerDataSchema";
+
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure.input(z.string()).query(async (opts) => {
@@ -49,9 +47,6 @@ export const usersRouter = router({
     .mutation(async (opts) => {
       await usersDB.updateWallet(opts.ctx.user.user_id, opts.input.wallet, opts.ctx.user.user_id.toString());
     }),
-
-
-
   createUserReward: initDataProtectedProcedure
     .input(
       z.object({
@@ -157,55 +152,5 @@ export const usersRouter = router({
         }
       }
     }),
-  updateOrganizer: initDataProtectedProcedure
-    .input(orgFieldsSchema)
-    .mutation(async (opts) => {
-      // 1) Grab the user's ID from context
-      const userId = opts.ctx.user.user_id;
 
-      // 2) Pass the validated input fields to your update method
-      logger.log("updateOrganizer", opts.input);
-      const { success, data, error } = await usersDB.updateOrganizerFieldsByUserId(
-        userId,
-        opts.input
-      );
-
-      // 3) If the update failed, throw an error
-      if (!success) {
-        logger.error(`Failed to update org fields: ${userId}` , { input : opts.input, error });
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: error ?? "Failed to update org fields.",
-        });
-      }
-
-      // 4) Return the success response (the updated user or null)
-      return {
-        success,
-        data,
-        error, // Will be `null` if successful
-      };
-    }),
-
-  searchOrganizers: publicProcedure
-    .input(searchOrganizersInput)
-    .query(async ({ input }) => {
-      const { searchString, cursor, limit } = input;
-      const offset = cursor ?? 0;
-
-      const items = await usersDB.searchOrganizers({
-        searchString,
-        offset,
-        limit,
-      });
-
-      // Determine nextCursor (if fewer than `limit` items returned, no more pages)
-      const nextCursor = items.length < limit ? null : offset + items.length;
-
-
-      return {
-        items,
-        nextCursor,
-      };
-    }),
 });
