@@ -60,9 +60,9 @@ export default function OrganizerEventsPage({ params }: Props) {
                 <EventCard
                   event={item}
                   key={item.id}
-                  ref={isLastItem ? lastItemRef : noop}
                   currentUserId={user?.user_id}
                   mode="normal"
+                  ref={isLastItem ? lastItemRef : noop}
                 />
               );
             })}

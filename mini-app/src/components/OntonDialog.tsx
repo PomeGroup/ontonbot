@@ -18,7 +18,7 @@ export default function OntonDialog({
   return (
     <div
       onClick={(e) => {
-        if (innerRef.current?.contains(e.target)) return;
+        if (innerRef.current?.contains(e.target as any)) return;
         onClose();
       }}
       className={cn(
