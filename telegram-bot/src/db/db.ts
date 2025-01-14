@@ -235,11 +235,17 @@ export async function changeRole(newRole: string, username: string) {
       [newRole, username],
     );
 
+
+    const totalOrgsQuery = 'SELECT count(*) FROM users WHERE role = $1';
+    const result = await client.query(totalOrgsQuery, ['organizer']); // Use parameterized queries to avoid SQL injection
+    const totalOrgs = result.rows[0].count;
+    
     await client.end();
 
     return {
       username : userExists.rows[0].username, 
       user_id : userExists.rows[0].user_id, 
+      total_organizers_count : totalOrgs,
     }
   } catch (error) {
     console.error("Error in changeRole:", error);

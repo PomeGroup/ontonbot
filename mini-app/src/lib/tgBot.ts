@@ -111,20 +111,34 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
 };
 
 // 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
-export const sendLogNotification = async (props: { message: string; topic: "event" | "ticket" | "system" }) => {
+export const sendLogNotification = async (props: { message: string; topic: "event" | "ticket" | "system" | "payments" }) => {
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     console.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");
   }
 
   const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
-  const { events_topic: EVENTS_TOPIC, system_topic: SYSTEM_TOPIC, tickets_topic: TICKETS_TOPIC } = configProtected;
+
+  // Centralized topic mapping
+  const topicMapping: Record<"event" | "ticket" | "system" | "payments", string | null> = {
+    event: configProtected.events_topic,
+    ticket: configProtected.tickets_topic,
+    system: configProtected.system_topic,
+    payments: configProtected.payments_topic, // Example additional topic
+  };
+
+  const topicMessageId = topicMapping[props.topic];
+
+  if (!topicMessageId) {
+    console.error(`Invalid or unconfigured topic: ${props.topic}`);
+    throw new Error(`Invalid or unconfigured topic: ${props.topic}`);
+  }
 
   const logBot = new Bot(BOT_TOKEN_LOGS);
 
   return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
     reply_parameters: {
-      message_id: Number(props.topic === "ticket" ? TICKETS_TOPIC : props.topic === "event" ? EVENTS_TOPIC : SYSTEM_TOPIC),
+      message_id: Number(topicMessageId),
     },
     parse_mode: "HTML",
     link_preview_options: { is_disabled: true },
