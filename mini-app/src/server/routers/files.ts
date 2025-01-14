@@ -50,7 +50,7 @@ export const fieldsRouter = router({
             { message: "Invalid image data" }
           )
           .transform(async (data) => {
-            if (!data ) {
+            if (!data) {
               throw new TRPCError({
                 code: "BAD_REQUEST",
                 message: "Invalid base64 data",
@@ -88,13 +88,13 @@ export const fieldsRouter = router({
 
             return { buffer, mimeType };
           }),
-        subfolder: z.enum(["event", "sbt"]),
+        subfolder: z.enum(["event", "sbt", "channels"]),
       })
     )
     .mutation(async (opts) => {
       // 1. Rate-limit check
       const userId = opts.ctx.user.user_id;
-      const { allowed, remaining } = await checkRateLimit(String(userId) , "uploadImage", UPLOAD_IMAGE_RATE_LIMIT.max, UPLOAD_IMAGE_RATE_LIMIT.window);
+      const { allowed, remaining } = await checkRateLimit(String(userId), "uploadImage", UPLOAD_IMAGE_RATE_LIMIT.max, UPLOAD_IMAGE_RATE_LIMIT.window);
       if (!allowed) {
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",

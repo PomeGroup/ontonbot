@@ -20,31 +20,18 @@ import { useRouter } from "next/navigation";
 import { Channel } from "@/types";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 
-const data = {
-  user_id: 428313379,
-  first_name: "Nichita",
-  last_name: "",
-  photo_url: null,
-  org_support_telegram_user_name: null,
-  org_channel_name: null,
-  org_bio: null,
-  org_image: null,
-  org_x_link: null,
-};
-
 export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!user?.wallet_address;
 
   const [paid, setPaid] = useState(true);
 
-  const router = useRouter();
-  useEffect(() => {
-    if (!window.location.search.includes("saved=true")) return;
+  // const router = useRouter();
+  // useEffect(() => {
+  //   if (!window.location.search.includes("saved=true")) return;
 
-    toast.success("Information updated successfully.");
-    router.replace("/my");
-  }, []);
+  //   router.replace("/my");
+  // }, []);
 
   return (
     <div className="bg-[#EFEFF4] pt-4 pb-4 min-h-screen">

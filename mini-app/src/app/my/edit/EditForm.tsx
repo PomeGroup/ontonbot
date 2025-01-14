@@ -1,15 +1,16 @@
 "use client";
 import Typography from "@/components/Typography";
-import { Button } from "konsta/react";
+import { Button, Preloader } from "konsta/react";
 import Image from "next/image";
 import cameraIcon from "./camera.svg";
 import xPlatformIcon from "@/app/_components/channels/xplatform.svg";
 import telegramIcon from "@/app/_components/channels/telegram.svg";
-import { ChangeEventHandler, ReactNode, useRef, useState } from "react";
+import { ChangeEventHandler, ReactNode, useEffect, useRef, useState } from "react";
 import { cn } from "@/utils";
 import { trpc } from "@/app/_trpc/client";
 import { Channel } from "@/types";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function EditForm({ data }: { data: Channel }) {
   const [title, setTitle] = useState(data.org_channel_name || "");
@@ -17,8 +18,6 @@ export default function EditForm({ data }: { data: Channel }) {
   const [x, setX] = useState(data.org_x_link || "");
   const [bio, setBio] = useState(data.org_bio || "");
   const [avatar, setAvatar] = useState(data.photo_url || "");
-
-  const editAvatar = () => {};
 
   const editApi = trpc.organizers.updateOrganizer.useMutation();
   const router = useRouter();
@@ -30,20 +29,44 @@ export default function EditForm({ data }: { data: Channel }) {
       org_bio: bio,
       org_image: avatar,
     });
+    toast.success("Information updated successfully.");
     router.push("/my?saved=true");
+  };
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadApi = trpc.files.uploadImage.useMutation();
+
+  const [isUploading, setUploading] = useState(false);
+  const uploadImage = async (files: FileList | null) => {
+    if (!files || !files[0]) return;
+
+    setUploading(true);
+    const response = await uploadApi.mutateAsync({ image: await toBase64(files[0]), subfolder: "channels" });
+    setAvatar(response.imageUrl);
+    setUploading(false);
   };
 
   return (
     <div className="p-4">
-      <Image
-        className="mb-4 w-full h-auto !rounded-[10px] aspect-square"
-        sizes="100vw"
-        src={avatar}
-        width={0}
-        height={0}
-        alt="Avatar"
-        layout="cover"
-      />
+      <div className="relative">
+        <div
+          className={cn(
+            "absolute z-2 inset-0 opacity-50 bg-white items-center justify-center hidden",
+            isUploading && "!flex"
+          )}
+        >
+          <Preloader size="w-16 h-16" />
+        </div>
+        <Image
+          className="mb-4 w-full h-auto !rounded-[10px] aspect-square"
+          sizes="100vw"
+          src={avatar}
+          width={0}
+          height={0}
+          alt="Avatar"
+        />
+      </div>
       <div className="flex align-center justify-between mb-2">
         <Typography
           variant="title3"
@@ -54,7 +77,10 @@ export default function EditForm({ data }: { data: Channel }) {
         <Button
           outline
           className="!w-auto py-4 px-3 rounded-[6px]"
-          onClick={editAvatar}
+          onClick={() => {
+            if (isUploading) return;
+            imageInputRef.current?.click();
+          }}
         >
           <Image
             src={cameraIcon}
@@ -63,6 +89,18 @@ export default function EditForm({ data }: { data: Channel }) {
             alt=""
           />
           Edit Image
+          <input
+            ref={imageInputRef}
+            type="file"
+            name="image"
+            accept="image/*"
+            onChange={(e) => {
+              e.preventDefault();
+              uploadImage(e.target.files);
+            }}
+            id="event_image_input"
+            className="hidden"
+          />
         </Button>
       </div>
       <Typography
@@ -175,14 +213,12 @@ const OntonExpandableInput = ({
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleInput: ChangeEventHandler<HTMLTextAreaElement> = (e) => {
-    if (!textareaRef.current) return;
-
+  useEffect(() => {
     // Adjust height based on content
+    if (!textareaRef.current) return;
     textareaRef.current.style.height = "auto";
     textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    onChange(e);
-  };
+  }, [value]);
 
   return (
     <InternalInputWrapper
@@ -193,7 +229,7 @@ const OntonExpandableInput = ({
       <textarea
         ref={textareaRef}
         value={value}
-        onChange={handleInput}
+        onChange={onChange}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         rows={1}
@@ -228,4 +264,13 @@ function InternalInputWrapper({
       {children}
     </div>
   );
+}
+
+function toBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+  });
 }
