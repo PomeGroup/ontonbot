@@ -283,7 +283,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
       logger.log("cron_trx_", o.order_uuid, o.order_type, o.value);
       await db
         .update(orders)
-        .set({ state: "processing", owner_address: o.owner.toString(), trx_hash: o.trx_hash })
+        .set({ state: "processing", owner_address: o.owner.toString(), trx_hash: o.trx_hash  , created_at : new Date()})
         .where(
           and(
             eq(orders.uuid, o.order_uuid),
