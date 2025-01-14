@@ -25,10 +25,11 @@ export async function middleware(req: NextRequest) {
         console.log("redirecting to edit event", eventId);
         return NextResponse.redirect(new URL(`/events/${eventId}/edit`, req.nextUrl.origin));
       }
-      const isMysteryUtm = tgAppStartParam.length >= 8 && tgAppStartParam.length <= 12;
+      const isMysteryUtm = tgAppStartParam.length >= 7 && tgAppStartParam.length <= 12;
       if (isMysteryUtm) {
-        console.log("redirecting to mystery " + tgAppStartParam);
-        const mysteryUUID = "43d33878-a1ba-4209-9169-4845066004c6";
+        
+        console.log(`affilate_redirect_${tgAppStartParam}`)
+        const mysteryUUID = "19cc1849-90c2-4275-89b1-1cc6d77b3b82";
         const url = new URL(`/ptma/event/${mysteryUUID}`, req.nextUrl.origin);
         url.searchParams.set("not_authenticated", userToken ? "false" : "true");
 
@@ -36,7 +37,7 @@ export async function middleware(req: NextRequest) {
         url.searchParams.set("utm_medium", "notification");
         url.searchParams.set("utm_campaign", tgAppStartParam);
 
-        console.log("Redirect to : ", url.href);
+        
 
         return NextResponse.redirect(url);
       }
