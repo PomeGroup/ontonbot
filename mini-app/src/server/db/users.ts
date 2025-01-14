@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { eventRegistrants, users, visitors, events } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { InferSelectModel, eq, sql, and, or } from "drizzle-orm";
+import { InferSelectModel, eq, sql, and, or, not, inArray } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import xss from "xss";
 import { logSQLQuery } from "@/lib/logSQLQuery";
@@ -191,7 +191,6 @@ export const selectUserById = async (
   if(use_cached_user){
     const cachedUser = await redisTools.getCache(cacheKey);
     if (cachedUser) {
-      console.log("cachedUser", cachedUser);
       return cachedUser; // Return cached user if found
     }
   }
@@ -493,12 +492,12 @@ export const updateEventCountsForUser = async (
         count: sql<number>`count(*)`.mapWith(Number),
       })
       .from(events)
-      .where(eq(events.owner, userId))
+      .where(and(eq(events.owner, userId) , eq(events.hidden, false)))
       .execute();
     const hostedCount = hostedCountResult[0]?.count ?? 0;
 
-    // 2) Count how many events user participated in
-    //    2a) Count from eventRegistrants where status in ("approved", "checkedin")
+    // 2a) Count from eventRegistrants where status in ("approved", "checkedin")
+    //     but exclude events where this user is already a visitor.
     const participatedCountResult = await db
       .select({
         count: sql<number>`count(*)`.mapWith(Number),
@@ -507,7 +506,16 @@ export const updateEventCountsForUser = async (
       .where(
         and(
           eq(eventRegistrants.user_id, userId),
-          or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin"))
+          or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
+          not(
+            inArray(
+              eventRegistrants.event_uuid,
+              db
+                .select({ event_uuid: visitors.event_uuid })
+                .from(visitors)
+                .where(eq(visitors.user_id, userId))
+            )
+          )
         )
       )
       .execute();

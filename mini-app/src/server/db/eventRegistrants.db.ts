@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
-import { eventRegistrants, notifications } from "@/db/schema";
-import { and, asc, count, eq, gt, inArray, ne, not, or } from "drizzle-orm";
+import { eventRegistrants, notifications, visitors, events } from "@/db/schema";
+import { and, asc, count, eq, gt, inArray, ne, not, or, sql } from "drizzle-orm";
 
 export const fetchApprovedUsers = async (
   eventUuid: string,
@@ -99,10 +99,32 @@ export const getNotRejectedRequestsCount = async (event_uuid: string) => {
   );
 };
 
+export const getEventsByUserIdForListing = async (userId: number) => {
+  try {
+    const result = await db
+      .select({
+        event_uuid: eventRegistrants.event_uuid,
+        user_id: eventRegistrants.user_id,
+        role: sql<string>`'participant'`.as("role"),
+        created_at: visitors.created_at,
+      })
+      .from(eventRegistrants)
+      .innerJoin(events, eq(eventRegistrants.event_uuid, events.event_uuid))
+      .where(eq(eventRegistrants.user_id, userId))
+      .execute();
+
+    return result;
+  } catch (error) {
+    console.error(`Error fetching events for User ID ${userId}:`, error);
+    throw error;
+  }
+};
+
 export const eventRegistrantsDB = {
   fetchApprovedUsers,
   getByEventUuidAndUserId,
   getNotRejectedRequestsCount,
   getApprovedRequestsCount,
   getRegistrantRequest,
+  getEventsByUserIdForListing,
 };

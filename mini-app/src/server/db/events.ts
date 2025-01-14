@@ -1,6 +1,15 @@
 import { db } from "@/db/db";
 import crypto from "crypto";
-import { event_details_search_list, eventFields, events, rewards, tickets, users, visitors } from "@/db/schema";
+import {
+  event_details_search_list,
+  eventFields,
+  eventRegistrants,
+  events,
+  rewards,
+  tickets,
+  users,
+  visitors,
+} from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
@@ -130,8 +139,9 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
   if (!userInfo) {
     return [];
   }
-  // return all events for admin
-  if (userInfo && userInfo.role === "admin") {
+
+  // 1) Return all events for admin
+  if (userInfo.role === "admin") {
     const eventQuery = db
       .select({
         event_uuid: events.event_uuid,
@@ -144,6 +154,10 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
 
     return await eventQuery.execute();
   }
+
+  // 2) Non-admin user queries
+  // -------------------------
+  // a) rewardQuery => from (rewards INNER JOIN visitors)
   const rewardQuery = db
     .select({
       event_uuid: visitors.event_uuid,
@@ -153,8 +167,9 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     })
     .from(rewards)
     .innerJoin(visitors, eq(visitors.id, rewards.visitor_id))
-    .where(eq(visitors.user_id, userId!));
+    .where(eq(visitors.user_id, userId));
 
+  // b) eventQuery => events owned by the user if role='organizer'
   const eventQuery = db
     .select({
       event_uuid: events.event_uuid,
@@ -164,8 +179,9 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     })
     .from(events)
     .innerJoin(users, eq(events.owner, users.user_id))
-    .where(and(eq(users.user_id, userId!), eq(users.role, "organizer")));
-  // add paid event to the user events as guest
+    .where(and(eq(users.user_id, userId), eq(users.role, "organizer")));
+
+  // c) ticketsQuery => user’s paid events (tickets)
   const ticketsQuery = db
     .select({
       event_uuid: tickets.event_uuid,
@@ -174,16 +190,30 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
       created_at: tickets.created_at,
     })
     .from(tickets)
-    .where(eq(tickets.user_id, userId!));
-  // logger.log("rewardQuery", ticketsQuery.toSQL().sql);
-  // Use unionAll to combine the results, apply orderBy, limit, and offset
-  //@ts-ignore
-  const combinedResultsQuery = unionAll(rewardQuery, eventQuery, ticketsQuery)
-    .orderBy((row) => row.created_at)
-    .limit(limit !== null ? limit : 100)
-    .offset(offset !== null ? offset : 0);
+    .where(eq(tickets.user_id, userId));
 
-  // Execute the query and return the results
+  // d) registrantQuery => from eventRegistrants table
+  const registrantQuery = db
+    .select({
+      event_uuid: eventRegistrants.event_uuid,
+      user_id: eventRegistrants.user_id,
+      role: sql<string>`'participant'`.as("role"), // or use eventRegistrants.status if you want
+      created_at: eventRegistrants.created_at,
+    })
+    .from(eventRegistrants)
+    .where(eq(eventRegistrants.user_id, userId));
+
+  // 3) Combine queries with unionAll
+  //    Drizzle’s unionAll can combine multiple queries of the same shape
+  //    (same selected columns & data types).
+  //    We then .orderBy, .limit, .offset on the unioned result.
+  // @ts-ignore (if needed, depending on your version/typing)
+  const combinedResultsQuery = unionAll(rewardQuery, eventQuery, ticketsQuery, registrantQuery)
+    .orderBy((row) => row.created_at)
+    .limit(limit)
+    .offset(offset);
+
+  // Execute the combined query and return the results
   return await combinedResultsQuery.execute();
 };
 export const getOrganizerEvents = async (
@@ -366,10 +396,10 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
 
   if (limit) {
     // @ts-expect-error
-    query = query.limit(limit).offset(cursor * limit);
+    query = query.limit(limit).offset(cursor * (limit - 1));
   }
 
-  logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
 
   await redisTools.setCache(cacheKey, eventsData, redisTools.cacheLvl.guard);

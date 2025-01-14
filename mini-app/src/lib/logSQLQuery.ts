@@ -1,3 +1,5 @@
+import { logger } from "@/server/utils/logger";
+
 type SQLParams = unknown[];
 //usage of logSQLQuery
 //   // Get the SQL string and parameters
@@ -15,6 +17,6 @@ export const logSQLQuery = (sql: string, params: SQLParams): void => {
 
     return String(param);
   });
-  // console.log("Sql_Query___ : ",fullQuery);
+   logger.log("Sql_Query___ : ",fullQuery);
   
 };
