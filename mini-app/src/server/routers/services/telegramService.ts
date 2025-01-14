@@ -146,6 +146,47 @@ export const shareEventRequest = async (
   }
 };
 
+export const shareOrganizerRequest = async (
+  // The user (who wants to share the organizer)
+  requestingUserId: string,
+  // The organizer we want to share
+  organizerId: string,
+  // The relevant organizer fields
+  organizerData: {
+    org_channel_name: string | null;
+    org_support_telegram_user_name: string | null;
+    org_x_link: string | null;
+    org_bio: string | null;
+    org_image: string | null;
+  },
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+  // Construct your share link / URLs or any data you want
+  const share_link = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=channels_${organizerId}`;
+  const url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/channels/${organizerId}`;
+
+  try {
+    // Send a POST to the new /share-organizer route in your telegram-bot service
+    const response = await axios.post(
+      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/share-organizer`,
+      {
+        requesting_user: requestingUserId,
+        organizer_id: organizerId,
+        share_link,
+        url,
+        // Pass the extra organizer data so the bot can render them
+        organizer_data: organizerData,
+      }
+    );
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    logger.error("Error sharing organizer: ", error);
+    return {
+      success: false,
+      error: (error as Error).message || "An unexpected error occurred",
+    };
+  }
+};
 /****** export telegramService ******/
 
 const tgService = {
@@ -154,7 +195,8 @@ const tgService = {
   sendTelegramMessageNoLink, // send Telegram message without link
   shareEventRequest, // share event request
   sendTelegramMessage,
-  sendEventPhoto
+  sendEventPhoto,
+  shareOrganizerRequest,
 };
 
 export default tgService;

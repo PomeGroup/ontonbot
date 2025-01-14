@@ -317,7 +317,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       });
       logger.log("add event telegram notification sent" , logMessage);
       // Clear the organizer user cache so it will be reloaded next time
-      await redisTools.deleteCache(getUserCacheKey(opts.ctx.user.user_id));
+      await redisTools.deleteCache(userCacheKey);
 
       // On local development skip  registration to ton society || paid event will be registered when organizer pays initial payment
       const register_to_ts = process.env.ENV !== "local" || !eventData.has_payment;
