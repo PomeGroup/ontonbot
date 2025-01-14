@@ -119,3 +119,8 @@ export const getDateFromUnix = (
 export function isEmptyObject(obj: object) {
   return Object.keys(obj).length === 0 && obj.constructor === Object;
 }
+
+export function rounder(num : number, decimals = 0) {
+  const factor = Math.pow(10, decimals);
+  return Math.round(num * factor) / factor;
+}

@@ -137,11 +137,11 @@ export async function POST(request: Request) {
         .execute()
     ).pop();
 
-    const user_registrant = await trx
-      .select()
-      .from(eventRegistrants)
-      .where(and(eq(eventRegistrants.event_uuid, body.data.event_uuid), eq(eventRegistrants.user_id, userId)))
-      .execute();
+    // const user_registrant = await trx
+    //   .select()
+    //   .from(eventRegistrants)
+    //   .where(and(eq(eventRegistrants.event_uuid, body.data.event_uuid), eq(eventRegistrants.user_id, userId)))
+    //   .execute();
 
     const { event_uuid, ...register_info } = body.data;
     await trx

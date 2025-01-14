@@ -11,7 +11,7 @@ import { CronJob } from "cron";
 import "dotenv/config";
 import { and, asc, eq, isNotNull, lt, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
-import { sleep } from "./utils";
+import { rounder, sleep } from "./utils";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
 import { registerActivity } from "@/lib/ton-society-api";
 import tonCenter from "@/server/routers/services/tonCenter";
@@ -80,9 +80,9 @@ function cronJob(fn: (_: () => any) => any) {
     }
 
     try {
-      console.time(`Cron job ${name} - ${cacheLockKey} duration`);
+      // console.time(`Cron job ${name} - ${cacheLockKey} duration`);
       await fn(pushLockTTl);
-      console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
+      // console.timeEnd(`Cron job ${name} - ${cacheLockKey} duration`);
     } catch (err) {
       logger.log(`Cron job ${name} error: ${getErrorMessages(err)} \n\n`, err);
       await sendLogNotification({
@@ -719,18 +719,26 @@ async function sendPaymentReminder() {
       total = Number(totalAmount[0].totalPrice!);
       commission = total * 0.05; // The 5% Commistion
       payment_amount = total - commission;
+      logger.log("event_payment_reminder_total", total);
+
     }
+
+    
+    
     const message_result = await sendLogNotification({
       message: `Payment For Event
 <b>${title}</b>
-Total Sold : ${total}
-Commision : <code>${commission}</code>
+Total Sold : ${rounder(total,2)}
+🤑Commision : <code>${rounder(commission,2)}</code>
 
 Payment Type : <b>${payment_type}</b>${payment_type_emojis}
-Organizer Payment : <code>${payment_amount}</code>
+💰Organizer Payment : <code>${rounder(payment_amount , 2)}</code>
 Recipient : <code>${recipient_address}</code>
+
+@Mfarimani
+@blackpred
 `,
-      topic: "ticket",
+      topic: "payments",
     });
 
     if (message_result.message_id) {
