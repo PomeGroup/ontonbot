@@ -48,7 +48,7 @@ export default function MyParticipatedEventsPage() {
         variant="title2"
         className="mb-6"
       >
-        My Participated Events
+        My Hosted Events
       </Typography>
       <div className="flex flex-col w-full">
         {data?.pages.map((page, pageIndex) => (
