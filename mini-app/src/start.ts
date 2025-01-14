@@ -726,7 +726,7 @@ async function sendPaymentReminder() {
     
     
     const message_result = await sendLogNotification({
-      message: `Payment For Event
+      message: `💵💵 Payment For Event
 <b>${title}</b>
 Total Sold : ${rounder(total,2)}
 🤑Commision : <code>${rounder(commission,2)}</code>
