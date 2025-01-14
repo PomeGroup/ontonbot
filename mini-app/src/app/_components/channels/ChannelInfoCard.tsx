@@ -7,9 +7,30 @@ import telegramIcon from "./telegram.svg";
 import shareIcon from "./share.svg";
 import { Channel } from "@/types";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
+import { trpc } from "@/app/_trpc/client";
+import useWebApp from "@/hooks/useWebApp";
+import { wait } from "@/lib/utils";
+import { LoaderIcon } from "lucide-react";
 
 export default function ChannelInfoCard({ data }: { data: Channel }) {
-  const share = () => {};
+  const WebApp = useWebApp();
+  const initData = WebApp?.initData || "";
+  const hapticFeedback = WebApp?.HapticFeedback;
+  const shareOrganizerMutation = trpc.telegramInteractions.requestShareOrganizer.useMutation();
+
+  const share = async () => {
+    // if there's no Telegram initData, do nothing
+    if (!initData) return;
+
+    // Fire the mutation
+    await shareOrganizerMutation.mutateAsync({ organizerId: data.user_id });
+
+    // Optionally open the Telegram link, haptic feedback, wait, then close
+    WebApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`);
+    hapticFeedback?.impactOccurred("medium");
+    await wait(500);
+    WebApp?.close();
+  };
 
   return (
     <Card className="mt-0">
@@ -67,12 +88,16 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
             </IconBg>
           )}
           <IconBg onClick={share}>
-            <Image
-              src={shareIcon}
-              width={16}
-              height={16}
-              alt={`Share ${data.org_channel_name}'s channel`}
-            />
+            {shareOrganizerMutation.isLoading ? (
+              <LoaderIcon className="animate-spin text-blue-600" />
+            ) : (
+              <Image
+                src={shareIcon}
+                width={16}
+                height={16}
+                alt={`Share ${data.org_channel_name}'s channel`}
+              />
+            )}
           </IconBg>
         </div>
       </div>
