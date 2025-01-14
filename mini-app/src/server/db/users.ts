@@ -24,7 +24,6 @@ export interface MinimalOrganizerData {
   photo_url: string | null;
   participated_event_count: number | null;
   hosted_event_count: number | null;
-  has_blocked_the_bot: boolean | null;
   org_channel_name: string | null;
   org_support_telegram_user_name: string | null;
   org_x_link: string | null;
@@ -430,7 +429,6 @@ export const selectMinimalOrganizerFieldsById = async (
         photo_url: users.photo_url,
         participated_event_count: users.participated_event_count,
         hosted_event_count: users.hosted_event_count,
-        has_blocked_the_bot: users.has_blocked_the_bot,
         org_channel_name: users.org_channel_name,
         org_support_telegram_user_name: users.org_support_telegram_user_name,
         org_x_link: users.org_x_link,

@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedProcedure, router } from "../trpc";
 import { logger } from "@/server/utils/logger";
-import ordersDB from "@/server/db/orders.db"; // <-- import the refactored DB module
+import ordersDB from "@/server/db/orders.db";
 import { selectUserById } from "@/server/db/users";
 
 // Hard-coded example event UUID
