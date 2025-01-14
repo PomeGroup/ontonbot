@@ -169,17 +169,17 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     .innerJoin(visitors, eq(visitors.id, rewards.visitor_id))
     .where(eq(visitors.user_id, userId));
 
-  // b) eventQuery => events owned by the user if role='organizer'
-  const eventQuery = db
-    .select({
-      event_uuid: events.event_uuid,
-      user_id: users.user_id,
-      role: users.role,
-      created_at: events.created_at,
-    })
-    .from(events)
-    .innerJoin(users, eq(events.owner, users.user_id))
-    .where(and(eq(users.user_id, userId), eq(users.role, "organizer")));
+  // // b) eventQuery => events owned by the user if role='organizer'
+  // const eventQuery = db
+  //   .select({
+  //     event_uuid: events.event_uuid,
+  //     user_id: users.user_id,
+  //     role: users.role,
+  //     created_at: events.created_at,
+  //   })
+  //   .from(events)
+  //   .innerJoin(users, eq(events.owner, users.user_id))
+  //   .where(and(eq(users.user_id, userId), eq(users.role, "organizer")));
 
   // c) ticketsQuery => user’s paid events (tickets)
   const ticketsQuery = db
@@ -208,7 +208,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
   //    (same selected columns & data types).
   //    We then .orderBy, .limit, .offset on the unioned result.
   // @ts-ignore (if needed, depending on your version/typing)
-  const combinedResultsQuery = unionAll(rewardQuery, eventQuery, ticketsQuery, registrantQuery)
+  const combinedResultsQuery = unionAll(rewardQuery,  ticketsQuery, registrantQuery)
     .orderBy((row) => row.created_at)
     .limit(limit)
     .offset(offset);
@@ -399,7 +399,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
     query = query.limit(limit).offset(cursor * (limit - 1));
   }
 
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
 
   await redisTools.setCache(cacheKey, eventsData, redisTools.cacheLvl.guard);
