@@ -1,5 +1,5 @@
 {
-  "id": "0b477b74-f150-42d8-8c46-7d53a861228e",
+  "id": "33329e9f-9204-4487-93fd-5f5beca6c096",
   "prevId": "ef657018-16b4-4488-8e0a-4ffb939e40d5",
   "version": "7",
   "dialect": "postgresql",
@@ -378,6 +378,14 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "organizer_payment_status": {
+          "name": "organizer_payment_status",
+          "type": "organizer_payment_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'not_payed'"
         },
         "created_at": {
           "name": "created_at",
@@ -1748,7 +1756,7 @@
           "name": "event_uuid",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "user_id": {
           "name": "user_id",
@@ -3385,7 +3393,17 @@
         "nft_mint",
         "offchain_ticket",
         "event_creation",
-        "event_capacity_increment"
+        "event_capacity_increment",
+        "promote_to_organizer"
+      ]
+    },
+    "public.organizer_payment_status": {
+      "name": "organizer_payment_status",
+      "schema": "public",
+      "values": [
+        "not_payed",
+        "payed_to_organizer",
+        "refunded"
       ]
     },
     "public.payment_types": {

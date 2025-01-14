@@ -1,3 +1,12 @@
+DO $$ BEGIN
+ CREATE TYPE "public"."organizer_payment_status" AS ENUM('not_payed', 'payed_to_organizer', 'refunded');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+ALTER TYPE "order_types" ADD VALUE 'promote_to_organizer';--> statement-breakpoint
+ALTER TABLE "orders" ALTER COLUMN "event_uuid" DROP NOT NULL;--> statement-breakpoint
+ALTER TABLE "event_payment_info" ADD COLUMN "organizer_payment_status" "organizer_payment_status" DEFAULT 'not_payed' NOT NULL;--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "is_premium" boolean;--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "allows_write_to_pm" boolean;--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "photo_url" text;--> statement-breakpoint
