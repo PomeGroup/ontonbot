@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
-import { users } from "@/db/schema";
+import { eventRegistrants, users, visitors, events } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { InferSelectModel, eq, sql, and } from "drizzle-orm";
+import { InferSelectModel, eq, sql, and, or } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import xss from "xss";
 import { logSQLQuery } from "@/lib/logSQLQuery";
@@ -34,7 +34,7 @@ export interface MinimalOrganizerData {
 
 // Cache key prefix
 // Function to generate cache key for user
-const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}${userId}`;
+export const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}${userId}`;
 
 // Function to generate cache key for wallet
 const getWalletCacheKey = (userId: number) => `${redisTools.cacheKeys.userWallet}${userId}`;
@@ -191,10 +191,11 @@ export const selectUserById = async (
   if(use_cached_user){
     const cachedUser = await redisTools.getCache(cacheKey);
     if (cachedUser) {
+      console.log("cachedUser", cachedUser);
       return cachedUser; // Return cached user if found
     }
   }
-
+  await updateEventCountsForUser(userId);
   // If not found in cache, query the database
   try {
     const userInfo = await db
@@ -256,9 +257,7 @@ export const insertUser = async (
           first_name,
           last_name,
           language_code,
-          role: "user", // default role
-          // explicitly do NOT include any org_* fields here
-          // is_premium, allows_write_to_pm, photo_url also can be inserted if you want
+          role: "user",
           is_premium: initDataJson.user.is_premium ?? false,
           allows_write_to_pm: initDataJson.user.allows_write_to_pm ?? false,
           photo_url: initDataJson.user.photo_url ?? null,
@@ -381,6 +380,7 @@ const updateWallet = async (
 
 export const selectUserByUsername = async (username: string) => {
   // If not found in cache, query the database
+  logger.log("selectUserByUsername", username);
   const userInfo = await db
     .select({
       user_id: users.user_id,
@@ -409,7 +409,7 @@ export const selectUserByUsername = async (username: string) => {
     // Remove leading '@' if present
     .where(eq(users.username, username.replace(/^@/, "")))
     .execute();
-
+  await updateEventCountsForUser(userInfo[0].user_id);
   logger.log("selectUserByUsername", userInfo);
   if (userInfo.length > 0) {
     return userInfo[0];
@@ -418,51 +418,20 @@ export const selectUserByUsername = async (username: string) => {
   return null; // Return null if user not found
 };
 
-export const selectMinimalOrganizerFieldsById = async (
-  userId: number
-): Promise<MinimalOrganizerData | null> => {
-  try {
-    // Query the DB for the exact columns we need
-    const result = await db
-      .select({
-        user_id: users.user_id,
-        photo_url: users.photo_url,
-        participated_event_count: users.participated_event_count,
-        hosted_event_count: users.hosted_event_count,
-        org_channel_name: users.org_channel_name,
-        org_support_telegram_user_name: users.org_support_telegram_user_name,
-        org_x_link: users.org_x_link,
-        org_bio: users.org_bio,
-        org_image: users.org_image,
-        role: users.role, // we need role to check if they're an organizer
-      })
-      .from(users)
-      .where(eq(users.user_id, userId))
-      .execute();
-
-    if (result.length === 0) {
-      return null;
-    }
-    return result[0];
-  } catch (error) {
-    logger.error(`selectMinimalOrganizerFieldsById failed for userId=${userId}`, error);
-    return null;
-  }
-}
 
 export const getOrganizerById = async (
   userId: number
 ): Promise<{
   success: boolean;
-  data: Omit<MinimalOrganizerData, "role"> | null; // We won't return `role` in `data`
+  data: Omit<MinimalOrganizerData, "role"> | null;
   error: string | null;
 }> => {
   try {
-    // 1) Query only the minimal organizer fields + role
-    const organizerRecord = await selectMinimalOrganizerFieldsById(userId);
+    // 1) Use the same cache flow / logic
+    const user = await selectUserById(userId);
 
     // 2) Check if user exists
-    if (!organizerRecord) {
+    if (!user) {
       return {
         success: false,
         data: null,
@@ -471,7 +440,7 @@ export const getOrganizerById = async (
     }
 
     // 3) Check if user is indeed organizer
-    if (organizerRecord.role !== "organizer") {
+    if (user.role !== "organizer") {
       return {
         success: false,
         data: null,
@@ -479,20 +448,100 @@ export const getOrganizerById = async (
       };
     }
 
-    // 4) Remove role from the returned data, since we only need the other fields
-    const { role, ...data } = organizerRecord;
+    // 4) Pick only the minimal organizer fields from the user object
+    //    (We also pick `role` so we can omit it from the final return)
+    const minimalData: MinimalOrganizerData = {
+      user_id: user.user_id,
+      photo_url: user.photo_url,
+      participated_event_count: user.participated_event_count,
+      hosted_event_count: user.hosted_event_count,
+      org_channel_name: user.org_channel_name,
+      org_support_telegram_user_name: user.org_support_telegram_user_name,
+      org_x_link: user.org_x_link,
+      org_bio: user.org_bio,
+      org_image: user.org_image,
+      role: user.role,
+    };
 
+    // 5) Omit `role` from the returned data
+    const { role, ...data } = minimalData;
+
+    // 6) Return success
     return {
       success: true,
       data,
       error: null,
     };
   } catch (err: any) {
+    // Catch any unexpected errors
     return {
       success: false,
       data: null,
       error: err instanceof Error ? err.message : String(err),
     };
+  }
+};
+
+export const updateEventCountsForUser = async (
+  userId: number
+) => {
+  try {
+
+    // 1) Count how many events the user is hosting
+    const hostedCountResult = await db
+      .select({
+        count: sql<number>`count(*)`.mapWith(Number),
+      })
+      .from(events)
+      .where(eq(events.owner, userId))
+      .execute();
+    const hostedCount = hostedCountResult[0]?.count ?? 0;
+
+    // 2) Count how many events user participated in
+    //    2a) Count from eventRegistrants where status in ("approved", "checkedin")
+    const participatedCountResult = await db
+      .select({
+        count: sql<number>`count(*)`.mapWith(Number),
+      })
+      .from(eventRegistrants)
+      .where(
+        and(
+          eq(eventRegistrants.user_id, userId),
+          or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin"))
+        )
+      )
+      .execute();
+    const participatedCount = participatedCountResult[0]?.count ?? 0;
+
+    //    2b) Count from visitors table
+    const visitorCountResult = await db
+      .select({
+        count: sql<number>`count(*)`.mapWith(Number),
+      })
+      .from(visitors)
+      .where(eq(visitors.user_id, userId))
+      .execute();
+    const visitorCount = visitorCountResult[0]?.count ?? 0;
+
+    // 3) Sum the counts (registrants + visitors)
+    const totalParticipated = participatedCount + visitorCount;
+
+    // 4) Update the user record
+    await db
+      .update(users)
+      .set({
+        participated_event_count: totalParticipated,
+        hosted_event_count: hostedCount,
+      })
+      .where(eq(users.user_id, userId))
+      .execute();
+
+    // 5) Clear user cache
+    await redisTools.deleteCache(getUserCacheKey(userId));
+
+  } catch (error) {
+    logger.error(`Error updating event counts for user [ID=${userId}]`, error);
+    throw error;
   }
 };
 export const usersDB = {

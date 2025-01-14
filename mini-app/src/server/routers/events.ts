@@ -8,7 +8,7 @@ import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
-import { and, asc, eq, gt  , ne} from "drizzle-orm";
+import { and, eq, ne} from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import eventDB from "@/server/db/events";
@@ -29,7 +29,8 @@ import { logger } from "@/server/utils/logger";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import { timestampToIsoString } from "@/lib/DateAndTime";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
-import { usersDB } from "../db/users";
+import { usersDB, getUserCacheKey } from "../db/users";
+import { redisTools } from "@/lib/redisTools";
 dotenv.config();
 
 
@@ -163,6 +164,7 @@ const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
 // private
 const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: EventDataSchema })).mutation(async (opts) => {
   const input_event_data = opts.input.eventData;
+  const userCacheKey = getUserCacheKey(opts.ctx.user.user_id);
   try {
     const result = await db.transaction(async (trx) => {
       const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
@@ -314,6 +316,9 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         topic: "event",
       });
       logger.log("add event telegram notification sent" , logMessage);
+      // Clear the organizer user cache so it will be reloaded next time
+      await redisTools.deleteCache(getUserCacheKey(opts.ctx.user.user_id));
+
       // On local development skip  registration to ton society || paid event will be registered when organizer pays initial payment
       const register_to_ts = process.env.ENV !== "local" || !eventData.has_payment;
 
