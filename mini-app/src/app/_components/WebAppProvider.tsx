@@ -24,10 +24,10 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
   console.log("webAppProvider: 24");
   // 1) Initialize
   useEffect(() => {
-    console.log("webAppProvider: 26");
+    console.log("webAppProvider: 26", webApp?.initDataUnsafe, webApp?.initData);
     if (webApp?.initData && !isInitialized) {
       console.log("webAppProvider: 29", webApp.initData);
-      setInitData(webApp.initData);
+      setInitData(webApp.initDataUnsafe);
       Sentry.init({ environment: process.env.NEXT_PUBLIC_ENV });
       Sentry.setUser({
         id: webApp.initDataUnsafe.user?.id,
