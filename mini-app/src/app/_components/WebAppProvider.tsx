@@ -32,14 +32,14 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       setIsInitialized(true);
     }
   }, [webApp?.initData, isInitialized]);
-  const initialHistoryLength = useRef<number>(0);
+   const initialHistoryLength = useRef<number>(0);
   useEffect(() => {
     console.log("webAppProvider 44");
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && window?.history) {
       console.log("webAppProvider 46");
-      initialHistoryLength.current = window.history.length;
+      initialHistoryLength.current = window.history?.length || 0;
       console.log("Initial history length:", initialHistoryLength.current);
-      window.history.replaceState(null, "", window.location.pathname);
+      //window.history.replaceState(null, "", window.location.pathname);
     }
   }, []);
 
@@ -57,7 +57,7 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       backButton.show();
     }
     const handleBackButtonClicked = () => {
-      console.log("window.history.length", window.history.length, initialHistoryLength);
+
 
       const isCreateRoute = pathname?.startsWith("/events/create");
       const isEditRoute = /^\/events\/[^/]+\/edit$/.test(pathname ?? "");
@@ -73,10 +73,13 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         // Normal fallback
         if (window.history.length === initialHistoryLength.current) {
+          console.log("Initial history length reached, going back to home" ,window.history.length , initialHistoryLength.current);
           router.push("/");
         } else if (window.history.length > 1) {
+          console.log("Going back");
           router.back();
         } else {
+          console.log("Going home because history length is 1");
           router.push("/");
         }
       }
