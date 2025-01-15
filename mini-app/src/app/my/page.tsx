@@ -25,17 +25,23 @@ export default function ProfilePage() {
   const hasWallet = !!user?.wallet_address;
 
   const [paid, setPaid] = useState(true);
-  const { data } = trpc.organizers.getOrganizer.useQuery({});
+  const { data, error, isLoading } = trpc.organizers.getOrganizer.useQuery({});
+
+  useEffect(() => {
+    const notOrganizer = error?.message?.includes("not found");
+    if (!notOrganizer) return;
+    setPaid(false);
+  }, [error]);
 
   const router = useRouter();
 
-  if (!data) return "loading";
+  if (isLoading) return "loading";
   return (
     <div className="bg-[#EFEFF4] pt-4 pb-4 min-h-screen">
-      {paid ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
+      {paid && data ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <Link
-        className="my-3 py-3 text-center block"
-        href={`/channels/${data.user_id}/`}
+        className="my-3 py-2 text-center block"
+        href={`/channels/${data?.user_id}/`}
       >
         My Public Page
       </Link>
@@ -62,7 +68,7 @@ export default function ProfilePage() {
               className="mt-auto flex gap-4"
             >
               <div>
-                <b>{data.participated_event_count || "0"}</b> Events
+                <b>{data?.participated_event_count || "0"}</b> Events
               </div>
               {/* <div>
                 <b>{data.sbt_count || "0"}</b> SBTs
@@ -98,7 +104,7 @@ export default function ProfilePage() {
             >
               {paid ? (
                 <>
-                  <b>{data.hosted_event_count || "0"}</b> Events
+                  <b>{data?.hosted_event_count || "0"}</b> Events
                 </>
               ) : (
                 "Become an organizer first"
