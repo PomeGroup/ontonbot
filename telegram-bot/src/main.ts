@@ -12,7 +12,7 @@ import {
 	sendMessage,
 	handlePhotoMessage,
 } from "./controllers";
-import { orgHandler, startHandler } from "./handlers";
+import { cmdHandler, orgHandler, startHandler } from "./handlers";
 import { mainComposer } from "./composers";
 // parse application/json
 
@@ -21,6 +21,7 @@ bot.use(session({ initial: () => ({}) }));
 console.log("Starting bot... v2");
 
 bot.command("org", orgHandler);
+bot.command("cmd", cmdHandler);
 bot.command("start", startHandler);
 
 bot.use(mainComposer);
