@@ -279,7 +279,7 @@ export async function mintNFT(owner_address : string , collection_address: strin
   const seqnoAfter = await waitSeqno(seqno, wallet);
   logger.log("seq after mint : ", seqnoAfter);
 
-  await sleep(10000); // just wait to make sure nft is minted
+  await sleep(22000); // just wait to make sure nft is minted
   nft_addres = await NftItem.getAddressByIndex(collection_address, nftIndex);
   if (nft_addres) return nft_addres;
 
