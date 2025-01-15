@@ -14,7 +14,6 @@ import { useSearchParams } from "next/navigation";
 import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Block } from "konsta/react";
 import { useTheme } from "next-themes";
@@ -23,7 +22,7 @@ import { useTheme } from "next-themes";
 const LIMIT = 5;
 
 const Search: React.FC = () => {
-  useWithBackButton({ whereTo: "/" });
+
   const { setTheme } = useTheme();
 
   const searchStore = useSearchEventsStore();
