@@ -10,9 +10,10 @@ import { logger } from "@/server/utils/logger";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/checkRateLimit";
 import { UPLOAD_IMAGE_RATE_LIMIT, UPLOAD_VIDEO_RATE_LIMIT } from "@/constants";
+import sharp from "sharp";
+
 // Base URL for Next.js API routes
 const API_BASE_URL = (process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000") + "/api/";
-
 // JWT secret from env
 const JWT_SECRET = process.env.ONTON_API_SECRET ?? "fallback-secret";
 
@@ -28,13 +29,8 @@ export const fieldsRouter = router({
               const base64Data = file.replace(/^data:image\/\w+;base64,/, "");
               const image = sizeOf(Buffer.from(base64Data, "base64"));
 
-              // Check if the image is square
-              if (image.width !== image.height) {
-                throw new TRPCError({
-                  code: "BAD_REQUEST",
-                  message: "Only square images are allowed",
-                });
-              }
+              if (!image.height || !image.width)
+                throw new TRPCError({ code: "BAD_REQUEST", message: "Image width/height is 0" });
 
               // Limit the size of the file (10 MB)
               const MAX_BASE64_SIZE = 10 * 1024 * 1024;
@@ -56,7 +52,6 @@ export const fieldsRouter = router({
                 message: "Invalid base64 data",
               });
             }
-
 
             const mimeTypeMatch = data.match(/^data:(.*?);base64,/);
             if (!mimeTypeMatch || !mimeTypeMatch[1]) {
@@ -94,7 +89,12 @@ export const fieldsRouter = router({
     .mutation(async (opts) => {
       // 1. Rate-limit check
       const userId = opts.ctx.user.user_id;
-      const { allowed, remaining } = await checkRateLimit(String(userId), "uploadImage", UPLOAD_IMAGE_RATE_LIMIT.max, UPLOAD_IMAGE_RATE_LIMIT.window);
+      const { allowed, remaining } = await checkRateLimit(
+        String(userId),
+        "uploadImage",
+        UPLOAD_IMAGE_RATE_LIMIT.max,
+        UPLOAD_IMAGE_RATE_LIMIT.window
+      );
       if (!allowed) {
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",
@@ -104,7 +104,24 @@ export const fieldsRouter = router({
 
       // 2. Build the endpoint + form data
       const uploadEndpoint = `${API_BASE_URL}/files/upload`;
-      const { buffer, mimeType } = opts.input.image;
+
+      let { buffer, mimeType } = opts.input.image;
+
+      const image = sizeOf(buffer);
+
+      // Check if the image is square
+      if (image.width !== image.height) {
+        const min_height = image.width! > image.height! ? image.height : image.width;
+
+        buffer = await sharp(buffer)
+          .resize({
+            width: min_height,
+            height: min_height,
+            fit: "cover", // crops the image to fill a 1:1 square
+          })
+          .toBuffer();
+      }
+
       const subfolder = opts.input.subfolder;
       const extension = mimeType.split("/")[1] || "png";
       const fullFilename = `event_image.${extension}`;
@@ -204,7 +221,12 @@ export const fieldsRouter = router({
     .mutation(async (opts) => {
       // 1. Rate-limit check
       const userId = opts.ctx.user.user_id;
-      const { allowed, remaining } = await checkRateLimit(String(userId), "uploadVideo", UPLOAD_VIDEO_RATE_LIMIT.max, UPLOAD_VIDEO_RATE_LIMIT.window);
+      const { allowed, remaining } = await checkRateLimit(
+        String(userId),
+        "uploadVideo",
+        UPLOAD_VIDEO_RATE_LIMIT.max,
+        UPLOAD_VIDEO_RATE_LIMIT.window
+      );
       if (!allowed) {
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",
