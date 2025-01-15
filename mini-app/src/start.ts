@@ -283,7 +283,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
       logger.log("cron_trx_", o.order_uuid, o.order_type, o.value);
       await db
         .update(orders)
-        .set({ state: "processing", owner_address: o.owner.toString(), trx_hash: o.trx_hash  , created_at : new Date()})
+        .set({ state: "processing", owner_address: o.owner.toString(), trx_hash: o.trx_hash, created_at: new Date() })
         .where(
           and(
             eq(orders.uuid, o.order_uuid),
@@ -720,19 +720,16 @@ async function sendPaymentReminder() {
       commission = total * 0.05; // The 5% Commistion
       payment_amount = total - commission;
       logger.log("event_payment_reminder_total", total);
-
     }
 
-    
-    
     const message_result = await sendLogNotification({
       message: `💵💵 Payment For Event
 <b>${title}</b>
-Total Sold : ${rounder(total,2)}
-🤑Commision : <code>${rounder(commission,2)}</code>
+Total Sold : ${rounder(total, 2)}
+🤑Commision : <code>${rounder(commission, 2)}</code>
 
 Payment Type : <b>${payment_type}</b>${payment_type_emojis}
-💰Organizer Payment : <code>${rounder(payment_amount , 2)}</code>
+💰Organizer Payment : <code>${rounder(payment_amount, 2)}</code>
 Recipient : <code>${recipient_address}</code>
 
 @Mfarimani
