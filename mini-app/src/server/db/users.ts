@@ -615,4 +615,5 @@ export const usersDB = {
   updateOrganizerFieldsByUserId,
   searchOrganizers,
   getOrganizerById,
+  updateUserRole,
 };
