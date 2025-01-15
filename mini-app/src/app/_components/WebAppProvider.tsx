@@ -34,11 +34,8 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
   }, [webApp?.initData, isInitialized]);
    const initialHistoryLength = useRef<number>(0);
   useEffect(() => {
-    console.log("webAppProvider 44");
     if (typeof window !== "undefined" && window?.history) {
-      console.log("webAppProvider 46");
       initialHistoryLength.current = window.history?.length || 0;
-      console.log("Initial history length:", initialHistoryLength.current);
       //window.history.replaceState(null, "", window.location.pathname);
     }
   }, []);
@@ -73,13 +70,10 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         // Normal fallback
         if (window.history.length === initialHistoryLength.current) {
-          console.log("Initial history length reached, going back to home" ,window.history.length , initialHistoryLength.current);
           router.push("/");
         } else if (window.history.length > 1) {
-          console.log("Going back");
           router.back();
         } else {
-          console.log("Going home because history length is 1");
           router.push("/");
         }
       }
