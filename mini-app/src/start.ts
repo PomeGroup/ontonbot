@@ -725,12 +725,28 @@ async function sendPaymentReminder() {
       logger.log("event_payment_reminder_total", total);
     }
 
+    const total_amount_of_nft = await db
+      .select({
+        nft_count: sql`COUNT(${nftItems.id})`, // Calculates the sum of total_price
+      })
+      .from(orders)
+      .where(eq(nftItems.event_uuid, event.events.event_uuid))
+      .execute();
+
+    const bought_capacity = event.event_payment_info.bought_capacity;
+
+    const nft_count: number = Number(total_amount_of_nft.pop()?.nft_count);
+    const unused_capacity = bought_capacity - (nft_count || 0);
+    const unused_refund = unused_capacity * 0.055;
+
     const message_result = await sendLogNotification({
       message: `💵💵 Payment For Event
 <b>${title}</b>
 Total Sold : ${rounder(total, 2)}
+Total Mints : ${nft_count}
 🤑Commision : <code>${rounder(commission, 2)}</code>
 
+Unused Capacity Amount : ${rounder(unused_refund, 2)} TON🔵
 Payment Type : <b>${payment_type}</b>${payment_type_emojis}
 💰Organizer Payment : <code>${rounder(payment_amount, 2)}</code>
 Recipient : <code>${recipient_address}</code>

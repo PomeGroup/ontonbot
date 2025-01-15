@@ -199,7 +199,7 @@ export const EventSections = () => {
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
 
-  const organizer = eventData.data.organizer;
+  const organizer = eventData?.data?.organizer;
 
   return (
     <div className="space-y-2">
@@ -231,16 +231,17 @@ export const EventSections = () => {
       )}
 
       {organizer && (
-        <Card className="my-3 -mx-3" onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}>
+        <Card className="w-full my-3 -mx-3" onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}>
           <Typography
             variant="title3"
             className="font-bold mb-2"
           >
             Organizer
           </Typography>
-          <div className="flex gap-3 items-stretch">
+          <div className="w-full flex gap-3 items-stretch">
             {organizer.org_image ? (
               <Image
+	      	className="rounded-mg"
                 src={organizer.org_image}
                 alt={organizer.org_channel_name || ""}
                 width={48}
@@ -257,7 +258,7 @@ export const EventSections = () => {
                 />
               </div>
             )}
-            <div className="flex flex-col justify-between">
+            <div className="flex flex-col grow justify-between">
               <Typography
                 variant="headline"
                 className="text-[#007AFF] font-normal line-clamp-2"

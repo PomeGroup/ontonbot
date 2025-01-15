@@ -225,7 +225,7 @@ function ConnectWalletCard() {
 
   const hasWallet = !!user?.wallet_address;
   return (
-    <Card>
+    <Card className="mb-6">
       <Typography
         bold
         variant="headline"

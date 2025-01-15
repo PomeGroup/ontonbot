@@ -31,9 +31,7 @@ const Search: React.FC = () => {
 
   // We no longer track offset; we'll rely on a cursor-based approach
   // that is handled automatically by the infiniteQuery below.
-  const [finalSearchInput, setFinalSearchInput] = useState(
-    searchEventsInputZod.parse(searchInput)
-  );
+  const [finalSearchInput, setFinalSearchInput] = useState(searchEventsInputZod.parse(searchInput));
 
   const webApp = useWebApp();
   const { authorized, role: userRole } = useAuth();
@@ -56,7 +54,6 @@ const Search: React.FC = () => {
     { value: "Upcoming", label: "Upcoming", borderClass: "border-x-2 border-x-gray-600" },
     { value: "Past", label: "Past" },
     { value: "OnGoing", label: "Ongoing", borderClass: "border-x-2 border-x-gray-600" },
-    { value: "MyEvents", label: "My Events" },
   ];
 
   /**
@@ -64,28 +61,22 @@ const Search: React.FC = () => {
    * 2) We pass in our search/filter input
    * 3) getNextPageParam looks at `lastPage.nextCursor`
    */
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    refetch,
-  } = trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
-    {
-      ...finalSearchInput,
-      limit: LIMIT,
-      // We can add more fields if needed:
-      // filter: finalSearchInput.filter
-      // search: finalSearchInput.search
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-      keepPreviousData: true,
-      // If you only want to fetch once "initial fetch done," you can
-      // conditionally enable or pass `enabled: true/false`
-    }
-  );
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, refetch } =
+    trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
+      {
+        ...finalSearchInput,
+        limit: LIMIT,
+        // We can add more fields if needed:
+        // filter: finalSearchInput.filter
+        // search: finalSearchInput.search
+      },
+      {
+        getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+        keepPreviousData: true,
+        // If you only want to fetch once "initial fetch done," you can
+        // conditionally enable or pass `enabled: true/false`
+      }
+    );
 
   // Combine all pages of data into one array
   const allEvents = data?.pages.flatMap((page) => page.items) ?? [];
@@ -98,12 +89,7 @@ const Search: React.FC = () => {
     if (observerRef.current) observerRef.current.disconnect();
 
     observerRef.current = new IntersectionObserver((entries) => {
-      if (
-        entries[0].isIntersecting &&
-        currentTabIndex === observingTab &&
-        hasNextPage &&
-        !isFetchingNextPage
-      ) {
+      if (entries[0].isIntersecting && currentTabIndex === observingTab && hasNextPage && !isFetchingNextPage) {
         fetchNextPage();
       }
     });
@@ -170,7 +156,6 @@ const Search: React.FC = () => {
             tabValue={tabValue}
             userRole={authorized ? userRole : "user"}
             showFilterTags={true}
-
             refetch={refetch}
             setFinalSearchInput={setFinalSearchInput}
             applyTabFilter={applyTabFilter}
@@ -185,7 +170,10 @@ const Search: React.FC = () => {
         </div>
 
         {/* Scrollable area containing the Swiper slides */}
-        <div ref={scrollableDivRef} className="overflow-y-auto flex-grow">
+        <div
+          ref={scrollableDivRef}
+          className="overflow-y-auto flex-grow"
+        >
           <Swiper
             onSlideChange={handleSlideChange}
             slidesPerView={1}
@@ -205,7 +193,10 @@ const Search: React.FC = () => {
                   {isLoading && allEvents.length === 0 ? (
                     <div className="flex flex-col gap-2">
                       {Array.from({ length: LIMIT }).map((_, i) => (
-                        <EventCardSkeleton key={i} mode="normal" />
+                        <EventCardSkeleton
+                          key={i}
+                          mode="normal"
+                        />
                       ))}
                     </div>
                   ) : (
@@ -230,16 +221,17 @@ const Search: React.FC = () => {
                       {/* Otherwise, render the events */}
                       {allEvents.map((event, eventIndex) => {
                         // Mark the last 1-2 events with a special class for IntersectionObserver
-                        const isNearEnd =
-                          eventIndex === allEvents.length - 1 ||
-                          eventIndex === allEvents.length - 2;
+                        const isNearEnd = eventIndex === allEvents.length - 1 || eventIndex === allEvents.length - 2;
 
                         return (
                           <div
                             key={event.eventId}
                             className={isNearEnd ? `last-event-card-${index}` : ""}
                           >
-                            <EventCard event={event} currentUserId={UserId} />
+                            <EventCard
+                              event={event}
+                              currentUserId={UserId}
+                            />
                           </div>
                         );
                       })}
