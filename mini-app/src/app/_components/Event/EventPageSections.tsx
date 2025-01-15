@@ -199,7 +199,7 @@ export const EventSections = () => {
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
 
-  const organizer = eventData.data.organizer;
+  const organizer = eventData?.data?.organizer;
 
   return (
     <div className="space-y-2">
