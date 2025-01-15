@@ -15,17 +15,18 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const { currentStep, setCurrentStep, resetState } = useCreateEventStore(
-    (state) => ({
-      currentStep: state.currentStep,
-      setCurrentStep: state.setCurrentStep,
-      resetState: state.resetState,
-    })
-  );
+  const { currentStep, setCurrentStep, resetState } = useCreateEventStore((state) => ({
+    currentStep: state.currentStep,
+    setCurrentStep: state.setCurrentStep,
+    resetState: state.resetState,
+  }));
 
+  console.log("webAppProvider: 24");
   // 1) Initialize
   useEffect(() => {
-    if (webApp?.initData && webApp?.initDataUnsafe && !isInitialized) {
+    console.log("webAppProvider: 26");
+    if (webApp?.initData && !isInitialized) {
+      console.log("webAppProvider: 29", webApp.initData);
       setInitData(webApp.initData);
       Sentry.init({ environment: process.env.NEXT_PUBLIC_ENV });
       Sentry.setUser({
@@ -34,22 +35,28 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       });
       setIsInitialized(true);
     }
+    console.log("webAppProvider 38");
   }, [webApp?.initData, isInitialized, setInitData]);
 
   // --------------------------------
   const initialHistoryLength = useRef<number>(0);
   useEffect(() => {
+    console.log("webAppProvider 44");
     if (typeof window !== "undefined") {
+      console.log("webAppProvider 46");
       initialHistoryLength.current = window.history.length;
       console.log("Initial history length:", initialHistoryLength.current);
     }
   }, []);
   // 2) Reset history on (re)load if desired
   useEffect(() => {
+    console.log("webAppProvider 53");
     // Option A: Always do it
     if (typeof window !== "undefined") {
+      console.log("webAppProvider 56");
       window.history.replaceState(null, "", window.location.pathname);
     }
+    console.log("webAppProvider 59");
   }, []);
 
   // 3) Global Back Button
@@ -67,7 +74,7 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       backButton.show();
     }
     const handleBackButtonClicked = () => {
-      console.log("window.history.length", window.history.length ,initialHistoryLength);
+      console.log("window.history.length", window.history.length, initialHistoryLength);
 
       const isCreateRoute = pathname?.startsWith("/events/create");
       const isEditRoute = /^\/events\/[^/]+\/edit$/.test(pathname ?? "");
@@ -84,15 +91,12 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
         // Normal fallback
         if (window.history.length === initialHistoryLength.current) {
           router.push("/");
-        }
-        else if (window.history.length > 1) {
+        } else if (window.history.length > 1) {
           router.back();
         } else {
           router.push("/");
         }
       }
-
-
     };
 
     WebApp.onEvent("backButtonClicked", handleBackButtonClicked);
@@ -101,16 +105,8 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       WebApp.offEvent("backButtonClicked", handleBackButtonClicked);
       backButton.hide();
-
     };
-  }, [
-    router,
-    pathname,
-    isInitialized,
-    currentStep,
-    setCurrentStep,
-    resetState
-  ]);
+  }, [router, pathname, isInitialized, currentStep, setCurrentStep, resetState]);
 
   if (!initData) {
     return <EventsSkeleton />;
