@@ -29,7 +29,7 @@ export default function PaymentCard({ visible, onPayFinished }: { visible: boole
 
       try {
         await transfer(config.ONTON_WALLET_ADDRESS as string, Number(response.total_price), response.payment_type, {
-          comment: `organizer_order=${response.uuid}`,
+          comment: `onton_order=${response.uuid}`,
         });
         // setIsRequestingTicket({ state: true, orderId: response[0].order_id });
         setLoadingPopupOpen(false);
