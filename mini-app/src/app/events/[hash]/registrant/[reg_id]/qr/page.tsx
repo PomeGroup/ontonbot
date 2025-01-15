@@ -1,7 +1,6 @@
 "use client";
 
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
-import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import RegistrantCheckInQrCode from "@/app/_components/Event/RegistrantCheckInQrCode";
 import useWebApp from "@/hooks/useWebApp";
 import { Block, BlockHeader, BlockTitle, Page } from "konsta/react";
@@ -14,9 +13,7 @@ export default function RegistrantQrCodePage() {
     reg_id: string;
   }>();
 
-  useWithBackButton({
-    whereTo: `/events/${params.hash}`,
-  });
+
 
   const webApp = useWebApp();
   const router = useRouter();
