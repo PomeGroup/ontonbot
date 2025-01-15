@@ -3,7 +3,7 @@
 import { Block } from "konsta/react";
 import Image from "next/image";
 import Typography from "../../components/Typography";
-import BottomNavigation from "../_components/BottomNavigation";
+import BottomNavigation from "../../components/BottomNavigation";
 import Link from "next/link";
 import { Channel } from "@/types";
 import usePaginatedChannels from "./usePaginatedChannels";

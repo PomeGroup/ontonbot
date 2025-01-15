@@ -5,7 +5,7 @@ import calendarStarIcon from "./calendar-star.svg";
 import Image from "next/image";
 import Typography from "../../components/Typography";
 import { ArrowRight } from "lucide-react";
-import BottomNavigation from "../_components/BottomNavigation";
+import BottomNavigation from "../../components/BottomNavigation";
 import tonIcon from "@/components/icons/ton.svg";
 import { useEffect, useState } from "react";
 import { cn } from "@/utils";
@@ -80,7 +80,13 @@ export default function ProfilePage() {
           </div>
         </div>
       </Card>
-      <Card onClick={() => router.push("/my/hosted/")}>
+      <Card onClick={() => {
+	      if (!paid) {
+		      toast.error('Only organizers can host events');
+		      return
+	      }
+	      router.push("/my/hosted/")
+      }}>
         <div className="flex gap-3 align-stretch">
           <div className="bg-[#efeff4] p-4 rounded-[10px]">
             <Image

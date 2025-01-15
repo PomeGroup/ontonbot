@@ -16,17 +16,14 @@ import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { Block } from "konsta/react";
 import { useTheme } from "next-themes";
 
-import BottomNavigation from "./_components/BottomNavigation";
-
+import BottomNavigation from "../components/BottomNavigation";
 
 // Define types for events
 type EventData = any[];
 
 export default function Home() {
   const { config } = useConfig();
-  const SliderEventUUID = Array.isArray(config?.homeSliderEventUUID)
-    ? config.homeSliderEventUUID[0]
-    : "";
+  const SliderEventUUID = Array.isArray(config?.homeSliderEventUUID) ? config.homeSliderEventUUID[0] : "";
   const webApp = useWebApp();
   const { authorized, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
