@@ -1,21 +1,15 @@
-import { db } from "@/db/db";
-import { orders } from "@/db/schema";
-import { Address, toNano } from "@ton/core";
 import { TRPCError } from "@trpc/server";
-import { and, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
-import { getEventByUuid, getEventsWithFilters as DBgetEventsWithFilters, selectEventByUuid } from "../db/events";
-import {
-  adminOrganizerProtectedProcedure,
-  eventManagementProtectedProcedure as evntManagerPP,
-  initDataProtectedProcedure,
-  publicProcedure,
-  router,
-} from "../trpc";
-import { logger } from "../utils/logger";
+import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedProcedure, router } from "../trpc";
+import { logger } from "@/server/utils/logger";
 import ordersDB from "@/server/db/orders.db";
+import { selectUserById } from "@/server/db/users";
+
+// Hard-coded example event UUID
+const hardCodedEventUuid = "4e76c66c-ef3d-483c-9836-a3e12815b044";
 
 export const ordersRouter = router({
+  // 1) Update order state
   updateOrderState: initDataProtectedProcedure
     .input(
       z.object({
@@ -29,31 +23,72 @@ export const ordersRouter = router({
       const order_uuid = opts.input.order_uuid;
 
       try {
-        const updatedRows = await db
-          .update(orders)
-          .set({ state: state })
-          .where(
-            and(
-              eq(orders.uuid, order_uuid),
-              eq(orders.user_id, user_id),
-              or(eq(orders.state, "new"), eq(orders.state, "confirming"), eq(orders.state, "cancelled"))
-            )
-          )
-          .returning({ uuid: orders.uuid })
-          .execute();
+        // DB call moved to ordersDB
+        const updatedRows = await ordersDB.updateOrderState(order_uuid, user_id, state);
 
         if (updatedRows.length > 0) {
           return { code: 200, message: "Order State Updated" };
         } else {
-          return { code: 200, message: "nothing to update" };
+          return { code: 200, message: "Nothing to update" };
         }
       } catch (error) {
-        logger.log("order_updateOrderState_internal_error", error);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "internal server error" });
+        logger.error("order_updateOrderState_internal_error", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Internal server error",
+        });
       }
     }),
 
-    getEventOrders : evntManagerPP.input(z.object({ event_uuid: z.string().uuid() })).query(async (opts) => {
-      return await ordersDB.getEventOrders(opts.input.event_uuid);
+  // 2) Get event orders
+  getEventOrders: evntManagerPP
+    .input(z.object({ event_uuid: z.string().uuid() }))
+    .query(async (opts) => {
+      // DB call moved to ordersDB
+      return ordersDB.getEventOrders(opts.input.event_uuid);
+    }),
+
+  // 3) Add a 'promote_to_organizer' order if user doesn't already have one
+  addPromoteToOrganizerOrder: initDataProtectedProcedure
+    .input(z.object({ user_id: z.number().optional() }))
+    .mutation(async (opts) => {
+      const user_id = opts.ctx.user.user_id;
+
+      // Check if user is already an organizer
+      const user = await selectUserById(user_id, false);
+      if (user?.role === "organizer") {
+        throw new TRPCError({ code: "CONFLICT", message: "User is already an organizer" });
+      }
+
+      // DB call: find existing promoter order
+      const userOrder = await ordersDB.findPromoteToOrganizerOrder(user_id);
+      if (userOrder) {
+        if (userOrder.state === "processing") {
+          throw new TRPCError({ code: "CONFLICT", message: "User already has a processing order" });
+        }
+        if (userOrder.state === "completed") {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "User has a completed 'promote to organizer' order",
+          });
+        }
+        // If it's 'new', 'confirming', or 'cancelled', just return it
+        return userOrder;
+      }
+
+      // DB call: create a new 'promote_to_organizer' order
+      const newOrder = await ordersDB.createPromoteToOrganizerOrder(user_id, hardCodedEventUuid);
+      return newOrder;
+    }),
+
+  // 4) Get a user's 'promote_to_organizer' order
+  getPromoteToOrganizerOrder: initDataProtectedProcedure
+    .input(z.object({ user_id: z.number().optional() }))
+    .query(async (opts) => {
+      const user_id = opts.ctx.user.user_id;
+      // DB call moved to ordersDB
+      const resultOrder = await ordersDB.getPromoteToOrganizerOrder(user_id);
+
+      return resultOrder ?? null;
     }),
 });

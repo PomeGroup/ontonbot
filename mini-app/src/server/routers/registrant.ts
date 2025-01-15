@@ -12,6 +12,8 @@ import { EventRegisterSchema } from "@/types";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import { addVisitor } from "@/server/db/visitors";
 import { users } from "@/db/schema/users";
+import { redisTools } from "@/lib/redisTools";
+import { getUserCacheKey } from "@/server/db/users";
 
 const checkinRegistrantRequest = evntManagerPP
   .input(
@@ -115,7 +117,8 @@ const processRegistrantRequest = evntManagerPP
         user_id: user_id,
         message,
       });
-      logger.log("*******approved_guest", response.status, response.message);
+      // Clear the organizer user cache so it will be reloaded next time
+      await redisTools.deleteCache(getUserCacheKey(user_id));
     }
 
     return { code: 201, message: "ok" };
@@ -178,6 +181,8 @@ const eventRegister = initDataProtectedProcedure.input(EventRegisterSchema).muta
     register_info: registerInfo,
   });
   await addVisitor(userId, event_uuid);
+  // Clear the organizer user cache so it will be reloaded next time
+  await redisTools.deleteCache(getUserCacheKey(userId));
 
   return { message: "success", code: 201 };
 });

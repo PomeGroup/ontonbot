@@ -23,6 +23,7 @@ import { Address } from "@ton/core";
 import { config } from "./server/config";
 import { selectUserById } from "./server/db/users";
 import { logger } from "./server/utils/logger";
+import { orgPromoteProcessOrder } from "./server/routers/services/orgPromoteOrderService";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -55,6 +56,8 @@ async function MainCronJob() {
   new CronJob("*/19 * * * * *", cronJob(CreateEventOrders), null, true);
 
   new CronJob("*/9 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
+
+  new CronJob("*/21 * * * * *", OrganizerPromoteProcessing, null, true);
 }
 
 function cronJob(fn: (_: () => any) => any) {
@@ -530,7 +533,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   const results = await db
     .select()
     .from(orders)
-    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "nft_mint")))
+    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "nft_mint"), isNotNull(orders.event_uuid)))
     .orderBy(asc(orders.created_at))
     .limit(100)
     .execute();
@@ -557,7 +560,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       }
 
       const paymentInfo = (
-        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
+        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid!)).execute()
       ).pop();
 
       if (!paymentInfo) {
@@ -595,7 +598,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       const nft_count_result = await db
         .select({ count: sql`count(*)`.mapWith(Number) })
         .from(nftItems)
-        .where(eq(nftItems.event_uuid, event_uuid))
+        .where(eq(nftItems.event_uuid, event_uuid!))
         .execute();
 
       const nft_index = nft_count_result[0].count || 0;
@@ -635,7 +638,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
         await trx
           .insert(nftItems)
           .values({
-            event_uuid: event_uuid,
+            event_uuid: event_uuid!,
             order_uuid: ordr.uuid,
             nft_address: nft_address,
             owner: ordr.user_id,
@@ -651,7 +654,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
             .set({ status: "approved" })
             .where(
               and(
-                eq(eventRegistrants.event_uuid, ordr.event_uuid),
+                eq(eventRegistrants.event_uuid, ordr.event_uuid!),
                 eq(eventRegistrants.user_id, ordr.user_id),
                 or(eq(eventRegistrants.status, "pending"), eq(eventRegistrants.status, "rejected"))
               )
@@ -766,6 +769,25 @@ Recipient : <code>${recipient_address}</code>
     await sleep(1000);
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/*                     Organizer Promote Order Processing                    */
+/* -------------------------------------------------------------------------- */
+async function OrganizerPromoteProcessing() {
+  const org_orders = await db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.order_type, "promote_to_organizer"), eq(orders.state, "processing")))
+    .orderBy(orders.created_at)
+    .execute();
+
+  for (const porg_ordr of org_orders) {
+    logger.log('OrganizerPromoteProcessing order_uuid : ',porg_ordr.uuid)
+    orgPromoteProcessOrder(porg_ordr);
+    await sleep(50);
+  }
+}
+
 // Run the Cron Jobs
 MainCronJob();
 // CreateEventOrders().finally(() => logger.log("well done ........"));
