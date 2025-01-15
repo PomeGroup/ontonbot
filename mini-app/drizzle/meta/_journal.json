@@ -36,6 +36,13 @@
       "when": 1735853911492,
       "tag": "0004_slim_talisman",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1736850229103,
+      "tag": "0005_acoustic_the_stranger",
+      "breakpoints": true
     }
   ]
 }

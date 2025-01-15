@@ -11,10 +11,15 @@ export async function middleware(req: NextRequest) {
 
     const utm_source = req.nextUrl.searchParams.get("utm_source");
 
+
     if (tgAppStartParam) {
       const isEdit = tgAppStartParam.startsWith("edit_");
+      const isOrganizerProfile = tgAppStartParam.startsWith("channels_");
       const isGatewaySideEvent = tgAppStartParam.startsWith("gateway");
-
+      if(isOrganizerProfile){
+              console.log("redirecting to organizer profile");
+              return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
+      }
       if (isGatewaySideEvent) {
         console.log("redirecting to gateway");
         return NextResponse.redirect(new URL(`/gateway/`, req.nextUrl.origin));
@@ -27,7 +32,7 @@ export async function middleware(req: NextRequest) {
       }
       const isMysteryUtm = tgAppStartParam.length >= 7 && tgAppStartParam.length <= 12;
       if (isMysteryUtm) {
-        
+
         console.log(`affilate_redirect_${tgAppStartParam}`)
         const mysteryUUID = "19cc1849-90c2-4275-89b1-1cc6d77b3b82";
         const url = new URL(`/ptma/event/${mysteryUUID}`, req.nextUrl.origin);
@@ -37,7 +42,7 @@ export async function middleware(req: NextRequest) {
         url.searchParams.set("utm_medium", "notification");
         url.searchParams.set("utm_campaign", tgAppStartParam);
 
-        
+
 
         return NextResponse.redirect(url);
       }

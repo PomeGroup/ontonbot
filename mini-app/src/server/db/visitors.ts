@@ -13,6 +13,7 @@ import { and, between, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { checkEventTicketToCheckIn } from "@/server/db/events";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
+import { getUserCacheKey } from "@/server/db/users";
 
 const getVisitorCacheKey = (user_id: number, event_uuid: string) => `visitor:${user_id}:${event_uuid}`;
 
@@ -371,6 +372,8 @@ export const addVisitor = async (user_id: number, event_uuid: string) => {
     if (existingVisitor) {
       return existingVisitor; // Visitor already exists, no need to add
     }
+    // Clear the organizer user cache so it will be reloaded next time
+    await redisTools.deleteCache(getUserCacheKey(user_id));
     // Insert new visitor
     return await insertNewVisitor(user_id, event_uuid);
   } catch (error) {

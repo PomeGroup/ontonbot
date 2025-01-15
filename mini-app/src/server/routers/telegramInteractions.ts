@@ -14,6 +14,7 @@ import { selectVisitorsByEventUuid } from "@/server/db/visitors";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import axios from "axios";
 import { getSBTClaimedStaus } from "@/lib/ton-society-api";
+import { usersDB } from "@/server/db/users";
 
 const requestShareEvent = initDataProtectedProcedure
   .input(
@@ -261,8 +262,65 @@ const requestSendQRCode = evntManagerPP
       return { status: "fail", data: null };
     }
   });
+
+const requestShareOrganizer = initDataProtectedProcedure
+  .input(
+    z.object({
+      organizerId: z.number(),    // The ID of the organizer (must be role='organizer')
+      platform: z.string().optional(),
+    })
+  )
+  .mutation(async (opts) => {
+    try {
+      // Step 1: Fetch the organizer user data
+      const organizer = await usersDB.selectUserById(opts.input.organizerId);
+      if (!organizer) {
+        return { status: "fail", data: `Organizer not found: ${opts.input.organizerId}` };
+      }
+      if (organizer.role !== "organizer") {
+        return { status: "fail", data: "User is not an organizer" };
+      }
+
+      // Step 2: Call telegramService to share the organizer
+      const result = await telegramService.shareOrganizerRequest(
+        // The user who is requesting the share
+        opts.ctx.user.user_id.toString(),
+        // The actual organizer to share
+        organizer.user_id.toString(),
+        // Additional data for constructing the share message
+        {
+          org_channel_name: organizer.org_channel_name,
+          org_support_telegram_user_name: organizer.org_support_telegram_user_name,
+          org_x_link: organizer.org_x_link,
+          org_bio: organizer.org_bio,
+          org_image: organizer.org_image,
+        }
+      );
+
+      // Step 3: Check for success
+      if (result.success) {
+        return { status: "success", data: null };
+      } else {
+        logger.error("Failed to share the organizer:", result.error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to share the organizer",
+          cause: result.error,
+        });
+      }
+    } catch (error) {
+      logger.error("Error while sharing organizer: ", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to share the organizer",
+        cause: error,
+      });
+    }
+  });
+
 export const telegramInteractionsRouter = router({
   requestShareEvent,
   requestExportFile,
   requestSendQRCode,
+  requestShareOrganizer,
 });
