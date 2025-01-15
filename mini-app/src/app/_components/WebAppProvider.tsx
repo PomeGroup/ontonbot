@@ -34,7 +34,7 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       });
       setIsInitialized(true);
     }
-  }, [webApp, isInitialized, setInitData]);
+  }, [webApp?.initData, isInitialized, setInitData]);
 
   // --------------------------------
   const initialHistoryLength = useRef<number>(0);
