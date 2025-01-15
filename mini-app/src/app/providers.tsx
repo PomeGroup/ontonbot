@@ -35,11 +35,11 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
             <TRPCAPIProvider>
               <NavigationHistoryProvider>
                 <ConfigProvider>
-                  <TwaAnalyticsProvider
-                    projectId={TELEMETREE_PROJECT_ID}
-                    apiKey={TELEMETREE_API_KEY}
-                    appName={TELEMETREE_APP_NAME}
-                  >
+                  {/*<TwaAnalyticsProvider*/}
+                  {/*  projectId={TELEMETREE_PROJECT_ID}*/}
+                  {/*  apiKey={TELEMETREE_API_KEY}*/}
+                  {/*  appName={TELEMETREE_APP_NAME}*/}
+                  {/*>*/}
                     <KonstaAppProvider>
                       <ThemeSetter>
                         <NotificationProvider>
@@ -48,7 +48,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
                       </ThemeSetter>
                       <Toaster />
                     </KonstaAppProvider>
-                  </TwaAnalyticsProvider>
+                  {/*</TwaAnalyticsProvider>*/}
                 </ConfigProvider>
               </NavigationHistoryProvider>
             </TRPCAPIProvider>
