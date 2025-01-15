@@ -43,7 +43,7 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
           alt={data.org_channel_name || ""}
         />
       ) : (
-        <div className="bg-[#EFEFF4] rounded-md p-1">
+        <div className="bg-[#EFEFF4] rounded-md mb-4 p-1">
           <Image
             className="rounded-md"
             src={channelAvatar}
@@ -60,7 +60,7 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
           variant="title2"
           className="self-center"
         >
-          {data.org_channel_name}
+          {data.org_channel_name || 'Untitled channel'}
         </Typography>
         <div className="flex gap-3">
           {data.org_x_link && (
