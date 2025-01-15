@@ -21,14 +21,15 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
     resetState: state.resetState,
   }));
 
+  console.log('version with log');
   console.log("webAppProvider: 24");
   // 1) Initialize
   useEffect(() => {
-    console.log("webAppProvider: 26", webApp?.initDataUnsafe, webApp?.initData, isInitialized);
-    debugger;
-    if (webApp?.initData && !isInitialized) {
+    console.log("webAppProvider: 26", webApp?.initData, isInitialized);
+
+    if (webApp && webApp?.initData?.length > 5 && !isInitialized) {
       console.log("webAppProvider: 29", webApp.initData);
-      setInitData(webApp.initDataUnsafe);
+      setInitData(webApp.initData);
       Sentry.init({ environment: process.env.NEXT_PUBLIC_ENV });
       Sentry.setUser({
         id: webApp.initDataUnsafe.user?.id,
@@ -37,7 +38,7 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       setIsInitialized(true);
     }
     console.log("webAppProvider 38");
-  }, [webApp?.initData, isInitialized, setInitData]);
+  }, [webApp?.initData, isInitialized, setInitData, webApp?.initDataUnsafe.user?.id, webApp?.initDataUnsafe.user?.username]);
 
   // --------------------------------
   const initialHistoryLength = useRef<number>(0);
