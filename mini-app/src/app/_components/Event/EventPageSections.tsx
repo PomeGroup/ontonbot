@@ -5,6 +5,7 @@ import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
 import { EventActions } from "./EventActions";
 import ShareEventButton from "../ShareEventButton";
+import { ArrowRight } from "lucide-react";
 import { EventPasswordAndWalletInput } from "./EventPasswordInput";
 import EventKeyValue from "../organisms/events/EventKewValue";
 import { ClaimRewardButton } from "./ClaimRewardButton";
@@ -15,6 +16,10 @@ import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
 import SupportButton from "../atoms/buttons/SupportButton";
+import { Card } from "konsta/react";
+import Typography from "@/components/Typography";
+import Image from "next/image";
+import channelAvatar from "@/components/icons/channel-avatar.svg";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -194,6 +199,8 @@ export const EventSections = () => {
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
 
+  const organizer = eventData?.data?.organizer;
+
   return (
     <div className="space-y-2">
       <EventImage />
@@ -223,6 +230,57 @@ export const EventSections = () => {
         />
       )}
 
+      {organizer && (
+        <Card className="w-full my-3 -mx-3" onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}>
+          <Typography
+            variant="title3"
+            className="font-bold mb-2"
+          >
+            Organizer
+          </Typography>
+          <div className="w-full flex gap-3 items-stretch">
+            {organizer.org_image ? (
+              <Image
+	      	className="rounded-mg"
+                src={organizer.org_image}
+                alt={organizer.org_channel_name || ""}
+                width={48}
+                height={48}
+              />
+            ) : (
+              <div className="bg-[#EFEFF4] rounded-md p-1">
+                <Image
+                  className="rounded-md"
+                  src={channelAvatar}
+                  width={48}
+                  height={48}
+                  alt={organizer.org_channel_name || ""}
+                />
+              </div>
+            )}
+            <div className="flex flex-col grow justify-between">
+              <Typography
+                variant="headline"
+                className="text-[#007AFF] font-normal line-clamp-2"
+              >
+                {organizer.org_channel_name || "Untitled organizer"}
+              </Typography>
+              <Typography
+                variant="subheadline1"
+                className="text-[#8E8E93]"
+              >
+                <b>{organizer.hosted_event_count || "1"}</b>
+                &nbsp; events
+              </Typography>
+            </div>
+	    <div className="self-center">
+  	    <ArrowRight className="text-main-button-color" />
+	    </div>
+          </div>
+        </Card>
+      )}
+      <SupportButton />
+
       {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
         <MainButton
           text="Check In"
@@ -247,8 +305,6 @@ export const EventSections = () => {
           color="secondary"
         />
       )}
-
-      <SupportButton />
     </div>
   );
 };

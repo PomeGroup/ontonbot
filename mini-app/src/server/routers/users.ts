@@ -3,14 +3,13 @@ import { validateMiniAppData } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { findVisitorByUserAndEventUuid } from "../db/visitors";
-
 import { default as rewardDB } from "@/server/db/rewards.db";
 import { usersDB } from "@/server/db/users";
 import { adminOrganizerProtectedProcedure, initDataProtectedProcedure, publicProcedure, router } from "../trpc";
-
 import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { logger } from "../utils/logger";
+
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure.input(z.string()).query(async (opts) => {
@@ -48,28 +47,6 @@ export const usersRouter = router({
     .mutation(async (opts) => {
       await usersDB.updateWallet(opts.ctx.user.user_id, opts.input.wallet, opts.ctx.user.user_id.toString());
     }),
-
-  // // private
-  // deleteWallet: publicProcedure
-  //   .input(
-  //     z.object({
-  //       initData: z.string().optional(),
-  //     })
-  //   )
-  //   .mutation(async (opts) => {
-  //     if (!opts.input.initData) {
-  //       return;
-  //     }
-
-  //     const { valid, initDataJson } = validateMiniAppData(opts.input.initData);
-
-  //     if (!valid) {
-  //       return;
-  //     }
-
-  //     await usersDB.updateWallet(initDataJson.user.id, "", initDataJson.user.id.toString());
-  //   }),
-
   createUserReward: initDataProtectedProcedure
     .input(
       z.object({
@@ -175,4 +152,5 @@ export const usersRouter = router({
         }
       }
     }),
+
 });

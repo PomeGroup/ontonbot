@@ -8,7 +8,7 @@ import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
-import { and, eq , ne} from "drizzle-orm";
+import { and, eq, ne} from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import eventDB from "@/server/db/events";
@@ -29,6 +29,8 @@ import { logger } from "@/server/utils/logger";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import { timestampToIsoString } from "@/lib/DateAndTime";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
+import { usersDB, getUserCacheKey } from "../db/users";
+import { redisTools } from "@/lib/redisTools";
 dotenv.config();
 
 
@@ -53,10 +55,28 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       message: "event not found",
     });
   }
-  if (!eventData.has_registration) {
-    return { capacity_filled, registrant_status, ...eventData, registrant_uuid };
-  }
 
+  //    Fetch user data for event owner
+  //    We'll rename org_* fields to 'organizer: { ... }' in the returned object.
+  const ownerUserId = eventData.owner; // This is the user_id who created the event
+  const ownerUser = await usersDB.selectUserById(Number(ownerUserId));
+
+  // Build an organizer object with the org_* fields (or null if no user found)
+  const organizer = ownerUser
+    ? {
+      org_channel_name: ownerUser.org_channel_name === null ? ownerUser.first_name : ownerUser.org_channel_name,
+      org_support_telegram_user_name: ownerUser.org_support_telegram_user_name,
+      org_x_link: ownerUser.org_x_link,
+      org_bio: ownerUser.org_bio,
+      org_image: ownerUser.org_image === null ? ownerUser.photo_url : ownerUser.org_image,
+      hosted_event_count: ownerUser.hosted_event_count,
+    }
+    : null;
+
+  // If the event does NOT require registration, just return data
+  if (!eventData.has_registration) {
+    return { capacity_filled, registrant_status, organizer, ...eventData, registrant_uuid };
+  }
   /* ------------------------ Event Needs Registration ------------------------ */
 
   const user_request = await eventRegistrantsDB.getRegistrantRequest(event_uuid, userId);
@@ -94,6 +114,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     return {
       capacity_filled,
       registrant_status,
+      organizer,
       ...eventData,
       registrant_uuid,
       capacity: mask_event_capacity ? 99 : eventData.capacity,
@@ -109,6 +130,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       return {
         capacity_filled,
         registrant_status,
+        organizer,
         ...eventData,
         registrant_uuid,
         capacity: mask_event_capacity ? 99 : eventData.capacity,
@@ -120,6 +142,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   return {
     capacity_filled,
     registrant_status,
+    organizer,
     ...eventData,
     registrant_uuid,
     capacity: mask_event_capacity ? 99 : eventData.capacity,
@@ -142,6 +165,7 @@ const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
 // private
 const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: EventDataSchema })).mutation(async (opts) => {
   const input_event_data = opts.input.eventData;
+  const userCacheKey = getUserCacheKey(opts.ctx.user.user_id);
   try {
     const result = await db.transaction(async (trx) => {
       const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
@@ -293,6 +317,9 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         topic: "event",
       });
       logger.log("add event telegram notification sent" , logMessage);
+      // Clear the organizer user cache so it will be reloaded next time
+      await redisTools.deleteCache(userCacheKey);
+
       // On local development skip  registration to ton society || paid event will be registered when organizer pays initial payment
       const register_to_ts = process.env.ENV !== "local" || !eventData.has_payment;
 
@@ -577,6 +604,28 @@ const getEventsWithFilters = publicProcedure.input(searchEventsInputZod).query(a
   }
 });
 
+export const getEventsWithFiltersInfinite = publicProcedure
+  .input(searchEventsInputZod)
+  .query(async ({ input }) => {
+    // Instead of passing `limit`, pass `limit + 1`
+    const dbResult = await eventDB.getEventsWithFilters({
+      ...input,
+      // tell the DB function: fetch an extra row
+      limit: (input.limit ?? 10) + 1,
+    });
+
+    const actualLimit = input.limit ?? 10;
+    let nextCursor: number | null = null;
+
+    if (dbResult.length > actualLimit) {
+       nextCursor = input.cursor + 1;
+    }
+
+    return {
+      items: dbResult,
+      nextCursor,
+    };
+  });
 /* -------------------------------------------------------------------------- */
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
@@ -586,6 +635,7 @@ export const eventsRouter = router({
   addEvent, //private
   updateEvent, //private
   getEventsWithFilters,
+  getEventsWithFiltersInfinite,
 });
 
 

@@ -463,3 +463,66 @@ export async function sendMessage(
     });
   }
 }
+
+// In your telegram-bot service, similarly to handleShareEvent:
+export const handleShareOrganizer = async (
+  req: Request & { bot: Bot },
+  res: Response,
+) => {
+  const { organizer_id, requesting_user, share_link, url, organizer_data } = req.body;
+
+  if (
+    typeof organizer_id !== "string" ||
+    typeof requesting_user !== "string"
+  ) {
+    return res.status(400).json({ message: "Invalid organizer or user ID" });
+  }
+
+  try {
+    // Destructure any relevant fields from organizer_data
+    const {
+      org_channel_name,
+      org_support_telegram_user_name,
+      org_x_link,
+      org_bio,
+      org_image,
+    } = organizer_data;
+
+    // Build the caption text. You can style it with HTML if you want
+    const caption = `
+<b>🔸${org_channel_name || "Organizer Profile"}</b>
+
+Take a look at my events in my channel on ONTON
+
+Address:  ${share_link}
+`;
+
+    // If you have an org_image, try sending it. Otherwise, fallback
+    const imageToSend = org_image || "https://onton.live/template-images/default.webp";
+
+    // Build an inline keyboard
+    const inline_keyboard = [[
+      {
+        text: "Open Organizer Page",
+        web_app: {
+          url,
+        },
+      },
+    ]];
+
+    // Send the message to the user who requested it
+    await req.bot.api.sendPhoto(parseInt(requesting_user), imageToSend, {
+      caption,
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard,
+      },
+    });
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Error sharing organizer:", error);
+    return res.status(500).json({ message: "Failed to share organizer" });
+  }
+};
+

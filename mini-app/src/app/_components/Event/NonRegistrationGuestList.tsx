@@ -4,7 +4,6 @@ import useWebApp from "@/hooks/useWebApp";
 import { RouterOutput } from "@/server";
 import { useState } from "react";
 import QrCodeButton from "@/app/_components/atoms/buttons/QrCodeButton";
-import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import CheckInGuest from "@/app/_components/checkInGuest/CheckInGuest";
 import { Block } from "konsta/react";
 
@@ -16,9 +15,6 @@ interface Props {
 }
 
 const NonRegistrationGuestList = (props: Props) => {
-  useWithBackButton({
-    whereTo: "/",
-  });
 
   const [needRefresh, setNeedRefresh] = useState(false);
   const webApp = useWebApp();

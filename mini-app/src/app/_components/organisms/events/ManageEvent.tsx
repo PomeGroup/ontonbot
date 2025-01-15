@@ -16,6 +16,13 @@ type ManageEventProps = {
   event?: RouterOutput["events"]["getEvent"];
 };
 
+const steps = [
+  { icon: <span>1</span>, label: "General" },
+  { icon: <span>2</span>, label: "Time/place" },
+  { icon: <span>3</span>, label: "Registration" },
+  { icon: <span>4</span>, label: "Reward" },
+];
+
 const ManageEvent = (props: ManageEventProps) => {
   const params = useParams<{ hash: string }>();
   const { currentStep, setCurrentStep, setEdit, setEventData, resetState, clearGeneralErrors } = useCreateEventStore(
@@ -88,30 +95,30 @@ const ManageEvent = (props: ManageEventProps) => {
     }
   }, [params.hash, props.event, isReset]);
 
-  const handleBack = useCallback(() => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    } else if (params.hash) {
-      router.push("/");
-    } else {
-      webApp?.showConfirm("Discard Changes?", (confirmed) => {
-        if (confirmed) {
-          resetState();
-          router.push("/");
-        }
-      });
-    }
-  }, [webApp, currentStep, setCurrentStep, router]);
+  // const handleBack = useCallback(() => {
+  //   if (currentStep > 1) {
+  //     setCurrentStep(currentStep - 1);
+  //   } else if (params.hash) {
+  //     router.push("/");
+  //   } else {
+  //     webApp?.showConfirm("Discard Changes?", (confirmed) => {
+  //       if (confirmed) {
+  //         resetState();
+  //         router.push("/");
+  //       }
+  //     });
+  //   }
+  // }, [webApp, currentStep, setCurrentStep, router]);
 
-  useEffect(() => {
-    webApp?.BackButton.show();
-    webApp?.BackButton.onClick(handleBack);
-
-    return () => {
-      webApp?.BackButton.offClick(handleBack);
-      webApp?.BackButton.hide();
-    };
-  }, [webApp, currentStep, setCurrentStep, router]);
+  // useEffect(() => {
+  //   webApp?.BackButton.show();
+  //   webApp?.BackButton.onClick(handleBack);
+  //
+  //   return () => {
+  //     webApp?.BackButton.offClick(handleBack);
+  //     webApp?.BackButton.hide();
+  //   };
+  // }, [webApp, currentStep, setCurrentStep, router]);
 
   useEffect(() => {
     document.location.pathname.endsWith("create") && resetState();
@@ -121,12 +128,7 @@ const ManageEvent = (props: ManageEventProps) => {
     <>
       <Block className="!-mb-2">
         <Stepper
-          steps={[
-            { icon: <span>1</span>, label: "General" },
-            { icon: <span>2</span>, label: "Time/place" },
-            { icon: <span>3</span>, label: "Registration" },
-            { icon: <span>4</span>, label: "Reward" },
-          ]}
+          steps={steps}
           currentStep={currentStep}
         />
       </Block>

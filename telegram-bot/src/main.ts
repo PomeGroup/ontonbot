@@ -11,6 +11,7 @@ import {
 	handleShareEvent,
 	sendMessage,
 	handlePhotoMessage,
+	handleShareOrganizer,
 } from "./controllers";
 import { cmdHandler, orgHandler, startHandler } from "./handlers";
 import { mainComposer } from "./composers";
@@ -51,6 +52,7 @@ app.post("/share-event", handleShareEvent);
 // @ts-expect-error
 app.post("/send-message", sendMessage);
 app.post("/send-photo", handlePhotoMessage);
+app.post("/share-organizer", handleShareOrganizer);
 
 process.once("SIGINT", () => bot.stop());
 process.once("SIGTERM", () => bot.stop());

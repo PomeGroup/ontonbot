@@ -7,35 +7,43 @@ import React from "react";
 import { IoIosArrowForward } from "react-icons/io";
 import { IoOptionsOutline } from "react-icons/io5";
 import { z } from "zod";
+
+/** The union from your Zod schema: 'default' | 'time' | 'most_people_reached' | etc. */
 export type SortByType = z.infer<typeof searchEventsInputZod>["sortBy"];
-export type setSortByType = (_value: string) => void;
+
+/** This is how you want the parent to set the sort:
+ *  i.e. (newValue: SortByType) => void
+ */
+export type setSortByType = (value: SortByType) => void;
+
 interface MainFilterDrawerProps {
-  onOpenChange: (_open: boolean) => void;
+  onOpenChange: (open: boolean) => void;
+  /** This can be ("online"|"in_person")[], but you have it as string[] in your snippet */
   participationType: string[];
   hubText: string;
   sortBy: SortByType;
   setSortBy: setSortByType;
-  setIsEventTypeDrawerOpen: (_open: boolean) => void;
-  setIsHubDrawerOpen: (_open: boolean) => void;
+  setIsEventTypeDrawerOpen: (open: boolean) => void;
+  setIsHubDrawerOpen: (open: boolean) => void;
   resetFilters: () => void;
   applyingFilters: boolean;
-  setApplyingFilters: (_value: boolean) => void;
+  setApplyingFilters: (value: boolean) => void;
   allParticipationTypes: string[];
 }
 
 const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
-  onOpenChange,
-  participationType,
-  hubText,
-  sortBy,
-  setSortBy,
-  setIsEventTypeDrawerOpen,
-  setIsHubDrawerOpen,
-  resetFilters,
-  applyingFilters,
-  setApplyingFilters,
-  allParticipationTypes,
-}) => {
+                                                             onOpenChange,
+                                                             participationType,
+                                                             hubText,
+                                                             sortBy,
+                                                             setSortBy,
+                                                             setIsEventTypeDrawerOpen,
+                                                             setIsHubDrawerOpen,
+                                                             resetFilters,
+                                                             applyingFilters,
+                                                             setApplyingFilters,
+                                                             allParticipationTypes,
+                                                           }) => {
   return (
     <KSheet
       trigger={(open, setOpen) => (
@@ -50,47 +58,52 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
       {(open, setOpen) => (
         <>
           <div className="p-4 py-4 space-y-2 cursor-pointer">
+            {/* EVENT TYPE */}
             <div
               className="space-y-3 border-b-[1px] pb-1"
               onClick={() => setIsEventTypeDrawerOpen(true)}
             >
               <p className=" font-medium">Event Type</p>
               <div className="cursor-pointer text-sm flex items-center">
-                {participationType.length === 0 || participationType.length == allParticipationTypes.length
+                {participationType.length === 0 ||
+                participationType.length === allParticipationTypes.length
                   ? "All"
                   : participationType.join(", ").replace("_", " ")}
                 <IoIosArrowForward className="ml-auto" />
               </div>
             </div>
+
+            {/* HUB SELECTOR */}
             <div
               className="flex items-center cursor-pointer border-b pb-1"
-              onClick={() => {
-                setIsHubDrawerOpen(true);
-              }}
+              onClick={() => setIsHubDrawerOpen(true)}
             >
               <div className="flex-1 space-y-3">
                 <p className="font-medium">Ton Hub</p>
-                <div className="text-sm line-clamp-1 w-11/12 overflow-hidden">{hubText}</div>
+                <div className="text-sm line-clamp-1 w-11/12 overflow-hidden">
+                  {hubText}
+                </div>
               </div>
-
               <IoIosArrowForward className="text-sm ml-2 mt-8" />
             </div>
 
+            {/* SORT BY */}
             <div className="space-y-4">
               <p className="text-sm font-medium pt-2">Sort By</p>
               <RadioGroup
                 orientation="vertical"
+                /* The RadioGroup wants a string, so `sortBy` is also a string union.
+                   If TS complains, cast: (sortBy as string) */
                 value={sortBy}
-                onValueChange={(value) => setSortBy(value)}
+                onValueChange={(value) => {
+                  // 'value' is always string -> cast to SortByType
+                  setSortBy(value as SortByType);
+                }}
               >
-                <label className="flex justify-between items-center  border-b-[1px] pb-2">
+                <label className="flex justify-between items-center border-b-[1px] pb-2">
                   <span className="text-sm">Time</span>
-                  <RadioGroupItem
-                    value="start_date_desc"
-                    className="h-4 w-4"
-                  />
+                  <RadioGroupItem value="start_date_desc" className="h-4 w-4" />
                 </label>
-
                 <label className="flex justify-between items-center">
                   <span className="text-sm">Most People Reached</span>
                   <RadioGroupItem
@@ -102,12 +115,12 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             </div>
           </div>
 
+          {/* APPLY / RESET BUTTONS */}
           <div className="flex gap-1 p-4 flex-col">
             <KButton
               className="py-5 rounded-3xl"
               onClick={() => {
                 setApplyingFilters(!applyingFilters);
-                // close the drawer
                 onOpenChange(false);
                 setOpen(false);
               }}
@@ -119,7 +132,6 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               className="py-5 rounded-3xl"
               onClick={() => {
                 resetFilters();
-                // close the drawer
                 onOpenChange(false);
                 setOpen(false);
               }}

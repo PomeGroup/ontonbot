@@ -1,6 +1,5 @@
 "use client";
 
-import { useWithBackButton } from "@/app/_components/atoms/buttons/web-app/useWithBackButton";
 import EventPageLoadingSkeleton from "../../events/[hash]/loading";
 import { useEventData } from "./eventPageContext";
 import { EventDataProvider } from "./EventDataProvider";
@@ -26,9 +25,7 @@ const EventDataQueryState = () => {
 };
 
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
-  useWithBackButton({
-    whereTo: "/",
-  });
+
 
   const { setTheme } = useTheme();
 

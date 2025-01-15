@@ -37,7 +37,7 @@ const fetchOngoingEvents = async () => {
     },
     sortBy: "start_date_asc",
     limit: 100,
-    offset: 0,
+    cursor: 0,
     useCache: false,
   };
 
