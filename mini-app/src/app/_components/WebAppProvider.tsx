@@ -24,7 +24,8 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
   console.log("webAppProvider: 24");
   // 1) Initialize
   useEffect(() => {
-    console.log("webAppProvider: 26", webApp?.initDataUnsafe, webApp?.initData);
+    console.log("webAppProvider: 26", webApp?.initDataUnsafe, webApp?.initData, isInitialized);
+    debugger;
     if (webApp?.initData && !isInitialized) {
       console.log("webAppProvider: 29", webApp.initData);
       setInitData(webApp.initDataUnsafe);
