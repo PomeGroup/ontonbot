@@ -766,6 +766,7 @@ async function OrganizerPromoteProcessing() {
     .execute();
 
   for (const porg_ordr of org_orders) {
+    logger.log('OrganizerPromoteProcessing order_uuid : ',porg_ordr.uuid)
     orgPromoteProcessOrder(porg_ordr);
     await sleep(50);
   }
