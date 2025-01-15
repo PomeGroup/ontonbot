@@ -558,6 +558,54 @@ export const updateEventCountsForUser = async (
     throw error;
   }
 };
+
+/**
+ * Updates the role of a user.
+ * @param {number} userId - The ID of the user to update.
+ * @param {"user" | "organizer" | "admin"} role - The new role to assign to the user.
+ * @returns {Promise<{ success: boolean; error: string | null; }>} - Operation result.
+ */
+export const updateUserRole = async (
+  userId: number,
+  role: "user" | "organizer" | "admin"
+): Promise<{ success: boolean; error: string | null }> => {
+  try {
+    // Validate input role
+    const validRoles = ["user", "organizer", "admin"];
+    if (!validRoles.includes(role)) {
+      logger.error(`Error updating user role for user ID=${userId}: Invalid role provided: ${role}`);
+      throw new Error(`Invalid role provided: ${role}`);
+    }
+
+    // Check if user exists
+    const existingUser = await selectUserById(userId);
+    if (!existingUser) {
+      return {
+        success: false,
+        error: `User with ID ${userId} not found.`,
+      };
+    }
+
+    // Update the role in the database
+    await db.update(users).set({ role }).where(eq(users.user_id, userId)).execute();
+
+    // Revalidate the cache
+    await redisTools.deleteCache(getUserCacheKey(userId));
+
+    // Return success
+    return {
+      success: true,
+      error: null,
+    };
+  } catch (error) {
+    logger.error(`Error updating user role for user ID=${userId}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+};
+
 export const usersDB = {
   selectUserById,
   insertUser,
