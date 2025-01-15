@@ -1,17 +1,16 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
 import useWebApp from "@/hooks/useWebApp";
 import EventsSkeleton from "./molecules/skeletons/EventsSkeleton";
-import { useUserStore } from "@/context/store/user.store";
 import * as Sentry from "@sentry/nextjs";
-import { useRouter, usePathname } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import { useUserStore } from "@/context/store/user.store";
+import { usePathname, useRouter } from "next/navigation";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 
 const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
   const webApp = useWebApp();
   const { setInitData, initData } = useUserStore();
   const [isInitialized, setIsInitialized] = useState(false);
-
   const router = useRouter();
   const pathname = usePathname();
 
@@ -20,27 +19,19 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
     setCurrentStep: state.setCurrentStep,
     resetState: state.resetState,
   }));
-
-  console.log('version with log');
-  console.log("webAppProvider: 24");
-  // 1) Initialize
   useEffect(() => {
-    console.log("webAppProvider: 26", webApp?.initData, isInitialized);
-
-    if (webApp && webApp?.initData?.length > 5 && !isInitialized) {
-      console.log("webAppProvider: 29", webApp.initData);
+    if (webApp?.initData && webApp?.initDataUnsafe && !isInitialized) {
       setInitData(webApp.initData);
-      Sentry.init({ environment: process.env.NEXT_PUBLIC_ENV });
+      Sentry.init({
+        environment: process.env.NEXT_PUBLIC_ENV,
+      });
       Sentry.setUser({
         id: webApp.initDataUnsafe.user?.id,
         username: webApp.initDataUnsafe.user?.username,
       });
       setIsInitialized(true);
     }
-    console.log("webAppProvider 38");
-  }, [webApp?.initData, isInitialized, setInitData, webApp?.initDataUnsafe.user?.id, webApp?.initDataUnsafe.user?.username]);
-
-  // --------------------------------
+  }, [webApp?.initData, isInitialized]);
   const initialHistoryLength = useRef<number>(0);
   useEffect(() => {
     console.log("webAppProvider 44");
@@ -48,20 +39,10 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("webAppProvider 46");
       initialHistoryLength.current = window.history.length;
       console.log("Initial history length:", initialHistoryLength.current);
-    }
-  }, []);
-  // 2) Reset history on (re)load if desired
-  useEffect(() => {
-    console.log("webAppProvider 53");
-    // Option A: Always do it
-    if (typeof window !== "undefined") {
-      console.log("webAppProvider 56");
       window.history.replaceState(null, "", window.location.pathname);
     }
-    console.log("webAppProvider 59");
   }, []);
 
-  // 3) Global Back Button
   useEffect(() => {
     if (typeof window === "undefined" || !window.Telegram?.WebApp) return;
     if (!isInitialized) return;
