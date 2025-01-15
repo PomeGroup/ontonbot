@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import useWebApp from "@/hooks/useWebApp";
 import EventsSkeleton from "./molecules/skeletons/EventsSkeleton";
 import { useUserStore } from "@/context/store/user.store";
@@ -23,9 +23,7 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
     })
   );
 
-  // --------------------------------
-  // 1) Initialize Sentry & user info
-  // --------------------------------
+  // 1) Initialize
   useEffect(() => {
     if (webApp?.initData && webApp?.initDataUnsafe && !isInitialized) {
       setInitData(webApp.initData);
@@ -39,22 +37,6 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
   }, [webApp, isInitialized, setInitData]);
 
   // --------------------------------
-  // 2) (Optional) Replace the current state
-  //    to prevent the user from going "back"
-  //    within your own app session.
-  // --------------------------------
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Overwrite the current entry so there's
-      // no 'back' inside your current session.
-      window.history.replaceState({}, "", window.location.href);
-      resetState();
-    }
-  }, [resetState]);
-
-  // --------------------------------
-  // 3) Store the initial history length
-  // --------------------------------
   const initialHistoryLength = useRef<number>(0);
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -62,59 +44,74 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Initial history length:", initialHistoryLength.current);
     }
   }, []);
+  // 2) Reset history on (re)load if desired
+  useEffect(() => {
+    // Option A: Always do it
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
 
-  // --------------------------------
-  // 4) Global Back Button Logic
-  // --------------------------------
+  // 3) Global Back Button
   useEffect(() => {
     if (typeof window === "undefined" || !window.Telegram?.WebApp) return;
     if (!isInitialized) return;
 
     const WebApp = window.Telegram.WebApp;
     const backButton = WebApp.BackButton;
-    backButton.show();
 
+    console.log("pathname", pathname);
+    if (pathname === "/") {
+      backButton.hide();
+    } else {
+      backButton.show();
+    }
     const handleBackButtonClicked = () => {
-      console.log("Current history length:", window.history.length);
-      console.log("Initial history length:", initialHistoryLength.current);
+      console.log("window.history.length", window.history.length ,initialHistoryLength);
 
       const isCreateRoute = pathname?.startsWith("/events/create");
       const isEditRoute = /^\/events\/[^/]+\/edit$/.test(pathname ?? "");
 
-      // 4a) If we are on a step-based route
       if (isCreateRoute || isEditRoute) {
+        // Step-based page
         if (currentStep > 1) {
           setCurrentStep(currentStep - 1);
         } else {
           // Step is 1 => user wants to exit
-          // Compare current vs. initial length
-          if (window.history.length > initialHistoryLength.current) {
-            router.back();
-          } else {
-            router.push("/");
-          }
+          router.back();
         }
       } else {
-        // 4b) Normal fallback for non-step routes
-        if (window.history.length > initialHistoryLength.current) {
+        // Normal fallback
+        if (window.history.length === initialHistoryLength.current) {
+          router.push("/");
+        }
+        else if (window.history.length > 1) {
           router.back();
         } else {
           router.push("/");
         }
       }
+
+
     };
 
     WebApp.onEvent("backButtonClicked", handleBackButtonClicked);
 
+    // Cleanup
     return () => {
       WebApp.offEvent("backButtonClicked", handleBackButtonClicked);
       backButton.hide();
-    };
-  }, [router, pathname, isInitialized, currentStep, setCurrentStep, resetState]);
 
-  // --------------------------------
-  // 5) Render
-  // --------------------------------
+    };
+  }, [
+    router,
+    pathname,
+    isInitialized,
+    currentStep,
+    setCurrentStep,
+    resetState
+  ]);
+
   if (!initData) {
     return <EventsSkeleton />;
   }
