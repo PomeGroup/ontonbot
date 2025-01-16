@@ -3,6 +3,7 @@ import { useState } from "react";
 import Typography from "../../components/Typography";
 import OntonDialog from "@/components/OntonDialog";
 import Image from "next/image";
+import { toast } from 'sonner';
 import greenCheckIcon from "./green-check.svg";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { cn } from "@/utils";
@@ -11,15 +12,16 @@ import { trpc } from "../_trpc/client";
 import useTransferTon from "./useTransfer";
 import { useConfig } from "@/context/ConfigContext";
 
-export default function PaymentCard({ visible, onPayFinished }: { visible: boolean; onPayFinished: () => void }) {
+export default function PaymentCard({ visible }: { visible: boolean }) {
   const [confirmPayDialogOpen, setConfirmPayDialogOpen] = useState(false);
   const [loadingPopupOpen, setLoadingPopupOpen] = useState(false);
   const [congratsDrawerOpen, setCongratsDrawerOpen] = useState(false);
-  // const api = useAddOrder();
+ 
   const transfer = useTransferTon();
   const userToOrganizerMutation = trpc.orders.addPromoteToOrganizerOrder.useMutation();
 
   const { config } = useConfig();
+  const trpcUtils = trpc.useUtils();
   const handlePay = async () => {
     setConfirmPayDialogOpen(false);
     const responsePromise = userToOrganizerMutation.mutateAsync({});
@@ -31,13 +33,15 @@ export default function PaymentCard({ visible, onPayFinished }: { visible: boole
         await transfer(config.ONTON_WALLET_ADDRESS as string, Number(response.total_price), response.payment_type, {
           comment: `onton_order=${response.uuid}`,
         });
-        // setIsRequestingTicket({ state: true, orderId: response[0].order_id });
         setLoadingPopupOpen(false);
-        onPayFinished();
         setTimeout(() => {
+          trpcUtils.orders.getPromoteToOrganizerOrder.invalidate({});
           setCongratsDrawerOpen(true);
-        }, 300);
+        }, 5000);
       } catch (error) {
+	toast.error("Transaction was not successfull. Please try again");
+	setConfirmPayDialogOpen(false);
+	setLoadingPopupOpen(false);
         // mainButton?.show().enable();
         console.error("Error during transfer:", error);
       }
@@ -46,7 +50,7 @@ export default function PaymentCard({ visible, onPayFinished }: { visible: boole
 
   return (
     <>
-      <Card className={cn("mb-12 hidden", visible && "!block")}>
+      <Card className={cn("-mt-8 mb-12 hidden", visible && "!block")}>
         <Typography
           bold
           variant="headline"
@@ -70,7 +74,6 @@ export default function PaymentCard({ visible, onPayFinished }: { visible: boole
         open={congratsDrawerOpen}
         onClose={() => {
           setCongratsDrawerOpen(false);
-          onPayFinished();
         }}
       />
       <LoadingPopup open={loadingPopupOpen} />

@@ -1,27 +1,26 @@
 import { Tabbar, TabbarLink } from "konsta/react";
-import { Calendar1Icon, UsersIcon } from "lucide-react";
+import { GlobeIcon, NetworkIcon, CircleUserRoundIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { PiTelegramLogo } from "react-icons/pi";
 
 const tabs = [
   {
     title: "Events",
-    icon: <Calendar1Icon />,
+    icon: <GlobeIcon />,
     url: "/",
   },
   {
     title: "Channels",
-    icon: <UsersIcon />,
+    icon: <NetworkIcon />,
     url: "/channels",
   },
   {
-    title: "My ONTON",
-    icon: <PiTelegramLogo />,
+    title: "My ONton",
+    icon: <CircleUserRoundIcon />,
     url: "/my",
   },
 ];
 
-export default function BottomNavigation({ active }: { active: "Events" | "Channels" | "My ONTON" }) {
+export default function BottomNavigation({ active }: { active: "Events" | "Channels" | "My ONton" }) {
   const router = useRouter();
 
   return (

@@ -22,23 +22,22 @@ import Link from "next/link";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
-  const hasWallet = !!user?.wallet_address;
+  const hasWallet = !!useTonAddress();
 
-  const [paid, setPaid] = useState(true);
   const { data, error, isLoading } = trpc.organizers.getOrganizer.useQuery({});
 
-  useEffect(() => {
-    const notOrganizer = error?.message?.includes("not found");
-    if (!notOrganizer) return;
-    setPaid(false);
-  }, [error]);
+  const getPromoteToOrganizerApi = trpc.orders.getPromoteToOrganizerOrder.useQuery({});
 
+  const paid =
+    user?.role === "organizer" || ["processing", "completed"].includes(getPromoteToOrganizerApi.data?.state || "");
   const router = useRouter();
+
+  console.log(paid, getPromoteToOrganizerApi.data);
 
   if (isLoading) return "loading";
   return (
     <div className="bg-[#EFEFF4] pt-4 pb-4 min-h-screen">
-      {paid && data ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
+      {paid ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <Link
         className="my-3 py-2 text-center block"
         href={`/channels/${data?.user_id}/`}
@@ -80,13 +79,15 @@ export default function ProfilePage() {
           </div>
         </div>
       </Card>
-      <Card onClick={() => {
-	      if (!paid) {
-		      toast.error('Only organizers can host events');
-		      return
-	      }
-	      router.push("/my/hosted/")
-      }}>
+      <Card
+        onClick={() => {
+          if (!paid) {
+            toast.error("Only organizers can host events");
+            return;
+          }
+          router.push("/my/hosted/");
+        }}
+      >
         <div className="flex gap-3 align-stretch">
           <div className="bg-[#efeff4] p-4 rounded-[10px]">
             <Image
@@ -123,16 +124,11 @@ export default function ProfilePage() {
         </div>
       </Card>
       <ConnectWalletCard />
-      <PaymentCard
-        visible={hasWallet && !paid}
-        onPayFinished={() => {
-          setPaid(true);
-        }}
-      />
+      <PaymentCard visible={!paid && hasWallet} />
 
       {paid && (
         <Button
-          className="py-6 mb-12 max-w-[calc(100%-2rem)] mx-auto rounded-[10px]"
+          className="-my-8 py-6 mb-12 max-w-[calc(100%-2rem)] mx-auto rounded-[10px]"
           onClick={() => {
             router.push("/events/create");
           }}
@@ -140,14 +136,15 @@ export default function ProfilePage() {
           Create New Event
         </Button>
       )}
-      <BottomNavigation active="My ONTON" />
+      <BottomNavigation active="My ONton" />
     </div>
   );
 }
 
-function InlineChannelCard({ data }: { data: Channel }) {
+function InlineChannelCard({ data }: { data: Channel | undefined }) {
   const router = useRouter();
 
+  if (!data) return null;
   return (
     <Card
       onClick={() => {
@@ -223,9 +220,9 @@ function ConnectWalletCard() {
   const [isOpen, setOpen] = useState(false);
   const { user } = useUserStore();
 
-  const hasWallet = !!user?.wallet_address;
+  const hasWallet = !!useTonAddress();
   return (
-    <Card className="mb-6">
+   <Card className="mb-12">
       <Typography
         bold
         variant="headline"
@@ -275,6 +272,7 @@ function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () =>
       // trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
       trpcUtils.users.getWallet.invalidate({}, { refetchType: "all" });
       trpcUtils.users.syncUser.invalidate(undefined, { refetchType: "all" });
+      onClose();
     },
   });
 
@@ -282,6 +280,10 @@ function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () =>
 
   useEffect(() => {
     if (!user?.user_id) return;
+
+    if (tonWalletAddress) {
+      onClose()
+    }
 
     if (!user?.wallet_address && tonWalletAddress) {
       toast.success("Your wallet is now connected");
