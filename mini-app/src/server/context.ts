@@ -1,6 +1,7 @@
 import { validateMiniAppData } from "@/utils";
 import { usersDB } from "./db/users";
 import { logger } from "@/server/utils/logger";
+import { TRPCError } from "@trpc/server";
 
 export async function createContext({ req }: { req: Request }) {
   // get user from init data passed as authorization header
@@ -27,6 +28,13 @@ export async function createContext({ req }: { req: Request }) {
         return null;
       }
 
+      if (user.role === "ban") {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "user is banned",
+        });
+      }
+      
       return user;
     }
     return null;
