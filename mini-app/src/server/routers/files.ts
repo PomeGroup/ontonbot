@@ -127,7 +127,7 @@ export const fieldsRouter = router({
               const base64Data = file.replace(/^data:video\/\w+;base64,/, "");
 
               // Limit the size of the file
-              const MAX_BASE64_SIZE = 5 * 1024 * 1024; // 5 MB
+              const MAX_BASE64_SIZE = Math.floor(5 * 1024 * 1024 * (4 / 3)) ; // 5 MB
               if (base64Data.length > MAX_BASE64_SIZE) {
                 throw new Error("File is too large");
               }
