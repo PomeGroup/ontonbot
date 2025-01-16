@@ -17,6 +17,13 @@ export const initDataProtectedProcedure = trpcApiInstance.procedure.use(async (o
       message: "No auth header found",
     });
   }
+  
+  if (opts.ctx.user.role === "ban") {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "user is banned",
+    });
+  }
 
   return opts.next({
     ctx: {
