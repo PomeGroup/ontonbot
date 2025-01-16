@@ -44,6 +44,8 @@ import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 import { walletChecks } from "./schema/walletChecks";
 import { nftItems } from "./schema/nft_items";
+import { coupon_definition, coupon_definition_status, coupon_definition_type } from "./schema/coupon_definition";
+import { coupon_item_status, coupon_items } from "./schema/coupon_item";
 
 // export all the enums
 export {
@@ -62,6 +64,9 @@ export {
   notificationItemType,
   eventPoaResultStatus,
   ticketTypes,
+  coupon_definition_type,
+  coupon_definition_status,
+  coupon_item_status,
 };
 
 // export all the tables and relations
@@ -97,6 +102,8 @@ export {
   organizerPaymentStatus,
   walletChecks,
   nftItems,
+  coupon_definition,
+  coupon_items,
 };
 
 // Type Exports
