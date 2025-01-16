@@ -30,9 +30,9 @@ export const GeneralStep = () => {
   };
  
   useEffect(() => {
-    if (!eventData?.id) return
+    if (!eventData?.event_id) return
     setTermsChecked(true)
-  }, [eventData?.id]) 
+  }, [eventData?.event_id]) 
 
   useEffect(() => {
     if (!eventData.event_id) return;
