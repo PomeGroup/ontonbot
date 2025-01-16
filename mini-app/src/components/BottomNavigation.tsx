@@ -20,7 +20,7 @@ const tabs = [
   },
 ];
 
-export default function BottomNavigation({ active }: { active: "Events" | "Channels" | "My ONTON" }) {
+export default function BottomNavigation({ active }: { active: "Events" | "Channels" | "My ONton" }) {
   const router = useRouter();
 
   return (
