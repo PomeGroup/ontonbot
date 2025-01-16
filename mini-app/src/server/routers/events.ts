@@ -469,7 +469,7 @@ const updateEvent = eventManagerPP
           await trx.update(eventPayment).set({
             recipient_address: eventData.paid_event.payment_recipient_address,
             price: price,
-          });
+          }).where(eq(eventPayment.event_uuid , oldEvent.event_uuid));
         }
 
         const currentFields = await eventFieldsDB.selectEventFieldsByEventId(trx, eventId!);
