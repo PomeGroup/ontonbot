@@ -32,14 +32,11 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       setIsInitialized(true);
     }
   }, [webApp?.initData, isInitialized]);
-  const initialHistoryLength = useRef<number>(0);
+   const initialHistoryLength = useRef<number>(0);
   useEffect(() => {
-    console.log("webAppProvider 44");
-    if (typeof window !== "undefined") {
-      console.log("webAppProvider 46");
-      initialHistoryLength.current = window.history.length;
-      console.log("Initial history length:", initialHistoryLength.current);
-      window.history.replaceState(null, "", window.location.pathname);
+    if (typeof window !== "undefined" && window?.history) {
+      initialHistoryLength.current = window.history?.length || 0;
+      //window.history.replaceState(null, "", window.location.pathname);
     }
   }, []);
 
@@ -57,7 +54,7 @@ const WebAppProvider = ({ children }: { children: React.ReactNode }) => {
       backButton.show();
     }
     const handleBackButtonClicked = () => {
-      console.log("window.history.length", window.history.length, initialHistoryLength);
+
 
       const isCreateRoute = pathname?.startsWith("/events/create");
       const isEditRoute = /^\/events\/[^/]+\/edit$/.test(pathname ?? "");

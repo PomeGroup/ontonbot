@@ -209,6 +209,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
    *  Searching
    * ---------------
    */
+
   const handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const val = event.target.value;
     const isFocus = event.target === document.activeElement;
@@ -233,7 +234,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
     if (event.key === "Enter") {
       applyFilters().then(() => {
         // navigate to search page with new query
-        window.location.href = `/search?tab=${tabValue}&${buildQueryParams().toString()}`;
+
+        router.replace(`/search?tab=${tabValue}&${buildQueryParams().toString()}`);
       });
     }
   };
@@ -317,7 +319,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
       query: searchTerm,
       sortBy: "start_date_desc",
     });
-    window.location.href = `/search?tab=${tabValue}&${q.toString()}`;
+
+    router.replace(`/search?tab=${tabValue}&${q.toString()}`);
   };
 
   /** ---------------
