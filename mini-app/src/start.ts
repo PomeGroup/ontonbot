@@ -506,7 +506,7 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
       }
 
       await db.transaction(async (trx) => {
-        const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.055);
+        const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.06);
 
         await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid)).execute();
         await trx
@@ -737,7 +737,7 @@ async function sendPaymentReminder() {
 
     const nft_count: number = Number(total_amount_of_nft.pop()?.nft_count);
     const unused_capacity = bought_capacity - (nft_count || 0);
-    const unused_refund = unused_capacity * 0.055;
+    const unused_refund = unused_capacity * (0.06 * 0.90);
 
     const message_result = await sendLogNotification({
       message: `💵💵 Payment For Event

@@ -37,7 +37,7 @@ dotenv.config();
 function get_paid_event_price(capacity : number ){
   const reduced_price = is_dev_env() || is_stage_env();
   
-  return reduced_price ? (0.001 + 0.00055 * capacity) : (10 + 0.055 * capacity) ;
+  return reduced_price ? (0.001 + 0.00055 * capacity) : (10 + 0.06 * capacity) ;
 }
 
 
@@ -443,7 +443,7 @@ const updateEvent = eventManagerPP
               order_type: "event_capacity_increment" as const,
               state: "new" as const,
               payment_type: "TON" as const,
-              total_price: 0.055 * (eventData.capacity - paymentInfo!.bought_capacity),
+              total_price: 0.06 * (eventData.capacity - paymentInfo!.bought_capacity),
               user_id: user_id,
             };
             if (update_order && (update_order.state === "new" || update_order.state === "confirming")) {
