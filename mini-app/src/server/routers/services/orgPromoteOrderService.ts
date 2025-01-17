@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema";
-import { updateUserRole } from "@/server/db/users";
+import { selectUserById, updateUserRole } from "@/server/db/users";
 import { logger } from "@/server/utils/logger";
 import { InferSelectModel, eq } from "drizzle-orm";
 
@@ -19,7 +19,12 @@ export async function orgPromoteProcessOrder(order: OrderRow): Promise<void> {
         return;
       }
 
-      const result = await updateUserRole(order.user_id, "organizer");
+      //get uncached user
+      const user = await selectUserById(order.user_id, false, false);
+
+      let result: { success: boolean; error: string | null } = { success: true, error: null };
+
+      if (user?.role === "user") result = await updateUserRole(order.user_id, "organizer");
 
       // Mark Order as Completed
       if (result.success) {

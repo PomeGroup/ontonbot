@@ -63,6 +63,9 @@ export async function POST(request: Request) {
       .execute()
   ).pop();
 
+  /* -------------------------------------------------------------------------- */
+  /*                            Already Have an Order                           */
+  /* -------------------------------------------------------------------------- */
   if (userOrder) {
     if (userOrder.state === "failed" || userOrder.state === "cancelled") {
       // Reactivate Order
@@ -76,7 +79,7 @@ export async function POST(request: Request) {
         message: "order reactivated successfully",
         payment_type: userOrder.payment_type,
         utm_tag: body.data.utm,
-        total_price : userOrder.total_price,
+        total_price: userOrder.total_price,
       });
     }
 
@@ -90,7 +93,7 @@ export async function POST(request: Request) {
         order_id: userOrder.uuid,
         message: "order is placed",
         payment_type: userOrder.payment_type,
-        total_price : userOrder.total_price
+        total_price: userOrder.total_price,
       });
     }
   }
@@ -121,13 +124,15 @@ export async function POST(request: Request) {
   let new_order_uuid = null;
   let new_order_price = -1;
 
+  /* -------------------------------------------------------------------------- */
+  /*                              Create New Order                              */
+  /* -------------------------------------------------------------------------- */
   await db.transaction(async (trx) => {
     //TODO - Apply Coupon Here
     new_order = (
       await trx
         .insert(orders)
         .values({
-          // TODO: change for multiple tickets
           event_uuid: body.data.event_uuid,
           user_id: userId,
 
