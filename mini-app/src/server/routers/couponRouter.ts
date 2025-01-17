@@ -27,9 +27,24 @@ export const couponRouter = router({
               message: "No event found.",
             });
           }
+
+          if (input.count > 1000) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Can't Create more than 1000 codes",
+            });
+          }
+
+          if (input.value > 99.0) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "more than 99 percent discount is not present",
+            });
+          }
+
           definition = await couponDefinitionsDB.addCouponDefinition({
             event_uuid: input.event_uuid,
-            cpd_type: "fixed", // Hard-coded to fixed
+            cpd_type: "percent", // Hard-coded to percent
             cpd_status: "active",
             value: input.value,
             start_date: input.start_date,
@@ -232,5 +247,4 @@ export const couponRouter = router({
   /**
    * Get List of Items (by coupon_definition_id)
    */
-
 });
