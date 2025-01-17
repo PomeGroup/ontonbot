@@ -3,7 +3,7 @@ import { eventRegistrants, orders } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
 import { selectEventByUuid } from "@/server/db/events";
 import { Address } from "@ton/core";
-import { and, eq, or, sql } from "drizzle-orm";
+import { InferSelectModel, and, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 const addOrderSchema = z.object({
@@ -15,6 +15,8 @@ const addOrderSchema = z.object({
   utm: z.string().nullable(),
   owner_address: z.string().refine((data) => Address.isAddress(Address.parse(data))),
 });
+
+type OrderRow = InferSelectModel<typeof orders>;
 
 export async function POST(request: Request) {
   const [userId, error] = getAuthenticatedUser();
@@ -74,19 +76,21 @@ export async function POST(request: Request) {
         message: "order reactivated successfully",
         payment_type: userOrder.payment_type,
         utm_tag: body.data.utm,
+        total_price : userOrder.total_price,
       });
     }
 
     if (userOrder.state === "new" || userOrder.state === "confirming") {
       await db
         .update(orders)
-        .set({ state: "new", updatedAt: new Date(), total_price: eventPaymentInfo.price })
+        .set({ state: "new", updatedAt: new Date(), total_price: eventPaymentInfo.price }) //TODO - Apply Coupon Here
         .where(eq(orders.uuid, userOrder.uuid))
         .execute();
       return Response.json({
         order_id: userOrder.uuid,
         message: "order is placed",
         payment_type: userOrder.payment_type,
+        total_price : userOrder.total_price
       });
     }
   }
@@ -113,9 +117,12 @@ export async function POST(request: Request) {
     );
   }
 
-  let new_order = undefined;
-  let new_order_uuid = undefined;
+  let new_order = null;
+  let new_order_uuid = null;
+  let new_order_price = -1;
+
   await db.transaction(async (trx) => {
+    //TODO - Apply Coupon Here
     new_order = (
       await trx
         .insert(orders)
@@ -137,11 +144,7 @@ export async function POST(request: Request) {
         .execute()
     ).pop();
 
-    // const user_registrant = await trx
-    //   .select()
-    //   .from(eventRegistrants)
-    //   .where(and(eq(eventRegistrants.event_uuid, body.data.event_uuid), eq(eventRegistrants.user_id, userId)))
-    //   .execute();
+    new_order_price = new_order?.total_price || -1;
 
     const { event_uuid, ...register_info } = body.data;
     await trx
@@ -170,6 +173,7 @@ export async function POST(request: Request) {
       message: "order created successfully",
       utm_tag: body.data.utm,
       payment_type: eventPaymentInfo.payment_type,
+      total_price: new_order_price,
     });
   } else {
     return Response.json({
