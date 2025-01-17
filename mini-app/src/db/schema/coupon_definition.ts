@@ -8,14 +8,16 @@ export const coupon_definition = pgTable(
   "coupon_definition",
   {
     id: serial("id").primaryKey(),
-    event_uuid: uuid("event_uuid").references(() => events.event_uuid, {
-      onDelete: "cascade", // when the referenced event is deleted, delete this row
-      onUpdate: "cascade", // when the event_uuid changes, update this foreign key
-    }),
+    event_uuid: uuid("event_uuid")
+      .references(() => events.event_uuid, {
+        onDelete: "cascade", // when the referenced event is deleted, delete this row
+        onUpdate: "cascade", // when the event_uuid changes, update this foreign key
+      })
+      .$type<string>(),
 
     cpd_type: coupon_definition_type("coupon_type").notNull(),
     cpd_status: coupon_definition_status("status").notNull(),
-    value: numeric("value", { precision: 8, scale: 3 }).notNull(),
+    value: numeric("value", { precision: 8, scale: 3 }).notNull().$type<number>(),
 
     start_date: timestamp("start_date").notNull(),
     end_date: timestamp("end_date").notNull(),
@@ -38,3 +40,4 @@ export const coupon_definition = pgTable(
     couponDefinitionUsedIdx: index("coupon_definition_used_idx").on(table.used),
   })
 );
+

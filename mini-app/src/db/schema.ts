@@ -45,7 +45,7 @@ import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistran
 import { walletChecks } from "./schema/walletChecks";
 import { nftItems } from "./schema/nft_items";
 import { coupon_definition, coupon_definition_status, coupon_definition_type } from "./schema/coupon_definition";
-import { coupon_item_status, coupon_items } from "./schema/coupon_item";
+import { coupon_item_status, coupon_items } from "./schema/coupon_items";
 
 // export all the enums
 export {

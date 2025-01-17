@@ -16,6 +16,7 @@ import { hubsRouter } from "@/server/routers/services/hubs";
 import { telegramInteractionsRouter } from "@/server/routers/telegramInteractions";
 import { registrantRouter } from "@/server/routers/registrant";
 import { organizerRouter } from "@/server/routers/organizers";
+import { couponRouter } from "@/server/routers/couponRouter";
 
 export const appRouter = router({
   users: usersRouter,
@@ -34,6 +35,7 @@ export const appRouter = router({
   hubs: hubsRouter,
   telegramInteractions : telegramInteractionsRouter,
   registrant: registrantRouter,
+  coupon: couponRouter,
 });
 
 export type AppRouter = typeof appRouter;
