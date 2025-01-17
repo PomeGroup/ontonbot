@@ -17,6 +17,7 @@ import { Block } from "konsta/react";
 import { useTheme } from "next-themes";
 
 import BottomNavigation from "../components/BottomNavigation";
+import EventBanner from "@/components/EventBanner";
 
 // Define types for events
 type EventData = any[];
@@ -200,29 +201,6 @@ export default function Home() {
             tabValue={tabValueForSearchBar}
             userRole={authorized ? userRole : "user"}
           />
-
-          {/* Tabs Header */}
-          {/* <Segmented
-            strong
-            rounded
-          >
-            <SegmentedButton
-              rounded
-              strong
-              active={activeTab === "all-events"}
-              onClick={() => handleTabClick("all-events")}
-            >
-              All events
-            </SegmentedButton>
-            <SegmentedButton
-              rounded
-              strong
-              active={activeTab === "my-events"}
-              onClick={() => handleTabClick("my-events")}
-            >
-              My events
-            </SegmentedButton>
-          </Segmented> */}
         </div>
 
         {/* Scrollable Content */}
@@ -243,50 +221,24 @@ export default function Home() {
                 {/* Slider Event */}
                 {isLoadingSlider && sliderEventsState.length === 0 ? (
                   <>
-                    <EventCardSkeleton mode={"detailed"} />
-                    <EventCardSkeleton mode={"detailed"} />
+                    <EventBanner skeleton />
+                    <EventBanner skeleton />
                   </>
                 ) : (
                   sliderEventsState.length > 0 && (
                     <div className="mb-4">
-                      <EventCard
-                        event={sliderEventsState[0]}
-                        mode={"detailed"}
-                        currentUserId={UserId}
-                      />
+                      <EventBanner event={sliderEventsState[0]} />
                     </div>
                   )
                 )}
 
                 {/* Ongoing Events */}
-                {isLoadingOngoing && ongoingEventsState.length === 0 ? (
-                  <>
-                    <EventCardSkeleton />
-                    <EventCardSkeleton />
-                  </>
-                ) : (
-                  ongoingEventsState.length > 0 && (
-                    <>
-                      <div className="pt-4 w-full pb-4 flex justify-between items-center">
-                        <h2 className="font-bold text-lg">Ongoing Events</h2>
-                        <a
-                          href={seeAllOngoingEventsLink}
-                          className="text-zinc-300 hover:underline"
-                        >
-                          See All
-                        </a>
-                      </div>
-                      {ongoingEventsState.map((event) => (
-                        <EventCard
-                          key={event.event_uuid}
-                          event={event}
-                          currentUserId={UserId}
-                          mode={"ongoing"}
-                        />
-                      ))}
-                    </>
-                  )
-                )}
+                <EventsBox
+                  title="Ongoing Events"
+                  link={seeAllOngoingEventsLink}
+                  items={ongoingEventsState}
+                  isLoading={isLoadingOngoing}
+                />
 
                 {/* Upcoming Events */}
                 {isLoadingUpcoming && upcomingEventsState.length === 0 ? (
@@ -370,7 +322,6 @@ export default function Home() {
                         key={event.event_uuid}
                         event={event}
                         currentUserId={UserId}
-                        mode={currentDateTime > event.startDate && currentDateTime < event.endDate ? "ongoing" : "normal"}
                       />
                     </>
                   ))
@@ -382,5 +333,45 @@ export default function Home() {
       </div>
       <BottomNavigation active="Events" />
     </Block>
+  );
+}
+
+interface EventsBoxProps {
+  title: string;
+  link: string;
+  items?: any[];
+  isLoading: boolean;
+}
+
+function EventsBox({ title, link, items = [], isLoading }: EventsBoxProps) {
+  const webApp = useWebApp();
+  const userId = webApp?.initDataUnsafe?.user?.id;
+
+  return isLoading ? (
+    <>
+      <EventCardSkeleton />
+      <EventCardSkeleton />
+    </>
+  ) : (
+    items.length > 0 && (
+      <>
+        <div className="pt-4 w-full pb-4 flex justify-between items-center">
+          <h2 className="font-bold text-lg">{title}</h2>
+          <a
+            href={link}
+            className="text-[#007AFF] hover:underline"
+          >
+            See All
+          </a>
+        </div>
+        {items.map((event) => (
+          <EventCard
+            key={event.event_uuid}
+            event={event}
+            currentUserId={userId}
+          />
+        ))}
+      </>
+    )
   );
 }
