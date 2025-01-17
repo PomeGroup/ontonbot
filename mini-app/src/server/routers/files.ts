@@ -156,8 +156,9 @@ export const fieldsRouter = router({
             (file) => {
               // Remove base64 prefix
               const base64Data = file.replace(/^data:video\/\w+;base64,/, "");
-              // Ensure under 5 MB
-              const MAX_BASE64_SIZE = 5 * 1024 * 1024;
+
+              // Limit the size of the file
+              const MAX_BASE64_SIZE = Math.floor(5 * 1024 * 1024 * (4 / 3)) ; // 5 MB
               if (base64Data.length > MAX_BASE64_SIZE) {
                 throw new TRPCError({
                   code: "BAD_REQUEST",

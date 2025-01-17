@@ -160,7 +160,7 @@ function ConnectWalletCard() {
 
   const hasWallet = !!useTonAddress();
   return (
-    <Card className="mb-12">
+   <Card className="mb-12">
       <Typography
         bold
         variant="headline"

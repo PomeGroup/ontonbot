@@ -7,6 +7,8 @@ import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import Image from "next/image";
 import React, { ForwardedRef, forwardRef, memo, useState } from "react";
 import { IoIosPlayCircle } from "react-icons/io";
+import { useRouter } from "next/navigation";
+
 
 interface EventCardProps {
   event: {
@@ -62,12 +64,12 @@ function UnforwardedEventCard({ event, currentUserId = 0 }: EventCardProps, ref:
     city || country ? `${city}, ${country}` : location.length > 15 ? `${location.slice(0, 15)}...` : location;
 
   const isOnline = participationType === "online" ? "Online" : participationType === "in_person" ? geoLocation : "unknown";
-
+  const router = useRouter();
   const handleEventClick = () => {
     if (ticketToCheckIn) {
       webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`);
     } else {
-      window.location.href = `/events/${eventUuid}`;
+      router.push(`/events/${eventUuid}`);
       return false;
     }
   };

@@ -331,4 +331,12 @@ export async function fetchOntonSetting() {
   }
 }
 
+export async function getClient() {
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+  });
+  await client.connect();
+  return client;
+}
+
 createDatabase(); // Call to initialize the database

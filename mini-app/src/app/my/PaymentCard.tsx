@@ -31,7 +31,7 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
 
       try {
         await transfer(config.ONTON_WALLET_ADDRESS as string, Number(response.total_price), response.payment_type, {
-          comment: `organizer_order=${response.uuid}`,
+          comment: `onton_order=${response.uuid}`,
         });
         setTimeout(() => {
           trpcUtils.orders.getPromoteToOrganizerOrder.invalidate({});
