@@ -195,8 +195,7 @@ const Search: React.FC = () => {
                       {Array.from({ length: LIMIT }).map((_, i) => (
                         <EventCardSkeleton
                           key={i}
-                          mode="normal"
-                        />
+                         />
                       ))}
                     </div>
                   ) : (

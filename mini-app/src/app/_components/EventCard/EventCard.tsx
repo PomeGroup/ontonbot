@@ -65,6 +65,7 @@ function UnforwardedEventCard({ event, currentUserId = 0 }: EventCardProps, ref:
 
   const isOnline = participationType === "online" ? "Online" : participationType === "in_person" ? geoLocation : "unknown";
   const router = useRouter();
+  const isOngoing = startDate < Date.now() && endDate > Date.now();
   const handleEventClick = () => {
     if (ticketToCheckIn) {
       webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`);
@@ -103,7 +104,7 @@ function UnforwardedEventCard({ event, currentUserId = 0 }: EventCardProps, ref:
           <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
             <div className="flex items-center self-stretch flex-nowrap relative">
               <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
-                {mode === "ongoing" ? (
+                {isOngoing   ? (
                   <div className="flex items-center text-green-500 animate-pulse">
                     <IoIosPlayCircle className="mr-1" /> Now
                   </div>
@@ -136,8 +137,8 @@ function UnforwardedEventCard({ event, currentUserId = 0 }: EventCardProps, ref:
   );
 }
 
-const UnmemoizedEventCard = forwardRef(UnforwardedEventCard);
-const EventCard = memo(UnmemoizedEventCard, (prevProps, nextProps) => {
+const UnmemorizedEventCard = forwardRef(UnforwardedEventCard);
+const EventCard = memo(UnmemorizedEventCard, (prevProps, nextProps) => {
   // Customize comparison to avoid unnecessary re-renders
   return prevProps.event.eventUuid === nextProps.event.eventUuid;
 });
