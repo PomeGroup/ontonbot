@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eq, and } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { coupon_definition } from "@/db/schema/coupon_definition";
 import { logger } from "@/server/utils/logger";
 
@@ -40,18 +40,32 @@ async function addCouponDefinition(params: AddCouponDefinitionParams) {
  * Updates `value`, `start_date`, `end_date`, `count`
  * by `id` AND `event_uuid` to ensure it belongs to the correct event.
  */
-async function updateCouponDefinition(params: { id: number; event_uuid: string; start_date: Date; end_date: Date }) {
+export const updateCouponDefinition = async (params: {
+  id: number;
+  event_uuid: string;
+  start_date: Date;
+  end_date: Date;
+}) => {
   const { id, event_uuid, ...updateData } = params;
 
-  return await db
+  // Use .returning() to get back the updated rows
+  const updatedRows = await db
     .update(coupon_definition)
     .set(updateData)
     .where(and(eq(coupon_definition.id, id), eq(coupon_definition.event_uuid, event_uuid)))
+    .returning()
     .execute()
     .catch((err) => {
       throw new Error(`Failed to update coupon definition: ${err.message}`);
     });
-}
+
+  // Check if no rows were updated
+  if (!updatedRows || updatedRows.length === 0) {
+    throw new Error(`NOT_FOUND: No coupon definition found for id=${id} and event_uuid=${event_uuid}. (Nothing updated.)`);
+  }
+
+  return updatedRows; // or return updatedRows[0] if you only need the first row
+};
 
 /**
  * Updates ONLY the `used` field by `id` and `event_uuid`.
@@ -68,41 +82,49 @@ async function updateCouponDefinitionUsed(params: { id: number; event_uuid: stri
 /**
  * Updates ONLY the `cpd_status` field by `id` and `event_uuid`.
  */
-async function updateCouponDefinitionStatus(params: {
+export const updateCouponDefinitionStatus = async (params: {
   id: number;
   event_uuid: string;
   status: "active" | "inactive" | "expired";
-}) {
+}) => {
   const { id, event_uuid, status } = params;
-  await db
+
+  // Use `.returning()` to get back the updated rows
+  const updatedRows = await db
     .update(coupon_definition)
     .set({ cpd_status: status })
     .where(and(eq(coupon_definition.id, id), eq(coupon_definition.event_uuid, event_uuid)))
+    .returning()
     .execute()
     .catch((err) => {
       logger.error("Error updating coupon definition status", { error: err, params });
       throw new Error(`Failed to update coupon definition status: ${err.message}`);
-    })
-    .finally(() => {
-      console.log(`Updated coupon definition status to ${status}`);
     });
-}
+
+  // If no rows were updated, that means no matching record
+  if (!updatedRows || updatedRows.length === 0) {
+    throw new Error(`NOT_FOUND: No coupon definition found for id=${id} and event_uuid=${event_uuid}. (Nothing updated.)`);
+  }
+
+  logger.log(`Updated coupon definition status to ${status} for id=${id}`, updatedRows);
+
+  return updatedRows; // or updatedRows[0] if you only need the first row
+};
 
 /**
  * Retrieves all coupon_definition rows for a given `event_uuid`.
  */
 async function getCouponDefinitionsByEventUuid(event_uuid: string) {
-  const results = await db
+  return await db
     .select()
     .from(coupon_definition)
     .where(eq(coupon_definition.event_uuid, event_uuid))
+    .orderBy(asc(coupon_definition.start_date))
     .execute()
     .catch((err) => {
       logger.error("Error fetching coupon definitions", { error: err, event_uuid });
       throw new Error(`Failed to fetch coupon definitions: ${err.message}`);
     });
-
-  return results;
 }
 
 /**

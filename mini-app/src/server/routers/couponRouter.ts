@@ -1,10 +1,13 @@
 import { TRPCError } from "@trpc/server";
-import { eventManagementProtectedProcedure, publicProcedure, router } from "../trpc";
+import { eventManagementProtectedProcedure, router } from "../trpc";
 import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
 import { couponItemsDB } from "@/server/db/couponItems.db";
 import couponSchema from "@/zodSchema/couponSchema";
 import { db } from "@/db/db";
-import { logger } from "@sentry/core";
+import { logger } from "@/server/utils/logger";
+import eventDB from "@/server/db/events";
+import Papa from "papaparse";
+import axios from "axios";
 
 export const couponRouter = router({
   /**
@@ -16,6 +19,14 @@ export const couponRouter = router({
         // 1) Insert new coupon_definition
         let definition;
         try {
+          const eventData = await eventDB.getEventByUuid(input.event_uuid);
+
+          if (!eventData?.event_uuid) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "No event found.",
+            });
+          }
           definition = await couponDefinitionsDB.addCouponDefinition({
             event_uuid: input.event_uuid,
             cpd_type: "fixed", // Hard-coded to fixed
@@ -97,7 +108,14 @@ export const couponRouter = router({
     .mutation(async ({ input }) => {
       const { id, event_uuid, start_date, end_date } = input;
       try {
-        // Attempt the update
+        const eventData = await eventDB.getEventByUuid(event_uuid);
+
+        if (!eventData?.event_uuid) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "No event found.",
+          });
+        }
         await couponDefinitionsDB.updateCouponDefinition({
           id,
           event_uuid,
@@ -106,12 +124,21 @@ export const couponRouter = router({
         });
 
         return { success: true };
-      } catch (err) {
+      } catch (err: any) {
+        // If our DB function threw a "No coupon definition found" error,
+        // we can interpret that as NOT_FOUND.
+        if (err.message?.includes("NOT_FOUND")) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: err.message,
+          });
+        }
+
         logger.error("Error updating coupon definition dates", { error: err, input });
-        // If it's already a TRPCError, rethrow, else wrap it
         if (err instanceof TRPCError) {
           throw err;
         }
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "An error occurred while updating coupon definition dates.",
@@ -128,14 +155,30 @@ export const couponRouter = router({
     .mutation(async ({ input }) => {
       const { id, event_uuid, status } = input;
       try {
-        await couponDefinitionsDB.updateCouponDefinitionStatus({
+        const eventData = await eventDB.getEventByUuid(event_uuid);
+
+        if (!eventData?.event_uuid) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "No event found.",
+          });
+        }
+        const updatedRows = await couponDefinitionsDB.updateCouponDefinitionStatus({
           id,
           event_uuid,
           status,
         });
 
         return { success: true };
-      } catch (err) {
+      } catch (err: any) {
+        // If our DB function threw "No coupon definition found" error
+        if (err.message?.includes("NOT_FOUND")) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: err.message,
+          });
+        }
+
         logger.error("Error updating coupon definition status", { error: err, input });
         if (err instanceof TRPCError) {
           throw err;
@@ -151,40 +194,43 @@ export const couponRouter = router({
   /**
    * Get List of Definitions (by event_uuid)
    */
-  getCouponDefinitions: publicProcedure.input(couponSchema.getDefinitionsSchema).query(async ({ input }) => {
-    const { event_uuid } = input;
-    try {
-      return await couponDefinitionsDB.getCouponDefinitionsByEventUuid(event_uuid);
-    } catch (err) {
-      logger.error("Error fetching coupon definitions", { error: err, input });
-      if (err instanceof TRPCError) {
-        throw err;
+  getCouponDefinitions: eventManagementProtectedProcedure
+    .input(couponSchema.getDefinitionsSchema)
+    .query(async ({ input }) => {
+      const { event_uuid } = input;
+      try {
+        const eventData = await eventDB.getEventByUuid(event_uuid);
+
+        if (!eventData?.event_uuid) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "No event found.",
+          });
+        }
+        return await couponDefinitionsDB.getCouponDefinitionsByEventUuid(event_uuid);
+      } catch (err: any) {
+        // If we threw "No coupon definitions found" in the DB layer, interpret that as NOT_FOUND
+        if (err.message?.includes("NOT_FOUND")) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: err.message,
+          });
+        }
+
+        logger.error("Error fetching coupon definitions", { error: err, input });
+        if (err instanceof TRPCError) {
+          throw err;
+        }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An error occurred while fetching coupon definitions.",
+          cause: err,
+        });
       }
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "An error occurred while fetching coupon definitions.",
-        cause: err,
-      });
-    }
-  }),
+    }),
 
   /**
    * Get List of Items (by coupon_definition_id)
    */
-  getCouponItems: publicProcedure.input(couponSchema.getItemsSchema).query(async ({ input }) => {
-    const { coupon_definition_id } = input;
-    try {
-      return await couponItemsDB.getCouponItemsByDefinitionId(coupon_definition_id);
-    } catch (err) {
-      logger.error("Error fetching coupon items", { error: err, input });
-      if (err instanceof TRPCError) {
-        throw err;
-      }
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "An error occurred while fetching coupon items.",
-        cause: err,
-      });
-    }
-  }),
+
 });

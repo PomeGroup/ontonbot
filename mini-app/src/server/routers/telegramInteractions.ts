@@ -1,6 +1,10 @@
-import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedProcedure } from "@/server/trpc";
+import {
+  eventManagementProtectedProcedure,
+  eventManagementProtectedProcedure as evntManagerPP,
+  initDataProtectedProcedure,
+} from "@/server/trpc";
 import { z } from "zod";
-import { getEventByUuid, selectEventByUuid } from "@/server/db/events";
+import eventDB, { getEventByUuid, selectEventByUuid } from "@/server/db/events";
 import { logger } from "@/server/utils/logger";
 import telegramService from "@/server/routers/services/telegramService";
 import { TRPCError } from "@trpc/server";
@@ -15,6 +19,9 @@ import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithD
 import axios from "axios";
 import { getSBTClaimedStaus } from "@/lib/ton-society-api";
 import { usersDB } from "@/server/db/users";
+import couponSchema from "@/zodSchema/couponSchema";
+import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
+import { couponItemsDB } from "@/server/db/couponItems.db";
 
 const requestShareEvent = initDataProtectedProcedure
   .input(
@@ -318,9 +325,130 @@ const requestShareOrganizer = initDataProtectedProcedure
     }
   });
 
+
+const getCouponItemsCSV = eventManagementProtectedProcedure
+  .input(
+    couponSchema.getItemsSchema.extend({
+      event_uuid: couponSchema.getDefinitionsSchema.shape.event_uuid,
+    })
+  )
+  .query(async ({ input, ctx }) => {
+    const { coupon_definition_id, event_uuid } = input;
+
+    try {
+      // 1) Validate Event
+      const eventData = await eventDB.getEventByUuid(event_uuid);
+      if (!eventData?.event_uuid) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No event found.",
+        });
+      }
+
+      // 2) Validate Definition
+      const definition = await couponDefinitionsDB.getCouponDefinitionById(coupon_definition_id);
+      if (!definition) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No coupon definition found.",
+        });
+      }
+
+      // 3) Fetch coupon items
+      const items = await couponItemsDB.getCouponItemsByDefinitionId(coupon_definition_id);
+      const itemCount = items.length;
+
+      // 4) Enrich each item with definition + event data
+      //    This avoids a DB join but still adds helpful columns.
+      const itemsForCsv = items.map((item) => ({
+        ...item, // original coupon_items fields
+        definition_type: definition.cpd_type,
+        definition_status: definition.cpd_status,
+        definition_value: definition.value,
+        definition_start_date: definition.start_date?.toISOString?.() ?? definition.start_date,
+        definition_end_date: definition.end_date?.toISOString?.() ?? definition.end_date,
+        definition_count: definition.count,
+        definition_used: definition.used,
+        event_title: eventData.title,
+        event_start_date: eventData.start_date,
+        event_end_date: eventData.end_date,
+        // ... add more event fields as needed
+      }));
+
+      // 5) Convert to CSV
+      const csvString = Papa.unparse(itemsForCsv, { header: true });
+
+      // 6) Add BOM for UTF-8
+      const bom = "\uFEFF";
+      const csvContentWithBom = bom + csvString;
+
+      // 7) Prepare a Blob
+      const fileBlob = new Blob([csvContentWithBom], {
+        type: "text/csv;charset=utf-8;",
+      });
+
+      // 8) Build form data
+      const formData = new FormData();
+      formData.append("file", fileBlob, "coupon_items.csv");
+
+      // Create a custom message with event + definition info
+      let customMessage = `Here is the coupon items list for definition #${definition.id}.`;
+      if (eventData.title) {
+        customMessage =
+          `📂 Download Coupon Items\n\n` +
+          `🟢 Event: ${eventData.title}\n` +
+          `🪪 Definition Code: ${definition.id}\n` +
+          `📅 Discount Start Date: ${definition.start_date?.toLocaleDateString?.() ?? definition.start_date}\n` +
+          `📅 Discount End Date: ${definition.end_date?.toLocaleDateString?.() ?? definition.end_date}\n` +
+          `💰 Value: ${definition.value}${definition.cpd_type === "percent" ? "%" : ""}\n` +
+          `👤 Total Count of Codes: ${itemCount}\n` +
+          `📊 Used Codes: ${definition.used}\n`;
+      }
+      formData.append("message", customMessage);
+      formData.append("fileName", `coupon_items_${definition.id}`);
+
+      // 9) Send to your Telegram Bot service
+      try {
+        const userId = ctx.user.user_id;
+        const response = await axios.post(
+          `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-file?id=${userId}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          return {
+            status: "success",
+            message: `CSV file for coupon definition #${definition.id} sent successfully.`,
+          };
+        } else {
+          return { status: "fail", data: response.data };
+        }
+      } catch (error) {
+        logger.log("Error while sending coupon items CSV file to Telegram: ", error);
+        return { status: "fail", data: null };
+      }
+    } catch (err: any) {
+      logger.error("Error fetching coupon items", { error: err, input });
+      if (err instanceof TRPCError) {
+        throw err;
+      }
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "An error occurred while fetching coupon items.",
+        cause: err,
+      });
+    }
+  })
+
 export const telegramInteractionsRouter = router({
   requestShareEvent,
   requestExportFile,
   requestSendQRCode,
   requestShareOrganizer,
+  getCouponItemsCSV,
 });
