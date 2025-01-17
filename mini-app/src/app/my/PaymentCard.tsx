@@ -3,7 +3,7 @@ import { useState } from "react";
 import Typography from "../../components/Typography";
 import OntonDialog from "@/components/OntonDialog";
 import Image from "next/image";
-import { toast } from 'sonner';
+import { toast } from "sonner";
 import greenCheckIcon from "./green-check.svg";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { cn } from "@/utils";
@@ -16,7 +16,7 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
   const [confirmPayDialogOpen, setConfirmPayDialogOpen] = useState(false);
   const [loadingPopupOpen, setLoadingPopupOpen] = useState(false);
   const [congratsDrawerOpen, setCongratsDrawerOpen] = useState(false);
- 
+
   const transfer = useTransferTon();
   const userToOrganizerMutation = trpc.orders.addPromoteToOrganizerOrder.useMutation();
 
@@ -33,15 +33,17 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
         await transfer(config.ONTON_WALLET_ADDRESS as string, Number(response.total_price), response.payment_type, {
           comment: `onton_order=${response.uuid}`,
         });
-        setLoadingPopupOpen(false);
         setTimeout(() => {
           trpcUtils.orders.getPromoteToOrganizerOrder.invalidate({});
-          setCongratsDrawerOpen(true);
-        }, 5000);
+          setLoadingPopupOpen(false);
+          setTimeout(() => {
+            setCongratsDrawerOpen(true);
+          }, 300);
+        }, 7000);
       } catch (error) {
-	toast.error("Transaction was not successfull. Please try again");
-	setConfirmPayDialogOpen(false);
-	setLoadingPopupOpen(false);
+        toast.error("Transaction was not successfull. Please try again");
+        setConfirmPayDialogOpen(false);
+        setLoadingPopupOpen(false);
         // mainButton?.show().enable();
         console.error("Error during transfer:", error);
       }

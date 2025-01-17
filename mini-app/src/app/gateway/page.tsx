@@ -2,13 +2,12 @@
 import React, { useEffect, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
-import SearchBar from "@/app/_components/SearchBar/SearchBar";
-import useAuth from "@/hooks/useAuth";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { trpc } from "../_trpc/client";
 import "../page.css";
 import { useConfig } from "@/context/ConfigContext";
 import "swiper/css";
+import EventBanner from "@/components/EventBanner";
 
 // Define types for events
 type EventData = any[];
@@ -19,8 +18,6 @@ export default function Home() {
   const eventUUID = "6acf01ed-3122-498a-a937-329766b459aa";
   const sideEventUUIDs = config?.gatewaySideEvents?.split(",");
   // console.log(config?.gatewaySideEvents);
-
-  const { authorized, role: userRole } = useAuth();
 
   // Store the last scroll positions of each tab
 
@@ -50,16 +47,12 @@ export default function Home() {
     }
   );
 
-  const { data: sideEventData, isLoading: isLoadingSide } = trpc.events.getEventsWithFilters.useQuery(
-    slideEventParams,
-    {
-      cacheTime: 10000,
-      enabled: sliderEventsState.length === 0,
-    }
-  );
+  const { data: sideEventData, isLoading: isLoadingSide } = trpc.events.getEventsWithFilters.useQuery(slideEventParams, {
+    cacheTime: 10000,
+    enabled: sliderEventsState.length === 0,
+  });
   useEffect(() => {
-    if (sliderEventData?.data && sliderEventData?.data?.length > 0)
-      setSliderEventsState(sliderEventData.data);
+    if (sliderEventData?.data && sliderEventData?.data?.length > 0) setSliderEventsState(sliderEventData.data);
     if (sideEventData?.data && sideEventData?.data?.length > 0) setSideEventsState(sideEventData.data);
   }, [sliderEventData, sideEventData]);
   return (
@@ -75,8 +68,8 @@ export default function Home() {
           {/* Slider Event */}
           {isLoadingSlider && sliderEventsState.length === 0 ? (
             <>
-              <EventCardSkeleton mode={"detailed"} />
-              <EventCardSkeleton mode={"detailed"} />
+              <EventBanner skeleton />
+              <EventBanner skeleton />
             </>
           ) : (
             sliderEventsState.length > 0 && (

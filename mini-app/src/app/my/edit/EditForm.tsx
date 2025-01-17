@@ -12,6 +12,9 @@ import { Channel } from "@/types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useFormik } from "formik";
+import placeholderImage from "@/components/icons/channel-avatar.svg";
+
+const xLinkDefault = "https://x.com/";
 
 export default function EditForm({ data }: { data: Channel }) {
   const editApi = trpc.organizers.updateOrganizer.useMutation();
@@ -29,7 +32,7 @@ export default function EditForm({ data }: { data: Channel }) {
     initialValues: {
       org_channel_name: data.org_channel_name || "",
       org_support_telegram_user_name: data.org_support_telegram_user_name || "",
-      org_x_link: data.org_x_link || "",
+      org_x_link: data.org_x_link || xLinkDefault,
       org_bio: data.org_bio || "",
       org_image: data.org_image || "",
     },
@@ -44,13 +47,19 @@ export default function EditForm({ data }: { data: Channel }) {
         newErrors.org_support_telegram_user_name = "Must start with @ and be 5-32 characters long.";
       }
 
-      if (values.org_x_link && !/^https?:\/\/[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}\/.*$/.test(values.org_x_link)) {
+      const xLink = values.org_x_link === xLinkDefault ? "" : values.org_x_link;
+
+      if (xLink && !/^https?:\/\/[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}\/.*$/.test(xLink)) {
         newErrors.org_x_link = "Invalid X handle URL. It should be like https://x.com/ontonlive";
       }
       return newErrors;
     },
     async onSubmit(values) {
-      const response = await editApi.mutateAsync(values);
+      const newVals = { ...values };
+      if (newVals.org_x_link === xLinkDefault) {
+        newVals.org_x_link = "";
+      }
+      await editApi.mutateAsync(newVals);
       toast.success("Information updated successfully.");
       goBack();
     },
@@ -87,14 +96,27 @@ export default function EditForm({ data }: { data: Channel }) {
           >
             <Preloader size="w-16 h-16" />
           </div>
-          <Image
-            className="mb-4 w-full h-auto !rounded-[10px] aspect-square"
-            sizes="100vw"
-            src={values.org_image}
-            width={0}
-            height={0}
-            alt="Avatar"
-          />
+          {values.org_image ? (
+            <Image
+              className="mb-4 w-full h-auto !rounded-[10px] aspect-square"
+              sizes="100vw"
+              src={values.org_image}
+              width={0}
+              height={0}
+              alt="Avatar"
+            />
+          ) : (
+            <div className="mb-4 w-full h-auto aspect-square rounded-[10px]">
+              <Image
+                className="w-full h-auto aspect-square"
+                sizes="100vw"
+                src={placeholderImage}
+                width={0}
+                height={0}
+                alt="Avatar"
+              />
+            </div>
+          )}
         </div>
         <div className="flex align-center justify-between mb-2">
           <Typography
@@ -204,7 +226,7 @@ export default function EditForm({ data }: { data: Channel }) {
           <Button
             className="py-5 !rounded-[10px]"
             outline
-            onClick={() => goBack()}
+            onClick={goBack}
           >
             Discard
           </Button>

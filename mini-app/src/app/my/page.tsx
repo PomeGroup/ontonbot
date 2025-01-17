@@ -18,68 +18,35 @@ import PaymentCard from "./PaymentCard";
 import { useRouter } from "next/navigation";
 import { Channel } from "@/types";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
-import Link from "next/link";
+import ActionCard from "@/ActionCard";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!useTonAddress();
 
-  const { data, error, isLoading } = trpc.organizers.getOrganizer.useQuery({});
+  const { data, isLoading } = trpc.organizers.getOrganizer.useQuery({});
 
-  const getPromoteToOrganizerApi = trpc.orders.getPromoteToOrganizerOrder.useQuery({});
-
-  const paid =
-    user?.role === "organizer" || ["processing", "completed"].includes(getPromoteToOrganizerApi.data?.state || "");
+  const paid = user?.role === "organizer";
   const router = useRouter();
 
-  console.log(paid, getPromoteToOrganizerApi.data);
-
   if (isLoading) return "loading";
+
   return (
-    <div className="bg-[#EFEFF4] pt-4 pb-4 min-h-screen">
+    <div className="bg-[#EFEFF4] pb-4 min-h-screen">
       {paid ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
-      <Link
-        className="my-3 py-2 text-center block"
-        href={`/channels/${data?.user_id}/`}
-      >
-        My Public Page
-      </Link>
-      <Card onClick={() => router.push("/my/participated/")}>
-        <div className="flex gap-3 align-stretch">
-          <div className="bg-[#efeff4] p-4 rounded-[10px]">
-            <Image
-              src={ticketIcon}
-              width={48}
-              height={48}
-              alt="ticket icon"
-            />
-          </div>
-          <div className="flex flex-col flex-1 gap-1">
-            <Typography
-              bold
-              variant="title3"
-            >
-              Participated
-            </Typography>
-            <Typography variant="body">Your Activity</Typography>
-            <Typography
-              variant="caption1"
-              className="mt-auto flex gap-4"
-            >
-              <div>
-                <b>{data?.participated_event_count || "0"}</b> Events
-              </div>
-              {/* <div>
-                <b>{data.sbt_count || "0"}</b> SBTs
-              </div> */}
-            </Typography>
-          </div>
-          <div className="self-center">
-            <ArrowRight className="text-main-button-color" />
-          </div>
-        </div>
-      </Card>
-      <Card
+      <ActionCard
+        onClick={() => router.push("/my/participated")}
+        iconSrc={ticketIcon}
+        title="Participated"
+        subtitle="Your Activity"
+        footerTexts={[
+          {
+            count: data?.participated_event_count || 0,
+            items: "Events",
+          },
+        ]}
+      />
+      <ActionCard
         onClick={() => {
           if (!paid) {
             toast.error("Only organizers can host events");
@@ -87,42 +54,14 @@ export default function ProfilePage() {
           }
           router.push("/my/hosted/");
         }}
-      >
-        <div className="flex gap-3 align-stretch">
-          <div className="bg-[#efeff4] p-4 rounded-[10px]">
-            <Image
-              src={calendarStarIcon}
-              width={48}
-              height={48}
-              alt="Calendar icon"
-            />
-          </div>
-          <div className="flex flex-col flex-1 gap-1">
-            <Typography
-              bold
-              variant="title3"
-            >
-              Hosted
-            </Typography>
-            <Typography variant="body">You Created</Typography>
-            <Typography
-              variant="caption1"
-              className="mt-auto"
-            >
-              {paid ? (
-                <>
-                  <b>{data?.hosted_event_count || "0"}</b> Events
-                </>
-              ) : (
-                "Become an organizer first"
-              )}
-            </Typography>
-          </div>
-          <div className="self-center">
-            <ArrowRight className="text-main-button-color" />
-          </div>
-        </div>
-      </Card>
+        iconSrc={calendarStarIcon}
+        title="Hosted"
+        subtitle="You Created"
+        footerTexts={[
+          paid ? { items: "Events", count: data?.hosted_event_count || 0 } : { items: "Become an organizer first" },
+        ]}
+      />
+
       <ConnectWalletCard />
       <PaymentCard visible={!paid && hasWallet} />
 
@@ -218,7 +157,6 @@ function OrganizerProgress({ step }: { step: 1 | 2 }) {
 
 function ConnectWalletCard() {
   const [isOpen, setOpen] = useState(false);
-  const { user } = useUserStore();
 
   const hasWallet = !!useTonAddress();
   return (
@@ -282,7 +220,7 @@ function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () =>
     if (!user?.user_id) return;
 
     if (tonWalletAddress) {
-      onClose()
+      onClose();
     }
 
     if (!user?.wallet_address && tonWalletAddress) {

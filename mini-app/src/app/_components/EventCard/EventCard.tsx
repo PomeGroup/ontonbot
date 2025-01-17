@@ -33,14 +33,10 @@ interface EventCardProps {
     country?: string;
     participationType?: string;
   };
-  mode?: "normal" | "small" | "detailed" | "ongoing" | "normal_without_dropdown";
   currentUserId?: number;
 }
 
-function UnforwardedEventCard(
-  { event, mode = "normal", currentUserId = 0 }: EventCardProps,
-  ref: ForwardedRef<HTMLDivElement> | null
-) {
+function UnforwardedEventCard({ event, currentUserId = 0 }: EventCardProps, ref: ForwardedRef<HTMLDivElement> | null) {
   const {
     eventUuid,
     title = "No Title",
@@ -82,7 +78,7 @@ function UnforwardedEventCard(
     <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
   );
 
-  const renderNormalMode = () => (
+  return (
     <>
       <div
         ref={ref}
@@ -138,80 +134,6 @@ function UnforwardedEventCard(
       <Separator className="my-4 bg-[#545458]" />
     </>
   );
-
-  const renderDetailedMode = () => (
-    <div
-      className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
-      onClick={handleEventClick}
-      key={`detailed-${eventUuid}`}
-    >
-      {!imageLoaded && renderImageSkeleton()}
-      <Image
-        // if date now before 5 november 2024 show special image
-        src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-        alt={title}
-        width={window?.innerWidth || 400}
-        height={400}
-        style={{ objectFit: "cover" }}
-        className={`rounded-lg transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-        onError={(e) => (e.currentTarget.src = defaultImage)}
-        onLoad={() => setImageLoaded(true)}
-        unoptimized={true}
-      />
-    </div>
-  );
-
-  const renderSmallMode = () => (
-    <>
-      <div
-        onClick={handleEventClick}
-        className="flex w-full p-2 gap-2 items-start flex-nowrap relative overflow-hidden cursor-pointer"
-        key={`small-${eventUuid}`}
-      >
-        <div className="relative overflow-hidden rounded-lg w-12 h-12 flex-shrink-0">
-          {!imageLoaded && renderImageSkeleton()}
-          <Image
-            src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-            alt={title}
-            layout="fill"
-            objectFit="cover"
-            style={{ objectFit: "cover" }}
-            className={`rounded-lg transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-            loading="lazy"
-            onError={(e) => (e.currentTarget.src = defaultImage)}
-            onLoad={() => setImageLoaded(true)}
-            unoptimized={true}
-          />
-        </div>
-        <div className="flex gap-1 pl-2 items-center self-stretch grow flex-nowrap relative">
-          <div className="flex flex-col gap-0 items-start self-stretch grow flex-nowrap relative">
-            <div className="flex items-center self-stretch flex-nowrap relative">
-              <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-xs leading-3">
-                {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
-              </span>
-            </div>
-            <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-              <span className="grow font-sans whitespace-normal text-black dark:text-white text-left line-clamp-1 text-sm font-medium leading-2">
-                {title}
-              </span>
-            </div>
-            <span className="grow font-sans text-left line-clamp-1 text-xs leading-2 text-gray-600 dark:text-gray-400">
-              by {organizerFirstName} {organizerLastName}
-            </span>
-          </div>
-        </div>
-      </div>
-      <Separator className="my-0 bg-[#545458]" />
-    </>
-  );
-
-  if (mode === "detailed") {
-    return renderDetailedMode();
-  } else if (mode === "small") {
-    return renderSmallMode();
-  } else {
-    return renderNormalMode();
-  }
 }
 
 const UnmemoizedEventCard = forwardRef(UnforwardedEventCard);
