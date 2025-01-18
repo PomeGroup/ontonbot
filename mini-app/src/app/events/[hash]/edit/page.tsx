@@ -10,8 +10,9 @@ import { Block, Page, Segmented, SegmentedButton } from "konsta/react";
 import { LucideDot } from "lucide-react";
 import { useTheme } from "next-themes";
 import { FC, useEffect, useState } from "react";
+import PromotionCode from "@/app/_components/Event/PromotionCode/PromotionCode";
 
-type ActiveTab = "guest_list" | "edit" | "event_orders";
+type ActiveTab = "guest_list" | "edit" | "event_orders" | "promotion_code";
 
 const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("guest_list");
@@ -47,7 +48,14 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
             active={activeTab === "guest_list"}
             onClick={() => setActiveTab("guest_list")}
           >
-            Guests List
+            Guests
+          </SegmentedButton>
+          <SegmentedButton
+            strong
+            active={activeTab === "promotion_code"}
+            onClick={() => setActiveTab("promotion_code")}
+          >
+            Promotion Codes
           </SegmentedButton>
           <SegmentedButton
             strong
@@ -71,6 +79,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         </Segmented>
       </Block>
       {activeTab === "edit" && <ManageEvent event={event.data} />}
+      {activeTab === "promotion_code" && params.hash && <PromotionCode eventUuid={params.hash} />}
       {activeTab === "event_orders" && <EventOrders />}
       {activeTab === "guest_list" && event.data && (
         <GuestList

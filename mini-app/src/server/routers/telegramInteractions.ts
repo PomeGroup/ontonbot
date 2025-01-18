@@ -332,7 +332,7 @@ const getCouponItemsCSV = eventManagementProtectedProcedure
       event_uuid: couponSchema.getDefinitionsSchema.shape.event_uuid,
     })
   )
-  .query(async ({ input, ctx }) => {
+  .mutation(async ({ input, ctx }) => {
     const { coupon_definition_id, event_uuid } = input;
 
     try {

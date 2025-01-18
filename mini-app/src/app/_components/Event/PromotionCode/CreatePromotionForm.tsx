@@ -1,0 +1,227 @@
+"use client";
+
+import React, { useState } from "react";
+import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import { trpc } from "@/app/_trpc/client";
+import couponSchema from "@/zodSchema/couponSchema";
+
+import NavigationButtons, { NavAction } from "@/components/NavigationButtons";
+import SuccessDialog from "./SuccessDialog";
+import ConfirmDialog from "./ConfirmDialog";
+import PlusMinusInput from "./PlusMinusInput";
+import DatePickerRow from "./DatePickerRow"; // Our MUI-based date/time row
+
+type AddCouponsFormValues = z.infer<typeof couponSchema.addCouponsSchema>;
+
+interface CreatePromotionFormProps {
+  eventUuid: string;
+  onDone?: () => void;
+}
+
+export default function CreatePromotionForm({
+                                              eventUuid,
+                                              onDone,
+                                            }: CreatePromotionFormProps) {
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<AddCouponsFormValues>({
+    resolver: zodResolver(couponSchema.addCouponsSchema),
+    mode: "onBlur",
+    defaultValues: {
+      event_uuid: eventUuid,
+    },
+  });
+
+  const addCouponsMutation = trpc.coupon.addCoupons.useMutation();
+
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Watch start_date so we can handle end_date logic
+  const startValue = watch("start_date");
+
+  // "Generate Codes" => open confirm dialog
+  const handleGenerateCodesClick = handleSubmit(() => {
+    setShowConfirm(true);
+  });
+
+  const handleCancelClick = () => {
+    onDone?.();
+  };
+
+  const handleConfirmSave = (data: AddCouponsFormValues) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
+    addCouponsMutation.mutate(data, {
+      onSuccess: () => {
+        setIsSubmitting(false);
+        setShowConfirm(false);
+        setShowSuccess(true);
+      },
+      onError: (err) => {
+        setIsSubmitting(false);
+        alert(`Failed to create coupons: ${err.message}`);
+      },
+    });
+  };
+
+  const handleDiscard = () => {
+    setShowConfirm(false);
+    onDone?.();
+  };
+
+  const handleSuccessDone = () => {
+    setShowSuccess(false);
+    onDone?.();
+  };
+
+  // NavigationButtons config
+  const actions: NavAction[] = [
+    {
+      label: "Generate Codes",
+      onClick: handleGenerateCodesClick,
+    },
+    {
+      label: "Cancel",
+      colors: { textIos :'text-primary', textMaterial: 'text-primary' },
+      outline: true,
+      onClick: handleCancelClick,
+    },
+  ];
+
+  return (
+    <div className="relative min-h-screen mb-4.5">
+      <div className="px-4">
+        <h1 className="text-lg font-bold">Create Your Codes</h1>
+      </div>
+
+      <div className="px-4 pt-4">
+        <p className="text-sm text-gray-700 mb-4">
+          One-time codes are automatically generated and you can download them
+          to share with your audience.
+        </p>
+
+        {/* 1) Count */}
+        <Controller
+          control={control}
+          name="count"
+          render={({ field }) => {
+            const numericVal = field.value ?? 0;
+            return (
+              <PlusMinusInput
+                label="Number of Codes"
+                value={numericVal}
+                onChange={field.onChange}
+                error={errors.count?.message}
+              />
+            );
+          }}
+        />
+
+        {/* 2) Discount Value */}
+        <Controller
+          control={control}
+          name="value"
+          render={({ field }) => {
+            const numericVal = field.value ?? 0;
+            return (
+              <PlusMinusInput
+                label="Discount Code Percentage"
+                unitLabel="%"
+                value={numericVal}
+                onChange={field.onChange}
+                error={errors.value?.message}
+              />
+            );
+          }}
+        />
+
+        {/* 3) Start Date/Time with minDate=Now */}
+        <Controller
+          control={control}
+          name="start_date"
+          render={({ field }) => (
+            <DatePickerRow
+              label="Activate at"
+              helperText="Must be today or later."
+              placeholder="Not set"
+              error={errors.start_date?.message}
+              value={field.value}
+              onChange={field.onChange}
+              // => This ensures the user can't pick a date/time before "now"
+              minDate={new Date()}
+            />
+          )}
+        />
+
+        {/* 4) End Date/Time (requires start date first) */}
+        <Controller
+          control={control}
+          name="end_date"
+          render={({ field }) => {
+            if (!startValue) {
+              return (
+                <div className="mb-4">
+                  <label className="text-sm text-gray-500 mb-1 block">
+                    Deactivate at
+                  </label>
+                  <p className="text-xs text-gray-400 mb-1">
+                    It is set to the event start time by default.
+                  </p>
+                  <div
+                    onClick={() => {
+                      alert("You must select start date first!");
+                    }}
+                    className="bg-gray-100 p-3 rounded shadow-sm text-sm text-gray-500 cursor-pointer"
+                  >
+                    Please pick the start date first
+                  </div>
+                </div>
+              );
+            }
+
+            // If start date is chosen, block end date from being earlier
+            return (
+              <DatePickerRow
+                label="Deactivate at"
+                helperText="It is set to the event start time by default."
+                placeholder="Not set"
+                error={errors.end_date?.message}
+                value={field.value}
+                // minDate => can't pick end < start
+                minDate={startValue}
+                onChange={field.onChange}
+              />
+            );
+          }}
+        />
+      </div>
+
+      <NavigationButtons layout="vertical" actions={actions} />
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        opened={showConfirm}
+        onBackdropClick={() => setShowConfirm(false)}
+        isSubmitting={isSubmitting}
+        onConfirm={handleSubmit(handleConfirmSave)}
+        onBack={handleDiscard}
+      />
+
+      {/* Success Dialog */}
+      <SuccessDialog
+        opened={showSuccess}
+        onBackdropClick={() => setShowSuccess(false)}
+        onDone={handleSuccessDone}
+      />
+    </div>
+  );
+}
