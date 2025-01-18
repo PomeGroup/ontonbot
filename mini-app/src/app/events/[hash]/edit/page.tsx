@@ -79,7 +79,7 @@ const CreateEventAdminPage: FC<{ params: { hash: string } }> = ({ params }) => {
         </Segmented>
       </Block>
       {activeTab === "edit" && <ManageEvent event={event.data} />}
-      {activeTab === "promotion_code" && params.hash && <PromotionCode eventUuid={params.hash} />}
+      {activeTab === "promotion_code" && params.hash && <PromotionCode eventUuid={params.hash}   />}
       {activeTab === "event_orders" && <EventOrders />}
       {activeTab === "guest_list" && event.data && (
         <GuestList

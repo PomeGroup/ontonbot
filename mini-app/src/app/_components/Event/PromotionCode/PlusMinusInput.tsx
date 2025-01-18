@@ -1,21 +1,23 @@
 "use client";
 
 import React from "react";
-import { FaPlus } from "react-icons/fa";
-import { FaMinus } from "react-icons/fa";
+import { FaPlus, FaMinus } from "react-icons/fa";
+
 interface PlusMinusInputProps {
   label: string;
   value: number;
   onChange: (val: number) => void;
   error?: string;      // optional error message
   unitLabel?: string;  // optional suffix like '%'
+  disabled?: boolean;  // NEW: optional disabled state
 }
 
 /**
  * Reusable numeric input that:
- *  - Has a typeable field on the left (with optional unit text),
- *  - Has plus/minus buttons on the right, stuck together (no spacing),
- *  - Allows the user to type or increment/decrement.
+ *  - Has a typeable field on the left (with optional unit text)
+ *  - Has plus/minus buttons on the right (no spacing)
+ *  - Allows user to type or increment/decrement
+ *  - Optional `disabled` prop to make it read-only
  */
 export default function PlusMinusInput({
                                          label,
@@ -23,12 +25,14 @@ export default function PlusMinusInput({
                                          onChange,
                                          error,
                                          unitLabel,
+                                         disabled = false,
                                        }: PlusMinusInputProps) {
   // Called when user types a new value
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return; // ignore input if disabled
+
     const typed = e.target.value;
     if (typed === "") {
-      // If empty, default to 0 or do something else
       onChange(0);
       return;
     }
@@ -36,17 +40,19 @@ export default function PlusMinusInput({
     if (Number.isNaN(parsed)) {
       onChange(0);
     } else {
-      onChange(Math.max(0, parsed)); // remove Math.max if you want negative
+      onChange(Math.max(0, parsed)); // remove Math.max if negative is allowed
     }
   };
 
   // Decrement by 1
   const handleMinus = () => {
+    if (disabled) return;
     onChange(Math.max(0, value - 1));
   };
 
   // Increment by 1
   const handlePlus = () => {
+    if (disabled) return;
     onChange(Math.max(0, value + 1));
   };
 
@@ -63,17 +69,21 @@ export default function PlusMinusInput({
         <div className="flex items-center space-x-1">
           <input
             type="number"
-            className="
+            className={`
               w-15
               border-none
               text-center
-
               outline-none
               p-0
-
-            "
+              ${
+              disabled
+                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                : ""
+            }
+            `}
             value={value.toString()}
             onChange={handleInputChange}
+            readOnly={disabled} // or we could use "disabled" if you prefer
           />
           {unitLabel && (
             <span className="text-gray-600 text-sm">
@@ -87,26 +97,36 @@ export default function PlusMinusInput({
           <button
             type="button"
             onClick={handleMinus}
-            className="
-              px-3 py-1 bg-gray-200
+            disabled={disabled}
+            className={`
+              px-3 py-1
+              ${
+              disabled
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-gray-200 hover:bg-gray-300"
+            }
               rounded-l
-              hover:bg-gray-300
               focus:outline-none
               border-r-2
               border-r-gray-500
-            "
+            `}
           >
             <FaMinus />
           </button>
           <button
             type="button"
             onClick={handlePlus}
-            className="
-              px-3 py-1 bg-gray-200
+            disabled={disabled}
+            className={`
+              px-3 py-1
+              ${
+              disabled
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-gray-200 hover:bg-gray-300"
+            }
               rounded-r
-              hover:bg-gray-300
               focus:outline-none
-            "
+            `}
           >
             <FaPlus />
           </button>

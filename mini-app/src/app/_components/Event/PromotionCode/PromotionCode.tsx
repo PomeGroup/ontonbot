@@ -2,33 +2,49 @@
 
 import React, { useEffect, useState } from "react";
 import { Page, Navbar, Block } from "konsta/react";
-import { trpc } from "@/app/_trpc/client";
-import useWebApp from "@/hooks/useWebApp";
-import NavigationButtons from "@/components/NavigationButtons";
-import CreatePromotionForm from "./CreatePromotionForm";
-import { Download } from "lucide-react";
-// 1) Import your custom ActionCardWithMenu
-import ActionCardWithMenu from "./ActionCardWithMenu";
-import { useDownloadCSV } from "@/app/_components/Event/PromotionCode/useDownloadCSV"; // adjust path
 
+import useWebApp from "@/hooks/useWebApp";
+import { trpc } from "@/app/_trpc/client";
+import { Download } from "lucide-react";
+
+import NavigationButtons from "@/components/NavigationButtons";
+import ActionCardWithMenu from "./ActionCardWithMenu";
+import CreatePromotionForm from "./CreatePromotionForm";
+import EditPromotionDatesForm from "./EditPromotionDatesForm";
+import { useDownloadCSV } from "@/app/_components/Event/PromotionCode/useDownloadCSV";
+
+// The props for your page-level component
 interface PromotionCodeProps {
   eventUuid: string;
 }
 
-export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
-  const webApp = useWebApp();
+// The shape of a coupon definition from your server
+// If your start/end date come as strings, convert them or adjust the type
+interface Definition {
+  id: number;
+  count: number;
+  value: number;
+  used: number;
+  start_date: Date; // or string => Date if needed
+  end_date: Date;   // or string => Date if needed
+  cpd_status: "active" | "inactive" | "expired";
+}
 
-  // a) Hide Telegram back button on unmount
+export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
+  // 1) Hide Telegram back button on unmount
+  const webApp = useWebApp();
   useEffect(() => {
     return () => {
       webApp?.BackButton.hide();
     };
   }, [webApp]);
 
-  // b) local states
+  // 2) Local states
   const [showCreateForm, setShowCreateForm] = useState(false);
+  // track the definition we want to edit (dates)
+  const [editingDef, setEditingDef] = useState<Definition | null>(null);
 
-  // c) tRPC for coupon definitions
+  // 3) tRPC query: get coupon definitions
   const {
     data,
     isLoading,
@@ -40,20 +56,21 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
     { enabled: Boolean(eventUuid) }
   );
 
-  // d) a separate tRPC mutation for updating the coupon status
-  //    We'll use it to "Activate" or "Deactivate" a coupon
+  // 4) CSV logic
+  const { isCSVLoading, handleDownloadCSV } = useDownloadCSV();
+
+  // 5) Status update (activate/deactivate) logic
+  //    We'll show an item in the 3-dot menu that calls this
   const updateStatusMutation = trpc.coupon.updateCouponDefinitionStatus.useMutation({
     onSuccess: () => {
-      // once status is updated, refresh the list
+      // Refresh the data
       refetch();
     },
   });
 
-  // e) for CSV downloading
-  const { isCSVLoading, handleDownloadCSV } = useDownloadCSV();
-
-  // f) show/hide the create form
+  // 6) Handlers for toggling forms
   const handleCreatePromotion = () => {
+    console.log("Create Promotion button clicked!");
     setShowCreateForm(true);
   };
   const handleFormDone = () => {
@@ -61,7 +78,7 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
     refetch(); // refresh definitions after creation
   };
 
-  // If showing creation form
+  // 7) If showCreateForm => show <CreatePromotionForm />
   if (showCreateForm) {
     return (
       <CreatePromotionForm
@@ -71,7 +88,25 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
     );
   }
 
-  // Loading / Error / Empty
+  // 8) If editingDef => show <EditPromotionDatesForm />
+  if (editingDef) {
+    return (
+      <EditPromotionDatesForm
+        id={editingDef.id}
+        eventUuid={eventUuid}
+        initialCount={editingDef.count}
+        initialValue={editingDef.value}
+        initialStartDate={editingDef.start_date}
+        initialEndDate={editingDef.end_date}
+        onDone={() => {
+          setEditingDef(null);
+          refetch();
+        }}
+      />
+    );
+  }
+
+  // 9) Loading / error / empty states
   if (isLoading) {
     return (
       <Page>
@@ -126,55 +161,54 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
     );
   }
 
-  // 2) Render existing definitions as ActionCardWithMenu
+  // 10) Otherwise => render the list with ActionCardWithMenu
   return (
     <Page>
       <Navbar title="Promotion Codes" />
 
       <Block className="space-y-2">
         {data.map((def) => {
-          const iconSrc = "/icons/ticket.png"; // or any icon for the card
-          // footers for bottom text
+          // Convert string => Date if needed
+          // e.g. def.start_date = new Date(def.start_date)
+          // e.g. def.end_date = new Date(def.end_date)
+
+          // We'll build footers
           const footerTexts = [
             { count: def.count, items: "codes" },
             { count: def.used, items: "used" },
           ];
 
-          // Build dynamic "Activate" or "Deactivate" item
+          // Build dynamic "Activate/Deactivate" item based on cpd_status
           let statusMenuItem = null;
           if (def.cpd_status === "expired") {
-            // if expired, maybe no item or show a disabled item
+            // skip or show a disabled item
           } else if (def.cpd_status === "active") {
             statusMenuItem = {
-              label: updateStatusMutation.isLoading
-                ? "Deactivating..."
-                : "Deactivate",
+              label: updateStatusMutation.isLoading ? "Deactivating..." : "Deactivate",
               disabled: updateStatusMutation.isLoading,
               onClick: () => {
                 updateStatusMutation.mutate({
                   id: def.id,
                   event_uuid: eventUuid,
-                  status: "inactive", // we want to deactivate
+                  status: "inactive",
                 });
               },
             };
           } else if (def.cpd_status === "inactive") {
             statusMenuItem = {
-              label: updateStatusMutation.isLoading
-                ? "Activating..."
-                : "Activate",
+              label: updateStatusMutation.isLoading ? "Activating..." : "Activate",
               disabled: updateStatusMutation.isLoading,
               onClick: () => {
                 updateStatusMutation.mutate({
                   id: def.id,
                   event_uuid: eventUuid,
-                  status: "active", // we want to activate
+                  status: "active",
                 });
               },
             };
           }
 
-          // Build the rest of the 3-dot menu
+          // Now build the 3-dot menu
           const menuItems = [
             {
               label: isCSVLoading ? "Loading CSV file..." : "Get list and statistics",
@@ -182,19 +216,23 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
               disabled: isCSVLoading,
               onClick: async () => {
                 if (!isCSVLoading) {
-                  // pass def.id as coupon_definition_id
                   await handleDownloadCSV(def.id, eventUuid);
                 }
               },
             },
             {
-              label: "Edit",
+              label: "Edit Dates",
               onClick: () => {
-                console.log("Edit clicked for definition", def.id);
+                setEditingDef({
+                  ...def,
+                  start_date: new Date(def.start_date),
+                  end_date: new Date(def.end_date),
+                });
               },
             },
-            // if we do have a "Activate"/"Deactivate" item, push it here
+            // Insert the status item if not null
             ...(statusMenuItem ? [statusMenuItem] : []),
+
             {
               label: "Delete",
               color: "text-red-500",
@@ -208,13 +246,12 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
           return (
             <ActionCardWithMenu
               key={def.id}
-              iconSrc={iconSrc}
+              iconSrc="/icons/ticket.png"
               title={`${def.count} codes`}
               subtitle={`%${def.value} discount - ${def.used} used`}
               footerTexts={footerTexts}
               menuItems={menuItems}
               onCardClick={() => {
-                // entire card click
                 console.log("Card clicked, id =", def.id);
               }}
             />
