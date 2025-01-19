@@ -45,6 +45,7 @@ const ManageEvent = (props: ManageEventProps) => {
     clearGeneralErrors();
   }, []);
 
+  // TODO: This is cancer!
   useLayoutEffect(() => {
     resetState();
     setIsReset(true);
@@ -54,6 +55,7 @@ const ManageEvent = (props: ManageEventProps) => {
         eventHash: params.hash,
       });
 
+      // This function is killing performance and making page laggy
       if (props.event) {
         setEventData({
           title: props.event.title || undefined,

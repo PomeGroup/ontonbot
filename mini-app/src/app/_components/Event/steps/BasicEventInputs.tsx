@@ -84,6 +84,7 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
             media={
               <Checkbox
                 name="terms-and-conditions"
+                defaultChecked={termsChecked}
                 checked={termsChecked}
                 onChange={(e) => {
                   const { checked } = e.target;

@@ -29,16 +29,11 @@ export const GeneralStep = () => {
     _setTermsChecked(checked);
   };
  
-  useEffect(() => {
-    if (!eventData?.event_id) return
-    setTermsChecked(true)
-  }, [eventData?.event_id]) 
-
-  useEffect(() => {
-    if (!eventData.event_id) return;
-
-    setTermsChecked(true);
-  }, [eventData.event_id]);
+  // TODO: eventData is updated multiple times during each render
+  // useEffect(() => {
+  //   if (!eventData?.start_date) return
+  //   setTermsChecked(true)
+  // }, [eventData?.event_uuid]) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
