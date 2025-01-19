@@ -19,7 +19,7 @@ const CheckInGuest: FC<{
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [ticketUuid, setTicketUuid] = useState<string | null>(null);
-  const [drawerTitle, setDrawerTitle] = useState<string | null>(null);
+  const [drawerTitle] = useState<string | null>(null);
   const [ticketData, setTicketData] = useState<any | null>(null);
   const [checkInState, setCheckInState] = useState<CheckInState>("NoTicketData");
 

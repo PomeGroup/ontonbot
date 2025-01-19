@@ -13,11 +13,13 @@ import { RewardForm } from "../../Event/steps/RewardStepFrom";
 import { rewardStepValidation } from "@/zodSchema/event/validation";
 import UpdateEventSuccessDialog from "../../Event/steps/UpdateEventSuccessDialog";
 import { useMainButton } from "@/hooks/useMainButton";
+import { useSectionStore } from "@/zustand/useSectionStore";
 
 export const RewardStep = () => {
   const { setEventData, eventData, edit: editOptions, setRewardStepErrors, clearRewardStepErrors } = useCreateEventStore();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const { clearSections } = useSectionStore();
   const [passwordDisabled, setPasswordDisabled] = useState(
     !!editOptions?.eventHash || eventData?.eventLocationType === "in_person"
   );
@@ -32,7 +34,7 @@ export const RewardStep = () => {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
-      router.push(`/events/${data?.eventHash}/edit`);
+      router.push(`/events/${data?.eventHash}/manage/edit`);
     },
     onError(error) {
       toast.error(error.message);
@@ -51,8 +53,7 @@ export const RewardStep = () => {
         setShowSuccessDialog(true);
       } else {
         console.log("PUSH Event updated successfully",   editOptions?.eventHash);
-        router.push(`/events/${data?.eventId}/edit`);
-        window.location.reload();
+        router.push(`/events/${data?.eventId}/manage`);
       }
 
     },
@@ -64,6 +65,7 @@ export const RewardStep = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formRef.current) return;
+
     const formData = new FormData(formRef.current);
     const formDataObject = Object.fromEntries(formData.entries());
     const stepInputsObject = {
@@ -136,6 +138,7 @@ export const RewardStep = () => {
           event_uuid: editOptions.eventHash,
           eventData: updateParsedData.data,
         });
+        clearSections();
       } else {
         const errors = updateParsedData.error.flatten().fieldErrors;
         console.error("Update event validation errors:", errors);
@@ -152,6 +155,7 @@ export const RewardStep = () => {
       addEvent.mutate({
         eventData: parsedEventData.data,
       });
+      clearSections();
     } else {
       const errors = parsedEventData.error.flatten().fieldErrors;
       console.error("Create event validation errors:", errors);

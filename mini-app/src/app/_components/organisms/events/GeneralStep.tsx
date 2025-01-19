@@ -5,25 +5,28 @@ import { generalStepDataSchema } from "@/zodSchema/event/validation";
 import { ErrorMessage } from "@/app/_components/molecules/alerts/ErrorMessage";
 import { useMainButton } from "@/hooks/useMainButton";
 import BasicEventInputs from "../../Event/steps/BasicEventInputs";
+import { useSectionStore } from "@/zustand/useSectionStore";
+import { useRouter } from "next/navigation";
 
 let lastToastId: string | number | null = null;
 
 export const GeneralStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
-
+  const { getCurrentSection, setSection } = useSectionStore();
+  const router = useRouter();
   const { setCurrentStep, setEventData, eventData, clearGeneralErrors, setGeneralStepErrors } = useCreateEventStore(
     (state) => ({
       setCurrentStep: state.setCurrentStep,
+      currentStep: state.currentStep,
       setEventData: state.setEventData,
       eventData: state.eventData,
       clearGeneralErrors: state.clearGeneralStepErrors,
       setGeneralStepErrors: state.setGeneralStepErrors,
     })
   );
-
   const [termsChecked, _setTermsChecked] = useState(false);
   const [showTermsError, setShowTermsError] = useState(false);
- 
+
   const setTermsChecked = (checked: boolean) => {
     if (checked) setShowTermsError(false);
     _setTermsChecked(checked);
@@ -80,6 +83,8 @@ export const GeneralStep = () => {
     setEventData(formDataParsed.data);
     clearGeneralErrors();
     setCurrentStep(2);
+    setSection("event_setup_form_time_place_step");
+
   };
 
   useMainButton(() => {

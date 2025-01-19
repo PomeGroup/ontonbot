@@ -12,11 +12,9 @@ import ActionCardWithMenu from "./ActionCardWithMenu";
 import CreatePromotionForm from "./CreatePromotionForm";
 import EditPromotionDatesForm from "./EditPromotionDatesForm";
 import { useDownloadCSV } from "@/app/_components/Event/PromotionCode/useDownloadCSV";
+import { useManageEventContext } from "@/app/events/[hash]/manage/layout";
 
-// The props for your page-level component
-interface PromotionCodeProps {
-  eventUuid: string;
-}
+
 
 // The shape of a coupon definition from your server
 // If your start/end date come as strings, convert them or adjust the type
@@ -30,8 +28,10 @@ interface Definition {
   cpd_status: "active" | "inactive" | "expired";
 }
 
-export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
+export default function PromotionCode() {
   // 1) Hide Telegram back button on unmount
+  const { eventData } = useManageEventContext();
+  const eventUuid = eventData.event_uuid;
   const webApp = useWebApp();
   useEffect(() => {
     return () => {
@@ -44,7 +44,14 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
   // track the definition we want to edit (dates)
   const [editingDef, setEditingDef] = useState<Definition | null>(null);
 
-  // 3) tRPC query: get coupon definitions
+  // 3) CSV logic
+  const { isCSVLoading, handleDownloadCSV } = useDownloadCSV();
+  if(eventUuid === undefined ) {
+
+    return <div>Loading...</div>;
+
+  }
+  // 4) tRPC query: get coupon definitions
   const {
     data,
     isLoading,
@@ -56,8 +63,6 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
     { enabled: Boolean(eventUuid) }
   );
 
-  // 4) CSV logic
-  const { isCSVLoading, handleDownloadCSV } = useDownloadCSV();
 
   // 5) Status update (activate/deactivate) logic
   //    We'll show an item in the 3-dot menu that calls this
@@ -77,6 +82,8 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
     setShowCreateForm(false);
     refetch(); // refresh definitions after creation
   };
+
+
 
   // 7) If showCreateForm => show <CreatePromotionForm />
   if (showCreateForm) {
@@ -258,15 +265,16 @@ export default function PromotionCode({ eventUuid }: PromotionCodeProps) {
           );
         })}
       </Block>
-
-      <NavigationButtons
-        actions={[
-          {
-            label: "Create Promotion",
-            onClick: handleCreatePromotion,
-          },
-        ]}
-      />
+      {eventData.isNotEnded && (
+        <NavigationButtons
+          actions={[
+            {
+              label: "Create Promotion",
+              onClick: handleCreatePromotion,
+            },
+          ]}
+        />
+      )}
     </Page>
   );
 }

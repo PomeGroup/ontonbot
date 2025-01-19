@@ -13,7 +13,7 @@ export const ManageEventButton = () => {
     return (
       <Button
         onClick={() => {
-          router.push(`/events/${eventHash}/edit`);
+          router.push(`/events/${eventHash}/manage`);
         }}
         variant={"primary"}
         className="w-full"
