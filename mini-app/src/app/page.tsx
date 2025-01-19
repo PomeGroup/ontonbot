@@ -231,72 +231,24 @@ export default function Home() {
                     </div>
                   )
                 )}
-
-                {/* Ongoing Events */}
-                <EventsBox
+                <HorizontalEvents
                   title="Ongoing Events"
                   link={seeAllOngoingEventsLink}
                   items={ongoingEventsState}
                   isLoading={isLoadingOngoing}
                 />
-
-                {/* Upcoming Events */}
-                {isLoadingUpcoming && upcomingEventsState.length === 0 ? (
-                  <>
-                    <EventCardSkeleton />
-                    <EventCardSkeleton />
-                  </>
-                ) : (
-                  upcomingEventsState.length > 0 && (
-                    <>
-                      <div className="pt-4 w-full pb-4 flex justify-between items-center">
-                        <h2 className="font-bold text-lg">Upcoming Events</h2>
-                        <a
-                          href={seeAllUpcomingEventsLink}
-                          className="text-zinc-300 hover:underline"
-                        >
-                          See All
-                        </a>
-                      </div>
-                      {upcomingEventsState.map((event) => (
-                        <EventCard
-                          key={event.event_uuid}
-                          event={event}
-                          currentUserId={UserId}
-                        />
-                      ))}
-                    </>
-                  )
-                )}
-
-                {/* Past Events */}
-                {isLoadingPast && pastEventsState.length === 0 ? (
-                  <>
-                    <EventCardSkeleton />
-                    <EventCardSkeleton />
-                  </>
-                ) : (
-                  pastEventsState.length > 0 && (
-                    <>
-                      <div className="pt-4 pb-4 flex justify-between items-center">
-                        <h2 className="font-bold text-lg">Past Events</h2>
-                        <a
-                          href={seeAllPastEventsLink}
-                          className="text-zinc-300 hover:underline"
-                        >
-                          See All
-                        </a>
-                      </div>
-                      {pastEventsState.map((event) => (
-                        <EventCard
-                          key={event.event_uuid}
-                          event={event}
-                          currentUserId={UserId}
-                        />
-                      ))}
-                    </>
-                  )
-                )}
+                <HorizontalEvents
+                  title="Upcoming Events"
+                  link={seeAllUpcomingEventsLink}
+                  items={upcomingEventsState}
+                  isLoading={isLoadingUpcoming}
+                />
+                <HorizontalEvents
+                  title="Past Events"
+                  link={seeAllPastEventsLink}
+                  items={pastEventsState}
+                  isLoading={isLoadingPast}
+                />
               </div>
             </SwiperSlide>
 
@@ -336,14 +288,14 @@ export default function Home() {
   );
 }
 
-interface EventsBoxProps {
+interface HorizontalEventsProps {
   title: string;
   link: string;
   items?: any[];
   isLoading: boolean;
 }
 
-function EventsBox({ title, link, items = [], isLoading }: EventsBoxProps) {
+function HorizontalEvents({ title, link, items = [], isLoading }: HorizontalEventsProps) {
   const webApp = useWebApp();
   const userId = webApp?.initDataUnsafe?.user?.id;
 
@@ -359,7 +311,7 @@ function EventsBox({ title, link, items = [], isLoading }: EventsBoxProps) {
           <h2 className="font-bold text-lg">{title}</h2>
           <a
             href={link}
-            className="text-[#007AFF] hover:underline"
+            className="text-[#007AFF] border-2 border-[#007aff] rounded-lg py-1.5 px-4 hover:underline"
           >
             See All
           </a>

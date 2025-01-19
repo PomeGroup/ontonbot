@@ -32,7 +32,7 @@ export default function ProfilePage() {
   if (isLoading) return "loading";
 
   return (
-    <div className="bg-[#EFEFF4] pb-4 min-h-screen">
+    <div className="bg-[#EFEFF4] py-4 min-h-screen">
       {paid ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <ActionCard
         onClick={() => router.push("/my/participated")}
@@ -86,6 +86,7 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
   if (!data) return null;
   return (
     <Card
+      className='mt-0'
       onClick={() => {
         router.push(`/my/edit`);
       }}
@@ -130,7 +131,7 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
 
 function OrganizerProgress({ step }: { step: 1 | 2 }) {
   return (
-    <Card className="border border-[#007AFF]">
+    <Card className="border border-[#007AFF] mt-0">
       <Typography
         bold
         variant="headline"
