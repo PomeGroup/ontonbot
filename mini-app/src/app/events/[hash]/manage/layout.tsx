@@ -1,28 +1,16 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React from "react";
 import { useParams } from "next/navigation";
-
 import useAuth from "@/hooks/useAuth";
 import { useGetEvent } from "@/hooks/events.hooks";
 import EventsSkeleton from "@/app/_components/molecules/skeletons/EventsSkeleton";
 
-/**
- * We'll store the loaded event data in this context,
- * so child routes can read it without re-fetching.
- */
-interface ManageEventContextValue {
-  eventData: NonNullable<ReturnType<typeof useGetEvent>["data"]>;
-}
-const ManageEventContext = createContext<ManageEventContextValue | null>(null);
-
-export function useManageEventContext() {
-  const ctx = useContext(ManageEventContext);
-  if (!ctx) {
-    throw new Error("useManageEventContext must be used inside [hash]/manage/layout.tsx");
-  }
-  return ctx;
-}
+// Import the context provider from the separate file:
+import {
+  ManageEventContextProvider,
+  ManageEventContextValue,
+} from "../../../../context/ManageEventContext";
 
 /**
  * The layout for /events/[hash]/manage/*.
@@ -32,10 +20,9 @@ export function useManageEventContext() {
  * - Otherwise => provide eventData to children routes
  */
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { hash } = useParams() as { hash: string };
+  const { hash } = useParams() as { hash?: string };
   const { authorized, isLoading } = useAuth();
   const event = useGetEvent(hash);
-
   // 1) If user is still loading
   if (isLoading) {
     return <EventsSkeleton />;
@@ -44,19 +31,37 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   if (!authorized) {
     return <div>Not Authorized</div>;
   }
-  // 3) If there's an error loading event
+
+  // If you have a scenario for a "new" event with no real data:
+  // if (hash === "new") {
+  //   return (
+  //     <ManageEventContextProvider value={{ eventData: null }}>
+  //       {children}
+  //     </ManageEventContextProvider>
+  //   );
+  // }
+
+  if (!hash) {
+    return <div>Missing event hash!</div>;
+  }
+
+  // 3) fetch the event
+
   if (event.error) {
     return <div>Error: {event.error.message}</div>;
   }
-  // 4) If event data is still loading
-  if (!event.data ) {
+  if (!event.data) {
     return <div>Loading event data...</div>;
   }
 
-  // 5) We have event data + authorized => pass via context
+  // 4) Provide the event data to children
+  const ctxValue: ManageEventContextValue = {
+    eventData: event.data,
+  };
+
   return (
-    <ManageEventContext.Provider value={{ eventData: event.data }}>
+    <ManageEventContextProvider value={ctxValue}>
       {children}
-    </ManageEventContext.Provider>
+    </ManageEventContextProvider>
   );
 }

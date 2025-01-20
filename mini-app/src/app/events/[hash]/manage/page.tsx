@@ -2,12 +2,12 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Page, Block, Card } from "konsta/react";
+import { Page, Block } from "konsta/react";
 // svg icons
 import guestListIcon from "./guest-list.svg";
 import promotionCodeIcon from "./promotion-code.svg";
 import ordersIcon from "./orders.svg";
-import { useManageEventContext } from "./layout";
+import { useManageEventContext } from "../../../../context/ManageEventContext";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import ActionCard from "@/components/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";

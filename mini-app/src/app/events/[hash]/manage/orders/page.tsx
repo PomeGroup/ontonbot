@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Page, Block } from "konsta/react";
-import { useManageEventContext } from "../layout";
+import { useManageEventContext } from "../../../../../context/ManageEventContext";
 import EventOrders from "@/app/_components/Event/Orders/Orders";
 
 export default function OrdersPage() {

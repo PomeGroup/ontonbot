@@ -12,7 +12,7 @@ import ActionCardWithMenu from "./ActionCardWithMenu";
 import CreatePromotionForm from "./CreatePromotionForm";
 import EditPromotionDatesForm from "./EditPromotionDatesForm";
 import { useDownloadCSV } from "@/app/_components/Event/PromotionCode/useDownloadCSV";
-import { useManageEventContext } from "@/app/events/[hash]/manage/layout";
+import { useManageEventContext } from "@/context/ManageEventContext";
 import Image from "next/image";
 
 
@@ -32,7 +32,7 @@ interface Definition {
 export default function PromotionCode() {
   // 1) Hide Telegram back button on unmount
   const { eventData } = useManageEventContext();
-  const eventUuid = eventData.event_uuid;
+
   const webApp = useWebApp();
   useEffect(() => {
     return () => {
@@ -47,11 +47,11 @@ export default function PromotionCode() {
 
   // 3) CSV logic
   const { isCSVLoading, handleDownloadCSV } = useDownloadCSV();
-  if(eventUuid === undefined ) {
-
+  if(!eventData?.event_uuid) {
     return <div>Loading...</div>;
-
   }
+  const eventUuid = eventData.event_uuid;
+
   // 4) tRPC query: get coupon definitions
   const {
     data,
