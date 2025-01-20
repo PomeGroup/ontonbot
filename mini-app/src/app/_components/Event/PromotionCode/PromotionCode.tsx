@@ -6,7 +6,7 @@ import { Page, Navbar, Block } from "konsta/react";
 import useWebApp from "@/hooks/useWebApp";
 import { trpc } from "@/app/_trpc/client";
 import { Download } from "lucide-react";
-import promotionCodeNoResult from "promotion-code-no-result.svg";
+import promotionCodeNoResult from "./promotion-code-no-result.svg";
 import NavigationButtons from "@/components/NavigationButtons";
 import ActionCardWithMenu from "./ActionCardWithMenu";
 import CreatePromotionForm from "./CreatePromotionForm";
