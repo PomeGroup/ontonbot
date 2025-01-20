@@ -1,20 +1,18 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { trpc } from "./_trpc/client";
-import "./page.css";
 import { useConfig } from "@/context/ConfigContext";
-import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
-import applyTabFilter from "@/app/_components/SearchBar/applyTabFilter";
 import { Block } from "konsta/react";
-import { useTheme } from "next-themes";
+import { trpc } from "./_trpc/client";
+// import { useTheme } from "next-themes";
+import "swiper/css";
+import "./page.css";
 
 import BottomNavigation from "../components/BottomNavigation";
 import EventBanner from "@/components/EventBanner";
@@ -22,26 +20,14 @@ import EventBanner from "@/components/EventBanner";
 // Define types for events
 type EventData = any[];
 
+const tabValueForSearchBar = 'All'
 export default function Home() {
   const { config } = useConfig();
   const SliderEventUUID = Array.isArray(config?.homeSliderEventUUID) ? config.homeSliderEventUUID[0] : "";
-  const webApp = useWebApp();
   const { authorized, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
 
-  const UserId = webApp?.initDataUnsafe?.user?.id;
-
-  const [activeTab, setActiveTab] = useState("all-events");
-  const [tabValueForSearchBar, setTabValueForSearchBar] = useState("All");
-  const swiperRef = useRef<any>(null);
-  const scrollRef = useRef<HTMLDivElement>(null); // Ref for scrollable area
-  const { setTheme, theme } = useTheme();
-
-  // Store the last scroll positions of each tab
-  const scrollPositions = useRef<{ [key: string]: number }>({
-    "all-events": 0,
-    "my-events": 0,
-  });
+  // const { setTheme, theme } = useTheme();
 
   // Fetch parameters
   const sliderEventParams = searchEventsInputZod.parse({
@@ -84,15 +70,6 @@ export default function Home() {
     sortBy: "start_date_desc",
   });
 
-  const myEventsParams = searchEventsInputZod.parse({
-    limit: 0,
-    offset: 0,
-    filter: {
-      user_id: UserId,
-    },
-    sortBy: "start_date_desc",
-  });
-
   // Local state to avoid unnecessary refetches
   const [sliderEventsState, setSliderEventsState] = useState<EventData>([]);
   const [upcomingEventsState, setUpcomingEventsState] = useState<EventData>([]);
@@ -126,14 +103,6 @@ export default function Home() {
     retryDelay: 5000,
     enabled: pastEventsState.length === 0,
   });
-  const {
-    data: myEventsData,
-    isLoading: isLoadingMyEvents,
-    refetch: refetchMyEvents,
-  } = trpc.events.getEventsWithFilters.useQuery(myEventsParams, {
-    staleTime: Infinity,
-    enabled: false, // Disable auto-fetch for "My Events"
-  });
 
   const seeAllUpcomingEventsLink = "/search/?tab=Upcoming";
   const seeAllPastEventsLink = "/search/?tab=Past";
@@ -147,48 +116,9 @@ export default function Home() {
     if (pastEventsData?.data && pastEventsData?.data?.length > 0) setPastEventsState(pastEventsData.data);
   }, [sliderEventData, upcomingEventsData, ongoingEventsData, pastEventsData]);
 
-  // Disable body scroll with inline styles
   // useEffect(() => {
-  //   document.body.style.overflow = "hidden";
-  //   document.body.style.height = "100vh";
-  //   return () => {
-  //     document.body.style.overflow = "";
-  //     document.body.style.height = "";
-  //   };
-  // }, []);
-
-  // Restore scroll position or scroll to top when tab changes
-  useEffect(() => {
-    const lastScrollPosition = scrollPositions.current[activeTab] || 0;
-    setTabValueForSearchBar(activeTab === "all-events" ? "All" : "My Events");
-    applyTabFilter(activeTab === "all-events" ? "All" : "MyEvents", UserId);
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: lastScrollPosition,
-        behavior: "smooth",
-      });
-    }
-  }, [activeTab]);
-
-  // Handle swiper slide change
-  const handleSlideChange = (swiper: any) => {
-    const activeIndex = swiper.activeIndex;
-    const newTab = activeIndex === 0 ? "all-events" : "my-events";
-    // Save the current scroll position before switching slides
-    if (scrollRef.current) {
-      scrollPositions.current[activeTab] = scrollRef.current.scrollTop;
-    }
-
-    setActiveTab(newTab);
-
-    if (newTab === "my-events") {
-      refetchMyEvents();
-    }
-  };
-
-  useEffect(() => {
-    setTheme("light");
-  }, [theme]);
+  //   setTheme("light");
+  // }, [setTheme, theme]);
 
   return (
     <Block margin="0">
@@ -197,90 +127,66 @@ export default function Home() {
         <div className="sticky top-0 z-50 w-full pb-1 bg-white">
           <SearchBar
             includeQueryParam={false}
-            onUpdateResults={() => {}}
+            onUpdateResults={() => { }}
             tabValue={tabValueForSearchBar}
             userRole={authorized ? userRole : "user"}
           />
         </div>
 
-        {/* Scrollable Content */}
         <div className=" flex-grow">
-          <Swiper
-            onSlideChange={handleSlideChange}
-            slidesPerView={1}
-            spaceBetween={30}
-            pagination={{ clickable: true }}
-            autoHeight
-            onSwiper={(swiper) => {
-              swiperRef.current = swiper;
-            }}
-          >
-            {/* All Events Slide */}
-            <SwiperSlide>
-              <div className="pt-2 flex-grow pb-4">
-                {/* Slider Event */}
-                {isLoadingSlider && sliderEventsState.length === 0 ? (
-                  <>
-                    <EventBanner skeleton />
-                    <EventBanner skeleton />
-                  </>
-                ) : (
-                  sliderEventsState.length > 0 && (
-                    <div className="mb-4">
-                      <EventBanner event={sliderEventsState[0]} />
-                    </div>
-                  )
-                )}
-                <HorizontalEvents
-                  title="Ongoing Events"
-                  link={seeAllOngoingEventsLink}
-                  items={ongoingEventsState}
-                  isLoading={isLoadingOngoing}
-                />
-                <HorizontalEvents
-                  title="Upcoming Events"
-                  link={seeAllUpcomingEventsLink}
-                  items={upcomingEventsState}
-                  isLoading={isLoadingUpcoming}
-                />
-                <HorizontalEvents
-                  title="Past Events"
-                  link={seeAllPastEventsLink}
-                  items={pastEventsState}
-                  isLoading={isLoadingPast}
-                />
-              </div>
-            </SwiperSlide>
-
-            {/* My Events Slide */}
-            <SwiperSlide>
-              <div className="pt-2 flex-grow overflow-y-auto pb-4 min-h-[calc(100vh-10rem)]">
-                {isLoadingMyEvents ? (
-                  [1, 2, 3, 4, 5].map((index) => <EventCardSkeleton key={index} />)
-                ) : myEventsData?.data?.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center text-center flex-grow h-[calc(100vh-10rem)] gap-4">
-                    <Image
-                      src={"/template-images/my-event-empty-list-msg.png"}
-                      alt={"No Events"}
-                      width={180}
-                      height={180}
-                    />
-                    <div className="text-gray-500 max-w-md">No Events at this time.</div>
-                  </div>
-                ) : (
-                  myEventsData?.data?.map((event) => (
+          <div className="pt-2 flex-grow pb-4">
+            {/* Slider Event */}
+            {isLoadingSlider && sliderEventsState.length === 0 ? (
+              <>
+                <EventBanner skeleton />
+                <EventBanner skeleton />
+              </>
+            ) : (
+              sliderEventsState.length > 0 && (
+                <Swiper
+                  // onSlideChange={handleSlideChange}
+                  slidesPerView={2}
+                  spaceBetween={30}
+                  pagination={{ clickable: true }}
+                  autoHeight
+                >
+                  {sliderEventsState.map(event => (
                     <>
-                      <EventCard
-                        key={event.event_uuid}
-                        event={event}
-                        currentUserId={UserId}
-                      />
+                      <SwiperSlide key={`1${event.event_uuid}`}>
+                        <EventBanner event={event} />
+                      </SwiperSlide>
+                      <SwiperSlide key={`2${event.event_uuid}`}>
+                        <EventBanner event={event} />
+                      </SwiperSlide>
+                      <SwiperSlide key={`3${event.event_uuid}`}>
+                        <EventBanner event={event} />
+                      </SwiperSlide>
+                      <SwiperSlide key={`5${event.event_uuid}`}>
+                        <EventBanner event={event} />
+                      </SwiperSlide>
                     </>
-                  ))
-                )}
-              </div>
-            </SwiperSlide>
-          </Swiper>
+                  ))}
+                </Swiper>
+              ))}
+            <HorizontalEvents
+              title="Ongoing Events"
+              link={seeAllOngoingEventsLink}
+              items={ongoingEventsState}
+              isLoading={isLoadingOngoing}
+            />
+            <HorizontalEvents
+              title="Upcoming Events"
+              link={seeAllUpcomingEventsLink}
+              items={upcomingEventsState}
+              isLoading={isLoadingUpcoming}
+            />
+            <HorizontalEvents
+              title="Past Events"
+              link={seeAllPastEventsLink}
+              items={pastEventsState}
+              isLoading={isLoadingPast}
+            />
+          </div>
         </div>
       </div>
       <BottomNavigation active="Events" />
