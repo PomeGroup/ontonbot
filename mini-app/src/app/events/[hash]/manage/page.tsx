@@ -96,17 +96,13 @@ export default function ManageIndexPage() {
         {/*  ]}*/}
         {/*/>*/}
         {/*)}*/}
-
-
-
-          <ActionCard
-            onClick={() => router.push(`/events/${eventData.event_uuid}/manage/guest-list`)}
-            iconSrc={guestListIcon}
-            title="Guests list"
-            subtitle="View and manage participants"
-            footerTexts={[]}
-          />
-
+        <ActionCard
+          onClick={() => router.push(`/events/${eventData.event_uuid}/manage/guest-list`)}
+          iconSrc={guestListIcon}
+          title="Guests list"
+          subtitle="View and manage participants"
+          footerTexts={[]}
+        />
       </Block>
     </Page>
   );
