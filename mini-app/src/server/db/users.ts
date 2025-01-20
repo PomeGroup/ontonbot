@@ -244,7 +244,8 @@ export const selectUserById = async (
         org_image: sql`
           COALESCE(
             ${users.org_image},
-            ${users.photo_url}
+            ${users.photo_url},
+            ''
           )
         `.as("org_image"),
       })
@@ -254,6 +255,7 @@ export const selectUserById = async (
 
     if (userInfo.length > 0 && update_cache) {
       await redisTools.setCache(cacheKey, userInfo[0], redisTools.cacheLvl.short); // Cache the user
+      //@ts-ignore
       return userInfo[0];
     }
     return null;
