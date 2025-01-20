@@ -497,13 +497,13 @@ export const getOrganizerById = async (
     }
 
     // 3) Check if user is indeed organizer
-    if (user.role !== "organizer") {
-      return {
-        success: false,
-        data: null,
-        error: `User with ID=${userId} is not an organizer.`,
-      };
-    }
+    // if (user.role !== "organizer") {
+    //   return {
+    //     success: false,
+    //     data: null,
+    //     error: `User with ID=${userId} is not an organizer.`,
+    //   };
+    // }
 
     // 4) Pick only the minimal organizer fields from the user object
     //    (We also pick `role` so we can omit it from the final return)
