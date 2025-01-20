@@ -45,7 +45,7 @@ export default function ActionCard({ onClick, iconSrc, title, subtitle, footerTe
                 key={index}
                 className={text.variant === "error" ? "text-red-500" : ""}
               >
-                {text.count && <b>{text.count} </b>}
+                {text.count !== undefined && <b>{text.count} </b>}
                 {text.items}
               </div>
             ))}

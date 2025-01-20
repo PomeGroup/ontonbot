@@ -112,6 +112,8 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
 
 // 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
 export const sendLogNotification = async (props: { message: string; topic: "event" | "ticket" | "system" | "payments" }) => {
+  if (process.env.NODE_ENV === 'development') return;
+  
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     console.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");

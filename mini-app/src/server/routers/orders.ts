@@ -78,7 +78,7 @@ export const ordersRouter = router({
 
       // DB call: create a new 'promote_to_organizer' order
       const newOrder = await ordersDB.createPromoteToOrganizerOrder(user_id, hardCodedEventUuid);
-      return newOrder;
+      return newOrder[0];
     }),
 
   // 4) Get a user's 'promote_to_organizer' order

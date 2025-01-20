@@ -60,7 +60,7 @@ function ManageEvent({ event }: ManageEventProps) {
     clearGeneralStepErrors();
   }, [clearGeneralStepErrors]);
 
-  // 2) On mount, reset store. Then set event data if we have it
+  // TODO: This is cancer!
   useLayoutEffect(() => {
     resetState();
     setIsReset(true);

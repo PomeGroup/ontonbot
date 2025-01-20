@@ -324,7 +324,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       await redisTools.deleteCache(userCacheKey);
 
       // On local development skip  registration to ton society || paid event will be registered when organizer pays initial payment
-      const register_to_ts = process.env.ENV !== "local" || !eventData.has_payment;
+      const register_to_ts = process.env.ENV !== "local";
 
       if (register_to_ts) {
         const res = await registerActivity(eventDraft);

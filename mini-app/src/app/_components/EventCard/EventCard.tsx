@@ -12,6 +12,7 @@ import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import { Button } from "konsta/react";
 
+
 interface EventCardProps {
   event: {
     eventUuid: string;
@@ -208,3 +209,4 @@ const EventCard = memo(UnmemorizedEventCard, (prevProps, nextProps) => {
 
 EventCard.displayName = "EventCard";
 export default EventCard;
+

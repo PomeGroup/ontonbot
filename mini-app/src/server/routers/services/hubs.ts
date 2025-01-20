@@ -4,7 +4,80 @@ import { HubsResponse } from "@/types";
 import { TRPCError } from "@trpc/server";
 import { logger } from "@/server/utils/logger";
 
+const hardCodedDataForIran = {
+  "status": "success",
+  "hubs": [
+    {
+      "id": "1",
+      "name": "Global"
+    },
+    {
+      "id": "2",
+      "name": "Europe"
+    },
+    {
+      "id": "3",
+      "name": "India"
+    },
+    {
+      "id": "4",
+      "name": "Korea"
+    },
+    {
+      "id": "5",
+      "name": "SEA"
+    },
+    {
+      "id": "6",
+      "name": "Caucasus"
+    },
+    {
+      "id": "7",
+      "name": "Turkiye"
+    },
+    {
+      "id": "8",
+      "name": "CIS"
+    },
+    {
+      "id": "9",
+      "name": "UAE"
+    },
+    {
+      "id": "10",
+      "name": "UK"
+    },
+    {
+      "id": "11",
+      "name": "Hong Kong"
+    },
+    {
+      "id": "12",
+      "name": "TON Square"
+    },
+    {
+      "id": "13",
+      "name": "Community"
+    },
+    {
+      "id": "33",
+      "name": "Onton"
+    },
+    {
+      "id": "34",
+      "name": "Japan"
+    },
+    {
+      "id": "49",
+      "name": "Balkans"
+    }
+  ]
+}
+
 const getHubs = publicProcedure.query(async () => {
+  if (process.env.NODE_ENV === 'development') {
+    return hardCodedDataForIran
+  }
   try {
     const response = await tonSocietyClient.get<HubsResponse>(`/hubs`, {
       params: {

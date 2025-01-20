@@ -49,7 +49,7 @@ export default function EditForm({ data }: { data: Channel }) {
 
       const xLink = values.org_x_link === xLinkDefault ? "" : values.org_x_link;
 
-      if (xLink && !/^https?:\/\/[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}\/.*$/.test(xLink)) {
+      if (xLink && !/^https?:\/\/[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}\/[a-zA-Z0-9_]{1,}$/.test(xLink)) {
         newErrors.org_x_link = "Invalid X handle URL. It should be like https://x.com/ontonlive";
       }
       return newErrors;
@@ -223,13 +223,9 @@ export default function EditForm({ data }: { data: Channel }) {
           >
             Save Changes
           </Button>
-          <Button
-            className="py-5 !rounded-[10px]"
-            outline
-            onClick={goBack}
-          >
+          <button type='button' onClick={goBack} className='w-full rounded-[10px] px-4 py-2 border-2 border-[#007AFF] text-[#007aff] font-semibold uppercase text-sm'>
             Discard
-          </Button>
+          </button>
         </div>
       </div>
     </form>
