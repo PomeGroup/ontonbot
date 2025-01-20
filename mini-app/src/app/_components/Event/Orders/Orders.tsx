@@ -16,7 +16,7 @@ const EventOrders = () => {
   const updateOrder = useUpdateOrder({ event_uuid: params.hash });
   const orders = useGetEventOrders();
 
-  const { config } = useConfig();
+  const config = useConfig();
 
   /**
    * TON Connect
@@ -74,29 +74,29 @@ const EventOrders = () => {
                         onClick={() => {
                           tonWallet?.account.address
                             ? // FIXME: support for usdt
-                              tonConnectUI
-                                .sendTransaction({
-                                  validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
-                                  messages: [
-                                    {
-                                      amount: toNano(order.total_price).toString(),
-                                      address: config.ONTON_WALLET_ADDRESS!,
-                                      payload: beginCell()
-                                        .storeUint(0, 32)
-                                        .storeStringTail(`onton_order=${order.uuid}`)
-                                        .endCell()
-                                        .toBoc()
-                                        .toString("base64"),
-                                    },
-                                  ],
-                                })
-                                .then(() => {
-                                  toast("Please wait until we confirm the transaction and do not pay again");
-                                  updateOrder.mutate({
-                                    state: "confirming",
-                                    order_uuid: order.uuid,
-                                  });
-                                })
+                            tonConnectUI
+                              .sendTransaction({
+                                validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
+                                messages: [
+                                  {
+                                    amount: toNano(order.total_price).toString(),
+                                    address: config.ONTON_WALLET_ADDRESS!,
+                                    payload: beginCell()
+                                      .storeUint(0, 32)
+                                      .storeStringTail(`onton_order=${order.uuid}`)
+                                      .endCell()
+                                      .toBoc()
+                                      .toString("base64"),
+                                  },
+                                ],
+                              })
+                              .then(() => {
+                                toast("Please wait until we confirm the transaction and do not pay again");
+                                updateOrder.mutate({
+                                  state: "confirming",
+                                  order_uuid: order.uuid,
+                                });
+                              })
                             : tonConnectUI.openModal();
                         }}
                       >

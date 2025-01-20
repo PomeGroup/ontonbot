@@ -40,7 +40,7 @@ export default function usePollPromoteToOrganizer(onFinish: (_success: boolean) 
 
   const transfer = useTransferTon();
   const userToOrganizerMutation = trpc.orders.addPromoteToOrganizerOrder.useMutation();
-  const {config} = useConfig()
+  const config = useConfig()
   const onPay = useCallback(async () => {
     if (state !== 'ready') return
 

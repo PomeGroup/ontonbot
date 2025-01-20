@@ -13,7 +13,7 @@ import EventBanner from "@/components/EventBanner";
 type EventData = any[];
 
 export default function Home() {
-  const { config } = useConfig();
+  const config = useConfig();
 
   const eventUUID = "6acf01ed-3122-498a-a937-329766b459aa";
   const sideEventUUIDs = config?.gatewaySideEvents?.split(",");

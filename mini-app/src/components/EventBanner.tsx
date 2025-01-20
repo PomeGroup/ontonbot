@@ -3,18 +3,20 @@ import Image from "next/image";
 import { useState } from "react";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import { OntonEvent } from "@/types";
+import { cn } from "@/utils";
 
-type SkeletonProps = { skeleton: true; event?: null };
+type SkeletonProps = { skeleton: true; event?: null, className: never };
 type EventProps = {
   skeleton?: false;
   event: OntonEvent;
+  className?: string
 };
 
 type Props = SkeletonProps | EventProps;
 
 const defaultImage = "/template-images/default.webp";
 
-export default function EventBanner({ skeleton, event }: Props) {
+export default function EventBanner({ skeleton, event, className }: Props) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const webApp = useWebApp();
 
@@ -38,7 +40,7 @@ export default function EventBanner({ skeleton, event }: Props) {
 
   return (
     <div
-      className="relative w-full h-auto overflow-hidden shadow-lg cursor-pointer"
+      className={cn("relative w-full h-auto overflow-hidden shadow-lg cursor-pointer", className)}
       onClick={handleEventClick}
       key={`detailed-${eventUuid}`}
     >
