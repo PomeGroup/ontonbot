@@ -1,5 +1,5 @@
 import { Block, Button, Card, Page, Popup, Sheet } from "konsta/react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import Typography from "../../components/Typography";
 import OntonDialog from "@/components/OntonDialog";
 import Image from "next/image";
@@ -8,46 +8,34 @@ import greenCheckIcon from "./green-check.svg";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { cn } from "@/utils";
 import useDisableScrollbar from "@/hooks/ui/useDisableScrollbar";
-import { trpc } from "../_trpc/client";
-import useTransferTon from "./useTransfer";
-import { useConfig } from "@/context/ConfigContext";
+import usePollPromoteToOrganizer from "./usePollPromoteToOrganizer";
 
 export default function PaymentCard({ visible }: { visible: boolean }) {
   const [confirmPayDialogOpen, setConfirmPayDialogOpen] = useState(false);
-  const [loadingPopupOpen, setLoadingPopupOpen] = useState(false);
   const [congratsDrawerOpen, setCongratsDrawerOpen] = useState(false);
 
-  const transfer = useTransferTon();
-  const userToOrganizerMutation = trpc.orders.addPromoteToOrganizerOrder.useMutation();
+  const onFail = useCallback(() => {
+    toast.error("Transaction was not successfull. Please try again");
+    setConfirmPayDialogOpen(false);
+  }, [])
 
-  const { config } = useConfig();
-  const trpcUtils = trpc.useUtils();
+  const onPollFinished = useCallback((success: boolean) => {
+    setConfirmPayDialogOpen(false);
+    console.log('final state', success)
+    setTimeout(() => {
+      if (success) {
+        setCongratsDrawerOpen(true);
+      } else {
+        onFail()
+      }
+    }, 300);
+  }, [onFail])
+
+  const { state, onPay } = usePollPromoteToOrganizer(onPollFinished)
+
   const handlePay = async () => {
     setConfirmPayDialogOpen(false);
-    const responsePromise = userToOrganizerMutation.mutateAsync({});
-    setTimeout(async () => {
-      setLoadingPopupOpen(true);
-      const response: any = await responsePromise;
-
-      try {
-        await transfer(config.ONTON_WALLET_ADDRESS as string, Number(response.total_price), response.payment_type, {
-          comment: `onton_order=${response.uuid}`,
-        });
-        setTimeout(() => {
-          trpcUtils.orders.getPromoteToOrganizerOrder.invalidate({});
-          setLoadingPopupOpen(false);
-          setTimeout(() => {
-            setCongratsDrawerOpen(true);
-          }, 300);
-        }, 7000);
-      } catch (error) {
-        toast.error("Transaction was not successfull. Please try again");
-        setConfirmPayDialogOpen(false);
-        setLoadingPopupOpen(false);
-        // mainButton?.show().enable();
-        console.error("Error during transfer:", error);
-      }
-    });
+    onPay()
   };
 
   return (
@@ -78,7 +66,7 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
           setCongratsDrawerOpen(false);
         }}
       />
-      <LoadingPopup open={loadingPopupOpen} />
+      <LoadingPopup open={state === 'processing'} />
     </>
   );
 }

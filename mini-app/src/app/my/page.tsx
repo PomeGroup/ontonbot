@@ -161,7 +161,7 @@ function ConnectWalletCard() {
 
   const hasWallet = !!useTonAddress();
   return (
-   <Card className="mb-12">
+    <Card className="mb-12">
       <Typography
         bold
         variant="headline"
@@ -230,7 +230,7 @@ function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () =>
         wallet: tonWalletAddress,
       });
     }
-  }, [tonWalletAddress, user?.wallet_address]);
+  }, [addWalletMutation, onClose, tonWalletAddress, user?.user_id, user?.wallet_address]);
 
   return (
     <OntonDialog
