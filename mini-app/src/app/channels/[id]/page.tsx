@@ -1,13 +1,9 @@
 "use client";
-
-import { Card } from "konsta/react";
-import Image from "next/image";
-import Typography from "../../../components/Typography";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
-import { ArrowRight } from "lucide-react";
 import ChannelInfoCard from "@/app/_components/channels/ChannelInfoCard";
 import { trpc } from "@/app/_trpc/client";
 import { useRouter } from "next/navigation";
+import ActionCard from "@/ActionCard";
 
 type Props = { params: { id: string } };
 
@@ -22,39 +18,13 @@ export default function ChannelPage({ params }: Props) {
   return (
     <div className="bg-[#EFEFF4] py-4">
       <ChannelInfoCard data={data} />
-      <Card
-        className="p-4 mb-0"
+      <ActionCard
         onClick={() => router.push(`/channels/${params.id}/events`)}
-      >
-        <div className="flex gap-3 align-stretch">
-          <div className="bg-[#efeff4] p-4 rounded-lg">
-            <Image
-              src={ticketIcon}
-              width={48}
-              height={48}
-              alt="ticket icon"
-            />
-          </div>
-          <div className="flex flex-col flex-1">
-            <Typography
-              bold
-              variant="title3"
-            >
-              Events
-            </Typography>
-            <Typography variant="body">Visit organizer&apos;s events</Typography>
-            <Typography
-              variant="caption1"
-              className="mt-auto"
-            >
-              <b>{data.hosted_event_count}</b> Events
-            </Typography>
-          </div>
-          <div className="self-center">
-            <ArrowRight className="text-main-button-color" />
-          </div>
-        </div>
-      </Card>
+        iconSrc={ticketIcon}
+        subtitle="Visit organizer events"
+        title="Events"
+        footerTexts={[{ count: data.hosted_event_count || 0, items: 'Events' }]}
+      />
     </div>
   );
 }
