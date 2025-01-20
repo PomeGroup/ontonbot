@@ -30,7 +30,7 @@ type Props = { params: { hash: string } };
 //   };
 // }
 
-export async function EventPage({ params }: Props) {
+export default function EventPage({ params }: Props) {
   if (params.hash.length !== 36) {
     return <div>Incorrect event link. Startapp param should be 36 characters long</div>;
   }
@@ -38,6 +38,4 @@ export async function EventPage({ params }: Props) {
   return <EventDataPage eventHash={params.hash} />;
 }
 
-export default EventPage;
 
-export const dynamic = "force-dynamic";
