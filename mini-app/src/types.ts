@@ -1,6 +1,29 @@
 import { Address } from "@ton/core";
 import { z } from "zod";
 
+export type OntonEvent = {
+    eventUuid: string;
+    title?: string;
+    startDate: number;
+    endDate: number;
+    location?: string;
+    imageUrl?: string;
+    subtitle?: string;
+    organizerFirstName?: string;
+    organizerLastName?: string;
+    organizerUsername?: string;
+    organizerUserId?: number;
+    ticketToCheckIn?: boolean;
+    timezone?: string;
+
+    reservedCount?: number;
+    visitorCount?: number;
+    ticketPrice?: number;
+    city?: string;
+    country?: string;
+    participationType?: string;
+  }
+
 export type InputField = {
   type: string;
   title: string;

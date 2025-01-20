@@ -9,6 +9,7 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useConfig } from "@/context/ConfigContext";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Block } from "konsta/react";
+import { Pagination } from 'swiper/modules';
 import { trpc } from "./_trpc/client";
 // import { useTheme } from "next-themes";
 import "swiper/css";
@@ -16,26 +17,18 @@ import "./page.css";
 
 import BottomNavigation from "../components/BottomNavigation";
 import EventBanner from "@/components/EventBanner";
+import { OntonEvent } from "@/types";
+import { noop } from "lodash";
 
 // Define types for events
 type EventData = any[];
 
 const tabValueForSearchBar = 'All'
 export default function Home() {
-  const { config } = useConfig();
-  const SliderEventUUID = Array.isArray(config?.homeSliderEventUUID) ? config.homeSliderEventUUID[0] : "";
   const { authorized, role: userRole } = useAuth();
   const currentDateTime = Math.floor(Date.now() / 1000);
 
   // const { setTheme, theme } = useTheme();
-
-  // Fetch parameters
-  const sliderEventParams = searchEventsInputZod.parse({
-    limit: 1,
-    filter: {
-      event_uuids: [SliderEventUUID],
-    },
-  });
 
   const upcomingEventsParams = searchEventsInputZod.parse({
     limit: 2,
@@ -71,19 +64,10 @@ export default function Home() {
   });
 
   // Local state to avoid unnecessary refetches
-  const [sliderEventsState, setSliderEventsState] = useState<EventData>([]);
   const [upcomingEventsState, setUpcomingEventsState] = useState<EventData>([]);
   const [ongoingEventsState, setOngoingEventsState] = useState<EventData>([]);
   const [pastEventsState, setPastEventsState] = useState<EventData>([]);
 
-  // Queries without caching
-  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery(
-    sliderEventParams,
-    {
-      staleTime: Infinity,
-      enabled: sliderEventsState.length === 0,
-    }
-  );
   const { data: upcomingEventsData, isLoading: isLoadingUpcoming } = trpc.events.getEventsWithFilters.useQuery(
     upcomingEventsParams,
     {
@@ -110,11 +94,10 @@ export default function Home() {
 
   // Set local state when data is fetched
   useEffect(() => {
-    if (sliderEventData?.data && sliderEventData?.data?.length > 0) setSliderEventsState(sliderEventData.data);
     if (upcomingEventsData?.data && upcomingEventsData?.data?.length > 0) setUpcomingEventsState(upcomingEventsData.data);
     if (ongoingEventsData?.data && ongoingEventsData?.data?.length > 0) setOngoingEventsState(ongoingEventsData.data);
     if (pastEventsData?.data && pastEventsData?.data?.length > 0) setPastEventsState(pastEventsData.data);
-  }, [sliderEventData, upcomingEventsData, ongoingEventsData, pastEventsData]);
+  }, [upcomingEventsData, ongoingEventsData, pastEventsData]);
 
   // useEffect(() => {
   //   setTheme("light");
@@ -127,7 +110,7 @@ export default function Home() {
         <div className="sticky top-0 z-50 w-full pb-1 bg-white">
           <SearchBar
             includeQueryParam={false}
-            onUpdateResults={() => { }}
+            onUpdateResults={noop}
             tabValue={tabValueForSearchBar}
             userRole={authorized ? userRole : "user"}
           />
@@ -136,38 +119,7 @@ export default function Home() {
         <div className=" flex-grow">
           <div className="pt-2 flex-grow pb-4">
             {/* Slider Event */}
-            {isLoadingSlider && sliderEventsState.length === 0 ? (
-              <>
-                <EventBanner skeleton />
-                <EventBanner skeleton />
-              </>
-            ) : (
-              sliderEventsState.length > 0 && (
-                <Swiper
-                  // onSlideChange={handleSlideChange}
-                  slidesPerView={2}
-                  spaceBetween={30}
-                  pagination={{ clickable: true }}
-                  autoHeight
-                >
-                  {sliderEventsState.map(event => (
-                    <>
-                      <SwiperSlide key={`1${event.event_uuid}`}>
-                        <EventBanner event={event} />
-                      </SwiperSlide>
-                      <SwiperSlide key={`2${event.event_uuid}`}>
-                        <EventBanner event={event} />
-                      </SwiperSlide>
-                      <SwiperSlide key={`3${event.event_uuid}`}>
-                        <EventBanner event={event} />
-                      </SwiperSlide>
-                      <SwiperSlide key={`5${event.event_uuid}`}>
-                        <EventBanner event={event} />
-                      </SwiperSlide>
-                    </>
-                  ))}
-                </Swiper>
-              ))}
+            <PromotedEvents />
             <HorizontalEvents
               title="Ongoing Events"
               link={seeAllOngoingEventsLink}
@@ -192,6 +144,59 @@ export default function Home() {
       <BottomNavigation active="Events" />
     </Block>
   );
+}
+
+type EventsResponseType = {
+  status: 'success',
+  data: (OntonEvent & { event_uuid: string })[]
+}
+
+function PromotedEvents() {
+  const { config } = useConfig();
+  const event_uuids = Array.isArray(config?.homeSliderEventUUID) ?
+    config.homeSliderEventUUID : [config.homeSliderEventUUID];
+
+  // Fetch parameters
+  const sliderEventParams = searchEventsInputZod.parse({
+    limit: 1,
+    filter: {
+      event_uuids,
+    },
+  });
+
+  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events
+    .getEventsWithFilters.useQuery<any, EventsResponseType>(
+      sliderEventParams,
+      {
+        staleTime: Infinity,
+      }
+    );
+
+  return isLoadingSlider ? (
+    <>
+      <EventBanner skeleton />
+      <EventBanner skeleton />
+    </>
+  ) : (
+    (sliderEventData?.data.length || 0) > 0 && (
+      <Swiper
+        // onSlideChange={handleSlideChange}
+        slidesPerView='auto'
+        spaceBetween={16}
+        pagination={{ clickable: true }}
+        // autoHeight
+        modules={[Pagination]}
+      >
+        {sliderEventData?.data.map(event => (
+          <>
+            <SwiperSlide className="w-[70vw]" key={event.event_uuid}>
+              <EventBanner event={event} />
+            </SwiperSlide>
+          </>
+        ))}
+      </Swiper>
+    )
+  )
 }
 
 interface HorizontalEventsProps {

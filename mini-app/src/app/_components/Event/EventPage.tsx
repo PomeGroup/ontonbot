@@ -25,8 +25,6 @@ const EventDataQueryState = () => {
 };
 
 export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
-
-
   const { setTheme } = useTheme();
 
   useEffect(() => {

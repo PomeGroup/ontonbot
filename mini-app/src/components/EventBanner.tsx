@@ -2,32 +2,12 @@ import useWebApp from "@/hooks/useWebApp";
 import Image from "next/image";
 import { useState } from "react";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
+import { OntonEvent } from "@/types";
 
 type SkeletonProps = { skeleton: true; event?: null };
 type EventProps = {
   skeleton?: false;
-  event: {
-    eventUuid: string;
-    title?: string;
-    startDate: number;
-    endDate: number;
-    location?: string;
-    imageUrl?: string;
-    subtitle?: string;
-    organizerFirstName?: string;
-    organizerLastName?: string;
-    organizerUsername?: string;
-    organizerUserId?: number;
-    ticketToCheckIn?: boolean;
-    timezone?: string;
-
-    reservedCount?: number;
-    visitorCount?: number;
-    ticketPrice?: number;
-    city?: string;
-    country?: string;
-    participationType?: string;
-  };
+  event: OntonEvent;
 };
 
 type Props = SkeletonProps | EventProps;
@@ -67,9 +47,10 @@ export default function EventBanner({ skeleton, event }: Props) {
         // if date now before 5 november 2024 show special image
         src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
         alt={title}
-        width={220}
-        height={220}
-        className={`rounded-[10px] transition-opacity duration-250 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+        width={0}
+        height={0}
+        sizes="100vw"
+        className={`aspect-square w-[70vw] rounded-[10px] transition-opacity duration-250 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
         onError={(e) => (e.currentTarget.src = defaultImage)}
         onLoad={() => setImageLoaded(true)}
       />
