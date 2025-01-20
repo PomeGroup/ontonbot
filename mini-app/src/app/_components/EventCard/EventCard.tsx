@@ -22,6 +22,7 @@ interface EventCardProps {
     location?: string;
     imageUrl?: string;
     subtitle?: string;
+    organizerChannelName?: string;
     organizerFirstName?: string;
     organizerLastName?: string;
     organizerUsername?: string;
@@ -67,6 +68,7 @@ function UnforwardedEventCard(
     endDate,
     location = "No Location",
     imageUrl = "/template-images/default.webp",
+    organizerChannelName = "",
     organizerFirstName = "Unknown",
     organizerLastName = "",
     organizerUserId = null,
@@ -166,9 +168,9 @@ function UnforwardedEventCard(
             </div>
 
             {/* Organizer */}
-            {organizerFirstName.trim().length > 0 || organizerLastName.trim().length > 0 && (
+            {organizerChannelName.trim().length > 0   && (
               <span className="font-sans text-left line-clamp-1 text-xs leading-4">
-                by {organizerFirstName} {organizerLastName}
+                by {organizerChannelName}
               </span>
             )}
           </div>

@@ -75,6 +75,12 @@ export const event_details_search_list = pgView("event_details_search_list", {
     organizer.first_name AS organizer_first_name,
     organizer.last_name AS organizer_last_name,
     organizer.username AS organizer_username,
+    organizer.photo_url AS organizer_photo_url,
+    COALESCE(organizer.org_channel_name, ((COALESCE(organizer.first_name, ''::text)  ' '::text)  COALESCE(organizer.last_name, ''::text))::character varying) AS organizer_channel_name,
+    COALESCE(organizer.org_image, organizer.photo_url::character varying) AS organizer_image,
+    organizer.org_bio AS organizer_bio,
+    organizer.org_x_link AS organizer_x_link,
+    organizer.org_support_telegram_user_name AS organizer_support_telegram_user_name,
     (SELECT count(t.id) AS count
      FROM ${tickets} t
      WHERE t.event_uuid::uuid = e.event_uuid) AS reserved_count,
