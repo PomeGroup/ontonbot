@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
@@ -20,88 +20,71 @@ import EventBanner from "@/components/EventBanner";
 import { OntonEvent } from "@/types";
 import { noop } from "lodash";
 
-// Define types for events
-type EventData = any[];
+
+const currentDateTime = Math.floor(Date.now() / 1000);
+
+const upcomingEventsParams = searchEventsInputZod.parse({
+  limit: 2,
+  offset: 0,
+  filter: {
+    participationType: ["online", "in_person"],
+    startDate: currentDateTime,
+  },
+  sortBy: "start_date_asc",
+});
+
+const ongoingEventsParams = searchEventsInputZod.parse({
+  limit: 2,
+  offset: 0,
+  filter: {
+    participationType: ["online", "in_person"],
+    startDate: currentDateTime,
+    startDateOperator: "<=",
+    endDate: currentDateTime,
+    endDateOperator: ">=",
+  },
+  sortBy: "random",
+});
+
+const pastEventsParams = searchEventsInputZod.parse({
+  limit: 2,
+  offset: 0,
+  filter: {
+    participationType: ["online", "in_person"],
+    endDate: currentDateTime - (currentDateTime % 600),
+  },
+  sortBy: "start_date_desc",
+});
 
 const tabValueForSearchBar = 'All'
 export default function Home() {
   const { authorized, role: userRole } = useAuth();
-  const currentDateTime = Math.floor(Date.now() / 1000);
 
   // const { setTheme, theme } = useTheme();
-
-  const upcomingEventsParams = searchEventsInputZod.parse({
-    limit: 2,
-    offset: 0,
-    filter: {
-      participationType: ["online", "in_person"],
-      startDate: currentDateTime,
-    },
-    sortBy: "start_date_asc",
-  });
-
-  const ongoingEventsParams = searchEventsInputZod.parse({
-    limit: 2,
-    offset: 0,
-    filter: {
-      participationType: ["online", "in_person"],
-      startDate: currentDateTime,
-      startDateOperator: "<=",
-      endDate: currentDateTime,
-      endDateOperator: ">=",
-    },
-    sortBy: "random",
-  });
-
-  const pastEventsParams = searchEventsInputZod.parse({
-    limit: 2,
-    offset: 0,
-    filter: {
-      participationType: ["online", "in_person"],
-      endDate: currentDateTime - (currentDateTime % 600),
-    },
-    sortBy: "start_date_desc",
-  });
-
-  // Local state to avoid unnecessary refetches
-  const [upcomingEventsState, setUpcomingEventsState] = useState<EventData>([]);
-  const [ongoingEventsState, setOngoingEventsState] = useState<EventData>([]);
-  const [pastEventsState, setPastEventsState] = useState<EventData>([]);
 
   const { data: upcomingEventsData, isLoading: isLoadingUpcoming } = trpc.events.getEventsWithFilters.useQuery(
     upcomingEventsParams,
     {
       staleTime: Infinity,
-      enabled: upcomingEventsState.length === 0,
+      enabled: true,
     }
   );
   const { data: ongoingEventsData, isLoading: isLoadingOngoing } = trpc.events.getEventsWithFilters.useQuery(
     ongoingEventsParams,
     {
       staleTime: Infinity,
-      enabled: ongoingEventsState.length === 0,
+      enabled: true,
     }
   );
   const { data: pastEventsData, isLoading: isLoadingPast } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams, {
     staleTime: Infinity,
     retryDelay: 5000,
-    enabled: pastEventsState.length === 0,
+    enabled: true,
   });
 
   const seeAllUpcomingEventsLink = "/search/?tab=Upcoming";
   const seeAllPastEventsLink = "/search/?tab=Past";
   const seeAllOngoingEventsLink = "/search/?tab=OnGoing";
-
-  // Set local state when data is fetched
-  useEffect(() => {
-    if (upcomingEventsData?.data && upcomingEventsData?.data?.length > 0) setUpcomingEventsState(upcomingEventsData.data);
-    if (ongoingEventsData?.data && ongoingEventsData?.data?.length > 0) setOngoingEventsState(ongoingEventsData.data);
-    if (pastEventsData?.data && pastEventsData?.data?.length > 0) setPastEventsState(pastEventsData.data);
-  }, [upcomingEventsData, ongoingEventsData, pastEventsData]);
-
-  // useEffect(() => {
-  //   setTheme("light");
-  // }, [setTheme, theme]);
 
   return (
     <Block margin="0">
@@ -123,19 +106,19 @@ export default function Home() {
             <HorizontalEvents
               title="Ongoing Events"
               link={seeAllOngoingEventsLink}
-              items={ongoingEventsState}
+              items={ongoingEventsData?.data || []}
               isLoading={isLoadingOngoing}
             />
             <HorizontalEvents
               title="Upcoming Events"
               link={seeAllUpcomingEventsLink}
-              items={upcomingEventsState}
+              items={upcomingEventsData?.data || []}
               isLoading={isLoadingUpcoming}
             />
             <HorizontalEvents
               title="Past Events"
               link={seeAllPastEventsLink}
-              items={pastEventsState}
+              items={pastEventsData?.data || []}
               isLoading={isLoadingPast}
             />
           </div>
@@ -153,31 +136,30 @@ type EventsResponseType = {
 
 function PromotedEvents() {
   const { config } = useConfig();
-  const event_uuids = Array.isArray(config?.homeSliderEventUUID) ?
-    config.homeSliderEventUUID : [config.homeSliderEventUUID];
+  const event_uuids = (Array.isArray(config?.homeSliderEventUUID) ?
+    config?.homeSliderEventUUID : [config?.homeSliderEventUUID]).filter(Boolean);
+
+  const eventCount = event_uuids.length
 
   // Fetch parameters
-  const sliderEventParams = searchEventsInputZod.parse({
+  const sliderEventParams = {
     limit: 1,
     filter: {
-      event_uuids,
+      event_uuids: event_uuids as string[],
     },
-  });
+  };
 
   const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events
     .getEventsWithFilters.useQuery<any, EventsResponseType>(
       sliderEventParams,
       {
+        enabled: eventCount > 0,
         staleTime: Infinity,
       }
     );
 
-  return isLoadingSlider ? (
-    <>
-      <EventBanner skeleton />
-      <EventBanner skeleton />
-    </>
-  ) : (
+  if (isLoadingSlider) return null
+  return (
     (sliderEventData?.data.length || 0) > 0 && (
       <Swiper
         // onSlideChange={handleSlideChange}

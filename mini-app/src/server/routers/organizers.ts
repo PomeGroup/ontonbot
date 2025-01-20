@@ -1,9 +1,10 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { usersDB } from "@/server/db/users";
+import { MinimalOrganizerData, usersDB } from "@/server/db/users";
 import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
 import { logger } from "../utils/logger";
 import { orgFieldsSchema, searchOrganizersInput } from "@/zodSchema/OrganizerDataSchema";
+import { config } from "../config";
 
 export const organizerRouter = router({
   updateOrganizer: initDataProtectedProcedure
@@ -91,4 +92,24 @@ export const organizerRouter = router({
         });
       }
     }),
+  
+  getPromotedOrganizers: publicProcedure
+    .input(z.object({}).optional())
+    .query(async (): Promise<MinimalOrganizerData[]> => {
+      const promotedChannelsStr = config?.promotedChannelIds || '[438186721, 428313379, 1049961551, 196466876,6123464355]'
+      try {
+        const ids: number[] = JSON.parse(promotedChannelsStr)
+
+        const result = await Promise.all(
+          ids
+            .map(id => usersDB
+              .getOrganizerById(id)
+              .then(({data}) => (data))
+            )
+          )
+        return result.filter(Boolean) as MinimalOrganizerData[]
+      } catch (e) {
+        return [] as MinimalOrganizerData[]
+      }
+    })
 });

@@ -10,6 +10,7 @@ import usePaginatedChannels from "./usePaginatedChannels";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import { ForwardedRef, forwardRef, Fragment, useCallback, useRef } from "react";
 import { noop } from "lodash";
+import PromotedChannels from "./PromotedChannels";
 
 export default function ChannelsPage() {
   const { data, isFetchingNextPage, fetchNextPage, hasNextPage, status } = usePaginatedChannels();
@@ -35,22 +36,26 @@ export default function ChannelsPage() {
   return (
     <Block
       margin="0"
-      className="flex flex-wrap gap-4 bg-[rgba(239,239,244,1)] pt-8 pb-16"
+      className="bg-[rgba(239,239,244,1)] pt-8 pb-16"
     >
-      {data?.pages.map((page, pageIndex) => (
-        <Fragment key={pageIndex}>
-          {page.items.map((item, index) => {
-            const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.length - 1;
-            return (
-              <ChannelCard
-                key={item.user_id}
-                data={item}
-                ref={isLastItem ? lastItemRef : noop}
-              />
-            );
-          })}
-        </Fragment>
-      ))}
+      <PromotedChannels />
+      <div className="flex flex-wrap gap-4 mt-4">
+        {data?.pages.map((page, pageIndex) => (
+          <Fragment key={pageIndex}>
+            {page.items.map((item, index) => {
+              const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.length - 1;
+              return (
+                <ChannelCard
+                  key={item.user_id}
+                  data={item}
+                  ref={isLastItem ? lastItemRef : noop}
+                />
+              );
+            })}
+          </Fragment>
+        ))}
+      </div>
+
       <BottomNavigation active="Channels" />
     </Block>
   );
@@ -90,8 +95,7 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
       )}
       <div className="text-center">
         <div
-          className="font-[590] mb-2 text-[17px] leading-[22px] tracking h-11 overflow-hidden"
-          style={{ WebkitBoxOrient: "vertical", WebkitLineClamp: 2, display: "-webkit-box" }}
+          className="font-[590] mb-2 text-[17px] leading-[22px] tracking h-11 overflow-hidden line-clamp-2"
         >
           {data.org_channel_name || "Untitled channel"}
         </div>
