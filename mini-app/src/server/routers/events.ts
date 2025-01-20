@@ -8,7 +8,7 @@ import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
-import { and, eq, ne} from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import eventDB from "@/server/db/events";
@@ -33,18 +33,19 @@ import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
 dotenv.config();
 
-
-function get_paid_event_price(capacity : number ){
+function get_paid_event_price(capacity: number) {
   const reduced_price = is_dev_env() || is_stage_env();
-  
-  return reduced_price ? (0.001 + 0.00055 * capacity) : (10 + 0.06 * capacity) ;
-}
 
+  return reduced_price ? 0.001 + 0.00055 * capacity : 10 + 0.06 * capacity;
+}
 
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const event_uuid = opts.input.event_uuid;
-  const eventData = { payment_details: {} as Partial<EventPaymentSelectType>, ...(await eventDB.selectEventByUuid(event_uuid)) };
+  const eventData = {
+    payment_details: {} as Partial<EventPaymentSelectType>,
+    ...(await eventDB.selectEventByUuid(event_uuid)),
+  };
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
@@ -56,6 +57,13 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     });
   }
 
+  //If event is hidden or not enabled
+  if (eventData.hidden || !eventData.enabled) {
+    if (userId !== eventData.owner && opts.ctx.user.role !== "admin") {
+      throw new TRPCError({ code: "NOT_FOUND", message: "event is not published yet" });
+    }
+  }
+
   //    Fetch user data for event owner
   //    We'll rename org_* fields to 'organizer: { ... }' in the returned object.
   const ownerUserId = eventData.owner; // This is the user_id who created the event
@@ -64,16 +72,16 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   // Build an organizer object with the org_* fields (or null if no user found)
   const organizer = ownerUser
     ? {
-      org_channel_name: ownerUser.org_channel_name === null ? ownerUser.first_name : ownerUser.org_channel_name,
-      org_support_telegram_user_name: ownerUser.org_support_telegram_user_name,
-      org_x_link: ownerUser.org_x_link,
-      org_bio: ownerUser.org_bio,
-      org_image: ownerUser.org_image === null ? ownerUser.photo_url : ownerUser.org_image,
-      user_id: ownerUser.user_id,
-      username: ownerUser.username,
-      first_name: ownerUser.first_name,
-      hosted_event_count: ownerUser.hosted_event_count,
-    }
+        org_channel_name: ownerUser.org_channel_name === null ? ownerUser.first_name : ownerUser.org_channel_name,
+        org_support_telegram_user_name: ownerUser.org_support_telegram_user_name,
+        org_x_link: ownerUser.org_x_link,
+        org_bio: ownerUser.org_bio,
+        org_image: ownerUser.org_image === null ? ownerUser.photo_url : ownerUser.org_image,
+        user_id: ownerUser.user_id,
+        username: ownerUser.username,
+        first_name: ownerUser.first_name,
+        hosted_event_count: ownerUser.hosted_event_count,
+      }
     : null;
 
   // If the event does NOT require registration, just return data
@@ -150,17 +158,18 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     registrant_uuid,
     capacity: mask_event_capacity ? 99 : eventData.capacity,
   };
-
 });
 
 // private
 const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
-  if(opts.ctx.userRole !== "admin" && opts.ctx.userRole !== "organizer") {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: `Unauthorized access, invalid role for ${opts.ctx.user?.user_id}` });
+  if (opts.ctx.userRole !== "admin" && opts.ctx.userRole !== "organizer") {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: `Unauthorized access, invalid role for ${opts.ctx.user?.user_id}`,
+    });
   }
   return await eventDB.getEventsForSpecialRole(opts.ctx.userRole, opts.ctx.user?.user_id);
 });
-
 
 /* -------------------------------------------------------------------------- */
 /*                                  🆕Add Event🆕                            */
@@ -248,9 +257,9 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       if (input_event_data.paid_event && event_has_payment) {
         if (!input_event_data.capacity)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
-        
+
         const order_price = get_paid_event_price(input_event_data.capacity);
-        
+
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
           user_id: opts.ctx.user.user_id,
@@ -314,12 +323,16 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       logger.log("eventDraft", JSON.stringify(eventDraft));
       logger.log("eventData", eventData);
       // Generate the message using the render function
-      const logMessage = renderAddEventMessage(opts.ctx.user.username || opts.ctx.user.user_id, eventData.event_uuid, eventData);
+      const logMessage = renderAddEventMessage(
+        opts.ctx.user.username || opts.ctx.user.user_id,
+        eventData.event_uuid,
+        eventData
+      );
       await sendLogNotification({
-        message : logMessage,
+        message: logMessage,
         topic: "event",
       });
-      logger.log("add event telegram notification sent" , logMessage);
+      logger.log("add event telegram notification sent", logMessage);
       // Clear the organizer user cache so it will be reloaded next time
       await redisTools.deleteCache(userCacheKey);
 
@@ -402,23 +415,27 @@ const updateEvent = eventManagerPP
             await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
           ).pop();
 
-          if(!paymentInfo) throw new TRPCError({ code: "BAD_REQUEST", message: `error: paymentInfo not found for ${eventUuid}` });
-          
-          // Update Create Order If Event is not published yet
-          if(!oldEvent.enabled && eventData.capacity < paymentInfo!.bought_capacity){
-            const where_condition = and(
-                                        eq(orders.event_uuid, eventUuid),
-                                        eq(orders.order_type, "event_creation"),
-                                        ne(orders.state, "processing"),
-                                        ne(orders.state, "completed"),
-                                      );
-            const createEventOrder = await trx.query.orders.findFirst({where: where_condition});
+          if (!paymentInfo)
+            throw new TRPCError({ code: "BAD_REQUEST", message: `error: paymentInfo not found for ${eventUuid}` });
 
-            if(createEventOrder){
-              await trx.update(orders).set({total_price : get_paid_event_price(eventData.capacity) }).where(where_condition).execute();
-              await trx.update(eventPayment).set({bought_capacity : eventData.capacity})
+          // Update Create Order If Event is not published yet
+          if (!oldEvent.enabled && eventData.capacity < paymentInfo!.bought_capacity) {
+            const where_condition = and(
+              eq(orders.event_uuid, eventUuid),
+              eq(orders.order_type, "event_creation"),
+              ne(orders.state, "processing"),
+              ne(orders.state, "completed")
+            );
+            const createEventOrder = await trx.query.orders.findFirst({ where: where_condition });
+
+            if (createEventOrder) {
+              await trx
+                .update(orders)
+                .set({ total_price: get_paid_event_price(eventData.capacity) })
+                .where(where_condition)
+                .execute();
+              await trx.update(eventPayment).set({ bought_capacity: eventData.capacity });
             }
-            
           }
 
           /* ------------------- Create Order For Increase Capacity ------------------- */
@@ -496,10 +513,13 @@ const updateEvent = eventManagerPP
           let price = Math.max(eventData.paid_event.payment_amount || 0, 0.001); // Price > 0.001
           price = Math.round(price * 1000) / 1000; // Round to 3 Decimals
 
-          await trx.update(eventPayment).set({
-            recipient_address: eventData.paid_event.payment_recipient_address,
-            price: price,
-          }).where(eq(eventPayment.event_uuid , oldEvent.event_uuid));
+          await trx
+            .update(eventPayment)
+            .set({
+              recipient_address: eventData.paid_event.payment_recipient_address,
+              price: price,
+            })
+            .where(eq(eventPayment.event_uuid, oldEvent.event_uuid));
         }
 
         const currentFields = await eventFieldsDB.selectEventFieldsByEventId(trx, eventId!);
@@ -570,7 +590,6 @@ const updateEvent = eventManagerPP
 
         const updateChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
 
-
         // if it was a fully local setup we don't want to update the activity_id
         if (process.env.ENV !== "local") {
           try {
@@ -584,14 +603,21 @@ const updateEvent = eventManagerPP
             });
           }
         }
-        const logMessage = renderUpdateEventMessage(opts.ctx.user.username || opts.ctx.user.user_id , eventUuid, oldChanges, updateChanges);
-        logger.log("update event telegram notification sent", logMessage );
+        const logMessage = renderUpdateEventMessage(
+          opts.ctx.user.username || opts.ctx.user.user_id,
+          eventUuid,
+          oldChanges,
+          updateChanges
+        );
+        logger.log("update event telegram notification sent", logMessage);
         await sendLogNotification({ message: logMessage, topic: "event" });
 
         return { success: true, eventId: opts.ctx.event.event_uuid } as const;
       });
     } catch (err) {
-      logger.error(`[eventRouter]_update_event failed id: ${opts.ctx.event.event_uuid}, error: ${err}` , {input :opts.input});
+      logger.error(`[eventRouter]_update_event failed id: ${opts.ctx.event.event_uuid}, error: ${err}`, {
+        input: opts.input,
+      });
 
       internal_server_error(err, `Failed to update event ${opts.ctx.event.event_uuid}`);
     }
@@ -607,28 +633,26 @@ const getEventsWithFilters = publicProcedure.input(searchEventsInputZod).query(a
   }
 });
 
-export const getEventsWithFiltersInfinite = publicProcedure
-  .input(searchEventsInputZod)
-  .query(async ({ input }) => {
-    // Instead of passing `limit`, pass `limit + 1`
-    const dbResult = await eventDB.getEventsWithFilters({
-      ...input,
-      // tell the DB function: fetch an extra row
-      limit: (input.limit ?? 10) + 1,
-    });
-
-    const actualLimit = input.limit ?? 10;
-    let nextCursor: number | null = null;
-
-    if (dbResult.length > actualLimit) {
-       nextCursor = input.cursor + 1;
-    }
-
-    return {
-      items: dbResult,
-      nextCursor,
-    };
+export const getEventsWithFiltersInfinite = publicProcedure.input(searchEventsInputZod).query(async ({ input }) => {
+  // Instead of passing `limit`, pass `limit + 1`
+  const dbResult = await eventDB.getEventsWithFilters({
+    ...input,
+    // tell the DB function: fetch an extra row
+    limit: (input.limit ?? 10) + 1,
   });
+
+  const actualLimit = input.limit ?? 10;
+  let nextCursor: number | null = null;
+
+  if (dbResult.length > actualLimit) {
+    nextCursor = input.cursor + 1;
+  }
+
+  return {
+    items: dbResult,
+    nextCursor,
+  };
+});
 /* -------------------------------------------------------------------------- */
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
@@ -640,5 +664,3 @@ export const eventsRouter = router({
   getEventsWithFilters,
   getEventsWithFiltersInfinite,
 });
-
-
