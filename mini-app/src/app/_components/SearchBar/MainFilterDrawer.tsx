@@ -32,24 +32,24 @@ interface MainFilterDrawerProps {
 }
 
 const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
-                                                             onOpenChange,
-                                                             participationType,
-                                                             hubText,
-                                                             sortBy,
-                                                             setSortBy,
-                                                             setIsEventTypeDrawerOpen,
-                                                             setIsHubDrawerOpen,
-                                                             resetFilters,
-                                                             applyingFilters,
-                                                             setApplyingFilters,
-                                                             allParticipationTypes,
-                                                           }) => {
+  onOpenChange,
+  participationType,
+  hubText,
+  sortBy,
+  setSortBy,
+  setIsEventTypeDrawerOpen,
+  setIsHubDrawerOpen,
+  resetFilters,
+  applyingFilters,
+  setApplyingFilters,
+  allParticipationTypes,
+}) => {
   return (
     <KSheet
       trigger={(open, setOpen) => (
         <button
           onClick={() => setOpen(true)}
-          className="p-2 rounded-md text-gray-500 hover:text-gray-700"
+          className="p-[6px] rounded-md text-gray-500 hover:text-gray-700 bg-[#7474801F]"
         >
           <IoOptionsOutline className="w-7 h-7" />
         </button>
@@ -66,7 +66,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               <p className=" font-medium">Event Type</p>
               <div className="cursor-pointer text-sm flex items-center">
                 {participationType.length === 0 ||
-                participationType.length === allParticipationTypes.length
+                  participationType.length === allParticipationTypes.length
                   ? "All"
                   : participationType.join(", ").replace("_", " ")}
                 <IoIosArrowForward className="ml-auto" />

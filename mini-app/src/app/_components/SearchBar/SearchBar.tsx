@@ -72,18 +72,18 @@ interface Hub {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
-                                               includeQueryParam = true,
-                                               showFilterTags = false,
-                                               onUpdateResults = () => {},
-                                               offset = 0,
-                                               setOffset = () => {},
-                                               refetch = () => {},
-                                               setFinalSearchInput = () => {},
-                                               tabValue = "All",
-                                               applyTabFilter = () => {},
-                                               userRole = "user",
-                                               refetchEvents = () => {},
-                                             }) => {
+  includeQueryParam = true,
+  showFilterTags = false,
+  onUpdateResults = () => { },
+  offset = 0,
+  setOffset = () => { },
+  refetch = () => { },
+  setFinalSearchInput = () => { },
+  tabValue = "All",
+  applyTabFilter = () => { },
+  userRole = "user",
+  refetchEvents = () => { },
+}) => {
   /** ---------------
    *  Zustand Store
    * ---------------
@@ -524,11 +524,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
       {/* Top row: search + filter icon */}
       <div className="relative flex items-center">
         <div
-          className={`flex-grow transition-all duration-300 ${
-            searchTerm ? "animate-grow" : "animate-shrink"
-          }`}
+          className={`flex-grow transition-all duration-300 ${searchTerm ? "animate-grow" : "animate-shrink"
+            }`}
         >
           <Searchbar
+            className="py-1.5"
             placeholder={
               tabValue === "" ? "Search All Events" : `Search ${tabValue}`
             }
@@ -562,7 +562,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         {/* Main filter drawer */}
         {showFilterButton && (
           <MainFilterDrawer
-            onOpenChange={() => {}}
+            onOpenChange={() => { }}
             participationType={participationTypeLocal}
             hubText={hubText}
             sortBy={sortByLocal}

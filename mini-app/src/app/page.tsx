@@ -87,10 +87,10 @@ export default function Home() {
   const seeAllOngoingEventsLink = "/search/?tab=OnGoing";
 
   return (
-    <Block margin="0">
+    <Block margin="0" className="bg-[#EFEFF4]">
       <div className="flex flex-col pt-2">
         {/* Fixed Search Bar */}
-        <div className="sticky top-0 z-50 w-full pb-1 bg-white">
+        <div className="w-full pb-1">
           <SearchBar
             includeQueryParam={false}
             onUpdateResults={noop}
