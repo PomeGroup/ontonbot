@@ -17,6 +17,7 @@ import { useSectionStore } from "@/zustand/useSectionStore";
 
 export const RewardStep = () => {
   const { setEventData, eventData, edit: editOptions, setRewardStepErrors, clearRewardStepErrors } = useCreateEventStore();
+  const { setSection } = useSectionStore();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const { clearSections } = useSectionStore();
@@ -34,7 +35,7 @@ export const RewardStep = () => {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
-      router.push(`/events/${data?.eventHash}/manage/edit`);
+      router.push(`/events/${data?.eventHash}/manage/`);
     },
     onError(error) {
       toast.error(error.message);
@@ -53,6 +54,7 @@ export const RewardStep = () => {
         setShowSuccessDialog(true);
       } else {
         console.log("PUSH Event updated successfully",   editOptions?.eventHash);
+        setSection("none");
         router.push(`/events/${data?.eventId}/manage`);
       }
 

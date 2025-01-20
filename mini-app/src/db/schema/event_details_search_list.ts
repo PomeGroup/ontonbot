@@ -30,6 +30,11 @@ export const event_details_search_list = pgView("event_details_search_list", {
   organizerFirstName: text("organizer_first_name"),
   organizerLastName: text("organizer_last_name"),
   organizerUsername: text("organizer_username"),
+  organizerChannelName: text("organizer_channel_name"),
+  organizerImage: text("organizer_image"),
+  organizerBio: text("organizer_bio"),
+  organizerXLink: text("organizer_x_link"),
+  organizerSupportTelegramUsername: text("organizer_support_telegram_user_name"),
   reservedCount: bigint("reserved_count", { mode: "number" }),
   visitorCount: bigint("visitor_count", { mode: "number" }),
   ticketId: bigint("ticket_id", { mode: "number" }),
@@ -41,6 +46,7 @@ export const event_details_search_list = pgView("event_details_search_list", {
   hasRegistration: boolean("has_registration"),
   hasApproval: boolean("has_approval"),
   // ticketCount: integer("ticket_count"),
+
 }).as(sql`
   SELECT
     e.event_id,
@@ -69,6 +75,12 @@ export const event_details_search_list = pgView("event_details_search_list", {
     organizer.first_name AS organizer_first_name,
     organizer.last_name AS organizer_last_name,
     organizer.username AS organizer_username,
+    organizer.photo_url AS organizer_photo_url,
+    COALESCE(organizer.org_channel_name, ((COALESCE(organizer.first_name, ''::text)  ' '::text)  COALESCE(organizer.last_name, ''::text))::character varying) AS organizer_channel_name,
+    COALESCE(organizer.org_image, organizer.photo_url::character varying) AS organizer_image,
+    organizer.org_bio AS organizer_bio,
+    organizer.org_x_link AS organizer_x_link,
+    organizer.org_support_telegram_user_name AS organizer_support_telegram_user_name,
     (SELECT count(t.id) AS count
      FROM ${tickets} t
      WHERE t.event_uuid::uuid = e.event_uuid) AS reserved_count,
