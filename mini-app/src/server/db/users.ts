@@ -162,10 +162,16 @@ export const searchOrganizers = async (params: {
       last_name: users.last_name,
       photo_url: users.photo_url,
       org_support_telegram_user_name: users.org_support_telegram_user_name,
-      org_channel_name: users.org_channel_name,
+      // Use COALESCE in the SELECT list
+      org_channel_name: sql`
+        COALESCE(${users.org_channel_name}, ${users.first_name} || ' ' || ${users.last_name})
+      `.as("org_channel_name"),
       hosted_event_count: users.hosted_event_count,
       org_bio: users.org_bio,
-      org_image: users.org_image,
+      // Same idea for org_image (fall back to photo_url if org_image is NULL)
+      org_image: sql`
+        COALESCE(${users.org_image}, ${users.photo_url})
+      `.as("org_image"),
       org_x_link: users.org_x_link,
     })
     .from(users)
@@ -221,11 +227,27 @@ export const selectUserById = async (
         participated_event_count: users.participated_event_count,
         hosted_event_count: users.hosted_event_count,
         has_blocked_the_bot: users.has_blocked_the_bot,
-        org_channel_name: users.org_channel_name,
+
+        // COALESCE org_channel_name with first_name + ' ' + last_name
+        org_channel_name: sql`
+          COALESCE(
+            ${users.org_channel_name},
+            ${users.first_name} || ' ' || ${users.last_name}
+          )
+        `.as("org_channel_name"),
+
         org_support_telegram_user_name: users.org_support_telegram_user_name,
         org_x_link: users.org_x_link,
         org_bio: users.org_bio,
-        org_image: users.org_image,
+
+        // COALESCE org_image with photo_url
+        org_image: sql`
+          COALESCE(
+            ${users.org_image},
+            ${users.photo_url},
+            ''
+          )
+        `.as("org_image"),
       })
       .from(users)
       .where(eq(users.user_id, userId))
@@ -233,6 +255,7 @@ export const selectUserById = async (
 
     if (userInfo.length > 0 && update_cache) {
       await redisTools.setCache(cacheKey, userInfo[0], redisTools.cacheLvl.short); // Cache the user
+      //@ts-ignore
       return userInfo[0];
     }
     return null;
