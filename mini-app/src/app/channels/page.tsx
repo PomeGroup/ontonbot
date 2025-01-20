@@ -72,7 +72,7 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
     <Link
       ref={ref}
       href={`/channels/${data.user_id}`}
-      className="p-4 bg-white rounded-md grow min-w-[50%] max-w-[50%]"
+      className="p-4 bg-white rounded-md grow min-w-[47%] max-w-[47%]"
     >
       {data.org_image ? (
         <Image
