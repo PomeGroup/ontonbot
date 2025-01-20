@@ -757,7 +757,7 @@ Recipient : <code>${recipient_address}</code>
       topic: "payments",
     });
 
-    if (message_result.message_id) {
+    if (message_result?.message_id) {
       //Successful Message send
       await db
         .update(eventPayment)
