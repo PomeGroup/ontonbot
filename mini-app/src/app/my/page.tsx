@@ -19,11 +19,12 @@ import { useRouter } from "next/navigation";
 import { Channel } from "@/types";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import ActionCard from "@/ActionCard";
+import { useSectionStore } from "@/zustand/useSectionStore";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!useTonAddress();
-
+  const { setSection } = useSectionStore();
   const { data, isLoading } = trpc.organizers.getOrganizer.useQuery({});
 
   const paid = user?.role === "organizer";
@@ -69,6 +70,7 @@ export default function ProfilePage() {
         <Button
           className="-my-8 py-6 mb-12 max-w-[calc(100%-2rem)] mx-auto rounded-[10px]"
           onClick={() => {
+            setSection("event_setup_form_general_step");
             router.push("/events/create");
           }}
         >
