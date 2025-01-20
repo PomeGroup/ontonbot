@@ -19,6 +19,33 @@ interface InitUserData {
   };
 }
 
+interface ExtendedUser {
+  user_id: number;
+  username: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  wallet_address: string | null;
+  language_code: string | null;
+  role: string;
+  created_at: Date | null;
+  updatedAt: Date | null;
+  updatedBy: string;
+  is_premium: boolean | null;
+  allows_write_to_pm: boolean | null;
+  photo_url: string | null;
+  participated_event_count: number | null;
+  hosted_event_count: number | null;
+  has_blocked_the_bot: boolean | null;
+
+  // Fallback columns as string | null
+  org_channel_name: string | null;
+  org_support_telegram_user_name: string | null;
+  org_x_link: string | null;
+  org_bio: string | null;
+  org_image: string | null;
+}
+
+
 export interface MinimalOrganizerData {
   user_id: number;
   photo_url: string | null;
@@ -163,15 +190,15 @@ export const searchOrganizers = async (params: {
       photo_url: users.photo_url,
       org_support_telegram_user_name: users.org_support_telegram_user_name,
       // Use COALESCE in the SELECT list
-      org_channel_name: sql`
+      org_channel_name: sql<string | null>`
         COALESCE(${users.org_channel_name}, ${users.first_name} || ' ' || ${users.last_name})
       `.as("org_channel_name"),
       hosted_event_count: users.hosted_event_count,
       org_bio: users.org_bio,
       // Same idea for org_image (fall back to photo_url if org_image is NULL)
-      org_image: sql`
-        COALESCE(${users.org_image}, ${users.photo_url})
-      `.as("org_image"),
+      org_image: sql<string | null>`
+                COALESCE(${users.org_image}, ${users.photo_url})
+              `.as("org_image"),
       org_x_link: users.org_x_link,
     })
     .from(users)
@@ -190,6 +217,8 @@ export const searchOrganizers = async (params: {
 
   // Execute and return
   return await query.execute();
+
+
 };
 
 export const selectUserById = async (
@@ -229,12 +258,12 @@ export const selectUserById = async (
         has_blocked_the_bot: users.has_blocked_the_bot,
 
         // COALESCE org_channel_name with first_name + ' ' + last_name
-        org_channel_name: sql`
+        org_channel_name: sql<string | null>`
           COALESCE(
             ${users.org_channel_name},
             ${users.first_name} || ' ' || ${users.last_name}
           )
-        `.as("org_channel_name"),
+        `.as("org_channel_name") ,
 
         org_support_telegram_user_name: users.org_support_telegram_user_name,
         org_x_link: users.org_x_link,
