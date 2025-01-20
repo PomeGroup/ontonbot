@@ -34,7 +34,7 @@ export const event_details_search_list = pgView("event_details_search_list", {
   organizerImage: text("organizer_image"),
   organizerBio: text("organizer_bio"),
   organizerXLink: text("organizer_x_link"),
-  organizerSupportTelegramUsername: text("organizer_support_telegram_username"),
+  organizerSupportTelegramUsername: text("organizer_support_telegram_user_name"),
   reservedCount: bigint("reserved_count", { mode: "number" }),
   visitorCount: bigint("visitor_count", { mode: "number" }),
   ticketId: bigint("ticket_id", { mode: "number" }),

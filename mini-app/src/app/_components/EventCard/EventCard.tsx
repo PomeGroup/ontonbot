@@ -180,7 +180,7 @@ function UnforwardedEventCard(
       {canEdit && onEditClick && (
         <div className="mt-2 flex">
           <Button
-            className=" px-3 py-1 rounded"
+            className=" px-3  rounded-[6px] py-4"
             outline={true}
             onClick={(e) => {
               e.stopPropagation();
