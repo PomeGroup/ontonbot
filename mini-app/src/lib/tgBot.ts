@@ -8,6 +8,7 @@ const tgClient = axios.create({
 
 import { AxiosError } from "axios";
 import { removeKey, removeSecretKey } from "@/lib/utils";
+import { EventRow } from "@/db/schema/events";
 
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
   try {
@@ -112,8 +113,6 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
 
 // 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
 export const sendLogNotification = async (props: { message: string; topic: "event" | "ticket" | "system" | "payments" }) => {
-  if (process.env.NODE_ENV === 'development') return;
-  
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     console.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");
@@ -168,12 +167,27 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 };
 
 /// 🌳 ---- render the add event message ---- 🌳
-export const renderAddEventMessage = (username: string | number, eventUuid: string, eventData: any): string => {
-  const eventDataWithoutDescription = removeKey(eventData, "description");
+export const renderAddEventMessage = (username: string | number, eventData: EventRow): string => {
+  const eventUuid = eventData.event_uuid;
+  const eventDataWithoutDescription = removeSecretKey(removeKey(eventData, "description"));
   return `
-@${username} <b>Added</b> a new event <code>${eventUuid}</code> successfully
+@${username} <b>Added</b> a new event <code>${eventData.event_uuid}</code> successfully
 
-<pre><code>${removeSecretKey(eventDataWithoutDescription)}</code></pre>
+<pre><code>${eventDataWithoutDescription}</code></pre>
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
+  `;
+};
+
+export const renderModerationEventMessage = (username: string | number, eventData: EventRow): string => {
+  const eventUuid = eventData.event_uuid;
+  const eventDataWithoutDescription = removeSecretKey(removeKey(eventData, "description"));
+  return `
+</b>${eventData.title}</b>
+
+${eventData.subtitle}
+
+@${username} 
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
   `;

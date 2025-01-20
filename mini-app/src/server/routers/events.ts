@@ -1,7 +1,12 @@
 import { db } from "@/db/db";
 import { eventFields, events, eventPayment, orders } from "@/db/schema";
 import { hashPassword } from "@/lib/bcrypt";
-import { renderAddEventMessage, renderUpdateEventMessage, sendLogNotification } from "@/lib/tgBot";
+import {
+  renderAddEventMessage,
+  renderModerationEventMessage,
+  renderUpdateEventMessage,
+  sendLogNotification,
+} from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
@@ -31,6 +36,7 @@ import { timestampToIsoString } from "@/lib/DateAndTime";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
 import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
+import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
 dotenv.config();
 
 function get_paid_event_price(capacity: number) {
@@ -39,8 +45,27 @@ function get_paid_event_price(capacity: number) {
   return reduced_price ? 0.001 + 0.00055 * capacity : 10 + 0.06 * capacity;
 }
 
+async function shouldEventBeHidden(event_is_paid: boolean, user_id: number) {
+  if (event_is_paid) return true;
+
+  const is_ts_verified = await organizerTsVerified(user_id);
+
+  if (!is_ts_verified) return true;
+
+  return false;
+}
+
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
+  const userRole = opts.ctx.user.role;
   const event_uuid = opts.input.event_uuid;
   const eventData = {
     payment_details: {} as Partial<EventPaymentSelectType>,
@@ -59,7 +84,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
 
   //If event is hidden or not enabled
   if (eventData.hidden || !eventData.enabled) {
-    if (userId !== eventData.owner && opts.ctx.user.role !== "admin") {
+    if (userId !== eventData.owner && userRole !== "admin" && !(await userHasModerationAccess(userId, userRole))) {
       throw new TRPCError({ code: "NOT_FOUND", message: "event is not published yet" });
     }
   }
@@ -93,7 +118,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const user_request = await eventRegistrantsDB.getRegistrantRequest(event_uuid, userId);
   const event_location = eventData.location;
 
-  const userIsAdminOrOwner = eventData.owner == userId || opts.ctx.user.role == "admin";
+  const userIsAdminOrOwner = eventData.owner == userId || userRole == "admin";
   let mask_event_capacity = !userIsAdminOrOwner;
 
   eventData.location = "Visible To Registered Users";
@@ -177,7 +202,10 @@ const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
 // private
 const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: EventDataSchema })).mutation(async (opts) => {
   const input_event_data = opts.input.eventData;
-  const userCacheKey = getUserCacheKey(opts.ctx.user.user_id);
+
+  const user_id = opts.ctx.user.user_id;
+  const userCacheKey = getUserCacheKey(user_id);
+
   try {
     const result = await db.transaction(async (trx) => {
       const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
@@ -206,10 +234,12 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
 
       /* ------------------- paid events must have registration ------------------- */
       input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
-      const is_paid = input_event_data.paid_event?.has_payment;
+      const is_paid = !!input_event_data.paid_event?.has_payment;
       if (is_paid && !config?.ONTON_WALLET_ADDRESS) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "ONTON_WALLET_ADDRESS NOT SET error" });
       }
+
+      const event_should_hidden = await shouldEventBeHidden(is_paid, user_id);
 
       const newEvent = await trx
         .insert(events)
@@ -227,21 +257,22 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           end_date: input_event_data.end_date,
           timezone: input_event_data.timezone,
           location: input_event_data.location,
-          owner: opts.ctx.user.user_id,
+          owner: user_id,
           participationType: input_event_data.eventLocationType, // right now paid event only can be in_person
           countryId: input_event_data.countryId,
           tsRewardImage: input_event_data.ts_reward_url,
           tsRewardVideo: input_event_data.video_url,
           cityId: input_event_data.cityId,
-          //Event Registration
+          /* --------------------------- Event Registration --------------------------- */
           has_registration: input_event_data.has_registration,
           has_approval: input_event_data.has_approval,
           capacity: input_event_data.capacity,
           has_waiting_list: input_event_data.has_waiting_list,
-          //Event Registration
+
+          /* -------------------------- Publish Event Or Not -------------------------- */
+          enabled: true,
+          hidden: event_should_hidden,
           /* ------------------------------- Paid Event ------------------------------- */
-          enabled: !is_paid,
-          hidden: is_paid,
           has_payment: is_paid,
           ticketToCheckIn: is_paid, // Duplicated Column same as has_payment 😐
           wallet_address: is_paid ? config?.ONTON_WALLET_ADDRESS : null,
@@ -249,7 +280,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         })
         .returning();
 
-      const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
+      const eventData = newEvent[0];
       /* -------------------------------------------------------------------------- */
       /*                     Paid Event : Insert Payment Details                    */
       /* -------------------------------------------------------------------------- */
@@ -262,7 +293,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
 
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
-          user_id: opts.ctx.user.user_id,
+          user_id: user_id,
           total_price: order_price,
           payment_type: "TON",
           state: "new",
@@ -301,7 +332,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           type: field.type,
           order_place: i,
           event_id: newEvent[0].event_id,
-          updatedBy: opts.ctx.user.user_id.toString(),
+          updatedBy: user_id.toString(),
         });
       }
 
@@ -315,7 +346,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           type: "input",
           order_place: input_event_data.dynamic_fields.length,
           event_id: newEvent[0].event_id,
-          updatedBy: opts.ctx.user.user_id.toString(),
+          updatedBy: user_id.toString(),
         });
       }
 
@@ -323,11 +354,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       logger.log("eventDraft", JSON.stringify(eventDraft));
       logger.log("eventData", eventData);
       // Generate the message using the render function
-      const logMessage = renderAddEventMessage(
-        opts.ctx.user.username || opts.ctx.user.user_id,
-        eventData.event_uuid,
-        eventData
-      );
+      const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
       await sendLogNotification({
         message: logMessage,
         topic: "event",
@@ -336,8 +363,9 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       // Clear the organizer user cache so it will be reloaded next time
       await redisTools.deleteCache(userCacheKey);
 
-      // On local development skip  registration to ton society || paid event will be registered when organizer pays initial payment
-      const register_to_ts = process.env.ENV !== "local";
+      // Skip Register to ts if :
+      //  local development  || paid event registers organizer pays initial payment || org must be verified
+      const register_to_ts = process.env.ENV !== "local" || !event_should_hidden;
 
       if (register_to_ts) {
         const res = await registerActivity(eventDraft);
@@ -346,7 +374,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           .update(events)
           .set({
             activity_id: res.data.activity_id,
-            updatedBy: opts.ctx.user.user_id.toString(),
+            updatedBy: user_id.toString(),
             updatedAt: new Date(),
           })
           .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
