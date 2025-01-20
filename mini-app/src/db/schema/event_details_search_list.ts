@@ -30,6 +30,11 @@ export const event_details_search_list = pgView("event_details_search_list", {
   organizerFirstName: text("organizer_first_name"),
   organizerLastName: text("organizer_last_name"),
   organizerUsername: text("organizer_username"),
+  organizerChannelName: text("organizer_channel_name"),
+  organizerImage: text("organizer_image"),
+  organizerBio: text("organizer_bio"),
+  organizerXLink: text("organizer_x_link"),
+  organizerSupportTelegramUsername: text("organizer_support_telegram_username"),
   reservedCount: bigint("reserved_count", { mode: "number" }),
   visitorCount: bigint("visitor_count", { mode: "number" }),
   ticketId: bigint("ticket_id", { mode: "number" }),
@@ -41,6 +46,7 @@ export const event_details_search_list = pgView("event_details_search_list", {
   hasRegistration: boolean("has_registration"),
   hasApproval: boolean("has_approval"),
   // ticketCount: integer("ticket_count"),
+
 }).as(sql`
   SELECT
     e.event_id,
