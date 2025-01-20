@@ -6,14 +6,12 @@ import { ErrorMessage } from "@/app/_components/molecules/alerts/ErrorMessage";
 import { useMainButton } from "@/hooks/useMainButton";
 import BasicEventInputs from "../../Event/steps/BasicEventInputs";
 import { useSectionStore } from "@/zustand/useSectionStore";
-import { useRouter } from "next/navigation";
 
 let lastToastId: string | number | null = null;
 
 export const GeneralStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
-  const { getCurrentSection, setSection } = useSectionStore();
-  const router = useRouter();
+  const { setSection } = useSectionStore();
   const { setCurrentStep, setEventData, eventData, clearGeneralErrors, setGeneralStepErrors } = useCreateEventStore(
     (state) => ({
       setCurrentStep: state.setCurrentStep,

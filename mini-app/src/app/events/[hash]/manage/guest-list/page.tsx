@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Page, Block } from "konsta/react";
+import { Page } from "konsta/react";
 import { useManageEventContext } from "../layout";
 import GuestList from "@/app/_components/organisms/events/GuestList";
 

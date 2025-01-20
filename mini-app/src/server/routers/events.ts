@@ -69,6 +69,9 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       org_x_link: ownerUser.org_x_link,
       org_bio: ownerUser.org_bio,
       org_image: ownerUser.org_image === null ? ownerUser.photo_url : ownerUser.org_image,
+      user_id: ownerUser.user_id,
+      username: ownerUser.username,
+      first_name: ownerUser.first_name,
       hosted_event_count: ownerUser.hosted_event_count,
     }
     : null;

@@ -6,13 +6,14 @@ import { Page, Navbar, Block } from "konsta/react";
 import useWebApp from "@/hooks/useWebApp";
 import { trpc } from "@/app/_trpc/client";
 import { Download } from "lucide-react";
-
+import promotionCodeNoResult from "promotion-code-no-result.svg";
 import NavigationButtons from "@/components/NavigationButtons";
 import ActionCardWithMenu from "./ActionCardWithMenu";
 import CreatePromotionForm from "./CreatePromotionForm";
 import EditPromotionDatesForm from "./EditPromotionDatesForm";
 import { useDownloadCSV } from "@/app/_components/Event/PromotionCode/useDownloadCSV";
 import { useManageEventContext } from "@/app/events/[hash]/manage/layout";
+import Image from "next/image";
 
 
 
@@ -145,7 +146,14 @@ export default function PromotionCode() {
           <h1 className="text-lg font-bold">Create Your Codes</h1>
         </div>
         <Block className="flex flex-col items-center justify-center mt-8">
-          <div className="mb-4 text-blue-500 text-6xl">🚫</div>
+          <div className="mb-4 text-blue-500 text-6xl">
+            <Image
+              src={promotionCodeNoResult}
+              width={48}
+              height={48}
+              alt=""
+            />
+          </div>
           <p className="font-bold text-lg">
             No discount code generated!
           </p>

@@ -22,7 +22,7 @@ function BasicEventInputs(props: Props) {
 
   return (
     <ListLayout
-      title="Basic"
+      title=""
       isLoading={hubsResponse.isLoading}
     >
       <ListInput
