@@ -17,6 +17,7 @@ export default function ManageIndexPage() {
   const { eventData } = useManageEventContext();
   const { setSection } = useSectionStore();
   const router = useRouter();
+
   if (!eventData || !eventData?.event_uuid) {
     return <div>Loading...</div>;
   }
@@ -35,7 +36,7 @@ export default function ManageIndexPage() {
   return (
     <Page>
       {/* Show an EventCard with the event data */}
-      <Block  className="mx-8 bg-white p-4 rounded-[10px]">
+      <Block className="mx-8 bg-white p-4 rounded-[10px]">
         <EventCard
           event={{
             eventUuid: eventData.event_uuid,
@@ -59,7 +60,7 @@ export default function ManageIndexPage() {
       {/* Action Cards for each sub-route */}
       <Block className="space-y-3 mt-4">
 
-        {eventData.has_payment  && (
+        {eventData.has_payment && (
           <>
             <ActionCard
               onClick={() => router.push(`/events/${eventData.event_uuid}/manage/orders`)}
@@ -101,17 +102,17 @@ export default function ManageIndexPage() {
         {/*)}*/}
 
 
-        { eventData.has_registration && (
-        <ActionCard
-          onClick={() => router.push(`/events/${eventData.event_uuid}/manage/guest-list`)}
-          iconSrc={guestListIcon}
-          title="Guests list"
-          subtitle="View and manage participants"
-          footerTexts={[
-            { count: guestsRegistered, items: "Registered" },
-            { count: guestsApproved, items: "Approved" },
-          ]}
-        />
+        {eventData.has_registration && (
+          <ActionCard
+            onClick={() => router.push(`/events/${eventData.event_uuid}/manage/guest-list`)}
+            iconSrc={guestListIcon}
+            title="Guests list"
+            subtitle="View and manage participants"
+            footerTexts={[
+              { count: guestsRegistered, items: "Registered" },
+              { count: guestsApproved, items: "Approved" },
+            ]}
+          />
         )}
       </Block>
     </Page>
