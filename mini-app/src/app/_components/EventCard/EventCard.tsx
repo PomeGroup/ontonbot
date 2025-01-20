@@ -10,6 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
+import { Button } from "konsta/react";
+
 
 interface EventCardProps {
   event: {
@@ -46,6 +48,7 @@ interface EventCardProps {
    * If not provided, the button doesn't appear or does nothing.
    */
   onEditClick?: () => void;
+  hasBorder?: boolean;
 }
 
 /**
@@ -53,7 +56,7 @@ interface EventCardProps {
  * also shows an "Edit Event Info" button that calls `onEditClick`.
  */
 function UnforwardedEventCard(
-  { event, currentUserId = 0, canEdit, onEditClick }: EventCardProps,
+  { event, currentUserId = 0, canEdit, onEditClick, hasBorder = true }: EventCardProps,
   ref: ForwardedRef<HTMLDivElement> | null
 ) {
   // Destructure event fields
@@ -163,9 +166,11 @@ function UnforwardedEventCard(
             </div>
 
             {/* Organizer */}
-            <span className="font-sans text-left line-clamp-1 text-xs leading-4">
-              by {organizerFirstName} {organizerLastName}
-            </span>
+            {organizerFirstName.trim().length > 0 || organizerLastName.trim().length > 0 && (
+              <span className="font-sans text-left line-clamp-1 text-xs leading-4">
+                by {organizerFirstName} {organizerLastName}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -174,20 +179,23 @@ function UnforwardedEventCard(
           We stop propagation so it doesn't trigger handleEventClick. */}
       {canEdit && onEditClick && (
         <div className="mt-2 flex">
-          <button
-            className="bg-blue-500 text-white px-3 py-1 rounded"
+          <Button
+            className=" px-3 py-1 rounded"
+            outline={true}
             onClick={(e) => {
               e.stopPropagation();
               onEditClick();
             }}
           >
             Edit Event Info
-          </button>
+          </Button>
         </div>
       )}
 
       {/* A line separator */}
-      <Separator className="my-4 bg-[#545458]" />
+      {hasBorder && (
+        <Separator className="my-4 bg-[#545458]" />
+      )}
     </>
   );
 }

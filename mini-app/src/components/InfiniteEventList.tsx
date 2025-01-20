@@ -68,7 +68,7 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
                     key={item.id}
                     ref={isLastItem ? lastItemRef : noop}
                     currentUserId={userId}
-                    mode="normal"
+
                   />
                 );
               })}

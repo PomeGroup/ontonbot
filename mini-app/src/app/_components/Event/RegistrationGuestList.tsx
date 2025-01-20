@@ -409,13 +409,7 @@ const RegistrationGuestList = () => {
     <>
       <BlockTitle medium>{eventData.data?.title}</BlockTitle>
       <Block className="!-mb-8">
-        {eventData.data?.image_url && (
-          <EventImage
-            url={eventData.data?.image_url}
-            width={300}
-            height={300}
-          />
-        )}
+
         <QrCodeButton
           event_uuid={params.hash}
           url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${params.hash}`}

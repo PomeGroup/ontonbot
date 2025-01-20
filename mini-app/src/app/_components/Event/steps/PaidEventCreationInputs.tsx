@@ -224,7 +224,7 @@ function Capacity() {
         }}
         label="Capacity"
         required
-        info="Number users who can buy your NFT, 0.055 TON for each NFT (minting fee)"
+        info="Number of users who can buy your NFT, 0.06 TON for each NFT (minting fee)"
       />
 
       {isEdit && (

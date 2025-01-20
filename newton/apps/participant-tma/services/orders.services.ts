@@ -9,23 +9,25 @@ export async function addOrder(body: {
   owner_address: string;
   event_uuid: string;
   utm: string | null;
+  coupon_code: string | null;
 }) {
-  const eventResponse = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/order`, {
+  const orderResponse = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/order`, {
     method: "POST",
     body: JSON.stringify(body),
   });
 
-  if (!eventResponse.ok) {
+  if (!orderResponse.ok) {
     throw new Error("Add order failed");
   }
 
-  const event: {
+  const order: {
     order_id: string;
     message: string;
+    total_price: number;
     payment_type: PaymentType;
-  } = await eventResponse.json();
+  } = await orderResponse.json();
 
-  return event;
+  return order;
 }
 
 /**

@@ -1,16 +1,22 @@
 "use client";
 
-import useWebApp from "@/hooks/useWebApp";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { Block } from "konsta/react";
+
 import { type RouterOutput } from "@/server";
-import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+
+import Stepper from "@/app/_components/molecules/stepper";
+
+import { useSectionStore } from "@/zustand/useSectionStore";
+// We keep createEventStore for storing data (like setEventData, setEdit, etc.)
 import { useCreateEventStore } from "@/zustand/createEventStore";
+
+// The 4-step components
 import { GeneralStep } from "./GeneralStep";
 import { TimePlaceStep } from "./TimePlaceStep";
-import { RewardStep } from "./RewardStep";
-import Stepper from "@/app/_components/molecules/stepper";
-import { Block } from "konsta/react";
 import RegistrationStep from "../../Event/steps/EventRegistration";
+import { RewardStep } from "./RewardStep";
 
 type ManageEventProps = {
   event?: RouterOutput["events"]["getEvent"];
@@ -23,27 +29,36 @@ const steps = [
   { icon: <span>4</span>, label: "Reward" },
 ];
 
-const ManageEvent = (props: ManageEventProps) => {
+/**
+ * We unify the step logic via "edit_event_step1" ... "edit_event_step4" in useSectionStore.
+ * Then we map those to numeric step indexes for Stepper.
+ */
+function ManageEvent({ event }: ManageEventProps) {
   const params = useParams<{ hash: string }>();
-  const { currentStep, setCurrentStep, setEdit, setEventData, resetState, clearGeneralErrors } = useCreateEventStore(
-    (state) => ({
-      currentStep: state.currentStep,
-      setCurrentStep: state.setCurrentStep,
-      setEdit: state.setEdit,
-      setEventData: state.setEventData,
-      resetState: state.resetState,
-      clearGeneralErrors: state.clearGeneralStepErrors,
-    })
-  );
 
+
+  // We read from createEventStore for data, but no step logic from here
+  const {
+    setEdit,
+    setEventData,
+    resetState,
+    clearGeneralStepErrors,
+  } = useCreateEventStore((state) => ({
+    setEdit: state.setEdit,
+    setEventData: state.setEventData,
+    resetState: state.resetState,
+    clearGeneralStepErrors: state.clearGeneralStepErrors,
+  }));
+
+  // Instead of currentStep, we read from our single store:
+  const { getCurrentSection } = useSectionStore();
+  // We'll track if we finished calling resetState so we can safely set data
   const [isReset, setIsReset] = useState(false);
 
-  const webApp = useWebApp();
-  const router = useRouter();
-
+  // 1) Clear errors on mount
   useEffect(() => {
-    clearGeneralErrors();
-  }, []);
+    clearGeneralStepErrors();
+  }, [clearGeneralStepErrors]);
 
   // TODO: This is cancer!
   useLayoutEffect(() => {
@@ -51,98 +66,88 @@ const ManageEvent = (props: ManageEventProps) => {
     setIsReset(true);
 
     if (params.hash && isReset) {
-      setEdit({
-        eventHash: params.hash,
-      });
+      setEdit({ eventHash: params.hash });
 
-      // This function is killing performance and making page laggy
-      if (props.event) {
+      if (event) {
         setEventData({
-          title: props.event.title || undefined,
-          description: props.event.description || undefined,
-          image_url: props.event.image_url || undefined,
-          subtitle: props.event.subtitle || undefined,
-          start_date: props.event.start_date || undefined,
-          end_date: props.event.end_date || undefined,
-          location: props.event.location || undefined,
-          society_hub:
-            props.event.society_hub?.id && props.event.society_hub?.name
-              ? {
-                  id: props.event.society_hub.id,
-                  name: props.event.society_hub.name,
-                }
-              : undefined,
-          eventLocationType: props.event.participationType,
-          countryId: props.event.countryId || undefined,
-          cityId: props.event.cityId || undefined,
-          ts_reward_url: props.event.tsRewardImage || undefined,
+          title: event.title || undefined,
+          description: event.description || undefined,
+          image_url: event.image_url || undefined,
+          subtitle: event.subtitle || undefined,
+          start_date: event.start_date || undefined,
+          end_date: event.end_date || undefined,
+          location: event.location || undefined,
+          // @ts-ignore
+          society_hub: event.society_hub
+            ? {
+              id: event.society_hub.id,
+              name: event.society_hub.name,
+            }
+            : undefined,
+          eventLocationType: event.participationType,
+          countryId: event.countryId || undefined,
+          cityId: event.cityId || undefined,
+          ts_reward_url: event.tsRewardImage || undefined,
 
-          // User Registration Attributes 📎
-          has_registration: Boolean(props.event.has_registration),
-          has_approval: Boolean(props.event.has_approval),
-          capacity: props.event.capacity || null,
-          has_waiting_list: Boolean(props.event.has_waiting_list),
+          // Registration
+          has_registration: Boolean(event.has_registration),
+          has_approval: Boolean(event.has_approval),
+          capacity: event.capacity || null,
+          has_waiting_list: Boolean(event.has_waiting_list),
+          // Payment
           paid_event: {
-            payment_type: props.event.payment_details?.payment_type,
-            payment_recipient_address: props.event?.payment_details.recipient_address,
-            nft_description: props.event.payment_details?.description || undefined,
-            nft_title: props.event.payment_details?.title || undefined,
-            has_payment: Boolean(props.event.payment_details?.payment_type),
-            payment_amount: props.event.payment_details?.price,
-            nft_image_url: props.event.payment_details?.ticketImage || undefined,
-            bought_capacity: props.event.payment_details?.bought_capacity,
+            payment_type: event.payment_details?.payment_type,
+            payment_recipient_address: event.payment_details?.recipient_address,
+            nft_description: event.payment_details?.description || undefined,
+            nft_title: event.payment_details?.title || undefined,
+            has_payment: Boolean(event.payment_details?.payment_type),
+            payment_amount: event.payment_details?.price,
+            nft_image_url: event.payment_details?.ticketImage || undefined,
+            bought_capacity: event.payment_details?.bought_capacity,
           },
         });
       }
     }
-  }, [params.hash, props.event, isReset]);
+  }, [params.hash, event, isReset, resetState, setEdit, setEventData]);
+ if( getCurrentSection() === 'none' ) {
+    return <div>Loading...</div>;
+  }
 
-  // const handleBack = useCallback(() => {
-  //   if (currentStep > 1) {
-  //     setCurrentStep(currentStep - 1);
-  //   } else if (params.hash) {
-  //     router.push("/");
-  //   } else {
-  //     webApp?.showConfirm("Discard Changes?", (confirmed) => {
-  //       if (confirmed) {
-  //         resetState();
-  //         router.push("/");
-  //       }
-  //     });
-  //   }
-  // }, [webApp, currentStep, setCurrentStep, router]);
+  // 3) Convert currentSection => numeric step for Stepper
+  const getStepIndex = (section: string) => {
+    switch (section) {
+      case "event_setup_form_general_step":
+      case "edit_event":
+        return 1;
+      case "event_setup_form_time_place_step":
+        return 2;
+      case "event_setup_form_registration_setup":
+        return 3;
+      case "event_setup_form_reward_step":
+        return 4;
+      default:
+        return 1;
+    }
+  };
 
-  // useEffect(() => {
-  //   webApp?.BackButton.show();
-  //   webApp?.BackButton.onClick(handleBack);
-  //
-  //   return () => {
-  //     webApp?.BackButton.offClick(handleBack);
-  //     webApp?.BackButton.hide();
-  //   };
-  // }, [webApp, currentStep, setCurrentStep, router]);
+  // We'll read the numeric step from the store's currentSection
+  const stepIndex = getStepIndex(getCurrentSection());
 
-  useEffect(() => {
-    document.location.pathname.endsWith("create") && resetState();
-  }, []);
-
+  // 4) Render the Stepper & the relevant step content
   return (
     <>
       <Block className="!-mb-2">
-        <Stepper
-          steps={steps}
-          currentStep={currentStep}
-        />
+        <Stepper steps={steps} currentStep={stepIndex} />
       </Block>
 
       <Block className="!p-0">
-        {isReset && currentStep === 1 && <GeneralStep />}
-        {isReset && currentStep === 2 && <TimePlaceStep />}
-        {isReset && currentStep === 3 && <RegistrationStep />}
-        {isReset && currentStep === 4 && <RewardStep />}
+        {isReset && stepIndex === 1 && <GeneralStep />}
+        {isReset && stepIndex === 2 && <TimePlaceStep />}
+        {isReset && stepIndex === 3 && <RegistrationStep />}
+        {isReset && stepIndex === 4 && <RewardStep />}
       </Block>
     </>
   );
-};
+}
 
 export default ManageEvent;

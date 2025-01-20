@@ -75,25 +75,28 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         event_uuid: params.event_uuid,
         utm,
         ...data,
+        coupon_code : "todo : get the coupon code"
       });
 
       console.log("transfer data", params.sendTo, Number(params.price), orderData.payment_type, {
         comment: `onton_order=${orderData.order_id}`,
       });
 
-      // try {
-      //   await transfer(params.sendTo, Number(params.price), orderData.payment_type, {
-      //     comment: `onton_order=${orderData.order_id}`,
-      //   });
-      //   setIsRequestingTicket({ state: true, orderId: orderData.order_id });
-      // } catch (error) {
-      //   mainButton?.show().enable();
-      //   console.error("Error during transfer:", error);
-      // }
+      try {
+        await transfer(params.sendTo, Number(orderData.total_price), orderData.payment_type, {
+          comment: `onton_order=${orderData.order_id}`,
+        });
+        setIsRequestingTicket({ state: true, orderId: orderData.order_id });
+      } catch (error) {
+        mainButton?.show().enable();
+        console.error("Error during transfer:", error);
+      }
     } catch (error) {
       toast.error("There was an error adding a new order");
+      mainButton?.show().enable();
       console.error("Error adding order:", error);
     }
+
     // if not connected
   };
 

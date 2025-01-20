@@ -65,7 +65,7 @@ const EventOrders = () => {
                       )}
                       {order.order_type === "event_capacity_increment" && (
                         <span>
-                          Increase event capacity by <b>{order.total_price / 0.055}</b> tickets
+                          Increase event capacity by <b>{order.total_price / 0.06}</b> tickets
                         </span>
                       )}
                     </p>
@@ -148,7 +148,7 @@ const EventOrders = () => {
                       )}
                       {order.order_type === "event_capacity_increment" && (
                         <span>
-                          Increase event capacity by <b>{order.total_price / 0.055}</b> tickets
+                          Increase event capacity by <b>{order.total_price / 0.06}</b> tickets
                         </span>
                       )}
                     </p>
