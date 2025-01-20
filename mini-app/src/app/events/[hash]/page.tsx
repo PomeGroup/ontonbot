@@ -37,5 +37,3 @@ export default function EventPage({ params }: Props) {
 
   return <EventDataPage eventHash={params.hash} />;
 }
-
-
