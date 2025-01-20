@@ -30,12 +30,14 @@ export const RewardStep = () => {
 
   const addEvent = trpc.events.addEvent.useMutation({
     onSuccess(data) {
-      setEventData({});
+
       toast("Event created successfully", {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
-      router.push(`/events/${data?.eventHash}/manage/`);
+      setEventData({});
+      setSection("none");
+      router.replace(`/events/${data?.eventHash}/manage`)
     },
     onError(error) {
       toast.error(error.message);
@@ -49,13 +51,13 @@ export const RewardStep = () => {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
-      console.log("Event updated successfully",   editOptions?.eventHash);
+
       if (eventData?.paid_event?.has_payment) {
         setShowSuccessDialog(true);
       } else {
-        console.log("PUSH Event updated successfully",   editOptions?.eventHash);
+
         setSection("none");
-        router.push(`/events/${data?.eventId}/manage`);
+        router.replace(`/events/${data?.eventId}/manage`);
       }
 
     },

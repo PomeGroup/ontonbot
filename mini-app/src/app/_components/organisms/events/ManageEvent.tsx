@@ -37,6 +37,8 @@ function ManageEvent({ event }: ManageEventProps) {
   const params = useParams<{ hash: string }>();
 
 
+
+
   // We read from createEventStore for data, but no step logic from here
   const {
     setEdit,
@@ -110,15 +112,14 @@ function ManageEvent({ event }: ManageEventProps) {
     }
   }, [params.hash, event, isReset, resetState, setEdit, setEventData]);
 
-  if (getCurrentSection() === 'none' && params.hash) {
-    return <div>Loading...</div>;
+  if (getCurrentSection() === 'none'    ) {
+    return null;
   }
 
   // 3) Convert currentSection => numeric step for Stepper
   const getStepIndex = (section: string) => {
     switch (section) {
       case "event_setup_form_general_step":
-      case "edit_event":
         return 1;
       case "event_setup_form_time_place_step":
         return 2;
@@ -142,7 +143,7 @@ function ManageEvent({ event }: ManageEventProps) {
       </Block>
 
       <Block className="!p-0">
-        {isReset && stepIndex === 1 && <GeneralStep />}
+        {isReset && stepIndex === 1 && <GeneralStep  />}
         {isReset && stepIndex === 2 && <TimePlaceStep />}
         {isReset && stepIndex === 3 && <RegistrationStep />}
         {isReset && stepIndex === 4 && <RewardStep />}

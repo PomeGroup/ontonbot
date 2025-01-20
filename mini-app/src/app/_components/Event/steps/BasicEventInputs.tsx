@@ -11,11 +11,14 @@ interface Props {
   termsChecked: boolean;
   setTermsChecked: (_checked: boolean) => void;
   showTermsError: boolean;
+
 }
 
 function BasicEventInputs(props: Props) {
   const errors = useCreateEventStore((state) => state.generalStepErrors);
   const eventData = useCreateEventStore((state) => state.eventData);
+
+  const { edit: editOptions } = useCreateEventStore();
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const clearImageError = useCreateEventStore((state) => state.clearImageErrors);
   const hubsResponse = useGetHubs();
@@ -60,7 +63,7 @@ function BasicEventInputs(props: Props) {
         error={errors?.description?.join(". ")}
         defaultValue={eventData?.description}
       />
-      {!eventData.event_id && <TermsCheckbox {...props} />}
+      {!editOptions?.eventHash && <TermsCheckbox {...props} />}
       <ImageUpload
         isError={Boolean(errors?.image_url)}
         clearError={clearImageError}

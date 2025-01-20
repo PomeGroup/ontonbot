@@ -5,7 +5,8 @@ import ManageEvent from "@/app/_components/organisms/events/ManageEvent";
 import useAuth from "@/hooks/useAuth";
 import { Page } from "konsta/react";
 
-const CreateEventAdminPage = () => {
+
+export default function CreateEventAdminPage ()  {
   const { authorized, isLoading } = useAuth();
 
   if (isLoading) {
@@ -16,6 +17,7 @@ const CreateEventAdminPage = () => {
     return <Alerts.NotAuthorized />;
   }
 
+
   return (
     <Page className="min-h-screen">
       <ManageEvent />
@@ -23,6 +25,4 @@ const CreateEventAdminPage = () => {
   );
 };
 
-export default CreateEventAdminPage;
 
-export const dynamic = "force-dynamic";

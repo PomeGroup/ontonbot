@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { generalStepDataSchema } from "@/zodSchema/event/validation";
@@ -7,7 +7,9 @@ import { useMainButton } from "@/hooks/useMainButton";
 import BasicEventInputs from "../../Event/steps/BasicEventInputs";
 import { useSectionStore } from "@/zustand/useSectionStore";
 
+
 let lastToastId: string | number | null = null;
+
 
 export const GeneralStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -20,8 +22,10 @@ export const GeneralStep = () => {
       eventData: state.eventData,
       clearGeneralErrors: state.clearGeneralStepErrors,
       setGeneralStepErrors: state.setGeneralStepErrors,
+
     })
   );
+  const { edit: editOptions } = useCreateEventStore();
   const [termsChecked, _setTermsChecked] = useState(false);
   const [showTermsError, setShowTermsError] = useState(false);
 
@@ -36,12 +40,13 @@ export const GeneralStep = () => {
   //   setTermsChecked(true)
   // }, [eventData?.event_uuid]) 
 
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formRef.current) return;
 
-    if (!termsChecked && !eventData.event_id) {
-      setShowTermsError(true);
+    if (!termsChecked && !editOptions?.eventHash) {
+
       toast.error("Please agree to the terms and conditions to continue.");
       return;
     }
@@ -93,6 +98,7 @@ export const GeneralStep = () => {
         showTermsError={showTermsError}
         termsChecked={termsChecked}
         setTermsChecked={setTermsChecked}
+
       />
     </form>
   );
