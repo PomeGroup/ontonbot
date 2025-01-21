@@ -2,6 +2,7 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
+import { typographyClassNameMappings } from "../Typography";
 
 const badgeVariants = cva(
   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-cn-ring focus:ring-offset-2",
@@ -14,6 +15,7 @@ const badgeVariants = cva(
         ontonDark:
           "flex items-center shrink-0 font-light text-xs rounded-md border-none relative overflow-hidden  items-center  text-center  bg-[#2F2F2F]   text-[#f6f6f6]  whitespace-nowrap   p-1 py-0.5 text-xs leading-3.5",
         outline: "text-cn-foreground",
+        ontonLight: `py-[2px] px-1 rounded bg-[#e8e8e9] ${typographyClassNameMappings.caption2} text-[#575757] font-medium`
       },
     },
     defaultVariants: {
@@ -22,7 +24,7 @@ const badgeVariants = cva(
   }
 );
 
-export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
+export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> { }
 
 function Badge({ className, variant, ...props }: BadgeProps) {
   return (

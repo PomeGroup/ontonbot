@@ -10,7 +10,8 @@ import { Separator } from "@/components/ui/separator";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
-import { Button } from "konsta/react";
+import { Button, Card } from "konsta/react";
+import Typography from "@/components/Typography";
 
 
 interface EventCardProps {
@@ -49,7 +50,6 @@ interface EventCardProps {
    * If not provided, the button doesn't appear or does nothing.
    */
   onEditClick?: () => void;
-  hasBorder?: boolean;
 }
 
 /**
@@ -57,7 +57,7 @@ interface EventCardProps {
  * also shows an "Edit Event Info" button that calls `onEditClick`.
  */
 function UnforwardedEventCard(
-  { event, currentUserId = 0, canEdit, onEditClick, hasBorder = true }: EventCardProps,
+  { event, currentUserId = 0, canEdit, onEditClick }: EventCardProps,
   ref: ForwardedRef<HTMLDivElement> | null
 ) {
   // Destructure event fields
@@ -69,8 +69,6 @@ function UnforwardedEventCard(
     location = "No Location",
     imageUrl = "/template-images/default.webp",
     organizerChannelName = "",
-    organizerFirstName = "Unknown",
-    organizerLastName = "",
     organizerUserId = null,
     ticketToCheckIn = false,
     timezone = "GMT",
@@ -114,21 +112,22 @@ function UnforwardedEventCard(
   );
 
   return (
-    <>
-      <div
-        ref={ref}
-        onClick={handleEventClick}
-        className="flex w-full gap-4 items-start flex-nowrap relative overflow-hidden cursor-pointer"
-      >
+    <Card
+      onClick={handleEventClick}
+      className="overflow-hidden cursor-pointer radius-[10px]"
+      margin="mb-3"
+      contentWrapPadding="p-2"
+    >
+      <div className='flex gap-4 items-stretch flex-nowrap relative'>
         {/* LEFT: Event Image */}
-        <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
+        <div className="relative rounded-lg max-w-[100px] min-w-[100px] flex-shrink-0">
           {!imageLoaded && renderImageSkeleton()}
           <Image
             src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
             alt={title}
-            layout="fill"
-            style={{ objectFit: "cover" }}
-            className={`rounded-lg transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+            width={100}
+            height={100}
+            className={`w-25 h-25 rounded-[6px] transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
             onError={(e) => (e.currentTarget.src = defaultImage)}
             onLoad={() => setImageLoaded(true)}
             loading="lazy"
@@ -136,69 +135,37 @@ function UnforwardedEventCard(
           />
         </div>
 
-        {/* MIDDLE: Event Info */}
-        <div className="flex gap-1 items-center self-stretch grow flex-nowrap relative">
-          <div className="flex flex-col gap-1 items-start self-stretch grow flex-nowrap relative">
-            {/* Top line with date range or "Now" + price */}
-            <div className="flex items-center self-stretch flex-nowrap relative">
-              <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
-                {isOngoing ? (
-                  <div className="flex items-center text-green-500 animate-pulse">
-                    <IoIosPlayCircle className="mr-1" /> Now
-                  </div>
-                ) : (
-                  <span className="grow font-sans text-gray-600 dark:text-gray-400 text-left whitespace-nowrap text-sm leading-3">
-                    {formatDateRange(startDate, endDate, validTimezone)} · {isOnline}
-                  </span>
+        <div className="flex flex-col grow">
+          <Typography className="font-semibold mb-1 line-clamp-2 overflow-hidden" variant="body">
+            {title}
+          </Typography>
+          {organizerChannelName.trim().length > 0 && (
+            <Typography
+              className="font-medium"
+              variant="subheadline2"
+            >by {organizerChannelName}</Typography>
+          )}
+          <div className='mt-auto text-[#8E8E93]'>
+            <Typography variant="subheadline2" className="font-medium mb-1">
+              {isOnline}
+            </Typography>
+            <div className="flex justify-between">
+              <Typography variant='subheadline2' className="font-medium">
+                {formatDateRange(startDate, endDate, validTimezone)}
+              </Typography>
+              <div className="flex gap-[6px]">
+
+                {/* Badge on the right: "hosted" if user is the organizer, else price */}
+                {currentUserId === organizerUserId && (
+                  <Badge variant="ontonLight">hosted</Badge>
                 )}
-              </span>
-              {/* Badge on the right: "hosted" if user is the organizer, else price */}
-              {currentUserId === organizerUserId ? (
-                <Badge variant="ontonDark">hosted</Badge>
-              ) : (
-                <Badge variant="ontonDark">{ticketPrice > 0 ? ticketPrice : "free"}</Badge>
-              )}
+                <Badge variant="ontonLight">{ticketPrice > 0 ? `$${ticketPrice}` : "Free"}</Badge>
+              </div>
             </div>
-
-            {/* Title */}
-            <div className="flex gap-1.5 items-center self-stretch flex-nowrap relative">
-              <span className="font-sans whitespace-normal text-black dark:text-white text-left line-clamp-2 text-lg font-semibold leading-5.5">
-                {title}
-              </span>
-            </div>
-
-            {/* Organizer */}
-            {organizerChannelName.trim().length > 0   && (
-              <span className="font-sans text-left line-clamp-1 text-xs leading-4">
-                by {organizerChannelName}
-              </span>
-            )}
           </div>
         </div>
       </div>
-
-      {/* If user can edit => show an "Edit Event Info" button below the card. 
-          We stop propagation so it doesn't trigger handleEventClick. */}
-      {canEdit && onEditClick && (
-        <div className="mt-2 flex">
-          <Button
-            className=" px-3  rounded-[6px] py-4"
-            outline={true}
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditClick();
-            }}
-          >
-            Edit Event Info
-          </Button>
-        </div>
-      )}
-
-      {/* A line separator */}
-      {hasBorder && (
-        <Separator className="my-4 bg-[#545458]" />
-      )}
-    </>
+    </Card>
   );
 }
 
