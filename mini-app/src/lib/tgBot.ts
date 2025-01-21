@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Bot, BotError, GrammyError } from "grammy";
+import { Bot, BotError, GrammyError, InlineKeyboard } from "grammy";
 import { configProtected } from "@/server/config";
 
 const tgClient = axios.create({
@@ -8,10 +8,15 @@ const tgClient = axios.create({
 
 import { AxiosError } from "axios";
 import { removeKey, removeSecretKey } from "@/lib/utils";
-import { EventRow } from "@/db/schema/events";
+import { EventRow, events } from "@/db/schema/events";
 import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 import { InlineKeyboardMarkup } from "grammy/types";
+import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
+import { selectEventByUuid } from "@/server/db/events";
+import { registerActivity } from "./ton-society-api";
+import { eq } from "drizzle-orm";
+import { db } from "@/db/db";
 
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
   try {
@@ -114,6 +119,61 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
   }
 };
 
+async function onCallBackModerateEvent(status: string, event_uuid: string) {
+  const eventData = await selectEventByUuid(event_uuid);
+
+  if (!eventData) return false;
+
+  const eventDraft = await CreateTonSocietyDraft(
+    {
+      title: eventData.title,
+      subtitle: eventData.subtitle,
+      description: eventData.description,
+      location: eventData.location!,
+      countryId: eventData.countryId,
+      society_hub: { id: eventData.society_hub_id! },
+      start_date: eventData.start_date,
+      end_date: eventData.end_date,
+      ts_reward_url: eventData.tsRewardImage,
+      video_url: eventData.tsRewardVideo,
+      eventLocationType: eventData.participationType,
+    },
+    event_uuid
+  );
+  let ton_society_result = undefined;
+  if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
+
+  if (eventData.activity_id || ton_society_result) {
+    const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
+    const update_result = await db.transaction(async (trx) => {
+      await trx
+        .update(events)
+        .set({
+          activity_id: activity_id,
+          hidden: false,
+          enabled: true,
+          updatedBy: "Moderation-Approve",
+          updatedAt: new Date(),
+        })
+        .where(eq(events.event_uuid, event_uuid))
+        .execute();
+      logger.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
+    });
+
+    const event = await db.query.events.findFirst({
+      where: eq(events.event_uuid, event_uuid),
+      columns: {
+        activity_id: true,
+      },
+    });
+
+    logger.log("tgBot_moderation_approve event_uuid , activity_id", event_uuid, event?.activity_id);
+    return event?.activity_id;
+  }
+
+  return false;
+}
+
 async function startBot() {
   while (true) {
     if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
@@ -134,22 +194,38 @@ async function startBot() {
       /* ------------------------------- On CallBack ------------------------------ */
       bot.on("callback_query:data", async (ctx) => {
         const payload = ctx.callbackQuery.data;
-        console.log("callback_query with payload", payload);
+        console.log("callback_query_with_payload : ", payload);
 
         const [status, event_uuid] = payload.split("_");
 
-        console.log();
-        
-        logger.log("CTX" , ctx);
-        
-        logger.log("CTX_MESSAGE" , ctx);
+        // console.log();
 
-        const orignal_text = ctx.update?.message?.caption || "";
-        const new_text = orignal_text + "\nStatus : " + status;
+        // logger.log("CTX" , ctx);
 
-        ctx.editMessageCaption({
-          caption : new_text
-        });
+        // console.log("CTX_MESSAGE" , ctx.update.message);
+
+        const orignal_text = ctx.update?.callback_query.message?.caption || "";
+        const new_text = orignal_text + "\n\nStatus : " + (status === "approve" ? "✅ Approved" : "❌ Rejected");
+        let update_completed = true;
+        if (status === "approve")
+          try {
+            update_completed = !!(await onCallBackModerateEvent(status, event_uuid));
+          } catch (error) {
+            logger.error("onCallBackModerateEvent_approve_failed", error);
+            update_completed = false;
+          }
+
+        if (update_completed) {
+          const reply_markup =
+            status === "approve"
+              ? undefined // No Button For approved events
+              : new InlineKeyboard().text("✅ Approve Rejected Event", `approve_${event_uuid}`);
+          // Rejected Events Can be published
+          ctx.editMessageCaption({
+            caption: new_text,
+            reply_markup,
+          });
+        }
 
         await ctx.answerCallbackQuery({ text: "Got it !!" }); // remove loading animation
       });

@@ -10,7 +10,7 @@ export async function organizerTsVerified(user_id: number) {
   const cacheKey = getUserFlagsCacheKey("ton_society_verified", user_id);
 
   const cachedFlag = await redisTools.getCache(cacheKey);
-  if (cachedFlag) {
+  if (cachedFlag !== null && cachedFlag !== undefined ) {
     return cachedFlag;
   }
   const result = await db.query.user_custom_flags.findFirst({
@@ -21,7 +21,7 @@ export async function organizerTsVerified(user_id: number) {
     ),
   });
 
-  logger.log(`organizerTsVerified , ${user_id} ${result}`);
+  logger.log(`organizerTsVerified_${user_id} result : ${result}`);
 
   const cache_value = result ? result : false;
   await redisTools.setCache(cacheKey, cache_value, redisTools.cacheLvl.medium);
