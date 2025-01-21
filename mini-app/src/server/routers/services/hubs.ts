@@ -94,7 +94,7 @@ export function getNonVerifiedHubzIds() {
 }
 
 const getHubs = initDataProtectedProcedure.query(async (opts) => {
-  if (process.env.NODE_ENV === "local") {
+  if (process.env?.ENV === "local") {
     return hardCodedHubz;
   }
 
