@@ -46,6 +46,7 @@ import { walletChecks } from "./schema/walletChecks";
 import { nftItems } from "./schema/nft_items";
 import { coupon_definition, coupon_definition_status, coupon_definition_type } from "./schema/coupon_definition";
 import { coupon_item_status, coupon_items } from "./schema/coupon_items";
+import { user_custom_flags, user_flags } from "./schema/user_custom_flags";
 
 // export all the enums
 export {
@@ -67,6 +68,7 @@ export {
   coupon_definition_type,
   coupon_definition_status,
   coupon_item_status,
+  user_flags,
 };
 
 // export all the tables and relations
@@ -104,6 +106,7 @@ export {
   nftItems,
   coupon_definition,
   coupon_items,
+  user_custom_flags,
 };
 
 // Type Exports

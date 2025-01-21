@@ -1,6 +1,9 @@
 import { eventParticipationType, giataCity } from "@/db/schema";
 import { users } from "@/db/schema/users";
+import { InferSelectModel } from "drizzle-orm";
 import { bigint, boolean, index, integer, json, pgTable, serial, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+
+
 
 export const events = pgTable(
   "events",
@@ -73,3 +76,5 @@ export const events = pgTable(
     event_uuid_unique: uniqueIndex().on(table.event_uuid),
   })
 );
+
+export type EventRow = InferSelectModel<typeof events>;

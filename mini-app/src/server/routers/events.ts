@@ -1,14 +1,19 @@
 import { db } from "@/db/db";
 import { eventFields, events, eventPayment, orders } from "@/db/schema";
 import { hashPassword } from "@/lib/bcrypt";
-import { renderAddEventMessage, renderUpdateEventMessage, sendLogNotification } from "@/lib/tgBot";
+import {
+  renderAddEventMessage,
+  renderModerationEventMessage,
+  renderUpdateEventMessage,
+  sendLogNotification,
+} from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
-import { and, eq, ne} from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import eventDB from "@/server/db/events";
@@ -31,20 +36,42 @@ import { timestampToIsoString } from "@/lib/DateAndTime";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
 import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
+import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
+import { InlineKeyboard } from "grammy";
 dotenv.config();
 
-
-function get_paid_event_price(capacity : number ){
+function get_paid_event_price(capacity: number) {
   const reduced_price = is_dev_env() || is_stage_env();
-  
-  return reduced_price ? (0.001 + 0.00055 * capacity) : (10 + 0.06 * capacity) ;
+
+  return reduced_price ? 0.001 + 0.00055 * capacity : 10 + 0.06 * capacity;
 }
 
+async function shouldEventBeHidden(event_is_paid: boolean, user_id: number) {
+  if (event_is_paid) return true;
+
+  const is_ts_verified = await organizerTsVerified(user_id);
+
+  if (!is_ts_verified) return true;
+
+  return false;
+}
+
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
+/* -------------------------------------------------------------------------- -------------------------------------------- */
 
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
+  const userRole = opts.ctx.user.role;
   const event_uuid = opts.input.event_uuid;
-  const eventData = { payment_details: {} as Partial<EventPaymentSelectType>, ...(await eventDB.selectEventByUuid(event_uuid)) };
+  const eventData = {
+    payment_details: {} as Partial<EventPaymentSelectType>,
+    ...(await eventDB.selectEventByUuid(event_uuid)),
+  };
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
@@ -54,6 +81,13 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       code: "NOT_FOUND",
       message: "event not found",
     });
+  }
+
+  //If event is hidden or not enabled
+  if (eventData.hidden || !eventData.enabled) {
+    if (userId !== eventData.owner && userRole !== "admin" && !(await userHasModerationAccess(userId, userRole))) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "event is not published yet" });
+    }
   }
 
   //    Fetch user data for event owner
@@ -74,6 +108,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       first_name: ownerUser.first_name,
       hosted_event_count: ownerUser.hosted_event_count,
     }
+
     : null;
 
   // If the event does NOT require registration, just return data
@@ -85,7 +120,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const user_request = await eventRegistrantsDB.getRegistrantRequest(event_uuid, userId);
   const event_location = eventData.location;
 
-  const userIsAdminOrOwner = eventData.owner == userId || opts.ctx.user.role == "admin";
+  const userIsAdminOrOwner = eventData.owner == userId || userRole == "admin";
   let mask_event_capacity = !userIsAdminOrOwner;
 
   eventData.location = "Visible To Registered Users";
@@ -150,17 +185,18 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     registrant_uuid,
     capacity: mask_event_capacity ? 99 : eventData.capacity,
   };
-
 });
 
 // private
 const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
-  if(opts.ctx.userRole !== "admin" && opts.ctx.userRole !== "organizer") {
-    throw new TRPCError({ code: "UNAUTHORIZED", message: `Unauthorized access, invalid role for ${opts.ctx.user?.user_id}` });
+  if (opts.ctx.userRole !== "admin" && opts.ctx.userRole !== "organizer") {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: `Unauthorized access, invalid role for ${opts.ctx.user?.user_id}`,
+    });
   }
   return await eventDB.getEventsForSpecialRole(opts.ctx.userRole, opts.ctx.user?.user_id);
 });
-
 
 /* -------------------------------------------------------------------------- */
 /*                                  🆕Add Event🆕                            */
@@ -168,7 +204,10 @@ const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
 // private
 const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: EventDataSchema })).mutation(async (opts) => {
   const input_event_data = opts.input.eventData;
-  const userCacheKey = getUserCacheKey(opts.ctx.user.user_id);
+
+  const user_id = opts.ctx.user.user_id;
+  const userCacheKey = getUserCacheKey(user_id);
+
   try {
     const result = await db.transaction(async (trx) => {
       const event_has_payment = input_event_data.paid_event && input_event_data.paid_event.has_payment;
@@ -197,10 +236,12 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
 
       /* ------------------- paid events must have registration ------------------- */
       input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
-      const is_paid = input_event_data.paid_event?.has_payment;
+      const is_paid = !!input_event_data.paid_event?.has_payment;
       if (is_paid && !config?.ONTON_WALLET_ADDRESS) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "ONTON_WALLET_ADDRESS NOT SET error" });
       }
+
+      const event_should_hidden = await shouldEventBeHidden(is_paid, user_id);
 
       const newEvent = await trx
         .insert(events)
@@ -218,21 +259,22 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           end_date: input_event_data.end_date,
           timezone: input_event_data.timezone,
           location: input_event_data.location,
-          owner: opts.ctx.user.user_id,
+          owner: user_id,
           participationType: input_event_data.eventLocationType, // right now paid event only can be in_person
           countryId: input_event_data.countryId,
           tsRewardImage: input_event_data.ts_reward_url,
           tsRewardVideo: input_event_data.video_url,
           cityId: input_event_data.cityId,
-          //Event Registration
+          /* --------------------------- Event Registration --------------------------- */
           has_registration: input_event_data.has_registration,
           has_approval: input_event_data.has_approval,
           capacity: input_event_data.capacity,
           has_waiting_list: input_event_data.has_waiting_list,
-          //Event Registration
+
+          /* -------------------------- Publish Event Or Not -------------------------- */
+          enabled: true,
+          hidden: event_should_hidden,
           /* ------------------------------- Paid Event ------------------------------- */
-          enabled: !is_paid,
-          hidden: is_paid,
           has_payment: is_paid,
           ticketToCheckIn: is_paid, // Duplicated Column same as has_payment 😐
           wallet_address: is_paid ? config?.ONTON_WALLET_ADDRESS : null,
@@ -240,7 +282,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         })
         .returning();
 
-      const eventData = newEvent[0]; // Ensure this is an object, assuming the update returns an array
+      const eventData = newEvent[0];
       /* -------------------------------------------------------------------------- */
       /*                     Paid Event : Insert Payment Details                    */
       /* -------------------------------------------------------------------------- */
@@ -248,12 +290,12 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       if (input_event_data.paid_event && event_has_payment) {
         if (!input_event_data.capacity)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
-        
+
         const order_price = get_paid_event_price(input_event_data.capacity);
-        
+
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
-          user_id: opts.ctx.user.user_id,
+          user_id: user_id,
           total_price: order_price,
           payment_type: "TON",
           state: "new",
@@ -292,7 +334,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           type: field.type,
           order_place: i,
           event_id: newEvent[0].event_id,
-          updatedBy: opts.ctx.user.user_id.toString(),
+          updatedBy: user_id.toString(),
         });
       }
 
@@ -306,25 +348,40 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           type: "input",
           order_place: input_event_data.dynamic_fields.length,
           event_id: newEvent[0].event_id,
-          updatedBy: opts.ctx.user.user_id.toString(),
+          updatedBy: user_id.toString(),
         });
       }
 
       const eventDraft = await CreateTonSocietyDraft(input_event_data, eventData.event_uuid);
       logger.log("eventDraft", JSON.stringify(eventDraft));
       logger.log("eventData", eventData);
-      // Generate the message using the render function
-      const logMessage = renderAddEventMessage(opts.ctx.user.username || opts.ctx.user.user_id, eventData.event_uuid, eventData);
-      await sendLogNotification({
-        message : logMessage,
-        topic: "event",
-      });
-      logger.log("add event telegram notification sent" , logMessage);
+      /* ------------- Generate the message using the render function ------------- */
+      const is_ts_verified = await organizerTsVerified(user_id);
+      if (is_ts_verified && !is_paid) {
+        /* -------------------------- Just Send The Message ------------------------- */
+        const logMessage = renderAddEventMessage(opts.ctx.user.username || user_id, eventData);
+        await sendLogNotification({
+          message: logMessage,
+          topic: "event",
+        });
+      } else {
+        /* --------------------------- Moderation Message --------------------------- */
+        const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
+        await sendLogNotification({
+          image : eventData.image_url,
+          message: logMessage,
+          topic: "event",
+          inline_keyboard: new InlineKeyboard()
+            .text("✅ Approve", `approve_${eventData.event_uuid}`)
+            .text("❌ Reject", `reject_${eventData.event_uuid}`),
+        });
+      }
       // Clear the organizer user cache so it will be reloaded next time
       await redisTools.deleteCache(userCacheKey);
 
-      // On local development skip  registration to ton society || paid event will be registered when organizer pays initial payment
-      const register_to_ts = process.env.ENV !== "local";
+      // Skip Register to ts if :
+      //  local development  || paid event registers organizer pays initial payment || org must be verified
+      const register_to_ts = process.env.ENV !== "local" && !event_should_hidden;
 
       if (register_to_ts) {
         const res = await registerActivity(eventDraft);
@@ -333,7 +390,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           .update(events)
           .set({
             activity_id: res.data.activity_id,
-            updatedBy: opts.ctx.user.user_id.toString(),
+            updatedBy: user_id.toString(),
             updatedAt: new Date(),
           })
           .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
@@ -402,23 +459,27 @@ const updateEvent = eventManagerPP
             await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
           ).pop();
 
-          if(!paymentInfo) throw new TRPCError({ code: "BAD_REQUEST", message: `error: paymentInfo not found for ${eventUuid}` });
-          
-          // Update Create Order If Event is not published yet
-          if(!oldEvent.enabled && eventData.capacity < paymentInfo!.bought_capacity){
-            const where_condition = and(
-                                        eq(orders.event_uuid, eventUuid),
-                                        eq(orders.order_type, "event_creation"),
-                                        ne(orders.state, "processing"),
-                                        ne(orders.state, "completed"),
-                                      );
-            const createEventOrder = await trx.query.orders.findFirst({where: where_condition});
+          if (!paymentInfo)
+            throw new TRPCError({ code: "BAD_REQUEST", message: `error: paymentInfo not found for ${eventUuid}` });
 
-            if(createEventOrder){
-              await trx.update(orders).set({total_price : get_paid_event_price(eventData.capacity) }).where(where_condition).execute();
-              await trx.update(eventPayment).set({bought_capacity : eventData.capacity})
+          // Update Create Order If Event is not published yet
+          if (!oldEvent.enabled && eventData.capacity < paymentInfo!.bought_capacity) {
+            const where_condition = and(
+              eq(orders.event_uuid, eventUuid),
+              eq(orders.order_type, "event_creation"),
+              ne(orders.state, "processing"),
+              ne(orders.state, "completed")
+            );
+            const createEventOrder = await trx.query.orders.findFirst({ where: where_condition });
+
+            if (createEventOrder) {
+              await trx
+                .update(orders)
+                .set({ total_price: get_paid_event_price(eventData.capacity) })
+                .where(where_condition)
+                .execute();
+              await trx.update(eventPayment).set({ bought_capacity: eventData.capacity });
             }
-            
           }
 
           /* ------------------- Create Order For Increase Capacity ------------------- */
@@ -496,10 +557,13 @@ const updateEvent = eventManagerPP
           let price = Math.max(eventData.paid_event.payment_amount || 0, 0.001); // Price > 0.001
           price = Math.round(price * 1000) / 1000; // Round to 3 Decimals
 
-          await trx.update(eventPayment).set({
-            recipient_address: eventData.paid_event.payment_recipient_address,
-            price: price,
-          }).where(eq(eventPayment.event_uuid , oldEvent.event_uuid));
+          await trx
+            .update(eventPayment)
+            .set({
+              recipient_address: eventData.paid_event.payment_recipient_address,
+              price: price,
+            })
+            .where(eq(eventPayment.event_uuid, oldEvent.event_uuid));
         }
 
         const currentFields = await eventFieldsDB.selectEventFieldsByEventId(trx, eventId!);
@@ -570,7 +634,6 @@ const updateEvent = eventManagerPP
 
         const updateChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
 
-
         // if it was a fully local setup we don't want to update the activity_id
         if (process.env.ENV !== "local") {
           try {
@@ -584,14 +647,21 @@ const updateEvent = eventManagerPP
             });
           }
         }
-        const logMessage = renderUpdateEventMessage(opts.ctx.user.username || opts.ctx.user.user_id , eventUuid, oldChanges, updateChanges);
-        logger.log("update event telegram notification sent", logMessage );
+        const logMessage = renderUpdateEventMessage(
+          opts.ctx.user.username || opts.ctx.user.user_id,
+          eventUuid,
+          oldChanges,
+          updateChanges
+        );
+        logger.log("update event telegram notification sent", logMessage);
         await sendLogNotification({ message: logMessage, topic: "event" });
 
         return { success: true, eventId: opts.ctx.event.event_uuid } as const;
       });
     } catch (err) {
-      logger.error(`[eventRouter]_update_event failed id: ${opts.ctx.event.event_uuid}, error: ${err}` , {input :opts.input});
+      logger.error(`[eventRouter]_update_event failed id: ${opts.ctx.event.event_uuid}, error: ${err}`, {
+        input: opts.input,
+      });
 
       internal_server_error(err, `Failed to update event ${opts.ctx.event.event_uuid}`);
     }
@@ -607,28 +677,26 @@ const getEventsWithFilters = publicProcedure.input(searchEventsInputZod).query(a
   }
 });
 
-export const getEventsWithFiltersInfinite = publicProcedure
-  .input(searchEventsInputZod)
-  .query(async ({ input }) => {
-    // Instead of passing `limit`, pass `limit + 1`
-    const dbResult = await eventDB.getEventsWithFilters({
-      ...input,
-      // tell the DB function: fetch an extra row
-      limit: (input.limit ?? 10) + 1,
-    });
-
-    const actualLimit = input.limit ?? 10;
-    let nextCursor: number | null = null;
-
-    if (dbResult.length > actualLimit) {
-       nextCursor = input.cursor + 1;
-    }
-
-    return {
-      items: dbResult,
-      nextCursor,
-    };
+export const getEventsWithFiltersInfinite = publicProcedure.input(searchEventsInputZod).query(async ({ input }) => {
+  // Instead of passing `limit`, pass `limit + 1`
+  const dbResult = await eventDB.getEventsWithFilters({
+    ...input,
+    // tell the DB function: fetch an extra row
+    limit: (input.limit ?? 10) + 1,
   });
+
+  const actualLimit = input.limit ?? 10;
+  let nextCursor: number | null = null;
+
+  if (dbResult.length > actualLimit) {
+    nextCursor = input.cursor + 1;
+  }
+
+  return {
+    items: dbResult,
+    nextCursor,
+  };
+});
 /* -------------------------------------------------------------------------- */
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
@@ -640,5 +708,3 @@ export const eventsRouter = router({
   getEventsWithFilters,
   getEventsWithFiltersInfinite,
 });
-
-
