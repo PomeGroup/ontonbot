@@ -115,7 +115,7 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
 export function startBot() {
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     console.error("Bot token or logs group ID not found in configProtected for this environment");
-    console.error("failed to start moderation log bot");
+    console.error("failed to start moderation log bot" , configProtected);
     return;
   }
 
