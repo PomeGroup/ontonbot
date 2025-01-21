@@ -163,9 +163,10 @@ function SearchBar() {
     setShowDialogParticipantError(false);
   };
 
-  const { filter: { society_hub_id: selectedHubs } } = localFilters
+  const { filter: { society_hub_id } } = localFilters
+  const selectedHubs = society_hub_id || []
   let hubText = 'All'
-  if (selectedHubs?.length !== 0 && selectedHubs.length !== hubs.length) {
+  if (selectedHubs && selectedHubs?.length !== 0 && selectedHubs?.length !== hubs?.length) {
     hubText = selectedHubs
       .map((hubId: number) => hubs.find((h) => h.id === String(hubId))?.name)
       .filter(Boolean)
