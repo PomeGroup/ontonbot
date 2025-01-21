@@ -133,8 +133,17 @@ async function startBot() {
 
       /* ------------------------------- On CallBack ------------------------------ */
       bot.on("callback_query:data", async (ctx) => {
-        console.log("callback_query with payload", ctx.callbackQuery.data);
-        await ctx.answerCallbackQuery({text : "Got it !!"}); // remove loading animation
+        const payload = ctx.callbackQuery.data;
+        console.log("callback_query with payload", payload);
+
+        const [status, event_uuid] = payload.split("_");
+
+        const orignal_text = ctx.update?.message?.text || "";
+        const new_text = orignal_text + "\nStatus : " + status;
+        
+        ctx.editMessageText(new_text);
+
+        await ctx.answerCallbackQuery({ text: "Got it !!" }); // remove loading animation
       });
       /* ------------------------------ Start The Bot ----------------------------- */
       await bot.start({

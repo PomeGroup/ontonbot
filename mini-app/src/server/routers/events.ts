@@ -370,8 +370,8 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           message: logMessage,
           topic: "event",
           inline_keyboard: new InlineKeyboard()
-            .text("✅ Approve", `approve_${eventData.event_id}`)
-            .text("❌ Reject", `reject_${eventData.event_id}`),
+            .text("✅ Approve", `approve_${eventData.event_uuid}`)
+            .text("❌ Reject", `reject_${eventData.event_uuid}`),
         });
       }
       // Clear the organizer user cache so it will be reloaded next time
