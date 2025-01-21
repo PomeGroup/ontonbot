@@ -183,7 +183,7 @@ export const renderModerationEventMessage = (username: string | number, eventDat
   const eventUuid = eventData.event_uuid;
   const eventDataWithoutDescription = removeSecretKey(removeKey(eventData, "description"));
   return `
-</b>${eventData.title}</b>
+<b>${eventData.title}</b>
 
 ${eventData.subtitle}
 
