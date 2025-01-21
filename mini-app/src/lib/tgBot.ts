@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Bot, BotError, GrammyError } from "grammy";
+import { Bot, BotError, GrammyError, InlineKeyboard } from "grammy";
 import { configProtected } from "@/server/config";
 
 const tgClient = axios.create({
@@ -194,7 +194,7 @@ async function startBot() {
       /* ------------------------------- On CallBack ------------------------------ */
       bot.on("callback_query:data", async (ctx) => {
         const payload = ctx.callbackQuery.data;
-        console.log("callback_query with payload", payload);
+        console.log("callback_query_with_payload : ", payload);
 
         const [status, event_uuid] = payload.split("_");
 
@@ -215,10 +215,17 @@ async function startBot() {
             update_completed = false;
           }
 
-        if (update_completed)
+        if (update_completed) {
+          const reply_markup =
+            status === "approve"
+              ? undefined // No Button For approved events
+              : new InlineKeyboard().text("✅ Approve Rejected Event", `approve_${event_uuid}`);
+          // Rejected Events Can be published
           ctx.editMessageCaption({
             caption: new_text,
+            reply_markup,
           });
+        }
 
         await ctx.answerCallbackQuery({ text: "Got it !!" }); // remove loading animation
       });
