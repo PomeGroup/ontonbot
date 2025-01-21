@@ -38,9 +38,6 @@ export default function Search() {
       },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-        keepPreviousData: true,
-        // If you only want to fetch once "initial fetch done," you can
-        // conditionally enable or pass `enabled: true/false`
       }
     );
 
@@ -82,7 +79,7 @@ export default function Search() {
         {/* Scrollable area containing the Swiper slides */}
         <div className="overflow-y-auto flex-grow">
           {/* Show skeleton if loading and no data */}
-          {isLoading && allEvents.length === 0 ? (
+          {allEvents.length === 0 ? isLoading ? (
             <div className="flex flex-col gap-2">
               {Array.from({ length: LIMIT }).map((_, i) => (
                 <EventCardSkeleton
@@ -90,51 +87,42 @@ export default function Search() {
                 />
               ))}
             </div>
-          ) : (
-            <>
-              {/* Show no results if done loading, no data */}
-              {!isLoading && !isFetchingNextPage && allEvents.length === 0 && (
-                <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
-                  <Image
-                    src="/template-images/no-search-result.gif"
-                    alt="No search results found"
-                    width={180}
-                    height={180}
+          ) : (<div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+            <Image
+              src="/template-images/no-search-result.gif"
+              alt="No search results found"
+              width={180}
+              height={180}
+            />
+            <div className="text-gray-500 max-w-md">
+              No Events were found
+              <br />
+              matching your Search.
+            </div>
+          </div>)
+            : <>{allEvents.map((event, eventIndex) => {
+              // Mark the last 1-2 events with a special class for IntersectionObserver
+              const isNearEnd = eventIndex === allEvents.length - 1 || eventIndex === allEvents.length - 2;
+
+              return (
+                <div
+                  key={event.eventId}
+                  className={isNearEnd ? `last-event-card` : ""}
+                >
+                  <EventCard
+                    event={event}
+                    currentUserId={UserId}
                   />
-                  <div className="text-gray-500 max-w-md">
-                    No Events were found
-                    <br />
-                    matching your Search.
-                  </div>
+                </div>
+              );
+            })}
+              {isFetchingNextPage && hasNextPage && (
+                <div className="text-center py-4 pb-5 w-full">
+                  <div className="loader">Loading results...</div>
                 </div>
               )}
-
-              {/* Otherwise, render the events */}
-              {allEvents.map((event, eventIndex) => {
-                // Mark the last 1-2 events with a special class for IntersectionObserver
-                const isNearEnd = eventIndex === allEvents.length - 1 || eventIndex === allEvents.length - 2;
-
-                return (
-                  <div
-                    key={event.eventId}
-                    className={isNearEnd ? `last-event-card` : ""}
-                  >
-                    <EventCard
-                      event={event}
-                      currentUserId={UserId}
-                    />
-                  </div>
-                );
-              })}
             </>
-          )}
-
-          {/* "Loading more" indicator, if we're currently fetching the next page */}
-          {isFetchingNextPage && hasNextPage && allEvents.length !== 0 && (
-            <div className="text-center py-4 pb-5 w-full">
-              <div className="loader">Loading results...</div>
-            </div>
-          )}
+          }
         </div>
       </div>
     </Block >

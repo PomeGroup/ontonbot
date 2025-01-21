@@ -250,7 +250,7 @@ function PromotedEventsList() {
   return (
     <>
       <div className="w-full pb-2 flex justify-between items-center">
-        <h2 className="font-bold text-lg">Promoted Events</h2>
+        <h2 className="font-bold text-lg">Events</h2>
         {/* <a
             href={link}
             className="text-[#007AFF] border-2 border-[#007aff] rounded-lg py-1.5 px-4 hover:underline"
