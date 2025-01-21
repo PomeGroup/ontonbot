@@ -191,7 +191,7 @@ export const searchOrganizers = async (params: { searchString?: string; offset: 
     // 1) Put those with a photo_url first (CASE returns 1 if photo_url is valid, otherwise 0)
     // 2) Then sort by hosted_event_count in descending order
     .orderBy(
-      sql`CASE WHEN ${users.photo_url} IS NOT NULL AND ${users.photo_url} <> '' THEN 1 ELSE 0 END DESC`,
+     // sql`CASE WHEN ${users.photo_url} IS NOT NULL AND ${users.photo_url} <> '' THEN 1 ELSE 0 END DESC`,
       sql`${users.hosted_event_count} DESC`
     )
     .offset(offset)

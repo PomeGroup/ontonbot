@@ -96,7 +96,7 @@ export const organizerRouter = router({
   getPromotedOrganizers: publicProcedure
     .input(z.object({}).optional())
     .query(async (): Promise<MinimalOrganizerData[]> => {
-      const promotedChannelsStr = config?.promotedChannelIds || '[438186721, 428313379, 1049961551, 196466876,6123464355]'
+      const promotedChannelsStr = config?.promotedChannelIds ?? '[]'
       try {
         const ids: number[] = JSON.parse(promotedChannelsStr)
 

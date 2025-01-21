@@ -98,16 +98,17 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   // Build an organizer object with the org_* fields (or null if no user found)
   const organizer = ownerUser
     ? {
-        org_channel_name: ownerUser.org_channel_name === null ? ownerUser.first_name : ownerUser.org_channel_name,
-        org_support_telegram_user_name: ownerUser.org_support_telegram_user_name,
-        org_x_link: ownerUser.org_x_link,
-        org_bio: ownerUser.org_bio,
-        org_image: ownerUser.org_image === null ? ownerUser.photo_url : ownerUser.org_image,
-        user_id: ownerUser.user_id,
-        username: ownerUser.username,
-        first_name: ownerUser.first_name,
-        hosted_event_count: ownerUser.hosted_event_count,
-      }
+      org_channel_name: ownerUser.org_channel_name === null ? `${ownerUser.first_name} ${ownerUser.last_name}`  : ownerUser.org_channel_name,
+      org_support_telegram_user_name: ownerUser.org_support_telegram_user_name,
+      org_x_link: ownerUser.org_x_link,
+      org_bio: ownerUser.org_bio,
+      org_image: ownerUser.org_image === null ? ownerUser.photo_url : ownerUser.org_image,
+      user_id: ownerUser.user_id,
+      username: ownerUser.username,
+      first_name: ownerUser.first_name,
+      hosted_event_count: ownerUser.hosted_event_count,
+    }
+
     : null;
 
   // If the event does NOT require registration, just return data

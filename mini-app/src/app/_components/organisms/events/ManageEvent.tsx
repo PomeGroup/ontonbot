@@ -112,8 +112,8 @@ function ManageEvent({ event }: ManageEventProps) {
     }
   }, [params.hash, event, isReset, resetState, setEdit, setEventData]);
 
-  if (getCurrentSection() === 'none'    ) {
-    return null;
+  if (getCurrentSection() === 'none' && params.hash) {
+    return <div>Loading...</div>;
   }
 
   // 3) Convert currentSection => numeric step for Stepper
@@ -143,7 +143,7 @@ function ManageEvent({ event }: ManageEventProps) {
       </Block>
 
       <Block className="!p-0">
-        {isReset && stepIndex === 1 && <GeneralStep  />}
+        {isReset && stepIndex === 1 && <GeneralStep />}
         {isReset && stepIndex === 2 && <TimePlaceStep />}
         {isReset && stepIndex === 3 && <RegistrationStep />}
         {isReset && stepIndex === 4 && <RewardStep />}

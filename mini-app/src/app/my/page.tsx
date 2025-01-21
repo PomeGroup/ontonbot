@@ -88,7 +88,7 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
   if (!data) return null;
   return (
     <Card
-      className='mt-0'
+      className='mt-0 cursor-pointer'
       onClick={() => {
         router.push(`/my/edit`);
       }}

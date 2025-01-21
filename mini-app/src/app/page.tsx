@@ -16,7 +16,6 @@ import "./page.css";
 import BottomNavigation from "../components/BottomNavigation";
 import EventBanner from "@/components/EventBanner";
 import { OntonEvent } from "@/types";
-import { noop } from "lodash";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { SearchIcon } from "lucide-react";
 import { typographyClassNameMappings } from "@/components/Typography";
