@@ -50,6 +50,13 @@
       "when": 1737076833475,
       "tag": "0006_mighty_scream",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1737418873418,
+      "tag": "0007_even_living_tribunal",
+      "breakpoints": true
     }
   ]
 }
