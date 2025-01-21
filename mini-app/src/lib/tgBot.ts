@@ -10,6 +10,7 @@ import { AxiosError } from "axios";
 import { removeKey, removeSecretKey } from "@/lib/utils";
 import { EventRow } from "@/db/schema/events";
 import { logger } from "@/server/utils/logger";
+import { sleep } from "@/utils";
 
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
   try {
@@ -112,21 +113,30 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
   }
 };
 
-export function startBot() {
-  if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
-    console.error("Bot token or logs group ID not found in configProtected for this environment");
-    console.error("failed to start moderation log bot" , configProtected);
-    return;
+async function startBot() {
+  while (true) {
+    if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
+      console.error("Bot token or logs group ID not found in configProtected for this environment");
+      console.error("Retrying to start moderation log bot in 5 seconds...", configProtected);
+      await sleep(5000); // Sleep for 5 seconds and try again
+      continue;
+    }
+
+    const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
+
+    try {
+      const bot = new Bot(BOT_TOKEN_LOGS);
+
+      bot.on("message", (ctx) => ctx.reply("Got another message! : " + ctx.message.text?.toString()));
+      await bot.start();
+
+      console.log("Started The Moderation/Logger Bot Successfully");
+      break; // Exit the loop once the bot starts successfully
+    } catch (error) {
+      console.error("Error while starting the bot. Retrying in 5 seconds...", error);
+      await sleep(5000);
+    }
   }
-
-  const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
-
-  const bot = new Bot(BOT_TOKEN_LOGS);
-
-  bot.on("message", (ctx) => ctx.reply("Got another message! : " + ctx.message.text?.toString()));
-  bot.start().catch((e) => logger.error("moderation_logger_bot_start_error", e));
-
-  console.log("Started The Moderation/Logger Bot Successfully");
 }
 
 // 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
@@ -211,4 +221,4 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
   `;
 };
 
-startBot();
+startBot().then(() => console.log('startBot Function Finish ;'));
