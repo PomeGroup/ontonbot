@@ -15,7 +15,7 @@ import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -40,6 +40,15 @@ export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) 
   }
 
   return { isOwner: true, valid, initDataJson };
+};
+//  get ongoing events
+export const fetchOngoingEvents = async () => {
+  const currentTime = Date.now() / 1000;
+  return await db
+    .select()
+    .from(events)
+    .where(and(eq(events.hidden, false), lt(events.end_date, currentTime), gt(events.start_date, currentTime)))
+    .execute();
 };
 
 export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
