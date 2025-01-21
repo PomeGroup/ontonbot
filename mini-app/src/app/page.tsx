@@ -18,9 +18,8 @@ import EventBanner from "@/components/EventBanner";
 import { OntonEvent } from "@/types";
 import { noop } from "lodash";
 import { Swiper, SwiperSlide } from "swiper/react";
-import useWebApp from "@/hooks/useWebApp";
-import { useUserStore } from "@/context/store/user.store";
-
+import { SearchIcon } from "lucide-react";
+import { typographyClassNameMappings } from "@/components/Typography";
 
 const currentDateTime = Math.floor(Date.now() / 1000);
 
@@ -89,19 +88,13 @@ export default function Home() {
 
   return (
     <Block margin="0" className="bg-[#EFEFF4] min-h-screen pb-9">
-      <div className="flex flex-col pt-2">
-        {/* Fixed Search Bar */}
-        <div className="w-full pb-1">
-          <SearchBar
-            includeQueryParam={false}
-            onUpdateResults={noop}
-            tabValue={tabValueForSearchBar}
-            userRole={authorized ? userRole : "user"}
-          />
+      <div className="flex flex-col pt-3">
+        <div className="w-full pb-3">
+          <SearchBar />
         </div>
 
         <div className=" flex-grow">
-          <div className="pt-2 flex-grow pb-4">
+          <div className="flex-grow pb-4">
             {/* Slider Event */}
             <PromotedEventsSlider />
             <PromotedEventsList />

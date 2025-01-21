@@ -136,7 +136,7 @@ function UnforwardedEventCard(
         </div>
 
         <div className="flex flex-col grow">
-          <Typography className="font-semibold mb-1" variant="body">
+          <Typography className="font-semibold mb-1 line-clamp-2 overflow-hidden" variant="body">
             {title}
           </Typography>
           {organizerChannelName.trim().length > 0 && (
@@ -150,7 +150,7 @@ function UnforwardedEventCard(
               {isOnline}
             </Typography>
             <div className="flex justify-between">
-              <Typography variant='subheadline2' className="font-light">
+              <Typography variant='subheadline2' className="font-medium">
                 {formatDateRange(startDate, endDate, validTimezone)}
               </Typography>
               <div className="flex gap-[6px]">

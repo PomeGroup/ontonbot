@@ -1,62 +1,28 @@
 "use client";
 
 import React, {
-  useCallback,
   useEffect,
-  useRef,
   useState,
-  MouseEvent,
   ChangeEvent,
-  KeyboardEvent,
+  useMemo,
 } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { z } from "zod";
-import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
-import { Searchbar } from "konsta/react";
 
-import useSearchEventsStore from "@/zustand/searchEventsInputZod";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 
-import { useSearchEvents } from "@/hooks/useSearchEvents";
-import { useGetHubs } from "@/hooks/events.hooks";
 import useWebApp from "@/hooks/useWebApp";
 
 import MainFilterDrawer from "./MainFilterDrawer";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
 import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
-import EventSearchSuggestion from "@/app/_components/EventSearchSuggestion";
 
-import StatusChip from "@/components/ui/status-chips";
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-
-/** Props for the SearchBar component */
-interface SearchBarProps {
-  /** If true, parse/push query parameters in the URL (e.g., ?query=xxx) */
-  includeQueryParam?: boolean;
-  /** If true, show the row of filter tags beneath the search bar. */
-  showFilterTags?: boolean;
-  /** Called whenever we reset or re-fetch results, so the parent can clear or update data */
-  onUpdateResults?: (data: any) => void;
-  /** Optional offset logic (if still used) */
-  offset?: number;
-  setOffset?: (_offset: number) => void;
-  /** Higher-level input props, if needed */
-  searchParamsParsed?: any;
-  setSearchParamsParsed?: (_value: any) => void;
-  /** Called when we want to refetch from the parent */
-  refetch?: () => void;
-  /** If you want to store a final copy of the search input in the parent */
-  setFinalSearchInput?: (_value: any) => void;
-  /** If you have tab filtering (e.g., "All", "Past", etc.) */
-  tabValue?: string;
-  applyTabFilter?: (_tabValue: string, _userId: number) => void;
-  /** The user’s role (admin, user, organizer) if relevant */
-  userRole?: "admin" | "user" | "organizer";
-  /** Another callback that triggers a re-fetch in the parent */
-  refetchEvents?: () => void;
-}
+import { SearchIcon } from "lucide-react";
+import { typographyClassNameMappings } from "@/components/Typography";
+import { useDebouncedCallback } from "@mantine/hooks";
+import parseSearchParams, { allParticipationTypes } from "@/app/search/parseSearchParams";
+import { trpc } from "@/app/_trpc/client";
 
 /** TypeScript types from your Zod schema */
 type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
@@ -71,282 +37,98 @@ interface Hub {
   name: string;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({
-  includeQueryParam = true,
-  showFilterTags = false,
-  onUpdateResults = () => { },
-  offset = 0,
-  setOffset = () => { },
-  refetch = () => { },
-  setFinalSearchInput = () => { },
-  tabValue = "All",
-  applyTabFilter = () => { },
-  userRole = "user",
-  refetchEvents = () => { },
-}) => {
-  /** ---------------
-   *  Zustand Store
-   * ---------------
-   */
-  const {
-    searchInput,
-    setSearchInput,
-    setParticipationType,
-    setSocietyHubId,
-    setSortBy,
-  } = useSearchEventsStore();
+const buildQueryParams = (newVals: ReturnType<typeof parseSearchParams>) => {
+  const pType = (
+    Array.isArray(newVals.filter.participationType) ?
+      newVals.filter.participationType :
+      allParticipationTypes
+  ).join(",")
 
-  /** ---------------
-   *  Local State
-   * ---------------
-   */
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  return new URLSearchParams({
+    query: newVals.search,
+    participationType: pType,
+    selectedHubs: (newVals.filter.society_hub_id).join(","),
+    sortBy: newVals.sortBy,
+  });
+};
+
+function SearchBar() {
   const [showDialogParticipantError, setShowDialogParticipantError] = useState(false);
-  const allParticipationTypes: ParticipationType = ["online", "in_person"];
-  const [participationTypeLocal, setParticipationTypeLocal] = useState<ParticipationType>(
-    searchInput.filter?.participationType || ["online", "in_person"]
-  );
-  const [sortByLocal, setSortByLocal] = useState<SortBy>(searchInput.sortBy || "start_date_desc");
-  const [selectedHubs, setSelectedHubs] = useState<string[]>([]);
-  const [applyingFilters, setApplyingFilters] = useState(false);
-  const [hubText, setHubText] = useState("All");
-  const [showFilterButton, setShowFilterButton] = useState(true);
+
   const [isEventTypeDrawerOpen, setIsEventTypeDrawerOpen] = useState(false);
   const [isHubDrawerOpen, setIsHubDrawerOpen] = useState(false);
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
-  const [searchIsFocused, setSearchIsFocused] = useState(false);
-  const [renderedFilterTags, setRenderedFilterTags] = useState(true);
 
   const router = useRouter();
-  const searchParams = useSearchParams();
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
   const userId = webApp?.initDataUnsafe?.user?.id || 0;
+  const searchParams = useSearchParams();
 
   /** ---------------
    *  Hubs from API
    * ---------------
    */
-  const hubsResponse = useGetHubs();
-  const [hubs, setHubs] = useState<Hub[]>([]);
-  useEffect(() => {
-    if (hubsResponse.data?.status === "success") {
-      const hubsData = hubsResponse.data.hubs;
-      setHubs((prev) => {
-        if (JSON.stringify(prev) !== JSON.stringify(hubsData)) {
-          return hubsData;
-        }
-        return prev;
-      });
+  const { data: { hubs } = { hubs: [] } } = trpc.hubs.getHubs.useQuery(undefined, {
+    staleTime: Infinity,
+    queryKey: ["hubs.getHubs", undefined],
+  });
+
+  const isSearchPage = usePathname().includes('/search')
+
+  const parsedSearchParams = useMemo(() => parseSearchParams(searchParams), [searchParams])
+  const {
+    filter: {
+      participationType: participationTypeLocal,
     }
-  }, [hubsResponse.data?.status]);
+  } = parsedSearchParams
 
-  /** ---------------
-   *  Search Suggestions
-   * ---------------
-   */
-  const { searchTerm, setSearchTerm, autoSuggestions, setAutoSuggestions } = useSearchEvents();
+  const defaultFilters = {
+    search: '',
+    sortBy: 'default' as SortBy,
+    filter: {
+      participationType: allParticipationTypes,
+      society_hub_id: hubs.map(h => h.id).map(Number)
+    }
+  }
+  const [localFilters, setLocalFilters] = useState<ReturnType<typeof parseSearchParams>>(defaultFilters)
 
-  /** ---------------
-   *  On mount, parse URL if includeQueryParam
-   * ---------------
-   */
-  const [initialHubsSet, setInitialHubsSet] = useState(false);
   useEffect(() => {
-    if (!initialHubsSet && hubs.length > 0) {
-      if (includeQueryParam) {
-        const participantFromQuery = searchParams.get("participationType")?.split(",") || [];
-        const maybePType =
-          participantFromQuery.length > 0 && participantFromQuery.length !== 2
-            ? (participantFromQuery as ParticipationType)
-            : [];
+    setLocalFilters(parsedSearchParams)
+  }, [parsedSearchParams])
 
-        const selectedHubsFromParams = searchParams.get("selectedHubs")?.split(",") || [];
-        const sortByQ = (searchParams.get("sortBy") as SortBy) || "start_date_desc";
-        const term = searchParams.get("query") || "";
 
-        // local states
-        setSearchTerm(term);
-        setParticipationTypeLocal(maybePType);
-        setSortByLocal(sortByQ);
-
-        // store states
-        setSearchInput({ search: term });
-        setParticipationType(maybePType);
-        setSortBy(sortByQ);
-
-        if (selectedHubsFromParams.length === 0) {
-          setSelectedHubs(hubs.map((hub) => hub.id));
-        } else {
-          setSelectedHubs(selectedHubsFromParams);
-        }
-      } else {
-        // if ignoring query param => default to all
-        setSelectedHubs(hubs.map((hub) => hub.id));
+  const applyFilters = (newVals: ReturnType<typeof parseSearchParams>) => {
+    const qs = buildQueryParams({
+      ...defaultFilters,
+      ...newVals,
+      filter: {
+        ...defaultFilters.filter,
+        ...newVals.filter
       }
-      setInitialHubsSet(true);
-    }
-  }, [hubs, includeQueryParam, initialHubsSet]);
+    });
 
-  /** ---------------
-   *  Display "All" if no hubs or all selected
-   * ---------------
-   */
-  useEffect(() => {
-    if (selectedHubs.length === 0 || selectedHubs.length === hubs.length) {
-      setHubText("All");
+    const searchUrl = `/search?${qs.toString()}`
+    if (!isSearchPage) {
+      router.push(searchUrl);
     } else {
-      const selectedNames = selectedHubs
-        .map((hubId) => hubs.find((h) => h.id === hubId)?.name)
-        .filter(Boolean)
-        .join(", ");
-      setHubText(selectedNames);
+      router.replace(searchUrl)
     }
-  }, [selectedHubs, hubs]);
+  };
 
-  /** ---------------
-   *  Searching
-   * ---------------
-   */
-
-  const handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const _handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const val = event.target.value;
-    const isFocus = event.target === document.activeElement;
-    setSearchIsFocused(isFocus);
-    setSearchTerm(val);
 
-    // sync store
-    setSearchInput({ search: val });
-    setSortBy(sortByLocal);
-
-    if (val.length > 2) {
-      setShowSuggestions(true);
-      setShowFilterButton(false);
-    } else {
-      setAutoSuggestions([]);
-      setShowSuggestions(false);
-      setShowFilterButton(true);
-    }
+    applyFilters({ search: val } as any)
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      applyFilters().then(() => {
-        // navigate to search page with new query
-
-        router.replace(`/search?tab=${tabValue}&${buildQueryParams().toString()}`);
-      });
-    }
-  };
-
-  /** ---------------
-   *  build Query Params
-   * ---------------
-   */
-  const buildQueryParams = () => {
-    const pType = participationTypeLocal && participationTypeLocal.length
-      ? participationTypeLocal.join(",")
-      : allParticipationTypes.join(",");
-
-    return new URLSearchParams({
-      query: searchTerm,
-      participationType: pType,
-      selectedHubs: selectedHubs.join(","),
-      sortBy: sortByLocal,
-    });
-  };
-
-  /** ---------------
-   *  Filtering
-   * ---------------
-   */
-  const applyFilters = async () => {
-    const qs = buildQueryParams();
-
-    if (!includeQueryParam && !searchIsFocused) {
-      router.push(`/search?${qs.toString()}`);
-    } else if (includeQueryParam && !searchIsFocused) {
-      // toggle re-render of filter tags
-      setRenderedFilterTags(!renderedFilterTags);
-      // apply tab filter if any
-      applyTabFilter(tabValue, userId);
-      // reset offset if used
-      setOffset(0);
-      // clear parent data
-      onUpdateResults([]);
-      // store final input in parent if desired
-      setFinalSearchInput?.(searchInput);
-    }
-  };
-
-  /** ---------------
-   *  Re-run filter if applying
-   * ---------------
-   */
-  useEffect(() => {
-    if (!applyingFilters) return;
-
-    // ensure local participation is valid
-    const validPType = participationTypeLocal?.filter((x) => allParticipationTypes.includes(x));
-    setParticipationType(validPType);
-    // update store with local sort
-    setSortBy(sortByLocal);
-
-    // convert selectedHubs => number[], update store
-    const numericHubs: SocietyHubId = selectedHubs.map(Number).filter((id) => !isNaN(id));
-    setSocietyHubId(numericHubs);
-
-    setApplyingFilters(false);
-    setSearchInput({ search: searchInput.search });
-
-    // after everything, run apply => refetch
-    applyFilters().then(() => {
-      refetchEvents();
-    });
-  }, [applyingFilters]);
-
-  /** ---------------
-   *  "Show all results" from suggestions
-   * ---------------
-   */
-  const handleAutoSuggestionAllResults = () => {
-    setAutoSuggestions([]);
-    setShowSuggestions(false);
-    setShowFilterButton(true);
-
-    const q = new URLSearchParams({
-      query: searchTerm,
-      sortBy: "start_date_desc",
-    });
-
-    router.replace(`/search?tab=${tabValue}&${q.toString()}`);
-  };
-
-  /** ---------------
-   *  Close suggestions
-   * ---------------
-   */
-  const handleCloseSuggestions = () => {
-    setSearchTerm("");
-    setShowSuggestions(false);
-    setShowFilterButton(true);
-  };
+  const handleSearchInputChange = useDebouncedCallback(_handleSearchInputChange, 300)
 
   /** ---------------
    *  Reset all filters
    * ---------------
    */
   const resetFilters = () => {
-    const allHubIds = hubs.map((hub) => hub.id);
-    setParticipationTypeLocal([]);
-    setSelectedHubs(allHubIds);
-    setSortByLocal("start_date_desc");
-    setRenderedFilterTags(!renderedFilterTags);
-
-    applyFilters().then(() => {
-      refetchEvents();
-    });
+    applyFilters(defaultFilters)
     hapticFeedback?.selectionChanged();
   };
 
@@ -357,151 +139,18 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const setParticipationTypes = (types: ParticipationType) => {
     hapticFeedback?.selectionChanged();
     if (types.length === 0) {
-      setParticipationTypeLocal(["online", "in_person"]);
+      setLocalFilters({ filter: { participationType: allParticipationTypes } } as any)
       return;
     }
-    setParticipationTypeLocal(types);
+    setLocalFilters(prev => ({ ...prev, filter: { ...prev.filter, participationType: types } } as any))
   };
 
-  /** ---------------
-   *  Toggle single PType
-   * ---------------
-   */
-  function toggleParticipationTypeLocal(
-    type: "online" | "in_person",
-    triggerFrom = "filter"
-  ) {
-    hapticFeedback?.selectionChanged();
-
-    // Construct the updated array
-    const updated = participationTypeLocal.includes(type)
-      ? participationTypeLocal.filter((t) => t !== type)
-      : [...participationTypeLocal, type];
-
-    // If user tries to remove both => show error
-    if (updated.length === 0 && triggerFrom === "filter") {
-      setShowDialogParticipantError(true);
-      return;
-    }
-
-    // This updated array is guaranteed to remain ("online" | "in_person")[]
-    setParticipationTypeLocal(updated);
-  }
-
-  /** ---------------
-   *  Hub selection toggles
-   * ---------------
-   */
-  const toggleHubSelection = (hubId: string) => {
-    hapticFeedback?.selectionChanged();
-    setSelectedHubs((prev) => {
-      return prev.includes(hubId) ? prev.filter((id) => id !== hubId) : [...prev, hubId];
-    });
-  };
   const setSelectedHubsArray = (hubIds: string[]) => {
+    console.log(hubIds)
     if (hubIds.length === 0) {
-      setSelectedHubs(hubs.map((hub) => hub.id));
+      setLocalFilters(prev => ({ ...prev, filter: { ...prev.filter, society_hub_id: hubs.map(h => h.id) } } as any))
     } else {
-      setSelectedHubs(hubIds);
-    }
-  };
-
-  /** ---------------
-   *  Remove single chip
-   * ---------------
-   */
-  const clearFilter = (filter: string) => {
-    // If it's a participationType
-    if ((filter === "online" || filter === "in_person") && participationTypeLocal.includes(filter)) {
-      toggleParticipationTypeLocal(filter, "tag");
-    }
-    // If it's a hub
-    else if (selectedHubs.includes(filter)) {
-      toggleHubSelection(filter);
-    }
-    // If it's a sort
-    else if (filter === "Most People Reached") {
-      setSortByLocal("start_date_desc");
-    }
-
-    setApplyingFilters(true);
-    hapticFeedback?.selectionChanged();
-  }
-
-  /** ---------------
-   *  Render filter tags
-   * ---------------
-   */
-  const renderFilterButtons = useCallback(() => {
-    // If sortByLocal != "start_date_desc", show "Most People Reached" chip
-    const baseFilters: (string | null)[] = [
-      ...(participationTypeLocal.length > 0 ? participationTypeLocal : []),
-      sortByLocal !== "start_date_desc" ? "Most People Reached" : null,
-    ].filter(Boolean);
-
-    const filterButtons = baseFilters.map((f, idx) => (
-      <StatusChip
-        key={`chip-${f}-${idx}`}
-        onDelete={() => clearFilter(f!)}
-        label={f!.split("_").join(" ")}
-        showDeleteButton
-      />
-    ));
-
-    // If not "All hubs" => show each hub as chip
-    if (selectedHubs.length > 0 && selectedHubs.length !== hubs.length) {
-      selectedHubs.forEach((hubId) => {
-        const hubName = hubs.find((h) => h.id === hubId)?.name;
-        if (!hubName) return;
-        filterButtons.push(
-          <StatusChip
-            key={`hub-${hubId}`}
-            onDelete={() => clearFilter(hubId)}
-            label={hubName}
-            showDeleteButton
-          />
-        );
-      });
-    }
-    return filterButtons;
-  }, [renderedFilterTags, participationTypeLocal, sortByLocal, selectedHubs, hubs]);
-
-  /** ---------------
-   *  Scroll-area arrow logic
-   * ---------------
-   */
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const scrollArea = scrollAreaRef.current;
-    if (!scrollArea) return;
-    scrollArea.dataset.isDragging = "true";
-    scrollArea.dataset.startX = `${e.pageX - scrollArea.offsetLeft}`;
-    scrollArea.dataset.scrollLeft = `${scrollArea.scrollLeft}`;
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    const scrollArea = scrollAreaRef.current;
-    if (scrollArea?.dataset.isDragging === "true") {
-      const x = e.pageX - scrollArea.offsetLeft;
-      const walk = x - Number(scrollArea.dataset.startX!);
-      scrollArea.scrollLeft = Number(scrollArea.dataset.scrollLeft!) - walk;
-    }
-  };
-
-  const handleMouseUp = () => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.dataset.isDragging = "false";
-    }
-  };
-
-  const checkScrollArrows = () => {
-    const scrollArea = scrollAreaRef.current;
-    if (scrollArea) {
-      setShowLeftArrow(scrollArea.scrollLeft > 0);
-      setShowRightArrow(
-        scrollArea.scrollLeft < scrollArea.scrollWidth - scrollArea.clientWidth
-      );
+      setLocalFilters(prev => ({ ...prev, filter: { ...prev.filter, society_hub_id: hubIds } } as any))
     }
   };
 
@@ -510,125 +159,49 @@ const SearchBar: React.FC<SearchBarProps> = ({
    * ---------------
    */
   const handleShowAll = () => {
-    setParticipationTypeLocal(["online", "in_person"]);
+    setParticipationTypes([])
     setShowDialogParticipantError(false);
   };
 
-  /** On mount (or changes to hubs, pType, sort), check scroll arrows */
-  useEffect(() => {
-    checkScrollArrows();
-  }, [selectedHubs, participationTypeLocal, sortByLocal]);
+  const { filter: { society_hub_id: selectedHubs } } = localFilters
+  let hubText = 'All'
+  if (selectedHubs?.length !== 0 && selectedHubs.length !== hubs.length) {
+    hubText = selectedHubs
+      .map((hubId: number) => hubs.find((h) => h.id === String(hubId))?.name)
+      .filter(Boolean)
+      .join(", ");
+  }
 
   return (
     <div className="relative flex flex-col">
       {/* Top row: search + filter icon */}
       <div className="relative flex items-center">
         <div
-          className={`flex-grow transition-all duration-300 ${searchTerm ? "animate-grow" : "animate-shrink"
-            }`}
+          className={`flex-grow transition-all duration-300`}
         >
-          <Searchbar
-            className="py-1.5"
-            placeholder={
-              tabValue === "" ? "Search All Events" : `Search ${tabValue}`
-            }
-            onChange={handleSearchInputChange}
-            onKeyDown={handleKeyDown}
-            value={searchTerm}
-            onFocus={handleSearchInputChange}
-            onBlur={handleSearchInputChange}
-          />
-
-          {/* If user tries removing both 'online' + 'in_person' */}
-          <ParticipantErrorDialog
-            open={showDialogParticipantError}
-            onClose={() => setShowDialogParticipantError(false)}
-            onConfirm={handleShowAll}
-          />
-
-          {/* Auto-suggestions */}
-          {showSuggestions && (
-            <EventSearchSuggestion
-              searchTerm={searchTerm}
-              onClose={handleCloseSuggestions}
-              autoSuggestions={autoSuggestions}
-              setAutoSuggestions={setAutoSuggestions}
-              handleFilterApply={applyFilters}
-              handleAutoSuggestionAllResults={handleAutoSuggestionAllResults}
+          <div className='relative mr-3 text-[#8e8e93] focus-within:text-[#007aff]'>
+            <SearchIcon className="absolute top-[6px] left-2 z-2" />
+            <input
+              className={`rounded-md bg-[#E0E0E5] w-full py-2 pl-10 caret-[#007aff] text-black ${typographyClassNameMappings.body} !font-normal`}
+              placeholder="Search Events and Organizers"
+              onChange={handleSearchInputChange}
             />
-          )}
+          </div>
         </div>
-
-        {/* Main filter drawer */}
-        {showFilterButton && (
-          <MainFilterDrawer
-            onOpenChange={() => { }}
-            participationType={participationTypeLocal}
-            hubText={hubText}
-            sortBy={sortByLocal}
-            setSortBy={setSortByLocal}
-            setIsEventTypeDrawerOpen={setIsEventTypeDrawerOpen}
-            setIsHubDrawerOpen={setIsHubDrawerOpen}
-            setApplyingFilters={setApplyingFilters}
-            applyingFilters={applyingFilters}
-            resetFilters={resetFilters}
-            allParticipationTypes={allParticipationTypes}
-          />
-        )}
+        <MainFilterDrawer
+          hubText={hubText}
+          setIsEventTypeDrawerOpen={setIsEventTypeDrawerOpen}
+          setIsHubDrawerOpen={setIsHubDrawerOpen}
+          resetFilters={resetFilters}
+          applyFilters={() => applyFilters(localFilters)}
+          participationType={localFilters.filter.participationType}
+          sortBy={localFilters.sortBy}
+          setSortBy={(newSort: SortBy) => setLocalFilters(prev => ({
+            ...prev,
+            sortBy: newSort
+          }))}
+        />
       </div>
-
-      {/* Filter chips row */}
-      {showFilterTags && (
-        <div className="relative mt-2">
-          {showLeftArrow && (
-            <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center">
-              <Button
-                variant="outline"
-                className="p-1"
-                onClick={() => {
-                  scrollAreaRef.current?.scrollBy({
-                    left: -100,
-                    behavior: "smooth",
-                  });
-                }}
-              >
-                <IoChevronBackOutline className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-
-          <ScrollArea
-            ref={scrollAreaRef}
-            className="w-full overflow-x-auto rounded-md border-0"
-            onScroll={checkScrollArrows}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-          >
-            <div className="flex w-max space-x-2 p-2 pt-0">
-              {renderFilterButtons()}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-
-          {showRightArrow && (
-            <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center">
-              <Button
-                variant="outline"
-                className="p-1"
-                onClick={() => {
-                  scrollAreaRef.current?.scrollBy({
-                    left: 100,
-                    behavior: "smooth",
-                  });
-                }}
-              >
-                <IoChevronForwardOutline className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Drawers */}
       <EventTypeDrawer
@@ -641,9 +214,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
       <HubSelectorDrawer
         isOpen={isHubDrawerOpen}
         onOpenChange={setIsHubDrawerOpen}
-        selectedHubs={selectedHubs}
+        selectedHubs={selectedHubs.map(String)}
         setSelectedHubs={setSelectedHubsArray}
         hubs={hubs}
+      />
+
+      {/* If user tries removing both 'online' + 'in_person' */}
+      <ParticipantErrorDialog
+        open={showDialogParticipantError}
+        onClose={() => setShowDialogParticipantError(false)}
+        onConfirm={handleShowAll}
       />
     </div>
   );
