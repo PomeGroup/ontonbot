@@ -44,7 +44,7 @@ interface EventCardProps {
  * also shows an "Edit Event Info" button that calls `onEditClick`.
  */
 function UnforwardedEventCard(
-  { event, currentUserId = 0 ,children }: EventCardProps,
+  { event, currentUserId = 0, children }: EventCardProps,
   ref: ForwardedRef<HTMLDivElement> | null
 ) {
   // Destructure event fields
