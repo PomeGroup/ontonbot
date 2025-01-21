@@ -21,7 +21,7 @@ export async function organizerTsVerified(user_id: number) {
     ),
   });
 
-  logger.log(`organizerTsVerified_${user_id} result : ${result}`);
+  logger.log(`organizerTsVerified_${user_id} result :` , result);
 
   const cache_value = result ? result : false;
   await redisTools.setCache(cacheKey, cache_value, redisTools.cacheLvl.medium);
