@@ -50,7 +50,6 @@ jobs:
           #  ["client-web"]="client-web-panel"
           declare -A service_dirs=(
             ["mini-app"]="mini-app"
-            ["nft-manager"]="newton/apps/nft-manager"
             ["participant-tma"]="newton/apps/participant-tma"
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
@@ -152,7 +151,6 @@ jobs:
         run: |
           #["client-web"]="client-web-panel"
           declare -A services=(
-            ["nft-manager"]="newton/apps/nft-manager"
             ["participant-tma"]="newton/apps/participant-tma"
             ["mini-app-sbt-worker"]="mini-app"
             ["mini-app"]="mini-app"
@@ -176,10 +174,7 @@ jobs:
           if  [ "$service" == "participant-tma" ]; then
             dockerfile_path="newton/apps/participant-tma/Dockerfile"
             build_context="./newton"
-          elif [ "$service" == "nft-manager" ]; then
-            dockerfile_path="newton/apps/nft-manager/Dockerfile"
-            build_context="./newton"
-          elif [ "$service" == "caddy" ]; then
+           elif [ "$service" == "caddy" ]; then
             dockerfile_path="devops/caddy/Dockerfile"
             build_context="./devops/caddy/"
           else
@@ -466,7 +461,6 @@ jobs:
             mkdir -p /home/tonont/$branch_name/telegram-bot
             mkdir -p /home/tonont/$branch_name/client-web
             mkdir -p /home/tonont/$branch_name/participant-tma
-            mkdir -p /home/tonont/$branch_name/nft-manager
             mkdir -p /home/tonont/$branch_name/website
             EOF
           else
