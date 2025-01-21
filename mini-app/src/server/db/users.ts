@@ -45,7 +45,6 @@ interface ExtendedUser {
   org_image: string | null;
 }
 
-
 export interface MinimalOrganizerData {
   user_id: number;
   photo_url: string | null;
@@ -66,14 +65,12 @@ export const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}
 // Function to generate cache key for wallet
 const getWalletCacheKey = (userId: number) => `${redisTools.cacheKeys.userWallet}${userId}`;
 
-
 // For convenience, define a response type
 interface UpdateOrgFieldsResponse {
   success: boolean;
   data: Awaited<ReturnType<typeof selectUserById>>; // This will be the updated user or null
   error: string | null;
 }
-
 
 /**
  * Updates the org_* fields for a given user by userId, with basic XSS sanitization.
@@ -108,9 +105,7 @@ export const updateOrganizerFieldsByUserId = async (
     }
 
     if (orgData.org_support_telegram_user_name !== undefined) {
-      updateData.org_support_telegram_user_name = xss(
-        orgData.org_support_telegram_user_name
-      );
+      updateData.org_support_telegram_user_name = xss(orgData.org_support_telegram_user_name);
     }
 
     if (orgData.org_x_link !== undefined) {
@@ -135,11 +130,7 @@ export const updateOrganizerFieldsByUserId = async (
     }
 
     // 3) Perform the update in the database
-    await db
-      .update(users)
-      .set(updateData)
-      .where(eq(users.user_id, userId))
-      .execute();
+    await db.update(users).set(updateData).where(eq(users.user_id, userId)).execute();
 
     // 4) Clear the user cache so it will be reloaded next time
     await redisTools.deleteCache(getUserCacheKey(userId));
@@ -164,11 +155,7 @@ export const updateOrganizerFieldsByUserId = async (
 /**
  * Select organizers by optional search string (with offset + limit).
  */
-export const searchOrganizers = async (params: {
-  searchString?: string;
-  offset: number;
-  limit: number;
-}) => {
+export const searchOrganizers = async (params: { searchString?: string; offset: number; limit: number }) => {
   const { searchString, offset, limit } = params;
 
   // Always require role='organizer'
@@ -176,9 +163,7 @@ export const searchOrganizers = async (params: {
 
   // If a search string is provided, add a case-insensitive condition on `org_channel_name`
   if (searchString) {
-    conditions.push(
-      sql`LOWER(${users.org_channel_name}) LIKE LOWER(${`%${searchString}%`})`
-    );
+    conditions.push(sql`LOWER(${users.org_channel_name}) LIKE LOWER(${`%${searchString}%`})`);
   }
 
   // Build the query
@@ -217,19 +202,17 @@ export const searchOrganizers = async (params: {
 
   // Execute and return
   return await query.execute();
-
-
 };
 
 export const selectUserById = async (
   userId: number,
-  use_cached_user : boolean = true,
-  update_cache : boolean = true
+  use_cached_user: boolean = true,
+  update_cache: boolean = true
 ): Promise<InferSelectModel<typeof users> | null> => {
   const cacheKey = getUserCacheKey(userId);
 
   // Try to get the user from cache
-  if(use_cached_user){
+  if (use_cached_user) {
     const cachedUser = await redisTools.getCache(cacheKey);
     if (cachedUser) {
       return cachedUser; // Return cached user if found
@@ -263,7 +246,7 @@ export const selectUserById = async (
             ${users.org_channel_name},
             ${users.first_name} || ' ' || ${users.last_name}
           )
-        `.as("org_channel_name") ,
+        `.as("org_channel_name"),
 
         org_support_telegram_user_name: users.org_support_telegram_user_name,
         org_x_link: users.org_x_link,
@@ -282,8 +265,8 @@ export const selectUserById = async (
       .where(eq(users.user_id, userId))
       .execute();
 
-    if (userInfo.length > 0 && update_cache) {
-      await redisTools.setCache(cacheKey, userInfo[0], redisTools.cacheLvl.short); // Cache the user
+    if (userInfo.length > 0) {
+      if (update_cache) await redisTools.setCache(cacheKey, userInfo[0], redisTools.cacheLvl.short); // Cache the user
       //@ts-ignore
       return userInfo[0];
     }
@@ -294,12 +277,8 @@ export const selectUserById = async (
   }
 };
 
-
-export const insertUser = async (
-  initDataJson: InitUserData
-): Promise<InferSelectModel<typeof users> | null> => {
-  const { id, username, first_name, last_name, language_code } =
-    initDataJson.user;
+export const insertUser = async (initDataJson: InitUserData): Promise<InferSelectModel<typeof users> | null> => {
+  const { id, username, first_name, last_name, language_code } = initDataJson.user;
 
   const user = await selectUserById(id);
 
@@ -367,11 +346,7 @@ export const insertUser = async (
     // If there are changes, update:
     if (Object.keys(updateData).length > 0) {
       try {
-        await db
-          .update(users)
-          .set(updateData)
-          .where(eq(users.user_id, id))
-          .execute();
+        await db.update(users).set(updateData).where(eq(users.user_id, id)).execute();
 
         // Clear cache for this user
         await redisTools.deleteCache(getUserCacheKey(id));
@@ -389,38 +364,31 @@ export const insertUser = async (
   }
 };
 
+const selectWalletById: (user_id: number) => Promise<{ wallet: string | null }> = async (user_id: number) => {
+  const cacheKey = getWalletCacheKey(user_id);
 
-const selectWalletById: (user_id: number) => Promise<{ wallet: string | null }> =
-  async (user_id: number) => {
-    const cacheKey = getWalletCacheKey(user_id);
+  // Try to get the wallet from cache
+  const cachedWallet = await redisTools.getCache(cacheKey);
+  if (cachedWallet) {
+    return cachedWallet as Promise<{ wallet: string }>; // Return cached wallet if found
+  }
 
-    // Try to get the wallet from cache
-    const cachedWallet = await redisTools.getCache(cacheKey);
-    if (cachedWallet) {
-      return cachedWallet as Promise<{ wallet: string }>; // Return cached wallet if found
-    }
+  // If not found in cache, query the database
+  const walletInfo = await db
+    .select({ wallet: users.wallet_address })
+    .from(users)
+    .where(eq(users.user_id, user_id))
+    .execute();
 
-    // If not found in cache, query the database
-    const walletInfo = await db
-      .select({ wallet: users.wallet_address })
-      .from(users)
-      .where(eq(users.user_id, user_id))
-      .execute();
+  if (walletInfo.length > 0) {
+    await redisTools.setCache(cacheKey, walletInfo[0], redisTools.cacheLvl.short);
+    return walletInfo[0];
+  }
 
-    if (walletInfo.length > 0) {
-      await redisTools.setCache(cacheKey, walletInfo[0], redisTools.cacheLvl.short);
-      return walletInfo[0];
-    }
+  return { wallet: null }; // Return null if wallet not found
+};
 
-    return { wallet: null }; // Return null if wallet not found
-  };
-
-
-const updateWallet = async (
-  user_id: number,
-  wallet_address: string,
-  updatedBy: string
-) => {
+const updateWallet = async (user_id: number, wallet_address: string, updatedBy: string) => {
   await db
     .update(users)
     .set({
@@ -474,7 +442,6 @@ export const selectUserByUsername = async (username: string) => {
 
   return null; // Return null if user not found
 };
-
 
 export const getOrganizerById = async (
   userId: number
@@ -539,18 +506,15 @@ export const getOrganizerById = async (
   }
 };
 
-export const updateEventCountsForUser = async (
-  userId: number
-) => {
+export const updateEventCountsForUser = async (userId: number) => {
   try {
-
     // 1) Count how many events the user is hosting
     const hostedCountResult = await db
       .select({
         count: sql<number>`count(*)`.mapWith(Number),
       })
       .from(events)
-      .where(and(eq(events.owner, userId) , eq(events.hidden, false)))
+      .where(and(eq(events.owner, userId), eq(events.hidden, false)))
       .execute();
     const hostedCount = hostedCountResult[0]?.count ?? 0;
 
@@ -568,10 +532,7 @@ export const updateEventCountsForUser = async (
           not(
             inArray(
               eventRegistrants.event_uuid,
-              db
-                .select({ event_uuid: visitors.event_uuid })
-                .from(visitors)
-                .where(eq(visitors.user_id, userId))
+              db.select({ event_uuid: visitors.event_uuid }).from(visitors).where(eq(visitors.user_id, userId))
             )
           )
         )
@@ -604,7 +565,6 @@ export const updateEventCountsForUser = async (
 
     // 5) Clear user cache
     await redisTools.deleteCache(getUserCacheKey(userId));
-
   } catch (error) {
     logger.error(`Error updating event counts for user [ID=${userId}]`, error);
     throw error;
