@@ -148,6 +148,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
         user_id: users.user_id,
         role: users.role,
         created_at: events.created_at,
+        owner : events.owner
       })
       .from(events)
       .innerJoin(users, eq(events.owner, users.user_id));
@@ -249,7 +250,7 @@ export const getOrganizerEvents = async (
   return await eventsQuery.execute();
 };
 
-export const getEventsWithFilters = async (params: z.infer<typeof searchEventsInputZod>): Promise<any[]> => {
+export const getEventsWithFilters = async (params: z.infer<typeof searchEventsInputZod>, user_id: number): Promise<any[]> => {
   const { limit = 10, cursor = 0, search, filter, sortBy = "default", useCache = false } = params;
   const roundMinutesInMs = 60; // don't touch this fucking value it will break the cache or made unexpected results
 
@@ -271,11 +272,11 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   const hash = crypto.createHash("md5").update(stringToHash).digest("hex");
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
   const cachedResult = await redisTools.getCache(cacheKey);
-  if (cachedResult && useCache) {
-    /// show return from cache and time
-    //logger.log("👙👙 cachedResult 👙👙" + Date.now());
-    return cachedResult;
-  }
+  // if (cachedResult && useCache) {
+  //   /// show return from cache and time
+  //   //logger.log("👙👙 cachedResult 👙👙" + Date.now());
+  //   return cachedResult;
+  // }
 
   let query = db.select().from(event_details_search_list);
   let userEventUuids = [];
@@ -295,9 +296,12 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   }
   // Apply user_id filter
 
-  if (filter?.user_id) {
+  if (
+      filter?.user_id
+      &&
+      ( filter.user_id === user_id  || filter?.organizer_user_id === user_id)) {
     const userEvents = await getUserEvents(filter.user_id, 1000, 0);
-    userEventUuids = userEvents.map((event) => event.event_uuid);
+    userEventUuids = userEvents.map((event) =>  event.event_uuid );
     if (userEventUuids.length) {
       filter.event_uuids = userEventUuids;
     } else {
@@ -314,7 +318,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   }
 
   // Apply hidden condition
-  if (!filter?.user_id) conditions.push(sql`${event_details_search_list.hidden} = ${false}`);
+  if (user_id) conditions.push(sql`(${event_details_search_list.hidden} = ${false} or ${event_details_search_list.organizerUserId} = ${user_id})`);
 
   // Apply organizer_user_id filter
   if (filter?.organizer_user_id) {
