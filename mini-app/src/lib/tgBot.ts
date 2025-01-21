@@ -207,7 +207,13 @@ async function startBot() {
         const orignal_text = ctx.update?.callback_query.message?.caption || "";
         const new_text = orignal_text + "\n\nStatus : " + (status === "approve" ? "✅ Approved" : "❌ Rejected");
         let update_completed = true;
-        if (status === "approve") update_completed = !!(await onCallBackModerateEvent(status, event_uuid));
+        if (status === "approve")
+          try {
+            update_completed = !!(await onCallBackModerateEvent(status, event_uuid));
+          } catch (error) {
+            logger.error("onCallBackModerateEvent_approve_failed", error);
+            update_completed = false;
+          }
 
         if (update_completed)
           ctx.editMessageCaption({
