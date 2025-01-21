@@ -30,7 +30,7 @@ export default function Search() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
       {
-        ...searchEventsInputZod.parse(searchInput),
+        ...searchInput,
         limit: LIMIT,
         // We can add more fields if needed:
         // filter: finalSearchInput.filter

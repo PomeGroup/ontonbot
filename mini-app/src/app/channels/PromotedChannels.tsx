@@ -6,7 +6,10 @@ import channelAvatar from "@/components/icons/channel-avatar.svg";
 import Typography from "@/components/Typography";
 
 export default function PromotedChannels() {
-  const { data, isLoading } = trpc.organizers.getPromotedOrganizers.useQuery()
+  const { data, isLoading } = trpc.organizers.getPromotedOrganizers.useQuery(undefined, {
+    retry: false,
+    staleTime: Infinity,
+  })
 
   if (isLoading || !data?.length) return null
 

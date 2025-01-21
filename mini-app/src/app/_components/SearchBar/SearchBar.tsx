@@ -96,7 +96,6 @@ function SearchBar() {
     setLocalFilters(parsedSearchParams)
   }, [parsedSearchParams])
 
-
   const applyFilters = (newVals: ReturnType<typeof parseSearchParams>) => {
     const qs = buildQueryParams({
       ...defaultFilters,
@@ -118,7 +117,7 @@ function SearchBar() {
   const _handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const val = event.target.value;
 
-    applyFilters({ search: val } as any)
+    applyFilters({ ...localFilters, search: val })
   };
 
   const handleSearchInputChange = useDebouncedCallback(_handleSearchInputChange, 300)
@@ -138,19 +137,32 @@ function SearchBar() {
    */
   const setParticipationTypes = (types: ParticipationType) => {
     hapticFeedback?.selectionChanged();
-    if (types.length === 0) {
-      setLocalFilters({ filter: { participationType: allParticipationTypes } } as any)
-      return;
-    }
-    setLocalFilters(prev => ({ ...prev, filter: { ...prev.filter, participationType: types } } as any))
+    setLocalFilters(prev => ({
+      ...prev,
+      filter: {
+        ...prev.filter,
+        participationType: types.length === 0 ? allParticipationTypes : types
+      }
+    }))
   };
 
   const setSelectedHubsArray = (hubIds: string[]) => {
-    console.log(hubIds)
     if (hubIds.length === 0) {
-      setLocalFilters(prev => ({ ...prev, filter: { ...prev.filter, society_hub_id: hubs.map(h => h.id) } } as any))
+      setLocalFilters(prev => ({
+        ...prev,
+        filter: {
+          ...prev.filter,
+          society_hub_id: hubs.map(h => h.id).map(Number)
+        }
+      }))
     } else {
-      setLocalFilters(prev => ({ ...prev, filter: { ...prev.filter, society_hub_id: hubIds } } as any))
+      setLocalFilters(prev => ({
+        ...prev,
+        filter: {
+          ...prev.filter,
+          society_hub_id: hubIds.map(Number)
+        }
+      }))
     }
   };
 
@@ -183,7 +195,7 @@ function SearchBar() {
           <div className='relative mr-3 text-[#8e8e93] focus-within:text-[#007aff]'>
             <SearchIcon className="absolute top-[6px] left-2 z-2" />
             <input
-              className={`rounded-md bg-[#E0E0E5] w-full py-2 pl-10 caret-[#007aff] text-black ${typographyClassNameMappings.body} !font-normal`}
+              className={`rounded-md bg-[#E0E0E5] w-full py-3 leading-[16px] pl-10 caret-[#007aff] text-black`}
               placeholder="Search Events and Organizers"
               onChange={handleSearchInputChange}
             />

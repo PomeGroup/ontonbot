@@ -2,7 +2,7 @@
 
 import { Block } from "konsta/react";
 import Image from "next/image";
-import Typography, { typographyClassNameMappings } from "../../components/Typography";
+import Typography from "../../components/Typography";
 import BottomNavigation from "../../components/BottomNavigation";
 import Link from "next/link";
 import { Channel } from "@/types";
