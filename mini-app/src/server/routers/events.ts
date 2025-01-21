@@ -667,9 +667,20 @@ const updateEvent = eventManagerPP
     }
   });
 
-const getEventsWithFilters = publicProcedure.input(searchEventsInputZod).query(async (opts) => {
+const getEventsWithFilters = initDataProtectedProcedure.input(searchEventsInputZod).query(async (opts) => {
+  if(!opts.ctx.user.user_id){
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized access, invalid user" });
+  }
+
+  if(opts.input.filter?.organizer_user_id){
+    const organizer = await usersDB.selectUserById(opts.input.filter.organizer_user_id);
+    if(organizer?.role !== "organizer" && organizer?.role !== "admin"){
+      throw new TRPCError({ code: "NOT_FOUND", message: "Organizer not found" });
+    }
+  }
+
   try {
-    const events = await eventDB.getEventsWithFilters(opts.input);
+    const events = await eventDB.getEventsWithFilters(opts.input,opts.ctx.user.user_id);
     return { status: "success", data: events };
   } catch (error) {
     logger.error("Error fetching events:", error);
@@ -677,26 +688,42 @@ const getEventsWithFilters = publicProcedure.input(searchEventsInputZod).query(a
   }
 });
 
-export const getEventsWithFiltersInfinite = publicProcedure.input(searchEventsInputZod).query(async ({ input }) => {
-  // Instead of passing `limit`, pass `limit + 1`
-  const dbResult = await eventDB.getEventsWithFilters({
-    ...input,
-    // tell the DB function: fetch an extra row
-    limit: (input.limit ?? 10) + 1,
+export const getEventsWithFiltersInfinite =  initDataProtectedProcedure
+  .input(searchEventsInputZod)
+  .query(async (opts) => {
+
+    const input = opts.input;
+    if(!opts.ctx.user.user_id){
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized access, invalid user" });
+    }
+    if(input.filter?.organizer_user_id){
+      const organizer = await usersDB.selectUserById(input.filter.organizer_user_id);
+      if(organizer?.role !== "organizer" && organizer?.role !== "admin"){
+        throw new TRPCError({ code: "NOT_FOUND", message: "Organizer not found" });
+      }
+    }
+    // Instead of passing `limit`, pass `limit + 1`
+    const dbResult = await eventDB.getEventsWithFilters({
+      ...input,
+      // tell the DB function: fetch an extra row
+      limit: (input.limit ?? 10) + 1,
+    }
+    ,
+      opts.ctx.user.user_id
+    );
+
+    const actualLimit = input.limit ?? 10;
+    let nextCursor: number | null = null;
+
+    if (dbResult.length > actualLimit) {
+       nextCursor = input.cursor + 1;
+    }
+
+    return {
+      items: dbResult,
+      nextCursor,
+    };
   });
-
-  const actualLimit = input.limit ?? 10;
-  let nextCursor: number | null = null;
-
-  if (dbResult.length > actualLimit) {
-    nextCursor = input.cursor + 1;
-  }
-
-  return {
-    items: dbResult,
-    nextCursor,
-  };
-});
 /* -------------------------------------------------------------------------- */
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
@@ -708,3 +735,5 @@ export const eventsRouter = router({
   getEventsWithFilters,
   getEventsWithFiltersInfinite,
 });
+
+

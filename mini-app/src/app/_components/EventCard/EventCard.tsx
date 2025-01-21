@@ -34,6 +34,7 @@ interface EventCardProps {
     city?: string;
     country?: string;
     participationType?: string;
+    hidden?: number;
   };
   currentUserId?: number;
   children?: React.ReactNode;
@@ -63,6 +64,7 @@ function UnforwardedEventCard(
     city = null,
     country = null,
     participationType = "unknown",
+    hidden = false,
   } = event;
 
   const defaultImage = "/template-images/default.webp";
@@ -76,7 +78,7 @@ function UnforwardedEventCard(
     city || country ? `${city}, ${country}` : location.length > 15 ? `${location.slice(0, 15)}...` : location;
 
   const isOnline = participationType === "online" ? "Online" : participationType === "in_person" ? geoLocation : "unknown";
-
+  const isPublished = !hidden;
   // We open the card or route
   const webApp = useWebApp();
   const router = useRouter();
@@ -135,7 +137,7 @@ function UnforwardedEventCard(
           )}
           <div className='mt-auto text-[#8E8E93]'>
             <Typography variant="subheadline2" className="font-medium mb-1">
-              {isOnline}
+              {isOnline} {isPublished ? "" : " • Not Published"}
             </Typography>
             <div className="flex justify-between">
               <Typography variant='subheadline2' className="font-medium">
