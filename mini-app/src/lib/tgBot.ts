@@ -129,7 +129,7 @@ async function startBot() {
       const bot = new Bot(BOT_TOKEN_LOGS);
 
       /* ------------------------------- On Message ------------------------------- */
-      bot.on("message", (ctx) => ctx.reply("Got another message! : " + ctx.message.text?.toString()));
+      // bot.on("message", (ctx) => ctx.reply("Got another message! : " + ctx.message.text?.toString()));
 
       /* ------------------------------- On CallBack ------------------------------ */
       bot.on("callback_query:data", async (ctx) => {
@@ -138,10 +138,18 @@ async function startBot() {
 
         const [status, event_uuid] = payload.split("_");
 
-        const orignal_text = ctx.update?.message?.text || "";
+        console.log();
+        
+        logger.log("CTX" , ctx);
+        
+        logger.log("CTX_MESSAGE" , ctx);
+
+        const orignal_text = ctx.update?.message?.caption || "";
         const new_text = orignal_text + "\nStatus : " + status;
 
-        ctx.editMessageText(new_text);
+        ctx.editMessageCaption({
+          caption : new_text
+        });
 
         await ctx.answerCallbackQuery({ text: "Got it !!" }); // remove loading animation
       });
