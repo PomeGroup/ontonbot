@@ -88,7 +88,7 @@ export default function Home() {
   const seeAllOngoingEventsLink = "/search/?tab=OnGoing";
 
   return (
-    <Block margin="0" className="bg-[#EFEFF4] min-h-screen">
+    <Block margin="0" className="bg-[#EFEFF4] min-h-screen pb-9">
       <div className="flex flex-col pt-2">
         {/* Fixed Search Bar */}
         <div className="w-full pb-1">
@@ -161,24 +161,23 @@ function PromotedEventsSlider() {
       }
     );
 
-  console.log('slider list', sliderEventData)
-  if (isLoadingSlider) return null
-  if (!sliderEventData?.data.length) return null
+  if (isLoadingSlider || !sliderEventData?.data?.length) return null
 
   return (
     <Swiper
       // onSlideChange={handleSlideChange}
       slidesPerView='auto'
-      spaceBetween={16}
+      className="-mx-3"
+      spaceBetween={12}
       pagination={{ clickable: true }}
       autoHeight
       modules={[Pagination]}
-      wrapperClass='swiper-wrapper pb-3'
+      wrapperClass='swiper-wrapper pb-3 px-4'
     >
       {/* <div className='flex gap-3'> */}
       {sliderEventData?.data.map(event => (
-        <SwiperSlide className="w-[65vw]" key={event.event_uuid}>
-          <EventBanner className="w-[65vw]" event={event} key={event.event_uuid} />
+        <SwiperSlide className='w-[220px]' key={event.event_uuid}>
+          <EventBanner className="w-[220px]" event={event} key={event.event_uuid} />
         </SwiperSlide>
       ))}
     </Swiper>
@@ -257,7 +256,7 @@ function PromotedEventsList() {
 
   return (
     <>
-      <div className="pt-4 w-full pb-4 flex justify-between items-center">
+      <div className="w-full pb-2 flex justify-between items-center">
         <h2 className="font-bold text-lg">Promoted Events</h2>
         {/* <a
             href={link}
