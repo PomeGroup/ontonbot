@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Bot } from "grammy";
+import { Bot, BotError, GrammyError } from "grammy";
 import { configProtected } from "@/server/config";
 
 const tgClient = axios.create({
@@ -128,11 +128,18 @@ async function startBot() {
       const bot = new Bot(BOT_TOKEN_LOGS);
 
       bot.on("message", (ctx) => ctx.reply("Got another message! : " + ctx.message.text?.toString()));
-      await bot.start();
+      await bot.start({
+        onStart: () => console.log("Started The Moderation/Logger Bot Successfully Callback"),
+      });
 
       console.log("Started The Moderation/Logger Bot Successfully");
       break; // Exit the loop once the bot starts successfully
     } catch (error) {
+      if (error instanceof GrammyError) {
+        if (error.error_code === 409) {
+          return;
+        }
+      }
       console.error("Error while starting the bot. Retrying in 5 seconds...", error);
       await sleep(5000);
     }
@@ -221,4 +228,4 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
   `;
 };
 
-startBot().then(() => console.log('startBot Function Finish ;'));
+startBot().then(() => console.log("startBot Function Finish ;"));
