@@ -335,3 +335,5 @@ END $$;
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "nft_items_order_uuid_index" ON "nft_items" USING btree ("order_uuid");--> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "wallet_checks_wallet_address_index" ON "wallet_checks" USING btree ("wallet_address");
+
+ALTER TABLE "event_payment_info" ADD COLUMN "organizer_payment_status" "organizer_payment_status" DEFAULT 'not_payed' NOT NULL;--> statement-breakpoint

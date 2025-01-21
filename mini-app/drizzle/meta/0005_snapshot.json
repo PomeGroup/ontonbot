@@ -1,5 +1,5 @@
 {
-  "id": "33329e9f-9204-4487-93fd-5f5beca6c096",
+  "id": "f65687b6-b6fb-49c1-b975-f3d372bb4c73",
   "prevId": "ef657018-16b4-4488-8e0a-4ffb939e40d5",
   "version": "7",
   "dialect": "postgresql",
@@ -156,6 +156,360 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.coupon_definition": {
+      "name": "coupon_definition",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_uuid": {
+          "name": "event_uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coupon_type": {
+          "name": "coupon_type",
+          "type": "coupon_definition_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "coupon_definition_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "numeric(8, 3)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "used": {
+          "name": "used",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "coupon_definition_event_uuid_idx": {
+          "name": "coupon_definition_event_uuid_idx",
+          "columns": [
+            {
+              "expression": "event_uuid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "coupon_definition_count_idx": {
+          "name": "coupon_definition_count_idx",
+          "columns": [
+            {
+              "expression": "count",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "coupon_definition_start_date_end_date_idx": {
+          "name": "coupon_definition_start_date_end_date_idx",
+          "columns": [
+            {
+              "expression": "start_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "end_date",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "coupon_definition_status_idx": {
+          "name": "coupon_definition_status_idx",
+          "columns": [
+            {
+              "expression": "status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "coupon_definition_type_idx": {
+          "name": "coupon_definition_type_idx",
+          "columns": [
+            {
+              "expression": "coupon_type",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "coupon_definition_used_idx": {
+          "name": "coupon_definition_used_idx",
+          "columns": [
+            {
+              "expression": "used",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "coupon_definition_event_uuid_events_event_uuid_fk": {
+          "name": "coupon_definition_event_uuid_events_event_uuid_fk",
+          "tableFrom": "coupon_definition",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_uuid"
+          ],
+          "columnsTo": [
+            "event_uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "public.coupon_items": {
+      "name": "coupon_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "event_uuid": {
+          "name": "event_uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coupon_definition_id": {
+          "name": "coupon_definition_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "code": {
+          "name": "code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coupon_status": {
+          "name": "coupon_status",
+          "type": "coupon_item_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unused'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "coupon_items_event_uuid_idx": {
+          "name": "coupon_items_event_uuid_idx",
+          "columns": [
+            {
+              "expression": "event_uuid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "coupon_items_code_idx": {
+          "name": "coupon_items_code_idx",
+          "columns": [
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "coupon_items_coupon_status_idx": {
+          "name": "coupon_items_coupon_status_idx",
+          "columns": [
+            {
+              "expression": "coupon_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "coupon_items_group_id_idx": {
+          "name": "coupon_items_group_id_idx",
+          "columns": [
+            {
+              "expression": "coupon_definition_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "coupon_items_event_uuid_code_uq": {
+          "name": "coupon_items_event_uuid_code_uq",
+          "columns": [
+            {
+              "expression": "event_uuid",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "coupon_items_event_uuid_events_event_uuid_fk": {
+          "name": "coupon_items_event_uuid_events_event_uuid_fk",
+          "tableFrom": "coupon_items",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_uuid"
+          ],
+          "columnsTo": [
+            "event_uuid"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
+        },
+        "coupon_items_coupon_definition_id_coupon_definition_id_fk": {
+          "name": "coupon_items_coupon_definition_id_coupon_definition_id_fk",
+          "tableFrom": "coupon_items",
+          "tableTo": "coupon_definition",
+          "columnsFrom": [
+            "coupon_definition_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -2787,6 +3141,97 @@
         }
       }
     },
+    "public.user_custom_flags": {
+      "name": "user_custom_flags",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_flag": {
+          "name": "user_flag",
+          "type": "user_flags_enum",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp (3)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "user_custom_flags_user_id_user_flag_index": {
+          "name": "user_custom_flags_user_id_user_flag_index",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_flag",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "user_custom_flags_user_id_users_user_id_fk": {
+          "name": "user_custom_flags_user_id_users_user_id_fk",
+          "tableFrom": "user_custom_flags",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "user_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "public.users": {
       "name": "users",
       "schema": "",
@@ -3283,6 +3728,31 @@
     }
   },
   "enums": {
+    "public.coupon_definition_status": {
+      "name": "coupon_definition_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "inactive",
+        "expired"
+      ]
+    },
+    "public.coupon_definition_type": {
+      "name": "coupon_definition_type",
+      "schema": "public",
+      "values": [
+        "percent",
+        "fixed"
+      ]
+    },
+    "public.coupon_item_status": {
+      "name": "coupon_item_status",
+      "schema": "public",
+      "values": [
+        "used",
+        "unused"
+      ]
+    },
     "public.development_environment": {
       "name": "development_environment",
       "schema": "public",
@@ -3450,6 +3920,14 @@
       "values": [
         "OFFCHAIN",
         "NFT"
+      ]
+    },
+    "public.user_flags_enum": {
+      "name": "user_flags_enum",
+      "schema": "public",
+      "values": [
+        "event_moderator",
+        "ton_society_verified"
       ]
     }
   },

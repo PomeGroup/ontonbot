@@ -40,22 +40,8 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1736850229103,
-      "tag": "0005_acoustic_the_stranger",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1737076833475,
-      "tag": "0006_mighty_scream",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1737418873418,
-      "tag": "0007_even_living_tribunal",
+      "when": 1737470450975,
+      "tag": "0005_quiet_nekra",
       "breakpoints": true
     }
   ]
