@@ -365,7 +365,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
 
       // Skip Register to ts if :
       //  local development  || paid event registers organizer pays initial payment || org must be verified
-      const register_to_ts = process.env.ENV !== "local" || !event_should_hidden;
+      const register_to_ts = process.env.ENV !== "local" && !event_should_hidden;
 
       if (register_to_ts) {
         const res = await registerActivity(eventDraft);

@@ -1,6 +1,7 @@
 import { db } from "@/db/db";
 import { user_custom_flags } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { logger } from "../utils/logger";
 
 export async function organizerTsVerified(user_id: number) {
   const result = await db.query.user_custom_flags.findFirst({
@@ -10,17 +11,19 @@ export async function organizerTsVerified(user_id: number) {
       eq(user_custom_flags.enabled, true)
     ),
   });
+
+  logger.log(`organizerTsVerified , ${user_id} ${result}`);
+
   if (!result) return false;
   if (result) {
     return Boolean(result.value);
   }
 }
 
-export async function userHasModerationAccess(user_id: number , user_role : string) {
-  if(user_role === 'admin'){
+export async function userHasModerationAccess(user_id: number, user_role: string) {
+  if (user_role === "admin") {
     return true; // faster response
   }
-  
 
   const result = await db.query.user_custom_flags.findFirst({
     where: and(
