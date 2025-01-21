@@ -9,6 +9,7 @@ const tgClient = axios.create({
 import { AxiosError } from "axios";
 import { removeKey, removeSecretKey } from "@/lib/utils";
 import { EventRow } from "@/db/schema/events";
+import { logger } from "@/server/utils/logger";
 
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
   try {
@@ -111,6 +112,23 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
   }
 };
 
+export function startBot() {
+  if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
+    console.error("Bot token or logs group ID not found in configProtected for this environment");
+    console.error("failed to start moderation log bot");
+    return;
+  }
+
+  const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
+
+  const bot = new Bot(BOT_TOKEN_LOGS);
+
+  bot.on("message", (ctx) => ctx.reply("Got another message! : " + ctx.message.text?.toString()));
+  bot.start().catch((e) => logger.error("moderation_logger_bot_start_error", e));
+
+  console.log("Started The Moderation/Logger Bot Successfully");
+}
+
 // 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
 export const sendLogNotification = async (props: { message: string; topic: "event" | "ticket" | "system" | "payments" }) => {
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
@@ -192,3 +210,5 @@ ${eventData.subtitle}
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
   `;
 };
+
+startBot();
