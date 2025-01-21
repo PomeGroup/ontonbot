@@ -11,6 +11,7 @@ import { removeKey, removeSecretKey } from "@/lib/utils";
 import { EventRow } from "@/db/schema/events";
 import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
+import { InlineKeyboardMarkup } from "grammy/types";
 
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
   try {
@@ -127,7 +128,15 @@ async function startBot() {
     try {
       const bot = new Bot(BOT_TOKEN_LOGS);
 
+      /* ------------------------------- On Message ------------------------------- */
       bot.on("message", (ctx) => ctx.reply("Got another message! : " + ctx.message.text?.toString()));
+
+      /* ------------------------------- On CallBack ------------------------------ */
+      bot.on("callback_query:data", async (ctx) => {
+        console.log("callback_query with payload", ctx.callbackQuery.data);
+        await ctx.answerCallbackQuery({text : "Got it !!"}); // remove loading animation
+      });
+      /* ------------------------------ Start The Bot ----------------------------- */
       await bot.start({
         onStart: () => console.log("Started The Moderation/Logger Bot Successfully Callback"),
       });
@@ -147,7 +156,13 @@ async function startBot() {
 }
 
 // 🌳 ---- SEND LOG NOTIFICATION ---- 🌳
-export const sendLogNotification = async (props: { message: string; topic: "event" | "ticket" | "system" | "payments" }) => {
+export async function sendLogNotification(
+  props: {
+    message: string;
+    topic: "event" | "ticket" | "system" | "payments";
+    inline_keyboard?: InlineKeyboardMarkup; // Optional property
+  } = { message: "", topic: "event", inline_keyboard: undefined }
+) {
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     console.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");
@@ -176,10 +191,11 @@ export const sendLogNotification = async (props: { message: string; topic: "even
     reply_parameters: {
       message_id: Number(topicMessageId),
     },
+    reply_markup: props.inline_keyboard,
     parse_mode: "HTML",
     link_preview_options: { is_disabled: true },
   });
-};
+}
 
 /// 🌳 ---- render the update event message ---- 🌳
 export const renderUpdateEventMessage = (

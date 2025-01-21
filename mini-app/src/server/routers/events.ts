@@ -37,6 +37,7 @@ import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyServi
 import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
 import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
+import { InlineKeyboard } from "grammy";
 dotenv.config();
 
 function get_paid_event_price(capacity: number) {
@@ -356,16 +357,21 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       /* ------------- Generate the message using the render function ------------- */
       const is_ts_verified = await organizerTsVerified(user_id);
       if (is_ts_verified && !is_paid) {
+        /* -------------------------- Just Send The Message ------------------------- */
         const logMessage = renderAddEventMessage(opts.ctx.user.username || user_id, eventData);
         await sendLogNotification({
           message: logMessage,
           topic: "event",
         });
       } else {
+        /* --------------------------- Moderation Message --------------------------- */
         const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
         await sendLogNotification({
           message: logMessage,
           topic: "event",
+          inline_keyboard: new InlineKeyboard()
+            .text("✅ Approve", `approve_${eventData.event_id}`)
+            .text("❌ Reject", `reject_${eventData.event_id}`),
         });
       }
       // Clear the organizer user cache so it will be reloaded next time
