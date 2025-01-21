@@ -38,6 +38,7 @@ import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
 import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
 import { InlineKeyboard } from "grammy";
+import { getNonVerifiedHubzIds } from "./services/hubs";
 dotenv.config();
 
 function get_paid_event_price(capacity: number) {
@@ -98,17 +99,19 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   // Build an organizer object with the org_* fields (or null if no user found)
   const organizer = ownerUser
     ? {
-      org_channel_name: ownerUser.org_channel_name === null ? `${ownerUser.first_name} ${ownerUser.last_name}`  : ownerUser.org_channel_name,
-      org_support_telegram_user_name: ownerUser.org_support_telegram_user_name,
-      org_x_link: ownerUser.org_x_link,
-      org_bio: ownerUser.org_bio,
-      org_image: ownerUser.org_image === null ? ownerUser.photo_url : ownerUser.org_image,
-      user_id: ownerUser.user_id,
-      username: ownerUser.username,
-      first_name: ownerUser.first_name,
-      hosted_event_count: ownerUser.hosted_event_count,
-    }
-
+        org_channel_name:
+          ownerUser.org_channel_name === null
+            ? `${ownerUser.first_name} ${ownerUser.last_name}`
+            : ownerUser.org_channel_name,
+        org_support_telegram_user_name: ownerUser.org_support_telegram_user_name,
+        org_x_link: ownerUser.org_x_link,
+        org_bio: ownerUser.org_bio,
+        org_image: ownerUser.org_image === null ? ownerUser.photo_url : ownerUser.org_image,
+        user_id: ownerUser.user_id,
+        username: ownerUser.username,
+        first_name: ownerUser.first_name,
+        hosted_event_count: ownerUser.hosted_event_count,
+      }
     : null;
 
   // If the event does NOT require registration, just return data
@@ -207,6 +210,9 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
 
   const user_id = opts.ctx.user.user_id;
   const userCacheKey = getUserCacheKey(user_id);
+  const is_ts_verified = await organizerTsVerified(user_id);
+  if (!is_ts_verified && !getNonVerifiedHubzIds().includes(input_event_data.society_hub.id))
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid HUBZ for non verified organizer" });
 
   try {
     const result = await db.transaction(async (trx) => {
@@ -223,16 +229,6 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       if (!input_event_data.end_date || !input_event_data.start_date) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid start-date/end-date" });
       }
-      /* ------------------------- Event Duration > 1 Week ------------------------ */
-      //FIXME -  Discuss With Mike
-
-      // if (input_event_data.end_date! - input_event_data.start_date > 604801) {
-      //   throw new TRPCError({
-      //     code: "BAD_REQUEST",
-      //     message: "Event Duration Can't be more than 1 week",
-      //   });
-      // }
-      /* -------------------------------------------------------------------------- */
 
       /* ------------------- paid events must have registration ------------------- */
       input_event_data.has_registration = event_has_payment ? true : input_event_data.has_registration;
@@ -355,8 +351,8 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       const eventDraft = await CreateTonSocietyDraft(input_event_data, eventData.event_uuid);
       logger.log("eventDraft", JSON.stringify(eventDraft));
       logger.log("eventData", eventData);
+
       /* ------------- Generate the message using the render function ------------- */
-      const is_ts_verified = await organizerTsVerified(user_id);
       if (is_ts_verified && !is_paid) {
         /* -------------------------- Just Send The Message ------------------------- */
         const logMessage = renderAddEventMessage(opts.ctx.user.username || user_id, eventData);
@@ -368,7 +364,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         /* --------------------------- Moderation Message --------------------------- */
         const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
         await sendLogNotification({
-          image : eventData.image_url,
+          image: eventData.image_url,
           message: logMessage,
           topic: "event",
           inline_keyboard: new InlineKeyboard()
@@ -668,19 +664,19 @@ const updateEvent = eventManagerPP
   });
 
 const getEventsWithFilters = initDataProtectedProcedure.input(searchEventsInputZod).query(async (opts) => {
-  if(!opts.ctx.user.user_id){
+  if (!opts.ctx.user.user_id) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized access, invalid user" });
   }
 
-  if(opts.input.filter?.organizer_user_id){
+  if (opts.input.filter?.organizer_user_id) {
     const organizer = await usersDB.selectUserById(opts.input.filter.organizer_user_id);
-    if(organizer?.role !== "organizer" && organizer?.role !== "admin"){
+    if (organizer?.role !== "organizer" && organizer?.role !== "admin") {
       throw new TRPCError({ code: "NOT_FOUND", message: "Organizer not found" });
     }
   }
 
   try {
-    const events = await eventDB.getEventsWithFilters(opts.input,opts.ctx.user.user_id);
+    const events = await eventDB.getEventsWithFilters(opts.input, opts.ctx.user.user_id);
     return { status: "success", data: events };
   } catch (error) {
     logger.error("Error fetching events:", error);
@@ -688,42 +684,39 @@ const getEventsWithFilters = initDataProtectedProcedure.input(searchEventsInputZ
   }
 });
 
-export const getEventsWithFiltersInfinite =  initDataProtectedProcedure
-  .input(searchEventsInputZod)
-  .query(async (opts) => {
-
-    const input = opts.input;
-    if(!opts.ctx.user.user_id){
-      throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized access, invalid user" });
+export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(searchEventsInputZod).query(async (opts) => {
+  const input = opts.input;
+  if (!opts.ctx.user.user_id) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized access, invalid user" });
+  }
+  if (input.filter?.organizer_user_id) {
+    const organizer = await usersDB.selectUserById(input.filter.organizer_user_id);
+    if (organizer?.role !== "organizer" && organizer?.role !== "admin") {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Organizer not found" });
     }
-    if(input.filter?.organizer_user_id){
-      const organizer = await usersDB.selectUserById(input.filter.organizer_user_id);
-      if(organizer?.role !== "organizer" && organizer?.role !== "admin"){
-        throw new TRPCError({ code: "NOT_FOUND", message: "Organizer not found" });
-      }
-    }
-    // Instead of passing `limit`, pass `limit + 1`
-    const dbResult = await eventDB.getEventsWithFilters({
+  }
+  // Instead of passing `limit`, pass `limit + 1`
+  const dbResult = await eventDB.getEventsWithFilters(
+    {
       ...input,
       // tell the DB function: fetch an extra row
       limit: (input.limit ?? 10) + 1,
-    }
-    ,
-      opts.ctx.user.user_id
-    );
+    },
+    opts.ctx.user.user_id
+  );
 
-    const actualLimit = input.limit ?? 10;
-    let nextCursor: number | null = null;
+  const actualLimit = input.limit ?? 10;
+  let nextCursor: number | null = null;
 
-    if (dbResult.length > actualLimit) {
-       nextCursor = input.cursor + 1;
-    }
+  if (dbResult.length > actualLimit) {
+    nextCursor = input.cursor + 1;
+  }
 
-    return {
-      items: dbResult,
-      nextCursor,
-    };
-  });
+  return {
+    items: dbResult,
+    nextCursor,
+  };
+});
 /* -------------------------------------------------------------------------- */
 /*                                   Router                                   */
 /* -------------------------------------------------------------------------- */
@@ -735,5 +728,3 @@ export const eventsRouter = router({
   getEventsWithFilters,
   getEventsWithFiltersInfinite,
 });
-
-
