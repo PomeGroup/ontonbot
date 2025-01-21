@@ -2,12 +2,12 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Page, Block } from "konsta/react";
+import { Page, Block, Button } from "konsta/react";
 // svg icons
 import guestListIcon from "./guest-list.svg";
-import promotionCodeIcon from "./promotion-code.svg";
+// import promotionCodeIcon from "./promotion-code.svg";
 import ordersIcon from "./orders.svg";
-import { useManageEventContext } from "../../../../context/ManageEventContext";
+import { useManageEventContext } from "@/context/ManageEventContext";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import ActionCard from "@/components/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";
@@ -15,22 +15,13 @@ import { useSectionStore } from "@/zustand/useSectionStore";
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
   const { eventData } = useManageEventContext();
+  console.log(eventData);
   const { setSection } = useSectionStore();
   const router = useRouter();
 
   if (!eventData || !eventData?.event_uuid) {
     return <div>Loading...</div>;
   }
-  // Example stats for your ActionCard footers
-  const ordersPaid = 1;
-  const ordersPending = 1;
-  const codesTotal = 46;
-  const codesActive = 25;
-  const codesUsed = 18;
-  // const attendanceSent = 100;
-  // const attendanceReceived = 73;
-  const guestsRegistered = 100;
-  const guestsApproved = 98;
 
   // The main “Manage” page
   return (
@@ -43,17 +34,27 @@ export default function ManageIndexPage() {
             title: eventData.title ?? "Untitled Event",
             startDate: eventData.start_date!!,
             endDate: eventData.end_date!!,
-            location: eventData.location ?? "No Location",
+            participationType: eventData.participationType ?? "",
             imageUrl: eventData.image_url ?? "/template-images/default.webp",
             subtitle: eventData.subtitle ?? "",
             organizerUserId: eventData.owner ?? 0,
+            organizerChannelName: eventData?.organizer?.org_channel_name ?? "ssss",
           }}
-          canEdit={true}
-          onEditClick={() => {
-            setSection("event_setup_form_general_step");
-            router.push(`/events/${eventData.event_uuid}/manage/edit`);
-          }}
-        />
+        >
+          <div className="mt-2 flex">
+            <Button
+              className=" px-3  rounded-[6px] py-4"
+              outline={true}
+              onClick={() => {
+                setSection("event_setup_form_general_step");
+                router.push(`/events/${eventData.event_uuid}/manage/edit`);
+              }}
+
+            >
+              Edit Event Info
+            </Button>
+          </div>
+        </EventCard>
       </Block>
 
       {/* Action Cards for each sub-route */}
@@ -65,10 +66,7 @@ export default function ManageIndexPage() {
               iconSrc={ordersIcon}
               title="Orders"
               subtitle="Event creation payments"
-              footerTexts={[
-                { count: ordersPaid, items: "Paid" },
-                { count: ordersPending, items: "Pending" },
-              ]}
+              footerTexts={[]}
             />
 
             {/*<ActionCard*/}
@@ -106,10 +104,7 @@ export default function ManageIndexPage() {
             iconSrc={guestListIcon}
             title="Guests list"
             subtitle="View and manage participants"
-            footerTexts={[
-              { count: guestsRegistered, items: "Registered" },
-              { count: guestsApproved, items: "Approved" },
-            ]}
+            footerTexts={[]}
           />
 
       </Block>

@@ -64,7 +64,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   // Build an organizer object with the org_* fields (or null if no user found)
   const organizer = ownerUser
     ? {
-      org_channel_name: ownerUser.org_channel_name === null ? ownerUser.first_name : ownerUser.org_channel_name,
+      org_channel_name: ownerUser.org_channel_name === null ? `${ownerUser.first_name} ${ownerUser.last_name}`  : ownerUser.org_channel_name,
       org_support_telegram_user_name: ownerUser.org_support_telegram_user_name,
       org_x_link: ownerUser.org_x_link,
       org_bio: ownerUser.org_bio,

@@ -3,14 +3,12 @@
 import React, { ForwardedRef, forwardRef, memo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { IoIosPlayCircle } from "react-icons/io";
 
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
-import { Button, Card } from "konsta/react";
+import { Card } from "konsta/react";
 import Typography from "@/components/Typography";
 
 
@@ -38,18 +36,7 @@ interface EventCardProps {
     participationType?: string;
   };
   currentUserId?: number;
-
-  /**
-   * If true, show an "Edit Event Info" button under the main event info.
-   * If false or undefined, hide it.
-   */
-  canEdit?: boolean;
-
-  /**
-   * Callback when user clicks "Edit Event Info" button.
-   * If not provided, the button doesn't appear or does nothing.
-   */
-  onEditClick?: () => void;
+  children?: React.ReactNode;
 }
 
 /**
@@ -57,7 +44,7 @@ interface EventCardProps {
  * also shows an "Edit Event Info" button that calls `onEditClick`.
  */
 function UnforwardedEventCard(
-  { event, currentUserId = 0, canEdit, onEditClick }: EventCardProps,
+  { event, currentUserId = 0 ,children }: EventCardProps,
   ref: ForwardedRef<HTMLDivElement> | null
 ) {
   // Destructure event fields
@@ -90,8 +77,6 @@ function UnforwardedEventCard(
 
   const isOnline = participationType === "online" ? "Online" : participationType === "in_person" ? geoLocation : "unknown";
 
-  const isOngoing = startDate < Date.now() && endDate > Date.now();
-
   // We open the card or route
   const webApp = useWebApp();
   const router = useRouter();
@@ -113,12 +98,15 @@ function UnforwardedEventCard(
 
   return (
     <Card
-      onClick={handleEventClick}
       className="overflow-hidden cursor-pointer radius-[10px]"
       margin="mb-3"
       contentWrapPadding="p-2"
     >
-      <div className='flex gap-4 items-stretch flex-nowrap relative'>
+      <div
+        className='flex gap-4 items-stretch flex-nowrap relative'
+        ref={ref}
+        onClick={handleEventClick}
+      >
         {/* LEFT: Event Image */}
         <div className="relative rounded-lg max-w-[100px] min-w-[100px] flex-shrink-0">
           {!imageLoaded && renderImageSkeleton()}
@@ -165,6 +153,7 @@ function UnforwardedEventCard(
           </div>
         </div>
       </div>
+      {children}
     </Card>
   );
 }
