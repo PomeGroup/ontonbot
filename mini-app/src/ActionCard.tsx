@@ -18,7 +18,10 @@ interface Props {
 
 export default function ActionCard({ onClick, iconSrc, title, subtitle, footerTexts }: Props) {
   return (
-    <Card onClick={onClick}>
+    <Card
+      onClick={onClick}
+      className={onClick !== undefined ? "cursor-pointer" : ""}
+    >
       <div className="flex gap-3 align-stretch">
         <div className="bg-[#efeff4] p-4 rounded-[10px]">
           <Image
