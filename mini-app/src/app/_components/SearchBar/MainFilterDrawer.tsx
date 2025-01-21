@@ -1,4 +1,5 @@
 "use client";
+import { allParticipationTypes } from "@/app/search/parseSearchParams";
 import { KButton } from "@/components/ui/button";
 import { KSheet } from "@/components/ui/drawer";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio";
@@ -14,35 +15,29 @@ export type SortByType = z.infer<typeof searchEventsInputZod>["sortBy"];
 /** This is how you want the parent to set the sort:
  *  i.e. (newValue: SortByType) => void
  */
-export type setSortByType = (value: SortByType) => void;
 
 interface MainFilterDrawerProps {
-  onOpenChange: (open: boolean) => void;
-  /** This can be ("online"|"in_person")[], but you have it as string[] in your snippet */
-  participationType: string[];
   hubText: string;
-  sortBy: SortByType;
-  setSortBy: setSortByType;
   setIsEventTypeDrawerOpen: (open: boolean) => void;
   setIsHubDrawerOpen: (open: boolean) => void;
   resetFilters: () => void;
-  applyingFilters: boolean;
-  setApplyingFilters: (value: boolean) => void;
-  allParticipationTypes: string[];
+  applyFilters: () => void
+  participationType: ("online" | "in_person")[],
+  sortBy: SortByType
+  setSortBy: (_s: SortByType) => void
 }
 
 const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
-  onOpenChange,
-  participationType,
   hubText,
-  sortBy,
-  setSortBy,
   setIsEventTypeDrawerOpen,
   setIsHubDrawerOpen,
   resetFilters,
-  applyingFilters,
-  setApplyingFilters,
-  allParticipationTypes,
+  applyFilters,
+  participationType,
+  sortBy,
+  setSortBy,
+  // applyingFilters,
+  // setApplyingFilters,
 }) => {
   return (
     <KSheet
@@ -120,8 +115,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             <KButton
               className="py-5 rounded-3xl"
               onClick={() => {
-                setApplyingFilters(!applyingFilters);
-                onOpenChange(false);
+                applyFilters();
                 setOpen(false);
               }}
             >
@@ -132,7 +126,6 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               className="py-5 rounded-3xl"
               onClick={() => {
                 resetFilters();
-                onOpenChange(false);
                 setOpen(false);
               }}
             >
