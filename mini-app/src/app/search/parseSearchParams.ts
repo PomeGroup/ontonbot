@@ -24,7 +24,7 @@ export default function parseSearchParams(searchParams: URLSearchParams) {
     sortBy: sortByQ,
     filter: {
       participationType,
-      society_hub_id: selectedHubsFromParams.map(Number)
+      society_hub_id: selectedHubsFromParams.map(Number).filter(Boolean)
     }
   }
 }
