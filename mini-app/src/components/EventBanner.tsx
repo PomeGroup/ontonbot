@@ -40,7 +40,7 @@ export default function EventBanner({ skeleton, event, className }: Props) {
 
   return (
     <div
-      className={cn("relative w-full h-auto overflow-hidden shadow-lg cursor-pointer", className)}
+      className={cn("relative w-full h-auto overflow-hidden cursor-pointer", className)}
       onClick={handleEventClick}
       key={`detailed-${eventUuid}`}
     >
@@ -52,7 +52,7 @@ export default function EventBanner({ skeleton, event, className }: Props) {
         width={0}
         height={0}
         sizes="100vw"
-        className={`aspect-square w-[70vw] rounded-[10px] transition-opacity duration-250 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+        className={`aspect-square w-[220px] rounded-[10px] transition-opacity duration-250 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
         onError={(e) => (e.currentTarget.src = defaultImage)}
         onLoad={() => setImageLoaded(true)}
       />

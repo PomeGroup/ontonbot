@@ -53,13 +53,11 @@ export default function ManageIndexPage() {
             setSection("event_setup_form_general_step");
             router.push(`/events/${eventData.event_uuid}/manage/edit`);
           }}
-          hasBorder={false}
         />
       </Block>
 
       {/* Action Cards for each sub-route */}
       <Block className="space-y-3 mt-4">
-
         {eventData.has_payment && (
           <>
             <ActionCard
