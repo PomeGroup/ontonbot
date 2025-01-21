@@ -17,8 +17,7 @@ import BottomNavigation from "../components/BottomNavigation";
 import EventBanner from "@/components/EventBanner";
 import { OntonEvent } from "@/types";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { SearchIcon } from "lucide-react";
-import { typographyClassNameMappings } from "@/components/Typography";
+import { ChevronRightIcon } from "lucide-react";
 
 const currentDateTime = Math.floor(Date.now() / 1000);
 
@@ -252,9 +251,10 @@ function PromotedEventsList() {
         <h2 className="font-bold text-lg">Events</h2>
         <a
           href='/search/'
-          className={`text-[#007AFF] border-2 border-[#007aff] rounded-lg py-1.5 px-4 ${typographyClassNameMappings.body} font-medium`}
+          className={`text-[#007AFF] border-2 border-[#007aff] rounded-lg py-1.5 pl-4 pr-2 font-medium flex align-center`}
         >
-          See All
+          <span>See All</span>
+          <ChevronRightIcon width={20} className='ml-1 -my-0.5' />
         </a>
       </div>
       {data.data?.map((event) => (

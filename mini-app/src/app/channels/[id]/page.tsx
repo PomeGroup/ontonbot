@@ -16,7 +16,7 @@ export default function ChannelPage({ params }: Props) {
   if (isError) return "something went wrong...";
 
   return (
-    <div className="bg-[#EFEFF4] py-4">
+    <div className="bg-[#EFEFF4] py-4 min-h-screen">
       <ChannelInfoCard data={data} />
       <ActionCard
         onClick={() => router.push(`/channels/${params.id}/events`)}
