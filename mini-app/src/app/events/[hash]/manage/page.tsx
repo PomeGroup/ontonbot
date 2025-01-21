@@ -71,17 +71,17 @@ export default function ManageIndexPage() {
               ]}
             />
 
-            <ActionCard
-              onClick={() => router.push(`/events/${eventData.event_uuid}/manage/promotion-code`)}
-              iconSrc={promotionCodeIcon}
-              title="Promotion Codes"
-              subtitle="Generate and manage codes"
-              footerTexts={[
-                { count: codesTotal, items: "Codes" },
-                { count: codesActive, items: "Active" },
-                { count: codesUsed, items: "Used" },
-              ]}
-            />
+            {/*<ActionCard*/}
+            {/*  onClick={() => router.push(`/events/${eventData.event_uuid}/manage/promotion-code`)}*/}
+            {/*  iconSrc={promotionCodeIcon}*/}
+            {/*  title="Promotion Codes"*/}
+            {/*  subtitle="Generate and manage codes"*/}
+            {/*  footerTexts={[*/}
+            {/*    { count: codesTotal, items: "Codes" },*/}
+            {/*    { count: codesActive, items: "Active" },*/}
+            {/*    { count: codesUsed, items: "Used" },*/}
+            {/*  ]}*/}
+            {/*/>*/}
           </>
         )}
 
@@ -100,7 +100,7 @@ export default function ManageIndexPage() {
         {/*)}*/}
 
 
-        {eventData.has_registration && (
+
           <ActionCard
             onClick={() => router.push(`/events/${eventData.event_uuid}/manage/guest-list`)}
             iconSrc={guestListIcon}
@@ -111,7 +111,7 @@ export default function ManageIndexPage() {
               { count: guestsApproved, items: "Approved" },
             ]}
           />
-        )}
+
       </Block>
     </Page>
   );
