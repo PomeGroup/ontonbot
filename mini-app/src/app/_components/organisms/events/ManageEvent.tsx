@@ -112,7 +112,7 @@ function ManageEvent({ event }: ManageEventProps) {
     }
   }, [params.hash, event, isReset, resetState, setEdit, setEventData]);
 
-  if (getCurrentSection() === 'none' && params.hash) {
+  if (getCurrentSection() === 'none' ) {
     return <div>Loading...</div>;
   }
 
