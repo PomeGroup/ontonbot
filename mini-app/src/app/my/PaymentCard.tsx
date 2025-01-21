@@ -21,7 +21,6 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
 
   const onPollFinished = useCallback((success: boolean) => {
     setConfirmPayDialogOpen(false);
-    console.log('final state', success)
     setTimeout(() => {
       if (success) {
         setCongratsDrawerOpen(true);
