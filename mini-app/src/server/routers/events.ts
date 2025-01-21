@@ -353,13 +353,21 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       const eventDraft = await CreateTonSocietyDraft(input_event_data, eventData.event_uuid);
       logger.log("eventDraft", JSON.stringify(eventDraft));
       logger.log("eventData", eventData);
-      // Generate the message using the render function
-      const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
-      await sendLogNotification({
-        message: logMessage,
-        topic: "event",
-      });
-      logger.log("add event telegram notification sent", logMessage);
+      /* ------------- Generate the message using the render function ------------- */
+      const is_ts_verified = await organizerTsVerified(user_id);
+      if (is_ts_verified && !is_paid) {
+        const logMessage = renderAddEventMessage(opts.ctx.user.username || user_id, eventData);
+        await sendLogNotification({
+          message: logMessage,
+          topic: "event",
+        });
+      } else {
+        const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
+        await sendLogNotification({
+          message: logMessage,
+          topic: "event",
+        });
+      }
       // Clear the organizer user cache so it will be reloaded next time
       await redisTools.deleteCache(userCacheKey);
 
