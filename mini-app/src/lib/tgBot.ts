@@ -138,11 +138,11 @@ async function startBot() {
 
         const [status, event_uuid] = payload.split("_");
 
-        console.log();
+        // console.log();
+
+        // logger.log("CTX" , ctx);
         
-        logger.log("CTX" , ctx);
-        
-        logger.log("CTX_MESSAGE" , ctx);
+        console.log("CTX_MESSAGE" , ctx);
 
         const orignal_text = ctx.update?.message?.caption || "";
         const new_text = orignal_text + "\nStatus : " + status;
