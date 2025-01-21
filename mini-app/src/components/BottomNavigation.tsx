@@ -1,3 +1,4 @@
+import { cn } from "@/utils";
 import { Tabbar, TabbarLink } from "konsta/react";
 import { GlobeIcon, NetworkIcon, CircleUserRoundIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -27,7 +28,7 @@ export default function BottomNavigation({ active }: { active: "Events" | "Chann
     <Tabbar
       labels
       icons
-      className="left-0 bottom-0 fixed"
+      className="left-0 bottom-0 fixed pt-2.5"
     >
       {tabs.map((tab) => (
         <TabbarLink
@@ -36,6 +37,7 @@ export default function BottomNavigation({ active }: { active: "Events" | "Chann
           onClick={() => router.push(tab.url)}
           icon={tab.icon}
           label={tab.title}
+          linkProps={{ className: cn('pt-1 pb-safe background-blur-none rounded-t-[6px] before:bg-[#CCD1EA4D]', active === tab.title && 'bg-[#E5F2FF]') }}
         />
       ))}
     </Tabbar>

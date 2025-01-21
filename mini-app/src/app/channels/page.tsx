@@ -2,7 +2,7 @@
 
 import { Block } from "konsta/react";
 import Image from "next/image";
-import Typography from "../../components/Typography";
+import Typography, { typographyClassNameMappings } from "../../components/Typography";
 import BottomNavigation from "../../components/BottomNavigation";
 import Link from "next/link";
 import { Channel } from "@/types";
@@ -72,7 +72,7 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
     <Link
       ref={ref}
       href={`/channels/${data.user_id}`}
-      className="p-4 bg-white rounded-md grow min-w-[47%] max-w-[47%]"
+      className={`p-4 bg-white rounded-md grow min-w-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)]`}
     >
       {data.org_image ? (
         <Image
@@ -83,9 +83,9 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
           alt={data.org_channel_name || ""}
         />
       ) : (
-        <div className="bg-[#EFEFF4] rounded-md aspect-square overflow-hidden">
+        <div className="bg-[#EFEFF4] rounded-md aspect-square overflow-hidden mb-3">
           <Image
-            className="rounded-md mb-3"
+            className="rounded-md"
             src={channelAvatar}
             width={300}
             height={300}

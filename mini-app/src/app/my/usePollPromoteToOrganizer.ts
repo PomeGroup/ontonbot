@@ -9,7 +9,6 @@ const emptyObject = {}
 const orderProcessingStates = ['new', 'processing', 'confirming']
 const orderFinishedStates = ['failed', 'completed', 'cancelled']
 export default function usePollPromoteToOrganizer(onFinish: (_success: boolean) => void) {
-  
   const { user } = useUserStore()
   const role = user?.role
   const [state, setState] = useState<'ready' | 'processing' | 'done'>(role === 'organizer' ? 'done' : 'ready')

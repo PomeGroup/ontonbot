@@ -96,12 +96,10 @@ export const organizerRouter = router({
   getPromotedOrganizers: publicProcedure
     .input(z.object({}).optional())
     .query(async (): Promise<MinimalOrganizerData[]> => {
-      const promotedChannelsStr = config?.promotedChannelIds ?? '[]'
+      const channelIds: number[] = (config?.promotedChannelIds as unknown as number[]) ?? []
       try {
-        const ids: number[] = JSON.parse(promotedChannelsStr)
-
         const result = await Promise.all(
-          ids
+          channelIds
             .map(id => usersDB
               .getOrganizerById(id)
               .then(({data}) => (data))

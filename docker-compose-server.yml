@@ -507,44 +507,44 @@ services:
         tag: "docker.${BRANCH_NAME}-participant-tma"
         fluentd-async-connect: "true"
 
-  nft-manager:
-    hostname: nft-manager
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-manager:${BRANCH_NAME}-latest
-    deploy:
-      resources:
-        limits:
-          memory: 3000M
-          cpus: "3.0"
-      mode: global
-      update_config:
-        failure_action: rollback
-        order: start-first
-        parallelism: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: on-failure
-        delay: 10s
-    depends_on:
-      - postgres
-      - redis
-      - minio
-      - mini-app
-      - fluentd
-    environment:
-      <<: *common-env
-      MNEMONIC: ${MNEMONIC}
-    networks:
-      - onton-network
-    secrets:
-      - registry-onton-config
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: "127.0.0.1:24224"
-        tag: "docker.${BRANCH_NAME}-nft-manager"
-        fluentd-async-connect: "true"
+#  nft-manager:
+#    hostname: nft-manager
+#    image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-manager:${BRANCH_NAME}-latest
+#    deploy:
+#      resources:
+#        limits:
+#          memory: 3000M
+#          cpus: "3.0"
+#      mode: global
+#      update_config:
+#        failure_action: rollback
+#        order: start-first
+#        parallelism: 1
+#      placement:
+#        constraints:
+#          - node.role == manager
+#      restart_policy:
+#        condition: on-failure
+#        delay: 10s
+#    depends_on:
+#      - postgres
+#      - redis
+#      - minio
+#      - mini-app
+#      - fluentd
+#    environment:
+#      <<: *common-env
+#      MNEMONIC: ${MNEMONIC}
+#    networks:
+#      - onton-network
+#    secrets:
+#      - registry-onton-config
+#    logging:
+#      driver: "fluentd"
+#      options:
+#        fluentd-address: "127.0.0.1:24224"
+#        tag: "docker.${BRANCH_NAME}-nft-manager"
+#        fluentd-async-connect: "true"
 
 
   website:
