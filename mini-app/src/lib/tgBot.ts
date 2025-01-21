@@ -140,7 +140,7 @@ async function startBot() {
 
         const orignal_text = ctx.update?.message?.text || "";
         const new_text = orignal_text + "\nStatus : " + status;
-        
+
         ctx.editMessageText(new_text);
 
         await ctx.answerCallbackQuery({ text: "Got it !!" }); // remove loading animation
@@ -169,8 +169,9 @@ export async function sendLogNotification(
   props: {
     message: string;
     topic: "event" | "ticket" | "system" | "payments";
+    image?: string | null;
     inline_keyboard?: InlineKeyboardMarkup; // Optional property
-  } = { message: "", topic: "event", inline_keyboard: undefined }
+  } = { message: "", topic: "event", image: undefined, inline_keyboard: undefined }
 ) {
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     console.error("Bot token or logs group ID not found in configProtected for this environment");
@@ -196,14 +197,25 @@ export async function sendLogNotification(
 
   const logBot = new Bot(BOT_TOKEN_LOGS);
 
-  return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
-    reply_parameters: {
-      message_id: Number(topicMessageId),
-    },
-    reply_markup: props.inline_keyboard,
-    parse_mode: "HTML",
-    link_preview_options: { is_disabled: true },
-  });
+  if (props.image) {
+    return await logBot.api.sendPhoto(Number(LOGS_GROUP_ID), props.image, {
+      caption: props.message,
+      reply_parameters: {
+        message_id: Number(topicMessageId),
+      },
+      reply_markup: props.inline_keyboard,
+      parse_mode: "HTML",
+    });
+  } else {
+    return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
+      reply_parameters: {
+        message_id: Number(topicMessageId),
+      },
+      reply_markup: props.inline_keyboard,
+      parse_mode: "HTML",
+      link_preview_options: { is_disabled: true },
+    });
+  }
 }
 
 /// 🌳 ---- render the update event message ---- 🌳

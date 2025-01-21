@@ -367,6 +367,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         /* --------------------------- Moderation Message --------------------------- */
         const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
         await sendLogNotification({
+          image : eventData.image_url,
           message: logMessage,
           topic: "event",
           inline_keyboard: new InlineKeyboard()
