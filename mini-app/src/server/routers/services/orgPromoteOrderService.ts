@@ -24,7 +24,10 @@ export async function orgPromoteProcessOrder(order: OrderRow): Promise<void> {
 
       let result: { success: boolean; error: string | null } = { success: true, error: null };
 
-      if (user?.role === "user") result = await updateUserRole(order.user_id, "organizer");
+      if (user?.role === "user") {
+        result = await updateUserRole(order.user_id, "organizer");
+        logger.log("orgPromoteProcessOrder user_id :  user_before_role :", user.user_id, user.role);
+      }
 
       // Mark Order as Completed
       if (result.success) {
