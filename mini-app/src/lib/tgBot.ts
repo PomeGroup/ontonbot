@@ -141,14 +141,14 @@ async function startBot() {
         // console.log();
 
         // logger.log("CTX" , ctx);
-        
-        console.log("CTX_MESSAGE" , ctx);
 
-        const orignal_text = ctx.update?.message?.caption || "";
-        const new_text = orignal_text + "\nStatus : " + status;
+        // console.log("CTX_MESSAGE" , ctx.update.message);
+
+        const orignal_text = ctx.update?.callback_query.message?.caption || "";
+        const new_text = orignal_text + "\n\nStatus : " + (status === "approve" ? '✅ Approved' : '❌ RejectedF');
 
         ctx.editMessageCaption({
-          caption : new_text
+          caption: new_text,
         });
 
         await ctx.answerCallbackQuery({ text: "Got it !!" }); // remove loading animation
