@@ -63,6 +63,7 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
         open={congratsDrawerOpen}
         onClose={() => {
           setCongratsDrawerOpen(false);
+          window.location.reload()
         }}
       />
       <LoadingPopup open={state === 'processing'} />

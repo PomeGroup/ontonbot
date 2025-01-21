@@ -3,6 +3,7 @@ import { trpc } from "../_trpc/client";
 import useTransferTon from "./useTransfer";
 import { useConfig } from "@/context/ConfigContext";
 import { useUserStore } from "@/context/store/user.store";
+import { toast } from "sonner";
 
 
 const emptyObject = {}
@@ -14,9 +15,9 @@ export default function usePollPromoteToOrganizer(onFinish: (_success: boolean) 
   const [state, setState] = useState<'ready' | 'processing' | 'done'>(role === 'organizer' ? 'done' : 'ready')
   const trpcUtils = trpc.useUtils()
   const { data } = trpc.orders.getPromoteToOrganizerOrder.useQuery(emptyObject, {
-    enabled: state !== 'done' && role !== 'organizer',
+    enabled: state === 'processing' && role !== 'organizer',
     onSuccess(data) {
-      const orderState = data?.state || ''
+      const orderState = data?.state || 'chert val'
       if (orderFinishedStates.includes(orderState)) {
         setState('done')
         const isComplete = orderState === 'completed'
@@ -43,17 +44,19 @@ export default function usePollPromoteToOrganizer(onFinish: (_success: boolean) 
   const onPay = useCallback(async () => {
     if (state !== 'ready') return
 
-    setState('processing')
     try {
       const response = await userToOrganizerMutation.mutateAsync(emptyObject);
       await transfer(
         config.ONTON_WALLET_ADDRESS as string || 'UQA02ekDpWFrIL5xh5g7WVY6UrcQRINXli5gDlD7cQrEkfOM',
         Number(response.total_price),
         response.payment_type, {
-        comment: `onton_order=${response.uuid}`,
-      });
+          comment: `onton_order=${response.uuid}`,
+        });
+      setState('processing')
     } catch (error) {
+      toast.error('Transaction was not successful. Please try again.')
       console.error("Error during transfer:", error);
+      setState('ready')
     }
   }, [config.ONTON_WALLET_ADDRESS, state, transfer, userToOrganizerMutation])
 

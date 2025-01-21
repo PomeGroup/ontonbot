@@ -19,7 +19,6 @@ import HubSelectorDrawer from "./HubSelectorDrawer";
 import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
 
 import { SearchIcon } from "lucide-react";
-import { typographyClassNameMappings } from "@/components/Typography";
 import { useDebouncedCallback } from "@mantine/hooks";
 import parseSearchParams, { allParticipationTypes } from "@/app/search/parseSearchParams";
 import { trpc } from "@/app/_trpc/client";
