@@ -27,7 +27,7 @@ export default function ProfilePage() {
   const { setSection } = useSectionStore();
   const { data, isLoading } = trpc.organizers.getOrganizer.useQuery({});
 
-  const paid = user?.role === "organizer";
+  const paid = user?.role === "organizer" || user?.role === "admin";
   const router = useRouter();
 
   if (isLoading) return "loading";
@@ -66,7 +66,7 @@ export default function ProfilePage() {
       <ConnectWalletCard />
       <PaymentCard visible={!paid && hasWallet} />
 
-      {paid && (
+      { paid && (
         <Button
           className="-my-8 py-6 mb-12 max-w-[calc(100%-2rem)] mx-auto rounded-[10px]"
           onClick={() => {

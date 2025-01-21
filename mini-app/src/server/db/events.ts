@@ -43,7 +43,7 @@ export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) 
 };
 //  get ongoing events
 export const fetchOngoingEvents = async () => {
-  const currentTime = Date.now() / 1000;
+  const currentTime =Math.floor( Date.now() / 1000);
   return await db
     .select()
     .from(events)
