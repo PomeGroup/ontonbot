@@ -1,16 +1,14 @@
 "use client";
 
-import React, { ForwardedRef, forwardRef, memo, useState } from "react";
+import React, { ForwardedRef, forwardRef, memo } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
-import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import { Card } from "konsta/react";
 import Typography from "@/components/Typography";
-
+import LoadableImage from "@/components/LoadableImage";
 
 interface EventCardProps {
   event: {
@@ -67,9 +65,6 @@ function UnforwardedEventCard(
     hidden = false,
   } = event;
 
-  const defaultImage = "/template-images/default.webp";
-  const [imageLoaded, setImageLoaded] = useState(false);
-
   // If time zone is invalid, fallback
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
 
@@ -93,11 +88,6 @@ function UnforwardedEventCard(
     }
   };
 
-  // Skeleton loader while image not loaded
-  const renderImageSkeleton = () => (
-    <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
-  );
-
   return (
     <Card
       className="overflow-hidden cursor-pointer radius-[10px]"
@@ -110,20 +100,7 @@ function UnforwardedEventCard(
         onClick={handleEventClick}
       >
         {/* LEFT: Event Image */}
-        <div className="relative rounded-lg max-w-[100px] min-w-[100px] flex-shrink-0">
-          {!imageLoaded && renderImageSkeleton()}
-          <Image
-            src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-            alt={title}
-            width={100}
-            height={100}
-            className={`w-25 h-25 rounded-[6px] transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-            onError={(e) => (e.currentTarget.src = defaultImage)}
-            onLoad={() => setImageLoaded(true)}
-            loading="lazy"
-            unoptimized={true}
-          />
-        </div>
+        <LoadableImage src={imageUrl} alt={title} size={100} />
 
         <div className="flex flex-col grow">
           <Typography className="font-semibold mb-1 line-clamp-2 overflow-hidden" variant="body">

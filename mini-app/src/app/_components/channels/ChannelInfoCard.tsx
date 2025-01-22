@@ -11,6 +11,7 @@ import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { wait } from "@/lib/utils";
 import { LoaderIcon } from "lucide-react";
+import LoadableImage from "@/components/LoadableImage";
 
 export default function ChannelInfoCard({ data }: { data: Channel }) {
   const WebApp = useWebApp();
@@ -34,25 +35,11 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
 
   return (
     <Card className="mt-0">
-      {data.org_image ? (
-        <Image
-          className="mb-4 rounded"
-          src={data.org_image}
-          width={500}
-          height={500}
-          alt={data.org_channel_name || ""}
-        />
-      ) : (
-        <div className="bg-[#EFEFF4] rounded-md mb-4 p-1">
-          <Image
-            className="rounded-md"
-            src={channelAvatar}
-            width={500}
-            height={500}
-            alt={data.org_channel_name || ""}
-          />
-        </div>
-      )}
+      <LoadableImage
+        src={data.org_image || channelAvatar}
+        size={500}
+        alt={data.org_channel_name}
+      />
 
       <div className="flex justify-between align-center mb-4">
         <Typography
