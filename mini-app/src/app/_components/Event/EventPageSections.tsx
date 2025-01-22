@@ -20,6 +20,8 @@ import { Card } from "konsta/react";
 import Typography from "@/components/Typography";
 import Image from "next/image";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
+import { isValidImageUrl } from "@/lib/isValidImageUrl";
+import LoadableImage from "@/components/LoadableImage";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -239,25 +241,10 @@ export const EventSections = () => {
             Organizer
           </Typography>
           <div className="w-full flex gap-3 items-stretch">
-            {organizer.org_image ? (
-              <Image
-	      	className="rounded-mg"
-                src={organizer.org_image}
-                alt={organizer.org_channel_name || ""}
-                width={48}
-                height={48}
-              />
-            ) : (
-              <div className="bg-[#EFEFF4] rounded-md p-1">
-                <Image
-                  className="rounded-md"
-                  src={channelAvatar}
-                  width={48}
-                  height={48}
-                  alt={organizer.org_channel_name || ""}
-                />
-              </div>
-            )}
+            <LoadableImage
+              alt={organizer.org_channel_name}
+              src={isValidImageUrl(organizer.org_image) ? organizer.org_image : channelAvatar.src}
+              size={48} />
             <div className="flex flex-col grow justify-between">
               <Typography
                 variant="headline"
@@ -273,9 +260,9 @@ export const EventSections = () => {
                 &nbsp; events
               </Typography>
             </div>
-	    <div className="self-center">
-  	    <ArrowRight className="text-main-button-color" />
-	    </div>
+            <div className="self-center">
+              <ArrowRight className="text-main-button-color" />
+            </div>
           </div>
         </Card>
       )}

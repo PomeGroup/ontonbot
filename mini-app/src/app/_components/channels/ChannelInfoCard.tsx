@@ -12,6 +12,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { wait } from "@/lib/utils";
 import { LoaderIcon } from "lucide-react";
 import LoadableImage from "@/components/LoadableImage";
+import { isValidImageUrl } from "@/lib/isValidImageUrl";
 
 export default function ChannelInfoCard({ data }: { data: Channel }) {
   const WebApp = useWebApp();
@@ -36,9 +37,10 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
   return (
     <Card className="mt-0">
       <LoadableImage
-        src={data.org_image || channelAvatar}
-        size={500}
+        src={isValidImageUrl(data.org_image) ? data.org_image : channelAvatar.src}
+        size={window.innerWidth}
         alt={data.org_channel_name}
+        className="mb-3"
       />
 
       <div className="flex justify-between align-center mb-4">

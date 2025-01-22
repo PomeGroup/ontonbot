@@ -1,9 +1,10 @@
 import { trpc } from "../_trpc/client";
 import { Channel } from "@/types";
 import Link from "next/link";
-import Image from "next/image";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import Typography from "@/components/Typography";
+import LoadableImage from "@/components/LoadableImage";
+import { isValidImageUrl } from "@/lib/isValidImageUrl";
 
 export default function PromotedChannels() {
   const { data, isLoading } = trpc.organizers.getPromotedOrganizers.useQuery(undefined, {
@@ -28,25 +29,7 @@ function ChannelCard({ data }: { data: Channel }) {
       href={`/channels/${data.user_id}`}
       className="p-3 bg-white rounded-md max-w-40 min-w-[7rem]"
     >
-      {data.org_image ? (
-        <Image
-          className="rounded-[6px] mb-3 w-full"
-          src={data.org_image}
-          width={200}
-          height={200}
-          alt={data.org_channel_name || ""}
-        />
-      ) : (
-        <div className="bg-[#EFEFF4] rounded-[6px]">
-          <Image
-            className="rounded-md mb-3"
-            src={channelAvatar}
-            width={200}
-            height={200}
-            alt={data.org_channel_name || ""}
-          />
-        </div>
-      )}
+      <LoadableImage className='mb-3' src={isValidImageUrl(data.org_image) ? data.org_image : channelAvatar.src} size={200} />
       <div className="text-center">
         <div
           className="font-[590] mb-2 text-[14px] leading-[19px] tracking h-9 overflow-hidden break-words line-clamp-2"
