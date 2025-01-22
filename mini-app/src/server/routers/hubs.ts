@@ -5,7 +5,11 @@ import { organizerTsVerified } from "@/server/db/userFlags.db";
 
 const getHubs = initDataProtectedProcedure.query(async () => {
   console.log("getHubs");
-    return await getHubsApi();
+   const result=  await getHubsApi();
+   return {
+     success: true,
+     hubs : result
+   }
 });
 
 const getOrgHubs = initDataProtectedProcedure.query(async (opts) => {
@@ -20,7 +24,11 @@ const getOrgHubs = initDataProtectedProcedure.query(async (opts) => {
     return nonVerifiedHubs;
   }
   // return all hubs
-  return await getHubsApi();
+  const result = await getHubsApi();
+  return {
+    status: true,
+    hubs: result,
+  };
 });
 
 export const hubsRouter = router({
