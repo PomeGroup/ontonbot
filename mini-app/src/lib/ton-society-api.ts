@@ -5,6 +5,8 @@ import { CreateUserRewardLinkReturnType, type CreateUserRewardLinkInputType } fr
 import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import axios, { AxiosError } from "axios";
+import { HubsResponse } from "@/types";
+import { redisTools ,cacheKeys } from "@/lib/redisTools";
 
 // ton society client to send http requests to https://ton-society.github.io/sbt-platform
 export const tonSocietyClient = axios.create({
@@ -16,7 +18,7 @@ export const tonSocietyClient = axios.create({
 });
 
 /**
- * Returns a unique reward link for users to receive rewards through particpation in activities
+ * Returns a unique reward link for users to receive rewards through participation in activities
  * more: https://ton-society.github.io/sbt-platform/#/Activities/createRewardLink
  */
 export async function createUserRewardLink(
@@ -92,14 +94,68 @@ export async function getSBTClaimedStaus(activity_id: number, user_id: number | 
   user_id = String(user_id);
   try {
     const result = await tonSocietyClient.get(`/activities/${activity_id}/rewards/${user_id}/status`);
-    // console.log("result at getSBTClaimedStaus ", activity_id, user_id, result.data);
     return result.data.data as {
       status: "NOT_CLAIMED" | "CLAIMED" | "RECEIVED";
     };
   } catch (error) {
-    // console.log("error at getSBTClaimedStaus ", activity_id, user_id);
     return {
       status: "NOT_ELIGBLE",
     };
+  }
+}
+
+export async function getHubs() {
+  // Define a cache key – you can parameterize if needed.
+  const cacheKey = redisTools.cacheKeys.hubs;
+
+  // 1. Try to read from the cache
+  const cachedResult = await redisTools.getCache(cacheKey);
+  if (cachedResult) {
+    // If we have a cached copy, return it
+    return {
+      status: "success",
+      hubs: cachedResult,
+    };
+  }
+
+  try {
+    // 2. Otherwise, fetch fresh data
+    const response = await tonSocietyClient.get<HubsResponse>("/hubs", {
+      params: {
+        _start: 0,
+        _end: 100,
+      },
+    });
+
+    if (response.status === 200 && response.data) {
+      // sort hubs by attributes.title
+      const sortedHubs = response.data.data.sort((a, b) =>
+        a.attributes.title.localeCompare(b.attributes.title)
+      );
+      const transformedHubs = sortedHubs.map((hub) => ({
+        id: hub.id.toString(),
+        name: hub.attributes.title,
+      }));
+
+      // 3. Cache the transformed result
+      await redisTools.setCache(cacheKey, transformedHubs, redisTools.cacheLvl.medium);
+
+      // 4. Return the data
+      return {
+        status: "success",
+        hubs: transformedHubs,
+      };
+    }
+
+    // If response is invalid:
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to fetch hubs data",
+    });
+  } catch (error) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to fetch hubs data",
+    });
   }
 }

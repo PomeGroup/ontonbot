@@ -4,7 +4,7 @@ import { SocietyHub } from "@/types";
 import { FC, useEffect, useState } from "react";
 import * as React from "react";
 import { ListInput } from "konsta/react";
-import { useGetHubs } from "@/hooks/events.hooks";
+import { useGetHubsManageEvent } from "@/hooks/events.hooks";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 
 // https://society.ton.org/v1/society-hubs
@@ -15,7 +15,7 @@ const TonHubPicker: FC<{
   errors?: string[];
 }> = ({ value, onValueChange, errors }) => {
   const [hubs, setHubs] = useState<Array<SocietyHub>>([]);
-  const hubsResponse = useGetHubs();
+  const hubsResponse = useGetHubsManageEvent()
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
   useEffect(() => {

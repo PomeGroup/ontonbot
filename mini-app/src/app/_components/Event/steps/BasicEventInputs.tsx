@@ -4,7 +4,7 @@ import { Block, Button, Checkbox, ListInput, ListItem, Toolbar } from "konsta/re
 import TonHubPicker from "../../molecules/pickers/TonHubpicker";
 import { ImageUpload } from "./ImageUpload";
 import { useCreateEventStore } from "@/zustand/createEventStore";
-import { useGetHubs } from "@/hooks/events.hooks";
+import { useGetHubs, useGetHubsManageEvent } from "@/hooks/events.hooks";
 import { KSheet } from "@/components/ui/drawer";
 
 interface Props {
@@ -21,7 +21,7 @@ function BasicEventInputs(props: Props) {
   const { edit: editOptions } = useCreateEventStore();
   const setEventData = useCreateEventStore((state) => state.setEventData);
   const clearImageError = useCreateEventStore((state) => state.clearImageErrors);
-  const hubsResponse = useGetHubs();
+  const hubsResponse = useGetHubsManageEvent();
 
   return (
     <ListLayout

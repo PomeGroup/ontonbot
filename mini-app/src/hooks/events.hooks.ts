@@ -51,6 +51,15 @@ export function useGetHubs() {
   });
 }
 
+/**
+ * get hubs for manage event
+ */
+export function useGetHubsManageEvent() {
+  return trpc.hubs.getOrgHubs.useQuery(undefined, {
+    staleTime: Infinity,
+    queryKey: ["hubs.getOrgHubs", undefined],
+  });
+}
 export function useGetEventOrders() {
   const params = useParams<{ hash: string }>();
 
