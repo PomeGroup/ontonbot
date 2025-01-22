@@ -35,9 +35,11 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
 
   // 2) Track initial history length
   const initialHistoryLength = useRef<number>(0);
+  const previousHistoryLength = useRef<number>(0);
   useEffect(() => {
     if (typeof window !== "undefined" && window.history) {
       initialHistoryLength.current = window.history.length || 0;
+      previousHistoryLength.current = window.history.length || 0;
     }
   }, []);
 
@@ -48,7 +50,7 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
 
     const WebApp = window.Telegram.WebApp;
     const backButton = WebApp.BackButton;
-
+    WebApp.isClosingConfirmationEnabled = true;
     // A function to show/hide the TG back button
     const decideVisibility = () => {
       const section = useSectionStore.getState().getCurrentSection();
@@ -71,6 +73,7 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
 
     const handleBackButtonClicked = () => {
       // Attempt to pop from store
+
       const didGoBack = goBack();
       if (didGoBack) {
         // We popped one level => check if we're now at "none"
@@ -113,8 +116,15 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
       backButton.hide();
     };
   }, [isInitialized, pathname, router, goBack]);
+  // 4) Haptic feedback on route change
+    useEffect(() => {
+      if (!isInitialized) return;
+      if (typeof window === "undefined" || !window.Telegram?.WebApp) return;
 
-  // 4) If we don't have initData => show skeleton
+      window.Telegram.WebApp.HapticFeedback.impactOccurred("light");
+
+    }, [pathname, isInitialized]);
+  // 5) If we don't have initData => show skeleton
   if (!initData) {
     return <EventsSkeleton />;
   }
