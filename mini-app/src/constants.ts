@@ -612,9 +612,7 @@ export const UPLOAD_IMAGE_RATE_LIMIT = { window: 60 , max: 2 };
 export const UPLOAD_VIDEO_RATE_LIMIT = { window: 60 , max: 5 };
 
 export const NonVerifiedHubsIds= ["12", "33"]
-export const hardCodedHubs = {
-  status: "success",
-  hubs: [
+export const hardCodedHubs = [
     {
       id: "1",
       name: "Global",
@@ -679,12 +677,9 @@ export const hardCodedHubs = {
       id: "49",
       name: "Balkans",
     },
-  ],
-};
+  ];
 
-export const nonVerifiedHubs = {
-  status: "success",
-  hubs: [
+export const nonVerifiedHubs = [
     {
       id: "12",
       name: "TON Square",
@@ -693,5 +688,4 @@ export const nonVerifiedHubs = {
       id: "33",
       name: "Onton",
     },
-  ],
-};
+  ];
