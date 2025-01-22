@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { logger } from "../utils/logger";
 import { redisTools } from "@/lib/redisTools";
 
-export const getUserFlagsCacheKey = (flag: string, userId: number) => `${redisTools.cacheKeys.user_flags}${userId}_${flag}`;
+export const getUserFlagsCacheKey = (flag: string, userId: number) => `${redisTools.cacheKeys.user_flags}${userId}:flags:${flag}`;
 
 export async function organizerTsVerified(user_id: number) {
   const cacheKey = getUserFlagsCacheKey("ton_society_verified", user_id);

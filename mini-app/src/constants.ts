@@ -1,3 +1,5 @@
+
+
 export const gmtTimeZones = [
   "GMT",
   "GMT+1",
@@ -608,3 +610,88 @@ export const PLACEHOLDER_VIDEO = "https://storage.onton.live/ontonvideo/event/dC
 
 export const UPLOAD_IMAGE_RATE_LIMIT = { window: 60 , max: 2 };
 export const UPLOAD_VIDEO_RATE_LIMIT = { window: 60 , max: 5 };
+
+export const NonVerifiedHubsIds= ["12", "33"]
+export const hardCodedHubs = {
+  status: "success",
+  hubs: [
+    {
+      id: "1",
+      name: "Global",
+    },
+    {
+      id: "2",
+      name: "Europe",
+    },
+    {
+      id: "3",
+      name: "India",
+    },
+    {
+      id: "4",
+      name: "Korea",
+    },
+    {
+      id: "5",
+      name: "SEA",
+    },
+    {
+      id: "6",
+      name: "Caucasus",
+    },
+    {
+      id: "7",
+      name: "Turkiye",
+    },
+    {
+      id: "8",
+      name: "CIS",
+    },
+    {
+      id: "9",
+      name: "UAE",
+    },
+    {
+      id: "10",
+      name: "UK",
+    },
+    {
+      id: "11",
+      name: "Hong Kong",
+    },
+    {
+      id: "12",
+      name: "TON Square",
+    },
+    {
+      id: "13",
+      name: "Community",
+    },
+    {
+      id: "33",
+      name: "Onton",
+    },
+    {
+      id: "34",
+      name: "Japan",
+    },
+    {
+      id: "49",
+      name: "Balkans",
+    },
+  ],
+};
+
+export const nonVerifiedHubs = {
+  status: "success",
+  hubs: [
+    {
+      id: "12",
+      name: "TON Square",
+    },
+    {
+      id: "33",
+      name: "Onton",
+    },
+  ],
+};

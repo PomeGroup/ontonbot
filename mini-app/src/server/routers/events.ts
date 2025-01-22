@@ -21,9 +21,9 @@ import {
   adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure as eventManagerPP,
   initDataProtectedProcedure,
-  publicProcedure,
   router,
 } from "../trpc";
+import { NonVerifiedHubsIds } from "@/constants";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import eventFieldsDB from "@/server/db/eventFields.db";
 import { internal_server_error } from "../utils/error_utils";
@@ -38,7 +38,6 @@ import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
 import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
 import { InlineKeyboard } from "grammy";
-import { getNonVerifiedHubzIds } from "./services/hubs";
 dotenv.config();
 
 function get_paid_event_price(capacity: number) {
@@ -211,8 +210,8 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
   const user_id = opts.ctx.user.user_id;
   const userCacheKey = getUserCacheKey(user_id);
   const is_ts_verified = await organizerTsVerified(user_id);
-  if (!is_ts_verified && !getNonVerifiedHubzIds().includes(input_event_data.society_hub.id))
-    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid HUBZ for non verified organizer" });
+  if (!is_ts_verified && !NonVerifiedHubsIds.includes(input_event_data.society_hub.id))
+    throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid HUBS for non verified organizer" });
 
   try {
     const result = await db.transaction(async (trx) => {

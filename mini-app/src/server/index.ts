@@ -12,7 +12,7 @@ import { visitorsRouter } from "./routers/visitors";
 import { router } from "./trpc";
 import { sbtRewardCollectionRouter } from "@/server/routers/sbtRewardCollectionRouter";
 import { POARouter } from "@/server/routers/POA";
-import { hubsRouter } from "@/server/routers/services/hubs";
+import { hubsRouter } from "@/server/routers/hubs";
 import { telegramInteractionsRouter } from "@/server/routers/telegramInteractions";
 import { registrantRouter } from "@/server/routers/registrant";
 import { organizerRouter } from "@/server/routers/organizers";

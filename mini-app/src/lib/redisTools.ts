@@ -279,7 +279,8 @@ export const cacheKeys = {
   notificationsByStatus: "notificationsByStatus:",
   eventPoaResult: "eventPoaResult:",
   eventPoaResultsByEvent: "eventPoaResultsByEvent:",
-  user_flags:'user_flags:'
+  user_flags:'user_flags:',
+  hubs: "ton-society:hubs"
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
