@@ -1,7 +1,6 @@
 "use client";
 
 import { Block } from "konsta/react";
-import Image from "next/image";
 import Typography from "../../components/Typography";
 import BottomNavigation from "../../components/BottomNavigation";
 import Link from "next/link";
@@ -11,6 +10,7 @@ import channelAvatar from "@/components/icons/channel-avatar.svg";
 import { ForwardedRef, forwardRef, Fragment, useCallback, useRef } from "react";
 import { noop } from "lodash";
 import PromotedChannels from "./PromotedChannels";
+import LoadableImage from "@/components/LoadableImage";
 
 export default function ChannelsPage() {
   const { data, isFetchingNextPage, fetchNextPage, hasNextPage, status } = usePaginatedChannels();
@@ -40,6 +40,7 @@ export default function ChannelsPage() {
     >
       <PromotedChannels />
       <div className="flex flex-wrap gap-4 mt-4">
+        <ChannelCard key={1} data={{ user_id: 1, org_channel_name: 'Masoud Bonaib', org_image: 'https://staging-storage.toncloud.observer/onton/channels/be5debecee_1737460305669_event_image.jpeg' } as any} />
         {data?.pages.map((page, pageIndex) => (
           <Fragment key={pageIndex}>
             {page.items.map((item, index) => {
@@ -74,25 +75,7 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
       href={`/channels/${data.user_id}`}
       className={`p-4 bg-white rounded-md grow min-w-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)]`}
     >
-      {data.org_image ? (
-        <Image
-          className="rounded-md mb-3"
-          src={data.org_image}
-          width={300}
-          height={300}
-          alt={data.org_channel_name || ""}
-        />
-      ) : (
-        <div className="bg-[#EFEFF4] rounded-md aspect-square overflow-hidden mb-3">
-          <Image
-            className="rounded-md"
-            src={channelAvatar}
-            width={300}
-            height={300}
-            alt={data.org_channel_name || ""}
-          />
-        </div>
-      )}
+      <LoadableImage src={data.org_image || channelAvatar} size={300} alt={data.org_channel_name} className='mb-3' />
       <div className="text-center">
         <div
           className="font-[590] mb-2 text-[17px] leading-[22px] tracking h-11 overflow-hidden line-clamp-2 break-all"

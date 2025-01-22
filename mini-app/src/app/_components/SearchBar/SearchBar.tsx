@@ -51,6 +51,7 @@ const buildQueryParams = (newVals: ReturnType<typeof parseSearchParams>) => {
   });
 };
 
+const defaultVal = [] as { id: string, name: string }[]
 function SearchBar() {
   const [showDialogParticipantError, setShowDialogParticipantError] = useState(false);
 
@@ -67,7 +68,7 @@ function SearchBar() {
    *  Hubs from API
    * ---------------
    */
-  const { data: { hubs } = { hubs: [] } } = trpc.hubs.getHubs.useQuery(undefined, {
+  const { data: { hubs } = { hubs: defaultVal } } = trpc.hubs.getHubs.useQuery(undefined, {
     staleTime: Infinity,
     queryKey: ["hubs.getHubs", undefined],
   });
