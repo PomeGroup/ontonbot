@@ -4,7 +4,12 @@ import { getHubs as getHubsApi} from "@/lib/ton-society-api";
 import { organizerTsVerified } from "@/server/db/userFlags.db";
 
 const getHubs = initDataProtectedProcedure.query(async () => {
-  console.log("getHubs");
+  if (process.env?.ENV === "local") {
+    return {
+      status: true,
+      hubs: hardCodedHubs,
+    };
+  }
    const result=  await getHubsApi();
    return {
      success: true,
@@ -15,13 +20,19 @@ const getHubs = initDataProtectedProcedure.query(async () => {
 const getOrgHubs = initDataProtectedProcedure.query(async (opts) => {
   // return hard coded hubs for local env
   if (process.env?.ENV === "local") {
-    return hardCodedHubs;
+    return {
+      status: true,
+      hubs: hardCodedHubs,
+    };
   }
 
   const isUserTsVerified = await organizerTsVerified(opts.ctx.user.user_id);
   // return non verified hubs
   if (!isUserTsVerified) {
-    return nonVerifiedHubs;
+    return {
+      status: true,
+      hubs: nonVerifiedHubs,
+    };
   }
   // return all hubs
   const result = await getHubsApi();

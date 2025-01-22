@@ -19,7 +19,8 @@ const TonHubPicker: FC<{
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
   useEffect(() => {
-    if (hubsResponse.data?.status === "success") {
+    if (hubsResponse.data?.status ) {
+      console.log(hubsResponse.data.hubs)
       setHubs(hubsResponse.data.hubs);
       setEventData({ society_hub: hubsResponse.data.hubs[0] });
     }
