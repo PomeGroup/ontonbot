@@ -59,11 +59,13 @@ const processOngoingEvents = async () => {
     const ongoingEvents = await fetchOngoingEvents();
     logger.log(`Fetched ${ongoingEvents.length} ongoing events.`);
     for (let i = 0; i < ongoingEvents.length; i++){
+
       const event = ongoingEvents[i];
       if (!event?.event_id || !event?.event_uuid) {
         logger.warn("Invalid event data:", event);
         continue;
       }
+      console.log("Event ==> " ,i ,ongoingEvents[i].title);
       const eventId = event.event_id;
       const eventUuid = event.event_uuid;
       const eventTitle = event.title;

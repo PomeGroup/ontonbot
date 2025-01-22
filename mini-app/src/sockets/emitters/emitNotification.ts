@@ -43,7 +43,7 @@ export const emitNotification = async (
       logger.warn("x-death header not found. Assuming first attempt.");
     }
 
-    if (retryCount >= retryLimit) {
+    if (retryCount >= retryLimit && !message.notificationId.includes("-") && notificationIdNum > 0 ) {
       logger.error(
         `Message dropped for User ${userId} after ${retryCount} retries:`,
       );
@@ -71,7 +71,11 @@ export const emitNotification = async (
       channel.ack(msg); // Acknowledge the message, no further retries
       return;
     }
-
+    if(message.notificationId.includes("-") || notificationIdNum <= 0) {
+      logger.warn(`Notification ID ${notificationIdNum} is non-persist for User ${userId}`);
+      channel.ack(msg); // Acknowledge the message, no further retries
+      return;
+    }
     // Send message to DLX to retry
     logger.warn(`Sending message to DLX after ${retryCount} retries.`);
     channel.nack(msg, false, false); // requeue=false ensures message goes to DLX
