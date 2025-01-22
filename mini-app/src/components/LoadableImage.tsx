@@ -24,7 +24,7 @@ export default function LoadableImage({ src, alt, width, height, size, className
         alt={alt || ''}
         width={width || size}
         height={height || size}
-        className={`w-full ${size && 'aspect-square'} rounded-[6px] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`w-[${width || size}] ${size && 'aspect-square'} rounded-[6px] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         onError={(e) => (e.currentTarget.src = defaultImage)}
         onLoad={() => setLoaded(true)}
         loading="lazy"
