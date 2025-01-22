@@ -37,7 +37,7 @@ export default function BottomNavigation({ active }: { active: "Events" | "Chann
           onClick={() => router.push(tab.url)}
           icon={tab.icon}
           label={tab.title}
-          linkProps={{ className: cn('pt-1 pb-[var(--tg-safe-area-inset-bottom)] h-14 before:bg-[#CCD1EA4D]') }}
+          linkProps={{ className: cn('pt-1 pb-[var(--tg-safe-area-inset-bottom)] before:bg-[#CCD1EA4D]') }}
         />
       ))}
     </Tabbar>
