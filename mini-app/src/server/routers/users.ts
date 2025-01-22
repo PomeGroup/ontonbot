@@ -88,6 +88,7 @@ export const usersRouter = router({
             event_uuid: opts.input.event_uuid,
           });
         } catch (error) {
+          logger.log('getVisitorReward_error_createUserReward' , error);
           if (error instanceof TRPCError) {
             if (error.code === "CONFLICT") {
               await rewardDB.insertReward(
@@ -103,7 +104,7 @@ export const usersRouter = router({
               } as const;
             }
           } else {
-            // logger.log(error);
+            // logger.log("getVisitorReward_error_else" );
           }
         }
 
