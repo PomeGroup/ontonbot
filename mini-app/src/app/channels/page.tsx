@@ -40,7 +40,6 @@ export default function ChannelsPage() {
     >
       <PromotedChannels />
       <div className="flex flex-wrap gap-4 mt-4">
-        <ChannelCard key={1} data={{ user_id: 1, org_channel_name: 'Masoud Bonaib', org_image: 'https://staging-storage.toncloud.observer/onton/channels/be5debecee_1737460305669_event_image.jpeg' } as any} />
         {data?.pages.map((page, pageIndex) => (
           <Fragment key={pageIndex}>
             {page.items.map((item, index) => {
