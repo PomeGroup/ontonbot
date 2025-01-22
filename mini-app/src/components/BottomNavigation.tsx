@@ -15,20 +15,20 @@ const tabs = [
     url: "/channels",
   },
   {
-    title: "My ONton",
+    title: "My ONTON",
     icon: <CircleUserRoundIcon />,
     url: "/my",
   },
 ];
 
-export default function BottomNavigation({ active }: { active: "Events" | "Channels" | "My ONton" }) {
+export default function BottomNavigation({ active }: { active: "Events" | "Channels" | "My ONTON" }) {
   const router = useRouter();
 
   return (
     <Tabbar
       labels
       icons
-      className="left-0 bottom-0 fixed pt-2.5"
+      className="left-0 bottom-0 fixed"
     >
       {tabs.map((tab) => (
         <TabbarLink
@@ -37,7 +37,7 @@ export default function BottomNavigation({ active }: { active: "Events" | "Chann
           onClick={() => router.push(tab.url)}
           icon={tab.icon}
           label={tab.title}
-          linkProps={{ className: cn('pt-1 pb-safe background-blur-none rounded-t-[6px] before:bg-[#CCD1EA4D]', active === tab.title && 'bg-[#E5F2FF]') }}
+          linkProps={{ className: cn('pt-1 pb-[env(safe-area-inset-bottom)] before:bg-[#CCD1EA4D]') }}
         />
       ))}
     </Tabbar>

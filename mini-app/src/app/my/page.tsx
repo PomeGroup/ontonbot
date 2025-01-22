@@ -77,7 +77,7 @@ export default function ProfilePage() {
           Create New Event
         </Button>
       )}
-      <BottomNavigation active="My ONton" />
+      <BottomNavigation active="My ONTON" />
     </div>
   );
 }

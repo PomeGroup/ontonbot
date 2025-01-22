@@ -118,7 +118,7 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
                     target="blank"
                     href="https://onton.live/tos"
                   >
-                    ONton’s Terms of Service.
+                    ONTON’s Terms of Service.
                   </a>
                 </li>
                 <li>
@@ -146,7 +146,7 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
               <b className="block mt-1">Foster a Positive Experience</b>
               <ul className="list-disc ml-4">
                 <li>
-                  Create events that are inclusive, respectful, and aligned with ONton&lsquo;s values to ensure a great
+                  Create events that are inclusive, respectful, and aligned with ONTON&lsquo;s values to ensure a great
                   experience for all users.
                 </li>
               </ul>
