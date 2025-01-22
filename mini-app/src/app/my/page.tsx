@@ -20,6 +20,8 @@ import { Channel } from "@/types";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import ActionCard from "@/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";
+import LoadableImage from "@/components/LoadableImage";
+import { isValidImageUrl } from "@/lib/isValidImageUrl";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
@@ -66,7 +68,7 @@ export default function ProfilePage() {
       <ConnectWalletCard />
       <PaymentCard visible={!paid && hasWallet} />
 
-      { paid && (
+      {paid && (
         <Button
           className="-my-8 py-6 mb-12 max-w-[calc(100%-2rem)] mx-auto rounded-[10px]"
           onClick={() => {
@@ -94,25 +96,7 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
       }}
     >
       <div className="flex gap-3">
-        {data.org_image || data.photo_url ? (
-          <Image
-            className="rounded-[10px]"
-            src={data.org_image || data.photo_url || ""}
-            width={80}
-            height={80}
-            alt="Avatar"
-          />
-        ) : (
-          <div className="bg-[#EFEFF4] rounded-md p-1">
-            <Image
-              className="rounded-md"
-              src={channelAvatar}
-              width={72}
-              height={72}
-              alt={data.org_channel_name || ""}
-            />
-          </div>
-        )}
+        <LoadableImage size={80} src={isValidImageUrl(data.org_image) ? data.org_image : data.photo_url || channelAvatar.src} />
         <div className="flex flex-col flex-1 gap-1 overflow-hidden">
           <Typography
             variant="title3"

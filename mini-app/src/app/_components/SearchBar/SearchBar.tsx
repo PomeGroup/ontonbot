@@ -190,7 +190,7 @@ function SearchBar() {
             <SearchIcon className="absolute top-[6px] left-2 z-2" />
             <input
               className={`rounded-md bg-[#E0E0E5] w-full py-3 leading-[16px] pl-10 caret-[#007aff] text-black`}
-              placeholder="Search Events and Organizers"
+              placeholder="Search Events"
               onChange={handleSearchInputChange}
             />
           </div>

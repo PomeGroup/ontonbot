@@ -1,22 +1,22 @@
 import { cn } from "@/utils";
 import { Tabbar, TabbarLink } from "konsta/react";
-import { GlobeIcon, NetworkIcon, CircleUserRoundIcon } from "lucide-react";
+import { Calendar, UserIcon, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const tabs = [
   {
     title: "Events",
-    icon: <GlobeIcon />,
+    icon: <Calendar />,
     url: "/",
   },
   {
     title: "Channels",
-    icon: <NetworkIcon />,
+    icon: <Users />,
     url: "/channels",
   },
   {
     title: "My ONTON",
-    icon: <CircleUserRoundIcon />,
+    icon: <UserIcon />,
     url: "/my",
   },
 ];

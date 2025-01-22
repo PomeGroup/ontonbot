@@ -11,6 +11,7 @@ import { ForwardedRef, forwardRef, Fragment, useCallback, useRef } from "react";
 import { noop } from "lodash";
 import PromotedChannels from "./PromotedChannels";
 import LoadableImage from "@/components/LoadableImage";
+import { isValidImageUrl } from "@/lib/isValidImageUrl";
 
 export default function ChannelsPage() {
   const { data, isFetchingNextPage, fetchNextPage, hasNextPage, status } = usePaginatedChannels();
@@ -36,7 +37,7 @@ export default function ChannelsPage() {
   return (
     <Block
       margin="0"
-      className="bg-[rgba(239,239,244,1)] pt-8 pb-16"
+      className="bg-[rgba(239,239,244,1)] pt-4 pb-16"
     >
       <PromotedChannels />
       <div className="flex flex-wrap gap-4 mt-4">
@@ -74,7 +75,7 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
       href={`/channels/${data.user_id}`}
       className={`p-4 bg-white rounded-md grow min-w-[calc(50%-0.5rem)] max-w-[calc(50%-0.5rem)]`}
     >
-      <LoadableImage src={data.org_image || channelAvatar} size={300} alt={data.org_channel_name} className='mb-3' />
+      <LoadableImage src={isValidImageUrl(data.org_image) ? data.org_image : channelAvatar.src} size={300} alt={data.org_channel_name} className='mb-3' />
       <div className="text-center">
         <div
           className="font-[590] mb-2 text-[17px] leading-[22px] tracking h-11 overflow-hidden line-clamp-2 break-all"
