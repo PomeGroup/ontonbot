@@ -5,7 +5,7 @@ import { CreateUserRewardLinkReturnType, type CreateUserRewardLinkInputType } fr
 import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import axios, { AxiosError } from "axios";
-import { HubsResponse, HubType, SocietyHub } from "@/types";
+import { HubsResponse, SocietyHub } from "@/types";
 import { redisTools  } from "@/lib/redisTools";
 
 // ton society client to send http requests to https://ton-society.github.io/sbt-platform

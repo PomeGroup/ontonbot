@@ -23,7 +23,7 @@ const TonHubPicker: FC<{
       setHubs(hubsResponse.data.hubs);
       setEventData({ society_hub: hubsResponse.data.hubs[0] });
     }
-  }, [hubsResponse.status]);
+  }, [hubsResponse.data?.hubs, hubsResponse.data?.status, hubsResponse.status, setEventData]);
 
   const onHubChange = (e: any) => {
     const hub = hubs.find((hub) => hub.id === e.target.value)!;
