@@ -15,12 +15,13 @@ import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, lte, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logSQLQuery } from "@/lib/logSQLQuery";
 import {  logger } from "../utils/logger";
+import { gte } from "lodash";
 
 export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) => {
   const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData);
@@ -43,11 +44,18 @@ export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) 
 };
 //  get ongoing events
 export const fetchOngoingEvents = async () => {
-  const currentTime =Math.floor( Date.now() / 1000);
+  const currentTime = Math.floor(Date.now() / 1000);
+  logger.log("check for events is ongoing in currentTime", currentTime );
   return await db
     .select()
     .from(events)
-    .where(and(eq(events.hidden, false), lt(events.end_date, currentTime), gt(events.start_date, currentTime)))
+    .where(
+      and(
+        eq(events.hidden, false),
+        lt(events.start_date, currentTime),
+        gt(events.end_date, currentTime)
+      )
+    )
     .execute();
 };
 
