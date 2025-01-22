@@ -198,7 +198,7 @@ export const handleNotificationReply = async (
         // Wrong password => increment tries
         currentTries += 1;
         await setCache(redisKey, currentTries); // store the new count
-
+        logger.warn(`User ${sanitizedUsername} (ID: ${userId}) wrong password attempt ${currentTries}/${maxTry} (Notification ID: ${notificationIdNumber}).`);
         if (currentTries >= maxTry) {
           // Now we've hit the limit => Expire notification
           await notificationsDB.updateNotificationStatusAndReply(notificationIdNumber, "EXPIRED", {
@@ -223,11 +223,12 @@ export const handleNotificationReply = async (
 
       // If correct password => clear tries from Redis, proceed
       await deleteCache(redisKey);
-
+      try{
       // Hash & store the entered password as userEventField
       const hashedPassword = await bcryptLib.hashPassword(enteredPassword);
-      await userEventFieldsDB.upsertUserEventFields(userId, relatedPOATrigger.eventId, inputField.id, hashedPassword);
-      try{
+      logger.log(`SBT::UserEventFields::Upserting user event field for user ${userId} and event ${relatedPOATrigger.eventId}`);
+      const userEventField =await userEventFieldsDB.upsertUserEventFields(userId, relatedPOATrigger.eventId, inputField.id, hashedPassword);
+      logger.log(`SBT::UserEventFields::Upserted user event field for user ${userId} and event ${relatedPOATrigger.eventId}` ,userEventField);
         logger.log(`SBT::Reward::Creating user reward for user ${userId} and event ${relatedPOATrigger.eventId}`);
         const SBTResult = await createUserReward( { event_id: relatedPOATrigger.eventId,  user_id: userId } , true);
         logger.log(`SBT::Reward::Created user reward for user ${userId} and event ${relatedPOATrigger.eventId} with result:`, SBTResult?.reward_link);
