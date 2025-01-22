@@ -5,8 +5,8 @@ import { CreateUserRewardLinkReturnType, type CreateUserRewardLinkInputType } fr
 import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import axios, { AxiosError } from "axios";
-import { HubsResponse } from "@/types";
-import { redisTools ,cacheKeys } from "@/lib/redisTools";
+import { HubsResponse, SocietyHub } from "@/types";
+import { redisTools  } from "@/lib/redisTools";
 
 // ton society client to send http requests to https://ton-society.github.io/sbt-platform
 export const tonSocietyClient = axios.create({
@@ -104,18 +104,15 @@ export async function getSBTClaimedStaus(activity_id: number, user_id: number | 
   }
 }
 
-export async function getHubs() {
+export async function getHubs():Promise<SocietyHub[]> {
   // Define a cache key – you can parameterize if needed.
   const cacheKey = redisTools.cacheKeys.hubs;
 
   // 1. Try to read from the cache
-  const cachedResult = await redisTools.getCache(cacheKey);
+  const cachedResult: SocietyHub[] = await redisTools.getCache(cacheKey);
   if (cachedResult) {
     // If we have a cached copy, return it
-    return {
-      status: "success",
-      hubs: cachedResult,
-    };
+    return  cachedResult
   }
 
   try {
@@ -141,10 +138,7 @@ export async function getHubs() {
       await redisTools.setCache(cacheKey, transformedHubs, redisTools.cacheLvl.medium);
 
       // 4. Return the data
-      return {
-        status: "success",
-        hubs: transformedHubs,
-      };
+      return transformedHubs
     }
 
     // If response is invalid:

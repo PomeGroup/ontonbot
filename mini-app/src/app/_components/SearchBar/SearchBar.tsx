@@ -28,13 +28,8 @@ type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
 type FilterType = NonNullable<SearchEventsInput["filter"]>;
 type SortBy = SearchEventsInput["sortBy"];
 type ParticipationType = FilterType["participationType"];
-type SocietyHubId = FilterType["society_hub_id"];
 
-/** For the hubs API response */
-interface Hub {
-  id: string;
-  name: string;
-}
+
 
 const buildQueryParams = (newVals: ReturnType<typeof parseSearchParams>) => {
   const pType = (
@@ -61,7 +56,6 @@ function SearchBar() {
   const router = useRouter();
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
-  const userId = webApp?.initDataUnsafe?.user?.id || 0;
   const searchParams = useSearchParams();
 
   /** ---------------
@@ -240,6 +234,6 @@ function SearchBar() {
       />
     </div>
   );
-};
+}
 
 export default SearchBar;
