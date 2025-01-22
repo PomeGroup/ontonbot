@@ -14,7 +14,7 @@ const mainFont = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Onton",
+  title: "ONTON",
   description: "Events on TON",
 };
 
