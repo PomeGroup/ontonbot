@@ -22,7 +22,7 @@ const handler = async (req: Request) => {
         {
           code: error.code,
           user: ctx?.user?.user_id,
-          user_name: ctx?.user?.first_name,
+          user_name: ctx?.user?.username,
           user_role: ctx?.user?.role,
           cause: error.cause, // if present
           input, // might contain request data
