@@ -20,6 +20,7 @@ export const allowedOrigins = [
 // rateLimit:  requests per second
 export const RATE_LIMIT_WINDOW_MS = 1000;
 export const RATE_LIMIT_MAX = 10;
+export const MAIN_NOTIFICATION_TTL = 60 * 2 * 1000 ; // 2 minutes
 export const SocketEvents = {
   receive: {
     test: "test",
@@ -45,6 +46,7 @@ export const dlxName = `${QueueNames.NOTIFICATIONS}-dlx`;
 export const notificationQueueOptions = {
   durable: true,
   arguments: {
+    "x-message-ttl": MAIN_NOTIFICATION_TTL,
     "x-dead-letter-exchange": dlxName,
     "x-dead-letter-routing-key": `${QueueNames.NOTIFICATIONS}-retry`,
   },
