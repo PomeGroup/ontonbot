@@ -3,7 +3,6 @@ import React from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
-import useAuth from "@/hooks/useAuth";
 import { Pagination } from 'swiper/modules';
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useConfig } from "@/context/ConfigContext";

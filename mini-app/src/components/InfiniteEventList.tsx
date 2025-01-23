@@ -4,7 +4,6 @@ import { Fragment, useCallback, useRef } from "react";
 import Typography from "./Typography";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import { noop } from "lodash";
-import useAuth from "@/hooks/useAuth";
 import { TRPCClientErrorBase } from "@trpc/react-query";
 import { DefaultErrorShape } from "@trpc/server";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -23,7 +22,7 @@ interface Props {
 
 export default function InfiniteEventList({ title, infiniteApi }: Props) {
   const webApp = useWebApp()
-    const userId = webApp?.initDataUnsafe?.user?.id;
+  const userId = webApp?.initDataUnsafe?.user?.id;
   const { data, isFetchingNextPage, hasNextPage, fetchNextPage, status } = infiniteApi;
 
   const observer = useRef<IntersectionObserver>();
