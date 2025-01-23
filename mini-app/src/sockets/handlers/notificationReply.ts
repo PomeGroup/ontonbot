@@ -224,10 +224,12 @@ export const handleNotificationReply = async (
       // If correct password => clear tries from Redis, proceed
       await deleteCache(redisKey);
 
-      // Hash & store the entered password as userEventField
-      const hashedPassword = await bcryptLib.hashPassword(enteredPassword);
-      await userEventFieldsDB.upsertUserEventFields(userId, relatedPOATrigger.eventId, inputField.id, hashedPassword);
       try{
+        // Hash & store the entered password as userEventField
+        const hashedPassword = await bcryptLib.hashPassword(enteredPassword);
+        logger.log(`SBT::UserEventFields::Upserting user event field for user ${userId} and event ${relatedPOATrigger.eventId}`);
+        const userEventField =await userEventFieldsDB.upsertUserEventFields(userId, relatedPOATrigger.eventId, inputField.id, hashedPassword);
+        logger.log(`SBT::UserEventFields::Upserted user event field for user ${userId} and event ${relatedPOATrigger.eventId}` ,userEventField);
         logger.log(`SBT::Reward::Creating user reward for user ${userId} and event ${relatedPOATrigger.eventId}`);
         const SBTResult = await createUserReward( { event_id: relatedPOATrigger.eventId,  user_id: userId } , true);
         logger.log(`SBT::Reward::Created user reward for user ${userId} and event ${relatedPOATrigger.eventId} with result:`, SBTResult?.reward_link);
@@ -264,8 +266,8 @@ export const handleNotificationReply = async (
 
         // Also notify the organizer that the user answered
         const eventId = eventPoaTrigger.eventId;
-        const eventDetails = await getEventById(eventId);
-        const organizerId = eventDetails?.owner;
+        //const eventDetails = await getEventById(eventId);
+        const organizerId = eventPoaTrigger.creator_user_id;
         if (!organizerId) {
           logger.warn(`Organizer ID not found for Event POA Trigger ID ${eventPoaTrigger.id}`);
         } else {

@@ -43,7 +43,7 @@ export const emitNotification = async (
       logger.warn("x-death header not found. Assuming first attempt.");
     }
 
-    if (retryCount >= retryLimit) {
+    if (retryCount >= retryLimit && !message.notificationId.includes("-") && notificationIdNum > 0) {
       logger.error(
         `Message dropped for User ${userId} after ${retryCount} retries:`,
       );
@@ -67,6 +67,11 @@ export const emitNotification = async (
         } else {
           logger.warn(`Event POA Trigger not found for ID ${message.itemId}`);
         }
+      }
+      if(message.notificationId.includes("-") || notificationIdNum <= 0) {
+        logger.warn(`Notification ID ${notificationIdNum} is non-persist for User ${userId}`);
+        channel.ack(msg); // Acknowledge the message, no further retries
+        return;
       }
       channel.ack(msg); // Acknowledge the message, no further retries
       return;
@@ -110,13 +115,13 @@ export const emitNotification = async (
     if (( message.type === "POA_SIMPLE" || message.type === "POA_PASSWORD") && message.additionalData && message.additionalData.eventId) {
       const eventId = message.additionalData.eventId;
       const eventDetails = await getEventById(eventId);
-
+      const eventPoaData = await eventPoaTriggersDB.getEventPoaTriggerById(message.itemId);
       if (!eventDetails || !eventDetails.owner) {
         logger.warn(`Event details or owner not found for Event ID ${eventId}`);
       } else {
         const ownerId = eventDetails.owner;
         const organizerNotification = {
-          userId: ownerId,
+          userId: eventPoaData?.creator_user_id ,
           type: "USER_RECEIVED_POA" as NotificationType,
           title: `User ${userId} has received a POA for Event ID ${eventId}`,
           desc: `User with ID ${userId} has successfully received a POA.`,

@@ -13,7 +13,7 @@ export const POARouter = router({
       }),
     )
     .mutation(async (opts) => {
-
+      //opts.ctx.user.user_id
       const eventUuid = opts.ctx.event.event_uuid;
       const currentTimestamp = Math.floor(Date.now() / 1000);
 
@@ -74,6 +74,7 @@ export const POARouter = router({
           countOfSuccess: 0,
           poaType: poaType,
           status: "active" as EventTriggerStatus,
+          creator_user_id: opts.ctx.user.user_id,
         };
 
         const POAResult = await addEventPoaTrigger(poaData);
