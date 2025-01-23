@@ -1,8 +1,9 @@
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { EventTriggerStatus, NotificationItemType, NotificationStatus, NotificationType } from "@/db/schema";
-import { getEventsWithFilters, getEventById } from "@/server/db/events";
+
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import { getEventById ,fetchOngoingEvents } from "@/server/db/events";
 import { z } from "zod";
 import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
 import { ACTION_TIMEOUTS, PASSWORD_RETRY_LIMIT, WORKER_INTERVAL, PAGE_SIZE } from "@/sockets/constants";
@@ -21,29 +22,30 @@ process.on("SIGTERM", () => {
   isShuttingDown = true;
 });
 
+
 // Function to fetch ongoing events with online participation
-const fetchOngoingEvents = async () => {
-  const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-
-  // Ensure the params conform to the Zod schema
-  const params: z.infer<typeof searchEventsInputZod> = {
-    search: "",
-    filter: {
-      participationType: ["online"],
-      startDate: currentTime,
-      startDateOperator: "<=",
-      endDate: currentTime,
-      endDateOperator: ">=",
-    },
-    sortBy: "start_date_asc",
-    limit: 100,
-    offset: 0,
-    useCache: false,
-  };
-
-  // Call the function with type-safe arguments
-  return getEventsWithFilters(params);
-};
+// const fetchOngoingEvents = async () => {
+//   const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+//
+//   // Ensure the params conform to the Zod schema
+//   const params: z.infer<typeof searchEventsInputZod> = {
+//     search: "",
+//     filter: {
+//       participationType: ["online"],
+//       startDate: currentTime,
+//       startDateOperator: "<=",
+//       endDate: currentTime,
+//       endDateOperator: ">=",
+//     },
+//     sortBy: "start_date_asc",
+//     limit: 100,
+//     offset: 0,
+//     useCache: false,
+//   };
+//
+//   // Call the function with type-safe arguments
+//   return getEventsWithFilters(params);
+// };
 
 // Function to create a notification for the event owner
 const notifyEventOwner = async (eventId: number, ownerId: number, notificationCount: number, triggerId: number) => {
@@ -80,18 +82,21 @@ const processOngoingEvents = async () => {
   try {
     await notificationsDB.expireReadNotifications(); // Expire read notifications
     logger.log("Expired read notifications.");
+
+
     const ongoingEvents = await fetchOngoingEvents();
     logger.log(`Fetched ${ongoingEvents.length} ongoing events.`);
+    for (let i = 0; i < ongoingEvents.length; i++){
 
-    for (const event of ongoingEvents) {
-      if (!event?.eventId || !event?.eventUuid) {
+      const event = ongoingEvents[i];
+      if (!event?.event_id || !event?.event_uuid) {
         logger.warn("Invalid event data:", event);
         continue;
       }
-      const eventId = event.eventId;
-      const eventUuid = event.eventUuid;
+      const eventId = event.event_id;
+      const eventUuid = event.event_uuid;
       const eventTitle = event.title;
-      const eventHasPayment = event.hasPayment || false;
+      const eventHasPayment = event.has_payment || false;
       let totalNotificationsCreated = 0; // Initialize counter for the event
 
       try {
@@ -162,7 +167,7 @@ const processOngoingEvents = async () => {
                 trigger.poaType === "simple"
                   ? ACTION_TIMEOUTS.POA_SIMPLE
                   : ACTION_TIMEOUTS.POA_PASSWORD,
-              additionalData: { eventId, eventUuid: event.eventUuid , has_payment : eventHasPayment , poaId: trigger.id, maxTry: PASSWORD_RETRY_LIMIT },
+              additionalData: { eventId, eventUuid: event.event_uuid , has_payment : eventHasPayment , poaId: trigger.id, maxTry: PASSWORD_RETRY_LIMIT },
               priority: 1,
               itemId: trigger.id,
               item_type: "POA_TRIGGER" as NotificationItemType,

@@ -401,7 +401,7 @@ export const expireReadNotifications = async () => {
       .set({ status: "EXPIRED" })
       .where(
         and(
-          or(  eq(notifications.status, "WAITING_TO_SEND")),
+          or( eq(notifications.status, "WAITING_TO_SEND")),
           sql`${notifications.readAt} IS NOT NULL`,
           sql`${notifications.actionTimeout} IS NOT NULL`,
           sql`${notifications.createdAt} + ${60 * 2}) * INTERVAL '1 second')  < NOW()`
