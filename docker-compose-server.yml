@@ -1,6 +1,6 @@
 x-common-extra-hosts: &default-extra-hosts
   extra_hosts:
-    - "${MINI_APP_DOMAIN}:host.docker.internal"
+    - host.docker.internal:host-gateway
 
 x-common-env: &common-env
   ACME_AGREE: ${ACME_AGREE}
@@ -279,6 +279,7 @@ services:
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
     ports:
       - "${MINI_APP_PORT}:${MINI_APP_PORT}"
+    <<: *default-extra-hosts
     deploy:
       resources:
         limits:
@@ -325,6 +326,7 @@ services:
   mini-app-sbt-worker:
     hostname: mini-app-sbt-worker
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    <<: *default-extra-hosts
     deploy:
       resources:
         limits:
@@ -366,6 +368,7 @@ services:
   mini-app-poa-worker:
     hostname: mini-app-poa-worker
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    <<: *default-extra-hosts
     deploy:
       resources:
         limits:
@@ -410,6 +413,7 @@ services:
   mini-app-notification-socket:
     hostname: mini-app-notification-socket
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    <<: *default-extra-hosts
     ports:
       - "${SOCKET_PORT}:${SOCKET_PORT}"
     deploy:
