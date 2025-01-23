@@ -386,31 +386,31 @@ export const expireReadNotifications = async () => {
       .set({ status: "EXPIRED" })
       .where(
         and(
-          or( eq(notifications.status, "READ")),
+          or(eq(notifications.status, "READ")),
           sql`${notifications.readAt} IS NOT NULL`,
           sql`${notifications.actionTimeout} IS NOT NULL`,
-          sql`${notifications.readAt} + ((${
-                  notifications.actionTimeout
-          } + ${NOTIFICATION_TIMEOUT_MARGIN}) * INTERVAL '1 second') < NOW()`
-        )
-      )
-      .returning({ id: notifications.id })
-      .execute();
-    const expiredNotificationsWaiting =  await db
-      .update(notifications)
-      .set({ status: "EXPIRED" })
-      .where(
-        and(
-          or( eq(notifications.status, "WAITING_TO_SEND")),
-          sql`${notifications.readAt} IS NOT NULL`,
-          sql`${notifications.actionTimeout} IS NOT NULL`,
-          sql`${notifications.createdAt} + ${60 * 2}) * INTERVAL '1 second')  < NOW()`
+          sql`(${notifications.readAt} + INTERVAL '1 second' * (${notifications.actionTimeout} + ${NOTIFICATION_TIMEOUT_MARGIN})) < NOW()`
         )
       )
       .returning({ id: notifications.id })
       .execute();
     logger.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
-    logger.log(`Expired ${expiredNotificationsWaiting.length} notifications that exceeded their action timeout.`);
+    logger.log("Expiring waiting notifications that exceeded their action timeout...");
+    const expiredNotificationsWaiting =  await db
+      .update(notifications)
+      .set({ status: "EXPIRED" })
+      .where(
+        and(
+          eq(notifications.status, "WAITING_TO_SEND"),
+          sql`${notifications.readAt} IS NOT NULL`,
+          sql`${notifications.actionTimeout} IS NOT NULL`,
+          sql`${notifications.createdAt}::timestamptz + (${60 * 2}) * INTERVAL '1 second' < NOW()`
+        )
+      )
+      .returning({ id: notifications.id })
+      .execute();
+    // logger.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
+    // logger.log(`Expired ${expiredNotificationsWaiting.length} notifications that exceeded their action timeout.`);
     return { success: true, count: expiredNotifications.length };
   } catch (error) {
     logger.error("Error expiring read notifications:", error);
