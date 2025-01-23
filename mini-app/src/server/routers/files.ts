@@ -153,10 +153,12 @@ export const fieldsRouter = router({
             const buffer = Buffer.from(base64Data, "base64");
 
             // Scan the file for malware
-            const isClean = await scanFileWithClamAV(buffer);
-            if (!isClean) {
-              throw new Error("Malicious file detected");
-            }
+            // const isClean = await scanFileWithClamAV(buffer);
+            // if (!isClean) {
+            //   throw new Error("Malicious file detected");
+            // }
+
+            logger.log('uploadVideo_transorm_done' , mimeType , buffer.length )
 
             return { buffer, mimeType };
           }),
@@ -179,14 +181,16 @@ export const fieldsRouter = router({
 
         formData.append("bucketName", bucketName);
         const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-video`;
-        logger.log("URL: ", url);
-        logger.log("Form Data: ", formData.getHeaders());
+
+        logger.log("uploadVideo_formData.getHeaders", formData.getHeaders());
         const res = await axios.post(url, formData, {
           headers: formData.getHeaders(),
         });
+        logger.log("uploadVideo_upload_done", res.status);
+        
 
         if (!res.data || !res.data.videoUrl) {
-          logger.error("File upload failed");
+          logger.error("File upload failed" , res.status);
           throw new Error("File upload failed");
         }
 
