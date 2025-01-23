@@ -79,7 +79,7 @@ export const usersRouter = router({
     .mutation(async (opts) => {
       return await rewardService.createUserReward({
         user_id: opts.ctx.user?.user_id as number,
-        event_uuid: opts.input.event_uuid
+        event_uuid: opts.input.event_uuid,
       });
     }),
 
@@ -111,7 +111,9 @@ export const usersRouter = router({
             event_uuid: opts.input.event_uuid,
           });
         } catch (error) {
+          
           if (error instanceof TRPCError) {
+            logger.log("reward_error_createUserReward_TRPC", error);
             if (error.code === "CONFLICT") {
               await rewardDB.insertReward(
                 visitor.id,
@@ -126,8 +128,15 @@ export const usersRouter = router({
               } as const;
             }
           } else {
-            // logger.log(error);
+            logger.log(
+              "reward_error_createUserReward_notTRPC_CONFLICT",
+              opts.ctx.user?.user_id,
+              opts.input.event_uuid,
+              error
+            );
           }
+          logger.log('reward_error_createUserReward_erro' , error)
+          throw error;
         }
 
         // Fetch the reward from the database
@@ -152,6 +161,7 @@ export const usersRouter = router({
         // validate reward data
         const dataValidation = rewardLinkZod.safeParse(reward.data);
         if (!dataValidation.success) {
+          logger.log("reward_error_dataValidation", reward.status, reward.data, reward);
           throw new TRPCError({
             code: "CONFLICT",
             message: "Reward data is invalid: " + JSON.stringify(reward.data),
@@ -164,7 +174,7 @@ export const usersRouter = router({
           type: "reward_link_generated",
         } as const;
       } catch (error) {
-        logger.error("Error in getVisitorReward query:", error);
+        logger.error("getVisitorReward_error", error);
         if (error instanceof TRPCError) {
           throw error;
         } else {
