@@ -105,42 +105,44 @@ export const usersRouter = router({
           });
         }
 
-        try {
-          await rewardService.createUserReward({
-            user_id: opts.ctx.user?.user_id as number,
-            event_uuid: opts.input.event_uuid,
-          });
-        } catch (error) {
-          
-          if (error instanceof TRPCError) {
-            logger.log("reward_error_createUserReward_TRPC", error);
-            if (error.code === "CONFLICT") {
-              await rewardDB.insertReward(
-                visitor.id,
-                opts.ctx.user.user_id.toString(),
-                "pending_creation",
-                "ton_society_sbt"
+        let reward = await rewardDB.findRewardByVisitorId(visitor.id);
+        //Try to create the reward
+        if (!reward) {
+          try {
+            await rewardService.createUserReward({
+              user_id: opts.ctx.user?.user_id as number,
+              event_uuid: opts.input.event_uuid,
+            });
+          } catch (error) {
+            if (error instanceof TRPCError) {
+              logger.log("reward_error_createUserReward_TRPC", error);
+              if (error.code === "CONFLICT") {
+                await rewardDB.insertReward(
+                  visitor.id,
+                  opts.ctx.user.user_id.toString(),
+                  "pending_creation",
+                  "ton_society_sbt"
+                );
+                return {
+                  type: "wait_for_reward",
+                  message: "We successfully collected your data, you'll receive your reward link through a bot message.",
+                  data: null,
+                } as const;
+              }
+            } else {
+              logger.log(
+                "reward_error_createUserReward_notTRPC_CONFLICT",
+                opts.ctx.user?.user_id,
+                opts.input.event_uuid,
+                error
               );
-              return {
-                type: "wait_for_reward",
-                message: "We successfully collected your data, you'll receive your reward link through a bot message.",
-                data: null,
-              } as const;
             }
-          } else {
-            logger.log(
-              "reward_error_createUserReward_notTRPC_CONFLICT",
-              opts.ctx.user?.user_id,
-              opts.input.event_uuid,
-              error
-            );
+            logger.log("reward_error_createUserReward_erro", error);
+            throw error;
           }
-          logger.log('reward_error_createUserReward_erro' , error)
-          throw error;
         }
-
         // Fetch the reward from the database
-        const reward = await rewardDB.findRewardByVisitorId(visitor.id);
+        reward = await rewardDB.findRewardByVisitorId(visitor.id);
 
         // Check if reward exists
         if (!reward) {
