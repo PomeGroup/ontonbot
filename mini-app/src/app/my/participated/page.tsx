@@ -2,12 +2,11 @@
 
 import { trpc } from "@/app/_trpc/client";
 import InfiniteEventList from "@/components/InfiniteEventList";
-import useAuth from "@/hooks/useAuth";
 import useWebApp from "@/hooks/useWebApp";
 
 export default function MyParticipatedEventsPage() {
-	const webApp = useWebApp()
-        const userId = webApp?.initDataUnsafe?.user?.id;
+  const webApp = useWebApp()
+  const userId = webApp?.initDataUnsafe?.user?.id;
 
   const infiniteApi = trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
     { filter: { user_id: userId } },
