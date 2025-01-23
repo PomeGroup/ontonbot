@@ -386,7 +386,7 @@ export const expireReadNotifications = async () => {
       .set({ status: "EXPIRED" })
       .where(
         and(
-          eq(notifications.status, "READ"),
+        //  eq(notifications.status, "READ"),
           sql`${notifications.readAt} IS NOT NULL`,
           sql`${notifications.actionTimeout} IS NOT NULL`,
           sql`${notifications.readAt} + ((${
