@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import { Channel, Message } from "amqplib";
-import { retryLimit, SocketEvents, UserId, userSockets } from "@/sockets/constants";
+import { retryLimit, SocketEvents, UserId } from "@/sockets/constants";
 import { sanitizeInput } from "@/lib/sanitizer";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
