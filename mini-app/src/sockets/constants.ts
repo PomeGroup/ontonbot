@@ -1,13 +1,13 @@
 // Description: Constants for the socket server.
 export const userSockets: Map<number, Set<string>> = new Map();
 export type UserId = number;
-export const prefetchCount = Number(process.env.PREFETCH_COUNT) || 10;
+export const prefetchCount = Number(process.env.PREFETCH_COUNT) || 70;
 export const rabbitMQUser = process.env.RABBITMQ_DEFAULT_USER || "";
 export const rabbitMQPass = process.env.RABBITMQ_DEFAULT_PASS || "";
 export const rabbitMQUrl = process.env.IP_RABBITMQ || "";
 export const rabbitMQPort = Number(process.env.RABBITMQ_NODE_PORT) || 0;
 // Notification constants
-export const retryLimit = 10;
+export const retryLimit = 20;
 // Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 after changing Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 you need to delete all queues and exchanges in RabbitMQ !!!!!!!!
@@ -61,12 +61,12 @@ export const retryQueueOptions = {
 };
 
 //  Define Notification Related Constants
-export const NOTIFICATION_TIMEOUT_MARGIN = 10; // 10 seconds
+export const NOTIFICATION_TIMEOUT_MARGIN = 15; // 10 seconds
 
 // action timeout in seconds
 export const ACTION_TIMEOUTS = {
   POA_SIMPLE: 30,
-  POA_PASSWORD: 60,
+  POA_PASSWORD: 75,
 }
 
 // Define the maximum number of retries for a password notification

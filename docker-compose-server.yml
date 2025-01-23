@@ -439,9 +439,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 3000M
+          memory: 5000M
           cpus: "2.0"
-      replicas: 3
+      replicas: 5
       update_config:
         failure_action: rollback
         order: start-first
@@ -641,18 +641,18 @@ services:
       RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
       RABBITMQ_NODE_PORT: "${RABBITMQ_NODE_PORT}"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+#    volumes:
+#      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
     depends_on:
       - fluentd
     deploy:
       mode: global
       resources:
         limits:
-          memory: 4096M
+          memory: 8096M
           cpus: "3.0"
         reservations:
-          memory: 2048M
+          memory: 4048M
           cpus: "1.0"
       restart_policy:
         condition: on-failure
@@ -736,9 +736,9 @@ volumes:
     name: "${STAGE_NAME}_drizzle_data"
   drizzle_data_cron:
     name: "${STAGE_NAME}_drizzle_data_cron"
-  rabbitmq_data:
-    driver: local
-    name: "${STAGE_NAME}_rabbitmq_data"
+#  rabbitmq_data:
+#    driver: local
+#    name: "${STAGE_NAME}_rabbitmq_data"
 secrets:
   registry-onton-config:
     external: true
