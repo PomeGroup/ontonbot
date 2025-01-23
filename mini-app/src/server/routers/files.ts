@@ -125,6 +125,7 @@ export const fieldsRouter = router({
             (file) => {
               // Remove base64 header and get the video data
               const base64Data = file.replace(/^data:video\/\w+;base64,/, "");
+              logger.log("uploadVideo_refine_length" , base64Data?.length );
 
               // Limit the size of the file
               const MAX_BASE64_SIZE = Math.floor(5 * 1024 * 1024 * (4 / 3)) ; // 5 MB
