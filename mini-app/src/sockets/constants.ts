@@ -20,7 +20,7 @@ export const allowedOrigins = [
 // rateLimit:  requests per second
 export const RATE_LIMIT_WINDOW_MS = 1000;
 export const RATE_LIMIT_MAX = 10;
-export const MAIN_NOTIFICATION_TTL = 60 * 2 * 1000 ; // 2 minutes
+export const MAIN_NOTIFICATION_TTL = 60 * 4 * 1000 ; // 2 minutes
 export const SocketEvents = {
   receive: {
     test: "test",

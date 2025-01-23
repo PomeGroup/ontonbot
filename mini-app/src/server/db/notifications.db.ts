@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { NotificationItemType, notifications, NotificationStatus, NotificationType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { and, eq, inArray, lt, or, sql } from "drizzle-orm";
-import { QueueNames, NOTIFICATION_TIMEOUT_MARGIN } from "@/sockets/constants";
+import { QueueNames, NOTIFICATION_TIMEOUT_MARGIN, MAIN_NOTIFICATION_TTL } from "@/sockets/constants";
 import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from "@/server/utils/logger";
@@ -403,7 +403,7 @@ export const expireReadNotifications = async () => {
         and(
           eq(notifications.status, "WAITING_TO_SEND"),
           sql`${notifications.actionTimeout} IS NOT NULL`,
-          sql`${notifications.createdAt}::timestamptz + (${60 * 2}) * INTERVAL '1 second' < NOW()`
+          sql`${notifications.createdAt}::timestamptz + (${MAIN_NOTIFICATION_TTL}) * INTERVAL '1 second' < NOW()`
         )
       )
       .returning({ id: notifications.id })
