@@ -219,31 +219,7 @@ services:
         tag: "docker.${BRANCH_NAME}-redis"
         fluentd-async-connect: "true"
 
-  clamav:
-    image: mkodockx/docker-clamav
-    hostname: clamav
-    environment:
-      - CLAMD_SETTINGS_MAXQUEUE=200
-      - CLAMD_SETTINGS_LOGTIME=1
-      - CLAMD_SETTINGS_TCPSOCKET=${CLAMAV_PORT}
-    deploy:
-      resources:
-        limits:
-          memory: 1000M
-          cpus: "5.0"
-      replicas: 1
-      update_config:
-        failure_action: rollback
-        order: start-first
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 20
-        window: 300s
-    volumes:
-      - clamav_data:/var/lib/clamav # Persist virus definition database
-    networks:
-      - onton-network
+
 
   pgadmin:
     image: dpage/pgadmin4
@@ -721,8 +697,6 @@ networks:
 volumes:
   pgadmin:
     name: "${STAGE_NAME}_pgadmin"
-  clamav_data:
-    name: "${STAGE_NAME}_clamav_data"
   minio_data:
     driver: local
     name: "${STAGE_NAME}_minio_data"
