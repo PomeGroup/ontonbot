@@ -178,11 +178,14 @@ export const fieldsRouter = router({
 
         formData.append("bucketName", bucketName);
         const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-video`;
+        logger.log("URL: ", url);
+        logger.log("Form Data: ", formData.getHeaders());
         const res = await axios.post(url, formData, {
           headers: formData.getHeaders(),
         });
 
         if (!res.data || !res.data.videoUrl) {
+          logger.error("File upload failed");
           throw new Error("File upload failed");
         }
 
