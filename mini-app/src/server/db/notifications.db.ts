@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { NotificationItemType, notifications, NotificationStatus, NotificationType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { and, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, eq, inArray, lt, or, sql } from "drizzle-orm";
 import { QueueNames, NOTIFICATION_TIMEOUT_MARGIN } from "@/sockets/constants";
 import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
 import { v4 as uuidv4 } from 'uuid';
