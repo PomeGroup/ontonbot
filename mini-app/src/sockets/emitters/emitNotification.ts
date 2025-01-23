@@ -42,7 +42,7 @@ export const emitNotification = async (
     } else {
       logger.warn("x-death header not found. Assuming first attempt.");
     }
-
+    logger.warn(`Message retry count: ${retryCount}/${retryLimit} for User ${userId} and Notification ID ${notificationIdNum}`,msg.properties.headers);
     if (retryCount >= retryLimit && !message.notificationId.includes("-") && notificationIdNum > 0) {
       logger.error(
         `Message dropped for User ${userId} after ${retryCount} retries:`,
@@ -112,35 +112,35 @@ export const emitNotification = async (
   try {
     // After successfully sending the notification to the user,
     // create a USER_RECEIVED_POA notification for the organizer
-    if (( message.type === "POA_SIMPLE" || message.type === "POA_PASSWORD") && message.additionalData && message.additionalData.eventId) {
-      const eventId = message.additionalData.eventId;
-      const eventDetails = await getEventById(eventId);
-      const eventPoaData = await eventPoaTriggersDB.getEventPoaTriggerById(message.itemId);
-      if (!eventDetails || !eventDetails.owner) {
-        logger.warn(`Event details or owner not found for Event ID ${eventId}`);
-      } else {
-        const ownerId = eventDetails.owner;
-        const organizerNotification = {
-          userId: eventPoaData?.creator_user_id ,
-          type: "USER_RECEIVED_POA" as NotificationType,
-          title: `User ${userId} has received a POA for Event ID ${eventId}`,
-          desc: `User with ID ${userId} has successfully received a POA.`,
-          actionTimeout: 0, // Adjust as needed
-          additionalData: { participant_id : userId,event_id : eventId, notification_id: notificationIdNum },
-          priority: 2, // Adjust priority as needed
-          itemId: message.itemId,
-          item_type: "POA_TRIGGER" as NotificationItemType,
-          status: "WAITING_TO_SEND" as NotificationStatus,
-          createdAt: new Date(),
-          readAt: undefined,
-          expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days from now
-        };
-
-        // Add the organizer notification to the database
-        await notificationsDB.addNotifications([organizerNotification], false);
-        logger.log(`Created USER_RECEIVED_POA notification for Organizer ${ownerId} `);
-      }
-    }
+    // if (( message.type === "POA_SIMPLE" || message.type === "POA_PASSWORD") && message.additionalData && message.additionalData.eventId) {
+    //   const eventId = message.additionalData.eventId;
+    //   const eventDetails = await getEventById(eventId);
+    //   const eventPoaData = await eventPoaTriggersDB.getEventPoaTriggerById(message.itemId);
+    //   if (!eventDetails || !eventDetails.owner) {
+    //     logger.warn(`Event details or owner not found for Event ID ${eventId}`);
+    //   } else {
+    //     const ownerId = eventDetails.owner;
+    //     const organizerNotification = {
+    //       userId: eventPoaData?.creator_user_id ,
+    //       type: "USER_RECEIVED_POA" as NotificationType,
+    //       title: `User ${userId} has received a POA for Event ID ${eventId}`,
+    //       desc: `User with ID ${userId} has successfully received a POA.`,
+    //       actionTimeout: 0, // Adjust as needed
+    //       additionalData: { participant_id : userId,event_id : eventId, notification_id: notificationIdNum },
+    //       priority: 2, // Adjust priority as needed
+    //       itemId: message.itemId,
+    //       item_type: "POA_TRIGGER" as NotificationItemType,
+    //       status: "WAITING_TO_SEND" as NotificationStatus,
+    //       createdAt: new Date(),
+    //       readAt: undefined,
+    //       expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days from now
+    //     };
+    //
+    //     // Add the organizer notification to the database
+    //     await notificationsDB.addNotifications([organizerNotification], false);
+    //     logger.log(`Created USER_RECEIVED_POA notification for Organizer ${ownerId} `);
+    //   }
+    // }
   } catch (organizerNotificationError) {
     logger.error(`Failed to create USER_RECEIVED_POA notification for Organizer:`, organizerNotificationError);
   }

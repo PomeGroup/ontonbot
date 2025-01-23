@@ -265,34 +265,34 @@ export const handleNotificationReply = async (
         });
 
         // Also notify the organizer that the user answered
-        const eventId = eventPoaTrigger.eventId;
-        //const eventDetails = await getEventById(eventId);
-        const organizerId = eventPoaTrigger.creator_user_id;
-        if (!organizerId) {
-          logger.warn(`Organizer ID not found for Event POA Trigger ID ${eventPoaTrigger.id}`);
-        } else {
-          const userAnswerNotification = {
-            userId: organizerId,
-            type: "USER_ANSWER_POA" as NotificationType,
-            title: `User ${userId} has responded to your POA`,
-            desc: `User ID ${userId} replied '${answer}' to your POA for Event ID ${eventPoaTrigger.eventId}.`,
-            actionTimeout: 0,
-            additionalData: {
-              participant_id: userId,
-              event_id: eventPoaTrigger.eventId,
-              poa_id: foundNotification.itemId,
-            },
-            priority: 2,
-            itemId: foundNotification.itemId,
-            item_type: "POA_TRIGGER" as NotificationItemType,
-            status: "WAITING_TO_SEND" as NotificationStatus,
-            createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
-          };
-
-          await notificationsDB.addNotifications([userAnswerNotification] , false);
-          logger.log(`USER_ANSWER_POA notification created for Organizer ID ${organizerId}`);
-        }
+        // const eventId = eventPoaTrigger.eventId;
+        // //const eventDetails = await getEventById(eventId);
+        // const organizerId = eventPoaTrigger.creator_user_id;
+        // if (!organizerId) {
+        //   logger.warn(`Organizer ID not found for Event POA Trigger ID ${eventPoaTrigger.id}`);
+        // } else {
+        //   const userAnswerNotification = {
+        //     userId: organizerId,
+        //     type: "USER_ANSWER_POA" as NotificationType,
+        //     title: `User ${userId} has responded to your POA`,
+        //     desc: `User ID ${userId} replied '${answer}' to your POA for Event ID ${eventPoaTrigger.eventId}.`,
+        //     actionTimeout: 0,
+        //     additionalData: {
+        //       participant_id: userId,
+        //       event_id: eventPoaTrigger.eventId,
+        //       poa_id: foundNotification.itemId,
+        //     },
+        //     priority: 2,
+        //     itemId: foundNotification.itemId,
+        //     item_type: "POA_TRIGGER" as NotificationItemType,
+        //     status: "WAITING_TO_SEND" as NotificationStatus,
+        //     createdAt: new Date(),
+        //     expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000), // 30 days
+        //   };
+        //
+        //   await notificationsDB.addNotifications([userAnswerNotification] , false);
+        //   logger.log(`USER_ANSWER_POA notification created for Organizer ID ${organizerId}`);
+        // }
       }
     }
 
