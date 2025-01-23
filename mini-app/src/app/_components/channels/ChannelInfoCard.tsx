@@ -37,10 +37,11 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
   return (
     <Card className="mt-0">
       <LoadableImage
-        src={isValidImageUrl(data.org_image) ? data.org_image : channelAvatar.src}
-        size={window.innerWidth}
+        src={data.org_image || channelAvatar.src}
+        width={window.innerWidth}
+        height={window.innerHeight}
         alt={data.org_channel_name}
-        className="mb-3"
+        wrapperClassName="mb-3"
       />
 
       <div className="flex justify-between align-center mb-4">

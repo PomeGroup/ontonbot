@@ -29,7 +29,11 @@ function ChannelCard({ data }: { data: Channel }) {
       href={`/channels/${data.user_id}`}
       className="p-3 bg-white rounded-md max-w-40 min-w-[7rem]"
     >
-      <LoadableImage className='mb-3' src={isValidImageUrl(data.org_image) ? data.org_image : channelAvatar.src} size={200} />
+      <LoadableImage
+        wrapperClassName='mb-3'
+        src={data.org_image || channelAvatar.src}
+        width={200}
+        height={200} />
       <div className="text-center">
         <div
           className="font-[590] mb-2 text-[14px] leading-[19px] tracking h-9 overflow-hidden break-words line-clamp-2"

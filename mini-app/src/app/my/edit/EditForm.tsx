@@ -12,7 +12,9 @@ import { Channel } from "@/types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useFormik } from "formik";
-import placeholderImage from "@/components/icons/channel-avatar.svg";
+import LoadableImage from "@/components/LoadableImage";
+import channelAvatar from "@/components/icons/channel-avatar.svg";
+import { getErrorMessages } from "@/lib/error";
 
 const xLinkDefault = "https://x.com/";
 
@@ -20,9 +22,18 @@ export default function EditForm({ data }: { data: Channel }) {
   const editApi = trpc.organizers.updateOrganizer.useMutation();
   const router = useRouter();
 
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  // const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const { errors, touched, values, handleChange, handleSubmit, isSubmitting, setFieldValue } = useFormik<{
+  const initialImage = data.org_image || data.photo_url || ''
+  const {
+    errors,
+    touched,
+    values,
+    handleChange,
+    handleSubmit,
+    isSubmitting,
+    setFieldValue
+  } = useFormik<{
     org_channel_name: string;
     org_support_telegram_user_name: string;
     org_x_link: string;
@@ -34,7 +45,7 @@ export default function EditForm({ data }: { data: Channel }) {
       org_support_telegram_user_name: data.org_support_telegram_user_name || "",
       org_x_link: data.org_x_link || xLinkDefault,
       org_bio: data.org_bio || "",
-      org_image: data.org_image || "",
+      org_image: initialImage,
     },
     validate(values) {
       const newErrors: any = {};
@@ -67,15 +78,40 @@ export default function EditForm({ data }: { data: Channel }) {
 
   const uploadApi = trpc.files.uploadImage.useMutation();
 
+  // const [prevImg, setPrevImg] = useState(initialImage)
   const [isUploading, setUploading] = useState(false);
   const uploadImage = async (files: FileList | null) => {
-    if (!files || !files[0]) return;
+    console.log('resetting error')
+    uploadApi.reset() // reset the error
+    const file = files?.[0]
+    if (!file) return;
 
-    setUploading(true);
+    const url = URL.createObjectURL(file)
+    // setPrevImg(values.org_image)
+    setFieldValue("org_image", url);
+
+    let base64Img
     try {
-      const response = await uploadApi.mutateAsync({ image: await toBase64(files[0]), subfolder: "channels" });
+      base64Img = await toBase64(file)
+    } catch (e) {
+      toast.error('Unable to encode image. Please try another image.')
+      return
+    }
+    setUploading(true);
+
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    try {
+      const response = await uploadApi.mutateAsync({
+        image: base64Img,
+        subfolder: "channels"
+      });
+      console.log(response)
       setFieldValue("org_image", response.imageUrl);
+    } catch (e) {
+      console.log(e)
+      toast.error('Unable to upload image. Please try again.')
     } finally {
+      // setFieldValue("org_image", prevImg)
       setUploading(false);
     }
   };
@@ -90,33 +126,29 @@ export default function EditForm({ data }: { data: Channel }) {
         <div className="relative">
           <div
             className={cn(
-              "absolute z-2 inset-0 opacity-50 bg-white items-center justify-center hidden",
+              "absolute z-10 inset-0 opacity-50 bg-white items-center justify-center hidden",
               isUploading && "!flex"
             )}
           >
             <Preloader size="w-16 h-16" />
           </div>
-          {values.org_image ? (
-            <Image
-              className="mb-4 w-full h-auto !rounded-[10px] aspect-square"
-              sizes="100vw"
-              src={values.org_image}
-              width={0}
-              height={0}
-              alt="Avatar"
-            />
-          ) : (
-            <div className="mb-4 w-full h-auto aspect-square rounded-[10px]">
-              <Image
-                className="w-full h-auto aspect-square"
-                sizes="100vw"
-                src={placeholderImage}
-                width={0}
-                height={0}
-                alt="Avatar"
-              />
-            </div>
-          )}
+          <div className={cn(
+            "absolute z-10 inset-0 bg-[rgba(255,255,255,0.6)] text-red-500 w-full text-balance mt-2 hidden justify-center items-center",
+            uploadApi.error && '!flex')}>
+            {
+              getErrorMessages(uploadApi.error?.message)
+                .map((errMessage, idx: number) => (
+                  <p key={idx}>{errMessage}</p>
+                ))}
+          </div>
+          <LoadableImage
+            src={values.org_image || channelAvatar.src}
+            width={0}
+            height={0}
+            wrapperClassName="mb-4 h-auto !rounded-[10px] aspect-square"
+            className="aspect-square w-full"
+            sizes="100vw"
+            alt="Avatar" />
         </div>
         <div className="flex align-center justify-between mb-2">
           <Typography
@@ -129,11 +161,6 @@ export default function EditForm({ data }: { data: Channel }) {
             outline
             itemType="button"
             className="!w-auto py-4 px-3 rounded-[6px] relative"
-            // onClick={(e) => {
-            //   e.preventDefault();
-            //   if (isUploading) return;
-            //   imageInputRef.current?.click();
-            // }}
           >
             <Image
               src={cameraIcon}
@@ -143,14 +170,13 @@ export default function EditForm({ data }: { data: Channel }) {
             />
             Edit Image
             <input
-              ref={imageInputRef}
               type="file"
               name="image"
               accept="image/*"
               onChange={(e) => {
                 uploadImage(e.target.files);
               }}
-              className="opacity-0 absolute inset-0 z-2"
+              className="opacity-0 absolute inset-0 z-10"
             />
           </Button>
         </div>

@@ -1,33 +1,56 @@
-import { useState } from "react"
+import { DetailedHTMLProps, ImgHTMLAttributes, useState } from "react"
 import Image from "next/image";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
+import { cn } from "@/utils";
 
-interface Props {
-  src: string
-  alt?: string | null
-  width?: number
-  height?: number
-  size?: number
-  className?: string
-}
+type Props = (
+  Omit<
+    DetailedHTMLProps<
+      ImgHTMLAttributes<HTMLImageElement>,
+      HTMLImageElement
+    >,
+    "src" | "alt" | "width" | "height" | "loading" | "ref" | "srcSet"
+  >) & {
+    src: string
+    alt?: string | null
+    width?: number
+    height?: number
+    className?: string
+    wrapperClassName?: string
+  }
 
 const defaultImage = "/template-images/default.webp";
 
-export default function LoadableImage({ src, alt, width, height, size, className }: Props) {
+export default function LoadableImage({
+  src,
+  alt,
+  width,
+  height,
+  className,
+  wrapperClassName,
+  ...props
+}: Props) {
   const [loaded, setLoaded] = useState(false)
 
   return (
-    <div className={`relative rounded-lg max-w-[${width || size}px] min-w-[${width || size}px] flex-shrink-0 ${className}`}>
-      {!loaded && <div className="absolute w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg" />}
+    <div className={cn(
+      `relative rounded-lg flex-shrink-0`,
+      wrapperClassName,
+      (width) && `min-w-[${width}px])`)}>
+      {!loaded && <div className={cn(
+        "absolute w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg",
+        className
+      )} />}
       <Image
-        src={isValidImageUrl(src) ? src : defaultImage}
+        src={src || defaultImage}
         alt={alt || ''}
-        width={width || size}
-        height={height || size}
-        className={`w-[${width || size}] ${size && 'aspect-square'} rounded-[6px] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        width={width}
+        height={height}
+        className={cn(`w-[${width}] rounded-[6px] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`, className)}
         onError={(e) => (e.currentTarget.src = defaultImage)}
         onLoad={() => setLoaded(true)}
         loading="lazy"
+        {...props}
       />
     </div>
   )

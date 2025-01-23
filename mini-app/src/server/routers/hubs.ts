@@ -10,7 +10,7 @@ const getHubs = initDataProtectedProcedure.query(async () => {
       hubs: hardCodedHubs,
     };
   }
-   const result=  await getHubsApi();
+   const result =  await getHubsApi();
    return {
      success: true,
      hubs : result

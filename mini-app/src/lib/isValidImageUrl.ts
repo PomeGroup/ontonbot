@@ -1,3 +1,5 @@
+
+
 export const isValidImageUrl = (url: string | null): boolean => {
   if (!url) return false
   // Define the regex pattern for the image URL validation
