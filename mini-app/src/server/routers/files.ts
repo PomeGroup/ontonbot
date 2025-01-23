@@ -166,26 +166,32 @@ export const fieldsRouter = router({
     .mutation(async (opts) => {
       const bucketName = process.env.MINIO_VIDEO_BUCKET || "ontonvideo";
       const subfolder = opts.input.subfolder;
+      try {
+        const { buffer, mimeType } = opts.input.video;
+        const fullFilename = `${subfolder}/event_video.${mimeType.split("/")[1]}`;
 
-      const { buffer, mimeType } = opts.input.video;
-      const fullFilename = `${subfolder}/event_video.${mimeType.split("/")[1]}`;
+        const formData = new FormData();
+        formData.append("video", buffer, {
+          filename: fullFilename,
+          contentType: mimeType,
+        });
 
-      const formData = new FormData();
-      formData.append("video", buffer, {
-        filename: fullFilename,
-        contentType: mimeType,
-      });
+        formData.append("bucketName", bucketName);
+        const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-video`;
+        const res = await axios.post(url, formData, {
+          headers: formData.getHeaders(),
+        });
 
-      formData.append("bucketName", bucketName);
-      const url = `http://${process.env.IP_NFT_MANAGER!}:${process.env.NFT_MANAGER_PORT!}/files/upload-video`;
-      const res = await axios.post(url, formData, {
-        headers: formData.getHeaders(),
-      });
+        if (!res.data || !res.data.videoUrl) {
+          throw new Error("File upload failed");
+        }
 
-      if (!res.data || !res.data.videoUrl) {
-        throw new Error("File upload failed");
+        return res.data as { videoUrl: string };
+      }
+      catch (error) {
+        logger.error("Error during file upload:", error);
+        throw new Error("An error occurred during file upload");
       }
 
-      return res.data as { videoUrl: string };
     }),
 });
