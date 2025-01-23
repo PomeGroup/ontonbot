@@ -56,34 +56,6 @@ const pastEventsParams = searchEventsInputZod.parse({
 
 const tabValueForSearchBar = 'All'
 export default function Home() {
-  const { authorized, role: userRole } = useAuth();
-
-  // const { setTheme, theme } = useTheme();
-
-  // const { data: upcomingEventsData, isLoading: isLoadingUpcoming } = trpc.events.getEventsWithFilters.useQuery(
-  //   upcomingEventsParams,
-  //   {
-  //     staleTime: Infinity,
-  //     enabled: true,
-  //   }
-  // );
-  // const { data: ongoingEventsData, isLoading: isLoadingOngoing } = trpc.events.getEventsWithFilters.useQuery(
-  //   { ...ongoingEventsParams, limit: 10 },
-  //   {
-  //     staleTime: Infinity,
-  //     enabled: true,
-  //   }
-  // );
-  // const { data: pastEventsData, isLoading: isLoadingPast } = trpc.events.getEventsWithFilters.useQuery(pastEventsParams, {
-  //   staleTime: Infinity,
-  //   retryDelay: 5000,
-  //   enabled: true,
-  // });
-
-  // const seeAllUpcomingEventsLink = "/search/?tab=Upcoming";
-  // const seeAllPastEventsLink = "/search/?tab=Past";
-  const seeAllOngoingEventsLink = "/search/?tab=OnGoing";
-
   return (
     <Block margin="0" className="bg-[#EFEFF4] min-h-screen pb-9">
       <div className="flex flex-col pt-3">
@@ -96,26 +68,6 @@ export default function Home() {
             {/* Slider Event */}
             <PromotedEventsSlider />
             <PromotedEventsList />
-            {/* <HorizontalEvents
-              title="Ongoing Events"
-              link={seeAllOngoingEventsLink}
-              items={ongoingEventsData?.data || []}
-              isLoading={isLoadingOngoing}
-            /> */}
-            {/*
-            <HorizontalEvents
-              title="Upcoming Events"
-              link={seeAllUpcomingEventsLink}
-              items={upcomingEventsData?.data || []}
-              isLoading={isLoadingUpcoming}
-            />
-            <HorizontalEvents
-              title="Past Events"
-              link={seeAllPastEventsLink}
-              items={pastEventsData?.data || []}
-              isLoading={isLoadingPast}
-            />
-            */}
           </div>
         </div>
       </div>

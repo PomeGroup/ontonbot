@@ -5,23 +5,18 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import { trpc } from "@/app/_trpc/client";
-import useAuth from "@/hooks/useAuth";
-import useWebApp from "@/hooks/useWebApp";
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useSearchParams } from "next/navigation";
 import { Block } from "konsta/react";
-import "swiper/css";
 import parseSearchParams from "./parseSearchParams";
+import { useUserStore } from "@/context/store/user.store";
+import "swiper/css";
 
 /** The maximum number of items per page */
 const LIMIT = 5;
 
 export default function Search() {
   const searchParams = useSearchParams();
-
-  const webApp = useWebApp();
-  const { authorized } = useAuth();
-  const UserId = authorized ? webApp?.initDataUnsafe?.user?.id : 0;
+  const { user } = useUserStore()
 
   // For the infinite scroll observer
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -111,7 +106,7 @@ export default function Search() {
                 >
                   <EventCard
                     event={event}
-                    currentUserId={UserId}
+                    currentUserId={user?.user_id}
                   />
                 </div>
               );
