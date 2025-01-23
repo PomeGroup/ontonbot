@@ -100,7 +100,7 @@ function UnforwardedEventCard(
         onClick={handleEventClick}
       >
         {/* LEFT: Event Image */}
-        <LoadableImage src={imageUrl} alt={title} size={100} />
+        <LoadableImage src={imageUrl} alt={title} width={100} height={100} />
 
         <div className="flex flex-col grow">
           <Typography className="font-semibold mb-1 line-clamp-2 overflow-hidden" variant="body">

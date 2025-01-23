@@ -187,7 +187,7 @@ function SearchBar() {
           className={`flex-grow transition-all duration-300`}
         >
           <div className='relative mr-3 text-[#8e8e93] focus-within:text-[#007aff]'>
-            <SearchIcon className="absolute top-[6px] left-2 z-2" />
+            <SearchIcon className="absolute top-[6px] left-2 z-10" />
             <input
               className={`rounded-md bg-[#E0E0E5] w-full py-3 leading-[16px] pl-10 caret-[#007aff] text-black`}
               placeholder="Search Events"

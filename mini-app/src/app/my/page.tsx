@@ -96,7 +96,11 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
       }}
     >
       <div className="flex gap-3">
-        <LoadableImage size={80} src={isValidImageUrl(data.org_image) ? data.org_image : data.photo_url || channelAvatar.src} />
+        <LoadableImage
+          width={80}
+          height={80}
+          src={data.org_image || data.photo_url || channelAvatar.src}
+        />
         <div className="flex flex-col flex-1 gap-1 overflow-hidden">
           <Typography
             variant="title3"

@@ -243,8 +243,10 @@ export const EventSections = () => {
           <div className="w-full flex gap-3 items-stretch">
             <LoadableImage
               alt={organizer.org_channel_name}
-              src={isValidImageUrl(organizer.org_image) ? organizer.org_image : channelAvatar.src}
-              size={48} />
+              src={organizer.org_image || channelAvatar.src}
+              width={48}
+              height={48}
+            />
             <div className="flex flex-col grow justify-between">
               <Typography
                 variant="headline"
