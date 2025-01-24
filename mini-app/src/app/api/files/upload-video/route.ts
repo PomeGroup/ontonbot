@@ -16,19 +16,12 @@ import { validateTelegramInitData } from "@/lib/validateTelegramInitData";
  * - Use Node.js runtime (not edge).
  * - Force dynamic if needed.
  */
+
+// 2. If you need Node.js runtime and forced dynamic:
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 const FFPROBE_PATH = "/usr/bin/ffprobe"; // Path to your system's ffprobe (Ubuntu default).
 // Alternatively: ffmpeg.setFfprobePath(ffprobeStatic.path) if you use ffprobe-static
-
-// Next.js route config
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 /**
  * Parse multipart form data using formidable.
  */
