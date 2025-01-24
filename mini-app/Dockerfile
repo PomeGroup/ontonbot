@@ -67,11 +67,16 @@ ENV NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
 # Set the working directory
 # Base stage
 FROM minimum-image AS base
-# Install necessary packages
-RUN apk add \
+# Install any additional packages you need at runtime/build:
+# - ffmpeg for video processing
+# - freetype, ttf-dejavu, etc., if you're using drawtext
+RUN apk add --no-cache \
   bash \
   curl \
-  ca-certificates
+  ca-certificates \
+  ffmpeg \
+  freetype \
+  ttf-dejavu
 
 
 # Stage : Dependencies

@@ -1,19 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
-import formidable, { Fields, Files, File as FormidableFile } from 'formidable';
-import fs from 'fs';
-import { verify } from 'jsonwebtoken';
-import { toNodeJsRequest } from '../helpers/toNodeJsRequest';
-import { minioClient } from '@/lib/minioClient';
-import { filePrefix } from '@/lib/fileUtils';
-
-export const dynamic = 'force-dynamic'; // Ensures Next.js does not statically optimize this route
-
-// Example: Use your environment variable name, e.g. ONTON_API_SECRET
-const JWT_SECRET = process.env.ONTON_API_SECRET || 'fallback-secret';
+import { NextRequest, NextResponse } from "next/server";
+import formidable, { Fields, Files, File as FormidableFile } from "formidable";
+import fs from "fs";
+// import path from "path";
+import ffmpeg from "fluent-ffmpeg";
+// import ffprobeStatic from "ffprobe-static";
+import { toNodeJsRequest } from "../helpers/toNodeJsRequest";
+import { minioClient } from "@/lib/minioClient";
+import { filePrefix } from "@/lib/fileUtils";
+import { checkRateLimit } from "@/lib/checkRateLimit";
+import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
+import { validateTelegramInitData } from "@/lib/validateTelegramInitData";
 
 /**
- * Reads the entire NextRequest into memory, converts it to a Node.js-like
- * IncomingMessage, and parses it with formidable.
+ * Important for Next.js App Router:
+ * - Use Node.js runtime (not edge).
+ * - Force dynamic if needed.
+ */
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+const FFPROBE_PATH = "/usr/bin/ffprobe"; // Path to your system's ffprobe (Ubuntu default).
+// Alternatively: ffmpeg.setFfprobePath(ffprobeStatic.path) if you use ffprobe-static
+
+// Next.js route config
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+/**
+ * Parse multipart form data using formidable.
  */
 async function parseFormdata(req: NextRequest): Promise<{ fields: Fields; files: Files }> {
   const nodeReq = await toNodeJsRequest(req);
@@ -27,84 +44,164 @@ async function parseFormdata(req: NextRequest): Promise<{ fields: Fields; files:
 }
 
 /**
- * Mirrors the NestJS `@Post('upload-video')`
- * - Only MP4
- * - Max 5MB
- * - JWT-protected
+ * Check if the video is square using ffprobe via fluent-ffmpeg.
  */
+async function checkIfSquareVideo(filePath: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    ffmpeg.setFfprobePath(FFPROBE_PATH);
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err || !metadata) {
+        return reject(new Error("Failed to parse video metadata."));
+      }
+      const { width, height } = metadata.streams[0];
+      resolve(width === height);
+    });
+  });
+}
+
 export async function POST(req: NextRequest) {
-  // 1. Extract & verify JWT
-  const authHeader = req.headers.get('authorization') ?? '';
-  const [bearer, token] = authHeader.split(' ');
-
-  if (bearer !== 'Bearer' || !token) {
-    return NextResponse.json({ message: 'Unauthorized: missing token' }, { status: 401 });
+  if(process.env.MINIO_PUBLIC_URL === undefined) {
+    return NextResponse.json(
+      { message: "Missing MINIO URL variable." },
+      { status: 500 }
+    );
   }
-
   try {
-    verify(token, JWT_SECRET);
-    // If verify throws, we catch below. If it's successful, continue.
-  } catch (error) {
-    console.error('Invalid JWT:', error);
-    return NextResponse.json({ message: 'Unauthorized: invalid token' }, { status: 401 });
-  }
+    // 1. Rate-limit  & validate user
 
-  // 2. If token is valid, proceed with form parse & upload
-  try {
-    // Parse the form data
+    const initData = req.headers.get("x-init-data");
+    if(!initData) {
+      return NextResponse.json(
+        { message: "Unauthorized access." },
+        { status: 401 }
+      );
+    }
+    const userValidation = validateTelegramInitData(initData);
+    if(!userValidation.valid) {
+      return NextResponse.json(
+        { message: "Unauthorized access." },
+        { status: 401 }
+      );
+    }
+    const initDataJson = userValidation.initDataJson;
+
+    const { allowed } = await checkRateLimit(initDataJson.user.id, "uploadVideo", 5, 60);
+    if (!allowed) {
+      return NextResponse.json(
+        { message: "Rate limit exceeded. Please wait a minute." },
+        { status: 429 }
+      );
+    }
+
+    // 2. Parse the form data
     const { fields, files } = await parseFormdata(req);
-
-    // Extract subfolder/bucket (with defaults)
-    const rawSubfolder = fields.subfolder ?? 'event';
-    const rawBucket = fields.bucketName ?? 'ontonvideo';
+    const rawSubfolder = fields.subfolder ?? "event";
+    const rawBucket = fields.bucketName ?? "ontonvideo";
     const subfolder = Array.isArray(rawSubfolder) ? rawSubfolder[0] : rawSubfolder;
     const bucketName = Array.isArray(rawBucket) ? rawBucket[0] : rawBucket;
 
-    // Check for the 'video' field
+    // 3. Check for the 'video' field
     const rawVideo = files.video;
     if (!rawVideo) {
-      return NextResponse.json({ message: 'No video file uploaded.' }, { status: 400 });
+      return NextResponse.json({ message: "No video file uploaded." }, { status: 400 });
+    }
+    const formFile = Array.isArray(rawVideo) ? rawVideo[0] : rawVideo[0] ?? rawVideo;
+    if (!formFile) {
+      return NextResponse.json({ message: "No video file uploaded." }, { status: 400 });
     }
 
-    // If it's an array, pick the first
-    const file = Array.isArray(rawVideo) ? rawVideo[0] : rawVideo;
-    if (!file) {
-      return NextResponse.json({ message: 'No video file uploaded.' }, { status: 400 });
+    const file = formFile as FormidableFile;
+
+    // 4. Validate file type & size
+    if (file.mimetype !== "video/mp4") {
+      return NextResponse.json({ message: "Only MP4 format is allowed." }, { status: 400 });
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json(
+        { message: "Video size exceeds the 5 MB limit." },
+        { status: 400 }
+      );
     }
 
-    // Cast to FormidableFile
-    const formFile = file as FormidableFile;
-
-    // Validate the file type
-    if (formFile.mimetype !== 'video/mp4') {
-      return NextResponse.json({ message: 'Only MP4 format is allowed.' }, { status: 400 });
+    // 5. Check if square
+    const isSquare = await checkIfSquareVideo(file.filepath);
+    if (!isSquare) {
+      return NextResponse.json(
+        { message: "Only square videos are allowed." },
+        { status: 400 }
+      );
     }
 
-    // Validate file size (max 5 MB)
-    if (formFile.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ message: 'Video size exceeds the 5 MB limit.' }, { status: 400 });
+    // 6. Scan the raw file for malware
+    const originalBuffer = fs.readFileSync(file.filepath);
+    const isClean = await scanFileWithClamAV(originalBuffer);
+    if (!isClean) {
+      return NextResponse.json(
+        { message: "Malicious file detected." },
+        { status: 400 }
+      );
     }
 
-    // Read the file into a Buffer
-    const fileData = fs.readFileSync(formFile.filepath);
+    // ---------------------------------------------------------
+    // 7. Watermark logic (COMMENTED OUT):
+    //
+    //    If you want to apply a watermark, uncomment this block
+    //    and comment out the direct upload below.
+    // ---------------------------------------------------------
+    /*
+    const tmpFolder = "/tmp"; // or another temp directory
+    const watermarkedFilename = `wm-${filePrefix()}-${file.originalFilename}`;
+    const watermarkedPath = path.join(tmpFolder, watermarkedFilename);
 
-    // Build final filename
-    const finalFilename = subfolder
-      ? `${subfolder}/${filePrefix()}${formFile.originalFilename}`
-      : `${filePrefix()}${formFile.originalFilename}`;
-
-    // Upload to MinIO
-    await minioClient.putObject(bucketName, finalFilename, fileData, formFile.size, {
-      'Content-Type': 'video/mp4',
+    // Use fluent-ffmpeg to add text overlay at top-right
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(file.filepath)
+        .setFfprobePath(FFPROBE_PATH)
+        .videoCodec("libx264")
+        .outputOptions([
+          "-vf",
+          "drawtext=" +
+          "fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:" +
+          "text='published by onton':" +
+          "x=(w-text_w-20):y=20:" + // top-right
+          "fontcolor=white:fontsize=32:" +
+          "box=1:boxcolor=black@0.5:boxborderw=6",
+          "-c:a",
+          "copy",
+        ])
+        .on("start", (cmd) => console.log("FFmpeg start:", cmd))
+        // .on("stderr", (line) => console.log("FFmpeg stderr:", line))
+        .on("error", (err) => reject(err))
+        .on("end", () => resolve())
+        .save(watermarkedPath);
     });
 
-    // Return public URL
+    const watermarkedBuffer = fs.readFileSync(watermarkedPath);
+    const watermarkedSize = fs.statSync(watermarkedPath).size;
+    */
+
+    // 8. Build final filename for Minio
+    const originalName = file.originalFilename || `video-${Date.now()}.mp4`;
+    const finalFilename = subfolder
+      ? `${subfolder}/${filePrefix()}${originalName}`
+      : `${filePrefix()}${originalName}`;
+
+    // ---------------------------------------------------------
+    // 9. Direct Upload (NO WATERMARK)
+    //    If you want the watermark, upload watermarkedBuffer instead.
+    // ---------------------------------------------------------
+    await minioClient.putObject(bucketName, finalFilename, originalBuffer, file.size, {
+      "Content-Type": "video/mp4",
+    });
+
+    // 10. Return public URL
     const videoUrl = `${process.env.MINIO_PUBLIC_URL}/${bucketName}/${finalFilename}`;
     return NextResponse.json({ videoUrl }, { status: 200 });
+
   } catch (error) {
-    console.error('Error uploading video:', error);
+    console.error("Error uploading video:", error);
     return NextResponse.json(
-      { message: 'An error occurred during video upload.' },
+      { message: "An error occurred during video upload." },
       { status: 500 }
     );
   }
