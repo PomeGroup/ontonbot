@@ -6,8 +6,8 @@ import InfiniteEventList from "@/components/InfiniteEventList";
 type Props = { params: { id: string } };
 
 export default function OrganizerEventsPage({ params }: Props) {
-  const infiniteApi = trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
-    { filter: { organizer_user_id: Number(params.id) } },
+  const infiniteApi = trpc.organizers.searchOrganizerHostedEvent.useInfiniteQuery(
+    { organizerId: parseInt(params.id) },
     {
       getNextPageParam(lastPage) {
         return lastPage.nextCursor;

@@ -13,3 +13,10 @@ export const searchOrganizersInput = z.object({
   cursor: z.number().nullish(), // treat as offset
   limit: z.number().default(10),
 });
+
+
+export const organizersHostedInput = z.object({
+  organizerId: z.number().min(3) ,
+  cursor: z.number().nullish(), // treat as offset
+  limit: z.number().default(10),
+});
