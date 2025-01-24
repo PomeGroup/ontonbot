@@ -30,7 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       {process.env.NODE_ENV === "production" && <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />}
       <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
-      <body className={cn(mainFont.className, 'safe-areas')}>
+      <body className={cn(mainFont.className, 'h-screen-safe')}>
         <Providers>
           <NotificationHandler />
           {children}
