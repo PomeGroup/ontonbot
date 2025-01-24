@@ -56,7 +56,7 @@ const pastEventsParams = searchEventsInputZod.parse({
 const tabValueForSearchBar = 'All'
 export default function Home() {
   return (
-    <Block margin="0" className="bg-[#EFEFF4] min-h-screen pb-9">
+    <Block margin="0" className="bg-[#EFEFF4] mb-safe-or-12 min-h-screen pb-9">
       <div className="flex flex-col pt-3">
         <div className="w-full pb-3">
           <SearchBar />
