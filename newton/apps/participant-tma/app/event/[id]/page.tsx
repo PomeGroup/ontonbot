@@ -19,9 +19,7 @@ import { getEventDataOnly } from "~/services/event.services.ssr";
 import { getUser } from "~/services/user.services";
 import { getAuthenticatedUser } from "~/utils/getAuthenticatedUser";
 import AddToCalendar from "~/components/event/AddToCalendar";
-import channelAvatar from './channel-avatar.svg';
-import { FaArrowRight } from "react-icons/fa";
-import { EventDataOnlyType, OrganizerType } from "~/types/event.types";
+import OrganizerSection from "./OrganizerSection";
 
 type EventParams = {
   params: {
@@ -173,41 +171,3 @@ const Event = async ({ params, searchParams }: EventParams) => {
 
 export default Event;
 export const dynamic = "force-dynamic";
-
-
-interface Props {
-  data: OrganizerType
-}
-
-function OrganizerSection({ data }: Props) {
-  return (
-    <div className={"text-telegram-text-color grid gap-2"}>
-      <h2 className={"type-title-3 font-bold"}>Organizer</h2>
-      <div className="flex gap-3 items-stretch">
-        <Image
-          className="border-wallet-separator-color rounded-[10px] border-[0.33px] object-contain"
-          alt={data.org_channel_name || "Untitled organizer"}
-          src={data.org_image || channelAvatar.src}
-          width={48}
-          height={48}
-        />
-        <div className="flex flex-col grow justify-between">
-          <div
-            className="text-[18px] leading-[22px] text-[#007AFF] font-normal line-clamp-2"
-          >
-            {data.org_channel_name || "Untitled organizer"}
-          </div>
-          <div
-            className="text-[#8E8E93] text-[14px] font-extralight leading-[20px]"
-          >
-            <b>{data.hosted_event_count || "1"}</b>
-            &nbsp; events
-          </div>
-        </div>
-        <div className="self-center">
-          <FaArrowRight className="text-main-button-color" />
-        </div>
-      </div>
-    </div>
-  )
-}

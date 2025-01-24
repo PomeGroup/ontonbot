@@ -50,7 +50,7 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
           variant="title2"
           className="self-center"
         >
-          {data.org_channel_name || 'Untitled channel'}
+          {data.org_channel_name || 'Untitled Organizer'}
         </Typography>
         <div className="flex gap-3">
           {data.org_x_link && (
