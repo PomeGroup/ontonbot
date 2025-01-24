@@ -1,36 +1,5 @@
 import { PaymentType } from "./order.types";
 
-export interface EventType extends EventDataOnlyType {
-  organizer: {
-    user_id: number;
-    username: string;
-    first_name: string;
-    last_name: string;
-    wallet_address: null | string;
-    language_code: string;
-    role: "organizer" | "admin" | "user";
-    created_at: string;
-  };
-  userTicket?: {
-    status: "USED" | "UNUSED" | null;
-    user_id: number | null;
-    name: string | null;
-    created_at: Date | null;
-    event_uuid: string | null;
-    id: number;
-    telegram: string | null;
-    company: string | null;
-    position: string | null;
-    nftAddress: string | null;
-    ticket_id: number;
-  };
-  userHasTicket: boolean;
-  needToUpdateTicket: boolean;
-  chosenNFTaddress: string;
-  orderAlreadyPlace: boolean;
-  isSoldOut: boolean;
-}
-
 export interface OrganizerType {
     user_id: number;
     username: string;
@@ -85,4 +54,27 @@ export interface EventDataOnlyType {
   hidden: boolean;
   ticketToCheckIn: boolean;
   created_at: string;
+}
+
+
+export interface EventType extends EventDataOnlyType {
+  organizer: OrganizerType
+  userTicket?: {
+    status: "USED" | "UNUSED" | null;
+    user_id: number | null;
+    name: string | null;
+    created_at: Date | null;
+    event_uuid: string | null;
+    id: number;
+    telegram: string | null;
+    company: string | null;
+    position: string | null;
+    nftAddress: string | null;
+    ticket_id: number;
+  };
+  userHasTicket: boolean;
+  needToUpdateTicket: boolean;
+  chosenNFTaddress: string;
+  orderAlreadyPlace: boolean;
+  isSoldOut: boolean;
 }
