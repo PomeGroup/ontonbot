@@ -22,6 +22,7 @@ import { usersDB } from "@/server/db/users";
 import couponSchema from "@/zodSchema/couponSchema";
 import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
 import { couponItemsDB } from "@/server/db/couponItems.db";
+import { convertSvgToJpegBuffer } from "@/lib/convertSvgToJpegBuffer";
 
 const requestShareEvent = initDataProtectedProcedure
   .input(
@@ -185,7 +186,6 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
 
             const sbtClaimStatus = await getSBTClaimedStaus(eventData?.activity_id!, visitorData.user_id!);
 
-
             delete visitorData.dynamicFields;
             return {
               ...visitorData,
@@ -273,7 +273,7 @@ const requestSendQRCode = evntManagerPP
 const requestShareOrganizer = initDataProtectedProcedure
   .input(
     z.object({
-      organizerId: z.number(),    // The ID of the organizer (must be role='organizer')
+      organizerId: z.number(), // The ID of the organizer (must be role='organizer')
       platform: z.string().optional(),
     })
   )
@@ -286,6 +286,19 @@ const requestShareOrganizer = initDataProtectedProcedure
       }
       if (organizer.role !== "organizer") {
         return { status: "fail", data: "User is not an organizer" };
+      }
+      let finalImageUrl = (organizer.org_image?.trim() === "" ? organizer.photo_url : organizer.org_image) ?? "";
+
+      let jpegBuffer: Buffer | undefined;
+      // If it's an SVG, convert it to JPEG
+      if (finalImageUrl.toLowerCase().endsWith(".svg")) {
+        try {
+          jpegBuffer = await convertSvgToJpegBuffer(finalImageUrl);
+        } catch (err) {
+          logger.error("Error converting SVG to JPEG:", err);
+          // fallback to a default image or simply skip the image
+          jpegBuffer = undefined;
+        }
       }
 
       // Step 2: Call telegramService to share the organizer
@@ -300,7 +313,7 @@ const requestShareOrganizer = initDataProtectedProcedure
           org_support_telegram_user_name: organizer.org_support_telegram_user_name,
           org_x_link: organizer.org_x_link,
           org_bio: organizer.org_bio,
-          org_image: organizer.org_image,
+          org_image: jpegBuffer ?? finalImageUrl ?? "",
         }
       );
 
@@ -324,7 +337,6 @@ const requestShareOrganizer = initDataProtectedProcedure
       });
     }
   });
-
 
 const getCouponItemsCSV = eventManagementProtectedProcedure
   .input(
@@ -443,7 +455,7 @@ const getCouponItemsCSV = eventManagementProtectedProcedure
         cause: err,
       });
     }
-  })
+  });
 
 export const telegramInteractionsRouter = router({
   requestShareEvent,

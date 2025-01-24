@@ -486,7 +486,7 @@ export const getOrganizerById = async (
       org_support_telegram_user_name: user.org_support_telegram_user_name,
       org_x_link: user.org_x_link,
       org_bio: user.org_bio,
-      org_image: user.org_image,
+      org_image: String(user.org_image).trim() === "" ? user.photo_url : user.org_image,
       role: user.role,
     };
 

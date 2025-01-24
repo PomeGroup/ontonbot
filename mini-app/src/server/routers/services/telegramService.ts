@@ -157,7 +157,7 @@ export const shareOrganizerRequest = async (
     org_support_telegram_user_name: string | null;
     org_x_link: string | null;
     org_bio: string | null;
-    org_image: string | null;
+    org_image: string | Buffer<ArrayBufferLike> | null ;
   },
 ): Promise<{ success: boolean; data?: any; error?: string }> => {
   // Construct your share link / URLs or any data you want
