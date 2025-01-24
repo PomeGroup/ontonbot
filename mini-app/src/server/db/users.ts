@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventRegistrants, users, visitors, events } from "@/db/schema";
+import { eventRegistrants, users, visitors, events, event_details_search_list } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { InferSelectModel, eq, sql, and, or, not, inArray } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
@@ -203,6 +203,9 @@ export const searchOrganizers = async (params: { searchString?: string; offset: 
   // Execute and return
   return await query.execute();
 };
+
+
+
 
 export const selectUserById = async (
   userId: number,
@@ -464,13 +467,13 @@ export const getOrganizerById = async (
     }
 
     // 3) Check if user is indeed organizer
-    // if (user.role !== "organizer") {
-    //   return {
-    //     success: false,
-    //     data: null,
-    //     error: `User with ID=${userId} is not an organizer.`,
-    //   };
-    // }
+    if (user.role !== "organizer" && user.role !== "admin") {
+      return {
+        success: false,
+        data: null,
+        error: `User with ID=${userId} is not an organizer.`,
+      };
+    }
 
     // 4) Pick only the minimal organizer fields from the user object
     //    (We also pick `role` so we can omit it from the final return)
@@ -483,7 +486,7 @@ export const getOrganizerById = async (
       org_support_telegram_user_name: user.org_support_telegram_user_name,
       org_x_link: user.org_x_link,
       org_bio: user.org_bio,
-      org_image: user.org_image,
+      org_image: String(user.org_image).trim() === "" ? user.photo_url : user.org_image,
       role: user.role,
     };
 

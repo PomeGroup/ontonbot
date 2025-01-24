@@ -15,12 +15,12 @@ import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, gt, inArray, lt, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logSQLQuery } from "@/lib/logSQLQuery";
-import {  logger } from "../utils/logger";
+import { logger } from "../utils/logger";
 import { gte } from "lodash";
 
 export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) => {
@@ -45,17 +45,11 @@ export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) 
 //  get ongoing events
 export const fetchOngoingEvents = async () => {
   const currentTime = Math.floor(Date.now() / 1000);
-  logger.log("check for events is ongoing in currentTime", currentTime );
+  logger.log("check for events is ongoing in currentTime", currentTime);
   return await db
     .select()
     .from(events)
-    .where(
-      and(
-        eq(events.hidden, false),
-        lt(events.start_date, currentTime),
-        gt(events.end_date, currentTime)
-      )
-    )
+    .where(and(eq(events.hidden, false), lt(events.start_date, currentTime), gt(events.end_date, currentTime)))
     .execute();
 };
 
@@ -165,7 +159,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
         user_id: users.user_id,
         role: users.role,
         created_at: events.created_at,
-        owner : events.owner
+        owner: events.owner,
       })
       .from(events)
       .innerJoin(users, eq(events.owner, users.user_id));
@@ -226,7 +220,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
   //    (same selected columns & data types).
   //    We then .orderBy, .limit, .offset on the unioned result.
   // @ts-ignore (if needed, depending on your version/typing)
-  const combinedResultsQuery = unionAll(rewardQuery,  ticketsQuery, registrantQuery)
+  const combinedResultsQuery = unionAll(rewardQuery, ticketsQuery, registrantQuery)
     .orderBy((row) => row.created_at)
     .limit(limit)
     .offset(offset);
@@ -267,7 +261,10 @@ export const getOrganizerEvents = async (
   return await eventsQuery.execute();
 };
 
-export const getEventsWithFilters = async (params: z.infer<typeof searchEventsInputZod>, user_id: number): Promise<any[]> => {
+export const getEventsWithFilters = async (
+  params: z.infer<typeof searchEventsInputZod>,
+  user_id: number
+): Promise<any[]> => {
   const { limit = 10, cursor = 0, search, filter, sortBy = "default", useCache = false } = params;
   const roundMinutesInMs = 60; // don't touch this fucking value it will break the cache or made unexpected results
 
@@ -313,12 +310,9 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   }
   // Apply user_id filter
 
-  if (
-      filter?.user_id
-      &&
-      ( filter.user_id === user_id  || filter?.organizer_user_id === user_id)) {
+  if (filter?.user_id && (filter.user_id === user_id || filter?.organizer_user_id === user_id)) {
     const userEvents = await getUserEvents(filter.user_id, 1000, 0);
-    userEventUuids = userEvents.map((event) =>  event.event_uuid );
+    userEventUuids = userEvents.map((event) => event.event_uuid);
     if (userEventUuids.length) {
       filter.event_uuids = userEventUuids;
     } else {
@@ -327,15 +321,22 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
   }
   // Apply date filters
   if (filter?.startDate && filter?.startDateOperator) {
-    conditions.push(sql`${event_details_search_list.startDate} ${sql.raw(filter.startDateOperator)} ${filter.startDate}`);
+    conditions.push(sql`${event_details_search_list.startDate}
+    ${sql.raw(filter.startDateOperator)}
+    ${filter.startDate}`);
   }
 
   if (filter?.endDate && filter?.endDateOperator) {
-    conditions.push(sql`${event_details_search_list.endDate} ${sql.raw(filter.endDateOperator)} ${filter.endDate}`);
+    conditions.push(sql`${event_details_search_list.endDate}
+    ${sql.raw(filter.endDateOperator)}
+    ${filter.endDate}`);
   }
 
   // Apply hidden condition
-  if (user_id) conditions.push(sql`(${event_details_search_list.hidden} = ${false} or ${event_details_search_list.organizerUserId} = ${user_id})`);
+  if (user_id)
+    conditions.push(
+      sql`(${event_details_search_list.hidden} = ${false} or ${event_details_search_list.organizerUserId} = ${user_id})`
+    );
 
   // Apply organizer_user_id filter
   if (filter?.organizer_user_id) {
@@ -344,7 +345,10 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
 
   // Apply event_ids filter
   if (filter?.event_ids && filter.event_ids.length) {
-    conditions.push(sql`${event_details_search_list.eventId} = any(${filter.event_ids})`);
+    conditions.push(sql`${event_details_search_list.eventId}
+    = any(
+    ${filter.event_ids}
+    )`);
   }
   // Apply society_hub_id filter
   if (filter?.society_hub_id && filter.society_hub_id.length) {
@@ -364,29 +368,53 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
     const searchPattern = `%${search}%`;
     conditions.push(
       or(
-        sql`${event_details_search_list.title} ILIKE ${searchPattern}`,
-        sql`${event_details_search_list.organizerFirstName} ILIKE ${searchPattern}`,
-        sql`${event_details_search_list.organizerLastName} ILIKE ${searchPattern}`,
-        sql`${event_details_search_list.location} ILIKE ${searchPattern}`
+        sql`${event_details_search_list.title}
+        ILIKE
+        ${searchPattern}`,
+        sql`${event_details_search_list.organizerFirstName}
+        ILIKE
+        ${searchPattern}`,
+        sql`${event_details_search_list.organizerLastName}
+        ILIKE
+        ${searchPattern}`,
+        sql`${event_details_search_list.location}
+        ILIKE
+        ${searchPattern}`
       )
     );
 
     let orderByClause;
     if (sortBy === "start_date_asc") {
-      orderByClause = sql`start_date ASC`;
+      orderByClause = sql`start_date
+      ASC`;
     } else if (sortBy === "start_date_desc" || sortBy === "default") {
-      orderByClause = sql`start_date DESC`;
+      orderByClause = sql`start_date
+      DESC`;
     } else if (sortBy === "most_people_reached") {
-      orderByClause = sql`visitor_count DESC`;
+      orderByClause = sql`visitor_count
+      DESC`;
     }
 
     // @ts-expect-error
     query = query.orderBy(
-      sql`${orderByClause ? sql`${orderByClause},` : sql``}
+      sql`${
+        orderByClause
+          ? sql`${orderByClause}
+      ,`
+          : sql``
+      }
       greatest(
-          similarity(${event_details_search_list.title}, ${search}),
-          similarity(${event_details_search_list.location}, ${search})
-      ) DESC`
+          similarity(
+      ${event_details_search_list.title},
+      ${search}
+      ),
+      similarity
+      (
+      ${event_details_search_list.location},
+      ${search}
+      )
+      )
+      DESC`
     );
   }
 
@@ -409,7 +437,8 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
       query = query.orderBy(desc(event_details_search_list.visitorCount));
     } else if (sortBy === "random") {
       // @ts-expect-error
-      query = query.orderBy(sql`random()`);
+      query = query.orderBy(sql`random
+      ()`);
     }
   }
 
@@ -429,7 +458,7 @@ export const getEventsWithFilters = async (params: z.infer<typeof searchEventsIn
 
 export const getEventByUuid = async (eventUuid: string, removeSecret: boolean = true) => {
   const event = await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute();
-  if (event === undefined || event.length === 0 ) {
+  if (event === undefined || event.length === 0) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: `Event not found  ${eventUuid}`,
@@ -448,12 +477,7 @@ export const getEventById = async (eventId: number) => {
 
 export const getEventsForSpecialRole = async (userRole: string, userId?: number) => {
   if (userRole === "admin") {
-    return await db
-      .select()
-      .from(events)
-      .where(eq(events.hidden, false))
-      .orderBy(desc(events.created_at))
-      .execute();
+    return await db.select().from(events).where(eq(events.hidden, false)).orderBy(desc(events.created_at)).execute();
   } else if (userRole === "organizer" && userId) {
     return await db
       .select()
@@ -463,6 +487,28 @@ export const getEventsForSpecialRole = async (userRole: string, userId?: number)
       .execute();
   } else {
     return [];
+  }
+};
+
+export const getOrganizerHosted = async (params: { organizerId?: number; hidden: boolean; offset: number; limit: number }) => {
+  const { organizerId, hidden = false, offset, limit } = params;
+
+  if (!organizerId) {
+    return [];
+  }
+  try {
+    const query = db
+      .select()
+      .from(event_details_search_list)
+      .where(and(eq(event_details_search_list.hidden, hidden), eq(event_details_search_list.organizerUserId, organizerId)))
+      .orderBy(desc(event_details_search_list.startDate))
+      .offset(offset)
+      .limit(limit);
+
+    return await query.execute();
+  } catch (error) {
+    logger.error("Error in getOrganizerHosted", error);
+    throw new Error("Error in getOrganizerHosted");
   }
 };
 
@@ -477,5 +523,6 @@ const eventDB = {
   getEventByUuid,
   getEventById,
   getEventsForSpecialRole,
+  getOrganizerHosted,
 };
 export default eventDB;

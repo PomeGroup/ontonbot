@@ -298,7 +298,7 @@ export const handleShareEvent = async (
         // Final fallback - use default image
         await req.bot.api.sendPhoto(
           parseInt(user_id),
-          "https://onton.live/template-images/default.webp",
+          "https://app.onton.live/template-images/default.webp",
           {
             caption: `
 📄 <b>${event.title}</b>
@@ -407,15 +407,15 @@ export async function sendMessage(
     // Create the reply_markup object if link is provided
     const reply_markup = link
       ? {
-          inline_keyboard: [
-            [
-              {
-                text: "Claim Reward",
-                url: link,
-              },
-            ],
+        inline_keyboard: [
+          [
+            {
+              text: "Claim Reward",
+              url: link,
+            },
           ],
-        }
+        ],
+      }
       : undefined;
 
     // Send the message to the chat
@@ -471,24 +471,37 @@ export const handleShareOrganizer = async (
 ) => {
   const { organizer_id, requesting_user, share_link, url, organizer_data } = req.body;
 
-  if (
-    typeof organizer_id !== "string" ||
-    typeof requesting_user !== "string"
-  ) {
+  if (typeof organizer_id !== "string" || typeof requesting_user !== "string") {
     return res.status(400).json({ message: "Invalid organizer or user ID" });
   }
 
+  /**
+   * Helper to resize (if width > 1920) and convert to JPEG (quality=85).
+   * Put this function at the top level of handleShareOrganizer to avoid TS1252.
+   */
+  const processImageBuffer = async (buffer: Buffer): Promise<Buffer> => {
+    let imageProcess = sharp(buffer);
+    const metadata = await imageProcess.metadata();
+
+    if (metadata.width && metadata.width > 1920) {
+      imageProcess = imageProcess.resize(1920, null, {
+        fit: "inside",
+        withoutEnlargement: true,
+      });
+    }
+
+    return await imageProcess
+      .jpeg({ quality: 85, force: false })
+      .toBuffer();
+  };
+
   try {
-    // Destructure any relevant fields from organizer_data
+    // Destructure relevant fields
     const {
       org_channel_name,
-      org_support_telegram_user_name,
-      org_x_link,
-      org_bio,
-      org_image,
-    } = organizer_data;
+      org_image, // Could be a string (URL) or { type: 'Buffer', data: [...] }
+    } = organizer_data || {};
 
-    // Build the caption text. You can style it with HTML if you want
     const caption = `
 <b>🔸${org_channel_name || "Organizer Profile"}</b>
 
@@ -497,26 +510,57 @@ Take a look at my events in my channel on ONTON
 Address:  ${share_link}
 `;
 
-    // If you have an org_image, try sending it. Otherwise, fallback
-    const imageToSend = org_image || "https://onton.live/template-images/default.webp";
-
     // Build an inline keyboard
     const inline_keyboard = [[
       {
         text: "Open Organizer Page",
-        web_app: {
-          url,
-        },
+        web_app: { url },
       },
     ]];
 
-    // Send the message to the user who requested it
-    await req.bot.api.sendPhoto(parseInt(requesting_user), imageToSend, {
+    let photoToSend: string | InputFile;
+
+    // If org_image is a JSON-serialized buffer => convert & resize
+    if (
+      org_image &&
+      typeof org_image === "object" &&
+      org_image.type === "Buffer" &&
+      Array.isArray(org_image.data)
+    ) {
+      try {
+        const realBuffer = Buffer.from(org_image.data);
+        const processed = await processImageBuffer(realBuffer);
+        photoToSend = new InputFile(processed);
+      } catch (err) {
+        console.error("Error processing buffer image:", err);
+        photoToSend = "https://onton.live/template-images/default.webp";
+      }
+    }
+    // If org_image is a string => assume it's a URL => fetch & resize
+    else if (typeof org_image === "string" && org_image.trim()) {
+      try {
+        const { data } = await axios.get<ArrayBuffer>(org_image, {
+          responseType: "arraybuffer",
+          headers: { Accept: "image/*" },
+        });
+        const buffer = Buffer.from(data);
+        const processed = await processImageBuffer(buffer);
+        photoToSend = new InputFile(processed);
+      } catch (err) {
+        console.error("Error fetching/processing image URL:", err);
+        photoToSend = "https://onton.live/template-images/default.webp";
+      }
+    }
+    // Otherwise, fallback to a default
+    else {
+      photoToSend = "https://onton.live/template-images/default.webp";
+    }
+
+    // Send the photo to Telegram
+    await req.bot.api.sendPhoto(parseInt(requesting_user, 10), photoToSend, {
       caption,
       parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard,
-      },
+      reply_markup: { inline_keyboard },
     });
 
     return res.json({ success: true });
