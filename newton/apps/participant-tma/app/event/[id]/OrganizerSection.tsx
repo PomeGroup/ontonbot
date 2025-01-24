@@ -18,8 +18,8 @@ export default function OrganizerSection({ data }: Props) {
   return (
     <div
       onClick={() => {
-        tmaUtils?.openTelegramLink(`https://t.me/${env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=channels_${data.user_id}`)
-
+        tmaUtils?.openTelegramLink(`https://t.me/${env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=channels_${data.user_id}`);
+        (tmaUtils as any)?.close()
       }}
       className={"text-telegram-text-color grid gap-2 cursor-pointer"}>
       <h2 className={"type-title-3 font-bold mb-1"}>Organizer</h2>
