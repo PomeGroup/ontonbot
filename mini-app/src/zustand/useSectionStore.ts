@@ -67,12 +67,10 @@ export const useSectionStore = create<SectionStackState>((set, get) => ({
   getCurrentSection: () => {
     const state = get();
     const stack = state.sections;
-    console.log("getCurrentSection", stack);
-    return stack[stack.length - 1] || "none";
+    return stack[stack.length - 1] || "none" ;
   },
 
   setSection: (section) => {
-    console.log("setSection", section);
     set((state) => ({
       sections: [...state.sections, section],
     }));

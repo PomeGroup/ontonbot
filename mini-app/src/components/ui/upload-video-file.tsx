@@ -1,7 +1,7 @@
-import { trpc } from "@/app/_trpc/client";
+"use client";
+
 import useWebApp from "@/hooks/useWebApp";
-import { getErrorMessages } from "@/lib/error";
-import { cn, fileToBase64 } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { CircleArrowUp } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Button, KButton } from "./button";
@@ -20,62 +20,47 @@ type UploadFileProps = {
 };
 
 export const UploadVideoFile = (props: UploadFileProps) => {
-  const videoInputRef = useRef<HTMLInputElement>(null);
   const webApp = useWebApp();
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
   const [videoPreview, setVideoPreview] = useState<string | undefined>(props.defaultVideo);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const uploadVideo = trpc.files.uploadVideo.useMutation({
-    onSuccess: (data) => {
-      const updatedUrl = `${data.videoUrl}?t=${Date.now()}`;
-      setVideoPreview(updatedUrl);
-      props.onVideoChange?.(updatedUrl);
-      if (videoInputRef.current) {
-        videoInputRef.current.value = ""; // Clear input value to allow re-uploading the same file
-      }
-    },
-  });
+  // Local states to handle uploading logic
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Function to check if the video is square
+  // Check if the video is square (client-side)
   const checkIfSquareVideo = async (file: File): Promise<boolean> => {
-    console.log("File metadata loaded: ", File);
     return new Promise((resolve, reject) => {
       const video = document.createElement("video");
-      console.log("Video metadata loaded: ", video);
-      // Set up event listeners
       video.onloadedmetadata = () => {
-        URL.revokeObjectURL(video.src); // Free up memory
-
+        URL.revokeObjectURL(video.src);
         resolve(video.videoWidth === video.videoHeight);
       };
-
       video.onerror = () => {
-        URL.revokeObjectURL(video.src); // Free up memory
+        URL.revokeObjectURL(video.src);
         reject(new Error("Failed to load video metadata. Please ensure the video is a valid MP4 file."));
       };
-
-      // Assign the video source
       video.src = URL.createObjectURL(file);
     });
   };
 
-  const handleSubmit = async () => {
-    const fileInput = videoInputRef.current;
-    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      return;
-    }
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (!e.target.files || e.target.files.length === 0) return;
 
-    const file = fileInput.files[0];
+    const file = e.target.files[0];
+    setError(null);
 
-    // Validate file size
+    // Basic validations
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be under 5 MB");
+      setError("File size must be under 5 MB");
       return;
     }
 
-    // Validate file type
     if (file.type !== "video/mp4") {
-      alert("Only MP4 format is allowed");
+      setError("Only MP4 format is allowed");
       return;
     }
 
@@ -83,37 +68,76 @@ export const UploadVideoFile = (props: UploadFileProps) => {
       // Check if the video is square
       const isSquare = await checkIfSquareVideo(file);
       if (!isSquare) {
-        alert("Only square videos are allowed");
+        setError("Only square videos are allowed");
         return;
       }
 
-      // Convert file to base64 for upload
-      const video = (await fileToBase64(file)) as string;
+      // Prepare multipart/form-data
+      const formData = new FormData();
+      formData.append("video", file);
+      formData.append("subfolder", "event");
 
-      // Proceed with upload
-      uploadVideo.mutate({
-        video,
-        subfolder: "event",
-      });
-    } catch (error) {
-      console.error(error);
-      alert("Failed to upload video. Please try again.");
+      setIsUploading(true);
+
+      // Get Telegram initData (assuming webApp?.initData exists)
+      const initData = webApp?.initData || "";
+
+      // Send request, adding initData in headers
+      const res = await fetch(
+        // Update with your real route:
+        process.env.NEXT_PUBLIC_APP_BASE_URL + "/api/files/upload-video",
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            "x-init-data": initData,
+          },
+        }
+      );
+
+      if (!res.ok) {
+        let msg = "Failed to upload video.";
+        try {
+          const errJson = await res.json();
+          msg = errJson.message || msg;
+        } catch (_) {
+          // ignore JSON parse errors
+        }
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      // e.g. { videoUrl: "..." }
+      const updatedUrl = `${data.videoUrl}?t=${Date.now()}`;
+      setVideoPreview(updatedUrl);
+      props.onVideoChange?.(updatedUrl);
+
+      // Clear the file input
+      if (videoInputRef.current) {
+        videoInputRef.current.value = "";
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to upload video. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
+  // Hide the Telegram WebApp MainButton while the bottom sheet is open
   useEffect(() => {
     if (isSheetOpen) {
       webApp?.MainButton.hide();
     } else {
       webApp?.MainButton.show();
     }
-  }, [isSheetOpen]);
+  }, [isSheetOpen, webApp]);
 
   return (
     <>
       <Button
         className={cn(
-          "w-full h-auto flex flex-col border border-cn-primary gap-3.5 border-dashed rounded-xl p-3",
+          "w-full h-auto flex flex-col gap-3.5 border border-dashed rounded-xl p-3",
           props.isError ? "border-red-300 bg-red-400/10" : "border-cn-primary"
         )}
         onClick={() => setIsSheetOpen(true)}
@@ -132,10 +156,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               playsInline
               className="rounded-xl"
             >
-              <source
-                src={videoPreview}
-                type="video/mp4"
-              />
+              <source src={videoPreview} type="video/mp4" />
             </video>
             <p className="font-semibold flex items-center gap-2 text-lg">
               <CircleArrowUp className="w-5" />
@@ -149,11 +170,14 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               {props.triggerText}
             </p>
             {props.infoText && (
-              <p className="text-cn-muted-foreground text-sm w-full text-balance">{props.infoText}</p>
+              <p className="text-cn-muted-foreground text-sm w-full text-balance">
+                {props.infoText}
+              </p>
             )}
           </>
         )}
       </Button>
+
       {createPortal(
         <Sheet
           opened={isSheetOpen}
@@ -163,8 +187,12 @@ export const UploadVideoFile = (props: UploadFileProps) => {
           <BlockTitle>Upload Video</BlockTitle>
           <Block className="space-y-2">
             {!videoPreview && (
-              <p>{props.drawerDescriptionText || "Upload an MP4 video from your device (max 5 MB)"}</p>
+              <p>
+                {props.drawerDescriptionText ||
+                  "Upload an MP4 video from your device (max 5 MB)"}
+              </p>
             )}
+
             {videoPreview && (
               <video
                 key={videoPreview}
@@ -173,52 +201,48 @@ export const UploadVideoFile = (props: UploadFileProps) => {
                 height="100"
                 className="w-full h-auto"
               >
-                <source
-                  src={videoPreview}
-                  type="video/mp4"
-                />
+                <source src={videoPreview} type="video/mp4" />
               </video>
             )}
-            {uploadVideo.error && (
+
+            {/* Error messages */}
+            {error && (
               <div className="text-red-500 text-sm w-full text-balance mt-2">
-                {getErrorMessages(uploadVideo.error.message).map((errMessage, idx: number) => (
-                  <p key={idx}>{errMessage}</p>
-                ))}
+                {error}
               </div>
             )}
+
             <input
               ref={videoInputRef}
               type="file"
               name="video"
               accept="video/mp4"
-              onChange={(e) => {
-                e.preventDefault();
-                handleSubmit();
-              }}
+              onChange={handleFileChange}
               id="event_video_input"
               className="hidden"
             />
+
             <KButton
               itemType="button"
               clear
               className="w-full h-12.5 flex items-center gap-2"
-              disabled={uploadVideo.isLoading}
+              disabled={isUploading}
               onClick={(e) => {
                 e.preventDefault();
-                // click on upload input
                 videoInputRef.current?.click();
               }}
             >
               <CircleArrowUp className="w-5" />
               <span>{videoPreview ? "Change Video" : "Upload Video"}</span>
             </KButton>
+
             {videoPreview && (
               <KButton
                 className="w-16 h-10 mx-auto rounded-full mt-4"
                 onClick={(e) => {
                   e.preventDefault();
                   setIsSheetOpen(false);
-                  typeof props?.onDone === "function" && props.onDone(videoPreview);
+                  if (props.onDone) props.onDone(videoPreview);
                 }}
                 itemType="button"
               >
