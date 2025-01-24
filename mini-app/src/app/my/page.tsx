@@ -35,7 +35,7 @@ export default function ProfilePage() {
   if (isLoading) return "loading";
 
   return (
-    <div className="bg-[#EFEFF4] py-4 min-h-screen -mb-safe">
+    <div className="bg-[#EFEFF4] py-4 min-h-screen mb-[var(--tg-safe-area-inset-bottom)]">
       {paid ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <ActionCard
         onClick={() => router.push("/my/participated")}
