@@ -38,7 +38,7 @@ function ChannelCard({ data }: { data: Channel }) {
         <div
           className="font-[590] mb-2 text-[14px] leading-[19px] tracking h-9 overflow-hidden break-words line-clamp-2"
         >
-          {data.org_channel_name || "Untitled channel"}
+          {data.org_channel_name || "Untitled Organizer"}
         </div>
         <div className="flex gap-[2px] justify-center text-[#8E8E93]">
           <Typography

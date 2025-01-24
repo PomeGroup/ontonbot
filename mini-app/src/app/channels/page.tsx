@@ -85,7 +85,7 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
         <div
           className="font-[590] mb-2 text-[17px] leading-[22px] tracking h-11 overflow-hidden line-clamp-2 break-all"
         >
-          {data.org_channel_name || "Untitled channel"}
+          {data.org_channel_name || "Untitled Organizer"}
         </div>
         <div className="flex gap-1 justify-center">
           <Typography
