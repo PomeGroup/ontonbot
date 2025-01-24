@@ -31,12 +31,7 @@ export interface EventType extends EventDataOnlyType {
   isSoldOut: boolean;
 }
 
-export interface EventDataOnlyType {
-  website?: {
-    label: string;
-    link: string;
-  };
-  organizer?: {
+export interface OrganizerType {
     user_id: number;
     username: string;
     first_name: string;
@@ -45,7 +40,17 @@ export interface EventDataOnlyType {
     language_code: string;
     role: "organizer" | "admin" | "user";
     created_at: string;
+    org_channel_name: string | null
+    org_image: string | null
+    hosted_event_count: number
+  }
+
+export interface EventDataOnlyType {
+  website?: {
+    label: string;
+    link: string;
   };
+  organizer?: OrganizerType;
   eventTicket?: {
     created_at: Date | null;
     event_id: number;
