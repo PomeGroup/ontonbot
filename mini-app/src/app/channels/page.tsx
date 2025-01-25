@@ -36,7 +36,7 @@ export default function ChannelsPage() {
   return (
     <Block
       margin="0"
-      className="bg-[rgba(239,239,244,1)] pt-4 pb-16"
+      className="bg-[rgba(239,239,244,1)] pt-4 pb-16 min-h-screen"
     >
       <PromotedChannels />
       <div className="flex flex-wrap gap-4 mt-4">

@@ -57,7 +57,7 @@ import Typography from "@/components/Typography";
 // const tabValueForSearchBar = 'All'
 export default function Home() {
   return (
-    <Block margin="0" className="bg-[#EFEFF4] pb-[var(--tg-safe-area-inset-bottom)]">
+    <Block margin="0" className="bg-[#EFEFF4] pb-16 min-h-screen">
       <div className="flex flex-col pt-3">
         <div className="w-full pb-3">
           <SearchBar />
