@@ -4,7 +4,7 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import { Pagination } from 'swiper/modules';
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+// import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useConfig } from "@/context/ConfigContext";
 import { Block } from "konsta/react";
 import { trpc } from "./_trpc/client";
@@ -17,43 +17,44 @@ import EventBanner from "@/components/EventBanner";
 import { OntonEvent } from "@/types";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { ChevronRightIcon } from "lucide-react";
+import Typography from "@/components/Typography";
 
-const currentDateTime = Math.floor(Date.now() / 1000);
+// const currentDateTime = Math.floor(Date.now() / 1000);
 
-const upcomingEventsParams = searchEventsInputZod.parse({
-  limit: 2,
-  offset: 0,
-  filter: {
-    participationType: ["online", "in_person"],
-    startDate: currentDateTime,
-  },
-  sortBy: "start_date_asc",
-});
+// const upcomingEventsParams = searchEventsInputZod.parse({
+//   limit: 2,
+//   offset: 0,
+//   filter: {
+//     participationType: ["online", "in_person"],
+//     startDate: currentDateTime,
+//   },
+//   sortBy: "start_date_asc",
+// });
 
-const ongoingEventsParams = searchEventsInputZod.parse({
-  limit: 2,
-  offset: 0,
-  filter: {
-    participationType: ["online", "in_person"],
-    startDate: currentDateTime,
-    startDateOperator: "<=",
-    endDate: currentDateTime,
-    endDateOperator: ">=",
-  },
-  sortBy: "random",
-});
+// const ongoingEventsParams = searchEventsInputZod.parse({
+//   limit: 2,
+//   offset: 0,
+//   filter: {
+//     participationType: ["online", "in_person"],
+//     startDate: currentDateTime,
+//     startDateOperator: "<=",
+//     endDate: currentDateTime,
+//     endDateOperator: ">=",
+//   },
+//   sortBy: "random",
+// });
 
-const pastEventsParams = searchEventsInputZod.parse({
-  limit: 2,
-  offset: 0,
-  filter: {
-    participationType: ["online", "in_person"],
-    endDate: currentDateTime - (currentDateTime % 600),
-  },
-  sortBy: "start_date_desc",
-});
+// const pastEventsParams = searchEventsInputZod.parse({
+//   limit: 2,
+//   offset: 0,
+//   filter: {
+//     participationType: ["online", "in_person"],
+//     endDate: currentDateTime - (currentDateTime % 600),
+//   },
+//   sortBy: "start_date_desc",
+// });
 
-const tabValueForSearchBar = 'All'
+// const tabValueForSearchBar = 'All'
 export default function Home() {
   return (
     <Block margin="0" className="bg-[#EFEFF4] min-h-screen pb-9">
@@ -94,7 +95,10 @@ function PromotedEventsSlider() {
     },
   };
 
-  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events
+  const {
+    data: sliderEventData,
+    isLoading: isLoadingSlider
+  } = trpc.events
     .getEventsWithFilters.useQuery<any, EventsResponseType>(
       sliderEventParams,
       {
@@ -102,69 +106,49 @@ function PromotedEventsSlider() {
         staleTime: Infinity,
       }
     );
+  if (!sliderEventData?.data?.length) return null
 
-  if (isLoadingSlider || !sliderEventData?.data?.length) return null
+  let content = <div className="flex gap-3 overflow-x-hidden -mx-3 px-3">
+    <EventBanner skeleton className='flex-[0_0_220px] h-[220px]' />
+    <EventBanner skeleton className='flex-[0_0_220px] h-[220px]' />
+    <EventBanner skeleton className='flex-[0_0_220px] h-[220px]' />
+  </div>
+
+  if (!isLoadingSlider) {
+    content = (
+      <Swiper
+        // onSlideChange={handleSlideChange}
+        slidesPerView='auto'
+        className="-mx-3"
+        spaceBetween={12}
+        pagination={{ clickable: true }}
+        autoHeight
+        modules={[Pagination]}
+        wrapperClass='swiper-wrapper pb-3 px-4'
+      >
+        {/* <div className='flex gap-3'> */}
+        {sliderEventData?.data.map(event => (
+          <SwiperSlide className='w-[220px]' key={event.event_uuid}>
+            <EventBanner className="w-[220px]" event={event} key={event.event_uuid} />
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    )
+  }
 
   return (
-    <Swiper
-      // onSlideChange={handleSlideChange}
-      slidesPerView='auto'
-      className="-mx-3"
-      spaceBetween={12}
-      pagination={{ clickable: true }}
-      autoHeight
-      modules={[Pagination]}
-      wrapperClass='swiper-wrapper pb-3 px-4'
-    >
-      {/* <div className='flex gap-3'> */}
-      {sliderEventData?.data.map(event => (
-        <SwiperSlide className='w-[220px]' key={event.event_uuid}>
-          <EventBanner className="w-[220px]" event={event} key={event.event_uuid} />
-        </SwiperSlide>
-      ))}
-    </Swiper>
+    <>
+      <Typography
+        variant="title3"
+        bold
+        className="mb-2"
+      >
+        Promoted Events
+      </Typography>
+      {content}
+    </>
   )
 }
-
-interface HorizontalEventsProps {
-  title: string;
-  link: string;
-  items?: any[];
-  isLoading: boolean;
-}
-
-// function HorizontalEvents({ title, link, items = [], isLoading }: HorizontalEventsProps) {
-//   const webApp = useWebApp();
-//   const userId = webApp?.initDataUnsafe?.user?.id;
-
-//   return isLoading ? (
-//     <>
-//       <EventCardSkeleton />
-//       <EventCardSkeleton />
-//     </>
-//   ) : (
-//     items.length > 0 && (
-//       <>
-//         <div className="pt-4 w-full pb-4 flex justify-between items-center">
-//           <h2 className="font-bold text-lg">{title}</h2>
-//           <a
-//             href={link}
-//             className="text-[#007AFF] border-2 border-[#007aff] rounded-lg py-1.5 px-4 hover:underline"
-//           >
-//             See All
-//           </a>
-//         </div>
-//         {items.map((event) => (
-//           <EventCard
-//             key={event.event_uuid}
-//             event={event}
-//             currentUserId={userId}
-//           />
-//         ))}
-//       </>
-//     )
-//   );
-// }
 
 function PromotedEventsList() {
   // const { user: {user_id} } = useUserStore()
@@ -218,3 +202,43 @@ function PromotedEventsList() {
     </>
   );
 }
+
+// interface HorizontalEventsProps {
+//   title: string;
+//   link: string;
+//   items?: any[];
+//   isLoading: boolean;
+// }
+
+// function HorizontalEvents({ title, link, items = [], isLoading }: HorizontalEventsProps) {
+//   const webApp = useWebApp();
+//   const userId = webApp?.initDataUnsafe?.user?.id;
+
+//   return isLoading ? (
+//     <>
+//       <EventCardSkeleton />
+//       <EventCardSkeleton />
+//     </>
+//   ) : (
+//     items.length > 0 && (
+//       <>
+//         <div className="pt-4 w-full pb-4 flex justify-between items-center">
+//           <h2 className="font-bold text-lg">{title}</h2>
+//           <a
+//             href={link}
+//             className="text-[#007AFF] border-2 border-[#007aff] rounded-lg py-1.5 px-4 hover:underline"
+//           >
+//             See All
+//           </a>
+//         </div>
+//         {items.map((event) => (
+//           <EventCard
+//             key={event.event_uuid}
+//             event={event}
+//             currentUserId={userId}
+//           />
+//         ))}
+//       </>
+//     )
+//   );
+// }

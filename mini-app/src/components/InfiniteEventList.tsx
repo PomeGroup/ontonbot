@@ -50,7 +50,8 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
       className="flex-wrap bg-[rgba(239,239,244,1)] pt-8 pb-16 min-h-screen"
     >
       <Typography
-        variant="title2"
+        variant="title3"
+        bold
         className="mb-6"
       >
         {title}
