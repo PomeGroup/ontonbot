@@ -120,6 +120,6 @@ export default function Search() {
           }
         </div>
       </div>
-    </Block >
+    </Block>
   );
 };
