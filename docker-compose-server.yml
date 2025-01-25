@@ -207,11 +207,11 @@ services:
       <<: *common-env
     networks:
       - onton-network
-    healthcheck:
-      test: ["CMD-SHELL", "redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT}  ping | grep PONG "]
-      interval: 30s
-      timeout: 5s
-      start_period: 5s
+#    healthcheck:
+#      test: ["CMD-SHELL", "redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT}  ping | grep PONG "]
+#      interval: 30s
+#      timeout: 5s
+#      start_period: 5s
     logging:
       driver: "fluentd"
       options:
