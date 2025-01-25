@@ -1,0 +1,1 @@
+ALTER TABLE "event_poa_triggers" ADD COLUMN "creator_user_id" bigint;
