@@ -207,19 +207,17 @@ services:
       <<: *common-env
     networks:
       - onton-network
-  #    healthcheck:
-  #      test: ["CMD-SHELL", "redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT}  ping | grep PONG "]
-  #      interval: 30s
-  #      timeout: 5s
-  #      start_period: 5s
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h ${REDIS_HOST} -p ${REDIS_PORT}  ping | grep PONG "]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
     logging:
       driver: "fluentd"
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-redis"
         fluentd-async-connect: "true"
-
-
 
   pgadmin:
     image: dpage/pgadmin4
@@ -409,7 +407,6 @@ services:
         tag: "docker.${BRANCH_NAME}-mini-app-poa-worker"
         fluentd-async-connect: "true"
 
-
   mini-app-notification-socket:
     hostname: mini-app-notification-socket
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -419,9 +416,12 @@ services:
     deploy:
       resources:
         limits:
-          memory: 3000M
+          memory: 5000M
           cpus: "2.0"
-      replicas: 3
+        reservations:
+          memory: 3000M
+          cpus: "1.0"
+      replicas: 5
       update_config:
         failure_action: rollback
         order: start-first
@@ -621,18 +621,18 @@ services:
       RABBITMQ_DEFAULT_USER: "${RABBITMQ_DEFAULT_USER}"
       RABBITMQ_DEFAULT_PASS: "${RABBITMQ_DEFAULT_PASS}"
       RABBITMQ_NODE_PORT: "${RABBITMQ_NODE_PORT}"
-#    volumes:
-#      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
     depends_on:
       - fluentd
     deploy:
       mode: global
       resources:
         limits:
-          memory: 4096M
+          memory: 8192M
           cpus: "3.0"
         reservations:
-          memory: 2048M
+          memory: 4096M
           cpus: "1.0"
       restart_policy:
         condition: on-failure
@@ -714,9 +714,9 @@ volumes:
     name: "${STAGE_NAME}_drizzle_data"
   drizzle_data_cron:
     name: "${STAGE_NAME}_drizzle_data_cron"
-#  rabbitmq_data:
-#    driver: local
-#    name: "${STAGE_NAME}_rabbitmq_data"
+  rabbitmq_data:
+    driver: local
+    name: "${STAGE_NAME}_rabbitmq_data"
 secrets:
   registry-onton-config:
     external: true

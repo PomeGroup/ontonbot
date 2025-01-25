@@ -348,26 +348,6 @@ services:
       onton-network:
         ipv4_address: "${IP_PARTICIPANT_TMA}"
 
-#  nft-microservice:
-#    hostname: nft-service
-#    container_name : ${ENV}-nft-service
-#    build:
-#      context: ./newton/
-#      dockerfile: ./apps/nft-manager/Dockerfile
-#    restart: unless-stopped
-#    ports:
-#      - "${NFT_MANAGER_PORT}:${NFT_MANAGER_PORT}"
-#    profiles:
-#      - front-end-development
-#      - manual-apps
-#      - full
-#    environment:
-#      <<: *common-env
-#      MNEMONIC: ${MNEMONIC}
-#    networks:
-#      onton-network:
-#        ipv4_address: "${IP_NFT_MANAGER}"
-
   website:
     hostname: website
     container_name: ${ENV}-website
@@ -378,8 +358,6 @@ services:
     restart: "unless-stopped"
     profiles:
       - full
-#    depends_on:
-#     - caddy
     ports:
       - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
     environment:
@@ -387,8 +365,6 @@ services:
     networks:
       onton-network:
         ipv4_address: ${IP_WEBSITE}
-
-
 
   metabase:
     image: metabase/metabase:v0.50.18.3

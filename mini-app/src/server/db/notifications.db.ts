@@ -1,8 +1,8 @@
 import { db } from "@/db/db";
 import { NotificationItemType, notifications, NotificationStatus, NotificationType } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
-import { and, eq, inArray, lt, sql } from "drizzle-orm";
-import { QueueNames, NOTIFICATION_TIMEOUT_MARGIN } from "@/sockets/constants";
+import { and, eq, inArray, lt, or, sql } from "drizzle-orm";
+import { QueueNames, NOTIFICATION_TIMEOUT_MARGIN, MAIN_NOTIFICATION_TTL } from "@/sockets/constants";
 import { rabbitMQService } from "@/server/routers/services/rabbitMQService";
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from "@/server/utils/logger";
@@ -365,13 +365,13 @@ export async function getRepliedPoaPasswordNotificationsForEvent(
     .select()
     .from(notifications)
     .where(
-        and(
-          eq(notifications.type, "POA_PASSWORD"),
-          eq(notifications.status, "REPLIED"),
-          inArray(notifications.userId, userIds),
-          sql`((${notifications.additionalData})->>'eventId')::int = ${eventId}`
-        ),
-      )
+      and(
+        eq(notifications.type, "POA_PASSWORD"),
+        eq(notifications.status, "REPLIED"),
+        inArray(notifications.userId, userIds),
+        sql`((${notifications.additionalData})->>'eventId')::int = ${eventId}`
+      ),
+    )
     .execute();
 
 
@@ -386,18 +386,30 @@ export const expireReadNotifications = async () => {
       .set({ status: "EXPIRED" })
       .where(
         and(
-          eq(notifications.status, "READ"),
+          or(eq(notifications.status, "READ")),
           sql`${notifications.readAt} IS NOT NULL`,
           sql`${notifications.actionTimeout} IS NOT NULL`,
-          sql`${notifications.readAt} + ((${
-                  notifications.actionTimeout
-          } + ${NOTIFICATION_TIMEOUT_MARGIN}) * INTERVAL '1 second') < NOW()`
+          sql`(${notifications.readAt} + INTERVAL '1 second' * (${notifications.actionTimeout} + ${NOTIFICATION_TIMEOUT_MARGIN})) < NOW()`
         )
       )
       .returning({ id: notifications.id })
       .execute();
-
     logger.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
+    logger.log("Expiring waiting notifications that exceeded their action timeout...");
+    const expiredNotificationsWaiting =  await db
+      .update(notifications)
+      .set({ status: "EXPIRED" })
+      .where(
+        and(
+          eq(notifications.status, "WAITING_TO_SEND"),
+          sql`${notifications.actionTimeout} IS NOT NULL`,
+          sql`${notifications.createdAt}::timestamptz + (${MAIN_NOTIFICATION_TTL}) * INTERVAL '1 second' < NOW()`
+        )
+      )
+      .returning({ id: notifications.id })
+      .execute();
+     logger.log(`Expired ${expiredNotifications.length} notifications that exceeded their action timeout.`);
+     logger.log(`Expired ${expiredNotificationsWaiting.length} notifications that exceeded their action timeout.`);
     return { success: true, count: expiredNotifications.length };
   } catch (error) {
     logger.error("Error expiring read notifications:", error);
