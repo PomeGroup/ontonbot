@@ -1,148 +1,74 @@
-// import { open, Database } from 'sqlite';
-// import { Database as SQLite3Database } from 'sqlite3';
-// import { TVisitor } from '../utils/types';
-
-// async function createDatabase() {
-//     const db: Database = await open({
-//         filename: '../telegram_users.db',
-//         driver: SQLite3Database
-//     });
-
-//     await db.exec(`
-//         CREATE TABLE IF NOT EXISTS telegram_bot_visitors (
-//             id INTEGER PRIMARY KEY,
-//             telegram_id TEXT NOT NULL,
-//             first_name TEXT,
-//             last_name TEXT,
-//             username TEXT,
-//             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-//         );
-//     `);
-
-//     await db.close();
-// }
-
-// export async function countReferrals(userId: number): Promise<{ totalReferrals: number, todayReferrals: number }> {
-//     const db: Database = await open({
-//         filename: 'telegram_users.db',
-//         driver: SQLite3Database
-//     });
-
-//     try {
-//         // Query to count total referrals by the user
-//         const totalReferralsQuery = 'SELECT COUNT(*) AS total FROM referrals WHERE referee = ?';
-//         const totalRefResult = await db.get(totalReferralsQuery, [userId]);
-//         const totalReferrals = totalRefResult ? totalRefResult.total : 0;
-
-//         // Query to count today's referrals by the user
-//         const todayReferralsQuery = `
-//             SELECT COUNT(*) AS today
-//             FROM referrals
-//             WHERE referee = ? AND DATE(created_at) = DATE('now')`;
-//         const todayRefResult = await db.get(todayReferralsQuery, [userId]);
-//         const todayReferrals = todayRefResult ? todayRefResult.today : 0;
-
-//         return { totalReferrals, todayReferrals };
-//     } catch (error) {
-//         console.error("Error in countReferrals:", error);
-//         throw error;
-//     } finally {
-//         await db.close();
-//     }
-// }
-
-// export async function addVisitor(visitor: TVisitor) {
-//     const db: Database = await open({
-//         filename: 'telegram_users.db',
-//         driver: SQLite3Database
-//     });
-
-//     const visitorExists = await db.get('SELECT * FROM telegram_bot_visitors WHERE telegram_id = ?', [visitor.telegram_id]);
-
-//     if (!visitorExists) {
-//         await db.run('INSERT INTO telegram_bot_visitors (telegram_id, first_name, last_name, username) VALUES (?, ?, ?, ?)', [
-//             visitor.telegram_id,
-//             visitor.first_name,
-//             visitor.last_name,
-//             visitor.username
-//         ]);
-//     }
-
-//     await db.close();
-// }
-
-// export async function addReferral(referee: number, referral: number) {
-//     const db: Database = await open({
-//         filename: 'telegram_users.db',
-//         driver: SQLite3Database
-//     });
-
-//     await db.run('INSERT INTO referrals (referee, referral) VALUES (?, ?)', [
-//         referee,
-//         referral
-//     ]);
-
-//     await db.close();
-// }
-
-// createDatabase()
-
-import { Client } from "pg";
 import { TVisitor } from "../utils/types";
+import { Pool } from "pg";
+
+// Create a single pool instance for your entire application
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 50, // maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // close idle clients after 30s
+  connectionTimeoutMillis: 2000, // return an error after 2s if connection could not be established
+});
 
 async function createDatabase() {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  });
-
-  await client.connect();
+  const client = await pool.connect();
 
   try {
     await client.query(`
-            CREATE TABLE IF NOT EXISTS telegram_bot_visitors (
-                id SERIAL PRIMARY KEY,
-                telegram_id TEXT NOT NULL,
-                first_name TEXT,
-                last_name TEXT,
-                username TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
+        CREATE TABLE IF NOT EXISTS telegram_bot_visitors
+        (
+            id
+            SERIAL
+            PRIMARY
+            KEY,
+            telegram_id
+            TEXT
+            NOT
+            NULL,
+            first_name
+            TEXT,
+            last_name
+            TEXT,
+            username
+            TEXT,
+            created_at
+            TIMESTAMP
+            DEFAULT
+            CURRENT_TIMESTAMP
+        );
+    `);
   } finally {
-    await client.end();
+    client.release();
   }
 }
 
 export async function getEvent(uuid: string) {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  });
-
-  await client.connect();
+  const client = await pool.connect();
 
   let event:
     | undefined
     | {
-        title: string;
-        description: string;
-        subtitle: string;
-        image_url: string;
-        start_date: string;
-        end_date: string;
-        timezone: string;
-      };
+    title: string;
+    description: string;
+    subtitle: string;
+    image_url: string;
+    start_date: string;
+    end_date: string;
+    timezone: string;
+  };
 
   try {
     event = (
       await client.query(
         `
-        SELECT * FROM events WHERE event_uuid = $1;
-      `,
+            SELECT *
+            FROM events
+            WHERE event_uuid = $1;
+        `,
         [uuid],
       )
     ).rows[0];
   } finally {
-    client.end();
+    client.release();
   }
 
   return event;
@@ -151,11 +77,7 @@ export async function getEvent(uuid: string) {
 export async function countReferrals(
   userId: number,
 ): Promise<{ totalReferrals: number; todayReferrals: number }> {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  });
-
-  await client.connect();
+  const client = await pool.connect();
 
   try {
     // Total referrals
@@ -166,9 +88,9 @@ export async function countReferrals(
 
     // Today's referrals
     const todayReferralsQuery = `
-            SELECT COUNT(*) AS today 
-            FROM referrals 
-            WHERE referee = $1 AND DATE(created_at) = CURRENT_DATE`;
+        SELECT COUNT(*) AS today
+        FROM referrals
+        WHERE referee = $1 AND DATE (created_at) = CURRENT_DATE`;
     const todayRefResult = await client.query(todayReferralsQuery, [userId]);
     const todayReferrals = todayRefResult.rows[0].today;
 
@@ -177,15 +99,12 @@ export async function countReferrals(
     console.error("Error in countReferrals:", error);
     throw error;
   } finally {
-    await client.end();
+    client.release();
   }
 }
 
 export async function addVisitor(visitor: TVisitor) {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  });
-  await client.connect();
+  const client = await pool.connect();
 
   try {
     const visitorExists = await client.query(
@@ -205,15 +124,12 @@ export async function addVisitor(visitor: TVisitor) {
       );
     }
   } finally {
-    await client.end();
+    client.release();
   }
 }
 
 export async function changeRole(newRole: string, username: string) {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  });
-  await client.connect();
+  const client = await pool.connect();
 
   try {
     // Check if the user exists
@@ -236,35 +152,35 @@ export async function changeRole(newRole: string, username: string) {
     );
 
 
-    const totalOrgsQuery = 'SELECT count(*) FROM users WHERE role = $1';
-    const result = await client.query(totalOrgsQuery, ['organizer']); // Use parameterized queries to avoid SQL injection
+    const totalOrgsQuery = "SELECT count(*) FROM users WHERE role = $1";
+    const result = await client.query(totalOrgsQuery, ["organizer"]); // Use parameterized queries to avoid SQL injection
     const totalOrgs = result.rows[0].count;
-    
-    await client.end();
+
+    client.release();
 
     return {
-      username : userExists.rows[0].username, 
-      user_id : userExists.rows[0].user_id, 
-      total_organizers_count : totalOrgs,
-    }
+      username: userExists.rows[0].username,
+      user_id: userExists.rows[0].user_id,
+      total_organizers_count: totalOrgs,
+    };
   } catch (error) {
     console.error("Error in changeRole:", error);
-    await client.end();
+    client.release();
     throw error;
   }
 }
 
 export async function getUser(usernameOrId: string) {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  });
-  await client.connect();
+  const client = await pool.connect();
 
   const user = await client.query(
-    `SELECT * FROM users WHERE username = $1 or user_id::text = $1`,
+    `SELECT *
+     FROM users
+     WHERE username = $1
+        or user_id::text = $1`,
     [usernameOrId],
   );
-  await client.end();
+  client.release();
   return user.rows[0];
 }
 
@@ -275,11 +191,7 @@ export async function isUserAdmin(usernameOrId: string) {
 }
 
 export async function getEventTickets(uuid: string) {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  });
-
-  await client.connect();
+  const client = await pool.connect();
 
   let event: {
     user_id: number;
@@ -289,13 +201,15 @@ export async function getEventTickets(uuid: string) {
     event = (
       await client.query(
         `
-        SELECT * FROM tickets WHERE event_uuid = $1;
-      `,
+            SELECT *
+            FROM tickets
+            WHERE event_uuid = $1;
+        `,
         [uuid],
       )
     ).rows;
   } finally {
-    client.end();
+    client.release();
   }
 
   return event;
@@ -303,15 +217,16 @@ export async function getEventTickets(uuid: string) {
 
 export async function fetchOntonSetting() {
   try {
-    const client = new Client({ connectionString: process.env.DATABASE_URL });
-    await client.connect();
+    const client = await pool.connect();
 
     const settings = await client.query(
-      `SELECT * FROM onton_setting where env = $1`,
+      `SELECT *
+       FROM onton_setting
+       where env = $1`,
       [process.env.ENV],
     );
 
-    await client.end();
+    client.release();
 
     let config: { [key: string]: string | null } = {};
     let configProtected: { [key: string]: string | null } = {};
@@ -331,12 +246,79 @@ export async function fetchOntonSetting() {
   }
 }
 
-export async function getClient() {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-  });
-  await client.connect();
-  return client;
+export async function getAdminOrganizerUsers() {
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(
+      `SELECT *
+       FROM users
+       WHERE role IN ('admin', 'organizer') `,
+    );
+    return result.rows; // array of user rows
+  } finally {
+    client.release();
+  }
 }
 
-createDatabase(); // Call to initialize the database
+export async function updateUserProfile(
+  userId: number,
+  {
+    isPremium,
+    allowsWriteToPm,
+    photoUrl,
+    hasBlockedBot,
+  }: {
+    isPremium?: boolean;
+    allowsWriteToPm?: boolean;
+    photoUrl?: string;
+    hasBlockedBot?: boolean;
+  },
+) {
+  const client = await pool.connect();
+
+  try {
+    // Build a dynamic UPDATE query for fields that are defined
+    const setClauses: string[] = [];
+    const values: any[] = [];
+
+    if (typeof isPremium !== "undefined") {
+      values.push(isPremium);
+      setClauses.push(`is_premium = $${values.length}`);
+    }
+    if (typeof allowsWriteToPm !== "undefined") {
+      values.push(allowsWriteToPm);
+      setClauses.push(`allows_write_to_pm = $${values.length}`);
+    }
+    if (typeof photoUrl !== "undefined") {
+      values.push(photoUrl);
+      setClauses.push(`photo_url = $${values.length}`);
+    }
+    if (typeof hasBlockedBot !== "undefined") {
+      values.push(hasBlockedBot);
+      setClauses.push(`has_blocked_the_bot = $${values.length}`);
+    }
+
+    // If there’s nothing to update, return early
+    if (!setClauses.length) return;
+
+    // Finally push userId
+    values.push(userId);
+    const query = `
+        UPDATE users
+        SET ${setClauses.join(", ")}
+        WHERE user_id = $${values.length};
+    `;
+
+    await client.query(query, values);
+  } finally {
+    client.release();
+  }
+}
+
+
+
+
+createDatabase().then(() => {
+  console.log("Database created successfully");
+});

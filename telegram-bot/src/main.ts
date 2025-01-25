@@ -13,14 +13,14 @@ import {
 	handlePhotoMessage,
 	handleShareOrganizer,
 } from "./controllers";
-import { cmdHandler, orgHandler, startHandler } from "./handlers";
+import { cmdHandler, orgHandler, startHandler ,updateAdminOrganizerProfilesHandler } from "./handlers";
 import { mainComposer } from "./composers";
 // parse application/json
 
 const bot = new Bot(process.env.BOT_TOKEN || "");
 bot.use(session({ initial: () => ({}) }));
 console.log("Starting bot... v2");
-
+bot.command("update_profiles", updateAdminOrganizerProfilesHandler);
 bot.command("org", orgHandler);
 bot.command("cmd", cmdHandler);
 bot.command("start", startHandler);
