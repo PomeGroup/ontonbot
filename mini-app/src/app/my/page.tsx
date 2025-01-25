@@ -21,7 +21,6 @@ import channelAvatar from "@/components/icons/channel-avatar.svg";
 import ActionCard from "@/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";
 import LoadableImage from "@/components/LoadableImage";
-import { isValidImageUrl } from "@/lib/isValidImageUrl";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
@@ -133,10 +132,10 @@ function OrganizerProgress({ step }: { step: 1 | 2 }) {
         variant="subheadline1"
         className="text-[#575757] font-medium mb-3"
       >
-        Subscribe as an organizer to create your own channel, publish events and let everyone know you and easily attend your
-        events.
+        Step forward as an organizer, Create your Organizer Channel,
+        Conduct wonderful events and distribute SBT badges to your participants.
         <br />
-        <b>{step === 1 ? "1. Connect your wallet." : "2. Pay subscription"}</b>
+        <b>{step === 1 ? "1. Connect your wallet." : "2. Pay one-time fee to become an organizer"}</b>
       </Typography>
       <div className="flex h-[2px] align-stretch gap-3">
         <div className="flex-1 bg-[#007AFF]" />

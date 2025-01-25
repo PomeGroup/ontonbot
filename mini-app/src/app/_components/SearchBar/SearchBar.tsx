@@ -5,6 +5,7 @@ import React, {
   useState,
   ChangeEvent,
   useMemo,
+  KeyboardEventHandler,
 } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { z } from "zod";
@@ -108,13 +109,11 @@ function SearchBar() {
     }
   };
 
-  const _handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const val = event.target.value;
 
-    applyFilters({ ...localFilters, search: val })
+    setLocalFilters(prev => ({ ...prev, search: val }))
   };
-
-  const handleSearchInputChange = useDebouncedCallback(_handleSearchInputChange, 300)
 
   /** ---------------
    *  Reset all filters
@@ -179,6 +178,13 @@ function SearchBar() {
       .join(", ");
   }
 
+  const handleSearchFromHome: KeyboardEventHandler = (e) => {
+    if (isSearchPage || e.key !== 'Enter' || localFilters.search?.length < 2) return
+    setTimeout(() => {
+      applyFilters(localFilters)
+    }, 10)
+  }
+
   return (
     <div className="relative flex flex-col">
       {/* Top row: search + filter icon */}
@@ -192,6 +198,8 @@ function SearchBar() {
               className={`rounded-md bg-[#E0E0E5] w-full py-3 leading-[16px] pl-10 caret-[#007aff] text-black`}
               placeholder="Search Events"
               onChange={handleSearchInputChange}
+              onKeyUp={handleSearchFromHome}
+              value={localFilters.search}
             />
           </div>
         </div>

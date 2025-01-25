@@ -5,24 +5,30 @@ import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import { OntonEvent } from "@/types";
 import { cn } from "@/utils";
 
-type SkeletonProps = { skeleton: true; event?: null, className: never };
+type SkeletonProps = { skeleton: true; event?: null };
 type EventProps = {
   skeleton?: false;
   event: OntonEvent;
   className?: string
 };
 
-type Props = SkeletonProps | EventProps;
+type Props = (SkeletonProps | EventProps) & {
+  className?: string;
+};
 
 const defaultImage = "/template-images/default.webp";
 
+const emptyObj = {} as any
 export default function EventBanner({ skeleton, event, className }: Props) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const webApp = useWebApp();
 
-  if (skeleton) return <EventBannerSkeleton />;
-
-  const { eventUuid, title = "No Title", imageUrl = "/template-images/default.webp", ticketToCheckIn = false } = event;
+  const {
+    eventUuid,
+    title = "No Title",
+    imageUrl = "/template-images/default.webp",
+    ticketToCheckIn = false
+  } = event || emptyObj;
 
   const handleEventClick = () => {
     if (ticketToCheckIn) {
@@ -44,28 +50,29 @@ export default function EventBanner({ skeleton, event, className }: Props) {
       onClick={handleEventClick}
       key={`detailed-${eventUuid}`}
     >
-      {!imageLoaded && renderImageSkeleton()}
-      <Image
-        // if date now before 5 november 2024 show special image
-        src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
-        alt={title}
-        width={0}
-        height={0}
-        sizes="100vw"
-        className={`aspect-square w-[220px] rounded-[10px] transition-opacity duration-250 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
-        onError={(e) => (e.currentTarget.src = defaultImage)}
-        onLoad={() => setImageLoaded(true)}
-      />
+      {(!imageLoaded || skeleton) && renderImageSkeleton()}
+      {!skeleton && (
+        <Image
+          // if date now before 5 november 2024 show special image
+          src={isValidImageUrl(imageUrl) ? imageUrl : defaultImage}
+          alt={title}
+          width={0}
+          height={0}
+          sizes="100vw"
+          className={`aspect-square w-[220px] rounded-[10px] transition-opacity duration-250 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+          onError={(e) => (e.currentTarget.src = defaultImage)}
+          onLoad={() => setImageLoaded(true)}
+        />
+      )}
     </div>
   );
 }
 
-function EventBannerSkeleton() {
+function EventBannerSkeleton({ className }: { className?: string }) {
   return (
-    <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg animate-pulse mb-4">
-      <div className="absolute inset-0 w-full h-full bg-gray-200 dark:bg-gray-700"></div>
-      <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-between p-6">
-        <div>
+    <div className={`relative w-full aspect-square rounded-lg bg-grey-200 overflow-hidden shadow-lg animate-pulse mb-4 ${className}`}>
+      {/* <div className="absolute inset-0 w-full h-full bg-gray-200 dark:bg-gray-700"></div> */}
+      {/* <div>
           <div className="flex justify-between items-start">
             <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
             <div className="w-32 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
@@ -76,8 +83,8 @@ function EventBannerSkeleton() {
         <div className="flex justify-between items-center text-sm">
           <div className="w-32 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
           <div className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
-      </div>
+        </div> */}
     </div>
+    // </div >
   );
 }
