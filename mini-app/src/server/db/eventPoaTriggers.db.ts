@@ -15,6 +15,7 @@ export type EventPoaTrigger = {
   status: "active" | "deactive" | "completed" | "sending";
   createdAt: Date | null;
   updatedAt: Date | null;
+  creator_user_id: number;
 };
 // Cache key prefix for event POA triggers
 const getEventPoaCacheKey = (poaId: number) => `${redisTools.cacheKeys.eventPoaTrigger}${poaId}`;
@@ -30,6 +31,7 @@ export const addEventPoaTrigger = async (poaData: {
   status: EventTriggerStatus; // "active", "deactive", "completed", "sending"
   createdAt?: Date;
   updatedAt?: Date;
+  creator_user_id: number;
 }) => {
   try {
     const result = await db
@@ -44,6 +46,7 @@ export const addEventPoaTrigger = async (poaData: {
         status: poaData.status,
         createdAt: poaData.createdAt || new Date(),
         updatedAt: poaData.updatedAt || new Date(),
+        creator_user_id: poaData.creator_user_id,
       })
       .onConflictDoNothing()
       .returning()

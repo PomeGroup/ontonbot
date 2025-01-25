@@ -1,7 +1,10 @@
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { EventTriggerStatus, NotificationItemType, NotificationStatus, NotificationType } from "@/db/schema";
+
+import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { getEventById ,fetchOngoingEvents } from "@/server/db/events";
+import { z } from "zod";
 import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
 import { ACTION_TIMEOUTS, PASSWORD_RETRY_LIMIT, WORKER_INTERVAL, PAGE_SIZE } from "@/sockets/constants";
 import { logger } from "@/server/utils/logger";
@@ -19,7 +22,30 @@ process.on("SIGTERM", () => {
   isShuttingDown = true;
 });
 
+
 // Function to fetch ongoing events with online participation
+// const fetchOngoingEvents = async () => {
+//   const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+//
+//   // Ensure the params conform to the Zod schema
+//   const params: z.infer<typeof searchEventsInputZod> = {
+//     search: "",
+//     filter: {
+//       participationType: ["online"],
+//       startDate: currentTime,
+//       startDateOperator: "<=",
+//       endDate: currentTime,
+//       endDateOperator: ">=",
+//     },
+//     sortBy: "start_date_asc",
+//     limit: 100,
+//     offset: 0,
+//     useCache: false,
+//   };
+//
+//   // Call the function with type-safe arguments
+//   return getEventsWithFilters(params);
+// };
 
 // Function to create a notification for the event owner
 const notifyEventOwner = async (eventId: number, ownerId: number, notificationCount: number, triggerId: number) => {
@@ -56,6 +82,8 @@ const processOngoingEvents = async () => {
   try {
     await notificationsDB.expireReadNotifications(); // Expire read notifications
     logger.log("Expired read notifications.");
+
+
     const ongoingEvents = await fetchOngoingEvents();
     logger.log(`Fetched ${ongoingEvents.length} ongoing events.`);
     for (let i = 0; i < ongoingEvents.length; i++){
@@ -65,7 +93,6 @@ const processOngoingEvents = async () => {
         logger.warn("Invalid event data:", event);
         continue;
       }
-      console.log("Event ==> " ,i ,ongoingEvents[i].title);
       const eventId = event.event_id;
       const eventUuid = event.event_uuid;
       const eventTitle = event.title;

@@ -43,6 +43,13 @@
       "when": 1737470450975,
       "tag": "0005_quiet_nekra",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1737809828230,
+      "tag": "0006_woozy_silver_centurion",
+      "breakpoints": true
     }
   ]
 }
