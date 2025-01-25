@@ -1,6 +1,5 @@
 import { DetailedHTMLProps, ImgHTMLAttributes, useState } from "react"
 import Image from "next/image";
-import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import { cn } from "@/utils";
 
 type Props = (

@@ -20,7 +20,7 @@ export default function ManageIndexPage() {
   const router = useRouter();
 
   if (!eventData || !eventData?.event_uuid) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   // The main “Manage” page
