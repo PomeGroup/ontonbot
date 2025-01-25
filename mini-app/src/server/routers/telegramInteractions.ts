@@ -284,8 +284,8 @@ const requestShareOrganizer = initDataProtectedProcedure
       if (!organizer) {
         return { status: "fail", data: `Organizer not found: ${opts.input.organizerId}` };
       }
-      if (organizer.role !== "organizer") {
-        return { status: "fail", data: "User is not an organizer" };
+      if (organizer.role !== "organizer" && organizer.role !== "admin") {
+        return { status: "fail", data: "User is not an organizer or admin" };
       }
       let finalImageUrl = (organizer.org_image?.trim() === "" ? organizer.photo_url : organizer.org_image) ?? "";
 
@@ -316,7 +316,7 @@ const requestShareOrganizer = initDataProtectedProcedure
           org_image: jpegBuffer ?? finalImageUrl ?? "",
         }
       );
-
+      logger.log("result", result);
       // Step 3: Check for success
       if (result.success) {
         return { status: "success", data: null };
