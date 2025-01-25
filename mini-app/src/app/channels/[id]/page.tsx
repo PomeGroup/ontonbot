@@ -12,7 +12,7 @@ export default function ChannelPage({ params }: Props) {
 
   const router = useRouter();
 
-  if (isLoading) return "loading...";
+  if (isLoading) return null;
   if (isError) return "something went wrong...";
 
   return (

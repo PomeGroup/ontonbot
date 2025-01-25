@@ -31,7 +31,7 @@ export default function ProfilePage() {
   const paid = user?.role === "organizer" || user?.role === "admin";
   const router = useRouter();
 
-  if (isLoading) return "loading";
+  if (isLoading) return null;
 
   return (
     <div className="bg-[#EFEFF4] py-4 min-h-screen">

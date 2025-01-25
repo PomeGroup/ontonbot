@@ -40,7 +40,7 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
     [isFetchingNextPage, fetchNextPage, hasNextPage]
   );
 
-  if (status === "loading") return <p>Loading...</p>;
+  if (status === "loading") return null;
   if (status === "error") return <p>Error fetching data</p>;
 
   const hasItems = data?.pages[0]?.items?.length > 0;

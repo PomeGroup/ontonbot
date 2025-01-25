@@ -30,7 +30,7 @@ export default function ChannelsPage() {
     [isFetchingNextPage, fetchNextPage, hasNextPage]
   );
 
-  if (status === "loading") return <p>Loading...</p>;
+  if (status === "loading") return null;
   if (status === "error") return <p>Error fetching data</p>;
 
   return (
