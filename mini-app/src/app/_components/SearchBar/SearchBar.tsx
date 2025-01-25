@@ -6,6 +6,7 @@ import React, {
   ChangeEvent,
   useMemo,
   KeyboardEventHandler,
+  useCallback,
 } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { z } from "zod";
@@ -23,6 +24,7 @@ import { SearchIcon } from "lucide-react";
 import { useDebouncedCallback } from "@mantine/hooks";
 import parseSearchParams, { allParticipationTypes } from "@/app/search/parseSearchParams";
 import { trpc } from "@/app/_trpc/client";
+import { noop } from "lodash";
 
 /** TypeScript types from your Zod schema */
 type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
@@ -77,21 +79,22 @@ function SearchBar() {
     }
   } = parsedSearchParams
 
-  const defaultFilters = {
+  const defaultFilters = useMemo(() => ({
     search: '',
     sortBy: 'default' as SortBy,
     filter: {
       participationType: allParticipationTypes,
       society_hub_id: hubs.map(h => h.id).map(Number)
     }
-  }
+  }), [hubs])
+
   const [localFilters, setLocalFilters] = useState<ReturnType<typeof parseSearchParams>>(defaultFilters)
 
   useEffect(() => {
     setLocalFilters(parsedSearchParams)
   }, [parsedSearchParams])
 
-  const applyFilters = (newVals: ReturnType<typeof parseSearchParams>) => {
+  const applyFilters = useCallback((newVals: ReturnType<typeof parseSearchParams>) => {
     const qs = buildQueryParams({
       ...defaultFilters,
       ...newVals,
@@ -107,13 +110,21 @@ function SearchBar() {
     } else {
       router.replace(searchUrl)
     }
-  };
+  }, [defaultFilters, isSearchPage, router]);
 
-  const handleSearchInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const debouncedApplyFilters = useDebouncedCallback(applyFilters, 500)
+  const handleSearchInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const val = event.target.value;
 
-    setLocalFilters(prev => ({ ...prev, search: val }))
-  };
+    setLocalFilters(prev => {
+      const newVal = {
+        ...prev,
+        search: val
+      }
+      if (isSearchPage) debouncedApplyFilters(newVal)
+      return newVal
+    })
+  }, [debouncedApplyFilters, isSearchPage]);
 
   /** ---------------
    *  Reset all filters
@@ -178,12 +189,12 @@ function SearchBar() {
       .join(", ");
   }
 
-  const handleSearchFromHome: KeyboardEventHandler = (e) => {
-    if (isSearchPage || e.key !== 'Enter' || localFilters.search?.length < 2) return
+  const handleSearchFromHome: KeyboardEventHandler = useCallback((e) => {
+    if (e.key !== 'Enter' || localFilters.search?.length < 2) return
     setTimeout(() => {
       applyFilters(localFilters)
     }, 10)
-  }
+  }, [applyFilters, localFilters])
 
   return (
     <div className="relative flex flex-col">
@@ -198,7 +209,7 @@ function SearchBar() {
               className={`rounded-md bg-[#E0E0E5] w-full py-3 leading-[16px] pl-10 caret-[#007aff] text-black`}
               placeholder="Search Events"
               onChange={handleSearchInputChange}
-              onKeyUp={handleSearchFromHome}
+              onKeyUp={isSearchPage ? noop : handleSearchFromHome}
               value={localFilters.search}
             />
           </div>
