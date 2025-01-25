@@ -5,8 +5,6 @@ import { startKeyboard } from "./markups";
 import { sendTopicMessage } from "./utils/logs-bot";
 import { hideCmd } from "./db/cmd.db";
 import axios from "axios";
-import * as jwt from "jsonwebtoken";
-import FormData from "form-data";
 import { API_BASE_URL, BOT_TOKEN, JWT_SECRET, MS_PER_REQUEST, REQUESTS_PER_SECOND } from "./constants";
 import { uploadProfileImage } from "./utils/uploadProfileImage";
 /* -------------------------------------------------------------------------- */
