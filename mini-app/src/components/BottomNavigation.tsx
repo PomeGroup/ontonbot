@@ -28,7 +28,7 @@ export default function BottomNavigation({ active }: { active: "Events" | "Chann
     <Tabbar
       labels
       icons
-      className={`left-0 bottom-0 fixed !h-[calc(48px+var(--tg-safe-area-inset-bottom))]`}
+      className={`left-0 bottom-0 h-[calc(48px+(var(--tg-safe-area-inset-bottom,0px)/2))] fixed`}
     >
       {tabs.map((tab) => (
         <TabbarLink
