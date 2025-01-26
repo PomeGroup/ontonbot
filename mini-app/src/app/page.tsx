@@ -31,30 +31,6 @@ import Typography from "@/components/Typography";
 //   sortBy: "start_date_asc",
 // });
 
-// const ongoingEventsParams = searchEventsInputZod.parse({
-//   limit: 2,
-//   offset: 0,
-//   filter: {
-//     participationType: ["online", "in_person"],
-//     startDate: currentDateTime,
-//     startDateOperator: "<=",
-//     endDate: currentDateTime,
-//     endDateOperator: ">=",
-//   },
-//   sortBy: "random",
-// });
-
-// const pastEventsParams = searchEventsInputZod.parse({
-//   limit: 2,
-//   offset: 0,
-//   filter: {
-//     participationType: ["online", "in_person"],
-//     endDate: currentDateTime - (currentDateTime % 600),
-//   },
-//   sortBy: "start_date_desc",
-// });
-
-// const tabValueForSearchBar = 'All'
 export default function Home() {
   return (
     <Block margin="0" className="bg-[#EFEFF4] pb-16 min-h-screen">
@@ -106,9 +82,10 @@ function PromotedEventsSlider() {
         staleTime: Infinity,
       }
     );
-  if (!sliderEventData?.data?.length) return null
 
-  let content = <div className="flex gap-3 overflow-x-hidden -mx-3 px-3">
+  if (!isLoadingSlider && !sliderEventData?.data?.length) return null
+
+  let content = <div className="flex gap-3 overflow-x-hidden -mx-3 px-3 pb-3">
     <EventBanner skeleton className='flex-[0_0_220px] h-[220px]' />
     <EventBanner skeleton className='flex-[0_0_220px] h-[220px]' />
     <EventBanner skeleton className='flex-[0_0_220px] h-[220px]' />
@@ -138,23 +115,13 @@ function PromotedEventsSlider() {
 
   return (
     <>
-      <Typography
-        variant="title3"
-        bold
-        className="mb-2"
-      >
-        Promoted Events
-      </Typography>
+      <h2 className="font-bold text-lg">Featured Events</h2>
       {content}
     </>
   )
 }
 
 function PromotedEventsList() {
-  // const { user: {user_id} } = useUserStore()
-
-  // const {data, isLoading, isError} = trpc.events.getSpecialList.useQuery('homeList')
-
   const config = useConfig()
   const itemIds = config?.homeListEventUUID as unknown as string[]
 
@@ -169,15 +136,23 @@ function PromotedEventsList() {
     return 'something went wrong';
   }
 
-  if (isLoading) {
-    return <>
-      <EventCardSkeleton />
-      <EventCardSkeleton />
-    </>
+  if (!isLoading && data.data?.length === 0) {
+    return null
   }
 
-  if (data.data?.length === 0) {
-    return null
+  let content = <>
+    <EventCardSkeleton />
+    <EventCardSkeleton />
+  </>
+  if (data?.data?.length) {
+    content = <>{data.data?.map((event) => (
+      <EventCard
+        key={(event as any).event_uuid}
+        event={event}
+        currentUserId={0}
+      />
+    ))}
+    </>
   }
 
   return (
@@ -192,13 +167,7 @@ function PromotedEventsList() {
           <ChevronRightIcon width={20} className='ml-1 -my-0.5' />
         </a>
       </div>
-      {data.data?.map((event) => (
-        <EventCard
-          key={(event as any).event_uuid}
-          event={event}
-          currentUserId={0}
-        />
-      ))}
+      {content}
     </>
   );
 }
