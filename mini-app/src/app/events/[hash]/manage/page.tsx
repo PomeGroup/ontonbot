@@ -1,25 +1,30 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Page, Block, Button } from "konsta/react";
 // svg icons
 import guestListIcon from "./guest-list.svg";
 // import promotionCodeIcon from "./promotion-code.svg";
 import ordersIcon from "./orders.svg";
-import { useManageEventContext } from "@/context/ManageEventContext";
+
 import EventCard from "@/app/_components/EventCard/EventCard";
 import ActionCard from "@/components/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";
+import { useGetEvent } from "@/hooks/events.hooks";
 
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
-  const { eventData } = useManageEventContext();
-  console.log(eventData);
+  const { hash } = useParams() as { hash?: string };
+  const {data:eventData , isLoading ,isError } = useGetEvent(hash);
+
   const { setSection } = useSectionStore();
   const router = useRouter();
 
-  if (!eventData || !eventData?.event_uuid) {
+  if(isError) {
+    return <div>something went wrong</div>
+  }
+  if (!eventData || !eventData?.event_uuid || isLoading ) {
     return null;
   }
 

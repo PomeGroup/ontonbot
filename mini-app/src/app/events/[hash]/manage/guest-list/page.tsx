@@ -2,12 +2,17 @@
 
 import React from "react";
 import { Page } from "konsta/react";
-import { useManageEventContext } from "../../../../../context/ManageEventContext";
 import GuestList from "@/app/_components/organisms/events/GuestList";
+import { useParams } from "next/navigation";
+import { useGetEvent } from "@/hooks/events.hooks";
 
 export default function GuestListPage() {
-  const { eventData } = useManageEventContext();
-  if(!eventData?.event_uuid) {
+  const { hash } = useParams() as { hash?: string };
+  const {data:eventData , isLoading ,isError } = useGetEvent(hash);
+  if(isError) {
+    return <div>something went wrong</div>
+  }
+  if(!eventData?.event_uuid  || isLoading) {
     return <div>Loading...</div>;
   }
   return (

@@ -12,8 +12,9 @@ import ActionCardWithMenu from "./ActionCardWithMenu";
 import CreatePromotionForm from "./CreatePromotionForm";
 import EditPromotionDatesForm from "./EditPromotionDatesForm";
 import { useDownloadCSV } from "@/app/_components/Event/PromotionCode/useDownloadCSV";
-import { useManageEventContext } from "@/context/ManageEventContext";
 import Image from "next/image";
+import { useParams } from "next/navigation";
+import { useGetEvent } from "@/hooks/events.hooks";
 
 
 
@@ -31,7 +32,8 @@ interface Definition {
 
 export default function PromotionCode() {
   // 1) Hide Telegram back button on unmount
-  const { eventData } = useManageEventContext();
+  const { hash } = useParams() as { hash?: string };
+  const {data:eventData ,isLoading : eventDataLoading ,isError :eventDataError } = useGetEvent(hash);
 
   const webApp = useWebApp();
   useEffect(() => {
@@ -47,7 +49,10 @@ export default function PromotionCode() {
 
   // 3) CSV logic
   const { isCSVLoading, handleDownloadCSV } = useDownloadCSV();
-  if(!eventData?.event_uuid) {
+  if(eventDataError) {
+    return <div>something went wrong</div>
+  }
+  if(!eventData?.event_uuid || eventDataLoading ) {
     return <div>Loading...</div>;
   }
   const eventUuid = eventData.event_uuid;
