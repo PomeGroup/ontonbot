@@ -1,10 +1,10 @@
 {
-  "name": "teth-pay",
+  "name": "telegram-bot-onton",
   "version": "1.0.0",
-  "description": "Payment non-custodial extention for integration ERC20 in Telegram",
+  "description": "Telegram bot for Onton",
   "main": "main.js",
-  "repository": "git@github.com:qpwedev/teth-pay.git",
-  "author": "qpwedev <russfdk@gmail.com>",
+  "repository": "https://github.com/PomeGroup/ontonbot",
+  "author": "PomeGroup <admin@onton.tg>",
   "license": "MIT",
   "dependencies": {
     "@grammyjs/conversations": "^1.2.0",
@@ -22,10 +22,10 @@
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.3",
     "qrcode": "^1.5.3",
+    "redis": "^4.7.0",
     "sharp": "^0.33.2",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
     "typescript": "^5.0.4",
+    "winston": "^3.17.0",
     "zod": "^3.23.8"
   },
   "scripts": {
@@ -33,8 +33,8 @@
     "dev:server": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/main.ts",
     "build": "tsc",
     "build:local": "dotenv -e ../.env -- tsc",
-    "start": "ts-node src/main.ts",
-    "start:local": "dotenv -e ../.env -- ts-node src/main.ts"
+    "start": "ts-node -r tsconfig-paths/register  src/main.ts",
+    "start:local": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register src/main.ts"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
@@ -44,8 +44,10 @@
     "@types/jsonwebtoken": "^9.0.8",
     "@types/node": "^18.19.8",
     "@types/pg": "^8.11.2",
+    "@types/winston": "^2.4.4",
     "dotenv-cli": "^7.4.2",
     "nodemon": "^2.0.22",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0"
   }
 }

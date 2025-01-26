@@ -81,6 +81,7 @@ x-common-env: &common-env
   NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL}
   IP_SOCKET: ${IP_SOCKET}
   SOCKET_PORT: ${SOCKET_PORT}
+  ONTON_API_SECRET: ${ONTON_API_SECRET}
 
 services:
   caddy:
@@ -214,7 +215,9 @@ services:
 
   telegram-bot:
     container_name: ${ENV}-telegram-bot
-    build: ./telegram-bot
+    build:
+      context: ./telegram-bot
+      target: production
     restart: "unless-stopped"
     ports:
       - "${TELEGRAM_BOT_PORT}:${TELEGRAM_BOT_PORT}"

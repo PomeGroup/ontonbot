@@ -1,5 +1,11 @@
 import { TVisitor } from "../utils/types";
 import { Pool } from "pg";
+import { logger } from "../utils/logger";
+import { redisTools } from "../lib/redisTools";
+
+
+// cache keys
+export const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}${userId}`;
 
 // Create a single pool instance for your entire application
 export const pool = new Pool({
@@ -96,7 +102,7 @@ export async function countReferrals(
 
     return { totalReferrals, todayReferrals };
   } catch (error) {
-    console.error("Error in countReferrals:", error);
+    logger.error("Error in countReferrals:", error);
     throw error;
   } finally {
     client.release();
@@ -146,17 +152,34 @@ export async function changeRole(newRole: string, username: string) {
       throw new Error("nothing_to_update");
     }
 
-    await client.query(
-      "UPDATE users SET role = $1 WHERE username = $2 or user_id::text = $2",
+  try {
+    const UpdateResult = await client.query(
+      `
+          UPDATE users
+          SET role = $1
+          WHERE username = $2
+             OR user_id::text = $2
+              RETURNING user_id
+      `,
       [newRole, username],
     );
 
+// result.rows[0] now contains the updated row, including user_id
+    const updatedUserId = UpdateResult.rows[0]?.user_id;
+    await redisTools.deleteCache(getUserCacheKey(updatedUserId));
+
+  } catch (error) {
+    logger.error("Error in changeRole:", error);
+    client.release();
+    throw error;
+  }
 
     const totalOrgsQuery = "SELECT count(*) FROM users WHERE role = $1";
     const result = await client.query(totalOrgsQuery, ["organizer"]); // Use parameterized queries to avoid SQL injection
     const totalOrgs = result.rows[0].count;
 
     client.release();
+    logger.log(`Role for ${username} changed to ${newRole}.`);
 
     return {
       username: userExists.rows[0].username,
@@ -164,7 +187,7 @@ export async function changeRole(newRole: string, username: string) {
       total_organizers_count: totalOrgs,
     };
   } catch (error) {
-    console.error("Error in changeRole:", error);
+    logger.error("Error in changeRole:", error);
     client.release();
     throw error;
   }
@@ -186,9 +209,12 @@ export async function getUser(usernameOrId: string) {
 
 export async function isUserAdmin(usernameOrId: string) {
   const user = await getUser(usernameOrId);
-
+  if (!user) {
+    return { isAdmin: false, user: null };
+  }
   return { isAdmin: user.role === "admin", user };
 }
+
 
 export async function getEventTickets(uuid: string) {
   const client = await pool.connect();
@@ -242,7 +268,7 @@ export async function fetchOntonSetting() {
 
     return { config, configProtected };
   } catch (error) {
-    console.error(error);
+    logger.error(error);
   }
 }
 
@@ -304,6 +330,7 @@ export async function updateUserProfile(
 
     // Finally push userId
     values.push(userId);
+    await redisTools.deleteCache(getUserCacheKey(userId));
     const query = `
         UPDATE users
         SET ${setClauses.join(", ")}
@@ -317,8 +344,6 @@ export async function updateUserProfile(
 }
 
 
-
-
 createDatabase().then(() => {
-  console.log("Database created successfully");
+  logger.log("Database created successfully");
 });

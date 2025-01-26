@@ -9,6 +9,14 @@ export const validateMiniAppData = (rawInitData: any): boolean => {
   return validateWebAppData(process.env.BOT_TOKEN, initData);
 };
 
+export const escapeHtml = (unsafe: string) => unsafe
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;")
+  .replace(/'/g, "&#039;");
+
+
 const editOrSend = async (
   ctx: Context,
   text: string,

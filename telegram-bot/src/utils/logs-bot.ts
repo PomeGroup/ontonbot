@@ -1,6 +1,7 @@
 import { Bot } from "grammy";
 import { configProtected } from "./onton-config";
 import { sleep } from "./utils";
+import { logger } from "./logger";
 
 let logsBot: undefined | Bot;
 
@@ -40,6 +41,6 @@ export const sendTopicMessage = async (
     );
   } catch (error) {
     // __AUTO_GENERATED_PRINT_VAR_START__
-    console.error("telegram bot sendTopicMessage error: %s", error); // __AUTO_GENERATED_PRINT_VAR_END__
+    logger.error("telegram bot sendTopicMessage error: %s", error); // __AUTO_GENERATED_PRINT_VAR_END__
   }
 };
