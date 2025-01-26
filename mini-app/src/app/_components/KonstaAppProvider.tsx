@@ -10,7 +10,7 @@ const KonstaAppProvider = ({ children }: { children: ReactNode }) => {
   return (
     <App
       theme={"ios"}
-      className="h-[unset] min-h-[unset]"
+      className="!h-[unset] !min-h-full overflow-y-auto"
     >
       {children}
     </App>

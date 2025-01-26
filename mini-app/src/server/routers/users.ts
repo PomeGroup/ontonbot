@@ -89,6 +89,7 @@ export const usersRouter = router({
           });
         } catch (error) {
           if (error instanceof TRPCError) {
+            console.log('getVisitorReward_error_createUserReward' , error , error.message);
             if (error.code === "CONFLICT") {
               await rewardDB.insertReward(
                 visitor.id,
@@ -103,7 +104,7 @@ export const usersRouter = router({
               } as const;
             }
           } else {
-            // logger.log(error);
+            // logger.log("getVisitorReward_error_else" );
           }
         }
 
