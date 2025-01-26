@@ -7,6 +7,7 @@ import { getEvent } from "./db/db";
 import { shareKeyboard } from "./markups";
 import axios from "axios";
 import { Bot, GrammyError, InputFile } from "grammy";
+import { logger } from "./utils/logger";
 
 export const handleSendQRCode = async (
   req: Request & { bot: Bot },
@@ -60,7 +61,7 @@ export const handleSendQRCode = async (
 
     return res.status(200).send("Success");
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return res.status(500).send("Internal Server Error");
   }
 };
@@ -102,7 +103,7 @@ export const handleFileSend = async (
 
     return res.status(200).send("Success");
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return res.status(500).send("Internal Server Error");
   }
 };
@@ -167,11 +168,11 @@ const processAndSendImage = async (
         },
       });
     } catch (sharpError) {
-      console.error("Sharp processing error:", sharpError);
+      logger.error("Sharp processing error:", sharpError);
       throw new Error("Image processing failed");
     }
   } catch (error) {
-    console.error("Image processing/sending error:", error);
+    logger.error("Image processing/sending error:", error);
 
     // Fall back to sending the original URL if processing fails
     await bot.api.sendPhoto(parseInt(userId), event.image_url, {
@@ -294,7 +295,7 @@ export const handleShareEvent = async (
           customButton,
         );
       } catch (error) {
-        console.error("Final fallback - using default image");
+        logger.error("Final fallback - using default image");
         // Final fallback - use default image
         await req.bot.api.sendPhoto(
           parseInt(user_id),
@@ -320,7 +321,7 @@ export const handleShareEvent = async (
 
       res.json(event);
     } catch (error) {
-      console.log(error);
+      logger.log(error);
       res.status(404).json({ message: "Event not found" });
     }
   } else {
@@ -342,7 +343,7 @@ export const handlePhotoMessage = async (
     typeof message === "string"
   ) {
     try {
-      console.log(
+      logger.log(
         "<----------------------> handlePhotoMessage , ",
         id,
         user_id,
@@ -355,12 +356,12 @@ export const handlePhotoMessage = async (
           parse_mode: "HTML",
         });
       } catch (error) {
-        console.log("<----------------------> handlePhotoMessage", error);
+        logger.log("<----------------------> handlePhotoMessage", error);
       }
 
       res.json(event);
     } catch (error) {
-      console.log("error_handlePhotoMessage", error);
+      logger.log("error_handlePhotoMessage", error);
       res.status(404).json({ message: "Event not found" });
     }
   } else {
@@ -435,7 +436,7 @@ export async function sendMessage(
       error.error_code === 429 &&
       tryCount < 10
     ) {
-      console.error("BOT_ERROR: 429", error);
+      logger.error("BOT_ERROR: 429", error);
 
       // wait 1000
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -448,7 +449,7 @@ export async function sendMessage(
       const errorMessage =
         error.response.description ||
         "An error occurred while sending the message.";
-      console.error("TELEGRAM_ERROR:", errorMessage);
+      logger.error("TELEGRAM_ERROR:", errorMessage);
       return res.status(error.response.statusCode).json({
         success: false,
         error: errorMessage,
@@ -456,7 +457,7 @@ export async function sendMessage(
     }
 
     // Handle other unexpected errors
-    console.error("Unexpected error sending message:", error);
+    logger.error("Unexpected error sending message:", error);
     return res.status(500).json({
       success: false,
       error: "Unexpected server error. Please try again later.",
@@ -532,7 +533,7 @@ Address:  ${share_link}
         const processed = await processImageBuffer(realBuffer);
         photoToSend = new InputFile(processed);
       } catch (err) {
-        console.error("Error processing buffer image:", err);
+        logger.error("Error processing buffer image:", err);
         photoToSend = "https://onton.live/template-images/default.webp";
       }
     }
@@ -547,7 +548,7 @@ Address:  ${share_link}
         const processed = await processImageBuffer(buffer);
         photoToSend = new InputFile(processed);
       } catch (err) {
-        console.error("Error fetching/processing image URL:", err);
+        logger.error("Error fetching/processing image URL:", err);
         photoToSend = "https://onton.live/template-images/default.webp";
       }
     }
@@ -565,7 +566,7 @@ Address:  ${share_link}
 
     return res.json({ success: true });
   } catch (error) {
-    console.error("Error sharing organizer:", error);
+    logger.error("Error sharing organizer:", error);
     return res.status(500).json({ message: "Failed to share organizer" });
   }
 };

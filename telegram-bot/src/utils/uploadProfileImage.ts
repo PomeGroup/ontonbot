@@ -2,6 +2,7 @@ import { API_BASE_URL, JWT_SECRET } from "../constants";
 import FormData from "form-data";
 import * as jwt from "jsonwebtoken";
 import axios from "axios";
+import { logger } from "../utils/logger";
 
 /**
  * Uploads the given buffer to your external file service in subfolder "profiles".
@@ -49,7 +50,7 @@ export const uploadProfileImage = async (
     // Return the final link to the uploaded image
     return response.data.imageUrl;
   } catch (err) {
-    console.error("Error during image upload:", err);
+    logger.error("Error during image upload:", err);
     throw new Error("An error occurred during image upload");
   }
 };

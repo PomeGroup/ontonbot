@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Context } from "grammy";
 import { changeRole, getAdminOrganizerUsers, isUserAdmin, updateUserProfile } from "./db/db";
 import { editOrSend } from "./utils/utils";
@@ -7,6 +8,7 @@ import { hideCmd } from "./db/cmd.db";
 import { API_BASE_URL, BOT_TOKEN, JWT_SECRET, MS_PER_REQUEST, REQUESTS_PER_SECOND } from "./constants";
 import { uploadProfileImage } from "./utils/uploadProfileImage";
 import axios from "axios";
+import { logger } from "./utils/logger";
 
 /* -------------------------------------------------------------------------- */
 /*                                 ORG Handler                                */
@@ -15,6 +17,7 @@ import axios from "axios";
 /* -------------------------------------------------------------------------- */
 export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
   // get user from database
+  console.log("orgHandler");
   const { isAdmin } = await isUserAdmin(ctx.from.id.toString());
 
   if (!isAdmin) {
@@ -154,7 +157,7 @@ export const startHandler = async (ctx: Context) => {
       false,
     );
   } catch (error) {
-    console.log(error);
+    logger.log(error);
   }
 };
 
@@ -189,7 +192,7 @@ export async function updateAdminOrganizerProfilesHandler(ctx: Context) {
     for (let i = 0; i < users.length; i++) {
       const userRow = users[i];
       const userId = Number(userRow.user_id);
-      console.log(`Updating profile for user ${userId}...`);
+      logger.log(`Updating profile for user ${userId}...`);
 
       // ~200ms delay between requests => ~5 rps
       await new Promise((resolve) => setTimeout(resolve, MS_PER_REQUEST));
@@ -247,7 +250,7 @@ export async function updateAdminOrganizerProfilesHandler(ctx: Context) {
           hasBlockedBot: false,
         });
 
-        console.log(`User ${userId} profile updated with an uploaded photo.`);
+        logger.log(`User ${userId} profile updated with an uploaded photo.`);
       } catch (error: any) {
         // 4. If it's a 403 => the user blocked the bot
         if (
@@ -255,16 +258,16 @@ export async function updateAdminOrganizerProfilesHandler(ctx: Context) {
           /bot was blocked by the user/i.test(error.description)
         ) {
           await updateUserProfile(userId, { hasBlockedBot: true });
-          console.log(`User ${userId} blocked the bot. Updated in DB.`);
+          logger.log(`User ${userId} blocked the bot. Updated in DB.`);
         } else {
-          console.error(`Error updating user ${userId}:`, error);
+          logger.error(`Error updating user ${userId}:`, error);
         }
       }
     }
 
     await ctx.reply("Profile updates complete.");
   } catch (error) {
-    console.error("Error in updateAdminOrganizerProfilesHandler:", error);
+    logger.error("Error in updateAdminOrganizerProfilesHandler:", error);
     await ctx.reply("An error occurred while updating profiles.");
   }
 }
