@@ -3,12 +3,14 @@ import { MouseEventHandler } from "react";
 import { ArrowRight } from "lucide-react";
 import Typography from "./Typography";
 import Image from "next/image";
+import { cn } from "@/utils";
 
 interface Props {
   onClick: MouseEventHandler<HTMLElement>;
   iconSrc: string;
   title: string;
   subtitle: string;
+  className?: string;
   footerTexts: {
     count?: number;
     items: string;
@@ -16,11 +18,12 @@ interface Props {
   }[];
 }
 
-export default function ActionCard({ onClick, iconSrc, title, subtitle, footerTexts }: Props) {
+export default function ActionCard({ onClick, iconSrc, title, subtitle, className, footerTexts }: Props) {
+
   return (
     <Card
       onClick={onClick}
-      className={onClick !== undefined ? "cursor-pointer" : ""}
+      className={cn(className, !!onClick && "cursor-pointer")}
     >
       <div className="flex gap-3 align-stretch">
         <div className="bg-[#efeff4] p-4 rounded-[10px]">
