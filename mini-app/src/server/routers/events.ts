@@ -359,7 +359,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           message: logMessage,
           topic: "event",
         });
-      } else {
+      } else if(!is_paid) {
         /* --------------------------- Moderation Message --------------------------- */
         const moderation_group_id = configProtected?.moderation_group_id;
         const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
