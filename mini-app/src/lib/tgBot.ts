@@ -255,14 +255,19 @@ export async function sendLogNotification(
     topic: "event" | "ticket" | "system" | "payments";
     image?: string | null;
     inline_keyboard?: InlineKeyboardMarkup; // Optional property
-  } = { message: "", topic: "event", image: undefined, inline_keyboard: undefined }
+    group_id?: number | string | null;
+  } = { message: "", topic: "event", image: undefined, inline_keyboard: undefined, group_id: undefined }
 ) {
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     console.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");
   }
 
-  const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
+  let { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
+
+  if (props.group_id) {
+    LOGS_GROUP_ID = props.group_id.toString();
+  }
 
   // Centralized topic mapping
   const topicMapping: Record<"event" | "ticket" | "system" | "payments", string | null> = {

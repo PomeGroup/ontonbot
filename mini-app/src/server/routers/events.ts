@@ -29,7 +29,7 @@ import eventFieldsDB from "@/server/db/eventFields.db";
 import { internal_server_error } from "../utils/error_utils";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { is_dev_env, is_stage_env } from "../utils/evnutils";
-import { config } from "../config";
+import { config, configProtected } from "../config";
 import { logger } from "@/server/utils/logger";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import { timestampToIsoString } from "@/lib/DateAndTime";
@@ -361,8 +361,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         });
       } else {
         /* --------------------------- Moderation Message --------------------------- */
+        const moderation_group_id = configProtected?.moderation_group_id;
         const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
         await sendLogNotification({
+          group_id: moderation_group_id,
           image: eventData.image_url,
           message: logMessage,
           topic: "event",
