@@ -17,6 +17,7 @@ import { selectEventByUuid } from "@/server/db/events";
 import { registerActivity } from "./ton-society-api";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/db";
+import { userHasModerationAccess } from "@/server/db/userFlags.db";
 
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
   try {
@@ -211,6 +212,10 @@ async function startBot() {
         const last_name = ctx.update.callback_query.from.last_name || "";
         const user_details = `\n<b>${first_name} ${last_name}</b> <code>${username}</code> <code>${user_id}</code>`;
 
+        // if (!(await userHasModerationAccess(user_id, "user"))) {
+        //   await ctx.answerCallbackQuery({ text: "Unauthorized" });
+        //   return;
+        // }
         const new_text =
           orignal_text + "\n\nStatus : " + (status === "approve" ? "✅ Approved By " : "❌ Rejected By ") + user_details;
 
@@ -232,7 +237,7 @@ async function startBot() {
           ctx.editMessageCaption({
             caption: new_text,
             reply_markup,
-            parse_mode:"HTML"
+            parse_mode: "HTML",
           });
         }
 
