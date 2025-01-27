@@ -23,7 +23,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- CREATE TYPE "public"."user_flags_enum" AS ENUM('event_moderator', 'ton_society_verified');
+ CREATE TYPE "public"."user_flags_enum" AS ENUM('event_moderator', 'ton_society_verified' , 'api_key');
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -118,7 +118,12 @@ CREATE INDEX IF NOT EXISTS "users_org_channel_name_idx" ON "users" USING btree (
 CREATE INDEX IF NOT EXISTS "users_id" ON "users" USING btree ("user_id");
 
 
-DROP VIEW  "public"."event_details_search_list";
+
+ALTER TABLE "event_poa_triggers" ADD COLUMN "creator_user_id" bigint;
+
+
+DROP VIEW "public"."event_details_search_list";
+-- Custom SQL migration file, put you code below! --
 CREATE VIEW "public"."event_details_search_list" AS  SELECT e.event_id,
                                                             e.event_uuid,
                                                             e.title,
@@ -164,7 +169,8 @@ CREATE VIEW "public"."event_details_search_list" AS  SELECT e.event_id,
     min_tickets.title AS ticket_title,
     min_tickets.description AS ticket_description,
     min_tickets.price AS ticket_price,
-    min_tickets.ticket_image
+    min_tickets.ticket_image,
+    min_tickets.payment_type
     FROM events e
     LEFT JOIN users organizer ON e.owner = organizer.user_id
     LEFT JOIN giata_city city ON e.city_id = city.id
@@ -173,7 +179,8 @@ CREATE VIEW "public"."event_details_search_list" AS  SELECT e.event_id,
     et.title,
     et.description,
     et.price,
-    et.ticket_image
+    et.ticket_image,
+    et.payment_type
     FROM event_payment_info et
     WHERE et.event_uuid = e.event_uuid
     ORDER BY et.price
