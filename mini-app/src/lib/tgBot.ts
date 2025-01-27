@@ -206,9 +206,9 @@ async function startBot() {
 
         const orignal_text = ctx.update?.callback_query.message?.caption || "";
         const user_id = ctx.update.callback_query.from.id;
-        const username = ctx.update.callback_query.from.username || "@null";
-        const first_name = ctx.update.callback_query.from.first_name;
-        const last_name = ctx.update.callback_query.from.last_name;
+        const username = "@" + ctx.update.callback_query.from.username || "";
+        const first_name = ctx.update.callback_query.from.first_name || "";
+        const last_name = ctx.update.callback_query.from.last_name || "";
         const user_details = `\n<b>${first_name} ${last_name}</b> <code>${username}</code> <code>${user_id}</code>`;
 
         const new_text =
@@ -232,6 +232,7 @@ async function startBot() {
           ctx.editMessageCaption({
             caption: new_text,
             reply_markup,
+            parse_mode:"HTML"
           });
         }
 
