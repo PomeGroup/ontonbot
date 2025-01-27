@@ -101,7 +101,7 @@ const EventHead = React.memo(() => {
   return (
     <div className="flex items-start justify-between">
       <div>
-        <div className="text-[24px] font-bold break-all">
+        <div className="text-[24px] leading-[28px] font-bold break-all mb-4">
           {eventData.data?.title ?? ""}
         </div>
         <EventSubtitle />
@@ -228,7 +228,10 @@ export const EventSections = () => {
       )}
 
       {organizer && (
-        <Card className="w-full my-3 -mx-3" onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}>
+        <Card
+          margin="mx-0"
+          contentWrap={false}
+          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}>
           <Typography
             variant="title3"
             className="font-bold mb-2"
@@ -242,7 +245,7 @@ export const EventSections = () => {
               width={48}
               height={48}
             />
-            <div className="flex flex-col grow justify-between">
+            <div className="flex flex-col grow justify-between overflow-hidden">
               <Typography
                 variant="headline"
                 className="text-[#007AFF] font-normal line-clamp-2"

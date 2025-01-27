@@ -41,14 +41,14 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
         width={window.innerWidth}
         height={window.innerHeight}
         alt={data.org_channel_name}
-        wrapperClassName="mb-3"
+        wrapperClassName="mb-3 flex justify-center"
       />
 
       <div className="flex justify-between align-center mb-4">
         <Typography
           bold
           variant="title2"
-          className="self-center"
+          className="self-center break-all"
         >
           {data.org_channel_name || 'Untitled Organizer'}
         </Typography>
@@ -79,7 +79,7 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
           )}
           <IconBg onClick={share}>
             {shareOrganizerMutation.isLoading ? (
-              <LoaderIcon className="animate-spin text-blue-600" />
+              <LoaderIcon className="animate-spin text-blue-600 -m-1" />
             ) : (
               <Image
                 src={shareIcon}
@@ -93,7 +93,7 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
       </div>
       <Typography
         variant="body"
-        className="font-normal"
+        className="font-normal break-word"
       >
         <span dangerouslySetInnerHTML={{ __html: data.org_bio?.replaceAll("\n", "<br/>") as string }} />
       </Typography>

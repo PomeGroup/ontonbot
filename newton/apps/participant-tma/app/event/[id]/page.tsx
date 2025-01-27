@@ -76,7 +76,7 @@ const Event = async ({ params, searchParams }: EventParams) => {
   const attributes: [string, ReactNode][] = [];
 
   attributes.push(["Location", event.location]);
-  attributes.push(["Organizer", event.organizer?.first_name]);
+  attributes.push(["Organizer", event.organizer?.org_channel_name || "Untitled organizer"]);
 
   if (event.eventTicket) {
     attributes.push(["Ticket Price", `${event.eventTicket?.price} ${event.eventTicket.payment_type}`]);
