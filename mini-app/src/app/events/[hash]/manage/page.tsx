@@ -16,15 +16,15 @@ import { useGetEvent } from "@/hooks/events.hooks";
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
   const { hash } = useParams() as { hash?: string };
-  const {data:eventData , isLoading ,isError } = useGetEvent(hash);
+  const { data: eventData, isLoading, isError } = useGetEvent(hash);
 
   const { setSection , clearSections } = useSectionStore();
   const router = useRouter();
 
-  if(isError) {
+  if (isError) {
     return <div>something went wrong</div>
   }
-  if (!eventData || !eventData?.event_uuid || isLoading ) {
+  if (!eventData || !eventData?.event_uuid || isLoading) {
     return null;
   }
 
@@ -32,7 +32,7 @@ export default function ManageIndexPage() {
   return (
     <Page>
       {/* Show an EventCard with the event data */}
-      <Block className="mx-8 bg-white p-4 rounded-[10px]">
+      <Block className="bg-white p-4 rounded-[10px] mx-4 !mb-0">
         <EventCard
           event={{
             eventUuid: eventData.event_uuid,
@@ -46,9 +46,9 @@ export default function ManageIndexPage() {
             organizerChannelName: eventData?.organizer?.org_channel_name ?? "ssss",
           }}
         >
-          <div className="mt-2 flex">
+          <div className="mt-3 -mb-2">
             <Button
-              className=" px-3  rounded-[6px] py-4"
+              className="px-3 rounded-[6px] py-4"
               outline={true}
               onClick={() => {
                 setSection("event_setup_form_general_step");
@@ -63,7 +63,7 @@ export default function ManageIndexPage() {
       </Block>
 
       {/* Action Cards for each sub-route */}
-      <Block className="space-y-3 mt-4">
+      <Block className="-mx-4 my-3">
         {eventData.has_payment && (
           <>
             <ActionCard
@@ -72,6 +72,7 @@ export default function ManageIndexPage() {
               title="Orders"
               subtitle="Event creation payments"
               footerTexts={[]}
+              className='!m-0'
             />
 
             {/*<ActionCard*/}
