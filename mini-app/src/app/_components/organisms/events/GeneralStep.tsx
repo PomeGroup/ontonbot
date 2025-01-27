@@ -14,6 +14,7 @@ let lastToastId: string | number | null = null;
 export const GeneralStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
   const { setSection } = useSectionStore();
+
   const { setCurrentStep, setEventData, eventData, clearGeneralErrors, setGeneralStepErrors } = useCreateEventStore(
     (state) => ({
       setCurrentStep: state.setCurrentStep,

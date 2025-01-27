@@ -45,11 +45,13 @@ function ManageEvent({ event }: ManageEventProps) {
     setEventData,
     resetState,
     clearGeneralStepErrors,
+    eventData
   } = useCreateEventStore((state) => ({
     setEdit: state.setEdit,
     setEventData: state.setEventData,
     resetState: state.resetState,
     clearGeneralStepErrors: state.clearGeneralStepErrors,
+    eventData: state.eventData,
   }));
 
   // Instead of currentStep, we read from our single store:
@@ -112,7 +114,7 @@ function ManageEvent({ event }: ManageEventProps) {
     }
   }, [params.hash, event, isReset, resetState, setEdit, setEventData]);
 
-  if (getCurrentSection() === 'none' ) {
+  if (params?.hash && !eventData) {
     return <div>Loading...</div>;
   }
 
