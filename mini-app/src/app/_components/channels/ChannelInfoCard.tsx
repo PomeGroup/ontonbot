@@ -79,7 +79,7 @@ export default function ChannelInfoCard({ data }: { data: Channel }) {
           )}
           <IconBg onClick={share}>
             {shareOrganizerMutation.isLoading ? (
-              <LoaderIcon className="animate-spin text-blue-600" />
+              <LoaderIcon className="animate-spin text-blue-600 -m-1" />
             ) : (
               <Image
                 src={shareIcon}
