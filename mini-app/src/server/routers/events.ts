@@ -632,7 +632,7 @@ const updateEvent = eventManagerPP
         const updateChanges = getObjectDifference(updatedEventWithoutDescription, oldEventWithoutDescription);
 
         // if it was a fully local setup we don't want to update the activity_id
-        if (process.env.ENV !== "local") {
+        if (process.env.ENV !== "local" && oldEvent.activity_id) {
           try {
             await updateActivity(eventDraft, opts.ctx.event.activity_id as number);
           } catch (error) {
