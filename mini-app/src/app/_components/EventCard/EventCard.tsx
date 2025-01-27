@@ -102,13 +102,13 @@ function UnforwardedEventCard(
         {/* LEFT: Event Image */}
         <LoadableImage src={imageUrl} alt={title} width={100} height={100} />
 
-        <div className="flex flex-col grow">
+        <div className="flex flex-col grow overflow-hidden">
           <Typography className="font-semibold mb-1 line-clamp-2 overflow-hidden" variant="body">
             {title}
           </Typography>
           {organizerChannelName.trim().length > 0 && (
             <Typography
-              className="font-medium"
+              className="font-medium overflow-hidden text-ellipsis whitespace-nowrap"
               variant="subheadline2"
             >by {organizerChannelName}</Typography>
           )}
