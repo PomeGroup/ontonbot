@@ -115,7 +115,7 @@ function PromotedEventsSlider() {
 
   return (
     <>
-      <h2 className="font-bold text-lg">Featured Events</h2>
+      <h2 className="font-bold text-lg mb-2">Featured Events</h2>
       {content}
     </>
   )
@@ -161,7 +161,7 @@ function PromotedEventsList() {
         <h2 className="font-bold text-lg">Events</h2>
         <a
           href='/search/'
-          className={`text-[#007AFF] border-2 border-[#007aff] rounded-lg py-1.5 pl-4 pr-2 font-medium flex align-center`}
+          className={`text-[#007AFF] font-medium flex align-center`}
         >
           <span>See All</span>
           <ChevronRightIcon width={20} className='ml-1 -my-0.5' />
