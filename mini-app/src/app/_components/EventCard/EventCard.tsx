@@ -33,6 +33,7 @@ interface EventCardProps {
     country?: string;
     participationType?: string;
     hidden?: number;
+    paymentType?: string;
   };
   currentUserId?: number;
   children?: React.ReactNode;
@@ -63,6 +64,7 @@ function UnforwardedEventCard(
     country = null,
     participationType = "unknown",
     hidden = false,
+    paymentType = "unknown",
   } = event;
 
   // If time zone is invalid, fallback
@@ -77,6 +79,10 @@ function UnforwardedEventCard(
   // We open the card or route
   const webApp = useWebApp();
   const router = useRouter();
+  const validCurrencies = ['USDT', 'TON'];
+  const currency = validCurrencies.includes(paymentType?.toUpperCase())
+    ? paymentType?.toUpperCase()
+    : '';
 
   const handleEventClick = () => {
     // If ticketToCheckIn => open Telegram link
@@ -126,7 +132,7 @@ function UnforwardedEventCard(
                 {currentUserId === organizerUserId && (
                   <Badge variant="ontonLight">hosted</Badge>
                 )}
-                <Badge variant="ontonLight">{ticketPrice > 0 ? `$${ticketPrice}` : "Free"}</Badge>
+                <Badge variant="ontonLight">{ticketPrice > 0 ? `${ticketPrice} ${currency}` : "Free"}</Badge>
               </div>
             </div>
           </div>
