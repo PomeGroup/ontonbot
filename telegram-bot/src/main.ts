@@ -43,8 +43,9 @@ import { RATE_LIMIT_OPTIONS } from "./constants";
 
 			// Check if the incoming message has 'bot_command' type
 			const hasCommandEntity =
-				ctx.message?.entities?.some((entity) => entity.type === "bot_command") ||
-				false;
+				ctx.message?.entities?.some(
+					(entity) => entity.type === "bot_command"
+				) || false;
 
 			if (hasCommandEntity) {
 				const userId = String(user.id);

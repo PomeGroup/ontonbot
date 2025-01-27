@@ -10,3 +10,13 @@ export async function hideCmd(event_uuid : string , hide : boolean) {
 
     
 }
+export async function bannerCmd(event_uuid : string , env : string) {
+
+  const client = await pool.connect();
+    const result = await client.query(
+        "UPDATE onton_setting SET value = $1 WHERE env = $2 and var = 'homeSliderEventUUID' ",
+        [event_uuid , env],
+      );
+
+    
+}
