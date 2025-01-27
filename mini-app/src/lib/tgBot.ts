@@ -205,7 +205,15 @@ async function startBot() {
         // console.log("CTX_MESSAGE" , ctx.update.message);
 
         const orignal_text = ctx.update?.callback_query.message?.caption || "";
-        const new_text = orignal_text + "\n\nStatus : " + (status === "approve" ? "✅ Approved" : "❌ Rejected");
+        const user_id = ctx.update.callback_query.from.id;
+        const username = ctx.update.callback_query.from.username || "@null";
+        const first_name = ctx.update.callback_query.from.first_name;
+        const last_name = ctx.update.callback_query.from.last_name;
+        const user_details = `\n<b>${first_name} ${last_name}</b> <code>${username}</code> <code>${user_id}</code>`;
+
+        const new_text =
+          orignal_text + "\n\nStatus : " + (status === "approve" ? "✅ Approved By " : "❌ Rejected By ") + user_details;
+
         let update_completed = true;
         if (status === "approve")
           try {
