@@ -42,7 +42,7 @@ async function MainCronJob() {
   }
 
   // Create Rewards Cron Job
-  new CronJob("*/6 * * * *", cronJob(createRewards), null, true);
+  new CronJob("*/1 * * * *", cronJob(createRewards), null, true);
 
   // Notify Users Cron Job
   new CronJob("*/3 * * * *", cronJob(notifyUsersForRewards), null, true);
@@ -109,7 +109,7 @@ async function createRewards(pushLockTTl: () => any) {
   do {
     pendingRewards = await db.query.rewards.findMany({
       where: (fields, { eq }) => eq(fields.status, "pending_creation"),
-      limit: 100,
+      limit: 500,
       offset,
       orderBy: [asc(rewards.created_at)],
     });
@@ -624,6 +624,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 👤username : @${username}
 <a href='https://${prefix}getgems.io/collection/${paymentInfo.collectionAddress}'>🎨Collection</a>
 <a href='https://${prefix}tonviewer.com/${ordr.trx_hash}'>💰TRX</a>
+<a href='https://${prefix}tonviewer.com/${nft_address}'>📦NFT</a>
           `,
           topic: "ticket",
         });
