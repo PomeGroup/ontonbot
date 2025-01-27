@@ -4,7 +4,6 @@ import Link from "next/link";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import Typography from "@/components/Typography";
 import LoadableImage from "@/components/LoadableImage";
-import { isValidImageUrl } from "@/lib/isValidImageUrl";
 
 export default function PromotedChannels() {
   const { data, isLoading } = trpc.organizers.getPromotedOrganizers.useQuery(undefined, {

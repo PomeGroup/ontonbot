@@ -70,6 +70,8 @@ export default function EditForm({ data }: { data: Channel }) {
       if (newVals.org_x_link === xLinkDefault) {
         newVals.org_x_link = "";
       }
+      // TODO: check if base64 url
+
       await editApi.mutateAsync(newVals);
       toast.success("Information updated successfully.");
       goBack();

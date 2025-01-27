@@ -18,9 +18,7 @@ import { useRouter } from "next/navigation";
 import SupportButton from "../atoms/buttons/SupportButton";
 import { Card } from "konsta/react";
 import Typography from "@/components/Typography";
-import Image from "next/image";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
-import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import LoadableImage from "@/components/LoadableImage";
 
 // Base components with memoization where beneficial

@@ -12,7 +12,6 @@ import useWebApp from "@/hooks/useWebApp";
 import { wait } from "@/lib/utils";
 import { LoaderIcon } from "lucide-react";
 import LoadableImage from "@/components/LoadableImage";
-import { isValidImageUrl } from "@/lib/isValidImageUrl";
 
 export default function ChannelInfoCard({ data }: { data: Channel }) {
   const WebApp = useWebApp();
