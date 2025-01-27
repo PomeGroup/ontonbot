@@ -89,7 +89,6 @@ export const EventPasswordAndWalletInput = () => {
             <Input
               placeholder="Event password"
               name="event_password"
-              autoFocus
               type="text"
               className="bg-cn-muted border-secondary-foreground/40 border"
               minLength={4}
@@ -106,7 +105,7 @@ export const EventPasswordAndWalletInput = () => {
             <MainButton
               progress={upsertUserEventFieldMutation.isLoading}
               text="Enter Password"
-              onClick={() => {formRef.current?.requestSubmit()}}
+              onClick={() => { formRef.current?.requestSubmit() }}
               disabled={upsertUserEventFieldMutation.isLoading}
             />
           </form>

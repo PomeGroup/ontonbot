@@ -37,13 +37,6 @@ const EventImage = React.memo(() => {
 
 EventImage.displayName = "EventImage";
 
-const EventTitle = React.memo(() => {
-  const { eventData } = useEventData();
-  return <Labels.CampaignTitle title={eventData.data?.title ?? ""} />;
-});
-
-EventTitle.displayName = "EventTitle";
-
 const EventSubtitle = React.memo(() => {
   const { eventData } = useEventData();
   return (
@@ -103,12 +96,14 @@ const EventDescription = React.memo(() => {
 EventDescription.displayName = "EventDescription";
 
 const EventHead = React.memo(() => {
-  const { eventHash } = useEventData();
+  const { eventHash, eventData } = useEventData();
 
   return (
     <div className="flex items-start justify-between">
       <div>
-        <EventTitle />
+        <div className="text-[24px] font-bold break-all">
+          {eventData.data?.title ?? ""}
+        </div>
         <EventSubtitle />
       </div>
       <ShareEventButton event_uuid={eventHash} />
