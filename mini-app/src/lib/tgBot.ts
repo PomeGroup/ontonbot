@@ -266,7 +266,7 @@ async function startBot() {
 export async function sendLogNotification(
   props: {
     message: string;
-    topic: "event" | "ticket" | "system" | "payments";
+    topic: "event" | "ticket" | "system" | "payments" | "no_topic";
     image?: string | null;
     inline_keyboard?: InlineKeyboardMarkup; // Optional property
     group_id?: number | string | null;
@@ -284,11 +284,12 @@ export async function sendLogNotification(
   }
 
   // Centralized topic mapping
-  const topicMapping: Record<"event" | "ticket" | "system" | "payments", string | null> = {
+  const topicMapping: Record<"no_topic" | "event" | "ticket" | "system" | "payments", string | null> = {
     event: configProtected.events_topic,
     ticket: configProtected.tickets_topic,
     system: configProtected.system_topic,
-    payments: configProtected.payments_topic, // Example additional topic
+    payments: configProtected.payments_topic,
+    no_topic: "no_topic",
   };
 
   const topicMessageId = topicMapping[props.topic];
@@ -303,17 +304,23 @@ export async function sendLogNotification(
   if (props.image) {
     return await logBot.api.sendPhoto(Number(LOGS_GROUP_ID), props.image, {
       caption: props.message,
-      reply_parameters: {
-        message_id: Number(topicMessageId),
-      },
+      reply_parameters:
+        topicMessageId === "no_topic"
+          ? undefined
+          : {
+              message_id: Number(topicMessageId),
+            },
       reply_markup: props.inline_keyboard,
       parse_mode: "HTML",
     });
   } else {
     return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
-      reply_parameters: {
-        message_id: Number(topicMessageId),
-      },
+      reply_parameters:
+        topicMessageId === "no_topic"
+          ? undefined
+          : {
+              message_id: Number(topicMessageId),
+            },
       reply_markup: props.inline_keyboard,
       parse_mode: "HTML",
       link_preview_options: { is_disabled: true },

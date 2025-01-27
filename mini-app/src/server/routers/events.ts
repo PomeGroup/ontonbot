@@ -367,7 +367,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           group_id: moderation_group_id,
           image: eventData.image_url,
           message: logMessage,
-          topic: "event",
+          topic: "no_topic",
           inline_keyboard: new InlineKeyboard()
             .text("✅ Approve", `approve_${eventData.event_uuid}`)
             .text("❌ Reject", `reject_${eventData.event_uuid}`),
