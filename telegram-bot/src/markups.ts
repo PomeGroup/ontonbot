@@ -11,7 +11,7 @@ const shareKeyboard = (url: string) => {
 
   return new InlineKeyboard()
     .switchInline('Share Event', url).row()
-    .webApp('Manage Event', `${process.env.NEXT_PUBLIC_APP_BASE_URL}/events/${id}/edit`).row()
+    .webApp('Manage Event', `${process.env.NEXT_PUBLIC_APP_BASE_URL}/events/${id}/manage`).row()
     .webApp('All Events', `${process.env.NEXT_PUBLIC_APP_BASE_URL}/`)
 }
 

@@ -17,6 +17,7 @@ import { selectEventByUuid } from "@/server/db/events";
 import { registerActivity } from "./ton-society-api";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/db";
+import { userHasModerationAccess } from "@/server/db/userFlags.db";
 
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
   try {
@@ -205,7 +206,19 @@ async function startBot() {
         // console.log("CTX_MESSAGE" , ctx.update.message);
 
         const orignal_text = ctx.update?.callback_query.message?.caption || "";
-        const new_text = orignal_text + "\n\nStatus : " + (status === "approve" ? "✅ Approved" : "❌ Rejected");
+        const user_id = ctx.update.callback_query.from.id;
+        const username = "@" + ctx.update.callback_query.from.username || "";
+        const first_name = ctx.update.callback_query.from.first_name || "";
+        const last_name = ctx.update.callback_query.from.last_name || "";
+        const user_details = `\n<b>${first_name} ${last_name}</b> <code>${username}</code> <code>${user_id}</code>`;
+
+        // if (!(await userHasModerationAccess(user_id, "user"))) {
+        //   await ctx.answerCallbackQuery({ text: "Unauthorized" });
+        //   return;
+        // }
+        const new_text =
+          orignal_text + "\n\nStatus : " + (status === "approve" ? "✅ Approved By " : "❌ Rejected By ") + user_details;
+
         let update_completed = true;
         if (status === "approve")
           try {
@@ -224,6 +237,7 @@ async function startBot() {
           ctx.editMessageCaption({
             caption: new_text,
             reply_markup,
+            parse_mode: "HTML",
           });
         }
 
@@ -255,14 +269,19 @@ export async function sendLogNotification(
     topic: "event" | "ticket" | "system" | "payments";
     image?: string | null;
     inline_keyboard?: InlineKeyboardMarkup; // Optional property
-  } = { message: "", topic: "event", image: undefined, inline_keyboard: undefined }
+    group_id?: number | string | null;
+  } = { message: "", topic: "event", image: undefined, inline_keyboard: undefined, group_id: undefined }
 ) {
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     console.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");
   }
 
-  const { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
+  let { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
+
+  if (props.group_id) {
+    LOGS_GROUP_ID = props.group_id.toString();
+  }
 
   // Centralized topic mapping
   const topicMapping: Record<"event" | "ticket" | "system" | "payments", string | null> = {
