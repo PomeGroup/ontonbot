@@ -27,7 +27,12 @@ export const fieldsRouter = router({
               // Remove base64 header and get the image size
               const base64Data = file.replace(/^data:image\/\w+;base64,/, "");
               const image = sizeOf(Buffer.from(base64Data, "base64"));
-
+              if(!image || !image?.width || !image?.height) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: "Invalid image data",
+                });
+              }
               // Check if the image is square
               if (image.width !== image.height) {
                 throw new TRPCError({
@@ -35,7 +40,12 @@ export const fieldsRouter = router({
                   message: "Only square images are allowed",
                 });
               }
-
+              if (image.width < 400 || image.height < 400) {
+                throw new TRPCError({
+                  code: "BAD_REQUEST",
+                  message: "Image is too small. Minimum size is 400x400.",
+                });
+              }
               // Limit the size of the file (10 MB)
               const MAX_BASE64_SIZE = 10 * 1024 * 1024;
               if (base64Data.length > MAX_BASE64_SIZE) {
