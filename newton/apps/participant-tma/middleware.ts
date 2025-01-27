@@ -28,7 +28,7 @@ export async function middleware(req: NextRequest) {
       if (isEdit) {
         const eventId = tgAppStartParam.replace("edit_", "");
         console.log("redirecting to edit event", eventId);
-        return NextResponse.redirect(new URL(`/events/${eventId}/manage/edit`, req.nextUrl.origin));
+        return NextResponse.redirect(new URL(`/events/${eventId}/manage`, req.nextUrl.origin));
       }
       const isMysteryUtm = tgAppStartParam.length >= 7 && tgAppStartParam.length <= 12;
       if (isMysteryUtm) {
