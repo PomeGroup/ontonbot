@@ -50,6 +50,13 @@
       "when": 1737809828230,
       "tag": "0006_woozy_silver_centurion",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1737984857428,
+      "tag": "0007_curly_master_chief",
+      "breakpoints": true
     }
   ]
 }

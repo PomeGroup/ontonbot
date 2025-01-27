@@ -6,7 +6,7 @@ type SQLParams = unknown[];
 //   const { sql: sqlString, params:paraSql } = query.toSQL();
 //   logSQLQuery( sqlString, paraSql);
 export const logSQLQuery = (sql: string, params: SQLParams): void => {
-  // if (process.env.ENV! === "production") return;
+  if (process.env.ENV! === "production") return;
 
   const fullQuery = sql.replace(/\$(\d+)/g, (substring: string, index: string): string => {
     const paramIndex = parseInt(index, 10) - 1;
@@ -17,6 +17,6 @@ export const logSQLQuery = (sql: string, params: SQLParams): void => {
 
     return String(param);
   });
-  //  logger.log("Sql_Query___ : ",fullQuery);
+   logger.log("Sql_Query___ : ",fullQuery);
   
 };

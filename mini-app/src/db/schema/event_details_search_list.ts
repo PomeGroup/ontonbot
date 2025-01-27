@@ -45,6 +45,7 @@ export const event_details_search_list = pgView("event_details_search_list", {
   hasPayment: boolean("has_payment"),
   hasRegistration: boolean("has_registration"),
   hasApproval: boolean("has_approval"),
+  paymentType: text("payment_type"),
   // ticketCount: integer("ticket_count"),
 
 }).as(sql`
@@ -91,7 +92,8 @@ export const event_details_search_list = pgView("event_details_search_list", {
     min_tickets.title AS ticket_title,
     min_tickets.description AS ticket_description,
     min_tickets.price AS ticket_price,
-    min_tickets.ticket_image
+    min_tickets.ticket_image,
+    min_tickets.payment_type,   
   FROM
     ${events} e
   LEFT JOIN
@@ -102,11 +104,9 @@ export const event_details_search_list = pgView("event_details_search_list", {
     ${giataCity} country ON e.country_id = country.id
   LEFT JOIN
     LATERAL (SELECT et.id,
-                    
-                    
                     et.price,
                     et.ticket_image,
-                    
+                    et.payment_type
              FROM ${eventPayment} et
              WHERE et.event_uuid = e.event_uuid
              ORDER BY et.price

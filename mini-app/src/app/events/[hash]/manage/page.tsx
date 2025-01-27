@@ -18,7 +18,7 @@ export default function ManageIndexPage() {
   const { hash } = useParams() as { hash?: string };
   const {data:eventData , isLoading ,isError } = useGetEvent(hash);
 
-  const { setSection } = useSectionStore();
+  const { setSection , clearSections } = useSectionStore();
   const router = useRouter();
 
   if(isError) {

@@ -36,8 +36,9 @@ export const RewardStep = () => {
         duration: 4000,
       });
       setEventData({});
-      setSection("none");
+
       router.replace(`/events/${data?.eventHash}/manage`)
+      setSection("none");
     },
     onError(error) {
       toast.error(error.message);
@@ -57,7 +58,8 @@ export const RewardStep = () => {
       } else {
 
         setSection("none");
-        router.replace(`/events/${data?.eventId}/manage`);
+        router.replace(`/events/${data?.eventId}`);
+        clearSections();
       }
 
     },
@@ -142,7 +144,7 @@ export const RewardStep = () => {
           event_uuid: editOptions.eventHash,
           eventData: updateParsedData.data,
         });
-        clearSections();
+        // clearSections();
       } else {
         const errors = updateParsedData.error.flatten().fieldErrors;
         console.error("Update event validation errors:", errors);
@@ -159,7 +161,7 @@ export const RewardStep = () => {
       addEvent.mutate({
         eventData: parsedEventData.data,
       });
-      clearSections();
+      // clearSections();
     } else {
       const errors = parsedEventData.error.flatten().fieldErrors;
       console.error("Create event validation errors:", errors);
