@@ -2,36 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import formidable, { Fields, Files, File as FormidableFile } from 'formidable';
 import fs from 'fs';
 import { verify } from 'jsonwebtoken';
-import { toNodeJsRequest } from '../helpers/toNodeJsRequest'; // Your helper
+import { toNodeJsRequest } from '../helpers/toNodeJsRequest';
 import { minioClient } from '@/lib/minioClient';
 import { filePrefix } from '@/lib/fileUtils';
 import { logger } from '@/server/utils/logger';
+import sharp from 'sharp'; // <-- 1) Import sharp
 
 const { MINIO_PUBLIC_URL, ONTON_API_SECRET } = process.env;
 
-export const dynamic = 'force-dynamic'; // Prevent static optimization
+export const dynamic = 'force-dynamic';
 
-/**
- * Convert NextRequest to Node.js IncomingMessage and parse
- * with formidable for file uploads.
- */
 async function parseFormdata(req: NextRequest): Promise<{ fields: Fields; files: Files }> {
-  if (!MINIO_PUBLIC_URL) {
-    logger.log(`MINIO_PUBLIC_URL is not defined in route /api/files/upload`);
-    throw new Error('MINIO_PUBLIC_URL is not defined');
-  }
-
-  // 1. Convert NextRequest to a Node.js IncomingMessage
   const nodeReq = await toNodeJsRequest(req);
-
-  // 2. Create formidable instance
   const form = formidable({ multiples: false });
 
-  // 3. Parse
   return new Promise((resolve, reject) => {
     form.parse(nodeReq, (err, fields, files) => {
       if (err) {
-        logger.log(`Error parsing formData in route /api/files/upload: ${err}`);
+        logger.log(`Error parsing formData: ${err}`);
         return reject(err);
       }
       resolve({ fields, files });
@@ -40,60 +28,79 @@ async function parseFormdata(req: NextRequest): Promise<{ fields: Fields; files:
 }
 
 export async function POST(req: NextRequest) {
-  // 1. Extract token from "Authorization: Bearer <token>"
+  // 1. Check token
   const authHeader = req.headers.get('authorization') ?? '';
   const [bearer, token] = authHeader.split(' ');
-
   if (bearer !== 'Bearer' || !token) {
-    logger.error(`Unauthorized request: missing token in /api/files/upload`);
     return NextResponse.json({ message: 'Unauthorized: missing token' }, { status: 401 });
   }
-
-  // 2. Verify token with ONTON_API_SECRET
   if (!ONTON_API_SECRET) {
-    logger.error(`ONTON_API_SECRET is not defined in environment`);
     return NextResponse.json({ message: 'Server misconfiguration' }, { status: 500 });
   }
-
   try {
     verify(token, ONTON_API_SECRET);
-    // If verify() throws, we catch below.
   } catch (error) {
-    logger.error(`Invalid token in /api/files/upload: ${error}`);
+    logger.error(`Invalid token: ${error}`);
     return NextResponse.json({ message: 'Unauthorized: invalid token' }, { status: 401 });
   }
 
-  // 3. If token is valid, proceed with file upload logic
+  // 2. Parse form data
+  let files: Files;
+  let fields: Fields;
   try {
-    const { fields, files } = await parseFormdata(req);
+    ({ files, fields } = await parseFormdata(req));
+  } catch (err) {
+    return NextResponse.json({ message: 'Error parsing form data' }, { status: 400 });
+  }
 
-    const rawBucket = fields.bucketName ?? 'onton';
-    const rawSubfolder = fields.subfolder ?? '';
-    const bucketName = Array.isArray(rawBucket) ? rawBucket[0] : rawBucket;
-    const subfolder = Array.isArray(rawSubfolder) ? rawSubfolder[0] : rawSubfolder;
+  // 3. Prepare MinIO paths
+  const rawBucket = fields.bucketName ?? 'onton';
+  const rawSubfolder = fields.subfolder ?? '';
+  const bucketName = Array.isArray(rawBucket) ? rawBucket[0] : rawBucket;
+  const subfolder = Array.isArray(rawSubfolder) ? rawSubfolder[0] : rawSubfolder;
 
-    const imageField = files.image;
-    if (!imageField) {
-      logger.log(`No file uploaded in route /api/files/upload`);
-      return NextResponse.json({ message: 'No file uploaded.' }, { status: 400 });
+  const imageField = files.image;
+  if (!imageField) {
+    return NextResponse.json({ message: 'No file uploaded.' }, { status: 400 });
+  }
+
+  const file = Array.isArray(imageField) ? imageField[0] : imageField;
+  const formidableFile = file as FormidableFile;
+
+  try {
+    // 4. Read file data from temp path
+    const fileData = fs.readFileSync(formidableFile.filepath);
+
+    // 5. If it’s recognized as an image, resize with sharp
+    //    (If you want to handle only certain image MIME types, check them first)
+    let finalBuffer = fileData; // fallback if not an image or resizing fails
+    if (formidableFile.mimetype?.startsWith('image/')) {
+      // We "fit: 'inside'" to ensure neither width nor height goes past 1280
+      // withoutEnlargement: true means if the image is smaller, don’t upscale.
+      finalBuffer = await sharp(fileData)
+        .resize({
+          width: 1280,
+          height: 1280,
+          fit: 'inside',
+          withoutEnlargement: true,
+        })
+        .toBuffer();
     }
 
-    const file = Array.isArray(imageField) ? imageField[0] : imageField;
-    const formidableFile = file as FormidableFile;
-
-    const fileData = fs.readFileSync(formidableFile.filepath);
+    // 6. Upload (now possibly resized) buffer to MinIO
     const finalFilename = subfolder
       ? `${subfolder}/${filePrefix()}${formidableFile.originalFilename}`
       : `${filePrefix()}${formidableFile.originalFilename}`;
 
-    await minioClient.putObject(bucketName, finalFilename, fileData, formidableFile.size, {
+    await minioClient.putObject(bucketName, finalFilename, finalBuffer, finalBuffer.byteLength, {
       'Content-Type': formidableFile.mimetype ?? 'application/octet-stream',
     });
 
     const imageUrl = `${MINIO_PUBLIC_URL}/${bucketName}/${finalFilename}`;
+
     return NextResponse.json({ imageUrl });
   } catch (error) {
-    logger.error(`An error occurred in route /api/files/upload: ${error}`);
+    logger.error(`An error occurred while uploading: ${error}`);
     return NextResponse.json({ message: 'An error occurred.' }, { status: 500 });
   }
 }
