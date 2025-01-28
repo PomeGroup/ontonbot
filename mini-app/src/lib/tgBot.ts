@@ -313,6 +313,19 @@ export async function sendLogNotification(
   if (props.image) {
     const response = await axios.get(props.image, { responseType: 'arraybuffer' });
     const buffer = response.data;
+    logger.log("Sending telegram photo message" ,Number(LOGS_GROUP_ID), new InputFile(buffer), {
+      caption: props.message,
+      reply_parameters:
+        topicMessageId === "no_topic"
+          ? undefined
+          : {
+            message_id: Number(topicMessageId),
+          },
+      reply_markup: props.inline_keyboard,
+      parse_mode: "HTML",
+    });
+
+
     return await logBot.api.sendPhoto(Number(LOGS_GROUP_ID), new InputFile(buffer), {
       caption: props.message,
       reply_parameters:
