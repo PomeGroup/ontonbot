@@ -13,7 +13,6 @@ export const organizerRouter = router({
     const userId = opts.ctx.user.user_id;
 
     // 2) Pass the validated input fields to your update method
-    logger.log("updateOrganizer", opts.input);
     const { success, data, error } = await usersDB.updateOrganizerFieldsByUserId(userId, opts.input);
 
     // 3) If the update failed, throw an error
@@ -87,7 +86,7 @@ export const organizerRouter = router({
 
   getPromotedOrganizers: publicProcedure.input(z.object({}).optional()).query(async (): Promise<MinimalOrganizerData[]> => {
     const channelIds: number[] = (config?.promotedChannelIds as unknown as number[]) ?? [];
-    console.log("channelIds", config);
+    
     try {
       const result = await Promise.all(channelIds.map((id) => usersDB.getOrganizerById(id).then(({ data }) => data)));
       return result.filter(Boolean) as MinimalOrganizerData[];

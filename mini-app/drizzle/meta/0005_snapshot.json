@@ -1,6 +1,6 @@
 {
-  "id": "f65687b6-b6fb-49c1-b975-f3d372bb4c73",
-  "prevId": "ef657018-16b4-4488-8e0a-4ffb939e40d5",
+  "id": "6378c75a-a02a-42bc-8a10-f498b76ec070",
+  "prevId": "f65687b6-b6fb-49c1-b975-f3d372bb4c73",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -976,6 +976,12 @@
         "updated_at": {
           "name": "updated_at",
           "type": "timestamp (6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "creator_user_id": {
+          "name": "creator_user_id",
+          "type": "bigint",
           "primaryKey": false,
           "notNull": false
         }
@@ -3927,7 +3933,8 @@
       "schema": "public",
       "values": [
         "event_moderator",
-        "ton_society_verified"
+        "ton_society_verified",
+        "api_key"
       ]
     }
   },

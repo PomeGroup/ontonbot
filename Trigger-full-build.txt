@@ -9,3 +9,4 @@ tets full build
 full build
 full build test before production
 full build channels
+full build haminjoori

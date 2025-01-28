@@ -100,7 +100,6 @@ export async function GET(request: Request, { params }: { params: { event_uuid: 
   //     false, // Always set dynamic_fields to false
   //     search || undefined
   //   );
-  //   console.log(data);
   //   return NextResponse.json(data, { status: 200 });
   // } catch (error: unknown) {
   //   const errorMessage =

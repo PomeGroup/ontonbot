@@ -100,7 +100,6 @@ export async function GET(request: Request) {
 
   // try {
   //   // Fetch organizer's events from the database using the organizerId, limit, and offset
-  //   console.log("organizerId", organizerId, limit, offset);
   //   const events = await getOrganizerEvents(organizerId, limit, offset);
 
   //   // Return the list of events as the response

@@ -192,7 +192,7 @@ export const searchOrganizers = async (params: { searchString?: string; offset: 
     // 2) Then sort by hosted_event_count in descending order
     .orderBy(
      // sql`CASE WHEN ${users.photo_url} IS NOT NULL AND ${users.photo_url} <> '' THEN 1 ELSE 0 END DESC`,
-      sql`${users.hosted_event_count} DESC`
+      sql`${users.hosted_event_count} DESC, ${users.user_id} ASC`
     )
     .offset(offset)
     .limit(limit);
@@ -408,7 +408,6 @@ const updateWallet = async (user_id: number, wallet_address: string, updatedBy: 
 
 export const selectUserByUsername = async (username: string) => {
   // If not found in cache, query the database
-  logger.log("selectUserByUsername", username);
   const userInfo = await db
     .select({
       user_id: users.user_id,
@@ -438,7 +437,6 @@ export const selectUserByUsername = async (username: string) => {
     .where(eq(users.username, username.replace(/^@/, "")))
     .execute();
   await updateEventCountsForUser(userInfo[0].user_id);
-  logger.log("selectUserByUsername", userInfo);
   if (userInfo.length > 0) {
     return userInfo[0];
   }

@@ -80,7 +80,7 @@ export const addNotification = async (notificationData: {
 
     // Check if the result is empty, indicating the record already existed
     if (result.length === 0) {
-      logger.log("Notification already exists.");
+      logger.log(`Notification already exists.`,result  );
       return { success: false, message: "Record already exists." };
     }
     // add to rabbitMQ

@@ -367,7 +367,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           group_id: moderation_group_id,
           image: eventData.image_url,
           message: logMessage,
-          topic: "event",
+          topic: "no_topic",
           inline_keyboard: new InlineKeyboard()
             .text("✅ Approve", `approve_${eventData.event_uuid}`)
             .text("❌ Reject", `reject_${eventData.event_uuid}`),
@@ -403,7 +403,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       eventHash: result[0].event_uuid,
     } as const;
   } catch (error) {
-    logger.error(`Error while adding event: ${Date.now()} , ${error}`);
+    logger.error(`error_while_adding_event` , error);
     if (error instanceof TRPCError) {
       throw error;
     }
@@ -711,6 +711,7 @@ export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(sea
 
   if (dbResult.length > actualLimit) {
     nextCursor = input.cursor + 1;
+    dbResult.pop(); // remove the extra row
   }
 
   return {
