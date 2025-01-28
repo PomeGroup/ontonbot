@@ -54,11 +54,11 @@ export default function EditForm({ data }: { data: Channel }) {
         newErrors.org_channel_name = "Channel name cannot be empty.";
       }
 
-      if (values.org_support_telegram_user_name && !/^@[a-zA-Z0-9_]{5,32}$/.test(values.org_support_telegram_user_name)) {
+      if (values.org_support_telegram_user_name !== "" && !/^@[a-zA-Z0-9_]{5,32}$/.test(values.org_support_telegram_user_name.trim())) {
         newErrors.org_support_telegram_user_name = "Must start with @ and be 5-32 characters long.";
       }
 
-      const xLink = values.org_x_link === xLinkDefault ? "" : values.org_x_link;
+      const xLink = values.org_x_link.trim() === xLinkDefault ? "" : values.org_x_link.trim();
 
       if (xLink && !/^https?:\/\/[a-zA-Z0-9._-]+\.[a-zA-Z]{2,}\/[a-zA-Z0-9_]{1,}$/.test(xLink)) {
         newErrors.org_x_link = "Invalid X handle URL. It should be like https://x.com/ontonlive";

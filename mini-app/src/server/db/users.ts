@@ -101,15 +101,15 @@ export const updateOrganizerFieldsByUserId = async (
 
     // Only update org_channel_name if it exists in orgData
     if (orgData.org_channel_name !== undefined) {
-      updateData.org_channel_name = xss(orgData.org_channel_name);
+      updateData.org_channel_name = xss(orgData.org_channel_name.trim());
     }
 
     if (orgData.org_support_telegram_user_name !== undefined) {
-      updateData.org_support_telegram_user_name = xss(orgData.org_support_telegram_user_name);
+      updateData.org_support_telegram_user_name = xss(orgData.org_support_telegram_user_name.trim());
     }
 
     if (orgData.org_x_link !== undefined) {
-      updateData.org_x_link = xss(orgData.org_x_link);
+      updateData.org_x_link = xss(orgData.org_x_link.trim());
     }
 
     if (orgData.org_bio !== undefined) {
