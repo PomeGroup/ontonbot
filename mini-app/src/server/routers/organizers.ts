@@ -13,7 +13,6 @@ export const organizerRouter = router({
     const userId = opts.ctx.user.user_id;
 
     // 2) Pass the validated input fields to your update method
-    logger.log("updateOrganizer", opts.input);
     const { success, data, error } = await usersDB.updateOrganizerFieldsByUserId(userId, opts.input);
 
     // 3) If the update failed, throw an error
