@@ -403,7 +403,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       eventHash: result[0].event_uuid,
     } as const;
   } catch (error) {
-    logger.error(`Error while adding event: ${Date.now()} , ${error}`);
+    logger.error(`error_while_adding_event` , error);
     if (error instanceof TRPCError) {
       throw error;
     }
