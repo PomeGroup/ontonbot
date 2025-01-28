@@ -711,6 +711,7 @@ export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(sea
 
   if (dbResult.length > actualLimit) {
     nextCursor = input.cursor + 1;
+    dbResult.pop(); // remove the extra row
   }
 
   return {
