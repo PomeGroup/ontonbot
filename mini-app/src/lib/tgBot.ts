@@ -216,18 +216,26 @@ async function startBot() {
           await ctx.answerCallbackQuery({ text: "Unauthorized Moderator" });
           return;
         }
+
+        const is_apporved = status === "approve";
         const new_text =
-          orignal_text + "\n\nStatus : " + (status === "approve" ? "✅ Approved By " : "❌ Rejected By ") + user_details;
+          orignal_text + "\n\nStatus : " + (is_apporved ? "✅ Approved By " : "❌ Rejected By ") + user_details;
 
         let update_completed = true;
-        if (status === "approve")
+        if (status === "approve") {
           try {
             update_completed = !!(await onCallBackModerateEvent(status, event_uuid));
           } catch (error) {
             logger.error("onCallBackModerateEvent_approve_failed", error);
             update_completed = false;
           }
-
+        } else {
+          const eventData = await selectEventByUuid(event_uuid);
+          await sendTelegramMessage({
+            chat_id: Number(eventData?.owner),
+            message: `❌Your Event <b>(${eventData?.title})</b> Has Been Rejected By Our Moderators`,
+          });
+        }
         if (update_completed) {
           const reply_markup =
             status === "approve"
