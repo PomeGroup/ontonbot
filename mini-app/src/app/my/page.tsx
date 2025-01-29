@@ -26,16 +26,16 @@ export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!useTonAddress();
   const { setSection } = useSectionStore();
-  const { data, isLoading } = trpc.organizers.getOrganizer.useQuery({});
+  //const { data, isLoading } = trpc.organizers.getOrganizer.useQuery({});
 
   const paid = user?.role === "organizer" || user?.role === "admin";
   const router = useRouter();
 
-  if (isLoading) return null;
+  //if (isLoading) return null;
 
   return (
     <div className="bg-[#EFEFF4] py-4 min-h-screen mb-[calc(-1*var(--tg-safe-area-inset-bottom))]">
-      {paid ? <InlineChannelCard data={data} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
+      {paid ? <InlineChannelCard data={user} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <ActionCard
         onClick={() => router.push("/my/participated")}
         iconSrc={ticketIcon}
@@ -43,7 +43,7 @@ export default function ProfilePage() {
         subtitle="Your Activity"
         footerTexts={[
           {
-            count: data?.participated_event_count || 0,
+            count: user?.participated_event_count || 0,
             items: "Events",
           },
         ]}
@@ -60,7 +60,7 @@ export default function ProfilePage() {
         title="Hosted"
         subtitle="You Created"
         footerTexts={[
-          paid ? { items: "Events", count: data?.hosted_event_count || 0 } : { items: "Become an organizer first" },
+          paid ? { items: "Events", count: user?.hosted_event_count || 0 } : { items: "Become an organizer first" },
         ]}
       />
 
