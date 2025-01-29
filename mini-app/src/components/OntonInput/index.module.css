@@ -1,0 +1,6 @@
+.wrapper {
+    @apply flex gap-3;
+}
+.wrapper:focus-within .wrapperLabel, .wrapperLabelActive {
+    @apply -translate-y-2 scale-67;
+}

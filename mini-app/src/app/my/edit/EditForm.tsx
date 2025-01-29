@@ -5,7 +5,7 @@ import Image from "next/image";
 import cameraIcon from "./camera.svg";
 import xPlatformIcon from "@/app/_components/channels/xplatform.svg";
 import telegramIcon from "@/app/_components/channels/telegram.svg";
-import { ChangeEventHandler, ReactNode, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { cn } from "@/utils";
 import { trpc } from "@/app/_trpc/client";
 import { Channel } from "@/types";
@@ -15,6 +15,7 @@ import { useFormik } from "formik";
 import LoadableImage from "@/components/LoadableImage";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import { getErrorMessages } from "@/lib/error";
+import { OntonExpandableInput, OntonInput } from "@/components/OntonInput";
 
 const xLinkDefault = "https://x.com/";
 
@@ -24,6 +25,7 @@ export default function EditForm({ data }: { data: Channel }) {
 
   // const imageInputRef = useRef<HTMLInputElement>(null);
 
+  const trpcUtils = trpc.useUtils()
   const initialImage = data.org_image || data.photo_url || ''
   const {
     errors,
@@ -32,6 +34,7 @@ export default function EditForm({ data }: { data: Channel }) {
     handleChange,
     handleSubmit,
     isSubmitting,
+    getFieldProps,
     setFieldValue
   } = useFormik<{
     org_channel_name: string;
@@ -70,10 +73,13 @@ export default function EditForm({ data }: { data: Channel }) {
       if (newVals.org_x_link === xLinkDefault) {
         newVals.org_x_link = "";
       }
-      // TODO: check if base64 url
+      if (newVals.org_image.startsWith('blob:')) {
+        newVals.org_image = null as any
+      }
 
       await editApi.mutateAsync(newVals);
       toast.success("Information updated successfully.");
+      trpcUtils.users.syncUser.invalidate(undefined, { refetchType: "all" })
       goBack();
     },
   });
@@ -83,13 +89,11 @@ export default function EditForm({ data }: { data: Channel }) {
   // const [prevImg, setPrevImg] = useState(initialImage)
   const [isUploading, setUploading] = useState(false);
   const uploadImage = async (files: FileList | null) => {
-    console.log('resetting error')
     uploadApi.reset() // reset the error
     const file = files?.[0]
     if (!file) return;
 
     const url = URL.createObjectURL(file)
-    // setPrevImg(values.org_image)
     setFieldValue("org_image", url);
 
     let base64Img
@@ -107,7 +111,6 @@ export default function EditForm({ data }: { data: Channel }) {
         image: base64Img,
         subfolder: "channels"
       });
-      console.log(response)
       setFieldValue("org_image", response.imageUrl);
     } catch (e) {
       console.log(e)
@@ -191,23 +194,18 @@ export default function EditForm({ data }: { data: Channel }) {
         <OntonInput
           className="mb-3"
           label="Channel Name"
-          name="org_channel_name"
-          value={values.org_channel_name}
           error={(errors.org_channel_name && touched.org_channel_name && errors.org_channel_name) || undefined}
-          onChange={handleChange}
+          {...getFieldProps('org_channel_name')}
         />
         <OntonInput
           className="mb-3"
           label="Telegram Handle"
-          name="org_support_telegram_user_name"
-          value={values.org_support_telegram_user_name}
           error={
             (errors.org_support_telegram_user_name &&
               touched.org_support_telegram_user_name &&
               errors.org_support_telegram_user_name) ||
             undefined
           }
-          onChange={handleChange}
           startAdornment={
             <div className="p-4 bg-[#EEEEF0] !rounded-[10px]">
               <Image
@@ -218,14 +216,12 @@ export default function EditForm({ data }: { data: Channel }) {
               />
             </div>
           }
+          {...getFieldProps('org_support_telegram_user_name')}
         />
         <OntonInput
           className="mb-3"
           label="X Handle"
-          name="org_x_link"
-          value={values.org_x_link}
           error={(errors.org_x_link && touched.org_x_link && errors.org_x_link) || undefined}
-          onChange={handleChange}
           startAdornment={
             <div className="p-4 bg-[#EEEEF0] !rounded-[10px]">
               <Image
@@ -236,6 +232,7 @@ export default function EditForm({ data }: { data: Channel }) {
               />
             </div>
           }
+          {...getFieldProps('org_x_link')}
         />
         <OntonExpandableInput
           label="Bio"
@@ -257,125 +254,6 @@ export default function EditForm({ data }: { data: Channel }) {
         </div>
       </div>
     </form>
-  );
-}
-
-const OntonInput = ({
-  name,
-  label,
-  value,
-  onChange,
-  error,
-  className,
-  startAdornment,
-}: {
-  name: string;
-  label: string;
-  value: string;
-  onChange: ChangeEventHandler<HTMLInputElement>;
-  error?: string;
-  className?: string;
-  startAdornment?: ReactNode;
-}) => {
-  const [isFocused, setIsFocused] = useState(false);
-
-  return (
-    <div className={className}>
-      <div className="flex gap-3">
-        {startAdornment}
-        <InternalInputWrapper
-          active={isFocused || !!value}
-          label={label}
-          error={!!error}
-          className="w-full"
-        >
-          <input
-            type="text"
-            name={name}
-            value={value}
-            onChange={onChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            className="w-full h-11 leading-5.5 bg-transparent px-4 pt-4 pb-1 focus:outline-none"
-          />
-        </InternalInputWrapper>
-      </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-    </div>
-  );
-};
-
-const OntonExpandableInput = ({
-  label,
-  value,
-  name,
-  onChange,
-  className,
-}: {
-  label: string;
-  value: string;
-  name: string;
-  onChange: ChangeEventHandler<HTMLTextAreaElement>;
-  className?: string;
-}) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    // Adjust height based on content
-    if (!textareaRef.current) return;
-    textareaRef.current.style.height = "auto";
-    textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-  }, [value]);
-
-  return (
-    <InternalInputWrapper
-      className={className}
-      label={label}
-      active={isFocused || !!value}
-    >
-      <textarea
-        name={name}
-        ref={textareaRef}
-        value={value}
-        onChange={onChange}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        rows={1}
-        className="w-full leading-5.5 px-4 pt-4 pb-1 bg-transparent resize-none focus:outline-none"
-      />
-    </InternalInputWrapper>
-  );
-};
-
-function InternalInputWrapper({
-  className,
-  active,
-  label,
-  children,
-  error,
-}: {
-  className?: string;
-  active: boolean;
-  label: string;
-  children: ReactNode;
-  error?: boolean;
-}) {
-  return (
-    <div className={className}>
-      <div className={cn("relative w-full bg-[#7474801F] !rounded-[10px] border", error && "border-red-500")}>
-        <label
-          className={cn(
-            "text-base absolute left-4 top-3 text-gray-500 pointer-events-none !leading-[16px]",
-            "transition-transform transform-gpu origin-top-left duration-200 antialiased",
-            active && "-translate-y-2 scale-67"
-          )}
-        >
-          {label}
-        </label>
-        {children}
-      </div>
-    </div>
   );
 }
 
