@@ -228,8 +228,9 @@ export async function getEventTickets(uuid: string) {
       await client.query(
         `
             SELECT *
-            FROM tickets
-            WHERE event_uuid = $1;
+            FROM event_registrants
+            WHERE event_uuid = $1 and (status = 'approved' or status = 'checkedin');
+
         `,
         [uuid],
       )
