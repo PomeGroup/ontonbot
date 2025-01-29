@@ -9,7 +9,7 @@ import {
 import { editOrSend } from "./utils/utils";
 import { startKeyboard } from "./markups";
 import { sendTopicMessage } from "./utils/logs-bot";
-import { bannerCmd, hideCmd } from "./db/cmd.db";
+import { hideCmd, setBanner } from "./db/cmd.db";
 import {
 	API_BASE_URL,
 	BOT_TOKEN,
@@ -132,26 +132,56 @@ export const cmdHandler = async (ctx: Context, next: () => Promise<void>) => {
 					.catch(async (error) => {
 						await editOrSend(ctx, `went wrong ${error}`, startKeyboard());
 					});
-			} else if (cmd === "banner") {
-				const event_uuid = payload[2];
-				const env = process.env.ENV;
-
-				await bannerCmd(event_uuid, env)
-					.then(async () => {
-						const message = `Event ${event_uuid} ==> Set as the main banner`;
-
-						// await sendTopicMessage("organizers_topic", message);
-
-						await editOrSend(ctx, message, startKeyboard());
-					})
-					.catch(async (error) => {
-						await editOrSend(ctx, `went wrong ${error}`, startKeyboard());
-					});
 			}
 		} else {
 			await editOrSend(ctx, `Invalid command.`, startKeyboard());
 		}
-	} catch (error) {}
+	} catch (error) {
+		await editOrSend(ctx, `Error.`, startKeyboard());
+	}
+};
+
+/* -------------------------------------------------------------------------- */
+/*                               Command Handler                              */
+/* -------------------------------------------------------------------------- */
+export const bannerHandler = async (
+	ctx: Context,
+	next: () => Promise<void>
+) => {
+	// get user from database
+	const { isAdmin } = await isUserAdmin(ctx.from.id.toString());
+
+	if (!isAdmin) {
+		return await ctx.reply(`You are not authorized to perform this operation.`);
+	}
+
+	try {
+		// @ts-ignore
+		const messageText = ctx.message?.text;
+		const payload = messageText.split(" ");
+
+		const position = payload[1].toLowerCase();
+		let event_uuid = payload[2].toLowerCase();
+
+		if (event_uuid.includes("event?startapp=")) { // handle link as well
+			event_uuid = event_uuid.split("event?startapp=")[1];
+		}
+		const env = process.env.ENV;
+
+		await setBanner(env, position, event_uuid)
+			.then(async () => {
+				const message = `✅ Event ${event_uuid} ==> Set For the ${position}`;
+
+				// await sendTopicMessage("organizers_topic", message);
+
+				await editOrSend(ctx, message, undefined);
+			})
+			.catch(async (error) => {
+				await editOrSend(ctx, `went wrong ${error}`, undefined);
+			});
+	} catch (error) {
+		await editOrSend(ctx, `Error.`, undefined);
+	}
 };
 
 /* -------------------------------------------------------------------------- */
