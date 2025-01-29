@@ -1,0 +1,33 @@
+.emptyList {
+    @apply flex flex-col justify-center gap-6 items-center h-full overflow-hidden;
+    @apply bg-white rounded-[10px];
+}
+
+.emptyList-helper {
+    @apply flex flex-col items-center gap-3;
+}
+
+.listItem {
+    @apply bg-white rounded-[10px];
+    @apply flex gap-3;
+}
+
+.listItem-avatar {
+    @apply rounded-[6px] w-12 h-12 min-w-12 grow-0;
+}
+
+.listItem-data {
+    @apply flex flex-col gap-2 grow;
+}
+
+.listItem-role--admin {
+    @apply text-[#ff9500];
+}
+
+.listItem-role--officer {
+    @apply text-[#34C759];
+}
+
+.footer {
+    @apply p-2 bg-white;
+}

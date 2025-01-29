@@ -7,19 +7,24 @@ import { Page, Block, Button } from "konsta/react";
 import guestListIcon from "./guest-list.svg";
 // import promotionCodeIcon from "./promotion-code.svg";
 import ordersIcon from "./orders.svg";
+import coOrganizerIcon from './co-organizers.svg'
 
 import EventCard from "@/app/_components/EventCard/EventCard";
 import ActionCard from "@/components/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";
 import { useGetEvent } from "@/hooks/events.hooks";
+import { useUserStore } from "@/context/store/user.store";
+import hardcodedAcl from "./hardcodedAcl";
 
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
   const { hash } = useParams() as { hash?: string };
   const { data: eventData, isLoading, isError } = useGetEvent(hash);
 
-  const { setSection , clearSections } = useSectionStore();
+  const { setSection, clearSections } = useSectionStore();
   const router = useRouter();
+
+  const { user } = useUserStore()
 
   if (isError) {
     return <div>something went wrong</div>
@@ -27,6 +32,14 @@ export default function ManageIndexPage() {
   if (!eventData || !eventData?.event_uuid || isLoading) {
     return null;
   }
+
+  const castedEventData = {
+    ...eventData,
+    acl: hardcodedAcl
+  }
+
+  const adminCount = castedEventData.acl.filter(item => item.role === 'admin').length + 1
+  const officerCount = castedEventData.acl.filter(item => item.role === 'officer').length
 
   // The main “Manage” page
   return (
@@ -109,6 +122,24 @@ export default function ManageIndexPage() {
           subtitle="View and manage participants"
           footerTexts={[]}
         />
+        {
+          // eventData.organizer?.user_id === user?.user_id && 
+          true &&
+          (
+            <ActionCard
+              onClick={() => router.push(`/events/${eventData.event_uuid}/manage/co-organizers`)}
+              iconSrc={coOrganizerIcon}
+              title="Co-organizers"
+              subtitle="Grant and remove access to check-in officers and admins"
+              footerTexts={[{
+                count: adminCount,
+                items: 'Admin' + (adminCount > 1 ? 's' : '')
+              }, {
+                count: officerCount,
+                items: 'Check-in officer' + (officerCount > 1 ? 's' : '')
+              }]}
+            />
+          )}
       </Block>
     </Page>
   );
