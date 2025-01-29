@@ -23,6 +23,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/db";
 import { parseRejectReason, tgBotModerationMenu } from "@/lib/TgBotTools";
 import { formatDate } from "@/lib/DateAndTime";
+import { selectUserById } from "@/server/db/users";
 
 // Helper to post to your custom Telegram server
 const tgClientPost = (path: string, data: any) =>
@@ -289,13 +290,14 @@ async function startBot() {
         if (action === "updateEventData") {
           // Demonstration: fetch event, pretend to update DB, then edit the caption
           const updatedEvent = await getEventByUuid(eventUuid);
+          const ownerInfo = await  selectUserById(updatedEvent.owner!!);
 
           const updatedCaption = `
-<b>${updatedEvent.title} (Updated in ${formatDate(Date.now())})</b>
+<b>${updatedEvent.title} (Updated in ${formatDate(Date.now()/1000)})</b>
 
 ${updatedEvent.subtitle}
 
-${username}
+${ownerInfo?.username ? `@${ownerInfo.username}` : `no username <code>${ownerInfo?.user_id}</code>`} 
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
 (This text is newly updated!)
