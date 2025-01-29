@@ -26,12 +26,10 @@ export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!useTonAddress();
   const { setSection } = useSectionStore();
-  //const { data, isLoading } = trpc.organizers.getOrganizer.useQuery({});
 
   const paid = user?.role === "organizer" || user?.role === "admin";
   const router = useRouter();
 
-  //if (isLoading) return null;
 
   return (
     <div className="bg-[#EFEFF4] py-4 min-h-screen mb-[calc(-1*var(--tg-safe-area-inset-bottom))]">
