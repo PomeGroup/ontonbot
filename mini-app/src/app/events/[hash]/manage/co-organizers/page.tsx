@@ -149,7 +149,7 @@ function AddPopup({ open, onAdd, onClose }: AddPopupProps) {
         </KonstaList>
         <div className='mt-auto p-3'>
           <Button className='py-3 mb-3 rounded-[10px]' onClick={handleAdd}>Save</Button>
-          <Button outlined className='py-3 rounded-[10px]' onClick={onClose}>Cancel</Button>
+          <Button outline className='py-3 rounded-[10px]' onClick={onClose}>Cancel</Button>
         </div>
       </Page>
     </Popup>
