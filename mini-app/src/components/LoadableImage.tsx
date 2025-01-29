@@ -1,4 +1,4 @@
-import { DetailedHTMLProps, ImgHTMLAttributes, useState } from "react"
+import { DetailedHTMLProps, ImgHTMLAttributes, SyntheticEvent, useCallback, useState } from "react"
 import Image from "next/image";
 import { cn } from "@/utils";
 
@@ -31,6 +31,13 @@ export default function LoadableImage({
 }: Props) {
   const [loaded, setLoaded] = useState(false)
 
+  const onError = useCallback((e: SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = defaultImage
+  }, [])
+  const onLoad = useCallback(() => {
+    setLoaded(true)
+  }, [])
+
   return (
     <div className={cn(
       `relative rounded-lg flex-shrink-0`,
@@ -46,8 +53,8 @@ export default function LoadableImage({
         width={width}
         height={height}
         className={cn(`w-[${width}] rounded-[6px] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`, className)}
-        onError={(e) => (e.currentTarget.src = defaultImage)}
-        onLoad={() => setLoaded(true)}
+        onError={onError}
+        onLoad={onLoad}
         loading="lazy"
         {...props}
       />

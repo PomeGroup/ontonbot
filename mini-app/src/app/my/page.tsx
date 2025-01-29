@@ -30,7 +30,6 @@ export default function ProfilePage() {
   const paid = user?.role === "organizer" || user?.role === "admin";
   const router = useRouter();
 
-
   return (
     <div className="bg-[#EFEFF4] py-4 min-h-screen mb-[calc(-1*var(--tg-safe-area-inset-bottom))]">
       {paid ? <InlineChannelCard data={user} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
