@@ -9,6 +9,7 @@ import { beginCell, toNano } from "@ton/core";
 import { toast } from "sonner";
 import { useUpdateOrder } from "@/hooks/orders.hooks";
 import { useParams } from "next/navigation";
+import DataStatus from "../../molecules/alerts/DataStatus";
 
 const EventOrders = () => {
   const params = useParams<{ hash: string }>();
@@ -39,6 +40,12 @@ const EventOrders = () => {
           variant: "danger",
         }}
       >
+        {orders.data?.filter((o) => o.state === "new").length === 0 && (
+          <DataStatus
+            status="not_found"
+            description="No new orders found"
+          />
+        )}
         {orders.data
           ?.filter((o) => o.state === "new")
           .map((order) => {
@@ -74,29 +81,29 @@ const EventOrders = () => {
                         onClick={() => {
                           tonWallet?.account.address
                             ? // FIXME: support for usdt
-                            tonConnectUI
-                              .sendTransaction({
-                                validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
-                                messages: [
-                                  {
-                                    amount: toNano(order.total_price).toString(),
-                                    address: config.ONTON_WALLET_ADDRESS!,
-                                    payload: beginCell()
-                                      .storeUint(0, 32)
-                                      .storeStringTail(`onton_order=${order.uuid}`)
-                                      .endCell()
-                                      .toBoc()
-                                      .toString("base64"),
-                                  },
-                                ],
-                              })
-                              .then(() => {
-                                toast("Please wait until we confirm the transaction and do not pay again");
-                                updateOrder.mutate({
-                                  state: "confirming",
-                                  order_uuid: order.uuid,
-                                });
-                              })
+                              tonConnectUI
+                                .sendTransaction({
+                                  validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
+                                  messages: [
+                                    {
+                                      amount: toNano(order.total_price).toString(),
+                                      address: config.ONTON_WALLET_ADDRESS!,
+                                      payload: beginCell()
+                                        .storeUint(0, 32)
+                                        .storeStringTail(`onton_order=${order.uuid}`)
+                                        .endCell()
+                                        .toBoc()
+                                        .toString("base64"),
+                                    },
+                                  ],
+                                })
+                                .then(() => {
+                                  toast("Please wait until we confirm the transaction and do not pay again");
+                                  updateOrder.mutate({
+                                    state: "confirming",
+                                    order_uuid: order.uuid,
+                                  });
+                                })
                             : tonConnectUI.openModal();
                         }}
                       >
@@ -122,6 +129,12 @@ const EventOrders = () => {
           variant: "primary",
         }}
       >
+        {orders.data?.filter((o) => o.state !== "new").length === 0 && (
+          <DataStatus
+            status="not_found"
+            description="No orders found"
+          />
+        )}
         {orders.data
           ?.filter((o) => o.state !== "new")
           .map((order) => {

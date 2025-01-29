@@ -70,6 +70,7 @@ export function useGetEventOrders() {
     },
     {
       staleTime: Infinity,
+      refetchInterval: 30_000,
       queryKey: ["orders.getEventOrders", { event_uuid: params.hash }],
     }
   );
