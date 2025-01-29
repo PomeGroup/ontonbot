@@ -14,39 +14,31 @@ export async function setBanner(
 ) {
 	const client = await pool.connect();
 	try {
-		// Map positions to the array index
-		const positionMap: Record<string, number> = {
+		const pos = position.toLowerCase();
+		const indexMap: Record<string, number> = {
 			u1: 0,
 			u2: 1,
 			d1: 0,
 			d2: 1,
 			d3: 2,
 		};
-
-		// Determine which var to fetch from DB
-		const varName = position.toLowerCase().startsWith("u")
+		const varName = pos.startsWith("u")
 			? "homeSliderEventUUID"
 			: "homeListEventUUID";
 
-		// Fetch existing array (value) from DB
 		const { rows } = await client.query(
 			"SELECT value FROM onton_setting WHERE env = $1 AND var = $2 LIMIT 1",
 			[env, varName]
 		);
+		if (!rows.length) throw new Error("No existing setting found.");
 
-		if (!rows.length) {
-			throw new Error("No existing setting found.");
-		}
+		const currentValue = JSON.parse(rows[0].value); // parse string as array
+		currentValue[indexMap[pos]] = event_uuid; // update array element
+		const updatedValue = JSON.stringify(currentValue);
 
-		// Replace the correct array element
-		const currentValue = rows[0].value; // e.g. ["b1845c...", "abea5d..."]
-		const index = positionMap[position.toLowerCase()];
-		currentValue[index] = event_uuid;
-
-		// Update DB
 		await client.query(
 			"UPDATE onton_setting SET value = $1 WHERE env = $2 AND var = $3",
-			[currentValue, env, varName]
+			[updatedValue, env, varName]
 		);
 	} finally {
 		client.release();
