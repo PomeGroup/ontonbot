@@ -20,6 +20,7 @@ import {
 import { uploadProfileImage } from "./utils/uploadProfileImage";
 import axios from "axios";
 import { logger } from "./utils/logger";
+import { deleteCache } from "./lib/redisTools";
 
 /* -------------------------------------------------------------------------- */
 /*                                 ORG Handler                                */
@@ -163,13 +164,15 @@ export const bannerHandler = async (
 		const position = payload[1].toLowerCase();
 		let event_uuid = payload[2].toLowerCase();
 
-		if (event_uuid.includes("event?startapp=")) { // handle link as well
+		if (event_uuid.includes("event?startapp=")) {
+			// handle link as well
 			event_uuid = event_uuid.split("event?startapp=")[1];
 		}
 		const env = process.env.ENV;
 
 		await setBanner(env, position, event_uuid)
 			.then(async () => {
+				await deleteCache("ontonSettings");
 				const message = `✅ Event ${event_uuid} ==> Set For the ${position}`;
 
 				// await sendTopicMessage("organizers_topic", message);
