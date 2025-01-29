@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventRegistrants, users, visitors, events, event_details_search_list } from "@/db/schema";
+import { eventRegistrants, users, visitors, events } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { InferSelectModel, eq, sql, and, or, not, inArray } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
