@@ -1,7 +1,7 @@
 import axios from "axios";
-import { Bot, GrammyError, InlineKeyboard, InputFile } from "grammy";
+import { Bot, GrammyError, InputFile } from "grammy";
+import { InlineKeyboard } from "grammy"; // InputMediaPhoto for editing media
 import { configProtected } from "@/server/config";
-
 
 const tgClient = axios.create({
   baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
@@ -16,22 +16,28 @@ import { InlineKeyboardMarkup } from "grammy/types";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
 import { selectEventByUuid } from "@/server/db/events";
 import { registerActivity } from "./ton-society-api";
+import { getEventByUuid } from "@/server/db/events";
+import { userHasModerationAccess } from "@/server/db/userFlags.db";
+import { InputMediaPhoto } from "grammy/types";
 import { eq } from "drizzle-orm";
 import { db } from "@/db/db";
-import { userHasModerationAccess } from "@/server/db/userFlags.db";
+import { parseRejectReason, tgBotModerationMenu } from "@/lib/TgBotTools";
+import { formatDate } from "@/lib/DateAndTime";
+import { selectUserById } from "@/server/db/users";
 
+// Helper to post to your custom Telegram server
+const tgClientPost = (path: string, data: any) =>
+  tgClient.post(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/${path}`, data);
+
+// =========== Send Telegram Message ===========
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
   try {
-    const response = await tgClient.post(
-      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-message`,
-      {
-        chat_id: props.chat_id,
-        custom_message: props.message,
-        link: props.link,
-      }
-    );
+    const response = await tgClientPost("send-message", {
+      chat_id: props.chat_id,
+      custom_message: props.message,
+      link: props.link,
+    });
 
-    // If the response indicates success, return the response data
     if (response.data.success) {
       return {
         success: true,
@@ -39,7 +45,6 @@ export const sendTelegramMessage = async (props: { chat_id: string | number; mes
       };
     }
 
-    // If the server responded but with an error, handle the error
     const errorMessage = `Error sending message sendTelegramMessage:${response.data.error || "An unknown error occurred"}`;
     logger.error(errorMessage);
     return {
@@ -48,20 +53,21 @@ export const sendTelegramMessage = async (props: { chat_id: string | number; mes
       status: response.status || 500,
     };
   } catch (error: unknown) {
-    // Type assertion to AxiosError
     if (error instanceof AxiosError && error.response && error.response.data) {
-      // Handle errors returned from the server
-      const errorMessage = `Error sending message sendTelegramMessage:${error.response.data.error || "Unknown error from server"}`;
+      const errorMessage = `Error sending message sendTelegramMessage:${
+        error.response.data.error || "Unknown error from server"
+      }`;
       logger.error(errorMessage);
       return {
         success: false,
         error: errorMessage,
-        status: error.response.status || 500,
+        status: error.response?.status || 500,
       };
     }
 
-    // For other types of errors, such as network errors
-    const errorMessage = `Error sending message sendTelegramMessage:${(error as Error).message || "An unexpected error occurred"}`;
+    const errorMessage = `Error sending message sendTelegramMessage:${
+      (error as Error).message || "An unexpected error occurred"
+    }`;
     logger.error(errorMessage);
     return {
       success: false,
@@ -70,18 +76,16 @@ export const sendTelegramMessage = async (props: { chat_id: string | number; mes
     };
   }
 };
+
+// =========== Send Event Photo ===========
 export const sendEventPhoto = async (props: { event_id: string; user_id: string | number; message: string }) => {
   try {
-    const response = await tgClient.post(
-      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/send-photo`,
-      {
-        id: props.event_id,
-        user_id: String(props.user_id),
-        message: props.message,
-      }
-    );
+    const response = await tgClientPost("send-photo", {
+      id: props.event_id,
+      user_id: String(props.user_id),
+      message: props.message,
+    });
 
-    // If the response indicates success, return the response data
     if (response.data.success) {
       return {
         success: true,
@@ -89,7 +93,6 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
       };
     }
 
-    // If the server responded but with an error, handle the error
     const errorMessage = `Error sending message sendTelegramMessage:${response.data.error || "An unknown error occurred"}`;
     logger.error(errorMessage);
     return {
@@ -98,20 +101,21 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
       status: response.status || 500,
     };
   } catch (error: unknown) {
-    // Type assertion to AxiosError
     if (error instanceof AxiosError && error.response && error.response.data) {
-      // Handle errors returned from the server
-      const errorMessage = `Error sending message sendTelegramMessage:${error.response.data.error || "Unknown error from server"}`;
+      const errorMessage = `Error sending message sendTelegramMessage:${
+        error.response.data.error || "Unknown error from server"
+      }`;
       logger.error(errorMessage);
       return {
         success: false,
         error: errorMessage,
-        status: error.response.status || 500,
+        status: error.response?.status || 500,
       };
     }
 
-    // For other types of errors, such as network errors
-    const errorMessage = `Error sending message sendTelegramMessage:${(error as Error).message || "An unexpected error occurred"}`;
+    const errorMessage = `Error sending message sendTelegramMessage:${
+      (error as Error).message || "An unexpected error occurred"
+    }`;
     logger.error(errorMessage);
     return {
       success: false,
@@ -121,67 +125,86 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
   }
 };
 
+// =========== Approve Event in TonSociety etc. ===========
 async function onCallBackModerateEvent(status: string, event_uuid: string) {
   const eventData = await selectEventByUuid(event_uuid);
-
+  const isLocal = process.env.ENV === "local";
   if (!eventData) return false;
 
-  const eventDraft = await CreateTonSocietyDraft(
-    {
-      title: eventData.title,
-      subtitle: eventData.subtitle,
-      description: eventData.description,
-      location: eventData.location!,
-      countryId: eventData.countryId,
-      society_hub: { id: eventData.society_hub_id! },
-      start_date: eventData.start_date,
-      end_date: eventData.end_date,
-      ts_reward_url: eventData.tsRewardImage,
-      video_url: eventData.tsRewardVideo,
-      eventLocationType: eventData.participationType,
-    },
-    event_uuid
-  );
-  let ton_society_result = undefined;
-  if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
-
-  if (eventData.activity_id || ton_society_result) {
-    const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
-    await db.transaction(async (trx) => {
-      await trx
-        .update(events)
-        .set({
-          activity_id: activity_id,
-          hidden: false,
-          enabled: true,
-          updatedBy: "Moderation-Approve",
-          updatedAt: new Date(),
-        })
-        .where(eq(events.event_uuid, event_uuid))
-        .execute();
-      logger.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
-    });
-
-    const event = await db.query.events.findFirst({
-      where: eq(events.event_uuid, event_uuid),
-      columns: {
-        activity_id: true,
+  if (!isLocal) {
+    const eventDraft = await CreateTonSocietyDraft(
+      {
+        title: eventData.title,
+        subtitle: eventData.subtitle,
+        description: eventData.description,
+        location: eventData.location!,
+        countryId: eventData.countryId,
+        society_hub: { id: eventData.society_hub_id! },
+        start_date: eventData.start_date,
+        end_date: eventData.end_date,
+        ts_reward_url: eventData.tsRewardImage,
+        video_url: eventData.tsRewardVideo,
+        eventLocationType: eventData.participationType,
       },
-    });
+      event_uuid
+    );
+    let ton_society_result = undefined;
+    if (!eventData.activity_id) {
+      ton_society_result = await registerActivity(eventDraft);
+    }
 
-    logger.log("tgBot_moderation_approve event_uuid , activity_id", event_uuid, event?.activity_id);
-    return event?.activity_id;
+    if (eventData.activity_id || ton_society_result) {
+      const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
+      await db.transaction(async (trx) => {
+        await trx
+          .update(events)
+          .set({
+            activity_id: activity_id,
+            hidden: false,
+            enabled: true,
+            updatedBy: "Moderation-Approve",
+            updatedAt: new Date(),
+          })
+          .where(eq(events.event_uuid, event_uuid))
+          .execute();
+        logger.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
+      });
+
+      const updatedEvent = await db.query.events.findFirst({
+        where: eq(events.event_uuid, event_uuid),
+        columns: {
+          activity_id: true,
+        },
+      });
+
+      logger.log("tgBot_moderation_approve event_uuid , activity_id", event_uuid, updatedEvent?.activity_id);
+      return updatedEvent?.activity_id;
+    } else {
+      return null;
+    }
   }
 
   return false;
 }
 
+/** For the "reject custom" flow, store data keyed by prompt message ID */
+interface PendingCustomReply {
+  eventUuid: string;
+  modChatId: number;
+  modMessageId: number;
+  originalCaption: string;
+  allowedUserId: number;
+}
+
+const pendingCustomReplyPrompts = new Map<number, PendingCustomReply>();
+
+// =========== Start Bot ===========
 async function startBot() {
   while (true) {
     if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
-      logger.error("Bot token or logs group ID not found in configProtected for this environment");
-      logger.error("Retrying to start moderation log bot in 5 seconds...", configProtected);
-      await sleep(5000); // Sleep for 5 seconds and try again
+      logger.error("Bot token or logs group ID not found in configProtected");
+      logger.error("Retrying in 5 seconds...");
+      await sleep(5000);
       continue;
     }
 
@@ -190,78 +213,298 @@ async function startBot() {
     try {
       const bot = new Bot(BOT_TOKEN_LOGS);
 
-      /* ------------------------------- On Message ------------------------------- */
-      // bot.on("message", (ctx) => ctx.reply("Got another message! : " + ctx.message.text?.toString()));
-
-      /* ------------------------------- On CallBack ------------------------------ */
+      // ----------------------------------
+      // 1) Handle Inline Keyboard Callbacks
+      // ----------------------------------
       bot.on("callback_query:data", async (ctx) => {
         const payload = ctx.callbackQuery.data;
-        logger.log("callback_query_with_payload : ", payload);
+        logger.log("callback_query_with_payload:", payload);
 
-        const [status, event_uuid] = payload.split("_");
+        const originalCaption = ctx.update.callback_query.message?.caption || "";
+        const modChatId = ctx.update.callback_query.message?.chat.id!;
+        const modMessageId = ctx.update.callback_query.message?.message_id!;
+        const userId = ctx.update.callback_query.from.id;
 
-        // logger.log();
+        const fromUser = ctx.update.callback_query.from;
+        const username = fromUser.username ? "@" + fromUser.username : "";
+        const first_name = fromUser.first_name || "";
+        const last_name = fromUser.last_name || "";
+        const user_details = `\n<b>${first_name} ${last_name}</b> <code>${username}</code> <code>${userId}</code>`;
 
-        // logger.log("CTX" , ctx);
-
-        // logger.log("CTX_MESSAGE" , ctx.update.message);
-
-        const orignal_text = ctx.update?.callback_query.message?.caption || "";
-        const user_id = ctx.update.callback_query.from.id;
-        const username = "@" + ctx.update.callback_query.from.username || "";
-        const first_name = ctx.update.callback_query.from.first_name || "";
-        const last_name = ctx.update.callback_query.from.last_name || "";
-        const user_details = `\n<b>${first_name} ${last_name}</b> <code>${username}</code> <code>${user_id}</code>`;
-
-        if (!(await userHasModerationAccess(user_id, "user"))) {
+        // Check moderator
+        if (!(await userHasModerationAccess(userId, "user"))) {
           await ctx.answerCallbackQuery({ text: "Unauthorized Moderator" });
           return;
         }
 
-        const is_apporved = status === "approve";
-        const new_text =
-          orignal_text + "\n\nStatus : " + (is_apporved ? "✅ Approved By " : "❌ Rejected By ") + user_details;
+        const parts = payload.split("_");
+        const action = parts[0]; // e.g. "approve", "rejectSpam", "updateEventData"
+        const eventUuid = parts[1];
 
-        let update_completed = true;
-        if (status === "approve") {
-          try {
-            update_completed = !!(await onCallBackModerateEvent(status, event_uuid));
-          } catch (error) {
-            logger.error("onCallBackModerateEvent_approve_failed", error);
-            update_completed = false;
-          }
-        } else {
-          const eventData = await selectEventByUuid(event_uuid);
-          await sendTelegramMessage({
-            chat_id: Number(eventData?.owner),
-            message: `❌Your Event <b>(${eventData?.title})</b> Has Been Rejected By Our Moderators`,
-          });
-        }
-        if (update_completed) {
-          const reply_markup =
-            status === "approve"
-              ? undefined // No Button For approved events
-              : new InlineKeyboard().text("✅ Approve Rejected Event", `approve_${event_uuid}`);
-          // Rejected Events Can be published
+        // ============= APPROVE (Two-step) ============
+        if (action === "approve") {
+          const confirmKb = new InlineKeyboard()
+            .text("✅ Yes, Approve", `yesApprove_${eventUuid}`)
+            .text("🔙 Back", `noApprove_${eventUuid}`);
           await ctx.editMessageCaption({
-            caption: new_text,
-            reply_markup,
+            caption: originalCaption + "\n\nAre you sure to approve?",
             parse_mode: "HTML",
+            reply_markup: confirmKb,
+          });
+          await ctx.answerCallbackQuery({ text: "Confirm approval?" });
+          return;
+        }
+        if (action === "yesApprove") {
+          let update_completed = true;
+          const isLocal = process.env.ENV === "local";
+          if (!isLocal) {
+            try {
+              update_completed = !!(await onCallBackModerateEvent("approve", eventUuid));
+            } catch (err) {
+              logger.error("onCallBackModerateEvent_approve_failed", err);
+              update_completed = false;
+            }
+          }
+          if (update_completed) {
+            const newCap = originalCaption + "\n\nStatus : ✅ Approved By " + user_details;
+            await ctx.editMessageCaption({
+              caption: newCap,
+              parse_mode: "HTML",
+              reply_markup: undefined,
+            });
+          }
+          await ctx.answerCallbackQuery({ text: "Event approved!" });
+          return;
+        }
+        if (action === "noApprove") {
+          await ctx.editMessageCaption({
+            caption: originalCaption + "\n\nApproval canceled.\n\nBack to main menu:",
+            parse_mode: "HTML",
+            reply_markup: tgBotModerationMenu(eventUuid),
+          });
+          await ctx.answerCallbackQuery({ text: "Canceled." });
+          return;
+        }
+
+        // ============= Update Event Data (Demo) ============
+        if (action === "updateEventData") {
+          // Demonstration: fetch event, pretend to update DB, then edit the caption
+          const updatedEvent = await getEventByUuid(eventUuid);
+          const ownerInfo = await  selectUserById(updatedEvent.owner!!);
+
+          const updatedCaption = `
+<b>${updatedEvent.title} (Updated in ${formatDate(Date.now()/1000)})</b>
+
+${updatedEvent.subtitle}
+
+${ownerInfo?.username ? `@${ownerInfo.username}` : `no username <code>${ownerInfo?.user_id}</code>`} 
+
+Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
+(This text is newly updated!)
+`.trim();
+
+          await ctx.editMessageCaption({
+            caption: updatedCaption,
+            parse_mode: "HTML",
+            reply_markup: tgBotModerationMenu(eventUuid),
+          });
+          // Let's pretend we have a new photo URL or file_id
+          const newPhotoUrl = updatedEvent.image_url || "https://onton.live/template-images/default.webp";
+
+          // We'll build a new InputMediaPhoto object
+          const newMedia: InputMediaPhoto = {
+            type: "photo",
+            media: newPhotoUrl,
+            caption: updatedCaption,
+            parse_mode: "HTML",
+          };
+          // Then call editMessageMedia:
+          // We must pass either chat_id + message_id OR inline_message_id
+          await ctx.api.editMessageMedia(modChatId, modMessageId, newMedia, {
+            reply_markup: tgBotModerationMenu(eventUuid), // keep the same menu
+          });
+          await ctx.answerCallbackQuery({
+            text: `Event data updated!`,
+            show_alert: true,
+          });
+          return;
+        }
+
+        // ============= REJECT (Custom) =============
+        if (action === "rejectCustom") {
+          const promptMsg = await ctx.api.sendMessage(
+            modChatId,
+            `Please reply to THIS message with your custom reason for event <b>${eventUuid}</b>, or press Cancel.`,
+            { parse_mode: "HTML" }
+          );
+          const finalKb = new InlineKeyboard().text("🚫 Cancel", `cancelCustom_${promptMsg.message_id}_${eventUuid}`);
+          await ctx.api.editMessageReplyMarkup(modChatId, promptMsg.message_id, {
+            reply_markup: finalKb,
+          });
+          pendingCustomReplyPrompts.set(promptMsg.message_id, {
+            eventUuid,
+            modChatId,
+            modMessageId,
+            originalCaption,
+            allowedUserId: userId,
+          });
+          await ctx.editMessageCaption({
+            caption: originalCaption + "\n\nNow waiting for custom reason...",
+            parse_mode: "HTML",
+            reply_markup: undefined,
+          });
+          await ctx.answerCallbackQuery({ text: "Type or cancel the custom reason." });
+          return;
+        }
+
+        // ============= Cancel Custom Rejection =============
+        if (action === "cancelCustom" && parts.length === 3) {
+          const promptId = Number(parts[1]);
+          const evUuid = parts[2];
+
+          if (!pendingCustomReplyPrompts.has(promptId)) {
+            await ctx.answerCallbackQuery({ text: "No pending custom reason found." });
+            return;
+          }
+          const stored = pendingCustomReplyPrompts.get(promptId)!;
+          if (stored.allowedUserId !== userId) {
+            await ctx.answerCallbackQuery({ text: "You're not allowed to cancel this prompt." });
+            return;
+          }
+          pendingCustomReplyPrompts.delete(promptId);
+
+          await ctx.api.editMessageCaption(stored.modChatId, stored.modMessageId, {
+            caption: stored.originalCaption + "\n\nRejection canceled.\n\nBack to main menu:",
+            parse_mode: "HTML",
+            reply_markup: tgBotModerationMenu(evUuid),
+          });
+
+          await ctx.api.editMessageText(stored.modChatId, promptId, "Custom rejection canceled.");
+
+          await ctx.answerCallbackQuery({ text: "Canceled custom reason." });
+          return;
+        }
+
+        // ============= REJECT (Standard) =============
+        if (action.startsWith("reject") && action !== "rejectCustom" && action !== "cancelCustom") {
+          const reasonKey = action.replace("reject", "");
+          const confirmKb = new InlineKeyboard()
+            .text("❌ Yes, Reject", `yesReject_${reasonKey}_${eventUuid}`)
+            .text("🔙 Back", `noReject_${eventUuid}`);
+          await ctx.editMessageCaption({
+            caption:
+              originalCaption + `\n\nAre you sure you want to reject with reason: <b>${parseRejectReason(reasonKey)}</b>?`,
+            parse_mode: "HTML",
+            reply_markup: confirmKb,
+          });
+          await ctx.answerCallbackQuery({ text: "Confirm rejection?" });
+          return;
+        }
+
+        if (action === "yesReject" && parts.length === 3) {
+          const reasonKey = parts[1];
+          const evId = parts[2];
+
+          const eventData = await selectEventByUuid(evId);
+          if (eventData) {
+            await sendTelegramMessage({
+              chat_id: Number(eventData.owner),
+              message: `❌Your Event <b>(${eventData.title})</b> Has Been Rejected.\nReason: ${parseRejectReason(
+                reasonKey
+              )}`,
+            });
+          }
+          const newCap =
+            originalCaption + "\n\nStatus : ❌ Rejected By " + user_details + `\nReason: ${parseRejectReason(reasonKey)}`;
+
+          const repMarkup = new InlineKeyboard()
+            .text("✅ Approve Rejected Event", `approve_${evId}`)
+            .row()
+            .text("🔃 Update Data", `updateEventData_${eventUuid}`);
+
+          await ctx.editMessageCaption({
+            caption: newCap,
+            parse_mode: "HTML",
+            reply_markup: repMarkup,
+          });
+          await ctx.answerCallbackQuery({ text: "Event rejected!" });
+          return;
+        }
+
+        if (action === "noReject") {
+          await ctx.editMessageCaption({
+            caption: originalCaption + "\n\nRejection canceled.\n\nBack to main menu:",
+            parse_mode: "HTML",
+            reply_markup: tgBotModerationMenu(eventUuid),
+          });
+          await ctx.answerCallbackQuery({ text: "Canceled." });
+          return;
+        }
+
+        // unknown action
+        await ctx.answerCallbackQuery({ text: "Unknown action" });
+      });
+
+      // ----------------------------------
+      // 2) Text messages (custom reason flow)
+      // ----------------------------------
+      bot.on("message:text", async (ctx) => {
+        const replyTo = ctx.message.reply_to_message;
+        if (!replyTo) return;
+
+        const promptId = replyTo.message_id;
+        if (!pendingCustomReplyPrompts.has(promptId)) {
+          return;
+        }
+
+        const { eventUuid, modChatId, modMessageId, originalCaption, allowedUserId } =
+          pendingCustomReplyPrompts.get(promptId)!;
+
+        const userId = ctx.from.id;
+        if (userId !== allowedUserId) {
+          await ctx.reply("You are not the moderator who triggered this custom reason prompt!");
+          return;
+        }
+
+        // finalize
+        pendingCustomReplyPrompts.delete(promptId);
+
+        const typedReason = ctx.message.text;
+        const eventData = await selectEventByUuid(eventUuid);
+        if (eventData) {
+          await sendTelegramMessage({
+            chat_id: Number(eventData.owner),
+            message: `❌Your Event <b>(${eventData.title})</b> Has Been Rejected.\nReason: ${typedReason}`,
           });
         }
 
-        await ctx.answerCallbackQuery({ text: "Got it !!" }); // remove loading animation
-      });
-      /* ------------------------------ Start The Bot ----------------------------- */
-      await bot.start({
-        onStart: () => logger.log("Started The Moderation/Logger Bot Successfully Callback"),
+        const first_name = ctx.from.first_name || "";
+        const last_name = ctx.from.last_name || "";
+        const username = ctx.from.username ? "@" + ctx.from.username : "";
+        const user_details = `\n<b>${first_name} ${last_name}</b> <code>${username}</code> <code>${userId}</code>`;
+
+        const newCap = originalCaption + "\n\nStatus : ❌ Rejected By " + user_details + `\nReason: ${typedReason}`;
+
+        const repMarkup = new InlineKeyboard().text("✅ Approve Rejected Event", `approve_${eventUuid}`);
+        await ctx.api.editMessageCaption(modChatId, modMessageId, {
+          caption: newCap,
+          parse_mode: "HTML",
+          reply_markup: repMarkup,
+        });
+
+        await ctx.api.editMessageText(modChatId, promptId, "Your custom rejection reason has been recorded. Thank you!");
       });
 
+      // Start the bot
+      await bot.start({
+        onStart: () => logger.log("Started moderation bot successfully."),
+      });
       logger.log("Started The Moderation/Logger Bot Successfully");
-      break; // Exit the loop once the bot starts successfully
+      break;
     } catch (error) {
       if (error instanceof GrammyError) {
         if (error.error_code === 409) {
+          // Bot is already running or conflict
           return;
         }
       }
@@ -277,11 +520,16 @@ export async function sendLogNotification(
     message: string;
     topic: "event" | "ticket" | "system" | "payments" | "no_topic";
     image?: string | null;
-    inline_keyboard?: InlineKeyboardMarkup; // Optional property
+    inline_keyboard?: InlineKeyboardMarkup; // optional
     group_id?: number | string | null;
-  } = { message: "", topic: "event", image: undefined, inline_keyboard: undefined, group_id: undefined }
+  } = {
+    message: "",
+    topic: "event",
+    image: undefined,
+    inline_keyboard: undefined,
+    group_id: undefined,
+  }
 ) {
-
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     logger.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");
@@ -292,7 +540,6 @@ export async function sendLogNotification(
     LOGS_GROUP_ID = props.group_id.toString();
   }
 
-  // Centralized topic mapping
   const topicMapping: Record<"no_topic" | "event" | "ticket" | "system" | "payments", string | null> = {
     event: configProtected.events_topic,
     ticket: configProtected.tickets_topic,
@@ -302,7 +549,6 @@ export async function sendLogNotification(
   };
 
   const topicMessageId = topicMapping[props.topic];
-
   if (!topicMessageId) {
     logger.error(`Invalid or unconfigured topic: ${props.topic}`);
     throw new Error(`Invalid or unconfigured topic: ${props.topic}`);
@@ -311,20 +557,19 @@ export async function sendLogNotification(
   const logBot = new Bot(BOT_TOKEN_LOGS);
 
   if (props.image) {
-    const response = await axios.get(props.image, { responseType: 'arraybuffer' });
+    const response = await axios.get(props.image, { responseType: "arraybuffer" });
     const buffer = response.data;
-    logger.log("Sending telegram photo message" ,Number(LOGS_GROUP_ID), props.image, {
+    logger.log("Sending telegram photo message", Number(LOGS_GROUP_ID), props.image, {
       caption: props.message,
       reply_parameters:
         topicMessageId === "no_topic"
           ? undefined
           : {
-            message_id: Number(topicMessageId),
-          },
+              message_id: Number(topicMessageId),
+            },
       reply_markup: props.inline_keyboard,
       parse_mode: "HTML",
     });
-
 
     return await logBot.api.sendPhoto(Number(LOGS_GROUP_ID), new InputFile(buffer), {
       caption: props.message,
@@ -338,6 +583,7 @@ export async function sendLogNotification(
       parse_mode: "HTML",
     });
   } else {
+    // Plain text
     return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
       reply_parameters:
         topicMessageId === "no_topic"
@@ -352,7 +598,8 @@ export async function sendLogNotification(
   }
 }
 
-/// 🌳 ---- render the update event message ---- 🌳
+// =========== RENDER FUNCTIONS ===========
+
 export const renderUpdateEventMessage = (
   username: string | number,
   eventUuid: string,
@@ -372,17 +619,16 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 `;
 };
 
-/// 🌳 ---- render the add event message ---- 🌳
 export const renderAddEventMessage = (username: string | number, eventData: EventRow): string => {
   const eventUuid = eventData.event_uuid;
   const eventDataWithoutDescription = removeSecretKey(removeKey(eventData, "description"));
   return `
-@${username} <b>Added</b> a new event <code>${eventData.event_uuid}</code> successfully
+@${username} <b>Added</b> a new event <code>${eventUuid}</code> successfully
 
 <pre><code>${eventDataWithoutDescription}</code></pre>
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
-  `;
+`;
 };
 
 export const renderModerationEventMessage = (username: string | number, eventData: EventRow): string => {
@@ -393,10 +639,11 @@ export const renderModerationEventMessage = (username: string | number, eventDat
 
 ${eventData.subtitle}
 
-@${username} 
+@${username}
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
-  `;
+`;
 };
 
+// Finally start the bot
 startBot().then(() => logger.log("startBot Function Finish ;"));

@@ -37,7 +37,7 @@ import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyServi
 import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
 import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
-import { InlineKeyboard } from "grammy";
+import { tgBotModerationMenu } from "@/lib/TgBotTools";
 dotenv.config();
 
 function get_paid_event_price(capacity: number) {
@@ -120,15 +120,12 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   /* ------------------------ Event Needs Registration ------------------------ */
 
   const user_request = await eventRegistrantsDB.getRegistrantRequest(event_uuid, userId);
-  const event_location = eventData.location;
 
   const userIsAdminOrOwner = eventData.owner == userId || userRole == "admin";
   let mask_event_capacity = !userIsAdminOrOwner;
 
-  eventData.location = "Visible To Registered Users";
 
   if (userIsAdminOrOwner) {
-    eventData.location = event_location;
     //event payment info
     if (eventData.has_payment) {
       const payment_details = (
@@ -148,7 +145,6 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   if (user_request) {
     registrant_status = user_request.status;
     if (registrant_status === "approved" || registrant_status === "checkedin") {
-      eventData.location = event_location;
       registrant_uuid = user_request.registrant_uuid;
     }
     return {
@@ -368,9 +364,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           image: eventData.image_url,
           message: logMessage,
           topic: "no_topic",
-          inline_keyboard: new InlineKeyboard()
-            .text("✅ Approve", `approve_${eventData.event_uuid}`)
-            .text("❌ Reject", `reject_${eventData.event_uuid}`),
+          inline_keyboard: tgBotModerationMenu(eventData.event_uuid),
         });
       }
       // Clear the organizer user cache so it will be reloaded next time
