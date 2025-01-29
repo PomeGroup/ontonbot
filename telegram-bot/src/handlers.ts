@@ -3,6 +3,7 @@ import { Context } from "grammy";
 import {
 	changeRole,
 	getAdminOrganizerUsers,
+	getEvent,
 	isUserAdmin,
 	updateUserProfile,
 } from "./db/db";
@@ -170,10 +171,23 @@ export const bannerHandler = async (
 		}
 		const env = process.env.ENV;
 
+		if (event_uuid.length !== 36) {
+			await editOrSend(ctx, `Wrong Event UUID : ${event_uuid}`, undefined);
+			return;
+		}
+
+		const event = await getEvent(event_uuid);
+		if (!event) {
+			await editOrSend(ctx, `event not found`, undefined);
+			return;
+		}
 		await setBanner(env, position, event_uuid)
 			.then(async () => {
 				await deleteCache("ontonSettings");
-				const message = `✅ Event ${event_uuid} ==> Set For the ${position}`;
+
+				const message = `✅ Event ${
+					event.title
+				} ==> <b>${position.toUpperCase()}</b>`;
 
 				// await sendTopicMessage("organizers_topic", message);
 
