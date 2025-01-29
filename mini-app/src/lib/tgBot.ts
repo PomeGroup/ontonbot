@@ -417,7 +417,11 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           const newCap =
             originalCaption + "\n\nStatus : ❌ Rejected By " + user_details + `\nReason: ${parseRejectReason(reasonKey)}`;
 
-          const repMarkup = new InlineKeyboard().text("✅ Approve Rejected Event", `approve_${evId}`);
+          const repMarkup = new InlineKeyboard()
+            .text("✅ Approve Rejected Event", `approve_${evId}`)
+            .row()
+            .text("🔃 Update Data", `updateEventData_${eventUuid}`);
+
           await ctx.editMessageCaption({
             caption: newCap,
             parse_mode: "HTML",
