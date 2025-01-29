@@ -120,15 +120,12 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   /* ------------------------ Event Needs Registration ------------------------ */
 
   const user_request = await eventRegistrantsDB.getRegistrantRequest(event_uuid, userId);
-  const event_location = eventData.location;
 
   const userIsAdminOrOwner = eventData.owner == userId || userRole == "admin";
   let mask_event_capacity = !userIsAdminOrOwner;
 
-  eventData.location = "Visible To Registered Users";
 
   if (userIsAdminOrOwner) {
-    eventData.location = event_location;
     //event payment info
     if (eventData.has_payment) {
       const payment_details = (
@@ -148,7 +145,6 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   if (user_request) {
     registrant_status = user_request.status;
     if (registrant_status === "approved" || registrant_status === "checkedin") {
-      eventData.location = event_location;
       registrant_uuid = user_request.registrant_uuid;
     }
     return {
