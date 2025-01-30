@@ -2,8 +2,6 @@ import {
   developmentEnvironment,
   eventParticipationType,
   orderState,
-  orderTypes,
-  ticketTypes,
   paymentTypes,
   rewardStatus,
   rewardType,
@@ -24,14 +22,14 @@ import {
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
-import { eventPayment, organizerPaymentStatus } from "./schema/eventPayment";
+import { eventPayment, organizerPaymentStatus, ticketTypes } from "./schema/eventPayment";
 import { event_details_search_list } from "./schema/event_details_search_list";
 import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers";
 import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults";
 import { events } from "./schema/events";
 import { giataCity } from "./schema/giataCity";
 import { ontoSetting } from "./schema/ontoSetting";
-import { orders } from "./schema/orders";
+import { orders, orderTypes } from "./schema/orders";
 import { notifications } from "./schema/notifications";
 import { rewards } from "./schema/rewards";
 import { sbtRewardCollections } from "./schema/sbtRewardCollections";
