@@ -54,7 +54,8 @@ export async function POST(request: Request) {
       });
       return Response.json(reward_result);
     } catch (error) {
-      if (error instanceof TRPCError) handleTrpcError(error);
+      if (error instanceof TRPCError) 
+        return handleTrpcError(error);
       logger.error("reward_api_creation_error", error);
       return Response.json({ message: "Someting Went Wrong with Creating reward" }, { status: 500 });
     }
