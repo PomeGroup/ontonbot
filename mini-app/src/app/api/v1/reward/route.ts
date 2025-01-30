@@ -1,18 +1,17 @@
 import { db } from "@/db/db";
-import { eventRegistrants, orders, user_custom_flags } from "@/db/schema";
+import { user_custom_flags } from "@/db/schema";
 import { selectEventByUuid } from "@/server/db/events";
-import { Address } from "@ton/core";
-import { InferSelectModel, and, eq, or, sql } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { z } from "zod";
-import { verify } from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { createUserReward } from "@/server/routers/services/rewardsService";
-
+import { TRPCError } from "@trpc/server";
+import { logger } from "@/server/utils/logger";
 /* -------------------------------------------------------------------------- */
 /*                                    Auth                                    */
 /* -------------------------------------------------------------------------- */
-export async function getAuthenticatedUserApi() {
-  const apiKey = cookies().get("api_key");
+export async function getAuthenticatedUserApi(req: Request) {
+  const apiKey = req.headers.get("api_key") || "";
 
   if (!apiKey) {
     return [null, Response.json({ error: "Unauthorized: No Api Key provided" }, { status: 401 })];
@@ -22,7 +21,7 @@ export async function getAuthenticatedUserApi() {
     const result = await db.query.user_custom_flags.findFirst({
       where: and(
         eq(user_custom_flags.user_flag, "api_key"),
-        eq(user_custom_flags.value, apiKey?.value),
+        eq(user_custom_flags.value, apiKey),
         eq(user_custom_flags.enabled, true)
       ),
     });
@@ -44,9 +43,9 @@ const rewardCreateSchema = z.object({
   event_uuid: z.string().uuid(),
 });
 
-import { TRPCError } from "@trpc/server";
-import { logger } from "@/server/utils/logger";
-
+/* -------------------------------------------------------------------------- */
+/*                          TRPCError Error Converter                         */
+/* -------------------------------------------------------------------------- */
 export function handleTrpcError(err: TRPCError) {
   let statusCode = 500;
   switch (err.code) {
@@ -66,9 +65,12 @@ export function handleTrpcError(err: TRPCError) {
   return Response.json({ message: err.message }, { status: 400 });
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                 Main Route                                 */
+/* -------------------------------------------------------------------------- */
 export async function POST(request: Request) {
   try {
-    const [userId, error] = await getAuthenticatedUserApi();
+    const [userId, error] = await getAuthenticatedUserApi(request);
     if (error) {
       return error;
     }
@@ -82,7 +84,7 @@ export async function POST(request: Request) {
         status: 400,
       });
     }
-
+    logger.log("reward_api_call", body);
     const eventData = await selectEventByUuid(body.data.event_uuid);
     if (!eventData) {
       return Response.json({ message: "event not found" }, { status: 400 });
@@ -98,10 +100,12 @@ export async function POST(request: Request) {
       return Response.json(reward_result);
     } catch (error) {
       if (error instanceof TRPCError) handleTrpcError(error);
-      logger.error("creating_reward_api_error", error);
+      logger.error("reward_api_creation_error", error);
       return Response.json({ message: "Someting Went Wrong with Creating reward" }, { status: 500 });
     }
   } catch (error) {
+    logger.error("reward_api_general_error", error);
+
     return Response.json({ message: "Someting Went Wrong" }, { status: 500 });
   }
 }
