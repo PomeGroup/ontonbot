@@ -16,8 +16,7 @@ import { paymentTypes } from "../enum";
 import { InferSelectModel } from "drizzle-orm";
 
 export const organizerPaymentStatus = pgEnum("organizer_payment_status", ["not_payed", "payed_to_organizer", "refunded"]);
-export const ticketTypes = pgEnum("ticket_types", ["OFFCHAIN", "NFT" , "TSCSBT"]);
-
+export const ticketTypes = pgEnum("ticket_types", ["NFT", "TSCSBT"]);
 
 export const eventPayment = pgTable(
   "event_payment_info",

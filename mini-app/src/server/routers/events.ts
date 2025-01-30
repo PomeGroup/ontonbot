@@ -317,7 +317,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           recipient_address: input_event_data.paid_event.payment_recipient_address,
           bought_capacity: input_event_data.capacity,
           /* -------------------------------------------------------------------------- */
-          ticket_type: input_event_data.paid_event.has_nft ? "NFT" : "OFFCHAIN",
+          ticket_type: "NFT",
           ticketImage: input_event_data.paid_event.nft_image_url,
           title: input_event_data.paid_event.nft_title,
           description: input_event_data.paid_event.nft_description,

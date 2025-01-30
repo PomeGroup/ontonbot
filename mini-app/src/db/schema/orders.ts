@@ -6,7 +6,6 @@ import { relations } from "drizzle-orm";
 
 export const orderTypes = pgEnum("order_types", [
   "nft_mint",
-  "offchain_ticket",
   "event_creation",
   "event_capacity_increment",
   "promote_to_organizer",

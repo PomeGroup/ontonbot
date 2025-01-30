@@ -3,7 +3,7 @@ import { eventRegistrants, orders } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
 import { selectEventByUuid } from "@/server/db/events";
 import { Address } from "@ton/core";
-import { InferSelectModel, and, eq, or, sql } from "drizzle-orm";
+import { InferSelectModel, and, count, eq, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 const addOrderSchema = z.object({
@@ -17,6 +17,9 @@ const addOrderSchema = z.object({
 });
 
 type OrderRow = InferSelectModel<typeof orders>;
+
+//create order if order for that event and user does not exist
+//reactivate order with current price
 
 export async function POST(request: Request) {
   const [userId, error] = getAuthenticatedUser();
@@ -55,13 +58,59 @@ export async function POST(request: Request) {
     );
   }
 
-  const userOrder = (
-    await db
-      .select()
-      .from(orders)
-      .where(and(eq(orders.user_id, userId), eq(orders.order_type, "nft_mint"), eq(orders.event_uuid, eventData.event_uuid)))
-      .execute()
-  ).pop();
+  /* -------------------------------------------------------------------------- */
+  /*                   OrderType Based On Event Ticket Setting                  */
+  /* -------------------------------------------------------------------------- */
+  const eventTicketingType = eventPaymentInfo.ticket_type;
+
+  const ticketOrderTypeMap = {
+    NFT: "nft_mint",
+    TSCSBT: "ts_csbt_ticket",
+  } as const;
+
+  // Ensure TypeScript recognizes the valid key
+  const ticketOrderType = ticketOrderTypeMap[eventTicketingType];
+
+  /* -------------------------------------------------------------------------- */
+  /*                                      ⬆                                     */
+  /* -------------------------------------------------------------------------- */
+
+  /* -------------------------------------------------------------------------- */
+  /*                               Sold Out Check                               */
+  /* -------------------------------------------------------------------------- */
+  const TicketsCount = await db
+    .select({ ticket_count: count() })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.event_uuid, body.data.event_uuid),
+        or(eq(orders.state, "completed"), eq(orders.state, "processing")),
+        eq(orders.order_type, ticketOrderType)
+      )
+    )
+    .execute();
+
+  if (TicketsCount[0].ticket_count >= (eventData.capacity || 0)) {
+    return Response.json(
+      {
+        message: "Event tickets are sold out",
+      },
+      {
+        status: 410,
+      }
+    );
+  }
+  /* -------------------------------------------------------------------------- */
+  /*                                      ⬆                                     */
+  /* -------------------------------------------------------------------------- */
+
+  const userOrder = await db.query.orders.findFirst({
+    where: and(
+      eq(orders.user_id, userId),
+      eq(orders.order_type, ticketOrderType),
+      eq(orders.event_uuid, eventData.event_uuid)
+    ),
+  });
 
   /* -------------------------------------------------------------------------- */
   /*                            Already Have an Order                           */
@@ -97,28 +146,6 @@ export async function POST(request: Request) {
       });
     }
   }
-  const TicketsCount = await db
-    .select({ count: sql`count(*)`.mapWith(Number) })
-    .from(orders)
-    .where(
-      and(
-        eq(orders.event_uuid, body.data.event_uuid),
-        or(eq(orders.state, "completed"), eq(orders.state, "processing")),
-        eq(orders.order_type, "nft_mint")
-      )
-    )
-    .execute();
-
-  if (TicketsCount[0].count >= (eventData.capacity || 0)) {
-    return Response.json(
-      {
-        message: "Event tickets are sold out",
-      },
-      {
-        status: 410,
-      }
-    );
-  }
 
   let new_order = null;
   let new_order_uuid = null;
@@ -140,7 +167,7 @@ export async function POST(request: Request) {
           payment_type: eventPaymentInfo.payment_type,
 
           state: "confirming",
-          order_type: "nft_mint",
+          order_type: ticketOrderType,
 
           utm_source: body.data.utm,
           updatedBy: "system",
