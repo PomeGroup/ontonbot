@@ -48,10 +48,9 @@ export async function POST(request: Request) {
 
     if (!eventData.activity_id) return Response.json({ message: "Event Not Published Yet" }, { status: 400 });
 
+    const society_hub_value =
+      typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
     try {
-      const society_hub_value =
-        typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
-
       const res = await createUserRewardLink(eventData.activity_id, {
         telegram_user_id: body.data.reward_user_id,
         attributes: eventData?.society_hub
@@ -70,14 +69,25 @@ export async function POST(request: Request) {
       }
 
       return Response.json(res);
-
     } catch (error) {
-      if (error instanceof TRPCError) handleTrpcError(error);
-      logger.error("reward_api_creation_error", error);
+      if (error instanceof TRPCError) return handleTrpcError(error);
+
+      console.log(eventData.activity_id, {
+        telegram_user_id: body.data.reward_user_id,
+        attributes: eventData?.society_hub
+          ? [
+              {
+                trait_type: "Organizer",
+                value: society_hub_value,
+              },
+            ]
+          : undefined,
+      });
+      console.error("reward_api_creation_error", error);
       return Response.json({ message: "Someting Went Wrong with Creating reward" }, { status: 500 });
     }
   } catch (error) {
-    logger.error("reward_api_general_error", error);
+    console.error("reward_api_general_error", error);
 
     return Response.json({ message: "Someting Went Wrong" }, { status: 500 });
   }
