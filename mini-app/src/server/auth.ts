@@ -53,7 +53,7 @@ export function apiKeyAuthentication(req: Request) {
   return null;
 }
 
-export async function getAuthenticatedUserApi(req: Request) {
+export async function getAuthenticatedUserApi(req: Request): Promise<[number, null] | [null, Response]> {
   const apiKey = req.headers.get("api_key") || "";
 
   if (!apiKey) {
