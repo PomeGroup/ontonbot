@@ -10,6 +10,7 @@ import {
 import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { eventPoaResultStatus } from "@/db/enum";
+import { z } from "zod";
 
 // Existing enums:
 export const accessRoleItemTypeEnum = pgEnum("item_type", ["event"]);
@@ -19,6 +20,7 @@ export const accessRoleEnum = pgEnum("access_role", [
   "checkin_officer",
 ]);
 export type accessRoleItemType = (typeof accessRoleItemTypeEnum.enumValues)[number];
+export type accessRoleEnumType = (typeof accessRoleEnum.enumValues)[number];
 /**
  * New enum for user role status
  * with values 'active' and 'reactive'.
@@ -27,6 +29,14 @@ export const userRoleStatusEnum = pgEnum("user_role_status", [
   "active",
   "reactive",
 ]);
+export type userRoleStatus = (typeof userRoleStatusEnum.enumValues)[number];
+
+// 1) Allowed values at runtime
+export const allowedItemTypes = ["event"] as const;
+export const allowedRoles = ["owner", "admin", "checkin_officer"] as const;
+// 3) Zod schema
+export const accessRoleItemTypeSchema = z.enum(allowedItemTypes);
+export const accessRoleEnumSchema = z.enum(allowedRoles);
 
 export const userRoles = pgTable(
   "user_roles",
@@ -49,9 +59,11 @@ export const userRoles = pgTable(
       .defaultNow()
       .notNull(),
     updatedAt: timestamp("updated_at", {
-      mode: "date",
-      precision: 3,
-    }),
+      withTimezone: true,
+      precision: 6,
+    })
+      .defaultNow()
+      .notNull(),
     updatedBy: text("updated_by").default("system").notNull(),
   },
   (table) => {

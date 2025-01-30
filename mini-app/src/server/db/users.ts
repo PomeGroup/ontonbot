@@ -221,7 +221,7 @@ export const selectUserById = async (
       return cachedUser; // Return cached user if found
     }
   }
-  await updateEventCountsForUser(userId);
+
   // If not found in cache, query the database
   try {
     const userInfo = await db
@@ -269,6 +269,7 @@ export const selectUserById = async (
       .execute();
 
     if (userInfo.length > 0) {
+      await updateEventCountsForUser(userId);
       if (update_cache) await redisTools.setCache(cacheKey, userInfo[0], redisTools.cacheLvl.short); // Cache the user
       //@ts-ignore
       return userInfo[0];

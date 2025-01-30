@@ -57,7 +57,7 @@ import {
   accessRoleItemType,
   accessRoleEnum,
   userRoles,
-  userRolesRelations, accessRoleItemTypeEnum,
+  userRolesRelations, accessRoleItemTypeEnum,accessRoleEnumType
 } from "./schema/userRoles";
 
 // export all the enums
@@ -135,3 +135,4 @@ export type { NotificationType };
 export type { NotificationItemType };
 export type { EventPoaResultStatus };
 export type { accessRoleItemType };
+export type { accessRoleEnumType };

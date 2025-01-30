@@ -1,14 +1,18 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { userRolesDB } from "@/server/db/userRoles.db";
+import {  userRolesDB } from "@/server/db/userRoles.db";
 import { adminOrganizerProtectedProcedure, router } from "../trpc";
 import { logger } from "../utils/logger";
+import { accessRoleEnumType, accessRoleItemTypeSchema } from "@/db/schema/userRoles";
+import { usersDB } from "@/server/db/users";
+import { userRolesBulkUpsertInputSchema } from "@/zodSchema/userRoles";
+import eventDB from "@/server/db/events";
 
-// 1) Allowed values at runtime
-export const allowedItemTypes = ["event"] as const;
-
-// 3) Zod schema
-export const accessRoleItemTypeSchema = z.enum(allowedItemTypes);
+export interface EventUserEntry {
+  user_id: number;
+  active: boolean;
+  role: accessRoleEnumType;
+}
 
 export const userRolesRouter = router({
   /**
@@ -23,8 +27,16 @@ export const userRolesRouter = router({
       })
     )
     .query(async ({ input }) => {
+      const { itemType, itemId } = input;
+      const event = await eventDB.getEventById(itemId);
+      if(!event) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Event with ID ${itemId} not found.`,
+        });
+      }
       try {
-        const { itemType, itemId } = input;
+
         const rows = await userRolesDB.listAllUserRolesForEvent(itemType, itemId);
         return {
           success: true,
@@ -50,9 +62,18 @@ export const userRolesRouter = router({
       })
     )
     .query(async ({ input }) => {
+      const { itemType, itemId } = input;
+      const event = await eventDB.getEventById(itemId);
+      if(!event) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Event with ID ${itemId} not found.`,
+        });
+      }
+
       try {
-        const { itemType, itemId } = input;
-        const rows = await userRolesDB.listActiveUserRolesForEvent(itemType, itemId);
+
+         const rows = await userRolesDB.listActiveUserRolesForEvent(itemType, itemId);
         return {
           success: true,
           data: rows,
@@ -68,56 +89,95 @@ export const userRolesRouter = router({
 
   /**
    * Bulk upsert user roles for a given item (itemType + itemId).
-   * - Expects an array of { user_id, active }
+   * - Expects an array of { username, active, role }
    * - If record exists => update status
-   * - If not => insert (default role='admin')
+   * - If not => insert
+   * Example:
+   * {{baseUrl}}/api/trpc/userRoles.bulkUpsertUserRolesForEvent?input={
+   *   "itemType": "event",
+   *   "itemId": 1280,
+   *   "userList": [
+   *     { "username": "@abs0lutelynot_me", "active": true, "role": "checkin_officer" }
+   *   ]
+   * }
    */
   bulkUpsertUserRolesForEvent: adminOrganizerProtectedProcedure
-    .input(
-      z.object({
-        itemType: accessRoleItemTypeSchema,
-        itemId: z.number(),
-        userList: z.array(
-          z.object({
-            user_id: z.number(),
-            active: z.boolean(),
-          })
-        ),
-        // Optionally let the client specify which role to assign
-        role: z.enum(["owner", "admin", "checkin_officer"]).optional().default("admin"),
-      })
-    )
+    .input(userRolesBulkUpsertInputSchema) // <--- use the separated schema
     .mutation(async ({ input, ctx }) => {
-      const { itemType, itemId, userList, role } = input;
-
+      const { itemType, itemId, userList } = input;
+      const event = await eventDB.getEventById(itemId);
+      if(!event) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Event with ID ${itemId} not found.`,
+        });
+      }
       try {
+
+        // 1) Convert each username to user_id
+        const convertedList: EventUserEntry[] = [];
+
+        for (const { username, active, role } of userList) {
+          // remove leading '@'
+          const usernameStripped = username.replace(/^@/, "");
+          const dbUser = await usersDB.selectUserByUsername(usernameStripped);
+
+          if (!dbUser) {
+            // user not exist => throw error
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: `The username '${username}' does not exist in our DB. 
+                You must ask them to join or start the bot & open our mini-app.`,
+            });
+          }
+
+          convertedList.push({ user_id: dbUser.user_id, active, role });
+        }
+
+        // 2) Bulk upsert via DB module
         const result = await userRolesDB.bulkUpsertUserRolesForEvent(
           itemType,
           itemId,
-          userList,
-          role,
+          convertedList,
           ctx.user?.user_id?.toString() ?? "system"
         );
 
+        // 3) Check DB result
         if (!result.success) {
+          // The DB function returned an error message => forward that
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: result.error ?? "Failed to upsert user roles",
+            message: result.error ?? "Failed to bulk upsert user roles",
+          });
+        }
+        logger.info(`Bulk upserted user roles for item [${itemType}, ID=${itemId}]` , { userList });
+        // 4) Return success
+        try {
+
+          const rows = await userRolesDB.listAllUserRolesForEvent(itemType, itemId);
+          return {
+            success: true,
+            data: rows,
+          };
+
+        } catch (error) {
+          logger.error("Error in listAllUserRolesForEvent: " , error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to list user roles.",
           });
         }
 
-        return {
-          success: true,
-          data: null,
-        };
       } catch (error) {
         logger.error("Error in bulkUpsertUserRolesForEvent:", error);
         if (error instanceof TRPCError) {
-          throw error;
+          throw error; // rethrow the TRPC error
         } else {
+          // Otherwise, wrap it in a TRPCError
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Failed to bulk upsert user roles.",
+            cause: error, // optional cause
           });
         }
       }
