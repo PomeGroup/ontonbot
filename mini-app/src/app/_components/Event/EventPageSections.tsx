@@ -99,12 +99,14 @@ const EventHead = React.memo(() => {
   return (
     <div className="flex items-start justify-between">
       <div>
-        <div className="text-[24px] leading-[28px] font-bold break-all mb-4">
-          {eventData.data?.title ?? ""}
-        </div>
+        <div className="text-[24px] leading-[28px] font-bold break-all mb-4">{eventData.data?.title ?? ""}</div>
         <EventSubtitle />
       </div>
-      <ShareEventButton event_uuid={eventHash} />
+      <ShareEventButton
+        event_uuid={eventHash}
+        activity_id={eventData.data?.activity_id}
+        hidden={eventData.data?.hidden}
+      />
     </div>
   );
 });
@@ -229,7 +231,8 @@ export const EventSections = () => {
         <Card
           margin="mx-0"
           contentWrap={false}
-          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}>
+          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
+        >
           <Typography
             variant="title3"
             className="font-bold mb-2"
