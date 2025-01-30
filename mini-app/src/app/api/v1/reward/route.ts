@@ -66,10 +66,7 @@ export async function POST(request: Request) {
 
       // Ensure the response contains data
       if (!res || !res.data || !res.data.data) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "Failed to create user reward link.",
-        });
+        return Response.json({ message: "Someting is Wrong with Creating reward" }, { status: 500 });
       }
     } catch (error) {
       if (error instanceof TRPCError) handleTrpcError(error);
