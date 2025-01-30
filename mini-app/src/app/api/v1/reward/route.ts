@@ -8,9 +8,8 @@ import { createUserReward } from "@/server/routers/services/rewardsService";
 import { TRPCError } from "@trpc/server";
 import { logger } from "@/server/utils/logger";
 import { getAuthenticatedUserApi } from "@/server/auth";
-/* -------------------------------------------------------------------------- */
-/*                                    Auth                                    */
-/* -------------------------------------------------------------------------- */
+import { handleTrpcError } from "@/server/utils/error_utils";
+
 
 /* -------------------------------------------------------------------------- */
 /*                              Reward Api Schema                             */
@@ -20,27 +19,6 @@ const rewardCreateSchema = z.object({
   event_uuid: z.string().uuid(),
 });
 
-/* -------------------------------------------------------------------------- */
-/*                          TRPCError Error Converter                         */
-/* -------------------------------------------------------------------------- */
-export function handleTrpcError(err: TRPCError) {
-  let statusCode = 500;
-  switch (err.code) {
-    case "CONFLICT":
-      statusCode = 409;
-      break;
-    case "FORBIDDEN":
-      statusCode = 403;
-      break;
-    case "BAD_REQUEST":
-      statusCode = 400;
-      break;
-    case "INTERNAL_SERVER_ERROR":
-      statusCode = 500;
-      break;
-  }
-  return Response.json({ message: err.message }, { status: 400 });
-}
 
 /* -------------------------------------------------------------------------- */
 /*                                 Main Route                                 */
