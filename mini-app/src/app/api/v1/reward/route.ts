@@ -68,6 +68,9 @@ export async function POST(request: Request) {
       if (!res || !res.data || !res.data.data) {
         return Response.json({ message: "Someting is Wrong with Creating reward" }, { status: 500 });
       }
+
+      return Response.json(res);
+
     } catch (error) {
       if (error instanceof TRPCError) handleTrpcError(error);
       logger.error("reward_api_creation_error", error);
