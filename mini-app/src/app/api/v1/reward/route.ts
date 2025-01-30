@@ -9,7 +9,7 @@ import { TRPCError } from "@trpc/server";
 import { logger } from "@/server/utils/logger";
 import { getAuthenticatedUserApi } from "@/server/auth";
 import { handleTrpcError } from "@/server/utils/error_utils";
-
+import { createUserRewardLink } from "@/lib/ton-society-api";
 
 /* -------------------------------------------------------------------------- */
 /*                              Reward Api Schema                             */
@@ -18,7 +18,6 @@ const rewardCreateSchema = z.object({
   reward_user_id: z.number(),
   event_uuid: z.string().uuid(),
 });
-
 
 /* -------------------------------------------------------------------------- */
 /*                                 Main Route                                 */
@@ -47,15 +46,33 @@ export async function POST(request: Request) {
 
     if (eventData.owner !== userId) return Response.json({ message: "Unauthorized Access to event" }, { status: 401 });
 
+    if (!eventData.activity_id) return Response.json({ message: "Event Not Published Yet" }, { status: 400 });
+
     try {
-      const reward_result = await createUserReward({
-        user_id: body.data.reward_user_id,
-        event_uuid: body.data.event_uuid,
+      const society_hub_value =
+        typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
+
+      const res = await createUserRewardLink(eventData.activity_id, {
+        telegram_user_id: body.data.reward_user_id,
+        attributes: eventData?.society_hub
+          ? [
+              {
+                trait_type: "Organizer",
+                value: society_hub_value,
+              },
+            ]
+          : undefined,
       });
-      return Response.json(reward_result);
+
+      // Ensure the response contains data
+      if (!res || !res.data || !res.data.data) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Failed to create user reward link.",
+        });
+      }
     } catch (error) {
-      if (error instanceof TRPCError) 
-        return handleTrpcError(error);
+      if (error instanceof TRPCError) handleTrpcError(error);
       logger.error("reward_api_creation_error", error);
       return Response.json({ message: "Someting Went Wrong with Creating reward" }, { status: 500 });
     }
