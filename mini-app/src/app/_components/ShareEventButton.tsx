@@ -23,7 +23,7 @@ const ShareEventButton = ({
 
   return (
     <button
-      className={cn("rounded-full bg-blue-100 p-2", shareEventMutation.isLoading && Boolean(initData) && "opacity-50")}
+      className={cn("rounded-full bg-blue-100 p-2 disabled:bg-gray-300 disabled:cursor-not-allowed", shareEventMutation.isLoading && Boolean(initData) && "opacity-50")}
       disabled={!initData || shareEventMutation.isLoading || !activity_id || !!hidden}
       onClick={async () => {
         if (!initData) return;
