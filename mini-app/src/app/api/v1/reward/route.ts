@@ -7,33 +7,10 @@ import { cookies } from "next/headers";
 import { createUserReward } from "@/server/routers/services/rewardsService";
 import { TRPCError } from "@trpc/server";
 import { logger } from "@/server/utils/logger";
+import { getAuthenticatedUserApi } from "@/server/auth";
 /* -------------------------------------------------------------------------- */
 /*                                    Auth                                    */
 /* -------------------------------------------------------------------------- */
-export async function getAuthenticatedUserApi(req: Request) {
-  const apiKey = req.headers.get("api_key") || "";
-
-  if (!apiKey) {
-    return [null, Response.json({ error: "Unauthorized: No Api Key provided" }, { status: 401 })];
-  }
-
-  try {
-    const result = await db.query.user_custom_flags.findFirst({
-      where: and(
-        eq(user_custom_flags.user_flag, "api_key"),
-        eq(user_custom_flags.value, apiKey),
-        eq(user_custom_flags.enabled, true)
-      ),
-    });
-    if (!result) return [null, Response.json({ error: "Unauthorized: invalid Api Key" }, { status: 401 })];
-
-    if (!result.user_id) return [null, Response.json({ error: "Unauthorized: Dangling Api Key" }, { status: 401 })];
-
-    return [result.user_id, null];
-  } catch (err) {
-    return [null, Response.json({ error: "Something went wrong" }, { status: 500 })];
-  }
-}
 
 /* -------------------------------------------------------------------------- */
 /*                              Reward Api Schema                             */
