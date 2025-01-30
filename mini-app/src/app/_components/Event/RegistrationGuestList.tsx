@@ -10,7 +10,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
-import EventImage from "../atoms/images/EventImage";
 import { useMainButton } from "@/hooks/useMainButton";
 import useWebApp from "@/hooks/useWebApp";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
@@ -50,7 +49,6 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
 
   const [showRegistrantInfo, setShowRegistrantInfo] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
-
 
   const handleEdit = () => {
     // Change status to "pending"
@@ -100,7 +98,6 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
               onClick={() => {
                 setShowRegistrantInfo(registrantInfo);
               }}
-
             />
 
             <div className="flex flex-col text-end text-xs">
@@ -132,7 +129,6 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       case "approved":
         afterContent = (
           <div className="flex space-x-2">
-
             <Button
               icon={<FileUser size={18} />}
               variant="purple"
@@ -140,14 +136,11 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
                 setShowRegistrantInfo(registrantInfo);
               }}
             />
-            {!hasPayment && (
-                <>
-                  <Button
-                    icon={<Pencil size={18} />}
-                    onClick={handleEdit}
-                  />
-
-                </>
+            {!hasPayment && itemStatus === "approved" && (
+              <Button
+                icon={<Pencil size={18} />}
+                onClick={handleEdit}
+              />
             )}
             <StatusChip
               variant={itemStatus === "checkedin" ? "primary" : "success"}
@@ -155,24 +148,24 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
             />
           </div>
         );
-        footerContent = hasPayment || !isEditing ? null : (
-          <div className="flex space-x-2">
-            <Button
-              variant="danger"
-              icon={<X size={18} />}
-              label="Reject"
-              onClick={handleRejectClick}
-              isLoading={isDeclining}
-            />
-          </div>
-        );
+        footerContent =
+          hasPayment || itemStatus === "checkedin" || !isEditing ? null : (
+            <div className="flex space-x-2">
+              <Button
+                variant="danger"
+                icon={<X size={18} />}
+                label="Reject"
+                onClick={handleRejectClick}
+                isLoading={isDeclining}
+              />
+            </div>
+          );
 
         break;
 
       case "rejected":
         afterContent = (
           <div className="flex space-x-2">
-
             <Button
               icon={<FileUser size={18} />}
               variant="purple"
@@ -194,17 +187,18 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
             )}
           </div>
         );
-        footerContent = hasPayment || !isEditing ? null : (
-          <div className="flex space-x-2">
-            <Button
-              variant="success"
-              icon={<Check size={19} />}
-              label="Approve"
-              onClick={handleApproveClick}
-              isLoading={isApproving}
-            />
-          </div>
-        );
+        footerContent =
+          hasPayment || !isEditing ? null : (
+            <div className="flex space-x-2">
+              <Button
+                variant="success"
+                icon={<Check size={19} />}
+                label="Approve"
+                onClick={handleApproveClick}
+                isLoading={isApproving}
+              />
+            </div>
+          );
         break;
       default:
         afterContent = null;
@@ -318,7 +312,7 @@ const RegistrationGuestList = () => {
   const processRegistrantRequest = trpc.registrant.processRegistrantRequest.useMutation();
 
   /*
-    * Check if the event has payment enabled
+   * Check if the event has payment enabled
    */
   const hasPayment = eventData.data?.has_payment || false;
 
@@ -363,7 +357,7 @@ const RegistrationGuestList = () => {
     }
   );
 
-  const disablePOAButton = Boolean(  eventData.data?.isNotEnded && eventData.data?.isStarted );
+  const disablePOAButton = Boolean(eventData.data?.isNotEnded && eventData.data?.isStarted);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -409,28 +403,24 @@ const RegistrationGuestList = () => {
     <>
       <BlockTitle medium>{eventData.data?.title}</BlockTitle>
       <Block className="!-mb-8">
-
         <QrCodeButton
           event_uuid={params.hash}
           url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${params.hash}`}
           hub={eventData.data?.society_hub?.name!}
         />
 
-        {
-          eventData.data?.participationType === "online"
-          &&
-          ((eventData.data?.enabled && eventData.data?.has_payment) || !eventData.data?.has_payment)
-          && (
-          <>
-            <ButtonPOA
-              event_uuid={params.hash}
-              poa_type={"password" as EventTriggerType}
-              showPOAButton={disablePOAButton}
-            />
-            {/* Organizer Notification Handler */}
-            <OrganizerNotificationHandler />
-          </>
-        )}
+        {eventData.data?.participationType === "online" &&
+          ((eventData.data?.enabled && eventData.data?.has_payment) || !eventData.data?.has_payment) && (
+            <>
+              <ButtonPOA
+                event_uuid={params.hash}
+                poa_type={"password" as EventTriggerType}
+                showPOAButton={disablePOAButton}
+              />
+              {/* Organizer Notification Handler */}
+              <OrganizerNotificationHandler />
+            </>
+          )}
       </Block>
 
       <BlockTitle medium>
@@ -476,9 +466,9 @@ const RegistrationGuestList = () => {
             date={
               registrant.created_at
                 ? new Date(registrant.created_at).toLocaleString("default", {
-                  month: "short",
-                  day: "numeric",
-                })
+                    month: "short",
+                    day: "numeric",
+                  })
                 : "no_date"
             }
             registrantInfo={registrant?.registrant_info}
@@ -488,11 +478,15 @@ const RegistrationGuestList = () => {
             handleReject={() => handleReject(registrant.user_id!)}
             className={idx === results.length - 1 ? "last-guest-item" : ""}
             hasPayment={hasPayment}
-
           />
         ))}
 
-        {isFetching && offset !== 0 && <DataStatus status="pending" title="Loading more registrants..." />}
+        {isFetching && offset !== 0 && (
+          <DataStatus
+            status="pending"
+            title="Loading more registrants..."
+          />
+        )}
       </List>
     </>
   );
