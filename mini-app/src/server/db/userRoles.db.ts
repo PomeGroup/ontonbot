@@ -81,7 +81,6 @@ export async function listActiveUserRolesForUserAndItem(
 ): Promise<ActiveUserRole[]> {
   // 1) Get all active user roles (cached) for this user
   const allRoles = await listActiveUserRolesForUser(userId);
-
   // 2) Filter by itemType + itemId
   return allRoles.filter((role) => role.itemType === itemType && role.itemId === itemId);
 }

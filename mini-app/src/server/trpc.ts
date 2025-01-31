@@ -111,7 +111,7 @@ export const eventManagementProtectedProcedure = initDataProtectedProcedure
       event.event_id
     );
 
-    const userHasAccessToPath = userAccessRolesToEventToPath && accessRolesPathConfig.checkin_officer.includes(opts.path);
+    const userHasAccessToPath = userAccessRolesToEventToPath.length > 0 && accessRolesPathConfig.checkin_officer.includes(opts.path);
 
     if (
       opts.ctx.user.role !== "admin" &&
