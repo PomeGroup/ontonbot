@@ -5,7 +5,7 @@ DO $$ BEGIN
      );
  CREATE TYPE "public"."user_role_status" AS ENUM (
      'active',
-     'deactive'
+     'deactivate'
      );
 EXCEPTION
  WHEN duplicate_object THEN null;
