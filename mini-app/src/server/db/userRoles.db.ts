@@ -99,7 +99,7 @@ export async function checkAccess(
   const userRoles = await listActiveUserRolesForUser(userId);
   // 2) Filter roles that match the itemType, itemId, and are in the `roles` array
   const result = userRoles.filter((r) => r.itemType === itemType && r.itemId === itemId && roles.includes(r.role));
- return result;
+  return result;
 }
 
 export async function checkHasAnyAccessToItemType(

@@ -34,7 +34,7 @@ export const appRouter = router({
   sbtRewardCollection: sbtRewardCollectionRouter,
   EventPOA: POARouter,
   hubs: hubsRouter,
-  telegramInteractions : telegramInteractionsRouter,
+  telegramInteractions: telegramInteractionsRouter,
   registrant: registrantRouter,
   coupon: couponRouter,
   userRoles: userRolesRouter,

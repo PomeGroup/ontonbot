@@ -36,7 +36,6 @@ export const initDataProtectedProcedure = trpcApiInstance.procedure.use(async (o
 });
 
 export const adminOrganizerProtectedProcedure = initDataProtectedProcedure.use((opts) => {
-
   if (opts.ctx.user.role !== "admin" && opts.ctx.user.role !== "organizer") {
     throw new TRPCError({
       code: "FORBIDDEN",
@@ -47,7 +46,7 @@ export const adminOrganizerProtectedProcedure = initDataProtectedProcedure.use((
   return opts.next({
     ctx: {
       ...opts.ctx,
-      userRole: opts.ctx.user.role as "admin" | "organizer"  | "user",
+      userRole: opts.ctx.user.role as "admin" | "organizer" | "user",
     },
   });
 });
@@ -59,7 +58,8 @@ export const adminOrganizerCoOrganizerProtectedProcedure = initDataProtectedProc
       ["admin"] as accessRoleEnumType[],
       "event" as accessRoleItemType
     );
-    const  coOrganizerHasAdminAccess =  userAdminAccessRolesToEvent.length > 0 && opts.path && accessRolesPathConfig.admin.includes(opts.path)
+    const coOrganizerHasAdminAccess =
+      userAdminAccessRolesToEvent.length > 0 && opts.path && accessRolesPathConfig.admin.includes(opts.path);
     if (coOrganizerHasAdminAccess) {
       return opts.next({
         ctx: {
@@ -111,7 +111,8 @@ export const eventManagementProtectedProcedure = initDataProtectedProcedure
       event.event_id
     );
 
-    const userHasAccessToPath = userAccessRolesToEventToPath.length > 0 && accessRolesPathConfig.checkin_officer.includes(opts.path);
+    const userHasAccessToPath =
+      userAccessRolesToEventToPath.length > 0 && accessRolesPathConfig.checkin_officer.includes(opts.path);
 
     if (
       opts.ctx.user.role !== "admin" &&
@@ -126,15 +127,11 @@ export const eventManagementProtectedProcedure = initDataProtectedProcedure
     }
 
     if (
-        (
-          opts.ctx.user.role === "organizer" &&
-          event.owner !== opts.ctx.user.user_id
-        ) &&
-        (
-          userAdminAccessRolesToEvent.length === 0 &&
-          !userHasAccessToPath
-        )
-      ) {
+      opts.ctx.user.role === "organizer" &&
+      event.owner !== opts.ctx.user.user_id &&
+      userAdminAccessRolesToEvent.length === 0 &&
+      !userHasAccessToPath
+    ) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
         message: "Unauthorized access, you don't have access to this event",

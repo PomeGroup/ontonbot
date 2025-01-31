@@ -39,6 +39,7 @@ import { redisTools } from "@/lib/redisTools";
 import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
 import { tgBotModerationMenu } from "@/lib/TgBotTools";
 import { userRolesDB } from "@/server/db/userRoles.db";
+
 dotenv.config();
 
 function get_paid_event_price(capacity: number) {
@@ -114,16 +115,15 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       }
     : null;
 
-    const accessData = await userRolesDB.listActiveUserRolesForEvent("event", Number(eventData.event_id));
-    const accessRoles = accessData.map(({ userId ,role  }) => ({
-      user_id: userId,
-      role: role,
-    }));
-
+  const accessData = await userRolesDB.listActiveUserRolesForEvent("event", Number(eventData.event_id));
+  const accessRoles = accessData.map(({ userId, role }) => ({
+    user_id: userId,
+    role: role,
+  }));
 
   // If the event does NOT require registration, just return data
   if (!eventData.has_registration) {
-    return { capacity_filled, registrant_status, organizer,accessRoles, ...eventData, registrant_uuid };
+    return { capacity_filled, registrant_status, organizer, accessRoles, ...eventData, registrant_uuid };
   }
   /* ------------------------ Event Needs Registration ------------------------ */
 
@@ -131,7 +131,6 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
 
   const userIsAdminOrOwner = eventData.owner == userId || userRole == "admin";
   let mask_event_capacity = !userIsAdminOrOwner;
-
 
   if (userIsAdminOrOwner) {
     //event payment info
@@ -366,7 +365,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           message: logMessage,
           topic: "event",
         });
-      } else if(!is_paid) {
+      } else if (!is_paid) {
         /* --------------------------- Moderation Message --------------------------- */
         const moderation_group_id = configProtected?.moderation_group_id;
         const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
@@ -408,7 +407,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       eventHash: result[0].event_uuid,
     } as const;
   } catch (error) {
-    logger.error(`error_while_adding_event` , error);
+    logger.error(`error_while_adding_event`, error);
     if (error instanceof TRPCError) {
       throw error;
     }
@@ -455,7 +454,11 @@ const updateEvent = eventManagerPP
         if (oldEvent.has_payment) {
           /* -------------------------------------------------------------------------- */
           //can't have capacity null if it's paid event
-          if (!eventData.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Paid Events Must have capacity" });
+          if (!eventData.capacity)
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Paid Events Must have capacity",
+            });
           /* -------------------------------------------------------------------------- */
           const paymentInfo = (
             await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
@@ -697,7 +700,7 @@ export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(sea
   }
   if (input.filter?.organizer_user_id) {
     const organizer = await usersDB.selectUserById(input.filter.organizer_user_id);
-    if (organizer?.role !== "organizer" && organizer?.role !== "admin" && organizer?.CustomAccessRoles?.length === 0 ) {
+    if (organizer?.role !== "organizer" && organizer?.role !== "admin" && organizer?.CustomAccessRoles?.length === 0) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Organizer not found" });
     }
   }

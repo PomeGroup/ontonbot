@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {  EventUserEntry, userRolesDB } from "@/server/db/userRoles.db";
+import { EventUserEntry, userRolesDB } from "@/server/db/userRoles.db";
 import { adminOrganizerProtectedProcedure, router } from "../trpc";
 import { logger } from "../utils/logger";
 import { accessRoleItemTypeSchema } from "@/db/schema/userRoles";
@@ -9,30 +9,24 @@ import eventDB from "@/server/db/events";
 import { usersDB } from "@/server/db/users";
 import { UserRolesBulkUpsertInput } from "@/types/ActiveUserRole.types";
 
-
-
 export const userRolesRouter = router({
   /**
    * List ALL user roles (both 'active' and 'reactive') for a given item.
    * itemType can be 'event' (or future types if you extend itemTypeEnum).
    */
   listAllUserRolesForEventId: adminOrganizerProtectedProcedure
-    .input(
-      z.number()
-    )
+    .input(z.number())
     .query(async ({ input }): Promise<UserRolesBulkUpsertInput[]> => {
-      const   itemId  = input;
+      const itemId = input;
       const event = await eventDB.getEventById(itemId);
-      if(!event) {
+      if (!event) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: `Event with ID ${itemId} not found.`,
         });
       }
       try {
-
-        return  await userRolesDB.listAllUserRolesForEvent('event' , itemId);
-
+        return await userRolesDB.listAllUserRolesForEvent("event", itemId);
       } catch (error) {
         logger.error("Error in listAllUserRolesForEvent:", error);
         throw new TRPCError({
@@ -55,7 +49,7 @@ export const userRolesRouter = router({
     .query(async ({ input }) => {
       const { itemType, itemId } = input;
       const event = await eventDB.getEventById(itemId);
-      if(!event) {
+      if (!event) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: `Event with ID ${itemId} not found.`,
@@ -63,9 +57,7 @@ export const userRolesRouter = router({
       }
 
       try {
-
         return await userRolesDB.listActiveUserRolesForEvent(itemType, itemId);
-
       } catch (error) {
         logger.error("Error in listActiveUserRolesForEvent:", error);
         throw new TRPCError({
@@ -94,25 +86,23 @@ export const userRolesRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { itemType, itemId, userList } = input;
       const event = await eventDB.getEventById(itemId);
-      if(!event) {
+      if (!event) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: `Event with ID ${itemId} not found.`,
         });
       }
       try {
-
         // 1) Convert each username to user_id
         const convertedList: EventUserEntry[] = [];
 
-        for (const { username, status , role } of userList) {
+        for (const { username, status, role } of userList) {
           // remove leading '@'
           const usernameStripped = username.replace(/^@/, "");
           console.log("usernameStripped: ", usernameStripped);
           const dbUser = await usersDB.selectUserByUsername(usernameStripped);
           console.log("dbUser: ", dbUser);
           if (dbUser === null) {
-
             // user not exist => throw error
             throw new TRPCError({
               code: "NOT_FOUND",
@@ -139,21 +129,17 @@ export const userRolesRouter = router({
             message: result.error ?? "Failed to bulk upsert user roles",
           });
         }
-        logger.info(`Bulk upserted user roles for item [${itemType}, ID=${itemId}]` , { userList });
+        logger.info(`Bulk upserted user roles for item [${itemType}, ID=${itemId}]`, { userList });
         // 4) Return success
         try {
-
           return await userRolesDB.listAllUserRolesForEvent(itemType, itemId);
-
-
         } catch (error) {
-          logger.error("Error in listAllUserRolesForEvent: " , error);
+          logger.error("Error in listAllUserRolesForEvent: ", error);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Failed to list user roles.",
           });
         }
-
       } catch (error) {
         logger.error("Error in bulkUpsertUserRolesForEvent:", error);
         if (error instanceof TRPCError) {
