@@ -277,7 +277,7 @@ function EmptyList() {
 type ChangeHandler = (id: string, checked: boolean) => void;
 
 function List({ data, handleActiveChange }: { handleActiveChange: ChangeHandler; data: UserRolesBulkUpsertInput[] }) {
-  return [...data, ...data, ...data, ...data].map((item) => (
+  return data.map((item) => (
     <CoOrganizerCard
       data={item}
       key={`${item.userId}-${item.role}`}
