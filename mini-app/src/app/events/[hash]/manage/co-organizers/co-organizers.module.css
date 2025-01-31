@@ -1,5 +1,5 @@
 .emptyList {
-    @apply flex flex-col justify-center gap-6 items-center h-full overflow-hidden;
+    @apply flex flex-col justify-center gap-6 items-center py-10 overflow-hidden;
     @apply bg-white rounded-[10px];
 }
 
@@ -19,14 +19,20 @@
 
 .listItem-data {
     @apply flex flex-col gap-2 grow;
+;
 }
-
 .listItem-role--admin {
-    @apply text-[#ff9500];
+    background: linear-gradient(45deg, #E86310FF, #efca12 80%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
 }
 
 .listItem-role--officer {
-    @apply text-[#34C759];
+    background: linear-gradient(45deg, #11b187, #78da37 80%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
 }
 
 .listItem-checkbox {

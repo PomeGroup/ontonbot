@@ -44,8 +44,8 @@ export default function CoOrganizersPage() {
         role,
         username: username as string,
       }));
-      await mutateAsync({ itemId: eventData.event_id, itemType: "event", userList: shavedAcl as any });
-      setAcl(newAcl);
+      const serverAcl = await mutateAsync({ itemId: eventData.event_id, itemType: "event", userList: shavedAcl as any });
+      setAcl(serverAcl);
       toast.success("Updates saved.");
     } catch (err) {
       if (err instanceof TRPCClientError) {
@@ -70,7 +70,7 @@ export default function CoOrganizersPage() {
   const [addPopupOpen, setAddPopupOpen] = useState(false);
 
   const onAdd = async (username: string, role: "admin" | "checkin_officer") => {
-    const exists = !acl.find(item => item.username === username.trim() && item.role === role);
+    const exists = !!acl.find(item => item.username === username.trim() && item.role === role);
      if(exists) {
        toast.error(`${username} is already added as ${role}`);
        return
@@ -220,7 +220,7 @@ function EmptyList() {
     <div className={styles.emptyList}>
       <Image
         src={placeholderImage}
-        width={1943}
+        width={194.3}
         height={141.6}
         alt=""
       />

@@ -22,7 +22,16 @@ import {
   CheckAdminOrOrganizer,
 
 } from "@/lib/userRolesUtils";
+const hardcodedAdminUsers = [
+  47284045, // dacrime
+  548648769, // radiophp
+  185027333, // sid
+  23932283, // Mfarimani
+  438186721, // blackpred
+  748891997, // samyar_kd
+  438186721, // masious
 
+]
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
   const { hash } = useParams() as { hash?: string };
@@ -57,6 +66,7 @@ export default function ManageIndexPage() {
       allowedRoles: ['checkin_officer', 'admin']
     }
     );
+
   const hasAdminOrOrganizerAccess = CheckAdminOrOrganizer(user?.role) ;
   // The main “Manage” page
   return (
@@ -144,7 +154,7 @@ export default function ManageIndexPage() {
         />
         )}
 
-        {hasAdminOrOrganizerAccess &&
+        {hasAdminOrOrganizerAccess && hardcodedAdminUsers.includes(user?.user_id ?? 0) &&
           (
             <ActionCard
               onClick={() => router.push(`/events/${eventData.event_uuid}/manage/co-organizers`)}
