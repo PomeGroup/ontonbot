@@ -9,12 +9,12 @@ import { List as KonstaList, Button, Checkbox, Page, Popup, ListItem, Radio } fr
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/app/_trpc/client";
-import { useDebouncedValue } from "@mantine/hooks";
 import { OntonInput } from "@/components/OntonInput";
 import { useGetEvent } from "@/hooks/events.hooks";
 import { useParams } from "next/navigation";
 import { UserRolesBulkUpsertInput } from "@/types/ActiveUserRole.types";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
+import { TRPCClientError } from '@trpc/client';
 
 export default function CoOrganizersPage() {
   const { hash } = useParams() as { hash?: string };
@@ -35,21 +35,25 @@ export default function CoOrganizersPage() {
 
   const syncServer = async (newAcl: UserRolesBulkUpsertInput[]) => {
     try {
-      if (!eventData?.event_id) return;
+      if (!eventData?.event_id)
+        return;
+
       const shavedAcl = newAcl.map(({ status, userId, username, role }) => ({
         status,
         userId,
         role,
         username: username as string,
       }));
-      const response = await mutateAsync({ itemId: eventData.event_id, itemType: "event", userList: shavedAcl as any });
-
-      console.log(response.data, response)
+      await mutateAsync({ itemId: eventData.event_id, itemType: "event", userList: shavedAcl as any });
       setAcl(newAcl);
-
       toast.success("Updates saved.");
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      if (err instanceof TRPCClientError) {
+        if (err.data?.code === 'NOT_FOUND') {
+          toast.error(err?.message || "User not found.");
+          return;
+        }
+      }
       toast.error("Failed to save the update.");
     }
   };
@@ -60,7 +64,7 @@ export default function CoOrganizersPage() {
         ? { ...item, status: (newActive ? "active" : "deactivate") as UserRolesBulkUpsertInput["status"] }
         : item
     );
-    syncServer(newAcl);
+    await syncServer(newAcl);
   };
 
   const [addPopupOpen, setAddPopupOpen] = useState(false);
@@ -70,6 +74,7 @@ export default function CoOrganizersPage() {
       userId: 0,
       username: username.trim(),
       role,
+      photo_url: null,
       status: "active" as const,
       itemType: "event" as const ,
       itemId: eventData?.event_id ?? 0,
@@ -280,7 +285,7 @@ function CoOrganizerCard({ data, onChange }: CoOrganizerCardProps) {
   return (
     <div className={styles["listItem"]}>
       <LoadableImage
-        src={channelAvatar.src}
+        src={data.photo_url ?? channelAvatar.src}
         className={styles["listItem-avatar"]}
         width={48}
         height={48}

@@ -15,6 +15,7 @@ export interface UserRolesBulkUpsertInput {
   itemType: "event" | "project"; // or string
   userId: number;
   username: string | null;
+  photo_url: string | null;
   role: "owner" | "admin" | "checkin_officer";
   status: "active" | "deactivate";
 }

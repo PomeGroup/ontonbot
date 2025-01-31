@@ -3,11 +3,11 @@ import { TRPCError } from "@trpc/server";
 import {  EventUserEntry, userRolesDB } from "@/server/db/userRoles.db";
 import { adminOrganizerProtectedProcedure, router } from "../trpc";
 import { logger } from "../utils/logger";
-import { accessRoleEnumType, accessRoleItemTypeSchema } from "@/db/schema/userRoles";
+import { accessRoleItemTypeSchema } from "@/db/schema/userRoles";
 import { userRolesBulkUpsertInputSchema } from "@/zodSchema/userRoles";
 import eventDB from "@/server/db/events";
 import { usersDB } from "@/server/db/users";
-import { ActiveUserRole, UserRolesBulkUpsertInput } from "@/types/ActiveUserRole.types";
+import { UserRolesBulkUpsertInput } from "@/types/ActiveUserRole.types";
 
 
 
@@ -115,8 +115,8 @@ export const userRolesRouter = router({
 
             // user not exist => throw error
             throw new TRPCError({
-              code: "CONFLICT",
-              message: `@'${username}' is not a user of Onton.`,
+              code: "NOT_FOUND",
+              message: `@${username} is not a user of Onton.`,
             });
           }
 

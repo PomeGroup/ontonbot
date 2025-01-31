@@ -1,12 +1,10 @@
 import { db } from "@/db/db";
 import { accessRoleEnumType, accessRoleItemType, userRoles } from "@/db/schema/userRoles";
-import { users } from "@/db/schema/users"; // <--- Import the users table schema
+import { users } from "@/db/schema/users"; // <--- users table schema
 import { and, eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { redisTools } from "@/lib/redisTools";
 import { ActiveUserRole, UserRolesBulkUpsertInput } from "@/types/ActiveUserRole.types";
-import { usersDB } from "@/server/db/users";
-
 
 // -------------- CACHE KEYS --------------
 const getAllRolesCacheKey = (itemType: string, itemId: number) =>
@@ -30,9 +28,7 @@ function getUserActiveRolesCacheKey(userId: number) {
  * Lists all *active* user roles for a given user (matching userId),
  * across *any* itemType and itemId.
  *
- * Joins the `users` table to return `username`, but note that
- * we already know `userId`—the join is just to be consistent
- * if you want to see the username in the result.
+ * Joins the `users` table to return `username` and now `photo_url`.
  */
 export async function listActiveUserRolesForUser(userId: number): Promise<ActiveUserRole[]> {
   const cacheKey = getUserActiveRolesCacheKey(userId);
@@ -50,7 +46,8 @@ export async function listActiveUserRolesForUser(userId: number): Promise<Active
         itemId: userRoles.itemId,
         itemType: userRoles.itemType,
         userId: userRoles.userId,
-        username: users.username, // or any other user fields you want to expose
+        username: users.username,
+        photo_url: users.photo_url, // <--- ADDED
         role: userRoles.role,
         status: userRoles.status,
         createdAt: userRoles.createdAt,
@@ -58,7 +55,7 @@ export async function listActiveUserRolesForUser(userId: number): Promise<Active
         updatedBy: userRoles.updatedBy,
       })
       .from(userRoles)
-      // leftJoin in case the user record is missing or something else
+      // leftJoin in case the user record is missing
       .leftJoin(users, eq(userRoles.userId, users.user_id))
       .where(and(eq(userRoles.userId, userId), eq(userRoles.status, "active")))
       .execute();
@@ -92,51 +89,42 @@ export async function listActiveUserRolesForUserAndItem(
 /**
  * Checks if a user has *any* of the specified roles on a given item (itemType + itemId).
  * Returns an array of matching ActiveUserRole entries.
- *
- * If you only need a boolean, you can check `.length` on the returned array.
  */
 export async function checkAccess(
   userId: number,
-  roles: accessRoleEnumType[], // array of roles to check, e.g. ["owner", "checkin_officer"]
-  itemType: accessRoleItemType, // e.g. "event"
+  roles: accessRoleEnumType[],
+  itemType: accessRoleItemType,
   itemId: number
 ): Promise<ActiveUserRole[]> {
   // 1) Get all active roles for this user
   const userRoles = await listActiveUserRolesForUser(userId);
 
   // 2) Filter roles that match the itemType, itemId, and are in the `roles` array
-  return userRoles.filter(
-    (r) =>
-      r.itemType === itemType &&
-      r.itemId === itemId &&
-      roles.includes(r.role)
-  );
+  return userRoles.filter((r) => r.itemType === itemType && r.itemId === itemId && roles.includes(r.role));
 }
-
 
 export async function checkHasAnyAccessToItemType(
   userId: number,
-  roles: accessRoleEnumType[], // array of roles to check, e.g. ["owner", "checkin_officer"]
-  itemType: accessRoleItemType, // e.g. "event"
+  roles: accessRoleEnumType[],
+  itemType: accessRoleItemType
 ): Promise<ActiveUserRole[]> {
   // 1) Get all active roles for this user
   const userRoles = await listActiveUserRolesForUser(userId);
 
-  // 2) Filter roles that match the itemType, itemId, and are in the `roles` array
-  return userRoles.filter(
-    (r) =>
-      r.itemType === itemType &&
-      roles.includes(r.role)
-  );
+  // 2) Filter roles that match the itemType + in the `roles` array
+  return userRoles.filter((r) => r.itemType === itemType && roles.includes(r.role));
 }
 
 /**
  * Lists all user roles for a given item (itemType + itemId),
  * returning both 'active' and 'reactive' statuses.
  *
- * Now includes a JOIN on the `users` table so we can return `username`.
+ * Includes a JOIN on `users` to return `username` and `photo_url`.
  */
-export async function listAllUserRolesForEvent(itemType: accessRoleItemType, itemId: number): Promise<UserRolesBulkUpsertInput[]> {
+export async function listAllUserRolesForEvent(
+  itemType: accessRoleItemType,
+  itemId: number
+): Promise<UserRolesBulkUpsertInput[]> {
   const cacheKey = getAllRolesCacheKey(itemType, itemId);
 
   try {
@@ -146,21 +134,20 @@ export async function listAllUserRolesForEvent(itemType: accessRoleItemType, ite
       return cached;
     }
 
-    // 2) Fetch from DB with LEFT JOIN (or JOIN) on `users`
+    // 2) Fetch from DB with LEFT JOIN on `users`
     const rows = await db
       .select({
         itemId: userRoles.itemId,
         itemType: userRoles.itemType,
         userId: userRoles.userId,
         username: users.username,
+        photo_url: users.photo_url, // <--- ADDED
         role: userRoles.role,
         status: userRoles.status,
-        // createdAt: userRoles.createdAt,
-        // updatedAt: userRoles.updatedAt,
-        // updatedBy: userRoles.updatedBy,
+        // Possibly also createdAt, updatedAt if needed
       })
       .from(userRoles)
-      .leftJoin(users, eq(userRoles.userId, users.user_id)) // Join condition
+      .leftJoin(users, eq(userRoles.userId, users.user_id))
       .where(and(eq(userRoles.itemId, itemId), eq(userRoles.itemType, itemType)))
       .execute();
 
@@ -175,7 +162,7 @@ export async function listAllUserRolesForEvent(itemType: accessRoleItemType, ite
 
 /**
  * Lists only 'active' user roles for a given item (itemType + itemId).
- * Also joins the `users` table to return `username`.
+ * Also joins the `users` table to return `username` and `photo_url`.
  */
 export async function listActiveUserRolesForEvent(itemType: accessRoleItemType, itemId: number): Promise<ActiveUserRole[]> {
   const cacheKey = getActiveRolesCacheKey(itemType, itemId);
@@ -194,6 +181,7 @@ export async function listActiveUserRolesForEvent(itemType: accessRoleItemType, 
         itemType: userRoles.itemType,
         userId: userRoles.userId,
         username: users.username,
+        photo_url: users.photo_url, // <--- ADDED
         role: userRoles.role,
         status: userRoles.status,
         createdAt: userRoles.createdAt,
@@ -215,7 +203,8 @@ export async function listActiveUserRolesForEvent(itemType: accessRoleItemType, 
 }
 
 /**
- * Bulk Upsert function remains the same, no changes needed:
+ * Bulk Upsert function (no need to join users table here, because
+ * we don't need user profile info in the immediate result).
  */
 export async function bulkUpsertUserRolesForEvent(
   itemType: accessRoleItemType,
@@ -224,10 +213,10 @@ export async function bulkUpsertUserRolesForEvent(
   updatedBy: string = "system"
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    // Run everything in a transaction for atomicity
+    // transaction for atomicity
     await db.transaction(async (tx) => {
       for (const entry of userList) {
-        const { user_id, status, role  } = entry;
+        const { user_id, status, role } = entry;
 
         // Check if a row already exists
         const existing = await tx
@@ -248,7 +237,7 @@ export async function bulkUpsertUserRolesForEvent(
           await tx
             .update(userRoles)
             .set({
-              status: status ,
+              status,
               updatedAt: new Date(),
               updatedBy,
             })
@@ -263,7 +252,6 @@ export async function bulkUpsertUserRolesForEvent(
             .execute();
         } else {
           // Insert
-
           await tx
             .insert(userRoles)
             .values({
@@ -271,27 +259,24 @@ export async function bulkUpsertUserRolesForEvent(
               itemType,
               userId: user_id,
               role,
-              status: status,
+              status,
               updatedBy,
               updatedAt: new Date(),
             })
             .execute();
         }
+        // Clear cache for the user’s active roles
         await redisTools.deleteCache(getUserActiveRolesCacheKey(user_id));
       }
-      // If we reach here, the transaction is successful -> it will commit automatically
     });
 
-    // After successful commit, clear caches
+    // After success, clear caches for item
     await redisTools.deleteCache(getAllRolesCacheKey(itemType, itemId));
     await redisTools.deleteCache(getActiveRolesCacheKey(itemType, itemId));
 
     return { success: true, error: null };
   } catch (err: any) {
-    // If transaction fails or something else happens
     logger.error(`Error in bulkUpsertUserRolesForEvent for [${itemType}, ID=${itemId}]:`, err);
-
-    // Return a consistent structure
     return {
       success: false,
       error: err instanceof Error ? err.message : String(err),
@@ -299,9 +284,7 @@ export async function bulkUpsertUserRolesForEvent(
   }
 }
 
-/**
- * Export as an object, similar to your existing style.
- */
+// Export
 export const userRolesDB = {
   checkAccess,
   listAllUserRolesForEvent,
