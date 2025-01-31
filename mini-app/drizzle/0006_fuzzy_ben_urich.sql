@@ -1,16 +1,11 @@
 DO $$ BEGIN
  CREATE TYPE "public"."access_role" AS ENUM('owner', 'admin', 'checkin_officer');
- CREATE TYPE "public"."item_type" AS ENUM (
-     'event'
-     );
- CREATE TYPE "public"."user_role_status" AS ENUM (
-     'active',
-     'deactivate'
-     );
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
+ALTER TYPE "order_types" ADD VALUE 'ts_csbt_ticket';--> statement-breakpoint
+ALTER TYPE "ticket_types" ADD VALUE 'TSCSBT';--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user_roles" (
 	"item_id" bigint NOT NULL,
 	"item_type" "item_type" NOT NULL,

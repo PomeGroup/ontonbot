@@ -1,5 +1,5 @@
 {
-  "id": "8027e336-2f28-4235-8dc9-af8ec54e4fdb",
+  "id": "961f0d51-76e1-4a45-ab1a-7d1c4c4f6878",
   "prevId": "6378c75a-a02a-42bc-8a10-f498b76ec070",
   "version": "7",
   "dialect": "postgresql",
@@ -3988,10 +3988,10 @@
       "schema": "public",
       "values": [
         "nft_mint",
-        "offchain_ticket",
         "event_creation",
         "event_capacity_increment",
-        "promote_to_organizer"
+        "promote_to_organizer",
+        "ts_csbt_ticket"
       ]
     },
     "public.organizer_payment_status": {
@@ -4045,8 +4045,8 @@
       "name": "ticket_types",
       "schema": "public",
       "values": [
-        "OFFCHAIN",
-        "NFT"
+        "NFT",
+        "TSCSBT"
       ]
     },
     "public.user_flags_enum": {
