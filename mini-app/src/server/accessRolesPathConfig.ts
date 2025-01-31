@@ -1,0 +1,17 @@
+export const accessRolesPathConfig = {
+  admin : [
+    "files.uploadImage" ,
+  ],
+  checkin_officer : [
+    "visitors.getAll" ,
+    "telegramInteractions.requestSendQRCode" ,
+    "registrant.getEventRegistrants" ,
+    "EventPOA.Info" ,
+    "EventPOA.Create" ,
+    "registrant.processRegistrantRequest" ,
+    "registrant.checkinRegistrantRequest",
+    "telegramInteractions.requestExportFile",
+  ],
+}
+
+
