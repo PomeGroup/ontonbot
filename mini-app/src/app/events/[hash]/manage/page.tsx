@@ -27,9 +27,10 @@ const hardcodedAdminUsers = [
   548648769, // radiophp
   185027333, // sid
   23932283, // Mfarimani
-  438186721, // blackpred
+  68007062, // blackpred
   748891997, // samyar_kd
   438186721, // masious
+
 
 ]
 export default function ManageIndexPage() {
