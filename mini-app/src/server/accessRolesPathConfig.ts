@@ -6,6 +6,7 @@ export const accessRolesPathConfig = {
     "visitors.getAll" ,
     "telegramInteractions.requestSendQRCode" ,
     "registrant.getEventRegistrants" ,
+    "registrant.getEventRegistrants" ,
     "EventPOA.Info" ,
     "EventPOA.Create" ,
     "registrant.processRegistrantRequest" ,
