@@ -28,16 +28,16 @@ export default function CoOrganizersPage() {
   const [acl, setAcl] = useState<UserRolesBulkUpsertInput[]>([]);
   useEffect(() => {
     if (!data) return;
-    setAcl(data.map((item) => ({ ...item, key: `${item.userId}-${item.role}` })));
+    setAcl(data);
   }, [data]);
 
   const {mutateAsync, isLoading } = useMutateAcl();
 
   const syncServer = async (newAcl: UserRolesBulkUpsertInput[]) => {
-    try {
-      if (!eventData?.event_id)
-        return;
+    if (!eventData?.event_id)
+      return;
 
+    try {
       const shavedAcl = newAcl.map(({ status, userId, username, role }) => ({
         status,
         userId,
@@ -70,6 +70,12 @@ export default function CoOrganizersPage() {
   const [addPopupOpen, setAddPopupOpen] = useState(false);
 
   const onAdd = async (username: string, role: "admin" | "checkin_officer") => {
+    const exists = !acl.find(item => item.username === username.trim() && item.role === role);
+     if(exists) {
+       toast.error(`${username} is already added as ${role}`);
+       return
+     }
+
     const newAcl = [...acl , {
       userId: 0,
       username: username.trim(),
@@ -82,28 +88,32 @@ export default function CoOrganizersPage() {
     await syncServer(newAcl);
     setAddPopupOpen(false);
   }
+
   return (
-    <div className="h-full min-h-screen flex flex-col overflow-hidden bg-[#EFEFF4] p-4">
-      <Typography
-        className="mb-5"
-        variant="title3"
-        bold
-      >
-        Co-Organizers Management
-      </Typography>
-      <div className="grow">
-        {acl.length === 0 ? (
-          <EmptyList />
-        ) : (
-          <List
-            data={acl}
-            handleActiveChange={handleChange}
-          />
-        )}
+    <div className="h-screen flex flex-col overflow-hidden bg-[#EFEFF4]">
+      <div className='grow overflow-y-auto p-4'>
+        <Typography
+          className="mb-5"
+          variant="title3"
+          bold
+        >
+          Co-Organizers Management
+        </Typography>
+        <div>
+          {acl.length === 0 ? (
+            <EmptyList />
+          ) : (
+            <List
+              data={acl}
+              handleActiveChange={handleChange}
+            />
+          )}
+        </div>
+
       </div>
       <div className={styles.footer}>
         <Button
-          className="py-4 rounded-[6px]"
+          className="py-6 rounded-[10px]"
           onClick={() => setAddPopupOpen(true)}
         >
           Add Co-organizer
@@ -165,7 +175,7 @@ function AddPopup({ open, onAdd, isSaving, onClose }: AddPopupProps) {
             media={
               <Radio
                 component="div"
-                value="admin"
+                value="Admin"
                 checked={role === "admin"}
                 onChange={() => setRole("admin")}
               />
@@ -173,20 +183,20 @@ function AddPopup({ open, onAdd, isSaving, onClose }: AddPopupProps) {
           />
           <ListItem
             label
-            title="Officer"
+            title="Check-in Officer"
             media={
               <Radio
                 component="div"
-                value="checkin_officer"
+                value="Check-in Officer"
                 checked={role === "checkin_officer"}
                 onChange={() => setRole("checkin_officer")}
               />
             }
           />
         </KonstaList>
-        <div className="mt-auto">
+        <div className={styles.addFooter}>
           <Button
-            className="py-5 mb-3 rounded-[10px]"
+            className="py-6 mb-3 rounded-[10px]"
             onClick={handleAdd}
             disabled={isSaving}
           >
@@ -194,7 +204,7 @@ function AddPopup({ open, onAdd, isSaving, onClose }: AddPopupProps) {
           </Button>
           <Button
             outline
-            className="py-5 rounded-[10px]"
+            className="py-5.5 rounded-[10px]"
             onClick={onClose}
           >
             Cancel
@@ -267,7 +277,7 @@ function EmptyList() {
 type ChangeHandler = (id: string, checked: boolean) => void;
 
 function List({ data, handleActiveChange }: { handleActiveChange: ChangeHandler; data: UserRolesBulkUpsertInput[] }) {
-  return data.map((item) => (
+  return [...data, ...data, ...data, ...data].map((item) => (
     <CoOrganizerCard
       data={item}
       key={`${item.userId}-${item.role}`}
@@ -293,7 +303,7 @@ function CoOrganizerCard({ data, onChange }: CoOrganizerCardProps) {
       <div className={styles["listItem-data"]}>
         <div className="text-[18px] font-medium">{data.username}</div>
         <div className={data.role === "admin" ? styles["listItem-role--admin"] : styles["listItem-role--officer"]}>
-          {data.role}
+          {data.role === 'admin' ? 'Admin' : 'Check-in Officer'}
         </div>
       </div>
       <div className={styles["listItem-checkbox"]}>
