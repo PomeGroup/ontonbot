@@ -43,6 +43,13 @@
       "when": 1737991011826,
       "tag": "0005_rich_iron_lad",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1738291956928,
+      "tag": "0006_sweet_hairball",
+      "breakpoints": true
     }
   ]
 }
