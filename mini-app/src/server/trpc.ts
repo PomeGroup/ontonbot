@@ -107,9 +107,10 @@ export const eventManagementProtectedProcedure = initDataProtectedProcedure
     const userAccessRolesToEventToPath = await userRolesDB.checkAccess(
       opts.ctx.user.user_id,
       ["checkin_officer"] as accessRoleEnumType[],
-      "path" as accessRoleItemType,
+      "event" as accessRoleItemType,
       event.event_id
     );
+
     const userHasAccessToPath = userAccessRolesToEventToPath && accessRolesPathConfig.checkin_officer.includes(opts.path);
 
     if (
@@ -124,7 +125,16 @@ export const eventManagementProtectedProcedure = initDataProtectedProcedure
       });
     }
 
-    if (opts.ctx.user.role === "organizer" && event.owner !== opts.ctx.user.user_id) {
+    if (
+        (
+          opts.ctx.user.role === "organizer" &&
+          event.owner !== opts.ctx.user.user_id
+        ) &&
+        (
+          userAdminAccessRolesToEvent.length === 0 &&
+          !userHasAccessToPath
+        )
+      ) {
       throw new TRPCError({
         code: "UNAUTHORIZED",
         message: "Unauthorized access, you don't have access to this event",
