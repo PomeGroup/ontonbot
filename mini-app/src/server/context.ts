@@ -24,7 +24,7 @@ export async function createContext({ req }: { req: Request }) {
 
       const user = await usersDB.insertUser(initDataJson);
       if (!user) {
-        logger.error("User not found", { initDataJson });
+        logger.info("User not found", { initDataJson });
         return null;
       }
 

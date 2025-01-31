@@ -1,9 +1,21 @@
 import { db } from "@/db/db";
-import { userRoles, accessRoleEnumType, accessRoleItemType } from "@/db/schema/userRoles";
-import { users } from "@/db/schema/users";  // <--- Import the users table schema
-import { eq, and } from "drizzle-orm";
+import { accessRoleEnumType, accessRoleItemType, userRoles } from "@/db/schema/userRoles";
+import { users } from "@/db/schema/users"; // <--- Import the users table schema
+import { and, eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { redisTools } from "@/lib/redisTools";
+
+export interface ActiveUserRole {
+  itemId: number;
+  itemType: "event" | "project"; // or string
+  userId: number;
+  username: string | null;
+  role: "owner" | "admin" | "checkin_officer";
+  status: "active" | "deactivate";
+  createdAt: Date;
+  updatedAt: Date;
+  updatedBy: string;
+}
 
 // -------------- CACHE KEYS --------------
 const getAllRolesCacheKey = (itemType: string, itemId: number) =>
@@ -19,13 +31,121 @@ export interface EventUserEntry {
   role: accessRoleEnumType;
 }
 
+function getUserActiveRolesCacheKey(userId: number) {
+  return `${redisTools.cacheKeys.user_roles}:byUser:${userId}:active`;
+}
+
+/**
+ * Lists all *active* user roles for a given user (matching userId),
+ * across *any* itemType and itemId.
+ *
+ * Joins the `users` table to return `username`, but note that
+ * we already know `userId`—the join is just to be consistent
+ * if you want to see the username in the result.
+ */
+export async function listActiveUserRolesForUser(userId: number): Promise<ActiveUserRole[]> {
+  const cacheKey = getUserActiveRolesCacheKey(userId);
+
+  try {
+    // 1) Attempt to get from cache
+    const cached = await redisTools.getCache(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // 2) Query DB for all active roles for this user
+    const rows = await db
+      .select({
+        itemId: userRoles.itemId,
+        itemType: userRoles.itemType,
+        userId: userRoles.userId,
+        username: users.username, // or any other user fields you want to expose
+        role: userRoles.role,
+        status: userRoles.status,
+        createdAt: userRoles.createdAt,
+        updatedAt: userRoles.updatedAt,
+        updatedBy: userRoles.updatedBy,
+      })
+      .from(userRoles)
+      // leftJoin in case the user record is missing or something else
+      .leftJoin(users, eq(userRoles.userId, users.user_id))
+      .where(and(eq(userRoles.userId, userId), eq(userRoles.status, "active")))
+      .execute();
+
+    // 3) Set cache
+    await redisTools.setCache(cacheKey, rows, redisTools.cacheLvl.short);
+
+    return rows;
+  } catch (error) {
+    logger.error(`Error listing active user roles for userId=${userId}`, error);
+    throw error;
+  }
+}
+
+/**
+ * Returns all active user roles for a specific user,
+ * filtered by a given itemType and itemId.
+ */
+export async function listActiveUserRolesForUserAndItem(
+  userId: number,
+  itemType: accessRoleItemType,
+  itemId: number
+): Promise<ActiveUserRole[]> {
+  // 1) Get all active user roles (cached) for this user
+  const allRoles = await listActiveUserRolesForUser(userId);
+
+  // 2) Filter by itemType + itemId
+  return allRoles.filter((role) => role.itemType === itemType && role.itemId === itemId);
+}
+
+/**
+ * Checks if a user has *any* of the specified roles on a given item (itemType + itemId).
+ * Returns an array of matching ActiveUserRole entries.
+ *
+ * If you only need a boolean, you can check `.length` on the returned array.
+ */
+export async function checkAccess(
+  userId: number,
+  roles: accessRoleEnumType[], // array of roles to check, e.g. ["owner", "checkin_officer"]
+  itemType: accessRoleItemType, // e.g. "event"
+  itemId: number
+): Promise<ActiveUserRole[]> {
+  // 1) Get all active roles for this user
+  const userRoles = await listActiveUserRolesForUser(userId);
+
+  // 2) Filter roles that match the itemType, itemId, and are in the `roles` array
+  return userRoles.filter(
+    (r) =>
+      r.itemType === itemType &&
+      r.itemId === itemId &&
+      roles.includes(r.role)
+  );
+}
+
+
+export async function checkHasAnyAccessToItemType(
+  userId: number,
+  roles: accessRoleEnumType[], // array of roles to check, e.g. ["owner", "checkin_officer"]
+  itemType: accessRoleItemType, // e.g. "event"
+): Promise<ActiveUserRole[]> {
+  // 1) Get all active roles for this user
+  const userRoles = await listActiveUserRolesForUser(userId);
+
+  // 2) Filter roles that match the itemType, itemId, and are in the `roles` array
+  return userRoles.filter(
+    (r) =>
+      r.itemType === itemType &&
+      roles.includes(r.role)
+  );
+}
+
 /**
  * Lists all user roles for a given item (itemType + itemId),
  * returning both 'active' and 'reactive' statuses.
  *
  * Now includes a JOIN on the `users` table so we can return `username`.
  */
-export async function listAllUserRolesForEvent(itemType: accessRoleItemType, itemId: number) {
+export async function listAllUserRolesForEvent(itemType: accessRoleItemType, itemId: number): Promise<ActiveUserRole[]> {
   const cacheKey = getAllRolesCacheKey(itemType, itemId);
 
   try {
@@ -47,16 +167,10 @@ export async function listAllUserRolesForEvent(itemType: accessRoleItemType, ite
         createdAt: userRoles.createdAt,
         updatedAt: userRoles.updatedAt,
         updatedBy: userRoles.updatedBy,
-
       })
       .from(userRoles)
-      .leftJoin(users, eq(userRoles.userId, users.user_id))  // Join condition
-      .where(
-        and(
-          eq(userRoles.itemId, itemId),
-          eq(userRoles.itemType, itemType)
-        )
-      )
+      .leftJoin(users, eq(userRoles.userId, users.user_id)) // Join condition
+      .where(and(eq(userRoles.itemId, itemId), eq(userRoles.itemType, itemType)))
       .execute();
 
     // 3) Cache the result
@@ -72,7 +186,7 @@ export async function listAllUserRolesForEvent(itemType: accessRoleItemType, ite
  * Lists only 'active' user roles for a given item (itemType + itemId).
  * Also joins the `users` table to return `username`.
  */
-export async function listActiveUserRolesForEvent(itemType: accessRoleItemType, itemId: number) {
+export async function listActiveUserRolesForEvent(itemType: accessRoleItemType, itemId: number): Promise<ActiveUserRole[]> {
   const cacheKey = getActiveRolesCacheKey(itemType, itemId);
 
   try {
@@ -94,17 +208,10 @@ export async function listActiveUserRolesForEvent(itemType: accessRoleItemType, 
         createdAt: userRoles.createdAt,
         updatedAt: userRoles.updatedAt,
         updatedBy: userRoles.updatedBy,
-
       })
       .from(userRoles)
       .leftJoin(users, eq(userRoles.userId, users.user_id))
-      .where(
-        and(
-          eq(userRoles.itemId, itemId),
-          eq(userRoles.itemType, itemType),
-          eq(userRoles.status, "active")
-        )
-      )
+      .where(and(eq(userRoles.itemId, itemId), eq(userRoles.itemType, itemType), eq(userRoles.status, "active")))
       .execute();
 
     // 3) Cache the result
@@ -150,7 +257,7 @@ export async function bulkUpsertUserRolesForEvent(
           await tx
             .update(userRoles)
             .set({
-              status: active ? "active" : "reactive",
+              status: active ? "active" : "deactivate",
               updatedAt: new Date(),
               updatedBy,
             })
@@ -172,12 +279,13 @@ export async function bulkUpsertUserRolesForEvent(
               itemType,
               userId: user_id,
               role,
-              status: active ? "active" : "reactive",
+              status: active ? "active" : "deactivate",
               updatedBy,
               updatedAt: new Date(),
             })
             .execute();
         }
+        await redisTools.deleteCache(getUserActiveRolesCacheKey(user_id));
       }
       // If we reach here, the transaction is successful -> it will commit automatically
     });
@@ -203,7 +311,11 @@ export async function bulkUpsertUserRolesForEvent(
  * Export as an object, similar to your existing style.
  */
 export const userRolesDB = {
+  checkAccess,
   listAllUserRolesForEvent,
   listActiveUserRolesForEvent,
+  listActiveUserRolesForUserAndItem,
+  checkHasAnyAccessToItemType,
   bulkUpsertUserRolesForEvent,
+  listActiveUserRolesForUser,
 };

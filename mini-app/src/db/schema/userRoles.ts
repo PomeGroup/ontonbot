@@ -27,7 +27,7 @@ export type accessRoleEnumType = (typeof accessRoleEnum.enumValues)[number];
  */
 export const userRoleStatusEnum = pgEnum("user_role_status", [
   "active",
-  "reactive",
+  "deactivate",
 ]);
 export type userRoleStatus = (typeof userRoleStatusEnum.enumValues)[number];
 

@@ -5,58 +5,10 @@ import { InferSelectModel, eq, sql, and, or, not, inArray } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import xss from "xss";
 import { logSQLQuery } from "@/lib/logSQLQuery";
+import { userRolesDB } from "@/server/db/userRoles.db";
+import { ExtendedUser, InitUserData, MinimalOrganizerData } from "@/types/extendedUserTypes";
 // User data from the init data
-interface InitUserData {
-  user: {
-    id: number;
-    username: string;
-    first_name: string;
-    last_name: string;
-    language_code: string;
-    is_premium?: boolean;
-    allows_write_to_pm?: boolean;
-    photo_url?: string;
-  };
-}
 
-interface ExtendedUser {
-  user_id: number;
-  username: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  wallet_address: string | null;
-  language_code: string | null;
-  role: string;
-  created_at: Date | null;
-  updatedAt: Date | null;
-  updatedBy: string;
-  is_premium: boolean | null;
-  allows_write_to_pm: boolean | null;
-  photo_url: string | null;
-  participated_event_count: number | null;
-  hosted_event_count: number | null;
-  has_blocked_the_bot: boolean | null;
-
-  // Fallback columns as string | null
-  org_channel_name: string | null;
-  org_support_telegram_user_name: string | null;
-  org_x_link: string | null;
-  org_bio: string | null;
-  org_image: string | null;
-}
-
-export interface MinimalOrganizerData {
-  user_id: number;
-  photo_url: string | null;
-  participated_event_count: number | null;
-  hosted_event_count: number | null;
-  org_channel_name: string | null;
-  org_support_telegram_user_name: string | null;
-  org_x_link: string | null;
-  org_bio: string | null;
-  org_image: string | null;
-  role: string;
-}
 
 // Cache key prefix
 // Function to generate cache key for user
@@ -211,19 +163,23 @@ export const selectUserById = async (
   userId: number,
   use_cached_user: boolean = true,
   update_cache: boolean = true
-): Promise<InferSelectModel<typeof users> | null> => {
+): Promise<ExtendedUser | null> => {
   const cacheKey = getUserCacheKey(userId);
 
-  // Try to get the user from cache
+  // 1) Check cache
   if (use_cached_user) {
     const cachedUser = await redisTools.getCache(cacheKey);
+    // ❗ If you’ve previously cached a plain user,
+    //    it won't have CustomAccessRoles.
+    //    You might want to skip returning from cache
+    //    or refactor how you cache.
     if (cachedUser) {
-      return cachedUser; // Return cached user if found
+      return cachedUser as ExtendedUser;
     }
   }
 
-  // If not found in cache, query the database
   try {
+    // 2) Select base user from DB
     const userInfo = await db
       .select({
         user_id: users.user_id,
@@ -242,38 +198,50 @@ export const selectUserById = async (
         participated_event_count: users.participated_event_count,
         hosted_event_count: users.hosted_event_count,
         has_blocked_the_bot: users.has_blocked_the_bot,
-
-        // COALESCE org_channel_name with first_name + ' ' + last_name
         org_channel_name: sql<string | null>`
-          COALESCE(
+            COALESCE(
             ${users.org_channel_name},
             ${users.first_name} || ' ' || ${users.last_name}
-          )
+            )
         `.as("org_channel_name"),
-
         org_support_telegram_user_name: users.org_support_telegram_user_name,
         org_x_link: users.org_x_link,
         org_bio: users.org_bio,
-
-        // COALESCE org_image with photo_url
-        org_image: sql`
-          COALESCE(
+        org_image: sql<string>`
+            COALESCE(
             ${users.org_image},
             ${users.photo_url},
             ''
-          )
+            )
         `.as("org_image"),
       })
       .from(users)
       .where(eq(users.user_id, userId))
       .execute();
 
+    // 3) If user exists
     if (userInfo.length > 0) {
+      // (Optional) update event counts
       await updateEventCountsForUser(userId);
-      if (update_cache) await redisTools.setCache(cacheKey, userInfo[0], redisTools.cacheLvl.short); // Cache the user
-      //@ts-ignore
-      return userInfo[0];
+
+      // 4) Fetch the user roles
+      const userRoles = await userRolesDB.listActiveUserRolesForUser(userId);
+
+      // 5) Merge user data + roles
+      const extendedUser: ExtendedUser = {
+        ...userInfo[0],
+        CustomAccessRoles: userRoles,
+      };
+
+      // 6) Cache extended user (optional)
+      if (update_cache) {
+        await redisTools.setCache(cacheKey, extendedUser, redisTools.cacheLvl.short);
+      }
+
+      return extendedUser;
     }
+
+    // else user not found
     return null;
   } catch (e) {
     logger.log("get user error: ", e);
@@ -281,7 +249,7 @@ export const selectUserById = async (
   }
 };
 
-export const insertUser = async (initDataJson: InitUserData): Promise<InferSelectModel<typeof users> | null> => {
+export const insertUser = async (initDataJson: InitUserData): Promise<ExtendedUser   | null> => {
   const { id, username, first_name, last_name, language_code } = initDataJson.user;
 
   const user = await selectUserById(id);

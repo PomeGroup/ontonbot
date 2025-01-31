@@ -15,13 +15,20 @@ import { useSectionStore } from "@/zustand/useSectionStore";
 import { useGetEvent } from "@/hooks/events.hooks";
 import { useUserStore } from "@/context/store/user.store";
 import hardcodedAcl from "./hardcodedAcl";
+import {
+  canUserEditEvent,
+  canUserManageEvent,
+  canUserPerformRole,
+  CheckAdminOrOrganizer,
+
+} from "@/lib/userRolesUtils";
 
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
   const { hash } = useParams() as { hash?: string };
   const { data: eventData, isLoading, isError } = useGetEvent(hash);
 
-  const { setSection, clearSections } = useSectionStore();
+  const { setSection } = useSectionStore();
   const router = useRouter();
 
   const { user } = useUserStore()
@@ -35,12 +42,25 @@ export default function ManageIndexPage() {
 
   const castedEventData = {
     ...eventData,
-    acl: hardcodedAcl
+    acl: eventData.accessRoles
   }
 
   const adminCount = castedEventData.acl.filter(item => item.role === 'admin').length + 1
-  const officerCount = castedEventData.acl.filter(item => item.role === 'officer').length
+  const officerCount = castedEventData.acl.filter(item => item.role === 'checkin_officer').length
 
+  const canEditEvent = canUserEditEvent({user,owner: eventData?.owner,accessRoles: eventData?.accessRoles}) ;
+
+  if(user) {
+    console.log( "canEditEvent", canEditEvent)
+    console.log( "accessRolesArray some ",eventData?.accessRoles.some((ar:{ user_id: number; role: string } ) => ar.user_id === user.user_id  && ar.role === 'admin') )
+  }
+  const guestListAccess = canUserPerformRole({
+       user,
+      accessRoles:  eventData?.accessRoles,
+      allowedRoles: ['checkin_officer', 'admin']
+    }
+    );
+  const hasAdminOrOrganizerAccess = CheckAdminOrOrganizer(user?.role) ;
   // The main “Manage” page
   return (
     <Page>
@@ -56,9 +76,10 @@ export default function ManageIndexPage() {
             imageUrl: eventData.image_url ?? "/template-images/default.webp",
             subtitle: eventData.subtitle ?? "",
             organizerUserId: eventData.owner ?? 0,
-            organizerChannelName: eventData?.organizer?.org_channel_name ?? "ssss",
+            organizerChannelName: eventData?.organizer?.org_channel_name ?? "",
           }}
         >
+          { canEditEvent && (
           <div className="mt-3 -mb-2">
             <Button
               className="px-3 rounded-[6px] py-4"
@@ -72,12 +93,13 @@ export default function ManageIndexPage() {
               Edit Event Info
             </Button>
           </div>
+          )}
         </EventCard>
       </Block>
 
       {/* Action Cards for each sub-route */}
       <Block className="-mx-4 my-3">
-        {eventData.has_payment && (
+        {eventData.has_payment && canEditEvent && (
           <>
             <ActionCard
               onClick={() => router.push(`/events/${eventData.event_uuid}/manage/orders`)}
@@ -115,6 +137,8 @@ export default function ManageIndexPage() {
         {/*  ]}*/}
         {/*/>*/}
         {/*)}*/}
+
+        { guestListAccess && (
         <ActionCard
           onClick={() => router.push(`/events/${eventData.event_uuid}/manage/guest-list`)}
           iconSrc={guestListIcon}
@@ -122,9 +146,9 @@ export default function ManageIndexPage() {
           subtitle="View and manage participants"
           footerTexts={[]}
         />
-        {
-          // eventData.organizer?.user_id === user?.user_id && 
-          true &&
+        )}
+
+        {hasAdminOrOrganizerAccess &&
           (
             <ActionCard
               onClick={() => router.push(`/events/${eventData.event_uuid}/manage/co-organizers`)}

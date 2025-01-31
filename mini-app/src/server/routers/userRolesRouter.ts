@@ -37,11 +37,8 @@ export const userRolesRouter = router({
       }
       try {
 
-        const rows = await userRolesDB.listAllUserRolesForEvent(itemType, itemId);
-        return {
-          success: true,
-          data: rows,
-        };
+        return  await userRolesDB.listAllUserRolesForEvent(itemType, itemId);
+
       } catch (error) {
         logger.error("Error in listAllUserRolesForEvent:", error);
         throw new TRPCError({
@@ -73,11 +70,8 @@ export const userRolesRouter = router({
 
       try {
 
-         const rows = await userRolesDB.listActiveUserRolesForEvent(itemType, itemId);
-        return {
-          success: true,
-          data: rows,
-        };
+        return await userRolesDB.listActiveUserRolesForEvent(itemType, itemId);
+
       } catch (error) {
         logger.error("Error in listActiveUserRolesForEvent:", error);
         throw new TRPCError({
@@ -154,11 +148,8 @@ export const userRolesRouter = router({
         // 4) Return success
         try {
 
-          const rows = await userRolesDB.listAllUserRolesForEvent(itemType, itemId);
-          return {
-            success: true,
-            data: rows,
-          };
+          return await userRolesDB.listAllUserRolesForEvent(itemType, itemId);
+
 
         } catch (error) {
           logger.error("Error in listAllUserRolesForEvent: " , error);

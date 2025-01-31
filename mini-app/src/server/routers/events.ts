@@ -38,6 +38,7 @@ import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
 import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
 import { tgBotModerationMenu } from "@/lib/TgBotTools";
+import { userRolesDB } from "@/server/db/userRoles.db";
 dotenv.config();
 
 function get_paid_event_price(capacity: number) {
@@ -113,9 +114,16 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       }
     : null;
 
+    const accessData = await userRolesDB.listActiveUserRolesForEvent("event", Number(eventData.event_id));
+    const accessRoles = accessData.map(({ userId ,role  }) => ({
+      user_id: userId,
+      role: role,
+    }));
+
+
   // If the event does NOT require registration, just return data
   if (!eventData.has_registration) {
-    return { capacity_filled, registrant_status, organizer, ...eventData, registrant_uuid };
+    return { capacity_filled, registrant_status, organizer,accessRoles, ...eventData, registrant_uuid };
   }
   /* ------------------------ Event Needs Registration ------------------------ */
 
@@ -151,6 +159,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       capacity_filled,
       registrant_status,
       organizer,
+      accessRoles,
       ...eventData,
       registrant_uuid,
       capacity: mask_event_capacity ? 99 : eventData.capacity,
@@ -167,6 +176,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
         capacity_filled,
         registrant_status,
         organizer,
+        accessRoles,
         ...eventData,
         registrant_uuid,
         capacity: mask_event_capacity ? 99 : eventData.capacity,
@@ -179,22 +189,23 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     capacity_filled,
     registrant_status,
     organizer,
+    accessRoles,
     ...eventData,
     registrant_uuid,
     capacity: mask_event_capacity ? 99 : eventData.capacity,
   };
 });
 
-// private
-const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
-  if (opts.ctx.userRole !== "admin" && opts.ctx.userRole !== "organizer") {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: `Unauthorized access, invalid role for ${opts.ctx.user?.user_id}`,
-    });
-  }
-  return await eventDB.getEventsForSpecialRole(opts.ctx.userRole, opts.ctx.user?.user_id);
-});
+// // private
+// const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
+//   if (opts.ctx.userRole !== "admin" && opts.ctx.userRole !== "organizer") {
+//     throw new TRPCError({
+//       code: "UNAUTHORIZED",
+//       message: `Unauthorized access, invalid role for ${opts.ctx.user?.user_id}`,
+//     });
+//   }
+//   return await eventDB.getEventsForSpecialRole(opts.ctx.userRole, opts.ctx.user?.user_id);
+// });
 
 /* -------------------------------------------------------------------------- */
 /*                                  🆕Add Event🆕                            */
@@ -686,7 +697,7 @@ export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(sea
   }
   if (input.filter?.organizer_user_id) {
     const organizer = await usersDB.selectUserById(input.filter.organizer_user_id);
-    if (organizer?.role !== "organizer" && organizer?.role !== "admin") {
+    if (organizer?.role !== "organizer" && organizer?.role !== "admin" && organizer?.CustomAccessRoles?.length === 0 ) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Organizer not found" });
     }
   }
@@ -718,7 +729,7 @@ export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(sea
 /* -------------------------------------------------------------------------- */
 export const eventsRouter = router({
   getEvent,
-  getEvents, // private
+  // getEvents, // private
   addEvent, //private
   updateEvent, //private
   getEventsWithFilters,

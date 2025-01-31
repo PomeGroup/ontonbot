@@ -20,6 +20,7 @@ import { Card } from "konsta/react";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
+import { canUserManageEvent } from "@/lib/userRolesUtils";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -182,10 +183,17 @@ const EventRegistrationStatus = ({
 // Main component
 export const EventSections = () => {
   const router = useRouter();
-  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData  } = useEventData();
   const { user } = useUserStore();
 
-  const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
+  const canManageEvent = canUserManageEvent(user,  {
+    data: {
+      owner: eventData?.data?.owner,
+      accessRoles: eventData?.data?.accessRoles,
+    },
+  }) ;
+
+
   const userCompletedTasks =
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
     user?.wallet_address;
@@ -207,7 +215,7 @@ export const EventSections = () => {
       <EventHead />
       <EventAttributes />
       <EventActions />
-      {isAdminOrOrganizer && <ManageEventButton />}
+      {canManageEvent && <ManageEventButton />}
       <EventDescription />
 
       {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
@@ -275,7 +283,7 @@ export const EventSections = () => {
         />
       )}
 
-      {!isAdminOrOrganizer && !isStarted && isNotEnded && (
+      {!canManageEvent && !isStarted && isNotEnded && (
         <MainButton
           text="Event Not Started Yet"
           disabled
@@ -283,7 +291,7 @@ export const EventSections = () => {
         />
       )}
 
-      {!isAdminOrOrganizer && !isNotEnded && (
+      {!canManageEvent && !isNotEnded && (
         <MainButton
           text="Event Has Ended"
           disabled
