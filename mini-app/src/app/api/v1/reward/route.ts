@@ -68,7 +68,7 @@ export async function POST(request: Request) {
         return Response.json({ message: "Someting is Wrong with Creating reward" }, { status: 500 });
       }
 
-      return Response.json(res);
+      return Response.json(res.data);
     } catch (error) {
       if (error instanceof TRPCError) return handleTrpcError(error);
 
