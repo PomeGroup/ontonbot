@@ -34,10 +34,11 @@ export type userRoleStatus = (typeof userRoleStatusEnum.enumValues)[number];
 // 1) Allowed values at runtime
 export const allowedItemTypes = ["event"] as const;
 export const allowedRoles = ["owner", "admin", "checkin_officer"] as const;
+export const allowedStatus = ["active", "deactivate"] as const;
 // 3) Zod schema
 export const accessRoleItemTypeSchema = z.enum(allowedItemTypes);
 export const accessRoleEnumSchema = z.enum(allowedRoles);
-
+export const userRoleStatusSchema = z.enum(allowedStatus);
 export const userRoles = pgTable(
   "user_roles",
   {

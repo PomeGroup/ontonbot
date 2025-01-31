@@ -40,13 +40,10 @@ export default function ManageIndexPage() {
     return null;
   }
 
-  const castedEventData = {
-    ...eventData,
-    acl: eventData.accessRoles
-  }
 
-  const adminCount = castedEventData.acl.filter(item => item.role === 'admin').length + 1
-  const officerCount = castedEventData.acl.filter(item => item.role === 'checkin_officer').length
+
+  const adminCount = eventData.accessRoles.filter(item => item.role === 'admin').length + 1
+  const officerCount = eventData.accessRoles.filter(item => item.role === 'checkin_officer').length
 
   const canEditEvent = canUserEditEvent({user,owner: eventData?.owner,accessRoles: eventData?.accessRoles}) ;
 
@@ -88,7 +85,6 @@ export default function ManageIndexPage() {
                 setSection("event_setup_form_general_step");
                 router.push(`/events/${eventData.event_uuid}/manage/edit`);
               }}
-
             >
               Edit Event Info
             </Button>

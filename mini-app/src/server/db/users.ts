@@ -405,8 +405,11 @@ export const selectUserByUsername = async (username: string) => {
     // Remove leading '@' if present
     .where(eq(users.username, username.replace(/^@/, "")))
     .execute();
-  await updateEventCountsForUser(userInfo[0].user_id);
+
+
+
   if (userInfo.length > 0) {
+    await updateEventCountsForUser(userInfo[0].user_id);
     return userInfo[0];
   }
 

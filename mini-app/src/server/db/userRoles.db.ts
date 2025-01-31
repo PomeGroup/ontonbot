@@ -4,18 +4,9 @@ import { users } from "@/db/schema/users"; // <--- Import the users table schema
 import { and, eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { redisTools } from "@/lib/redisTools";
+import { ActiveUserRole, UserRolesBulkUpsertInput } from "@/types/ActiveUserRole.types";
+import { usersDB } from "@/server/db/users";
 
-export interface ActiveUserRole {
-  itemId: number;
-  itemType: "event" | "project"; // or string
-  userId: number;
-  username: string | null;
-  role: "owner" | "admin" | "checkin_officer";
-  status: "active" | "deactivate";
-  createdAt: Date;
-  updatedAt: Date;
-  updatedBy: string;
-}
 
 // -------------- CACHE KEYS --------------
 const getAllRolesCacheKey = (itemType: string, itemId: number) =>
@@ -27,7 +18,7 @@ const getActiveRolesCacheKey = (itemType: string, itemId: number) =>
 // Input type for upsert function
 export interface EventUserEntry {
   user_id: number;
-  active: boolean; // if true => status='active', if false => status='reactive'
+  status: "active" | "deactivate";
   role: accessRoleEnumType;
 }
 
@@ -145,7 +136,7 @@ export async function checkHasAnyAccessToItemType(
  *
  * Now includes a JOIN on the `users` table so we can return `username`.
  */
-export async function listAllUserRolesForEvent(itemType: accessRoleItemType, itemId: number): Promise<ActiveUserRole[]> {
+export async function listAllUserRolesForEvent(itemType: accessRoleItemType, itemId: number): Promise<UserRolesBulkUpsertInput[]> {
   const cacheKey = getAllRolesCacheKey(itemType, itemId);
 
   try {
@@ -164,9 +155,9 @@ export async function listAllUserRolesForEvent(itemType: accessRoleItemType, ite
         username: users.username,
         role: userRoles.role,
         status: userRoles.status,
-        createdAt: userRoles.createdAt,
-        updatedAt: userRoles.updatedAt,
-        updatedBy: userRoles.updatedBy,
+        // createdAt: userRoles.createdAt,
+        // updatedAt: userRoles.updatedAt,
+        // updatedBy: userRoles.updatedBy,
       })
       .from(userRoles)
       .leftJoin(users, eq(userRoles.userId, users.user_id)) // Join condition
@@ -236,7 +227,7 @@ export async function bulkUpsertUserRolesForEvent(
     // Run everything in a transaction for atomicity
     await db.transaction(async (tx) => {
       for (const entry of userList) {
-        const { user_id, active, role } = entry;
+        const { user_id, status, role  } = entry;
 
         // Check if a row already exists
         const existing = await tx
@@ -257,7 +248,7 @@ export async function bulkUpsertUserRolesForEvent(
           await tx
             .update(userRoles)
             .set({
-              status: active ? "active" : "deactivate",
+              status: status ,
               updatedAt: new Date(),
               updatedBy,
             })
@@ -272,6 +263,7 @@ export async function bulkUpsertUserRolesForEvent(
             .execute();
         } else {
           // Insert
+
           await tx
             .insert(userRoles)
             .values({
@@ -279,7 +271,7 @@ export async function bulkUpsertUserRolesForEvent(
               itemType,
               userId: user_id,
               role,
-              status: active ? "active" : "deactivate",
+              status: status,
               updatedBy,
               updatedAt: new Date(),
             })

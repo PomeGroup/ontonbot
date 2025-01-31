@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { accessRoleEnumSchema, accessRoleItemTypeSchema } from "@/db/schema/userRoles";
+import { accessRoleEnumSchema, accessRoleItemTypeSchema, userRoleStatusSchema } from "@/db/schema/userRoles";
 
 
 
@@ -13,8 +13,8 @@ export const userRolesBulkUpsertInputSchema = z.object({
   itemId: z.number(),
   userList: z.array(
     z.object({
-      username: z.string().regex(/^@[A-Za-z0-9_]{1,}$/), // must start with @
-      active: z.boolean(),
+      username: z.string().regex(/^[A-Za-z0-9_]{1,}$/), // must start with @
+      status: userRoleStatusSchema,
       role: accessRoleEnumSchema,
     })
   ),

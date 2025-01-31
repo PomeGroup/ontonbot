@@ -1,33 +1,27 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {  userRolesDB } from "@/server/db/userRoles.db";
+import {  EventUserEntry, userRolesDB } from "@/server/db/userRoles.db";
 import { adminOrganizerProtectedProcedure, router } from "../trpc";
 import { logger } from "../utils/logger";
 import { accessRoleEnumType, accessRoleItemTypeSchema } from "@/db/schema/userRoles";
-import { usersDB } from "@/server/db/users";
 import { userRolesBulkUpsertInputSchema } from "@/zodSchema/userRoles";
 import eventDB from "@/server/db/events";
+import { usersDB } from "@/server/db/users";
+import { ActiveUserRole, UserRolesBulkUpsertInput } from "@/types/ActiveUserRole.types";
 
-export interface EventUserEntry {
-  user_id: number;
-  active: boolean;
-  role: accessRoleEnumType;
-}
+
 
 export const userRolesRouter = router({
   /**
    * List ALL user roles (both 'active' and 'reactive') for a given item.
    * itemType can be 'event' (or future types if you extend itemTypeEnum).
    */
-  listAllUserRolesForEvent: adminOrganizerProtectedProcedure
+  listAllUserRolesForEventId: adminOrganizerProtectedProcedure
     .input(
-      z.object({
-        itemType: accessRoleItemTypeSchema,
-        itemId: z.number(),
-      })
+      z.number()
     )
-    .query(async ({ input }) => {
-      const { itemType, itemId } = input;
+    .query(async ({ input }): Promise<UserRolesBulkUpsertInput[]> => {
+      const   itemId  = input;
       const event = await eventDB.getEventById(itemId);
       if(!event) {
         throw new TRPCError({
@@ -37,7 +31,7 @@ export const userRolesRouter = router({
       }
       try {
 
-        return  await userRolesDB.listAllUserRolesForEvent(itemType, itemId);
+        return  await userRolesDB.listAllUserRolesForEvent('event' , itemId);
 
       } catch (error) {
         logger.error("Error in listAllUserRolesForEvent:", error);
@@ -111,21 +105,22 @@ export const userRolesRouter = router({
         // 1) Convert each username to user_id
         const convertedList: EventUserEntry[] = [];
 
-        for (const { username, active, role } of userList) {
+        for (const { username, status , role } of userList) {
           // remove leading '@'
           const usernameStripped = username.replace(/^@/, "");
+          console.log("usernameStripped: ", usernameStripped);
           const dbUser = await usersDB.selectUserByUsername(usernameStripped);
+          console.log("dbUser: ", dbUser);
+          if (dbUser === null) {
 
-          if (!dbUser) {
             // user not exist => throw error
             throw new TRPCError({
               code: "CONFLICT",
-              message: `The username '${username}' does not exist in our DB. 
-                You must ask them to join or start the bot & open our mini-app.`,
+              message: `@'${username}' is not a user of Onton.`,
             });
           }
 
-          convertedList.push({ user_id: dbUser.user_id, active, role });
+          convertedList.push({ user_id: dbUser.user_id, status, role });
         }
 
         // 2) Bulk upsert via DB module
