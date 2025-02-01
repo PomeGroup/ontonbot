@@ -41,17 +41,26 @@ const checkinRegistrantRequest = evntManagerPP
     ).pop();
 
     if (!registrant) {
-      throw new TRPCError({ code: "NOT_FOUND", message: `Registrant Not Found/Invalid for ${event_uuid} and registrant_uuid ${registrant_uuid}` });
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `Registrant Not Found/Invalid for ${event_uuid} and registrant_uuid ${registrant_uuid}`,
+      });
     }
     if (registrant.event_uuid !== event_uuid) {
-      throw new TRPCError({ code: "CONFLICT", message: `Registrant Not for this event ${event_uuid} and registrant_uuid ${registrant_uuid}` });
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: `Registrant Not for this event ${event_uuid} and registrant_uuid ${registrant_uuid}`,
+      });
     }
 
     if (registrant.status === "checkedin") {
       return { code: 200, message: "Already Checked-in" };
     }
     if (registrant.status !== "approved") {
-      throw new TRPCError({ code: "CONFLICT", message: `Registrant Not Approved for this event ${event_uuid} and registrant_uuid ${registrant_uuid}` });
+      throw new TRPCError({
+        code: "CONFLICT",
+        message: `Registrant Not Approved for this event ${event_uuid} and registrant_uuid ${registrant_uuid}`,
+      });
     }
 
     await rewardService.createUserReward(
@@ -205,9 +214,9 @@ const getEventRegistrants = evntManagerPP
 
     const condition = event.has_payment
       ? and(
-        or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
-        eq(eventRegistrants.event_uuid, event_uuid)
-      )
+          or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
+          eq(eventRegistrants.event_uuid, event_uuid)
+        )
       : eq(eventRegistrants.event_uuid, event_uuid);
 
     const registrants = await db
@@ -232,7 +241,7 @@ const getEventRegistrants = evntManagerPP
     return registrants;
   });
 
-export const  registrantRouter = router({
+export const registrantRouter = router({
   checkinRegistrantRequest,
   processRegistrantRequest,
   eventRegister,

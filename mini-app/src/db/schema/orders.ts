@@ -1,8 +1,17 @@
-import { bigint, index, pgTable, text, timestamp, uuid, real } from "drizzle-orm/pg-core";
-import { orderState, orderTypes, paymentTypes } from "@/db/schema";
+import { bigint, index, pgTable, text, timestamp, uuid, real, pgEnum } from "drizzle-orm/pg-core";
+import { orderState, paymentTypes } from "@/db/schema";
 import { events } from "@/db/schema/events";
 import { users } from "@/db/schema/users";
 import { relations } from "drizzle-orm";
+
+export const orderTypes = pgEnum("order_types", [
+  "nft_mint",
+  "event_creation",
+  "event_capacity_increment",
+  "promote_to_organizer",
+  "ts_csbt_ticket",
+]);
+
 export const orders = pgTable(
   "orders",
   {

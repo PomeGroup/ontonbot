@@ -38,6 +38,8 @@ import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
 import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
 import { tgBotModerationMenu } from "@/lib/TgBotTools";
+import { userRolesDB } from "@/server/db/userRoles.db";
+
 dotenv.config();
 
 function get_paid_event_price(capacity: number) {
@@ -113,9 +115,15 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       }
     : null;
 
+  const accessData = await userRolesDB.listActiveUserRolesForEvent("event", Number(eventData.event_id));
+  const accessRoles = accessData.map(({ userId, role }) => ({
+    user_id: userId,
+    role: role,
+  }));
+
   // If the event does NOT require registration, just return data
   if (!eventData.has_registration) {
-    return { capacity_filled, registrant_status, organizer, ...eventData, registrant_uuid };
+    return { capacity_filled, registrant_status, organizer, accessRoles, ...eventData, registrant_uuid };
   }
   /* ------------------------ Event Needs Registration ------------------------ */
 
@@ -123,7 +131,6 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
 
   const userIsAdminOrOwner = eventData.owner == userId || userRole == "admin";
   let mask_event_capacity = !userIsAdminOrOwner;
-
 
   if (userIsAdminOrOwner) {
     //event payment info
@@ -151,6 +158,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       capacity_filled,
       registrant_status,
       organizer,
+      accessRoles,
       ...eventData,
       registrant_uuid,
       capacity: mask_event_capacity ? 99 : eventData.capacity,
@@ -167,6 +175,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
         capacity_filled,
         registrant_status,
         organizer,
+        accessRoles,
         ...eventData,
         registrant_uuid,
         capacity: mask_event_capacity ? 99 : eventData.capacity,
@@ -179,22 +188,23 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     capacity_filled,
     registrant_status,
     organizer,
+    accessRoles,
     ...eventData,
     registrant_uuid,
     capacity: mask_event_capacity ? 99 : eventData.capacity,
   };
 });
 
-// private
-const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
-  if (opts.ctx.userRole !== "admin" && opts.ctx.userRole !== "organizer") {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: `Unauthorized access, invalid role for ${opts.ctx.user?.user_id}`,
-    });
-  }
-  return await eventDB.getEventsForSpecialRole(opts.ctx.userRole, opts.ctx.user?.user_id);
-});
+// // private
+// const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
+//   if (opts.ctx.userRole !== "admin" && opts.ctx.userRole !== "organizer") {
+//     throw new TRPCError({
+//       code: "UNAUTHORIZED",
+//       message: `Unauthorized access, invalid role for ${opts.ctx.user?.user_id}`,
+//     });
+//   }
+//   return await eventDB.getEventsForSpecialRole(opts.ctx.userRole, opts.ctx.user?.user_id);
+// });
 
 /* -------------------------------------------------------------------------- */
 /*                                  🆕Add Event🆕                            */
@@ -306,7 +316,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           recipient_address: input_event_data.paid_event.payment_recipient_address,
           bought_capacity: input_event_data.capacity,
           /* -------------------------------------------------------------------------- */
-          ticket_type: input_event_data.paid_event.has_nft ? "NFT" : "OFFCHAIN",
+          ticket_type: "NFT",
           ticketImage: input_event_data.paid_event.nft_image_url,
           title: input_event_data.paid_event.nft_title,
           description: input_event_data.paid_event.nft_description,
@@ -355,7 +365,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           message: logMessage,
           topic: "event",
         });
-      } else if(!is_paid) {
+      } else if (!is_paid) {
         /* --------------------------- Moderation Message --------------------------- */
         const moderation_group_id = configProtected?.moderation_group_id;
         const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
@@ -397,7 +407,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       eventHash: result[0].event_uuid,
     } as const;
   } catch (error) {
-    logger.error(`error_while_adding_event` , error);
+    logger.error(`error_while_adding_event`, error);
     if (error instanceof TRPCError) {
       throw error;
     }
@@ -444,7 +454,11 @@ const updateEvent = eventManagerPP
         if (oldEvent.has_payment) {
           /* -------------------------------------------------------------------------- */
           //can't have capacity null if it's paid event
-          if (!eventData.capacity) throw new TRPCError({ code: "BAD_REQUEST", message: "Paid Events Must have capacity" });
+          if (!eventData.capacity)
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Paid Events Must have capacity",
+            });
           /* -------------------------------------------------------------------------- */
           const paymentInfo = (
             await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
@@ -686,7 +700,7 @@ export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(sea
   }
   if (input.filter?.organizer_user_id) {
     const organizer = await usersDB.selectUserById(input.filter.organizer_user_id);
-    if (organizer?.role !== "organizer" && organizer?.role !== "admin") {
+    if (organizer?.role !== "organizer" && organizer?.role !== "admin" && organizer?.CustomAccessRoles?.length === 0) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Organizer not found" });
     }
   }
@@ -718,7 +732,7 @@ export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(sea
 /* -------------------------------------------------------------------------- */
 export const eventsRouter = router({
   getEvent,
-  getEvents, // private
+  // getEvents, // private
   addEvent, //private
   updateEvent, //private
   getEventsWithFilters,

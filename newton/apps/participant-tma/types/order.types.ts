@@ -1,4 +1,4 @@
-export type OrderType = "nft_mint" | "offchain_ticket" | "event_creation" | "event_capacity_increment";
+export type OrderType = "nft_mint" | "event_creation" | "event_capacity_increment";
 export type PaymentType = "TON" | "USDT";
 export type OrderState = "completed" | "new" | "confirming" | "processing" | "cancelled" | "failed";
 

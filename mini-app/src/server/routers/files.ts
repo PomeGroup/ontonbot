@@ -2,7 +2,7 @@ import axios from "axios";
 import sizeOf from "image-size";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { adminOrganizerProtectedProcedure, router } from "../trpc";
+import { adminOrganizerCoOrganizerProtectedProcedure, adminOrganizerProtectedProcedure, router } from "../trpc";
 import { validateMimeType } from "@/lib/validateMimeType";
 import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
 import FormData from "form-data";
@@ -17,7 +17,7 @@ const API_BASE_URL = (process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:
 const JWT_SECRET = process.env.ONTON_API_SECRET ?? "fallback-secret";
 
 export const fieldsRouter = router({
-  uploadImage: adminOrganizerProtectedProcedure
+  uploadImage: adminOrganizerCoOrganizerProtectedProcedure
     .input(
       z.object({
         image: z

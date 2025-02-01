@@ -26,9 +26,9 @@ export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!useTonAddress();
   const { setSection } = useSectionStore();
-
-  const paid = user?.role === "organizer" || user?.role === "admin";
+  const paid = user?.role === "organizer" || user?.role === "admin" ;
   const router = useRouter();
+  if(!user) return null;
 
   return (
     <div className="bg-[#EFEFF4] py-4 min-h-screen mb-[calc(-1*var(--tg-safe-area-inset-bottom))]">
