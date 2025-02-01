@@ -245,7 +245,7 @@ async function startBot() {
         if (action === "approve") {
           const confirmKb = new InlineKeyboard()
             .text("✅ Yes, Approve", `yesApprove_${eventUuid}`)
-            .text("❌ No", `noApprove_${eventUuid}`);
+            .text("🔙 Back", `noApprove_${eventUuid}`);
           await ctx.editMessageCaption({
             caption: originalCaption + "\n\nAre you sure to approve?",
             parse_mode: "HTML",
@@ -389,8 +389,8 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         if (action.startsWith("reject") && action !== "rejectCustom" && action !== "cancelCustom") {
           const reasonKey = action.replace("reject", "");
           const confirmKb = new InlineKeyboard()
-            .text("✅ Yes, Reject", `yesReject_${reasonKey}_${eventUuid}`)
-            .text("❌ No", `noReject_${eventUuid}`);
+            .text("❌ Yes, Reject", `yesReject_${reasonKey}_${eventUuid}`)
+            .text("🔙 Back", `noReject_${eventUuid}`);
           await ctx.editMessageCaption({
             caption:
               originalCaption + `\n\nAre you sure you want to reject with reason: <b>${parseRejectReason(reasonKey)}</b>?`,
@@ -417,7 +417,11 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           const newCap =
             originalCaption + "\n\nStatus : ❌ Rejected By " + user_details + `\nReason: ${parseRejectReason(reasonKey)}`;
 
-          const repMarkup = new InlineKeyboard().text("✅ Approve Rejected Event", `approve_${evId}`);
+          const repMarkup = new InlineKeyboard()
+            .text("✅ Approve Rejected Event", `approve_${evId}`)
+            .row()
+            .text("🔃 Update Data", `updateEventData_${eventUuid}`);
+
           await ctx.editMessageCaption({
             caption: newCap,
             parse_mode: "HTML",

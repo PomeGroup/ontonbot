@@ -13,6 +13,7 @@ import {
 	handleShareOrganizer,
 } from "./controllers";
 import {
+	bannerHandler,
 	cmdHandler,
 	orgHandler,
 	startHandler,
@@ -69,6 +70,7 @@ import { RATE_LIMIT_OPTIONS } from "./constants";
 		bot.command("update_profiles", updateAdminOrganizerProfilesHandler);
 		bot.command("org", orgHandler);
 		bot.command("cmd", cmdHandler);
+		bot.command("banner", bannerHandler);
 		bot.command("start", startHandler);
 		bot.use(mainComposer);
 

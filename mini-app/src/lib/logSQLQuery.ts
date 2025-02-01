@@ -1,3 +1,4 @@
+import { is_dev_env, is_prod_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
 
 type SQLParams = unknown[];
@@ -17,6 +18,5 @@ export const logSQLQuery = (sql: string, params: SQLParams): void => {
 
     return String(param);
   });
-   logger.log("Sql_Query___ : ",fullQuery);
-  
+  if (!is_prod_env) logger.log("Sql_Query___ : ", fullQuery);
 };

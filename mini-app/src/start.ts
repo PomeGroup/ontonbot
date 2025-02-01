@@ -9,7 +9,7 @@ import telegramService from "@/server/routers/services/telegramService";
 import { RewardType } from "@/types/event.types";
 import { CronJob } from "cron";
 import "dotenv/config";
-import { and, asc, eq, isNotNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull, lt, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
 import { rounder, sleep } from "./utils";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
@@ -728,9 +728,9 @@ async function sendPaymentReminder() {
 
     const total_amount_of_nft = await db
       .select({
-        nft_count: sql`COUNT(${nftItems.id})`, // Calculates the sum of total_price
+        nft_count: count(), // Calculates the sum of total_price
       })
-      .from(orders)
+      .from(nftItems)
       .where(eq(nftItems.event_uuid, event.events.event_uuid))
       .execute();
 

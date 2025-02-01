@@ -10,3 +10,5 @@ full build
 full build test before production
 full build channels
 full build haminjoori
+full build after registery clear
+full build

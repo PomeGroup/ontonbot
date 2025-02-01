@@ -39,15 +39,15 @@ export const EventDataContext = createContext<{
         order_place: number | null;
       }
     | undefined;
-    organizer?: {
-        org_channel_name: string | null,
-        org_support_telegram_user_name: string | null,
-        org_x_link: string | null,
-        org_bio: string | null,
-        org_image: string | null,
-        hosted_event_count: number | null,
-      }
-     ;
+  organizer?: {
+    org_channel_name: string | null;
+    org_support_telegram_user_name: string | null;
+    org_x_link: string | null;
+    org_bio: string | null;
+    org_image: string | null;
+    hosted_event_count: number | null;
+  };
+  accessRoles: Array<{ user_id: number; role: string }> | undefined;
 } | null>(null);
 
 /**

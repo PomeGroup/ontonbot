@@ -1,11 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { MinimalOrganizerData, usersDB } from "@/server/db/users";
+import {  usersDB } from "@/server/db/users";
 import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
 import { logger } from "../utils/logger";
 import { organizersHostedInput, orgFieldsSchema, searchOrganizersInput } from "@/zodSchema/OrganizerDataSchema";
 import { config } from "../config";
-import eventDB, { getOrganizerHosted } from "@/server/db/events";
+import eventDB from "@/server/db/events";
+import { MinimalOrganizerData } from "@/types/extendedUserTypes";
 
 export const organizerRouter = router({
   updateOrganizer: initDataProtectedProcedure.input(orgFieldsSchema).mutation(async (opts) => {

@@ -320,6 +320,9 @@ const RegistrationGuestList = () => {
 
   const processRegistrantRequest = trpc.registrant.processRegistrantRequest.useMutation();
 
+  /*
+   * Check if the event has payment enabled
+   */
   const hasPayment = eventData.data?.has_payment || false;
 
   const exportVisitorList = trpc.telegramInteractions.requestExportFile.useMutation({
@@ -468,7 +471,7 @@ const RegistrationGuestList = () => {
           ) : (
             <DataStatus
               status="danger"
-              title="Something Went Wrong"
+              title="Something Went Wrong with Registrant"
               description={"There was a problem try refreshing the page"}
             />
           ))}

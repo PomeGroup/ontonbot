@@ -18,10 +18,9 @@ import { useRouter } from "next/navigation";
 import SupportButton from "../atoms/buttons/SupportButton";
 import { Card } from "konsta/react";
 import Typography from "@/components/Typography";
-import Image from "next/image";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
-import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import LoadableImage from "@/components/LoadableImage";
+import { canUserManageEvent } from "@/lib/userRolesUtils";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -98,15 +97,20 @@ EventDescription.displayName = "EventDescription";
 const EventHead = React.memo(() => {
   const { eventHash, eventData } = useEventData();
 
+  const isNotPublished = !eventData.data?.activity_id || !!eventData.data?.hidden;
+
   return (
     <div className="flex items-start justify-between">
       <div>
-        <div className="text-[24px] leading-[28px] font-bold break-all mb-4">
-          {eventData.data?.title ?? ""}
-        </div>
+        {isNotPublished && <div className="mb-2 text-red-500 text-lg font-semibold">! Event is not published</div>}
+        <div className="text-[24px] leading-[28px] font-bold break-all mb-4">{eventData.data?.title ?? ""}</div>
         <EventSubtitle />
       </div>
-      <ShareEventButton event_uuid={eventHash} />
+      <ShareEventButton
+        event_uuid={eventHash}
+        activity_id={eventData.data?.activity_id}
+        hidden={eventData.data?.hidden}
+      />
     </div>
   );
 });
@@ -184,10 +188,17 @@ const EventRegistrationStatus = ({
 // Main component
 export const EventSections = () => {
   const router = useRouter();
-  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData  } = useEventData();
   const { user } = useUserStore();
 
-  const isAdminOrOrganizer = user?.role === "admin" || user?.user_id === eventData.data?.owner;
+  const canManageEvent = canUserManageEvent(user,  {
+    data: {
+      owner: eventData?.data?.owner,
+      accessRoles: eventData?.data?.accessRoles,
+    },
+  }) ;
+
+
   const userCompletedTasks =
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
     user?.wallet_address;
@@ -209,7 +220,7 @@ export const EventSections = () => {
       <EventHead />
       <EventAttributes />
       <EventActions />
-      {isAdminOrOrganizer && <ManageEventButton />}
+      {canManageEvent && <ManageEventButton />}
       <EventDescription />
 
       {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
@@ -231,7 +242,8 @@ export const EventSections = () => {
         <Card
           margin="mx-0"
           contentWrap={false}
-          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}>
+          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
+        >
           <Typography
             variant="title3"
             className="font-bold mb-2"
@@ -277,7 +289,7 @@ export const EventSections = () => {
         />
       )}
 
-      {!isAdminOrOrganizer && !isStarted && isNotEnded && (
+      {!canManageEvent && !isStarted && isNotEnded && (
         <MainButton
           text="Event Not Started Yet"
           disabled
@@ -285,7 +297,7 @@ export const EventSections = () => {
         />
       )}
 
-      {!isAdminOrOrganizer && !isNotEnded && (
+      {!canManageEvent && !isNotEnded && (
         <MainButton
           text="Event Has Ended"
           disabled

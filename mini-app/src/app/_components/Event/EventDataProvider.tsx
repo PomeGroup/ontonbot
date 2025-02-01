@@ -90,6 +90,7 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
         isLocationUrl,
         eventPasswordField,
         userEventPasswordField,
+        accessRoles: eventData.data?.accessRoles,
       }}
     >
       {children}

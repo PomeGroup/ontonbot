@@ -6,7 +6,15 @@ import { cn, wait } from "@/lib/utils";
 import { LoaderIcon } from "lucide-react";
 import { PiShareFatBold } from "react-icons/pi";
 
-const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
+const ShareEventButton = ({
+  event_uuid,
+  activity_id,
+  hidden,
+}: {
+  event_uuid: string;
+  activity_id: number | null | undefined;
+  hidden: boolean | null | undefined;
+}) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
   const hapticFeedback = WebApp?.HapticFeedback;
@@ -15,11 +23,8 @@ const ShareEventButton = ({ event_uuid }: { event_uuid: string }) => {
 
   return (
     <button
-      className={cn(
-        "rounded-full bg-blue-100 p-2",
-        shareEventMutation.isLoading && Boolean(initData) && "opacity-50"
-      )}
-      disabled={!initData || shareEventMutation.isLoading}
+      className={cn("rounded-full bg-blue-100 p-2 disabled:bg-gray-300 disabled:cursor-not-allowed", shareEventMutation.isLoading && Boolean(initData) && "opacity-50")}
+      disabled={!initData || shareEventMutation.isLoading || !activity_id || !!hidden}
       onClick={async () => {
         if (!initData) return;
 

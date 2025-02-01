@@ -2,8 +2,6 @@ import {
   developmentEnvironment,
   eventParticipationType,
   orderState,
-  orderTypes,
-  ticketTypes,
   paymentTypes,
   rewardStatus,
   rewardType,
@@ -24,14 +22,14 @@ import {
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
-import { eventPayment, organizerPaymentStatus } from "./schema/eventPayment";
+import { eventPayment, organizerPaymentStatus, ticketTypes } from "./schema/eventPayment";
 import { event_details_search_list } from "./schema/event_details_search_list";
 import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers";
 import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults";
 import { events } from "./schema/events";
 import { giataCity } from "./schema/giataCity";
 import { ontoSetting } from "./schema/ontoSetting";
-import { orders } from "./schema/orders";
+import { orders, orderTypes } from "./schema/orders";
 import { notifications } from "./schema/notifications";
 import { rewards } from "./schema/rewards";
 import { sbtRewardCollections } from "./schema/sbtRewardCollections";
@@ -44,9 +42,21 @@ import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 import { walletChecks } from "./schema/walletChecks";
 import { nftItems } from "./schema/nft_items";
-import { coupon_definition, coupon_definition_status, coupon_definition_type } from "./schema/coupon_definition";
+import {
+  coupon_definition,
+  coupon_definition_status,
+  coupon_definition_type,
+} from "./schema/coupon_definition";
 import { coupon_item_status, coupon_items } from "./schema/coupon_items";
 import { user_custom_flags, user_flags } from "./schema/user_custom_flags";
+
+// ---- NEW IMPORTS for user_roles ----
+import {
+  accessRoleItemType,
+  accessRoleEnum,
+  userRoles,
+  userRolesRelations, accessRoleItemTypeEnum,accessRoleEnumType
+} from "./schema/userRoles";
 
 // export all the enums
 export {
@@ -69,6 +79,8 @@ export {
   coupon_definition_status,
   coupon_item_status,
   user_flags,
+
+  accessRoleEnum,
 };
 
 // export all the tables and relations
@@ -107,6 +119,10 @@ export {
   coupon_definition,
   coupon_items,
   user_custom_flags,
+
+  // --- Export the new userRoles table & relations
+  userRoles,
+  userRolesRelations,
 };
 
 // Type Exports
@@ -116,3 +132,5 @@ export type { NotificationStatus };
 export type { NotificationType };
 export type { NotificationItemType };
 export type { EventPoaResultStatus };
+export type { accessRoleItemType };
+export type { accessRoleEnumType };

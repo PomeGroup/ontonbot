@@ -7,6 +7,7 @@ import {
   events,
   rewards,
   tickets,
+  userRoles,
   users,
   visitors,
 } from "@/db/schema";
@@ -21,7 +22,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logSQLQuery } from "@/lib/logSQLQuery";
 import { logger } from "../utils/logger";
-import { gte } from "lodash";
+
 
 export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) => {
   const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData);
@@ -205,13 +206,30 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     })
     .from(eventRegistrants)
     .where(eq(eventRegistrants.user_id, userId));
+  // const userRolesQuery = db
+  //   .select({
+  //     event_uuid: events.event_uuid,         // from events
+  //     user_id: userRoles.userId,            // from userRoles
+  //     role: userRoles.role,                 // e.g. 'owner', 'admin', 'checkin_officer'
+  //     created_at: userRoles.createdAt,      // or userRoles.created_at if you have that column
+  //     owner: events.owner,                  // from events
+  //   })
+  //   .from(userRoles)
+  //   .innerJoin(events, eq(userRoles.itemId, events.event_id))
+  //   .where(
+  //     and(
+  //       eq(userRoles.userId, userId),
+  //       eq(userRoles.itemType, "event"),
+  //       eq(userRoles.status, "active"),
+  //     )
+  //   );
 
   // 3) Combine queries with unionAll
   //    Drizzle’s unionAll can combine multiple queries of the same shape
   //    (same selected columns & data types).
   //    We then .orderBy, .limit, .offset on the unioned result.
   // @ts-ignore (if needed, depending on your version/typing)
-  const combinedResultsQuery = unionAll(rewardQuery, ticketsQuery, registrantQuery)
+  const combinedResultsQuery = unionAll(rewardQuery, ticketsQuery, registrantQuery , userRolesQuery)
     .orderBy((row) => row.created_at)
     .limit(limit)
     .offset(offset);
@@ -219,6 +237,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
   // Execute the combined query and return the results
   return await combinedResultsQuery.execute();
 };
+
 export const getOrganizerEvents = async (
   organizerId: number,
   limit?: number, // Optional limit
@@ -277,11 +296,11 @@ export const getEventsWithFilters = async (
   const hash = crypto.createHash("md5").update(stringToHash).digest("hex");
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
   const cachedResult = await redisTools.getCache(cacheKey);
-  // if (cachedResult && useCache) {
-  //   /// show return from cache and time
-  //   //logger.log("👙👙 cachedResult 👙👙" + Date.now());
-  //   return cachedResult;
-  // }
+  if (cachedResult && useCache) {
+    /// show return from cache and time
+    //logger.log("👙👙 cachedResult 👙👙" + Date.now());
+    return cachedResult;
+  }
 
   let query = db.select().from(event_details_search_list);
   let userEventUuids = [];
@@ -440,7 +459,7 @@ export const getEventsWithFilters = async (
     query = query.limit(limit).offset(cursor * (limit - 1));
   }
 
-  logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
 
   await redisTools.setCache(cacheKey, eventsData, redisTools.cacheLvl.guard);
