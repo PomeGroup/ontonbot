@@ -9,7 +9,7 @@ import telegramService from "@/server/routers/services/telegramService";
 import { RewardType } from "@/types/event.types";
 import { CronJob } from "cron";
 import "dotenv/config";
-import { and, asc, count, eq, isNotNull, lt, or, sql } from "drizzle-orm";
+import { desc, and, asc, count, eq, isNotNull, lt, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
 import { rounder, sleep } from "./utils";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
@@ -24,6 +24,8 @@ import { config } from "./server/config";
 import { selectUserById } from "./server/db/users";
 import { logger } from "./server/utils/logger";
 import { orgPromoteProcessOrder } from "./server/routers/services/orgPromoteOrderService";
+import { selectEventByUuid } from "./server/db/events";
+import { createUserReward } from "./server/routers/services/rewardsService";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -68,7 +70,7 @@ function cronJob(fn: (_: () => any) => any) {
     const cronLock = await redisTools.getCache(redisTools.cacheKeys.cronJobLock + name);
 
     if (cronLock) {
-      logger.log(`Cron job ${name} is already running`);
+      // logger.log(`Cron job ${name} is already running`);
       return;
     }
 
@@ -109,7 +111,7 @@ async function createRewards(pushLockTTl: () => any) {
   do {
     pendingRewards = await db.query.rewards.findMany({
       where: (fields, { eq }) => eq(fields.status, "pending_creation"),
-      limit: 500,
+      limit: 250,
       offset,
       orderBy: [asc(rewards.created_at)],
     });
@@ -138,6 +140,7 @@ async function processRewardChunk(pendingRewards: RewardType[]) {
       await sleep(100);
       await rewardDB.updateReward(pendingReward.id, response.data.data);
     } catch (error) {
+      console.log(pendingReward.id, "failed");
       await handleRewardError(pendingReward, error);
     }
   }
@@ -376,48 +379,56 @@ async function CreateEventOrders(pushLockTTl: () => any) {
       }
 
       /* -------------------------------------------------------------------------- */
+      /*                          Create Ton Society Event                          */
+      /* -------------------------------------------------------------------------- */
+      let ton_society_result = undefined;
+      if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
+
+      /* -------------------------------------------------------------------------- */
       /*                              Create Collection                             */
       /* -------------------------------------------------------------------------- */
       let collectionAddress = paymentInfo?.collectionAddress || null;
       let collection_address_in_db = true;
       if (paymentInfo && !paymentInfo?.collectionAddress) {
         /* -------------------------------------------------------------------------- */
-        /* ----------------------------- MetaData Upload ---------------------------- */
-        let metaDataUrl = "";
-        metaDataUrl = await uploadJsonToMinio(
-          {
-            name: paymentInfo?.title,
-            description: paymentInfo?.description,
-            image: paymentInfo?.ticketImage,
-            cover_image: paymentInfo?.ticketImage,
-          },
-          "ontoncollection"
-        );
-        if (!metaDataUrl) continue; //failed
+        /*                               NFT COLLECTION                               */
+        /* -------------------------------------------------------------------------- */
+        if (paymentInfo.ticket_type === "NFT") {
+          /* -------------------------------------------------------------------------- */
+          /* ----------------------------- MetaData Upload ---------------------------- */
+          let metaDataUrl = "";
+          metaDataUrl = await uploadJsonToMinio(
+            {
+              name: paymentInfo?.title,
+              description: paymentInfo?.description,
+              image: paymentInfo?.ticketImage,
+              cover_image: paymentInfo?.ticketImage,
+            },
+            "ontoncollection"
+          );
+          if (!metaDataUrl) continue; //failed
 
-        logger.log("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
+          logger.log("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
 
-        /* ---------------------------- Collection Deploy --------------------------- */
-        logger.log(`paid_event_deploy_collection_${eventData.event_uuid}`);
-        collection_address_in_db = false;
-        collectionAddress = await deployCollection(metaDataUrl);
-        logger.log(`paid_event_deployed_collection_${eventData.event_uuid}_${collectionAddress}`);
-        try {
-          const prefix = is_mainnet ? "" : "testnet.";
-          await sendLogNotification({
-            message: `Deployed collection for <b>${eventData.title}</b>\n\n🎈<a href='https://${prefix}getgems.io/collection/${collectionAddress}'>Collection</a>\n\n👤Capacity: ${eventData.capacity}`,
-            topic: "event",
-          });
-        } catch (error) {
-          logger.log(`paid_event_deployed_collection_send_error_${event_uuid}_${error}`);
+          /* ---------------------------- Collection Deploy --------------------------- */
+          logger.log(`paid_event_deploy_collection_${eventData.event_uuid}`);
+          collection_address_in_db = false;
+          collectionAddress = await deployCollection(metaDataUrl);
+          logger.log(`paid_event_deployed_collection_${eventData.event_uuid}_${collectionAddress}`);
+          try {
+            const prefix = is_mainnet ? "" : "testnet.";
+            await sendLogNotification({
+              message: `Deployed collection for <b>${eventData.title}</b>\n\n🎈<a href='https://${prefix}getgems.io/collection/${collectionAddress}'>Collection</a>\n\n👤Capacity: ${eventData.capacity}`,
+              topic: "event",
+            });
+          } catch (error) {
+            logger.log(`paid_event_deployed_collection_send_error_${event_uuid}_${error}`);
+          }
+        } else if (paymentInfo.ticket_type === "TSCSBT") {
+          //No Collection Deploy
+          collectionAddress = "tsCsbt-collection-address";
         }
       }
-
-      /* -------------------------------------------------------------------------- */
-      /*                          Create Ton Society Event                          */
-      /* -------------------------------------------------------------------------- */
-      let ton_society_result = undefined;
-      if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
 
       /* -------------------------------------------------------------------------- */
       /*                                  Update DB                                 */
@@ -674,6 +685,124 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 }
 
 /* -------------------------------------------------------------------------- */
+/*                                 TS CSBT Ticket                             */
+/* -------------------------------------------------------------------------- */
+async function TsCsbtTicket_Order(pushLockTTl: () => any) {
+  // Get Orders to be Minted
+  // Mint NFT
+  // Update (DB) Successful Minted Orders as Minted
+  // logger.log("&&&& MintNFT &&&&");
+  const results = await db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "ts_csbt_ticket"), isNotNull(orders.event_uuid)))
+    .orderBy(asc(orders.created_at))
+    .limit(500)
+    .execute();
+
+  /* -------------------------------------------------------------------------- */
+  /*                               ORDER PROCCESS                               */
+  /* -------------------------------------------------------------------------- */
+  for (const ordr of results) {
+    await pushLockTTl();
+    try {
+      const event_uuid = ordr.event_uuid;
+
+      if (!ordr.owner_address) {
+        //NOTE -  tg error
+        logger.error("error_wtf : no owner address", "order_id=", ordr.uuid);
+        continue;
+      }
+      try {
+        Address.parse(ordr.owner_address);
+      } catch {
+        //NOTE - tg error
+        logger.error("error_uparsable address : ", ordr.owner_address, "order_id=", ordr.uuid);
+        continue;
+      }
+
+      const paymentInfo = (
+        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid!)).execute()
+      ).pop();
+
+      if (!paymentInfo) {
+        logger.error("error_what the fuck : ", "event Does not have payment !!!", event_uuid);
+        continue;
+      }
+
+      if (!paymentInfo.collectionAddress) {
+        logger.error("no_colleciton_address", event_uuid);
+        continue;
+      }
+      // const eventData = await  selectEventByUuid(event_uuid!);
+
+      try {
+        const result = await createUserReward(
+          {
+            user_id: ordr.user_id!,
+            event_uuid: event_uuid!,
+          },
+          true
+        );
+      } catch (error) {
+        continue;
+      }
+
+      await db.transaction(async (trx) => {
+        await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
+        logger.log(`nft_mint_order_completed_${ordr.uuid}`);
+
+        if (ordr.user_id) {
+          // if ordr.user_id === null order is manual mint(Gift)
+          await trx
+            .update(eventRegistrants)
+            .set({ status: "approved" })
+            .where(
+              and(
+                eq(eventRegistrants.event_uuid, ordr.event_uuid!),
+                eq(eventRegistrants.user_id, ordr.user_id),
+                or(eq(eventRegistrants.status, "pending"), eq(eventRegistrants.status, "rejected"))
+              )
+            )
+            .execute();
+
+          logger.log(`nft_mint_user_approved_${ordr.user_id}`);
+        }
+      });
+
+      try {
+        const prefix = is_mainnet ? "" : "testnet.";
+        let username = "GIFT-USER";
+        if (ordr.user_id) username = (await selectUserById(ordr.user_id!))?.username || username;
+
+        const [{ order_count }] = await db
+          .select({ order_count: count() })
+          .from(orders)
+          .where(
+            and(eq(orders.event_uuid, event_uuid!), eq(orders.order_type, "ts_csbt_ticket"), eq(orders.state, "completed"))
+          );
+        await sendLogNotification({
+          message: `CSBT Ticket ${order_count}
+<b>${paymentInfo.title}</b>
+👤user_id : <code>${ordr.user_id}</code>
+👤username : @${username}
+
+          `,
+          topic: "ticket",
+        });
+        /* -------------------------------------------------------------------------- */
+      } catch (error) {
+        logger.error("MintNFTforPaid_Orders-sendLogNotification-error--:", error);
+      }
+
+      // await pushLockTTl();
+    } catch (error) {
+      logger.log(`nft_mint_error , ${error}`);
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /*                        Payment to Organizer Reminder                       */
 /* -------------------------------------------------------------------------- */
 async function sendPaymentReminder() {
@@ -738,7 +867,7 @@ async function sendPaymentReminder() {
 
     const nft_count: number = Number(total_amount_of_nft.pop()?.nft_count);
     const unused_capacity = bought_capacity - (nft_count || 0);
-    const unused_refund = unused_capacity * (0.06 * 0.90);
+    const unused_refund = unused_capacity * (0.06 * 0.9);
 
     const message_result = await sendLogNotification({
       message: `💵💵 Payment For Event
@@ -783,7 +912,7 @@ async function OrganizerPromoteProcessing() {
     .execute();
 
   for (const porg_ordr of org_orders) {
-    logger.log('OrganizerPromoteProcessing order_uuid : ',porg_ordr.uuid)
+    logger.log("OrganizerPromoteProcessing order_uuid : ", porg_ordr.uuid);
     orgPromoteProcessOrder(porg_ordr);
     await sleep(50);
   }

@@ -1846,3 +1846,85 @@ export interface TSAPIoperations {
 }
 
 export type TONSOcietyAPISchemaT = components["schemas"];
+
+
+export type findActivityResponseType = {
+  data: {
+    additional_info: string;
+    description: string;
+    end_date: string;
+    join_button: {
+      link: string;
+      title: string;
+    };
+    link: string;
+    public_path: string;
+    publishedAt: string;
+    rewards: {
+      collection: {
+        cover: {
+          url: string;
+        };
+        description: string;
+        image: {
+          url: string;
+        };
+        item_description: string;
+        item_image: {
+          url: string;
+        };
+        item_metadata: {
+          activity_type: string;
+          attributes: {
+            trait_type: string;
+            value: string;
+          }[];
+          buttons: {
+            label: string;
+            uri: string;
+          }[];
+          content_type: string;
+          content_url: string;
+          description: string;
+          end_date_iso: string;
+          image: string;
+          name: string;
+          organizer: string;
+          original_activity_url: string;
+          place: {
+            country_code_iso: string;
+            place_coordinates_osm: string;
+            type: string;
+            venue_name: string;
+          };
+          start_date_iso: string;
+          user_data: string;
+        };
+        item_title: string;
+        item_video: {
+          file: {
+            url: string;
+          };
+          present: boolean;
+        };
+        metadata: {
+          cover_image: string;
+          description: string;
+          image: string;
+          name: string;
+          social_links: string[];
+        };
+        title: string;
+      };
+      collection_address: string;
+      hub: {
+        id: number;
+      };
+      mint_type: string;
+    };
+    start_date: string;
+    subtitle: string;
+    title: string;
+  };
+  status: "success";
+};

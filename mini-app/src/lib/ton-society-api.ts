@@ -1,13 +1,15 @@
 // The integration with ton society apis will be here
 import { TonSocietyRegisterActivityResponse } from "@/types/event.types";
-import { TSAPIoperations } from "@/types/ton-society-api-types";
+import { findActivityResponseType, TSAPIoperations } from "@/types/ton-society-api-types";
 import { CreateUserRewardLinkReturnType, type CreateUserRewardLinkInputType } from "@/types/user.types";
 import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import axios, { AxiosError } from "axios";
 import { HubsResponse, SocietyHub } from "@/types";
-import { redisTools  } from "@/lib/redisTools";
+import { redisTools } from "@/lib/redisTools";
+import { configDotenv } from "dotenv";
 
+configDotenv();
 // ton society client to send http requests to https://ton-society.github.io/sbt-platform
 export const tonSocietyClient = axios.create({
   baseURL: process.env.TON_SOCIETY_BASE_URL,
@@ -104,7 +106,16 @@ export async function getSBTClaimedStaus(activity_id: number, user_id: number | 
   }
 }
 
-export async function getHubs():Promise<SocietyHub[]> {
+export async function findActivity(activity_id: number): Promise<findActivityResponseType> {
+  if (!activity_id) {
+    throw new Error("wrong activity id");
+  }
+
+  const result = await tonSocietyClient.get(`/activities/${activity_id}`);
+  return result.data;
+}
+
+export async function getHubs(): Promise<SocietyHub[]> {
   // Define a cache key – you can parameterize if needed.
   const cacheKey = redisTools.cacheKeys.hubs;
 
@@ -112,7 +123,7 @@ export async function getHubs():Promise<SocietyHub[]> {
   const cachedResult: SocietyHub[] = await redisTools.getCache(cacheKey);
   if (cachedResult) {
     // If we have a cached copy, return it
-    return  cachedResult
+    return cachedResult;
   }
 
   try {
@@ -126,9 +137,7 @@ export async function getHubs():Promise<SocietyHub[]> {
 
     if (response.status === 200 && response.data) {
       // sort hubs by attributes.title
-      const sortedHubs = response.data.data.sort((a, b) =>
-        a.attributes.title.localeCompare(b.attributes.title)
-      );
+      const sortedHubs = response.data.data.sort((a, b) => a.attributes.title.localeCompare(b.attributes.title));
       const transformedHubs = sortedHubs.map((hub) => ({
         id: hub.id.toString(),
         name: hub.attributes.title,
@@ -138,7 +147,7 @@ export async function getHubs():Promise<SocietyHub[]> {
       await redisTools.setCache(cacheKey, transformedHubs, redisTools.cacheLvl.medium);
 
       // 4. Return the data
-      return transformedHubs
+      return transformedHubs;
     }
 
     // If response is invalid:
