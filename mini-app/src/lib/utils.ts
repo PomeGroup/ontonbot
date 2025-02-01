@@ -69,5 +69,7 @@ export const roundDateToInterval = (date: number | undefined, interval: number):
   return date ? Math.floor(date / interval) * interval : date;
 };
 
-export const removeSecretKey = (changes: any) => JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
+export const removeSecretKey = (changes: any) =>
+  JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
 
+export type InferArrayType<T> = T extends (infer U)[] ? U : never;
