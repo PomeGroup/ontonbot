@@ -4,11 +4,10 @@ import { selectEventByUuid } from "@/server/db/events";
 import { TRPCError } from "@trpc/server";
 import { db } from "@/db/db";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
-import { and, desc, eq, ne, or } from "drizzle-orm";
+import { and, desc, eq, like, ne, or } from "drizzle-orm";
 import rewardService from "@/server/routers/services/rewardsService";
 import telegramService from "@/server/routers/services/telegramService";
-import { logger } from "@/server/utils/logger";
-import { CombinedEventRegisterSchema, EventRegisterSchema } from "@/types";
+import { EventRegisterSchema } from "@/types";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import { addVisitor } from "@/server/db/visitors";
 import { users } from "@/db/schema/users";
@@ -121,11 +120,12 @@ const processRegistrantRequest = evntManagerPP
       const rejected_message = `❌ Your request has been rejected for the event : <b>${event.title}</b> \n${share_link}`;
       const message = opts.input.status === "approved" ? approved_message : rejected_message;
 
-      const response = await telegramService.sendEventPhoto({
+      await telegramService.sendEventPhoto({
         event_id: event.event_uuid,
         user_id: user_id,
         message,
       });
+
       // Clear the organizer user cache so it will be reloaded next time
       await redisTools.deleteCache(getUserCacheKey(user_id));
     }
@@ -202,22 +202,33 @@ const getEventRegistrants = evntManagerPP
       event_uuid: z.string(),
       offset: z.number().default(0),
       limit: z.number().default(10),
+      search: z.string().optional(),
     })
   )
   .query(async (opts) => {
-    const { event_uuid, offset, limit } = opts.input;
+    const { event_uuid, offset, limit, search } = opts.input;
 
     const event = await selectEventByUuid(event_uuid);
     if (!event) {
-      throw new TRPCError({ code: "NOT_FOUND", message: `event not found with uuid ${event_uuid}` });
+      throw new TRPCError({ code: "NOT_FOUND", message: `Event not found with uuid ${event_uuid}` });
     }
 
-    const condition = event.has_payment
+    // base condition for the event registrants
+    let condition = event.has_payment
       ? and(
           or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
           eq(eventRegistrants.event_uuid, event_uuid)
         )
       : eq(eventRegistrants.event_uuid, event_uuid);
+
+    // If a search query is provided, extend the condition to filter by username, first_name, or last_name
+    if (search && search.trim() !== "") {
+      const searchStr = `%${search.trim()}%`;
+      condition = and(
+        condition,
+        or(like(users.username, searchStr), like(users.first_name, searchStr), like(users.last_name, searchStr))
+      );
+    }
 
     const registrants = await db
       .select({
