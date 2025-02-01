@@ -79,8 +79,10 @@ function UnforwardedEventCard(
   // We open the card or route
   const webApp = useWebApp();
   const router = useRouter();
-  const validCurrencies = ["USDT", "TON"];
-  const currency = validCurrencies.includes(paymentType?.toUpperCase()) ? paymentType?.toUpperCase() : "";
+  const validCurrencies = ['USDT', 'TON'];
+  const currency = validCurrencies.includes(paymentType?.toUpperCase())
+    ? paymentType?.toUpperCase()
+    : '';
 
   const handleEventClick = () => {
     // If ticketToCheckIn => open Telegram link
@@ -99,50 +101,37 @@ function UnforwardedEventCard(
       contentWrapPadding="p-2"
     >
       <div
-        className="flex gap-4 items-stretch flex-nowrap relative"
+        className='flex gap-4 items-stretch flex-nowrap relative'
         ref={ref}
         onClick={handleEventClick}
       >
         {/* LEFT: Event Image */}
-        <LoadableImage
-          src={imageUrl}
-          alt={title}
-          width={100}
-          height={100}
-        />
+        <LoadableImage src={imageUrl} alt={title} width={100} height={100} />
 
         <div className="flex flex-col grow overflow-hidden">
-          <Typography
-            className="font-semibold mb-1 line-clamp-2 overflow-hidden"
-            variant="body"
-          >
+          <Typography className="font-semibold mb-1 line-clamp-2 overflow-hidden" variant="body">
             {title}
           </Typography>
           {organizerChannelName.trim().length > 0 && (
             <Typography
               className="font-medium overflow-hidden text-ellipsis whitespace-nowrap"
               variant="subheadline2"
-            >
-              by {organizerChannelName}
-            </Typography>
+            >by {organizerChannelName}</Typography>
           )}
-          <div className="mt-auto text-[#8E8E93]">
-            <Typography
-              variant="subheadline2"
-              className="font-medium mb-1"
-            >
+          <div className='mt-auto text-[#8E8E93]'>
+            <Typography variant="subheadline2" className="font-medium mb-1">
               {isOnline} {isPublished ? "" : " • Not Published"}
             </Typography>
             <div className="flex justify-between">
-              <Typography
-                variant="subheadline2"
-                className="font-medium"
-              >
+              <Typography variant='subheadline2' className="font-medium">
                 {formatDateRange(startDate, endDate, validTimezone)}
               </Typography>
               <div className="flex gap-[6px]">
+
                 {/* Badge on the right: "hosted" if user is the organizer, else price */}
-                {currentUserId === organizerUserId && <Badge variant="ontonLight">hosted</Badge>}
+                {currentUserId === organizerUserId && (
+                  <Badge variant="ontonLight">hosted</Badge>
+                )}
                 <Badge variant="ontonLight">{ticketPrice > 0 ? `${ticketPrice} ${currency}` : "Free"}</Badge>
               </div>
             </div>
@@ -163,3 +152,4 @@ const EventCard = memo(UnmemorizedEventCard, (prevProps, nextProps) => {
 
 EventCard.displayName = "EventCard";
 export default EventCard;
+

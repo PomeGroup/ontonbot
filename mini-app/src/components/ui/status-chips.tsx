@@ -3,7 +3,7 @@ import { cva } from "class-variance-authority";
 import { Chip } from "konsta/react";
 
 export interface StatusChipProps {
-  variant?: "primary" | "success" | "danger" | "default" | "warning";
+  variant?: "primary" | "success" | "danger" | "default";
   label: string;
   className?: string;
   onDelete?: (_: string) => void;
@@ -18,7 +18,6 @@ const StatusChip: React.FC<StatusChipProps> = (props) => {
         success: "bg-green-500 text-green-700",
         danger: "bg-red-500 text-red-600",
         default: "bg-gray-500 text-gray-600",
-        warning: "bg-yellow-500 text-yellow-600",
       },
     },
     defaultVariants: {
