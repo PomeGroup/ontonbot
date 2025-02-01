@@ -1,5 +1,5 @@
 {
-  "id": "961f0d51-76e1-4a45-ab1a-7d1c4c4f6878",
+  "id": "80d4856b-06ef-485a-9a4f-164cacd5f8ec",
   "prevId": "6378c75a-a02a-42bc-8a10-f498b76ec070",
   "version": "7",
   "dialect": "postgresql",
@@ -3855,6 +3855,13 @@
         "checkin_officer"
       ]
     },
+    "public.item_type": {
+      "name": "item_type",
+      "schema": "public",
+      "values": [
+        "event"
+      ]
+    },
     "public.coupon_definition_status": {
       "name": "coupon_definition_status",
       "schema": "public",
@@ -4047,6 +4054,14 @@
       "values": [
         "NFT",
         "TSCSBT"
+      ]
+    },
+    "public.user_role_status": {
+      "name": "user_role_status",
+      "schema": "public",
+      "values": [
+        "active",
+        "deactivate"
       ]
     },
     "public.user_flags_enum": {
