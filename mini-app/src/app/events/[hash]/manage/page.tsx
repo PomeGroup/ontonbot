@@ -30,6 +30,7 @@ const hardcodedAdminUsers = [
   68007062, // blackpred
   748891997, // samyar_kd
   438186721, // masious
+  689111540, //katebahajati
 
 
 ]
