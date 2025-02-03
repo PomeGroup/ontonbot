@@ -2,9 +2,9 @@ import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedPr
 import { z } from "zod";
 import { selectEventByUuid } from "@/server/db/events";
 import { TRPCError } from "@trpc/server";
-import { db } from "@/db/db";
+import { db, dbLower } from "@/db/db";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
-import { and, desc, eq, like, ne, or } from "drizzle-orm";
+import { and, desc, eq, like, ne, or, sql } from "drizzle-orm";
 import rewardService from "@/server/routers/services/rewardsService";
 import telegramService from "@/server/routers/services/telegramService";
 import { EventRegisterSchema } from "@/types";
@@ -13,6 +13,7 @@ import { addVisitor } from "@/server/db/visitors";
 import { users } from "@/db/schema/users";
 import { redisTools } from "@/lib/redisTools";
 import { getUserCacheKey } from "@/server/db/users";
+import { rewards, visitors } from "@/db/schema";
 
 const checkinRegistrantRequest = evntManagerPP
   .input(
@@ -226,7 +227,14 @@ const getEventRegistrants = evntManagerPP
       const searchStr = `%${search.trim()}%`;
       condition = and(
         condition,
-        or(like(users.username, searchStr), like(users.first_name, searchStr), like(users.last_name, searchStr))
+        or(
+          // @ts-expect-error
+          like(dbLower(users.username), dbLower(searchStr)),
+          // @ts-expect-error
+          like(dbLower(users.first_name), dbLower(searchStr)),
+          // @ts-expect-error
+          like(dbLower(users.last_name), dbLower(searchStr))
+        )
       );
     }
 
@@ -240,6 +248,14 @@ const getEventRegistrants = evntManagerPP
         status: eventRegistrants.status,
         created_at: eventRegistrants.created_at,
         registrant_info: eventRegistrants.register_info,
+        has_reward: sql<boolean>`exists(
+          ${db
+            .select()
+            .from(rewards)
+            .innerJoin(visitors, eq(rewards.visitor_id, visitors.id))
+            .where(
+              and(eq(visitors.user_id, eventRegistrants.user_id), eq(visitors.event_uuid, eventRegistrants.event_uuid))
+            )})`.as("has_reward"),
       })
       .from(eventRegistrants)
       .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))

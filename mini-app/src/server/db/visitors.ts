@@ -1,14 +1,5 @@
 import { db } from "@/db/db";
-import {
-  eventFields,
-  events,
-  rewards,
-  specialGuests,
-  tickets,
-  userEventFields,
-  users,
-  visitors,
-} from "@/db/schema";
+import { eventFields, events, rewards, specialGuests, tickets, userEventFields, users, visitors } from "@/db/schema";
 import { and, between, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { checkEventTicketToCheckIn } from "@/server/db/events";
 import { redisTools } from "@/lib/redisTools";
@@ -109,11 +100,7 @@ export const selectValidVisitorById = async (visitorId: number) => {
         isNotNull(events.start_date),
         isNotNull(events.end_date),
         isNotNull(users.wallet_address),
-        between(
-          visitors.last_visit,
-          sql`TO_TIMESTAMP(events.start_date)`,
-          sql`TO_TIMESTAMP(events.end_date)`
-        ),
+        between(visitors.last_visit, sql`TO_TIMESTAMP(events.start_date)`, sql`TO_TIMESTAMP(events.end_date)`),
         eq(
           db
             .select({ count: sql`count(*)`.mapWith(Number) })
