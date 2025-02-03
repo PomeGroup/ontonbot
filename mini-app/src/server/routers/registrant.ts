@@ -258,4 +258,3 @@ export const registrantRouter = router({
   eventRegister,
   getEventRegistrants,
 });
-

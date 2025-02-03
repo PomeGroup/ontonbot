@@ -4,6 +4,18 @@ EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."item_type" AS ENUM('event');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."user_role_status" AS ENUM('active', 'deactivate');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 ALTER TYPE "order_types" ADD VALUE 'ts_csbt_ticket';--> statement-breakpoint
 ALTER TYPE "ticket_types" ADD VALUE 'TSCSBT';--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user_roles" (

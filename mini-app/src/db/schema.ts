@@ -55,7 +55,8 @@ import {
   accessRoleItemType,
   accessRoleEnum,
   userRoles,
-  userRolesRelations, accessRoleItemTypeEnum,accessRoleEnumType
+  userRolesRelations, accessRoleItemTypeEnum,accessRoleEnumType,
+  userRoleStatusEnum
 } from "./schema/userRoles";
 
 // export all the enums
@@ -79,8 +80,9 @@ export {
   coupon_definition_status,
   coupon_item_status,
   user_flags,
-
+  accessRoleItemTypeEnum,
   accessRoleEnum,
+  userRoleStatusEnum,
 };
 
 // export all the tables and relations
