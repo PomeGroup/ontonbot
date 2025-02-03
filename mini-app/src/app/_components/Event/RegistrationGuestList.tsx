@@ -410,6 +410,8 @@ const RegistrationGuestList = () => {
           event_uuid={params.hash}
           url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${params.hash}`}
           hub={eventData.data?.society_hub?.name!}
+          activity_id={eventData.data?.activity_id}
+          hidden={eventData.data?.hidden}
         />
 
         {eventData.data?.participationType === "online" &&

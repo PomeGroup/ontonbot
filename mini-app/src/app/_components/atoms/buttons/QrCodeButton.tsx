@@ -6,7 +6,19 @@ import useWebApp from "@/hooks/useWebApp";
 import { cn, wait } from "@/lib/utils";
 import { LoaderIcon, QrCode } from "lucide-react";
 
-const QrCodeButton = ({ url, hub, event_uuid }: { event_uuid: string; url: string; hub?: string }) => {
+const QrCodeButton = ({
+  url,
+  hub,
+  event_uuid,
+  activity_id,
+  hidden,
+}: {
+  event_uuid: string;
+  url: string;
+  hub?: string;
+  activity_id: number | null | undefined;
+  hidden: boolean | null | undefined;
+}) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
   const hapticFeedback = WebApp?.HapticFeedback;
@@ -19,7 +31,7 @@ const QrCodeButton = ({ url, hub, event_uuid }: { event_uuid: string; url: strin
         requestSendQRCodeMutation.isLoading && Boolean(initData) && "opacity-50"
       )}
       variant={"secondary"}
-      disabled={!initData || requestSendQRCodeMutation.isLoading}
+      disabled={!initData || requestSendQRCodeMutation.isLoading || !activity_id || !!hidden}
       onClick={async () => {
         if (!initData) return;
         await requestSendQRCodeMutation.mutateAsync({

@@ -15,7 +15,6 @@ interface Props {
 }
 
 const NonRegistrationGuestList = (props: Props) => {
-
   const [needRefresh, setNeedRefresh] = useState(false);
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;
@@ -41,6 +40,8 @@ const NonRegistrationGuestList = (props: Props) => {
           event_uuid={props.event.event_uuid}
           url={`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event.event_uuid}`}
           hub={props.event.society_hub?.name!}
+          activity_id={props.event?.activity_id}
+          hidden={props.event?.hidden}
         />
       )}
 
