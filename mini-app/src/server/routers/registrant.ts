@@ -197,6 +197,7 @@ const eventRegister = initDataProtectedProcedure.input(CombinedEventRegisterSche
   return { message: "success", code: 201 };
 });
 
+const statusesZod = z.enum(["pending", "rejected", "approved", "checkedin"]);
 const getEventRegistrants = evntManagerPP
   .input(
     z.object({
@@ -204,17 +205,17 @@ const getEventRegistrants = evntManagerPP
       offset: z.number().default(0),
       limit: z.number().default(10),
       search: z.string().optional(),
+      statuses: z.array(statusesZod).optional(),
     })
   )
   .query(async (opts) => {
-    const { event_uuid, offset, limit, search } = opts.input;
+    const { event_uuid, offset, limit, search, statuses } = opts.input;
 
     const event = await selectEventByUuid(event_uuid);
     if (!event) {
       throw new TRPCError({ code: "NOT_FOUND", message: `Event not found with uuid ${event_uuid}` });
     }
 
-    // base condition for the event registrants
     let condition = event.has_payment
       ? and(
           or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
@@ -222,20 +223,25 @@ const getEventRegistrants = evntManagerPP
         )
       : eq(eventRegistrants.event_uuid, event_uuid);
 
-    // If a search query is provided, extend the condition to filter by username, first_name, or last_name
     if (search && search.trim() !== "") {
       const searchStr = `%${search.trim()}%`;
       condition = and(
         condition,
         or(
-          // @ts-expect-error
+          //@ts-expect-error
           like(dbLower(users.username), dbLower(searchStr)),
-          // @ts-expect-error
+          //@ts-expect-error
           like(dbLower(users.first_name), dbLower(searchStr)),
-          // @ts-expect-error
+          //@ts-expect-error
           like(dbLower(users.last_name), dbLower(searchStr))
         )
       );
+    }
+
+    if (statuses && statuses.length > 0) {
+      condition = and(condition, or(...statuses.map((status) => eq(eventRegistrants.status, status))));
+      // __AUTO_GENERATED_PRINT_VAR_START__
+      console.log("(anon)#if condition: %s", condition); // __AUTO_GENERATED_PRINT_VAR_END__
     }
 
     const registrants = await db

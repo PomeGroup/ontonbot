@@ -10,7 +10,7 @@ const connectToRedis = async (): Promise<void> => {
     });
 
     redisClient.on("error", (err) => {
-      logger.error("Redis error:", err);
+      // logger.error("Redis error:", err);
     });
 
     redisClient.on("connect", () => {

@@ -1,4 +1,5 @@
 import { trpc } from "@/app/_trpc/client";
+import { EventRegistrantStatusType } from "@/db/schema/eventRegistrants";
 import { useParams } from "next/navigation";
 
 /**
@@ -6,7 +7,13 @@ import { useParams } from "next/navigation";
  * @param offset
  * @param limit
  */
-export function useGetEventRegistrants(event_hash?: string, offset = 0, limit = 10, search?: string) {
+export function useGetEventRegistrants(
+  event_hash?: string,
+  offset = 0,
+  limit = 10,
+  search?: string,
+  statuses: EventRegistrantStatusType[] = []
+) {
   const params = useParams<{ hash: string }>();
   const event_uuid = event_hash ?? params.hash;
 
@@ -15,11 +22,12 @@ export function useGetEventRegistrants(event_hash?: string, offset = 0, limit = 
       event_uuid,
       offset,
       limit,
-      search, // pass the search term to the query
+      search: search || undefined,
+      statuses: statuses.length ? statuses : undefined,
     },
     {
       staleTime: 10_000,
-      queryKey: ["registrant.getEventRegistrants", { event_uuid, offset, limit, search }],
+      queryKey: ["registrant.getEventRegistrants", { event_uuid, offset, limit, search, statuses }],
     }
   );
 }

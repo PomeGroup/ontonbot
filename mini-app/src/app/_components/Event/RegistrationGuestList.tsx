@@ -10,15 +10,16 @@ import useWebApp from "@/hooks/useWebApp";
 import { RouterOutput } from "@/server";
 import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
-import { Block, BlockFooter, BlockHeader, BlockTitle, List, ListItem, Sheet } from "konsta/react";
-import { Check, FileUser, Pencil, X } from "lucide-react";
+import { Block, BlockFooter, BlockHeader, BlockTitle, Checkbox, List, ListItem, Sheet } from "konsta/react";
+import { Check, FileUser, Filter, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
 import DataStatus from "../molecules/alerts/DataStatus";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
 import { useDebouncedValue } from "@mantine/hooks";
+import { EventRegistrantStatusType } from "@/db/schema/eventRegistrants";
 
 interface CustomListItemProps {
   name: string;
@@ -308,24 +309,25 @@ const Button: React.FC<ButtonProps> = ({ variant, icon, label, onClick, isLoadin
 
 const RegistrationGuestList = () => {
   const params = useParams<{ hash: string }>();
-  // search state
   const [search, setSearch] = useState("");
-
   const [debouncedSearch] = useDebouncedValue(search, 500);
 
-  // pagination state and other states
   const LIMIT = 10;
   const [results, setResults] = useState<RouterOutput["registrant"]["getEventRegistrants"]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get event data and registrants with search
+  const [filters, setFilters] = useState<EventRegistrantStatusType[]>([]);
+  const [tempFilters, setTempFilters] = useState<EventRegistrantStatusType[]>([]);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+
   const registrantsQuery = useGetEventRegistrants(
     params.hash,
     offset,
     LIMIT,
-    debouncedSearch?.length >= 3 ? debouncedSearch : ""
+    debouncedSearch?.length >= 3 ? debouncedSearch : "",
+    filters
   );
 
   const eventData = useGetEvent();
@@ -342,21 +344,59 @@ const RegistrationGuestList = () => {
     },
   });
 
-  const handleApprove = async (user_id: number) => {
-    await processRegistrantRequest.mutateAsync({
-      event_uuid: params.hash,
-      status: "approved",
-      user_id,
-    });
-  };
+  const toggleTempFilter = useCallback((status: EventRegistrantStatusType) => {
+    setTempFilters((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]));
+  }, []);
 
-  const handleReject = async (user_id: number) => {
-    await processRegistrantRequest.mutateAsync({
-      event_uuid: params.hash,
-      status: "rejected",
-      user_id,
-    });
-  };
+  const handleApprove = useCallback(
+    async (user_id: number) => {
+      await processRegistrantRequest.mutateAsync({
+        event_uuid: params.hash,
+        status: "approved",
+        user_id,
+      });
+      setResults((prev) =>
+        prev.map((registrant) => (registrant.user_id === user_id ? { ...registrant, status: "approved" } : registrant))
+      );
+    },
+    [processRegistrantRequest, params.hash]
+  );
+
+  const handleReject = useCallback(
+    async (user_id: number) => {
+      await processRegistrantRequest.mutateAsync({
+        event_uuid: params.hash,
+        status: "rejected",
+        user_id,
+      });
+      setResults((prev) =>
+        prev.map((registrant) => (registrant.user_id === user_id ? { ...registrant, status: "rejected" } : registrant))
+      );
+    },
+    [processRegistrantRequest, params.hash]
+  );
+
+  const openFilterSheet = useCallback(() => {
+    setTempFilters(filters);
+    setIsFilterSheetOpen(true);
+  }, [filters]);
+
+  const applyFilters = useCallback(() => {
+    setFilters(tempFilters);
+    setOffset(0);
+    setResults([]);
+    setHasMore(true);
+    setIsFilterSheetOpen(false);
+  }, [tempFilters]);
+
+  const removeFilters = useCallback(() => {
+    setTempFilters([]);
+    setFilters([]);
+    setOffset(0);
+    setResults([]);
+    setHasMore(true);
+    setIsFilterSheetOpen(false);
+  }, []);
 
   useMainButton(
     () => {
@@ -373,42 +413,29 @@ const RegistrationGuestList = () => {
 
   const disablePOAButton = Boolean(eventData.data?.isNotEnded && eventData.data?.isStarted);
 
-  // Reset pagination when the search term changes
-  useEffect(() => {
-    if (debouncedSearch?.length >= 3 || debouncedSearch?.length === 0) {
-      setResults([]);
-      setOffset(0);
-      setHasMore(true);
+  const loadMoreResults = useCallback(() => {
+    if (hasMore && !isLoading) {
+      setIsLoading(true);
+      setOffset((prevOffset) => prevOffset + LIMIT);
     }
-  }, [debouncedSearch]);
+  }, [hasMore, isLoading]);
 
-  useEffect(() => {
-    const loadMoreResults = () => {
-      if (hasMore && !isLoading) {
-        setIsLoading(true);
-        setOffset((prevOffset) => prevOffset + LIMIT);
-      }
-    };
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMoreResults();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
+  const handleScroll = useCallback(() => {
     const lastElement = document.querySelector(".last-guest-item");
-    if (lastElement) observer.observe(lastElement);
+    if (lastElement) {
+      const rect = lastElement.getBoundingClientRect();
+      if (rect.bottom <= window.innerHeight) {
+        loadMoreResults();
+      }
+    }
+  }, [loadMoreResults]);
 
-    return () => {
-      if (lastElement) observer.unobserve(lastElement);
-    };
-  }, [results, hasMore, isLoading]);
+  React.useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
-  // When new data is fetched, update results
-  useEffect(() => {
+  React.useEffect(() => {
     if (registrantsQuery.data) {
       if (offset === 0) {
         setResults(registrantsQuery.data);
@@ -418,7 +445,7 @@ const RegistrationGuestList = () => {
       setHasMore(registrantsQuery.data.length === LIMIT);
       setIsLoading(false);
     }
-  }, [offset, registrantsQuery.data]);
+  }, [registrantsQuery.data, offset]);
 
   return (
     <>
@@ -447,7 +474,16 @@ const RegistrationGuestList = () => {
 
       <BlockTitle medium>
         <span>Guest List</span>
-        {eventData.data?.participationType === "in_person" && <ScanRegistrantQRCode />}
+        <div className="flex gap-3 items-center">
+          <Filter
+            onClick={openFilterSheet}
+            className={cn(
+              "rounded cursor-pointer",
+              filters.length ? "text-primary bg-primary/10 " : "text-cn-muted-foreground"
+            )}
+          />
+          {eventData.data?.participationType === "in_person" && <ScanRegistrantQRCode />}
+        </div>
       </BlockTitle>
 
       {/* Search input */}
@@ -456,7 +492,12 @@ const RegistrationGuestList = () => {
           type="text"
           placeholder="Search by username or name"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setOffset(0);
+            setResults([]);
+            setHasMore(true);
+          }}
           className="p-2 border rounded w-full"
         />
       </Block>
@@ -490,7 +531,44 @@ const RegistrationGuestList = () => {
             />
           ))}
       </BlockHeader>
-      <List>
+
+      <Sheet
+        onBackdropClick={() => setIsFilterSheetOpen(false)}
+        opened={isFilterSheetOpen}
+        className="!overflow-hidden w-full"
+      >
+        <BlockTitle>Filter Registrants</BlockTitle>
+        <List>
+          {(["pending", "rejected", "approved", "checkedin"] as EventRegistrantStatusType[]).map((status) => (
+            <ListItem
+              key={status}
+              label
+              className="capitalize"
+              title={status}
+              media={
+                <Checkbox
+                  value={status}
+                  checked={tempFilters.includes(status)}
+                  onChange={() => toggleTempFilter(status)}
+                />
+              }
+            />
+          ))}
+        </List>
+        <BlockFooter className="flex flex-col gap-1">
+          {Boolean(filters.length) && (
+            <KButton
+              clear
+              onClick={removeFilters}
+            >
+              Clear Filters
+            </KButton>
+          )}
+          <KButton onClick={applyFilters}>Apply</KButton>
+        </BlockFooter>
+      </Sheet>
+
+      <List className="!my-2">
         {results.map((registrant, idx) => (
           <CustomListItem
             key={`registrant_${idx}`}
