@@ -420,20 +420,23 @@ const RegistrationGuestList = () => {
     }
   }, [hasMore, isLoading]);
 
-  const handleScroll = useCallback(() => {
-    const lastElement = document.querySelector(".last-guest-item");
-    if (lastElement) {
-      const rect = lastElement.getBoundingClientRect();
-      if (rect.bottom <= window.innerHeight) {
-        loadMoreResults();
-      }
-    }
-  }, [loadMoreResults]);
-
   React.useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMoreResults();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    const lastElement = document.querySelector(".last-guest-item");
+    if (lastElement) observer.observe(lastElement);
+
+    return () => {
+      if (lastElement) observer.unobserve(lastElement);
+    };
+  }, [results]);
 
   React.useEffect(() => {
     if (registrantsQuery.data) {
