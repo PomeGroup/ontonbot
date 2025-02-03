@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
  * @param offset
  * @param limit
  */
-export function useGetEventRegistrants(event_hash?: string, offset = 0, limit = 10) {
+export function useGetEventRegistrants(event_hash?: string, offset = 0, limit = 10, search?: string) {
   const params = useParams<{ hash: string }>();
   const event_uuid = event_hash ?? params.hash;
 
@@ -15,10 +15,11 @@ export function useGetEventRegistrants(event_hash?: string, offset = 0, limit = 
       event_uuid,
       offset,
       limit,
+      search, // pass the search term to the query
     },
     {
       staleTime: 10_000,
-      queryKey: ["registrant.getEventRegistrants", { event_uuid, offset, limit }],
+      queryKey: ["registrant.getEventRegistrants", { event_uuid, offset, limit, search }],
     }
   );
 }
@@ -69,6 +70,7 @@ export function useGetEventOrders() {
     },
     {
       staleTime: Infinity,
+      refetchInterval: 30_000,
       queryKey: ["orders.getEventOrders", { event_uuid: params.hash }],
     }
   );
