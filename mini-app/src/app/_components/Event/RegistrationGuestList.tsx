@@ -5,7 +5,6 @@ import { KButton } from "@/components/ui/button";
 import StatusChip from "@/components/ui/status-chips";
 import { EventTriggerType } from "@/db/enum";
 import { useGetEvent, useGetEventRegistrants } from "@/hooks/events.hooks";
-import useDebounce from "@/hooks/useDebounce";
 import { useMainButton } from "@/hooks/useMainButton";
 import useWebApp from "@/hooks/useWebApp";
 import { RouterOutput } from "@/server";
@@ -19,6 +18,7 @@ import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
 import DataStatus from "../molecules/alerts/DataStatus";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
+import { useDebouncedValue } from "@mantine/hooks";
 
 interface CustomListItemProps {
   name: string;
@@ -311,7 +311,7 @@ const RegistrationGuestList = () => {
   // search state
   const [search, setSearch] = useState("");
 
-  const debouncedSearch = useDebounce(search);
+  const [debouncedSearch] = useDebouncedValue(search, 500);
 
   // pagination state and other states
   const LIMIT = 10;
