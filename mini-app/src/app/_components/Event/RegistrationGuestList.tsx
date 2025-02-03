@@ -436,7 +436,7 @@ const RegistrationGuestList = () => {
     return () => {
       if (lastElement) observer.unobserve(lastElement);
     };
-  }, [results]);
+  }, [loadMoreResults, results]);
 
   React.useEffect(() => {
     if (registrantsQuery.data) {
@@ -511,7 +511,7 @@ const RegistrationGuestList = () => {
             description="No one has filled the form yet."
           />
         )}
-        {registrantsQuery.isLoading && (
+        {!registrantsQuery.isFetched && registrantsQuery.isLoading && (
           <DataStatus
             status="pending"
             title="Loading Guest List"

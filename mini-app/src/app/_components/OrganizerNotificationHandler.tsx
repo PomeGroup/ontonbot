@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import useNotificationStore from "@/zustand/useNotificationStore";
 import { NotificationType, NotificationStatus, NotificationItemType } from "@/db/schema";
-import { Card, List, ListItem, Badge, Dialog, Button } from "konsta/react";
+import { List, ListItem, Badge, Dialog, Button } from "konsta/react";
 
 type OrganizerNotification = {
   notificationId: string;
@@ -43,9 +43,7 @@ const OrganizerNotificationHandler: React.FC = () => {
   useEffect(() => {
     console.log("Checking for new POA_CREATION_FOR_ORGANIZER notifications...");
     const newPoaCreations = notifications.filter(
-      (n) =>
-        n.type === "POA_CREATION_FOR_ORGANIZER" &&
-        !handledPoaCreationIds.has(n.notificationId)
+      (n) => n.type === "POA_CREATION_FOR_ORGANIZER" && !handledPoaCreationIds.has(n.notificationId)
     );
 
     if (newPoaCreations.length > 0) {
@@ -66,9 +64,7 @@ const OrganizerNotificationHandler: React.FC = () => {
   useEffect(() => {
     console.log("Checking for new USER_RECEIVED_POA notifications...");
     const newPoaSent = notifications.filter(
-      (n) =>
-        n.type === "USER_RECEIVED_POA" &&
-        !handledPoaSentIds.has(n.notificationId)
+      (n) => n.type === "USER_RECEIVED_POA" && !handledPoaSentIds.has(n.notificationId)
     );
 
     if (newPoaSent.length > 0) {
@@ -86,9 +82,7 @@ const OrganizerNotificationHandler: React.FC = () => {
   useEffect(() => {
     console.log("Checking for new USER_ANSWER_POA notifications...");
     const newUserAnswerPoa = notifications.filter(
-      (n) =>
-        n.type === "USER_ANSWER_POA" &&
-        !handledUserAnswerPoaIds.has(n.notificationId)
+      (n) => n.type === "USER_ANSWER_POA" && !handledUserAnswerPoaIds.has(n.notificationId)
     );
 
     if (newUserAnswerPoa.length > 0) {
@@ -111,8 +105,6 @@ const OrganizerNotificationHandler: React.FC = () => {
 
     // Optionally reset handled IDs if you want to handle future notifications again
 
-
-
     setDialogOpen(false);
   };
 
@@ -121,11 +113,14 @@ const OrganizerNotificationHandler: React.FC = () => {
       opened={dialogOpen}
       onBackdropClick={handleCloseDialog}
       title="Attendance Summary"
-      className="myDialog max-w-[400px] w-11/12 p-0 mx-auto bg-white bg-opacity-100"
+      className="z-50 myDialog max-w-[400px] w-11/12 p-0 mx-auto bg-white bg-opacity-100"
       colors={{ bgIos: "bg-white", bgMaterial: "bg-white" }}
       translucent={false}
     >
-      <List className={"p-0 my-0"} dividers={false}>
+      <List
+        className={"p-0 my-0"}
+        dividers={false}
+      >
         {/* If you want to show POAs Created again, just uncomment below */}
         {/* <ListItem>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
@@ -147,7 +142,7 @@ const OrganizerNotificationHandler: React.FC = () => {
         </ListItem>
       </List>
 
-      <div style={{ marginTop: '1rem', textAlign: 'right' }}>
+      <div style={{ marginTop: "1rem", textAlign: "right" }}>
         <Button onClick={handleCloseDialog}>Close</Button>
       </div>
     </Dialog>
