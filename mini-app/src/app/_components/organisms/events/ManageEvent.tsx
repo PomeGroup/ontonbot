@@ -36,17 +36,8 @@ const steps = [
 function ManageEvent({ event }: ManageEventProps) {
   const params = useParams<{ hash: string }>();
 
-
-
-
   // We read from createEventStore for data, but no step logic from here
-  const {
-    setEdit,
-    setEventData,
-    resetState,
-    clearGeneralStepErrors,
-    eventData
-  } = useCreateEventStore((state) => ({
+  const { setEdit, setEventData, resetState, clearGeneralStepErrors, eventData } = useCreateEventStore((state) => ({
     setEdit: state.setEdit,
     setEventData: state.setEventData,
     resetState: state.resetState,
@@ -84,9 +75,9 @@ function ManageEvent({ event }: ManageEventProps) {
           // @ts-ignore
           society_hub: event.society_hub
             ? {
-              id: event.society_hub.id,
-              name: event.society_hub.name,
-            }
+                id: event.society_hub.id,
+                name: event.society_hub.name,
+              }
             : undefined,
           eventLocationType: event.participationType,
           countryId: event.countryId || undefined,
@@ -141,7 +132,10 @@ function ManageEvent({ event }: ManageEventProps) {
   return (
     <>
       <Block className="!-mb-2">
-        <Stepper steps={steps} currentStep={stepIndex} />
+        <Stepper
+          steps={steps}
+          currentStep={stepIndex}
+        />
       </Block>
 
       <Block className="!p-0">
@@ -155,3 +149,4 @@ function ManageEvent({ event }: ManageEventProps) {
 }
 
 export default ManageEvent;
+
