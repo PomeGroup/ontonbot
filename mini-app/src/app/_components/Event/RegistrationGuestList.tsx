@@ -1,22 +1,24 @@
+import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
+import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
 import { trpc } from "@/app/_trpc/client";
 import { KButton } from "@/components/ui/button";
+import StatusChip from "@/components/ui/status-chips";
+import { EventTriggerType } from "@/db/enum";
 import { useGetEvent, useGetEventRegistrants } from "@/hooks/events.hooks";
+import useDebounce from "@/hooks/useDebounce";
+import { useMainButton } from "@/hooks/useMainButton";
+import useWebApp from "@/hooks/useWebApp";
+import { RouterOutput } from "@/server";
 import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
-import { List, BlockTitle, ListItem, BlockHeader, Sheet, BlockFooter, Block } from "konsta/react";
+import { Block, BlockFooter, BlockHeader, BlockTitle, List, ListItem, Sheet } from "konsta/react";
 import { Check, FileUser, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import DataStatus from "../molecules/alerts/DataStatus";
 import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
-import { useMainButton } from "@/hooks/useMainButton";
-import useWebApp from "@/hooks/useWebApp";
+import DataStatus from "../molecules/alerts/DataStatus";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
-import StatusChip from "@/components/ui/status-chips";
-import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
-import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
-import { EventTriggerType } from "@/db/enum";
 
 interface CustomListItemProps {
   name: string;
@@ -29,6 +31,7 @@ interface CustomListItemProps {
   handleReject: (_: number) => Promise<void>;
   className?: string;
   hasPayment: boolean;
+  has_reward: boolean;
 }
 
 const CustomListItem: React.FC<CustomListItemProps> = ({
@@ -42,6 +45,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   handleReject,
   className,
   hasPayment,
+  has_reward,
 }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
@@ -135,7 +139,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
                 setShowRegistrantInfo(registrantInfo);
               }}
             />
-            {!hasPayment && itemStatus === "approved" && (
+            {!hasPayment && !has_reward && itemStatus === "approved" && (
               <Button
                 icon={<Pencil size={18} />}
                 onClick={handleEdit}
@@ -215,6 +219,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
     isDeclining,
     handleApproveClick,
     isApproving,
+    has_reward,
     handleEdit,
     isEditing,
     registrantInfo,
@@ -306,15 +311,23 @@ const RegistrationGuestList = () => {
   // search state
   const [search, setSearch] = useState("");
 
+  const debouncedSearch = useDebounce(search);
+
   // pagination state and other states
   const LIMIT = 10;
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<RouterOutput["registrant"]["getEventRegistrants"]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   // Get event data and registrants with search
-  const registrantsQuery = useGetEventRegistrants(params.hash, offset, LIMIT, search);
+  const registrantsQuery = useGetEventRegistrants(
+    params.hash,
+    offset,
+    LIMIT,
+    debouncedSearch?.length >= 3 ? debouncedSearch : ""
+  );
+
   const eventData = useGetEvent();
   const webApp = useWebApp();
 
@@ -365,10 +378,12 @@ const RegistrationGuestList = () => {
 
   // Reset pagination when the search term changes
   useEffect(() => {
-    setResults([]);
-    setOffset(0);
-    setHasMore(true);
-  }, [search]);
+    if (debouncedSearch?.length >= 3 || debouncedSearch?.length === 0) {
+      setResults([]);
+      setOffset(0);
+      setHasMore(true);
+    }
+  }, [debouncedSearch]);
 
   useEffect(() => {
     const loadMoreResults = () => {
@@ -482,6 +497,7 @@ const RegistrationGuestList = () => {
             key={`registrant_${idx}`}
             name={registrant.first_name || "No Name"}
             username={registrant.username || "no username"}
+            has_reward={registrant.has_reward}
             date={
               registrant.created_at
                 ? new Date(registrant.created_at).toLocaleString("default", {
