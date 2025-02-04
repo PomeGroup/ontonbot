@@ -27,7 +27,7 @@ interface CustomListItemProps {
   date: string;
   status: "pending" | "approved" | "rejected" | "checkedin";
   user_id: number;
-  registrantInfo: Record<string, string>;
+  registrantInfo: Record<string, string | null> | null;
   handleApprove: (_: number) => Promise<void>;
   handleReject: (_: number) => Promise<void>;
   className?: string;
@@ -247,15 +247,16 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
         >
           <BlockTitle>Registrant Info</BlockTitle>
           <List className="!pe-2">
-            {Object.entries(registrantInfo).map(([key, value], idx) => {
-              return (
-                <ListItem
-                  key={idx}
-                  title={<div className="capitalize">{key.split("_").join(" ")}</div>}
-                  subtitle={value || <p className="text-cn-muted-foreground">Not Provided</p>}
-                />
-              );
-            })}
+            {registrantInfo &&
+              Object.entries(registrantInfo).map(([key, value], idx) => {
+                return (
+                  <ListItem
+                    key={idx}
+                    title={<div className="capitalize">{key.split("_").join(" ")}</div>}
+                    subtitle={value || <p className="text-cn-muted-foreground">Not Provided</p>}
+                  />
+                );
+              })}
           </List>
           <BlockFooter>
             <KButton onClick={() => setShowRegistrantInfo(null)}>Close</KButton>

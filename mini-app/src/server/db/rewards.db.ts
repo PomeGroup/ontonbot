@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { RewardStatus, RewardType } from "@/db/enum";
 import { visitors } from "@/db/schema";
-import { rewards, RewardsSelectType } from "@/db/schema/rewards";
+import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
 import { eq, sql } from "drizzle-orm";
@@ -81,7 +81,7 @@ const updateRewardById = async (
   updateFields: Partial<{
     visitor_id: number;
     type: RewardType;
-    data: Record<string, any>;
+    data: RewardDataTyepe;
     tryCount: number;
     status: RewardStatus;
     updatedBy: string;
@@ -112,7 +112,13 @@ const updateReward = async (reward_id: string, data: any) => {
     updatedBy: "system", // Updated by 'system'
   });
 };
-const insertRewardWithData = async (visitor_id: number, user_id: string, type: RewardType, data: any, status: RewardStatus) => {
+const insertRewardWithData = async (
+  visitor_id: number,
+  user_id: string,
+  type: RewardType,
+  data: any,
+  status: RewardStatus
+) => {
   return await rewardDB.insert(
     visitor_id,
     data, // Data from response or any other source
@@ -176,7 +182,7 @@ const updateRewardWithConditions = async (
     .set({
       tryCount: isEventPublished ? pendingReward.tryCount + 1 : undefined, // Increment tryCount if event is published
       status: shouldFail ? "failed" : undefined, // Set status to 'failed' if shouldFail is true
-      data: shouldFail ? { fail_reason: error } : undefined, // Set fail_reason if shouldFail is true
+      data: shouldFail && error ? { fail_reason: error, ok: false } : null, // Set fail_reason if shouldFail is true
       updatedBy: "system", // Updated by 'system'
     })
     .where(eq(rewards.id, reward_id)) // Update based on reward ID
