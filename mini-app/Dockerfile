@@ -1,8 +1,14 @@
-# minimum-image
+##
+# Stage: minimum-image
+##
 FROM node:22-alpine3.19 AS minimum-image
-RUN apk update
-RUN apk add nano
-RUN npm i -g pnpm
+
+# Install basic utilities
+RUN apk update && apk add --no-cache nano
+
+# Enable corepack to use Yarn
+RUN corepack enable
+
 # ARGS
 ARG ENV
 ARG NEXT_PUBLIC_ENV
@@ -33,6 +39,7 @@ ARG CLIENT_API_FIXED_USER
 ARG CLIENT_API_FIXED_ORGANIZER
 ARG NEXT_PUBLIC_SOCKET_URL
 ARG IP_REDIS
+
 # Export arguments as environment variables
 ENV ENV=${ENV}
 ENV NEXT_PUBLIC_ENV=${NEXT_PUBLIC_ENV}
@@ -64,58 +71,78 @@ ENV CLIENT_API_FIXED_USER=${CLIENT_API_FIXED_USER}
 ENV CLIENT_API_FIXED_ORGANIZER=${CLIENT_API_FIXED_ORGANIZER}
 ENV NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL}
 
-# Set the working directory
-# Base stage
+##
+# Stage: base
+##
 FROM minimum-image AS base
-# Install any additional packages you need at runtime/build:
-# - ffmpeg for video processing
-# - freetype, ttf-dejavu, etc., if you're using drawtext
+
+# Install any additional packages you need at runtime/build
 RUN apk add --no-cache \
-  bash \
-  curl \
-  ca-certificates \
-  ffmpeg \
-  freetype \
-  ttf-dejavu
+    bash \
+    curl \
+    ca-certificates \
+    ffmpeg \
+    freetype \
+    ttf-dejavu
 
-
-# Stage : Dependencies
+##
+# Stage: dependencies
+##
 FROM base AS dependencies
+
 # Copy package files for dependency installation
-COPY ./package.json  /app/
-# Set working directory
-WORKDIR /app
-# Install production dependencies only
-RUN  pnpm install --prod
+COPY ./package.json /app/
 
-# Stage : With Files
-FROM dependencies AS with-files
-# Copy the entire project to be used in the build stages
-COPY . /app
-
-# Stage : Build Stage
-FROM with-files AS build-stage
-RUN echo "Build stage files " && ls -la /app && ls -la
-RUN  pnpm install
-# Build the Next.js application
-RUN pnpm run build
-# Clean up unnecessary files to reduce image size
-
-# Stage : Production Stage
-FROM build-stage AS production
-# Expose the necessary port for mini-app (Next.js)
-
-EXPOSE $MINI_APP_PORT
-# Default command for the Next.js app
-CMD  node ./node_modules/next/dist/bin/next start  --port $MINI_APP_PORT
-
-# Stage : Development Stage
-FROM minimum-image AS development
-# Copy the entire project to be used in the build stages
-COPY . /app
-EXPOSE $MINI_APP_PORT
 # Set the working directory
 WORKDIR /app
-# Run the app in development mode
-CMD export NODE_ENV=development && pnpm install  && node ./node_modules/next/dist/bin/next dev  --port $MINI_APP_PORT
 
+# Install production dependencies only using Yarn
+RUN yarn install --production
+
+##
+# Stage: with-files
+##
+FROM dependencies AS with-files
+
+# Copy the entire project
+COPY . /app
+
+##
+# Stage: build-stage
+##
+FROM with-files AS build-stage
+
+# Double check the content
+RUN echo "Build stage files:" && ls -la /app
+
+# Install all dependencies (including dev) and build
+RUN yarn install
+RUN yarn build
+
+##
+# Stage: production
+##
+FROM build-stage AS production
+
+# Expose the port for your Next.js app
+EXPOSE $MINI_APP_PORT
+
+# Default command for the Next.js app
+CMD node ./node_modules/next/dist/bin/next start --port $MINI_APP_PORT
+
+##
+# Stage: development
+##
+FROM minimum-image AS development
+
+# Copy the entire project
+COPY . /app
+
+# Set the working directory
+WORKDIR /app
+
+# Expose the development port
+EXPOSE $MINI_APP_PORT
+
+# Run the app in development mode
+CMD export NODE_ENV=development && yarn install && yarn dev --port $MINI_APP_PORT
