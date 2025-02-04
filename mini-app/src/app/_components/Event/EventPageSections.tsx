@@ -188,16 +188,15 @@ const EventRegistrationStatus = ({
 // Main component
 export const EventSections = () => {
   const router = useRouter();
-  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData  } = useEventData();
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
 
-  const canManageEvent = canUserManageEvent(user,  {
+  const canManageEvent = canUserManageEvent(user, {
     data: {
       owner: eventData?.data?.owner,
       accessRoles: eventData?.data?.accessRoles,
     },
-  }) ;
-
+  });
 
   const userCompletedTasks =
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
