@@ -3,6 +3,12 @@ import { rewardStatus, rewardType } from "@/db/schema";
 import { visitors } from "@/db/schema/visitors";
 import { InferSelectModel } from "drizzle-orm";
 
+export type RewardDataTyepe =
+  | {
+      reward_link: string;
+      ok: true;
+    }
+  | { fail_reason: string; ok: false };
 export const rewards = pgTable(
   "rewards",
   {
@@ -11,7 +17,7 @@ export const rewards = pgTable(
       .references(() => visitors.id)
       .notNull(),
     type: rewardType("type"),
-    data: json("data"),
+    data: json("data").$type<RewardDataTyepe>(),
     tryCount: integer("try_count").default(0).notNull(),
     status: rewardStatus("status").notNull().default("created"),
     created_at: timestamp("created_at").defaultNow(),

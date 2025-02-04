@@ -13,7 +13,7 @@ export const eventRegistrants = pgTable(
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
 
     status: eventRegistrantStatus("status").default("pending").notNull(),
-    register_info: json("register_info").notNull().default({}).$type<Record<string, string>>(),
+    register_info: json("register_info").notNull().default({}).$type<Record<string, string | null>>(),
 
     registrant_uuid: uuid("registrant_uuid")
       .unique()
