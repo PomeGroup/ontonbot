@@ -17,7 +17,9 @@ export const sendRewardNotification = async (
     const response = await sendTelegramMessage({
       link: rewardLink,
       chat_id: visitor.user_id as number,
-      message: `Hey there, you just received your reward for the ${event.title} event. Please click on the link below to claim it.`,
+      message: `👋Hey there
+Your CSBT for the event <b>${event.title}<b>
+👇 Please click on the link below to claim it.`,
     });
 
     // If the response was not successful, return the error
