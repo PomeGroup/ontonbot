@@ -2,7 +2,7 @@ import { bigint, index, pgTable, text, timestamp, uuid, real, pgEnum } from "dri
 import { orderState, paymentTypes } from "@/db/schema";
 import { events } from "@/db/schema/events";
 import { users } from "@/db/schema/users";
-import { relations } from "drizzle-orm";
+import { InferSelectModel, relations } from "drizzle-orm";
 
 export const orderTypes = pgEnum("order_types", [
   "nft_mint",
@@ -57,3 +57,6 @@ export const orderRelations = relations(orders, ({ one, many }) => ({
     references: [users.user_id],
   }),
 }));
+
+export type OrderRow = InferSelectModel<typeof orders>;
+

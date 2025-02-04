@@ -9,6 +9,8 @@ import tonCenter from "@/server/routers/services/tonCenter";
 import { NFTItem } from "@/server/routers/services/tonCenter";
 
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
+import { OrderRow } from "@/db/schema/orders";
+import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -40,11 +42,7 @@ async function getValidNfts(
   const valid_nfts_no_info: NFTItem[] = [];
   const valid_nfts_with_info: NFTItem[] = [];
 
-  const event_registered = await db
-    .select()
-    .from(eventRegistrants)
-    .where(and(eq(eventRegistrants.event_uuid, event_uuid), eq(eventRegistrants.user_id, userId)))
-    .execute();
+  const event_registered = await getByEventUuidAndUserId(event_uuid, userId);
 
   if (wallet_nfts?.nft_items) {
     for (const nft of wallet_nfts.nft_items) {
@@ -85,8 +83,8 @@ async function getValidNfts(
         }
 
         if (
-          event_registered.length &&
-          (event_registered[0].status === "approved" || event_registered[0].status === "checkedin") &&
+          event_registered &&
+          (event_registered.status === "approved" || event_registered.status === "checkedin") &&
           nft_db?.owner === userId
         ) {
           valid_nfts_with_info.push(nft);
@@ -231,52 +229,54 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 
     const ownerAddress = decoded.address;
+    let chosenNFTaddress = "";
+    let needToUpdateTicket = false;
+    let userHasTicket = false;
+    let userOrder: OrderRow | undefined = undefined;
+    let valid_nfts_no_info: NFTItem[] | never[] = [];
+    let valid_nfts_with_info: NFTItem[] | never[] = [];
 
-    const { valid_nfts_no_info, valid_nfts_with_info } = await getValidNfts(
-      ownerAddress,
-      event_payment_info?.collectionAddress!,
-      userId,
-      event_uuid
-    );
+    if (event_payment_info?.ticket_type === "NFT") {
+      const vaildNFTsResult = await getValidNfts(ownerAddress, event_payment_info?.collectionAddress!, userId, event_uuid);
 
-    const userHasTicket = !!valid_nfts_no_info.length || !!valid_nfts_with_info.length;
-    // const userHasTicket = (
-    //   await db
-    //     .select()
-    //     .from(tickets)
-    //     .where(
-    //       and(
-    //         eq(tickets.event_uuid, event.event_uuid as string),
-    //         eq(tickets.user_id, userId)
-    //       )
-    //     )
-    //     .orderBy(asc(tickets.created_at))
-    //     .execute()
-    // ).pop();
+      valid_nfts_no_info = vaildNFTsResult.valid_nfts_no_info;
+      valid_nfts_with_info = vaildNFTsResult.valid_nfts_with_info;
 
-    const userOrder = (
-      await db
-        .select()
-        .from(orders)
-        .where(
-          and(
+      userHasTicket = !!valid_nfts_no_info.length || !!valid_nfts_with_info.length;
+
+      userOrder = await db.query.orders.findFirst({
+        where: and(
+          eq(orders.user_id, userId),
+          eq(orders.event_uuid, event_uuid),
+          eq(orders.order_type, "nft_mint"),
+          eq(orders.state, "processing")
+        ),
+      });
+
+      needToUpdateTicket = !valid_nfts_with_info.length;
+
+      if (userHasTicket && needToUpdateTicket) {
+        chosenNFTaddress = valid_nfts_no_info[0].address;
+        console.log(`User ${userId} can claim ${chosenNFTaddress} `);
+      } else if (userHasTicket) {
+        chosenNFTaddress = valid_nfts_with_info[0].address;
+      }
+    }
+    if (event_payment_info?.ticket_type === "TSCSBT") {
+      const event_registrant = await getByEventUuidAndUserId(event_uuid, userId);
+      if (event_registrant?.status === "approved" || event_registrant?.status === "checkedin") {
+        userHasTicket = true;
+        userOrder = await db.query.orders.findFirst({
+          where: and(
             eq(orders.user_id, userId),
             eq(orders.event_uuid, event_uuid),
-            eq(orders.order_type, "nft_mint"),
+            eq(orders.order_type, "ts_csbt_ticket"),
             eq(orders.state, "processing")
-          )
-        )
-        .execute()
-    ).pop();
-
-    const needToUpdateTicket = !valid_nfts_with_info.length;
-
-    let chosenNFTaddress = "";
-    if (userHasTicket && needToUpdateTicket) {
-      chosenNFTaddress = valid_nfts_no_info[0].address;
-      console.log(`User ${userId} can claim ${chosenNFTaddress} `);
-    } else if (userHasTicket) {
-      chosenNFTaddress = valid_nfts_with_info[0].address;
+          ),
+        });
+      }
+    } else {
+      throw new Error("Invalid Ticket Type");
     }
 
     const data = {

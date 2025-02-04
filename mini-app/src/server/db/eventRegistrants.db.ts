@@ -53,7 +53,7 @@ export const getByEventUuidAndUserId = async (eventUuid: string, userId: number)
       .from(eventRegistrants)
       .where(and(eq(eventRegistrants.event_uuid, eventUuid), eq(eventRegistrants.user_id, userId)))
       .execute();
-    return result[0];
+    return result.pop();
   } catch (error) {
     console.error(`Error fetching Event Registrant for Event UUID ${eventUuid} and User ID ${userId}:`, error);
     throw error; // Propagate the error to be handled by the caller
