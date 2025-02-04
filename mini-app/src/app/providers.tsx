@@ -13,7 +13,6 @@ import KonstaAppProvider from "./_components/KonstaAppProvider";
 import UserSaver from "./_components/UserSaver";
 import * as Sentry from "@sentry/nextjs";
 import NotificationProvider from "./_components/NotificationProvider";
-import { TwaAnalyticsProvider } from '@tonsolutions/telemetree-react';
 const TELEMETREE_API_KEY = "ffdf302a-c23a-417d-932d-b82b46573742";
 const TELEMETREE_PROJECT_ID = "57ca5abb-9d53-4417-b8eb-18cfb8345f0c"
 const TELEMETREE_APP_NAME = "Onton-mini-app";

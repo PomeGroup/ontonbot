@@ -8,7 +8,6 @@ import {
   uuid,
   uniqueIndex,
   real,
-  boolean,
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";

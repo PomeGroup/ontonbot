@@ -6,8 +6,6 @@ import couponSchema from "@/zodSchema/couponSchema";
 import { db } from "@/db/db";
 import { logger } from "@/server/utils/logger";
 import eventDB from "@/server/db/events";
-import Papa from "papaparse";
-import axios from "axios";
 
 export const couponRouter = router({
   /**

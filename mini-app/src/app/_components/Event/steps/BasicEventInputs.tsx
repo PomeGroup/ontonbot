@@ -4,7 +4,7 @@ import { Block, Button, Checkbox, ListInput, ListItem, Toolbar } from "konsta/re
 import TonHubPicker from "../../molecules/pickers/TonHubpicker";
 import { ImageUpload } from "./ImageUpload";
 import { useCreateEventStore } from "@/zustand/createEventStore";
-import { useGetHubs, useGetHubsManageEvent } from "@/hooks/events.hooks";
+import { useGetHubsManageEvent } from "@/hooks/events.hooks";
 import { KSheet } from "@/components/ui/drawer";
 
 interface Props {

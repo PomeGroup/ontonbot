@@ -14,10 +14,8 @@ import ActionCard from "@/components/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";
 import { useGetEvent } from "@/hooks/events.hooks";
 import { useUserStore } from "@/context/store/user.store";
-import hardcodedAcl from "./hardcodedAcl";
 import {
   canUserEditEvent,
-  canUserManageEvent,
   canUserPerformRole,
   CheckAdminOrOrganizer,
 

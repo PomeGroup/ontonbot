@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
-import { eventPayment, eventRegistrants, nftItems, tickets } from "@/db/schema";
+import { eventPayment, eventRegistrants, nftItems } from "@/db/schema";
 import { getAuthenticatedUser } from "@/server/auth";
-import { and, eq, desc, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   const event_uuid = params.id;

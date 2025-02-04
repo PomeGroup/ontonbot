@@ -1,8 +1,5 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
-import { redisTools } from "@/lib/redisTools";
-import { validateJwtFromRequest } from "@/app/api/client/v1/authService";
-import jwt from "jsonwebtoken";
 
 // Define error codes for consistent error responses
 const ERROR_CODES = {

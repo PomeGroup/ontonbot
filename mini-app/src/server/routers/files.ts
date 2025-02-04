@@ -2,14 +2,14 @@ import axios from "axios";
 import sizeOf from "image-size";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { adminOrganizerCoOrganizerProtectedProcedure, adminOrganizerProtectedProcedure, router } from "../trpc";
+import { adminOrganizerCoOrganizerProtectedProcedure, router } from "../trpc";
 import { validateMimeType } from "@/lib/validateMimeType";
 import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
 import FormData from "form-data";
 import { logger } from "@/server/utils/logger";
 import jwt from "jsonwebtoken";
 import { checkRateLimit } from "@/lib/checkRateLimit";
-import { UPLOAD_IMAGE_RATE_LIMIT, UPLOAD_VIDEO_RATE_LIMIT } from "@/constants";
+import { UPLOAD_IMAGE_RATE_LIMIT } from "@/constants";
 // Base URL for Next.js API routes
 const API_BASE_URL = (process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000") + "/api/";
 

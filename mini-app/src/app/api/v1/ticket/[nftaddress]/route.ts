@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventRegistrants, nftItems, orders, tickets } from "@/db/schema";
+import { eventRegistrants, nftItems } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { type NextRequest } from "next/server";

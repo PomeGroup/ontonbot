@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { notificationsDB } from "@/server/db/notifications.db";
-import { NotificationStatus, NotificationType, NotificationItemType } from "@/db/schema";
+import { NotificationStatus } from "@/db/schema";
 import { eventPoaResultsDB } from "@/server/db/eventPoaResults.db";
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { NOTIFICATION_TIMEOUT_MARGIN, PASSWORD_RETRY_LIMIT } from "@/sockets/constants";

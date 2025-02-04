@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
-import { getOrganizerEvents } from "@/server/db/events"; // Ensure the function is correctly imported
-import { validateJwtFromRequest } from "@/app/api/client/v1/authService";
+// Ensure the function is correctly imported
 
 // Zod schema for validating query parameters
 const getEventsListSchema = z.object({

@@ -9,7 +9,6 @@ import {
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
-import { eventPoaResultStatus } from "@/db/enum";
 import { z } from "zod";
 
 // Existing enums:

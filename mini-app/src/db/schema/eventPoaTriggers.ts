@@ -1,5 +1,5 @@
 import { integer, pgTable, serial, timestamp, smallint, bigint } from "drizzle-orm/pg-core";
-import { eventTriggerType, eventTriggerStatus, events, users } from "@/db/schema";
+import { eventTriggerType, eventTriggerStatus, events } from "@/db/schema";
 
 
 export const eventPoaTriggers = pgTable("event_poa_triggers", {

@@ -1,4 +1,4 @@
-import { is_dev_env, is_prod_env } from "@/server/utils/evnutils";
+import { is_prod_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
 
 type SQLParams = unknown[];

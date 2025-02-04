@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventRegistrants, nftItems, orders, tickets } from "@/db/schema";
+import { eventRegistrants, nftItems, orders } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import { and, eq, or, sql } from "drizzle-orm";

@@ -7,7 +7,6 @@ import { useSocketStore } from "@/zustand/useSocketStore";
 import { Dialog, DialogButton } from "konsta/react";
 import useWebApp from "@/hooks/useWebApp";
 import { NotificationItemType, NotificationStatus, NotificationType } from "@/db/enum";
-import { FaCheck } from "react-icons/fa";
 import { useRouter } from "next/navigation"; // For programmatic navigation in Next.js 13
 
 type Notification = {

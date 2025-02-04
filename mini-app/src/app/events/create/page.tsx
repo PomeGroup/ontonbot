@@ -1,6 +1,6 @@
 "use client";
 import ManageEvent from "@/app/_components/organisms/events/ManageEvent";
-import { Block, Page } from "konsta/react";
+import { Page } from "konsta/react";
 
 
 export default function CreateEventAdminPage() {

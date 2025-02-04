@@ -1,4 +1,4 @@
-import { eventPayment, eventRegistrants, events, nftItems, orders, rewards, tickets, walletChecks } from "@/db/schema";
+import { eventPayment, eventRegistrants, events, nftItems, orders, rewards, walletChecks } from "@/db/schema";
 import { getErrorMessages } from "@/lib/error";
 import { redisTools } from "@/lib/redisTools";
 import { sendLogNotification } from "@/lib/tgBot";
@@ -9,7 +9,7 @@ import telegramService from "@/server/routers/services/telegramService";
 import { RewardType } from "@/types/event.types";
 import { CronJob } from "cron";
 import "dotenv/config";
-import { desc, and, asc, count, eq, isNotNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull, lt, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
 import { rounder, sleep } from "./utils";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
@@ -24,7 +24,6 @@ import { config } from "./server/config";
 import { selectUserById } from "./server/db/users";
 import { logger } from "./server/utils/logger";
 import { orgPromoteProcessOrder } from "./server/routers/services/orgPromoteOrderService";
-import { selectEventByUuid } from "./server/db/events";
 import { createUserReward } from "./server/routers/services/rewardsService";
 
 process.on("unhandledRejection", (err) => {

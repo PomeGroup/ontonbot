@@ -1,6 +1,5 @@
 import { trpc } from "@/app/_trpc/client";
 import { useState } from "react";
-import { telegramInteractionsRouter } from "@/server/routers/telegramInteractions";
 import { wait } from "@/lib/utils";
 import useWebApp from "@/hooks/useWebApp";
 

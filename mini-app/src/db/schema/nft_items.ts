@@ -1,5 +1,5 @@
 import { users } from "@/db/schema/users";
-import { bigint, pgTable, serial, uuid, text, uniqueIndex, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { bigint, pgTable, serial, uuid, text, uniqueIndex, timestamp } from "drizzle-orm/pg-core";
 import { orders } from "./orders";
 
 export const nftItems = pgTable(

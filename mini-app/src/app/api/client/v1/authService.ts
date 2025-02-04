@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-import { redisTools } from "@/lib/redisTools";
-import { selectUserById, selectUserByUsername } from "@/server/db/users"; // Assuming redisTools is available for Redis operations
+// Assuming redisTools is available for Redis operations
 
 const JWT_SECRET = process.env.CLIENT_API_JWT_SECRET!;
 

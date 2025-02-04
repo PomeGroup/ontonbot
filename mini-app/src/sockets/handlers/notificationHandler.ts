@@ -1,5 +1,5 @@
 import { Server, Socket } from "socket.io";
-import { SocketEvents, userSockets } from "../constants";
+import { SocketEvents } from "../constants";
 import { startNotificationWorker } from "../notificationWorker";
 import { sanitizeString } from "@/lib/sanitizer";
 

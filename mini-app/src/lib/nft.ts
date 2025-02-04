@@ -2,7 +2,7 @@ import tonCenter, { v2_client } from "@/server/routers/services/tonCenter";
 import { Address, Cell, internal, beginCell, contractAddress, StateInit, SendMode, OpenedContract, toNano } from "@ton/core";
 
 import { KeyPair, mnemonicToPrivateKey } from "@ton/crypto";
-import { TonClient, WalletContractV4 } from "@ton/ton";
+import { WalletContractV4 } from "@ton/ton";
 import { logger } from "@/server/utils/logger";
 import * as dotenv from "dotenv";
 

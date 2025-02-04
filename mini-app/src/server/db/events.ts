@@ -7,7 +7,6 @@ import {
   events,
   rewards,
   tickets,
-  userRoles,
   users,
   visitors,
 } from "@/db/schema";
@@ -20,7 +19,6 @@ import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { logSQLQuery } from "@/lib/logSQLQuery";
 import { logger } from "../utils/logger";
 
 

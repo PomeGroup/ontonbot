@@ -1,7 +1,7 @@
 import { trpc } from "@/app/_trpc/client";
 import { Button } from "@/components/ui/button";
 import { EventRegisterSchema } from "@/types";
-import { ListInput, List, BlockTitle, BlockFooter, Preloader } from "konsta/react";
+import { ListInput, List, BlockTitle, Preloader } from "konsta/react";
 import { useParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";

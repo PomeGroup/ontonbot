@@ -17,7 +17,6 @@ import EventBanner from "@/components/EventBanner";
 import { OntonEvent } from "@/types";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { ChevronRightIcon } from "lucide-react";
-import Typography from "@/components/Typography";
 
 // const currentDateTime = Math.floor(Date.now() / 1000);
 

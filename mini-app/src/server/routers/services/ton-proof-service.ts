@@ -5,7 +5,6 @@ import { randomBytes, sign } from "tweetnacl";
 import { CheckProofRequestDto } from "@/types/ton-proof";
 import { tryParsePublicKey } from "@/server/utils/wallets-data";
 import { DOMAINS, PAYLOAD_TTL } from "@/constants";
-import { logger } from "@/server/utils/logger";
 const tonProofPrefix = "ton-proof-item-v2/";
 const tonConnectPrefix = "ton-connect";
 const allowedDomains = DOMAINS;

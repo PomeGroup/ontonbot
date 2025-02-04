@@ -1,10 +1,5 @@
-import { db } from "@/db/db";
-import { user_custom_flags } from "@/db/schema";
 import { selectEventByUuid } from "@/server/db/events";
-import { and, eq, or } from "drizzle-orm";
 import { z } from "zod";
-import { cookies } from "next/headers";
-import { createUserReward } from "@/server/routers/services/rewardsService";
 import { TRPCError } from "@trpc/server";
 import { logger } from "@/server/utils/logger";
 import { getAuthenticatedUserApi } from "@/server/auth";

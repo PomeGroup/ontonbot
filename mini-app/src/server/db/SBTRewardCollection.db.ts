@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { sbtRewardCollections } from "@/db/schema";
-import { eq, SQLWrapper } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 
 interface SBTRewardCollection {

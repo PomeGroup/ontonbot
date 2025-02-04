@@ -1,12 +1,11 @@
 import { Server } from "socket.io";
 import { Channel, Message } from "amqplib";
-import { retryLimit, SocketEvents, UserId, userSockets } from "@/sockets/constants";
+import { retryLimit, SocketEvents, UserId } from "@/sockets/constants";
 import { sanitizeInput } from "@/lib/sanitizer";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { eventPoaResultsDB } from "@/server/db/eventPoaResults.db";
-import { getEventById } from "@/server/db/events";
-import { NotificationItemType, NotificationStatus, NotificationType } from "@/db/enum"; // Ensure this import is present
+// Ensure this import is present
 import { logger } from "@/server/utils/logger";
 
 export const emitNotification = async (

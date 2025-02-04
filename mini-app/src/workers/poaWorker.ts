@@ -2,9 +2,7 @@ import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { EventTriggerStatus, NotificationItemType, NotificationStatus, NotificationType } from "@/db/schema";
 
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { getEventById ,fetchOngoingEvents } from "@/server/db/events";
-import { z } from "zod";
 import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
 import { ACTION_TIMEOUTS, PASSWORD_RETRY_LIMIT, WORKER_INTERVAL, PAGE_SIZE } from "@/sockets/constants";
 import { logger } from "@/server/utils/logger";
