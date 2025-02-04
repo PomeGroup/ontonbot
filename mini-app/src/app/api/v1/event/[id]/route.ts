@@ -261,19 +261,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       } else if (userHasTicket) {
         chosenNFTaddress = valid_nfts_with_info[0].address;
       }
-    }
-    if (event_payment_info?.ticket_type === "TSCSBT") {
+    } else if (event_payment_info?.ticket_type === "TSCSBT") {
       const event_registrant = await getByEventUuidAndUserId(event_uuid, userId);
+      userOrder = await db.query.orders.findFirst({
+        where: and(
+          eq(orders.user_id, userId),
+          eq(orders.event_uuid, event_uuid),
+          eq(orders.order_type, "ts_csbt_ticket"),
+          eq(orders.state, "processing")
+        ),
+      });
       if (event_registrant?.status === "approved" || event_registrant?.status === "checkedin") {
         userHasTicket = true;
-        userOrder = await db.query.orders.findFirst({
-          where: and(
-            eq(orders.user_id, userId),
-            eq(orders.event_uuid, event_uuid),
-            eq(orders.order_type, "ts_csbt_ticket"),
-            eq(orders.state, "processing")
-          ),
-        });
       }
     } else {
       throw new Error("Invalid Ticket Type");
