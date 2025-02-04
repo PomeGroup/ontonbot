@@ -53,7 +53,14 @@ export function ClaimRewardButton(props: { eventId: string; initData: string }) 
 
   // Conditional rendering of the button or child component
   if (props.initData) {
-    return visitorReward.isSuccess ? (
+    return visitorReward.isLoading ? (
+      <MainButton
+        text="Loading..."
+        color="primary"
+        disabled
+        progress
+      />
+    ) : visitorReward.isSuccess ? (
       <ClaimRewardButtonChild
         isNotified={
           visitorReward.data.type === "reward_link_generated" &&
@@ -63,8 +70,8 @@ export function ClaimRewardButton(props: { eventId: string; initData: string }) 
       />
     ) : (
       <MainButton
-        text="Something With Reward Went Wrong"
-        color={"secondary"}
+        text={visitorReward.error.message || "Something With Reward Went Wrong"}
+        color="secondary"
       />
     );
   }
