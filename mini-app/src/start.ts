@@ -59,6 +59,8 @@ async function MainCronJob() {
 
   new CronJob("*/9 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
 
+  new CronJob("*/5 * * * * *", cronJob(TsCsbtTicket_Order), null, true);
+
   new CronJob("*/21 * * * * *", OrganizerPromoteProcessing, null, true);
 }
 
@@ -692,6 +694,7 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
   // Mint NFT
   // Update (DB) Successful Minted Orders as Minted
   // logger.log("&&&& MintNFT &&&&");
+  console.log('TsCsbtTicket_Order');
   const results = await db
     .select()
     .from(orders)
@@ -737,24 +740,9 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
       // const eventData = await  selectEventByUuid(event_uuid!);
 
       try {
-        const result = await createUserReward(
-          {
-            user_id: ordr.user_id!,
-            event_uuid: event_uuid!,
-          },
-          true
-        );
-      } catch (error) {
-        continue;
-      }
-
-      await db.transaction(async (trx) => {
-        await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
-        logger.log(`nft_mint_order_completed_${ordr.uuid}`);
-
         if (ordr.user_id) {
           // if ordr.user_id === null order is manual mint(Gift)
-          await trx
+          await db
             .update(eventRegistrants)
             .set({ status: "approved" })
             .where(
@@ -768,6 +756,21 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
 
           logger.log(`nft_mint_user_approved_${ordr.user_id}`);
         }
+        const result = await createUserReward(
+          {
+            user_id: ordr.user_id!,
+            event_uuid: event_uuid!,
+          },
+          true
+        );
+      } catch (error) {
+        console.log("create_tscsbt_ticket_failed", error);
+        continue;
+      }
+
+      await db.transaction(async (trx) => {
+        await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
+        logger.log(`nft_mint_order_completed_${ordr.uuid}`);
       });
 
       try {
