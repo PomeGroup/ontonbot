@@ -18,7 +18,7 @@
     "build:local": "dotenv -e ../.env -- cross-var next build",
     "start-cron": "tsx ./src/start.ts",
     "nft": "tsx ./src/lib/nft.ts",
-    "start": "pnpm run init:minio:server && next start",
+    "start": "yarn run init:minio:server && next start",
     "start:local": "dotenv -e ../.env -- cross-var next start --port %MINI_APP_PORT%",
     "lint": "next lint",
     "test": "tsx ./src/test.ts",
