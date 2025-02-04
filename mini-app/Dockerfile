@@ -7,7 +7,11 @@ FROM node:22-alpine3.19 AS minimum-image
 RUN apk update && apk add --no-cache nano
 
 # Enable corepack to use Yarn
-RUN corepack enable
+# Disable corepack to avoid signature verification
+RUN corepack disable
+
+# Install Yarn globally
+RUN npm install -g yarn
 
 # ARGS
 ARG ENV
