@@ -18,7 +18,7 @@ export const sendRewardNotification = async (
       link: rewardLink,
       chat_id: visitor.user_id as number,
       message: `👋Hey there
-Your CSBT for the event ${event.title}
+🎈 Your CSBT for the event ${event.title}
 👇 Please click on the link below to claim it.`,
     });
 

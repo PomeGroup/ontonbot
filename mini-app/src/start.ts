@@ -694,7 +694,7 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
   // Mint NFT
   // Update (DB) Successful Minted Orders as Minted
   // logger.log("&&&& MintNFT &&&&");
-  console.log('TsCsbtTicket_Order');
+  // console.log('TsCsbtTicket_Order');
   const results = await db
     .select()
     .from(orders)
@@ -795,12 +795,12 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
         });
         /* -------------------------------------------------------------------------- */
       } catch (error) {
-        logger.error("MintNFTforPaid_Orders-sendLogNotification-error--:", error);
+        logger.error("TsCsbtTicket_Order-sendLogNotification-error--:", error);
       }
 
-      // await pushLockTTl();
+      await pushLockTTl();
     } catch (error) {
-      logger.log(`nft_mint_error , ${error}`);
+      logger.log(`tscsbt_mint_error , ${error}`);
     }
   }
 }
