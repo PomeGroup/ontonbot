@@ -21,6 +21,7 @@ import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
 import { canUserManageEvent } from "@/lib/userRolesUtils";
+import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -102,7 +103,9 @@ const EventHead = React.memo(() => {
   return (
     <div className="flex items-start justify-between">
       <div>
-        {isNotPublished && <div className="mb-2 text-sky-500 text-lg font-semibold">! Event is not published and pending moderation</div>}
+        {isNotPublished && (
+          <div className="mb-2 text-sky-500 text-lg font-semibold">! Event is not published and pending moderation</div>
+        )}
         <div className="text-[24px] leading-[28px] font-bold break-all mb-4">{eventData.data?.title ?? ""}</div>
         <EventSubtitle />
       </div>
@@ -138,7 +141,7 @@ const EventRegistrationStatus = ({
   hasWaitingList: boolean;
 }) => {
   const statusConfigs = {
-    "": () => <UserRegisterForm />,
+    "": () => <UserCustomRegisterForm />,
     pending: () => (
       <DataStatus
         status="sent"
@@ -188,16 +191,15 @@ const EventRegistrationStatus = ({
 // Main component
 export const EventSections = () => {
   const router = useRouter();
-  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData  } = useEventData();
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
 
-  const canManageEvent = canUserManageEvent(user,  {
+  const canManageEvent = canUserManageEvent(user, {
     data: {
       owner: eventData?.data?.owner,
       accessRoles: eventData?.data?.accessRoles,
     },
-  }) ;
-
+  });
 
   const userCompletedTasks =
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&

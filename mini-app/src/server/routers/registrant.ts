@@ -8,7 +8,7 @@ import { and, desc, eq, ne, or } from "drizzle-orm";
 import rewardService from "@/server/routers/services/rewardsService";
 import telegramService from "@/server/routers/services/telegramService";
 import { logger } from "@/server/utils/logger";
-import { EventRegisterSchema } from "@/types";
+import { CombinedEventRegisterSchema, EventRegisterSchema } from "@/types";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import { addVisitor } from "@/server/db/visitors";
 import { users } from "@/db/schema/users";
@@ -133,7 +133,7 @@ const processRegistrantRequest = evntManagerPP
     return { code: 201, message: "ok" };
   });
 
-const eventRegister = initDataProtectedProcedure.input(EventRegisterSchema).mutation(async (opts) => {
+const eventRegister = initDataProtectedProcedure.input(CombinedEventRegisterSchema).mutation(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const { event_uuid, ...registerInfo } = opts.input;
   const event = await selectEventByUuid(event_uuid);

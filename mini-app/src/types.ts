@@ -2,27 +2,27 @@ import { Address } from "@ton/core";
 import { z } from "zod";
 
 export type OntonEvent = {
-    eventUuid: string;
-    title?: string;
-    startDate: number;
-    endDate: number;
-    location?: string;
-    imageUrl?: string;
-    subtitle?: string;
-    organizerFirstName?: string;
-    organizerLastName?: string;
-    organizerUsername?: string;
-    organizerUserId?: number;
-    ticketToCheckIn?: boolean;
-    timezone?: string;
+  eventUuid: string;
+  title?: string;
+  startDate: number;
+  endDate: number;
+  location?: string;
+  imageUrl?: string;
+  subtitle?: string;
+  organizerFirstName?: string;
+  organizerLastName?: string;
+  organizerUsername?: string;
+  organizerUserId?: number;
+  ticketToCheckIn?: boolean;
+  timezone?: string;
 
-    reservedCount?: number;
-    visitorCount?: number;
-    ticketPrice?: number;
-    city?: string;
-    country?: string;
-    participationType?: string;
-  }
+  reservedCount?: number;
+  visitorCount?: number;
+  ticketPrice?: number;
+  city?: string;
+  country?: string;
+  participationType?: string;
+};
 
 export type InputField = {
   type: string;
@@ -180,7 +180,12 @@ export const PaidEventSchema = z
       }
 
       // Validate that `payment_type` is present
-      if (!data.payment_type) ctx.addIssue({ code: "custom", path: ["payment_type"], message: "Payment type is required." });
+      if (!data.payment_type)
+        ctx.addIssue({
+          code: "custom",
+          path: ["payment_type"],
+          message: "Payment type is required.",
+        });
 
       // Validate that `payment_amount` is present and greater than 0
       if (data.payment_amount === undefined || data.payment_amount <= 0)
@@ -266,8 +271,6 @@ export const EventDataSchema = z
         message: "Secret phrase is required for free events.",
       });
     }
-
-
   });
 
 export const UpdateEventDataSchema = z.object({
@@ -363,13 +366,27 @@ export const EventRegisterSchema = z.object({
     .string()
     .max(100)
     .optional()
-    .refine(
-      (value) => !value || /^(https?:\/\/)?([\w]+\.)?linkedin\.com\/.+/.test(value),
-      { message: "Please enter a valid LinkedIn URL" }
-    ),
+    .refine((value) => !value || /^(https?:\/\/)?([\w]+\.)?linkedin\.com\/.+/.test(value), {
+      message: "Please enter a valid LinkedIn URL",
+    }),
   github: z.string({ required_error: "GitHub URL is required" }).max(30).optional(),
   notes: z.string({ required_error: "notes are required" }).max(512).optional(),
 });
+
+export const CustomEventRegisterSchema = z.object({
+  event_uuid: z.string(),
+  full_name: z.string().min(1, "Full Name is required."),
+  company: z.string().min(1, "Organization is required."),
+  role: z.string().min(1, "Your role is required."),
+  linkedin: z.string().optional(),
+  github: z.string().optional(),
+  email: z.string().min(1, "Email is required.").email("Invalid email format."),
+  attendee_type: z.string().min(1, "Please select an option."),
+  developer_type: z.string().optional(),
+  main_goal: z.string().min(1, "Main request/goal is required."),
+});
+
+export const CombinedEventRegisterSchema = z.union([EventRegisterSchema, CustomEventRegisterSchema]);
 
 export const AgendaItemSchema = z.object({
   time: z.string({ required_error: "time is required" }), // assuming time is a string, e.g., "10:00 AM"

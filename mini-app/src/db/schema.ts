@@ -42,21 +42,19 @@ import { sideEvents } from "./schema/sideEvents";
 import { eventRegistrants, eventRegistrantStatus } from "./schema/eventRegistrants";
 import { walletChecks } from "./schema/walletChecks";
 import { nftItems } from "./schema/nft_items";
-import {
-  coupon_definition,
-  coupon_definition_status,
-  coupon_definition_type,
-} from "./schema/coupon_definition";
+import { coupon_definition, coupon_definition_status, coupon_definition_type } from "./schema/coupon_definition";
 import { coupon_item_status, coupon_items } from "./schema/coupon_items";
-import { user_custom_flags, user_flags } from "./schema/user_custom_flags";
+import { user_custom_flags, user_flags, userFlagsType } from "./schema/user_custom_flags";
 
 // ---- NEW IMPORTS for user_roles ----
 import {
   accessRoleItemType,
   accessRoleEnum,
   userRoles,
-  userRolesRelations, accessRoleItemTypeEnum,accessRoleEnumType,
-  userRoleStatusEnum
+  userRolesRelations,
+  accessRoleItemTypeEnum,
+  accessRoleEnumType,
+  userRoleStatusEnum,
 } from "./schema/userRoles";
 
 // export all the enums
@@ -136,3 +134,4 @@ export type { NotificationItemType };
 export type { EventPoaResultStatus };
 export type { accessRoleItemType };
 export type { accessRoleEnumType };
+export type { userFlagsType };

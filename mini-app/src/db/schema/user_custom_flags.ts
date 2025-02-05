@@ -2,8 +2,14 @@ import { bigint, text, timestamp, pgTable, pgEnum, serial, uniqueIndex, boolean 
 import { users } from "./users";
 
 // Define enum for user flags
-export const user_flags = pgEnum("user_flags_enum", ["event_moderator", "ton_society_verified" , 'api_key']);
-
+export const user_flags = pgEnum("user_flags_enum", [
+  "event_moderator",
+  "ton_society_verified",
+  "api_key",
+  "custom_registration_1",
+]);
+// Define type for user flags
+export type userFlagsType = (typeof user_flags.enumValues)[number];
 // Define the table
 export const user_custom_flags = pgTable(
   "user_custom_flags",

@@ -36,7 +36,7 @@ import { timestampToIsoString } from "@/lib/DateAndTime";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
 import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
-import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
+import { organizerTsVerified, userFlagsDB, userHasModerationAccess } from "../db/userFlags.db";
 import { tgBotModerationMenu } from "@/lib/TgBotTools";
 import { userRolesDB } from "@/server/db/userRoles.db";
 
@@ -121,9 +121,20 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     role: role,
   }));
 
+  const registrationFromSchema = {
+    isCustom: await userFlagsDB.checkUserCustomFlagBoolean(userId, "custom_registration_1"),
+  };
   // If the event does NOT require registration, just return data
   if (!eventData.has_registration) {
-    return { capacity_filled, registrant_status, organizer, accessRoles, ...eventData, registrant_uuid };
+    return {
+      capacity_filled,
+      registrant_status,
+      organizer,
+      registrationFromSchema,
+      accessRoles,
+      ...eventData,
+      registrant_uuid,
+    };
   }
   /* ------------------------ Event Needs Registration ------------------------ */
 
@@ -158,6 +169,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       capacity_filled,
       registrant_status,
       organizer,
+      registrationFromSchema,
       accessRoles,
       ...eventData,
       registrant_uuid,
@@ -175,6 +187,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
         capacity_filled,
         registrant_status,
         organizer,
+        registrationFromSchema,
         accessRoles,
         ...eventData,
         registrant_uuid,
@@ -188,6 +201,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     capacity_filled,
     registrant_status,
     organizer,
+    registrationFromSchema,
     accessRoles,
     ...eventData,
     registrant_uuid,
