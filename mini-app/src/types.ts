@@ -382,7 +382,7 @@ export const CustomEventRegisterSchema = z.object({
   github: z.string().optional(),
   email: z.string().min(1, "Email is required.").email("Invalid email format."),
   career: z.string().min(1, "Please select an option."),
-  developer_type: z.string().optional(),
+  developer_type: z.string().default(""),
   main_goal: z.string().min(1, "Main request/goal is required."),
 });
 
