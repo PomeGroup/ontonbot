@@ -35,7 +35,7 @@ const NavbarLink = ({ href, label, target }) => {
     } else {
       setIsActive(pathname === href);
     }
-  }, [pathname, hash]);
+  }, [pathname, hash, href]);
 
   return (
     <li className="relative">
@@ -60,25 +60,12 @@ const navItems = [
   },
   {
     label: "Organizer Guide",
-    href: "https://theontonbot.notion.site/14903fff39d680d78408d8609f5b60da?v=14903fff39d68176a798000c77eac507",
-    target: "_blank",
-  },
-  {
-    label: "FAQs",
-    href: "https://t.me/ontonsupport/22315",
+    href: "https://onton.live/blog/guide/",
     target: "_blank",
   },
   {
     label: "Mini app",
     href: "/#features",
-  },
-  {
-    label: "Privacy",
-    href: "/privacy",
-  },
-  {
-    label: "Terms of Service",
-    href: "/tos",
   },
 ];
 
