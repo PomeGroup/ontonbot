@@ -121,7 +121,7 @@ RUN echo "Build stage files:" && ls -la /app
 
 # Install all dependencies (including dev) and build
 RUN yarn install
-RUN yarn build
+RUN DEBUG=* yarn build --verbose
 
 ##
 # Stage: production
