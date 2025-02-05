@@ -102,7 +102,7 @@ const EventHead = React.memo(() => {
   return (
     <div className="flex items-start justify-between">
       <div>
-        {isNotPublished && <div className="mb-2 text-red-500 text-lg font-semibold">! Event is not published</div>}
+        {isNotPublished && <div className="mb-2 text-sky-500 text-lg font-semibold">! Event isn't published and pending moderation</div>}
         <div className="text-[24px] leading-[28px] font-bold break-all mb-4">{eventData.data?.title ?? ""}</div>
         <EventSubtitle />
       </div>
