@@ -19,12 +19,12 @@ interface TonSocietyDraftSchema {
 }
 // Original function with overloads
 export function CreateTonSocietyDraft(
-  input_event_data: z.infer<typeof EventDataSchema>,
-  event_uuid: string
+  _input_event_data: z.infer<typeof EventDataSchema>,
+  _event_uuid: string
 ): Promise<TonSocietyRegisterActivityT>;
 export function CreateTonSocietyDraft(
-  input_event_data: TonSocietyDraftSchema,
-  event_uuid: string
+  _input_event_data: TonSocietyDraftSchema,
+  _event_uuid: string
 ): Promise<TonSocietyRegisterActivityT>;
 
 export async function CreateTonSocietyDraft(

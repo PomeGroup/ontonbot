@@ -137,7 +137,7 @@ const TicketDrawer: FC<TicketDrawerProps> = ({
         </DrawerFooter>
       </>
     );
-  }, [drawerTitle, checkInState, handleCheckIn, ticketData, eventTicketData]);
+  }, [checkInState, handleCheckIn, ticketData, eventTicketData]);
 
   const renderScanError = (errorMessage: string) => (
     <>

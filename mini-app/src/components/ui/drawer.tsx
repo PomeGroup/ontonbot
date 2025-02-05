@@ -119,26 +119,29 @@ export const KSheet = (props: KSheeProps) => {
   // this state is used to check if we have made the main button hidden after showing the sheet
   const { openedOneSheet, closedOneSheet } = useSheetStackStore();
 
-  const setOpen = (state: boolean) => {
-    if (state && !open) {
-      openedOneSheet();
-      setOpenState(true);
-    } else if (open) {
-      closedOneSheet();
-      setOpenState(false);
-    }
-  };
+  const setOpen = React.useCallback(
+    (state: boolean) => {
+      if (state && !open) {
+        openedOneSheet();
+        setOpenState(true);
+      } else if (open) {
+        closedOneSheet();
+        setOpenState(false);
+      }
+    },
+    [closedOneSheet, open, openedOneSheet]
+  );
 
   React.useEffect(() => {
     typeof props.open === "boolean" && setOpen(props.open);
-  }, [props.open]);
+  }, [props.open, setOpen]);
 
   React.useEffect(() => {
     return () => {
       closedOneSheet();
       setOpenState(false);
     };
-  }, []);
+  }, [closedOneSheet]);
 
   return (
     <>

@@ -39,5 +39,5 @@ export function useMainButton(onClick: () => void, text: string, options?: MainB
       webApp?.MainButton.setText(text);
       webApp?.MainButton.hide();
     };
-  }, [webApp?.MainButton, options?.disabled, options?.isLoading, options?.color]);
+  }, [webApp?.MainButton, options?.disabled, options?.isLoading, options?.color, onClick, text]);
 }

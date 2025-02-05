@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 
 type SocketState = {
   socket: Socket | null;
-  setSocket: (socket: Socket | null) => void;
+  setSocket: (_socket: Socket | null) => void;
 };
 
 export const useSocketStore = create<SocketState>((set) => ({

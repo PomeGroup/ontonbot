@@ -21,7 +21,7 @@ export default function ThemeSetter({ children }: { children: React.ReactNode })
     } else {
       document.body.style.backgroundColor = "#ffffff";
     }
-  }, [theme, webApp]);
+  }, [habticfeedback, theme, webApp]);
 
   useEffect(() => {
     console.log("current theme", {

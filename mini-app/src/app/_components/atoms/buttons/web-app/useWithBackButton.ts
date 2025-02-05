@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 export interface BackButtonProps {
   whereTo: string;
@@ -10,9 +10,9 @@ let isButtonShown = false;
 
 const useWithBackButton = ({ whereTo }: BackButtonProps) => {
   const router = useRouter();
-  const goBack = () => {
+  const goBack = useCallback(() => {
     router.push(whereTo);
-  };
+  }, [router, whereTo]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -40,7 +40,7 @@ const useWithBackButton = ({ whereTo }: BackButtonProps) => {
     return () => {
       WebApp.offEvent("backButtonClicked", goBack);
     };
-  }, [whereTo]);
+  }, [goBack, whereTo]);
 };
 
 export { useWithBackButton };

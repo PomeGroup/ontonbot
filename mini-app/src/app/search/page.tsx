@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
@@ -37,7 +37,7 @@ export default function Search() {
     );
 
   // Combine all pages of data into one array
-  const allEvents = data?.pages.flatMap((page) => page.items) ?? [];
+  const allEvents = useMemo(() => data?.pages.flatMap((page) => page.items) ?? [], [data?.pages]);
 
   /**
    * IntersectionObserver that triggers fetchNextPage()

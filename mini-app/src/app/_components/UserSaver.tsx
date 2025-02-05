@@ -17,7 +17,7 @@ const UserSaver: FC<{
     if (syncUser.isSuccess) {
       setUser(syncUser.data);
     }
-  }, [syncUser.isSuccess, syncUser.data?.wallet_address]);
+  }, [syncUser.isSuccess, syncUser.data?.wallet_address, syncUser.data, setUser]);
 
   // Show loading state until everything is ready
 

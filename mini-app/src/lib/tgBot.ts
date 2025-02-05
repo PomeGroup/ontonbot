@@ -633,7 +633,6 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 
 export const renderModerationEventMessage = (username: string | number, eventData: EventRow): string => {
   const eventUuid = eventData.event_uuid;
-  const eventDataWithoutDescription = removeSecretKey(removeKey(eventData, "description"));
   return `
 <b>${eventData.title}</b>
 

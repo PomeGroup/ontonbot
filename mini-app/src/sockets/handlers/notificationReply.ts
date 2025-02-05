@@ -16,7 +16,7 @@ import { getCache, setCache, deleteCache, cacheKeys } from "@/lib/redisTools";
 import { Server } from "socket.io";
 import { createUserReward } from "@/server/routers/services/rewardsService";
 
-type CallbackFunction = (response: { status: string; message: string }) => void;
+type CallbackFunction = (_response: { status: string; message: string }) => void;
 
 /**
  * handleNotificationReply - Extended to check password attempts via Redis

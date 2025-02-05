@@ -81,7 +81,7 @@ export const UploadImageFile = (props: UploadFileProps): JSX.Element => {
     } else {
       webApp?.MainButton.show();
     }
-  }, [isSheetOpen]);
+  }, [isSheetOpen, webApp?.MainButton]);
 
   useEffect(() => {
     // Set the initial image preview when the component mounts

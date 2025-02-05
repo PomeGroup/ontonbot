@@ -24,7 +24,7 @@ export class TonProofService {
    */
   public async checkProof(
     payload: CheckProofRequestDto,
-    getWalletPublicKey: (address: string) => Promise<Buffer | null>
+    getWalletPublicKey: (_address: string) => Promise<Buffer | null>
   ): Promise<boolean> {
     try {
       const stateInit = loadStateInit(Cell.fromBase64(payload.proof.state_init).beginParse());

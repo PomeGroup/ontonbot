@@ -215,7 +215,7 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
             try {
               window.Telegram.WebApp.showConfirm(
                 "You will need pay 10 TON to create a paid event + 0.06 TON for each person buying the ticket (minting fees)",
-                (confirmed) => {
+                (confirmed: any) => {
                   if (confirmed) {
                     set((state) => {
                       state.eventData.paid_event = paidEventInfo;

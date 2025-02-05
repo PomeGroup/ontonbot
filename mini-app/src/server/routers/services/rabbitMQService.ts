@@ -37,7 +37,7 @@ export const pushMessageToQueue = async (queue: QueueNamesType, message: any): P
  */
 export const consumeQueueMessages = async (
   queue: QueueNamesType,
-  onMessage: (message: any) => Promise<void>,
+  onMessage: (_message: any) => Promise<void>,
   prefetchCount = 40
 ): Promise<void> => {
   try {

@@ -1,19 +1,15 @@
 declare module "clamav.js" {
-  interface ClamAVScanResult {
-    isClean(): boolean;
-  }
-
   export function ping(
-    port: number,
-    host: string,
-    timeout: number,
-    callback: (err: Error | null, alive: boolean) => void
+    _port: number,
+    _host: string,
+    _timeout: number,
+    _callback: (_err: Error | null, _alive: boolean) => void
   ): void;
 
   export function scan(
-    buffer: Buffer,
-    port: number,
-    host: string,
-    callback: (err: Error | null, object: any, malicious: boolean) => void
+    _buffer: Buffer,
+    _port: number,
+    _host: string,
+    _callback: (_err: Error | null, _object: any, _malicious: boolean) => void
   ): void;
 }
