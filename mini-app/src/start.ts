@@ -25,7 +25,7 @@ import { selectUserById } from "./server/db/users";
 import { logger } from "./server/utils/logger";
 import { orgPromoteProcessOrder } from "./server/routers/services/orgPromoteOrderService";
 import { selectEventByUuid } from "./server/db/events";
-import { createUserReward } from "./server/routers/services/rewardsService";
+import { createUserReward, CsbtTicket } from "./server/routers/services/rewardsService";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -756,13 +756,7 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
 
           logger.log(`nft_mint_user_approved_${ordr.user_id}`);
         }
-        const result = await createUserReward(
-          {
-            user_id: ordr.user_id!,
-            event_uuid: event_uuid!,
-          },
-          true
-        );
+        const result = await CsbtTicket(event_uuid!, ordr.user_id!);
       } catch (error) {
         console.log("create_tscsbt_ticket_failed", error);
         continue;

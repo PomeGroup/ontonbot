@@ -260,7 +260,7 @@ export const createUserReward = async (
       // Create the user reward link
       const society_hub_value =
         typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
-        
+
       const res = await createUserRewardLink(eventData.activity_id, {
         telegram_user_id: props.user_id,
         attributes: eventData?.society_hub
@@ -315,6 +315,43 @@ export const createUserReward = async (
     }
   }
 };
+
+export async function CsbtTicket(event_uuid: string, user_id: number) {
+  const visitor = await addVisitor(user_id, event_uuid);
+  const eventData = await selectEventByUuid(event_uuid);
+  if (!eventData || !eventData.activity_id) {
+    logger.error("CsbtTicketRewardService eventData or activity_id is null");
+    throw new Error("CsbtTicketRewardService eventData or activity_id is null");
+  }
+  // Create the user reward link
+  const society_hub_value =
+    typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
+
+  const reward = await rewardDB.checkExistingReward(visitor.id);
+  if (reward) return;
+
+  const res = await createUserRewardLink(eventData.activity_id, {
+    telegram_user_id: user_id,
+    attributes: eventData?.society_hub
+      ? [
+          {
+            trait_type: "Organizer",
+            value: society_hub_value,
+          },
+        ]
+      : undefined,
+  });
+
+  // Ensure the response contains data
+  if (!res || !res.data || !res.data.data) {
+    throw new Error("Failed to create user reward link.");
+  }
+
+  // Insert the reward into the database
+  await rewardsDb.insertRewardWithData(visitor.id, user_id.toString(), "ton_society_sbt", res.data.data, "created");
+
+  return res.data.data;
+}
 
 const rewardService = {
   createUserRewardSBT,
