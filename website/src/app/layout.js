@@ -6,8 +6,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "ONton Landing Page",
-  description: "ONton - Experience the Future of Event Management",
+  title: "ONton | Event Management Platform On TON",
+  description:
+    "ONton is a revolutionary Soulbound Tokens and event management platform in ton blockchain.",
 };
 
 export default function RootLayout({ children }) {
