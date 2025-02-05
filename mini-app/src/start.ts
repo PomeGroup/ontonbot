@@ -754,7 +754,7 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
             )
             .execute();
 
-          logger.log(`nft_mint_user_approved_${ordr.user_id}`);
+          logger.log(`tscsbt_user_approved_${ordr.user_id}`);
         }
         const result = await CsbtTicket(event_uuid!, ordr.user_id!);
       } catch (error) {
@@ -764,7 +764,7 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
 
       await db.transaction(async (trx) => {
         await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
-        logger.log(`nft_mint_order_completed_${ordr.uuid}`);
+        logger.log(`tscsbt_order_completed_${ordr.uuid}`);
       });
 
       try {
