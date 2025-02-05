@@ -146,8 +146,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
           variant="info"
           className="my-4"
         >
-          Upload a video related to your event. Only MP4 format is allowed, and the file size must be under 5
-          MB.
+          Upload a video related to your event. Only MP4 format is allowed, and the file size must be under 5 MB.
         </AlertGeneric>
         <UploadVideoFile
           changeText="Change SBT Video"

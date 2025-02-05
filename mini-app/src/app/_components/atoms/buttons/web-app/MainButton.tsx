@@ -11,14 +11,7 @@ export interface MainButtonProps {
   progress?: boolean;
 }
 
-const MainButton: FC<MainButtonProps> = ({
-  disabled = false,
-  color,
-  textColor,
-  text,
-  onClick,
-  progress = false,
-}) => {
+const MainButton: FC<MainButtonProps> = ({ disabled = false, color, textColor, text, onClick, progress = false }) => {
   const WebApp = useWebApp();
 
   const buttonParams = useMemo(

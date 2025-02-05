@@ -5,4 +5,4 @@ async function main() {
   console.log(result.data.rewards.collection_address);
 }
 
-main().then(()=>console.log('done'));
+main().then(() => console.log("done"));

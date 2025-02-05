@@ -69,7 +69,7 @@ const generateRandomVisitor = (userId: number) => ({
   ],
 });
 
-export const selectVisitorsByEventUuidMock = async (event_uuid: string, limit: number, cursor: number) => {
+export const selectVisitorsByEventUuidMock = async (_event_uuid: string, limit: number, cursor: number) => {
   const visitorsData = Array.from({ length: limit }, (_, index) => generateRandomVisitor(cursor + index + 1));
 
   const moreRecordsAvailable = visitorsData.length === limit; // Simulate the possibility of more records

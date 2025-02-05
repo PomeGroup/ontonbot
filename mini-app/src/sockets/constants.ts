@@ -11,16 +11,14 @@ export const retryLimit = 20;
 // Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 after changing Retry interval for socket connections
 // 🚨🚨🚨🚨🚨🚨 you need to delete all queues and exchanges in RabbitMQ !!!!!!!!
-export const SOCKET_RETRY_INTERVAL =  5000;
+export const SOCKET_RETRY_INTERVAL = 5000;
 ////////////////////////////////////////////////////////////////
 // Define the socket events using a TypeScript enum
-export const allowedOrigins = [
-  process.env.NEXT_PUBLIC_APP_BASE_URL  ,
-];
+export const allowedOrigins = [process.env.NEXT_PUBLIC_APP_BASE_URL];
 // rateLimit:  requests per second
 export const RATE_LIMIT_WINDOW_MS = 1000;
 export const RATE_LIMIT_MAX = 10;
-export const MAIN_NOTIFICATION_TTL = 60 * 4 * 1000 ; // 2 minutes
+export const MAIN_NOTIFICATION_TTL = 60 * 4 * 1000; // 2 minutes
 export const SocketEvents = {
   receive: {
     test: "test",
@@ -69,7 +67,7 @@ export const NOTIFICATION_TIMEOUT_MARGIN = 15; // 10 seconds
 export const ACTION_TIMEOUTS = {
   POA_SIMPLE: 30,
   POA_PASSWORD: 75,
-}
+};
 
 // Define the maximum number of retries for a password notification
 export const PASSWORD_RETRY_LIMIT = 3;
@@ -78,4 +76,4 @@ export const PASSWORD_RETRY_LIMIT = 3;
 export const WORKER_INTERVAL = 4 * 1000; // 5 seconds
 export const PAGE_SIZE = 500; // Number of users to fetch per batch
 export const POA_CREATION_LIMIT = 4; // Maximum number of POA creation notifications to send per batch
-export const POA_CREATION_TIME_DISTANCE = (5 * 60) + 2; // 10 minutes
+export const POA_CREATION_TIME_DISTANCE = 5 * 60 + 2; // 10 minutes

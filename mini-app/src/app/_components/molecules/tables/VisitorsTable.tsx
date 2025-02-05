@@ -28,12 +28,7 @@ interface VisitorsTableProps {
   needRefresh: boolean;
 }
 
-const VisitorsTable: FC<VisitorsTableProps> = ({
-  event_uuid,
-  handleVisitorsExport,
-  setNeedRefresh,
-  needRefresh,
-}) => {
+const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExport, setNeedRefresh, needRefresh }) => {
   const webApp = useWebApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -113,9 +108,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     return flatData.filter((visitor) => {
       const matchesSearch =
         visitor?.username?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        `${visitor?.first_name} ${visitor?.last_name}`
-          .toLowerCase()
-          .includes(debouncedSearchQuery.toLowerCase());
+        `${visitor?.first_name} ${visitor?.last_name}`.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
       const matchesStatus =
         statusFilter === "All" ||
         (statusFilter === "Waiting" && visitor.ticket_status === "UNUSED") ||
@@ -137,10 +130,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
 
       if (
         debouncedSearchQuery.length === 0 ||
-        (debouncedSearchQuery.length > 0 &&
-          filteredVisitors.length === 0 &&
-          !isFetchingNextPage &&
-          !isLoadingVisitors)
+        (debouncedSearchQuery.length > 0 && filteredVisitors.length === 0 && !isFetchingNextPage && !isLoadingVisitors)
       ) {
         setShowNoResults(true); // Show message immediately if no results and not loading
       }

@@ -126,7 +126,7 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
 };
 
 // =========== Approve Event in TonSociety etc. ===========
-async function onCallBackModerateEvent(status: string, event_uuid: string) {
+async function onCallBackModerateEvent(_status: string, event_uuid: string) {
   const eventData = await selectEventByUuid(event_uuid);
   const isLocal = process.env.ENV === "local";
   if (!eventData) return false;
@@ -290,10 +290,10 @@ async function startBot() {
         if (action === "updateEventData") {
           // Demonstration: fetch event, pretend to update DB, then edit the caption
           const updatedEvent = await getEventByUuid(eventUuid);
-          const ownerInfo = await  selectUserById(updatedEvent.owner!!);
+          const ownerInfo = await selectUserById(updatedEvent.owner!!);
 
           const updatedCaption = `
-<b>${updatedEvent.title} (Updated in ${formatDate(Date.now()/1000)})</b>
+<b>${updatedEvent.title} (Updated in ${formatDate(Date.now() / 1000)})</b>
 
 ${updatedEvent.subtitle}
 

@@ -19,7 +19,7 @@ const initDataExpirationAlert = () => {
     window.Telegram.WebApp.showPopup(
       {
         message: "Your session has expired. Please restart the app.",
-        buttons: [{  type: "close" }],
+        buttons: [{ type: "close" }],
       },
       () => {
         window.Telegram.WebApp.close();
@@ -97,9 +97,7 @@ export default function TRPCAPIProvider({ children }: { children: React.ReactNod
       links: [
         createCombinedLink(), // custom link to handlen retring
         httpLink({
-          url: process.env.NEXT_PUBLIC_TRPC_BASE_URL
-            ? process.env.NEXT_PUBLIC_TRPC_BASE_URL + "/api/trpc"
-            : "/api/trpc",
+          url: process.env.NEXT_PUBLIC_TRPC_BASE_URL ? process.env.NEXT_PUBLIC_TRPC_BASE_URL + "/api/trpc" : "/api/trpc",
           headers: () => {
             return {
               Authorization: initData!,

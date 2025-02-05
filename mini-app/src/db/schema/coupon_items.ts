@@ -1,7 +1,7 @@
 import { index, integer, pgTable, serial, timestamp, uuid, pgEnum, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
 import { coupon_definition } from "./coupon_definition";
-import { InferModel } from "drizzle-orm";
+import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 export const coupon_item_status = pgEnum("coupon_item_status", ["used", "unused"]);
 
@@ -40,7 +40,7 @@ export const coupon_items = pgTable(
 );
 
 // 1) Type for reading rows from coupon_items (i.e., SELECT queries)
-export type CouponItem = InferModel<typeof coupon_items, "select">;
+export type CouponItem = InferSelectModel<typeof coupon_items>;
 
 // 2) Type for inserting new rows into coupon_items
-export type CouponItemInsert = InferModel<typeof coupon_items, "insert">;
+export type CouponItemInsert = InferInsertModel<typeof coupon_items>;

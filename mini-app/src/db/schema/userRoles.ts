@@ -1,33 +1,18 @@
-import {
-  pgTable,
-  pgEnum,
-  primaryKey,
-  index,
-  bigint,
-  text,
-  timestamp,
-} from "drizzle-orm/pg-core";
+import { pgTable, pgEnum, primaryKey, index, bigint, text, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
 import { z } from "zod";
 
 // Existing enums:
 export const accessRoleItemTypeEnum = pgEnum("item_type", ["event"]);
-export const accessRoleEnum = pgEnum("access_role", [
-  "owner",
-  "admin",
-  "checkin_officer",
-]);
+export const accessRoleEnum = pgEnum("access_role", ["owner", "admin", "checkin_officer"]);
 export type accessRoleItemType = (typeof accessRoleItemTypeEnum.enumValues)[number];
 export type accessRoleEnumType = (typeof accessRoleEnum.enumValues)[number];
 /**
  * New enum for user role status
  * with values 'active' and 'reactive'.
  */
-export const userRoleStatusEnum = pgEnum("user_role_status", [
-  "active",
-  "deactivate",
-]);
+export const userRoleStatusEnum = pgEnum("user_role_status", ["active", "deactivate"]);
 export type userRoleStatus = (typeof userRoleStatusEnum.enumValues)[number];
 
 // 1) Allowed values at runtime
@@ -69,13 +54,10 @@ export const userRoles = pgTable(
   (table) => {
     return {
       // Composite primary key
-      pk: primaryKey(table.itemId, table.itemType, table.userId, table.role),
+      pk: primaryKey({ columns: [table.itemId, table.itemType, table.userId, table.role] }),
 
       // Index on (item_id, item_type)
-      itemIdItemTypeIdx: index("user_roles_item_id_item_type_idx").on(
-        table.itemId,
-        table.itemType
-      ),
+      itemIdItemTypeIdx: index("user_roles_item_id_item_type_idx").on(table.itemId, table.itemType),
 
       // Index on user_id
       userIdIdx: index("user_roles_user_id_idx").on(table.userId),

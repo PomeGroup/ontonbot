@@ -36,14 +36,14 @@ interface EditPromotionFormProps {
 }
 
 export default function EditPromotionForm({
-                                            id,
-                                            eventUuid,
-                                            initialCount,
-                                            initialValue,
-                                            initialStartDate,
-                                            initialEndDate,
-                                            onDone,
-                                          }: EditPromotionFormProps) {
+  id,
+  eventUuid,
+  initialCount,
+  initialValue,
+  initialStartDate,
+  initialEndDate,
+  onDone,
+}: EditPromotionFormProps) {
   // 1) Setup form, but we only need to store date fields in the final mutation
   // The "count" & "value" we'll show as read-only in the UI.
   const {
@@ -116,7 +116,7 @@ export default function EditPromotionForm({
     },
     {
       label: "Cancel",
-      colors: { textIos :'text-primary', textMaterial: 'text-primary' },
+      colors: { textIos: "text-primary", textMaterial: "text-primary" },
       outline: true,
       onClick: handleCancelClick,
     },
@@ -181,12 +181,8 @@ export default function EditPromotionForm({
             if (!startValue) {
               return (
                 <div className="mb-4">
-                  <label className="text-sm text-gray-500 mb-1 block">
-                    Deactivate at
-                  </label>
-                  <p className="text-xs text-gray-400 mb-1">
-                    It is set to the event start time by default.
-                  </p>
+                  <label className="text-sm text-gray-500 mb-1 block">Deactivate at</label>
+                  <p className="text-xs text-gray-400 mb-1">It is set to the event start time by default.</p>
                   <div
                     onClick={() => {
                       alert("You must select start date first!");
@@ -214,7 +210,10 @@ export default function EditPromotionForm({
         />
       </div>
 
-      <NavigationButtons layout="vertical" actions={actions} />
+      <NavigationButtons
+        layout="vertical"
+        actions={actions}
+      />
 
       {/* Confirmation Dialog */}
       <ConfirmDialog

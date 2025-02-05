@@ -20,9 +20,7 @@ const urlSchema = z
         return false;
       }
       // Ensure each domain part is valid
-      return domainParts.every(
-        (part) => part.length > 0 && /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/.test(part)
-      );
+      return domainParts.every((part) => part.length > 0 && /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/.test(part));
     } catch {
       return false;
     }

@@ -16,9 +16,7 @@ const NotificationProvider: React.FC<NotificationProviderProps> = ({ children })
   useEffect(() => {
     const isBrowser = typeof window !== "undefined";
     const telegram = isBrowser && (window as any).Telegram ? (window as any).Telegram : undefined;
-    const telegramInitData = telegram && telegram.WebApp
-      ? telegram.WebApp.initData || ""
-      : "";
+    const telegramInitData = telegram && telegram.WebApp ? telegram.WebApp.initData || "" : "";
 
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
     if (!socketUrl) {

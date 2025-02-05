@@ -43,11 +43,7 @@ export const getPoaResultsByUserIdEventIdAndStatus = async (
       .select()
       .from(eventPoaResults)
       .where(
-        and(
-          eq(eventPoaResults.userId, userId),
-          eq(eventPoaResults.eventId, eventId),
-          eq(eventPoaResults.status, status)
-        )
+        and(eq(eventPoaResults.userId, userId), eq(eventPoaResults.eventId, eventId), eq(eventPoaResults.status, status))
       )
       .execute();
 
@@ -105,9 +101,7 @@ export const insertPoaResult = async (params: {
       `${redisTools.cacheKeys.eventPoaResultsByEvent}${eventId}`,
     ];
 
-    await Promise.all(
-      cacheKeysToInvalidate.map((key) => redisTools.deleteCache(key))
-    );
+    await Promise.all(cacheKeysToInvalidate.map((key) => redisTools.deleteCache(key)));
 
     return insertedResult;
   } catch (error) {
@@ -125,11 +119,7 @@ export const getPoaResultsByEventId = async (eventId: number) => {
       return cachedResult; // Return cached data if available
     }
 
-    const results = await db
-      .select()
-      .from(eventPoaResults)
-      .where(eq(eventPoaResults.eventId, eventId))
-      .execute();
+    const results = await db.select().from(eventPoaResults).where(eq(eventPoaResults.eventId, eventId)).execute();
 
     await redisTools.setCache(cacheKey, results, redisTools.cacheLvl.short); // Cache the result
     logger.log(`POA Results for Event ${eventId} retrieved:`, results);

@@ -30,14 +30,13 @@ export const RewardStep = () => {
 
   const addEvent = trpc.events.addEvent.useMutation({
     onSuccess(data) {
-
       toast("Event created successfully", {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
       setEventData({});
 
-      router.replace(`/events/${data?.eventHash}/manage`)
+      router.replace(`/events/${data?.eventHash}/manage`);
       setSection("none");
     },
     onError(error) {
@@ -56,12 +55,10 @@ export const RewardStep = () => {
       if (eventData?.paid_event?.has_payment) {
         setShowSuccessDialog(true);
       } else {
-
         setSection("none");
         router.replace(`/events/${data?.eventId}`);
         clearSections();
       }
-
     },
     onError(error) {
       toast.error(error.message);
@@ -99,11 +96,10 @@ export const RewardStep = () => {
     }
     const isPaid = eventData?.paid_event?.has_payment ?? false;
     const hasRegistration = eventData?.has_registration ?? false;
-    const thirdStepDataSchema = rewardStepValidation(isPaid, hasRegistration, Boolean(editOptions?.eventHash))
+    const thirdStepDataSchema = rewardStepValidation(isPaid, hasRegistration, Boolean(editOptions?.eventHash));
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
 
     if (!formDataParsed.success) {
-
       const errors = formDataParsed.error.flatten().fieldErrors;
 
       console.error("Third step validation errors:", errors);
@@ -193,28 +189,26 @@ export const RewardStep = () => {
 
   return (
     <>
-    <form
-      ref={formRef}
-      onSubmit={handleSubmit}
-    >
-      <RewardForm
-        passwordDisabled={passwordDisabled}
-        setPasswordDisabled={setPasswordDisabled}
-        passwordValue={passwordValue}
-        setPasswordValue={setPasswordValue}
-        sbtOption={sbtOption}
-        setSbtOption={setSbtOption}
-        clearImageError={clearImageError}
-        clearVideoError={clearVideoError}
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+      >
+        <RewardForm
+          passwordDisabled={passwordDisabled}
+          setPasswordDisabled={setPasswordDisabled}
+          passwordValue={passwordValue}
+          setPasswordValue={setPasswordValue}
+          sbtOption={sbtOption}
+          setSbtOption={setSbtOption}
+          clearImageError={clearImageError}
+          clearVideoError={clearVideoError}
+        />
+      </form>
+      <UpdateEventSuccessDialog
+        open={showSuccessDialog}
+        eventUuid={editOptions?.eventHash}
+        onClose={() => setShowSuccessDialog(false)}
       />
-
-    </form>
-    <UpdateEventSuccessDialog
-      open={showSuccessDialog}
-
-      eventUuid={editOptions?.eventHash}
-      onClose={() => setShowSuccessDialog(false)}
-    />
     </>
   );
 };

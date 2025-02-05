@@ -3,9 +3,7 @@ import { Address, TonClient4 } from "@ton/ton";
 import { Buffer } from "buffer";
 
 export class TonApiService {
-  public static create(
-    client: TonClient4 | (typeof CHAIN)["MAINNET"] | (typeof CHAIN)["TESTNET"]
-  ): TonApiService {
+  public static create(client: TonClient4 | (typeof CHAIN)["MAINNET"] | (typeof CHAIN)["TESTNET"]): TonApiService {
     if (client === CHAIN.MAINNET) {
       client = new TonClient4({
         endpoint: "https://mainnet-v4.tonhubapi.com",
@@ -30,12 +28,7 @@ export class TonApiService {
    */
   public async getWalletPublicKey(address: string): Promise<Buffer> {
     const masterAt = await this.client.getLastBlock();
-    const result = await this.client.runMethod(
-      masterAt.last.seqno,
-      Address.parse(address),
-      "get_public_key",
-      []
-    );
+    const result = await this.client.runMethod(masterAt.last.seqno, Address.parse(address), "get_public_key", []);
     return Buffer.from(result.reader.readBigNumber().toString(16).padStart(64, "0"), "hex");
   }
 

@@ -30,9 +30,5 @@ export const NavigationHistoryProvider: React.FC<NavigationHistoryProviderProps>
     }
   }, [pathname]);
 
-  return (
-    <NavigationHistoryContext.Provider value={{ history, setHistory }}>
-      {children}
-    </NavigationHistoryContext.Provider>
-  );
+  return <NavigationHistoryContext.Provider value={{ history, setHistory }}>{children}</NavigationHistoryContext.Provider>;
 };

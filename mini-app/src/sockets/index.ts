@@ -19,7 +19,6 @@ const SOCKET_PORT = Number(process.env.SOCKET_PORT);
 
     if (!IP_REDIS || !REDIS_PORT) {
       throw new Error("Missing IP_REDIS or REDIS_PORT environment variable.");
-
     }
 
     if (!SOCKET_PORT) {
@@ -54,8 +53,6 @@ const SOCKET_PORT = Number(process.env.SOCKET_PORT);
       allowEIO3: false, // Disallow old Socket.IO clients
     });
 
-
-
     // Apply Redis adapter
     io.adapter(createAdapter(pubClient, subClient));
 
@@ -75,8 +72,6 @@ const SOCKET_PORT = Number(process.env.SOCKET_PORT);
     httpServer.listen(SOCKET_PORT, () => {
       logger.log(`Socket.IO server listening on port ${SOCKET_PORT}`);
     });
-
-
   } catch (error) {
     logger.error("Error starting the socket server:", error);
     process.exit(1);

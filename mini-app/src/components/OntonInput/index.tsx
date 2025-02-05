@@ -1,6 +1,6 @@
 import { cn } from "@/utils";
 import { ChangeEventHandler, HTMLProps, ReactNode, useEffect, useRef, useState } from "react";
-import styles from './index.module.css';
+import styles from "./index.module.css";
 
 export function OntonInput({
   label,
@@ -9,14 +9,14 @@ export function OntonInput({
   error,
   startAdornment,
   ...props
-}: HTMLProps<HTMLInputElement> & { error?: string, startAdornment?: ReactNode }) {
+}: HTMLProps<HTMLInputElement> & { error?: string; startAdornment?: ReactNode }) {
   return (
     <div className={className}>
       <div className={styles.wrapper}>
         {startAdornment}
         <InternalInputWrapper
           active={!!value}
-          label={label || ''}
+          label={label || ""}
           error={!!error}
           className="w-full"
         >
@@ -31,7 +31,7 @@ export function OntonInput({
       {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
-};
+}
 
 export function OntonExpandableInput({
   label,
@@ -74,7 +74,7 @@ export function OntonExpandableInput({
       />
     </InternalInputWrapper>
   );
-};
+}
 
 function InternalInputWrapper({
   className,

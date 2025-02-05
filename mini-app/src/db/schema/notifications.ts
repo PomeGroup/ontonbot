@@ -1,14 +1,4 @@
-import {
-  json,
-  pgTable,
-  serial,
-  smallint,
-  timestamp,
-  varchar,
-  index,
-  bigint,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
+import { json, pgTable, serial, smallint, timestamp, varchar, index, bigint, uniqueIndex } from "drizzle-orm/pg-core";
 import { notificationStatus, notificationType, notificationItemType } from "@/db/enum";
 
 export const notifications = pgTable(
@@ -39,21 +29,17 @@ export const notifications = pgTable(
       table.userId,
       table.type,
       table.itemId,
-      table.item_type,
+      table.item_type
     ),
     // Define indexes
     userIdIndex: index("notifications_user_id_idx").on(table.userId),
 
     expiresAtIndex: index("notifications_expires_at_idx").on(table.expiresAt),
 
-    itemIdItemTypeIndex: index("notifications_item_id_item_type_idx").on(
-      table.itemId,
-      table.item_type
-    ),
+    itemIdItemTypeIndex: index("notifications_item_id_item_type_idx").on(table.itemId, table.item_type),
 
     statusIndex: index("notifications_status_idx").on(table.status),
 
     typeIndex: index("notifications_type_idx").on(table.type),
-
-  }),
+  })
 );

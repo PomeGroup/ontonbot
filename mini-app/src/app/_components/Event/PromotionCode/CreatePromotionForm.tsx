@@ -21,10 +21,7 @@ interface CreatePromotionFormProps {
   onDone?: () => void;
 }
 
-export default function CreatePromotionForm({
-                                              eventUuid,
-                                              onDone,
-                                            }: CreatePromotionFormProps) {
+export default function CreatePromotionForm({ eventUuid, onDone }: CreatePromotionFormProps) {
   const {
     control,
     handleSubmit,
@@ -91,7 +88,7 @@ export default function CreatePromotionForm({
     },
     {
       label: "Cancel",
-      colors: { textIos :'text-primary', textMaterial: 'text-primary' },
+      colors: { textIos: "text-primary", textMaterial: "text-primary" },
       outline: true,
       onClick: handleCancelClick,
     },
@@ -105,8 +102,7 @@ export default function CreatePromotionForm({
 
       <div className="px-4 pt-4">
         <p className="text-sm text-gray-700 mb-4">
-          One-time codes are automatically generated and you can download them
-          to share with your audience.
+          One-time codes are automatically generated and you can download them to share with your audience.
         </p>
 
         {/* 1) Count */}
@@ -170,12 +166,8 @@ export default function CreatePromotionForm({
             if (!startValue) {
               return (
                 <div className="mb-4">
-                  <label className="text-sm text-gray-500 mb-1 block">
-                    Deactivate at
-                  </label>
-                  <p className="text-xs text-gray-400 mb-1">
-                    It is set to the event start time by default.
-                  </p>
+                  <label className="text-sm text-gray-500 mb-1 block">Deactivate at</label>
+                  <p className="text-xs text-gray-400 mb-1">It is set to the event start time by default.</p>
                   <div
                     onClick={() => {
                       alert("You must select start date first!");
@@ -205,7 +197,10 @@ export default function CreatePromotionForm({
         />
       </div>
 
-      <NavigationButtons layout="vertical" actions={actions} />
+      <NavigationButtons
+        layout="vertical"
+        actions={actions}
+      />
 
       {/* Confirmation Dialog */}
       <ConfirmDialog

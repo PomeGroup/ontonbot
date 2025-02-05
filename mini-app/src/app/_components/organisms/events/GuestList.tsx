@@ -11,8 +11,6 @@ interface Props {
 }
 
 const GuestList = (props: Props) => {
-
-
   // this will not refetch (it will fetch once)
   const event = useGetEvent();
 

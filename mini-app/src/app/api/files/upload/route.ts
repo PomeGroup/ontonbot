@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server';
-import formidable, { Fields, Files, File as FormidableFile } from 'formidable';
-import fs from 'fs';
-import { verify } from 'jsonwebtoken';
-import { toNodeJsRequest } from '../helpers/toNodeJsRequest';
-import { minioClient } from '@/lib/minioClient';
-import { filePrefix } from '@/lib/fileUtils';
-import { logger } from '@/server/utils/logger';
-import sharp from 'sharp'; // <-- 1) Import sharp
+import { NextRequest, NextResponse } from "next/server";
+import formidable, { Fields, Files, File as FormidableFile } from "formidable";
+import fs from "fs";
+import { verify } from "jsonwebtoken";
+import { toNodeJsRequest } from "../helpers/toNodeJsRequest";
+import { minioClient } from "@/lib/minioClient";
+import { filePrefix } from "@/lib/fileUtils";
+import { logger } from "@/server/utils/logger";
+import sharp from "sharp"; // <-- 1) Import sharp
 
 const { MINIO_PUBLIC_URL, ONTON_API_SECRET } = process.env;
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 async function parseFormdata(req: NextRequest): Promise<{ fields: Fields; files: Files }> {
   const nodeReq = await toNodeJsRequest(req);
@@ -29,19 +29,19 @@ async function parseFormdata(req: NextRequest): Promise<{ fields: Fields; files:
 
 export async function POST(req: NextRequest) {
   // 1. Check token
-  const authHeader = req.headers.get('authorization') ?? '';
-  const [bearer, token] = authHeader.split(' ');
-  if (bearer !== 'Bearer' || !token) {
-    return NextResponse.json({ message: 'Unauthorized: missing token' }, { status: 401 });
+  const authHeader = req.headers.get("authorization") ?? "";
+  const [bearer, token] = authHeader.split(" ");
+  if (bearer !== "Bearer" || !token) {
+    return NextResponse.json({ message: "Unauthorized: missing token" }, { status: 401 });
   }
   if (!ONTON_API_SECRET) {
-    return NextResponse.json({ message: 'Server misconfiguration' }, { status: 500 });
+    return NextResponse.json({ message: "Server misconfiguration" }, { status: 500 });
   }
   try {
     verify(token, ONTON_API_SECRET);
   } catch (error) {
     logger.error(`Invalid token: ${error}`);
-    return NextResponse.json({ message: 'Unauthorized: invalid token' }, { status: 401 });
+    return NextResponse.json({ message: "Unauthorized: invalid token" }, { status: 401 });
   }
 
   // 2. Parse form data
@@ -50,18 +50,18 @@ export async function POST(req: NextRequest) {
   try {
     ({ files, fields } = await parseFormdata(req));
   } catch (err) {
-    return NextResponse.json({ message: 'Error parsing form data' }, { status: 400 });
+    return NextResponse.json({ message: "Error parsing form data" }, { status: 400 });
   }
 
   // 3. Prepare MinIO paths
-  const rawBucket = fields.bucketName ?? 'onton';
-  const rawSubfolder = fields.subfolder ?? '';
+  const rawBucket = fields.bucketName ?? "onton";
+  const rawSubfolder = fields.subfolder ?? "";
   const bucketName = Array.isArray(rawBucket) ? rawBucket[0] : rawBucket;
   const subfolder = Array.isArray(rawSubfolder) ? rawSubfolder[0] : rawSubfolder;
 
   const imageField = files.image;
   if (!imageField) {
-    return NextResponse.json({ message: 'No file uploaded.' }, { status: 400 });
+    return NextResponse.json({ message: "No file uploaded." }, { status: 400 });
   }
 
   const file = Array.isArray(imageField) ? imageField[0] : imageField;
@@ -74,14 +74,14 @@ export async function POST(req: NextRequest) {
     // 5. If it’s recognized as an image, resize with sharp
     //    (If you want to handle only certain image MIME types, check them first)
     let finalBuffer = fileData; // fallback if not an image or resizing fails
-    if (formidableFile.mimetype?.startsWith('image/')) {
+    if (formidableFile.mimetype?.startsWith("image/")) {
       // We "fit: 'inside'" to ensure neither width nor height goes past 1280
       // withoutEnlargement: true means if the image is smaller, don’t upscale.
       finalBuffer = await sharp(fileData)
         .resize({
           width: 1280,
           height: 1280,
-          fit: 'inside',
+          fit: "inside",
           withoutEnlargement: true,
         })
         .toBuffer();
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       : `${filePrefix()}${formidableFile.originalFilename}`;
 
     await minioClient.putObject(bucketName, finalFilename, finalBuffer, finalBuffer.byteLength, {
-      'Content-Type': formidableFile.mimetype ?? 'application/octet-stream',
+      "Content-Type": formidableFile.mimetype ?? "application/octet-stream",
     });
 
     const imageUrl = `${MINIO_PUBLIC_URL}/${bucketName}/${finalFilename}`;
@@ -101,6 +101,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ imageUrl });
   } catch (error) {
     logger.error(`An error occurred while uploading: ${error}`);
-    return NextResponse.json({ message: 'An error occurred.' }, { status: 500 });
+    return NextResponse.json({ message: "An error occurred." }, { status: 500 });
   }
 }

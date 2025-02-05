@@ -156,7 +156,10 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               playsInline
               className="rounded-xl"
             >
-              <source src={videoPreview} type="video/mp4" />
+              <source
+                src={videoPreview}
+                type="video/mp4"
+              />
             </video>
             <p className="font-semibold flex items-center gap-2 text-lg">
               <CircleArrowUp className="w-5" />
@@ -169,11 +172,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               <CircleArrowUp className="w-5" />
               {props.triggerText}
             </p>
-            {props.infoText && (
-              <p className="text-cn-muted-foreground text-sm w-full text-balance">
-                {props.infoText}
-              </p>
-            )}
+            {props.infoText && <p className="text-cn-muted-foreground text-sm w-full text-balance">{props.infoText}</p>}
           </>
         )}
       </Button>
@@ -186,12 +185,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
         >
           <BlockTitle>Upload Video</BlockTitle>
           <Block className="space-y-2">
-            {!videoPreview && (
-              <p>
-                {props.drawerDescriptionText ||
-                  "Upload an MP4 video from your device (max 5 MB)"}
-              </p>
-            )}
+            {!videoPreview && <p>{props.drawerDescriptionText || "Upload an MP4 video from your device (max 5 MB)"}</p>}
 
             {videoPreview && (
               <video
@@ -201,16 +195,15 @@ export const UploadVideoFile = (props: UploadFileProps) => {
                 height="100"
                 className="w-full h-auto"
               >
-                <source src={videoPreview} type="video/mp4" />
+                <source
+                  src={videoPreview}
+                  type="video/mp4"
+                />
               </video>
             )}
 
             {/* Error messages */}
-            {error && (
-              <div className="text-red-500 text-sm w-full text-balance mt-2">
-                {error}
-              </div>
-            )}
+            {error && <div className="text-red-500 text-sm w-full text-balance mt-2">{error}</div>}
 
             <input
               ref={videoInputRef}

@@ -8,7 +8,6 @@ const CACHE_ENABLED = process.env.CACHE_ENABLED ? process.env.CACHE_ENABLED.toLo
  * @returns The MD5 hash of the key.
  */
 
-
 /**
  * Sets a value in Redis cache.
  *
@@ -279,7 +278,7 @@ export const cacheKeys = {
   notificationsByStatus: "notificationsByStatus:",
   eventPoaResult: "eventPoaResult:",
   eventPoaResultsByEvent: "eventPoaResultsByEvent:",
-  user_flags:'user_flags:',
+  user_flags: "user_flags:",
   hubs: "ton-society:hubs",
   user_roles: "user_roles:",
 };

@@ -27,13 +27,13 @@ interface ActionCardWithMenuProps {
 }
 
 export default function ActionCardWithMenu({
-                                             iconSrc,
-                                             title,
-                                             subtitle,
-                                             footerTexts,
-                                             menuItems,
-                                             onCardClick,
-                                           }: ActionCardWithMenuProps) {
+  iconSrc,
+  title,
+  subtitle,
+  footerTexts,
+  menuItems,
+  onCardClick,
+}: ActionCardWithMenuProps) {
   // local state for popover
   const [popoverOpened, setPopoverOpened] = useState(false);
   const threeDotRef = useRef<HTMLDivElement>(null);
@@ -47,13 +47,24 @@ export default function ActionCardWithMenu({
   };
 
   return (
-    <Card onClick={onCardClick} className="cursor-pointer">
+    <Card
+      onClick={onCardClick}
+      className="cursor-pointer"
+    >
       <div className="flex gap-3 align-stretch">
         <div className="bg-[#efeff4] p-4 rounded-[10px]">
-          <Image src={iconSrc} width={48} height={48} alt="icon" />
+          <Image
+            src={iconSrc}
+            width={48}
+            height={48}
+            alt="icon"
+          />
         </div>
         <div className="flex flex-col flex-1 gap-1">
-          <Typography bold variant="title3">
+          <Typography
+            bold
+            variant="title3"
+          >
             {title}
           </Typography>
           <Typography variant="body">{subtitle}</Typography>
@@ -90,7 +101,10 @@ export default function ActionCardWithMenu({
         target={threeDotRef}
         className="w-[160px]"
       >
-        <List strongIos outlineIos>
+        <List
+          strongIos
+          outlineIos
+        >
           {menuItems.map((item, i) => (
             <ListItem
               key={i}

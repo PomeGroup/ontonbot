@@ -33,12 +33,17 @@ export default function ActionCard({ onClick, iconSrc, title, subtitle, footerTe
         </div>
         <div className="flex flex-col flex-1 gap-1">
           <Typography
-            className='font-semibold'
+            className="font-semibold"
             variant="title3"
           >
             {title}
           </Typography>
-          <Typography variant="body" className='font-light'>{subtitle}</Typography>
+          <Typography
+            variant="body"
+            className="font-light"
+          >
+            {subtitle}
+          </Typography>
           <Typography
             variant="caption1"
             className="mt-auto flex gap-4"

@@ -13,7 +13,7 @@ import {
 import amqp, { Connection, Channel, Message, Options } from "amqplib";
 import { logger } from "@/server/utils/logger";
 
-export type QueueNamesType = typeof QueueNames[keyof typeof QueueNames];
+export type QueueNamesType = (typeof QueueNames)[keyof typeof QueueNames];
 
 // Singleton class for RabbitMQ
 export class RabbitMQ {
@@ -140,7 +140,7 @@ export class RabbitMQ {
   public async push(
     queue: QueueNamesType,
     message: Record<string, any>,
-    options: Options.Publish = { persistent: true },
+    options: Options.Publish = { persistent: true }
   ): Promise<void> {
     try {
       const channel = await this.getChannel(queue);
@@ -167,7 +167,7 @@ export class RabbitMQ {
   public async consume(
     queue: QueueNamesType,
     onMessage: (_msg: Message, _channel: Channel) => Promise<void>,
-    prefetchCount = 1,
+    prefetchCount = 1
   ): Promise<string> {
     try {
       const channel = await this.getChannel(queue);
@@ -188,7 +188,7 @@ export class RabbitMQ {
             }
           }
         },
-        { noAck: false },
+        { noAck: false }
       );
 
       logger.log(`Consuming messages from queue '${queue}' with prefetch count ${prefetchCount}`);
@@ -262,11 +262,7 @@ export class RabbitMQ {
       await channel.assertQueue(`${QueueNames.NOTIFICATIONS}-retry`, retryQueueOptions);
 
       // Bind the DLX to the dead-letter queue
-      await channel.bindQueue(
-        `${QueueNames.NOTIFICATIONS}-retry`,
-        dlxName,
-        `${QueueNames.NOTIFICATIONS}-retry`
-      );
+      await channel.bindQueue(`${QueueNames.NOTIFICATIONS}-retry`, dlxName, `${QueueNames.NOTIFICATIONS}-retry`);
 
       logger.log("Queues and exchanges setup completed.");
     } catch (error) {
@@ -279,18 +275,14 @@ export class RabbitMQ {
 // Export utility functions
 const rabbit = RabbitMQ.getInstance();
 
-export const pushToQueue = async (
-  queue: QueueNamesType,
-  message: Record<string, any>,
-  options: Options.Publish,
-) => {
+export const pushToQueue = async (queue: QueueNamesType, message: Record<string, any>, options: Options.Publish) => {
   await rabbit.push(queue, message, options);
 };
 
 export const consumeFromQueue = async (
   queue: QueueNamesType,
   onMessage: (_msg: Message, _channel: Channel) => Promise<void>,
-  prefetchCount = 1,
+  prefetchCount = 1
 ): Promise<string> => {
   return await rabbit.consume(queue, onMessage, prefetchCount);
 };

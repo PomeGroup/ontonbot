@@ -18,13 +18,13 @@ export type SortByType = z.infer<typeof searchEventsInputZod>["sortBy"];
 
 interface MainFilterDrawerProps {
   hubText: string;
-  setIsEventTypeDrawerOpen: (open: boolean) => void;
-  setIsHubDrawerOpen: (open: boolean) => void;
+  setIsEventTypeDrawerOpen: (_open: boolean) => void;
+  setIsHubDrawerOpen: (_open: boolean) => void;
   resetFilters: () => void;
-  applyFilters: () => void
-  participationType: ("online" | "in_person")[],
-  sortBy: SortByType
-  setSortBy: (_s: SortByType) => void
+  applyFilters: () => void;
+  participationType: ("online" | "in_person")[];
+  sortBy: SortByType;
+  setSortBy: (_s: SortByType) => void;
 }
 
 const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
@@ -41,7 +41,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
 }) => {
   return (
     <KSheet
-      trigger={(open, setOpen) => (
+      trigger={(_open, setOpen) => (
         <button
           onClick={() => setOpen(true)}
           className="p-[6px] rounded-md text-gray-500 hover:text-gray-700 bg-[#7474801F]"
@@ -50,7 +50,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
         </button>
       )}
     >
-      {(open, setOpen) => (
+      {(_open, setOpen) => (
         <>
           <div className="p-4 py-4 space-y-2 cursor-pointer">
             {/* EVENT TYPE */}
@@ -60,8 +60,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             >
               <p className=" font-medium">Event Type</p>
               <div className="cursor-pointer text-sm flex items-center">
-                {participationType.length === 0 ||
-                  participationType.length === allParticipationTypes.length
+                {participationType.length === 0 || participationType.length === allParticipationTypes.length
                   ? "All"
                   : participationType.join(", ").replace("_", " ")}
                 <IoIosArrowForward className="ml-auto" />
@@ -75,9 +74,7 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
             >
               <div className="flex-1 space-y-3">
                 <p className="font-medium">Ton Hub</p>
-                <div className="text-sm line-clamp-1 w-11/12 overflow-hidden">
-                  {hubText}
-                </div>
+                <div className="text-sm line-clamp-1 w-11/12 overflow-hidden">{hubText}</div>
               </div>
               <IoIosArrowForward className="text-sm ml-2 mt-8" />
             </div>
@@ -97,7 +94,10 @@ const MainFilterDrawer: React.FC<MainFilterDrawerProps> = ({
               >
                 <label className="flex justify-between items-center border-b-[1px] pb-2">
                   <span className="text-sm">Time</span>
-                  <RadioGroupItem value="start_date_desc" className="h-4 w-4" />
+                  <RadioGroupItem
+                    value="start_date_desc"
+                    className="h-4 w-4"
+                  />
                 </label>
                 <label className="flex justify-between items-center">
                   <span className="text-sm">Most People Reached</span>

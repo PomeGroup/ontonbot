@@ -8,11 +8,11 @@ import { useGetEvent } from "@/hooks/events.hooks";
 
 export default function GuestListPage() {
   const { hash } = useParams() as { hash?: string };
-  const {data:eventData , isLoading ,isError } = useGetEvent(hash);
-  if(isError) {
-    return <div>something went wrong</div>
+  const { data: eventData, isLoading, isError } = useGetEvent(hash);
+  if (isError) {
+    return <div>something went wrong</div>;
   }
-  if(!eventData?.event_uuid  || isLoading) {
+  if (!eventData?.event_uuid || isLoading) {
     return <div>Loading...</div>;
   }
   return (

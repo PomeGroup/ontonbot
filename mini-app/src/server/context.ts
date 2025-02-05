@@ -34,7 +34,7 @@ export async function createContext({ req }: { req: Request }) {
           message: "user is banned",
         });
       }
-      
+
       return user;
     }
     return null;

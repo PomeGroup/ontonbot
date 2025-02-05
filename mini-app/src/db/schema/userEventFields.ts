@@ -1,14 +1,4 @@
-import {
-  bigint,
-  boolean,
-  index,
-  integer,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  unique,
-} from "drizzle-orm/pg-core";
+import { bigint, boolean, index, integer, pgTable, serial, text, timestamp, unique } from "drizzle-orm/pg-core";
 import { users } from "@/db/schema/users";
 import { events } from "@/db/schema/events";
 import { eventFields } from "@/db/schema/eventFields";

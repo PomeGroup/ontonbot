@@ -2,27 +2,27 @@ import { Address } from "@ton/core";
 import { z } from "zod";
 
 export type OntonEvent = {
-    eventUuid: string;
-    title?: string;
-    startDate: number;
-    endDate: number;
-    location?: string;
-    imageUrl?: string;
-    subtitle?: string;
-    organizerFirstName?: string;
-    organizerLastName?: string;
-    organizerUsername?: string;
-    organizerUserId?: number;
-    ticketToCheckIn?: boolean;
-    timezone?: string;
+  eventUuid: string;
+  title?: string;
+  startDate: number;
+  endDate: number;
+  location?: string;
+  imageUrl?: string;
+  subtitle?: string;
+  organizerFirstName?: string;
+  organizerLastName?: string;
+  organizerUsername?: string;
+  organizerUserId?: number;
+  ticketToCheckIn?: boolean;
+  timezone?: string;
 
-    reservedCount?: number;
-    visitorCount?: number;
-    ticketPrice?: number;
-    city?: string;
-    country?: string;
-    participationType?: string;
-  }
+  reservedCount?: number;
+  visitorCount?: number;
+  ticketPrice?: number;
+  city?: string;
+  country?: string;
+  participationType?: string;
+};
 
 export type InputField = {
   type: string;
@@ -266,8 +266,6 @@ export const EventDataSchema = z
         message: "Secret phrase is required for free events.",
       });
     }
-
-
   });
 
 export const UpdateEventDataSchema = z.object({
@@ -363,10 +361,9 @@ export const EventRegisterSchema = z.object({
     .string()
     .max(100)
     .optional()
-    .refine(
-      (value) => !value || /^(https?:\/\/)?([\w]+\.)?linkedin\.com\/.+/.test(value),
-      { message: "Please enter a valid LinkedIn URL" }
-    ),
+    .refine((value) => !value || /^(https?:\/\/)?([\w]+\.)?linkedin\.com\/.+/.test(value), {
+      message: "Please enter a valid LinkedIn URL",
+    }),
   github: z.string({ required_error: "GitHub URL is required" }).max(30).optional(),
   notes: z.string({ required_error: "notes are required" }).max(512).optional(),
 });

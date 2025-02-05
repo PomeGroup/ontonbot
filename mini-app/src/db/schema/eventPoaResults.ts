@@ -2,8 +2,7 @@ import { pgTable, serial, integer, varchar, timestamp, bigint } from "drizzle-or
 import { eventPoaResultStatus } from "@/db/schema";
 import { users } from "./users";
 import { eventPoaTriggers } from "@/db/schema";
-import { events  } from "@/db/schema";
-
+import { events } from "@/db/schema";
 
 export const eventPoaResults = pgTable("event_poa_results", {
   id: serial("id").primaryKey(),

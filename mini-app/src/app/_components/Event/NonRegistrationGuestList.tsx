@@ -15,7 +15,6 @@ interface Props {
 }
 
 const NonRegistrationGuestList = (props: Props) => {
-
   const [needRefresh, setNeedRefresh] = useState(false);
   const webApp = useWebApp();
   const hapticFeedback = webApp?.HapticFeedback;

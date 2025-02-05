@@ -13,8 +13,6 @@ export default function RegistrantQrCodePage() {
     reg_id: string;
   }>();
 
-
-
   const webApp = useWebApp();
   const router = useRouter();
 

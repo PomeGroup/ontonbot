@@ -39,7 +39,6 @@ export const ticketRouter = router({
     .mutation(async (opts) => {
       const result = await ticketDB.checkInTicket(opts.input.ticketUuid);
 
-
       if (!result) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -62,7 +61,6 @@ export const ticketRouter = router({
         if (isAlreadyCheckedIn(result)) {
           return { alreadyCheckedIn: true, result: result };
         }
-
 
         return {
           checkInSuccess: true,

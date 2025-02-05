@@ -45,9 +45,7 @@ const EventKeyValue = (props: EventKeyValueProps) => {
           }
         }}
       >
-        {props.variant === "link" && typeof props.value === "string"
-          ? props.value.replace(/^https?:\/\//, "")
-          : props.value}
+        {props.variant === "link" && typeof props.value === "string" ? props.value.replace(/^https?:\/\//, "") : props.value}
       </p>
     </div>
   );

@@ -2,24 +2,24 @@ import { ensureBucketsExist } from "@/lib/minioClient";
 
 // Hardcode your desired bucket names (no environment variables)
 const bucketNames = [
-  'ontoncollection',
-  'ontonitem',
-  'ontonimage',
-  'ontonvideo',
-  'ontondoc',
-  'sbt-collections',
-  'onton',
-  'ontonorganizerprofiles',
+  "ontoncollection",
+  "ontonitem",
+  "ontonimage",
+  "ontonvideo",
+  "ontondoc",
+  "sbt-collections",
+  "onton",
+  "ontonorganizerprofiles",
 ];
 
 // Hardcode your region name
-const regionName = 'default';
+const regionName = "default";
 
 async function main() {
   // This will ensure each bucket in `bucketNames` exists,
   // creating them in region `regionName` if they do not.
   await ensureBucketsExist(bucketNames, regionName);
-  console.log('Buckets ensured!');
+  console.log("Buckets ensured!");
 }
 
 main().catch((error) => {

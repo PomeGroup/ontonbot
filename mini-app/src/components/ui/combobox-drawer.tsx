@@ -1,14 +1,7 @@
 "use client";
 
 import { KButton } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
@@ -140,12 +133,7 @@ export function ComboboxDrawer({
                                 handleSelect(currentValue); // Call handleSelect to update value
                               }}
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  value === option.value ? "opacity-100" : "opacity-0"
-                                )}
-                              />
+                              <Check className={cn("mr-2 h-4 w-4", value === option.value ? "opacity-100" : "opacity-0")} />
                               {option.label}
                             </CommandItem>
                           ))}

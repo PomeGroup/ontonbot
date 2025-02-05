@@ -117,13 +117,12 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
     };
   }, [isInitialized, pathname, router, goBack]);
   // 4) Haptic feedback on route change
-    useEffect(() => {
-      if (!isInitialized) return;
-      if (typeof window === "undefined" || !window.Telegram?.WebApp) return;
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (typeof window === "undefined" || !window.Telegram?.WebApp) return;
 
-      window.Telegram.WebApp.HapticFeedback.impactOccurred("light");
-
-    }, [pathname, isInitialized]);
+    window.Telegram.WebApp.HapticFeedback.impactOccurred("light");
+  }, [pathname, isInitialized]);
   // 5) If we don't have initData => show skeleton
   if (!initData) {
     return <EventsSkeleton />;

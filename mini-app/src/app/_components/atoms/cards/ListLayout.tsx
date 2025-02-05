@@ -18,7 +18,6 @@ interface FormBlockProps {
 }
 
 const ListLayout = (props: FormBlockProps) => {
-
   return (
     <>
       <BlockTitle className="!mt-4 capitalize">

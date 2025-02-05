@@ -25,9 +25,7 @@ export const formatDateTime = (date: number): string => {
     hour: "numeric",
     minute: "numeric",
     second: "numeric",
-    timeZone : "UTC"
-
-
+    timeZone: "UTC",
   });
 };
 export const formatDateRange = (start: number, end: number, _timezone: string): string => {

@@ -15,12 +15,7 @@ export const checkPasswordTask = async (user_id: number, event_id: number) => {
   return userEventFieldsData.find((field) => field.completed);
 };
 
-export const upsertUserEventFields = async (
-  user_id: number,
-  event_id: number,
-  field_id: number,
-  data: string
-) => {
+export const upsertUserEventFields = async (user_id: number, event_id: number, field_id: number, data: string) => {
   return await db
     .insert(userEventFields)
     .values({
@@ -55,10 +50,7 @@ export const getSecureUserEventFields = async (user_id: number, event_uuid: stri
     })
     .from(events)
     .innerJoin(eventFields, eq(eventFields.event_id, events.event_id))
-    .leftJoin(
-      userEventFields,
-      and(eq(userEventFields.event_field_id, eventFields.id), eq(userEventFields.user_id, user_id))
-    )
+    .leftJoin(userEventFields, and(eq(userEventFields.event_field_id, eventFields.id), eq(userEventFields.user_id, user_id)))
     .where(eq(events.event_uuid, event_uuid))
     .execute();
 };

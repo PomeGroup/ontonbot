@@ -9,7 +9,6 @@ import { userRolesDB } from "@/server/db/userRoles.db";
 import { ExtendedUser, InitUserData, MinimalOrganizerData } from "@/types/extendedUserTypes";
 // User data from the init data
 
-
 // Cache key prefix
 // Function to generate cache key for user
 export const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}${userId}`;
@@ -143,7 +142,7 @@ export const searchOrganizers = async (params: { searchString?: string; offset: 
     // 1) Put those with a photo_url first (CASE returns 1 if photo_url is valid, otherwise 0)
     // 2) Then sort by hosted_event_count in descending order
     .orderBy(
-     // sql`CASE WHEN ${users.photo_url} IS NOT NULL AND ${users.photo_url} <> '' THEN 1 ELSE 0 END DESC`,
+      // sql`CASE WHEN ${users.photo_url} IS NOT NULL AND ${users.photo_url} <> '' THEN 1 ELSE 0 END DESC`,
       sql`${users.hosted_event_count} DESC, ${users.user_id} ASC`
     )
     .offset(offset)
@@ -155,9 +154,6 @@ export const searchOrganizers = async (params: { searchString?: string; offset: 
   // Execute and return
   return await query.execute();
 };
-
-
-
 
 export const selectUserById = async (
   userId: number,
@@ -249,7 +245,7 @@ export const selectUserById = async (
   }
 };
 
-export const insertUser = async (initDataJson: InitUserData): Promise<ExtendedUser   | null> => {
+export const insertUser = async (initDataJson: InitUserData): Promise<ExtendedUser | null> => {
   const { id, username, first_name, last_name, language_code } = initDataJson.user;
 
   const user = await selectUserById(id);
@@ -405,8 +401,6 @@ export const selectUserByUsername = async (username: string) => {
     // Remove leading '@' if present
     .where(eq(users.username, username.replace(/^@/, "")))
     .execute();
-
-
 
   if (userInfo.length > 0) {
     await updateEventCountsForUser(userInfo[0].user_id);

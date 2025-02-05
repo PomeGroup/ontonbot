@@ -149,4 +149,3 @@ function ManageEvent({ event }: ManageEventProps) {
 }
 
 export default ManageEvent;
-

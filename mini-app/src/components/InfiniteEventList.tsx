@@ -7,7 +7,7 @@ import { noop } from "lodash";
 import { TRPCClientErrorBase } from "@trpc/react-query";
 import { DefaultErrorShape } from "@trpc/server";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import useWebApp from '@/hooks/useWebApp';
+import useWebApp from "@/hooks/useWebApp";
 
 interface Props {
   title: string;
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function InfiniteEventList({ title, infiniteApi }: Props) {
-  const webApp = useWebApp()
+  const webApp = useWebApp();
   const userId = webApp?.initDataUnsafe?.user?.id;
   const { data, isFetchingNextPage, hasNextPage, fetchNextPage, status } = infiniteApi;
 
@@ -68,7 +68,6 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
                     key={item.id}
                     ref={isLastItem ? lastItemRef : noop}
                     currentUserId={userId}
-
                   />
                 );
               })}

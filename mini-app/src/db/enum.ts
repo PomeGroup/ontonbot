@@ -15,7 +15,7 @@ export const rewardStatus = pgEnum("reward_status", [
 ]);
 export const ticketStatus = pgEnum("event_ticket_status", ["USED", "UNUSED"]);
 
-export const orderState = pgEnum("order_state", ["new", "confirming", "processing", "completed",'cancelled' , "failed"]);
+export const orderState = pgEnum("order_state", ["new", "confirming", "processing", "completed", "cancelled", "failed"]);
 export const paymentTypes = pgEnum("payment_types", ["USDT", "TON"]);
 export const developmentEnvironment = pgEnum("development_environment", ["local", "development", "staging", "production"]);
 export const eventTriggerType = pgEnum("event_trigger_type", ["simple", "multiple_choice", "question", "password"]);
@@ -29,8 +29,20 @@ export const notificationType = pgEnum("notification_type", [
   "MESSAGE_SIMPLE",
   "UNKNOWN",
 ]);
-export const notificationStatus = pgEnum("notification_status", ["WAITING_TO_SEND", "DELIVERED", "READ", "REPLIED", "EXPIRED"]);
-export const notificationItemType = pgEnum("notification_item_type", ["POA_TRIGGER", "EVENT", "SBT_REWARD", "TRANSACTION", "UNKNOWN"]);
+export const notificationStatus = pgEnum("notification_status", [
+  "WAITING_TO_SEND",
+  "DELIVERED",
+  "READ",
+  "REPLIED",
+  "EXPIRED",
+]);
+export const notificationItemType = pgEnum("notification_item_type", [
+  "POA_TRIGGER",
+  "EVENT",
+  "SBT_REWARD",
+  "TRANSACTION",
+  "UNKNOWN",
+]);
 export const eventPoaResultStatus = pgEnum("event_poa_result_status", ["REPLIED", "EXPIRED"]);
 
 // Type Exports
@@ -47,4 +59,3 @@ export type NotificationType = (typeof notificationType.enumValues)[number];
 export type NotificationStatus = (typeof notificationStatus.enumValues)[number];
 export type NotificationItemType = (typeof notificationItemType.enumValues)[number];
 export type EventPoaResultStatus = (typeof eventPoaResultStatus.enumValues)[number];
-

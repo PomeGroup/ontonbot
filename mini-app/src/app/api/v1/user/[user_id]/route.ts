@@ -3,7 +3,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest, { params }: { params: { user_id: string } }) {
+export async function GET(_req: NextRequest, { params }: { params: { user_id: string } }) {
   const userId = parseInt(params.user_id);
 
   if (isNaN(userId)) {
