@@ -91,6 +91,7 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
         eventPasswordField,
         userEventPasswordField,
         accessRoles: eventData.data?.accessRoles,
+        registrationFromSchema: eventData.data?.registrationFromSchema,
       }}
     >
       {children}

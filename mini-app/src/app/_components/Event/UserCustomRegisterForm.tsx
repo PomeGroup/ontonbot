@@ -19,7 +19,7 @@ const UserCustomRegisterForm = () => {
     linkedin?: string[];
     github?: string[];
     email?: string[];
-    attendee_type?: string[];
+    career?: string[];
     developer_type?: string[];
     main_goal?: string[];
   }>({});
@@ -130,8 +130,8 @@ const UserCustomRegisterForm = () => {
             outline
             label="How do you describe yourself?"
             type="select"
-            name="attendee_type"
-            error={formErrors?.attendee_type?.[0]}
+            name="career"
+            error={formErrors?.career?.[0]}
             onChange={(e) => setAttendeeType(e.target.value)}
           >
             <option value="">Select an option</option>

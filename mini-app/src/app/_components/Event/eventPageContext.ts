@@ -48,6 +48,7 @@ export const EventDataContext = createContext<{
     hosted_event_count: number | null;
   };
   accessRoles: Array<{ user_id: number; role: string }> | undefined;
+  registrationFromSchema: { isCustom?: boolean } | undefined;
 } | null>(null);
 
 /**

@@ -10,7 +10,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
-import EventImage from "../atoms/images/EventImage";
 import { useMainButton } from "@/hooks/useMainButton";
 import useWebApp from "@/hooks/useWebApp";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
@@ -230,7 +229,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
         <Sheet
           onBackdropClick={() => setShowRegistrantInfo(null)}
           opened={Boolean(showRegistrantInfo)}
-          className={cn("!overflow-hidden w-full", { hidden: !Boolean(showRegistrantInfo) })}
+          className={cn("!overflow-hidden min-h-screen w-full", { hidden: !Boolean(showRegistrantInfo) })}
         >
           <BlockTitle>Registrant Info</BlockTitle>
           <List className="!pe-2">
@@ -238,8 +237,11 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
               return (
                 <ListItem
                   key={idx}
-                  title={<div className="capitalize">{key.split("_").join(" ")}</div>}
-                  subtitle={value}
+                  title={
+                    <div className="capitalize text-sm">
+                      <b>{key.split("_").join(" ")}:</b> {value}
+                    </div>
+                  }
                 />
               );
             })}

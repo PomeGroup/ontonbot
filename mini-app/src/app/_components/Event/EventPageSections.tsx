@@ -135,13 +135,16 @@ const EventRegistrationStatus = ({
   registrantStatus,
   capacityFilled,
   hasWaitingList,
+  isCustom,
 }: {
   registrantStatus: "" | "approved" | "rejected" | "pending" | "checkedin";
   capacityFilled: boolean;
   hasWaitingList: boolean;
+  isCustom: boolean;
 }) => {
+  const formComponent = isCustom ? <UserCustomRegisterForm /> : <UserRegisterForm />;
   const statusConfigs = {
-    "": () => <UserCustomRegisterForm />,
+    "": () => formComponent,
     pending: () => (
       <DataStatus
         status="sent"
@@ -237,6 +240,7 @@ export const EventSections = () => {
           registrantStatus={eventData.data?.registrant_status ?? ""}
           capacityFilled={Boolean(eventData.data?.capacity_filled)}
           hasWaitingList={Boolean(eventData.data?.has_waiting_list)}
+          isCustom={eventData.data?.registrationFromSchema?.isCustom}
         />
       )}
 

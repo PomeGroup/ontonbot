@@ -1,0 +1,1 @@
+ALTER TYPE "user_flags_enum" ADD VALUE 'custom_registration_1';
