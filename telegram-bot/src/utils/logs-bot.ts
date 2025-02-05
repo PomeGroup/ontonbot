@@ -32,6 +32,7 @@ export const sendTopicMessage = async (
   text: string,
 ) => {
   try {
+    console.log('meesage_send' , Number(configProtected["logs_group_id"]) ,  Number(configProtected[topic]))
     await logsBot.api.sendMessage(
       Number(configProtected["logs_group_id"]),
       text,
@@ -41,6 +42,6 @@ export const sendTopicMessage = async (
     );
   } catch (error) {
     // __AUTO_GENERATED_PRINT_VAR_START__
-    logger.error("telegram bot sendTopicMessage error: %s", error); // __AUTO_GENERATED_PRINT_VAR_END__
+    logger.error("telegram bot sendTopicMessage error:", error); // __AUTO_GENERATED_PRINT_VAR_END__
   }
 };
