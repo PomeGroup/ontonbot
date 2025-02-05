@@ -74,6 +74,8 @@ import { RATE_LIMIT_OPTIONS } from "./constants";
 		bot.command("start", startHandler);
 		bot.use(mainComposer);
 
+		bot.catch(e => console.log(e))
+
 		// 4) Start the bot (non-blocking)
 		bot
 			.start()
