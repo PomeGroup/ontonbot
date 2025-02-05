@@ -43,7 +43,7 @@ export const EventPasswordAndWalletInput = () => {
         wallet: tonWalletAddress,
       });
     }
-  }, [user?.wallet_address, tonWalletAddress, initData]);
+  }, [user?.wallet_address, tonWalletAddress, initData, addWalletMutation]);
   useEffect(() => {}, []);
 
   const submitPassword: FormEventHandler<HTMLFormElement> = (e) => {

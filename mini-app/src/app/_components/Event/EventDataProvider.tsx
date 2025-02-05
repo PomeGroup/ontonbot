@@ -30,7 +30,7 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
     if (userEventFields.isSuccess) {
       trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
     }
-  }, [userEventFields.isSuccess, userEventFields.data]);
+  }, [userEventFields.isSuccess, userEventFields.data, trpcUtils.users.getVisitorReward]);
 
   useEffect(() => {
     if (webApp?.initData && !isInitialized) {
@@ -43,7 +43,7 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
 
   const eventPasswordField = useMemo(() => {
     return eventData.data?.dynamic_fields?.find((v) => v.title === "secret_phrase_onton_input");
-  }, [eventData.data?.dynamic_fields?.length]);
+  }, [eventData.data?.dynamic_fields]);
 
   const { isLocationUrl, endUTC, startUTC, location } = useMemo(() => {
     if (!eventData.data) {
@@ -65,14 +65,14 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
       startUTC,
       location,
     };
-  }, [eventData.data?.start_date, eventData.data?.end_date, eventData.data?.location]);
+  }, [eventData.data]);
 
   const userEventPasswordField = useMemo(() => {
     // console.log(userEventFields.data);
     if (eventPasswordField?.id) {
       return userEventFields.data?.[eventPasswordField.id];
     }
-  }, [eventPasswordField?.id, userEventFields.isFetching, userEventFields.isSuccess]);
+  }, [eventPasswordField?.id, userEventFields.data]);
 
   return (
     <EventDataContext.Provider

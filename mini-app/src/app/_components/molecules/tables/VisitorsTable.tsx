@@ -73,7 +73,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
         setNeedRefresh(false);
       });
     }
-  }, [needRefresh]);
+  }, [needRefresh, refetchVisitors, setNeedRefresh]);
 
   useEffect(() => {
     if (entry?.isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -94,9 +94,12 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
     };
   }, [searchQuery]);
   // Flatten all pages to include newly fetched data
-  const flatData: Visitor[] =
-    // @ts-expect-error
-    data?.pages.flatMap((page) => page?.visitorsData) || [];
+  const flatData: Visitor[] = useMemo(
+    () =>
+      // @ts-expect-error
+      data?.pages.flatMap((page) => page?.visitorsData) || [],
+    [data?.pages]
+  );
 
   // Check the visitor count on the first page
   const firstPageVisitorCount = data?.pages[0]?.visitorsData.length || 0;
@@ -137,7 +140,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExpor
     } else {
       setShowNoResults(false); // Reset the message if results are found or search changes
     }
-  }, [debouncedSearchQuery, filteredVisitors, isFetchingNextPage, isTyping]);
+  }, [debouncedSearchQuery, filteredVisitors, isFetchingNextPage, isLoadingVisitors, isTyping]);
 
   return (
     <div className="mt-0 overflow-x-auto">

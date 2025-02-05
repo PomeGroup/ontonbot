@@ -471,7 +471,7 @@ export const getEventByUuid = async (eventUuid: string, removeSecret: boolean = 
     });
   }
   // remove the secret_phrase from the response
-  const { secret_phrase, ...restEvent } = event[0];
+  const restEvent = removeKey(event[0], "secret_phrase");
   return removeSecret ? restEvent : event[0];
 };
 

@@ -134,7 +134,7 @@ interface AddPopupProps {
   open: boolean;
   onClose: () => void;
   isSaving: boolean;
-  onAdd: (username: string, role: "admin" | "checkin_officer") => void;
+  onAdd: (_username: string, _role: "admin" | "checkin_officer") => void;
 }
 
 function AddPopup({ open, onAdd, isSaving, onClose }: AddPopupProps) {
@@ -276,7 +276,7 @@ function EmptyList() {
   );
 }
 
-type ChangeHandler = (id: string, checked: boolean) => void;
+type ChangeHandler = (_id: string, _checked: boolean) => void;
 
 function List({ data, handleActiveChange }: { handleActiveChange: ChangeHandler; data: UserRolesBulkUpsertInput[] }) {
   return data.map((item) => (

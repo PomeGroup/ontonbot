@@ -7,6 +7,7 @@ import xss from "xss";
 import { logSQLQuery } from "@/lib/logSQLQuery";
 import { userRolesDB } from "@/server/db/userRoles.db";
 import { ExtendedUser, InitUserData, MinimalOrganizerData } from "@/types/extendedUserTypes";
+import { removeKey } from "@/lib/utils";
 // User data from the init data
 
 // Cache key prefix
@@ -332,7 +333,7 @@ export const insertUser = async (initDataJson: InitUserData): Promise<ExtendedUs
   }
 };
 
-const selectWalletById: (user_id: number) => Promise<{ wallet: string | null }> = async (user_id: number) => {
+const selectWalletById: (_user_id: number) => Promise<{ wallet: string | null }> = async (user_id: number) => {
   const cacheKey = getWalletCacheKey(user_id);
 
   // Try to get the wallet from cache
@@ -455,7 +456,7 @@ export const getOrganizerById = async (
     };
 
     // 5) Omit `role` from the returned data
-    const { role, ...data } = minimalData;
+    const data = removeKey(minimalData, "role");
 
     // 6) Return success
     return {

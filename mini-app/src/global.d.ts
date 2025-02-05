@@ -1,8 +1,4 @@
 declare global {
-  interface Window {
-    Telegram: Telegram;
-  }
-
   interface WebAppUser {
     id: number;
     is_bot?: boolean;

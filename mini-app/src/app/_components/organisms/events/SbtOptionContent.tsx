@@ -72,7 +72,7 @@ export const SbtOptionContent: React.FC<SbtOptionContentProps> = ({
       });
       setSelectedSbtId(collection.id);
     }
-  }, [rewardCollections?.length, sbtOption]);
+  }, [rewardCollections, rewardCollections?.length, sbtOption, setEventData]);
 
   if (sbtOption === "default") {
     return isLoading && !isSuccess && !eventData?.ts_reward_url ? (

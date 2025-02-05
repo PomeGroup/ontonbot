@@ -24,7 +24,7 @@ type Notification = {
 
 type NotificationState = {
   notifications: Notification[];
-  addNotification: (notification: Notification) => void;
+  addNotification: (_notification: Notification) => void;
   clearNotifications: () => void;
 };
 

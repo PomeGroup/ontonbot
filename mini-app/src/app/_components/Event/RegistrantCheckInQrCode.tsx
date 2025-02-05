@@ -32,7 +32,7 @@ const RegistrantCheckInQrCode = (props: RegistrantCheckInQrCodeProps) => {
 
   useEffect(() => {
     qrCode.append(ref.current!);
-  }, []);
+  }, [qrCode]);
 
   return (
     <div

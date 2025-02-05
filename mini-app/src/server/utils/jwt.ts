@@ -22,7 +22,7 @@ export type PayloadToken = {
 /**
  * Create a token with the given payload.
  */
-function buildCreateToken<T extends JWTPayload>(expirationTime: string): (payload: T) => Promise<string> {
+function buildCreateToken<T extends JWTPayload>(expirationTime: string): (_payload: T) => Promise<string> {
   return async (payload: T) => {
     const encoder = new TextEncoder();
     const key = encoder.encode(JWT_SECRET_KEY);
@@ -54,7 +54,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 /**
  * Decode the given token.
  */
-function buildDecodeToken<T extends JWTPayload>(): (token: string) => T | null {
+function buildDecodeToken<T extends JWTPayload>(): (_token: string) => T | null {
   return (token: string) => {
     try {
       return decodeJwt(token) as T;

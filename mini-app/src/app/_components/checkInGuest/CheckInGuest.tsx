@@ -62,7 +62,7 @@ const CheckInGuest: FC<{
       }
       setDrawerOpen(true); // Ensure the drawer opens on error as well
     }
-  }, [ticketQuery.isSuccess, ticketQuery.isError, ticketQuery.data]);
+  }, [ticketQuery.isSuccess, ticketQuery.isError, ticketQuery.data, ticketQuery.error]);
 
   // Close drawer and reset states when the drawer is closed
   useEffect(() => {
@@ -93,7 +93,7 @@ const CheckInGuest: FC<{
     } else if (checkInMutation.isError) {
       setCheckInState("checkInError");
     }
-  }, [checkInMutation.isSuccess, checkInMutation.isError, checkInMutation.data]);
+  }, [checkInMutation.isSuccess, checkInMutation.isError, checkInMutation.data, ticketQuery, params]);
 
   const handleCheckIn = useCallback(() => {
     if (ticketData && ticketData.order_uuid) {
