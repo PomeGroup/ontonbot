@@ -121,7 +121,8 @@ RUN echo "Build stage files:" && ls -la /app
 
 # Install all dependencies (including dev) and build
 RUN yarn install
-RUN DEBUG=* yarn build --verbose
+RUN yarn lint:quiet
+RUN yarn build
 
 ##
 # Stage: production
@@ -149,4 +150,4 @@ WORKDIR /app
 EXPOSE $MINI_APP_PORT
 
 # Run the app in development mode
-CMD export NODE_ENV=development && yarn install && yarn dev --port $MINI_APP_PORT
+CMD export NODE_ENV=development && yarn install && yarn lint:quiet && yarn dev --port $MINI_APP_PORT

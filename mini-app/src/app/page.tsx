@@ -47,7 +47,6 @@ export default function Home() {
             {/* Slider Event */}
             <PromotedEventsSlider />
             <PromotedEventsList />
-            i'm here
           </div>
         </div>
       </div>
