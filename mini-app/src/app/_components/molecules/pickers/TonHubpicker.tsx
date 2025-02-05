@@ -15,14 +15,14 @@ const TonHubPicker: FC<{
   errors?: string[];
 }> = ({ value, onValueChange, errors }) => {
   const [hubs, setHubs] = useState<Array<SocietyHub>>([]);
-  const hubsResponse = useGetHubsManageEvent()
+  const hubsResponse = useGetHubsManageEvent();
   const setEventData = useCreateEventStore((state) => state.setEventData);
 
   useEffect(() => {
-    if (hubsResponse.data?.status ) {
-      console.log(hubsResponse.data.hubs)
+    if (hubsResponse.data?.status) {
+      console.log(hubsResponse.data.hubs);
       setHubs(hubsResponse.data.hubs);
-      setEventData({ society_hub: hubsResponse.data.hubs[0] });
+      // setEventData({ society_hub: hubsResponse.data.hubs[0] });
     }
   }, [hubsResponse.data?.hubs, hubsResponse.data?.status, hubsResponse.status, setEventData]);
 

@@ -34,8 +34,8 @@ export function useGetEvent(event_hash?: string) {
   return trpc.events.getEvent.useQuery(
     { event_uuid },
     {
-      // after 10s data is considered stale and <<when>> the hook is used again will be refetched
-      staleTime: Infinity,
+      // after 2s data is considered stale and <<when>> the hook is used again will be refetched
+      staleTime: 2_000,
       queryKey: ["events.getEvent", { event_uuid }],
     }
   );
@@ -60,6 +60,7 @@ export function useGetHubsManageEvent() {
     queryKey: ["hubs.getOrgHubs", undefined],
   });
 }
+
 export function useGetEventOrders() {
   const params = useParams<{ hash: string }>();
 
