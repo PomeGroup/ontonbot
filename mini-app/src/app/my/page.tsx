@@ -26,9 +26,9 @@ export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!useTonAddress();
   const { setSection } = useSectionStore();
-  const paid = user?.role === "organizer" || user?.role === "admin" ;
+  const paid = user?.role === "organizer" || user?.role === "admin";
   const router = useRouter();
-  if(!user) return null;
+  if (!user) return null;
 
   return (
     <div className="bg-[#EFEFF4] py-4 min-h-screen mb-[calc(-1*var(--tg-safe-area-inset-bottom))]">
@@ -86,7 +86,7 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
   if (!data) return null;
   return (
     <Card
-      className='mt-0 cursor-pointer'
+      className="mt-0 cursor-pointer"
       onClick={() => {
         router.push(`/my/edit`);
       }}
@@ -129,8 +129,8 @@ function OrganizerProgress({ step }: { step: 1 | 2 }) {
         variant="subheadline1"
         className="text-[#575757] font-medium mb-3"
       >
-        Step forward as an organizer, Create your Organizer Channel,
-        Conduct wonderful events and distribute SBT badges to your participants.
+        Step forward as an organizer, Create your Organizer Channel, Conduct wonderful events and distribute SBT badges to
+        your participants.
         <br />
         <b>{step === 1 ? "1. Connect your wallet." : "2. Pay one-time fee to become an organizer"}</b>
       </Typography>

@@ -41,12 +41,10 @@ export const ordersRouter = router({
     }),
 
   // 2) Get event orders
-  getEventOrders: evntManagerPP
-    .input(z.object({ event_uuid: z.string().uuid() }))
-    .query(async (opts) => {
-      // DB call moved to ordersDB
-      return ordersDB.getEventOrders(opts.input.event_uuid);
-    }),
+  getEventOrders: evntManagerPP.input(z.object({ event_uuid: z.string().uuid() })).query(async (opts) => {
+    // DB call moved to ordersDB
+    return ordersDB.getEventOrders(opts.input.event_uuid);
+  }),
 
   // 3) Add a 'promote_to_organizer' order if user doesn't already have one
   addPromoteToOrganizerOrder: initDataProtectedProcedure

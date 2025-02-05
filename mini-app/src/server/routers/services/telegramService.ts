@@ -1,14 +1,10 @@
-import { sendTelegramMessage , sendEventPhoto } from "@/lib/tgBot";
+import { sendTelegramMessage, sendEventPhoto } from "@/lib/tgBot";
 import { EventTypeSecure, RewardType, VisitorsType } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
 import axios from "axios";
 import { logger } from "@/server/utils/logger";
 // Send reward notification to visitors
-export const sendRewardNotification = async (
-  reward: RewardType,
-  visitor: VisitorsType,
-  event: EventTypeSecure
-) => {
+export const sendRewardNotification = async (reward: RewardType, visitor: VisitorsType, event: EventTypeSecure) => {
   try {
     // Validate reward link and send Telegram message
     const rewardLink = rewardLinkZod.parse(reward.data).reward_link;
@@ -114,21 +110,18 @@ export const shareEventRequest = async (
   const event_url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/events/${event_uuid}`;
 
   try {
-    const response = await axios.post(
-      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/share-event`,
-      {
-        user_id: user_id,
-        id: event_uuid,
-        share_link: share_link,
-        url: event_url,
-        custom_button: {
-          text: "Open the Event",
-          web_app: {
-            url: event_url, // Ensure web_app is an object
-          },
+    const response = await axios.post(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/share-event`, {
+      user_id: user_id,
+      id: event_uuid,
+      share_link: share_link,
+      url: event_url,
+      custom_button: {
+        text: "Open the Event",
+        web_app: {
+          url: event_url, // Ensure web_app is an object
         },
-      }
-    );
+      },
+    });
 
     // Return success response
     return {
@@ -157,8 +150,8 @@ export const shareOrganizerRequest = async (
     org_support_telegram_user_name: string | null;
     org_x_link: string | null;
     org_bio: string | null;
-    org_image: string | Buffer<ArrayBufferLike> | null ;
-  },
+    org_image: string | Buffer<ArrayBufferLike> | null;
+  }
 ): Promise<{ success: boolean; data?: any; error?: string }> => {
   // Construct your share link / URLs or any data you want
   const share_link = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=channels_${organizerId}`;

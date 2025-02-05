@@ -1847,7 +1847,6 @@ export interface TSAPIoperations {
 
 export type TONSOcietyAPISchemaT = components["schemas"];
 
-
 export type findActivityResponseType = {
   data: {
     additional_info: string;

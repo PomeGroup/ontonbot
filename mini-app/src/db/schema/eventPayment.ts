@@ -1,15 +1,4 @@
-import {
-  index,
-  integer,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  uuid,
-  uniqueIndex,
-  real,
-  pgEnum,
-} from "drizzle-orm/pg-core";
+import { index, integer, pgTable, serial, text, timestamp, uuid, uniqueIndex, real, pgEnum } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
 import { paymentTypes } from "../enum";
 import { InferSelectModel } from "drizzle-orm";

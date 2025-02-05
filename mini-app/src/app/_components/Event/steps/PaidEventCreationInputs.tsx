@@ -104,7 +104,6 @@ function PaymentsRecepient() {
   }));
 
   const handleInputChange = (value: string) => {
-
     setEventData({
       paid_event: {
         ...eventData.paid_event,
@@ -126,7 +125,7 @@ function PaymentsRecepient() {
             placeholder="Enter wallet address"
             value={eventData.paid_event?.payment_recipient_address || ""}
             onChange={(e) => handleInputChange(e.target.value)}
-            error={recepient_error_messages?.length  && recepient_error_messages?.[0]}
+            error={recepient_error_messages?.length && recepient_error_messages?.[0]}
           />
         </>
       }
@@ -244,20 +243,20 @@ function Capacity() {
  * The default export and this is used to combine all other above ones
  */
 const PaidEventCreationInputs = () => {
-  const { payment, toggleIsPaidEvent, editOptions, eventData ,has_registration  } = useCreateEventStore((state) => ({
+  const { payment, toggleIsPaidEvent, editOptions, has_registration } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     toggleIsPaidEvent: state.togglePaidEvent,
     editOptions: state.edit,
     eventData: state.eventData,
     has_registration: state.eventData?.has_registration,
   }));
-  if(!has_registration) {
+  if (!has_registration) {
     return null;
   }
   // if(eventData?.eventLocationType === "online") {
   //   return null;
   // }
-  const disablePaidToggle = Boolean(editOptions?.eventHash)  ;
+  const disablePaidToggle = Boolean(editOptions?.eventHash);
   return (
     <ListLayout title="Paid Event">
       <ListItem
@@ -274,7 +273,7 @@ const PaidEventCreationInputs = () => {
             })}
           />
         }
-        footer={<p >Cannot be changed after the event is created.</p>}
+        footer={<p>Cannot be changed after the event is created.</p>}
       />
       {payment.has_payment && (
         <>

@@ -9,13 +9,13 @@ export const ManageEventButton = () => {
   const { eventData, eventHash } = useEventData();
   const router = useRouter();
 
-  const { user } = useUserStore()
-  const canManageEvent = canUserManageEvent(user,  {
+  const { user } = useUserStore();
+  const canManageEvent = canUserManageEvent(user, {
     data: {
       owner: eventData?.data?.owner,
       accessRoles: eventData?.data?.accessRoles,
     },
-  }) ;
+  });
 
   if (canManageEvent) {
     return (

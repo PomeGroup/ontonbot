@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import {  usersDB } from "@/server/db/users";
+import { usersDB } from "@/server/db/users";
 import { initDataProtectedProcedure, publicProcedure, router } from "../trpc";
 import { logger } from "../utils/logger";
 import { organizersHostedInput, orgFieldsSchema, searchOrganizersInput } from "@/zodSchema/OrganizerDataSchema";
@@ -87,7 +87,7 @@ export const organizerRouter = router({
 
   getPromotedOrganizers: publicProcedure.input(z.object({}).optional()).query(async (): Promise<MinimalOrganizerData[]> => {
     const channelIds: number[] = (config?.promotedChannelIds as unknown as number[]) ?? [];
-    
+
     try {
       const result = await Promise.all(channelIds.map((id) => usersDB.getOrganizerById(id).then(({ data }) => data)));
       return result.filter(Boolean) as MinimalOrganizerData[];

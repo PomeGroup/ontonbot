@@ -2,35 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import useNotificationStore from "@/zustand/useNotificationStore";
-import { NotificationType, NotificationStatus, NotificationItemType } from "@/db/schema";
 import { List, ListItem, Badge, Dialog, Button } from "konsta/react";
-
-type OrganizerNotification = {
-  notificationId: string;
-  userId: number;
-  type: NotificationType;
-  title: string;
-  desc: string;
-  actionTimeout: number | string;
-  additionalData: {
-    participant_id?: number;
-    event_id?: number;
-    poa_id?: string;
-    notification_id?: number;
-  };
-  priority: number;
-  itemId: string;
-  item_type: NotificationItemType;
-  status: NotificationStatus;
-  createdAt: string;
-  expiresAt: string;
-  id: string;
-};
 
 const OrganizerNotificationHandler: React.FC = () => {
   const notifications = useNotificationStore((state) => state.notifications);
 
-  const [poaCreatedCount, setPoaCreatedCount] = useState<number>(0);
+  const [, setPoaCreatedCount] = useState<number>(0);
   const [poaSentCount, setPoaSentCount] = useState<number>(0);
   const [userAnswerPoaCount, setUserAnswerPoaCount] = useState<number>(0);
 

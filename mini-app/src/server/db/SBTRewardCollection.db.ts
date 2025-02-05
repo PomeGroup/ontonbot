@@ -36,11 +36,7 @@ export const fetchSBTRewardCollectionsByHubID = async (hubID: number): Promise<S
     return cachedResult;
   }
 
-  const result = await db
-    .select()
-    .from(sbtRewardCollections)
-    .where(eq(sbtRewardCollections.hubID, hubID))
-    .execute();
+  const result = await db.select().from(sbtRewardCollections).where(eq(sbtRewardCollections.hubID, hubID)).execute();
 
   await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.long);
 

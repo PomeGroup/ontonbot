@@ -14,11 +14,11 @@ export async function GET() {
     const allowedDir = process.cwd();
     if (!filePath.startsWith(allowedDir)) {
       return NextResponse.json(
-            {
-                error: "Access to the specified file is not allowed",
-            },
-            { status: 403 }
-        );
+        {
+          error: "Access to the specified file is not allowed",
+        },
+        { status: 403 }
+      );
     }
 
     // Read the file content
@@ -34,17 +34,16 @@ export async function GET() {
         uptime: `${Math.floor(uptime)} seconds`,
         timestamp,
       },
-      sha: commitDetail
+      sha: commitDetail,
     });
   } catch (error) {
     return NextResponse.json(
-        {
-          error: "An internal server error occurred", // Generic error message
-        },
-        { status: 500 }
+      {
+        error: "An internal server error occurred", // Generic error message
+      },
+      { status: 500 }
     );
   }
 }
-
 
 export const dynamic = "force-dynamic";

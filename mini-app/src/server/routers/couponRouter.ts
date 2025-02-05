@@ -176,7 +176,7 @@ export const couponRouter = router({
             message: "No event found.",
           });
         }
-        const updatedRows = await couponDefinitionsDB.updateCouponDefinitionStatus({
+        await couponDefinitionsDB.updateCouponDefinitionStatus({
           id,
           event_uuid,
           status,

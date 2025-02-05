@@ -244,7 +244,12 @@ export class NftItem {
   }
 }
 
-export async function mintNFT(owner_address : string , collection_address: string, nftIndex: number | null, nft_metadata_url: string) {
+export async function mintNFT(
+  owner_address: string,
+  collection_address: string,
+  nftIndex: number | null,
+  nft_metadata_url: string
+) {
   if (nftIndex === null) {
     const result = await tonCenter.fetchCollection(collection_address);
     nftIndex = Number(result?.nft_collections[0]?.next_item_index);

@@ -32,15 +32,11 @@ export function useManageEventContext() {
  * A Provider to wrap your children in a <ManageEventContext.Provider value={...} />
  */
 export function ManageEventContextProvider({
-                                             value,
-                                             children,
-                                           }: {
+  value,
+  children,
+}: {
   value: ManageEventContextValue;
   children: React.ReactNode;
 }) {
-  return (
-    <ManageEventContext.Provider value={value}>
-      {children}
-    </ManageEventContext.Provider>
-  );
+  return <ManageEventContext.Provider value={value}>{children}</ManageEventContext.Provider>;
 }

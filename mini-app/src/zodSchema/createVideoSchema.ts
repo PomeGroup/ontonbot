@@ -2,7 +2,6 @@ import { z } from "zod";
 import { checkRateLimit } from "@/lib/checkRateLimit";
 import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
 
-
 export function createVideoSchema(userId: string) {
   return z
     .object({

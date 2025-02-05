@@ -7,7 +7,7 @@ import { logger } from "@/server/utils/logger";
 export type EventPoaTrigger = {
   id: number;
   eventId: number;
-  poaOrder: number ;
+  poaOrder: number;
   startTime: number;
   countOfSent: number;
   countOfSuccess: number;
@@ -85,7 +85,7 @@ export const incrementCountOfSent = async (poaId: number, incrementBy = 1) => {
       sql`UPDATE ${eventPoaTriggers}
           SET count_of_sent = count_of_sent + ${incrementBy},
               updated_at    = ${new Date()}
-          WHERE id = ${poaId}`,
+          WHERE id = ${poaId}`
     );
 
     await redisTools.deleteCache(getEventPoaCacheKey(poaId)); // Clear cache
@@ -103,7 +103,7 @@ export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) =>
       sql`UPDATE ${eventPoaTriggers}
           SET count_of_success = count_of_success + ${incrementBy},
               updated_at       = ${new Date()}
-          WHERE id = ${poaId}`,
+          WHERE id = ${poaId}`
     );
 
     await redisTools.deleteCache(getEventPoaCacheKey(poaId)); // Clear cache
@@ -117,7 +117,6 @@ export const incrementCountOfSuccess = async (poaId: number, incrementBy = 1) =>
 // Get a list of active POAs by time
 export const getActivePoaForEventByTime = async (eventId: number, startTime: number) => {
   try {
-
     return await db
       .select()
       .from(eventPoaTriggers)
@@ -125,11 +124,10 @@ export const getActivePoaForEventByTime = async (eventId: number, startTime: num
         and(
           eq(eventPoaTriggers.eventId, eventId),
           eq(eventPoaTriggers.status, "active" as const),
-          lte(eventPoaTriggers.startTime, startTime),
-        ),
+          lte(eventPoaTriggers.startTime, startTime)
+        )
       )
       .execute();
-
   } catch (error) {
     logger.error("Error getting active POAs by time:", error);
     throw error;
@@ -146,11 +144,7 @@ export const getPoaByEventId = async (eventId: number) => {
     //   return cachedResult; // Return cached data if available
     // }
 
-    const poaTriggers = await db
-      .select()
-      .from(eventPoaTriggers)
-      .where(eq(eventPoaTriggers.eventId, eventId))
-      .execute();
+    const poaTriggers = await db.select().from(eventPoaTriggers).where(eq(eventPoaTriggers.eventId, eventId)).execute();
 
     await redisTools.setCache(cacheKey, poaTriggers, redisTools.cacheLvl.short); // Cache the result
     return poaTriggers;
@@ -169,7 +163,7 @@ export const generatePoaForAddEvent = async (
     poaCount: number;
     poaType: EventTriggerType;
     bufferMinutes?: number;
-  },
+  }
 ) => {
   const { eventId, eventStartTime, eventEndTime, poaCount, poaType } = params;
 
@@ -187,9 +181,7 @@ export const generatePoaForAddEvent = async (
   const adjustedEndTime = eventEndTime - buffer;
 
   if (adjustedStartTime >= adjustedEndTime) {
-    throw new Error(
-      "Adjusted event times are invalid. Ensure the event duration is longer than the buffer.",
-    );
+    throw new Error("Adjusted event times are invalid. Ensure the event duration is longer than the buffer.");
   }
 
   let interval: number;
@@ -213,17 +205,12 @@ export const generatePoaForAddEvent = async (
   const existingPoa = await trx
     .select({ poaOrder: eventPoaTriggers.poaOrder })
     .from(eventPoaTriggers)
-    .where(
-      and(
-        eq(eventPoaTriggers.eventId, eventId),
-        eq(eventPoaTriggers.status, "active" as const),
-      ),
-    )
+    .where(and(eq(eventPoaTriggers.eventId, eventId), eq(eventPoaTriggers.status, "active" as const)))
     .execute();
 
   const maxExistingOrder = existingPoa.reduce<number>(
     (max, poa) => (poa.poaOrder !== null && poa.poaOrder > max ? poa.poaOrder : max),
-    0,
+    0
   );
 
   try {
@@ -260,11 +247,7 @@ export const getEventPoaTriggerById = async (poaId: number) => {
       return cachedResult; // Return cached data if available
     }
 
-    const poaTrigger = await db
-      .select()
-      .from(eventPoaTriggers)
-      .where(eq(eventPoaTriggers.id, poaId))
-      .execute();
+    const poaTrigger = await db.select().from(eventPoaTriggers).where(eq(eventPoaTriggers.id, poaId)).execute();
     const result = poaTrigger[0];
     await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.medium); // Cache the result
     return result;
@@ -283,5 +266,4 @@ export const eventPoaTriggersDB = {
   getPoaByEventId,
   generatePoaForAddEvent,
   getEventPoaTriggerById,
-
 };

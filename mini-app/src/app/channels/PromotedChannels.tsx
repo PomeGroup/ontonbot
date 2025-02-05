@@ -9,17 +9,20 @@ export default function PromotedChannels() {
   const { data, isLoading } = trpc.organizers.getPromotedOrganizers.useQuery(undefined, {
     retry: false,
     staleTime: Infinity,
-  })
+  });
 
-  if (isLoading || !data?.length) return null
+  if (isLoading || !data?.length) return null;
 
   return (
     <div className="flex overflow-y-auto gap-3">
-      {data?.map(channel => (
-        <ChannelCard data={channel} key={channel.user_id} />
+      {data?.map((channel) => (
+        <ChannelCard
+          data={channel}
+          key={channel.user_id}
+        />
       ))}
     </div>
-  )
+  );
 }
 
 function ChannelCard({ data }: { data: Channel }) {
@@ -29,24 +32,28 @@ function ChannelCard({ data }: { data: Channel }) {
       className="p-3 bg-white rounded-md max-w-40 min-w-[7rem]"
     >
       <LoadableImage
-        wrapperClassName='mb-3'
+        wrapperClassName="mb-3"
         src={data.org_image || channelAvatar.src}
         width={200}
-        height={200} />
+        height={200}
+      />
       <div className="text-center">
-        <div
-          className="font-[590] mb-2 text-[14px] leading-[19px] tracking h-9 overflow-hidden break-words line-clamp-2"
-        >
+        <div className="font-[590] mb-2 text-[14px] leading-[19px] tracking h-9 overflow-hidden break-words line-clamp-2">
           {data.org_channel_name || "Untitled Organizer"}
         </div>
         <div className="flex gap-[2px] justify-center text-[#8E8E93]">
           <Typography
             variant="caption1"
-            className='font-semibold'
+            className="font-semibold"
           >
             {data.hosted_event_count || "0"}
           </Typography>
-          <Typography variant="caption1" className='font-light'>&nbsp;Events</Typography>
+          <Typography
+            variant="caption1"
+            className="font-light"
+          >
+            &nbsp;Events
+          </Typography>
         </div>
       </div>
     </Link>

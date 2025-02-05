@@ -1,41 +1,6 @@
 import { NextResponse } from "next/server";
 
-// Define error codes for consistent error responses
-const ERROR_CODES = {
-  VALIDATION_FAILED: {
-    code: "VALIDATION_FAILED",
-    message: "Invalid input parameters.",
-  },
-  OTP_SEND_FAILED: {
-    code: "OTP_SEND_FAILED",
-    message: "Failed to send OTP via Telegram.",
-  },
-  OTP_CACHE_FAILED: {
-    code: "OTP_CACHE_FAILED",
-    message: "Error saving OTP to cache.",
-  },
-  UNKNOWN_ERROR: {
-    code: "UNKNOWN_ERROR",
-    message: "An unknown error occurred.",
-  },
-  TELEGRAM_ID_NOT_FOUND: {
-    code: "TELEGRAM_ID_NOT_FOUND",
-    message: "Telegram ID not found.",
-  },
-};
-
 // Define success codes
-const SUCCESS_CODES = {
-  OTP_SENT: {
-    code: "OTP_SENT",
-    message: "OTP successfully sent to the organizer.",
-  },
-  MESSAGE_SENT: {
-    code: "MESSAGE_SENT",
-    message: "Message successfully sent to the user.",
-  },
-};
-
 /**
  * @swagger
  * /sendCode:
@@ -118,7 +83,7 @@ const SUCCESS_CODES = {
  *                       description: Detailed error information, if available.
  *                       example: "An unknown error occurred while sending OTP."
  */
-export async function POST(req: Request) {
+export async function POST() {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
     success: false,

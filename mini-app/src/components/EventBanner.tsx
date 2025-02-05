@@ -9,7 +9,7 @@ type SkeletonProps = { skeleton: true; event?: null };
 type EventProps = {
   skeleton?: false;
   event: OntonEvent;
-  className?: string
+  className?: string;
 };
 
 type Props = (SkeletonProps | EventProps) & {
@@ -18,7 +18,7 @@ type Props = (SkeletonProps | EventProps) & {
 
 const defaultImage = "/template-images/default.webp";
 
-const emptyObj = {} as any
+const emptyObj = {} as any;
 export default function EventBanner({ skeleton, event, className }: Props) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const webApp = useWebApp();
@@ -27,7 +27,7 @@ export default function EventBanner({ skeleton, event, className }: Props) {
     eventUuid,
     title = "No Title",
     imageUrl = "/template-images/default.webp",
-    ticketToCheckIn = false
+    ticketToCheckIn = false,
   } = event || emptyObj;
 
   const handleEventClick = () => {
@@ -65,26 +65,5 @@ export default function EventBanner({ skeleton, event, className }: Props) {
         />
       )}
     </div>
-  );
-}
-
-function EventBannerSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={`relative w-full aspect-square rounded-lg bg-grey-200 overflow-hidden shadow-lg animate-pulse mb-4 ${className}`}>
-      {/* <div className="absolute inset-0 w-full h-full bg-gray-200 dark:bg-gray-700"></div> */}
-      {/* <div>
-          <div className="flex justify-between items-start">
-            <div className="w-24 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            <div className="w-32 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          </div>
-          <div className="mt-2 w-3/4 h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="mt-2 w-1/2 h-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
-        <div className="flex justify-between items-center text-sm">
-          <div className="w-32 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="w-20 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div> */}
-    </div>
-    // </div >
   );
 }

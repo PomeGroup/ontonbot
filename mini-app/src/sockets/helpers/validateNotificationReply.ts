@@ -1,5 +1,5 @@
-import {notificationReplyPOASimpleSchema ,notificationReplyPasswordSchema} from "@/zodSchema/SocketZodSchemas";
-import {ZodError} from "zod";
+import { notificationReplyPOASimpleSchema, notificationReplyPasswordSchema } from "@/zodSchema/SocketZodSchemas";
+import { ZodError } from "zod";
 import { logger } from "@/server/utils/logger";
 
 type ValidatedNotificationReply = {
@@ -19,11 +19,11 @@ type NotificationReplyValidationResult = ValidatedNotificationReply | InvalidNot
 export const validateNotificationReply = (data: any): NotificationReplyValidationResult => {
   try {
     logger.log("Validating notification reply data:", data);
-    if(typeof data !== "object" || data === null || !data?.type) {
-        return {
-            valid: false,
-            error: "Invalid data object",
-        };
+    if (typeof data !== "object" || data === null || !data?.type) {
+      return {
+        valid: false,
+        error: "Invalid data object",
+      };
     }
     const schemaToUse = data.type === "POA_SIMPLE" ? notificationReplyPOASimpleSchema : notificationReplyPasswordSchema;
     const validatedData = schemaToUse.parse(data);
@@ -46,4 +46,3 @@ export const validateNotificationReply = (data: any): NotificationReplyValidatio
     };
   }
 };
-

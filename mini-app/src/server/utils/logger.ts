@@ -1,17 +1,16 @@
 // logger.ts
-import { winstonLogger } from './winstonLogger';
+import { winstonLogger } from "./winstonLogger";
 
 /** The only two valid log formats in our system. */
-export type LogFormatType = 'single_line' | 'multi_line';
+export type LogFormatType = "single_line" | "multi_line";
 
 /**
  * Read process.env.LOG_FORMAT and cast it to our LogFormatType,
  * defaulting to 'single_line' if it's not 'multi_line'.
  */
-const LOG_FORMAT: LogFormatType =
-  process.env.LOG_FORMAT === 'multi_line' ? 'multi_line' : 'single_line';
+const LOG_FORMAT: LogFormatType = process.env.LOG_FORMAT === "multi_line" ? "multi_line" : "single_line";
 
-const isSingleLineFormat = LOG_FORMAT === 'single_line';
+const isSingleLineFormat = LOG_FORMAT === "single_line";
 
 // The helper from step (2):
 function replicateArgsAsFields(args: any[]): Record<string, any> {
@@ -19,13 +18,13 @@ function replicateArgsAsFields(args: any[]): Record<string, any> {
 
   args.forEach((arg, idx) => {
     const key = `logParam_${idx + 1}`;
-    if (typeof arg === 'object' && arg !== null) {
+    if (typeof arg === "object" && arg !== null) {
       try {
         // Attempt JSON.stringify for objects
         fields[key] = JSON.stringify(arg);
       } catch {
         // Handle circular references
-        fields[key] = '[Circular]';
+        fields[key] = "[Circular]";
       }
     } else {
       // Convert all non-objects to string
@@ -35,7 +34,6 @@ function replicateArgsAsFields(args: any[]): Record<string, any> {
 
   return fields;
 }
-
 
 export const logger = {
   debug: (...args: any[]) => {

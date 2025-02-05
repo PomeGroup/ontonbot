@@ -25,18 +25,9 @@ export default function EditForm({ data }: { data: Channel }) {
 
   // const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const trpcUtils = trpc.useUtils()
-  const initialImage = data.org_image || data.photo_url || ''
-  const {
-    errors,
-    touched,
-    values,
-    handleChange,
-    handleSubmit,
-    isSubmitting,
-    getFieldProps,
-    setFieldValue
-  } = useFormik<{
+  const trpcUtils = trpc.useUtils();
+  const initialImage = data.org_image || data.photo_url || "";
+  const { errors, touched, values, handleChange, handleSubmit, isSubmitting, getFieldProps, setFieldValue } = useFormik<{
     org_channel_name: string;
     org_support_telegram_user_name: string;
     org_x_link: string;
@@ -57,7 +48,10 @@ export default function EditForm({ data }: { data: Channel }) {
         newErrors.org_channel_name = "Channel name cannot be empty.";
       }
 
-      if (values.org_support_telegram_user_name !== "" && !/^@[a-zA-Z0-9_]{5,32}$/.test(values.org_support_telegram_user_name.trim())) {
+      if (
+        values.org_support_telegram_user_name !== "" &&
+        !/^@[a-zA-Z0-9_]{5,32}$/.test(values.org_support_telegram_user_name.trim())
+      ) {
         newErrors.org_support_telegram_user_name = "Must start with @ and be 5-32 characters long.";
       }
 
@@ -73,13 +67,13 @@ export default function EditForm({ data }: { data: Channel }) {
       if (newVals.org_x_link === xLinkDefault) {
         newVals.org_x_link = "";
       }
-      if (newVals.org_image.startsWith('blob:')) {
-        newVals.org_image = null as any
+      if (newVals.org_image.startsWith("blob:")) {
+        newVals.org_image = null as any;
       }
 
       await editApi.mutateAsync(newVals);
       toast.success("Information updated successfully.");
-      trpcUtils.users.syncUser.invalidate(undefined, { refetchType: "all" })
+      trpcUtils.users.syncUser.invalidate(undefined, { refetchType: "all" });
       goBack();
     },
   });
@@ -89,32 +83,32 @@ export default function EditForm({ data }: { data: Channel }) {
   // const [prevImg, setPrevImg] = useState(initialImage)
   const [isUploading, setUploading] = useState(false);
   const uploadImage = async (files: FileList | null) => {
-    uploadApi.reset() // reset the error
-    const file = files?.[0]
+    uploadApi.reset(); // reset the error
+    const file = files?.[0];
     if (!file) return;
 
-    const url = URL.createObjectURL(file)
+    const url = URL.createObjectURL(file);
     setFieldValue("org_image", url);
 
-    let base64Img
+    let base64Img;
     try {
-      base64Img = await toBase64(file)
+      base64Img = await toBase64(file);
     } catch (e) {
-      toast.error('Unable to encode image. Please try another image.')
-      return
+      toast.error("Unable to encode image. Please try another image.");
+      return;
     }
     setUploading(true);
 
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     try {
       const response = await uploadApi.mutateAsync({
         image: base64Img,
-        subfolder: "channels"
+        subfolder: "channels",
       });
       setFieldValue("org_image", response.imageUrl);
     } catch (e) {
-      console.log(e)
-      toast.error('Unable to upload image. Please try again.')
+      console.log(e);
+      toast.error("Unable to upload image. Please try again.");
     } finally {
       // setFieldValue("org_image", prevImg)
       setUploading(false);
@@ -137,14 +131,15 @@ export default function EditForm({ data }: { data: Channel }) {
           >
             <Preloader size="w-16 h-16" />
           </div>
-          <div className={cn(
-            "absolute z-10 inset-0 bg-[rgba(255,255,255,0.6)] text-red-500 w-full text-balance mt-2 hidden justify-center items-center",
-            uploadApi.error && '!flex')}>
-            {
-              getErrorMessages(uploadApi.error?.message)
-                .map((errMessage, idx: number) => (
-                  <p key={idx}>{errMessage}</p>
-                ))}
+          <div
+            className={cn(
+              "absolute z-10 inset-0 bg-[rgba(255,255,255,0.6)] text-red-500 w-full text-balance mt-2 hidden justify-center items-center",
+              uploadApi.error && "!flex"
+            )}
+          >
+            {getErrorMessages(uploadApi.error?.message).map((errMessage, idx: number) => (
+              <p key={idx}>{errMessage}</p>
+            ))}
           </div>
           <LoadableImage
             src={values.org_image || channelAvatar.src}
@@ -153,7 +148,8 @@ export default function EditForm({ data }: { data: Channel }) {
             wrapperClassName="mb-4 h-auto !rounded-[10px] aspect-square"
             className="aspect-square w-full"
             sizes="100vw"
-            alt="Avatar" />
+            alt="Avatar"
+          />
         </div>
         <div className="flex align-center justify-between mb-2">
           <Typography
@@ -195,7 +191,7 @@ export default function EditForm({ data }: { data: Channel }) {
           className="mb-3"
           label="Channel Name"
           error={(errors.org_channel_name && touched.org_channel_name && errors.org_channel_name) || undefined}
-          {...getFieldProps('org_channel_name')}
+          {...getFieldProps("org_channel_name")}
         />
         <OntonInput
           className="mb-3"
@@ -216,7 +212,7 @@ export default function EditForm({ data }: { data: Channel }) {
               />
             </div>
           }
-          {...getFieldProps('org_support_telegram_user_name')}
+          {...getFieldProps("org_support_telegram_user_name")}
         />
         <OntonInput
           className="mb-3"
@@ -232,7 +228,7 @@ export default function EditForm({ data }: { data: Channel }) {
               />
             </div>
           }
-          {...getFieldProps('org_x_link')}
+          {...getFieldProps("org_x_link")}
         />
         <OntonExpandableInput
           label="Bio"
@@ -248,7 +244,11 @@ export default function EditForm({ data }: { data: Channel }) {
           >
             Save Changes
           </Button>
-          <button type='button' onClick={goBack} className='w-full rounded-[10px] px-4 py-2 border-2 border-[#007AFF] text-[#007aff] font-semibold uppercase text-sm'>
+          <button
+            type="button"
+            onClick={goBack}
+            className="w-full rounded-[10px] px-4 py-2 border-2 border-[#007AFF] text-[#007aff] font-semibold uppercase text-sm"
+          >
             Discard
           </button>
         </div>

@@ -12,8 +12,7 @@ const RegistrationStep = () => {
   const tonWallet = useTonWallet();
   const { setSection } = useSectionStore();
 
-
-  const { eventData, setEventData, submitMainbutton, isEdit } = useCreateEventStore((state) => ({
+  const { eventData, setEventData, submitMainbutton } = useCreateEventStore((state) => ({
     eventData: state.eventData,
     setEventData: state.setEventData,
     setCurrentStep: state.setCurrentStep,
@@ -25,7 +24,7 @@ const RegistrationStep = () => {
     if (eventData?.eventLocationType === "in_person") {
       setEventData({ has_registration: true });
     }
-  }, []);
+  }, [eventData?.eventLocationType, setEventData]);
 
   useMainButton(() => {
     formRef.current?.requestSubmit();
@@ -40,8 +39,8 @@ const RegistrationStep = () => {
         submitMainbutton(tonWallet?.account.address || null);
       }}
     >
-      { <UserRegistrationForm />}
-      { <PaidEventCreationInputs />}
+      {<UserRegistrationForm />}
+      {<PaidEventCreationInputs />}
     </form>
   );
 };

@@ -17,18 +17,15 @@ const handler = async (req: Request) => {
      * (including `TRPCError`).
      */
     onError({ error, type, path, input, ctx }) {
-      logger.error(
-        `tRPC error [${type}] on path [${path}] - ${error.message}`,
-        {
-          code: error.code,
-          user: ctx?.user?.user_id,
-          user_name: ctx?.user?.username,
-          user_role: ctx?.user?.role,
-          cause: error.cause, // if present
-          input, // might contain request data
-        }
-      );
-    }
+      logger.error(`tRPC error [${type}] on path [${path}] - ${error.message}`, {
+        code: error.code,
+        user: ctx?.user?.user_id,
+        user_name: ctx?.user?.username,
+        user_role: ctx?.user?.role,
+        cause: error.cause, // if present
+        input, // might contain request data
+      });
+    },
   });
 
   const text = await response.text();

@@ -33,9 +33,7 @@ const useNotificationStore = create<NotificationState>((set) => ({
   addNotification: (notification) =>
     set((state) => {
       // Check if this notificationId already exists
-      const exists = state.notifications.some(
-        (n) => n.notificationId === notification.notificationId
-      );
+      const exists = state.notifications.some((n) => n.notificationId === notification.notificationId);
 
       if (exists) {
         // If it already exists, don't add it again

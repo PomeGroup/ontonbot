@@ -15,13 +15,7 @@ export const visitorsRouter = router({
     )
     .query(async (opts) => {
       const { limit = 25, cursor = 0, dynamic_fields = true } = opts.input;
-      const data = await selectVisitorsByEventUuid(
-        opts.input.event_uuid,
-        limit,
-        cursor,
-        dynamic_fields,
-        opts.input.search
-      );
+      const data = await selectVisitorsByEventUuid(opts.input.event_uuid, limit, cursor, dynamic_fields, opts.input.search);
       return { ...data, event: opts.ctx.event || null };
     }),
 });

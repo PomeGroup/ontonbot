@@ -18,12 +18,7 @@ export const sanitizeString = (input: any) => {
 // Utility to sanitize objects recursively
 export const sanitizeObject = (obj: any): any => {
   if (typeof obj === "object" && obj !== null) {
-    return Object.fromEntries(
-      Object.entries(obj).map(([key, value]) => [key, sanitizeString(value)]),
-    );
+    return Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, sanitizeString(value)]));
   }
   return sanitizeString(obj);
 };
-
-
-

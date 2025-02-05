@@ -10,10 +10,14 @@ import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import { Dialog } from "konsta/react"; // Import Konsta UI Dialog
 
-const ButtonPOA = ({ event_uuid, poa_type, showPOAButton }: {
+const ButtonPOA = ({
+  event_uuid,
+  poa_type,
+  showPOAButton,
+}: {
   event_uuid: string;
-  poa_type?: EventTriggerType,
-  showPOAButton: boolean
+  poa_type?: EventTriggerType;
+  showPOAButton: boolean;
 }) => {
   const WebApp = useWebApp();
   const initData = WebApp?.initData || "";
@@ -24,21 +28,24 @@ const ButtonPOA = ({ event_uuid, poa_type, showPOAButton }: {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [countdown, setCountdown] = useState<number>(0);
 
-  const { data: poaInfo, refetch } = trpc.EventPOA.Info.useQuery({ event_uuid }, {
-    enabled: !!initData,
-    onSuccess(data) {
-      if (!data.success) {
-        // If info query returns success: false, show the error dialog
-        setErrorMessage(data?.message || "Unknown error");
+  const { data: poaInfo, refetch } = trpc.EventPOA.Info.useQuery(
+    { event_uuid },
+    {
+      enabled: !!initData,
+      onSuccess(data) {
+        if (!data.success) {
+          // If info query returns success: false, show the error dialog
+          setErrorMessage(data?.message || "Unknown error");
+          setDialogOpen(true);
+        }
+      },
+      onError(error) {
+        // If there is a query-level error (network or unhandled), show it
+        setErrorMessage(error.message);
         setDialogOpen(true);
-      }
-    },
-    onError(error) {
-      // If there is a query-level error (network or unhandled), show it
-      setErrorMessage(error.message);
-      setDialogOpen(true);
-    },
-  });
+      },
+    }
+  );
 
   const CreatePOAMutation = trpc.EventPOA.Create.useMutation({
     onError(error) {

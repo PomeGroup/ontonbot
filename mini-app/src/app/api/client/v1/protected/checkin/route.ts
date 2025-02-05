@@ -1,40 +1,4 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
-
-// Zod schema to validate the request body
-const checkInTicketSchema = z.object({
-  order_uuid: z.string(),
-});
-
-// Define error codes for consistent error responses
-const ERROR_CODES = {
-  TICKET_NOT_FOUND: { code: "TICKET_NOT_FOUND", message: "Ticket not found." },
-  TICKET_ALREADY_CHECKED_IN: {
-    code: "TICKET_ALREADY_CHECKED_IN",
-    message: "Ticket has already been checked in.",
-  },
-  TICKET_UPDATE_FAILED: {
-    code: "TICKET_UPDATE_FAILED",
-    message: "Failed to update ticket status.",
-  },
-  UNKNOWN_ERROR: {
-    code: "UNKNOWN_ERROR",
-    message: "An unknown error occurred.",
-  },
-  REWARD_CREATION_FAILED: {
-    code: "REWARD_CREATION_FAILED",
-    message: "Failed to create reward for the user.",
-  },
-  JWT_INVALID: {
-    code: "JWT_INVALID",
-    message: "Invalid or missing JWT token.",
-  },
-};
-
-// Type guard to check if result is alreadyCheckedIn type
-function isAlreadyCheckedIn(result: any): result is { alreadyCheckedIn: boolean } {
-  return result && "alreadyCheckedIn" in result;
-}
 
 /**
  * @swagger
@@ -99,7 +63,7 @@ function isAlreadyCheckedIn(result: any): result is { alreadyCheckedIn: boolean 
  *       500:
  *         description: Internal server error.
  */
-export async function POST(req: Request) {
+export async function POST(_req: Request) {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
     success: false,

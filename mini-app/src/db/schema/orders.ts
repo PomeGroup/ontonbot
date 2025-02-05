@@ -47,7 +47,7 @@ export const orders = pgTable(
 );
 
 // Relations
-export const orderRelations = relations(orders, ({ one, many }) => ({
+export const orderRelations = relations(orders, ({ one }) => ({
   event: one(events, {
     fields: [orders.event_uuid],
     references: [events.event_uuid],

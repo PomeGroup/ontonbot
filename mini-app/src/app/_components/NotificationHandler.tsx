@@ -62,9 +62,7 @@ const NotificationHandler: React.FC = () => {
   // ─────────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     const newNotification = notifications.find(
-      (n) =>
-        (n.type === "POA_PASSWORD" || n.type === "POA_SIMPLE") &&
-        !handledNotificationIds.has(n.notificationId),
+      (n) => (n.type === "POA_PASSWORD" || n.type === "POA_SIMPLE") && !handledNotificationIds.has(n.notificationId)
     );
 
     if (newNotification) {
@@ -173,7 +171,7 @@ const NotificationHandler: React.FC = () => {
           // If some other success-like status => close
           handleClose();
         }
-      },
+      }
     );
   };
 
@@ -188,7 +186,7 @@ const NotificationHandler: React.FC = () => {
       },
       () => {
         handleClose();
-      },
+      }
     );
   };
 
@@ -203,7 +201,7 @@ const NotificationHandler: React.FC = () => {
       },
       () => {
         handleClose();
-      },
+      }
     );
   };
 
@@ -229,8 +227,7 @@ const NotificationHandler: React.FC = () => {
   const isPoaPassword = notificationToShow?.type === "POA_PASSWORD";
 
   const dialogTitle = notificationToShow?.title || "NOTIFICATION";
-  const formattedTime =
-    timeLeft > 0 ? `(${new Date(timeLeft * 1000).toISOString().slice(14, 19)})` : "(00:00)";
+  const formattedTime = timeLeft > 0 ? `(${new Date(timeLeft * 1000).toISOString().slice(14, 19)})` : "(00:00)";
 
   return (
     <>
@@ -319,40 +316,30 @@ const NotificationHandler: React.FC = () => {
         translucent={false}
         content={
           <div className="p-4 text-center">
+            {successEventUuid && successEventHasPayment ? (
+              <p className="inline-flex text-left text-sm mb-2">
+                You have successfully entered the correct password. we will send you the reward link soon.
+              </p>
+            ) : (
+              <p className="inline-flex text-left text-sm mb-2">
+                You have entered the correct password. Now you must check the event page to get your SBT reward.
+              </p>
+            )}
 
-
-              {successEventUuid &&
-                successEventHasPayment ?
-                (
-                  <p className="inline-flex text-left text-sm mb-2">
-                    You have successfully entered the correct password. we will send you the reward link soon.
-                  </p>
-                )
-                : (
-                  <p className="inline-flex text-left text-sm mb-2">
-                    You have entered the correct password. Now you must check the event page to get your SBT reward.
-
-                  </p>
-                )
-              }
-
-
-              {successEventUuid && redirectCountdown > 0 && (
-                <>
-              {successEventHasPayment ? (
+            {successEventUuid && redirectCountdown > 0 && (
+              <>
+                {successEventHasPayment ? (
+                  <p className="text-xs text-gray-600">check your telegram later</p>
+                ) : (
                   <p className="text-xs text-gray-600">
-                    check your telegram later
+                    Redirecting in {redirectCountdown} second
+                    {redirectCountdown > 1 ? "s" : ""}...
                   </p>
-                    ) : (
-                    <p className="text-xs text-gray-600">
-                      Redirecting in {redirectCountdown} second
-                      {redirectCountdown > 1 ? "s" : ""}...
-                    </p>
-                    )}
-                  </>
                 )}
-              </div>
-            }
+              </>
+            )}
+          </div>
+        }
         buttons={
           <div className="flex justify-center bg-white p-0 w-full">
             {successEventUuid ? (
@@ -362,7 +349,6 @@ const NotificationHandler: React.FC = () => {
                 onClick={closeSuccessDialogAndRedirect}
               >
                 {successEventHasPayment ? "Close" : "Go to Event Page"}
-
               </DialogButton>
             ) : (
               <DialogButton

@@ -1,6 +1,6 @@
-import { NextRequest } from 'next/server';
-import { Readable } from 'stream';
-import type { IncomingMessage } from 'http';
+import { NextRequest } from "next/server";
+import { Readable } from "stream";
+import type { IncomingMessage } from "http";
 
 // This helper reads the entire NextRequest body into memory (arrayBuffer),
 // then creates a Readable stream. We attach the necessary Node.js fields so
@@ -30,9 +30,9 @@ export async function toNodeJsRequest(req: NextRequest): Promise<IncomingMessage
 
   nodeReq.headers = headers;
   // method, url, and other props that formidable might use:
-  nodeReq.method = req.method ?? 'POST';
-  nodeReq.url = req.url ?? '/';
-  nodeReq.httpVersion = '1.1';
+  nodeReq.method = req.method ?? "POST";
+  nodeReq.url = req.url ?? "/";
+  nodeReq.httpVersion = "1.1";
   nodeReq.httpVersionMajor = 1;
   nodeReq.httpVersionMinor = 1;
 

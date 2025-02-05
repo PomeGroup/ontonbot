@@ -1,13 +1,6 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
 
 // Zod schema for validating the path and query parameters
-const getGuestListSchema = z.object({
-  event_uuid: z.string(),
-  limit: z.string().optional().nullable(), // Optional query param for limit
-  cursor: z.string().optional().nullable(), // Optional query param for cursor
-  search: z.string().optional().nullable(), // Optional query param for search
-});
 
 /**
  * @swagger
@@ -47,7 +40,7 @@ const getGuestListSchema = z.object({
  *       401:
  *         description: Unauthorized (Invalid or missing JWT)
  */
-export async function GET(request: Request, { params }: { params: { event_uuid: string } }) {
+export async function GET() {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
     success: false,

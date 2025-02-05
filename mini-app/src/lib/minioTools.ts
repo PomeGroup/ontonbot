@@ -46,13 +46,13 @@ export const uploadJsonToMinio = async (
     const res = await axios.post(url, formData, {
       headers: {
         ...formData.getHeaders(),
-        Authorization: `Bearer ${token}`,  // If your route enforces JWT
+        Authorization: `Bearer ${token}`, // If your route enforces JWT
       },
     });
 
     // 6. Validate the response
     if (!res.data || !res.data.jsonUrl) {
-      logger.error("JSON upload failed (no jsonUrl in response)",res);
+      logger.error("JSON upload failed (no jsonUrl in response)", res);
       throw new Error("JSON upload failed (no jsonUrl in response)");
     }
 

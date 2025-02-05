@@ -182,7 +182,6 @@ async function fetchCollection(collection_address: string, limit: number = 100, 
       await delay(50);
       if (attempt === retries) {
         throw error;
-        throw new Error(`fetchTransactions Failed after ${retries} attempts`);
       }
     }
   }
@@ -254,7 +253,6 @@ async function fetchTransactions({
       await delay(50);
       if (attempt === retries) {
         throw error;
-        throw new Error(`fetchTransactions Failed after ${retries} attempts`);
       }
     }
   }
@@ -329,7 +327,6 @@ async function parseTransactions(transactions: Transaction[]) {
     const source = in_msg.source;
     const destination = in_msg.destination;
     const message_content = in_msg.message_content;
-    const created_at = in_msg.created_at;
     const opcode = in_msg.opcode;
 
     if (!source || !destination || opcode === undefined || opcode === null || !message_content) continue;

@@ -7,9 +7,7 @@ import { useMainButton } from "@/hooks/useMainButton";
 import BasicEventInputs from "../../Event/steps/BasicEventInputs";
 import { useSectionStore } from "@/zustand/useSectionStore";
 
-
 let lastToastId: string | number | null = null;
-
 
 export const GeneralStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -23,7 +21,6 @@ export const GeneralStep = () => {
       eventData: state.eventData,
       clearGeneralErrors: state.clearGeneralStepErrors,
       setGeneralStepErrors: state.setGeneralStepErrors,
-
     })
   );
   const { edit: editOptions } = useCreateEventStore();
@@ -34,20 +31,18 @@ export const GeneralStep = () => {
     if (checked) setShowTermsError(false);
     _setTermsChecked(checked);
   };
- 
+
   // TODO: eventData is updated multiple times during each render
   // useEffect(() => {
   //   if (!eventData?.start_date) return
   //   setTermsChecked(true)
-  // }, [eventData?.event_uuid]) 
-
+  // }, [eventData?.event_uuid])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formRef.current) return;
 
     if (!termsChecked && !editOptions?.eventHash) {
-
       toast.error("Please agree to the terms and conditions to continue.");
       return;
     }
@@ -83,7 +78,6 @@ export const GeneralStep = () => {
     clearGeneralErrors();
     setCurrentStep(2);
     setSection("event_setup_form_time_place_step");
-
   };
 
   useMainButton(() => {
@@ -99,7 +93,6 @@ export const GeneralStep = () => {
         showTermsError={showTermsError}
         termsChecked={termsChecked}
         setTermsChecked={setTermsChecked}
-
       />
     </form>
   );

@@ -1,23 +1,7 @@
 import { NextResponse } from "next/server";
 // Assuming redisTools is available for Redis operations
 
-const JWT_SECRET = process.env.CLIENT_API_JWT_SECRET!;
-
-// Define error codes for JWT validation
-const ERROR_CODES = {
-  JWT_MISSING: { code: "JWT_MISSING", message: "Authorization token missing." },
-  JWT_INVALID: { code: "JWT_INVALID", message: "Invalid or expired token." },
-  JWT_VERIFICATION_FAILED: {
-    code: "JWT_VERIFICATION_FAILED",
-    message: "Token verification failed.",
-  },
-  JWT_BLACKLISTED: {
-    code: "JWT_BLACKLISTED",
-    message: "The token has been blacklisted and is no longer valid.",
-  },
-};
-
-export async function validateJwtFromRequest(req: Request) {
+export async function validateJwtFromRequest(_req: Request) {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
     success: false,

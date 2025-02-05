@@ -1,53 +1,4 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
-
-const JWT_SECRET = process.env.CLIENT_API_JWT_SECRET!;
-const FIXED_API_KEY = process.env.CLIENT_API_FIXED_KEY!;
-const FIXED_USER = process.env.CLIENT_API_FIXED_USER!;
-const FIXED_ORGANIZER = process.env.CLIENT_API_FIXED_ORGANIZER!;
-
-// Define error codes for consistent error responses
-const ERROR_CODES = {
-  METHOD_NOT_ALLOWED: {
-    code: "METHOD_NOT_ALLOWED",
-    message: "Method not allowed.",
-  },
-  VALIDATION_FAILED: {
-    code: "VALIDATION_FAILED",
-    message: "Invalid input parameters.",
-  },
-  OTP_INVALID: { code: "OTP_INVALID", message: "Invalid OTP." },
-  USER_NOT_FOUND: { code: "USER_NOT_FOUND", message: "User not found." },
-  OTP_DELETION_FAILED: {
-    code: "OTP_DELETION_FAILED",
-    message: "Error deleting OTP from cache.",
-  },
-  UNKNOWN_ERROR: {
-    code: "UNKNOWN_ERROR",
-    message: "An unknown error occurred.",
-  },
-};
-
-// Define success codes
-const SUCCESS_CODES = {
-  LOGIN_SUCCESS: {
-    code: "LOGIN_SUCCESS",
-    message: "Login successful. JWT generated.",
-  },
-};
-
-// Zod schema for validating the request body (now using organizerId and userId)
-const loginSchema = z.object({
-  organizerId: z
-    .string()
-    .min(2)
-    .regex(/^@[a-zA-Z0-9_]{5,}$/, "Invalid organizer Telegram username format"),
-  userId: z
-    .string()
-    .min(2)
-    .regex(/^@[a-zA-Z0-9_]{5,}$/, "Invalid user Telegram username format"),
-  loginCode: z.string(),
-});
 
 /**
  * @swagger
@@ -126,7 +77,7 @@ const loginSchema = z.object({
  *                       type: string
  *                       description: Error message.
  */
-export async function POST(req: Request) {
+export async function POST() {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
     success: false,

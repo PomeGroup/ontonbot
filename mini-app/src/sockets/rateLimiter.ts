@@ -2,14 +2,13 @@
 import { Server, Socket } from "socket.io";
 import { RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS } from "./constants";
 
-
 const userRateLimits = new Map<string, { count: number; firstRequestTimestamp: number }>();
 
 export const applyRateLimiting = (io: Server) => {
   io.on("connection", (socket: Socket) => {
     const userId = socket.data.user.id;
 
-    socket.onAny((event, ...args) => {
+    socket.onAny((_event, ..._args) => {
       const now = Date.now();
       const rateLimitInfo = userRateLimits.get(userId) || { count: 0, firstRequestTimestamp: now };
 

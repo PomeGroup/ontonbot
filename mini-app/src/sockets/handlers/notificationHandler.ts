@@ -10,11 +10,9 @@ import { handleNotificationReply } from "./notificationReply";
 import { logger } from "@/server/utils/logger";
 // Track active user connections
 
-
 export const handleNotifications = async (io: Server) => {
   // Start the RabbitMQ Notification Worker
   await startNotificationWorker(io);
-
 
   io.on("connection", (socket: Socket) => {
     const user = socket.data.user;
@@ -44,7 +42,7 @@ export const handleNotifications = async (io: Server) => {
     // Expecting client to emit: socket.emit("notificationReply", { notificationId: "123", answer: "yes" }, (response) => { ... });
     socket.on(SocketEvents.receive.notificationReply, (data, callback) => {
       // Use the handler to validate and process the reply
-      handleNotificationReply(io, data, callback, sanitizedUsername , user.id);
+      handleNotificationReply(io, data, callback, sanitizedUsername, user.id);
     });
     // Test event handler
     socket.on(SocketEvents.receive.test, (data, callback) => {
@@ -65,11 +63,3 @@ export const handleNotifications = async (io: Server) => {
     });
   });
 };
-
-
-
-
-
-
-
-

@@ -47,7 +47,6 @@ export const event_details_search_list = pgView("event_details_search_list", {
   hasApproval: boolean("has_approval"),
   paymentType: text("payment_type"),
   // ticketCount: integer("ticket_count"),
-
 }).as(sql`
   SELECT
     e.event_id,

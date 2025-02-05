@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { EventDataPage } from "@/app/_components/Event/EventPage";
 
@@ -37,4 +37,3 @@ export default function EventPage({ params }: Props) {
 
   return <EventDataPage eventHash={params.hash} />;
 }
-

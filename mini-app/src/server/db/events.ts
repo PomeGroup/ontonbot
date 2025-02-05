@@ -21,7 +21,6 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logger } from "../utils/logger";
 
-
 export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) => {
   const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData);
 
@@ -41,7 +40,6 @@ export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) 
 
   return { isOwner: true, valid, initDataJson };
 };
-
 
 export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
   const data = validateMiniAppData(rawInitData);
@@ -227,7 +225,7 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
   //    (same selected columns & data types).
   //    We then .orderBy, .limit, .offset on the unioned result.
   // @ts-ignore (if needed, depending on your version/typing)
-  const combinedResultsQuery = unionAll(rewardQuery, ticketsQuery, registrantQuery , userRolesQuery)
+  const combinedResultsQuery = unionAll(rewardQuery, ticketsQuery, registrantQuery, userRolesQuery)
     .orderBy((row) => row.created_at)
     .limit(limit)
     .offset(offset);
@@ -498,7 +496,12 @@ export const getEventsForSpecialRole = async (userRole: string, userId?: number)
   }
 };
 
-export const getOrganizerHosted = async (params: { organizerId?: number; hidden: boolean; offset: number; limit: number }) => {
+export const getOrganizerHosted = async (params: {
+  organizerId?: number;
+  hidden: boolean;
+  offset: number;
+  limit: number;
+}) => {
   const { organizerId, hidden = false, offset, limit } = params;
 
   if (!organizerId) {
@@ -523,17 +526,11 @@ export const getOrganizerHosted = async (params: { organizerId?: number; hidden:
 //  get ongoing events
 export const fetchOngoingEvents = async () => {
   const currentTime = Math.floor(Date.now() / 1000);
-  logger.log("check for events is ongoing in currentTime", currentTime );
+  logger.log("check for events is ongoing in currentTime", currentTime);
   return await db
     .select()
     .from(events)
-    .where(
-      and(
-        eq(events.hidden, false),
-        lt(events.start_date, currentTime),
-        gt(events.end_date, currentTime)
-      )
-    )
+    .where(and(eq(events.hidden, false), lt(events.start_date, currentTime), gt(events.end_date, currentTime)))
     .execute();
 };
 const eventDB = {

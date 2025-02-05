@@ -14,14 +14,7 @@ interface LazyLoadVideoProps {
   onClick: () => void;
 }
 
-const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({
-  src,
-  hubName,
-  collectionId,
-  coverImage,
-  selected,
-  onClick,
-}) => {
+const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({ src, hubName, collectionId, coverImage, selected, onClick }) => {
   const { ref, inView } = useInView({ triggerOnce: true, threshold: 0.5 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -64,9 +57,7 @@ const LazyLoadVideo: React.FC<LazyLoadVideoProps> = ({
             src={coverImage}
             alt={`${hubName} cover`}
             fill
-            className={`object-cover rounded-lg transition-opacity duration-500 ${
-              isLoading ? "opacity-0" : "opacity-100"
-            }`}
+            className={`object-cover rounded-lg transition-opacity duration-500 ${isLoading ? "opacity-0" : "opacity-100"}`}
             onLoadingComplete={() => setIsLoading(false)}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />

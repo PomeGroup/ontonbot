@@ -5,11 +5,7 @@ import { TRPCError } from "@trpc/server";
 import userEventFieldsDB from "@/server/db/userEventFields.db";
 import { logger } from "@/server/utils/logger";
 
-export const getAndValidateVisitor = async (
-  user_id: number,
-  event_uuid: string,
-  ticketOrderUuid?: string | null
-) => {
+export const getAndValidateVisitor = async (user_id: number, event_uuid: string, ticketOrderUuid?: string | null) => {
   try {
     // Check if the visitor exists, depending on the ticketOrderUuid
     const visitor = ticketOrderUuid

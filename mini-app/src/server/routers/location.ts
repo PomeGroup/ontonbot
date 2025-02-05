@@ -9,7 +9,7 @@ export const locationRouter = router({
     .input(
       z.object({
         search: z.string().optional(),
-      }),
+      })
     )
     .query(async (opts) => {
       return await fetchCountries(opts.input.search);
@@ -25,10 +25,14 @@ export const locationRouter = router({
     return await fetchCityById(opts.input.cityId);
   }),
 
-  getCoordsByName: publicProcedure.input(z.object({
-    countryName: z.string(),
-    cityName: z.string(),
-  })).query(async (opts) => {
-    return await fetchCoordsByName(opts.input.countryName, opts.input.cityName);
-  }),
+  getCoordsByName: publicProcedure
+    .input(
+      z.object({
+        countryName: z.string(),
+        cityName: z.string(),
+      })
+    )
+    .query(async (opts) => {
+      return await fetchCoordsByName(opts.input.countryName, opts.input.cityName);
+    }),
 });

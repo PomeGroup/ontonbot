@@ -7,19 +7,14 @@ import { Page, Block, Button } from "konsta/react";
 import guestListIcon from "./guest-list.svg";
 // import promotionCodeIcon from "./promotion-code.svg";
 import ordersIcon from "./orders.svg";
-import coOrganizerIcon from './co-organizers.svg'
+import coOrganizerIcon from "./co-organizers.svg";
 
 import EventCard from "@/app/_components/EventCard/EventCard";
 import ActionCard from "@/components/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";
 import { useGetEvent } from "@/hooks/events.hooks";
 import { useUserStore } from "@/context/store/user.store";
-import {
-  canUserEditEvent,
-  canUserPerformRole,
-  CheckAdminOrOrganizer,
-
-} from "@/lib/userRolesUtils";
+import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
 const hardcodedAdminUsers = [
   47284045, // dacrime
   548648769, // radiophp
@@ -28,9 +23,7 @@ const hardcodedAdminUsers = [
   68007062, // blackpred
   748891997, // samyar_kd
   438186721, // masious
-
-
-]
+];
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
   const { hash } = useParams() as { hash?: string };
@@ -39,34 +32,36 @@ export default function ManageIndexPage() {
   const { setSection } = useSectionStore();
   const router = useRouter();
 
-  const { user } = useUserStore()
+  const { user } = useUserStore();
 
   if (isError) {
-    return <div>something went wrong</div>
+    return <div>something went wrong</div>;
   }
   if (!eventData || !eventData?.event_uuid || isLoading) {
     return null;
   }
 
+  const adminCount = eventData.accessRoles.filter((item) => item.role === "admin").length + 1;
+  const officerCount = eventData.accessRoles.filter((item) => item.role === "checkin_officer").length;
 
+  const canEditEvent = canUserEditEvent({ user, owner: eventData?.owner, accessRoles: eventData?.accessRoles });
 
-  const adminCount = eventData.accessRoles.filter(item => item.role === 'admin').length + 1
-  const officerCount = eventData.accessRoles.filter(item => item.role === 'checkin_officer').length
-
-  const canEditEvent = canUserEditEvent({user,owner: eventData?.owner,accessRoles: eventData?.accessRoles}) ;
-
-  if(user) {
-    console.log( "canEditEvent", canEditEvent)
-    console.log( "accessRolesArray some ",eventData?.accessRoles.some((ar:{ user_id: number; role: string } ) => ar.user_id === user.user_id  && ar.role === 'admin') )
+  if (user) {
+    console.log("canEditEvent", canEditEvent);
+    console.log(
+      "accessRolesArray some ",
+      eventData?.accessRoles.some(
+        (ar: { user_id: number; role: string }) => ar.user_id === user.user_id && ar.role === "admin"
+      )
+    );
   }
   const guestListAccess = canUserPerformRole({
-       user,
-      accessRoles:  eventData?.accessRoles,
-      allowedRoles: ['checkin_officer', 'admin']
-    }
-    );
+    user,
+    accessRoles: eventData?.accessRoles,
+    allowedRoles: ["checkin_officer", "admin"],
+  });
 
-  const hasAdminOrOrganizerAccess = CheckAdminOrOrganizer(user?.role) ;
+  const hasAdminOrOrganizerAccess = CheckAdminOrOrganizer(user?.role);
   // The main “Manage” page
   return (
     <Page>
@@ -85,19 +80,19 @@ export default function ManageIndexPage() {
             organizerChannelName: eventData?.organizer?.org_channel_name ?? "",
           }}
         >
-          { canEditEvent && (
-          <div className="mt-3 -mb-2">
-            <Button
-              className="px-3 rounded-[6px] py-4"
-              outline={true}
-              onClick={() => {
-                setSection("event_setup_form_general_step");
-                router.push(`/events/${eventData.event_uuid}/manage/edit`);
-              }}
-            >
-              Edit Event Info
-            </Button>
-          </div>
+          {canEditEvent && (
+            <div className="mt-3 -mb-2">
+              <Button
+                className="px-3 rounded-[6px] py-4"
+                outline={true}
+                onClick={() => {
+                  setSection("event_setup_form_general_step");
+                  router.push(`/events/${eventData.event_uuid}/manage/edit`);
+                }}
+              >
+                Edit Event Info
+              </Button>
+            </div>
           )}
         </EventCard>
       </Block>
@@ -112,7 +107,7 @@ export default function ManageIndexPage() {
               title="Orders"
               subtitle="Event creation payments"
               footerTexts={[]}
-              className='!m-0'
+              className="!m-0"
             />
 
             {/*<ActionCard*/}
@@ -129,7 +124,6 @@ export default function ManageIndexPage() {
           </>
         )}
 
-
         {/*{ eventData.participationType === "online" && (*/}
         {/*<ActionCard*/}
         {/*  onClick={() => router.push(`/events/${eventData.event_uuid}/manage/attendance`)}*/}
@@ -143,32 +137,34 @@ export default function ManageIndexPage() {
         {/*/>*/}
         {/*)}*/}
 
-        { guestListAccess && (
-        <ActionCard
-          onClick={() => router.push(`/events/${eventData.event_uuid}/manage/guest-list`)}
-          iconSrc={guestListIcon}
-          title="Guests list"
-          subtitle="View and manage participants"
-          footerTexts={[]}
-        />
+        {guestListAccess && (
+          <ActionCard
+            onClick={() => router.push(`/events/${eventData.event_uuid}/manage/guest-list`)}
+            iconSrc={guestListIcon}
+            title="Guests list"
+            subtitle="View and manage participants"
+            footerTexts={[]}
+          />
         )}
 
-        {hasAdminOrOrganizerAccess && hardcodedAdminUsers.includes(user?.user_id ?? 0) &&
-          (
-            <ActionCard
-              onClick={() => router.push(`/events/${eventData.event_uuid}/manage/co-organizers`)}
-              iconSrc={coOrganizerIcon}
-              title="Co-organizers"
-              subtitle="Grant and remove access to check-in officers and admins"
-              footerTexts={[{
+        {hasAdminOrOrganizerAccess && hardcodedAdminUsers.includes(user?.user_id ?? 0) && (
+          <ActionCard
+            onClick={() => router.push(`/events/${eventData.event_uuid}/manage/co-organizers`)}
+            iconSrc={coOrganizerIcon}
+            title="Co-organizers"
+            subtitle="Grant and remove access to check-in officers and admins"
+            footerTexts={[
+              {
                 count: adminCount,
-                items: 'Admin' + (adminCount > 1 ? 's' : '')
-              }, {
+                items: "Admin" + (adminCount > 1 ? "s" : ""),
+              },
+              {
                 count: officerCount,
-                items: 'Check-in officer' + (officerCount > 1 ? 's' : '')
-              }]}
-            />
-          )}
+                items: "Check-in officer" + (officerCount > 1 ? "s" : ""),
+              },
+            ]}
+          />
+        )}
       </Block>
     </Page>
   );

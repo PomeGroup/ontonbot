@@ -2,7 +2,6 @@ import { Address, beginCell, toNano, Sender, SenderArguments, storeStateInit } f
 import { TonConnectUI, useTonConnectUI } from "@tonconnect/ui-react";
 import { AssetsSDK, createApi } from "@ton-community/assets-sdk";
 
-
 type TransferType = "USDT" | "TON";
 
 interface TransferOptions {
@@ -85,7 +84,7 @@ class TonConnectSender implements Sender {
   }
 }
 
-const isTestnet = !(/*NOT*/["production", "stage", "staging"].includes(process.env.NEXT_PUBLIC_ENV || 'development'));
+const isTestnet = !(/*NOT*/ ["production", "stage", "staging"].includes(process.env.NEXT_PUBLIC_ENV || "development"));
 
 const NETWORK = isTestnet ? "testnet" : "mainnet";
 const assetsSdk = async (provider: TonConnectUI) => {

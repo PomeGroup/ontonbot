@@ -119,7 +119,6 @@ const UserRegisterForm = () => {
           {registerUser.isLoading ? <Preloader size="w-4 h-4" /> : "Request to Join"}
         </Button>
       </form>
-
     </>
   );
 };

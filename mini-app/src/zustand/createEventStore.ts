@@ -283,7 +283,7 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
             set((state) => {
               state.paid_info_errors = fieldErrors;
             });
-          }  else {
+          } else {
             // Validation successful, proceed to the next step
             set((state) => {
               state.paid_info_errors = {};
@@ -299,7 +299,7 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           });
           setCurrentStep(4);
         }
-      }
+      },
     }))
   )
 );

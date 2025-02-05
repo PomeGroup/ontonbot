@@ -23,7 +23,7 @@ export default function ChannelPage({ params }: Props) {
         iconSrc={ticketIcon}
         subtitle="Visit organizer events"
         title="Events"
-        footerTexts={[{ count: data.hosted_event_count || 0, items: 'Events' }]}
+        footerTexts={[{ count: data.hosted_event_count || 0, items: "Events" }]}
       />
     </div>
   );

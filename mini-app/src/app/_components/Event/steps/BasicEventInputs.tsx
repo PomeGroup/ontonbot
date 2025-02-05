@@ -11,7 +11,6 @@ interface Props {
   termsChecked: boolean;
   setTermsChecked: (_checked: boolean) => void;
   showTermsError: boolean;
-
 }
 
 function BasicEventInputs(props: Props) {
@@ -78,7 +77,7 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
   return (
     <>
       <KSheet
-        trigger={(open, setOpen) => (
+        trigger={(_open, setOpen) => (
           <ListItem
             className="mr-4"
             label
@@ -103,7 +102,7 @@ function TermsCheckbox({ termsChecked, setTermsChecked, showTermsError }: Props)
           />
         )}
       >
-        {(open, setOpen) => (
+        {(_open, setOpen) => (
           <>
             <Toolbar top>
               <div className="text-center flex-1 font-bold">Terms and Conditions</div>

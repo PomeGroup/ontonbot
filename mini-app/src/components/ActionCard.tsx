@@ -19,7 +19,6 @@ interface Props {
 }
 
 export default function ActionCard({ onClick, iconSrc, title, subtitle, className, footerTexts }: Props) {
-
   return (
     <Card
       onClick={onClick}

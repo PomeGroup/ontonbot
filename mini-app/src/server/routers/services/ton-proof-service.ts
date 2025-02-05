@@ -52,10 +52,7 @@ export class TonProofService {
         return false;
       }
 
-      if (
-        !allowedDomains.includes(payload.proof.domain.value) &&
-        !payload.proof.domain.value.endsWith("onton.live")
-      ) {
+      if (!allowedDomains.includes(payload.proof.domain.value) && !payload.proof.domain.value.endsWith("onton.live")) {
         return false;
       }
 

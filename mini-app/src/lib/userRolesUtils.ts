@@ -1,5 +1,3 @@
-
-
 /**
  * Returns `true` if the user is:
  *  - an admin (user.role === 'admin'), OR
@@ -10,7 +8,7 @@ export function canUserManageEvent(
   user: { user_id: number; role: string } | null,
   eventData: { data?: { owner?: number | null; accessRoles?: Array<{ user_id: number; role: string }> } }
 ): boolean {
-  console.log( "eventData", eventData)
+  console.log("eventData", eventData);
   if (!user || !eventData?.data?.owner || !eventData.data.accessRoles) {
     return false;
   }
@@ -19,21 +17,22 @@ export function canUserManageEvent(
 
   // accessRoles is an array of { user_id: number, role: string }
   const accessRoles = eventData?.data?.accessRoles ?? [];
-  const isInAccessRoles = accessRoles.some((ar) => ar.user_id === user.user_id  );
+  const isInAccessRoles = accessRoles.some((ar) => ar.user_id === user.user_id);
 
   return isAdmin || isOwner || isInAccessRoles;
 }
 
-export function canUserEditEvent(
-  { user, accessRoles, owner }: {
-    user: { user_id: number; role: string } | null,
-    accessRoles?: Array<{ user_id: number; role: string }> | null,
-    owner: number | null | undefined
-  }
-): boolean {
-
+export function canUserEditEvent({
+  user,
+  accessRoles,
+  owner,
+}: {
+  user: { user_id: number; role: string } | null;
+  accessRoles?: Array<{ user_id: number; role: string }> | null;
+  owner: number | null | undefined;
+}): boolean {
   if (!user || !owner || !accessRoles) {
-    console.log( "user", user , "owner", owner, "accessRoles", accessRoles)
+    console.log("user", user, "owner", owner, "accessRoles", accessRoles);
     return false;
   }
   const isAdmin = user.role === "admin";
@@ -42,19 +41,22 @@ export function canUserEditEvent(
   // accessRoles is an array of { user_id: number, role: string }
   const accessRolesArray = accessRoles ?? [];
 
-  const isInAccessRoles = accessRolesArray.some((ar:{ user_id: number; role: string } ) => ar.user_id === user.user_id  && ar.role === 'admin');
+  const isInAccessRoles = accessRolesArray.some(
+    (ar: { user_id: number; role: string }) => ar.user_id === user.user_id && ar.role === "admin"
+  );
 
   return isAdmin || isOwner || isInAccessRoles;
 }
 
-
-export function canUserPerformRole(
-  { user, accessRoles, allowedRoles }: {
-    user: { user_id: number; role: string } | null,
-    accessRoles?: Array<{ user_id: number; role: string }> | null,
-    allowedRoles: string[]
-  }
-): boolean {
+export function canUserPerformRole({
+  user,
+  accessRoles,
+  allowedRoles,
+}: {
+  user: { user_id: number; role: string } | null;
+  accessRoles?: Array<{ user_id: number; role: string }> | null;
+  allowedRoles: string[];
+}): boolean {
   if (!user || !accessRoles) {
     return false;
   }
@@ -69,5 +71,5 @@ export function canUserPerformRole(
 }
 
 export function CheckAdminOrOrganizer(role: string | undefined): boolean {
-  return role === 'admin' || role === 'organizer';
+  return role === "admin" || role === "organizer";
 }

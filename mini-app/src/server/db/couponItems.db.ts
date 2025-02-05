@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { and, eq } from "drizzle-orm";
 import { coupon_items, CouponItem } from "@/db/schema/coupon_items";
-import {  generateRandomCode } from "@/server/utils/utils";
+import { generateRandomCode } from "@/server/utils/utils";
 
 interface BulkAddCouponItemsParams {
   coupon_definition_id: number;

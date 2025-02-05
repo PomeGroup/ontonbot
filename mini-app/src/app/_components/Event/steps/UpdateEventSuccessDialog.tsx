@@ -9,11 +9,7 @@ interface UpdateEventSuccessDialogProps {
   eventUuid: string | undefined;
   onClose: () => void;
 }
-const UpdateEventSuccessDialog: React.FC<UpdateEventSuccessDialogProps> = ({
-                                                                             open,
-                                                                             eventUuid,
-                                                                             onClose,
-                                                                           }) => {
+const UpdateEventSuccessDialog: React.FC<UpdateEventSuccessDialogProps> = ({ open, eventUuid, onClose }) => {
   const webApp = useWebApp(); // Hook for Telegram Mini App integration
 
   const handleGuestList = () => {
@@ -26,9 +22,7 @@ const UpdateEventSuccessDialog: React.FC<UpdateEventSuccessDialogProps> = ({
 
   const handleViewEvent = () => {
     if (eventUuid) {
-      webApp?.openTelegramLink(
-        `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`
-      );
+      webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`);
       window.location.reload();
       return;
     }
@@ -50,7 +44,10 @@ const UpdateEventSuccessDialog: React.FC<UpdateEventSuccessDialogProps> = ({
       }
       buttons={
         <div className="flex justify-end space-x-0 px-0 pb-0 bg-white w-full">
-          <DialogButton onClick={handleGuestList} className="w-1/2 text-sm">
+          <DialogButton
+            onClick={handleGuestList}
+            className="w-1/2 text-sm"
+          >
             Guest List
           </DialogButton>
           <DialogButton

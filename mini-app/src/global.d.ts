@@ -62,9 +62,16 @@ declare global {
   }
 
   interface CloudStorage {
-    setItem: (_key: CloudStorageKey, _value: CloudStorageValue, _callback?: (_error: string | null, _result?: boolean) => void) => void;
+    setItem: (
+      _key: CloudStorageKey,
+      _value: CloudStorageValue,
+      _callback?: (_error: string | null, _result?: boolean) => void
+    ) => void;
     getItem: (_key: CloudStorageKey, _callback?: (_error: string | null, _result?: CloudStorageValue) => void) => void;
-    getItems: (_keys: Array<CloudStorageKey>, _callback?: (_error: string | null, _result?: CloudStorageItems) => void) => void;
+    getItems: (
+      _keys: Array<CloudStorageKey>,
+      _callback?: (_error: string | null, _result?: CloudStorageItems) => void
+    ) => void;
     getKeys: (_callback?: (_error: string | null, _result?: Array<CloudStorageKey>) => void) => void;
     removeItem: (_key: CloudStorageKey, _callback?: (_error: string | null, _result?: boolean) => void) => void;
     removeItems: (_key: Array<CloudStorageKey>, _callback?: (_error: string | null, _result?: boolean) => void) => void;
@@ -94,7 +101,13 @@ declare global {
     onClick: (_callback: VoidFunction) => void;
     offClick: (_callback: VoidFunction) => void;
     setText: (_text: string) => void;
-    setParams: (_params: { color?: string; text?: string; text_color?: string; is_active?: boolean; is_visible?: boolean }) => void;
+    setParams: (_params: {
+      color?: string;
+      text?: string;
+      text_color?: string;
+      is_active?: boolean;
+      is_visible?: boolean;
+    }) => void;
   }
 
   type InvoiceStatuses = "pending" | "failed" | "cancelled" | "paid";

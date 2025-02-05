@@ -1,44 +1,11 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
 
 // Define error codes for consistent error responses
-const ERROR_CODES = {
-  VALIDATION_FAILED: {
-    code: "VALIDATION_FAILED",
-    message: "Invalid input parameters.",
-  },
-  JWT_INVALID: {
-    code: "JWT_INVALID",
-    message: "Invalid or missing JWT token.",
-  },
-  LOGOUT_FAILED: {
-    code: "LOGOUT_FAILED",
-    message: "Failed to log out the user.",
-  },
-  UNKNOWN_ERROR: {
-    code: "UNKNOWN_ERROR",
-    message: "An unknown error occurred.",
-  },
-};
-
-// Define success codes
-const SUCCESS_CODES = {
-  LOGOUT_SUCCESS: {
-    code: "LOGOUT_SUCCESS",
-    message: "User successfully logged out.",
-  },
-};
-
-// Zod schema for validating the request body
-const logoutSchema = z.object({
-  telegramUserId: z.string().regex(/^@[a-zA-Z0-9_]{5,}$/, "Invalid Telegram username format"),
-});
-
 /**
  * Logout endpoint (JWT protected)
  * Logs out the user by removing session-related data from Redis and blacklisting the JWT token.
  */
-export async function POST(req: Request) {
+export async function POST() {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
     success: false,

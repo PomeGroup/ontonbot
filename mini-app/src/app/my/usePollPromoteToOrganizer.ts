@@ -5,67 +5,68 @@ import { useConfig } from "@/context/ConfigContext";
 import { useUserStore } from "@/context/store/user.store";
 import { toast } from "sonner";
 
-
-const emptyObject = {}
-const orderProcessingStates = ['new', 'processing', 'confirming']
-const orderFinishedStates = ['failed', 'completed', 'cancelled']
+const emptyObject = {};
+const orderProcessingStates = ["new", "processing", "confirming"];
+const orderFinishedStates = ["failed", "completed", "cancelled"];
 export default function usePollPromoteToOrganizer(onFinish: (_success: boolean) => void) {
-  const { user } = useUserStore()
-  const role = user?.role
-  const [state, setState] = useState<'ready' | 'processing' | 'done'>(role === 'organizer' ? 'done' : 'ready')
-  const trpcUtils = trpc.useUtils()
+  const { user } = useUserStore();
+  const role = user?.role;
+  const [state, setState] = useState<"ready" | "processing" | "done">(role === "organizer" ? "done" : "ready");
+  const trpcUtils = trpc.useUtils();
   const { data } = trpc.orders.getPromoteToOrganizerOrder.useQuery(emptyObject, {
-    enabled: state === 'processing' && role !== 'organizer',
+    enabled: state === "processing" && role !== "organizer",
     onSuccess(data) {
-      const orderState = data?.state || 'chert val'
+      const orderState = data?.state || "chert val";
       if (orderFinishedStates.includes(orderState)) {
-        setState('done')
-        const isComplete = orderState === 'completed'
+        setState("done");
+        const isComplete = orderState === "completed";
         if (isComplete) {
-          trpcUtils.users.syncUser.invalidate(undefined, { refetchType: 'all' })
+          trpcUtils.users.syncUser.invalidate(undefined, { refetchType: "all" });
         }
-        onFinish(isComplete)
-        return
+        onFinish(isComplete);
+        return;
       }
-      if (state === 'ready' && orderProcessingStates.includes(orderState)) {
-        setState('processing')
+      if (state === "ready" && orderProcessingStates.includes(orderState)) {
+        setState("processing");
       }
 
       // for other states, refetch
       setTimeout(() => {
-        trpcUtils.orders.getPromoteToOrganizerOrder.invalidate(emptyObject)
-      }, 2000)
-    }
-  })
+        trpcUtils.orders.getPromoteToOrganizerOrder.invalidate(emptyObject);
+      }, 2000);
+    },
+  });
 
   const transfer = useTransferTon();
   const userToOrganizerMutation = trpc.orders.addPromoteToOrganizerOrder.useMutation();
-  const config = useConfig()
+  const config = useConfig();
   const onPay = useCallback(async () => {
-    if (state !== 'ready') return
+    if (state !== "ready") return;
 
     try {
       const response = await userToOrganizerMutation.mutateAsync(emptyObject);
       await transfer(
-        config.ONTON_WALLET_ADDRESS as string || 'UQA02ekDpWFrIL5xh5g7WVY6UrcQRINXli5gDlD7cQrEkfOM',
+        (config.ONTON_WALLET_ADDRESS as string) || "UQA02ekDpWFrIL5xh5g7WVY6UrcQRINXli5gDlD7cQrEkfOM",
         Number(response.total_price),
-        response.payment_type, {
+        response.payment_type,
+        {
           comment: `onton_order=${response.uuid}`,
-        });
-      setState('processing')
+        }
+      );
+      setState("processing");
     } catch (error) {
-      toast.error('Transaction was not successful. Please try again.')
+      toast.error("Transaction was not successful. Please try again.");
       console.error("Error during transfer:", error);
-      setState('ready')
+      setState("ready");
     }
-  }, [config.ONTON_WALLET_ADDRESS, state, transfer, userToOrganizerMutation])
+  }, [config.ONTON_WALLET_ADDRESS, state, transfer, userToOrganizerMutation]);
 
-  const orderState = data?.state
+  const orderState = data?.state;
   return {
-    state: state === 'done' ? orderState === 'completed' ? 'completed' : 'failed' : state,
-    onPay
+    state: state === "done" ? (orderState === "completed" ? "completed" : "failed") : state,
+    onPay,
   } as {
-    state: 'completed' | 'failed' | 'processing' | 'ready',
-    onPay: () => void
-  }
+    state: "completed" | "failed" | "processing" | "ready";
+    onPay: () => void;
+  };
 }

@@ -6,7 +6,8 @@ const EventCardSkeleton: React.FC = ({ className }: { className?: string }) => {
     <Card
       className={`overflow-hidden radius-[10px] ${className}`}
       margin="mb-3"
-      contentWrapPadding="p-2">
+      contentWrapPadding="p-2"
+    >
       <div className="flex w-full gap-4 flex-nowrap relative overflow-hidden animate-pulse">
         <div className="basis-[100px] h-[100px] shrink-0 rounded-lg relative overflow-hidden bg-gray-200 dark:bg-gray-700"></div>
         <div className="flex py-1 px-0 flex-col gap-2 grow flex-nowrap relative">

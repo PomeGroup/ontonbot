@@ -1,7 +1,6 @@
 import { integer, pgTable, serial, timestamp, smallint, bigint } from "drizzle-orm/pg-core";
 import { eventTriggerType, eventTriggerStatus, events } from "@/db/schema";
 
-
 export const eventPoaTriggers = pgTable("event_poa_triggers", {
   id: serial("id").primaryKey(),
   eventId: integer("event_id").references(() => events.event_id, { onDelete: "cascade" }),

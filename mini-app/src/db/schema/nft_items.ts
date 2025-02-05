@@ -7,7 +7,9 @@ export const nftItems = pgTable(
   {
     id: serial("id").primaryKey(),
     event_uuid: uuid("event_uuid").notNull(),
-    order_uuid: uuid("order_uuid").references(() => orders.uuid).notNull(),
+    order_uuid: uuid("order_uuid")
+      .references(() => orders.uuid)
+      .notNull(),
     // user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
     nft_address: text("nft_address").notNull(),
     owner: bigint("owner", { mode: "number" }).references(() => users.user_id),

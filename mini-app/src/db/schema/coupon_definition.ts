@@ -40,4 +40,3 @@ export const coupon_definition = pgTable(
     couponDefinitionUsedIdx: index("coupon_definition_used_idx").on(table.used),
   })
 );
-

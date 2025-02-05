@@ -1,20 +1,5 @@
-import { z } from "zod";
 import { NextResponse } from "next/server";
 // Ensure the function is correctly imported
-
-// Zod schema for validating query parameters
-const getEventsListSchema = z.object({
-  limit: z.string().optional().nullable(), // Optional query param for limit (as string)
-  offset: z.string().optional().nullable(), // Optional query param for offset (as string)
-});
-
-// Define error codes for consistent error handling
-const ERROR_CODES = {
-  ORGANIZER_NOT_FOUND: {
-    code: "ORGANIZER_NOT_FOUND",
-    message: "Organizer not found in JWT payload.",
-  },
-};
 
 /**
  * @swagger
@@ -42,7 +27,7 @@ const ERROR_CODES = {
  *       401:
  *         description: Unauthorized (Invalid or missing JWT)
  */
-export async function GET(request: Request) {
+export async function GET() {
   /* ----------------------------- OUT OF SERVICE ----------------------------- */
   return NextResponse.json({
     success: false,

@@ -39,9 +39,7 @@ const HubSelectorDrawer: React.FC<HubSelectorDrawerProps> = ({
   }, [isOpen, selectedHubs]);
 
   const toggleHubSelection = (hubId: string) => {
-    setLocalSelectedHubs((prev) =>
-      prev.includes(hubId) ? prev.filter((id) => id !== hubId) : [...prev, hubId]
-    );
+    setLocalSelectedHubs((prev) => (prev.includes(hubId) ? prev.filter((id) => id !== hubId) : [...prev, hubId]));
   };
 
   const selectAllHubs = () => {

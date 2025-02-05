@@ -17,24 +17,27 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
   const onFail = useCallback(() => {
     toast.error("Transaction was not successfull. Please try again");
     setConfirmPayDialogOpen(false);
-  }, [])
+  }, []);
 
-  const onPollFinished = useCallback((success: boolean) => {
-    setConfirmPayDialogOpen(false);
-    setTimeout(() => {
-      if (success) {
-        setCongratsDrawerOpen(true);
-      } else {
-        onFail()
-      }
-    }, 300);
-  }, [onFail])
+  const onPollFinished = useCallback(
+    (success: boolean) => {
+      setConfirmPayDialogOpen(false);
+      setTimeout(() => {
+        if (success) {
+          setCongratsDrawerOpen(true);
+        } else {
+          onFail();
+        }
+      }, 300);
+    },
+    [onFail]
+  );
 
-  const { state, onPay } = usePollPromoteToOrganizer(onPollFinished)
+  const { state, onPay } = usePollPromoteToOrganizer(onPollFinished);
 
   const handlePay = async () => {
     setConfirmPayDialogOpen(false);
-    onPay()
+    onPay();
   };
 
   return (
@@ -63,10 +66,10 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
         open={congratsDrawerOpen}
         onClose={() => {
           setCongratsDrawerOpen(false);
-          window.location.reload()
+          window.location.reload();
         }}
       />
-      <LoadingPopup open={state === 'processing'} />
+      <LoadingPopup open={state === "processing"} />
     </>
   );
 }
