@@ -7,7 +7,7 @@ import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { and, desc, eq, like, ne, or, sql } from "drizzle-orm";
 import rewardService from "@/server/routers/services/rewardsService";
 import telegramService from "@/server/routers/services/telegramService";
-import { EventRegisterSchema } from "@/types";
+import { CombinedEventRegisterSchema } from "@/types";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import { addVisitor } from "@/server/db/visitors";
 import { users } from "@/db/schema/users";
