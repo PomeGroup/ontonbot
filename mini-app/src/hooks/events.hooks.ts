@@ -9,7 +9,6 @@ import { useParams } from "next/navigation";
  */
 export function useGetEventRegistrants(
   event_hash?: string,
-  offset = 0,
   limit = 10,
   search?: string,
   statuses: EventRegistrantStatusType[] = []
@@ -20,14 +19,13 @@ export function useGetEventRegistrants(
   return trpc.registrant.getEventRegistrants.useQuery(
     {
       event_uuid,
-      offset,
       limit,
       search: search || undefined,
       statuses: statuses.length ? statuses : undefined,
     },
     {
       staleTime: 10_000,
-      queryKey: ["registrant.getEventRegistrants", { event_uuid, offset, limit, search, statuses }],
+      queryKey: ["registrant.getEventRegistrants", { event_uuid, limit, search, statuses }],
     }
   );
 }

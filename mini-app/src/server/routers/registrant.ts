@@ -4,7 +4,7 @@ import { selectEventByUuid } from "@/server/db/events";
 import { TRPCError } from "@trpc/server";
 import { db, dbLower } from "@/db/db";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
-import { and, desc, eq, like, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, like, lt, ne, or, sql } from "drizzle-orm";
 import rewardService from "@/server/routers/services/rewardsService";
 import telegramService from "@/server/routers/services/telegramService";
 import { CombinedEventRegisterSchema } from "@/types";
@@ -201,15 +201,15 @@ const statusesZod = z.enum(["pending", "rejected", "approved", "checkedin"]);
 const getEventRegistrants = evntManagerPP
   .input(
     z.object({
-      event_uuid: z.string(),
-      offset: z.number().default(0),
+      event_uuid: z.string().uuid(),
+      cursor: z.string().optional(),
       limit: z.number().default(10),
       search: z.string().optional(),
       statuses: z.array(statusesZod).optional(),
     })
   )
   .query(async (opts) => {
-    const { event_uuid, offset, limit, search, statuses } = opts.input;
+    const { event_uuid, cursor, limit, search, statuses } = opts.input;
 
     const event = await selectEventByUuid(event_uuid);
     if (!event) {
@@ -228,11 +228,11 @@ const getEventRegistrants = evntManagerPP
       condition = and(
         condition,
         or(
-          //@ts-expect-error
+          // @ts-expect-error
           like(dbLower(users.username), dbLower(searchStr)),
-          //@ts-expect-error
+          // @ts-expect-error
           like(dbLower(users.first_name), dbLower(searchStr)),
-          //@ts-expect-error
+          // @ts-expect-error
           like(dbLower(users.last_name), dbLower(searchStr))
         )
       );
@@ -240,8 +240,10 @@ const getEventRegistrants = evntManagerPP
 
     if (statuses && statuses.length > 0) {
       condition = and(condition, or(...statuses.map((status) => eq(eventRegistrants.status, status))));
-      // __AUTO_GENERATED_PRINT_VAR_START__
-      console.log("(anon)#if condition: %s", condition); // __AUTO_GENERATED_PRINT_VAR_END__
+    }
+
+    if (cursor) {
+      condition = and(condition, lt(eventRegistrants.created_at, new Date(cursor)));
     }
 
     const registrants = await db
@@ -267,11 +269,19 @@ const getEventRegistrants = evntManagerPP
       .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))
       .where(condition)
       .orderBy(desc(eventRegistrants.created_at))
-      .limit(limit)
-      .offset(offset)
+      .limit(limit + 1)
       .execute();
 
-    return registrants;
+    let nextCursor: string | null = null;
+    if (registrants.length > limit) {
+      const nextItem = registrants.pop();
+      nextCursor = nextItem?.created_at?.toISOString() || null;
+    }
+
+    return {
+      registrants,
+      nextCursor,
+    };
   });
 
 export const registrantRouter = router({

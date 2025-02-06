@@ -1,20 +1,19 @@
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { trpc } from "@/app/_trpc/client";
 import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
 import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
-import { trpc } from "@/app/_trpc/client";
 import { KButton } from "@/components/ui/button";
 import StatusChip from "@/components/ui/status-chips";
 import { EventTriggerType } from "@/db/enum";
-import { useGetEvent, useGetEventRegistrants } from "@/hooks/events.hooks";
+import { useGetEvent } from "@/hooks/events.hooks";
 import { useMainButton } from "@/hooks/useMainButton";
 import useWebApp from "@/hooks/useWebApp";
-import { RouterOutput } from "@/server";
 import { cn } from "@/utils";
 import { cva } from "class-variance-authority";
 import { Block, BlockFooter, BlockHeader, BlockTitle, Checkbox, List, ListItem, Sheet } from "konsta/react";
 import { Check, FileUser, Filter, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
 import DataStatus from "../molecules/alerts/DataStatus";
 import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
@@ -51,12 +50,10 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [itemStatus, setItemStatus] = useState(status);
-
   const [showRegistrantInfo, setShowRegistrantInfo] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
 
   const handleEdit = useCallback(() => {
-    // Change status to "pending"
     setIsEditing(!isEditing);
   }, [isEditing]);
 
@@ -64,11 +61,10 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
     setIsApproving(true);
     try {
       await handleApprove(user_id);
-      // Optimistically update the status to "approved"
       setItemStatus("approved");
       setIsEditing(false);
     } catch (error) {
-      // console.error("Approval failed:", error);
+      // Handle error (e.g. show toast notification)
     } finally {
       setIsApproving(false);
     }
@@ -78,17 +74,16 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
     setIsDeclining(true);
     try {
       await handleReject(user_id);
-      // Optimistically update the status to "declined"
       setItemStatus("rejected");
       setIsEditing(false);
     } catch (error) {
-      // console.error("Reject failed:", error);
+      // Handle error
     } finally {
       setIsDeclining(false);
     }
   }, [handleReject, user_id]);
 
-  const { footerContent, afterContent } = useMemo(() => {
+  const { afterContent, footerContent } = useMemo(() => {
     let afterContent;
     let footerContent;
 
@@ -99,11 +94,8 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
             <Button
               icon={<FileUser size={18} />}
               variant="purple"
-              onClick={() => {
-                setShowRegistrantInfo(registrantInfo);
-              }}
+              onClick={() => setShowRegistrantInfo(registrantInfo)}
             />
-
             <div className="flex flex-col text-end text-xs">
               <span>{date}</span>
               <span>Registered</span>
@@ -129,16 +121,14 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
           </div>
         );
         break;
-      case "checkedin":
       case "approved":
+      case "checkedin":
         afterContent = (
           <div className="flex space-x-2">
             <Button
               icon={<FileUser size={18} />}
               variant="purple"
-              onClick={() => {
-                setShowRegistrantInfo(registrantInfo);
-              }}
+              onClick={() => setShowRegistrantInfo(registrantInfo)}
             />
             {!hasPayment && !has_reward && itemStatus === "approved" && (
               <Button
@@ -164,18 +154,14 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
               />
             </div>
           );
-
         break;
-
       case "rejected":
         afterContent = (
           <div className="flex space-x-2">
             <Button
               icon={<FileUser size={18} />}
               variant="purple"
-              onClick={() => {
-                setShowRegistrantInfo(registrantInfo);
-              }}
+              onClick={() => setShowRegistrantInfo(registrantInfo)}
             />
             {!hasPayment && (
               <>
@@ -208,10 +194,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
         afterContent = null;
         footerContent = null;
     }
-    return {
-      afterContent,
-      footerContent,
-    };
+    return { afterContent, footerContent };
   }, [
     itemStatus,
     date,
@@ -248,15 +231,13 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
           <BlockTitle>Registrant Info</BlockTitle>
           <List className="!pe-2">
             {registrantInfo &&
-              Object.entries(registrantInfo).map(([key, value], idx) => {
-                return (
-                  <ListItem
-                    key={idx}
-                    title={<div className="capitalize">{key.split("_").join(" ")}</div>}
-                    subtitle={value || <p className="text-cn-muted-foreground">Not Provided</p>}
-                  />
-                );
-              })}
+              Object.entries(registrantInfo).map(([key, value], idx) => (
+                <ListItem
+                  key={idx}
+                  title={<div className="capitalize">{key.split("_").join(" ")}</div>}
+                  subtitle={value || <p className="text-cn-muted-foreground">Not Provided</p>}
+                />
+              ))}
           </List>
           <BlockFooter>
             <KButton onClick={() => setShowRegistrantInfo(null)}>Close</KButton>
@@ -312,31 +293,15 @@ const RegistrationGuestList = () => {
   const params = useParams<{ hash: string }>();
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebouncedValue(search, 500);
-
-  const LIMIT = 10;
-  const [results, setResults] = useState<RouterOutput["registrant"]["getEventRegistrants"]>([]);
-  const [hasMore, setHasMore] = useState(true);
-  const [offset, setOffset] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const [filters, setFilters] = useState<EventRegistrantStatusType[]>([]);
-  const [tempFilters, setTempFilters] = useState<EventRegistrantStatusType[]>([]);
-  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-
-  const registrantsQuery = useGetEventRegistrants(
-    params.hash,
-    offset,
-    LIMIT,
-    debouncedSearch?.length >= 3 ? debouncedSearch : "",
-    filters
-  );
-
   const eventData = useGetEvent();
   const webApp = useWebApp();
 
-  const processRegistrantRequest = trpc.registrant.processRegistrantRequest.useMutation();
-
-  const hasPayment = eventData.data?.has_payment || false;
+  const processRegistrantRequest = trpc.registrant.processRegistrantRequest.useMutation({
+    // On success, refetch the registrants query
+    onSuccess: () => {
+      registrantsQuery.refetch();
+    },
+  });
 
   const exportVisitorList = trpc.telegramInteractions.requestExportFile.useMutation({
     onSuccess: () => {
@@ -345,59 +310,7 @@ const RegistrationGuestList = () => {
     },
   });
 
-  const toggleTempFilter = useCallback((status: EventRegistrantStatusType) => {
-    setTempFilters((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]));
-  }, []);
-
-  const handleApprove = useCallback(
-    async (user_id: number) => {
-      await processRegistrantRequest.mutateAsync({
-        event_uuid: params.hash,
-        status: "approved",
-        user_id,
-      });
-      setResults((prev) =>
-        prev.map((registrant) => (registrant.user_id === user_id ? { ...registrant, status: "approved" } : registrant))
-      );
-    },
-    [processRegistrantRequest, params.hash]
-  );
-
-  const handleReject = useCallback(
-    async (user_id: number) => {
-      await processRegistrantRequest.mutateAsync({
-        event_uuid: params.hash,
-        status: "rejected",
-        user_id,
-      });
-      setResults((prev) =>
-        prev.map((registrant) => (registrant.user_id === user_id ? { ...registrant, status: "rejected" } : registrant))
-      );
-    },
-    [processRegistrantRequest, params.hash]
-  );
-
-  const openFilterSheet = useCallback(() => {
-    setTempFilters(filters);
-    setIsFilterSheetOpen(true);
-  }, [filters]);
-
-  const applyFilters = useCallback(() => {
-    setFilters(tempFilters);
-    setOffset(0);
-    setResults([]);
-    setHasMore(true);
-    setIsFilterSheetOpen(false);
-  }, [tempFilters]);
-
-  const removeFilters = useCallback(() => {
-    setTempFilters([]);
-    setFilters([]);
-    setOffset(0);
-    setResults([]);
-    setHasMore(true);
-    setIsFilterSheetOpen(false);
-  }, []);
+  const hasPayment = eventData.data?.has_payment || false;
 
   useMainButton(
     () => {
@@ -412,52 +325,92 @@ const RegistrationGuestList = () => {
     }
   );
 
-  const disablePOAButton = Boolean(eventData.data?.isNotEnded && eventData.data?.isStarted);
-
-  const loadMoreResults = useCallback(() => {
-    if (hasMore && !isLoading) {
-      setIsLoading(true);
-      setOffset((prevOffset) => prevOffset + LIMIT);
+  // Infinite query using nextCursor as the cursor for pagination
+  const registrantsQuery = trpc.registrant.getEventRegistrants.useInfiniteQuery(
+    {
+      event_uuid: params.hash,
+      search: debouncedSearch.length >= 3 ? debouncedSearch : "",
+      statuses: undefined, // you can apply filters here
+      limit: 10,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      staleTime: 10_000,
+      queryKey: ["registrant.getEventRegistrants", { event_uuid: params.hash, search: debouncedSearch }],
     }
-  }, [hasMore, isLoading]);
+  );
 
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMoreResults();
+  // Compute a flat list of registrants from all pages
+  const registrantList = useMemo(() => {
+    if (!registrantsQuery.data) return [];
+    return registrantsQuery.data.pages.flatMap((page) => page.registrants);
+  }, [registrantsQuery.data]);
+
+  // Intersection Observer to load more when the last item is visible
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastItemRef = useCallback(
+    (node: HTMLElement | null) => {
+      if (registrantsQuery.isFetchingNextPage) return;
+      if (observerRef.current) observerRef.current.disconnect();
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && registrantsQuery.hasNextPage) {
+          registrantsQuery.fetchNextPage();
         }
-      },
-      { threshold: 1.0 }
-    );
+      });
+      if (node) observerRef.current.observe(node);
+    },
+    [registrantsQuery]
+  );
 
-    const lastElement = document.querySelector(".last-guest-item");
-    if (lastElement) observer.observe(lastElement);
+  // Filter sheet state management (if you plan to add filtering logic)
+  const [filters, setFilters] = useState<EventRegistrantStatusType[]>([]);
+  const [tempFilters, setTempFilters] = useState<EventRegistrantStatusType[]>([]);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
-    return () => {
-      if (lastElement) observer.unobserve(lastElement);
-    };
-  }, [loadMoreResults, results]);
+  const toggleTempFilter = useCallback((status: EventRegistrantStatusType) => {
+    setTempFilters((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]));
+  }, []);
 
-  React.useEffect(() => {
-    if (registrantsQuery.data) {
-      if (offset === 0) {
-        setResults(registrantsQuery.data);
-      } else {
-        setResults((prev) => [...prev, ...registrantsQuery.data!]);
-      }
-      setHasMore(registrantsQuery.data.length === LIMIT);
-      setIsLoading(false);
-    }
-  }, [registrantsQuery.data, offset]);
+  const openFilterSheet = useCallback(() => {
+    setTempFilters(filters);
+    setIsFilterSheetOpen(true);
+  }, [filters]);
 
-  useEffect(() => {
-    if (debouncedSearch.length >= 3) {
-      setOffset(0);
-      setResults([]);
-      setHasMore(true);
-    }
-  }, [debouncedSearch]);
+  const applyFilters = useCallback(() => {
+    setFilters(tempFilters);
+    // Invalidate or refetch your query with the new filters as needed
+    registrantsQuery.refetch();
+    setIsFilterSheetOpen(false);
+  }, [tempFilters, registrantsQuery]);
+
+  const removeFilters = useCallback(() => {
+    setTempFilters([]);
+    setFilters([]);
+    registrantsQuery.refetch();
+    setIsFilterSheetOpen(false);
+  }, [registrantsQuery]);
+
+  const handleApprove = useCallback(
+    async (user_id: number) => {
+      await processRegistrantRequest.mutateAsync({
+        event_uuid: params.hash,
+        status: "approved",
+        user_id,
+      });
+    },
+    [processRegistrantRequest, params.hash]
+  );
+
+  const handleReject = useCallback(
+    async (user_id: number) => {
+      await processRegistrantRequest.mutateAsync({
+        event_uuid: params.hash,
+        status: "rejected",
+        user_id,
+      });
+    },
+    [processRegistrantRequest, params.hash]
+  );
 
   return (
     <>
@@ -477,7 +430,7 @@ const RegistrationGuestList = () => {
               <ButtonPOA
                 event_uuid={params.hash}
                 poa_type={"password" as EventTriggerType}
-                showPOAButton={disablePOAButton}
+                showPOAButton={Boolean(eventData.data?.isNotEnded && eventData.data?.isStarted)}
               />
               <OrganizerNotificationHandler />
             </>
@@ -491,28 +444,26 @@ const RegistrationGuestList = () => {
             onClick={openFilterSheet}
             className={cn(
               "rounded cursor-pointer",
-              filters.length ? "text-primary bg-primary/10 " : "text-cn-muted-foreground"
+              filters.length ? "text-primary bg-primary/10" : "text-cn-muted-foreground"
             )}
           />
           {eventData.data?.participationType === "in_person" && <ScanRegistrantQRCode />}
         </div>
       </BlockTitle>
 
-      {/* Search input */}
+      {/* Search Input */}
       <Block>
         <input
           type="text"
           placeholder="Search by username or name"
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-          }}
+          onChange={(e) => setSearch(e.target.value)}
           className="p-2 border rounded w-full"
         />
       </Block>
 
       <BlockHeader className="font-bold">
-        {registrantsQuery.isSuccess && !registrantsQuery.data?.length && (
+        {registrantsQuery.isSuccess && registrantList.length === 0 && (
           <DataStatus
             status="not_found"
             title="No Registrants Yet"
@@ -536,7 +487,7 @@ const RegistrationGuestList = () => {
             <DataStatus
               status="danger"
               title="Something Went Wrong with Registrant"
-              description={"There was a problem try refreshing the page"}
+              description="There was a problem; try refreshing the page."
             />
           ))}
       </BlockHeader>
@@ -565,7 +516,7 @@ const RegistrationGuestList = () => {
           ))}
         </List>
         <BlockFooter className="flex flex-col gap-1">
-          {Boolean(filters.length) && (
+          {filters.length > 0 && (
             <KButton
               clear
               onClick={removeFilters}
@@ -578,31 +529,32 @@ const RegistrationGuestList = () => {
       </Sheet>
 
       <List className="!my-2">
-        {results.map((registrant, idx) => (
-          <CustomListItem
-            key={`registrant_${idx}`}
-            name={registrant.first_name || "No Name"}
-            username={registrant.username || "no username"}
-            has_reward={registrant.has_reward}
-            date={
-              registrant.created_at
-                ? new Date(registrant.created_at).toLocaleString("default", {
-                    month: "short",
-                    day: "numeric",
-                  })
-                : "no_date"
-            }
-            registrantInfo={registrant?.registrant_info}
-            user_id={registrant.user_id!}
-            status={registrant.status}
-            handleApprove={() => handleApprove(registrant.user_id!)}
-            handleReject={() => handleReject(registrant.user_id!)}
-            className={idx === results.length - 1 ? "last-guest-item" : ""}
-            hasPayment={hasPayment}
-          />
-        ))}
-
-        {isLoading && offset !== 0 && (
+        {registrantList.map((registrant, idx) => {
+          // Attach the observer ref to the last item in the list
+          const refProp = idx === registrantList.length - 1 ? { ref: lastItemRef } : {};
+          return (
+            <CustomListItem
+              key={`registrant_${idx}`}
+              name={registrant.first_name || "No Name"}
+              username={registrant.username || "no username"}
+              has_reward={registrant.has_reward}
+              date={
+                registrant.created_at
+                  ? new Date(registrant.created_at).toLocaleString("default", { month: "short", day: "numeric" })
+                  : "no_date"
+              }
+              registrantInfo={registrant.registrant_info}
+              user_id={registrant.user_id!}
+              status={registrant.status}
+              handleApprove={() => handleApprove(registrant.user_id!)}
+              handleReject={() => handleReject(registrant.user_id!)}
+              className={cn(idx === registrantList.length - 1 && "last-guest-item")}
+              hasPayment={hasPayment}
+              {...refProp}
+            />
+          );
+        })}
+        {registrantsQuery.isFetchingNextPage && (
           <DataStatus
             status="pending"
             title="Loading more registrants..."
@@ -612,4 +564,5 @@ const RegistrationGuestList = () => {
     </>
   );
 };
+
 export default RegistrationGuestList;
