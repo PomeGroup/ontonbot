@@ -13,7 +13,7 @@ import { cva } from "class-variance-authority";
 import { Block, BlockFooter, BlockHeader, BlockTitle, Checkbox, List, ListItem, Sheet } from "konsta/react";
 import { Check, FileUser, Filter, Pencil, X } from "lucide-react";
 import { useParams } from "next/navigation";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import QrCodeButton from "../atoms/buttons/QrCodeButton";
 import DataStatus from "../molecules/alerts/DataStatus";
@@ -451,6 +451,14 @@ const RegistrationGuestList = () => {
     }
   }, [registrantsQuery.data, offset]);
 
+  useEffect(() => {
+    if (debouncedSearch.length >= 3) {
+      setOffset(0);
+      setResults([]);
+      setHasMore(true);
+    }
+  }, [debouncedSearch]);
+
   return (
     <>
       <BlockTitle medium>{eventData.data?.title}</BlockTitle>
@@ -498,9 +506,6 @@ const RegistrationGuestList = () => {
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
-            setOffset(0);
-            setResults([]);
-            setHasMore(true);
           }}
           className="p-2 border rounded w-full"
         />
