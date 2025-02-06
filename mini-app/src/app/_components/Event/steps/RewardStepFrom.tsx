@@ -6,6 +6,7 @@ import { cn } from "@/utils";
 import { useEffect } from "react";
 import { useGetEvent } from "@/hooks/events.hooks";
 import Image from "next/image";
+import { lowerCase } from "lodash";
 
 interface RewardFormProps {
   passwordDisabled: boolean;
@@ -38,21 +39,17 @@ export const RewardForm = ({
   }));
 
   useEffect(() => {
-
     if (eventData?.eventLocationType === "in_person" && eventData?.paid_event?.has_payment === true) {
       setEventData({ secret_phrase: "onton_default_placeholder" });
       setPasswordValue("onton_default_placeholder");
     } else {
       setEventData({ secret_phrase: "" });
     }
-  }, [eventData?.eventLocationType]);
+  }, [eventData?.eventLocationType, eventData?.paid_event?.has_payment, setEventData, setPasswordValue]);
 
   return (
     <>
-      {
-
-        eventData?.eventLocationType === "online"
-        && (
+      {eventData?.eventLocationType === "online" && (
         <ListLayout
           inset={false}
           title="Event password"
@@ -80,7 +77,7 @@ export const RewardForm = ({
               }
             }}
             onChange={(e) => {
-              setPasswordValue(e.target.value);
+              Boolean(e?.target?.value?.trim()) && setPasswordValue(lowerCase(e.target.value));
             }}
             error={errors?.secret_phrase?.[0]}
           />

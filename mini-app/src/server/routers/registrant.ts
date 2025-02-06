@@ -2,18 +2,18 @@ import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedPr
 import { z } from "zod";
 import { selectEventByUuid } from "@/server/db/events";
 import { TRPCError } from "@trpc/server";
-import { db } from "@/db/db";
+import { db, dbLower } from "@/db/db";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
-import { and, desc, eq, ne, or } from "drizzle-orm";
+import { and, desc, eq, like, ne, or, sql } from "drizzle-orm";
 import rewardService from "@/server/routers/services/rewardsService";
 import telegramService from "@/server/routers/services/telegramService";
-import { logger } from "@/server/utils/logger";
-import { CombinedEventRegisterSchema, EventRegisterSchema } from "@/types";
+import { EventRegisterSchema } from "@/types";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
 import { addVisitor } from "@/server/db/visitors";
 import { users } from "@/db/schema/users";
 import { redisTools } from "@/lib/redisTools";
 import { getUserCacheKey } from "@/server/db/users";
+import { rewards, visitors } from "@/db/schema";
 
 const checkinRegistrantRequest = evntManagerPP
   .input(
@@ -121,11 +121,12 @@ const processRegistrantRequest = evntManagerPP
       const rejected_message = `❌ Your request has been rejected for the event : <b>${event.title}</b> \n${share_link}`;
       const message = opts.input.status === "approved" ? approved_message : rejected_message;
 
-      const response = await telegramService.sendEventPhoto({
+      await telegramService.sendEventPhoto({
         event_id: event.event_uuid,
         user_id: user_id,
         message,
       });
+
       // Clear the organizer user cache so it will be reloaded next time
       await redisTools.deleteCache(getUserCacheKey(user_id));
     }
@@ -196,28 +197,52 @@ const eventRegister = initDataProtectedProcedure.input(CombinedEventRegisterSche
   return { message: "success", code: 201 };
 });
 
+const statusesZod = z.enum(["pending", "rejected", "approved", "checkedin"]);
 const getEventRegistrants = evntManagerPP
   .input(
     z.object({
       event_uuid: z.string(),
       offset: z.number().default(0),
       limit: z.number().default(10),
+      search: z.string().optional(),
+      statuses: z.array(statusesZod).optional(),
     })
   )
   .query(async (opts) => {
-    const { event_uuid, offset, limit } = opts.input;
+    const { event_uuid, offset, limit, search, statuses } = opts.input;
 
     const event = await selectEventByUuid(event_uuid);
     if (!event) {
-      throw new TRPCError({ code: "NOT_FOUND", message: `event not found with uuid ${event_uuid}` });
+      throw new TRPCError({ code: "NOT_FOUND", message: `Event not found with uuid ${event_uuid}` });
     }
 
-    const condition = event.has_payment
+    let condition = event.has_payment
       ? and(
           or(eq(eventRegistrants.status, "approved"), eq(eventRegistrants.status, "checkedin")),
           eq(eventRegistrants.event_uuid, event_uuid)
         )
       : eq(eventRegistrants.event_uuid, event_uuid);
+
+    if (search && search.trim() !== "") {
+      const searchStr = `%${search.trim()}%`;
+      condition = and(
+        condition,
+        or(
+          //@ts-expect-error
+          like(dbLower(users.username), dbLower(searchStr)),
+          //@ts-expect-error
+          like(dbLower(users.first_name), dbLower(searchStr)),
+          //@ts-expect-error
+          like(dbLower(users.last_name), dbLower(searchStr))
+        )
+      );
+    }
+
+    if (statuses && statuses.length > 0) {
+      condition = and(condition, or(...statuses.map((status) => eq(eventRegistrants.status, status))));
+      // __AUTO_GENERATED_PRINT_VAR_START__
+      console.log("(anon)#if condition: %s", condition); // __AUTO_GENERATED_PRINT_VAR_END__
+    }
 
     const registrants = await db
       .select({
@@ -229,6 +254,14 @@ const getEventRegistrants = evntManagerPP
         status: eventRegistrants.status,
         created_at: eventRegistrants.created_at,
         registrant_info: eventRegistrants.register_info,
+        has_reward: sql<boolean>`exists(
+          ${db
+            .select()
+            .from(rewards)
+            .innerJoin(visitors, eq(rewards.visitor_id, visitors.id))
+            .where(
+              and(eq(visitors.user_id, eventRegistrants.user_id), eq(visitors.event_uuid, eventRegistrants.event_uuid))
+            )})`.as("has_reward"),
       })
       .from(eventRegistrants)
       .innerJoin(users, eq(eventRegistrants.user_id, users.user_id))

@@ -127,7 +127,7 @@ export const processRewardCreation = async (eventData: any, user_id: number, vis
       // Update reward in the database with status "created"
       reward = await rewardDB.updateRewardById(reward.id, {
         status: "created",
-        data: res.data.data,
+        data: { ...res.data.data, ok: true },
         updatedBy: "system",
       });
 
@@ -208,14 +208,10 @@ export const createUserReward = async (
     }
 
     const reward = await rewardDB.findRewardByVisitorId(visitor.id);
-
-    if (reward) {
-      const err_msg = `user with id ${visitor.id} already recived reward by id ${reward.id} for event ${event_uuid}`;
-      // logger.log(err_msg);
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: err_msg,
-      });
+    if (reward?.data?.ok) {
+      return {
+        reward_link: reward.data?.reward_link,
+      };
     }
 
     if (!eventData?.activity_id || eventData.activity_id < 0) {

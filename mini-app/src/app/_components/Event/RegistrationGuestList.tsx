@@ -1,22 +1,25 @@
-import { trpc } from "@/app/_trpc/client";
-import { KButton } from "@/components/ui/button";
-import { useGetEvent, useGetEventRegistrants } from "@/hooks/events.hooks";
-import { cn } from "@/utils";
-import { cva } from "class-variance-authority";
-import { List, BlockTitle, ListItem, BlockHeader, Sheet, BlockFooter, Block } from "konsta/react";
-import { Check, FileUser, Pencil, X } from "lucide-react";
-import { useParams } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
-import DataStatus from "../molecules/alerts/DataStatus";
-import { createPortal } from "react-dom";
-import QrCodeButton from "../atoms/buttons/QrCodeButton";
-import { useMainButton } from "@/hooks/useMainButton";
-import useWebApp from "@/hooks/useWebApp";
-import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
-import StatusChip from "@/components/ui/status-chips";
 import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
 import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
+import { trpc } from "@/app/_trpc/client";
+import { KButton } from "@/components/ui/button";
+import StatusChip from "@/components/ui/status-chips";
 import { EventTriggerType } from "@/db/enum";
+import { useGetEvent, useGetEventRegistrants } from "@/hooks/events.hooks";
+import { useMainButton } from "@/hooks/useMainButton";
+import useWebApp from "@/hooks/useWebApp";
+import { RouterOutput } from "@/server";
+import { cn } from "@/utils";
+import { cva } from "class-variance-authority";
+import { Block, BlockFooter, BlockHeader, BlockTitle, Checkbox, List, ListItem, Sheet } from "konsta/react";
+import { Check, FileUser, Filter, Pencil, X } from "lucide-react";
+import { useParams } from "next/navigation";
+import React, { useCallback, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
+import QrCodeButton from "../atoms/buttons/QrCodeButton";
+import DataStatus from "../molecules/alerts/DataStatus";
+import ScanRegistrantQRCode from "./ScanRegistrantQRCode";
+import { useDebouncedValue } from "@mantine/hooks";
+import { EventRegistrantStatusType } from "@/db/schema/eventRegistrants";
 
 interface CustomListItemProps {
   name: string;
@@ -24,11 +27,12 @@ interface CustomListItemProps {
   date: string;
   status: "pending" | "approved" | "rejected" | "checkedin";
   user_id: number;
-  registrantInfo: any;
+  registrantInfo: Record<string, string | null> | null;
   handleApprove: (_: number) => Promise<void>;
   handleReject: (_: number) => Promise<void>;
   className?: string;
   hasPayment: boolean;
+  has_reward: boolean;
 }
 
 const CustomListItem: React.FC<CustomListItemProps> = ({
@@ -42,6 +46,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   handleReject,
   className,
   hasPayment,
+  has_reward,
 }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
@@ -50,17 +55,16 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   const [showRegistrantInfo, setShowRegistrantInfo] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleEdit = () => {
+  const handleEdit = useCallback(() => {
     // Change status to "pending"
-    setIsEditing(true);
-  };
+    setIsEditing(!isEditing);
+  }, [isEditing]);
 
-  const handleApproveClick = async () => {
+  const handleApproveClick = useCallback(async () => {
     setIsApproving(true);
     try {
       await handleApprove(user_id);
       // Optimistically update the status to "approved"
-      // This would typically be managed in the parent component's state
       setItemStatus("approved");
       setIsEditing(false);
     } catch (error) {
@@ -68,9 +72,9 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
     } finally {
       setIsApproving(false);
     }
-  };
+  }, [handleApprove, user_id]);
 
-  const handleRejectClick = async () => {
+  const handleRejectClick = useCallback(async () => {
     setIsDeclining(true);
     try {
       await handleReject(user_id);
@@ -82,7 +86,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
     } finally {
       setIsDeclining(false);
     }
-  };
+  }, [handleReject, user_id]);
 
   const { footerContent, afterContent } = useMemo(() => {
     let afterContent;
@@ -136,13 +140,11 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
                 setShowRegistrantInfo(registrantInfo);
               }}
             />
-            {!hasPayment && (
-              <>
-                <Button
-                  icon={<Pencil size={18} />}
-                  onClick={handleEdit}
-                />
-              </>
+            {!hasPayment && !has_reward && itemStatus === "approved" && (
+              <Button
+                icon={<Pencil size={18} />}
+                onClick={handleEdit}
+              />
             )}
             <StatusChip
               variant={itemStatus === "checkedin" ? "primary" : "success"}
@@ -151,7 +153,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
           </div>
         );
         footerContent =
-          hasPayment || !isEditing ? null : (
+          hasPayment || itemStatus === "checkedin" || !isEditing ? null : (
             <div className="flex space-x-2">
               <Button
                 variant="danger"
@@ -210,7 +212,19 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
       afterContent,
       footerContent,
     };
-  }, [itemStatus, registrantInfo, date, hasPayment, isDeclining, isApproving, isEditing]);
+  }, [
+    itemStatus,
+    date,
+    hasPayment,
+    handleRejectClick,
+    isDeclining,
+    handleApproveClick,
+    isApproving,
+    has_reward,
+    handleEdit,
+    isEditing,
+    registrantInfo,
+  ]);
 
   return (
     <>
@@ -233,18 +247,16 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
         >
           <BlockTitle>Registrant Info</BlockTitle>
           <List className="!pe-2">
-            {Object.entries(registrantInfo as object).map(([key, value], idx) => {
-              return (
-                <ListItem
-                  key={idx}
-                  title={
-                    <div className="capitalize text-sm">
-                      <b>{key.split("_").join(" ")}:</b> {value}
-                    </div>
-                  }
-                />
-              );
-            })}
+            {registrantInfo &&
+              Object.entries(registrantInfo).map(([key, value], idx) => {
+                return (
+                  <ListItem
+                    key={idx}
+                    title={<div className="capitalize">{key.split("_").join(" ")}</div>}
+                    subtitle={value || <p className="text-cn-muted-foreground">Not Provided</p>}
+                  />
+                );
+              })}
           </List>
           <BlockFooter>
             <KButton onClick={() => setShowRegistrantInfo(null)}>Close</KButton>
@@ -297,33 +309,35 @@ const Button: React.FC<ButtonProps> = ({ variant, icon, label, onClick, isLoadin
 };
 
 const RegistrationGuestList = () => {
-  /*
-   * Get Event Registrants
-   */
   const params = useParams<{ hash: string }>();
-  const registrants = useGetEventRegistrants();
-  const eventData = useGetEvent();
-  const webApp = useWebApp();
-  //// pagination logic
-  const LIMIT = 10; // Adjust the limit as needed
-  const [results, setResults] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch] = useDebouncedValue(search, 500);
+
+  const LIMIT = 10;
+  const [results, setResults] = useState<RouterOutput["registrant"]["getEventRegistrants"]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  /*
-   * Process Registrant (Approve ✅ / Reject ❌)
-   */
+  const [filters, setFilters] = useState<EventRegistrantStatusType[]>([]);
+  const [tempFilters, setTempFilters] = useState<EventRegistrantStatusType[]>([]);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+
+  const registrantsQuery = useGetEventRegistrants(
+    params.hash,
+    offset,
+    LIMIT,
+    debouncedSearch?.length >= 3 ? debouncedSearch : "",
+    filters
+  );
+
+  const eventData = useGetEvent();
+  const webApp = useWebApp();
+
   const processRegistrantRequest = trpc.registrant.processRegistrantRequest.useMutation();
 
-  /*
-   * Check if the event has payment enabled
-   */
   const hasPayment = eventData.data?.has_payment || false;
 
-  /*
-   * Export visitor list
-   */
   const exportVisitorList = trpc.telegramInteractions.requestExportFile.useMutation({
     onSuccess: () => {
       webApp?.HapticFeedback.impactOccurred("soft");
@@ -331,23 +345,59 @@ const RegistrationGuestList = () => {
     },
   });
 
-  const handleApprove = async (user_id: number) => {
-    // Perform approval logic
-    await processRegistrantRequest.mutateAsync({
-      event_uuid: params.hash,
-      status: "approved",
-      user_id,
-    });
-  };
-  const handleReject = async (user_id: number) => {
-    // Perform decline logic
+  const toggleTempFilter = useCallback((status: EventRegistrantStatusType) => {
+    setTempFilters((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]));
+  }, []);
 
-    await processRegistrantRequest.mutateAsync({
-      event_uuid: params.hash,
-      status: "rejected",
-      user_id,
-    });
-  };
+  const handleApprove = useCallback(
+    async (user_id: number) => {
+      await processRegistrantRequest.mutateAsync({
+        event_uuid: params.hash,
+        status: "approved",
+        user_id,
+      });
+      setResults((prev) =>
+        prev.map((registrant) => (registrant.user_id === user_id ? { ...registrant, status: "approved" } : registrant))
+      );
+    },
+    [processRegistrantRequest, params.hash]
+  );
+
+  const handleReject = useCallback(
+    async (user_id: number) => {
+      await processRegistrantRequest.mutateAsync({
+        event_uuid: params.hash,
+        status: "rejected",
+        user_id,
+      });
+      setResults((prev) =>
+        prev.map((registrant) => (registrant.user_id === user_id ? { ...registrant, status: "rejected" } : registrant))
+      );
+    },
+    [processRegistrantRequest, params.hash]
+  );
+
+  const openFilterSheet = useCallback(() => {
+    setTempFilters(filters);
+    setIsFilterSheetOpen(true);
+  }, [filters]);
+
+  const applyFilters = useCallback(() => {
+    setFilters(tempFilters);
+    setOffset(0);
+    setResults([]);
+    setHasMore(true);
+    setIsFilterSheetOpen(false);
+  }, [tempFilters]);
+
+  const removeFilters = useCallback(() => {
+    setTempFilters([]);
+    setFilters([]);
+    setOffset(0);
+    setResults([]);
+    setHasMore(true);
+    setIsFilterSheetOpen(false);
+  }, []);
 
   useMainButton(
     () => {
@@ -364,7 +414,14 @@ const RegistrationGuestList = () => {
 
   const disablePOAButton = Boolean(eventData.data?.isNotEnded && eventData.data?.isStarted);
 
-  useEffect(() => {
+  const loadMoreResults = useCallback(() => {
+    if (hasMore && !isLoading) {
+      setIsLoading(true);
+      setOffset((prevOffset) => prevOffset + LIMIT);
+    }
+  }, [hasMore, isLoading]);
+
+  React.useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -380,29 +437,19 @@ const RegistrationGuestList = () => {
     return () => {
       if (lastElement) observer.unobserve(lastElement);
     };
-  }, [results]);
+  }, [loadMoreResults, results]);
 
-  // Fetch registrants dynamically based on offset
-  const { data, isFetching } = trpc.registrant.getEventRegistrants.useQuery(
-    { event_uuid: params.hash, offset, limit: LIMIT },
-    {
-      keepPreviousData: true, // Keeps existing data while fetching new data
-      onSuccess: (newData) => {
-        if (newData) {
-          setResults((prev) => [...prev, ...newData]);
-          setHasMore(newData.length === LIMIT); // Check if more results are available
-        }
-        setIsLoading(false);
-      },
+  React.useEffect(() => {
+    if (registrantsQuery.data) {
+      if (offset === 0) {
+        setResults(registrantsQuery.data);
+      } else {
+        setResults((prev) => [...prev, ...registrantsQuery.data!]);
+      }
+      setHasMore(registrantsQuery.data.length === LIMIT);
+      setIsLoading(false);
     }
-  );
-
-  const loadMoreResults = () => {
-    if (hasMore && !isFetching && !isLoading) {
-      setIsLoading(true);
-      setOffset((prevOffset) => prevOffset + LIMIT);
-    }
-  };
+  }, [registrantsQuery.data, offset]);
 
   return (
     <>
@@ -424,7 +471,6 @@ const RegistrationGuestList = () => {
                 poa_type={"password" as EventTriggerType}
                 showPOAButton={disablePOAButton}
               />
-              {/* Organizer Notification Handler */}
               <OrganizerNotificationHandler />
             </>
           )}
@@ -432,25 +478,50 @@ const RegistrationGuestList = () => {
 
       <BlockTitle medium>
         <span>Guest List</span>
-        {eventData.data?.participationType === "in_person" && <ScanRegistrantQRCode />}
+        <div className="flex gap-3 items-center">
+          <Filter
+            onClick={openFilterSheet}
+            className={cn(
+              "rounded cursor-pointer",
+              filters.length ? "text-primary bg-primary/10 " : "text-cn-muted-foreground"
+            )}
+          />
+          {eventData.data?.participationType === "in_person" && <ScanRegistrantQRCode />}
+        </div>
       </BlockTitle>
 
+      {/* Search input */}
+      <Block>
+        <input
+          type="text"
+          placeholder="Search by username or name"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setOffset(0);
+            setResults([]);
+            setHasMore(true);
+          }}
+          className="p-2 border rounded w-full"
+        />
+      </Block>
+
       <BlockHeader className="font-bold">
-        {registrants.isSuccess && !registrants.data?.length && (
+        {registrantsQuery.isSuccess && !registrantsQuery.data?.length && (
           <DataStatus
             status="not_found"
             title="No Registrants Yet"
             description="No one has filled the form yet."
           />
         )}
-        {registrants.isLoading && (
+        {!registrantsQuery.isFetched && registrantsQuery.isLoading && (
           <DataStatus
             status="pending"
             title="Loading Guest List"
           />
         )}
-        {registrants.isError &&
-          (registrants.error.data?.code === "NOT_FOUND" ? (
+        {registrantsQuery.isError &&
+          (registrantsQuery.error.data?.code === "NOT_FOUND" ? (
             <DataStatus
               status="not_found"
               title="Event Not Found"
@@ -464,12 +535,50 @@ const RegistrationGuestList = () => {
             />
           ))}
       </BlockHeader>
-      <List>
+
+      <Sheet
+        onBackdropClick={() => setIsFilterSheetOpen(false)}
+        opened={isFilterSheetOpen}
+        className="!overflow-hidden w-full"
+      >
+        <BlockTitle>Filter Registrants</BlockTitle>
+        <List>
+          {(["pending", "rejected", "approved", "checkedin"] as EventRegistrantStatusType[]).map((status) => (
+            <ListItem
+              key={status}
+              label
+              className="capitalize"
+              title={status}
+              media={
+                <Checkbox
+                  value={status}
+                  checked={tempFilters.includes(status)}
+                  onChange={() => toggleTempFilter(status)}
+                />
+              }
+            />
+          ))}
+        </List>
+        <BlockFooter className="flex flex-col gap-1">
+          {Boolean(filters.length) && (
+            <KButton
+              clear
+              onClick={removeFilters}
+            >
+              Clear Filters
+            </KButton>
+          )}
+          <KButton onClick={applyFilters}>Apply</KButton>
+        </BlockFooter>
+      </Sheet>
+
+      <List className="!my-2">
         {results.map((registrant, idx) => (
           <CustomListItem
             key={`registrant_${idx}`}
             name={registrant.first_name || "No Name"}
             username={registrant.username || "no username"}
+            has_reward={registrant.has_reward}
             date={
               registrant.created_at
                 ? new Date(registrant.created_at).toLocaleString("default", {
@@ -488,7 +597,7 @@ const RegistrationGuestList = () => {
           />
         ))}
 
-        {isFetching && offset !== 0 && (
+        {isLoading && offset !== 0 && (
           <DataStatus
             status="pending"
             title="Loading more registrants..."
@@ -498,5 +607,4 @@ const RegistrationGuestList = () => {
     </>
   );
 };
-
 export default RegistrationGuestList;

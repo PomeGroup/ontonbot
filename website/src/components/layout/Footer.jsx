@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { GetStartedLink } from "../GetstartedLink";
 
 const socialMediaIcons = [
   { name: "X", icon: "/icons/x-icon.svg", link: "https://x.com/ontonbot" },

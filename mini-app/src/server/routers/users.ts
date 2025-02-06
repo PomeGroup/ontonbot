@@ -10,7 +10,6 @@ import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { logger } from "../utils/logger";
 
-
 export const usersRouter = router({
   validateUserInitData: publicProcedure.input(z.string()).query(async (opts) => {
     return validateMiniAppData(opts.input);
@@ -56,7 +55,7 @@ export const usersRouter = router({
     .mutation(async (opts) => {
       return await rewardService.createUserReward({
         user_id: opts.ctx.user?.user_id as number,
-        event_uuid: opts.input.event_uuid
+        event_uuid: opts.input.event_uuid,
       });
     }),
 
@@ -89,7 +88,7 @@ export const usersRouter = router({
           });
         } catch (error) {
           if (error instanceof TRPCError) {
-            logger.log('getVisitorReward_error_createUserReward' , error , error.message);
+            logger.log("getVisitorReward_error_createUserReward", error, error.message);
             if (error.code === "CONFLICT") {
               await rewardDB.insertReward(
                 visitor.id,
@@ -103,8 +102,6 @@ export const usersRouter = router({
                 data: null,
               } as const;
             }
-          } else {
-            // logger.log("getVisitorReward_error_else" );
           }
         }
 
@@ -153,5 +150,4 @@ export const usersRouter = router({
         }
       }
     }),
-
 });

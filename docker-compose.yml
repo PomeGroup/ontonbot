@@ -9,6 +9,7 @@ x-common-env: &common-env
   DATABASE_URL: ${DATABASE_URL}
   DATABASE_URL_NFT_MANAGER: ${DATABASE_URL_NFT_MANAGER}
   ENV: ${ENV}
+  PGDATA: "/var/lib/postgresql/data/pgdata"
   GOLANG_SERVER_PORT: ${GOLANG_SERVER_PORT}
   IP_CLAMAV: ${IP_CLAMAV}
   IP_CLIENT_WEB: ${IP_CLIENT_WEB}
@@ -126,14 +127,14 @@ services:
       - "${MINIO_DASHBOARD_PORT}:${MINIO_DASHBOARD_PORT}"
     volumes:
       - ./data/minio_data:/data
-      - ./devops/minio-init.sh:/usr/bin/entrypoint.sh  # Mount the script into the container
-    entrypoint: ["/usr/bin/entrypoint.sh"]  # Use the custom entrypoint script
+      - ./devops/minio-init.sh:/usr/bin/entrypoint.sh # Mount the script into the container
+    entrypoint: ["/usr/bin/entrypoint.sh"] # Use the custom entrypoint script
     environment:
       <<: *common-env
 
   postgres:
     hostname: postgres
-    container_name : ${ENV}-postgres
+    container_name: ${ENV}-postgres
     image: postgres:16.3-alpine3.20
     restart: unless-stopped
     ports:
@@ -167,7 +168,7 @@ services:
       - full
     command: redis-server --save "" --appendonly no
     environment:
-        <<: *common-env
+      <<: *common-env
     networks:
       onton-network:
         ipv4_address: ${IP_REDIS}
@@ -186,11 +187,11 @@ services:
       - CLAMD_SETTINGS_MAXQUEUE=200
       - CLAMD_SETTINGS_LOGTIME=1
     volumes:
-      - clamav_data:/var/lib/clamav  # Persist virus definition database
+      - clamav_data:/var/lib/clamav # Persist virus definition database
     restart: unless-stopped
     networks:
-        onton-network:
-            ipv4_address: "${IP_CLAMAV}"
+      onton-network:
+        ipv4_address: "${IP_CLAMAV}"
 
   pgadmin:
     image: dpage/pgadmin4
@@ -247,7 +248,7 @@ services:
         <<: *common-env
     restart: "unless-stopped"
     environment:
-        <<: *common-env
+      <<: *common-env
     depends_on:
       - postgres
       - redis
@@ -269,7 +270,7 @@ services:
     profiles:
       - full
     environment:
-        <<: *common-env
+      <<: *common-env
     depends_on:
       - postgres
       - redis
@@ -278,7 +279,7 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_MINI_APP_CRON}"
-    command: ["pnpm","run", "start-cron"]
+    command: ["pnpm", "run", "start-cron"]
 
   mini-app-poa-worker:
     hostname: mini-app-poa-worker
@@ -302,7 +303,7 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_POA_WORKER}"
-    command: ["pnpm","run", "start:poa"]
+    command: ["pnpm", "run", "start:poa"]
 
   mini-app-notification-socket:
     hostname: mini-app-notification-socket
@@ -328,8 +329,7 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_SOCKET}"
-    command: ["pnpm","run", "start:socket"]
-
+    command: ["pnpm", "run", "start:socket"]
 
   participant-tma:
     hostname: participant-tma
@@ -339,14 +339,14 @@ services:
       - "${PARTICIPANT_TMA_PORT}:${PARTICIPANT_TMA_PORT}"
     profiles:
       - full
-    build: 
+    build:
       context: ./newton/
       dockerfile: ./apps/participant-tma/Dockerfile
       args:
         <<: *common-env
     restart: "unless-stopped"
     environment:
-        <<: *common-env
+      <<: *common-env
     networks:
       onton-network:
         ipv4_address: "${IP_PARTICIPANT_TMA}"
@@ -355,16 +355,16 @@ services:
     hostname: website
     container_name: ${ENV}-website
     build:
-        context: ./website
-        args:
-            <<: *common-env
+      context: ./website
+      args:
+        <<: *common-env
     restart: "unless-stopped"
     profiles:
       - full
     ports:
       - "${PORT_WEB_SITE}:${PORT_WEB_SITE}"
     environment:
-        <<: *common-env
+      <<: *common-env
     networks:
       onton-network:
         ipv4_address: ${IP_WEBSITE}
@@ -413,29 +413,29 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        ENV_TYPE : production
-        NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
-        CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
-        CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
-        CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
-        CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+        ENV_TYPE: production
+        NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+        CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
+        CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
+        CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
+        CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
         PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
     restart: "unless-stopped"
     environment:
-      NEXT_PUBLIC_BACKEND_URL_CLIENT : ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
-      CLIENT_API_JWT_SECRET : ${CLIENT_API_JWT_SECRET}
-      CLIENT_API_FIXED_KEY : ${CLIENT_API_FIXED_KEY}
-      CLIENT_API_FIXED_USER : ${CLIENT_API_FIXED_USER}
-      CLIENT_API_FIXED_ORGANIZER : ${CLIENT_API_FIXED_ORGANIZER}
+      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
+      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
+      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
+      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
       PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
-#    depends_on:
-#      - caddy
+    #    depends_on:
+    #      - caddy
     networks:
       onton-network:
         ipv4_address: ${IP_CLIENT_WEB}
   rabbitmq:
     image: "rabbitmq:4.0.4-management-alpine"
-    container_name:  ${ENV}-rabbitmq
+    container_name: ${ENV}-rabbitmq
     hostname: rabbitmq
     profiles:
       - front-end-development
@@ -448,14 +448,14 @@ services:
         max-size: "1G"
         max-file: "2"
     ports:
-      - '${RABBITMQ_MANAGEMENT_PORT}:15672' # Management console
-      - '${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}' # AMQP port
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672" # Management console
+      - "${RABBITMQ_NODE_PORT}:${RABBITMQ_NODE_PORT}" # AMQP port
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
       - RABBITMQ_NODE_PORT=${RABBITMQ_NODE_PORT}
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq  # Persist data
+      - rabbitmq_data:/var/lib/rabbitmq # Persist data
     restart: unless-stopped
     tty: true
     networks:
@@ -481,7 +481,6 @@ networks:
       config:
         - subnet: "${IP_RANGE_START}.0.0/${IP_RANGE_SUBNET}"
 volumes:
-    pgadmin:
-    clamav_data:
-    rabbitmq_data:
-
+  pgadmin:
+  clamav_data:
+  rabbitmq_data:

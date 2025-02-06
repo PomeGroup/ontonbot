@@ -3,6 +3,7 @@ import { users } from "@/db/schema/users";
 import { bigint, pgTable, serial, uuid, text, check, uniqueIndex, timestamp, pgEnum, json } from "drizzle-orm/pg-core";
 
 export const eventRegistrantStatus = pgEnum("registrant_status", ["pending", "rejected", "approved", "checkedin"]);
+export type EventRegistrantStatusType = (typeof eventRegistrantStatus.enumValues)[number];
 
 export const eventRegistrants = pgTable(
   "event_registrants",
@@ -12,7 +13,7 @@ export const eventRegistrants = pgTable(
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
 
     status: eventRegistrantStatus("status").default("pending").notNull(),
-    register_info: json("register_info").notNull().default({}),
+    register_info: json("register_info").notNull().default({}).$type<Record<string, string | null>>(),
 
     registrant_uuid: uuid("registrant_uuid")
       .unique()

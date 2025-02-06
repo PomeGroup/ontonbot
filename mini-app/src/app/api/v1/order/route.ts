@@ -1,9 +1,10 @@
 import { db } from "@/db/db";
 import { eventRegistrants, orders } from "@/db/schema";
+import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import { selectEventByUuid } from "@/server/db/events";
 import { Address } from "@ton/core";
-import { InferSelectModel, and, count, eq, or, sql } from "drizzle-orm";
+import { and, count, eq, or } from "drizzle-orm";
 import { z } from "zod";
 
 const addOrderSchema = z.object({
@@ -15,8 +16,6 @@ const addOrderSchema = z.object({
   utm: z.string().nullable(),
   owner_address: z.string().refine((data) => Address.isAddress(Address.parse(data))),
 });
-
-type OrderRow = InferSelectModel<typeof orders>;
 
 //create order if order for that event and user does not exist
 //reactivate order with current price
@@ -178,7 +177,7 @@ export async function POST(request: Request) {
 
     new_order_price = new_order?.total_price || -1;
 
-    const { event_uuid, ...register_info } = body.data;
+    const register_info = removeKey(body.data, "event_uuid");
     await trx
       .insert(eventRegistrants)
       .values({
