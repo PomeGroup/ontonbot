@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+// adjust these imports as needed
+// adjust as needed
 import { trpc } from "@/app/_trpc/client";
 import ButtonPOA from "@/app/_components/atoms/buttons/ButtonPOA";
 import OrganizerNotificationHandler from "@/app/_components/OrganizerNotificationHandler";
@@ -296,9 +298,80 @@ const RegistrationGuestList = () => {
   const eventData = useGetEvent();
   const webApp = useWebApp();
 
+  // Local state for filtering
+  const [filters, setFilters] = useState<EventRegistrantStatusType[]>([]);
+  const [tempFilters, setTempFilters] = useState<EventRegistrantStatusType[]>([]);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+
+  // Use the same logic for statuses both in input and in queryKey.
+  const statusesQueryValue = filters.length > 0 ? filters : undefined;
+
+  const registrantsQuery = trpc.registrant.getEventRegistrants.useInfiniteQuery(
+    {
+      event_uuid: params.hash,
+      search: debouncedSearch.length >= 3 ? debouncedSearch : "",
+      statuses: statusesQueryValue, // use undefined when filters is empty
+      limit: 10,
+    },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      staleTime: 10_000,
+      queryKey: [
+        "registrant.getEventRegistrants",
+        { event_uuid: params.hash, search: debouncedSearch, statuses: statusesQueryValue },
+      ],
+    }
+  );
+
+  // Compute a flat list of registrants from all pages.
+  const registrantList = useMemo(() => {
+    if (!registrantsQuery.data) return [];
+    return registrantsQuery.data.pages.flatMap((page) => page.registrants);
+  }, [registrantsQuery.data]);
+
+  // Intersection Observer to load more when the last item is visible.
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastItemRef = useCallback(
+    (node: HTMLElement | null) => {
+      if (registrantsQuery.isFetchingNextPage) return;
+      if (observerRef.current) observerRef.current.disconnect();
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && registrantsQuery.hasNextPage) {
+          registrantsQuery.fetchNextPage();
+        }
+      });
+      if (node) observerRef.current.observe(node);
+    },
+    [registrantsQuery]
+  );
+
+  // Filter sheet handlers
+  const toggleTempFilter = useCallback((status: EventRegistrantStatusType) => {
+    setTempFilters((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]));
+  }, []);
+
+  const openFilterSheet = useCallback(() => {
+    setTempFilters(filters);
+    setIsFilterSheetOpen(true);
+  }, [filters]);
+
+  // When applying filters, update the filters state.
+  const applyFilters = useCallback(() => {
+    setFilters(tempFilters);
+    setIsFilterSheetOpen(false);
+    // With the query key based on filters, the query will refetch automatically.
+  }, [tempFilters]);
+
+  // When clearing filters, set filters to an empty array and force a refetch.
+  const removeFilters = useCallback(() => {
+    setTempFilters([]);
+    setFilters([]);
+    setIsFilterSheetOpen(false);
+  }, []);
+
   const processRegistrantRequest = trpc.registrant.processRegistrantRequest.useMutation({
-    // On success, refetch the registrants query
     onSuccess: () => {
+      // Refetch after a mutation so that the list updates correctly.
       registrantsQuery.refetch();
     },
   });
@@ -324,71 +397,6 @@ const RegistrationGuestList = () => {
       disabled: exportVisitorList.isLoading,
     }
   );
-
-  // Infinite query using nextCursor as the cursor for pagination
-  const registrantsQuery = trpc.registrant.getEventRegistrants.useInfiniteQuery(
-    {
-      event_uuid: params.hash,
-      search: debouncedSearch.length >= 3 ? debouncedSearch : "",
-      statuses: undefined, // you can apply filters here
-      limit: 10,
-    },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-      staleTime: 10_000,
-      queryKey: ["registrant.getEventRegistrants", { event_uuid: params.hash, search: debouncedSearch }],
-    }
-  );
-
-  // Compute a flat list of registrants from all pages
-  const registrantList = useMemo(() => {
-    if (!registrantsQuery.data) return [];
-    return registrantsQuery.data.pages.flatMap((page) => page.registrants);
-  }, [registrantsQuery.data]);
-
-  // Intersection Observer to load more when the last item is visible
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const lastItemRef = useCallback(
-    (node: HTMLElement | null) => {
-      if (registrantsQuery.isFetchingNextPage) return;
-      if (observerRef.current) observerRef.current.disconnect();
-      observerRef.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && registrantsQuery.hasNextPage) {
-          registrantsQuery.fetchNextPage();
-        }
-      });
-      if (node) observerRef.current.observe(node);
-    },
-    [registrantsQuery]
-  );
-
-  // Filter sheet state management (if you plan to add filtering logic)
-  const [filters, setFilters] = useState<EventRegistrantStatusType[]>([]);
-  const [tempFilters, setTempFilters] = useState<EventRegistrantStatusType[]>([]);
-  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-
-  const toggleTempFilter = useCallback((status: EventRegistrantStatusType) => {
-    setTempFilters((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]));
-  }, []);
-
-  const openFilterSheet = useCallback(() => {
-    setTempFilters(filters);
-    setIsFilterSheetOpen(true);
-  }, [filters]);
-
-  const applyFilters = useCallback(() => {
-    setFilters(tempFilters);
-    // Invalidate or refetch your query with the new filters as needed
-    registrantsQuery.refetch();
-    setIsFilterSheetOpen(false);
-  }, [tempFilters, registrantsQuery]);
-
-  const removeFilters = useCallback(() => {
-    setTempFilters([]);
-    setFilters([]);
-    registrantsQuery.refetch();
-    setIsFilterSheetOpen(false);
-  }, [registrantsQuery]);
 
   const handleApprove = useCallback(
     async (user_id: number) => {
@@ -451,7 +459,6 @@ const RegistrationGuestList = () => {
         </div>
       </BlockTitle>
 
-      {/* Search Input */}
       <Block>
         <input
           type="text"
@@ -530,28 +537,33 @@ const RegistrationGuestList = () => {
 
       <List className="!my-2">
         {registrantList.map((registrant, idx) => {
-          // Attach the observer ref to the last item in the list
-          const refProp = idx === registrantList.length - 1 ? { ref: lastItemRef } : {};
+          const isLastItem = idx === registrantList.length - 1;
           return (
-            <CustomListItem
+            <div
               key={`registrant_${idx}`}
-              name={registrant.first_name || "No Name"}
-              username={registrant.username || "no username"}
-              has_reward={registrant.has_reward}
-              date={
-                registrant.created_at
-                  ? new Date(registrant.created_at).toLocaleString("default", { month: "short", day: "numeric" })
-                  : "no_date"
-              }
-              registrantInfo={registrant.registrant_info}
-              user_id={registrant.user_id!}
-              status={registrant.status}
-              handleApprove={() => handleApprove(registrant.user_id!)}
-              handleReject={() => handleReject(registrant.user_id!)}
-              className={cn(idx === registrantList.length - 1 && "last-guest-item")}
-              hasPayment={hasPayment}
-              {...refProp}
-            />
+              ref={isLastItem ? lastItemRef : null}
+            >
+              <CustomListItem
+                name={registrant.first_name || "No Name"}
+                username={registrant.username || "no username"}
+                has_reward={registrant.has_reward}
+                date={
+                  registrant.created_at
+                    ? new Date(registrant.created_at).toLocaleString("default", {
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : "no_date"
+                }
+                registrantInfo={registrant.registrant_info}
+                user_id={registrant.user_id!}
+                status={registrant.status}
+                handleApprove={() => handleApprove(registrant.user_id!)}
+                handleReject={() => handleReject(registrant.user_id!)}
+                className={cn(isLastItem && "last-guest-item")}
+                hasPayment={hasPayment}
+              />
+            </div>
           );
         })}
         {registrantsQuery.isFetchingNextPage && (
