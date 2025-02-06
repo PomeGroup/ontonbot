@@ -85,7 +85,7 @@ function UnforwardedEventCard(
   const handleEventClick = () => {
     // If ticketToCheckIn => open Telegram link
     if (ticketToCheckIn) {
-      webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/samyar?startapp=${eventUuid}`);
+      webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`);
     } else {
       // Otherwise, push to /events/[eventUuid]
       router.push(`/events/${eventUuid}`);
