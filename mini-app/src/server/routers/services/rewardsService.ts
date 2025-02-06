@@ -12,6 +12,7 @@ import { TRPCError } from "@trpc/server";
 import { eventRegistrants } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { selectEventByUuid } from "@/server/db/events";
+import { logger } from "@/server/utils/logger";
 
 //TODO - Put this in db functions files
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
