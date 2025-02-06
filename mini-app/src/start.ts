@@ -24,8 +24,7 @@ import { config } from "./server/config";
 import { selectUserById } from "./server/db/users";
 import { logger } from "./server/utils/logger";
 import { orgPromoteProcessOrder } from "./server/routers/services/orgPromoteOrderService";
-import { selectEventByUuid } from "./server/db/events";
-import { createUserReward, CsbtTicket } from "./server/routers/services/rewardsService";
+import { CsbtTicket } from "./server/routers/services/rewardsService";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
