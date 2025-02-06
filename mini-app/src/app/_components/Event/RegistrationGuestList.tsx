@@ -33,7 +33,6 @@ interface CustomListItemProps {
   handleReject: (_: number) => Promise<void>;
   className?: string;
   hasPayment: boolean;
-  has_reward: boolean;
 }
 
 const CustomListItem: React.FC<CustomListItemProps> = ({
@@ -47,7 +46,6 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
   handleReject,
   className,
   hasPayment,
-  has_reward,
 }) => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
@@ -132,7 +130,7 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
               variant="purple"
               onClick={() => setShowRegistrantInfo(registrantInfo)}
             />
-            {!hasPayment && !has_reward && itemStatus === "approved" && (
+            {!hasPayment && itemStatus === "approved" && (
               <Button
                 icon={<Pencil size={18} />}
                 onClick={handleEdit}
@@ -205,7 +203,6 @@ const CustomListItem: React.FC<CustomListItemProps> = ({
     isDeclining,
     handleApproveClick,
     isApproving,
-    has_reward,
     handleEdit,
     isEditing,
     registrantInfo,
@@ -546,7 +543,6 @@ const RegistrationGuestList = () => {
               <CustomListItem
                 name={registrant.first_name || "No Name"}
                 username={registrant.username || "no username"}
-                has_reward={registrant.has_reward}
                 date={
                   registrant.created_at
                     ? new Date(registrant.created_at).toLocaleString("default", {
