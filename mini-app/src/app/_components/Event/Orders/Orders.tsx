@@ -9,8 +9,8 @@ import { beginCell, toNano } from "@ton/core";
 import { toast } from "sonner";
 import { useUpdateOrder } from "@/hooks/orders.hooks";
 import { useParams } from "next/navigation";
-import DataStatus from "../../molecules/alerts/DataStatus";
 import { InferArrayType } from "@/lib/utils";
+import DataStatus from "../../molecules/alerts/DataStatus";
 
 const EventOrders = () => {
   const params = useParams<{ hash: string }>();
@@ -71,25 +71,22 @@ const EventOrders = () => {
   const OrdersSection = ({
     filterFn,
     label,
-    emptyMessage,
   }: {
     filterFn: (_o: OrderType) => boolean;
     label: { text: string; variant: "danger" | "primary" | "success" | "warning" };
-    emptyMessage: string;
-  }) => (
-    <ListLayout
-      isLoading={isLoading}
-      isEmpty={orders?.length === 0 || isError}
-      title="Orders List"
-      label={label}
-    >
-      {orders?.filter(filterFn).length === 0 ? (
-        <DataStatus
-          status="not_found"
-          description={emptyMessage}
-        />
-      ) : (
-        orders?.filter(filterFn).map((order) => (
+  }) => {
+    if (orders?.filter(filterFn).length === 0) {
+      return null;
+    }
+
+    return (
+      <ListLayout
+        isLoading={isLoading}
+        isEmpty={orders?.length === 0 || isError}
+        title="Orders List"
+        label={label}
+      >
+        {orders?.filter(filterFn).map((order) => (
           <ListItem
             key={order.uuid}
             title={
@@ -111,40 +108,44 @@ const EventOrders = () => {
             }
             after={<p className={`capitalize ${order.state === "completed" ? "text-green-600" : ""}`}>{order.state}</p>}
           />
-        ))
-      )}
-    </ListLayout>
-  );
+        ))}
+      </ListLayout>
+    );
+  };
 
   return (
     <div className="space-y-3 pb-6">
       <div className="flex justify-center">
         <TonConnectButton className="[&>button]:px-2 [&>button]:py-3" />
       </div>
+      {orders?.length === 0 ? (
+        <DataStatus
+          status="not_found"
+          description={"Orders list is empty"}
+        />
+      ) : (
+        <>
+          <OrdersSection
+            filterFn={(o) => o.state === "new"}
+            label={{ text: "New", variant: "danger" }}
+          />
 
-      <OrdersSection
-        filterFn={(o) => o.state === "new"}
-        label={{ text: "New", variant: "danger" }}
-        emptyMessage="No new orders found"
-      />
+          <OrdersSection
+            filterFn={(o) => ["confirming", "processing"].includes(o.state)}
+            label={{ text: "In Progress", variant: "primary" }}
+          />
 
-      <OrdersSection
-        filterFn={(o) => ["confirming", "processing"].includes(o.state)}
-        label={{ text: "In Progress", variant: "primary" }}
-        emptyMessage="No orders in progress"
-      />
+          <OrdersSection
+            filterFn={(o) => o.state === "completed"}
+            label={{ text: "Completed", variant: "success" }}
+          />
 
-      <OrdersSection
-        filterFn={(o) => o.state === "completed"}
-        label={{ text: "Completed", variant: "success" }}
-        emptyMessage="No completed orders found"
-      />
-
-      <OrdersSection
-        filterFn={(o) => ["failed", "cancelled"].includes(o.state)}
-        label={{ text: "Failed", variant: "warning" }}
-        emptyMessage="No failed orders"
-      />
+          <OrdersSection
+            filterFn={(o) => ["failed", "cancelled"].includes(o.state)}
+            label={{ text: "Failed", variant: "warning" }}
+          />
+        </>
+      )}
     </div>
   );
 };
