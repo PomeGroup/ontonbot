@@ -122,8 +122,10 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   }));
 
   const registrationFromSchema = {
-    isCustom: await userFlagsDB.checkUserCustomFlagBoolean(eventData.owner!, "custom_registration_1"),
+    // isCustom: await userFlagsDB.checkUserCustomFlagBoolean(eventData.owner!, "custom_registration_1"),
+    isCustom: true,
   };
+  
   // If the event does NOT require registration, just return data
   if (!eventData.has_registration) {
     return {
