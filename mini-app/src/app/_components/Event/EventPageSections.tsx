@@ -106,7 +106,7 @@ const EventHead = React.memo(() => {
         {isNotPublished && (
           <div className="mb-2 text-sky-500 text-lg font-semibold">! Event is not published and pending moderation</div>
         )}
-        <div className="text-[24px] leading-[28px] font-bold break-all mb-4">{eventData.data?.title ?? ""}</div>
+        <div className="text-2xl leading-7 font-bold mb-4">{eventData.data?.title ?? ""}</div>
         <EventSubtitle />
       </div>
       <ShareEventButton

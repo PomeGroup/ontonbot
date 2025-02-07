@@ -9,6 +9,7 @@ export type RewardDataTyepe =
       ok: true;
     }
   | { fail_reason: string; ok: false };
+
 export const rewards = pgTable(
   "rewards",
   {
