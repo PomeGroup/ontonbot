@@ -205,23 +205,23 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     .from(eventRegistrants)
     .where(eq(eventRegistrants.user_id, userId));
 
-  const userRolesQuery = db
-    .select({
-      event_uuid: events.event_uuid, // from events
-      user_id: userRoles.userId, // from userRoles
-      role: userRoles.role, // e.g. 'owner', 'admin', 'checkin_officer'
-      created_at: userRoles.createdAt, // or userRoles.created_at if you have that column
-    })
-    .from(userRoles)
-    .innerJoin(events, eq(userRoles.itemId, events.event_id))
-    .where(and(eq(userRoles.userId, userId), eq(userRoles.itemType, "event"), eq(userRoles.status, "active")));
+  // const userRolesQuery = db
+  //   .select({
+  //     event_uuid: events.event_uuid, // from events
+  //     user_id: userRoles.userId, // from userRoles
+  //     role: userRoles.role, // e.g. 'owner', 'admin', 'checkin_officer'
+  //     created_at: userRoles.createdAt, // or userRoles.created_at if you have that column
+  //   })
+  //   .from(userRoles)
+  //   .innerJoin(events, eq(userRoles.itemId, events.event_id))
+  //   .where(and(eq(userRoles.userId, userId), eq(userRoles.itemType, "event"), eq(userRoles.status, "active")));
 
   // 3) Combine queries with unionAll
   //    Drizzle’s unionAll can combine multiple queries of the same shape
   //    (same selected columns & data types).
   //    We then .orderBy, .limit, .offset on the unioned result.
 
-  const combinedResultsQuery = unionAll(rewardQuery, registrantQuery, userRolesQuery)
+  const combinedResultsQuery = unionAll(rewardQuery, registrantQuery)
     .orderBy((row) => row.created_at)
     .limit(limit)
     .offset(offset);
