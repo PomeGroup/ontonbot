@@ -603,19 +603,13 @@ export async function sendLogNotification(
 export const renderUpdateEventMessage = (
   username: string | number,
   eventUuid: string,
+  event_title:string,
   oldChanges: any,
   updateChanges: any
 ): string => {
   return `
-@${username} <b>Updated</b> an event <code>${eventUuid}</code> successfully
-
-Before:
-<pre><code>${removeSecretKey(oldChanges)}</code></pre>
-
-After:
-<pre><code>${removeSecretKey(updateChanges)}</code></pre>
-
-Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
+@${username} <b>Updated</b> event <code>${event_title}</code> successfully
+🔗Event Link: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
 `;
 };
 

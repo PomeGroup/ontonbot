@@ -671,6 +671,7 @@ const updateEvent = eventManagerPP
         const logMessage = renderUpdateEventMessage(
           opts.ctx.user.username || opts.ctx.user.user_id,
           eventUuid,
+          eventData.title,
           oldChanges,
           updateChanges
         );
