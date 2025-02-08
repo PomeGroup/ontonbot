@@ -9,7 +9,7 @@ export const eventRegistrants = pgTable(
   "event_registrants",
   {
     id: serial("id").primaryKey(),
-    event_uuid: uuid("event_uuid"),
+    event_uuid: uuid("event_uuid").notNull(),
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
 
     status: eventRegistrantStatus("status").default("pending").notNull(),

@@ -23,7 +23,6 @@ import { TRPCError } from "@trpc/server";
 import { logSQLQuery } from "@/lib/logSQLQuery";
 import { logger } from "../utils/logger";
 
-
 export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) => {
   const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData);
 
@@ -43,7 +42,6 @@ export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) 
 
   return { isOwner: true, valid, initDataJson };
 };
-
 
 export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
   const data = validateMiniAppData(rawInitData);
@@ -185,16 +183,16 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
   //   .innerJoin(users, eq(events.owner, users.user_id))
   //   .where(and(eq(users.user_id, userId), eq(users.role, "organizer")));
 
-  // c) ticketsQuery => user’s paid events (tickets)
-  const ticketsQuery = db
-    .select({
-      event_uuid: tickets.event_uuid,
-      user_id: tickets.user_id,
-      role: sql<string>`'participant'`.as("role"),
-      created_at: tickets.created_at,
-    })
-    .from(tickets)
-    .where(eq(tickets.user_id, userId));
+  // // c) ticketsQuery => user’s paid events (tickets)
+  // const ticketsQuery = db
+  //   .select({
+  //     event_uuid: tickets.event_uuid,
+  //     user_id: tickets.user_id,
+  //     role: sql<string>`'participant'`.as("role"),
+  //     created_at: tickets.created_at,
+  //   })
+  //   .from(tickets)
+  //   .where(eq(tickets.user_id, userId));
 
   // d) registrantQuery => from eventRegistrants table
   const registrantQuery = db
@@ -206,30 +204,24 @@ export const getUserEvents = async (userId: number | null, limit: number | 100, 
     })
     .from(eventRegistrants)
     .where(eq(eventRegistrants.user_id, userId));
-  // const userRolesQuery = db
-  //   .select({
-  //     event_uuid: events.event_uuid,         // from events
-  //     user_id: userRoles.userId,            // from userRoles
-  //     role: userRoles.role,                 // e.g. 'owner', 'admin', 'checkin_officer'
-  //     created_at: userRoles.createdAt,      // or userRoles.created_at if you have that column
-  //     owner: events.owner,                  // from events
-  //   })
-  //   .from(userRoles)
-  //   .innerJoin(events, eq(userRoles.itemId, events.event_id))
-  //   .where(
-  //     and(
-  //       eq(userRoles.userId, userId),
-  //       eq(userRoles.itemType, "event"),
-  //       eq(userRoles.status, "active"),
-  //     )
-  //   );
+
+  const userRolesQuery = db
+    .select({
+      event_uuid: events.event_uuid, // from events
+      user_id: userRoles.userId, // from userRoles
+      role: userRoles.role, // e.g. 'owner', 'admin', 'checkin_officer'
+      created_at: userRoles.createdAt, // or userRoles.created_at if you have that column
+    })
+    .from(userRoles)
+    .innerJoin(events, eq(userRoles.itemId, events.event_id))
+    .where(and(eq(userRoles.userId, userId), eq(userRoles.itemType, "event"), eq(userRoles.status, "active")));
 
   // 3) Combine queries with unionAll
   //    Drizzle’s unionAll can combine multiple queries of the same shape
   //    (same selected columns & data types).
   //    We then .orderBy, .limit, .offset on the unioned result.
-  // @ts-ignore (if needed, depending on your version/typing)
-  const combinedResultsQuery = unionAll(rewardQuery, ticketsQuery, registrantQuery , userRolesQuery)
+
+  const combinedResultsQuery = unionAll(rewardQuery, registrantQuery, userRolesQuery)
     .orderBy((row) => row.created_at)
     .limit(limit)
     .offset(offset);
@@ -500,7 +492,12 @@ export const getEventsForSpecialRole = async (userRole: string, userId?: number)
   }
 };
 
-export const getOrganizerHosted = async (params: { organizerId?: number; hidden: boolean; offset: number; limit: number }) => {
+export const getOrganizerHosted = async (params: {
+  organizerId?: number;
+  hidden: boolean;
+  offset: number;
+  limit: number;
+}) => {
   const { organizerId, hidden = false, offset, limit } = params;
 
   if (!organizerId) {
@@ -525,17 +522,11 @@ export const getOrganizerHosted = async (params: { organizerId?: number; hidden:
 //  get ongoing events
 export const fetchOngoingEvents = async () => {
   const currentTime = Math.floor(Date.now() / 1000);
-  logger.log("check for events is ongoing in currentTime", currentTime );
+  logger.log("check for events is ongoing in currentTime", currentTime);
   return await db
     .select()
     .from(events)
-    .where(
-      and(
-        eq(events.hidden, false),
-        lt(events.start_date, currentTime),
-        gt(events.end_date, currentTime)
-      )
-    )
+    .where(and(eq(events.hidden, false), lt(events.start_date, currentTime), gt(events.end_date, currentTime)))
     .execute();
 };
 const eventDB = {
