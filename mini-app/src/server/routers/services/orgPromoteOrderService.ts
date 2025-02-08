@@ -1,8 +1,10 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema";
+import { sendLogNotification } from "@/lib/tgBot";
 import { selectUserById, updateUserRole } from "@/server/db/users";
 import { logger } from "@/server/utils/logger";
 import { InferSelectModel, eq } from "drizzle-orm";
+import { is_mainnet } from "./tonCenter";
 
 type OrderRow = InferSelectModel<typeof orders>;
 
@@ -38,6 +40,20 @@ export async function orgPromoteProcessOrder(order: OrderRow): Promise<void> {
           })
           .where(eq(orders.uuid, order.uuid))
           .execute();
+        /* -------------------------------------------------------------------------- */
+        const prefix = is_mainnet ? "" : "testnet.";
+
+        await sendLogNotification({
+          message: `<b> 🧙‍♂️Promote Organizer🧙‍♂️ </b>
+
+👤user_id : <code>${user?.user_id}</code>
+👤username : @${user?.username}
+<a href='https://${prefix}tonviewer.com/${order.trx_hash}'>💰TRX</a>
+
+<b> 🧙‍♂️Promote Organizer🧙‍♂️ </b>
+`,
+          topic: "payments",
+        });
       } else {
         logger.error("failed_to_promote_organizer", order.user_id, result.error);
       }
