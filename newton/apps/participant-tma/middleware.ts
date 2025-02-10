@@ -33,8 +33,8 @@ export async function middleware(req: NextRequest) {
       const isMysteryUtm = tgAppStartParam.length >= 7 && tgAppStartParam.length <= 12;
       if (isMysteryUtm) {
 
-        console.log(`affilate_redirect_${tgAppStartParam}`)
-        const mysteryUUID = "19cc1849-90c2-4275-89b1-1cc6d77b3b82";
+        // console.log(`affilate_redirect_${tgAppStartParam}`)
+        const mysteryUUID = "4ddfab00-33c0-426a-b03f-a50bdcd72454";
         const url = new URL(`/ptma/event/${mysteryUUID}`, req.nextUrl.origin);
         url.searchParams.set("not_authenticated", userToken ? "false" : "true");
 
