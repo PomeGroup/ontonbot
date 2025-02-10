@@ -7,7 +7,7 @@ import {
   renderUpdateEventMessage,
   sendLogNotification,
 } from "@/lib/tgBot";
-import { registerActivity, updateActivity } from "@/lib/ton-society-api";
+import { findActivity, registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
@@ -66,6 +66,38 @@ async function shouldEventBeHidden(event_is_paid: boolean, user_id: number) {
 /* -------------------------------------------------------------------------- -------------------------------------------- */
 /* -------------------------------------------------------------------------- -------------------------------------------- */
 
+async function updateEventSbtCollection(
+  start_date: number | null | undefined,
+  end_date: number | null | undefined,
+  activity_id: number | null | undefined,
+  sbt_collection_address: string | null | undefined
+) {
+  if (!start_date || !end_date || !activity_id) return;
+  /* -------------------------------------------------------------------------- */
+  const now = Date.now();
+  if (now < start_date) return;
+  /* -------------------------------------------------------------------------- */
+  if (sbt_collection_address) return;
+  /* -------------------------------------------------------------------------- */
+  // Keeping Low Load if sbt-collection is not
+  // Check only 10% of time if event is not ended
+  const checkSbtCollection = now > end_date ? now % 3 !== 1 : now % 10 === 1;
+  if (checkSbtCollection) {
+    try {
+      const result = await findActivity(activity_id);
+      const sbt_collection_address = result.data.rewards.collection_address;
+      if (sbt_collection_address)
+        await db
+          .update(events)
+          .set({ sbt_collection_address: sbt_collection_address })
+          .where(eq(events.activity_id, activity_id))
+          .execute();
+    } catch (error) {
+      return;
+    }
+  }
+}
+
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const userRole = opts.ctx.user.role;
@@ -84,6 +116,13 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       message: "event not found",
     });
   }
+  //update sbt_collection_address from ton-society if not exists
+  updateEventSbtCollection(
+    eventData.start_date,
+    eventData.end_date,
+    eventData.activity_id,
+    eventData.sbt_collection_address
+  );
 
   //If event is hidden or not enabled
   if (eventData.hidden || !eventData.enabled) {
@@ -125,7 +164,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     // isCustom: await userFlagsDB.checkUserCustomFlagBoolean(eventData.owner!, "custom_registration_1"),
     isCustom: true,
   };
-  
+
   // If the event does NOT require registration, just return data
   if (!eventData.has_registration) {
     return {
