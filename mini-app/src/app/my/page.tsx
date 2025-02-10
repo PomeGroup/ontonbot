@@ -3,9 +3,9 @@ import { Button, Card } from "konsta/react";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
 import calendarStarIcon from "./calendar-star.svg";
 import Image from "next/image";
-import Typography from "../../components/Typography";
+import Typography from "@/components/Typography";
 import { ArrowRight } from "lucide-react";
-import BottomNavigation from "../../components/BottomNavigation";
+import BottomNavigation from "@/components/BottomNavigation";
 import tonIcon from "@/components/icons/ton.svg";
 import { useEffect, useState } from "react";
 import { cn } from "@/utils";
@@ -21,15 +21,16 @@ import channelAvatar from "@/components/icons/channel-avatar.svg";
 import ActionCard from "@/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";
 import LoadableImage from "@/components/LoadableImage";
+import solarCupOutline from "@/components/icons/solar-cup-outline.svg";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!useTonAddress();
   const { setSection } = useSectionStore();
-  const paid = user?.role === "organizer" || user?.role === "admin" ;
+  const paid = user?.role === "organizer" || user?.role === "admin";
   const router = useRouter();
-  if(!user) return null;
-
+  if (!user) return null;
+  const userTotalPoints = 220;
   return (
     <div className="bg-[#EFEFF4] py-4 min-h-screen mb-[calc(-1*var(--tg-safe-area-inset-bottom))]">
       {paid ? <InlineChannelCard data={user} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
@@ -60,7 +61,15 @@ export default function ProfilePage() {
           paid ? { items: "Events", count: user?.hosted_event_count || 0 } : { items: "Become an organizer first" },
         ]}
       />
-
+      <ActionCard
+        onClick={() => {
+          router.push("/my/points/");
+        }}
+        iconSrc={solarCupOutline}
+        title="My Points"
+        subtitle="You Acheived"
+        footerTexts={[{ items: "Points", count: userTotalPoints || 0 }]}
+      />
       <ConnectWalletCard />
       <PaymentCard visible={!paid && hasWallet} />
 
@@ -86,7 +95,7 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
   if (!data) return null;
   return (
     <Card
-      className='mt-0 cursor-pointer'
+      className="mt-0 cursor-pointer"
       onClick={() => {
         router.push(`/my/edit`);
       }}
@@ -129,8 +138,8 @@ function OrganizerProgress({ step }: { step: 1 | 2 }) {
         variant="subheadline1"
         className="text-[#575757] font-medium mb-3"
       >
-        Step forward as an organizer, Create your Organizer Channel,
-        Conduct wonderful events and distribute SBT badges to your participants.
+        Step forward as an organizer, Create your Organizer Channel, Conduct wonderful events and distribute SBT badges to
+        your participants.
         <br />
         <b>{step === 1 ? "1. Connect your wallet." : "2. Pay one-time fee to become an organizer"}</b>
       </Typography>
