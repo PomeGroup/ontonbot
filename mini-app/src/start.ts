@@ -58,7 +58,7 @@ async function MainCronJob() {
 
   new CronJob("*/9 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
 
-  new CronJob("*/5 * * * * *", cronJob(TsCsbtTicket_Order), null, true);
+  new CronJob("*/11 * * * * *", cronJob(TsCsbtTicket_Order), null, true);
 
   new CronJob("*/21 * * * * *", OrganizerPromoteProcessing, null, true);
 }
