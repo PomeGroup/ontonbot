@@ -159,10 +159,10 @@ const UserCustomRegisterForm = () => {
             </ListInput>
           )}
 
-          {/* 10. Your main request/goal for attending the event? - required */}
+          {/* 10. Your event request/goal for attending the event? - required */}
           <ListInput
             outline
-            label="Your Main Request/Goal"
+            label="Your Event Request/Goal"
             name="main_goal"
             error={formErrors?.main_goal?.[0]}
             placeholder="e.g., Networking, Funding, Learning, etc."

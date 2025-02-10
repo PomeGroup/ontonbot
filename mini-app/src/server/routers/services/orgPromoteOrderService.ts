@@ -3,7 +3,7 @@ import { orders } from "@/db/schema";
 import { sendLogNotification } from "@/lib/tgBot";
 import { selectUserById, updateUserRole } from "@/server/db/users";
 import { logger } from "@/server/utils/logger";
-import { InferSelectModel, eq } from "drizzle-orm";
+import { InferSelectModel, and, count, eq } from "drizzle-orm";
 import { is_mainnet } from "./tonCenter";
 
 type OrderRow = InferSelectModel<typeof orders>;
@@ -41,16 +41,24 @@ export async function orgPromoteProcessOrder(order: OrderRow): Promise<void> {
           .where(eq(orders.uuid, order.uuid))
           .execute();
         /* -------------------------------------------------------------------------- */
+        const org_promotion_orders = await trx
+          .select({ rowcount: count() })
+          .from(orders)
+          .where(and(eq(orders.state, "completed"), eq(orders.order_type, "promote_to_organizer")))
+          .execute();
+        const completed_org_promotion_count = org_promotion_orders.pop()?.rowcount;
+        /* -------------------------------------------------------------------------- */
         const prefix = is_mainnet ? "" : "testnet.";
 
         await sendLogNotification({
-          message: `<b> 🧙‍♂️Promote Organizer🧙‍♂️ </b>
+          message: `<b> 🧙‍♂️ Organizer Promotion🧙‍♂️ </b>
 
 👤user_id : <code>${user?.user_id}</code>
 👤username : @${user?.username}
 <a href='https://${prefix}tonviewer.com/${order.trx_hash}'>💰TRX</a>
 
-<b> 🧙‍♂️Promote Organizer🧙‍♂️ </b>
+<code>${order.total_price}</code> TON paid to become organizer
+Serial Id: ${completed_org_promotion_count}
 `,
           topic: "payments",
         });
