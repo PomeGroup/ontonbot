@@ -79,12 +79,10 @@ function UnforwardedChannelCard({ data }: ChannelCardProps, ref: ForwardedRef<HT
         width={300}
         height={300}
         alt={data.org_channel_name}
-        wrapperClassName='mb-3'
+        wrapperClassName="mb-3"
       />
       <div className="text-center">
-        <div
-          className="font-[590] mb-2 text-[17px] leading-[22px] tracking h-11 overflow-hidden line-clamp-2 break-all"
-        >
+        <div className="font-[590] mb-2 text-[17px] leading-[22px] tracking h-11 overflow-hidden line-clamp-2 ">
           {data.org_channel_name || "Untitled Organizer"}
         </div>
         <div className="flex gap-1 justify-center">
