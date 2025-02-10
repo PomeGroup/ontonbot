@@ -45,7 +45,12 @@ export async function POST(request: Request) {
 
     if (eventData.owner !== userId) return Response.json({ message: "Unauthorized Access to event" }, { status: 401 });
 
-    if (!eventData.activity_id) return Response.json({ message: "Event Not Published Yet" }, { status: 400 });
+    if (!eventData.activity_id) return Response.json({ message: "Event not published yet" }, { status: 400 });
+
+    const now = Date.now();
+
+    if (eventData.start_date > now || now < eventData.end_date)
+      return Response.json({ message: "Event is not ongoing" }, { status: 400 });
 
     const society_hub_value =
       typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
