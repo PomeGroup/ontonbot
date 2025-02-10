@@ -57,6 +57,13 @@
       "when": 1738769254096,
       "tag": "0007_dizzy_scream",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1739161702736,
+      "tag": "0008_dusty_annihilus",
+      "breakpoints": true
     }
   ]
 }

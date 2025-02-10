@@ -18,13 +18,13 @@ export const events = pgTable(
     title: text("title").notNull(),
     subtitle: text("subtitle").notNull(),
     description: text("description").notNull(),
-    image_url: text("image_url"),
+    image_url: text("image_url").notNull(),
     wallet_address: text("wallet_address"),
 
     society_hub: text("society_hub"),
     society_hub_id: text("society_hub_id"),
     activity_id: integer("activity_id"),
-    collection_address: text("collection_address"),
+    sbt_collection_address: text("sbt_collection_address"),
     secret_phrase: text("secret_phrase").default(""),
     start_date: integer("start_date").notNull(),
     end_date: integer("end_date").notNull(),
@@ -32,7 +32,7 @@ export const events = pgTable(
 
     location: text("location"),
     website: json("website"),
-    owner: bigint("owner", { mode: "number" }).references(() => users.user_id),
+    owner: bigint("owner", { mode: "number" }).references(() => users.user_id).notNull(),
 
     ticketToCheckIn: boolean("ticketToCheckIn").default(false),
     participationType: eventParticipationType("participation_type").default("online").notNull(),
@@ -49,7 +49,7 @@ export const events = pgTable(
     /* ------------------------- // Event Registration > ------------------------ */
 
     /* ------------------------------- Paid Event ------------------------------- */
-    has_payment: boolean("has_payment"),
+    has_payment: boolean("has_payment").notNull().default(false),
     /* ------------------------------- Paid Event ------------------------------- */
 
     created_at: timestamp("created_at").defaultNow(),
