@@ -6,6 +6,7 @@ import * as jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { NextRequest } from "next/server";
 import { z, ZodError } from "zod";
+import "@/lib/gracefullyShutdown";
 
 const userDataSchema = z.object({
   id: z.number(),
@@ -36,7 +37,15 @@ export async function GET(req: NextRequest) {
       console.error(error);
       console.error("==========");
 
-      return Response.json({ error: "invalid_init_data" }, { status: 403, headers: { "Content-Type": "application/json" } });
+
+      return Response.json(
+        { error: "invalid_init_data" },
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      
     }
 
     const userRaw = initDataSearchParams.get("user");

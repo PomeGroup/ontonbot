@@ -9,7 +9,7 @@ import { logger } from "@/server/utils/logger";
 import { getAuthenticatedUserApi } from "@/server/auth";
 import { handleTrpcError } from "@/server/utils/error_utils";
 import { createUserRewardLink } from "@/lib/ton-society-api";
-
+import "@/lib/gracefullyShutdown";
 /* -------------------------------------------------------------------------- */
 /*                              Reward Api Schema                             */
 /* -------------------------------------------------------------------------- */
@@ -20,6 +20,7 @@ const rewardCreateSchema = z.object({
 
 /* -------------------------------------------------------------------------- */
 /*                                 Main Route                                 */
+
 /* -------------------------------------------------------------------------- */
 export async function POST(request: Request) {
   try {

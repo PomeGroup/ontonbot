@@ -1,6 +1,7 @@
 import { db } from "@/db/db";
 import { apiKeyAuthentication, getAuthenticatedUser } from "@/server/auth";
 import { NextRequest } from "next/server";
+import "@/lib/gracefullyShutdown";
 
 type OptionsProps = {
   params: {

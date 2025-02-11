@@ -1,3 +1,5 @@
+import "@/lib/gracefullyShutdown";
+
 const handler = async (req: Request) => {
   // Extract query parameters
 
@@ -36,3 +38,4 @@ const handler = async (req: Request) => {
 
 // Export the handler for both GET and POST requests
 export { handler as GET, handler as POST };
+export const dynamic = "force-dynamic";

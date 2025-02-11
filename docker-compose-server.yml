@@ -364,6 +364,48 @@ services:
         tag: "docker.${BRANCH_NAME}-mini-app-sbt-worker"
         fluentd-async-connect: "true"
 
+  mini-app-moderation-bot:
+    hostname: mini-app-moderation-bot
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    <<: *default-extra-hosts
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+          cpus: "1.0"
+      mode: global
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 20
+        window: 40s
+    environment:
+      <<: *common-env
+      MNEMONIC: ${MNEMONIC}
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - fluentd
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      - onton-network
+    command: [ "yarn", "run", "start:moderation" ]
+    secrets:
+      - registry-onton-config
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app-moderation-bot"
+        fluentd-async-connect: "true"
+
   mini-app-poa-worker:
     hostname: mini-app-poa-worker
     image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
@@ -487,46 +529,6 @@ services:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-participant-tma"
         fluentd-async-connect: "true"
-
-  #  nft-manager:
-  #    hostname: nft-manager
-  #    image: ${REGISTRY_URL}/${GITHUB_REPO}/nft-manager:${BRANCH_NAME}-latest
-  #    deploy:
-  #      resources:
-  #        limits:
-  #          memory: 3000M
-  #          cpus: "3.0"
-  #      mode: global
-  #      update_config:
-  #        failure_action: rollback
-  #        order: start-first
-  #        parallelism: 1
-  #      placement:
-  #        constraints:
-  #          - node.role == manager
-  #      restart_policy:
-  #        condition: on-failure
-  #        delay: 10s
-  #    depends_on:
-  #      - postgres
-  #      - redis
-  #      - minio
-  #      - mini-app
-  #      - fluentd
-  #    environment:
-  #      <<: *common-env
-  #      MNEMONIC: ${MNEMONIC}
-  #    networks:
-  #      - onton-network
-  #    secrets:
-  #      - registry-onton-config
-  #    logging:
-  #      driver: "fluentd"
-  #      options:
-  #        fluentd-address: "127.0.0.1:24224"
-  #        tag: "docker.${BRANCH_NAME}-nft-manager"
-  #        fluentd-async-connect: "true"
-
 
   website:
     hostname: website
