@@ -23,10 +23,7 @@ export async function GET(req: NextRequest) {
     const initData = req.nextUrl.searchParams.get("init_data");
 
     if (!initData) {
-      return Response.json(
-        { error: "no_init_data" },
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+      return Response.json({ error: "no_init_data" }, { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
     const initDataSearchParams = new URLSearchParams(initData);
@@ -39,10 +36,7 @@ export async function GET(req: NextRequest) {
       console.error(error);
       console.error("==========");
 
-      return Response.json(
-        { error: "invalid_init_data" },
-        { status: 403, headers: { "Content-Type": "application/json" } }
-      );
+      return Response.json({ error: "invalid_init_data" }, { status: 403, headers: { "Content-Type": "application/json" } });
     }
 
     const userRaw = initDataSearchParams.get("user");
@@ -112,10 +106,6 @@ export async function GET(req: NextRequest) {
       }
     );
   } catch (error) {
-    console.error("==============================");
-    // console.error("Error:", error);
-    console.error("==============================");
-
     if (error instanceof ZodError) {
       return Response.json(
         {
@@ -125,6 +115,9 @@ export async function GET(req: NextRequest) {
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
+    console.error("==============================");
+    console.error("Error:", error);
+    console.error("==============================");
 
     return Response.json(
       { error: "server_error" },
