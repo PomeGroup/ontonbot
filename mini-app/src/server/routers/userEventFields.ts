@@ -6,6 +6,8 @@ import { initDataProtectedProcedure, router } from "../trpc";
 import userEventFieldsDB from "@/server/db/userEventFields.db";
 import { getEventById } from "@/server/db/events";
 import eventFieldsDB from "@/server/db/eventFields.db";
+import { checkRateLimit } from "@/lib/checkRateLimit";
+import { EVENT_PASSWORD_RATE_LIMIT } from "@/constants";
 
 export const userEventFieldsRouter = router({
   // protect
@@ -18,6 +20,18 @@ export const userEventFieldsRouter = router({
       })
     )
     .mutation(async (opts) => {
+      const { allowed, remaining } = await checkRateLimit(
+        String(opts.ctx.user.user_id),
+        "userEventFields.upsertUserEventField",
+        EVENT_PASSWORD_RATE_LIMIT.max,
+        EVENT_PASSWORD_RATE_LIMIT.window
+      );
+      if (!allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Rate limit exceeded. Please wait a minute.",
+        });
+      }
       const eventData = await getEventById(opts.input.event_id);
 
       if (eventData === null) {
@@ -27,6 +41,12 @@ export const userEventFieldsRouter = router({
         });
       }
 
+      if (eventData.has_registration === true) {
+        throw new TRPCError({
+          message: "it is not possible to use the password for the events with registration",
+          code: "BAD_REQUEST",
+        });
+      }
       const startDate = Number(eventData.start_date) * 1000;
       const endDate = Number(eventData.end_date) * 1000;
 
@@ -65,7 +85,7 @@ export const userEventFieldsRouter = router({
 
       if (!isFixedPasswordCorrect && !isRealPasswordCorrect) {
         throw new TRPCError({
-          message: "Password incorrect, try again",
+          message: `Password incorrect, try again. ${remaining}/${EVENT_PASSWORD_RATE_LIMIT.max} attempts remaining.`,
           code: TRPC_ERROR_CODES_BY_NUMBER["-32003"],
         });
       }
