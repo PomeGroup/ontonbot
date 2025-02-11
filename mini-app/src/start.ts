@@ -9,7 +9,7 @@ import telegramService from "@/server/routers/services/telegramService";
 import { RewardType } from "@/types/event.types";
 import { CronJob } from "cron";
 import "dotenv/config";
-import { desc, and, asc, count, eq, isNotNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull, lt, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
 import { rounder, sleep } from "./utils";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
@@ -25,6 +25,7 @@ import { selectUserById } from "./server/db/users";
 import { logger } from "./server/utils/logger";
 import { orgPromoteProcessOrder } from "./server/routers/services/orgPromoteOrderService";
 import { CsbtTicket } from "./server/routers/services/rewardsService";
+import "@/lib/gracefullyShutdown";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -103,6 +104,7 @@ function cronJob(fn: (_: () => any) => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                                   Rewards                                  */
+
 /* -------------------------------------------------------------------------- */
 
 async function createRewards(pushLockTTl: () => any) {
@@ -252,6 +254,7 @@ async function handleRewardError(reward: RewardType, error: any) {
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 /*                                Transactions                                */
+
 /* -------------------------------------------------------------------------- */
 async function CheckTransactions(pushLockTTl: () => any) {
   // Get Orders to be Checked (Sort By Order.TicketDetails.Id)
@@ -319,6 +322,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                             Create Event Orders                            */
+
 /* -------------------------------------------------------------------------- */
 async function CreateEventOrders(pushLockTTl: () => any) {
   // Get Pending(paid) Orders to create event
@@ -480,6 +484,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                            Event Update Capacity                           */
+
 /* -------------------------------------------------------------------------- */
 async function UpdateEventCapacity(pushLockTTl: () => any) {
   const results = await db
@@ -536,6 +541,7 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                                 NFT Minter                                 */
+
 /* -------------------------------------------------------------------------- */
 async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   // Get Orders to be Minted
@@ -608,7 +614,10 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       //   )
       // )
       const nft_count_result = await db
-        .select({ count: sql`count(*)`.mapWith(Number) })
+        .select({
+          count: sql`count
+              (*)`.mapWith(Number),
+        })
         .from(nftItems)
         .where(eq(nftItems.event_uuid, event_uuid!))
         .execute();
@@ -687,6 +696,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                                 TS CSBT Ticket                             */
+
 /* -------------------------------------------------------------------------- */
 async function TsCsbtTicket_Order(pushLockTTl: () => any) {
   // Get Orders to be Minted
@@ -800,6 +810,7 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                        Payment to Organizer Reminder                       */
+
 /* -------------------------------------------------------------------------- */
 async function sendPaymentReminder() {
   logger.log("sendPaymentReminder");
@@ -828,7 +839,8 @@ async function sendPaymentReminder() {
     logger.log("event_payment_reminder", event.events.event_uuid);
     const totalAmount = await db
       .select({
-        totalPrice: sql`SUM(${orders.total_price})`, // Calculates the sum of total_price
+        totalPrice: sql`SUM
+            (${orders.total_price})`, // Calculates the sum of total_price
       })
       .from(orders)
       .where(
@@ -898,6 +910,7 @@ Recipient : <code>${recipient_address}</code>
 
 /* -------------------------------------------------------------------------- */
 /*                     Organizer Promote Order Processing                    */
+
 /* -------------------------------------------------------------------------- */
 async function OrganizerPromoteProcessing() {
   const org_orders = await db

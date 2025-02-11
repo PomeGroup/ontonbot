@@ -83,6 +83,7 @@ x-common-env: &common-env
   IP_SOCKET: ${IP_SOCKET}
   SOCKET_PORT: ${SOCKET_PORT}
   ONTON_API_SECRET: ${ONTON_API_SECRET}
+  NEXT_PUBLIC_ENV: ${NEXT_PUBLIC_ENV}
 
 services:
   caddy:
@@ -128,7 +129,7 @@ services:
     volumes:
       - ./data/minio_data:/data
       - ./devops/minio-init.sh:/usr/bin/entrypoint.sh # Mount the script into the container
-    entrypoint: ["/usr/bin/entrypoint.sh"] # Use the custom entrypoint script
+    entrypoint: [ "/usr/bin/entrypoint.sh" ] # Use the custom entrypoint script
     environment:
       <<: *common-env
 
@@ -279,7 +280,7 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_MINI_APP_CRON}"
-    command: ["pnpm", "run", "start-cron"]
+    command: [ "pnpm", "run", "start-cron" ]
 
   mini-app-poa-worker:
     hostname: mini-app-poa-worker
@@ -303,7 +304,7 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_POA_WORKER}"
-    command: ["pnpm", "run", "start:poa"]
+    command: [ "pnpm", "run", "start:poa" ]
 
   mini-app-notification-socket:
     hostname: mini-app-notification-socket
@@ -329,7 +330,7 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_SOCKET}"
-    command: ["pnpm", "run", "start:socket"]
+    command: [ "pnpm", "run", "start:socket" ]
 
   participant-tma:
     hostname: participant-tma

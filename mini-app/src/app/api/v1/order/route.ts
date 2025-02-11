@@ -6,6 +6,7 @@ import { selectEventByUuid } from "@/server/db/events";
 import { Address } from "@ton/core";
 import { and, count, eq, or } from "drizzle-orm";
 import { z } from "zod";
+import "@/lib/gracefullyShutdown";
 
 const addOrderSchema = z.object({
   event_uuid: z.string().uuid(),
