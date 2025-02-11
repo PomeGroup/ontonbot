@@ -20,8 +20,13 @@ interface TypographyProps {
   children: ReactNode;
   bold?: boolean;
   className?: string;
+  truncate?: boolean;
 }
 
-export default function Typography({ variant, bold, children, className }: TypographyProps) {
-  return <div className={cn(typographyClassNameMappings[variant], bold && "!font-bold", className)}>{children}</div>;
+export default function Typography({ variant, bold, children, className, truncate }: TypographyProps) {
+  return (
+    <div className={cn(typographyClassNameMappings[variant], bold && "!font-bold", truncate && "truncate", className)}>
+      {children}
+    </div>
+  );
 }

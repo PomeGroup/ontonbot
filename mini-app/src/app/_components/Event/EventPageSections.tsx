@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Images from "@/app/_components/atoms/images";
 import Labels from "@/app/_components/atoms/labels";
 import EventDates from "@/app/_components/EventDates";
@@ -22,6 +22,7 @@ import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
 import { canUserManageEvent } from "@/lib/userRolesUtils";
 import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
+import { Address } from "@ton/core";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -191,6 +192,119 @@ const EventRegistrationStatus = ({
   return statusConfigs[registrantStatus]?.() ?? null;
 };
 
+const OrganizerCard = React.memo(() => {
+  const { eventData } = useEventData();
+  const router = useRouter();
+
+  const organizer = eventData?.data?.organizer;
+
+  if (!organizer) return null;
+
+  return (
+    <Card
+      margin="mx-0"
+      contentWrap={false}
+      onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
+    >
+      <Typography
+        variant="title3"
+        className="font-bold mb-2"
+      >
+        Organizer
+      </Typography>
+      <div className="w-full flex gap-3 items-stretch">
+        <LoadableImage
+          alt={organizer.org_channel_name}
+          src={organizer.org_image || channelAvatar.src}
+          width={48}
+          height={48}
+        />
+        <div className="flex flex-col grow justify-between overflow-hidden">
+          <Typography
+            variant="headline"
+            className="text-[#007AFF] font-normal line-clamp-2"
+          >
+            {organizer.org_channel_name || "Untitled organizer"}
+          </Typography>
+        </div>
+        <div className="self-center">
+          <ArrowRight className="text-main-button-color" />
+        </div>
+      </div>
+    </Card>
+  );
+});
+OrganizerCard.displayName = "OrganizerCard";
+
+const SbtCollectionLink = React.memo(() => {
+  const { eventData } = useEventData();
+
+  const collectionAddress = eventData.data?.sbt_collection_address;
+
+  const isValidAddress = useMemo(() => {
+    try {
+      if (!collectionAddress) return false;
+      Address.parse(collectionAddress);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [collectionAddress]);
+
+  if (!isValidAddress) return null;
+
+  return (
+    <Card
+      margin="mx-0 cursor-pointer"
+      contentWrap={false}
+      onClick={() => window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank")}
+    >
+      <Typography
+        variant="title3"
+        className="font-bold"
+      >
+        SBT Reward Badge
+      </Typography>
+      <Typography
+        variant="body"
+        className=" mb-2"
+      >
+        Reward you receive by attending the event and submitting proof of attendance.
+      </Typography>
+      <div className="w-full flex gap-3 items-stretch">
+        {eventData.data?.tsRewardImage && (
+          <LoadableImage
+            alt={eventData.data?.title}
+            src={eventData.data?.tsRewardImage}
+            width={48}
+            height={48}
+          />
+        )}
+        <div className="flex flex-col grow justify-between overflow-hidden">
+          <Typography
+            variant="headline"
+            truncate
+            className="text-[#007AFF] font-normal line-clamp-2"
+          >
+            {eventData.data?.title}
+          </Typography>
+          <Typography
+            variant="subheadline1"
+            className="text-[#8E8E93]"
+            truncate
+          >
+            {collectionAddress}
+          </Typography>
+        </div>
+        <div className="self-center">
+          <ArrowRight className="text-main-button-color" />
+        </div>
+      </div>
+    </Card>
+  );
+});
+SbtCollectionLink.displayName = "SbtCollectionLink";
+
 // Main component
 export const EventSections = () => {
   const router = useRouter();
@@ -211,8 +325,6 @@ export const EventSections = () => {
   const isOnlineEvent = eventData.data?.participationType === "online";
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
-
-  const organizer = eventData?.data?.organizer;
 
   return (
     <div className="space-y-2">
@@ -243,47 +355,10 @@ export const EventSections = () => {
           isCustom={eventData.data?.registrationFromSchema?.isCustom}
         />
       )}
-
-      {organizer && (
-        <Card
-          margin="mx-0"
-          contentWrap={false}
-          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
-        >
-          <Typography
-            variant="title3"
-            className="font-bold mb-2"
-          >
-            Organizer
-          </Typography>
-          <div className="w-full flex gap-3 items-stretch">
-            <LoadableImage
-              alt={organizer.org_channel_name}
-              src={organizer.org_image || channelAvatar.src}
-              width={48}
-              height={48}
-            />
-            <div className="flex flex-col grow justify-between overflow-hidden">
-              <Typography
-                variant="headline"
-                className="text-[#007AFF] font-normal line-clamp-2"
-              >
-                {organizer.org_channel_name || "Untitled organizer"}
-              </Typography>
-              <Typography
-                variant="subheadline1"
-                className="text-[#8E8E93]"
-              >
-                <b>{organizer.hosted_event_count || "1"}</b>
-                &nbsp; events
-              </Typography>
-            </div>
-            <div className="self-center">
-              <ArrowRight className="text-main-button-color" />
-            </div>
-          </div>
-        </Card>
-      )}
+      <div className="space-y-4">
+        <OrganizerCard />
+        <SbtCollectionLink />
+      </div>
       <SupportButton />
 
       {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
