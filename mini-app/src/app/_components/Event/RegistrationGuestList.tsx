@@ -476,7 +476,7 @@ const RegistrationGuestList = () => {
         )}
         {!registrantsQuery.isFetched && registrantsQuery.isLoading && (
           <DataStatus
-            status="pending"
+            status="searching"
             title="Loading Guest List"
           />
         )}
@@ -564,7 +564,7 @@ const RegistrationGuestList = () => {
         })}
         {registrantsQuery.isFetchingNextPage && (
           <DataStatus
-            status="pending"
+            status="searching"
             title="Loading more registrants..."
           />
         )}
