@@ -191,6 +191,94 @@ const EventRegistrationStatus = ({
   return statusConfigs[registrantStatus]?.() ?? null;
 };
 
+const OrganizerCard = React.memo(() => {
+  const { eventData } = useEventData();
+  const router = useRouter();
+
+  const organizer = eventData?.data?.organizer;
+
+  if (!organizer) return null;
+
+  return (
+    <Card
+      margin="mx-0"
+      contentWrap={false}
+      onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
+    >
+      <Typography
+        variant="title3"
+        className="font-bold mb-2"
+      >
+        Organizer
+      </Typography>
+      <div className="w-full flex gap-3 items-stretch">
+        <LoadableImage
+          alt={organizer.org_channel_name}
+          src={organizer.org_image || channelAvatar.src}
+          width={48}
+          height={48}
+        />
+        <div className="flex flex-col grow justify-between overflow-hidden">
+          <Typography
+            variant="headline"
+            className="text-[#007AFF] font-normal line-clamp-2"
+          >
+            {organizer.org_channel_name || "Untitled organizer"}
+          </Typography>
+          <Typography
+            variant="subheadline1"
+            className="text-[#8E8E93]"
+          >
+            <b>{organizer.hosted_event_count || "1"}</b>
+            &nbsp; events
+          </Typography>
+        </div>
+        <div className="self-center">
+          <ArrowRight className="text-main-button-color" />
+        </div>
+      </div>
+    </Card>
+  );
+});
+OrganizerCard.displayName = "OrganizerCard";
+
+const SbtCollectionLink = React.memo(() => {
+  const { eventData } = useEventData();
+
+  const collectionAddress = eventData.data?.sbt_collection_address;
+
+  if (!collectionAddress) return null;
+
+  return (
+    <Card
+      margin="mx-0"
+      contentWrap={false}
+      onClick={() => window.open(`https://tonviewer.com/${collectionAddress}`, "_blank")}
+    >
+      <Typography
+        variant="title3"
+        className="font-bold mb-2"
+      >
+        SBT Collection
+      </Typography>
+      <div className="w-full flex gap-3 items-stretch">
+        <div className="flex flex-col grow justify-between overflow-hidden">
+          <Typography
+            variant="headline"
+            className="text-[#007AFF] font-normal line-clamp-2"
+          >
+            {collectionAddress}
+          </Typography>
+        </div>
+        <div className="self-center">
+          <ArrowRight className="text-main-button-color" />
+        </div>
+      </div>
+    </Card>
+  );
+});
+SbtCollectionLink.displayName = "SbtCollectionLink";
+
 // Main component
 export const EventSections = () => {
   const router = useRouter();
@@ -211,8 +299,6 @@ export const EventSections = () => {
   const isOnlineEvent = eventData.data?.participationType === "online";
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
-
-  const organizer = eventData?.data?.organizer;
 
   return (
     <div className="space-y-2">
@@ -244,46 +330,8 @@ export const EventSections = () => {
         />
       )}
 
-      {organizer && (
-        <Card
-          margin="mx-0"
-          contentWrap={false}
-          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
-        >
-          <Typography
-            variant="title3"
-            className="font-bold mb-2"
-          >
-            Organizer
-          </Typography>
-          <div className="w-full flex gap-3 items-stretch">
-            <LoadableImage
-              alt={organizer.org_channel_name}
-              src={organizer.org_image || channelAvatar.src}
-              width={48}
-              height={48}
-            />
-            <div className="flex flex-col grow justify-between overflow-hidden">
-              <Typography
-                variant="headline"
-                className="text-[#007AFF] font-normal line-clamp-2"
-              >
-                {organizer.org_channel_name || "Untitled organizer"}
-              </Typography>
-              <Typography
-                variant="subheadline1"
-                className="text-[#8E8E93]"
-              >
-                <b>{organizer.hosted_event_count || "1"}</b>
-                &nbsp; events
-              </Typography>
-            </div>
-            <div className="self-center">
-              <ArrowRight className="text-main-button-color" />
-            </div>
-          </div>
-        </Card>
-      )}
+      <OrganizerCard />
+      <SbtCollectionLink />
       <SupportButton />
 
       {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
