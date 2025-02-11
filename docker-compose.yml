@@ -248,6 +248,8 @@ services:
       args:
         <<: *common-env
     restart: "unless-stopped"
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     environment:
       <<: *common-env
     depends_on:
@@ -268,6 +270,8 @@ services:
       args:
         <<: *common-env
     restart: "unless-stopped"
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     profiles:
       - full
     environment:
@@ -291,6 +295,8 @@ services:
       args:
         <<: *common-env
     restart: "unless-stopped"
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     profiles:
       - full
     environment:
@@ -313,6 +319,8 @@ services:
       args:
         <<: *common-env
     restart: "unless-stopped"
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     profiles:
       - full
     environment:
@@ -339,6 +347,8 @@ services:
       args:
         <<: *common-env
     restart: "unless-stopped"
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     profiles:
       - full
     environment:

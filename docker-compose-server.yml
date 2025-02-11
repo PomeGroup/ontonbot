@@ -291,6 +291,8 @@ services:
       restart_policy:
         condition: any
         delay: 3s
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     environment:
       <<: *common-env
       TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -340,6 +342,8 @@ services:
         delay: 10s
         max_attempts: 20
         window: 300s
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     environment:
       <<: *common-env
       MNEMONIC: ${MNEMONIC}
@@ -382,6 +386,8 @@ services:
         delay: 10s
         max_attempts: 20
         window: 40s
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     environment:
       <<: *common-env
       MNEMONIC: ${MNEMONIC}
@@ -426,6 +432,8 @@ services:
       restart_policy:
         condition: on-failure
         delay: 5s
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     environment:
       <<: *common-env
       TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
@@ -471,6 +479,8 @@ services:
       restart_policy:
         condition: any
         delay: 20s
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
     environment:
       <<: *common-env
       TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
