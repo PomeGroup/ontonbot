@@ -44,6 +44,11 @@ export const users = pgTable(
     org_x_link: varchar("org_x_link", { length: 255 }),
     org_bio: text("org_bio"),
     org_image: varchar("org_image", { length: 255 }),
+
+    /* -------------------------------------------------------------------------- */
+    /*                                   Points                                   */
+    /* -------------------------------------------------------------------------- */
+    user_point : integer('user_point').notNull().default(0)
   },
   (table) => ({
     usernameIdx: index("users_username_idx").on(table.username),
