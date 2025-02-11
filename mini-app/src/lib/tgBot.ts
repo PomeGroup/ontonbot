@@ -199,7 +199,7 @@ interface PendingCustomReply {
 const pendingCustomReplyPrompts = new Map<number, PendingCustomReply>();
 
 // =========== Start Bot ===========
-async function startBot() {
+export async function startBot() {
   while (true) {
     if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
       logger.error("Bot token or logs group ID not found in configProtected");
@@ -290,10 +290,10 @@ async function startBot() {
         if (action === "updateEventData") {
           // Demonstration: fetch event, pretend to update DB, then edit the caption
           const updatedEvent = await getEventByUuid(eventUuid);
-          const ownerInfo = await  selectUserById(updatedEvent.owner!!);
+          const ownerInfo = await selectUserById(updatedEvent.owner!!);
 
           const updatedCaption = `
-<b>${updatedEvent.title} (Updated in ${formatDate(Date.now()/1000)})</b>
+<b>${updatedEvent.title} (Updated in ${formatDate(Date.now() / 1000)})</b>
 
 ${updatedEvent.subtitle}
 
@@ -603,7 +603,7 @@ export async function sendLogNotification(
 export const renderUpdateEventMessage = (
   username: string | number,
   eventUuid: string,
-  event_title:string,
+  event_title: string,
   oldChanges: any,
   updateChanges: any
 ): string => {
@@ -640,4 +640,4 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 };
 
 // Finally start the bot
-startBot().then(() => logger.log("startBot Function Finish ;"));
+

@@ -84,7 +84,7 @@ x-common-env: &common-env
   SOCKET_PORT: ${SOCKET_PORT}
   ONTON_API_SECRET: ${ONTON_API_SECRET}
   NEXT_PUBLIC_ENV: ${NEXT_PUBLIC_ENV}
-
+  IP_MINI_APP_MODERATION: ${IP_MINI_APP_MODERATION}
 services:
   caddy:
     image: caddy:latest
@@ -280,8 +280,30 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_MINI_APP_CRON}"
-    command: [ "pnpm", "run", "start-cron" ]
+    command: [ "yarn", "run", "start-cron" ]
 
+  mini-app-moderation-bot:
+    hostname: mini-app-moderation-bot
+    container_name: ${ENV}-mini-app-moderation-bot
+    build:
+      context: ./mini-app
+      target: production
+      args:
+        <<: *common-env
+    restart: "unless-stopped"
+    profiles:
+      - full
+    environment:
+      <<: *common-env
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./data/drizzle_data:/app/drizzle
+    networks:
+      onton-network:
+        ipv4_address: "${IP_MINI_APP_MODERATION}"
+    command: [ "yarn", "run", "start:moderation" ]
   mini-app-poa-worker:
     hostname: mini-app-poa-worker
     container_name: ${ENV}-mini-app-poa-worker
@@ -304,7 +326,7 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_POA_WORKER}"
-    command: [ "pnpm", "run", "start:poa" ]
+    command: [ "yarn", "run", "start:poa" ]
 
   mini-app-notification-socket:
     hostname: mini-app-notification-socket
@@ -330,7 +352,7 @@ services:
     networks:
       onton-network:
         ipv4_address: "${IP_SOCKET}"
-    command: [ "pnpm", "run", "start:socket" ]
+    command: [ "yarn", "run", "start:socket" ]
 
   participant-tma:
     hostname: participant-tma
