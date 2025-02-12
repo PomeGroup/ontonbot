@@ -36,7 +36,7 @@ import { timestampToIsoString } from "@/lib/DateAndTime";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
 import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
-import { organizerTsVerified, userFlagsDB, userHasModerationAccess } from "../db/userFlags.db";
+import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
 import { tgBotModerationMenu } from "@/lib/TgBotTools";
 import { userRolesDB } from "@/server/db/userRoles.db";
 
@@ -64,13 +64,15 @@ async function shouldEventBeHidden(event_is_paid: boolean, user_id: number) {
 /* -------------------------------------------------------------------------- -------------------------------------------- */
 /* -------------------------------------------------------------------------- -------------------------------------------- */
 /* -------------------------------------------------------------------------- -------------------------------------------- */
+
 /* -------------------------------------------------------------------------- -------------------------------------------- */
 
 async function updateEventSbtCollection(
   start_date: number | null | undefined,
   end_date: number | null | undefined,
   activity_id: number | null | undefined,
-  sbt_collection_address: string | null | undefined
+  sbt_collection_address: string | null | undefined,
+  event_uuid: string
 ) {
   if (!start_date || !end_date || !activity_id) return;
   /* -------------------------------------------------------------------------- */
@@ -86,12 +88,14 @@ async function updateEventSbtCollection(
     try {
       const result = await findActivity(activity_id);
       const sbt_collection_address = result.data.rewards.collection_address;
-      if (sbt_collection_address)
+      if (sbt_collection_address) {
         await db
           .update(events)
           .set({ sbt_collection_address: sbt_collection_address })
           .where(eq(events.activity_id, activity_id))
           .execute();
+        await eventDB.deleteEventCache(event_uuid);
+      }
     } catch (error) {
       return;
     }
@@ -104,7 +108,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const event_uuid = opts.input.event_uuid;
   const eventData = {
     payment_details: {} as Partial<EventPaymentSelectType>,
-    ...(await eventDB.selectEventByUuid(event_uuid)),
+    ...(await eventDB.fetchEventByUuid(event_uuid)),
   };
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
@@ -117,11 +121,12 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     });
   }
   //update sbt_collection_address from ton-society if not exists
-  updateEventSbtCollection(
+  await updateEventSbtCollection(
     eventData.start_date,
     eventData.end_date,
     eventData.activity_id,
-    eventData.sbt_collection_address
+    eventData.sbt_collection_address,
+    eventData.event_uuid
   );
 
   //If event is hidden or not enabled
@@ -611,6 +616,7 @@ const updateEvent = eventManagerPP
           .where(eq(events.event_uuid, eventUuid))
           .returning()
           .execute();
+        await eventDB.deleteEventCache(eventUuid);
 
         //Only recipient_address and price can be updated
         if (eventData.paid_event?.has_payment && oldEvent.has_payment) {

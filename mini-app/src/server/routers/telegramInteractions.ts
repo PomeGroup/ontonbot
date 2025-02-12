@@ -73,7 +73,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
   const event = opts.ctx.event;
   const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
 
-  const eventData = await selectEventByUuid(event_uuid);
+  const eventData = await eventDB.fetchEventByUuid(event_uuid);
 
   let csvString = "";
   let count = 0;

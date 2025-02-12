@@ -11,7 +11,7 @@ import { sendRewardNotification } from "@/server/routers/services/telegramServic
 import { TRPCError } from "@trpc/server";
 import { eventRegistrants } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { selectEventByUuid } from "@/server/db/events";
+import eventDB, { selectEventByUuid } from "@/server/db/events";
 import { logger } from "@/server/utils/logger";
 
 //TODO - Put this in db functions files
@@ -162,7 +162,7 @@ export const createUserReward = async (
 
     let eventData = null;
     if (props.event_uuid) {
-      eventData = await selectEventByUuid(props.event_uuid);
+      eventData = await eventDB.fetchEventByUuid(props.event_uuid);
     } else if (props.event_id) {
       eventData = await db.query.events.findFirst({
         where(fields, { eq }) {
@@ -189,7 +189,10 @@ export const createUserReward = async (
 
     // Check if visitor exists
     if (!visitor)
-      throw new TRPCError({ code: "BAD_REQUEST", message: "Visitor not found with the provided user ID and event UUID." });
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Visitor not found with the provided user ID and event UUID.",
+      });
 
     /* -------------------------------------------------------------------------- */
 

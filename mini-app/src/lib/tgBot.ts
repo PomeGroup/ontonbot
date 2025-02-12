@@ -14,7 +14,7 @@ import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 import { InlineKeyboardMarkup } from "grammy/types";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
-import { selectEventByUuid } from "@/server/db/events";
+import eventDB from "@/server/db/events";
 import { registerActivity } from "./ton-society-api";
 import { getEventByUuid } from "@/server/db/events";
 import { userHasModerationAccess } from "@/server/db/userFlags.db";
@@ -127,7 +127,7 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
 
 // =========== Approve Event in TonSociety etc. ===========
 async function onCallBackModerateEvent(status: string, event_uuid: string) {
-  const eventData = await selectEventByUuid(event_uuid);
+  const eventData = await eventDB.fetchEventByUuid(event_uuid);
   const isLocal = process.env.ENV === "local";
   if (!eventData) return false;
 
@@ -167,6 +167,7 @@ async function onCallBackModerateEvent(status: string, event_uuid: string) {
           })
           .where(eq(events.event_uuid, event_uuid))
           .execute();
+        await eventDB.deleteEventCache(event_uuid);
         logger.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
       });
 
@@ -405,7 +406,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           const reasonKey = parts[1];
           const evId = parts[2];
 
-          const eventData = await selectEventByUuid(evId);
+          const eventData = await eventDB.fetchEventByUuid(evId);
           if (eventData) {
             await sendTelegramMessage({
               chat_id: Number(eventData.owner),
@@ -470,7 +471,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         pendingCustomReplyPrompts.delete(promptId);
 
         const typedReason = ctx.message.text;
-        const eventData = await selectEventByUuid(eventUuid);
+        const eventData = await eventDB.fetchEventByUuid(eventUuid);
         if (eventData) {
           await sendTelegramMessage({
             chat_id: Number(eventData.owner),

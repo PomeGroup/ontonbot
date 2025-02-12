@@ -1,6 +1,6 @@
 import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedProcedure, router } from "@/server/trpc";
 import { z } from "zod";
-import { selectEventByUuid } from "@/server/db/events";
+import eventDB, { selectEventByUuid } from "@/server/db/events";
 import { TRPCError } from "@trpc/server";
 import { db, dbLower } from "@/db/db";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
@@ -23,7 +23,7 @@ const checkinRegistrantRequest = evntManagerPP
   )
   .mutation(async (opts) => {
     const event_uuid = opts.input.event_uuid;
-    const event = await selectEventByUuid(event_uuid);
+    const event = await eventDB.fetchEventByUuid(event_uuid);
     const registrant_uuid = opts.input.registrant_uuid;
 
     if (!event) {
@@ -93,7 +93,7 @@ const processRegistrantRequest = evntManagerPP
   .mutation(async (opts) => {
     const event_uuid = opts.input.event_uuid;
     const user_id = opts.input.user_id;
-    const event = await selectEventByUuid(event_uuid);
+    const event = await eventDB.fetchEventByUuid(event_uuid);
 
     if (!event) {
       throw new TRPCError({ code: "NOT_FOUND", message: "event not found" });
@@ -136,7 +136,7 @@ const processRegistrantRequest = evntManagerPP
 const eventRegister = initDataProtectedProcedure.input(CombinedEventRegisterSchema).mutation(async (opts) => {
   const userId = opts.ctx.user.user_id;
   const { event_uuid, ...registerInfo } = opts.input;
-  const event = await selectEventByUuid(event_uuid);
+  const event = await eventDB.fetchEventByUuid(event_uuid);
   if (!event) {
     throw new TRPCError({ code: "NOT_FOUND", message: `event not found with uuid ${event_uuid}` });
   }
@@ -210,7 +210,7 @@ const getEventRegistrants = evntManagerPP
   .query(async (opts) => {
     const { event_uuid, cursor, limit, search, statuses } = opts.input;
 
-    const event = await selectEventByUuid(event_uuid);
+    const event = await eventDB.fetchEventByUuid(event_uuid);
     if (!event) {
       throw new TRPCError({ code: "NOT_FOUND", message: `Event not found with uuid ${event_uuid}` });
     }
