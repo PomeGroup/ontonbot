@@ -1,15 +1,14 @@
-'use client'
+"use client";
 
-import Image from "next/image"
-import { OrganizerType } from "~/types/event.types"
-import channelAvatar from './channel-avatar.svg';
+import Image from "next/image";
+import { OrganizerType } from "~/types/event.types";
+import channelAvatar from "./channel-avatar.svg";
 import { FaArrowRight } from "react-icons/fa";
 import { useUtils } from "@tma.js/sdk-react";
-import { env } from "~/env.mjs"
-
+import { env } from "~/env.mjs";
 
 interface Props {
-  data: OrganizerType
+  data: OrganizerType;
 }
 
 export default function OrganizerSection({ data }: Props) {
@@ -19,9 +18,10 @@ export default function OrganizerSection({ data }: Props) {
     <div
       onClick={() => {
         tmaUtils?.openTelegramLink(`https://t.me/${env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=channels_${data.user_id}`);
-        (tmaUtils as any)?.close()
+        (tmaUtils as any)?.close();
       }}
-      className={"text-telegram-text-color grid gap-2 cursor-pointer"}>
+      className={"text-telegram-text-color grid gap-2 cursor-pointer"}
+    >
       <h2 className={"type-title-3 font-bold mb-1"}>Organizer</h2>
       <div className="flex gap-3 items-stretch">
         <Image
@@ -32,9 +32,7 @@ export default function OrganizerSection({ data }: Props) {
           height={48}
         />
         <div className="flex flex-col grow justify-between">
-          <div
-            className="text-[18px] leading-[22px] text-[#007AFF] font-medium line-clamp-2"
-          >
+          <div className="text-[18px] leading-[22px] text-[#007AFF] font-medium line-clamp-2">
             {data.org_channel_name || "Untitled organizer"}
           </div>
           <div className="text-[#8E8E93] text-[14px] font-light leading-[20px]">
@@ -47,5 +45,5 @@ export default function OrganizerSection({ data }: Props) {
         </div>
       </div>
     </div>
-  )
+  );
 }

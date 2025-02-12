@@ -20,6 +20,7 @@ import { getUser } from "~/services/user.services";
 import { getAuthenticatedUser } from "~/utils/getAuthenticatedUser";
 import AddToCalendar from "~/components/event/AddToCalendar";
 import OrganizerSection from "./OrganizerSection";
+import SBTCollectionSection from "./SbtCollectionSection";
 
 type EventParams = {
   params: {
@@ -157,10 +158,22 @@ const Event = async ({ params, searchParams }: EventParams) => {
       </Section>
       {event.organizer && (
         <Section
-          variant="topRounded"
+          variant="rounded"
           className="py-6"
         >
           <OrganizerSection data={event.organizer} />
+        </Section>
+      )}
+      {event?.sbt_collection_address && (
+        <Section
+          variant="topRounded"
+          className="py-6"
+        >
+          <SBTCollectionSection
+            collection_address={event.sbt_collection_address}
+            rewardImage={event?.image_url}
+            title={event.title}
+          />
         </Section>
       )}
       {/* Telegram Main Button */}
