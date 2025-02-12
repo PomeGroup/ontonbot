@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { eventRegistrants, orders } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
-import { selectEventByUuid } from "@/server/db/events";
+import eventDB from "@/server/db/events";
 import { Address } from "@ton/core";
 import { and, count, eq, or } from "drizzle-orm";
 import { z } from "zod";
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       status: 400,
     });
   }
-  const eventData = await selectEventByUuid(body.data.event_uuid);
+  const eventData = await eventDB.selectEventByUuid(body.data.event_uuid);
   if (!eventData) {
     return Response.json({ message: "event not found" }, { status: 400 });
   }

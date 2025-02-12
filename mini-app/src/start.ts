@@ -1,4 +1,4 @@
-import { eventPayment, eventRegistrants, events, nftItems, orders, rewards, tickets, walletChecks } from "@/db/schema";
+import { eventPayment, eventRegistrants, events, nftItems, orders, rewards, walletChecks } from "@/db/schema";
 import { getErrorMessages } from "@/lib/error";
 import { redisTools } from "@/lib/redisTools";
 import { sendLogNotification } from "@/lib/tgBot";
@@ -26,6 +26,7 @@ import { logger } from "./server/utils/logger";
 import { orgPromoteProcessOrder } from "./server/routers/services/orgPromoteOrderService";
 import { CsbtTicket } from "./server/routers/services/rewardsService";
 import "@/lib/gracefullyShutdown";
+import eventDB from "@/server/db/events";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -132,13 +133,14 @@ async function processRewardChunk(pendingRewards: RewardType[]) {
   for (const pendingReward of pendingRewards) {
     try {
       const visitor = await findVisitorById(pendingReward.visitor_id);
-      const event = await db.query.events.findFirst({
-        where: (fields, { eq }) => eq(fields.event_uuid, visitor?.event_uuid as string),
-      });
+      // const event = await db.query.events.findFirst({
+      //   where: (fields, { eq }) => eq(fields.event_uuid, visitor?.event_uuid as string),
+      // });
+      const event = await eventDB.selectEventByUuid(visitor?.event_uuid as string);
 
       const response = await createUserRewardLink(event?.activity_id as number, {
         telegram_user_id: visitor?.user_id as number,
-        attributes: [{ trait_type: "Organizer", value: event?.society_hub as string }],
+        attributes: [{ trait_type: "Organizer", value: event?.society_hub.name as string }],
       });
       await sleep(100);
       await rewardDB.updateReward(pendingReward.id, response.data.data);
@@ -183,9 +185,10 @@ async function sendRewardNotification(createdReward: RewardType) {
     const visitor = await findVisitorById(createdReward.visitor_id);
     if (!visitor) throw new Error("Visitor not found");
 
-    const event = await db.query.events.findFirst({
-      where: (fields, { eq }) => eq(fields.event_uuid, visitor.event_uuid),
-    });
+    // const event = await db.query.events.findFirst({
+    //   where: (fields, { eq }) => eq(fields.event_uuid, visitor.event_uuid),
+    // });
+    const event = await eventDB.fetchEventByUuid(visitor.event_uuid);
 
     if (!event) throw new Error("Event not found");
 
@@ -351,13 +354,14 @@ async function CreateEventOrders(pushLockTTl: () => any) {
         logger.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
         continue;
       }
-      const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      // const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      const event = await eventDB.selectEventByUuid(event_uuid);
       if (!event) {
         //NOTE - tg log
         logger.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
         continue;
       }
-      const eventData = event[0];
+      const eventData = event;
       const eventDraft = await CreateTonSocietyDraft(
         {
           title: eventData.title,
@@ -453,6 +457,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
             })
             .where(eq(events.event_uuid, event_uuid))
             .execute();
+          await eventDB.deleteEventCache(event_uuid);
           logger.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
         }
         /* ------------------------ Update Collection Address ----------------------- */
@@ -504,13 +509,15 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
         logger.error("error_CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
         continue;
       }
-      const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      // const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      const event = await eventDB.selectEventByUuid(event_uuid);
+
       if (!event) {
         //NOTE - tg log
         logger.error("error_CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
         continue;
       }
-      const eventData = event[0];
+      const eventData = event;
 
       const paymentInfo = (
         await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
@@ -526,6 +533,8 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
         const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.06);
 
         await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid)).execute();
+        await eventDB.deleteEventCache(eventData.event_uuid);
+
         await trx
           .update(eventPayment)
           .set({ bought_capacity: newCapacity })

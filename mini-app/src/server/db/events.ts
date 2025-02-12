@@ -1,28 +1,74 @@
 import { db } from "@/db/db";
 import crypto from "crypto";
-import {
-  event_details_search_list,
-  eventFields,
-  eventRegistrants,
-  events,
-  rewards,
-  tickets,
-  userRoles,
-  users,
-  visitors,
-} from "@/db/schema";
+import { event_details_search_list, eventFields, eventRegistrants, events, rewards, users, visitors } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, InferSelectModel, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { logSQLQuery } from "@/lib/logSQLQuery";
 import { logger } from "../utils/logger";
+import { EventRow } from "@/db/schema/events";
+import eventFieldsDB from "@/server/db/eventFields.db";
+import { EventField } from "@/db/schema/eventFields";
 
+export const getEventIDCacheKey = (eventID: number) => redisTools.cacheKeys.event_id + eventID;
+export const getEventUUIDCacheKey = (eventUUID: string) => redisTools.cacheKeys.event_uuid + eventUUID;
+
+export const deleteEventCache = async (eventIDOrUUID: number | string) => {
+  if (typeof eventIDOrUUID === "number") {
+    const event = await getEventById(eventIDOrUUID);
+    if (event) {
+      await redisTools.deleteCache(getEventIDCacheKey(eventIDOrUUID));
+      await redisTools.deleteCache(getEventUUIDCacheKey(event.event_uuid));
+      logger.log(`Deleted cache for event ${eventIDOrUUID}`);
+    }
+  } else {
+    const event = await getEventByUuid(eventIDOrUUID);
+    if (event) {
+      await redisTools.deleteCache(getEventIDCacheKey(event.event_id));
+      await redisTools.deleteCache(getEventUUIDCacheKey(eventIDOrUUID));
+      logger.log(`Deleted cache for event ${eventIDOrUUID}`);
+    }
+  }
+};
+
+export const fetchEventByUuid = async (eventUuid: string): Promise<EventRow | null> => {
+  if (eventUuid.length !== 36) {
+    return null;
+  }
+  const cachedEvent = await redisTools.getCache(getEventUUIDCacheKey(eventUuid));
+  if (cachedEvent) {
+    return cachedEvent;
+  }
+  const result = (await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute()).pop();
+  if (result) {
+    await redisTools.setCache(getEventUUIDCacheKey(eventUuid), result, redisTools.cacheLvl.short);
+    await redisTools.setCache(getEventIDCacheKey(result.event_id), result, redisTools.cacheLvl.short);
+    return result;
+  }
+  return null;
+};
+
+export const fetchEventById = async (eventId: number): Promise<EventRow | null> => {
+  const cachedEvent = await redisTools.getCache(getEventIDCacheKey(eventId));
+  if (cachedEvent) {
+    return cachedEvent;
+  }
+  const result = (await db.select().from(events).where(eq(events.event_id, eventId)).execute()).pop();
+  if (result) {
+    await redisTools.setCache(getEventIDCacheKey(eventId), result, redisTools.cacheLvl.short);
+    await redisTools.setCache(getEventUUIDCacheKey(result.event_uuid), result, redisTools.cacheLvl.short);
+    return result;
+  }
+  return null;
+};
+export const fetchEventByActivityId = async (activityId: number) => {
+  return (await db.select().from(events).where(eq(events.activity_id, activityId)).execute()).pop();
+};
 export const checkIsEventOwner = async (rawInitData: string, eventUuid: string) => {
   const { initDataJson, valid } = await checkIsAdminOrOrganizer(rawInitData);
 
@@ -62,55 +108,41 @@ export const checkIsAdminOrOrganizer = async (rawInitData: string) => {
 
   return { role: role[0].role, ...data };
 };
+
 export const checkEventTicketToCheckIn = async (eventUuid: string) => {
-  const event = await db
-    .select({
-      event_uuid: events.event_uuid,
-      ticketToCheckIn: events.ticketToCheckIn,
-    })
-    .from(events)
-    .where(eq(events.event_uuid, eventUuid))
-    .execute();
+  // const event = await db
+  //   .select({
+  //     event_uuid: events.event_uuid,
+  //     ticketToCheckIn: events.ticketToCheckIn,
+  //   })
+  //   .from(events)
+  //   .where(eq(events.event_uuid, eventUuid))
+  //   .execute();
+  const event = await fetchEventByUuid(eventUuid);
+
   if (!event) {
     return { event_uuid: null, ticketToCheckIn: null };
   }
   return {
-    event_uuid: event[0]?.event_uuid,
-    ticketToCheckIn: event[0].ticketToCheckIn,
+    event_uuid: event?.event_uuid,
+    ticketToCheckIn: event.ticketToCheckIn,
   };
 };
+
 export const selectEventByUuid = async (eventUuid: string) => {
   if (eventUuid.length !== 36) {
     return null;
   }
 
-  const eventData = (await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute()).pop();
+  // const eventData = (await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute()).pop();
+  const eventData = await fetchEventByUuid(eventUuid);
 
   if (!eventData) {
     return null;
   }
 
   const restEventData = removeKey(eventData, "secret_phrase");
-
-  const dynamicFields = await db
-    .select()
-    .from(eventFields)
-    .where(eq(eventFields.event_id, eventData.event_id))
-    .execute()
-    // remove the placeholder from dynamic fields
-    .then((fields) =>
-      fields.map((field) => {
-        if (field.title === "secret_phrase_onton_input") {
-          return {
-            ...field,
-            placeholder: "",
-          };
-        }
-        return field;
-      })
-    );
-
-  dynamicFields.sort((a, b) => a.order_place! - b.order_place!);
+  let dynamicFields = await eventFieldsDB.getDynamicFields(eventData.event_id);
 
   const startUTC = Number(eventData.start_date) * 1000;
   const endUTC = Number(eventData.end_date) * 1000;
@@ -440,7 +472,7 @@ export const getEventsWithFilters = async (
     } else if (sortBy === "random") {
       // @ts-expect-error
       query = query.orderBy(sql`random
-      ()`);
+          ()`);
     }
   }
 
@@ -459,22 +491,22 @@ export const getEventsWithFilters = async (
 };
 
 export const getEventByUuid = async (eventUuid: string, removeSecret: boolean = true) => {
-  const event = await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute();
-  if (event === undefined || event.length === 0) {
+  // const event = await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute();
+  const event = await fetchEventByUuid(eventUuid);
+  if (!event) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: `Event not found  ${eventUuid}`,
     });
   }
   // remove the secret_phrase from the response
-  const { secret_phrase, ...restEvent } = event[0];
-  return removeSecret ? restEvent : event[0];
+  const { secret_phrase, ...restEvent } = event;
+  return removeSecret ? restEvent : event;
 };
 
 export const getEventById = async (eventId: number) => {
-  const event = await db.select().from(events).where(eq(events.event_id, eventId)).execute();
-
-  return event === undefined || event.length === 0 ? null : event[0];
+  // const event = await db.select().from(events).where(eq(events.event_id, eventId)).execute();
+  return await fetchEventById(eventId);
 };
 
 export const getEventsForSpecialRole = async (userRole: string, userId?: number) => {
@@ -529,6 +561,7 @@ export const fetchOngoingEvents = async () => {
     .where(and(eq(events.hidden, false), lt(events.start_date, currentTime), gt(events.end_date, currentTime)))
     .execute();
 };
+
 const eventDB = {
   checkIsEventOwner,
   checkIsAdminOrOrganizer,
@@ -542,5 +575,9 @@ const eventDB = {
   getEventsForSpecialRole,
   getOrganizerHosted,
   fetchOngoingEvents,
+  fetchEventByUuid,
+  fetchEventById,
+  deleteEventCache,
+  fetchEventByActivityId,
 };
 export default eventDB;

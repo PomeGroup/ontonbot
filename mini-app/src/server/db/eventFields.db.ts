@@ -1,8 +1,11 @@
 // get by id
 
 import { db } from "@/db/db";
-import { eventFields } from "@/db/schema/eventFields";
+import { EventField, eventFields } from "@/db/schema/eventFields";
 import { and, eq } from "drizzle-orm";
+import { redisTools } from "@/lib/redisTools";
+
+export const getDynamicFieldsCacheKey = (eventID: number) => redisTools.cacheKeys.dynamic_fields + eventID;
 
 const getEventFields = async (event_id: number) => {
   return await db
@@ -25,7 +28,10 @@ const insertEventField = async (
     updatedBy: string;
   }
 ) => {
-  await trx.insert(eventFields).values(eventFieldData).execute();
+  await trx.transaction(async (trx) => {
+    await trx.insert(eventFields).values(eventFieldData).execute();
+    await redisTools.deleteCache(getDynamicFieldsCacheKey(eventFieldData.event_id));
+  });
 };
 
 // Function to update an event field
@@ -47,10 +53,13 @@ const selectEventFieldsByEventId = async (trx: typeof db, eventId: number) => {
 
 // Function to delete an event field by its ID
 const deleteEventFieldById = async (trx: typeof db, fieldId: number, eventId: number) => {
-  return await trx
-    .delete(eventFields)
-    .where(and(eq(eventFields.id, fieldId), eq(eventFields.event_id, eventId)))
-    .execute();
+  await trx.transaction(async (trx) => {
+    await redisTools.deleteCache(getDynamicFieldsCacheKey(eventId));
+    return await trx
+      .delete(eventFields)
+      .where(and(eq(eventFields.id, fieldId), eq(eventFields.event_id, eventId)))
+      .execute();
+  });
 };
 
 // Upsert (update or insert) event field based on field existence
@@ -66,19 +75,22 @@ const upsertEventField = async (trx: typeof db, field: any, index: number, userI
     updatedAt: new Date(),
   };
 
-  if (field.id) {
-    // Update the existing field
-    await trx.update(eventFields).set(fieldData).where(eq(eventFields.id, field.id)).execute();
-  } else {
-    // Insert a new field
-    await trx
-      .insert(eventFields)
-      .values({
-        ...fieldData,
-        event_id: eventId, // Include event ID for new records
-      })
-      .execute();
-  }
+  await trx.transaction(async (trx) => {
+    if (field.id) {
+      // Update the existing field
+      await trx.update(eventFields).set(fieldData).where(eq(eventFields.id, field.id)).execute();
+    } else {
+      // Insert a new field
+      await trx
+        .insert(eventFields)
+        .values({
+          ...fieldData,
+          event_id: eventId, // Include event ID for new records
+        })
+        .execute();
+    }
+    await redisTools.deleteCache(getDynamicFieldsCacheKey(eventId));
+  });
 };
 
 // Function to handle dynamic fields
@@ -98,6 +110,34 @@ const getEventFieldByTitleAndEventId = async (title: string, eventId: number) =>
     .execute();
   return result[0];
 };
+const getDynamicFields = async (eventId: number): Promise<EventField[] | null> => {
+  let dynamicFields = null;
+  const cachedDynamicFields = await redisTools.getCache(eventFieldsDB.getDynamicFieldsCacheKey(eventId));
+  if (cachedDynamicFields) {
+    dynamicFields = cachedDynamicFields;
+  } else {
+    dynamicFields = await db
+      .select()
+      .from(eventFields)
+      .where(eq(eventFields.event_id, eventId))
+      .execute()
+      // remove the placeholder from dynamic fields
+      .then((fields) =>
+        fields.map((field) => {
+          if (field.title === "secret_phrase_onton_input") {
+            return {
+              ...field,
+              placeholder: "",
+            };
+          }
+          return field;
+        })
+      );
+    dynamicFields.sort((a, b) => a.order_place! - b.order_place!);
+    await redisTools.setCache(eventFieldsDB.getDynamicFieldsCacheKey(eventId), dynamicFields, redisTools.cacheLvl.short);
+  }
+  return dynamicFields;
+};
 // export module
 const eventFieldsDB = {
   getEventFields,
@@ -108,5 +148,7 @@ const eventFieldsDB = {
   upsertEventField,
   handleDynamicFields,
   getEventFieldByTitleAndEventId,
+  getDynamicFieldsCacheKey,
+  getDynamicFields,
 };
 export default eventFieldsDB;
