@@ -5,15 +5,15 @@ import { ReactNode } from "react";
 export const typographyVariants = cva("", {
   variants: {
     variant: {
-      title1: "text-[28px] font-normal leading-[34px]",
+      title1: "text-3xl font-normal leading-[34px]",
       title2: "text-[22px] font-thin leading-[28px]",
-      title3: "text-[20px] font-thin leading-[24px]",
-      headline: "text-[18px] font-light leading-[22px]",
-      body: "text-[16px] font-thin leading-[22px]",
-      callout: "text-[16px] font-light leading-[22px]",
-      subheadline1: "text-[14px] font-extralight leading-[20px]",
-      subheadline2: "text-[14px] font-light leading-[18px]",
-      caption1: "text-[12px] font-light leading-[16px]",
+      title3: "text-xl font-thin leading-[24px]",
+      headline: "text-lg font-light leading-[22px]",
+      body: "text-base font-thin leading-[22px]",
+      callout: "text-base font-light leading-[22px]",
+      subheadline1: "text-sm font-extralight leading-[20px]",
+      subheadline2: "text-sm font-light leading-[18px]",
+      caption1: "text-xs font-light leading-[16px]",
       caption2: "text-[11px] font-light leading-[13px]",
       footnote: "text-[13px] font-light leading-[18px]",
     },

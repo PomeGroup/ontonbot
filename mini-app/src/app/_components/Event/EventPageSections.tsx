@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import Images from "@/app/_components/atoms/images";
-import Labels from "@/app/_components/atoms/labels";
 import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
 import { EventActions } from "./EventActions";
@@ -24,6 +23,7 @@ import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterFo
 import { Address } from "@ton/core";
 import { FaAngleRight } from "react-icons/fa6";
 import { TonConnectButton } from "@tonconnect/ui-react";
+import Divider from "@/components/Divider";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -42,10 +42,12 @@ EventImage.displayName = "EventImage";
 const EventSubtitle = React.memo(() => {
   const { eventData } = useEventData();
   return (
-    <Labels.CampaignDescription
-      description={eventData.data?.subtitle ?? ""}
-      className="text-gray-600 text-xs"
-    />
+    <Typography
+      variant="body"
+      weight="medium"
+    >
+      {eventData.data?.subtitle}
+    </Typography>
   );
 });
 EventSubtitle.displayName = "EventSubtitle";
@@ -137,19 +139,26 @@ const EventHead = React.memo(() => {
   const isNotPublished = !eventData.data?.activity_id || !!eventData.data?.hidden;
 
   return (
-    <div className="flex items-start justify-between">
-      <div>
-        {isNotPublished && (
-          <div className="mb-2 text-sky-500 text-lg font-semibold">! Event is not published and pending moderation</div>
-        )}
-        <div className="text-2xl leading-7 font-bold mb-4">{eventData.data?.title ?? ""}</div>
-        <EventSubtitle />
+    <div className="mt-4 space-y-4">
+      {isNotPublished && (
+        <div className="text-sky-500 text-lg font-semibold">! Event is not published and pending moderation</div>
+      )}
+      <div className="flex items-center justify-between">
+        <div>
+          <Typography
+            variant="title1"
+            weight="bold"
+          >
+            {eventData.data?.title ?? ""}
+          </Typography>
+        </div>
+        <ShareEventButton
+          event_uuid={eventHash}
+          activity_id={eventData.data?.activity_id}
+          hidden={eventData.data?.hidden}
+        />
       </div>
-      <ShareEventButton
-        event_uuid={eventHash}
-        activity_id={eventData.data?.activity_id}
-        hidden={eventData.data?.hidden}
-      />
+      <EventSubtitle />
     </div>
   );
 });
@@ -354,7 +363,7 @@ const SbtCollectionLink = React.memo(() => {
 SbtCollectionLink.displayName = "SbtCollectionLink";
 
 const MainButtonHandler = React.memo(() => {
-  const { eventData, hasEnteredPassword, isStarted, isNotEnded } = useEventData();
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
   const router = useRouter();
 
@@ -375,6 +384,12 @@ const MainButtonHandler = React.memo(() => {
 
   return (
     <>
+      {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
+        <ClaimRewardButton
+          initData={initData}
+          eventId={eventData.data?.event_uuid ?? ""}
+        />
+      )}
       {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
         <MainButton
           text="Check In"
@@ -406,45 +421,34 @@ MainButtonHandler.displayName = "MainButtonHandler";
 
 // Main component
 export const EventSections = () => {
-  const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded } = useEventData();
   const { user } = useUserStore();
-
-  const canManageEvent = canUserManageEvent(user, {
-    data: {
-      owner: eventData?.data?.owner,
-      accessRoles: eventData?.data?.accessRoles,
-    },
-  });
 
   const userCompletedTasks =
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
     user?.wallet_address;
 
   const isOnlineEvent = eventData.data?.participationType === "online";
-  const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
 
   return (
     <>
-      <EventImage />
+      <Card>
+        <EventImage />
 
-      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <EventPasswordAndWalletInput />
-      )}
+        {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
+          <EventPasswordAndWalletInput />
+        )}
 
-      <EventHead />
-      <EventAttributes />
-      <EventActions />
-      {canManageEvent && <ManageEventButton />}
+        <EventHead />
+        <Divider margin="medium" />
+        <EventAttributes />
+        <EventActions />
+      </Card>
+
+      <ManageEventButton />
       <EventDescription />
       <UserWallet />
-
-      {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
-        <ClaimRewardButton
-          initData={initData}
-          eventId={eventData.data?.event_uuid ?? ""}
-        />
-      )}
 
       {isNotEnded && eventData.data?.has_registration && (
         <EventRegistrationStatus
@@ -458,6 +462,10 @@ export const EventSections = () => {
       <OrganizerCard />
       <SbtCollectionLink />
       <SupportButton />
+
+      {/* --------------------------------------- */}
+      {/* ---------- MainButtonHandler ---------- */}
+      {/* --------------------------------------- */}
       <MainButtonHandler />
     </>
   );
