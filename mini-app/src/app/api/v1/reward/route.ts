@@ -1,9 +1,5 @@
-import { db } from "@/db/db";
-import { user_custom_flags } from "@/db/schema";
-import eventDB, { selectEventByUuid } from "@/server/db/events";
-import { and, eq, or } from "drizzle-orm";
+import eventDB from "@/server/db/events";
 import { z } from "zod";
-import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
 import { logger } from "@/server/utils/logger";
 import { getAuthenticatedUserApi } from "@/server/auth";
@@ -39,7 +35,7 @@ export async function POST(request: Request) {
       });
     }
     logger.log("reward_api_call", body);
-    const eventData = await eventDB.fetchEventByUuid(body.data.event_uuid);
+    const eventData = await eventDB.selectEventByUuid(body.data.event_uuid);
     if (!eventData) {
       return Response.json({ message: "event not found" }, { status: 400 });
     }

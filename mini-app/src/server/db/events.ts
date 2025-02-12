@@ -11,6 +11,7 @@ import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logger } from "../utils/logger";
+import { EventRow } from "@/db/schema/events";
 
 export const getEventIDCacheKey = (eventID: number) => redisTools.cacheKeys.event_id + eventID;
 export const getEventUUIDCacheKey = (eventUUID: string) => redisTools.cacheKeys.event_uuid + eventUUID;
@@ -33,7 +34,7 @@ export const deleteEventCache = async (eventIDOrUUID: number | string) => {
   }
 };
 
-export const fetchEventByUuid = async (eventUuid: string) => {
+export const fetchEventByUuid = async (eventUuid: string): Promise<EventRow | null> => {
   if (eventUuid.length !== 36) {
     return null;
   }
@@ -50,7 +51,7 @@ export const fetchEventByUuid = async (eventUuid: string) => {
   return null;
 };
 
-export const fetchEventById = async (eventId: number) => {
+export const fetchEventById = async (eventId: number): Promise<EventRow | null> => {
   const cachedEvent = await redisTools.getCache(getEventIDCacheKey(eventId));
   if (cachedEvent) {
     return cachedEvent;
@@ -121,8 +122,8 @@ export const checkEventTicketToCheckIn = async (eventUuid: string) => {
     return { event_uuid: null, ticketToCheckIn: null };
   }
   return {
-    event_uuid: event[0]?.event_uuid,
-    ticketToCheckIn: event[0].ticketToCheckIn,
+    event_uuid: event?.event_uuid,
+    ticketToCheckIn: event.ticketToCheckIn,
   };
 };
 

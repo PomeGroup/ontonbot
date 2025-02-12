@@ -355,13 +355,13 @@ async function CreateEventOrders(pushLockTTl: () => any) {
         continue;
       }
       // const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
-      const event = await eventDB.fetchEventByUuid(event_uuid);
+      const event = await eventDB.selectEventByUuid(event_uuid);
       if (!event) {
         //NOTE - tg log
         logger.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
         continue;
       }
-      const eventData = event[0];
+      const eventData = event;
       const eventDraft = await CreateTonSocietyDraft(
         {
           title: eventData.title,
@@ -510,14 +510,14 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
         continue;
       }
       // const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
-      const event = await eventDB.fetchEventByUuid(event_uuid);
+      const event = await eventDB.selectEventByUuid(event_uuid);
 
       if (!event) {
         //NOTE - tg log
         logger.error("error_CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
         continue;
       }
-      const eventData = event[0];
+      const eventData = event;
 
       const paymentInfo = (
         await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()

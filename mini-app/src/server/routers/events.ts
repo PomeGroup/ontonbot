@@ -72,7 +72,7 @@ async function updateEventSbtCollection(
   end_date: number | null | undefined,
   activity_id: number | null | undefined,
   sbt_collection_address: string | null | undefined,
-  event_uuid: string
+  event_uuid: string | null | undefined
 ) {
   if (!start_date || !end_date || !activity_id) return;
   /* -------------------------------------------------------------------------- */
@@ -94,7 +94,7 @@ async function updateEventSbtCollection(
           .set({ sbt_collection_address: sbt_collection_address })
           .where(eq(events.activity_id, activity_id))
           .execute();
-        await eventDB.deleteEventCache(event_uuid);
+        await eventDB.deleteEventCache(event_uuid!!);
       }
     } catch (error) {
       return;
@@ -108,7 +108,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const event_uuid = opts.input.event_uuid;
   const eventData = {
     payment_details: {} as Partial<EventPaymentSelectType>,
-    ...(await eventDB.fetchEventByUuid(event_uuid)),
+    ...(await eventDB.selectEventByUuid(event_uuid)),
   };
   let capacity_filled = false;
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";

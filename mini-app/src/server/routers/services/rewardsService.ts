@@ -162,7 +162,7 @@ export const createUserReward = async (
 
     let eventData = null;
     if (props.event_uuid) {
-      eventData = await eventDB.fetchEventByUuid(props.event_uuid);
+      eventData = await eventDB.selectEventByUuid(props.event_uuid);
     } else if (props.event_id) {
       eventData = await db.query.events.findFirst({
         where(fields, { eq }) {
