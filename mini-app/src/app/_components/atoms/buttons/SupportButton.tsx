@@ -1,24 +1,83 @@
 "use client";
 
+import Typography from "@/components/Typography";
+import { Button } from "konsta/react";
 import useWebApp from "@/hooks/useWebApp";
-import { MessageSquare } from "lucide-react";
+import { Card } from "konsta/react";
 import React from "react";
+import { useEventData } from "../../Event/eventPageContext";
 
 const SupportButton = () => {
   const webApp = useWebApp();
   const hapticfeedback = webApp?.HapticFeedback;
+  const { eventData } = useEventData();
 
   return (
-    <div
-      className="flex items-center justify-center text-xs text-cn-muted-foreground"
-      onClick={() => {
-        hapticfeedback?.impactOccurred("medium");
-        webApp?.openTelegramLink("https://t.me/ontonsupport");
-      }}
+    <Card
+      header={
+        <>
+          <Typography
+            weight={"bold"}
+            variant="title3"
+          >
+            Support
+          </Typography>
+        </>
+      }
     >
-      Open Support Chat
-      <MessageSquare className="w-3 ml-1" />
-    </div>
+      <Typography
+        variant="body"
+        weight="normal"
+        className="!-mt-6"
+      >
+        Do you have issues with SBT or payment?
+      </Typography>
+      <Button
+        outline
+        large
+        className="rounded-2lg !mt-2"
+        onClick={() => {
+          hapticfeedback?.impactOccurred("medium");
+          webApp?.openTelegramLink("https://t.me/ontonsupport");
+        }}
+      >
+        <Typography
+          variant={"headline"}
+          weight={"semibold"}
+          className="capitalize"
+        >
+          ONTON Support
+        </Typography>
+      </Button>
+      {eventData.data?.organizer?.org_support_telegram_user_name && (
+        <>
+          <Typography
+            variant="body"
+            weight="normal"
+            className="mt-2"
+          >
+            Do you have questions about the event?
+          </Typography>
+          <Button
+            outline
+            large
+            className="rounded-2lg !mt-2 caption-bottom"
+            onClick={() => {
+              hapticfeedback?.impactOccurred("medium");
+              webApp?.openTelegramLink(`https://t.me/${eventData.data?.organizer?.org_support_telegram_user_name}`);
+            }}
+          >
+            <Typography
+              variant={"headline"}
+              weight={"semibold"}
+              className="capitalize"
+            >
+              Event Support
+            </Typography>
+          </Button>
+        </>
+      )}
+    </Card>
   );
 };
 

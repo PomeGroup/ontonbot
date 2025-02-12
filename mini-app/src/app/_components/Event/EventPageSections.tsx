@@ -340,7 +340,7 @@ export const EventSections = () => {
   const isEventActive = isStarted && isNotEnded;
 
   return (
-    <div className="space-y-2">
+    <>
       <EventImage />
 
       {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
@@ -368,10 +368,8 @@ export const EventSections = () => {
           isCustom={eventData.data?.registrationFromSchema?.isCustom}
         />
       )}
-      <div className="space-y-4">
-        <OrganizerCard />
-        <SbtCollectionLink />
-      </div>
+      <OrganizerCard />
+      <SbtCollectionLink />
       <SupportButton />
 
       {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
@@ -398,6 +396,6 @@ export const EventSections = () => {
           color="secondary"
         />
       )}
-    </div>
+    </>
   );
 };

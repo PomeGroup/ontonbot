@@ -37,6 +37,9 @@ module.exports = konstaConfig({
         xxs: "320px",
         xs: "375px",
       },
+      borderRadius: {
+        "2lg": "10px",
+      },
       spacing: {
         11.5: "46px",
         12.5: "50px",
