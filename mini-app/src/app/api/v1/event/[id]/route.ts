@@ -11,6 +11,7 @@ import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { OrderRow } from "@/db/schema/orders";
 import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
 import "@/lib/gracefullyShutdown";
+import eventDB, { fetchEventById } from "@/server/db/events";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -107,11 +108,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const searchParams = req.nextUrl.searchParams;
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
 
-    const unsafeEvent = await db.query.events.findFirst({
-      where(fields, { eq }) {
-        return eq(fields.event_uuid, event_uuid);
-      },
-    });
+    // const unsafeEvent = await db.query.events.findFirst({
+    //   where(fields, { eq }) {
+    //     return eq(fields.event_uuid, event_uuid);
+    //   },
+    // });
+    const unsafeEvent = await eventDB.fetchEventByUuid(event_uuid);
 
     if (!unsafeEvent?.event_uuid) {
       return Response.json({ error: "Event not found" }, { status: 400 });
