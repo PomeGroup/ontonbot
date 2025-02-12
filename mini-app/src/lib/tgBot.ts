@@ -127,7 +127,7 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
 
 // =========== Approve Event in TonSociety etc. ===========
 async function onCallBackModerateEvent(status: string, event_uuid: string) {
-  const eventData = await eventDB.fetchEventByUuid(event_uuid);
+  const eventData = await eventDB.selectEventByUuid(event_uuid);
   const isLocal = process.env.ENV === "local";
   if (!eventData) return false;
 
@@ -406,7 +406,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           const reasonKey = parts[1];
           const evId = parts[2];
 
-          const eventData = await eventDB.fetchEventByUuid(evId);
+          const eventData = await eventDB.selectEventByUuid(evId);
           if (eventData) {
             await sendTelegramMessage({
               chat_id: Number(eventData.owner),
@@ -471,7 +471,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         pendingCustomReplyPrompts.delete(promptId);
 
         const typedReason = ctx.message.text;
-        const eventData = await eventDB.fetchEventByUuid(eventUuid);
+        const eventData = await eventDB.selectEventByUuid(eventUuid);
         if (eventData) {
           await sendTelegramMessage({
             chat_id: Number(eventData.owner),

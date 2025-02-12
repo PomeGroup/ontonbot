@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       status: 400,
     });
   }
-  const eventData = await eventDB.fetchEventByUuid(body.data.event_uuid);
+  const eventData = await eventDB.selectEventByUuid(body.data.event_uuid);
   if (!eventData) {
     return Response.json({ message: "event not found" }, { status: 400 });
   }

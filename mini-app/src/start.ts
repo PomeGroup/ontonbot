@@ -136,11 +136,11 @@ async function processRewardChunk(pendingRewards: RewardType[]) {
       // const event = await db.query.events.findFirst({
       //   where: (fields, { eq }) => eq(fields.event_uuid, visitor?.event_uuid as string),
       // });
-      const event = await eventDB.fetchEventByUuid(visitor?.event_uuid as string);
+      const event = await eventDB.selectEventByUuid(visitor?.event_uuid as string);
 
       const response = await createUserRewardLink(event?.activity_id as number, {
         telegram_user_id: visitor?.user_id as number,
-        attributes: [{ trait_type: "Organizer", value: event?.society_hub as string }],
+        attributes: [{ trait_type: "Organizer", value: event?.society_hub.name as string }],
       });
       await sleep(100);
       await rewardDB.updateReward(pendingReward.id, response.data.data);

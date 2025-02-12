@@ -4,7 +4,7 @@ import {
   initDataProtectedProcedure,
 } from "@/server/trpc";
 import { z } from "zod";
-import eventDB, { getEventByUuid, selectEventByUuid } from "@/server/db/events";
+import eventDB, { getEventByUuid } from "@/server/db/events";
 import { logger } from "@/server/utils/logger";
 import telegramService from "@/server/routers/services/telegramService";
 import { TRPCError } from "@trpc/server";
@@ -73,7 +73,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
   const event = opts.ctx.event;
   const dynamic_fields = !(event.has_registration && event.participationType === "in_person");
 
-  const eventData = await eventDB.fetchEventByUuid(event_uuid);
+  const eventData = await eventDB.selectEventByUuid(event_uuid);
 
   let csvString = "";
   let count = 0;

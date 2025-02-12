@@ -51,7 +51,7 @@ export const addVisitor = async (opts: any) => {
   const { user_id } = opts.ctx.user;
 
   // Fetch the event by UUID
-  const event = await eventDB.fetchEventByUuid(event_uuid);
+  const event = await eventDB.selectEventByUuid(event_uuid);
   if (!event) {
     throw new TRPCError({
       code: "NOT_FOUND",
