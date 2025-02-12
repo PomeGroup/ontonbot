@@ -23,6 +23,7 @@ import { canUserManageEvent } from "@/lib/userRolesUtils";
 import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
 import { Address } from "@ton/core";
 import { FaAngleRight } from "react-icons/fa6";
+import { TonConnectButton } from "@tonconnect/ui-react";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -109,6 +110,26 @@ const EventDescription = React.memo(() => {
 });
 
 EventDescription.displayName = "EventDescription";
+
+const UserWallet = () => {
+  return (
+    <Card
+      header={
+        <Typography
+          weight="bold"
+          variant="title3"
+        >
+          Your Wallet
+        </Typography>
+      }
+      contentWrap={false}
+    >
+      <div className="p-4 pt-0 flex items-center justify-center">
+        <TonConnectButton />
+      </div>
+    </Card>
+  );
+};
 
 const EventHead = React.memo(() => {
   const { eventHash, eventData } = useEventData();
@@ -332,9 +353,59 @@ const SbtCollectionLink = React.memo(() => {
 });
 SbtCollectionLink.displayName = "SbtCollectionLink";
 
+const MainButtonHandler = React.memo(() => {
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded } = useEventData();
+  const { user } = useUserStore();
+  const router = useRouter();
+
+  const canManageEvent = canUserManageEvent(user, {
+    data: {
+      owner: eventData?.data?.owner,
+      accessRoles: eventData?.data?.accessRoles,
+    },
+  });
+
+  const userCompletedTasks =
+    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
+    user?.wallet_address;
+
+  const isOnlineEvent = eventData.data?.participationType === "online";
+  const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
+  const isEventActive = isStarted && isNotEnded;
+
+  return (
+    <>
+      {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
+        <MainButton
+          text="Check In"
+          onClick={() =>
+            router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)
+          }
+        />
+      )}
+
+      {!canManageEvent && !isStarted && isNotEnded && (
+        <MainButton
+          text="Event Not Started Yet"
+          disabled
+          color="secondary"
+        />
+      )}
+
+      {!canManageEvent && !isNotEnded && (
+        <MainButton
+          text="Event Has Ended"
+          disabled
+          color="secondary"
+        />
+      )}
+    </>
+  );
+});
+MainButtonHandler.displayName = "MainButtonHandler";
+
 // Main component
 export const EventSections = () => {
-  const router = useRouter();
   const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
 
@@ -366,6 +437,7 @@ export const EventSections = () => {
       <EventActions />
       {canManageEvent && <ManageEventButton />}
       <EventDescription />
+      <UserWallet />
 
       {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
         <ClaimRewardButton
@@ -382,34 +454,11 @@ export const EventSections = () => {
           isCustom={eventData.data?.registrationFromSchema?.isCustom}
         />
       )}
+
       <OrganizerCard />
       <SbtCollectionLink />
       <SupportButton />
-
-      {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
-        <MainButton
-          text="Check In"
-          onClick={() =>
-            router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)
-          }
-        />
-      )}
-
-      {!canManageEvent && !isStarted && isNotEnded && (
-        <MainButton
-          text="Event Not Started Yet"
-          disabled
-          color="secondary"
-        />
-      )}
-
-      {!canManageEvent && !isNotEnded && (
-        <MainButton
-          text="Event Has Ended"
-          disabled
-          color="secondary"
-        />
-      )}
+      <MainButtonHandler />
     </>
   );
 };
