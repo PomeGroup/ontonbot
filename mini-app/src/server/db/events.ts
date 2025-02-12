@@ -6,12 +6,14 @@ import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, InferSelectModel, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logger } from "../utils/logger";
 import { EventRow } from "@/db/schema/events";
+import eventFieldsDB from "@/server/db/eventFields.db";
+import { EventField } from "@/db/schema/eventFields";
 
 export const getEventIDCacheKey = (eventID: number) => redisTools.cacheKeys.event_id + eventID;
 export const getEventUUIDCacheKey = (eventUUID: string) => redisTools.cacheKeys.event_uuid + eventUUID;
@@ -140,26 +142,7 @@ export const selectEventByUuid = async (eventUuid: string) => {
   }
 
   const restEventData = removeKey(eventData, "secret_phrase");
-
-  const dynamicFields = await db
-    .select()
-    .from(eventFields)
-    .where(eq(eventFields.event_id, eventData.event_id))
-    .execute()
-    // remove the placeholder from dynamic fields
-    .then((fields) =>
-      fields.map((field) => {
-        if (field.title === "secret_phrase_onton_input") {
-          return {
-            ...field,
-            placeholder: "",
-          };
-        }
-        return field;
-      })
-    );
-
-  dynamicFields.sort((a, b) => a.order_place! - b.order_place!);
+  let dynamicFields = await eventFieldsDB.getDynamicFields(eventData.event_id);
 
   const startUTC = Number(eventData.start_date) * 1000;
   const endUTC = Number(eventData.end_date) * 1000;

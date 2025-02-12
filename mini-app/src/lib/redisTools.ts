@@ -283,6 +283,7 @@ export const cacheKeys = {
   user_roles: "user_roles:",
   event_uuid: "event_uuid:",
   event_id: "event_id:",
+  dynamic_fields: "dynamic_fields:event_id:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
