@@ -139,7 +139,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 8000M
+          memory: 16000M
           cpus: "5.0"
       mode: global
       update_config:

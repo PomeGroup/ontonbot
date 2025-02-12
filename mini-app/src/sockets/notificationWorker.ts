@@ -66,7 +66,7 @@ const consumeMessages = async (rabbit: RabbitMQ, io: Server, queue: QueueNamesTy
         // Emit the notification or requeue it if the user is not online
         await emitNotification(io, userId, message, channel, msg);
       } catch (error) {
-        logger.error("Error processing RabbitMQ message:", error);
+        logger.error("Error processing RabbitMQ message:", error, msg);
         channel.nack(msg, false, true); // Requeue the message
       }
 
