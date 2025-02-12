@@ -91,7 +91,21 @@ EventDatesComponent.displayName = "EventDatesComponent";
 
 const EventDescription = React.memo(() => {
   const { eventData } = useEventData();
-  return <Labels.CampaignDescription description={eventData.data?.description ?? ""} />;
+  return (
+    <Card
+      header={
+        <Typography
+          weight="bold"
+          variant="title3"
+        >
+          About
+        </Typography>
+      }
+      contentWrap={false}
+    >
+      <p className="p-4 pt-0">{eventData.data?.description ?? ""}</p>
+    </Card>
+  );
 });
 
 EventDescription.displayName = "EventDescription";
