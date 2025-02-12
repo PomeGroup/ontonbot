@@ -5,7 +5,6 @@ import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
 import { EventActions } from "./EventActions";
 import ShareEventButton from "../ShareEventButton";
-import { ArrowRight } from "lucide-react";
 import { EventPasswordAndWalletInput } from "./EventPasswordInput";
 import EventKeyValue from "../organisms/events/EventKewValue";
 import { ClaimRewardButton } from "./ClaimRewardButton";
@@ -16,13 +15,14 @@ import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
 import SupportButton from "../atoms/buttons/SupportButton";
-import { Card } from "konsta/react";
+import { Card, ListItem, List, Block } from "konsta/react";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
 import { canUserManageEvent } from "@/lib/userRolesUtils";
 import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
 import { Address } from "@ton/core";
+import { FaAngleRight } from "react-icons/fa6";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -202,35 +202,41 @@ const OrganizerCard = React.memo(() => {
 
   return (
     <Card
-      margin="mx-0"
+      header={
+        <Typography
+          weight={"bold"}
+          variant="title3"
+        >
+          Organizer
+        </Typography>
+      }
       contentWrap={false}
-      onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
     >
-      <Typography
-        variant="title3"
-        className="font-bold mb-2"
-      >
-        Organizer
-      </Typography>
-      <div className="w-full flex gap-3 items-stretch">
-        <LoadableImage
-          alt={organizer.org_channel_name}
-          src={organizer.org_image || channelAvatar.src}
-          width={48}
-          height={48}
+      <List className="!mb-0 !-mt-2">
+        <ListItem
+          className="cursor-pointer"
+          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
+          title={organizer.org_channel_name || "Untitled organizer"}
+          subtitle={
+            <Typography
+              weight={"medium"}
+              variant="subheadline1"
+              className="text-brand-muted"
+            >
+              {organizer.hosted_event_count || 0} events
+            </Typography>
+          }
+          media={
+            <LoadableImage
+              alt={organizer.org_channel_name}
+              src={organizer.org_image || channelAvatar.src}
+              width={48}
+              height={48}
+            />
+          }
+          after={<FaAngleRight className="text-primary" />}
         />
-        <div className="flex flex-col grow justify-between overflow-hidden">
-          <Typography
-            variant="headline"
-            className="text-[#007AFF] font-normal line-clamp-2"
-          >
-            {organizer.org_channel_name || "Untitled organizer"}
-          </Typography>
-        </div>
-        <div className="self-center">
-          <ArrowRight className="text-main-button-color" />
-        </div>
-      </div>
+      </List>
     </Card>
   );
 });
@@ -255,51 +261,58 @@ const SbtCollectionLink = React.memo(() => {
 
   return (
     <Card
-      margin="mx-0 cursor-pointer"
+      header={
+        <>
+          <Typography
+            weight={"bold"}
+            variant="title3"
+          >
+            SBT Reward Badge
+          </Typography>
+          <Typography
+            variant="body"
+            weight="normal"
+            className="mt-4"
+          >
+            Reward you receive by attending the event and submitting proof of attendance.
+          </Typography>
+        </>
+      }
       contentWrap={false}
-      onClick={() => window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank")}
     >
-      <Typography
-        variant="title3"
-        className="font-bold"
+      <Block
+        className="!mt-0 mb-4 cursor-pointer"
+        onClick={() => window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank")}
       >
-        SBT Reward Badge
-      </Typography>
-      <Typography
-        variant="body"
-        className=" mb-2"
-      >
-        Reward you receive by attending the event and submitting proof of attendance.
-      </Typography>
-      <div className="w-full flex gap-3 items-stretch">
-        {eventData.data?.tsRewardImage && (
-          <LoadableImage
-            alt={eventData.data?.title}
-            src={eventData.data?.tsRewardImage}
-            width={48}
-            height={48}
-          />
-        )}
-        <div className="flex flex-col grow justify-between overflow-hidden">
-          <Typography
-            variant="headline"
-            truncate
-            className="text-[#007AFF] font-normal line-clamp-2"
-          >
-            {eventData.data?.title}
-          </Typography>
-          <Typography
-            variant="subheadline1"
-            className="text-[#8E8E93]"
-            truncate
-          >
-            {collectionAddress}
-          </Typography>
+        <div className="w-full flex gap-3 items-stretch bg-brand-fill-bg/10 p-2 rounded-lg">
+          {eventData.data?.tsRewardImage && (
+            <LoadableImage
+              alt={eventData.data?.title}
+              src={eventData.data?.tsRewardImage}
+              width={48}
+              height={48}
+            />
+          )}
+          <div className="flex flex-col grow justify-between overflow-hidden">
+            <Typography
+              variant="headline"
+              truncate
+              weight="normal"
+              className="line-clamp-2"
+            >
+              {eventData.data?.title}
+            </Typography>
+            <Typography
+              variant="subheadline1"
+              className="text-brand-muted"
+              truncate
+              weight={"medium"}
+            >
+              {collectionAddress}
+            </Typography>
+          </div>
         </div>
-        <div className="self-center">
-          <ArrowRight className="text-main-button-color" />
-        </div>
-      </div>
+      </Block>
     </Card>
   );
 });
