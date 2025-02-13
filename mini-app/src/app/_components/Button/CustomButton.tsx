@@ -29,6 +29,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     disabled={isLoading}
     onClick={onClick}
     className="rounded-2lg"
+    // @ts-expect-error the type declaration for this prop does not exist but we should pass it
+    type="button"
   >
     <Typography
       variant={fontSize}
