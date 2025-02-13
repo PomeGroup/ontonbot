@@ -57,7 +57,7 @@ const SupportButtons = () => {
               webApp?.openTelegramLink(`https://t.me/${eventData.data?.organizer?.org_support_telegram_user_name}`);
             }}
           >
-            Event Support
+            Organizer Support
           </CustomButton>
         </>
       )}
