@@ -134,7 +134,7 @@ const EventDescription = React.memo(() => {
       }
       contentWrap={false}
     >
-      <p className="p-4 pt-0">{eventData.data?.description ?? ""}</p>
+      <p className="p-4 pt-0 whitespace-pre-line">{eventData.data?.description ?? ""}</p>
     </Card>
   );
 });

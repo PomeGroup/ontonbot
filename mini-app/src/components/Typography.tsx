@@ -45,7 +45,7 @@ export const typographyVariants = cva("", {
   },
 });
 
-interface TypographyProps extends VariantProps<typeof typographyVariants> {
+export interface TypographyProps extends VariantProps<typeof typographyVariants> {
   children: ReactNode;
   className?: string;
 }

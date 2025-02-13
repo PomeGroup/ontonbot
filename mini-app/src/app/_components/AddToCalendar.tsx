@@ -1,14 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { FaGoogle, FaYahoo } from "react-icons/fa";
-import { PiMicrosoftOutlookLogoThin } from "react-icons/pi";
-import { Button, KButton } from "@/components/ui/button";
-import { createPortal } from "react-dom";
-import { Block, Sheet } from "konsta/react";
-import { cn } from "@/utils";
-import Typography from "@/components/Typography";
+import { PiMicrosoftOutlookLogoFill } from "react-icons/pi";
+import { Block } from "konsta/react";
 import { LucideCalendarPlus } from "lucide-react";
+import ReusableSheet from "./Sheet/ReusableSheet";
+import CustomButton from "./Button/CustomButton";
+import Divider from "@/components/Divider";
+import { AiFillYahoo } from "react-icons/ai";
+import { SiGooglecalendar } from "react-icons/si";
 
 // Assuming shadcn drawer is structured like this
 
@@ -56,67 +56,56 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
 
   return (
     <>
-      <KButton
-        className="rounded-2lg"
-        outline
-        itemType="button"
-        large
+      <CustomButton
+        variant="outline"
         onClick={() => setIsOpen(true)}
+        icon={<LucideCalendarPlus />}
       >
-        <Typography
-          variant="headline"
-          className="flex gap-2 items-center capitalize"
-          weight="semibold"
-        >
-          <LucideCalendarPlus />
-          Add to Calendar
-        </Typography>
-      </KButton>
-      {createPortal(
-        <Sheet
-          opened={isOpen}
-          onBackdropClick={setIsOpen}
-          className={cn("w-full")}
-        >
-          <Block className="flex flex-col gap-2 justify-between">
-            <div className="p-4 divide-black divide-y-2 w-full flex flex-col gap-1">
-              <Button
-                variant="link"
-                className="flex rounded-none items-center w-full"
-                onClick={() => openInOSBrowser(googleCalendarLink)}
-              >
-                <FaGoogle className="mr-2" />
-                Add to Google Calendar
-              </Button>
-              <Button
-                variant="link"
-                className="flex rounded-none items-center w-full"
-                onClick={() => openInOSBrowser(outlookLink)}
-              >
-                <PiMicrosoftOutlookLogoThin className="mr-2" />
-                Add to Outlook Calendar
-              </Button>
-              <Button
-                variant="link"
-                className="flex rounded-none items-center w-full"
-                onClick={() => openInOSBrowser(yahooLink)}
-              >
-                <FaYahoo className="mr-2" />
-                Add to Yahoo Calendar
-              </Button>
-            </div>
-            {/* Close button at the bottom */}
-            <KButton
-              className="w-full"
-              onClick={() => setIsOpen(false)}
-              tonal
+        Add to Calendar
+      </CustomButton>
+      <ReusableSheet
+        opened={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Add to Calendar"
+      >
+        <Block className="flex flex-col gap-2 justify-between">
+          <div className="p-4 w-full flex flex-col gap-1">
+            <CustomButton
+              variant="link"
+              onClick={() => openInOSBrowser(googleCalendarLink)}
+              fontWeight={"normal"}
+              icon={<SiGooglecalendar />}
             >
-              Close
-            </KButton>
-          </Block>
-        </Sheet>,
-        document.body
-      )}
+              Add to Google Calendar
+            </CustomButton>
+            <Divider height={"1"} />
+            <CustomButton
+              variant="link"
+              onClick={() => openInOSBrowser(outlookLink)}
+              icon={<PiMicrosoftOutlookLogoFill />}
+              fontWeight={"normal"}
+            >
+              Add to Outlook Calendar
+            </CustomButton>
+            <Divider height={"1"} />
+            <CustomButton
+              variant="link"
+              onClick={() => openInOSBrowser(yahooLink)}
+              icon={<AiFillYahoo />}
+              fontWeight={"normal"}
+            >
+              Add to Yahoo Calendar
+            </CustomButton>
+          </div>
+          {/* Close button at the bottom */}
+          <CustomButton
+            variant="outline"
+            onClick={() => setIsOpen(false)}
+          >
+            Close
+          </CustomButton>
+        </Block>
+      </ReusableSheet>
     </>
   );
 };
