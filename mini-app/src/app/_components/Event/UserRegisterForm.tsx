@@ -1,14 +1,17 @@
 import { trpc } from "@/app/_trpc/client";
-import { Button } from "@/components/ui/button";
 import { EventRegisterSchema } from "@/types";
-import { ListInput, List, BlockTitle, Preloader } from "konsta/react";
+import { ListInput, List } from "konsta/react";
 import { useParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
+import ReusableSheet from "../Sheet/ReusableSheet";
+import MainButton from "../atoms/buttons/web-app/MainButton";
+import CustomButton from "../Button/CustomButton";
 
 const UserRegisterForm = () => {
   const params = useParams<{ hash: string }>();
   const registrationForm = useRef<HTMLFormElement>(null);
+  const [isOpen, setOpen] = useState(false);
 
   const [formErrors, setErrors] = useState<{
     full_name?: string[];
@@ -26,6 +29,8 @@ const UserRegisterForm = () => {
     },
     onSuccess() {
       trpcUtils.events.getEvent.refetch();
+      toast.success("You have successfully registered!");
+      setOpen(false);
     },
   });
 
@@ -55,70 +60,96 @@ const UserRegisterForm = () => {
 
   return (
     <>
-      <BlockTitle className="!px-0">Registration Form</BlockTitle>
-      <form
-        ref={registrationForm}
-        onSubmit={handleSubmit}
-      >
-        <List margin="!-mx-4">
-          <ListInput
-            outline
-            label="Full Name"
-            name="full_name"
-            error={formErrors?.full_name?.[0]}
-            placeholder="John Doe"
-          />
-          <ListInput
-            outline
-            label="Company"
-            name="company"
-            error={formErrors?.company?.[0]}
-            placeholder="Example Company"
-          />
-          <ListInput
-            outline
-            label="Position"
-            name="position"
-            error={formErrors?.position?.[0]}
-            placeholder="Designer"
-          />
-          <ListInput
-            outline
-            label="LinkedIn"
-            name="linkedin"
-            error={formErrors?.linkedin?.[0]}
-            placeholder="https://www.linkedin.com/in/john"
-          />
-          <ListInput
-            outline
-            label="Github"
-            name="github"
-            error={formErrors?.github?.[0]}
-            placeholder="john_doe"
-          />
-          <ListInput
-            outline
-            info="Optional"
-            placeholder="I will be 30min late"
-            name="notes"
-            error={formErrors?.notes?.[0]}
-            label="Additional information"
-          />
-        </List>
-        <Button
-          variant={"primary"}
-          className="w-full"
-          title="Submit"
-          itemType="button"
-          disabled={registerUser.isLoading}
-          onClick={(e) => {
-            e.preventDefault();
-            registrationForm.current?.requestSubmit();
+      {!isOpen && (
+        <MainButton
+          onClick={() => {
+            setOpen(true);
           }}
+          text="Request to Join"
+        />
+      )}
+      <ReusableSheet
+        opened={isOpen}
+        title="Registration Form"
+        onClose={() => {
+          setOpen(false);
+        }}
+      >
+        <form
+          ref={registrationForm}
+          onSubmit={handleSubmit}
         >
-          {registerUser.isLoading ? <Preloader size="w-4 h-4" /> : "Request to Join"}
-        </Button>
-      </form>
+          <List
+            strongIos
+            className="!my-6"
+          >
+            <ListInput
+              outline
+              label="Full Name"
+              name="full_name"
+              error={formErrors?.full_name?.[0]}
+              placeholder="John Doe"
+            />
+            <ListInput
+              outline
+              label="Company"
+              name="company"
+              error={formErrors?.company?.[0]}
+              placeholder="Example Company"
+            />
+            <ListInput
+              outline
+              label="Position"
+              name="position"
+              error={formErrors?.position?.[0]}
+              placeholder="Designer"
+            />
+            <ListInput
+              outline
+              label="LinkedIn"
+              name="linkedin"
+              error={formErrors?.linkedin?.[0]}
+              placeholder="https://www.linkedin.com/in/john"
+            />
+            <ListInput
+              outline
+              label="Github"
+              name="github"
+              error={formErrors?.github?.[0]}
+              placeholder="john_doe"
+            />
+            <ListInput
+              outline
+              info="Optional"
+              placeholder="I will be 30min late"
+              name="notes"
+              error={formErrors?.notes?.[0]}
+              label="Additional information"
+            />
+          </List>
+          <div className="pt-0 space-y-3 p-4">
+            <CustomButton
+              variant="primary"
+              isLoading={registerUser.isLoading}
+              onClick={(e) => {
+                e.preventDefault();
+                registrationForm.current?.requestSubmit();
+              }}
+            >
+              Request to Join
+            </CustomButton>
+            <CustomButton
+              variant="outline"
+              isLoading={registerUser.isLoading}
+              onClick={() => {
+                setOpen(false);
+              }}
+            >
+              Cancel
+            </CustomButton>
+          </div>
+        </form>
+      </ReusableSheet>
     </>
   );
 };

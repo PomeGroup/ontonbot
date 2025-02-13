@@ -3,8 +3,7 @@
 import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { cn, wait } from "@/lib/utils";
-import { LoaderIcon } from "lucide-react";
-import { PiShareFatBold } from "react-icons/pi";
+import { LoaderIcon, LucideShare2 } from "lucide-react";
 
 const ShareEventButton = ({
   event_uuid,
@@ -23,7 +22,10 @@ const ShareEventButton = ({
 
   return (
     <button
-      className={cn("rounded-full bg-blue-100 p-2 disabled:bg-gray-300 disabled:cursor-not-allowed", shareEventMutation.isLoading && Boolean(initData) && "opacity-50")}
+      className={cn(
+        "rounded-lg bg-brand-fill-bg/15 p-2 disabled:bg-brand-fill-bg/5 disabled:cursor-not-allowed",
+        shareEventMutation.isLoading && Boolean(initData) && "opacity-50"
+      )}
       disabled={!initData || shareEventMutation.isLoading || !activity_id || !!hidden}
       onClick={async () => {
         if (!initData) return;
@@ -39,11 +41,7 @@ const ShareEventButton = ({
         WebApp?.close();
       }}
     >
-      {shareEventMutation.isLoading ? (
-        <LoaderIcon className="animate-spin text-blue-600" />
-      ) : (
-        <PiShareFatBold className="text-blue-600" />
-      )}
+      {shareEventMutation.isLoading ? <LoaderIcon className="animate-spin" /> : <LucideShare2 />}
     </button>
   );
 };

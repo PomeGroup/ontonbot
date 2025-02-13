@@ -1,12 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { FaGoogle, FaYahoo, FaCalendarPlus } from "react-icons/fa";
+import { FaGoogle, FaYahoo } from "react-icons/fa";
 import { PiMicrosoftOutlookLogoThin } from "react-icons/pi";
 import { Button, KButton } from "@/components/ui/button";
 import { createPortal } from "react-dom";
 import { Block, Sheet } from "konsta/react";
 import { cn } from "@/utils";
+import Typography from "@/components/Typography";
+import { LucideCalendarPlus } from "lucide-react";
 
 // Assuming shadcn drawer is structured like this
 
@@ -40,9 +42,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
 
   const yahooLink = `https://calendar.yahoo.com/?v=60&view=d&type=20&title=${encodeURIComponent(
     title
-  )}&st=${new Date(startDate).toISOString()}&et=${new Date(
-    endDate
-  ).toISOString()}&desc=${encodeURIComponent(description)}`;
+  )}&st=${new Date(startDate).toISOString()}&et=${new Date(endDate).toISOString()}&desc=${encodeURIComponent(description)}`;
 
   // Function to open the link using Telegram Web App API and close drawer
   const openInOSBrowser = (url: string) => {
@@ -57,15 +57,20 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
   return (
     <>
       <KButton
-        className="w-full"
-        tonal
+        className="rounded-2lg"
+        outline
         itemType="button"
-        // @ts-expect-error
-        type="button"
+        large
         onClick={() => setIsOpen(true)}
       >
-        <FaCalendarPlus className="mr-2" />
-        Add to Calendar
+        <Typography
+          variant="headline"
+          className="flex gap-2 items-center capitalize"
+          weight="semibold"
+        >
+          <LucideCalendarPlus />
+          Add to Calendar
+        </Typography>
       </KButton>
       {createPortal(
         <Sheet
