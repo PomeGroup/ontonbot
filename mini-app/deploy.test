@@ -13,3 +13,5 @@ after something
 clear registery
 dep stage
 deploy verify test
+
+deploy after reset
