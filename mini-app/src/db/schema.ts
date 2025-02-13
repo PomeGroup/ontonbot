@@ -45,7 +45,7 @@ import { nftItems } from "./schema/nft_items";
 import { coupon_definition, coupon_definition_status, coupon_definition_type } from "./schema/coupon_definition";
 import { coupon_item_status, coupon_items } from "./schema/coupon_items";
 import { user_custom_flags, user_flags, userFlagsType } from "./schema/user_custom_flags";
-
+import { usersScore, UsersScoreType, UsersScoreActivityType, UserScoreItemType } from "./schema/usersScore";
 // ---- NEW IMPORTS for user_roles ----
 import {
   accessRoleItemType,
@@ -119,10 +119,9 @@ export {
   coupon_definition,
   coupon_items,
   user_custom_flags,
-
-  // --- Export the new userRoles table & relations
   userRoles,
   userRolesRelations,
+  usersScore,
 };
 
 // Type Exports
@@ -135,3 +134,6 @@ export type { EventPoaResultStatus };
 export type { accessRoleItemType };
 export type { accessRoleEnumType };
 export type { userFlagsType };
+export type { UsersScoreType };
+export type { UserScoreItemType };
+export type { UsersScoreActivityType };
