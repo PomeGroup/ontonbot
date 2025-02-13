@@ -13,7 +13,7 @@ import MainButton from "../atoms/buttons/web-app/MainButton";
 import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
-import SupportButton from "../atoms/buttons/SupportButton";
+import SupportButtons from "../atoms/buttons/SupportButton";
 import { Card, ListItem, List, Block } from "konsta/react";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
@@ -485,7 +485,7 @@ export const EventSections = () => {
       <EventDescription />
       <EventRegistrationStatus />
 
-      <SupportButton />
+      <SupportButtons />
 
       {/* --------------------------------------- */}
       {/* ---------- MainButtonHandler ---------- */}

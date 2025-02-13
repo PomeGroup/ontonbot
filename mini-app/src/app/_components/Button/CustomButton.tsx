@@ -1,17 +1,16 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { Button, Preloader } from "konsta/react";
 import Typography from "@/components/Typography";
 
 interface CustomButtonProps {
-  title: string;
+  children: ReactNode;
   variant?: "primary" | "outline";
   isLoading?: boolean;
   onClick: (_e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-const CustomButton: React.FC<CustomButtonProps> = ({ title, variant = "primary", isLoading = false, onClick }) => (
+const CustomButton: React.FC<CustomButtonProps> = ({ children, variant = "primary", isLoading = false, onClick }) => (
   <Button
-    title={title}
     itemType="button"
     large
     outline={variant === "outline"}
@@ -24,7 +23,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({ title, variant = "primary",
       weight="bold"
       className="capitalize"
     >
-      {isLoading && variant === "primary" ? <Preloader size="w-4 h-4" /> : title}
+      {isLoading && variant === "primary" ? <Preloader size="w-4 h-4" /> : children}
     </Typography>
   </Button>
 );

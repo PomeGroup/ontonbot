@@ -191,22 +191,24 @@ const UserCustomRegisterForm = () => {
 
           <div className="pt-0 space-y-3 p-4">
             <CustomButton
-              title="Request to Join"
               variant="primary"
               isLoading={registerUser.isLoading}
               onClick={(e) => {
                 e.preventDefault();
                 registrationForm.current?.requestSubmit();
               }}
-            />
+            >
+              Request to Join
+            </CustomButton>
             <CustomButton
-              title="Cancel"
               variant="outline"
               isLoading={registerUser.isLoading}
               onClick={() => {
                 setOpen(false);
               }}
-            />
+            >
+              Cancel
+            </CustomButton>
           </div>
         </form>
       </ReusableSheet>

@@ -3,7 +3,8 @@ import { useEventData } from "./eventPageContext";
 import { Pencil } from "lucide-react";
 import { useUserStore } from "@/context/store/user.store";
 import { canUserManageEvent } from "@/lib/userRolesUtils";
-import { Button, Card } from "konsta/react";
+import { Card } from "konsta/react";
+import CustomButton from "../Button/CustomButton";
 
 export const ManageEventButton = () => {
   const { eventData, eventHash } = useEventData();
@@ -23,19 +24,17 @@ export const ManageEventButton = () => {
 
   return (
     <Card>
-      <Button
+      <CustomButton
         onClick={() => {
           router.push(`/events/${eventHash}/manage`);
         }}
-        large
-        className="rounded-2lg"
-        outline
+        variant="outline"
       >
         <div className="flex gap-2 items-center">
           <Pencil />
           <span>Manage Event</span>
         </div>
-      </Button>
+      </CustomButton>
     </Card>
   );
 };

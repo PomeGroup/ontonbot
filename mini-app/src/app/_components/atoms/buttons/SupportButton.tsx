@@ -1,13 +1,13 @@
 "use client";
 
 import Typography from "@/components/Typography";
-import { Button } from "konsta/react";
 import useWebApp from "@/hooks/useWebApp";
 import { Card } from "konsta/react";
 import React from "react";
 import { useEventData } from "../../Event/eventPageContext";
+import CustomButton from "../../Button/CustomButton";
 
-const SupportButton = () => {
+const SupportButtons = () => {
   const webApp = useWebApp();
   const hapticfeedback = webApp?.HapticFeedback;
   const { eventData } = useEventData();
@@ -32,23 +32,15 @@ const SupportButton = () => {
       >
         Do you have issues with SBT or payment?
       </Typography>
-      <Button
-        outline
-        large
-        className="rounded-2lg !mt-2"
+      <CustomButton
+        variant="outline"
         onClick={() => {
           hapticfeedback?.impactOccurred("medium");
           webApp?.openTelegramLink("https://t.me/ontonsupport");
         }}
       >
-        <Typography
-          variant={"headline"}
-          weight={"semibold"}
-          className="capitalize"
-        >
-          ONTON Support
-        </Typography>
-      </Button>
+        ONTON Support
+      </CustomButton>
       {eventData.data?.organizer?.org_support_telegram_user_name && (
         <>
           <Typography
@@ -58,27 +50,19 @@ const SupportButton = () => {
           >
             Do you have questions about the event?
           </Typography>
-          <Button
-            outline
-            large
-            className="rounded-2lg !mt-2 caption-bottom"
+          <CustomButton
+            variant="outline"
             onClick={() => {
               hapticfeedback?.impactOccurred("medium");
               webApp?.openTelegramLink(`https://t.me/${eventData.data?.organizer?.org_support_telegram_user_name}`);
             }}
           >
-            <Typography
-              variant={"headline"}
-              weight={"semibold"}
-              className="capitalize"
-            >
-              Event Support
-            </Typography>
-          </Button>
+            Event Support
+          </CustomButton>
         </>
       )}
     </Card>
   );
 };
 
-export default SupportButton;
+export default SupportButtons;
