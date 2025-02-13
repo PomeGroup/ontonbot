@@ -856,7 +856,7 @@ async function sendPaymentReminder() {
         and(
           isNotNull(orders.trx_hash), // Ensures trx_hash is not null
           eq(orders.event_uuid, event.events.event_uuid),
-          eq(orders.order_type, "nft_mint"),
+          or(eq(orders.order_type, "nft_mint"),eq(orders.order_type, "ts_csbt_ticket")),
           eq(orders.state, "completed")
         )
       )
