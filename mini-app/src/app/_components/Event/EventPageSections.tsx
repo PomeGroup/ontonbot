@@ -206,64 +206,66 @@ const EventAttributes = React.memo(() => {
 EventAttributes.displayName = "EventAttributes";
 
 // Status component to handle different event states
-const EventRegistrationStatus = ({
-  registrantStatus,
-  capacityFilled,
-  hasWaitingList,
-  isCustom,
-}: {
-  registrantStatus: "" | "approved" | "rejected" | "pending" | "checkedin";
-  capacityFilled: boolean;
-  hasWaitingList: boolean;
-  isCustom: boolean;
-}) => {
-  const formComponent = isCustom ? <UserCustomRegisterForm /> : <UserRegisterForm />;
-  const statusConfigs = {
-    "": () => formComponent,
-    pending: () => (
-      <DataStatus
-        status="sent"
-        title="Request Pending"
-        description="Your request to join this event is pending to be approved."
-      />
-    ),
-    approved: () => (
-      <DataStatus
-        status="approved"
-        title="Request Approved"
-        description="Your request to join this event has been approved"
-      />
-    ),
-    rejected: () => (
-      <DataStatus
-        status="rejected"
-        title="Request Rejected"
-        description="Your request to join this event has been rejected."
-      />
-    ),
-    checkedin: () => {
-      <div></div>;
-    },
-  };
+const EventRegistrationStatus = () => {
+  const { eventData, isNotEnded } = useEventData();
+  const registrantStatus = eventData.data?.registrant_status ?? "";
+  const capacityFilled = Boolean(eventData.data?.capacity_filled);
+  const hasWaitingList = Boolean(eventData.data?.has_waiting_list);
 
-  if (capacityFilled && !hasWaitingList) {
-    return (
-      <>
-        <DataStatus
-          status="rejected"
-          title="Capacity Filled"
-          description="Event capacity is filled and no longer accepts registrations."
-        />
-        <MainButton
-          text="Event Capacity Filled"
-          disabled
-          color="secondary"
-        />
-      </>
-    );
+  if (!isNotEnded || !eventData.data?.has_registration) {
+    return null;
   }
 
-  return statusConfigs[registrantStatus]?.() ?? null;
+  const isCustom = Boolean(eventData.data?.registrationFromSchema?.isCustom);
+  if ((hasWaitingList || !capacityFilled) && registrantStatus === "") {
+    return isCustom ? <UserCustomRegisterForm /> : <UserRegisterForm />;
+  }
+
+  return (
+    <Card>
+      {capacityFilled && !hasWaitingList && (
+        <>
+          <DataStatus
+            status="rejected"
+            title="Capacity Filled"
+            description="Event capacity is filled and no longer accepts registrations."
+          />
+          <MainButton
+            text="Event Capacity Filled"
+            disabled
+            color="secondary"
+          />
+        </>
+      )}
+
+      {!capacityFilled && (
+        <>
+          {registrantStatus === "pending" && (
+            <DataStatus
+              status="sent"
+              title="Request Pending"
+              description="Your request to join this event is pending to be approved."
+            />
+          )}
+          {registrantStatus === "approved" && (
+            <DataStatus
+              status="approved"
+              title="Request Approved"
+              description="Your request to join this event has been approved."
+            />
+          )}
+          {registrantStatus === "rejected" && (
+            <DataStatus
+              status="rejected"
+              title="Request Rejected"
+              description="Your request to join this event has been rejected."
+            />
+          )}
+          {registrantStatus === "checkedin" && <div></div>}
+        </>
+      )}
+    </Card>
+  );
 };
 
 const OrganizerCard = React.memo(() => {
@@ -477,20 +479,12 @@ export const EventSections = () => {
       </Card>
 
       <ManageEventButton />
-      <EventDescription />
-      <UserWallet />
-
-      {isNotEnded && eventData.data?.has_registration && (
-        <EventRegistrationStatus
-          registrantStatus={eventData.data?.registrant_status ?? ""}
-          capacityFilled={Boolean(eventData.data?.capacity_filled)}
-          hasWaitingList={Boolean(eventData.data?.has_waiting_list)}
-          isCustom={eventData.data?.registrationFromSchema?.isCustom}
-        />
-      )}
-
       <OrganizerCard />
       <SbtCollectionLink />
+      <UserWallet />
+      <EventDescription />
+      <EventRegistrationStatus />
+
       <SupportButton />
 
       {/* --------------------------------------- */}
