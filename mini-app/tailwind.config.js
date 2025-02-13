@@ -13,6 +13,7 @@ module.exports = konstaConfig({
       "brand-purple": "#6d28d9",
       "brand-fill-bg": "#747480",
       "brand-muted": "#8E8E93",
+      "brand-divider": "#C8C7CB",
     },
   },
   darkMode: ["class"],

@@ -3,6 +3,7 @@ import { Sheet } from "konsta/react";
 import { IoCloseCircleOutline } from "react-icons/io5";
 import Typography from "@/components/Typography";
 import { cn } from "@/lib/utils";
+import { createPortal } from "react-dom";
 
 interface ReusableSheetProps {
   title: string;
@@ -12,25 +13,27 @@ interface ReusableSheetProps {
   onClose?: () => void;
 }
 
-const ReusableSheet: React.FC<ReusableSheetProps> = ({ title, opened, children, className, onClose }) => (
-  <Sheet
-    opened={opened}
-    className={cn("w-full rounded-t-2xl", className)}
-    onBackdropClick={onClose}
-  >
-    <div className="flex !mt-5 mx-4 justify-between items-center">
-      <Typography
-        variant="title3"
-        weight="normal"
-      >
-        {title}
-      </Typography>
-      <button onClick={onClose}>
-        <IoCloseCircleOutline className="text-2xl" />
-      </button>
-    </div>
-    {children}
-  </Sheet>
-);
+const ReusableSheet: React.FC<ReusableSheetProps> = ({ title, opened, children, className, onClose }) =>
+  createPortal(
+    <Sheet
+      opened={opened}
+      className={cn("w-full rounded-t-2xl overflow-scroll max-h-screen", className)}
+      onBackdropClick={onClose}
+    >
+      <div className="flex !mt-5 mx-4 justify-between items-center">
+        <Typography
+          variant="title3"
+          weight="normal"
+        >
+          {title}
+        </Typography>
+        <button onClick={onClose}>
+          <IoCloseCircleOutline className="text-2xl" />
+        </button>
+      </div>
+      {children}
+    </Sheet>,
+    document.body
+  );
 
 export default ReusableSheet;

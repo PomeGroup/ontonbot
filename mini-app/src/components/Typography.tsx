@@ -2,7 +2,7 @@ import { cn } from "@/utils";
 import { cva, VariantProps } from "class-variance-authority";
 import { ReactNode } from "react";
 
-export const typographyVariants = cva("", {
+export const typographyVariants = cva("break-words", {
   variants: {
     variant: {
       title1: "text-3xl font-normal leading-[34px]",
@@ -45,7 +45,7 @@ export const typographyVariants = cva("", {
   },
 });
 
-interface TypographyProps extends VariantProps<typeof typographyVariants> {
+export interface TypographyProps extends VariantProps<typeof typographyVariants> {
   children: ReactNode;
   className?: string;
 }

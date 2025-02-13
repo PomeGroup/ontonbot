@@ -134,7 +134,13 @@ const EventDescription = React.memo(() => {
       }
       contentWrap={false}
     >
-      <p className="p-4 pt-0">{eventData.data?.description ?? ""}</p>
+      <Typography
+        weight="normal"
+        variant={"body"}
+        className="p-4 pt-0 whitespace-pre-line"
+      >
+        {eventData.data?.description ?? ""}
+      </Typography>
     </Card>
   );
 });
@@ -171,15 +177,14 @@ const EventTitle = React.memo(() => {
       {isNotPublished && (
         <div className="text-sky-500 text-lg font-semibold">! Event is not published and pending moderation</div>
       )}
-      <div className="flex items-center justify-between">
-        <div>
-          <Typography
-            variant="title1"
-            weight="bold"
-          >
-            {eventData.data?.title ?? ""}
-          </Typography>
-        </div>
+      <div className="grid grid-cols-8 gap-2 items-start">
+        <Typography
+          variant="title2"
+          weight="bold"
+          className="self-center col-span-7"
+        >
+          {eventData.data?.title ?? ""}
+        </Typography>
         <ShareEventButton
           event_uuid={eventHash}
           activity_id={eventData.data?.activity_id}
@@ -292,7 +297,15 @@ const OrganizerCard = React.memo(() => {
         <ListItem
           className="cursor-pointer"
           onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
-          title={organizer.org_channel_name || "Untitled organizer"}
+          title={
+            <Typography
+              variant="headline"
+              weight="medium"
+              className="text-primary"
+            >
+              {organizer.org_channel_name || "Untitled organizer"}
+            </Typography>
+          }
           subtitle={
             <Typography
               weight={"medium"}

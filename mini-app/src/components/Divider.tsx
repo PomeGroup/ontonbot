@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
 import { cva, VariantProps } from "class-variance-authority";
 
-const dividerVariants = cva("w-full bg-brand-muted/15", {
+const dividerVariants = cva("w-full bg-brand-divider", {
   variants: {
     height: {
+      "1": "h-0.25",
       "2": "h-0.5",
       "4": "h-1",
       "8": "h-2",
