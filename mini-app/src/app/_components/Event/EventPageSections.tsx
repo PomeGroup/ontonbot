@@ -297,7 +297,15 @@ const OrganizerCard = React.memo(() => {
         <ListItem
           className="cursor-pointer"
           onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
-          title={organizer.org_channel_name || "Untitled organizer"}
+          title={
+            <Typography
+              variant="headline"
+              weight="medium"
+              className="text-primary"
+            >
+              {organizer.org_channel_name || "Untitled organizer"}
+            </Typography>
+          }
           subtitle={
             <Typography
               weight={"medium"}
