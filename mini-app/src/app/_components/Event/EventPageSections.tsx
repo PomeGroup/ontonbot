@@ -66,19 +66,47 @@ const EventLocation = React.memo(() => {
 });
 EventLocation.displayName = "EventLocation";
 
-const EventWebsiteLink = React.memo(() => {
-  const { location, isLocationUrl } = useEventData();
+const EventLink = React.memo(() => {
+  const { location, isLocationUrl, eventData } = useEventData();
   if (!location || !isLocationUrl) return null;
 
   return (
     <EventKeyValue
       variant="link"
       label="Event Link"
-      value={location}
+      value={
+        eventData.data?.has_registration && !["approved", "checkedin"].includes(eventData.data.registrant_status)
+          ? "Visible after registration"
+          : location
+      }
+    />
+  );
+});
+EventLink.displayName = "EventLink";
+
+const EventWebsiteLink = React.memo(() => {
+  const { eventData } = useEventData();
+  if (!eventData.data?.website) return null;
+
+  return (
+    <EventKeyValue
+      variant="link"
+      label="website"
+      value={eventData.data.website.link}
     />
   );
 });
 EventWebsiteLink.displayName = "EventWebsiteLink";
+
+const EventTicketPrice = React.memo(() => {
+  return (
+    <EventKeyValue
+      label="Ticket Price"
+      value={"Free"}
+    />
+  );
+});
+EventTicketPrice.displayName = "EventTicketPrice";
 
 const EventDatesComponent = React.memo(() => {
   const { startUTC, endUTC } = useEventData();
@@ -166,10 +194,12 @@ EventHead.displayName = "EventHead";
 
 const EventAttributes = React.memo(() => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
       <EventLocation />
-      <EventWebsiteLink />
+      <EventLink />
+      <EventTicketPrice />
       <EventDatesComponent />
+      <EventWebsiteLink />
     </div>
   );
 });
