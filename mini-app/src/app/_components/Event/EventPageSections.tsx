@@ -161,7 +161,7 @@ const UserWallet = () => {
   );
 };
 
-const EventHead = React.memo(() => {
+const EventTitle = React.memo(() => {
   const { eventHash, eventData } = useEventData();
 
   const isNotPublished = !eventData.data?.activity_id || !!eventData.data?.hidden;
@@ -190,7 +190,7 @@ const EventHead = React.memo(() => {
     </div>
   );
 });
-EventHead.displayName = "EventHead";
+EventTitle.displayName = "EventHead";
 
 const EventAttributes = React.memo(() => {
   return (
@@ -451,8 +451,7 @@ const MainButtonHandler = React.memo(() => {
 });
 MainButtonHandler.displayName = "MainButtonHandler";
 
-// Main component
-export const EventSections = () => {
+const EventHeader = React.memo(() => {
   const { eventData, hasEnteredPassword, isStarted, isNotEnded } = useEventData();
   const { user } = useUserStore();
 
@@ -464,20 +463,27 @@ export const EventSections = () => {
   const isEventActive = isStarted && isNotEnded;
 
   return (
+    <Card>
+      <EventImage />
+
+      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
+        <EventPasswordAndWalletInput />
+      )}
+
+      <EventTitle />
+      <Divider margin="medium" />
+      <EventAttributes />
+      <EventActions />
+    </Card>
+  );
+});
+EventHeader.displayName = "EventHeader";
+
+// Main component
+export const EventSections = () => {
+  return (
     <>
-      <Card>
-        <EventImage />
-
-        {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-          <EventPasswordAndWalletInput />
-        )}
-
-        <EventHead />
-        <Divider margin="medium" />
-        <EventAttributes />
-        <EventActions />
-      </Card>
-
+      <EventHeader />
       <ManageEventButton />
       <OrganizerCard />
       <SbtCollectionLink />
