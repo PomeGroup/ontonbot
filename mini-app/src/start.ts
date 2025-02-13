@@ -1,4 +1,4 @@
-import { eventPayment, eventRegistrants, events, nftItems, orders, rewards, tickets, walletChecks } from "@/db/schema";
+import { eventPayment, eventRegistrants, events, nftItems, orders, rewards, walletChecks } from "@/db/schema";
 import { getErrorMessages } from "@/lib/error";
 import { redisTools } from "@/lib/redisTools";
 import { sendLogNotification } from "@/lib/tgBot";
@@ -9,7 +9,7 @@ import telegramService from "@/server/routers/services/telegramService";
 import { RewardType } from "@/types/event.types";
 import { CronJob } from "cron";
 import "dotenv/config";
-import { desc, and, asc, count, eq, isNotNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull, lt, or, sql } from "drizzle-orm";
 import { db } from "./db/db";
 import { rounder, sleep } from "./utils";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
@@ -25,6 +25,8 @@ import { selectUserById } from "./server/db/users";
 import { logger } from "./server/utils/logger";
 import { orgPromoteProcessOrder } from "./server/routers/services/orgPromoteOrderService";
 import { CsbtTicket } from "./server/routers/services/rewardsService";
+import "@/lib/gracefullyShutdown";
+import eventDB from "@/server/db/events";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -58,7 +60,7 @@ async function MainCronJob() {
 
   new CronJob("*/9 * * * * *", cronJob(MintNFTforPaid_Orders), null, true);
 
-  new CronJob("*/5 * * * * *", cronJob(TsCsbtTicket_Order), null, true);
+  new CronJob("*/11 * * * * *", cronJob(TsCsbtTicket_Order), null, true);
 
   new CronJob("*/21 * * * * *", OrganizerPromoteProcessing, null, true);
 }
@@ -103,6 +105,7 @@ function cronJob(fn: (_: () => any) => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                                   Rewards                                  */
+
 /* -------------------------------------------------------------------------- */
 
 async function createRewards(pushLockTTl: () => any) {
@@ -130,13 +133,14 @@ async function processRewardChunk(pendingRewards: RewardType[]) {
   for (const pendingReward of pendingRewards) {
     try {
       const visitor = await findVisitorById(pendingReward.visitor_id);
-      const event = await db.query.events.findFirst({
-        where: (fields, { eq }) => eq(fields.event_uuid, visitor?.event_uuid as string),
-      });
+      // const event = await db.query.events.findFirst({
+      //   where: (fields, { eq }) => eq(fields.event_uuid, visitor?.event_uuid as string),
+      // });
+      const event = await eventDB.selectEventByUuid(visitor?.event_uuid as string);
 
       const response = await createUserRewardLink(event?.activity_id as number, {
         telegram_user_id: visitor?.user_id as number,
-        attributes: [{ trait_type: "Organizer", value: event?.society_hub as string }],
+        attributes: [{ trait_type: "Organizer", value: event?.society_hub.name as string }],
       });
       await sleep(100);
       await rewardDB.updateReward(pendingReward.id, response.data.data);
@@ -181,9 +185,10 @@ async function sendRewardNotification(createdReward: RewardType) {
     const visitor = await findVisitorById(createdReward.visitor_id);
     if (!visitor) throw new Error("Visitor not found");
 
-    const event = await db.query.events.findFirst({
-      where: (fields, { eq }) => eq(fields.event_uuid, visitor.event_uuid),
-    });
+    // const event = await db.query.events.findFirst({
+    //   where: (fields, { eq }) => eq(fields.event_uuid, visitor.event_uuid),
+    // });
+    const event = await eventDB.fetchEventByUuid(visitor.event_uuid);
 
     if (!event) throw new Error("Event not found");
 
@@ -252,6 +257,7 @@ async function handleRewardError(reward: RewardType, error: any) {
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
 /*                                Transactions                                */
+
 /* -------------------------------------------------------------------------- */
 async function CheckTransactions(pushLockTTl: () => any) {
   // Get Orders to be Checked (Sort By Order.TicketDetails.Id)
@@ -319,6 +325,7 @@ async function CheckTransactions(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                             Create Event Orders                            */
+
 /* -------------------------------------------------------------------------- */
 async function CreateEventOrders(pushLockTTl: () => any) {
   // Get Pending(paid) Orders to create event
@@ -347,13 +354,14 @@ async function CreateEventOrders(pushLockTTl: () => any) {
         logger.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
         continue;
       }
-      const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      // const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      const event = await eventDB.selectEventByUuid(event_uuid);
       if (!event) {
         //NOTE - tg log
         logger.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
         continue;
       }
-      const eventData = event[0];
+      const eventData = event;
       const eventDraft = await CreateTonSocietyDraft(
         {
           title: eventData.title,
@@ -449,6 +457,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
             })
             .where(eq(events.event_uuid, event_uuid))
             .execute();
+          await eventDB.deleteEventCache(event_uuid);
           logger.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
         }
         /* ------------------------ Update Collection Address ----------------------- */
@@ -480,6 +489,7 @@ async function CreateEventOrders(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                            Event Update Capacity                           */
+
 /* -------------------------------------------------------------------------- */
 async function UpdateEventCapacity(pushLockTTl: () => any) {
   const results = await db
@@ -499,13 +509,15 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
         logger.error("error_CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
         continue;
       }
-      const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      // const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
+      const event = await eventDB.selectEventByUuid(event_uuid);
+
       if (!event) {
         //NOTE - tg log
         logger.error("error_CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
         continue;
       }
-      const eventData = event[0];
+      const eventData = event;
 
       const paymentInfo = (
         await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
@@ -521,6 +533,8 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
         const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.06);
 
         await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid)).execute();
+        await eventDB.deleteEventCache(eventData.event_uuid);
+
         await trx
           .update(eventPayment)
           .set({ bought_capacity: newCapacity })
@@ -536,6 +550,7 @@ async function UpdateEventCapacity(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                                 NFT Minter                                 */
+
 /* -------------------------------------------------------------------------- */
 async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
   // Get Orders to be Minted
@@ -608,7 +623,10 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
       //   )
       // )
       const nft_count_result = await db
-        .select({ count: sql`count(*)`.mapWith(Number) })
+        .select({
+          count: sql`count
+              (*)`.mapWith(Number),
+        })
         .from(nftItems)
         .where(eq(nftItems.event_uuid, event_uuid!))
         .execute();
@@ -687,6 +705,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                                 TS CSBT Ticket                             */
+
 /* -------------------------------------------------------------------------- */
 async function TsCsbtTicket_Order(pushLockTTl: () => any) {
   // Get Orders to be Minted
@@ -800,6 +819,7 @@ async function TsCsbtTicket_Order(pushLockTTl: () => any) {
 
 /* -------------------------------------------------------------------------- */
 /*                        Payment to Organizer Reminder                       */
+
 /* -------------------------------------------------------------------------- */
 async function sendPaymentReminder() {
   logger.log("sendPaymentReminder");
@@ -828,7 +848,8 @@ async function sendPaymentReminder() {
     logger.log("event_payment_reminder", event.events.event_uuid);
     const totalAmount = await db
       .select({
-        totalPrice: sql`SUM(${orders.total_price})`, // Calculates the sum of total_price
+        totalPrice: sql`SUM
+            (${orders.total_price})`, // Calculates the sum of total_price
       })
       .from(orders)
       .where(
@@ -898,6 +919,7 @@ Recipient : <code>${recipient_address}</code>
 
 /* -------------------------------------------------------------------------- */
 /*                     Organizer Promote Order Processing                    */
+
 /* -------------------------------------------------------------------------- */
 async function OrganizerPromoteProcessing() {
   const org_orders = await db

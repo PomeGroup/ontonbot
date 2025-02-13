@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eventRegistrants, nftItems, orders, tickets } from "@/db/schema";
+import { nftItems, orders } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import { and, eq, or, sql } from "drizzle-orm";
@@ -7,10 +7,11 @@ import { type NextRequest } from "next/server";
 import { usersDB } from "@/server/db/users";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { NFTItem } from "@/server/routers/services/tonCenter";
-
 import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { OrderRow } from "@/db/schema/orders";
 import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
+import "@/lib/gracefullyShutdown";
+import eventDB, { fetchEventById } from "@/server/db/events";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -107,11 +108,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const searchParams = req.nextUrl.searchParams;
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
 
-    const unsafeEvent = await db.query.events.findFirst({
-      where(fields, { eq }) {
-        return eq(fields.event_uuid, event_uuid);
-      },
-    });
+    // const unsafeEvent = await db.query.events.findFirst({
+    //   where(fields, { eq }) {
+    //     return eq(fields.event_uuid, event_uuid);
+    //   },
+    // });
+    const unsafeEvent = await eventDB.fetchEventByUuid(event_uuid);
 
     if (!unsafeEvent?.event_uuid) {
       return Response.json({ error: "Event not found" }, { status: 400 });
@@ -139,7 +141,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 
     const soldTicketsCount = await db
-      .select({ count: sql`count(*)`.mapWith(Number) })
+      .select({
+        count: sql`count
+            (*)`.mapWith(Number),
+      })
       .from(orders)
       .where(
         and(

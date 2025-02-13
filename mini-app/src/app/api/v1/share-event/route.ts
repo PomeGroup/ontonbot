@@ -1,6 +1,7 @@
 import { getAuthenticatedUser } from "@/server/auth";
 import axios from "axios";
 import { NextRequest } from "next/server";
+import "@/lib/gracefullyShutdown";
 
 export async function GET(req: NextRequest): Promise<Response> {
   const [, err] = getAuthenticatedUser();
@@ -20,3 +21,5 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   return Response.json({ message: "share message sent successfully" });
 }
+
+export const dynamic = "force-dynamic";

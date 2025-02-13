@@ -6,7 +6,6 @@ import { cn } from "@/utils";
 import { useEffect } from "react";
 import { useGetEvent } from "@/hooks/events.hooks";
 import Image from "next/image";
-import { lowerCase } from "lodash";
 
 interface RewardFormProps {
   passwordDisabled: boolean;
@@ -77,7 +76,7 @@ export const RewardForm = ({
               }
             }}
             onChange={(e) => {
-              Boolean(e?.target?.value?.trim()) && setPasswordValue(lowerCase(e.target.value));
+              Boolean(e?.target?.value?.trim()) && setPasswordValue((e.target.value as string).toLowerCase().trim());
             }}
             error={errors?.secret_phrase?.[0]}
           />

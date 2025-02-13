@@ -43,7 +43,7 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
 
   const eventPasswordField = useMemo(() => {
     return eventData.data?.dynamic_fields?.find((v) => v.title === "secret_phrase_onton_input");
-  }, [eventData.data?.dynamic_fields?.length]);
+  }, [eventData.data?.dynamic_fields]);
 
   const { isLocationUrl, endUTC, startUTC, location } = useMemo(() => {
     if (!eventData.data) {

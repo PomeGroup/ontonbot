@@ -1,15 +1,11 @@
 // Helper function to validate and retrieve visitor
 import visitorsDB from "@/server/db/visitors";
-import { selectEventByUuid } from "@/server/db/events";
+import eventDB from "@/server/db/events";
 import { TRPCError } from "@trpc/server";
 import userEventFieldsDB from "@/server/db/userEventFields.db";
 import { logger } from "@/server/utils/logger";
 
-export const getAndValidateVisitor = async (
-  user_id: number,
-  event_uuid: string,
-  ticketOrderUuid?: string | null
-) => {
+export const getAndValidateVisitor = async (user_id: number, event_uuid: string, ticketOrderUuid?: string | null) => {
   try {
     // Check if the visitor exists, depending on the ticketOrderUuid
     const visitor = ticketOrderUuid
@@ -55,7 +51,7 @@ export const addVisitor = async (opts: any) => {
   const { user_id } = opts.ctx.user;
 
   // Fetch the event by UUID
-  const event = await selectEventByUuid(event_uuid);
+  const event = await eventDB.selectEventByUuid(event_uuid);
   if (!event) {
     throw new TRPCError({
       code: "NOT_FOUND",

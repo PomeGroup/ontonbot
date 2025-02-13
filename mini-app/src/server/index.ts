@@ -18,6 +18,7 @@ import { registrantRouter } from "@/server/routers/registrant";
 import { organizerRouter } from "@/server/routers/organizers";
 import { couponRouter } from "@/server/routers/couponRouter";
 import { userRolesRouter } from "@/server/routers/userRolesRouter";
+import "@/lib/gracefullyShutdown";
 
 export const appRouter = router({
   users: usersRouter,

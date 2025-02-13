@@ -1,7 +1,11 @@
 import { index, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
-import { relations } from "drizzle-orm";
+import { eq, InferSelectModel, relations } from "drizzle-orm";
 import { userEventFields } from "@/db/schema/userEventFields";
+import { redisTools } from "@/lib/redisTools";
+import eventFieldsDB from "@/server/db/eventFields.db";
+import { db } from "@/db/db";
+
 export const eventFields = pgTable(
   "event_fields",
   {
@@ -35,3 +39,5 @@ export const eventFieldRelations = relations(eventFields, ({ one, many }) => ({
   }),
   userEventFields: many(userEventFields),
 }));
+
+export type EventField = InferSelectModel<typeof eventFields>;

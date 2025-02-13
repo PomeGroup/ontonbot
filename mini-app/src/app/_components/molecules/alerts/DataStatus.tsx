@@ -3,14 +3,14 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { cn } from "@/utils";
 
 interface DataStatusProps {
-  status: "pending" | "success" | "danger" | "not_found" | "approved" | "rejected" | "sent";
+  status: keyof typeof DATA_STATUS_ANIMATIONS;
   title?: ReactNode;
   description?: ReactNode;
-  size?: "sm" | "md" | "lg";
+  size?: keyof typeof ANIMATION_SIZES;
   className?: string;
 }
 
-const DATA_STATUS_ANIMATIONS: Record<DataStatusProps["status"], string> = {
+const DATA_STATUS_ANIMATIONS = {
   not_found: "https://storage.onton.live/ontonimage/looking_duck.lottie",
   approved: "https://storage.onton.live/ontonimage/approved.lottie",
   rejected: "https://storage.onton.live/ontonimage/rejected.lottie",
@@ -18,14 +18,14 @@ const DATA_STATUS_ANIMATIONS: Record<DataStatusProps["status"], string> = {
   danger: "https://storage.onton.live/ontonimage/crying_duck.lottie",
   pending: "https://storage.onton.live/ontonimage/pending_duck.lottie",
   sent: "https://storage.onton.live/ontonimage/send-flying-paper-dart.lottie",
-};
+  searching: "https://storage.onton.live/ontonimage/duck-searching.json",
+} as const;
 
-// @ts-expect-error
-const ANIMATION_SIZES: Record<DataStatusProps["size"], number> = {
+const ANIMATION_SIZES = {
   lg: 300,
   md: 120,
   sm: 60,
-};
+} as const;
 
 export default function DataStatus(props: DataStatusProps) {
   return (

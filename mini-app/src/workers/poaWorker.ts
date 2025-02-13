@@ -1,13 +1,11 @@
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { notificationsDB } from "@/server/db/notifications.db";
 import { EventTriggerStatus, NotificationItemType, NotificationStatus, NotificationType } from "@/db/schema";
-
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { getEventById ,fetchOngoingEvents } from "@/server/db/events";
-import { z } from "zod";
+import { getEventById, fetchOngoingEvents } from "@/server/db/events";
 import { fetchApprovedUsers } from "@/server/db/eventRegistrants.db";
 import { ACTION_TIMEOUTS, PASSWORD_RETRY_LIMIT, WORKER_INTERVAL, PAGE_SIZE } from "@/sockets/constants";
 import { logger } from "@/server/utils/logger";
+import { closeDB } from "@/db/db";
 
 let isShuttingDown = false;
 
@@ -21,31 +19,6 @@ process.on("SIGTERM", () => {
   logger.log("Received SIGTERM. Initiating graceful shutdown...");
   isShuttingDown = true;
 });
-
-
-// Function to fetch ongoing events with online participation
-// const fetchOngoingEvents = async () => {
-//   const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
-//
-//   // Ensure the params conform to the Zod schema
-//   const params: z.infer<typeof searchEventsInputZod> = {
-//     search: "",
-//     filter: {
-//       participationType: ["online"],
-//       startDate: currentTime,
-//       startDateOperator: "<=",
-//       endDate: currentTime,
-//       endDateOperator: ">=",
-//     },
-//     sortBy: "start_date_asc",
-//     limit: 100,
-//     offset: 0,
-//     useCache: false,
-//   };
-//
-//   // Call the function with type-safe arguments
-//   return getEventsWithFilters(params);
-// };
 
 // Function to create a notification for the event owner
 const notifyEventOwner = async (eventId: number, ownerId: number, notificationCount: number, triggerId: number) => {
@@ -83,11 +56,9 @@ const processOngoingEvents = async () => {
     await notificationsDB.expireReadNotifications(); // Expire read notifications
     logger.log("Expired read notifications.");
 
-
     const ongoingEvents = await fetchOngoingEvents();
     logger.log(`Fetched ${ongoingEvents.length} ongoing events.`);
-    for (let i = 0; i < ongoingEvents.length; i++){
-
+    for (let i = 0; i < ongoingEvents.length; i++) {
       const event = ongoingEvents[i];
       if (!event?.event_id || !event?.event_uuid) {
         logger.warn("Invalid event data:", event);
@@ -103,10 +74,7 @@ const processOngoingEvents = async () => {
         const startTime = Math.floor(Date.now() / 1000);
         const readableDate = new Date(startTime * 1000).toLocaleString();
         logger.log(`Processing Event ${eventId} : ${eventTitle} at ${startTime} - ${readableDate}`);
-        const activePoaTriggers = await eventPoaTriggersDB.getActivePoaForEventByTime(
-          eventId,
-          startTime,
-        );
+        const activePoaTriggers = await eventPoaTriggersDB.getActivePoaForEventByTime(eventId, startTime);
 
         if (activePoaTriggers.length === 0) {
           logger.warn(`No active POA triggers for Event ${eventId} at ${startTime}`);
@@ -121,14 +89,10 @@ const processOngoingEvents = async () => {
             // Check for shutdown during batch processing
             if (isShuttingDown) {
               logger.log("Shutdown requested during user processing. Exiting batch...");
+              await closeDB();
               return;
             }
-            const approvedUsers = await fetchApprovedUsers(
-              eventUuid,
-              trigger.id,
-              lastUserId,
-              PAGE_SIZE,
-            );
+            const approvedUsers = await fetchApprovedUsers(eventUuid, trigger.id, lastUserId, PAGE_SIZE);
 
             if (approvedUsers.length === 0) {
               hasMore = false;
@@ -142,7 +106,6 @@ const processOngoingEvents = async () => {
               // Now we fetch REPLIED notifications for these users & event
               const replied = await notificationsDB.getRepliedPoaPasswordNotificationsForEvent(eventId, userIds);
 
-
               logger.log(`Found ${replied.length} replied password notifications for Event ${eventId}`);
 
               // Convert userId to number if needed
@@ -150,9 +113,7 @@ const processOngoingEvents = async () => {
 
               // Filter out the users who have REPLIED (so we don't send them new notifications)
               finalUsers = approvedUsers.filter((u) => !userIdsWhoAlreadyReplied.has(u.userId));
-              logger.log(
-                `Filtered out ${approvedUsers.length - finalUsers.length} users who already replied`
-              );
+              logger.log(`Filtered out ${approvedUsers.length - finalUsers.length} users who already replied`);
             }
 
             const notificationsToAdd = finalUsers.map((user) => ({
@@ -163,11 +124,14 @@ const processOngoingEvents = async () => {
                 trigger.poaType === "simple"
                   ? `Please respond to the POA for Event ${event.title}`
                   : `Please enter the password for Event ${event.title}`,
-              actionTimeout:
-                trigger.poaType === "simple"
-                  ? ACTION_TIMEOUTS.POA_SIMPLE
-                  : ACTION_TIMEOUTS.POA_PASSWORD,
-              additionalData: { eventId, eventUuid: event.event_uuid , has_payment : eventHasPayment , poaId: trigger.id, maxTry: PASSWORD_RETRY_LIMIT },
+              actionTimeout: trigger.poaType === "simple" ? ACTION_TIMEOUTS.POA_SIMPLE : ACTION_TIMEOUTS.POA_PASSWORD,
+              additionalData: {
+                eventId,
+                eventUuid: event.event_uuid,
+                has_payment: eventHasPayment,
+                poaId: trigger.id,
+                maxTry: PASSWORD_RETRY_LIMIT,
+              },
               priority: 1,
               itemId: trigger.id,
               item_type: "POA_TRIGGER" as NotificationItemType,
@@ -176,14 +140,13 @@ const processOngoingEvents = async () => {
               readAt: undefined,
               expiresAt: new Date(Date.now() + 60 * 60 * 24 * 30 * 1000),
             }));
-            logger.log(`Adding ${notificationsToAdd.length} notifications for Trigger ${trigger.id}`,notificationsToAdd);
+            logger.log(`Adding ${notificationsToAdd.length} notifications for Trigger ${trigger.id}`, notificationsToAdd);
             try {
-              if(notificationsToAdd.length > 0) {
+              if (notificationsToAdd.length > 0) {
                 const result = await notificationsDB.addNotifications(notificationsToAdd);
                 logger.log(`Created ${result.count} notifications for Trigger ${trigger.id}`);
                 totalNotificationsCreated += result.count; // Accumulate count
-              }
-              else {
+              } else {
                 logger.log(`No notifications to create for Trigger ${trigger.id}`);
               }
             } catch (notificationError) {
@@ -221,6 +184,7 @@ const processOngoingEvents = async () => {
       // Check for shutdown after processing an event
       if (isShuttingDown) {
         logger.log("Shutdown requested after event processing. Exiting...");
+        await closeDB();
         return;
       }
     }
@@ -250,9 +214,7 @@ const runWorker = async () => {
       break;
     }
 
-    logger.log(
-      `Waiting for ${WORKER_INTERVAL / 1000} seconds before the next run...`,
-    );
+    logger.log(`Waiting for ${WORKER_INTERVAL / 1000} seconds before the next run...`);
     await new Promise((resolve) => setTimeout(resolve, WORKER_INTERVAL));
   }
 

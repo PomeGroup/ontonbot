@@ -27,7 +27,7 @@ export function rewardStepValidation(isPaid: boolean, hasRegistration:boolean, e
         : z
             .string()
             .min(4, { message: "Password must be at least 4 characters" })
-            .max(20, { message: "Password must be less than 20 characters" }),
+            .max(60, { message: "Password must be less than 60 characters" }),
     ts_reward_url: editing
       ? z.string().url({ message: "Please select a valid reward image URL" }).optional()
       : z.string().url({ message: "Please select a valid reward image URL" }),

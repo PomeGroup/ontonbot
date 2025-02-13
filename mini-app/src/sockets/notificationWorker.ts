@@ -4,6 +4,7 @@ import { emitNotification } from "./emitters/emitNotification";
 import { Server } from "socket.io";
 import { Message, Channel } from "amqplib";
 import { logger } from "@/server/utils/logger";
+import { closeDB } from "@/db/db";
 // Define the queue name as a constant
 const NOTIFICATIONS_QUEUE = QueueNames.NOTIFICATIONS;
 
@@ -11,13 +12,13 @@ const NOTIFICATIONS_QUEUE = QueueNames.NOTIFICATIONS;
 let isShuttingDown = false;
 
 // Listen for shutdown signals
-process.on('SIGINT', () => {
-  logger.log('Received SIGINT. Initiating graceful shutdown...');
+process.on("SIGINT", () => {
+  logger.log("Received SIGINT. Initiating graceful shutdown...");
   isShuttingDown = true;
 });
 
-process.on('SIGTERM', () => {
-  logger.log('Received SIGTERM. Initiating graceful shutdown...');
+process.on("SIGTERM", () => {
+  logger.log("Received SIGTERM. Initiating graceful shutdown...");
   isShuttingDown = true;
 });
 
@@ -25,27 +26,27 @@ process.on('SIGTERM', () => {
  * Shutdown Function to Clean Up Resources
  */
 const shutdown = async (rabbit: RabbitMQ, queue: QueueNamesType, consumerTag: string) => {
-  logger.log('Shutting down RabbitMQ Notification Worker...');
+  logger.log("Shutting down RabbitMQ Notification Worker...");
 
   const shutdownTimeout = setTimeout(() => {
-    logger.warn('Shutdown timeout reached. Forcing exit.');
+    logger.warn("Shutdown timeout reached. Forcing exit.");
     process.exit(1);
   }, 10000); // 10 seconds timeout
 
   try {
     // Cancel the consumer to stop receiving new messages
     await rabbit.cancelConsumer(queue, consumerTag);
-    logger.log('Consumer canceled.');
+    logger.log("Consumer canceled.");
 
     // Close RabbitMQ connections gracefully
     await rabbit.close();
-    logger.log('RabbitMQ connections closed.');
+    logger.log("RabbitMQ connections closed.");
   } catch (error) {
-    logger.error('Error during shutdown:', error);
+    logger.error("Error during shutdown:", error);
   }
 
   clearTimeout(shutdownTimeout);
-  logger.log('Shutdown complete. Exiting process.');
+  logger.log("Shutdown complete. Exiting process.");
   process.exit(0);
 };
 
@@ -65,13 +66,14 @@ const consumeMessages = async (rabbit: RabbitMQ, io: Server, queue: QueueNamesTy
         // Emit the notification or requeue it if the user is not online
         await emitNotification(io, userId, message, channel, msg);
       } catch (error) {
-        logger.error("Error processing RabbitMQ message:", error);
+        logger.error("Error processing RabbitMQ message:", error, msg);
         channel.nack(msg, false, true); // Requeue the message
       }
 
       // If shutdown is requested, initiate shutdown after processing current message
       if (isShuttingDown) {
-        logger.log('Shutdown flag detected during message processing. Initiating shutdown...');
+        logger.log("Shutdown flag detected during message processing. Initiating shutdown...");
+        await closeDB(); // Close the database connection
         // Note: Do not await shutdown here to prevent blocking message processing
         // Shutdown will be handled in the periodic check
       }
@@ -97,7 +99,7 @@ export const startNotificationWorker = async (io: Server): Promise<void> => {
   }
 
   // Store the consumer tag
-  let consumerTag: string = '';
+  let consumerTag: string = "";
 
   // Consume Messages
   try {
@@ -113,14 +115,16 @@ export const startNotificationWorker = async (io: Server): Promise<void> => {
   const checkShutdown = setInterval(async () => {
     if (isShuttingDown) {
       clearInterval(checkShutdown);
+      await closeDB();
       await shutdown(rabbit, NOTIFICATIONS_QUEUE, consumerTag);
     }
   }, 1000); // Check every second
 
   // Optional: Listen for process exit to ensure shutdown
-  process.on('exit', () => {
+  process.on("exit", () => {
     if (!isShuttingDown) {
-      logger.log('Process exiting without shutdown signal.');
+      logger.log("Process exiting without shutdown signal.");
+      closeDB();
     }
   });
 };

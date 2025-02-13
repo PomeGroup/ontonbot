@@ -1,15 +1,11 @@
-import { db } from "@/db/db";
-import { user_custom_flags } from "@/db/schema";
-import { selectEventByUuid } from "@/server/db/events";
-import { and, eq, or } from "drizzle-orm";
+import eventDB from "@/server/db/events";
 import { z } from "zod";
-import { cookies } from "next/headers";
 import { TRPCError } from "@trpc/server";
 import { logger } from "@/server/utils/logger";
 import { getAuthenticatedUserApi } from "@/server/auth";
 import { handleTrpcError } from "@/server/utils/error_utils";
 import { createUserRewardLink } from "@/lib/ton-society-api";
-
+import "@/lib/gracefullyShutdown";
 /* -------------------------------------------------------------------------- */
 /*                              Reward Api Schema                             */
 /* -------------------------------------------------------------------------- */
@@ -20,6 +16,7 @@ const rewardCreateSchema = z.object({
 
 /* -------------------------------------------------------------------------- */
 /*                                 Main Route                                 */
+
 /* -------------------------------------------------------------------------- */
 export async function POST(request: Request) {
   try {
@@ -38,7 +35,7 @@ export async function POST(request: Request) {
       });
     }
     logger.log("reward_api_call", body);
-    const eventData = await selectEventByUuid(body.data.event_uuid);
+    const eventData = await eventDB.selectEventByUuid(body.data.event_uuid);
     if (!eventData) {
       return Response.json({ message: "event not found" }, { status: 400 });
     }

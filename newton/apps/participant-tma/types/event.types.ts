@@ -1,18 +1,18 @@
 import { PaymentType } from "./order.types";
 
 export interface OrganizerType {
-    user_id: number;
-    username: string;
-    first_name: string;
-    last_name: string;
-    wallet_address: null | string;
-    language_code: string;
-    role: "organizer" | "admin" | "user";
-    created_at: string;
-    org_channel_name: string | null
-    org_image: string | null
-    hosted_event_count: number
-  }
+  user_id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  wallet_address: null | string;
+  language_code: string;
+  role: "organizer" | "admin" | "user";
+  created_at: string;
+  org_channel_name: string | null;
+  org_image: string | null;
+  hosted_event_count: number;
+}
 
 export interface EventDataOnlyType {
   website?: {
@@ -44,7 +44,7 @@ export interface EventDataOnlyType {
   society_hub: string;
   society_hub_id: string;
   activity_id: number;
-  collection_address: string;
+  sbt_collection_address: string;
   secret_phrase: string;
   start_date: number;
   end_date: number;
@@ -56,9 +56,8 @@ export interface EventDataOnlyType {
   created_at: string;
 }
 
-
 export interface EventType extends EventDataOnlyType {
-  organizer: OrganizerType
+  organizer: OrganizerType;
   userTicket?: {
     status: "USED" | "UNUSED" | null;
     user_id: number | null;

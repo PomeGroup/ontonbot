@@ -2,9 +2,8 @@
 FROM node:22-alpine3.19 AS minimum-image
 RUN apk update
 RUN apk add nano
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
+# Update pnpm to the latest (or a specific) version
+RUN npm install --global pnpm@latest
 
 
 # Base stage
@@ -49,6 +48,8 @@ FROM base AS dependencies
 COPY  ./ /app
 # Install production dependencies only
 WORKDIR /app/
+# Set this ENV so pnpm won't ask interactive questions
+ENV CI=true
 # Install production dependencies only
 RUN pnpm install
 

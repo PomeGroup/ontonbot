@@ -14,7 +14,7 @@ import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 import { InlineKeyboardMarkup } from "grammy/types";
 import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
-import { selectEventByUuid } from "@/server/db/events";
+import eventDB from "@/server/db/events";
 import { registerActivity } from "./ton-society-api";
 import { getEventByUuid } from "@/server/db/events";
 import { userHasModerationAccess } from "@/server/db/userFlags.db";
@@ -127,7 +127,7 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
 
 // =========== Approve Event in TonSociety etc. ===========
 async function onCallBackModerateEvent(status: string, event_uuid: string) {
-  const eventData = await selectEventByUuid(event_uuid);
+  const eventData = await eventDB.selectEventByUuid(event_uuid);
   const isLocal = process.env.ENV === "local";
   if (!eventData) return false;
 
@@ -167,6 +167,7 @@ async function onCallBackModerateEvent(status: string, event_uuid: string) {
           })
           .where(eq(events.event_uuid, event_uuid))
           .execute();
+        await eventDB.deleteEventCache(event_uuid);
         logger.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
       });
 
@@ -199,7 +200,7 @@ interface PendingCustomReply {
 const pendingCustomReplyPrompts = new Map<number, PendingCustomReply>();
 
 // =========== Start Bot ===========
-async function startBot() {
+export async function startBot() {
   while (true) {
     if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
       logger.error("Bot token or logs group ID not found in configProtected");
@@ -290,10 +291,10 @@ async function startBot() {
         if (action === "updateEventData") {
           // Demonstration: fetch event, pretend to update DB, then edit the caption
           const updatedEvent = await getEventByUuid(eventUuid);
-          const ownerInfo = await  selectUserById(updatedEvent.owner!!);
+          const ownerInfo = await selectUserById(updatedEvent.owner!!);
 
           const updatedCaption = `
-<b>${updatedEvent.title} (Updated in ${formatDate(Date.now()/1000)})</b>
+<b>${updatedEvent.title} (Updated in ${formatDate(Date.now() / 1000)})</b>
 
 ${updatedEvent.subtitle}
 
@@ -405,7 +406,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
           const reasonKey = parts[1];
           const evId = parts[2];
 
-          const eventData = await selectEventByUuid(evId);
+          const eventData = await eventDB.selectEventByUuid(evId);
           if (eventData) {
             await sendTelegramMessage({
               chat_id: Number(eventData.owner),
@@ -470,7 +471,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
         pendingCustomReplyPrompts.delete(promptId);
 
         const typedReason = ctx.message.text;
-        const eventData = await selectEventByUuid(eventUuid);
+        const eventData = await eventDB.selectEventByUuid(eventUuid);
         if (eventData) {
           await sendTelegramMessage({
             chat_id: Number(eventData.owner),
@@ -603,7 +604,7 @@ export async function sendLogNotification(
 export const renderUpdateEventMessage = (
   username: string | number,
   eventUuid: string,
-  event_title:string,
+  event_title: string,
   oldChanges: any,
   updateChanges: any
 ): string => {
@@ -640,4 +641,4 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 };
 
 // Finally start the bot
-startBot().then(() => logger.log("startBot Function Finish ;"));
+
