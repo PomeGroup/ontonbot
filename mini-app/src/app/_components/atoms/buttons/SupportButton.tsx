@@ -28,7 +28,7 @@ const SupportButtons = () => {
       <Typography
         variant="body"
         weight="normal"
-        className="!-mt-6"
+        className="!-mt-6 mb-2"
       >
         Do you have issues with SBT or payment?
       </Typography>
@@ -46,7 +46,7 @@ const SupportButtons = () => {
           <Typography
             variant="body"
             weight="normal"
-            className="mt-2"
+            className="my-2"
           >
             Do you have questions about the event?
           </Typography>

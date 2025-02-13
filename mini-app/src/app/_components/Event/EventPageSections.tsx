@@ -171,15 +171,14 @@ const EventTitle = React.memo(() => {
       {isNotPublished && (
         <div className="text-sky-500 text-lg font-semibold">! Event is not published and pending moderation</div>
       )}
-      <div className="flex items-center justify-between">
-        <div>
-          <Typography
-            variant="title1"
-            weight="bold"
-          >
-            {eventData.data?.title ?? ""}
-          </Typography>
-        </div>
+      <div className="grid grid-cols-8 gap-2 items-start">
+        <Typography
+          variant="title2"
+          weight="bold"
+          className="self-center col-span-7"
+        >
+          {eventData.data?.title ?? ""}
+        </Typography>
         <ShareEventButton
           event_uuid={eventHash}
           activity_id={eventData.data?.activity_id}
