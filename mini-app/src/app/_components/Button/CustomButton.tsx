@@ -15,7 +15,7 @@ interface CustomButtonProps {
 const CustomButton: React.FC<CustomButtonProps> = ({
   children,
   icon,
-  fontWeight = "bold",
+  fontWeight = "semibold",
   fontSize = "headline",
   variant = "primary",
   isLoading = false,
