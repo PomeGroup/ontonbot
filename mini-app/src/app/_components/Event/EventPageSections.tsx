@@ -175,7 +175,7 @@ const EventTitle = React.memo(() => {
   return (
     <div className="mt-4 space-y-4">
       {isNotPublished && (
-        <div className="text-sky-500 text-lg font-semibold">! Event is not published and pending moderation</div>
+        <div className="text-sky-500 text-lg font-semibold">Event is not published and pending moderation!</div>
       )}
       <div className="grid grid-cols-8 gap-2 items-start">
         <Typography

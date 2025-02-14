@@ -28,7 +28,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     clear={variant === "link"}
     disabled={isLoading}
     onClick={onClick}
-    className="rounded-2lg"
+    className="rounded-2lg h-12"
     // @ts-expect-error the type declaration for this prop does not exist but we should pass it
     type="button"
   >
