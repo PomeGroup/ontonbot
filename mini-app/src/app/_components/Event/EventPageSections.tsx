@@ -234,6 +234,7 @@ const EventRegistrationStatus = () => {
             status="rejected"
             title="Capacity Filled"
             description="Event capacity is filled and no longer accepts registrations."
+            size="md"
           />
           <MainButton
             text="Event Capacity Filled"
@@ -250,6 +251,7 @@ const EventRegistrationStatus = () => {
               status="sent"
               title="Request Pending"
               description="Your request to join this event is pending to be approved."
+              size="md"
             />
           )}
           {registrantStatus === "approved" && (
@@ -257,6 +259,7 @@ const EventRegistrationStatus = () => {
               status="approved"
               title="Request Approved"
               description="Your request to join this event has been approved."
+              size="md"
             />
           )}
           {registrantStatus === "rejected" && (
@@ -264,6 +267,7 @@ const EventRegistrationStatus = () => {
               status="rejected"
               title="Request Rejected"
               description="Your request to join this event has been rejected."
+              size="md"
             />
           )}
           {registrantStatus === "checkedin" && <div></div>}
