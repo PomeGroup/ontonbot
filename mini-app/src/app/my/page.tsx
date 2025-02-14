@@ -29,8 +29,9 @@ export default function ProfilePage() {
   const { setSection } = useSectionStore();
   const paid = user?.role === "organizer" || user?.role === "admin";
   const router = useRouter();
-  if (!user) return null;
-  const userTotalPoints = 220;
+  const { data: totalPoints, isLoading: loadingTotalPoints } = trpc.usersScore.getTotalScoreByUserId.useQuery();
+  if (!user || loadingTotalPoints) return null;
+
   return (
     <div className="bg-[#EFEFF4] py-4 min-h-screen mb-[calc(-1*var(--tg-safe-area-inset-bottom))]">
       {paid ? <InlineChannelCard data={user} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
@@ -68,7 +69,7 @@ export default function ProfilePage() {
         iconSrc={solarCupOutline}
         title="My Points"
         subtitle="You Acheived"
-        footerTexts={[{ items: "Points", count: userTotalPoints || 0 }]}
+        footerTexts={[{ items: "Points", count: totalPoints || 0 }]}
       />
       <ConnectWalletCard />
       <PaymentCard visible={!paid && hasWallet} />

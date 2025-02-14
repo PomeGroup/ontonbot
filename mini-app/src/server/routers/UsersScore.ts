@@ -11,7 +11,7 @@ export const UsersScoreRouter = router({
   getTotalScoreByUserId: initDataProtectedProcedure.query(async (opts) => {
     try {
       const totalScore = await usersScoreDB.getTotalScoreByUserId(opts.ctx.user.user_id);
-      return totalScore;
+      return totalScore || 0;
     } catch (error) {
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
@@ -35,7 +35,7 @@ export const UsersScoreRouter = router({
           opts.ctx.user.user_id,
           opts.input.activityType
         );
-        return { success: true, totalScore };
+        return totalScore;
       } catch (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

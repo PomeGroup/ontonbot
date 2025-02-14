@@ -4,13 +4,14 @@ import { InferSelectModel } from "drizzle-orm";
 // Define ENUM types
 export const userScoreItem = pgEnum("user_score_item_type", ["event", "task"]);
 
-export const usersScoreActivity = pgEnum("users_score_activity_type", [
+export const activityTypesArray = [
   "free_online_event",
   "free_offline_event",
   "paid_online_event",
   "paid_offline_event",
   "join_onton",
-]);
+] as const;
+export const usersScoreActivity = pgEnum("users_score_activity_type", activityTypesArray);
 
 // Create the users_score table
 export const usersScore = pgTable(

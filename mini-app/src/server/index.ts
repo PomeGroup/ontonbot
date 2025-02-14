@@ -40,7 +40,7 @@ export const appRouter = router({
   registrant: registrantRouter,
   coupon: couponRouter,
   userRoles: userRolesRouter,
-  UsersScore: UsersScoreRouter,
+  usersScore: UsersScoreRouter,
 });
 
 export type AppRouter = typeof appRouter;
