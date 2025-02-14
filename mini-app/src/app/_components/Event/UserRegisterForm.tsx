@@ -136,7 +136,7 @@ const UserRegisterForm = () => {
                 registrationForm.current?.requestSubmit();
               }}
             >
-              Request to Join
+              Submit Request
             </CustomButton>
             <CustomButton
               variant="outline"
