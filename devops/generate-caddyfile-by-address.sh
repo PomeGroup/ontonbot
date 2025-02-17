@@ -131,14 +131,14 @@ ${ONTON_DOMAIN} {
     ${LOG_CONFIG}
 
     # Reverse proxy for /blog path to WordPress
-    handle_path /blog* {
+#    handle_path /blog* {
         reverse_proxy ${IP_RANGE_BASE}:6600
-    }
+#    }
 
     # Reverse proxy for all other paths to Next.js
-    handle {
-        reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
-    }
+#    handle {
+#        reverse_proxy ${PROXY_WEBSITE}:${PORT_WEB_SITE}
+#    }
 }
 
 
