@@ -87,6 +87,7 @@ export const EventPasswordAndWalletInput = () => {
           title="Claim Your Reward"
           opened={isPasswordOpen}
           onClose={closePasswordModal}
+          defaultPadding={false}
         >
           <form
             className="p-4 space-y-4"

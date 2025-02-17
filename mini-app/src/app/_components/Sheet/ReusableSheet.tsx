@@ -11,9 +11,17 @@ interface ReusableSheetProps {
   children: React.ReactNode;
   className?: string;
   onClose?: () => void;
+  defaultPadding?: boolean;
 }
 
-const ReusableSheet: React.FC<ReusableSheetProps> = ({ title, opened, children, className, onClose }) =>
+const ReusableSheet: React.FC<ReusableSheetProps> = ({
+  title,
+  opened,
+  children,
+  className,
+  defaultPadding = true,
+  onClose,
+}) =>
   createPortal(
     <Sheet
       opened={opened}
@@ -31,7 +39,13 @@ const ReusableSheet: React.FC<ReusableSheetProps> = ({ title, opened, children, 
           <IoCloseCircleOutline className="text-2xl" />
         </button>
       </div>
-      {children}
+      <div
+        className={cn({
+          "p-4": defaultPadding,
+        })}
+      >
+        {children}
+      </div>
     </Sheet>,
     document.body
   );

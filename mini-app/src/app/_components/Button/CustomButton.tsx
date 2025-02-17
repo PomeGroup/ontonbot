@@ -1,10 +1,13 @@
 import React, { ReactNode } from "react";
 import { Button, Preloader } from "konsta/react";
 import Typography, { TypographyProps } from "@/components/Typography";
+import { cva } from "class-variance-authority";
 
 interface CustomButtonProps {
   children: ReactNode;
   variant?: "primary" | "outline" | "link";
+  size?: "lg" | "md";
+  color?: "success" | "primary";
   isLoading?: boolean;
   icon?: ReactNode;
   fontSize?: TypographyProps["variant"];
@@ -12,12 +15,32 @@ interface CustomButtonProps {
   onClick: (_e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
+const customButtonVariants = cva(" min-w-20", {
+  variants: {
+    size: {
+      lg: "h-12 rounded-2lg",
+      md: "h-9 rounded-md",
+    },
+    color: {
+      success: "k-color-brand-green",
+      danger: "k-color-brand-red",
+      primary: "",
+    },
+  },
+  defaultVariants: {
+    size: "lg",
+    color: "primary",
+  },
+});
+
 const CustomButton: React.FC<CustomButtonProps> = ({
   children,
   icon,
   fontWeight = "semibold",
   fontSize = "headline",
   variant = "primary",
+  size,
+  color,
   isLoading = false,
   onClick,
 }) => (
@@ -28,7 +51,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     clear={variant === "link"}
     disabled={isLoading}
     onClick={onClick}
-    className="rounded-2lg h-12"
+    className={customButtonVariants({ size, color })}
     // @ts-expect-error the type declaration for this prop does not exist but we should pass it
     type="button"
   >

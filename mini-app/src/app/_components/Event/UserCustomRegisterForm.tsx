@@ -81,6 +81,7 @@ const UserCustomRegisterForm = () => {
         onClose={() => {
           setOpen(false);
         }}
+        defaultPadding={false}
       >
         <form
           ref={registrationForm}

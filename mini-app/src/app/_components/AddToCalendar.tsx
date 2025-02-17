@@ -67,6 +67,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
         opened={isOpen}
         onClose={() => setIsOpen(false)}
         title="Add to Calendar"
+        defaultPadding={false}
       >
         <Block className="flex flex-col gap-2 justify-between">
           <div className="p-4 w-full flex flex-col gap-1">

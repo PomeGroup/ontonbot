@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Images from "@/app/_components/atoms/images";
 import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
@@ -24,6 +24,9 @@ import { Address } from "@ton/core";
 import { FaAngleRight } from "react-icons/fa6";
 import { TonConnectButton } from "@tonconnect/ui-react";
 import Divider from "@/components/Divider";
+import ReusableSheet from "../Sheet/ReusableSheet";
+import CustomButton from "../Button/CustomButton";
+import Task from "../Task";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -418,6 +421,7 @@ const MainButtonHandler = React.memo(() => {
   const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
   const router = useRouter();
+  const [isTasksOpen, setIsTasksOpen] = useState(false);
 
   const canManageEvent = canUserManageEvent(user, {
     data: {
@@ -434,40 +438,88 @@ const MainButtonHandler = React.memo(() => {
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
 
-  return (
-    <>
-      {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
+  if (1 || isTasksOpen) {
+    const closeTasksOpen = () => {
+      setIsTasksOpen(false);
+    };
+
+    return (
+      <>
+        {!isTasksOpen && (
+          <MainButton
+            text="Complete tasks to Attend"
+            onClick={() => setIsTasksOpen(true)}
+          />
+        )}
+
+        <ReusableSheet
+          title="Pre-registration tasks"
+          opened={isTasksOpen}
+          onClose={closeTasksOpen}
+        >
+          <div className="space-y-4">
+            <Task
+              title="Follow TON Network on X"
+              status="done"
+            />
+            <Task
+              title="Follow TON Network on X"
+              status="pending"
+            />
+            <Task
+              title="Follow TON Network on X"
+              status="pending"
+            />
+          </div>
+          <div className="mt-6">
+            <CustomButton onClick={closeTasksOpen}>Close</CustomButton>
+          </div>
+        </ReusableSheet>
+      </>
+    );
+  }
+
+  if (userCompletedTasks && hasEnteredPassword) {
+    if (isCheckedIn) {
+      return (
         <ClaimRewardButton
           initData={initData}
           eventId={eventData.data?.event_uuid ?? ""}
         />
-      )}
-      {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
+      );
+    } else if (isEventActive && eventData.data?.registrant_uuid) {
+      return (
         <MainButton
           text="Check In"
           onClick={() =>
             router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)
           }
         />
-      )}
+      );
+    }
+  }
 
-      {!canManageEvent && !isStarted && isNotEnded && (
+  if (!canManageEvent) {
+    if (!isStarted && isNotEnded) {
+      return (
         <MainButton
           text="Event Not Started Yet"
           disabled
           color="secondary"
         />
-      )}
-
-      {!canManageEvent && !isNotEnded && (
+      );
+    } else if (!isNotEnded) {
+      return (
         <MainButton
           text="Event Has Ended"
           disabled
           color="secondary"
         />
-      )}
-    </>
-  );
+      );
+    }
+  }
+
+  return null;
 });
 MainButtonHandler.displayName = "MainButtonHandler";
 
