@@ -1,15 +1,19 @@
 import { trpc } from "@/app/_trpc/client";
-import { FormEventHandler, useEffect, useRef } from "react";
+import { FormEventHandler, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useEventData } from "./eventPageContext";
 import PasscodeIcon from "@/components/icons/Passcode";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import { Input } from "@/components/ui/input";
-import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
+import { useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
 import { useUserStore } from "@/context/store/user.store";
+import ReusableSheet from "../Sheet/ReusableSheet";
+import CustomButton from "../Button/CustomButton";
+import Typography from "@/components/Typography";
 
 export const EventPasswordAndWalletInput = () => {
   const { initData, eventPasswordField, eventHash, eventData } = useEventData();
+  const [isPasswordOpen, setPasswordOpen] = useState(false);
 
   const trpcUtils = trpc.useUtils();
   const { user } = useUserStore();
@@ -33,6 +37,7 @@ export const EventPasswordAndWalletInput = () => {
       trpcUtils.userEventFields.getUserEventFields.refetch({
         event_hash: eventHash,
       });
+      setPasswordOpen(false);
     },
   });
 
@@ -43,10 +48,7 @@ export const EventPasswordAndWalletInput = () => {
         wallet: tonWalletAddress,
       });
     }
-  }, [user?.wallet_address, tonWalletAddress, initData]);
-  useEffect(() => {
-
-  }, []);
+  }, [user?.wallet_address, tonWalletAddress, initData, addWalletMutation]);
 
   const submitPassword: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
@@ -67,51 +69,74 @@ export const EventPasswordAndWalletInput = () => {
   };
   const hasRegistration = eventData.data?.has_registration ?? false;
 
+  const closePasswordModal = () => {
+    setPasswordOpen(false);
+  };
+
   return !user?.wallet_address ? (
-    <>
-      <TonConnectButton className="mx-auto" />
-      <MainButton
-        text="Connect Wallet"
-        onClick={() => {
-          walletModal.open();
-        }}
-      />
-    </>
+    <MainButton
+      text="Connect Wallet"
+      onClick={() => {
+        walletModal.open();
+      }}
+    />
   ) : (
-    <>
-      {
-        !hasRegistration && (
+    !hasRegistration && (
+      <>
+        <ReusableSheet
+          title="Claim Your Reward"
+          opened={isPasswordOpen}
+          onClose={closePasswordModal}
+        >
           <form
-            className="mt-2 space-y-1"
+            className="p-4 space-y-4"
             ref={formRef}
             onSubmit={submitPassword}
           >
+            <Typography
+              variant="body"
+              weight="normal"
+            >
+              Enter the Event Password that the organizer shared to confirm your participation in the event.
+            </Typography>
             <Input
               placeholder="Event password"
               name="event_password"
               type="text"
-              className="bg-cn-muted border-secondary-foreground/40 border"
+              className="bg-brand-divider placeholder:text-black/40 border-secondary-foreground/40 border"
               minLength={4}
               errors={
-                upsertUserEventFieldMutation.error?.message
-                  ? [upsertUserEventFieldMutation.error?.message]
-                  : undefined
+                upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined
               }
               prefix_icon={<PasscodeIcon />}
             />
-            <p className="text-cn-muted-foreground text-xs">
-              Enter the Event Password that the organizer shared to confirm your participation in the event.
-            </p>
-            <MainButton
-              progress={upsertUserEventFieldMutation.isLoading}
-              text="Enter Password"
-              onClick={() => { formRef.current?.requestSubmit() }}
-              disabled={upsertUserEventFieldMutation.isLoading}
-            />
+            <div className="pt-0 space-y-3">
+              <CustomButton
+                onClick={() => {
+                  formRef.current?.requestSubmit();
+                }}
+                isLoading={upsertUserEventFieldMutation.isLoading}
+              >
+                Submit Password
+              </CustomButton>
+              <CustomButton
+                variant="outline"
+                onClick={closePasswordModal}
+              >
+                Close
+              </CustomButton>
+            </div>
           </form>
-        )
-      }
-    </>
-
+        </ReusableSheet>
+        {!isPasswordOpen && (
+          <MainButton
+            text="Enter Password"
+            onClick={() => {
+              setPasswordOpen(true);
+            }}
+          />
+        )}
+      </>
+    )
   );
 };

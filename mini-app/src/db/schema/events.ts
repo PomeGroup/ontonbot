@@ -1,9 +1,19 @@
 import { eventParticipationType, giataCity } from "@/db/schema";
 import { users } from "@/db/schema/users";
 import { InferSelectModel } from "drizzle-orm";
-import { bigint, boolean, index, integer, json, pgTable, serial, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-
-
+import {
+  bigint,
+  boolean,
+  index,
+  integer,
+  json,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 export const events = pgTable(
   "events",
@@ -31,8 +41,13 @@ export const events = pgTable(
     timezone: text("timezone"),
 
     location: text("location"),
-    website: json("website"),
-    owner: bigint("owner", { mode: "number" }).references(() => users.user_id).notNull(),
+    website: json("website").$type<{
+      label: string;
+      link: string;
+    }>(),
+    owner: bigint("owner", { mode: "number" })
+      .references(() => users.user_id)
+      .notNull(),
 
     ticketToCheckIn: boolean("ticketToCheckIn").default(false),
     participationType: eventParticipationType("participation_type").default("online").notNull(),

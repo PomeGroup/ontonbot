@@ -3,11 +3,10 @@ import { isTelegramUrl } from "@tonconnect/ui-react";
 import { cva, VariantProps } from "class-variance-authority";
 import React, { ReactNode } from "react";
 
-const eventKeyValueCva = cva("p", {
+const eventKeyValueCva = cva("flex-1 text-sm p-1 font-medium text-black text-right", {
   variants: {
     variant: {
       base: "",
-      filled_value: ["bg-zinc-100 rounded-md"],
       link: "text-blue-500 truncate cursor-pointer text-center",
     },
   },
@@ -32,7 +31,6 @@ const EventKeyValue = (props: EventKeyValueProps) => {
       <label className="text-left text-sm text-cn-muted-foreground flex-1">{props.label}</label>
       <p
         className={eventKeyValueCva({
-          className: "flex-1 text-sm p-1 text-black",
           variant: props.variant,
         })}
         onClick={() => {
@@ -45,9 +43,7 @@ const EventKeyValue = (props: EventKeyValueProps) => {
           }
         }}
       >
-        {props.variant === "link" && typeof props.value === "string"
-          ? props.value.replace(/^https?:\/\//, "")
-          : props.value}
+        {props.variant === "link" && typeof props.value === "string" ? props.value.replace(/^https?:\/\//, "") : props.value}
       </p>
     </div>
   );
