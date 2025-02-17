@@ -205,11 +205,20 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     }
   }
 
-  // Registrant Already has a request
   if (user_request) {
+    // Registrant Already has a request
     registrant_status = user_request.status;
     if (registrant_status === "approved" || registrant_status === "checkedin") {
       registrant_uuid = user_request.registrant_uuid;
+    }
+    // avoid showing the location to the user if the event is online and the user is not approved
+    if (
+      !(registrant_status === "approved" || registrant_status === "checkedin") &&
+      !userIsAdminOrOwner &&
+      eventData.participationType === "online" &&
+      eventData.has_registration
+    ) {
+      removeKey(eventData, "location");
     }
     return {
       capacity_filled,
