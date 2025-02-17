@@ -6,6 +6,7 @@ import { Card } from "konsta/react";
 import React from "react";
 import { useEventData } from "../../Event/eventPageContext";
 import CustomButton from "../../Button/CustomButton";
+import { sleep } from "@/utils";
 
 const SupportButtons = () => {
   const webApp = useWebApp();
@@ -57,6 +58,9 @@ const SupportButtons = () => {
             onClick={() => {
               hapticfeedback?.impactOccurred("medium");
               webApp?.openTelegramLink(`https://t.me/${orgSupportTelegramUserName}`);
+              sleep(100).then(() => {
+                webApp?.close();
+              });
             }}
           >
             Organizer Support
