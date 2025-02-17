@@ -106,7 +106,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   const userId = opts.ctx.user.user_id;
   const userRole = opts.ctx.user.role;
   const event_uuid = opts.input.event_uuid;
-  const eventData = {
+  let eventData = {
     payment_details: {} as Partial<EventPaymentSelectType>,
     ...(await eventDB.selectEventByUuid(event_uuid)),
   };
@@ -205,6 +205,11 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     }
   }
 
+  if (!user_request && !userIsAdminOrOwner && eventData.participationType === "online" && eventData.has_registration) {
+    eventData.location = "visible after registration";
+    logger.log("eventData", eventData);
+    logger.log("user_request", user_request);
+  }
   if (user_request) {
     // Registrant Already has a request
     registrant_status = user_request.status;
@@ -213,12 +218,12 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     }
     // avoid showing the location to the user if the event is online and the user is not approved
     if (
-      !(registrant_status === "approved" || registrant_status === "checkedin") &&
+      !(user_request.status === "approved" || user_request.status === "checkedin") &&
       !userIsAdminOrOwner &&
       eventData.participationType === "online" &&
       eventData.has_registration
     ) {
-      removeKey(eventData, "location");
+      eventData.location = "visible after approval";
     }
     return {
       capacity_filled,
