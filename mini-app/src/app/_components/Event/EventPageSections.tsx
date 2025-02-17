@@ -303,17 +303,14 @@ const OrganizerCard = React.memo(() => {
         <ListItem
           className="cursor-pointer"
           onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
-          titleWrapClassName="overflow-hidden w-52 bg-red-500 [&>*]:w-full"
-          innerClassName="bg-red-500 overflow-hidden"
           title={
             <Typography
               variant="headline"
               weight="medium"
-              className="text-primary"
+              className="text-primary w-52"
               truncate
             >
-              {organizer.org_channel_name || "Untitled organizer"} sd fjsdhl kjhsdalf kjhsdkljf
-              hsdkljfhdskfakjsdhfkjfkjhdsfkjsdhfkjsdhfkjsdhfdskjhfkdjsh
+              {organizer.org_channel_name || "Untitled organizer"}
             </Typography>
           }
           subtitle={
