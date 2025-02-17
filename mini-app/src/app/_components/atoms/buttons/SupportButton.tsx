@@ -1,25 +1,68 @@
 "use client";
 
+import Typography from "@/components/Typography";
 import useWebApp from "@/hooks/useWebApp";
-import { MessageSquare } from "lucide-react";
+import { Card } from "konsta/react";
 import React from "react";
+import { useEventData } from "../../Event/eventPageContext";
+import CustomButton from "../../Button/CustomButton";
 
-const SupportButton = () => {
+const SupportButtons = () => {
   const webApp = useWebApp();
   const hapticfeedback = webApp?.HapticFeedback;
+  const { eventData } = useEventData();
 
   return (
-    <div
-      className="flex items-center justify-center text-xs text-cn-muted-foreground"
-      onClick={() => {
-        hapticfeedback?.impactOccurred("medium");
-        webApp?.openTelegramLink("https://t.me/ontonsupport");
-      }}
+    <Card
+      header={
+        <>
+          <Typography
+            weight={"bold"}
+            variant="title3"
+          >
+            Support
+          </Typography>
+        </>
+      }
     >
-      Open Support Chat
-      <MessageSquare className="w-3 ml-1" />
-    </div>
+      <Typography
+        variant="body"
+        weight="normal"
+        className="!-mt-6 mb-2"
+      >
+        Do you have issues with SBT or payment?
+      </Typography>
+      <CustomButton
+        variant="outline"
+        onClick={() => {
+          hapticfeedback?.impactOccurred("medium");
+          webApp?.openTelegramLink("https://t.me/ontonsupport");
+        }}
+      >
+        ONTON Support
+      </CustomButton>
+      {eventData.data?.organizer?.org_support_telegram_user_name && (
+        <>
+          <Typography
+            variant="body"
+            weight="normal"
+            className="my-2"
+          >
+            Do you have questions about the event?
+          </Typography>
+          <CustomButton
+            variant="outline"
+            onClick={() => {
+              hapticfeedback?.impactOccurred("medium");
+              webApp?.openTelegramLink(`https://t.me/${eventData.data?.organizer?.org_support_telegram_user_name}`);
+            }}
+          >
+            Organizer Support
+          </CustomButton>
+        </>
+      )}
+    </Card>
   );
 };
 
-export default SupportButton;
+export default SupportButtons;

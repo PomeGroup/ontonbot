@@ -11,6 +11,9 @@ module.exports = konstaConfig({
       "brand-green": "#10b210",
       "brand-gray": "#888888",
       "brand-purple": "#6d28d9",
+      "brand-fill-bg": "#747480",
+      "brand-muted": "#8e8e93",
+      "brand-divider": "#eeeef0",
     },
   },
   darkMode: ["class"],
@@ -34,6 +37,9 @@ module.exports = konstaConfig({
       screens: {
         xxs: "320px",
         xs: "375px",
+      },
+      borderRadius: {
+        "2lg": "10px",
       },
       spacing: {
         11.5: "46px",
