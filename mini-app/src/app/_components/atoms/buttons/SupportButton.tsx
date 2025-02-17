@@ -10,8 +10,10 @@ import CustomButton from "../../Button/CustomButton";
 const SupportButtons = () => {
   const webApp = useWebApp();
   const hapticfeedback = webApp?.HapticFeedback;
-  const { eventData } = useEventData();
 
+  const { eventData } = useEventData();
+  // trim @ from the start of the username
+  const orgSupportTelegramUserName = eventData.data?.organizer?.org_support_telegram_user_name?.replace(/^@/, "");
   return (
     <Card
       header={
@@ -41,7 +43,7 @@ const SupportButtons = () => {
       >
         ONTON Support
       </CustomButton>
-      {eventData.data?.organizer?.org_support_telegram_user_name && (
+      {orgSupportTelegramUserName && (
         <>
           <Typography
             variant="body"
@@ -54,7 +56,7 @@ const SupportButtons = () => {
             variant="outline"
             onClick={() => {
               hapticfeedback?.impactOccurred("medium");
-              webApp?.openTelegramLink(`https://t.me/${eventData.data?.organizer?.org_support_telegram_user_name}`);
+              webApp?.openTelegramLink(`https://t.me/${orgSupportTelegramUserName}`);
             }}
           >
             Organizer Support
