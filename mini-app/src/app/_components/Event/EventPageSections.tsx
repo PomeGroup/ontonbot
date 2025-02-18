@@ -232,11 +232,29 @@ const EventRegistrationStatus = () => {
   );
   if ((hasWaitingList || !capacityFilled) && registrantStatus === "") {
     return isCustom ? (
-      <Card>
+      <Card
+        header={
+          <Typography
+            weight={"bold"}
+            variant="title3"
+          >
+            Registration Form
+          </Typography>
+        }
+      >
         <UserCustomRegisterForm />
       </Card>
     ) : (
-      <Card>
+      <Card
+        header={
+          <Typography
+            weight={"bold"}
+            variant="title3"
+          >
+            Registration Form
+          </Typography>
+        }
+      >
         <UserRegisterForm />
       </Card>
     );
@@ -509,7 +527,16 @@ const EventHeader = React.memo(() => {
       </Card>
 
       {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <Card>
+        <Card
+          header={
+            <Typography
+              weight={"bold"}
+              variant="title3"
+            >
+              Claim Your Reward
+            </Typography>
+          }
+        >
           <EventPasswordAndWalletInput />
         </Card>
       )}

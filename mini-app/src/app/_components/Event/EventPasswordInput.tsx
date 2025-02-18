@@ -91,20 +91,19 @@ export const EventPasswordAndWalletInput = () => {
         {/*  className={"overflow-y-auto"}*/}
         {/*>*/}
         <form
-          className=" space-y-4"
+          className="  "
           ref={formRef}
           onSubmit={submitPassword}
         >
           <Typography
             variant="body"
             weight="normal"
-            className={"p-4"}
           >
             Enter the Event Password that the organizer shared to confirm your participation in the event.
           </Typography>
           <List
             strongIos
-            className="!my-6 p-0"
+            className="!my-6 !p-0 !mx-0 "
           >
             <ListInput
               outline
@@ -112,11 +111,12 @@ export const EventPasswordAndWalletInput = () => {
               name="event_password"
               type="text"
               minLength={4}
+              className={"!-mx-4"}
               error={upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined}
               media={<PasscodeIcon />}
             />
           </List>
-          <div className="p-4 pt-0  space-y-3">
+          <div className="  pt-0  space-y-3">
             <CustomButton
               onClick={() => {
                 formRef.current?.requestSubmit();
