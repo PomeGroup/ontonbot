@@ -182,7 +182,7 @@ EventTitle.displayName = "EventHead";
 
 const EventAttributes = React.memo(() => {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <EventLocation />
       <EventLink />
       <EventTicketPrice />

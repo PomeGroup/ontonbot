@@ -23,7 +23,7 @@ const ShareEventButton = ({
   return (
     <button
       className={cn(
-        "justify-self-end flex items-center justify-center rounded-lg bg-brand-fill-bg/15 p-2.5 disabled:opacity-20 disabled:cursor-not-allowed",
+        "w-9 h-9 justify-self-end flex items-center justify-center rounded-lg bg-brand-fill-bg/15 disabled:opacity-20 disabled:cursor-not-allowed",
         shareEventMutation.isLoading && Boolean(initData) && "opacity-50"
       )}
       disabled={!initData || shareEventMutation.isLoading || !activity_id || !!hidden}

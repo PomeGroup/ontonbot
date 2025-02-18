@@ -1,9 +1,10 @@
+import Typography from "@/components/Typography";
 import useWebApp from "@/hooks/useWebApp";
 import { isTelegramUrl } from "@tonconnect/ui-react";
 import { cva, VariantProps } from "class-variance-authority";
 import React, { ReactNode } from "react";
 
-const eventKeyValueCva = cva("flex-1 text-sm p-1 font-medium text-black text-right", {
+const eventKeyValueCva = cva("flex-1 text-sm font-medium text-black text-right", {
   variants: {
     variant: {
       base: "",
@@ -28,7 +29,13 @@ const EventKeyValue = (props: EventKeyValueProps) => {
 
   return (
     <div className="flex items-center justify-between">
-      <label className="text-left text-sm text-cn-muted-foreground flex-1">{props.label}</label>
+      <Typography
+        variant="subheadline1"
+        weight={"medium"}
+        className="flex-1 leading-5"
+      >
+        <label className="text-left text-sm text-cn-muted-foreground">{props.label}</label>
+      </Typography>
       <p
         className={eventKeyValueCva({
           variant: props.variant,
@@ -43,7 +50,14 @@ const EventKeyValue = (props: EventKeyValueProps) => {
           }
         }}
       >
-        {props.variant === "link" && typeof props.value === "string" ? props.value.replace(/^https?:\/\//, "") : props.value}
+        <Typography
+          variant={"body"}
+          weight={"medium"}
+        >
+          {props.variant === "link" && typeof props.value === "string"
+            ? props.value.replace(/^https?:\/\//, "")
+            : props.value}
+        </Typography>
       </p>
     </div>
   );
