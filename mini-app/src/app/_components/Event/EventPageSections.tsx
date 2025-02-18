@@ -241,6 +241,7 @@ const EventRegistrationStatus = () => {
             Registration Form
           </Typography>
         }
+        contentWrap={false}
       >
         <UserCustomRegisterForm />
       </Card>
@@ -254,6 +255,7 @@ const EventRegistrationStatus = () => {
             Registration Form
           </Typography>
         }
+        contentWrap={false}
       >
         <UserRegisterForm />
       </Card>
