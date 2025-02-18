@@ -81,6 +81,7 @@ const UserCustomRegisterForm = () => {
         onClose={() => {
           setOpen(false);
         }}
+        className={"overflow-y-auto"}
       >
         <form
           ref={registrationForm}

@@ -10,6 +10,7 @@ import { useUserStore } from "@/context/store/user.store";
 import ReusableSheet from "../Sheet/ReusableSheet";
 import CustomButton from "../Button/CustomButton";
 import Typography from "@/components/Typography";
+import { List, ListInput } from "konsta/react";
 
 export const EventPasswordAndWalletInput = () => {
   const { initData, eventPasswordField, eventHash, eventData } = useEventData();
@@ -87,30 +88,37 @@ export const EventPasswordAndWalletInput = () => {
           title="Claim Your Reward"
           opened={isPasswordOpen}
           onClose={closePasswordModal}
+          className={"overflow-y-auto"}
         >
           <form
-            className="p-4 space-y-4"
+            className=" space-y-4"
             ref={formRef}
             onSubmit={submitPassword}
           >
             <Typography
               variant="body"
               weight="normal"
+              className={"p-4"}
             >
               Enter the Event Password that the organizer shared to confirm your participation in the event.
             </Typography>
-            <Input
-              placeholder="Event password"
-              name="event_password"
-              type="text"
-              className="bg-brand-divider placeholder:text-black/40 border-secondary-foreground/40 border"
-              minLength={4}
-              errors={
-                upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined
-              }
-              prefix_icon={<PasscodeIcon />}
-            />
-            <div className="pt-0 space-y-3">
+            <List
+              strongIos
+              className="!my-6 p-0"
+            >
+              <ListInput
+                outline
+                placeholder="Event password"
+                name="event_password"
+                type="text"
+                minLength={4}
+                error={
+                  upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined
+                }
+                media={<PasscodeIcon />}
+              />
+            </List>
+            <div className="p-4 pt-0  space-y-3">
               <CustomButton
                 onClick={() => {
                   formRef.current?.requestSubmit();
