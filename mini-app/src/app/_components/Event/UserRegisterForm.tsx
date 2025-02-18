@@ -60,96 +60,97 @@ const UserRegisterForm = () => {
 
   return (
     <>
-      {!isOpen && (
-        <MainButton
-          onClick={() => {
-            setOpen(true);
-          }}
-          text="Request to Join"
-        />
-      )}
-      <ReusableSheet
-        opened={isOpen}
-        title="Registration Form"
-        onClose={() => {
-          setOpen(false);
-        }}
+      {/*{!isOpen && (*/}
+      {/*  <MainButton*/}
+      {/*    onClick={() => {*/}
+      {/*      setOpen(true);*/}
+      {/*    }}*/}
+      {/*    text="Request to Join"*/}
+      {/*  />*/}
+      {/*)}*/}
+      {/*<ReusableSheet*/}
+      {/*  opened={isOpen}*/}
+      {/*  title="Registration Form"*/}
+      {/*  onClose={() => {*/}
+      {/*    setOpen(false);*/}
+      {/*  }}*/}
+      {/*  className={"overflow-y-auto"}*/}
+      {/*>*/}
+      <form
+        ref={registrationForm}
+        onSubmit={handleSubmit}
       >
-        <form
-          ref={registrationForm}
-          onSubmit={handleSubmit}
+        <List
+          strongIos
+          className="!my-6"
         >
-          <List
-            strongIos
-            className="!my-6"
+          <ListInput
+            outline
+            label="Full Name"
+            name="full_name"
+            error={formErrors?.full_name?.[0]}
+            placeholder="John Doe"
+          />
+          <ListInput
+            outline
+            label="Company"
+            name="company"
+            error={formErrors?.company?.[0]}
+            placeholder="Example Company"
+          />
+          <ListInput
+            outline
+            label="Position"
+            name="position"
+            error={formErrors?.position?.[0]}
+            placeholder="Designer"
+          />
+          <ListInput
+            outline
+            label="LinkedIn"
+            name="linkedin"
+            error={formErrors?.linkedin?.[0]}
+            placeholder="https://www.linkedin.com/in/john"
+          />
+          <ListInput
+            outline
+            label="Github"
+            name="github"
+            error={formErrors?.github?.[0]}
+            placeholder="john_doe"
+          />
+          <ListInput
+            outline
+            info="Optional"
+            placeholder="I will be 30min late"
+            name="notes"
+            error={formErrors?.notes?.[0]}
+            label="Additional information"
+          />
+        </List>
+        <div className="pt-0 space-y-3 p-4">
+          <CustomButton
+            variant="primary"
+            isLoading={registerUser.isLoading}
+            onClick={(e) => {
+              e.preventDefault();
+              registrationForm.current?.requestSubmit();
+            }}
           >
-            <ListInput
-              outline
-              label="Full Name"
-              name="full_name"
-              error={formErrors?.full_name?.[0]}
-              placeholder="John Doe"
-            />
-            <ListInput
-              outline
-              label="Company"
-              name="company"
-              error={formErrors?.company?.[0]}
-              placeholder="Example Company"
-            />
-            <ListInput
-              outline
-              label="Position"
-              name="position"
-              error={formErrors?.position?.[0]}
-              placeholder="Designer"
-            />
-            <ListInput
-              outline
-              label="LinkedIn"
-              name="linkedin"
-              error={formErrors?.linkedin?.[0]}
-              placeholder="https://www.linkedin.com/in/john"
-            />
-            <ListInput
-              outline
-              label="Github"
-              name="github"
-              error={formErrors?.github?.[0]}
-              placeholder="john_doe"
-            />
-            <ListInput
-              outline
-              info="Optional"
-              placeholder="I will be 30min late"
-              name="notes"
-              error={formErrors?.notes?.[0]}
-              label="Additional information"
-            />
-          </List>
-          <div className="pt-0 space-y-3 p-4">
-            <CustomButton
-              variant="primary"
-              isLoading={registerUser.isLoading}
-              onClick={(e) => {
-                e.preventDefault();
-                registrationForm.current?.requestSubmit();
-              }}
-            >
-              Submit Request
-            </CustomButton>
-            <CustomButton
-              variant="outline"
-              isLoading={registerUser.isLoading}
-              onClick={() => {
-                setOpen(false);
-              }}
-            >
-              Cancel
-            </CustomButton>
-          </div>
-        </form>
-      </ReusableSheet>
+            Submit Request
+          </CustomButton>
+          {/*<CustomButton*/}
+          {/*  variant="outline"*/}
+          {/*  isLoading={registerUser.isLoading}*/}
+          {/*  onClick={() => {*/}
+          {/*    setOpen(false);*/}
+          {/*  }}*/}
+          {/*>*/}
+          {/*  Cancel*/}
+          {/*</CustomButton>*/}
+        </div>
+      </form>
+      {/*</ReusableSheet>*/}
     </>
   );
 };

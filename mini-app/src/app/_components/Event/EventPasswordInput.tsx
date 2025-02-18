@@ -4,12 +4,11 @@ import { toast } from "sonner";
 import { useEventData } from "./eventPageContext";
 import PasscodeIcon from "@/components/icons/Passcode";
 import MainButton from "../atoms/buttons/web-app/MainButton";
-import { Input } from "@/components/ui/input";
 import { useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
 import { useUserStore } from "@/context/store/user.store";
-import ReusableSheet from "../Sheet/ReusableSheet";
 import CustomButton from "../Button/CustomButton";
 import Typography from "@/components/Typography";
+import { List, ListInput } from "konsta/react";
 
 export const EventPasswordAndWalletInput = () => {
   const { initData, eventPasswordField, eventHash, eventData } = useEventData();
@@ -83,59 +82,64 @@ export const EventPasswordAndWalletInput = () => {
   ) : (
     !hasRegistration && (
       <>
-        <ReusableSheet
-          title="Claim Your Reward"
-          opened={isPasswordOpen}
-          onClose={closePasswordModal}
+        {/*<ReusableSheet*/}
+        {/*  title="Claim Your Reward"*/}
+        {/*  opened={isPasswordOpen}*/}
+        {/*  onClose={closePasswordModal}*/}
+        {/*  className={"overflow-y-auto"}*/}
+        {/*>*/}
+        <form
+          className="  "
+          ref={formRef}
+          onSubmit={submitPassword}
         >
-          <form
-            className="p-4 space-y-4"
-            ref={formRef}
-            onSubmit={submitPassword}
+          <Typography
+            variant="body"
+            weight="normal"
           >
-            <Typography
-              variant="body"
-              weight="normal"
-            >
-              Enter the Event Password that the organizer shared to confirm your participation in the event.
-            </Typography>
-            <Input
+            Enter the Event Password that the organizer shared to confirm your participation in the event.
+          </Typography>
+          <List
+            strongIos
+            className="!my-6 !-mx-4"
+          >
+            <ListInput
+              outline
               placeholder="Event password"
               name="event_password"
               type="text"
-              className="bg-brand-divider placeholder:text-black/40 border-secondary-foreground/40 border"
               minLength={4}
-              errors={
-                upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined
-              }
-              prefix_icon={<PasscodeIcon />}
+              className={"!-mx-4"}
+              error={upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined}
+              media={<PasscodeIcon />}
             />
-            <div className="pt-0 space-y-3">
-              <CustomButton
-                onClick={() => {
-                  formRef.current?.requestSubmit();
-                }}
-                isLoading={upsertUserEventFieldMutation.isLoading}
-              >
-                Submit Password
-              </CustomButton>
-              <CustomButton
-                variant="outline"
-                onClick={closePasswordModal}
-              >
-                Close
-              </CustomButton>
-            </div>
-          </form>
-        </ReusableSheet>
-        {!isPasswordOpen && (
-          <MainButton
-            text="Enter Password"
-            onClick={() => {
-              setPasswordOpen(true);
-            }}
-          />
-        )}
+          </List>
+          <div className="pt-0 space-y-3">
+            <CustomButton
+              onClick={() => {
+                formRef.current?.requestSubmit();
+              }}
+              isLoading={upsertUserEventFieldMutation.isLoading}
+            >
+              Submit Password
+            </CustomButton>
+            {/*<CustomButton*/}
+            {/*  variant="outline"*/}
+            {/*  onClick={closePasswordModal}*/}
+            {/*>*/}
+            {/*  Close*/}
+            {/*</CustomButton>*/}
+          </div>
+        </form>
+        {/*</ReusableSheet>*/}
+        {/*{!isPasswordOpen && (*/}
+        {/*  <MainButton*/}
+        {/*    text="Enter Password"*/}
+        {/*    onClick={() => {*/}
+        {/*      setPasswordOpen(true);*/}
+        {/*    }}*/}
+        {/*  />*/}
+        {/*)}*/}
       </>
     )
   );

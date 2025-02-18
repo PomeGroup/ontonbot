@@ -224,8 +224,42 @@ const EventRegistrationStatus = () => {
   }
 
   const isCustom = Boolean(eventData.data?.registrationFromSchema?.isCustom);
+  console.log(
+    "EventRegistrationStatus: hasWaitingList or !capacityFilled and registrantStatus === ''",
+    registrantStatus,
+    hasWaitingList,
+    capacityFilled
+  );
   if ((hasWaitingList || !capacityFilled) && registrantStatus === "") {
-    return isCustom ? <UserCustomRegisterForm /> : <UserRegisterForm />;
+    return isCustom ? (
+      <Card
+        header={
+          <Typography
+            weight={"bold"}
+            variant="title3"
+          >
+            Registration Form
+          </Typography>
+        }
+        contentWrap={false}
+      >
+        <UserCustomRegisterForm />
+      </Card>
+    ) : (
+      <Card
+        header={
+          <Typography
+            weight={"bold"}
+            variant="title3"
+          >
+            Registration Form
+          </Typography>
+        }
+        contentWrap={false}
+      >
+        <UserRegisterForm />
+      </Card>
+    );
   }
 
   return (
@@ -483,18 +517,32 @@ const EventHeader = React.memo(() => {
   const isEventActive = isStarted && isNotEnded;
 
   return (
-    <Card>
-      <EventImage />
+    <>
+      <Card>
+        <EventImage />
+
+        <EventTitle />
+        <Divider margin="medium" />
+        <EventAttributes />
+
+        <EventActions />
+      </Card>
 
       {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <EventPasswordAndWalletInput />
+        <Card
+          header={
+            <Typography
+              weight={"bold"}
+              variant="title3"
+            >
+              Claim Your Reward
+            </Typography>
+          }
+        >
+          <EventPasswordAndWalletInput />
+        </Card>
       )}
-
-      <EventTitle />
-      <Divider margin="medium" />
-      <EventAttributes />
-      <EventActions />
-    </Card>
+    </>
   );
 });
 EventHeader.displayName = "EventHeader";
