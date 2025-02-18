@@ -1,11 +1,9 @@
 import React, { useMemo } from "react";
 import Images from "@/app/_components/atoms/images";
-import Labels from "@/app/_components/atoms/labels";
 import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
 import { EventActions } from "./EventActions";
 import ShareEventButton from "../ShareEventButton";
-import { ArrowRight } from "lucide-react";
 import { EventPasswordAndWalletInput } from "./EventPasswordInput";
 import EventKeyValue from "../organisms/events/EventKewValue";
 import { ClaimRewardButton } from "./ClaimRewardButton";
@@ -15,14 +13,18 @@ import MainButton from "../atoms/buttons/web-app/MainButton";
 import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
-import SupportButton from "../atoms/buttons/SupportButton";
-import { Card } from "konsta/react";
+import SupportButtons from "../atoms/buttons/SupportButton";
+import { ListItem, List, Block } from "konsta/react";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
 import { canUserManageEvent } from "@/lib/userRolesUtils";
 import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
 import { Address } from "@ton/core";
+import { FaAngleRight } from "react-icons/fa6";
+import { TonConnectButton } from "@tonconnect/ui-react";
+import Divider from "@/components/Divider";
+import CustomCard from "../atoms/cards/CustomCard";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -41,10 +43,12 @@ EventImage.displayName = "EventImage";
 const EventSubtitle = React.memo(() => {
   const { eventData } = useEventData();
   return (
-    <Labels.CampaignDescription
-      description={eventData.data?.subtitle ?? ""}
-      className="text-gray-600 text-xs"
-    />
+    <Typography
+      variant="body"
+      weight="medium"
+    >
+      {eventData.data?.subtitle}
+    </Typography>
   );
 });
 EventSubtitle.displayName = "EventSubtitle";
@@ -63,19 +67,47 @@ const EventLocation = React.memo(() => {
 });
 EventLocation.displayName = "EventLocation";
 
-const EventWebsiteLink = React.memo(() => {
-  const { location, isLocationUrl } = useEventData();
+const EventLink = React.memo(() => {
+  const { location, isLocationUrl, eventData } = useEventData();
   if (!location || !isLocationUrl) return null;
 
   return (
     <EventKeyValue
       variant="link"
       label="Event Link"
-      value={location}
+      value={
+        eventData.data?.has_registration && !["approved", "checkedin"].includes(eventData.data.registrant_status)
+          ? "Visible after registration"
+          : location
+      }
+    />
+  );
+});
+EventLink.displayName = "EventLink";
+
+const EventWebsiteLink = React.memo(() => {
+  const { eventData } = useEventData();
+  if (!eventData.data?.website) return null;
+
+  return (
+    <EventKeyValue
+      variant="link"
+      label="website"
+      value={eventData.data.website.link}
     />
   );
 });
 EventWebsiteLink.displayName = "EventWebsiteLink";
+
+const EventTicketPrice = React.memo(() => {
+  return (
+    <EventKeyValue
+      label="Ticket Price"
+      value={"Free"}
+    />
+  );
+});
+EventTicketPrice.displayName = "EventTicketPrice";
 
 const EventDatesComponent = React.memo(() => {
   const { startUTC, endUTC } = useEventData();
@@ -91,105 +123,155 @@ EventDatesComponent.displayName = "EventDatesComponent";
 
 const EventDescription = React.memo(() => {
   const { eventData } = useEventData();
-  return <Labels.CampaignDescription description={eventData.data?.description ?? ""} />;
+  return (
+    <CustomCard title={"About"}>
+      <Typography
+        weight="normal"
+        variant={"body"}
+        className="p-4 pt-0 whitespace-pre-line"
+      >
+        {eventData.data?.description ?? ""}
+      </Typography>
+    </CustomCard>
+  );
 });
 
 EventDescription.displayName = "EventDescription";
 
-const EventHead = React.memo(() => {
+const UserWallet = () => {
+  return (
+    <CustomCard title={"Your Wallet"}>
+      <div className="p-4 pt-0 flex items-center justify-center">
+        <TonConnectButton />
+      </div>
+    </CustomCard>
+  );
+};
+
+const EventTitle = React.memo(() => {
   const { eventHash, eventData } = useEventData();
 
   const isNotPublished = !eventData.data?.activity_id || !!eventData.data?.hidden;
 
   return (
-    <div className="flex items-start justify-between">
-      <div>
-        {isNotPublished && (
-          <div className="mb-2 text-sky-500 text-lg font-semibold">! Event is not published and pending moderation</div>
-        )}
-        <div className="text-2xl leading-7 font-bold mb-4">{eventData.data?.title ?? ""}</div>
-        <EventSubtitle />
+    <div className="mt-4 space-y-4">
+      {isNotPublished && (
+        <div className="text-sky-500 text-lg font-semibold">Event is not published and pending moderation!</div>
+      )}
+      <div className="grid grid-cols-12 items-start">
+        <Typography
+          variant="title2"
+          weight="bold"
+          className="self-center col-span-10"
+        >
+          {eventData.data?.title ?? ""}
+        </Typography>
+        <div className="col-span-2">
+          <ShareEventButton
+            event_uuid={eventHash}
+            activity_id={eventData.data?.activity_id}
+            hidden={eventData.data?.hidden}
+          />
+        </div>
       </div>
-      <ShareEventButton
-        event_uuid={eventHash}
-        activity_id={eventData.data?.activity_id}
-        hidden={eventData.data?.hidden}
-      />
+      <EventSubtitle />
     </div>
   );
 });
-EventHead.displayName = "EventHead";
+EventTitle.displayName = "EventHead";
 
 const EventAttributes = React.memo(() => {
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-4">
       <EventLocation />
-      <EventWebsiteLink />
+      <EventLink />
+      <EventTicketPrice />
       <EventDatesComponent />
+      <EventWebsiteLink />
     </div>
   );
 });
 EventAttributes.displayName = "EventAttributes";
 
 // Status component to handle different event states
-const EventRegistrationStatus = ({
-  registrantStatus,
-  capacityFilled,
-  hasWaitingList,
-  isCustom,
-}: {
-  registrantStatus: "" | "approved" | "rejected" | "pending" | "checkedin";
-  capacityFilled: boolean;
-  hasWaitingList: boolean;
-  isCustom: boolean;
-}) => {
-  const formComponent = isCustom ? <UserCustomRegisterForm /> : <UserRegisterForm />;
-  const statusConfigs = {
-    "": () => formComponent,
-    pending: () => (
-      <DataStatus
-        status="sent"
-        title="Request Pending"
-        description="Your request to join this event is pending to be approved."
-      />
-    ),
-    approved: () => (
-      <DataStatus
-        status="approved"
-        title="Request Approved"
-        description="Your request to join this event has been approved"
-      />
-    ),
-    rejected: () => (
-      <DataStatus
-        status="rejected"
-        title="Request Rejected"
-        description="Your request to join this event has been rejected."
-      />
-    ),
-    checkedin: () => {
-      <div></div>;
-    },
-  };
+const EventRegistrationStatus = () => {
+  const { eventData, isNotEnded } = useEventData();
+  const registrantStatus = eventData.data?.registrant_status ?? "";
+  const capacityFilled = Boolean(eventData.data?.capacity_filled);
+  const hasWaitingList = Boolean(eventData.data?.has_waiting_list);
 
-  if (capacityFilled && !hasWaitingList) {
-    return (
-      <>
-        <DataStatus
-          status="rejected"
-          title="Capacity Filled"
-          description="Event capacity is filled and no longer accepts registrations."
-        />
-        <MainButton
-          text="Event Capacity Filled"
-          disabled
-          color="secondary"
-        />
-      </>
+  if (!isNotEnded || !eventData.data?.has_registration) {
+    return null;
+  }
+
+  const isCustom = Boolean(eventData.data?.registrationFromSchema?.isCustom);
+  console.log(
+    "EventRegistrationStatus: hasWaitingList or !capacityFilled and registrantStatus === ''",
+    registrantStatus,
+    hasWaitingList,
+    capacityFilled
+  );
+  if ((hasWaitingList || !capacityFilled) && registrantStatus === "") {
+    return isCustom ? (
+      <CustomCard title={"Registration Form"}>
+        <UserCustomRegisterForm />
+      </CustomCard>
+    ) : (
+      <CustomCard title={"Registration Form"}>
+        <UserRegisterForm />
+      </CustomCard>
     );
   }
 
-  return statusConfigs[registrantStatus]?.() ?? null;
+  return (
+    <CustomCard defaultPadding>
+      {capacityFilled && !hasWaitingList && (
+        <>
+          <DataStatus
+            status="rejected"
+            title="Capacity Filled"
+            description="Event capacity is filled and no longer accepts registrations."
+            size="md"
+          />
+          <MainButton
+            text="Event Capacity Filled"
+            disabled
+            color="secondary"
+          />
+        </>
+      )}
+
+      {!capacityFilled && (
+        <>
+          {registrantStatus === "pending" && (
+            <DataStatus
+              status="sent"
+              title="Request Pending"
+              description="Your request to join this event is pending to be approved."
+              size="md"
+            />
+          )}
+          {registrantStatus === "approved" && (
+            <DataStatus
+              status="approved"
+              title="Request Approved"
+              description="Your request to join this event has been approved."
+              size="md"
+            />
+          )}
+          {registrantStatus === "rejected" && (
+            <DataStatus
+              status="rejected"
+              title="Request Rejected"
+              description="Your request to join this event has been rejected."
+              size="md"
+            />
+          )}
+          {registrantStatus === "checkedin" && <div></div>}
+        </>
+      )}
+    </CustomCard>
+  );
 };
 
 const OrganizerCard = React.memo(() => {
@@ -201,37 +283,42 @@ const OrganizerCard = React.memo(() => {
   if (!organizer) return null;
 
   return (
-    <Card
-      margin="mx-0"
-      contentWrap={false}
-      onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
-    >
-      <Typography
-        variant="title3"
-        className="font-bold mb-2"
-      >
-        Organizer
-      </Typography>
-      <div className="w-full flex gap-3 items-stretch">
-        <LoadableImage
-          alt={organizer.org_channel_name}
-          src={organizer.org_image || channelAvatar.src}
-          width={48}
-          height={48}
+    <CustomCard title={"Organizer"}>
+      <List className="!mb-0 !-mt-2">
+        <ListItem
+          className="cursor-pointer"
+          onClick={() => router.push(`/channels/${eventData.data?.owner}/`)}
+          title={
+            <Typography
+              variant="headline"
+              weight="medium"
+              className="text-primary w-52"
+              truncate
+            >
+              {organizer.org_channel_name || "Untitled organizer"}
+            </Typography>
+          }
+          subtitle={
+            <Typography
+              weight={"medium"}
+              variant="subheadline1"
+              className="text-brand-muted"
+            >
+              {organizer.hosted_event_count || 0} events
+            </Typography>
+          }
+          media={
+            <LoadableImage
+              alt={organizer.org_channel_name}
+              src={organizer.org_image || channelAvatar.src}
+              width={48}
+              height={48}
+            />
+          }
+          after={<FaAngleRight className="text-primary" />}
         />
-        <div className="flex flex-col grow justify-between overflow-hidden">
-          <Typography
-            variant="headline"
-            className="text-[#007AFF] font-normal line-clamp-2"
-          >
-            {organizer.org_channel_name || "Untitled organizer"}
-          </Typography>
-        </div>
-        <div className="self-center">
-          <ArrowRight className="text-main-button-color" />
-        </div>
-      </div>
-    </Card>
+      </List>
+    </CustomCard>
   );
 });
 OrganizerCard.displayName = "OrganizerCard";
@@ -254,62 +341,52 @@ const SbtCollectionLink = React.memo(() => {
   if (!isValidAddress) return null;
 
   return (
-    <Card
-      margin="mx-0 cursor-pointer"
-      contentWrap={false}
-      onClick={() => window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank")}
+    <CustomCard
+      title={"SBT Reward Badge"}
+      description="Reward you receive by attending the event and submitting proof of attendance."
     >
-      <Typography
-        variant="title3"
-        className="font-bold"
+      <Block
+        className="!mt-0 mb-4 cursor-pointer"
+        onClick={() => window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank")}
       >
-        SBT Reward Badge
-      </Typography>
-      <Typography
-        variant="body"
-        className=" mb-2"
-      >
-        Reward you receive by attending the event and submitting proof of attendance.
-      </Typography>
-      <div className="w-full flex gap-3 items-stretch">
-        {eventData.data?.tsRewardImage && (
-          <LoadableImage
-            alt={eventData.data?.title}
-            src={eventData.data?.tsRewardImage}
-            width={48}
-            height={48}
-          />
-        )}
-        <div className="flex flex-col grow justify-between overflow-hidden">
-          <Typography
-            variant="headline"
-            truncate
-            className="text-[#007AFF] font-normal line-clamp-2"
-          >
-            {eventData.data?.title}
-          </Typography>
-          <Typography
-            variant="subheadline1"
-            className="text-[#8E8E93]"
-            truncate
-          >
-            {collectionAddress}
-          </Typography>
+        <div className="w-full flex gap-3 items-stretch bg-brand-fill-bg/10 p-2 rounded-lg">
+          {eventData.data?.tsRewardImage && (
+            <LoadableImage
+              alt={eventData.data?.title}
+              src={eventData.data?.tsRewardImage}
+              width={48}
+              height={48}
+            />
+          )}
+          <div className="flex flex-col grow justify-between overflow-hidden">
+            <Typography
+              variant="headline"
+              truncate
+              weight="normal"
+              className="line-clamp-2"
+            >
+              {eventData.data?.title}
+            </Typography>
+            <Typography
+              variant="subheadline1"
+              className="text-brand-muted"
+              truncate
+              weight={"medium"}
+            >
+              {collectionAddress}
+            </Typography>
+          </div>
         </div>
-        <div className="self-center">
-          <ArrowRight className="text-main-button-color" />
-        </div>
-      </div>
-    </Card>
+      </Block>
+    </CustomCard>
   );
 });
 SbtCollectionLink.displayName = "SbtCollectionLink";
 
-// Main component
-export const EventSections = () => {
-  const router = useRouter();
+const MainButtonHandler = React.memo(() => {
   const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
+  const router = useRouter();
 
   const canManageEvent = canUserManageEvent(user, {
     data: {
@@ -327,40 +404,13 @@ export const EventSections = () => {
   const isEventActive = isStarted && isNotEnded;
 
   return (
-    <div className="space-y-2">
-      <EventImage />
-
-      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <EventPasswordAndWalletInput />
-      )}
-
-      <EventHead />
-      <EventAttributes />
-      <EventActions />
-      {canManageEvent && <ManageEventButton />}
-      <EventDescription />
-
+    <>
       {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
         <ClaimRewardButton
           initData={initData}
           eventId={eventData.data?.event_uuid ?? ""}
         />
       )}
-
-      {isNotEnded && eventData.data?.has_registration && (
-        <EventRegistrationStatus
-          registrantStatus={eventData.data?.registrant_status ?? ""}
-          capacityFilled={Boolean(eventData.data?.capacity_filled)}
-          hasWaitingList={Boolean(eventData.data?.has_waiting_list)}
-          isCustom={eventData.data?.registrationFromSchema?.isCustom}
-        />
-      )}
-      <div className="space-y-4">
-        <OrganizerCard />
-        <SbtCollectionLink />
-      </div>
-      <SupportButton />
-
       {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
         <MainButton
           text="Check In"
@@ -385,6 +435,62 @@ export const EventSections = () => {
           color="secondary"
         />
       )}
+    </>
+  );
+});
+MainButtonHandler.displayName = "MainButtonHandler";
+
+const EventHeader = React.memo(() => {
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded } = useEventData();
+  const { user } = useUserStore();
+
+  const userCompletedTasks =
+    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
+    user?.wallet_address;
+
+  const isOnlineEvent = eventData.data?.participationType === "online";
+  const isEventActive = isStarted && isNotEnded;
+
+  return (
+    <>
+      <CustomCard defaultPadding>
+        <EventImage />
+
+        <EventTitle />
+        <Divider margin="medium" />
+        <EventAttributes />
+
+        <EventActions />
+      </CustomCard>
+
+      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
+        <CustomCard title={"Claim Your Reward"}>
+          <EventPasswordAndWalletInput />
+        </CustomCard>
+      )}
+    </>
+  );
+});
+EventHeader.displayName = "EventHeader";
+
+// Main component
+export const EventSections = () => {
+  return (
+    <div className="flex flex-col gap-3 p-4">
+      <EventHeader />
+      <ManageEventButton />
+      <OrganizerCard />
+      <SbtCollectionLink />
+      <UserWallet />
+      <EventDescription />
+      <EventRegistrationStatus />
+
+      <SupportButtons />
+
+      {/* --------------------------------------- */}
+      {/* ---------- MainButtonHandler ---------- */}
+      {/* --------------------------------------- */}
+      <MainButtonHandler />
     </div>
   );
 };

@@ -24,21 +24,19 @@ const EventDates = ({ startDate, endDate }: Props) => {
   const [endDateStr] = useState(formatDate(endDate));
 
   return (
-    <div className="text-center space-y-1">
+    <>
       {/* Start Date */}
       <EventKeyValue
-        variant={"filled_value"}
         label="Start Date"
-        value={<time className="font-medium">{startDateStr}</time>}
+        value={<time>{startDateStr}</time>}
       />
 
       {/* End Date */}
       <EventKeyValue
-        variant={"filled_value"}
         label="End Date"
-        value={<time className="font-medium">{endDateStr}</time>}
+        value={<time>{endDateStr}</time>}
       />
-    </div>
+    </>
   );
 };
 

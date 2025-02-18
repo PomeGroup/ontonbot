@@ -55,7 +55,7 @@ export async function orgPromoteProcessOrder(order: OrderRow): Promise<void> {
 
 👤user_id : <code>${user?.user_id}</code>
 👤username : @${user?.username}
-<a href='https://${prefix}tonviewer.com/${order.trx_hash}'>💰TRX</a>
+<a href='https://${prefix}tonviewer.com/transaction/${order.trx_hash}'>💰TRX</a>
 
 <code>${order.total_price}</code> TON paid to become organizer
 Serial Id: ${completed_org_promotion_count}

@@ -4,7 +4,7 @@ import EventPageLoadingSkeleton from "../../events/[hash]/loading";
 import { useEventData } from "./eventPageContext";
 import { EventDataProvider } from "./EventDataProvider";
 import { EventSections } from "./EventPageSections";
-import { Block } from "konsta/react";
+import { Page } from "konsta/react";
 
 import { useEffect } from "react";
 import { useTheme } from "next-themes";
@@ -32,10 +32,10 @@ export const EventDataPage = ({ eventHash }: { eventHash: string }) => {
   }, [setTheme]);
 
   return (
-    <Block margin="mt-2">
+    <Page>
       <EventDataProvider eventHash={eventHash}>
         <EventDataQueryState />
       </EventDataProvider>
-    </Block>
+    </Page>
   );
 };

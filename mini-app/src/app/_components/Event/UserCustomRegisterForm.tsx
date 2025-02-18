@@ -1,15 +1,18 @@
 "use client";
 import { trpc } from "@/app/_trpc/client";
-import { Button } from "@/components/ui/button";
-import { ListInput, List, BlockTitle, Preloader } from "konsta/react";
+import { ListInput, List } from "konsta/react";
 import { useParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { CustomEventRegisterSchema } from "@/types";
+import ReusableSheet from "../Sheet/ReusableSheet";
+import CustomButton from "../Button/CustomButton";
+import MainButton from "../atoms/buttons/web-app/MainButton";
 
 const UserCustomRegisterForm = () => {
   const params = useParams<{ hash: string }>();
   const registrationForm = useRef<HTMLFormElement>(null);
+  const [isOpen, setOpen] = useState(false);
 
   // Store errors from Zod validation
   const [formErrors, setFormErrors] = useState<{
@@ -36,6 +39,7 @@ const UserCustomRegisterForm = () => {
     onSuccess() {
       trpcUtils.events.getEvent.refetch();
       toast.success("You have successfully registered!");
+      setOpen(false);
     },
   });
 
@@ -63,13 +67,30 @@ const UserCustomRegisterForm = () => {
 
   return (
     <>
-      <BlockTitle className="!px-0">Registration Form</BlockTitle>
-
+      {/*{!isOpen && (*/}
+      {/*  <MainButton*/}
+      {/*    onClick={() => {*/}
+      {/*      setOpen(true);*/}
+      {/*    }}*/}
+      {/*    text="Request to Join"*/}
+      {/*  />*/}
+      {/*)}*/}
+      {/*<ReusableSheet*/}
+      {/*  opened={isOpen}*/}
+      {/*  title="Registration Form"*/}
+      {/*  onClose={() => {*/}
+      {/*    setOpen(false);*/}
+      {/*  }}*/}
+      {/*  className={"overflow-y-auto"}*/}
+      {/*>*/}
       <form
         ref={registrationForm}
         onSubmit={handleSubmit}
       >
-        <List strongIos>
+        <List
+          strongIos
+          className="!my-6"
+        >
           {/* 1. Full Name - required */}
           <ListInput
             outline
@@ -169,20 +190,29 @@ const UserCustomRegisterForm = () => {
           />
         </List>
 
-        <Button
-          variant={"primary"}
-          className="w-full"
-          title="Submit"
-          itemType="button"
-          disabled={registerUser.isLoading}
-          onClick={(e) => {
-            e.preventDefault();
-            registrationForm.current?.requestSubmit();
-          }}
-        >
-          {registerUser.isLoading ? <Preloader size="w-4 h-4" /> : "Request to Join"}
-        </Button>
+        <div className="pt-0 space-y-3 p-4">
+          <CustomButton
+            variant="primary"
+            isLoading={registerUser.isLoading}
+            onClick={(e) => {
+              e.preventDefault();
+              registrationForm.current?.requestSubmit();
+            }}
+          >
+            Submit Request
+          </CustomButton>
+          {/*<CustomButton*/}
+          {/*  variant="outline"*/}
+          {/*  isLoading={registerUser.isLoading}*/}
+          {/*  onClick={() => {*/}
+          {/*    setOpen(false);*/}
+          {/*  }}*/}
+          {/*>*/}
+          {/*  Cancel*/}
+          {/*</CustomButton>*/}
+        </div>
       </form>
+      {/*</ReusableSheet>*/}
     </>
   );
 };

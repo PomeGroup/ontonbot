@@ -18,6 +18,7 @@ import { OntonEvent } from "@/types";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { ChevronRightIcon } from "lucide-react";
 import Typography from "@/components/Typography";
+import { useRouter } from "next/navigation";
 
 // const currentDateTime = Math.floor(Date.now() / 1000);
 
@@ -142,7 +143,7 @@ function PromotedEventsSlider() {
 function PromotedEventsList() {
   const config = useConfig();
   const itemIds = config?.homeListEventUUID as unknown as string[];
-
+  const router = useRouter();
   const { isError, isLoading, data } = trpc.events.getEventsWithFilters.useQuery(
     {
       limit: 10,
@@ -186,7 +187,7 @@ function PromotedEventsList() {
       <div className="w-full pb-2 flex justify-between items-center">
         <h2 className="font-bold text-lg">Events</h2>
         <a
-          href="/search/"
+          onClick={() => router.push("/search/")}
           className={`text-[#007AFF] font-medium flex align-center`}
         >
           <span>See All</span>

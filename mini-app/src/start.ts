@@ -653,7 +653,7 @@ async function MintNFTforPaid_Orders(pushLockTTl: () => any) {
 👤user_id : <code>${ordr.user_id}</code>
 👤username : @${username}
 <a href='https://${prefix}getgems.io/collection/${paymentInfo.collectionAddress}'>🎨Collection</a>
-<a href='https://${prefix}tonviewer.com/${ordr.trx_hash}'>💰TRX</a>
+<a href='https://${prefix}tonviewer.com/transaction/${ordr.trx_hash}'>💰TRX</a>
 <a href='https://${prefix}tonviewer.com/${nft_address}'>📦NFT</a>
           `,
           topic: "ticket",
@@ -856,7 +856,7 @@ async function sendPaymentReminder() {
         and(
           isNotNull(orders.trx_hash), // Ensures trx_hash is not null
           eq(orders.event_uuid, event.events.event_uuid),
-          eq(orders.order_type, "nft_mint"),
+          or(eq(orders.order_type, "nft_mint"),eq(orders.order_type, "ts_csbt_ticket")),
           eq(orders.state, "completed")
         )
       )
