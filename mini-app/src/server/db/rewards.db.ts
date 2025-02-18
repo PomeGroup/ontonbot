@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { RewardStatus, RewardType } from "@/db/enum";
-import { visitors } from "@/db/schema";
+import { RewardTonSocietyStatusType, visitors } from "@/db/schema";
 import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
@@ -189,6 +189,26 @@ const updateRewardWithConditions = async (
     .execute();
 };
 
+const updateTonSocietyStatusByVisitorId = async (visitor_id: number, newTonSocietyStatus: RewardTonSocietyStatusType) => {
+  // Perform the update
+  const updatedVisitor = await db
+    .update(rewards)
+    .set({
+      tonSocietyStatus: newTonSocietyStatus,
+      updatedBy: "system",
+    })
+    .where(eq(rewards.visitor_id, visitor_id))
+    .returning()
+    .execute();
+
+  // Update the cache with the new record
+  const cacheKey = generateCacheKey(visitor_id);
+  await redisTools.setCache(cacheKey, updatedVisitor?.[0], redisTools.cacheLvl.medium);
+
+  // Return the first updated row, or null if none
+  return updatedVisitor?.[0] ?? null;
+};
+
 const rewardDB = {
   checkExistingReward,
   insert,
@@ -200,6 +220,7 @@ const rewardDB = {
   selectRewardsWithVisitorDetails,
   updateReward,
   updateRewardWithConditions,
+  updateTonSocietyStatusByVisitorId,
 };
 
 export default rewardDB;

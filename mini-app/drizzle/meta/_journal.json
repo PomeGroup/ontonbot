@@ -71,6 +71,13 @@
       "when": 1739527335616,
       "tag": "0009_deep_hawkeye",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1739894725991,
+      "tag": "0010_giant_zombie",
+      "breakpoints": true
     }
   ]
 }

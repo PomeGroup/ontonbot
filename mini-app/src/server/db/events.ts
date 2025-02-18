@@ -1,19 +1,18 @@
 import { db } from "@/db/db";
 import crypto from "crypto";
-import { event_details_search_list, eventFields, eventRegistrants, events, rewards, users, visitors } from "@/db/schema";
+import { event_details_search_list, eventRegistrants, events, rewards, users, visitors } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, gt, inArray, InferSelectModel, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logger } from "../utils/logger";
 import { EventRow } from "@/db/schema/events";
 import eventFieldsDB from "@/server/db/eventFields.db";
-import { EventField } from "@/db/schema/eventFields";
 
 export const getEventIDCacheKey = (eventID: number) => redisTools.cacheKeys.event_id + eventID;
 export const getEventUUIDCacheKey = (eventUUID: string) => redisTools.cacheKeys.event_uuid + eventUUID;
