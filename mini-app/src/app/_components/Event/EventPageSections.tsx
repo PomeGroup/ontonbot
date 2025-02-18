@@ -224,8 +224,22 @@ const EventRegistrationStatus = () => {
   }
 
   const isCustom = Boolean(eventData.data?.registrationFromSchema?.isCustom);
+  console.log(
+    "EventRegistrationStatus: hasWaitingList or !capacityFilled and registrantStatus === ''",
+    registrantStatus,
+    hasWaitingList,
+    capacityFilled
+  );
   if ((hasWaitingList || !capacityFilled) && registrantStatus === "") {
-    return isCustom ? <UserCustomRegisterForm /> : <UserRegisterForm />;
+    return isCustom ? (
+      <Card>
+        <UserCustomRegisterForm />
+      </Card>
+    ) : (
+      <Card>
+        <UserRegisterForm />
+      </Card>
+    );
   }
 
   return (
@@ -483,18 +497,23 @@ const EventHeader = React.memo(() => {
   const isEventActive = isStarted && isNotEnded;
 
   return (
-    <Card>
-      <EventImage />
+    <>
+      <Card>
+        <EventImage />
+
+        <EventTitle />
+        <Divider margin="medium" />
+        <EventAttributes />
+
+        <EventActions />
+      </Card>
 
       {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <EventPasswordAndWalletInput />
+        <Card>
+          <EventPasswordAndWalletInput />
+        </Card>
       )}
-
-      <EventTitle />
-      <Divider margin="medium" />
-      <EventAttributes />
-      <EventActions />
-    </Card>
+    </>
   );
 });
 EventHeader.displayName = "EventHeader";

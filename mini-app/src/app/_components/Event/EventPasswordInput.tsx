@@ -84,66 +84,64 @@ export const EventPasswordAndWalletInput = () => {
   ) : (
     !hasRegistration && (
       <>
-        <ReusableSheet
-          title="Claim Your Reward"
-          opened={isPasswordOpen}
-          onClose={closePasswordModal}
-          className={"overflow-y-auto"}
+        {/*<ReusableSheet*/}
+        {/*  title="Claim Your Reward"*/}
+        {/*  opened={isPasswordOpen}*/}
+        {/*  onClose={closePasswordModal}*/}
+        {/*  className={"overflow-y-auto"}*/}
+        {/*>*/}
+        <form
+          className=" space-y-4"
+          ref={formRef}
+          onSubmit={submitPassword}
         >
-          <form
-            className=" space-y-4"
-            ref={formRef}
-            onSubmit={submitPassword}
+          <Typography
+            variant="body"
+            weight="normal"
+            className={"p-4"}
           >
-            <Typography
-              variant="body"
-              weight="normal"
-              className={"p-4"}
+            Enter the Event Password that the organizer shared to confirm your participation in the event.
+          </Typography>
+          <List
+            strongIos
+            className="!my-6 p-0"
+          >
+            <ListInput
+              outline
+              placeholder="Event password"
+              name="event_password"
+              type="text"
+              minLength={4}
+              error={upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined}
+              media={<PasscodeIcon />}
+            />
+          </List>
+          <div className="p-4 pt-0  space-y-3">
+            <CustomButton
+              onClick={() => {
+                formRef.current?.requestSubmit();
+              }}
+              isLoading={upsertUserEventFieldMutation.isLoading}
             >
-              Enter the Event Password that the organizer shared to confirm your participation in the event.
-            </Typography>
-            <List
-              strongIos
-              className="!my-6 p-0"
-            >
-              <ListInput
-                outline
-                placeholder="Event password"
-                name="event_password"
-                type="text"
-                minLength={4}
-                error={
-                  upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined
-                }
-                media={<PasscodeIcon />}
-              />
-            </List>
-            <div className="p-4 pt-0  space-y-3">
-              <CustomButton
-                onClick={() => {
-                  formRef.current?.requestSubmit();
-                }}
-                isLoading={upsertUserEventFieldMutation.isLoading}
-              >
-                Submit Password
-              </CustomButton>
-              <CustomButton
-                variant="outline"
-                onClick={closePasswordModal}
-              >
-                Close
-              </CustomButton>
-            </div>
-          </form>
-        </ReusableSheet>
-        {!isPasswordOpen && (
-          <MainButton
-            text="Enter Password"
-            onClick={() => {
-              setPasswordOpen(true);
-            }}
-          />
-        )}
+              Submit Password
+            </CustomButton>
+            {/*<CustomButton*/}
+            {/*  variant="outline"*/}
+            {/*  onClick={closePasswordModal}*/}
+            {/*>*/}
+            {/*  Close*/}
+            {/*</CustomButton>*/}
+          </div>
+        </form>
+        {/*</ReusableSheet>*/}
+        {/*{!isPasswordOpen && (*/}
+        {/*  <MainButton*/}
+        {/*    text="Enter Password"*/}
+        {/*    onClick={() => {*/}
+        {/*      setPasswordOpen(true);*/}
+        {/*    }}*/}
+        {/*  />*/}
+        {/*)}*/}
       </>
     )
   );
