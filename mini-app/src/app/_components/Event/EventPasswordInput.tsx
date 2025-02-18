@@ -4,10 +4,8 @@ import { toast } from "sonner";
 import { useEventData } from "./eventPageContext";
 import PasscodeIcon from "@/components/icons/Passcode";
 import MainButton from "../atoms/buttons/web-app/MainButton";
-import { Input } from "@/components/ui/input";
 import { useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
 import { useUserStore } from "@/context/store/user.store";
-import ReusableSheet from "../Sheet/ReusableSheet";
 import CustomButton from "../Button/CustomButton";
 import Typography from "@/components/Typography";
 import { List, ListInput } from "konsta/react";
@@ -103,7 +101,7 @@ export const EventPasswordAndWalletInput = () => {
           </Typography>
           <List
             strongIos
-            className="!my-6 !p-0 !mx-0 "
+            className="!my-6 !-mx-4"
           >
             <ListInput
               outline
@@ -116,7 +114,7 @@ export const EventPasswordAndWalletInput = () => {
               media={<PasscodeIcon />}
             />
           </List>
-          <div className="  pt-0  space-y-3">
+          <div className="pt-0 space-y-3">
             <CustomButton
               onClick={() => {
                 formRef.current?.requestSubmit();
