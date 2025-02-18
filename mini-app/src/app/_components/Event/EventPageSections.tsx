@@ -14,7 +14,7 @@ import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
 import SupportButtons from "../atoms/buttons/SupportButton";
-import { Card, ListItem, List, Block } from "konsta/react";
+import { ListItem, List, Block } from "konsta/react";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
@@ -24,6 +24,7 @@ import { Address } from "@ton/core";
 import { FaAngleRight } from "react-icons/fa6";
 import { TonConnectButton } from "@tonconnect/ui-react";
 import Divider from "@/components/Divider";
+import CustomCard from "../atoms/cards/CustomCard";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -123,17 +124,7 @@ EventDatesComponent.displayName = "EventDatesComponent";
 const EventDescription = React.memo(() => {
   const { eventData } = useEventData();
   return (
-    <Card
-      header={
-        <Typography
-          weight="bold"
-          variant="title3"
-        >
-          About
-        </Typography>
-      }
-      contentWrap={false}
-    >
+    <CustomCard title={"About"}>
       <Typography
         weight="normal"
         variant={"body"}
@@ -141,7 +132,7 @@ const EventDescription = React.memo(() => {
       >
         {eventData.data?.description ?? ""}
       </Typography>
-    </Card>
+    </CustomCard>
   );
 });
 
@@ -149,21 +140,11 @@ EventDescription.displayName = "EventDescription";
 
 const UserWallet = () => {
   return (
-    <Card
-      header={
-        <Typography
-          weight="bold"
-          variant="title3"
-        >
-          Your Wallet
-        </Typography>
-      }
-      contentWrap={false}
-    >
+    <CustomCard title={"Your Wallet"}>
       <div className="p-4 pt-0 flex items-center justify-center">
         <TonConnectButton />
       </div>
-    </Card>
+    </CustomCard>
   );
 };
 
@@ -232,38 +213,18 @@ const EventRegistrationStatus = () => {
   );
   if ((hasWaitingList || !capacityFilled) && registrantStatus === "") {
     return isCustom ? (
-      <Card
-        header={
-          <Typography
-            weight={"bold"}
-            variant="title3"
-          >
-            Registration Form
-          </Typography>
-        }
-        contentWrap={false}
-      >
+      <CustomCard title={"Registration Form"}>
         <UserCustomRegisterForm />
-      </Card>
+      </CustomCard>
     ) : (
-      <Card
-        header={
-          <Typography
-            weight={"bold"}
-            variant="title3"
-          >
-            Registration Form
-          </Typography>
-        }
-        contentWrap={false}
-      >
+      <CustomCard title={"Registration Form"}>
         <UserRegisterForm />
-      </Card>
+      </CustomCard>
     );
   }
 
   return (
-    <Card>
+    <CustomCard defaultPadding>
       {capacityFilled && !hasWaitingList && (
         <>
           <DataStatus
@@ -309,7 +270,7 @@ const EventRegistrationStatus = () => {
           {registrantStatus === "checkedin" && <div></div>}
         </>
       )}
-    </Card>
+    </CustomCard>
   );
 };
 
@@ -322,17 +283,7 @@ const OrganizerCard = React.memo(() => {
   if (!organizer) return null;
 
   return (
-    <Card
-      header={
-        <Typography
-          weight={"bold"}
-          variant="title3"
-        >
-          Organizer
-        </Typography>
-      }
-      contentWrap={false}
-    >
+    <CustomCard title={"Organizer"}>
       <List className="!mb-0 !-mt-2">
         <ListItem
           className="cursor-pointer"
@@ -367,7 +318,7 @@ const OrganizerCard = React.memo(() => {
           after={<FaAngleRight className="text-primary" />}
         />
       </List>
-    </Card>
+    </CustomCard>
   );
 });
 OrganizerCard.displayName = "OrganizerCard";
@@ -390,25 +341,9 @@ const SbtCollectionLink = React.memo(() => {
   if (!isValidAddress) return null;
 
   return (
-    <Card
-      header={
-        <>
-          <Typography
-            weight={"bold"}
-            variant="title3"
-          >
-            SBT Reward Badge
-          </Typography>
-          <Typography
-            variant="body"
-            weight="normal"
-            className="mt-4"
-          >
-            Reward you receive by attending the event and submitting proof of attendance.
-          </Typography>
-        </>
-      }
-      contentWrap={false}
+    <CustomCard
+      title={"SBT Reward Badge"}
+      description="Reward you receive by attending the event and submitting proof of attendance."
     >
       <Block
         className="!mt-0 mb-4 cursor-pointer"
@@ -443,7 +378,7 @@ const SbtCollectionLink = React.memo(() => {
           </div>
         </div>
       </Block>
-    </Card>
+    </CustomCard>
   );
 });
 SbtCollectionLink.displayName = "SbtCollectionLink";
@@ -518,7 +453,7 @@ const EventHeader = React.memo(() => {
 
   return (
     <>
-      <Card>
+      <CustomCard defaultPadding>
         <EventImage />
 
         <EventTitle />
@@ -526,21 +461,12 @@ const EventHeader = React.memo(() => {
         <EventAttributes />
 
         <EventActions />
-      </Card>
+      </CustomCard>
 
       {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <Card
-          header={
-            <Typography
-              weight={"bold"}
-              variant="title3"
-            >
-              Claim Your Reward
-            </Typography>
-          }
-        >
+        <CustomCard title={"Claim Your Reward"}>
           <EventPasswordAndWalletInput />
-        </Card>
+        </CustomCard>
       )}
     </>
   );
@@ -550,7 +476,7 @@ EventHeader.displayName = "EventHeader";
 // Main component
 export const EventSections = () => {
   return (
-    <>
+    <div className="flex flex-col gap-3 p-4">
       <EventHeader />
       <ManageEventButton />
       <OrganizerCard />
@@ -565,6 +491,6 @@ export const EventSections = () => {
       {/* ---------- MainButtonHandler ---------- */}
       {/* --------------------------------------- */}
       <MainButtonHandler />
-    </>
+    </div>
   );
 };

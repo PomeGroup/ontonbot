@@ -2,11 +2,11 @@
 
 import Typography from "@/components/Typography";
 import useWebApp from "@/hooks/useWebApp";
-import { Card } from "konsta/react";
 import React from "react";
 import { useEventData } from "../../Event/eventPageContext";
 import CustomButton from "../../Button/CustomButton";
 import { sleep } from "@/utils";
+import CustomCard from "../cards/CustomCard";
 
 const SupportButtons = () => {
   const webApp = useWebApp();
@@ -16,17 +16,9 @@ const SupportButtons = () => {
   // trim @ from the start of the username
   const orgSupportTelegramUserName = eventData.data?.organizer?.org_support_telegram_user_name?.replace(/^@/, "");
   return (
-    <Card
-      header={
-        <>
-          <Typography
-            weight={"bold"}
-            variant="title3"
-          >
-            Support
-          </Typography>
-        </>
-      }
+    <CustomCard
+      title={"Support"}
+      defaultPadding
     >
       <Typography
         variant="body"
@@ -67,7 +59,7 @@ const SupportButtons = () => {
           </CustomButton>
         </>
       )}
-    </Card>
+    </CustomCard>
   );
 };
 
