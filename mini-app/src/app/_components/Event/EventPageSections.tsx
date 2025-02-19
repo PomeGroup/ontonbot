@@ -404,10 +404,10 @@ const MainButtonHandler = React.memo(() => {
   const isEventActive = isStarted && isNotEnded;
 
   const joinTaskStatus = trpc.users.joinOntonTasks.useQuery();
-  const [isJoinedX, setJoinedX] = useState(false);
+  const [isJoinedX, setJoinedX] = useState("not_done");
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
 
-  if (joinTaskStatus.isLoading) {
+  if (!joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
     return <MainButton progress />;
   }
 
@@ -449,10 +449,17 @@ const MainButtonHandler = React.memo(() => {
             />
             <Task
               title="Follow ONTON on X"
-              status={joinTaskStatus.isFetching ? "checking" : isJoinedX ? "done" : "not_done"}
+              status={
+                joinTaskStatus.isFetching || isJoinedX === "checking"
+                  ? "checking"
+                  : isJoinedX === "done"
+                    ? "done"
+                    : "not_done"
+              }
               onClick={() => {
+                setJoinedX("checking");
                 webApp?.openLink("https://x.com/ontonbot");
-                sleep(1000).then(() => setJoinedX(true));
+                sleep(30000).then(() => setJoinedX("done"));
               }}
             />
           </div>
