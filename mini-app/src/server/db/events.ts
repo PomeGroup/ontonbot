@@ -6,7 +6,7 @@ import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -561,6 +561,40 @@ export const fetchOngoingEvents = async () => {
     .execute();
 };
 
+/**
+ * Fetch a chunk of events that have a non-null activity_id,
+ * sorted descending by event_id.
+ */
+export async function fetchEventsWithNonNullActivityIdDESC(limit: number, offset: number): Promise<EventRow[]> {
+  return await db
+    .select()
+    .from(events)
+    .where(isNotNull(events.activity_id))
+    .orderBy(sql`${events.event_id} DESC`)
+    .limit(limit)
+    .offset(offset)
+    .execute();
+}
+
+/**
+ * Fetch events with a non-null activity_id and start_date > given cutoff,
+ * in descending order by event_id.
+ */
+export async function fetchEventsWithNonNullActivityIdAfterStartDateDESC(
+  limit: number,
+  offset: number,
+  startDateCutoff: number
+): Promise<EventRow[]> {
+  return await db
+    .select()
+    .from(events)
+    .where(and(isNotNull(events.activity_id), gt(events.start_date, startDateCutoff)))
+    .orderBy(sql`${events.event_id} DESC`)
+    .limit(limit)
+    .offset(offset)
+    .execute();
+}
+
 const eventDB = {
   checkIsEventOwner,
   checkIsAdminOrOrganizer,
@@ -578,5 +612,7 @@ const eventDB = {
   fetchEventById,
   deleteEventCache,
   fetchEventByActivityId,
+  fetchEventsWithNonNullActivityIdDESC,
+  fetchEventsWithNonNullActivityIdAfterStartDateDESC,
 };
 export default eventDB;

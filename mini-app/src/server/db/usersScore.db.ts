@@ -43,7 +43,7 @@ export const createUserScore = async (scoreData: {
         active: scoreData.active,
         itemId: scoreData.itemId,
         itemType: scoreData.itemType,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
       })
       .returning();
     logger.log("UserScore created:", result);
@@ -61,7 +61,7 @@ export const createUserScore = async (scoreData: {
 /**
  * Change the status (active flag) of a usersScore record by its ID.
  */
-export const changeUserScoreStatus = async (id: number, newStatus: boolean, userId: number) => {
+export const changeUserScoreStatus = async (id: bigint, newStatus: boolean, userId: number) => {
   try {
     await db
       .update(usersScore)
@@ -80,7 +80,7 @@ export const changeUserScoreStatus = async (id: number, newStatus: boolean, user
 /**
  * Update the point (score) of a usersScore record by its ID.
  */
-export const updateUserScore = async (id: number, newPoint: number, userId: number) => {
+export const updateUserScore = async (id: bigint, newPoint: number, userId: number) => {
   try {
     await db
       .update(usersScore)
@@ -120,7 +120,7 @@ export const getTotalScoreByUserId = async (userId: number): Promise<number> => 
     ).pop();
 
     const total = result?.total || 0;
-    await redisTools.setCache(cacheKey, total, redisTools.cacheLvl.short);
+    await redisTools.setCache(cacheKey, total, redisTools.cacheLvl.extraLong);
     return total;
   } catch (error) {
     logger.error("Error getting total score by user id:", error);
@@ -157,7 +157,7 @@ export const getTotalScoreByActivityTypeAndUserId = async (
     ).pop();
 
     const data: TotalScoreByActivityTypeAndUserId = result || { total: 0, count: 0 };
-    await redisTools.setCache(cacheKey, data, redisTools.cacheLvl.short);
+    await redisTools.setCache(cacheKey, data, redisTools.cacheLvl.extraLong);
     return data;
   } catch (error) {
     logger.error("Error getting total score by activity type and user id:", error);

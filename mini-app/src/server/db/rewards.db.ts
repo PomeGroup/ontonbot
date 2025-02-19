@@ -4,7 +4,12 @@ import { RewardTonSocietyStatusType, visitors } from "@/db/schema";
 import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
+
+export interface RewardChunkRow {
+  reward_id: string; // or `uuid` type depending on your schema
+  visitor_id: number;
+}
 
 // Utility function to generate cache keys
 const generateCacheKey = (visitor_id: number, reward_id?: string) => {
@@ -209,6 +214,29 @@ const updateTonSocietyStatusByVisitorId = async (visitor_id: number, newTonSocie
   return updatedVisitor?.[0] ?? null;
 };
 
+/**
+ * Fetch a chunk of rewards for a given event_uuid where
+ * tonSocietyStatus is "NOT_CLAIMED".
+ */
+export async function fetchNotClaimedRewardsForEvent(
+  event_uuid: string,
+  limit: number,
+  offset: number
+): Promise<RewardChunkRow[]> {
+  return await db
+    .select({
+      reward_id: rewards.id,
+      visitor_id: rewards.visitor_id,
+    })
+    .from(rewards)
+    .innerJoin(sql`visitors as v`, eq(sql`v.id`, rewards.visitor_id))
+    .where(and(eq(sql`v.event_uuid`, event_uuid), eq(rewards.tonSocietyStatus, "NOT_CLAIMED")))
+    .orderBy(sql`${rewards.id} ASC`)
+    .limit(limit)
+    .offset(offset)
+    .execute();
+}
+
 const rewardDB = {
   checkExistingReward,
   insert,
@@ -221,6 +249,7 @@ const rewardDB = {
   updateReward,
   updateRewardWithConditions,
   updateTonSocietyStatusByVisitorId,
+  fetchNotClaimedRewardsForEvent,
 };
 
 export default rewardDB;

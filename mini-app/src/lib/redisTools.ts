@@ -291,6 +291,7 @@ export const cacheLvl = {
   short: 60 * 10, // 5 minutes
   medium: 60 * 60 * 2, // 2 hour
   long: 60 * 60 * 24, // 1 day
+  extraLong: 60 * 60 * 24 * 30, //  30 days
   authApiOtpTimeout: 60 * 5, // 5 minutes
 };
 
