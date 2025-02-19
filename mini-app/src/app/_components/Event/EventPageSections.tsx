@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Images from "@/app/_components/atoms/images";
 import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
@@ -407,6 +407,21 @@ const MainButtonHandler = React.memo(() => {
   const [isJoinedX, setJoinedX] = useState("not_done");
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
 
+  useEffect(() => {
+    const handleFocus = () => {
+      joinTaskStatus.refetch();
+      if (isJoinedX === "checking") {
+        sleep(1000).then(() => setJoinedX("done"));
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [joinTaskStatus, isJoinedX]);
+
   if (!joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
     return <MainButton progress />;
   }
@@ -436,15 +451,14 @@ const MainButtonHandler = React.memo(() => {
               status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.gp ? "done" : "not_done"}
               onClick={() => {
                 webApp?.openTelegramLink("https://t.me/ontonsupport");
-                sleep(6000).then(() => joinTaskStatus.refetch());
               }}
             />
             <Task
               title="ONTON Announcement Channel"
               status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.ch ? "done" : "not_done"}
               onClick={() => {
-                webApp?.openTelegramLink("https://t.me/ontonlive");
-                sleep(6000).then(() => joinTaskStatus.refetch());
+                setJoinedX("checking");
+                webApp?.openLink("https://x.com/ontonbot");
               }}
             />
             <Task
@@ -459,7 +473,6 @@ const MainButtonHandler = React.memo(() => {
               onClick={() => {
                 setJoinedX("checking");
                 webApp?.openLink("https://x.com/ontonbot");
-                sleep(30000).then(() => setJoinedX("done"));
               }}
             />
           </div>
