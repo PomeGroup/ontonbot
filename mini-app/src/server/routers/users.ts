@@ -67,25 +67,36 @@ export const usersRouter = router({
     const { configProtected } = await fetchOntonSettings();
     const checkJoinBotToken = configProtected["check_join_bot_token"] as string;
     const userId = c.ctx.user.user_id;
+    const memberStatuses = ["member", "creator", "administrator", "restricted"];
 
     const tgBot = new Bot(checkJoinBotToken);
     tgBot.stop();
 
     // main tg channel
     let isJoinedCh = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_ch + userId));
-    const memberStatuses = ["member", "creator", "administrator", "restricted"];
+    // __AUTO_GENERATED_PRINT_VAR_START__
+    console.log("(anon) isJoinedCh: %s", isJoinedCh); // __AUTO_GENERATED_PRINT_VAR_END__
     if (!isJoinedCh) {
       const userStatus = (await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId)).status;
-
+      // __AUTO_GENERATED_PRINT_VAR_START__
+      console.log("(anon)#if userStatus: %s", userStatus); // __AUTO_GENERATED_PRINT_VAR_END__
       isJoinedCh = memberStatuses.includes(userStatus);
+      // __AUTO_GENERATED_PRINT_VAR_START__
+      console.log("(anon)#if isJoinedCh: %s", isJoinedCh); // __AUTO_GENERATED_PRINT_VAR_END__
       await redisTools.setCache(cacheKeys.join_task_tg_ch + userId, isJoinedCh, cacheLvl.long);
     }
 
     // main tg group
     let isJoinedGp = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_gp + userId));
+    // __AUTO_GENERATED_PRINT_VAR_START__
+    console.log("(anon) isJoinedGp: %s", isJoinedGp); // __AUTO_GENERATED_PRINT_VAR_END__
     if (!isJoinedGp) {
       const userStatus = (await tgBot.api.getChatMember(MAIN_TG_CHAT_ID, userId)).status;
+      // __AUTO_GENERATED_PRINT_VAR_START__
+      console.log("(anon)#if userStatus: %s", userStatus); // __AUTO_GENERATED_PRINT_VAR_END__
       isJoinedGp = memberStatuses.includes(userStatus);
+      // __AUTO_GENERATED_PRINT_VAR_START__
+      console.log("(anon)#if isJoinedGp: %s", isJoinedGp); // __AUTO_GENERATED_PRINT_VAR_END__
       await redisTools.setCache(cacheKeys.join_task_tg_gp + userId, isJoinedGp, cacheLvl.long);
     }
 
