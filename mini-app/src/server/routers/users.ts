@@ -11,7 +11,7 @@ import rewardService from "@/server/routers/services/rewardsService";
 import { logger } from "../utils/logger";
 import { Bot } from "grammy";
 import { cacheKeys, cacheLvl, redisTools } from "@/lib/redisTools";
-import { MAIN_TG_CHANNEL_ID, MAIN_TG_CHAT_ID } from "@/constants";
+import { MAIN_TG_CHANNEL_ID } from "@/constants";
 import { fetchOntonSettings } from "../db/ontoSetting";
 
 export const usersRouter = router({
@@ -74,29 +74,19 @@ export const usersRouter = router({
 
     // main tg channel
     let isJoinedCh = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_ch + userId));
-    // __AUTO_GENERATED_PRINT_VAR_START__
-    console.log("(anon) isJoinedCh: %s", isJoinedCh); // __AUTO_GENERATED_PRINT_VAR_END__
     if (!isJoinedCh) {
-      const userStatus = (await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId)).status;
-      // __AUTO_GENERATED_PRINT_VAR_START__
-      console.log("(anon)#if userStatus: %s", userStatus); // __AUTO_GENERATED_PRINT_VAR_END__
-      isJoinedCh = memberStatuses.includes(userStatus);
-      // __AUTO_GENERATED_PRINT_VAR_START__
-      console.log("(anon)#if isJoinedCh: %s", isJoinedCh); // __AUTO_GENERATED_PRINT_VAR_END__
+      const chatMember = await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId);
+      const userStatus = chatMember.status;
+      isJoinedCh = memberStatuses.includes(userStatus) && userStatus === "restricted" ? chatMember.is_member : true;
       await redisTools.setCache(cacheKeys.join_task_tg_ch + userId, isJoinedCh, cacheLvl.long);
     }
 
     // main tg group
     let isJoinedGp = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_gp + userId));
-    // __AUTO_GENERATED_PRINT_VAR_START__
-    console.log("(anon) isJoinedGp: %s", isJoinedGp); // __AUTO_GENERATED_PRINT_VAR_END__
     if (!isJoinedGp) {
-      const userStatus = (await tgBot.api.getChatMember(MAIN_TG_CHAT_ID, userId)).status;
-      // __AUTO_GENERATED_PRINT_VAR_START__
-      console.log("(anon)#if userStatus: %s", userStatus); // __AUTO_GENERATED_PRINT_VAR_END__
-      isJoinedGp = memberStatuses.includes(userStatus);
-      // __AUTO_GENERATED_PRINT_VAR_START__
-      console.log("(anon)#if isJoinedGp: %s", isJoinedGp); // __AUTO_GENERATED_PRINT_VAR_END__
+      const chatMember = await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId);
+      const userStatus = chatMember.status;
+      isJoinedGp = memberStatuses.includes(userStatus) && userStatus === "restricted" ? chatMember.is_member : true;
       await redisTools.setCache(cacheKeys.join_task_tg_gp + userId, isJoinedGp, cacheLvl.long);
     }
 
