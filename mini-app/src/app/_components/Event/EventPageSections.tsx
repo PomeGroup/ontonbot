@@ -404,7 +404,7 @@ const MainButtonHandler = React.memo(() => {
   const isEventActive = isStarted && isNotEnded;
 
   const joinTaskStatus = trpc.users.joinOntonTasks.useQuery(undefined, {
-    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
   const [isJoinedX, setJoinedX] = useState("not_done");
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
