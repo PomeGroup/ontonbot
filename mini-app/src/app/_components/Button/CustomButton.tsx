@@ -60,7 +60,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
       weight={fontWeight}
       className="capitalize"
     >
-      {isLoading && variant === "primary" ? (
+      {isLoading ? (
         <Preloader size="w-4 h-4" />
       ) : (
         <>
