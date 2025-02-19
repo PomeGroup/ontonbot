@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Images from "@/app/_components/atoms/images";
 import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
@@ -409,20 +409,6 @@ const MainButtonHandler = React.memo(() => {
   const [isJoinedX, setJoinedX] = useState("not_done");
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
 
-  useEffect(() => {
-    const handleFocus = async () => {
-      if (isJoinedX === "checking") {
-        await sleep(10_000);
-        setJoinedX("done");
-      }
-    };
-
-    window.addEventListener("focus", handleFocus);
-    return () => {
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [joinTaskStatus, isJoinedX]);
-
   if (!joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
     return <MainButton progress />;
   }
@@ -470,9 +456,11 @@ const MainButtonHandler = React.memo(() => {
                     ? "done"
                     : "not_done"
               }
-              onClick={() => {
+              onClick={async () => {
                 setJoinedX("checking");
                 webApp?.openLink("https://x.com/ontonbot");
+                await sleep(10_000);
+                setJoinedX("done");
               }}
             />
           </div>
