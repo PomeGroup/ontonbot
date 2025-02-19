@@ -1,21 +1,14 @@
 import { List, ListItem } from "konsta/react";
 import CustomButton from "./Button/CustomButton";
+import { FaSpinner } from "react-icons/fa6";
 
 type TaskProps = {
   title: string;
-  status: "pending" | "done";
+  status: "not_done" | "done" | "checking";
+  onClick?: () => void;
 };
 
-const Task = ({ title, status }: TaskProps) => {
-  const handleClick = () => {
-    // Define the click behavior based on status
-    if (status === "pending") {
-      // Implement pending action
-    } else if (status === "done") {
-      // Implement done action
-    }
-  };
-
+const Task = ({ title, status, onClick }: TaskProps) => {
   return (
     <List
       outline
@@ -27,13 +20,15 @@ const Task = ({ title, status }: TaskProps) => {
         title={title}
         after={
           <CustomButton
-            variant={status === "pending" ? "outline" : "link"}
-            onClick={handleClick}
+            variant={status === "not_done" ? "outline" : "link"}
+            onClick={onClick}
             fontWeight="normal"
             size="md"
             color={status === "done" ? "success" : undefined}
           >
-            {status === "pending" ? "Go" : "Done!"}
+            {status === "not_done" && "Go"}
+            {status === "done" && "Done!"}
+            {status === "checking" && <FaSpinner className="animate-spin" />}
           </CustomButton>
         }
       />

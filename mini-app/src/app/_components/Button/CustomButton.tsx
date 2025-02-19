@@ -12,7 +12,7 @@ interface CustomButtonProps {
   icon?: ReactNode;
   fontSize?: TypographyProps["variant"];
   fontWeight?: TypographyProps["weight"];
-  onClick: (_e: React.MouseEvent<HTMLButtonElement>) => void;
+  onClick?: (_e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 const customButtonVariants = cva(" min-w-20", {

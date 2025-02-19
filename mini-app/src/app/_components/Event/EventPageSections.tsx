@@ -18,7 +18,6 @@ import { ListItem, List, Block } from "konsta/react";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
-import { canUserManageEvent } from "@/lib/userRolesUtils";
 import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
 import { Address } from "@ton/core";
 import { FaAngleRight } from "react-icons/fa6";
@@ -28,6 +27,9 @@ import ReusableSheet from "../Sheet/ReusableSheet";
 import CustomButton from "../Button/CustomButton";
 import Task from "../Task";
 import CustomCard from "../atoms/cards/CustomCard";
+import { trpc } from "@/app/_trpc/client";
+import useWebApp from "@/hooks/useWebApp";
+import { sleep } from "@/utils";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -391,13 +393,7 @@ const MainButtonHandler = React.memo(() => {
   const { user } = useUserStore();
   const router = useRouter();
   const [isTasksOpen, setIsTasksOpen] = useState(false);
-
-  const canManageEvent = canUserManageEvent(user, {
-    data: {
-      owner: eventData?.data?.owner,
-      accessRoles: eventData?.data?.accessRoles,
-    },
-  });
+  const webApp = useWebApp();
 
   const userCompletedTasks =
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
@@ -407,7 +403,15 @@ const MainButtonHandler = React.memo(() => {
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
 
-  if (1 || isTasksOpen) {
+  const joinTaskStatus = trpc.users.joinOntonTasks.useQuery();
+  const [isJoinedX, setJoinedX] = useState(false);
+  const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
+
+  if (joinTaskStatus.isLoading) {
+    return <MainButton progress />;
+  }
+
+  if (!joinTaskStatus.data?.all_done || isTasksOpen) {
     const closeTasksOpen = () => {
       setIsTasksOpen(false);
     };
@@ -428,20 +432,37 @@ const MainButtonHandler = React.memo(() => {
         >
           <div className="space-y-4">
             <Task
-              title="Follow TON Network on X"
-              status="done"
+              title="ONTON Community Chat"
+              status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.gp ? "done" : "not_done"}
+              onClick={() => {
+                webApp?.openTelegramLink("https://t.me/ontonsupport");
+                sleep(5000).then(() => joinTaskStatus.refetch());
+              }}
             />
             <Task
-              title="Follow TON Network on X"
-              status="pending"
+              title="ONTON Announcement Channel"
+              status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.ch ? "done" : "not_done"}
+              onClick={() => {
+                webApp?.openTelegramLink("https://t.me/ontonlive");
+                sleep(5000).then(() => joinTaskStatus.refetch());
+              }}
             />
             <Task
-              title="Follow TON Network on X"
-              status="pending"
+              title="Follow ONTON on X"
+              status={joinTaskStatus.isFetching ? "checking" : isJoinedX ? "done" : "not_done"}
+              onClick={() => {
+                webApp?.openLink("https://x.com/ontonbot");
+                sleep(1000).then(() => setJoinedX(true));
+              }}
             />
           </div>
           <div className="mt-6">
-            <CustomButton onClick={closeTasksOpen}>Close</CustomButton>
+            <CustomButton
+              variant={allTasksDone ? undefined : "outline"}
+              onClick={closeTasksOpen}
+            >
+              Close
+            </CustomButton>
           </div>
         </ReusableSheet>
       </>
@@ -468,24 +489,22 @@ const MainButtonHandler = React.memo(() => {
     }
   }
 
-  if (!canManageEvent) {
-    if (!isStarted && isNotEnded) {
-      return (
-        <MainButton
-          text="Event Not Started Yet"
-          disabled
-          color="secondary"
-        />
-      );
-    } else if (!isNotEnded) {
-      return (
-        <MainButton
-          text="Event Has Ended"
-          disabled
-          color="secondary"
-        />
-      );
-    }
+  if (!isStarted && isNotEnded) {
+    return (
+      <MainButton
+        text="Event Not Started Yet"
+        disabled
+        color="secondary"
+      />
+    );
+  } else if (!isNotEnded) {
+    return (
+      <MainButton
+        text="Event Has Ended"
+        disabled
+        color="secondary"
+      />
+    );
   }
 
   return null;

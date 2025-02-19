@@ -690,5 +690,5 @@ export const nonVerifiedHubs = [
 
 export const TTL_24_HOURS = 24 * 60 * 60 * 1000; // 24 hours
 
-export const MAIN_TG_CHANNEL_ID = 2188275713;
-export const MAIN_TG_CHAT_ID = 2129089489;
+export const MAIN_TG_CHANNEL_ID = -1002188275713;
+export const MAIN_TG_CHAT_ID = -1002129089489;
