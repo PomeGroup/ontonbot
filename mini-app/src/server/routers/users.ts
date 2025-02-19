@@ -10,8 +10,8 @@ import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { logger } from "../utils/logger";
 import { Bot } from "grammy";
-import { cacheKeys, redisTools } from "@/lib/redisTools";
-import { MAIN_TG_CHANNEL_ID, MAIN_TG_CHAT_ID, TTL_24_HOURS } from "@/constants";
+import { cacheKeys, cacheLvl, redisTools } from "@/lib/redisTools";
+import { MAIN_TG_CHANNEL_ID, MAIN_TG_CHAT_ID } from "@/constants";
 import { fetchOntonSettings } from "../db/ontoSetting";
 
 export const usersRouter = router({
@@ -78,7 +78,7 @@ export const usersRouter = router({
       const userStatus = (await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId)).status;
 
       isJoinedCh = memberStatuses.includes(userStatus);
-      await redisTools.setCache(cacheKeys.join_task_tg_ch + userId, isJoinedCh, TTL_24_HOURS);
+      await redisTools.setCache(cacheKeys.join_task_tg_ch + userId, isJoinedCh, cacheLvl.long);
     }
 
     // main tg group
@@ -86,7 +86,7 @@ export const usersRouter = router({
     if (!isJoinedGp) {
       const userStatus = (await tgBot.api.getChatMember(MAIN_TG_CHAT_ID, userId)).status;
       isJoinedGp = memberStatuses.includes(userStatus);
-      await redisTools.setCache(cacheKeys.join_task_tg_gp + userId, isJoinedGp, TTL_24_HOURS);
+      await redisTools.setCache(cacheKeys.join_task_tg_gp + userId, isJoinedGp, cacheLvl.long);
     }
 
     return { ch: isJoinedCh, gp: isJoinedGp, all_done: isJoinedCh && isJoinedGp };
