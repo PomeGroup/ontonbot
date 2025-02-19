@@ -410,9 +410,10 @@ const MainButtonHandler = React.memo(() => {
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
 
   useEffect(() => {
-    const handleFocus = () => {
+    const handleFocus = async () => {
       if (isJoinedX === "checking") {
-        sleep(10_000).then(() => setJoinedX("done"));
+        await sleep(10_000);
+        setJoinedX("done");
       }
     };
 
@@ -426,7 +427,7 @@ const MainButtonHandler = React.memo(() => {
     return <MainButton progress />;
   }
 
-  if (!joinTaskStatus.data?.all_done || isTasksOpen) {
+  if (!joinTaskStatus.data?.all_done || isJoinedX !== "done" || isTasksOpen) {
     const closeTasksOpen = () => {
       setIsTasksOpen(false);
     };
@@ -457,8 +458,7 @@ const MainButtonHandler = React.memo(() => {
               title="ONTON Announcement Channel"
               status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.ch ? "done" : "not_done"}
               onClick={() => {
-                setJoinedX("checking");
-                webApp?.openLink("https://x.com/ontonbot");
+                webApp?.openLink("https://t.me/ontonlive");
               }}
             />
             <Task
