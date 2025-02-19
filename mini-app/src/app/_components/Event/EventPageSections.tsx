@@ -535,7 +535,10 @@ const EventHeader = React.memo(() => {
       </CustomCard>
 
       {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <CustomCard title={"Claim Your Reward"}>
+        <CustomCard
+          title={"Claim Your Reward"}
+          defaultPadding
+        >
           <EventPasswordAndWalletInput />
         </CustomCard>
       )}
