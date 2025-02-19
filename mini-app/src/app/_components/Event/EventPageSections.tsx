@@ -411,7 +411,7 @@ const MainButtonHandler = React.memo(() => {
     return <MainButton progress />;
   }
 
-  if (1 || !joinTaskStatus.data?.all_done || isTasksOpen) {
+  if (!joinTaskStatus.data?.all_done || isTasksOpen) {
     const closeTasksOpen = () => {
       setIsTasksOpen(false);
     };
