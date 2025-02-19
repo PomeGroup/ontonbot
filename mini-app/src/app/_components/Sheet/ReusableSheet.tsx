@@ -25,7 +25,7 @@ const ReusableSheet: React.FC<ReusableSheetProps> = ({
   createPortal(
     <Sheet
       opened={opened}
-      className={cn("w-full rounded-t-2xl overflow-scroll max-h-screen", className)}
+      className={cn("w-full rounded-t-2xl max-h-screen", className)}
       onBackdropClick={onClose}
     >
       <div className="flex !mt-5 mx-4 justify-between items-center">

@@ -3,8 +3,8 @@ import { useEventData } from "./eventPageContext";
 import { Pencil } from "lucide-react";
 import { useUserStore } from "@/context/store/user.store";
 import { canUserManageEvent } from "@/lib/userRolesUtils";
-import { Card } from "konsta/react";
 import CustomButton from "../Button/CustomButton";
+import CustomCard from "../atoms/cards/CustomCard";
 
 export const ManageEventButton = () => {
   const { eventData, eventHash } = useEventData();
@@ -23,7 +23,7 @@ export const ManageEventButton = () => {
   }
 
   return (
-    <Card>
+    <CustomCard defaultPadding>
       <CustomButton
         onClick={() => {
           router.push(`/events/${eventHash}/manage`);
@@ -35,6 +35,6 @@ export const ManageEventButton = () => {
           <span>Manage Event</span>
         </div>
       </CustomButton>
-    </Card>
+    </CustomCard>
   );
 };

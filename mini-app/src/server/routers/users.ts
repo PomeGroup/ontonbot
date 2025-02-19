@@ -9,6 +9,10 @@ import { adminOrganizerProtectedProcedure, initDataProtectedProcedure, publicPro
 import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { logger } from "../utils/logger";
+import { configProtected } from "../config";
+import { Bot } from "grammy";
+import { cacheKeys, redisTools } from "@/lib/redisTools";
+import { MAIN_TG_CHANNEL_ID, MAIN_TG_CHAT_ID, TTL_24_HOURS } from "@/constants";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure.input(z.string()).query(async (opts) => {
@@ -59,6 +63,29 @@ export const usersRouter = router({
       });
     }),
 
+  joinOntonTasks: initDataProtectedProcedure.query(async (c) => {
+    const checkJoinBotToken = configProtected["check_join_bot_token"] as string;
+    const userId = c.ctx.user.user_id;
+
+    const tgBot = new Bot(checkJoinBotToken);
+    tgBot.stop();
+
+    // main tg channel
+    let isJoinedCh = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_ch + userId));
+    if (!isJoinedCh) {
+      isJoinedCh = Boolean(await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId));
+      await redisTools.setCache(cacheKeys.join_task_tg_ch + userId, isJoinedCh, TTL_24_HOURS);
+    }
+
+    // main tg group
+    let isJoinedGp = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_gp + userId));
+    if (!isJoinedGp) {
+      isJoinedGp = Boolean(await tgBot.api.getChatMember(MAIN_TG_CHAT_ID, userId));
+      await redisTools.setCache(cacheKeys.join_task_tg_gp + userId, isJoinedGp, TTL_24_HOURS);
+    }
+
+    return { ch: isJoinedCh, gp: isJoinedGp };
+  }),
   getVisitorReward: initDataProtectedProcedure
     .input(
       z.object({

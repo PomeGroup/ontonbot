@@ -14,7 +14,7 @@ import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
 import SupportButtons from "../atoms/buttons/SupportButton";
-import { Card, ListItem, List, Block } from "konsta/react";
+import { ListItem, List, Block } from "konsta/react";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
@@ -27,6 +27,7 @@ import Divider from "@/components/Divider";
 import ReusableSheet from "../Sheet/ReusableSheet";
 import CustomButton from "../Button/CustomButton";
 import Task from "../Task";
+import CustomCard from "../atoms/cards/CustomCard";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -126,17 +127,7 @@ EventDatesComponent.displayName = "EventDatesComponent";
 const EventDescription = React.memo(() => {
   const { eventData } = useEventData();
   return (
-    <Card
-      header={
-        <Typography
-          weight="bold"
-          variant="title3"
-        >
-          About
-        </Typography>
-      }
-      contentWrap={false}
-    >
+    <CustomCard title={"About"}>
       <Typography
         weight="normal"
         variant={"body"}
@@ -144,7 +135,7 @@ const EventDescription = React.memo(() => {
       >
         {eventData.data?.description ?? ""}
       </Typography>
-    </Card>
+    </CustomCard>
   );
 });
 
@@ -152,21 +143,11 @@ EventDescription.displayName = "EventDescription";
 
 const UserWallet = () => {
   return (
-    <Card
-      header={
-        <Typography
-          weight="bold"
-          variant="title3"
-        >
-          Your Wallet
-        </Typography>
-      }
-      contentWrap={false}
-    >
+    <CustomCard title={"Your Wallet"}>
       <div className="p-4 pt-0 flex items-center justify-center">
         <TonConnectButton />
       </div>
-    </Card>
+    </CustomCard>
   );
 };
 
@@ -204,7 +185,7 @@ EventTitle.displayName = "EventHead";
 
 const EventAttributes = React.memo(() => {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <EventLocation />
       <EventLink />
       <EventTicketPrice />
@@ -227,12 +208,26 @@ const EventRegistrationStatus = () => {
   }
 
   const isCustom = Boolean(eventData.data?.registrationFromSchema?.isCustom);
+  console.log(
+    "EventRegistrationStatus: hasWaitingList or !capacityFilled and registrantStatus === ''",
+    registrantStatus,
+    hasWaitingList,
+    capacityFilled
+  );
   if ((hasWaitingList || !capacityFilled) && registrantStatus === "") {
-    return isCustom ? <UserCustomRegisterForm /> : <UserRegisterForm />;
+    return isCustom ? (
+      <CustomCard title={"Registration Form"}>
+        <UserCustomRegisterForm />
+      </CustomCard>
+    ) : (
+      <CustomCard title={"Registration Form"}>
+        <UserRegisterForm />
+      </CustomCard>
+    );
   }
 
   return (
-    <Card>
+    <CustomCard defaultPadding>
       {capacityFilled && !hasWaitingList && (
         <>
           <DataStatus
@@ -278,7 +273,7 @@ const EventRegistrationStatus = () => {
           {registrantStatus === "checkedin" && <div></div>}
         </>
       )}
-    </Card>
+    </CustomCard>
   );
 };
 
@@ -291,17 +286,7 @@ const OrganizerCard = React.memo(() => {
   if (!organizer) return null;
 
   return (
-    <Card
-      header={
-        <Typography
-          weight={"bold"}
-          variant="title3"
-        >
-          Organizer
-        </Typography>
-      }
-      contentWrap={false}
-    >
+    <CustomCard title={"Organizer"}>
       <List className="!mb-0 !-mt-2">
         <ListItem
           className="cursor-pointer"
@@ -336,7 +321,7 @@ const OrganizerCard = React.memo(() => {
           after={<FaAngleRight className="text-primary" />}
         />
       </List>
-    </Card>
+    </CustomCard>
   );
 });
 OrganizerCard.displayName = "OrganizerCard";
@@ -359,25 +344,9 @@ const SbtCollectionLink = React.memo(() => {
   if (!isValidAddress) return null;
 
   return (
-    <Card
-      header={
-        <>
-          <Typography
-            weight={"bold"}
-            variant="title3"
-          >
-            SBT Reward Badge
-          </Typography>
-          <Typography
-            variant="body"
-            weight="normal"
-            className="mt-4"
-          >
-            Reward you receive by attending the event and submitting proof of attendance.
-          </Typography>
-        </>
-      }
-      contentWrap={false}
+    <CustomCard
+      title={"SBT Reward Badge"}
+      description="Reward you receive by attending the event and submitting proof of attendance."
     >
       <Block
         className="!mt-0 mb-4 cursor-pointer"
@@ -412,7 +381,7 @@ const SbtCollectionLink = React.memo(() => {
           </div>
         </div>
       </Block>
-    </Card>
+    </CustomCard>
   );
 });
 SbtCollectionLink.displayName = "SbtCollectionLink";
@@ -535,18 +504,23 @@ const EventHeader = React.memo(() => {
   const isEventActive = isStarted && isNotEnded;
 
   return (
-    <Card>
-      <EventImage />
+    <>
+      <CustomCard defaultPadding>
+        <EventImage />
+
+        <EventTitle />
+        <Divider margin="medium" />
+        <EventAttributes />
+
+        <EventActions />
+      </CustomCard>
 
       {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <EventPasswordAndWalletInput />
+        <CustomCard title={"Claim Your Reward"}>
+          <EventPasswordAndWalletInput />
+        </CustomCard>
       )}
-
-      <EventTitle />
-      <Divider margin="medium" />
-      <EventAttributes />
-      <EventActions />
-    </Card>
+    </>
   );
 });
 EventHeader.displayName = "EventHeader";
@@ -554,7 +528,7 @@ EventHeader.displayName = "EventHeader";
 // Main component
 export const EventSections = () => {
   return (
-    <>
+    <div className="flex flex-col gap-3 p-4">
       <EventHeader />
       <ManageEventButton />
       <OrganizerCard />
@@ -569,6 +543,6 @@ export const EventSections = () => {
       {/* ---------- MainButtonHandler ---------- */}
       {/* --------------------------------------- */}
       <MainButtonHandler />
-    </>
+    </div>
   );
 };

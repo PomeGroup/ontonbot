@@ -641,4 +641,3 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 };
 
 // Finally start the bot
-
