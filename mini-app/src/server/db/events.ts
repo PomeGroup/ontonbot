@@ -427,6 +427,8 @@ export const getEventsWithFilters = async (
     } else if (sortBy === "most_people_reached") {
       orderByClause = sql`visitor_count
       DESC`;
+    } else if (sortBy === "do_not_order") {
+      orderByClause = sql``;
     }
 
     // @ts-expect-error
