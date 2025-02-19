@@ -73,15 +73,19 @@ export const usersRouter = router({
 
     // main tg channel
     let isJoinedCh = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_ch + userId));
+    const memberStatuses = ["member", "creator", "administrator", "restricted"];
     if (!isJoinedCh) {
-      isJoinedCh = Boolean(await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId));
+      const userStatus = (await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId)).status;
+
+      isJoinedCh = memberStatuses.includes(userStatus);
       await redisTools.setCache(cacheKeys.join_task_tg_ch + userId, isJoinedCh, TTL_24_HOURS);
     }
 
     // main tg group
     let isJoinedGp = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_gp + userId));
     if (!isJoinedGp) {
-      isJoinedGp = Boolean(await tgBot.api.getChatMember(MAIN_TG_CHAT_ID, userId));
+      const userStatus = (await tgBot.api.getChatMember(MAIN_TG_CHAT_ID, userId)).status;
+      isJoinedGp = memberStatuses.includes(userStatus);
       await redisTools.setCache(cacheKeys.join_task_tg_gp + userId, isJoinedGp, TTL_24_HOURS);
     }
 

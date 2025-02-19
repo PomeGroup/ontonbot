@@ -436,7 +436,7 @@ const MainButtonHandler = React.memo(() => {
               status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.gp ? "done" : "not_done"}
               onClick={() => {
                 webApp?.openTelegramLink("https://t.me/ontonsupport");
-                sleep(5000).then(() => joinTaskStatus.refetch());
+                sleep(6000).then(() => joinTaskStatus.refetch());
               }}
             />
             <Task
@@ -444,7 +444,7 @@ const MainButtonHandler = React.memo(() => {
               status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.ch ? "done" : "not_done"}
               onClick={() => {
                 webApp?.openTelegramLink("https://t.me/ontonlive");
-                sleep(5000).then(() => joinTaskStatus.refetch());
+                sleep(6000).then(() => joinTaskStatus.refetch());
               }}
             />
             <Task
