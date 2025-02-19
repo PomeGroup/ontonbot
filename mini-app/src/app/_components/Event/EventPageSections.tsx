@@ -23,7 +23,7 @@ import { Address } from "@ton/core";
 import { FaAngleRight } from "react-icons/fa6";
 import { TonConnectButton } from "@tonconnect/ui-react";
 import Divider from "@/components/Divider";
-import ReusableSheet from "../Sheet/ReusableSheet";
+import CustomSheet from "../Sheet/CustomSheet";
 import CustomButton from "../Button/CustomButton";
 import Task from "../Task";
 import CustomCard from "../atoms/cards/CustomCard";
@@ -411,7 +411,7 @@ const MainButtonHandler = React.memo(() => {
     return <MainButton progress />;
   }
 
-  if (!joinTaskStatus.data?.all_done || isTasksOpen) {
+  if (1 || !joinTaskStatus.data?.all_done || isTasksOpen) {
     const closeTasksOpen = () => {
       setIsTasksOpen(false);
     };
@@ -425,7 +425,7 @@ const MainButtonHandler = React.memo(() => {
           />
         )}
 
-        <ReusableSheet
+        <CustomSheet
           title="Pre-registration tasks"
           opened={isTasksOpen}
           onClose={closeTasksOpen}
@@ -464,7 +464,7 @@ const MainButtonHandler = React.memo(() => {
               Close
             </CustomButton>
           </div>
-        </ReusableSheet>
+        </CustomSheet>
       </>
     );
   }
