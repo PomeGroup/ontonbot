@@ -11,7 +11,7 @@ import rewardService from "@/server/routers/services/rewardsService";
 import { logger } from "../utils/logger";
 import { Bot } from "grammy";
 import { cacheKeys, cacheLvl, redisTools } from "@/lib/redisTools";
-import { MAIN_TG_CHANNEL_ID } from "@/constants";
+import { MAIN_TG_CHANNEL_ID, MAIN_TG_CHAT_ID } from "@/constants";
 import { fetchOntonSettings } from "../db/ontoSetting";
 
 export const usersRouter = router({
@@ -84,7 +84,7 @@ export const usersRouter = router({
     // main tg group
     let isJoinedGp = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_gp + userId));
     if (!isJoinedGp) {
-      const chatMember = await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId);
+      const chatMember = await tgBot.api.getChatMember(MAIN_TG_CHAT_ID, userId);
       const userStatus = chatMember.status;
       isJoinedGp = memberStatuses.includes(userStatus) && userStatus === "restricted" ? chatMember.is_member : true;
       await redisTools.setCache(cacheKeys.join_task_tg_gp + userId, isJoinedGp, cacheLvl.long);
