@@ -403,20 +403,20 @@ const MainButtonHandler = React.memo(() => {
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
 
-  const joinTaskStatus = trpc.users.joinOntonTasks.useQuery();
+  const joinTaskStatus = trpc.users.joinOntonTasks.useQuery(undefined, {
+    refetchOnMount: true,
+  });
   const [isJoinedX, setJoinedX] = useState("not_done");
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
 
   useEffect(() => {
     const handleFocus = () => {
-      joinTaskStatus.refetch();
       if (isJoinedX === "checking") {
-        sleep(1000).then(() => setJoinedX("done"));
+        sleep(10_000).then(() => setJoinedX("done"));
       }
     };
 
     window.addEventListener("focus", handleFocus);
-
     return () => {
       window.removeEventListener("focus", handleFocus);
     };
