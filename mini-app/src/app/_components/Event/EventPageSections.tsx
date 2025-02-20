@@ -472,7 +472,7 @@ const MainButtonHandler = React.memo(() => {
               onClick={async () => {
                 setJoinedX("checking");
                 webApp?.openLink("https://x.com/ontonbot");
-                await sleep(5_000);
+                await sleep(10_000);
                 setJoinedX("done");
                 localStorage.removeItem("n-j-x");
               }}
