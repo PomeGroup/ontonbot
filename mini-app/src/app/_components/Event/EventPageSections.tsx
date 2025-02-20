@@ -406,7 +406,7 @@ const MainButtonHandler = React.memo(() => {
   const joinTaskStatus = trpc.users.joinOntonTasks.useQuery(undefined, {
     refetchOnWindowFocus: true,
   });
-  const [isJoinedX, setJoinedX] = useState(
+  const [isJoinedX, setJoinedX] = useState<"done" | "not_done" | "checking">(
     localStorage.getItem("n-j-x")
       ? "not_done"
       : joinTaskStatus.isSuccess
