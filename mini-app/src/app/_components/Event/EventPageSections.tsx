@@ -30,6 +30,7 @@ import CustomCard from "../atoms/cards/CustomCard";
 import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { sleep } from "@/utils";
+import { useConfig } from "@/context/ConfigContext";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -416,12 +417,13 @@ const MainButtonHandler = React.memo(() => {
         : "done"
   );
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
+  const config = useConfig();
 
-  if (!joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
+  if (!config.tjo && !joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
     return <MainButton progress />;
   }
 
-  if (!joinTaskStatus.data?.all_done || isJoinedX !== "done" || isTasksOpen) {
+  if (!config.tjo && (!joinTaskStatus.data?.all_done || isJoinedX !== "done" || isTasksOpen)) {
     const closeTasksOpen = () => {
       setIsTasksOpen(false);
     };
