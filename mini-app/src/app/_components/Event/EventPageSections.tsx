@@ -407,7 +407,13 @@ const MainButtonHandler = React.memo(() => {
     refetchOnWindowFocus: true,
   });
   const [isJoinedX, setJoinedX] = useState(
-    localStorage.getItem("n-j-x") ? false : joinTaskStatus.data?.all_done ? "done" : "not_done"
+    localStorage.getItem("n-j-x")
+      ? "not_done"
+      : joinTaskStatus.isSuccess
+        ? joinTaskStatus.data?.all_done
+          ? "done"
+          : "not_done"
+        : "done"
   );
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
 
