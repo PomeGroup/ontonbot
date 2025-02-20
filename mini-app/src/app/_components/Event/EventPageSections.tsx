@@ -457,7 +457,7 @@ const MainButtonHandler = React.memo(() => {
               title="ONTON Announcement Channel"
               status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.ch ? "done" : "not_done"}
               onClick={() => {
-                webApp?.openLink("https://t.me/ontonlive");
+                webApp?.openTelegramLink("https://t.me/ontonlive");
               }}
             />
             <Task
