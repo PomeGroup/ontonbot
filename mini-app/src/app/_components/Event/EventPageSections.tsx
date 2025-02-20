@@ -406,7 +406,9 @@ const MainButtonHandler = React.memo(() => {
   const joinTaskStatus = trpc.users.joinOntonTasks.useQuery(undefined, {
     refetchOnWindowFocus: true,
   });
-  const [isJoinedX, setJoinedX] = useState("not_done");
+  const [isJoinedX, setJoinedX] = useState(
+    localStorage.getItem("n-j-x") ? false : joinTaskStatus.data?.all_done ? "done" : "not_done"
+  );
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
 
   if (!joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
@@ -423,7 +425,10 @@ const MainButtonHandler = React.memo(() => {
         {!isTasksOpen && (
           <MainButton
             text="Complete tasks to Attend"
-            onClick={() => setIsTasksOpen(true)}
+            onClick={() => {
+              setIsTasksOpen(true);
+              localStorage.setItem("n-j-x", "88a0bd0a-39fb-4dd0-ad5e-cfb73a2ac54a");
+            }}
           />
         )}
 
@@ -459,8 +464,9 @@ const MainButtonHandler = React.memo(() => {
               onClick={async () => {
                 setJoinedX("checking");
                 webApp?.openLink("https://x.com/ontonbot");
-                await sleep(10_000);
+                await sleep(5_000);
                 setJoinedX("done");
+                localStorage.removeItem("n-j-x");
               }}
             />
           </div>
