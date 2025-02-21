@@ -11,7 +11,7 @@ import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { OrderRow } from "@/db/schema/orders";
 import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
 import "@/lib/gracefullyShutdown";
-import eventDB, { fetchEventById } from "@/server/db/events";
+import eventDB from "@/server/db/events";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -155,7 +155,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       )
       .execute();
 
-    const isSoldOut = (soldTicketsCount[0].count as unknown as number) >= (event.capacity || 0);
+    const isSoldOut = (soldTicketsCount[0].count || 0) >= (event.capacity || 0);
 
     if (dataOnly === "true") {
       return Response.json(

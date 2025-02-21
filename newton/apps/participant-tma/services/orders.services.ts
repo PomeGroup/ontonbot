@@ -17,7 +17,12 @@ export async function addOrder(body: {
   });
 
   if (!orderResponse.ok) {
-    throw new Error("Add order failed");
+    if (orderResponse.status !== 500) {
+      const errorData = await orderResponse.json();
+      throw new Error(errorData.message);
+    } else {
+      throw new Error(`${orderResponse.status} - There was an error adding a new order`);
+    }
   }
 
   const order: {

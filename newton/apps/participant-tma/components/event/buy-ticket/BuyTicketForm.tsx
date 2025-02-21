@@ -75,7 +75,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         event_uuid: params.event_uuid,
         utm,
         ...data,
-        coupon_code : "todo : get the coupon code"
+        coupon_code: "todo : get the coupon code",
       });
 
       console.log("transfer data", params.sendTo, Number(params.price), orderData.payment_type, {
@@ -92,7 +92,6 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         console.error("Error during transfer:", error);
       }
     } catch (error) {
-      toast.error("There was an error adding a new order");
       mainButton?.show().enable();
       console.error("Error adding order:", error);
     }
