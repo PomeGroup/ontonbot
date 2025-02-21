@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { nftItems, orders } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
-import { and, count, eq, or } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { usersDB } from "@/server/db/users";
 import tonCenter from "@/server/routers/services/tonCenter";
@@ -12,6 +12,7 @@ import { OrderRow } from "@/db/schema/orders";
 import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
 import "@/lib/gracefullyShutdown";
 import eventDB from "@/server/db/events";
+import ordersDB from "@/server/db/orders.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -129,7 +130,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 
     let event_payment_info;
-    let isSoldOut;
+    let isSoldOut: boolean | undefined;
     if (event.has_payment) {
       event_payment_info = await db.query.eventPayment.findFirst({
         where(fields, { eq }) {
@@ -147,19 +148,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         // Ensure TypeScript recognizes the valid key
         const ticketOrderType = ticketOrderTypeMap[eventTicketingType];
 
-        const TicketsCount = await db
-          .select({ ticket_count: count() })
-          .from(orders)
-          .where(
-            and(
-              eq(orders.event_uuid, event_uuid),
-              or(eq(orders.state, "completed"), eq(orders.state, "processing")),
-              eq(orders.order_type, ticketOrderType)
-            )
-          )
-          .execute();
-
-        isSoldOut = (TicketsCount[0].ticket_count || 0) >= (event.capacity || 0);
+        // Use the shared sold-out check function
+        const { isSoldOut: iso } = await ordersDB.checkIfSoldOut(event_uuid, ticketOrderType, event.capacity || 0);
+        isSoldOut = iso;
       }
     }
 
