@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { nftItems, orders } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, count, eq, or } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { usersDB } from "@/server/db/users";
 import tonCenter from "@/server/routers/services/tonCenter";
@@ -129,33 +129,39 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 
     let event_payment_info;
-    if (event.ticketToCheckIn) {
+    let isSoldOut;
+    if (event.has_payment) {
       event_payment_info = await db.query.eventPayment.findFirst({
         where(fields, { eq }) {
           return eq(fields.event_uuid, event.event_uuid as string);
         },
       });
-      if (!event_payment_info) {
-        console.warn(`Ticket not found for event ID: ${event_uuid}`);
+      if (event_payment_info) {
+        const eventTicketingType = event_payment_info?.ticket_type;
+
+        const ticketOrderTypeMap = {
+          NFT: "nft_mint",
+          TSCSBT: "ts_csbt_ticket",
+        } as const;
+
+        // Ensure TypeScript recognizes the valid key
+        const ticketOrderType = ticketOrderTypeMap[eventTicketingType];
+
+        const TicketsCount = await db
+          .select({ ticket_count: count() })
+          .from(orders)
+          .where(
+            and(
+              eq(orders.event_uuid, event_uuid),
+              or(eq(orders.state, "completed"), eq(orders.state, "processing")),
+              eq(orders.order_type, ticketOrderType)
+            )
+          )
+          .execute();
+
+        isSoldOut = (TicketsCount[0].ticket_count || 0) >= (event.capacity || 0);
       }
     }
-
-    const soldTicketsCount = await db
-      .select({
-        count: sql`count
-            (*)`.mapWith(Number),
-      })
-      .from(orders)
-      .where(
-        and(
-          eq(orders.event_uuid, event_uuid),
-          or(eq(orders.state, "completed"), eq(orders.state, "processing")),
-          eq(orders.order_type, "nft_mint")
-        )
-      )
-      .execute();
-
-    const isSoldOut = (soldTicketsCount[0].count || 0) >= (event.capacity || 0);
 
     if (dataOnly === "true") {
       return Response.json(
