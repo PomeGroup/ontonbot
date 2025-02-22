@@ -73,20 +73,20 @@ export const usersRouter = router({
     tgBot.stop();
 
     // main tg channel
-    let isJoinedCh = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_ch + userId));
+    let isJoinedCh = await redisTools.getCache(cacheKeys.join_task_tg_ch + userId);
     if (!isJoinedCh) {
       const chatMember = await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId);
       const userStatus = chatMember.status;
-      isJoinedCh = memberStatuses.includes(userStatus) && userStatus === "restricted" ? chatMember.is_member : true;
+      isJoinedCh = memberStatuses.includes(userStatus) && (userStatus === "restricted" ? chatMember.is_member : true);
       await redisTools.setCache(cacheKeys.join_task_tg_ch + userId, isJoinedCh, cacheLvl.long);
     }
 
     // main tg group
-    let isJoinedGp = Boolean(await redisTools.getCache(cacheKeys.join_task_tg_gp + userId));
+    let isJoinedGp = await redisTools.getCache(cacheKeys.join_task_tg_gp + userId);
     if (!isJoinedGp) {
       const chatMember = await tgBot.api.getChatMember(MAIN_TG_CHAT_ID, userId);
       const userStatus = chatMember.status;
-      isJoinedGp = memberStatuses.includes(userStatus) && userStatus === "restricted" ? chatMember.is_member : true;
+      isJoinedGp = memberStatuses.includes(userStatus) && (userStatus === "restricted" ? chatMember.is_member : true);
       await redisTools.setCache(cacheKeys.join_task_tg_gp + userId, isJoinedGp, cacheLvl.long);
     }
 
