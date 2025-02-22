@@ -5,7 +5,7 @@ import { visitors } from "@/db/schema";
 import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
-import { eq, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 
 // Utility function to generate cache keys
@@ -231,6 +231,25 @@ const handleRewardError = async (reward: RewardTypeParitial, error: any) => {
   }
 };
 
+/**
+ * Fetch pending rewards for a specific event, in a paginated (offset/limit) manner.
+ */
+export const fetchPendingRewardsForEvent = async (
+  eventUuid: string,
+  limit: number,
+  offset: number
+): Promise<RewardTypeParitial[]> =>
+  db.query.rewards.findMany({
+    where: (fields, { eq, and, inArray }) =>
+      and(
+        eq(fields.status, "pending_creation"),
+        inArray(fields.visitor_id, db.select({ id: visitors.id }).from(visitors).where(eq(visitors.event_uuid, eventUuid)))
+      ),
+    limit,
+    offset,
+    orderBy: [asc(rewards.created_at)],
+  });
+
 const rewardDB = {
   checkExistingReward,
   insert,
@@ -244,6 +263,7 @@ const rewardDB = {
   updateRewardWithConditions,
   updateRewardStatus,
   handleRewardError,
+  fetchPendingRewardsForEvent,
 };
 
 export default rewardDB;
