@@ -1,4 +1,5 @@
 import { InlineKeyboard } from "grammy";
+import { logger } from "@/server/utils/logger";
 
 /**
  * The main moderation menu (Approve/Reject/etc.)
@@ -28,7 +29,11 @@ export function tgBotModerationMenu(eventUuid: string) {
  * Moderator can send a notice to the organizer (or add more buttons as needed).
  */
 export function tgBotApprovedMenu(eventUuid: string) {
-  return new InlineKeyboard().text("🔔 Send Notice", `sendNotice_${eventUuid}`);
+  logger.log("tgBotApprovedMenu");
+  return new InlineKeyboard()
+    .text("🔔 Send Notice", `sendNotice_${eventUuid}`)
+    .row()
+    .text("🔃 Update Data", `updateEventData_${eventUuid}`);
 }
 
 /**

@@ -33,7 +33,9 @@ export const handleRejectConfirm = async (
   const repMarkup = new InlineKeyboard()
     .text("✅ Approve Rejected Event", `approve_${eventUuid}`)
     .row()
-    .text("🔃 Update Data", `updateEventData_${eventUuid}`);
+    .text("🔃 Update Data", `updateEventData_${eventUuid}`)
+    .row()
+    .text("🔔 Send Notice", `sendNotice_${eventUuid}`);
 
   await ctx.editMessageCaption({
     caption: newCap,

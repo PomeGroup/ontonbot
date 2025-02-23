@@ -31,7 +31,10 @@ export const handleCustomRejectText = async (
   const user_details = `\n<b>${first_name} ${last_name}</b> <code>${username}</code> <code>${userId}</code>`;
 
   const newCap = stored.originalCaption + "\n\nStatus : ❌ Rejected By " + user_details + `\nReason: ${typedText}`;
-  const repMarkup = new InlineKeyboard().text("✅ Approve Rejected Event", `approve_${stored.eventUuid}`);
+  const repMarkup = new InlineKeyboard()
+    .text("✅ Approve Rejected Event", `approve_${stored.eventUuid}`)
+    .row()
+    .text("🔃 Update Data", `updateEventData_${stored.eventUuid}`);
 
   await ctx.api.editMessageCaption(stored.modChatId, stored.modMessageId, {
     caption: newCap,
