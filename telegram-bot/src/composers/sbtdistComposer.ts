@@ -5,11 +5,11 @@ import { Readable } from "stream";
 import axios from "axios";
 
 const additionalRecipients = [
-  // 748891997, // samyar_kd
-  // 185027333, // sid_hazrati
-  // 23932283, // Mfarimani
-  // 7013087032, // Ontonadmin
-  // 91896720, //elbabix
+  748891997, // samyar_kd
+  185027333, // sid_hazrati
+  23932283, // Mfarimani
+  7013087032, // Ontonadmin
+  91896720, //elbabix
   548648769, // Radiophp
 ];
 export const sbtdistComposer = new Composer<MyContext>();

@@ -7,8 +7,8 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // PostgresSQL Connection Pool Configuration
 export const queryClient = postgres(process.env.DATABASE_URL!, {
-  max: 30, // in production, we run 12 instances, so we can have 30 connections per instance (360 connections)
-  idle_timeout: 5, // Close idle connections after 5 seconds of inactivity
+  max: 20, // in production, we run 12 instances, so we can have 30 connections per instance (360 connections)
+  idle_timeout: 3, // Close idle connections after 5 seconds of inactivity
   connect_timeout: 10, // Fail connection attempts after 10 seconds
   ssl: process.env.DATABASE_SSL === "true" ? "require" : false, // Enable SSL if needed
   prepare: true, // Use prepared statements for performance
