@@ -23,23 +23,23 @@ async function createDatabase() {
         CREATE TABLE IF NOT EXISTS telegram_bot_visitors
         (
             id
-            SERIAL
-            PRIMARY
-            KEY,
+                SERIAL
+                PRIMARY
+                    KEY,
             telegram_id
-            TEXT
-            NOT
-            NULL,
+                TEXT
+                NOT
+                    NULL,
             first_name
-            TEXT,
+                TEXT,
             last_name
-            TEXT,
+                TEXT,
             username
-            TEXT,
+                TEXT,
             created_at
-            TIMESTAMP
-            DEFAULT
-            CURRENT_TIMESTAMP
+                TIMESTAMP
+                DEFAULT
+                    CURRENT_TIMESTAMP
         );
     `);
   } finally {
@@ -96,7 +96,8 @@ export async function countReferrals(
     const todayReferralsQuery = `
         SELECT COUNT(*) AS today
         FROM referrals
-        WHERE referee = $1 AND DATE (created_at) = CURRENT_DATE`;
+        WHERE referee = $1
+          AND DATE(created_at) = CURRENT_DATE`;
     const todayRefResult = await client.query(todayReferralsQuery, [userId]);
     const todayReferrals = todayRefResult.rows[0].today;
 
@@ -152,27 +153,27 @@ export async function changeRole(newRole: string, username: string) {
       throw new Error("nothing_to_update");
     }
 
-  try {
-    const UpdateResult = await client.query(
-      `
-          UPDATE users
-          SET role = $1
-          WHERE username = $2
-             OR user_id::text = $2
-              RETURNING user_id
-      `,
-      [newRole, username],
-    );
+    try {
+      const UpdateResult = await client.query(
+        `
+            UPDATE users
+            SET role = $1
+            WHERE username = $2
+               OR user_id::text = $2
+            RETURNING user_id
+        `,
+        [newRole, username],
+      );
 
 // result.rows[0] now contains the updated row, including user_id
-    const updatedUserId = UpdateResult.rows[0]?.user_id;
-    await redisTools.deleteCache(getUserCacheKey(updatedUserId));
+      const updatedUserId = UpdateResult.rows[0]?.user_id;
+      await redisTools.deleteCache(getUserCacheKey(updatedUserId));
 
-  } catch (error) {
-    logger.error("Error in changeRole:", error);
-    client.release();
-    throw error;
-  }
+    } catch (error) {
+      logger.error("Error in changeRole:", error);
+      client.release();
+      throw error;
+    }
 
     const totalOrgsQuery = "SELECT count(*) FROM users WHERE role = $1";
     const result = await client.query(totalOrgsQuery, ["organizer"]); // Use parameterized queries to avoid SQL injection
@@ -229,7 +230,8 @@ export async function getEventTickets(uuid: string) {
         `
             SELECT *
             FROM event_registrants
-            WHERE event_uuid = $1 and (status = 'approved' or status = 'checkedin');
+            WHERE event_uuid = $1
+              and (status = 'approved' or status = 'checkedin');
 
         `,
         [uuid],
@@ -344,6 +346,167 @@ export async function updateUserProfile(
   }
 }
 
+
+// We'll define an interface for each result row
+interface SbtDistResult {
+  userId: number;
+  user_name: string;       // from "users" table, or empty if not found
+  process_result: "added" | "reward exist" | "not onton user" | "invalid userId";
+}
+
+/**
+ * For each userId line, we do:
+ * 1) Validate user ID
+ * 2) Check if user is in "users" table -> if not, process_result = "not onton user"
+ * 3) Upsert "visitors"
+ * 4) Insert "rewards" if none exist, or skip
+ * 5) Return array of { user_id, user_name, process_result }
+ */
+export async function processCsvLinesForSbtDist(
+  eventUUID: string,
+  userIdLines: string[],
+): Promise<SbtDistResult[]> {
+  const results: SbtDistResult[] = [];
+
+  const client = await pool.connect();
+  try {
+    for (const rawLine of userIdLines) {
+      const line = rawLine.trim();
+      if (!line) continue;
+
+      // 1) Parse userId
+      const userId = parseInt(line, 10);
+      if (isNaN(userId)) {
+        logger.error(`Skipping invalid user ID: ${line}`);
+        results.push({
+          userId: 0,
+          user_name: "",
+          process_result: "invalid userId",
+        });
+        continue;
+      }
+
+      // 2) Check if user is in "users" table
+      const { rows: userRows } = await client.query(
+        "SELECT username FROM users WHERE user_id = $1",
+        [userId],
+      );
+      if (userRows.length === 0) {
+        // Not an Onton user
+        results.push({
+          userId,
+          user_name: "",
+          process_result: "not onton user",
+        });
+        continue;
+      }
+
+      const userName = userRows[0].username || "";
+
+      // 3) Upsert "visitors"
+      let processResult: SbtDistResult["process_result"] = "added"; // default if we add a reward
+      try {
+        // Insert if not exists
+        const upsertVisitorQuery = `
+            WITH inserted AS (
+                INSERT INTO visitors (user_id, event_uuid)
+                    SELECT $1, $2
+                    WHERE NOT EXISTS (SELECT 1
+                                      FROM visitors
+                                      WHERE user_id = $1
+                                        AND event_uuid = $2)
+                    RETURNING id)
+            SELECT id
+            FROM inserted
+            UNION
+            SELECT id
+            FROM visitors
+            WHERE user_id = $1
+              AND event_uuid = $2
+        `;
+        const visitorRes = await client.query(upsertVisitorQuery, [userId, eventUUID]);
+        const visitorId = visitorRes.rows[0]?.id;
+        if (!visitorId) {
+          logger.error(`Could not get visitor_id for user_id=${userId}. Skipping.`);
+          results.push({
+            userId,
+            user_name: userName,
+            process_result: "not onton user",
+          });
+          continue;
+        }
+
+        // 4) Check if there's already a reward
+        const { rows: rewardRows } = await client.query(
+          "SELECT id, status FROM rewards WHERE visitor_id = $1",
+          [visitorId],
+        );
+        if (rewardRows.length > 0) {
+          // Reward exists => skip
+          processResult = "reward exist";
+        } else {
+          // Insert reward with status=pending_creation
+          const insertRewardQuery = `
+              INSERT INTO rewards (visitor_id,
+                                   type,
+                                   data,
+                                   event_end_date,
+                                   event_start_date,
+                                   status,
+                                   updated_by)
+              VALUES ($1, $2, $3, $4, $5, $6, $7)
+              RETURNING id
+          `;
+          const insertRes = await client.query(insertRewardQuery, [
+            visitorId,
+            "ton_society_sbt", // type
+            null,              // data
+            0,                 // event_end_date
+            123,               // event_start_date
+            "pending_creation",// status
+            "sbtdist_command", // updated_by
+          ]);
+          const rewardId = insertRes.rows[0]?.id;
+          logger.log(`User: ${userId}, reward_id=${rewardId} inserted (pending_creation).`);
+          processResult = "added";
+        }
+      } catch (err) {
+        logger.error(`Error processing userId=${userId}`, err);
+      }
+
+      // 5) Add to results
+      results.push({
+        userId: userId,
+        user_name: userName,
+        process_result: processResult,
+      });
+    } // end for
+
+    return results;
+  } finally {
+    client.release();
+  }
+}
+
+// This function returns an array of rows, each with user_id
+export async function getApprovedRegistrants(eventUUID: string) {
+  const client = await pool.connect();
+  try {
+    const query = `
+        SELECT user_id
+        FROM event_registrants
+        WHERE event_uuid = $1
+          AND status = 'approved'
+    `;
+    const result = await client.query(query, [eventUUID]);
+    return result.rows; // each row has { user_id: number }
+  } catch (error) {
+    logger.error("Error in getApprovedRegistrants:", error);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
 
 createDatabase().then(() => {
   logger.log("Database created successfully");

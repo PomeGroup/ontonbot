@@ -2,12 +2,13 @@
 import { TonSocietyRegisterActivityResponse } from "@/types/event.types";
 import { findActivityResponseType, TSAPIoperations } from "@/types/ton-society-api-types";
 import { CreateUserRewardLinkReturnType, type CreateUserRewardLinkInputType } from "@/types/user.types";
-import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import axios, { AxiosError } from "axios";
 import { HubsResponse, SocietyHub } from "@/types";
 import { redisTools } from "@/lib/redisTools";
 import { configDotenv } from "dotenv";
+import { logger } from "@/server/utils/logger";
+import { sleep } from "@/utils";
 
 configDotenv();
 // ton society client to send http requests to https://ton-society.github.io/sbt-platform
@@ -28,33 +29,44 @@ export async function createUserRewardLink(
   data: CreateUserRewardLinkInputType
 ): Promise<{ data: CreateUserRewardLinkReturnType }> {
   try {
-    return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
+    // 1) Check if the reward link already exists
+    const getResponse = await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
       `/activities/${activityId}/rewards/${data.telegram_user_id}`
     );
+    // If reward_link is present, return it and skip creation
+    if (getResponse?.data?.data?.reward_link) {
+      return { data: getResponse.data };
+    }
+
+    // 2) If the GET succeeded but `reward_link` is missing, create a new link
+    const postResponse = await tonSocietyClient.post<CreateUserRewardLinkReturnType>(
+      `/activities/${activityId}/rewards`,
+      data
+    );
+
+    // Validate that we got a reward_link
+    if (!postResponse?.data?.data?.reward_link) {
+      throw new Error(`Failed to create reward link for activityId=${activityId}, data=${JSON.stringify(data)}`);
+    }
+
+    return { data: postResponse.data };
   } catch (error) {
-    try {
-      return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(`/activities/${activityId}/rewards`, data);
-    } catch (error) {
-      if (
-        error instanceof AxiosError &&
-        (error.response?.data?.message === "reward link with such activity id and wallet address already created" ||
-          error.response?.data?.message === "reward link with such activity id and telegram user id already created")
-      ) {
-        return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
-          `/activities/${activityId}/rewards/${data.telegram_user_id}`
+    // log and rethrow the error
+    if ((error as AxiosError).response?.data) {
+      if ((error as AxiosError).response?.status === 429) {
+        logger.error(
+          `REWARD_LINK_RATE_LIMIT Error creating reward link for activityId=${activityId}, data=${JSON.stringify(data)}`,
+          (error as AxiosError).response?.status
         );
       }
-
-      // console.error(`CREATE_REWARD_ERROR_${Date.now()}`, error);
-      // console.error(
-      //   `CREATE_REWARD_ERROR_REQUEST_${Date.now()}`,
-      //   `/activities/${activityId}/rewards/${data.telegram_user_id}`
-      // );
-
-      await sleep(100);
-
-      throw error;
+      logger.error(
+        `Error creating reward link for activityId=${activityId}, data=${JSON.stringify(data)}`,
+        (error as AxiosError).response?.status
+      );
+    } else {
+      // console.error(`Error creating reward link for activityId=${activityId}, data=${JSON.stringify(data)}`, error);
     }
+    throw error;
   }
 }
 
@@ -84,6 +96,7 @@ export async function updateActivity(
       code: "BAD_REQUEST",
       message: "event does not have a valid activity id",
     });
+  logger.info(`Updating activity ${activity_id} with details`, activityDetails);
   const response = await tonSocietyClient.patch(`/activities/${activity_id}`, activityDetails);
   return response.data as { status: "success"; data: {} };
 }

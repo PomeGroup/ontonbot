@@ -1,10 +1,12 @@
 import { db } from "@/db/db";
 import { RewardStatus, RewardType } from "@/db/enum";
+import { RewardType as RewardTypeParitial } from "@/types/event.types";
 import { visitors } from "@/db/schema";
 import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
-import { eq, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
+import { logger } from "@/server/utils/logger";
 
 // Utility function to generate cache keys
 const generateCacheKey = (visitor_id: number, reward_id?: string) => {
@@ -189,6 +191,65 @@ const updateRewardWithConditions = async (
     .execute();
 };
 
+const updateRewardStatus = async (
+  rewardId: string,
+  status?: string,
+  options?: {
+    tryCount: number;
+    data: any;
+  }
+) => {
+  const reward = (await db.select().from(rewards).where(eq(rewards.id, rewardId)))[0];
+
+  await db
+    .update(rewards)
+    .set({
+      status,
+      ...(options?.data && {
+        ...(typeof reward?.data === "object" && reward.data),
+        ...options.data,
+      }),
+      tryCount: options?.tryCount,
+      updatedBy: "system",
+      updatedAt: new Date(),
+    })
+    .where(eq(rewards.id, rewardId));
+};
+
+const handleRewardError = async (reward: RewardTypeParitial, error: any) => {
+  const shouldFail = reward.tryCount >= 10;
+  const newStatus = shouldFail ? "notification_failed" : undefined;
+  const newData = shouldFail ? { fail_reason: error.message } : undefined;
+
+  try {
+    await rewardDB.updateRewardStatus(reward.id, newStatus, {
+      tryCount: reward.tryCount + 1,
+      data: newData,
+    });
+  } catch (dbError) {
+    logger.error("DB_ERROR", dbError);
+  }
+};
+
+/**
+ * Fetch pending rewards for a specific event, in a paginated (offset/limit) manner.
+ */
+export const fetchPendingRewardsForEvent = async (
+  eventUuid: string,
+  limit: number,
+  offset: number
+): Promise<RewardTypeParitial[]> =>
+  db.query.rewards.findMany({
+    where: (fields, { eq, and, inArray }) =>
+      and(
+        eq(fields.status, "pending_creation"),
+        inArray(fields.visitor_id, db.select({ id: visitors.id }).from(visitors).where(eq(visitors.event_uuid, eventUuid)))
+      ),
+    limit,
+    offset,
+    orderBy: [asc(rewards.created_at)],
+  });
+
 const rewardDB = {
   checkExistingReward,
   insert,
@@ -200,6 +261,9 @@ const rewardDB = {
   selectRewardsWithVisitorDetails,
   updateReward,
   updateRewardWithConditions,
+  updateRewardStatus,
+  handleRewardError,
+  fetchPendingRewardsForEvent,
 };
 
 export default rewardDB;
