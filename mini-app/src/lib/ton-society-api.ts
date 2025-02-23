@@ -29,13 +29,25 @@ export async function createUserRewardLink(
   data: CreateUserRewardLinkInputType
 ): Promise<{ data: CreateUserRewardLinkReturnType }> {
   // 1) Check if the reward link already exists
-  const getResponse = await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
-    `/activities/${activityId}/rewards/${data.telegram_user_id}`
-  );
-  // If reward_link is present, return it and skip creation
-  if (getResponse?.data?.data?.reward_link) {
-    return { data: getResponse.data };
+  try {
+    const getResponse = await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
+      `/activities/${activityId}/rewards/${data.telegram_user_id}`
+    );
+
+    // If reward_link is present, return it and skip creation
+    if (getResponse?.data?.data?.reward_link) {
+      return { data: getResponse.data };
+    }
+    // If we got a 2xx response but no reward_link, we'll create a new one below
+  } catch (error) {
+    // if GET fails, check if it's a 404 -> meaning "reward link not found" is expected
+    if (error instanceof AxiosError && error.response?.status !== 404) {
+      // any non-404 error is unexpected; rethrow it
+      throw error;
+    }
+    // if it was 404, we do nothing and proceed to POST below
   }
+
   try {
     // 2) If the GET succeeded but `reward_link` is missing, create a new link
     const postResponse = await tonSocietyClient.post<CreateUserRewardLinkReturnType>(
