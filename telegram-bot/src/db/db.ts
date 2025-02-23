@@ -488,6 +488,26 @@ export async function processCsvLinesForSbtDist(
   }
 }
 
+// This function returns an array of rows, each with user_id
+export async function getApprovedRegistrants(eventUUID: string) {
+  const client = await pool.connect();
+  try {
+    const query = `
+        SELECT user_id
+        FROM event_registrants
+        WHERE event_uuid = $1
+          AND status = 'approved'
+    `;
+    const result = await client.query(query, [eventUUID]);
+    return result.rows; // each row has { user_id: number }
+  } catch (error) {
+    logger.error("Error in getApprovedRegistrants:", error);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 createDatabase().then(() => {
   logger.log("Database created successfully");
 });
