@@ -28,16 +28,15 @@ export async function createUserRewardLink(
   activityId: number,
   data: CreateUserRewardLinkInputType
 ): Promise<{ data: CreateUserRewardLinkReturnType }> {
+  // 1) Check if the reward link already exists
+  const getResponse = await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
+    `/activities/${activityId}/rewards/${data.telegram_user_id}`
+  );
+  // If reward_link is present, return it and skip creation
+  if (getResponse?.data?.data?.reward_link) {
+    return { data: getResponse.data };
+  }
   try {
-    // 1) Check if the reward link already exists
-    const getResponse = await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
-      `/activities/${activityId}/rewards/${data.telegram_user_id}`
-    );
-    // If reward_link is present, return it and skip creation
-    if (getResponse?.data?.data?.reward_link) {
-      return { data: getResponse.data };
-    }
-
     // 2) If the GET succeeded but `reward_link` is missing, create a new link
     const postResponse = await tonSocietyClient.post<CreateUserRewardLinkReturnType>(
       `/activities/${activityId}/rewards`,
