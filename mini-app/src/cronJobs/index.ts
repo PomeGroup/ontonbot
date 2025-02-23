@@ -5,7 +5,7 @@ import { MintNFTForPaidOrders } from "@/cronJobs/tasks/MintNFTForPaidOrders";
 import { TsCsbtTicketOrder } from "@/cronJobs/tasks/TsCsbtTicketOrder";
 import { sendPaymentReminder } from "@/cronJobs/tasks/sendPaymentReminder";
 import { OrganizerPromoteProcessing } from "@/cronJobs/tasks/OrganizerPromoteProcessing";
-import { createRewards } from "@/cronJobs/tasks/createRewards";
+import { CreateRewards } from "@/cronJobs/tasks/CreateRewards";
 import { notifyUsersForRewards } from "@/cronJobs/tasks/notifyUsersForRewards";
 import { cronJobRunner } from "@/cronJobs/cornJobRunner";
 
@@ -17,7 +17,7 @@ const cronJobs = {
   TsCsbtTicketOrder,
   sendPaymentReminder,
   OrganizerPromoteProcessing,
-  createRewards,
+  CreateRewards,
   notifyUsersForRewards,
 };
 export { cronJobRunner };

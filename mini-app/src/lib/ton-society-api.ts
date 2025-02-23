@@ -33,7 +33,6 @@ export async function createUserRewardLink(
     const getResponse = await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
       `/activities/${activityId}/rewards/${data.telegram_user_id}`
     );
-    console.log("getResponse", getResponse);
     // If reward_link is present, return it and skip creation
     if (getResponse?.data?.data?.reward_link) {
       return { data: getResponse.data };
@@ -97,6 +96,7 @@ export async function updateActivity(
       code: "BAD_REQUEST",
       message: "event does not have a valid activity id",
     });
+  logger.info(`Updating activity ${activity_id} with details`, activityDetails);
   const response = await tonSocietyClient.patch(`/activities/${activity_id}`, activityDetails);
   return response.data as { status: "success"; data: {} };
 }

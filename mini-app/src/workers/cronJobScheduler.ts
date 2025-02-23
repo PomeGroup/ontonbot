@@ -13,7 +13,7 @@ process.on("unhandledRejection", (err) => {
 async function MainCronJob() {
   logger.log("====> RUNNING Cron jobs on", process.env.ENV);
 
-  new CronJob("*/1 * * * *", cronJobRunner(cronJobs.createRewards), null, true);
+  new CronJob("*/1 * * * *", cronJobRunner(cronJobs.CreateRewards), null, true);
   new CronJob("*/3 * * * *", cronJobRunner(cronJobs.notifyUsersForRewards), null, true);
   new CronJob("0 */4 * * *", cronJobs.sendPaymentReminder, null, true);
   new CronJob("*/7 * * * * *", cronJobs.CheckTransactions, null, true);
