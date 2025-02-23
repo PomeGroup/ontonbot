@@ -32,23 +32,24 @@ export const handleApproveConfirm = async (
         eventOwnerId: eventData.owner,
         action: "APPROVE",
       });
+      // 2) Update the moderator’s caption
 
-      // 2) Send "approved" message to the organizer
+      const newCap = originalCaption + "\n\nStatus : ✅ Approved By " + user_details;
+      await ctx.editMessageCaption({
+        caption: newCap,
+        parse_mode: "HTML",
+        reply_markup: tgBotApprovedMenu(eventUuid),
+      });
+      // 4) Let the moderator know it’s done
+      await ctx.answerCallbackQuery({ text: "Event approved!" });
+      // 3) Send "approved" message to the organizer
       await sendTelegramMessage({
         chat_id: Number(eventData.owner),
         message: `✅<b>Congratulations!</b>\nYour event <b>(${eventData.title})</b> has been approved.`,
       });
+    } else {
+      logger.error("Event not found in DB", eventUuid);
+      await ctx.answerCallbackQuery({ text: "Event not found in DB" });
     }
-
-    // 3) Update the moderator’s caption
-    const newCap = originalCaption + "\n\nStatus : ✅ Approved By " + user_details;
-    await ctx.editMessageCaption({
-      caption: newCap,
-      parse_mode: "HTML",
-      reply_markup: tgBotApprovedMenu(eventUuid),
-    });
   }
-
-  // 4) Let the moderator know it’s done
-  await ctx.answerCallbackQuery({ text: "Event approved!" });
 };

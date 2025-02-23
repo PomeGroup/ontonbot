@@ -11,8 +11,12 @@ import { getErrorMessages } from "@/lib/error";
 
 async function sendRewardNotification(createdReward: RewardType) {
   try {
+    logger.log("sendRewardNotification", createdReward);
     const visitor = await findVisitorById(createdReward.visitor_id);
-    if (!visitor) throw new Error("Visitor not found");
+    if (!visitor) {
+      logger.error(`Visitor not found for reward ${createdReward.id}`);
+      throw new Error("Visitor not found");
+    }
 
     const event = await eventDB.fetchEventByUuid(visitor.event_uuid);
 
