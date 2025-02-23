@@ -30,12 +30,12 @@ export const CreateRewards = async (pushLockTTl: () => any) => {
   // 2) For each event (descending by end_date), process rewards in chunks
   for (const evt of eventsWithPending) {
     const localEvent = await eventDB.fetchEventByUuid(evt.eventUuid);
-    if (evt.eventUuid !== "f8a5930e-0813-432c-8d3d-2aa6044aa7b7") continue;
+
     if (!localEvent || !localEvent.activity_id) {
       logger.warn(`Event ${evt.eventUuid} missing local record or activity_id, skipping reward creation...`);
       continue;
     }
-
+    logger.info(`Processing rewards for event ${evt.eventUuid} with title "${localEvent.title}"`);
     const now = Math.floor(Date.now() / 1000);
     const extendedEndDate = now + 86400; // +1 day from now
 
