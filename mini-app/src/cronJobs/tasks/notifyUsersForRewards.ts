@@ -37,7 +37,7 @@ async function sendRewardNotification(createdReward: RewardType) {
 }
 
 export const notifyUsersForRewards = async (pushLockTTl: () => any) => {
-  const chunkSize = 15;
+  const chunkSize = 10;
   let offset = 0;
   let createdRewards: RewardType[] = [];
 
