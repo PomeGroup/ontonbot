@@ -11,7 +11,6 @@ export default function ThemeSetter({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     webApp?.expand();
-    webApp?.disableVerticalSwipes();
 
     webApp?.setHeaderColor(theme === "dark" ? "#1C1C1E" : "#ffffff");
     webApp?.setBackgroundColor(theme === "dark" ? "#1C1C1E" : "#ffffff");
@@ -21,7 +20,10 @@ export default function ThemeSetter({ children }: { children: React.ReactNode })
     } else {
       document.body.style.backgroundColor = "#ffffff";
     }
-  }, [theme, webApp]);
+    try {
+      webApp?.ready();
+    } catch {}
+  }, [habticfeedback, theme, webApp]);
 
   useEffect(() => {
     console.log("current theme", {
