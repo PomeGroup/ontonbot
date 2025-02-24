@@ -11,13 +11,15 @@ import { removeKey, removeSecretKey } from "@/lib/utils";
 import { EventRow } from "@/db/schema/events";
 import { logger } from "@/server/utils/logger";
 import { InlineKeyboardMarkup } from "grammy/types";
-import { parseRejectReason, tgBotApprovedMenu, tgBotModerationMenu } from "@/moderationBot/menu";
 import moderationLogDB from "@/server/db/moderationLogger.db";
 import { getNoticeEmoji } from "@/moderationBot/helpers";
 
 // Helper to post to your custom Telegram server
 const tgClientPost = (path: string, data: any) =>
   tgClient.post(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/${path}`, data);
+
+const eventChannelPublisherBot = new Bot(configProtected.onton_events_publisher_bot!);
+eventChannelPublisherBot.stop(); // just in case
 
 // =========== Send Telegram Message ===========
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
@@ -205,8 +207,8 @@ export const renderUpdateEventMessage = (
   username: string | number,
   eventUuid: string,
   event_title: string,
-  oldChanges: any,
-  updateChanges: any
+  _oldChanges: any,
+  _updateChanges: any
 ): string => {
   return `
 @${username} <b>Updated</b> event <code>${event_title}</code> successfully
@@ -236,7 +238,6 @@ export async function renderModerationEventMessage(username: string | number, ev
   const circleEmoji = getNoticeEmoji(totalNotices);
 
   // 3) Prepare event data display (excluding the `description`)
-  const eventDataWithoutDescription = removeSecretKey(removeKey(eventData, "description"));
 
   // 4) Return message with a notice count line
   return `
@@ -250,6 +251,34 @@ ${circleEmoji} User currently has <b>${totalNotices}</b> notice(s).
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
 `;
- 
-};
- 
+}
+
+// ======================================== //
+//     PUBLISH EVENT ON EVENTS CHANNEL      //
+// ======================================== //
+export function sendToEventsTgChannel(props: {
+  image: string;
+  title: string;
+  subtitle: string;
+  s_date: number;
+  e_date: number;
+  event_uuid: string;
+}) {
+  return eventChannelPublisherBot.api.sendPhoto(
+    Number(configProtected.events_channel),
+    props.image, // image url
+    {
+      caption: `<b>${props.title}</b>
+
+${props.subtitle}
+
+<a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
+
+<b>Starts at: ${new Date(props.s_date * 1000).toUTCString().slice(5, 11).split(" ").reverse().join(" ")} - ${new Date(props.s_date * 1000).toUTCString().slice(17, 22)}</b>
+<b>Ends at: ${new Date(props.e_date * 1000).toUTCString().slice(5, 11).split(" ").reverse().join(" ")} - ${new Date(props.e_date * 1000).toUTCString().slice(17, 22)}</b>
+
+@ontonlive`,
+      parse_mode: "HTML",
+    }
+  );
+}

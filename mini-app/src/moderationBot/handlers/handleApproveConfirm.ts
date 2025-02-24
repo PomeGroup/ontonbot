@@ -3,7 +3,7 @@ import eventDB from "@/server/db/events";
 import moderationLogDB from "@/server/db/moderationLogger.db";
 import { tgBotApprovedMenu } from "@/moderationBot/menu";
 import { onCallBackModerateEvent } from "@/moderationBot/callBacks/onCallBackModerateEvent";
-import { sendTelegramMessage } from "@/lib/tgBot";
+import { sendTelegramMessage, sendToEventsTgChannel } from "@/lib/tgBot";
 
 export const handleApproveConfirm = async (
   ctx: any,
@@ -46,6 +46,18 @@ export const handleApproveConfirm = async (
       await sendTelegramMessage({
         chat_id: Number(eventData.owner),
         message: `✅<b>Congratulations!</b>\nYour event <b>(${eventData.title})</b> has been approved.`,
+      });
+
+      // ------------------------------------------------ //
+      //           PUBLISH EVENT ON TELEGRAM CHANNEL      //
+      // ------------------------------------------------ //
+      await sendToEventsTgChannel({
+        image: eventData.image_url,
+        title: eventData.title,
+        subtitle: eventData.subtitle,
+        s_date: eventData.start_date,
+        e_date: eventData.end_date,
+        event_uuid: eventData.event_uuid,
       });
     } else {
       logger.error("Event not found in DB", eventUuid);
