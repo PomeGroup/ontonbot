@@ -48,8 +48,8 @@ export const handleApproveConfirm = async (
         message: `✅<b>Congratulations!</b>\nYour event <b>(${eventData.title})</b> has been approved.`,
       });
     } else {
-      logger.error("Event not found in DB", eventUuid);
-      await ctx.answerCallbackQuery({ text: "Event not found in DB" });
+      logger.error(`Event not found in DB ${eventUuid}`);
+      await ctx.answerCallbackQuery({ text: `Event not found in DB ${eventUuid}` });
     }
   }
 };
