@@ -217,6 +217,14 @@ export async function getFullActivityDetails(activityId: number): Promise<TonSoc
         logger.error(`Server error (500) when fetching activity ${activityId}.`);
         throw new Error(`Internal server error (500) fetching activity ${activityId}.`);
       }
+      if (status === 403) {
+        logger.error(`Forbidden error (403) when fetching activity ${activityId}.`);
+        throw new Error(`Forbidden error (403) fetching activity ${activityId}.`);
+      }
+      if (status === 429) {
+        logger.error(`Rate limit error (429) when fetching activity ${activityId}.`);
+        throw new Error(`Rate limit error (429) fetching activity ${activityId}.`);
+      }
 
       // You can handle other status codes if desired
       logger.error(`Error fetching activity ${activityId} from Ton Society:`, status);

@@ -83,6 +83,4 @@ export const CreateRewards = async (pushLockTTl: () => any) => {
       }
     }
   }
-
-  return totalProcessed;
 };
