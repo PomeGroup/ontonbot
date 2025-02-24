@@ -22,6 +22,7 @@ async function MainCronJob() {
   new CronJob("*/9 * * * * *", cronJobRunner(cronJobs.MintNFTForPaidOrders), null, true);
   new CronJob("*/11 * * * * *", cronJobRunner(cronJobs.TsCsbtTicketOrder), null, true);
   new CronJob("*/21 * * * * *", cronJobs.OrganizerPromoteProcessing, null, true);
+  new CronJob("0 */30 * * * *", cronJobs.syncSbtCollectionsForEvents, null, true);
 }
 
 MainCronJob().then(() => logger.log("Cron Jobs Started"));
