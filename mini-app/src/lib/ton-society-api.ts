@@ -41,10 +41,14 @@ export async function createUserRewardLink(
     // If we got a 2xx response but no reward_link, we'll create a new one below
   } catch (error) {
     // if GET fails, check if it's a 404 -> meaning "reward link not found" is expected
-    if (error instanceof AxiosError && error.response?.status !== 404) {
-      // any non-404 error is unexpected; rethrow it
-      throw error;
-    }
+    // if (error instanceof AxiosError && error.response?.status !== 404) {
+    //   // any non-404 error is unexpected; rethrow it
+    //   throw error;
+    // }
+    logger.error(
+      `Error getting reward link (will try to create) for activityId=${activityId}, data=${JSON.stringify(data)}`,
+      error
+    );
     // if it was 404, we do nothing and proceed to POST below
   }
 
