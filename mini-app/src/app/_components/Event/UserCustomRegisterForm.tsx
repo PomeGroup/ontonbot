@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { CustomEventRegisterSchema } from "@/types";
-import ReusableSheet from "../Sheet/ReusableSheet";
+import CustomSheet from "../Sheet/CustomSheet";
 import CustomButton from "../Button/CustomButton";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 

@@ -110,7 +110,13 @@ export const EventPasswordAndWalletInput = () => {
               type="text"
               minLength={4}
               className={"!-mx-4"}
-              error={upsertUserEventFieldMutation.error?.message ? [upsertUserEventFieldMutation.error?.message] : undefined}
+              error={
+                upsertUserEventFieldMutation.isError
+                  ? upsertUserEventFieldMutation.error?.message
+                    ? upsertUserEventFieldMutation.error.message
+                    : "Something went wrong"
+                  : ""
+              }
               media={<PasscodeIcon />}
             />
           </List>

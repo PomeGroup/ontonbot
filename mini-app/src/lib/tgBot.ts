@@ -250,4 +250,6 @@ ${circleEmoji} User currently has <b>${totalNotices}</b> notice(s).
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
 `;
-}
+ 
+};
+ 

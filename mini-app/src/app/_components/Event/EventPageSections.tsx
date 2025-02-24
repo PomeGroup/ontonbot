@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Images from "@/app/_components/atoms/images";
 import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
@@ -14,16 +14,23 @@ import UserRegisterForm from "./UserRegisterForm";
 import DataStatus from "../molecules/alerts/DataStatus";
 import { useRouter } from "next/navigation";
 import SupportButtons from "../atoms/buttons/SupportButton";
-import { Card, ListItem, List, Block } from "konsta/react";
+import { ListItem, List, Block } from "konsta/react";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
-import { canUserManageEvent } from "@/lib/userRolesUtils";
 import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
 import { Address } from "@ton/core";
 import { FaAngleRight } from "react-icons/fa6";
 import { TonConnectButton } from "@tonconnect/ui-react";
 import Divider from "@/components/Divider";
+import CustomSheet from "../Sheet/CustomSheet";
+import CustomButton from "../Button/CustomButton";
+import Task from "../Task";
+import CustomCard from "../atoms/cards/CustomCard";
+import { trpc } from "@/app/_trpc/client";
+import useWebApp from "@/hooks/useWebApp";
+import { sleep } from "@/utils";
+import { useConfig } from "@/context/ConfigContext";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -123,17 +130,7 @@ EventDatesComponent.displayName = "EventDatesComponent";
 const EventDescription = React.memo(() => {
   const { eventData } = useEventData();
   return (
-    <Card
-      header={
-        <Typography
-          weight="bold"
-          variant="title3"
-        >
-          About
-        </Typography>
-      }
-      contentWrap={false}
-    >
+    <CustomCard title={"About"}>
       <Typography
         weight="normal"
         variant={"body"}
@@ -141,7 +138,7 @@ const EventDescription = React.memo(() => {
       >
         {eventData.data?.description ?? ""}
       </Typography>
-    </Card>
+    </CustomCard>
   );
 });
 
@@ -149,21 +146,11 @@ EventDescription.displayName = "EventDescription";
 
 const UserWallet = () => {
   return (
-    <Card
-      header={
-        <Typography
-          weight="bold"
-          variant="title3"
-        >
-          Your Wallet
-        </Typography>
-      }
-      contentWrap={false}
-    >
+    <CustomCard title={"Your Wallet"}>
       <div className="p-4 pt-0 flex items-center justify-center">
         <TonConnectButton />
       </div>
-    </Card>
+    </CustomCard>
   );
 };
 
@@ -201,7 +188,7 @@ EventTitle.displayName = "EventHead";
 
 const EventAttributes = React.memo(() => {
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <EventLocation />
       <EventLink />
       <EventTicketPrice />
@@ -232,38 +219,18 @@ const EventRegistrationStatus = () => {
   );
   if ((hasWaitingList || !capacityFilled) && registrantStatus === "") {
     return isCustom ? (
-      <Card
-        header={
-          <Typography
-            weight={"bold"}
-            variant="title3"
-          >
-            Registration Form
-          </Typography>
-        }
-        contentWrap={false}
-      >
+      <CustomCard title={"Registration Form"}>
         <UserCustomRegisterForm />
-      </Card>
+      </CustomCard>
     ) : (
-      <Card
-        header={
-          <Typography
-            weight={"bold"}
-            variant="title3"
-          >
-            Registration Form
-          </Typography>
-        }
-        contentWrap={false}
-      >
+      <CustomCard title={"Registration Form"}>
         <UserRegisterForm />
-      </Card>
+      </CustomCard>
     );
   }
 
   return (
-    <Card>
+    <CustomCard defaultPadding>
       {capacityFilled && !hasWaitingList && (
         <>
           <DataStatus
@@ -309,7 +276,7 @@ const EventRegistrationStatus = () => {
           {registrantStatus === "checkedin" && <div></div>}
         </>
       )}
-    </Card>
+    </CustomCard>
   );
 };
 
@@ -322,17 +289,7 @@ const OrganizerCard = React.memo(() => {
   if (!organizer) return null;
 
   return (
-    <Card
-      header={
-        <Typography
-          weight={"bold"}
-          variant="title3"
-        >
-          Organizer
-        </Typography>
-      }
-      contentWrap={false}
-    >
+    <CustomCard title={"Organizer"}>
       <List className="!mb-0 !-mt-2">
         <ListItem
           className="cursor-pointer"
@@ -367,7 +324,7 @@ const OrganizerCard = React.memo(() => {
           after={<FaAngleRight className="text-primary" />}
         />
       </List>
-    </Card>
+    </CustomCard>
   );
 });
 OrganizerCard.displayName = "OrganizerCard";
@@ -390,25 +347,9 @@ const SbtCollectionLink = React.memo(() => {
   if (!isValidAddress) return null;
 
   return (
-    <Card
-      header={
-        <>
-          <Typography
-            weight={"bold"}
-            variant="title3"
-          >
-            SBT Reward Badge
-          </Typography>
-          <Typography
-            variant="body"
-            weight="normal"
-            className="mt-4"
-          >
-            Reward you receive by attending the event and submitting proof of attendance.
-          </Typography>
-        </>
-      }
-      contentWrap={false}
+    <CustomCard
+      title={"SBT Reward Badge"}
+      description="Reward you receive by attending the event and submitting proof of attendance."
     >
       <Block
         className="!mt-0 mb-4 cursor-pointer"
@@ -443,7 +384,7 @@ const SbtCollectionLink = React.memo(() => {
           </div>
         </div>
       </Block>
-    </Card>
+    </CustomCard>
   );
 });
 SbtCollectionLink.displayName = "SbtCollectionLink";
@@ -452,13 +393,8 @@ const MainButtonHandler = React.memo(() => {
   const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
   const router = useRouter();
-
-  const canManageEvent = canUserManageEvent(user, {
-    data: {
-      owner: eventData?.data?.owner,
-      accessRoles: eventData?.data?.accessRoles,
-    },
-  });
+  const [isTasksOpen, setIsTasksOpen] = useState(false);
+  const webApp = useWebApp();
 
   const userCompletedTasks =
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
@@ -468,40 +404,132 @@ const MainButtonHandler = React.memo(() => {
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
 
-  return (
-    <>
-      {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
+  const joinTaskStatus = trpc.users.joinOntonTasks.useQuery(undefined, {
+    refetchOnWindowFocus: true,
+  });
+  const [isJoinedX, setJoinedX] = useState<"done" | "not_done" | "checking">(
+    localStorage.getItem("n-j-x")
+      ? "not_done"
+      : joinTaskStatus.isSuccess
+        ? joinTaskStatus.data?.all_done
+          ? "done"
+          : "not_done"
+        : "done"
+  );
+  const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
+  const config = useConfig();
+
+  if (!config.tjo && !joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
+    return <MainButton progress />;
+  }
+
+  if (!config.tjo && (!joinTaskStatus.data?.all_done || isJoinedX !== "done" || isTasksOpen)) {
+    const closeTasksOpen = () => {
+      setIsTasksOpen(false);
+    };
+
+    return (
+      <>
+        {!isTasksOpen && (
+          <MainButton
+            text="Complete tasks to Attend"
+            onClick={() => {
+              setIsTasksOpen(true);
+              localStorage.setItem("n-j-x", "88a0bd0a-39fb-4dd0-ad5e-cfb73a2ac54a");
+            }}
+          />
+        )}
+
+        <CustomSheet
+          title="Pre-registration tasks"
+          opened={isTasksOpen}
+          onClose={closeTasksOpen}
+        >
+          <div className="space-y-4">
+            <Task
+              title="ONTON Community Chat"
+              status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.gp ? "done" : "not_done"}
+              onClick={() => {
+                webApp?.openTelegramLink("https://t.me/ontonsupport");
+              }}
+            />
+            <Task
+              title="ONTON Announcement Channel"
+              status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.ch ? "done" : "not_done"}
+              onClick={() => {
+                webApp?.openTelegramLink("https://t.me/ontonlive");
+              }}
+            />
+            <Task
+              title="Follow ONTON on X"
+              status={
+                joinTaskStatus.isFetching || isJoinedX === "checking"
+                  ? "checking"
+                  : isJoinedX === "done"
+                    ? "done"
+                    : "not_done"
+              }
+              onClick={async () => {
+                setJoinedX("checking");
+                webApp?.openLink("https://x.com/ontonbot");
+                await sleep(30_000);
+                setJoinedX("done");
+                localStorage.removeItem("n-j-x");
+              }}
+            />
+          </div>
+          <div className="mt-6">
+            <CustomButton
+              variant={allTasksDone ? undefined : "outline"}
+              onClick={closeTasksOpen}
+            >
+              Close
+            </CustomButton>
+          </div>
+        </CustomSheet>
+      </>
+    );
+  }
+
+  if (userCompletedTasks && hasEnteredPassword) {
+    if (isCheckedIn) {
+      return (
         <ClaimRewardButton
           initData={initData}
           eventId={eventData.data?.event_uuid ?? ""}
         />
-      )}
-      {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
+      );
+    } else if (isEventActive && eventData.data?.registrant_uuid) {
+      return (
         <MainButton
           text="Check In"
           onClick={() =>
             router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)
           }
         />
-      )}
+      );
+    }
+  }
 
-      {!canManageEvent && !isStarted && isNotEnded && (
-        <MainButton
-          text="Event Not Started Yet"
-          disabled
-          color="secondary"
-        />
-      )}
+  if (!isStarted && isNotEnded) {
+    return (
+      <MainButton
+        text="Event Not Started Yet"
+        disabled
+        color="secondary"
+      />
+    );
+  } else if (!isNotEnded) {
+    return (
+      <MainButton
+        text="Event Has Ended"
+        disabled
+        color="secondary"
+      />
+    );
+  }
 
-      {!canManageEvent && !isNotEnded && (
-        <MainButton
-          text="Event Has Ended"
-          disabled
-          color="secondary"
-        />
-      )}
-    </>
-  );
+  return null;
 });
 MainButtonHandler.displayName = "MainButtonHandler";
 
@@ -518,7 +546,7 @@ const EventHeader = React.memo(() => {
 
   return (
     <>
-      <Card>
+      <CustomCard defaultPadding>
         <EventImage />
 
         <EventTitle />
@@ -526,21 +554,15 @@ const EventHeader = React.memo(() => {
         <EventAttributes />
 
         <EventActions />
-      </Card>
+      </CustomCard>
 
       {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <Card
-          header={
-            <Typography
-              weight={"bold"}
-              variant="title3"
-            >
-              Claim Your Reward
-            </Typography>
-          }
+        <CustomCard
+          title={"Claim Your Reward"}
+          defaultPadding
         >
           <EventPasswordAndWalletInput />
-        </Card>
+        </CustomCard>
       )}
     </>
   );
@@ -550,7 +572,7 @@ EventHeader.displayName = "EventHeader";
 // Main component
 export const EventSections = () => {
   return (
-    <>
+    <div className="flex flex-col gap-3 p-4">
       <EventHeader />
       <ManageEventButton />
       <OrganizerCard />
@@ -565,6 +587,6 @@ export const EventSections = () => {
       {/* ---------- MainButtonHandler ---------- */}
       {/* --------------------------------------- */}
       <MainButtonHandler />
-    </>
+    </div>
   );
 };
