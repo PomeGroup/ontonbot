@@ -13,7 +13,7 @@
     "cron:test": "dotenv -e ../.env -- cross-var tsx src/cronJobs/runTests.ts",
     "start:local:poa": "dotenv -e ../.env -- cross-var tsx src/workers/poaWorker.ts",
     "start:poa": "tsx src/workers/poaWorker.ts",
-    "start:moderation": "tsx src/src/moderationBot/startBot.ts",
+    "start:moderation": "tsx src/moderationBot/startBot.ts",
     "start:local:socket": "dotenv -e ../.env -- cross-var nodemon --watch src/sockets --ext ts --exec tsx src/sockets/index.ts",
     "start:socket": "tsx src/sockets/index.ts",
     "test:socket:client": "dotenv -e ../.env -- cross-var nodemon --watch src/sockets --ext ts --exec tsx src/sockets/tests/test-client.ts",

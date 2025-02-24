@@ -8,6 +8,7 @@ import { OrganizerPromoteProcessing } from "@/cronJobs/tasks/OrganizerPromotePro
 import { CreateRewards } from "@/cronJobs/tasks/CreateRewards";
 import { notifyUsersForRewards } from "@/cronJobs/tasks/notifyUsersForRewards";
 import { cronJobRunner } from "@/cronJobs/cornJobRunner";
+import { syncSbtCollectionsForEvents } from "@/cronJobs/tasks/syncSbtCollectionsForEvents";
 
 const cronJobs = {
   CheckTransactions,
@@ -19,6 +20,7 @@ const cronJobs = {
   OrganizerPromoteProcessing,
   CreateRewards,
   notifyUsersForRewards,
+  syncSbtCollectionsForEvents,
 };
 export { cronJobRunner };
 export default cronJobs;
