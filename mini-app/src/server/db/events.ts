@@ -1,19 +1,18 @@
 import { db } from "@/db/db";
 import crypto from "crypto";
-import { event_details_search_list, eventFields, eventRegistrants, events, rewards, users, visitors } from "@/db/schema";
+import { event_details_search_list, eventRegistrants, events, rewards, users, visitors } from "@/db/schema";
 import { redisTools } from "@/lib/redisTools";
 import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, gt, inArray, InferSelectModel, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { logger } from "../utils/logger";
 import { EventRow } from "@/db/schema/events";
 import eventFieldsDB from "@/server/db/eventFields.db";
-import { EventField } from "@/db/schema/eventFields";
 
 export const getEventIDCacheKey = (eventID: number) => redisTools.cacheKeys.event_id + eventID;
 export const getEventUUIDCacheKey = (eventUUID: string) => redisTools.cacheKeys.event_uuid + eventUUID;
@@ -427,6 +426,8 @@ export const getEventsWithFilters = async (
     } else if (sortBy === "most_people_reached") {
       orderByClause = sql`visitor_count
       DESC`;
+    } else if (sortBy === "do_not_order") {
+      orderByClause = sql``;
     }
 
     // @ts-expect-error
@@ -562,6 +563,22 @@ export const fetchOngoingEvents = async () => {
     .execute();
 };
 
+/**
+ * Fetch all events (via visitors) that have pending rewards, sorted by event end_date descending.
+ */
+export const fetchEventsWithPendingRewards = async () =>
+  db
+    .select({
+      eventUuid: events.event_uuid,
+      eventEndDate: events.end_date,
+    })
+    .from(rewards)
+    .innerJoin(visitors, eq(visitors.id, rewards.visitor_id))
+    .innerJoin(events, eq(visitors.event_uuid, events.event_uuid))
+    .where(eq(rewards.status, "pending_creation"))
+    .groupBy(events.event_uuid, events.end_date)
+    .orderBy(desc(events.end_date));
+
 const eventDB = {
   checkIsEventOwner,
   checkIsAdminOrOrganizer,
@@ -579,5 +596,6 @@ const eventDB = {
   fetchEventById,
   deleteEventCache,
   fetchEventByActivityId,
+  fetchEventsWithPendingRewards,
 };
 export default eventDB;

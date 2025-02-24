@@ -37,7 +37,7 @@ import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyServi
 import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
 import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
-import { tgBotModerationMenu } from "@/lib/TgBotTools";
+import { tgBotModerationMenu } from "@/moderationBot/menu";
 import { userRolesDB } from "@/server/db/userRoles.db";
 
 dotenv.config();
@@ -442,7 +442,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       } else if (!is_paid) {
         /* --------------------------- Moderation Message --------------------------- */
         const moderation_group_id = configProtected?.moderation_group_id;
-        const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
+        const logMessage = await renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
         await sendLogNotification({
           group_id: moderation_group_id,
           image: eventData.image_url,
