@@ -57,6 +57,7 @@ export const handleApproveConfirm = async (
         subtitle: eventData.subtitle,
         s_date: eventData.start_date,
         e_date: eventData.end_date,
+        timezone: eventData.timezone,
         event_uuid: eventData.event_uuid,
       });
     } else {

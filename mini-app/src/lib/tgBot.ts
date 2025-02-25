@@ -263,6 +263,7 @@ export function sendToEventsTgChannel(props: {
   s_date: number;
   e_date: number;
   event_uuid: string;
+  timezone: string | null;
 }) {
   return eventChannelPublisherBot.api.sendPhoto(
     Number(configProtected.events_channel),
@@ -274,8 +275,25 @@ ${props.subtitle}
 
 <a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
 
-<b>Starts at: ${new Date(props.s_date * 1000).toUTCString().slice(5, 11).split(" ").reverse().join(" ")} - ${new Date(props.s_date * 1000).toUTCString().slice(17, 22)}</b>
-<b>Ends at: ${new Date(props.e_date * 1000).toUTCString().slice(5, 11).split(" ").reverse().join(" ")} - ${new Date(props.e_date * 1000).toUTCString().slice(17, 22)}</b>
+<b>Starts at: ${new Date(props.s_date * 1000).toLocaleString("en-US", {
+        timeZone: props.timezone || "UTC",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZoneName: "short",
+        hour12: false,
+      })}</b>
+
+<b>Ends at: ${new Date(props.e_date * 1000).toLocaleString("en-US", {
+        timeZone: props.timezone || "UTC",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZoneName: "short",
+        hour12: false,
+      })}</b>
 
 @ontonlive`,
       parse_mode: "HTML",
