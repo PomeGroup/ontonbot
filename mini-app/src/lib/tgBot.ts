@@ -18,8 +18,28 @@ import { getNoticeEmoji } from "@/moderationBot/helpers";
 const tgClientPost = (path: string, data: any) =>
   tgClient.post(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/${path}`, data);
 
-const eventChannelPublisherBot = new Bot(configProtected.onton_events_publisher_bot!);
-eventChannelPublisherBot.stop(); // just in case
+let botInstance: Bot | null = null;
+const MAX_WAIT_TIME = 30000; // 30 seconds max wait time
+const CHECK_INTERVAL = 100; // Check every 100ms
+
+// Helper function to get or create the bot instance
+async function getEventsChannelBotInstance() {
+  // If the bot is already created, return it
+  if (botInstance) return botInstance;
+
+  // Wait for the token to be available
+  const startTime = Date.now();
+  while (!configProtected.onton_events_publisher_bot) {
+    if (Date.now() - startTime > MAX_WAIT_TIME) {
+      throw new Error("Timed out waiting for bot token to be available.");
+    }
+    await new Promise((resolve) => setTimeout(resolve, CHECK_INTERVAL));
+  }
+
+  // Once the token is available, create the bot instance
+  botInstance = new Bot(configProtected.onton_events_publisher_bot);
+  return botInstance;
+}
 
 // =========== Send Telegram Message ===========
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
@@ -316,7 +336,7 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 // ======================================== //
 //     PUBLISH EVENT ON EVENTS CHANNEL      //
 // ======================================== //
-export function sendToEventsTgChannel(props: {
+export async function sendToEventsTgChannel(props: {
   image: string;
   title: string;
   subtitle: string;
@@ -325,6 +345,8 @@ export function sendToEventsTgChannel(props: {
   event_uuid: string;
   timezone: string | null;
 }) {
+  const eventChannelPublisherBot = await getEventsChannelBotInstance();
+
   return eventChannelPublisherBot.api.sendPhoto(
     Number(configProtected.events_channel),
     props.image, // image url
