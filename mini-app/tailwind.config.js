@@ -8,7 +8,7 @@ module.exports = konstaConfig({
       primary: "#007aff",
       // custom colors used for Konsta UI components theming
       "brand-red": "#ff0000",
-      "brand-green": "#10b210",
+      "brand-green": "#34C759",
       "brand-gray": "#888888",
       "brand-purple": "#6d28d9",
       "brand-fill-bg": "#747480",

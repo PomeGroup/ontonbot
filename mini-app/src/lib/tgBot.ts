@@ -198,6 +198,66 @@ export const sendLogNotification = async (
     });
   }
 };
+// CSV log sender
+export type CsvLogProps = {
+  message: string;
+  topic: "event" | "ticket" | "system" | "payments" | "no_topic";
+  csvFileName: string;
+  csvContent: string;
+  inline_keyboard?: InlineKeyboardMarkup;
+  group_id?: number | string | null;
+};
+
+export async function sendLogNotificationWithCsv(props: CsvLogProps) {
+  if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
+    logger.error("Bot token or logs group ID not found in configProtected for this environment");
+    throw new Error("Bot token or logs group ID not found in configProtected for this environment");
+  }
+
+  let { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
+
+  // If a different group/chat ID is specified
+  if (props.group_id) {
+    LOGS_GROUP_ID = props.group_id.toString();
+  }
+
+  const topicMapping: Record<"no_topic" | "event" | "ticket" | "system" | "payments", string | null> = {
+    event: configProtected.events_topic,
+    ticket: configProtected.tickets_topic,
+    system: configProtected.system_topic,
+    payments: configProtected.payments_topic,
+    no_topic: "no_topic",
+  };
+
+  const topicMessageId = topicMapping[props.topic];
+  if (!topicMessageId) {
+    logger.error(`Invalid or unconfigured topic: ${props.topic}`);
+    throw new Error(`Invalid or unconfigured topic: ${props.topic}`);
+  }
+
+  const logBot = new Bot(BOT_TOKEN_LOGS);
+
+  // Create a buffer for the CSV file
+  const csvBuffer = Buffer.from(props.csvContent, "utf-8");
+
+  logger.log("Sending telegram message with CSV attachment to", LOGS_GROUP_ID, {
+    caption: props.message,
+    reply_parameters:
+      topicMessageId === "no_topic"
+        ? undefined
+        : {
+            message_id: Number(topicMessageId),
+          },
+  });
+
+  // Use sendDocument to attach the CSV
+  return await logBot.api.sendDocument(Number(LOGS_GROUP_ID), new InputFile(csvBuffer, props.csvFileName), {
+    caption: props.message,
+    reply_parameters: topicMessageId === "no_topic" ? undefined : { message_id: Number(topicMessageId) },
+    reply_markup: props.inline_keyboard,
+    parse_mode: "HTML",
+  });
+}
 
 // =========== RENDER FUNCTIONS ===========
 

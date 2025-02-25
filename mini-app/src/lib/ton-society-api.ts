@@ -1,5 +1,5 @@
 // The integration with ton society apis will be here
-import { TonSocietyRegisterActivityResponse } from "@/types/event.types";
+import { TonSocietyActivityFullResponse, TonSocietyRegisterActivityResponse } from "@/types/event.types";
 import { findActivityResponseType, TSAPIoperations } from "@/types/ton-society-api-types";
 import { CreateUserRewardLinkReturnType, type CreateUserRewardLinkInputType } from "@/types/user.types";
 import { TRPCError } from "@trpc/server";
@@ -188,5 +188,51 @@ export async function getHubs(): Promise<SocietyHub[]> {
       code: "INTERNAL_SERVER_ERROR",
       message: "Failed to fetch hubs data",
     });
+  }
+}
+
+export async function getFullActivityDetails(activityId: number): Promise<TonSocietyActivityFullResponse> {
+  if (!activityId) {
+    throw new Error("Activity ID must be provided");
+  }
+
+  try {
+    const response = await tonSocietyClient.get<TonSocietyActivityFullResponse>(`/activities/${activityId}`);
+
+    // verify response.data.status === "success"
+    if (response.data.status !== "success") {
+      throw new Error(`Unexpected status: ${response.data.status}`);
+    }
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      // Handle HTTP errors
+      const status = error.response?.status;
+      if (status === 404) {
+        logger.warn(`Activity ${activityId} not found on Ton Society (404).`);
+        throw new Error(`Activity ${activityId} not found (404).`);
+      }
+      if (status === 500) {
+        logger.error(`Server error (500) when fetching activity ${activityId}.`);
+        throw new Error(`Internal server error (500) fetching activity ${activityId}.`);
+      }
+      if (status === 403) {
+        logger.error(`Forbidden error (403) when fetching activity ${activityId}.`);
+        throw new Error(`Forbidden error (403) fetching activity ${activityId}.`);
+      }
+      if (status === 429) {
+        logger.error(`Rate limit error (429) when fetching activity ${activityId}.`);
+        throw new Error(`Rate limit error (429) fetching activity ${activityId}.`);
+      }
+
+      // You can handle other status codes if desired
+      logger.error(`Error fetching activity ${activityId} from Ton Society:`, status);
+      throw error; // rethrow or throw a custom error
+    } else {
+      // Non-Axios error (network or other issue)
+      logger.error(`Unexpected error fetching activity ${activityId}:`, error);
+      throw error; // or wrap it in a new error
+    }
   }
 }

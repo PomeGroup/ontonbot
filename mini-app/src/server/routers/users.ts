@@ -9,6 +9,10 @@ import { adminOrganizerProtectedProcedure, initDataProtectedProcedure, publicPro
 import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
 import { logger } from "../utils/logger";
+import { Bot, GrammyError } from "grammy";
+import { cacheKeys, cacheLvl, redisTools } from "@/lib/redisTools";
+import { MAIN_TG_CHANNEL_ID, MAIN_TG_CHAT_ID } from "@/constants";
+import { fetchOntonSettings } from "../db/ontoSetting";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure.input(z.string()).query(async (opts) => {
@@ -59,6 +63,79 @@ export const usersRouter = router({
       });
     }),
 
+  joinOntonTasks: initDataProtectedProcedure.query(async (c) => {
+    const { configProtected } = await fetchOntonSettings();
+    const checkJoinBotToken = configProtected["check_join_bot_token"] as string;
+    const userId = c.ctx.user.user_id;
+    const memberStatuses = ["member", "creator", "administrator", "restricted"];
+
+    const tgBot = new Bot(checkJoinBotToken);
+    tgBot.stop();
+
+    // main tg channel
+    let isJoinedCh = await redisTools.getCache(cacheKeys.join_task_tg_ch + userId);
+    if (!isJoinedCh) {
+      let chatMember;
+      let attempts = 0;
+      const maxAttempts = 3;
+      while (attempts < maxAttempts) {
+        try {
+          chatMember = await tgBot.api.getChatMember(MAIN_TG_CHANNEL_ID, userId);
+          break;
+        } catch (error: any) {
+          if (error instanceof GrammyError && error.error_code === 429) {
+            const waitTime = Math.pow(2, attempts) * 1000;
+            await new Promise((res) => setTimeout(res, waitTime));
+            attempts++;
+          } else {
+            throw error;
+          }
+        }
+      }
+      if (!chatMember) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Rate limit exceeded while accessing Telegram API.",
+        });
+      }
+      const userStatus = chatMember.status;
+      isJoinedCh = memberStatuses.includes(userStatus) && (userStatus === "restricted" ? chatMember.is_member : true);
+      await redisTools.setCache(cacheKeys.join_task_tg_ch + userId, isJoinedCh, cacheLvl.long);
+    }
+
+    // main tg group
+    let isJoinedGp = await redisTools.getCache(cacheKeys.join_task_tg_gp + userId);
+    if (!isJoinedGp) {
+      let chatMember;
+      let attempts = 0;
+      const maxAttempts = 3;
+      while (attempts < maxAttempts) {
+        try {
+          chatMember = await tgBot.api.getChatMember(MAIN_TG_CHAT_ID, userId);
+          break;
+        } catch (error: any) {
+          if (error instanceof GrammyError && error.error_code === 429) {
+            const waitTime = Math.pow(2, attempts) * 1000;
+            await new Promise((res) => setTimeout(res, waitTime));
+            attempts++;
+          } else {
+            throw error;
+          }
+        }
+      }
+      if (!chatMember) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Rate limit exceeded while accessing Telegram API.",
+        });
+      }
+      const userStatus = chatMember.status;
+      isJoinedGp = memberStatuses.includes(userStatus) && (userStatus === "restricted" ? chatMember.is_member : true);
+      await redisTools.setCache(cacheKeys.join_task_tg_gp + userId, isJoinedGp, cacheLvl.long);
+    }
+
+    return { ch: isJoinedCh, gp: isJoinedGp, all_done: isJoinedCh && isJoinedGp };
+  }),
   getVisitorReward: initDataProtectedProcedure
     .input(
       z.object({
