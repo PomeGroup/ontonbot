@@ -353,11 +353,11 @@ export async function sendToEventsTgChannel(props: {
     {
       caption: `<b>${props.title}</b>
 
-${props.subtitle}
+<i>${props.subtitle}</i>
 
-<a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
+👉 <a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
 
-<b>Starts at: ${new Date(props.s_date * 1000).toLocaleString("en-US", {
+⏰ <b>Starts at:</b> ${new Date(props.s_date * 1000).toLocaleString("en-US", {
         timeZone: props.timezone || "UTC",
         month: "short",
         day: "numeric",
@@ -365,9 +365,9 @@ ${props.subtitle}
         minute: "2-digit",
         timeZoneName: "short",
         hour12: false,
-      })}</b>
+      })}
 
-<b>Ends at: ${new Date(props.e_date * 1000).toLocaleString("en-US", {
+⏰ <b>Ends at:</b> ${new Date(props.e_date * 1000).toLocaleString("en-US", {
         timeZone: props.timezone || "UTC",
         month: "short",
         day: "numeric",
@@ -375,9 +375,9 @@ ${props.subtitle}
         minute: "2-digit",
         timeZoneName: "short",
         hour12: false,
-      })}</b>
+      })}
 
-@ontonlive`,
+<b>ONTON <a href="https://t.me/+eErXwpP8fDw3ODY0">News</a> | <a href="https://t.me/ontonsupport">Community</a> | <a href="https://t.me/theontonbot">ONTON bot</a> | <a href="https://x.com/ontonbot">X</a> | <a href="https://t.me/ontonsupport/122863">Tutorials</a></b>`,
       parse_mode: "HTML",
     }
   );
