@@ -408,7 +408,7 @@ const MainButtonHandler = React.memo(() => {
     refetchOnWindowFocus: true,
   });
   const [isJoinedX, setJoinedX] = useState<"done" | "not_done" | "checking">(
-    !localStorage.getItem("n-j-x")
+    localStorage.getItem("n-j-x")
       ? "not_done"
       : joinTaskStatus.isSuccess
         ? joinTaskStatus.data?.all_done
