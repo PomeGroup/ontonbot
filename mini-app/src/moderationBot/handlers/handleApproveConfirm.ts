@@ -1,5 +1,5 @@
 import { logger } from "@/server/utils/logger";
-import eventDB from "@/server/db/events";
+import eventDB, { fetchEventByUuid } from "@/server/db/events";
 import moderationLogDB from "@/server/db/moderationLogger.db";
 import { tgBotApprovedMenu } from "@/moderationBot/menu";
 import { onCallBackModerateEvent } from "@/moderationBot/callBacks/onCallBackModerateEvent";
@@ -23,7 +23,7 @@ export const handleApproveConfirm = async (
   }
 
   if (update_completed) {
-    const eventData = await eventDB.selectEventByUuid(eventUuid);
+    const eventData = await eventDB.fetchEventByUuid(eventUuid);
     if (eventData) {
       // 1) Insert moderation log
       await moderationLogDB.insertModerationLog({
@@ -59,6 +59,7 @@ export const handleApproveConfirm = async (
         e_date: eventData.end_date,
         timezone: eventData.timezone,
         event_uuid: eventData.event_uuid,
+        participationType: eventData.participationType,
       });
     } else {
       logger.error(`Event not found in DB ${eventUuid}`);

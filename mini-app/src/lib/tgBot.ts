@@ -344,41 +344,52 @@ export async function sendToEventsTgChannel(props: {
   e_date: number;
   event_uuid: string;
   timezone: string | null;
+  participationType: string;
+  ticketPrice?: {
+    paymentType: string;
+    amount: number;
+  };
 }) {
-  const eventChannelPublisherBot = await getEventsChannelBotInstance();
+  try {
+    const eventChannelPublisherBot = await getEventsChannelBotInstance();
 
-  return eventChannelPublisherBot.api.sendPhoto(
-    Number(configProtected.events_channel),
-    props.image, // image url
-    {
-      caption: `<b>${props.title}</b>
+    return await eventChannelPublisherBot.api.sendPhoto(
+      Number(configProtected.events_channel),
+      props.image, // image url
+      {
+        caption: `<b>${props.title}</b>
 
-${props.subtitle}
+<i>${props.subtitle}</i>
 
-<a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
+📍 <i>${props.participationType.split("_").join(" ").charAt(0).toUpperCase() + props.participationType.split("_").join(" ").slice(1)} ${props.ticketPrice ? "Paid" : "Free"}</i>
+${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : props.ticketPrice.paymentType === "star" ? "⭐" : "💲"} <b>Ticket Price:</b> ${props.ticketPrice.amount} ${props.ticketPrice.amount}\n` : ""}
+👉 <a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
 
-<b>Starts at: ${new Date(props.s_date * 1000).toLocaleString("en-US", {
-        timeZone: props.timezone || "UTC",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZoneName: "short",
-        hour12: false,
-      })}</b>
+⏰ <b>Starts at:</b> ${new Date(props.s_date * 1000).toLocaleString("en-US", {
+          timeZone: props.timezone || "UTC",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZoneName: "short",
+          hour12: false,
+        })}
 
-<b>Ends at: ${new Date(props.e_date * 1000).toLocaleString("en-US", {
-        timeZone: props.timezone || "UTC",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZoneName: "short",
-        hour12: false,
-      })}</b>
+⏰ <b>Ends at:</b> ${new Date(props.e_date * 1000).toLocaleString("en-US", {
+          timeZone: props.timezone || "UTC",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZoneName: "short",
+          hour12: false,
+        })}
 
-@ontonlive`,
-      parse_mode: "HTML",
-    }
-  );
+🔵 <b>ONTON <a href="https://t.me/+eErXwpP8fDw3ODY0">News</a> | <a href="https://t.me/ontonsupport">Community</a> | <a href="https://t.me/theontonbot">ONTON bot</a> | <a href="https://x.com/ontonbot">X</a> | <a href="https://t.me/ontonsupport/122863">Tutorials</a></b> | <a href="https://t.me/onton_events">Events</a>`,
+        parse_mode: "HTML",
+      }
+    );
+  } catch (err) {
+    logger.error("FAILED_TO_PUBLISH_ON_EVENTS_CHANNEL:", err);
+  }
 }
