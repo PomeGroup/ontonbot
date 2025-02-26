@@ -15,6 +15,7 @@ on:
       - 'mini-app/**'
       - 'newton/**'
       - 'telegram-bot/**'
+      - 'swagger/**'
       - 'website/**'
       - '.github/workflows/**'
       - 'Trigger-full-build.txt'
@@ -54,6 +55,7 @@ jobs:
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
             ["caddy"]="devops/caddy"
+            ["swagger-ui"]="swagger"
           )
           # If Trigger-full-build.txt has changed, add all services
           if echo "$changed_files" | grep -q "^Trigger-full-build.txt$"; then
