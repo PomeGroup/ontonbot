@@ -85,6 +85,9 @@ x-common-env: &common-env
   ONTON_API_SECRET: ${ONTON_API_SECRET}
   NEXT_PUBLIC_ENV: ${NEXT_PUBLIC_ENV}
   IP_MINI_APP_MODERATION: ${IP_MINI_APP_MODERATION}
+  SWAGGER_UI_DOMAIN: ${SWAGGER_UI_DOMAIN}
+  SWAGGER_UI_PORT: ${SWAGGER_UI_PORT}
+
 services:
   caddy:
     image: caddy:latest
@@ -495,17 +498,24 @@ services:
       onton-network:
         ipv4_address: ${IP_RABBITMQ}
 
-#  swagger-ui:
-#    image: swaggerapi/swagger-ui
-#    environment:
-#      SWAGGER_JSON: /swagger.yaml
-#    volumes:
-#      - ./swagger/swagger.yaml:/swagger.yaml
-##    depends_on:
-##      - caddy
-#    networks:
-#      onton-network:
-#        ipv4_address: "${IP_SWAGGER_UI}"
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    environment:
+      SWAGGER_JSON: /swagger.yaml
+    profiles:
+      - swagger
+      - full
+      - minimal
+    ports:
+      - "${SWAGGER_UI_PORT}:8080"
+    volumes:
+      - ./mini-app/src/app/api/externalSeller/openapi.yml:/swagger.yaml
+    depends_on:
+      - caddy
+    networks:
+      onton-network:
+        ipv4_address: "${IP_SWAGGER_UI}"
+
 networks:
   onton-network:
     driver: bridge
