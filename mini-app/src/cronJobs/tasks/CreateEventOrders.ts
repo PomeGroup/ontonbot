@@ -9,7 +9,7 @@ import { registerActivity } from "@/lib/ton-society-api";
 import { uploadJsonToMinio } from "@/lib/minioTools";
 import { deployCollection } from "@/lib/nft";
 import { is_mainnet } from "@/server/routers/services/tonCenter";
-import { sendLogNotification } from "@/lib/tgBot";
+import { sendLogNotification, sendToEventsTgChannel } from "@/lib/tgBot";
 import { events } from "@/db/schema/events";
 
 export const CreateEventOrders = async () => {
@@ -114,6 +114,15 @@ export const CreateEventOrders = async () => {
             await sendLogNotification({
               message: `Deployed collection for <b>${eventData.title}</b>\n\n🎈<a href='https://${prefix}getgems.io/collection/${collectionAddress}'>Collection</a>\n\n👤Capacity: ${eventData.capacity}`,
               topic: "event",
+            });
+            await sendToEventsTgChannel({
+              image: eventData.image_url,
+              title: eventData.title,
+              subtitle: eventData.subtitle,
+              s_date: eventData.start_date,
+              e_date: eventData.end_date,
+              timezone: eventData.timezone,
+              event_uuid: eventData.event_uuid,
             });
           } catch (error) {
             logger.log(`paid_event_deployed_collection_send_error_${event_uuid}_${error}`);
