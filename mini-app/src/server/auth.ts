@@ -54,7 +54,7 @@ export function apiKeyAuthentication(req: Request) {
 }
 
 export async function getAuthenticatedUserApi(req: Request): Promise<[number, null] | [null, Response]> {
-  const apiKey = req.headers.get("api_key") || "";
+  const apiKey = req.headers.get("api_key") || req.headers.get("Authorization");
 
   if (!apiKey) {
     return [null, Response.json({ error: "Unauthorized: No Api Key provided" }, { status: 401 })];

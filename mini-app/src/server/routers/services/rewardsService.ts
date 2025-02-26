@@ -5,7 +5,7 @@ import { getAndValidateVisitor } from "@/server/routers/services/visitorService"
 
 import { db } from "@/db/db";
 import rewardsDb from "@/server/db/rewards.db";
-import { addVisitor, findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/server/db/visitors";
+import visitorsDB, { addVisitor, findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/server/db/visitors";
 import { validateEventData, validateEventDates } from "@/server/routers/services/eventService";
 import { sendRewardNotification } from "@/server/routers/services/telegramService";
 import { TRPCError } from "@trpc/server";
@@ -13,6 +13,7 @@ import { eventRegistrants } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import eventDB, { selectEventByUuid } from "@/server/db/events";
 import { logger } from "@/server/utils/logger";
+import { sleep } from "@/utils";
 
 //TODO - Put this in db functions files
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
@@ -352,10 +353,76 @@ export async function CsbtTicket(event_uuid: string, user_id: number) {
   return res.data.data;
 }
 
+export const CsbtTicketForApi = async (event_uuid: string, user_id: number) => {
+  // 1) Make sure there's a Visitor record
+  const visitor = await visitorsDB.addVisitor(user_id, event_uuid);
+  const eventData = await eventDB.selectEventByUuid(event_uuid);
+  if (!eventData || !eventData.activity_id) {
+    logger.error("CsbtTicketRewardService eventData or activity_id is null");
+    // In a normal CsbtTicket, we'd throw. But let's do so here as well:
+    throw new Error("CsbtTicketRewardService eventData or activity_id is null");
+  }
+
+  // 2) Check if a reward already exists for this visitor
+  const existingReward = await rewardDB.checkExistingReward(visitor.id);
+  if (existingReward) {
+    // If there's already a reward, we do nothing further
+    logger.info(`Reward already exists for visitor ${visitor.id}, skipping creation.`);
+    return existingReward.data; // Return the existing reward data
+  }
+
+  // Prepare the "Organizer" trait
+  const society_hub_value =
+    typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
+
+  while (true) {
+    // Brief delay between attempts to avoid spamming the API
+    await sleep(20);
+
+    try {
+      // 4) Call your external API to create the user reward link
+      const response = await createUserRewardLink(eventData.activity_id, {
+        telegram_user_id: user_id,
+        attributes: [
+          {
+            trait_type: "Organizer",
+            value: society_hub_value,
+          },
+        ],
+      });
+
+      // Make sure it's valid
+      if (!response?.data?.data) {
+        throw new Error("Failed to create user reward link: No 'data' returned.");
+      }
+
+      // 5) Insert the newly created reward into your DB
+      await rewardsDb.insertRewardWithData(visitor.id, user_id.toString(), "ton_society_sbt", response.data.data, "created");
+
+      logger.info(`CSBT Ticket created successfully for user ${user_id}.`);
+      return response.data.data; // Return the reward link data
+    } catch (error) {
+      try {
+        await rewardsDb.insertRewardWithData(
+          visitor.id,
+          user_id.toString(),
+          "ton_society_sbt",
+          null, // no reward link data
+          "pending_creation" // custom status
+        );
+      } catch (insertErr) {
+        // If even that fails, just log it
+        logger.error("Error inserting pending creation reward record", insertErr);
+      }
+    }
+  }
+};
+
 const rewardService = {
   createUserRewardSBT,
   processRewardCreation,
   createUserReward,
+  CsbtTicketForApi,
 };
 
 export default rewardService;

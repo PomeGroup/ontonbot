@@ -1,0 +1,169 @@
+openapi: 3.0.3
+info:
+  title: External Seller API
+  version: 1.0.0
+  description: |
+    API used by external sellers to verify a payment and create or update an order.
+    It requires an API key (or `Authorization` header) that matches a valid user_custom_flags record.
+
+servers:
+  - url: https://staging.toncloud.observer
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+paths:
+  /api/external-seller/verifyPayment:
+    options:
+      summary: "Handle preflight requests for CORS"
+      description: "Preflight endpoint returning 204."
+      responses:
+        "204":
+          description: "No Content"
+
+    post:
+      summary: "Verify a user's payment and create a ticket"
+      description: >
+        This endpoint:<br>
+        1. Authenticates the request using the `api_key` or `Authorization` header.<br> 
+        2. Validates Telegram user info, event ownership, and payment details.<br> 
+        3. issues a CSBT ticket . <br> 
+
+      tags:
+        - External Seller
+      security:
+        - ApiKeyAuth: [ ]
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - telegramUserId
+                - telegramUsername
+                - eventUuid
+                - paymentType
+                - paymentAmount
+              properties:
+                telegramUserId:
+                  type: integer
+                  description: The Telegram user ID of the paying user.
+                  example: 123456789
+                telegramUsername:
+                  type: string
+                  description: The Telegram username, including '@'.
+                  example: "@user_name"
+                eventUuid:
+                  type: string
+                  format: uuid
+                  description: The UUID of the event to which the ticket belongs.
+                  example: "82be2f44-8d0c-4bd9-a3c1-c71613163abe"
+                paymentType:
+                  type: string
+                  enum: [ STAR, TON, USDT ]
+                  description: The method of payment used by the user.
+                  example: "STAR"
+                paymentAmount:
+                  type: number
+                  format: float
+                  description: The amount paid by the user.
+                  example: 50
+
+      responses:
+        "200":
+          description: Payment verified successfully, and a CSBT ticket may have been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  isOntonUser:
+                    type: boolean
+                    example: true
+                  sbtClaimLink:
+                    type: string
+                    example: "https://onton.app/claim/abcdef123"
+        "400":
+          description: Bad Request (validation failure or other client error).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Invalid request body or internal server error"
+                  status:
+                    type: array
+                    items:
+                      type: string
+                    example: "bad_request"
+        "401":
+          description: Unauthorized (No or invalid API key, or user mismatch).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized: invalid Api Key"
+        "404":
+          description: Resource not found (e.g., event not found, payment info not found).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Event not found"
+                  status:
+                    type: array
+                    items:
+                      type: string
+                    example: "event_not_exist"
+        "410":
+          description: Resource gone or no longer available (e.g., event not active, sold out).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Event tickets are sold out"
+                  status:
+                    type: array
+                    items:
+                      type: string
+                    example: "sold_out"
+        "500":
+          description: Server error (unexpected issue in DB or external call).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Something went wrong"
+
