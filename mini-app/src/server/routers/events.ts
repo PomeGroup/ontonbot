@@ -439,6 +439,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           e_date: eventData.end_date,
           timezone: eventData.timezone,
           event_uuid: eventData.event_uuid,
+          participationType: eventData.participationType,
         });
       } else if (!is_paid) {
         /* --------------------------- Moderation Message --------------------------- */

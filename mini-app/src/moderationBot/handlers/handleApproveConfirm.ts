@@ -59,6 +59,7 @@ export const handleApproveConfirm = async (
         e_date: eventData.end_date,
         timezone: eventData.timezone,
         event_uuid: eventData.event_uuid,
+        participationType: eventData.participationType,
       });
     } else {
       logger.error(`Event not found in DB ${eventUuid}`);

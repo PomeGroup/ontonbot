@@ -123,6 +123,11 @@ export const CreateEventOrders = async () => {
               e_date: eventData.end_date,
               timezone: eventData.timezone,
               event_uuid: eventData.event_uuid,
+              participationType: eventData.participationType,
+              ticketPrice: {
+                amount: paymentInfo.price,
+                paymentType: paymentInfo.payment_type.toLocaleLowerCase(),
+              },
             });
           } catch (error) {
             logger.log(`paid_event_deployed_collection_send_error_${event_uuid}_${error}`);
