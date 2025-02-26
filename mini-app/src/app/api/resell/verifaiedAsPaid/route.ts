@@ -7,8 +7,10 @@ import "@/lib/gracefullyShutdown";
 
 import { selectEventByUuid } from "@/server/db/events";
 import ordersDB from "@/server/db/orders.db";
-import { addVisitor } from "@/server/db/visitors";
-import { CsbtTicket } from "@/server/routers/services/rewardsService";
+// ⬇️ Import the new method instead of CsbtTicket
+import rewardService from "@/server/routers/services/rewardsService";
+import { selectUserById, usersDB } from "@/server/db/users";
+import { fetchRewardLinkForEvent } from "@/server/db/rewards.db";
 
 /**
  * According to your README spec for verifaiedAsPaid:
@@ -18,7 +20,7 @@ import { CsbtTicket } from "@/server/routers/services/rewardsService";
  *   "telegramUserId": 123456789,
  *   "telegramUsername": "@user_name",
  *   "eventUuid": "event-uuid-string",
- *   "paymentType": "STAR" | "TON" | "USDT" ,
+ *   "paymentType": "STAR" | "TON" | "USDT",
  *   "paymentAmount": 50
  * }
  *
@@ -32,7 +34,7 @@ import { CsbtTicket } from "@/server/routers/services/rewardsService";
  * Error Response
  * {
  *   "success": false,
- *   "status": [ "some_error_code" ]
+ *   "status": ["some_error_code"]
  * }
  */
 const verifiedAsPaidSchema = z.object({
@@ -62,6 +64,37 @@ export async function POST(request: Request) {
 
     const { telegramUserId, telegramUsername, eventUuid, paymentType, paymentAmount } = parseResult.data;
 
+    /* --------------------------------------------------------------------------
+     *    1) INSERT (OR UPDATE) USER IF NEEDED
+     * -------------------------------------------------------------------------- */
+    const user = await selectUserById(telegramUserId);
+    if (!user) {
+      const initDataJson = {
+        user: {
+          id: telegramUserId,
+          username: telegramUsername.replace("@", ""),
+          first_name: "PaymentFlow",
+          last_name: "",
+          language_code: "en",
+          is_premium: false,
+          allows_write_to_pm: false,
+          photo_url: undefined,
+        },
+      };
+
+      const addedOrFoundUser = await usersDB.insertUser(initDataJson);
+      if (!addedOrFoundUser) {
+        logger.error("Failed to insert/find user in verifaiedAsPaid", initDataJson);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            status: ["user_insert_failed"],
+          }),
+          { status: 400 }
+        );
+      }
+    }
+
     // ---------------------------- Find Event -----------------------------
     const eventData = await selectEventByUuid(eventUuid);
     if (!eventData) {
@@ -74,8 +107,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // -------------- Example: Check user in DB if needed -----------------
-    // If you maintain user records, you can verify telegramUserId here.
+    if (!eventData.activity_id) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          status: ["event_not_active"],
+        }),
+        { status: 410 }
+      );
+    }
 
     // ------------------- Payment Info & Ticket Type ----------------------
     const eventPaymentInfo = await db.query.eventPayment.findFirst({
@@ -119,23 +159,29 @@ export async function POST(request: Request) {
       where: and(
         eq(orders.user_id, telegramUserId),
         eq(orders.order_type, orderType),
-        eq(orders.event_uuid, eventData.event_uuid)
+        eq(orders.event_uuid, eventData.event_uuid),
+        eq(orders.state, "completed")
       ),
     });
 
-    // If order exists, you can either return the existing SBT link
-    // or do something else. For demonstration, let's assume we return success
     if (existingOrder) {
-      // Possibly fetch reward link if the event is TSCSBT
+      // Possibly fetch or generate the CSBT ticket if needed
       let existingRewardLink = `https://onton.app/claim/${existingOrder.uuid}`;
+
       if (orderType === "ts_csbt_ticket") {
-        // Attempt to fetch or generate the CSBT ticket if not previously done
-        // (We skip creation if it already exists in your `reward` table)
         try {
-          const linkData = await CsbtTicket(eventUuid, telegramUserId);
-          // If CsbtTicket found or created a link, we can use that
-          if (linkData) {
-            existingRewardLink = linkData.reward_link || existingRewardLink;
+          // The function can return different shapes (existingReward.data or response.data.data)
+          const linkData = await rewardService.CsbtTicketForApi(eventUuid, telegramUserId);
+
+          // Safely check if `linkData` has a `reward_link` property
+          if (
+            linkData &&
+            typeof linkData === "object" &&
+            // TypeScript won't narrow "in" checks on unknown shapes, so we cast linkData to an object:
+            "reward_link" in (linkData as Record<string, unknown>) &&
+            typeof (linkData as { reward_link?: unknown }).reward_link === "string"
+          ) {
+            existingRewardLink = (linkData as { reward_link: string }).reward_link || existingRewardLink;
           }
         } catch (err) {
           logger.error("Failed to create or fetch existing TSCSBT link", err);
@@ -145,7 +191,7 @@ export async function POST(request: Request) {
       return new Response(
         JSON.stringify({
           success: true,
-          isOntonUser: true,
+          isOntonUser: !!user,
           sbtClaimLink: existingRewardLink,
         }),
         { status: 200 }
@@ -162,12 +208,13 @@ export async function POST(request: Request) {
             event_uuid: eventUuid,
             user_id: telegramUserId,
             total_price: paymentAmount,
-            payment_type: paymentType, // "star" or "ton"
-            state: "completed", // Because user has already paid
+            payment_type: paymentType, // e.g., "STAR", "TON", or "USDT"
+            state: "completed", // because user has already paid
             order_type: orderType,
             utm_source: null,
             updatedBy: "system",
           })
+
           .returning()
           .execute()
       ).pop();
@@ -184,10 +231,17 @@ export async function POST(request: Request) {
           },
           user_id: telegramUserId,
         })
+        .onConflictDoUpdate({
+          target: [eventRegistrants.event_uuid, eventRegistrants.user_id],
+          set: {
+            status: "approved",
+            register_info: {
+              telegramUsername,
+              telegramUserId: String(telegramUserId),
+            },
+          },
+        })
         .execute();
-
-      // (Optional) Mark them as a visitor
-      await addVisitor(telegramUserId, eventUuid);
     });
 
     if (!newOrder) {
@@ -199,23 +253,36 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
+    let sbtClaimLink = `https://onton.live/`;
     // ------------------- Generate or Return SBT Link ---------------------
-    let sbtClaimLink = `no_link`; // Fallback link
+    const eventRewardLink = await fetchRewardLinkForEvent(eventUuid);
+    if (
+      eventRewardLink &&
+      typeof eventRewardLink.data === "object" &&
+      "reward_link" in (eventRewardLink.data as Record<string, unknown>) &&
+      typeof (eventRewardLink.data as { reward_link?: unknown }).reward_link === "string"
+    ) {
+      // Safely check if `eventRewardLink` has a `reward_link` property
+      sbtClaimLink = (eventRewardLink.data as { reward_link: string }).reward_link;
+    }
 
-    // If the event is TSCSBT, call CsbtTicket to create a user reward link
     if (orderType === "ts_csbt_ticket") {
       try {
-        const csbtResult = await CsbtTicket(eventUuid, telegramUserId);
-        // `CsbtTicket` returns res.data.data from createUserRewardLink
-        if (csbtResult) {
-          // Depending on what your createUserRewardLink returns,
-          // you might have `short_link`, `url`, or some other field
-          sbtClaimLink = csbtResult.reward_link || sbtClaimLink;
+        // The function can return different shapes (existingReward.data or response.data.data)
+        const linkData = await rewardService.CsbtTicketForApi(eventUuid, telegramUserId);
+
+        // Safely check if `linkData` has a `reward_link` property
+        if (
+          linkData &&
+          typeof linkData === "object" &&
+          // TypeScript won't narrow "in" checks on unknown shapes, so we cast linkData to an object:
+          "reward_link" in (linkData as Record<string, unknown>) &&
+          typeof (linkData as { reward_link?: unknown }).reward_link === "string"
+        ) {
+          sbtClaimLink = (linkData as { reward_link: string }).reward_link;
         }
       } catch (err) {
-        logger.error("Failed to create TSCSBT link", err);
-        // We can still return success but the fallback link will be used
+        logger.error("Failed to create or fetch existing TSCSBT link", err);
       }
     }
 

@@ -5,12 +5,16 @@ import { visitors } from "@/db/schema";
 import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq, or, sql } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 
 // Utility function to generate cache keys
 const generateCacheKey = (visitor_id: number, reward_id?: string) => {
   return `reward:${visitor_id}${reward_id ? `:${reward_id}` : ""}`;
+};
+
+const generateCacheKeyForLinkEvent = (event_uuid: string) => {
+  return `reward:link:${event_uuid}`;
 };
 // Function to check if a reward already exists for a visitor
 const checkExistingReward = async (visitor_id: number): Promise<Maybe<RewardsSelectType>> => {
@@ -250,6 +254,41 @@ export const fetchPendingRewardsForEvent = async (
     orderBy: [asc(rewards.created_at)],
   });
 
+/**
+ * Finds the first visitor for the given eventUuid,
+ * then returns the first "created" reward linked to that visitor.
+ *
+ * Returns `RewardTypeParitial` if found, otherwise `null`.
+ */
+export const fetchRewardLinkForEvent = async (eventUuid: string): Promise<RewardTypeParitial | null> => {
+  const cacheKey = generateCacheKeyForLinkEvent(eventUuid);
+  const cachedReward = await redisTools.getCache(cacheKey);
+  if (cachedReward) {
+    return cachedReward;
+  }
+  // 1) Find a single visitor for the given eventUuid
+  const singleVisitor = await db.query.visitors.findFirst({
+    where: (fields, { eq }) => eq(fields.event_uuid, eventUuid),
+    orderBy: [asc(visitors.created_at)], // or your preferred sorting
+  });
+  if (!singleVisitor) {
+    // If no visitor found, return null
+    return null;
+  }
+
+  // 2) Using that visitor's ID, find one reward with status "created"
+  //    Return `null` if not found
+  const reward = await db.query.rewards.findFirst({
+    where: (fields, { eq, and }) =>
+      and(or(eq(fields.status, "created"), eq(fields.status, "notified")), eq(fields.visitor_id, singleVisitor.id)),
+    orderBy: [asc(rewards.created_at)],
+  });
+  if (reward) {
+    await redisTools.setCache(cacheKey, reward, redisTools.cacheLvl.short);
+  }
+  // 3) Convert `undefined` to `null` for TypeScript consistency
+  return reward ?? null;
+};
 const rewardDB = {
   checkExistingReward,
   insert,
@@ -264,6 +303,7 @@ const rewardDB = {
   updateRewardStatus,
   handleRewardError,
   fetchPendingRewardsForEvent,
+  fetchRewardLinkForEvent,
 };
 
 export default rewardDB;
