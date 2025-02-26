@@ -9,6 +9,7 @@ export interface MainButtonProps {
   text?: string;
   onClick?: () => void;
   progress?: boolean;
+  buttonType?: "MainButton" | "SecondaryButton";
 }
 
 const MainButton: FC<MainButtonProps> = ({
@@ -18,6 +19,7 @@ const MainButton: FC<MainButtonProps> = ({
   text,
   onClick,
   progress = false,
+  buttonType = "MainButton",
 }) => {
   const WebApp = useWebApp();
 
@@ -35,27 +37,27 @@ const MainButton: FC<MainButtonProps> = ({
     const { button_color, button_text_color } = WebApp.themeParams;
 
     if (text) {
-      WebApp.MainButton.setText(text);
-      WebApp.MainButton.show();
+      WebApp[buttonType].setText(text);
+      WebApp[buttonType].show();
     } else {
-      WebApp.MainButton.hide();
+      WebApp[buttonType].hide();
     }
 
-    WebApp.MainButton.setParams({
+    WebApp[buttonType].setParams({
       color: buttonParams.color || button_color,
       text_color: buttonParams.text_color || button_text_color,
     });
 
     if (progress) {
-      WebApp.MainButton.showProgress();
+      WebApp[buttonType].showProgress();
     } else {
-      WebApp.MainButton.hideProgress();
+      WebApp[buttonType].hideProgress();
     }
 
     if (disabled || progress) {
-      WebApp.MainButton.disable();
+      WebApp[buttonType].disable();
     } else {
-      WebApp.MainButton.enable();
+      WebApp[buttonType].enable();
     }
   }, [WebApp, text, buttonParams, disabled, progress]);
 
@@ -65,19 +67,19 @@ const MainButton: FC<MainButtonProps> = ({
     updateButton();
 
     if (onClick) {
-      WebApp.MainButton.onClick(onClick);
+      WebApp[buttonType].onClick(onClick);
     }
 
     return () => {
-      WebApp.MainButton.hide();
-      WebApp.MainButton.enable();
-      WebApp.MainButton.hideProgress();
-      WebApp.MainButton.setParams({
+      WebApp[buttonType].hide();
+      WebApp[buttonType].enable();
+      WebApp[buttonType].hideProgress();
+      WebApp[buttonType].setParams({
         color: WebApp.themeParams.button_color,
         text_color: WebApp.themeParams.button_text_color,
       });
       if (onClick) {
-        WebApp.MainButton.offClick(onClick);
+        WebApp[buttonType].offClick(onClick);
       }
     };
   }, [WebApp, updateButton, onClick, progress, disabled, buttonParams, text, color, textColor]);

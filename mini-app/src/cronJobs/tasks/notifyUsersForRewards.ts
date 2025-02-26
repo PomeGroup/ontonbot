@@ -44,7 +44,7 @@ export const notifyUsersForRewards = async (pushLockTTl: () => any) => {
   const chunkSize = 10;
   let offset = 0;
   let createdRewards: RewardType[] = [];
-
+  
   do {
     createdRewards = await db.query.rewards.findMany({
       where: (fields, { eq }) => eq(fields.status, "created"),

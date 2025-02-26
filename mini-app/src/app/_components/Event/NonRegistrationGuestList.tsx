@@ -47,7 +47,7 @@ const NonRegistrationGuestList = (props: Props) => {
 
       <div className="mt-0 flex items-center space-x-2 px-2  ">
         <span className=" text-2xl font-extrabold tracking-tight dark:text-gray-300 mr-auto"> Guests List </span>
-        {props.event && props.event.ticketToCheckIn === true && (
+        {props.event && props.event.has_payment === true && (
           <span>
             <CheckInGuest params={guestCheckInParams} />
           </span>

@@ -220,6 +220,66 @@ export const sendLogNotification = async (
     });
   }
 };
+// CSV log sender
+export type CsvLogProps = {
+  message: string;
+  topic: "event" | "ticket" | "system" | "payments" | "no_topic";
+  csvFileName: string;
+  csvContent: string;
+  inline_keyboard?: InlineKeyboardMarkup;
+  group_id?: number | string | null;
+};
+
+export async function sendLogNotificationWithCsv(props: CsvLogProps) {
+  if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
+    logger.error("Bot token or logs group ID not found in configProtected for this environment");
+    throw new Error("Bot token or logs group ID not found in configProtected for this environment");
+  }
+
+  let { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
+
+  // If a different group/chat ID is specified
+  if (props.group_id) {
+    LOGS_GROUP_ID = props.group_id.toString();
+  }
+
+  const topicMapping: Record<"no_topic" | "event" | "ticket" | "system" | "payments", string | null> = {
+    event: configProtected.events_topic,
+    ticket: configProtected.tickets_topic,
+    system: configProtected.system_topic,
+    payments: configProtected.payments_topic,
+    no_topic: "no_topic",
+  };
+
+  const topicMessageId = topicMapping[props.topic];
+  if (!topicMessageId) {
+    logger.error(`Invalid or unconfigured topic: ${props.topic}`);
+    throw new Error(`Invalid or unconfigured topic: ${props.topic}`);
+  }
+
+  const logBot = new Bot(BOT_TOKEN_LOGS);
+
+  // Create a buffer for the CSV file
+  const csvBuffer = Buffer.from(props.csvContent, "utf-8");
+
+  logger.log("Sending telegram message with CSV attachment to", LOGS_GROUP_ID, {
+    caption: props.message,
+    reply_parameters:
+      topicMessageId === "no_topic"
+        ? undefined
+        : {
+            message_id: Number(topicMessageId),
+          },
+  });
+
+  // Use sendDocument to attach the CSV
+  return await logBot.api.sendDocument(Number(LOGS_GROUP_ID), new InputFile(csvBuffer, props.csvFileName), {
+    caption: props.message,
+    reply_parameters: topicMessageId === "no_topic" ? undefined : { message_id: Number(topicMessageId) },
+    reply_markup: props.inline_keyboard,
+    parse_mode: "HTML",
+  });
+}
 
 // =========== RENDER FUNCTIONS ===========
 
@@ -283,23 +343,53 @@ export async function sendToEventsTgChannel(props: {
   s_date: number;
   e_date: number;
   event_uuid: string;
+  timezone: string | null;
+  participationType: string;
+  ticketPrice?: {
+    paymentType: string;
+    amount: number;
+  };
 }) {
-  const eventChannelPublisherBot = await getEventsChannelBotInstance();
-  return eventChannelPublisherBot.api.sendPhoto(
-    Number(configProtected.events_channel),
-    props.image, // image url
-    {
-      caption: `<b>${props.title}</b>
+  try {
+    const eventChannelPublisherBot = await getEventsChannelBotInstance();
 
-${props.subtitle}
+    return await eventChannelPublisherBot.api.sendPhoto(
+      Number(configProtected.events_channel),
+      props.image, // image url
+      {
+        caption: `<b>${props.title}</b>
 
-<a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
+<i>${props.subtitle}</i>
 
-<b>Starts at: ${new Date(props.s_date * 1000).toUTCString().slice(5, 11).split(" ").reverse().join(" ")} - ${new Date(props.s_date * 1000).toUTCString().slice(17, 22)}</b>
-<b>Ends at: ${new Date(props.e_date * 1000).toUTCString().slice(5, 11).split(" ").reverse().join(" ")} - ${new Date(props.e_date * 1000).toUTCString().slice(17, 22)}</b>
+📍 <i>${props.participationType.split("_").join(" ").charAt(0).toUpperCase() + props.participationType.split("_").join(" ").slice(1)} ${props.ticketPrice ? "Paid" : "Free"}</i>
+${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : props.ticketPrice.paymentType === "star" ? "⭐" : "💲"} <b>Ticket Price:</b> ${props.ticketPrice.amount} ${props.ticketPrice.amount}\n` : ""}
+👉 <a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
 
-@ontonlive`,
-      parse_mode: "HTML",
-    }
-  );
+⏰ <b>Starts at:</b> ${new Date(props.s_date * 1000).toLocaleString("en-US", {
+          timeZone: props.timezone || "UTC",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZoneName: "short",
+          hour12: false,
+        })}
+
+⏰ <b>Ends at:</b> ${new Date(props.e_date * 1000).toLocaleString("en-US", {
+          timeZone: props.timezone || "UTC",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZoneName: "short",
+          hour12: false,
+        })}
+
+🔵 <b>ONTON <a href="https://t.me/+eErXwpP8fDw3ODY0">News</a> | <a href="https://t.me/ontonsupport">Community</a> | <a href="https://t.me/theontonbot">ONTON bot</a> | <a href="https://x.com/ontonbot">X</a> | <a href="https://t.me/ontonsupport/122863">Tutorials</a></b> | <a href="https://t.me/onton_events">Events</a>`,
+        parse_mode: "HTML",
+      }
+    );
+  } catch (err) {
+    logger.error("FAILED_TO_PUBLISH_ON_EVENTS_CHANNEL:", err);
+  }
 }
