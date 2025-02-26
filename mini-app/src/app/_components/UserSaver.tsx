@@ -49,7 +49,7 @@ const UserSaver: FC<{
     );
   }
 
-  if (syncUser.data.has_blocked_the_bot) {
+  if (syncUser.data?.has_blocked_the_bot) {
     return (
       <Page>
         <Card>
