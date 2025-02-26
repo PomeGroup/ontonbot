@@ -509,7 +509,7 @@ services:
     ports:
       - "${SWAGGER_UI_PORT}:8080"
     volumes:
-      - ./mini-app/src/app/api/externalSeller/openapi.yml:/swagger.yaml
+      - ./swagger/ExternalSeller.yml:/swagger.yaml
     depends_on:
       - caddy
     networks:
