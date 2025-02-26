@@ -15,3 +15,4 @@
 127.0.0.1 monitoring.toncloud.observer
 127.0.0.1 rabbitmq.toncloud.observer
 127.0.0.1 socket.toncloud.observer
+127.0.0.1 swagger-ui.toncloud.observer
