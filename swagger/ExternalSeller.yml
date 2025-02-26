@@ -3,11 +3,16 @@ info:
   title: External Seller API
   version: 1.0.0
   description: |
-    API used by external sellers to verify a payment and create or update an order.
-    It requires an API key (or `Authorization` header) that matches a valid user_custom_flags record.
+    API used by external sellers create an order.
+    It requires an API key (or `Authorization` header) to authenticate the request.
 
 servers:
-  - url: https://staging.toncloud.observer
+  - url: https://staging-app.toncloud.observer
+    description: Staging server
+  - url: https://dev-app.toncloud.observer
+    description: Development server
+  - url: https://app.onton.live
+    description: Production server
 
 components:
   securitySchemes:
@@ -17,7 +22,7 @@ components:
       name: Authorization
 
 paths:
-  /api/external-seller/verifyPayment:
+  /api/externalSeller/verifiedAsPaid:
     options:
       summary: "Handle preflight requests for CORS"
       description: "Preflight endpoint returning 204."
@@ -91,7 +96,7 @@ paths:
                     example: true
                   sbtClaimLink:
                     type: string
-                    example: "https://onton.app/claim/abcdef123"
+                    example: "https://t.me/ton_society_bot/start?startapp=csbt-test-for-ton-fest&mode=compact"
         "400":
           description: Bad Request (validation failure or other client error).
           content:
