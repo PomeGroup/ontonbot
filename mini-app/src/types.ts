@@ -152,7 +152,7 @@ export const PaidEventSchema = z
   .object({
     has_payment: z.boolean({ required_error: "payment status is required" }).optional().default(false),
     payment_recipient_address: z.string({ required_error: "recipient address is required" }).optional().default(""),
-    payment_type: z.enum(["USDT", "TON"], { required_error: "payment type is required" }).optional(),
+    payment_type: z.enum(["USDT", "TON", "STAR"], { required_error: "payment type is required" }).optional(),
     payment_amount: z.number({ required_error: "payment amount is required" }).optional(),
     has_nft: z.boolean({ required_error: "NFT status is required" }).optional().default(false),
     nft_title: z.string({ required_error: "NFT title is required" }).optional().default(""),
