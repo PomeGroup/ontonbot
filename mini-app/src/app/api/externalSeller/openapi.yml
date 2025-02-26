@@ -14,7 +14,7 @@ components:
     ApiKeyAuth:
       type: apiKey
       in: header
-      name: api_key
+      name: Authorization
 
 paths:
   /api/external-seller/verifyPayment:
@@ -28,13 +28,10 @@ paths:
     post:
       summary: "Verify a user's payment and create a ticket"
       description: >
-        This endpoint:
-
-        1. Authenticates the request using the `api_key` or `Authorization` header.  
-        2. Validates Telegram user info, event ownership, and payment details.  
-        3. Creates or updates an order (`orders` table).  
-        4. Updates or inserts an event registrant (`eventRegistrants` table).  
-        5. Optionally issues a CSBT ticket (via `CsbtTicketForApi` method).
+        This endpoint:<br>
+        1. Authenticates the request using the `api_key` or `Authorization` header.<br> 
+        2. Validates Telegram user info, event ownership, and payment details.<br> 
+        3. issues a CSBT ticket . <br> 
 
       tags:
         - External Seller
@@ -112,7 +109,7 @@ paths:
                     type: array
                     items:
                       type: string
-                    example: [ "bad_request" ]
+                    example: "bad_request"
         "401":
           description: Unauthorized (No or invalid API key, or user mismatch).
           content:
@@ -140,7 +137,7 @@ paths:
                     type: array
                     items:
                       type: string
-                    example: [ "event_not_exist" ]
+                    example: "event_not_exist"
         "410":
           description: Resource gone or no longer available (e.g., event not active, sold out).
           content:
@@ -158,7 +155,7 @@ paths:
                     type: array
                     items:
                       type: string
-                    example: [ "sold_out" ]
+                    example: "sold_out"
         "500":
           description: Server error (unexpected issue in DB or external call).
           content:
