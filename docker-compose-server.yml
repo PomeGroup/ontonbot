@@ -707,7 +707,7 @@ services:
       <<: *common-env
       SWAGGER_JSON: "/swagger.yaml"
     volumes:
-      - ./mini-app/src/app/api/externalSeller/openapi.yml:/swagger.yaml
+      - ./swagger/ExternalSeller.yml:/swagger.yaml
     networks:
       - onton-network
     deploy:
