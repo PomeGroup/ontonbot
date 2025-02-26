@@ -6,6 +6,7 @@ import { trpc } from "../_trpc/client";
 import { useUserStore } from "@/context/store/user.store";
 import useWebApp from "@/hooks/useWebApp";
 import { Card, Page } from "konsta/react";
+import MainButton from "./atoms/buttons/web-app/MainButton";
 
 const UserSaver: FC<{
   children: ReactNode;
@@ -32,13 +33,18 @@ const UserSaver: FC<{
     );
   }
 
-  if (syncUser.isError) {
+  if (true || syncUser.isError) {
     return (
       <Page>
         <Card>
           This is a simple card with plain text, but cards can also contain their own header, footer, list view, image, or
           any other element.
         </Card>
+        <MainButton text="wowo" />
+        <MainButton
+          buttonType="SecondaryButton"
+          text="secondary"
+        />
       </Page>
     );
   }
