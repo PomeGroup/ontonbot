@@ -1,12 +1,13 @@
 "use client";
 
+import { ErrorState } from "@/app/_components/ErrorState";
 import { EventDataPage } from "@/app/_components/Event/EventPage";
 
 type Props = { params: { hash: string } };
 
 export default function EventPage({ params }: Props) {
   if (params.hash.length !== 36) {
-    return <div>Incorrect event link. Startapp param should be 36 characters long</div>;
+    return <ErrorState errorCode="event_not_found" />;
   }
 
   return <EventDataPage eventHash={params.hash} />;
