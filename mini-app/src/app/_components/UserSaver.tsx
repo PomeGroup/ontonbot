@@ -5,8 +5,7 @@ import EventSkeleton from "./molecules/skeletons/EventSkeleton";
 import { trpc } from "../_trpc/client";
 import { useUserStore } from "@/context/store/user.store";
 import useWebApp from "@/hooks/useWebApp";
-import { Card, Page } from "konsta/react";
-import MainButton from "./atoms/buttons/web-app/MainButton";
+import { ErrorState } from "./ErrorState";
 
 const UserSaver: FC<{
   children: ReactNode;
@@ -33,31 +32,20 @@ const UserSaver: FC<{
     );
   }
 
-  if (true || syncUser.isError) {
-    return (
-      <Page>
-        <Card>
-          This is a simple card with plain text, but cards can also contain their own header, footer, list view, image, or
-          any other element.
-        </Card>
-        <MainButton text="wowo" />
-        <MainButton
-          buttonType="SecondaryButton"
-          text="secondary"
-        />
-      </Page>
-    );
+  if (syncUser.isError) {
+    if (syncUser.error.data?.code === "FORBIDDEN") {
+      return <ErrorState errorCode="something_went_wrong" />;
+    } else {
+      return <ErrorState errorCode="something_went_wrong" />;
+    }
   }
 
   if (syncUser.data?.has_blocked_the_bot) {
-    return (
-      <Page>
-        <Card>
-          This is a simple card with plain text, but cards can also contain their own header, footer, list view, image, or
-          any other element.
-        </Card>
-      </Page>
-    );
+    return <ErrorState errorCode="blocked_bot" />;
+  }
+
+  if (syncUser.data?.role === "ban") {
+    return <ErrorState errorCode="banned" />;
   }
 
   return <>{children}</>;

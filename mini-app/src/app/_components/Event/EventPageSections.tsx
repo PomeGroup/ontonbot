@@ -31,6 +31,7 @@ import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { sleep } from "@/utils";
 import { useConfig } from "@/context/ConfigContext";
+import { TG_SUPPORT_GROUP } from "@/constants";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -450,7 +451,7 @@ const MainButtonHandler = React.memo(() => {
               title="ONTON Community Chat"
               status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.gp ? "done" : "not_done"}
               onClick={() => {
-                webApp?.openTelegramLink("https://t.me/ontonsupport");
+                webApp?.openTelegramLink(TG_SUPPORT_GROUP);
               }}
             />
             <Task
