@@ -81,6 +81,9 @@ export const ErrorState: FC<ErrorStateProps> = ({ errorCode }) => {
                   width={22}
                   height={22}
                   className="inline align-baseline"
+                  style={{
+                    marginBottom: -1,
+                  }}
                 />
                 {part}
               </React.Fragment>
