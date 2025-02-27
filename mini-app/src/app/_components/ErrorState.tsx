@@ -63,7 +63,7 @@ export const ErrorState: FC<ErrorStateProps> = ({ errorCode }) => {
     config;
 
   return (
-    <Page className="p-4 flex flex-col gap-4">
+    <Page className="p-4 flex flex-col gap-9">
       <CustomCard
         className="flex-1 flex flex-col items-center justify-center text-center"
         defaultPadding
