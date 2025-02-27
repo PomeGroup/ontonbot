@@ -31,28 +31,28 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
           defaultTheme="light"
           attribute="class"
         >
-          <WebAppProvider>
-            <TRPCAPIProvider>
-              <NavigationHistoryProvider>
-                <ConfigProvider>
-                  {/*<TwaAnalyticsProvider*/}
-                  {/*  projectId={TELEMETREE_PROJECT_ID}*/}
-                  {/*  apiKey={TELEMETREE_API_KEY}*/}
-                  {/*  appName={TELEMETREE_APP_NAME}*/}
-                  {/*>*/}
-                  <KonstaAppProvider>
+          <KonstaAppProvider>
+            <WebAppProvider>
+              <TRPCAPIProvider>
+                <NavigationHistoryProvider>
+                  <ConfigProvider>
+                    {/*<TwaAnalyticsProvider*/}
+                    {/*  projectId={TELEMETREE_PROJECT_ID}*/}
+                    {/*  apiKey={TELEMETREE_API_KEY}*/}
+                    {/*  appName={TELEMETREE_APP_NAME}*/}
+                    {/*>*/}
                     <ThemeSetter>
                       <NotificationProvider>
                         <UserSaver>{children}</UserSaver>
                       </NotificationProvider>
                     </ThemeSetter>
                     <Toaster />
-                  </KonstaAppProvider>
-                  {/*</TwaAnalyticsProvider>*/}
-                </ConfigProvider>
-              </NavigationHistoryProvider>
-            </TRPCAPIProvider>
-          </WebAppProvider>
+                    {/*</TwaAnalyticsProvider>*/}
+                  </ConfigProvider>
+                </NavigationHistoryProvider>
+              </TRPCAPIProvider>
+            </WebAppProvider>
+          </KonstaAppProvider>
         </ThemeProvider>
       </TonConnectUIProvider>
     </Sentry.ErrorBoundary>
