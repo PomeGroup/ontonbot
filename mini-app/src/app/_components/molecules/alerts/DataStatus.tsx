@@ -30,7 +30,15 @@ const ANIMATION_SIZES = {
 
 export default function DataStatus(props: DataStatusProps) {
   return (
-    <div className={cn("flex flex-col items-center mx-auto", props.className)}>
+    <div
+      style={{
+        // @ts-expect-error
+        maxWidth: ANIMATION_SIZES[props.size] || ANIMATION_SIZES.sm,
+        // @ts-expect-error
+        maxHeight: ANIMATION_SIZES[props.size] || ANIMATION_SIZES.sm,
+      }}
+      className={cn("flex flex-col items-center mx-auto", props.className)}
+    >
       <DotLottieReact
         loop
         autoplay
@@ -39,12 +47,6 @@ export default function DataStatus(props: DataStatusProps) {
         height={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.sm}
         // @ts-expect-error
         width={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.sm}
-        style={{
-          // @ts-expect-error
-          maxWidth: ANIMATION_SIZES[props.size] || ANIMATION_SIZES.sm,
-          // @ts-expect-error
-          maxHeight: ANIMATION_SIZES[props.size] || ANIMATION_SIZES.sm,
-        }}
         className={"mx-auto mb-3"}
       />
       <h4 className="block text-[20px] font-semibold mb-1">{props.title}</h4>
