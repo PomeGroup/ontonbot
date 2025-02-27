@@ -29,7 +29,7 @@ export const ErrorState: FC<ErrorStateProps> = ({ errorCode }) => {
       secondaryHandler: () => webApp?.close(), // clsoe the miniapp
     },
     banned: {
-      errorMessage: "You have been banned!",
+      errorMessage: "You have been banned from NTON",
       desc: "Your access to ONTON has been restricted due to a violation of our policies.",
       buttonTextPrimary: "Contact Support",
       buttonTextSecondary: "Close",
