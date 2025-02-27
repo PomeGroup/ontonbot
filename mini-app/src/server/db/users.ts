@@ -603,7 +603,6 @@ export const fetchUsersByOffset = async (offset: number, limit: number) => {
       user_id: users.user_id,
     })
     .from(users)
-    .where(sql`${users.user_id} = '548648769'`)
     .orderBy(users.user_id)
     .offset(offset)
     .limit(limit);
