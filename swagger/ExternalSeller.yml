@@ -172,3 +172,138 @@ paths:
                     type: string
                     example: "Something went wrong"
 
+
+  /api/externalSeller/refund:
+    options:
+      summary: Handle preflight requests (CORS)
+      responses:
+        "204":
+          description: No Content
+
+    post:
+      summary: "Refund a user's order"
+      description: |
+        1. Authenticates the request using the `api_key` or `Authorization` header.  
+        2. Validates that the event belongs to the authenticated owner.  
+        3. Searches for the user's orders for the specified event.  
+        4. If a "completed" order is found, it sets that order state to "cancelled" and the eventRegistrant status to "rejected".  
+        5. If no "completed" order exists but a "cancelled" order does, it returns "order_already_cancelled".  
+        6. Otherwise returns an error indicating the order cannot be refunded or wasn't found.
+
+      tags:
+        - External Seller
+      security:
+        - ApiKeyAuth: [ ]   # Adjust to your chosen security scheme
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - telegramUserId
+                - eventUuid
+              properties:
+                telegramUserId:
+                  type: integer
+                  description: The Telegram user ID whose order you want to refund
+                  example: 123456789
+                eventUuid:
+                  type: string
+                  format: uuid
+                  description: The UUID of the event
+                  example: "c5f9bd59-a46b-4dce-91cb-3cd146b255a5"
+      responses:
+        "200":
+          description: Refund was successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Order refunded successfully"
+                  status:
+                    type: string
+                    example: "order_refunded"
+        "204":
+          description: Preflight response for OPTIONS requests
+        "400":
+          description: Bad request or internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal server error"
+                  status:
+                    type: string
+                    example: "bad_request"
+        "401":
+          description: Unauthorized (invalid API key or event mismatch)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized Access to event"
+        "404":
+          description: Event or order not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "No order found for this user & event"
+                  status:
+                    type: string
+                    example: "order_not_found"
+        "409":
+          description: Order was previously cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Order was cancelled before"
+                  status:
+                    type: string
+                    example: "order_already_cancelled"
+        "410":
+          description: Event not published or tickets are sold out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Event not published yet"
+                  status:
+                    type: string
+                    example: "event_not_active"
+

@@ -2,6 +2,8 @@ import "@/lib/gracefullyShutdown";
 import { getAuthenticatedUserApi } from "@/server/auth";
 import externalSellerApi from "@/lib/externalSeller.api";
 import ordersDB from "@/server/db/orders.db";
+import { isStructuredErrorShape } from "@/lib/openAPIErrorHandler";
+import { is_local_env } from "@/server/utils/evnutils";
 
 export async function POST(request: Request) {
   if (request.method === "OPTIONS") {
@@ -17,16 +19,9 @@ export async function POST(request: Request) {
     // 2) Parse & validate
     const { telegramUserId, telegramUsername, eventUuid, paymentType, paymentAmount } =
       await externalSellerApi.parseAndValidateRequest(request);
-    if (eventUuid !== "c5f9bd59-a46b-4dce-91cb-3cd146b255a5") {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Your API KEY has Not permission to use this endpoint",
-          status: "access_blocked",
-        }),
-        { status: 500 }
-      );
-    }
+
+    await externalSellerApi.externalSellerApiAccessLimit(eventUuid);
+    
     // 3) Fetch & validate event (ownership, etc.)
     const eventData = await externalSellerApi.fetchAndValidateEvent(eventUuid, eventOwner);
 
@@ -76,7 +71,7 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (err) {
-    if (externalSellerApi.isStructuredErrorShape(err)) {
+    if (isStructuredErrorShape(err)) {
       return new Response(JSON.stringify(err.errorBody), { status: err.status });
     }
 

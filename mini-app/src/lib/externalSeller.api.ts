@@ -9,6 +9,8 @@ import { OrderTypeValues } from "@/db/schema/orders";
 import rewardService from "@/server/routers/services/rewardsService";
 import { PaymentTypes } from "@/db/enum";
 import rewardDB from "@/server/db/rewards.db";
+import { and, eq } from "drizzle-orm";
+import { is_local_env } from "@/server/utils/evnutils";
 
 /* -------------------------------------------------------------------------- */
 /*                           Zod Schema Definition                            */
@@ -21,10 +23,26 @@ const verifiedAsPaidSchema = z.object({
   paymentAmount: z.number().positive(),
 });
 
+const refundSchema = z.object({
+  telegramUserId: z.number().positive(),
+  eventUuid: z.string().uuid(),
+});
 /* -------------------------------------------------------------------------- */
 /*                          Helper / Utility Functions                        */
 
 /* -------------------------------------------------------------------------- */
+const externalSellerApiAccessLimit = async (eventUuid: string) => {
+  if (eventUuid !== "c5f9bd59-a46b-4dce-91cb-3cd146b255a5" && !is_local_env()) {
+    throw {
+      status: 500,
+      errorBody: {
+        success: false,
+        message: "Your API KEY has Not permission to use this endpoint",
+        status: "access_blocked",
+      },
+    };
+  }
+};
 
 /**
  * Validate & parse the request body using Zod schema
@@ -307,22 +325,96 @@ const getSbtClaimLink = async (eventUuid: string, telegramUserId: number, orderT
 
   return sbtClaimLink;
 };
+/* -------------------------------------------------------------------------- */
+/*                               Refund API                                */
+/* -------------------------------------------------------------------------- */
+/**
+ * Parse & validate the request body.
+ * Throws an error response if invalid.
+ */
+const parseRequestRefundBody = async (request: Request) => {
+  const rawBody = await request.json();
+  const parseResult = refundSchema.safeParse(rawBody);
+  if (!parseResult.success) {
+    throw {
+      status: 400,
+      errorBody: {
+        success: false,
+        status: "bad_request",
+        message: "Invalid request body",
+        errors: parseResult.error.flatten(),
+      },
+    };
+  }
+  return parseResult.data; // => { telegramUserId, eventUuid }
+};
+/*
+ * Locate and refund the latest completed order, or decide what to do if none is found.
+ */
+const processRefundLogic = async (
+  userOrders: any[], // or typed array if you have a model type
+  eventUuid: string,
+  telegramUserId: number
+) => {
+  if (userOrders.length === 0) {
+    return {
+      success: false,
+      message: "No order found for this user & event",
+      status: "order_not_found",
+      httpStatus: 404,
+    };
+  }
 
-export interface StructuredErrorShape {
-  status: number;
-  errorBody: {
-    success: boolean;
-    message?: string;
-    status?: string;
-    [key: string]: any;
+  // Find the first (latest) completed order
+  const latestCompleted = userOrders.find((o) => o.state === "completed");
+  if (latestCompleted) {
+    // We have a completed order to refund
+    await db.transaction(async (trx) => {
+      // 1) Cancel the order
+      await trx
+        .update(orders)
+        .set({ state: "cancelled", updatedBy: "system" })
+        .where(eq(orders.uuid, latestCompleted.uuid))
+        .execute();
+
+      // 2) Update the event registrant to "rejected"
+      await trx
+        .update(eventRegistrants)
+        .set({ status: "rejected" })
+        .where(and(eq(eventRegistrants.event_uuid, eventUuid), eq(eventRegistrants.user_id, telegramUserId)))
+        .execute();
+    });
+
+    return {
+      success: true,
+      message: "Order refunded successfully",
+      status: "order_refunded",
+      httpStatus: 200,
+    };
+  }
+
+  // No completed orders - check if there's a cancelled order
+  const cancelledOrder = userOrders.find((o) => o.state === "cancelled");
+  if (cancelledOrder) {
+    return {
+      success: false,
+      message: "Order was cancelled before",
+      status: "order_already_cancelled",
+      httpStatus: 409,
+    };
+  }
+
+  // Possibly "pending", "failed", etc.
+  return {
+    success: false,
+    message: "No completed order found to refund",
+    status: "order_not_refundable",
+    httpStatus: 400,
   };
-}
-
-// A simple type guard function
-export const isStructuredErrorShape = (err: unknown): err is StructuredErrorShape =>
-  typeof err === "object" && err !== null && "status" in err && "errorBody" in err;
+};
 
 const externalSellerApi = {
+  externalSellerApiAccessLimit,
   parseAndValidateRequest,
   fetchAndValidateEvent,
   fetchPaymentInfoAndCheckSoldOut,
@@ -330,6 +422,8 @@ const externalSellerApi = {
   handleExistingOrder,
   createOrderAndRegistrant,
   getSbtClaimLink,
-  isStructuredErrorShape,
+  // Refund API
+  parseRequestRefundBody,
+  processRefundLogic,
 };
 export default externalSellerApi;
