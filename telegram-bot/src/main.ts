@@ -4,24 +4,21 @@ import { Bot, session } from "grammy";
 import { logger } from "./utils/logger";
 import bodyParser from "body-parser";
 import fileUpload from "express-fileupload";
-import {
-  handleFileSend,
-  handleSendQRCode,
-  handleShareEvent,
-  sendMessage,
-  handlePhotoMessage,
-  handleShareOrganizer,
-} from "./controllers";
-import {
-  bannerHandler,
-  cmdHandler,
-  orgHandler, sbtdistHandler,
-  startHandler,
-  updateAdminOrganizerProfilesHandler,
-} from "./handlers";
+import { handleCheckBlockStatus } from "./controllers/handleCheckBlockStatus";
+import { handleFileSend } from "./controllers/handleFileSend";
+import { handleShareOrganizer } from "./controllers/handleShareOrganizer";
+import { handlePhotoMessage } from "./controllers/handlePhotoMessage";
+import { handleSendQRCode } from "./controllers/handleSendQRCode";
+import { handleShareEvent } from "./controllers/handleShareEvent";
+import { sendMessage } from "./controllers/sendMessage";
+import { bannerHandler } from "./handlers/bannerHandler";
+import { cmdHandler } from "./handlers/cmdHandler";
+import { orgHandler } from "./handlers/orgHandler";
+import { sbtdistHandler } from "./handlers/sbtdistHandler";
+import { startHandler } from "./handlers/startHandler";
+import { updateAdminOrganizerProfilesHandler } from "./handlers/updateAdminOrganizerProfilesHandler";
 import { mainComposer } from "./composers";
 import { connectRedis } from "./lib/redisTools";
-// Import the rate limiter
 import { checkRateLimit } from "./utils/checkRateLimit";
 import { RATE_LIMIT_OPTIONS } from "./constants";
 import { MyContext } from "./types/MyContext";
@@ -106,7 +103,7 @@ import { MyContext } from "./types/MyContext";
     app.post("/send-message", sendMessage);
     app.post("/send-photo", handlePhotoMessage);
     app.post("/share-organizer", handleShareOrganizer);
-
+    app.post("/check-block-status", handleCheckBlockStatus);
     // 7) Start listening, store the server instance
     const server = app.listen(port, () =>
       logger.log(`Telegram Bot API service on port ${port}`),

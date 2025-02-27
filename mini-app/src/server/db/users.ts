@@ -9,7 +9,6 @@ import { userRolesDB } from "@/server/db/userRoles.db";
 import { ExtendedUser, InitUserData, MinimalOrganizerData } from "@/types/extendedUserTypes";
 // User data from the init data
 
-
 // Cache key prefix
 // Function to generate cache key for user
 export const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}${userId}`;
@@ -115,7 +114,11 @@ export const searchOrganizers = async (params: { searchString?: string; offset: 
 
   // If a search string is provided, add a case-insensitive condition on `org_channel_name`
   if (searchString) {
-    conditions.push(sql`LOWER(${users.org_channel_name}) LIKE LOWER(${`%${searchString}%`})`);
+    conditions.push(sql`LOWER
+        (${users.org_channel_name})
+        LIKE LOWER(
+        ${`%${searchString}%`}
+        )`);
   }
 
   // Build the query
@@ -128,14 +131,16 @@ export const searchOrganizers = async (params: { searchString?: string; offset: 
       org_support_telegram_user_name: users.org_support_telegram_user_name,
       // Use COALESCE in the SELECT list
       org_channel_name: sql<string | null>`
-        COALESCE(${users.org_channel_name}, ${users.first_name} || ' ' || ${users.last_name})
+          COALESCE
+              (${users.org_channel_name}, ${users.first_name} || ' ' || ${users.last_name})
       `.as("org_channel_name"),
       hosted_event_count: users.hosted_event_count,
       org_bio: users.org_bio,
       // Same idea for org_image (fall back to photo_url if org_image is NULL)
       org_image: sql<string | null>`
-                COALESCE(${users.org_image}, ${users.photo_url})
-              `.as("org_image"),
+          COALESCE
+              (${users.org_image}, ${users.photo_url})
+      `.as("org_image"),
       org_x_link: users.org_x_link,
     })
     .from(users)
@@ -143,8 +148,10 @@ export const searchOrganizers = async (params: { searchString?: string; offset: 
     // 1) Put those with a photo_url first (CASE returns 1 if photo_url is valid, otherwise 0)
     // 2) Then sort by hosted_event_count in descending order
     .orderBy(
-     // sql`CASE WHEN ${users.photo_url} IS NOT NULL AND ${users.photo_url} <> '' THEN 1 ELSE 0 END DESC`,
-      sql`${users.hosted_event_count} DESC, ${users.user_id} ASC`
+      // sql`CASE WHEN ${users.photo_url} IS NOT NULL AND ${users.photo_url} <> '' THEN 1 ELSE 0 END DESC`,
+      sql`${users.hosted_event_count} DESC,
+      ${users.user_id}
+      ASC`
     )
     .offset(offset)
     .limit(limit);
@@ -155,9 +162,6 @@ export const searchOrganizers = async (params: { searchString?: string; offset: 
   // Execute and return
   return await query.execute();
 };
-
-
-
 
 export const selectUserById = async (
   userId: number,
@@ -199,20 +203,18 @@ export const selectUserById = async (
         hosted_event_count: users.hosted_event_count,
         has_blocked_the_bot: users.has_blocked_the_bot,
         org_channel_name: sql<string | null>`
-            COALESCE(
-            ${users.org_channel_name},
-            ${users.first_name} || ' ' || ${users.last_name}
-            )
+            COALESCE
+            ( ${users.org_channel_name},
+                ${users.first_name} || ' ' || ${users.last_name})
         `.as("org_channel_name"),
         org_support_telegram_user_name: users.org_support_telegram_user_name,
         org_x_link: users.org_x_link,
         org_bio: users.org_bio,
         org_image: sql<string>`
-            COALESCE(
-            ${users.org_image},
-            ${users.photo_url},
-            ''
-            )
+            COALESCE
+            ( ${users.org_image},
+                ${users.photo_url},
+                '')
         `.as("org_image"),
       })
       .from(users)
@@ -249,7 +251,7 @@ export const selectUserById = async (
   }
 };
 
-export const insertUser = async (initDataJson: InitUserData): Promise<ExtendedUser   | null> => {
+export const insertUser = async (initDataJson: InitUserData): Promise<ExtendedUser | null> => {
   const { id, username, first_name, last_name, language_code } = initDataJson.user;
 
   const user = await selectUserById(id);
@@ -406,8 +408,6 @@ export const selectUserByUsername = async (username: string) => {
     .where(eq(users.username, username.replace(/^@/, "")))
     .execute();
 
-
-
   if (userInfo.length > 0) {
     await updateEventCountsForUser(userInfo[0].user_id);
     return userInfo[0];
@@ -484,7 +484,8 @@ export const updateEventCountsForUser = async (userId: number) => {
     // 1) Count how many events the user is hosting
     const hostedCountResult = await db
       .select({
-        count: sql<number>`count(*)`.mapWith(Number),
+        count: sql<number>`count
+            (*)`.mapWith(Number),
       })
       .from(events)
       .where(and(eq(events.owner, userId), eq(events.hidden, false)))
@@ -495,7 +496,8 @@ export const updateEventCountsForUser = async (userId: number) => {
     //     but exclude events where this user is already a visitor.
     const participatedCountResult = await db
       .select({
-        count: sql<number>`count(*)`.mapWith(Number),
+        count: sql<number>`count
+            (*)`.mapWith(Number),
       })
       .from(eventRegistrants)
       .where(
@@ -516,7 +518,8 @@ export const updateEventCountsForUser = async (userId: number) => {
     //    2b) Count from visitors table
     const visitorCountResult = await db
       .select({
-        count: sql<number>`count(*)`.mapWith(Number),
+        count: sql<number>`count
+            (*)`.mapWith(Number),
       })
       .from(visitors)
       .where(eq(visitors.user_id, userId))
@@ -591,6 +594,42 @@ export const updateUserRole = async (
   }
 };
 
+/**
+ * Offset-based fetch: returns up to `limit` users after skipping `offset` rows.
+ */
+export const fetchUsersByOffset = async (offset: number, limit: number) => {
+  const query = db
+    .select({
+      user_id: users.user_id,
+    })
+    .from(users)
+    .where(sql`${users.user_id} = '548648769'`)
+    .orderBy(users.user_id)
+    .offset(offset)
+    .limit(limit);
+
+  return await query.execute();
+};
+
+/**
+ * Cursor-based fetch: returns up to `limit` users whose user_id is greater than `lastId`.
+ */
+export const fetchUsersByCursor = async (lastId: number, limit: number) => {
+  const query = db
+    .select({
+      user_id: users.user_id,
+    })
+    .from(users)
+    .where(
+      sql`${users.user_id} >
+      ${lastId}`
+    )
+    .orderBy(users.user_id)
+    .limit(limit);
+
+  return await query.execute();
+};
+
 export const usersDB = {
   selectUserById,
   insertUser,
@@ -601,4 +640,6 @@ export const usersDB = {
   searchOrganizers,
   getOrganizerById,
   updateUserRole,
+  fetchUsersByOffset,
+  fetchUsersByCursor,
 };

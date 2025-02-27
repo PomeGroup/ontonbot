@@ -36,6 +36,8 @@ async function MainCronJob() {
   new CronJob("*/11 * * * * *", cronJobRunner(cronJobs.TsCsbtTicketOrder), null, true);
   new CronJob("*/21 * * * * *", cronJobs.OrganizerPromoteProcessing, null, true);
   new CronJob("0 */30 * * * *", cronJobs.syncSbtCollectionsForEvents, null, true);
+  // run every Tuesday at 1:00 AM
+  new CronJob("0 1 * * 2", cronJobs.CheckAllUsersBlock, null, true);
 }
 
 MainCronJob().then(() => logger.log("Cron Jobs Started"));
