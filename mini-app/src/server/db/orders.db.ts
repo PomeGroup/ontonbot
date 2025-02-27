@@ -107,6 +107,14 @@ const findExistingCompletedOrder = async (eventUuid: string, telegramUserId: num
       eq(orders.state, "completed")
     ),
   });
+
+const findOrderByEventUser = async (eventUuid: string, telegramUserId: number) => {
+  return db.query.orders.findMany({
+    where: and(eq(orders.event_uuid, eventUuid), eq(orders.user_id, telegramUserId)),
+    orderBy: (fields, { desc }) => [desc(fields.created_at)], // or desc(fields.id)
+  });
+};
+
 const ordersDB = {
   getEventOrders,
   updateOrderState,
@@ -115,6 +123,7 @@ const ordersDB = {
   getPromoteToOrganizerOrder,
   checkIfSoldOut,
   findExistingCompletedOrder,
+  findOrderByEventUser,
 };
 
 export default ordersDB;
