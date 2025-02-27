@@ -17,7 +17,16 @@ export async function POST(request: Request) {
     // 2) Parse & validate
     const { telegramUserId, telegramUsername, eventUuid, paymentType, paymentAmount } =
       await externalSellerApi.parseAndValidateRequest(request);
-
+    if (eventUuid !== "c5f9bd59-a46b-4dce-91cb-3cd146b255a5") {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Your API KEY has Not permission to use this endpoint",
+          status: "access_blocked",
+        }),
+        { status: 500 }
+      );
+    }
     // 3) Fetch & validate event (ownership, etc.)
     const eventData = await externalSellerApi.fetchAndValidateEvent(eventUuid, eventOwner);
 

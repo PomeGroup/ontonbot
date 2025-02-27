@@ -501,7 +501,8 @@ services:
   swagger-ui:
     image: swaggerapi/swagger-ui
     environment:
-      SWAGGER_JSON: /swagger.yaml
+      SWAGGER_JSON: ""
+      SWAGGER_UI_CSS: /usr/share/nginx/html/custom.css
     profiles:
       - swagger
       - full
@@ -509,7 +510,11 @@ services:
     ports:
       - "${SWAGGER_UI_PORT}:8080"
     volumes:
-      - ./swagger/ExternalSeller.yml:/swagger.yaml
+      - ./swagger/ExternalSeller.yml:/usr/share/nginx/html/ExternalSeller.yaml
+      - ./swagger/GameRewards.yml:/usr/share/nginx/html/GameRewards.yaml
+      - ./swagger/swagger-initializer.js:/usr/share/nginx/html/swagger-initializer.js
+      - ./swagger/custom.css:/usr/share/nginx/html/custom.css
+      - ./swagger/home.html:/usr/share/nginx/html/home.html
     depends_on:
       - caddy
     networks:
