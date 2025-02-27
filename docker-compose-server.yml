@@ -707,7 +707,11 @@ services:
       <<: *common-env
       SWAGGER_JSON: "/swagger.yaml"
     volumes:
-      - ./swagger/ExternalSeller.yml:/swagger.yaml
+      - ./swagger/ExternalSeller.yml:/usr/share/nginx/html/ExternalSeller.yaml
+      - ./swagger/GameRewards.yml:/usr/share/nginx/html/GameRewards.yaml
+      - ./swagger/swagger-initializer.js:/usr/share/nginx/html/swagger-initializer.js
+      - ./swagger/custom.css:/usr/share/nginx/html/custom.css
+      - ./swagger/home.html:/usr/share/nginx/html/home.html
     networks:
       - onton-network
     deploy:
