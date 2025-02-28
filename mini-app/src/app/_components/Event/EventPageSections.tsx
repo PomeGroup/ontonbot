@@ -24,6 +24,7 @@ import { FaAngleRight } from "react-icons/fa6";
 import { TonConnectButton } from "@tonconnect/ui-react";
 import Divider from "@/components/Divider";
 import CustomCard from "../atoms/cards/CustomCard";
+import PreRegistrationTasks from "./PreRegistrationTasks";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -398,10 +399,12 @@ const MainButtonHandler = React.memo(() => {
   if (userCompletedTasks && hasEnteredPassword) {
     if (isCheckedIn) {
       return (
-        <ClaimRewardButton
-          initData={initData}
-          eventId={eventData.data?.event_uuid ?? ""}
-        />
+        <PreRegistrationTasks>
+          <ClaimRewardButton
+            initData={initData}
+            eventId={eventData.data?.event_uuid ?? ""}
+          />
+        </PreRegistrationTasks>
       );
     } else if (isEventActive && eventData.data?.registrant_uuid) {
       return (
