@@ -363,7 +363,7 @@ export async function sendToEventsTgChannel(props: {
 <i>${props.subtitle}</i>
 
 📍 <i>${props.participationType.split("_").join(" ").charAt(0).toUpperCase() + props.participationType.split("_").join(" ").slice(1)} ${props.ticketPrice ? "Paid" : "Free"}</i>
-${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : props.ticketPrice.paymentType === "star" ? "⭐" : "💲"} <b>Ticket Price:</b> ${props.ticketPrice.amount} ${props.ticketPrice.amount}\n` : ""}
+${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : props.ticketPrice.paymentType === "star" ? "⭐" : "💲"} <b>Ticket Price:</b> ${props.ticketPrice.amount}${props.ticketPrice.paymentType}\n` : ""}
 👉 <a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
 
 ⏰ <b>Starts at:</b> ${new Date(props.s_date * 1000).toLocaleString("en-US", {
