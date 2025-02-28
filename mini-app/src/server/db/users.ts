@@ -598,12 +598,30 @@ export const updateUserRole = async (
  * Offset-based fetch: returns up to `limit` users after skipping `offset` rows.
  */
 export const fetchUsersByOffset = async (offset: number, limit: number) => {
+  // We'll select user_id from "users"
+  // Only rows where updated_at < NOW() - INTERVAL '10 days'
+  // Order results by updated_at ascending
+  // Offset/limit for pagination
   const query = db
     .select({
       user_id: users.user_id,
     })
     .from(users)
-    .orderBy(users.user_id)
+    .where(
+      sql`
+        ${users.updatedAt} IS NULL 
+        OR
+        ${users.updatedAt}
+        <
+        NOW
+        (
+        )
+        -
+        interval
+        '10 days'
+    `
+    )
+    .orderBy(users.updatedAt) // ascending by default
     .offset(offset)
     .limit(limit);
 

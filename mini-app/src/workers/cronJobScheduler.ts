@@ -36,8 +36,19 @@ async function MainCronJob() {
   new CronJob("*/11 * * * * *", cronJobRunner(cronJobs.TsCsbtTicketOrder), null, true);
   new CronJob("*/21 * * * * *", cronJobs.OrganizerPromoteProcessing, null, true);
   new CronJob("0 */30 * * * *", cronJobs.syncSbtCollectionsForEvents, null, true);
-  // run every Tuesday at 1:00 AM
-  new CronJob("0 1 * * 2", cronJobs.CheckAllUsersBlock, null, true);
+  new CronJob(
+    "0 1 * * *", // (cronTime) => at 1:00 AM
+    cronJobs.CheckAllUsersBlock, // (onTick)   => function to run
+    null, // (onComplete) => no special callback after job
+    true, // (start) => start immediately
+    null, // (timeZone) => e.g. "UTC" or your local
+    null, // (context)
+    false, // (runOnInit) => don't run immediately on app start
+    null, // (utcOffset)
+    false, // (unrefTimeout)
+    true // (waitForCompletion) => wait for onTick to finish
+    // No errorHandler passed
+  );
 }
 
 MainCronJob().then(() => logger.log("Cron Jobs Started"));
