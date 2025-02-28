@@ -29,7 +29,7 @@ type EventParams = {
   searchParams: { [key: string]: string | undefined };
 };
 
-export function canUserManageEvent(
+function canUserManageEvent(
   user: { user_id: number; role: string } | null,
   eventData: { data?: { owner?: number | null; accessRoles?: Array<{ user_id: number; role: string }> } }
 ): boolean {
