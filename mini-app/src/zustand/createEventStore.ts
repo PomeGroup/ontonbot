@@ -3,7 +3,8 @@ import { EventDataSchemaAllOptional, PaidEventSchema, PaidEventType } from "@/ty
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import type {} from "@redux-devtools/extension"; // required for devtools typing
+import type {} from "@redux-devtools/extension";
+import { PaymentTypes } from "@/db/enum"; // required for devtools typing
 
 export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
   /*
@@ -19,7 +20,7 @@ export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
   };
 };
 
-type PaymentType = "USDT" | "TON";
+type PaymentType = "USDT" | "TON" | "STAR";
 
 type PaidInfoErrors = {
   has_payment?: string[] | undefined;
@@ -283,7 +284,7 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
             set((state) => {
               state.paid_info_errors = fieldErrors;
             });
-          }  else {
+          } else {
             // Validation successful, proceed to the next step
             set((state) => {
               state.paid_info_errors = {};
@@ -299,7 +300,7 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           });
           setCurrentStep(4);
         }
-      }
+      },
     }))
   )
 );

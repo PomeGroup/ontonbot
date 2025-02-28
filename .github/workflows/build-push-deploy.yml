@@ -15,6 +15,7 @@ on:
       - 'mini-app/**'
       - 'newton/**'
       - 'telegram-bot/**'
+      - 'swagger/**'
       - 'website/**'
       - '.github/workflows/**'
       - 'Trigger-full-build.txt'
@@ -54,6 +55,7 @@ jobs:
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
             ["caddy"]="devops/caddy"
+            ["swagger-ui"]="swagger"
           )
           # If Trigger-full-build.txt has changed, add all services
           if echo "$changed_files" | grep -q "^Trigger-full-build.txt$"; then
@@ -470,7 +472,7 @@ jobs:
           fi
 
           echo "Copying files to server..."
-          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no docker-compose-server.yml .env docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore  devops tonont@$ssh_ip:/home/tonont/$branch_name
+          scp  -P "$ssh_port"  -r -o StrictHostKeyChecking=no  docker-compose-server.yml .env docker-compose-server.volume.dev.yml docker-compose-server.override.dev.yml .dockerignore swagger devops tonont@$ssh_ip:/home/tonont/$branch_name
           
           
           # Remove brackets and convert to space-separated string

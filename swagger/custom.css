@@ -1,0 +1,15 @@
+/* Hide default Swagger logo */
+.topbar-wrapper .link img {
+    display: none !important;
+}
+
+/* Insert your own background/logo in the top bar */
+.topbar-wrapper .link::before {
+    content: "";
+    display: inline-block;
+    background: url('https://onton.live/wp-content/uploads/2025/02/Group-1321315847-2.png') no-repeat center;
+    width: 120px; /* adjust to your logo size */
+    height: 40px;
+    background-size: contain;
+    margin-right: 10px;
+}

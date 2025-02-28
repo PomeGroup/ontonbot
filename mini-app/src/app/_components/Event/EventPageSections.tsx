@@ -18,13 +18,13 @@ import { ListItem, List, Block } from "konsta/react";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
-import { canUserManageEvent } from "@/lib/userRolesUtils";
 import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
 import { Address } from "@ton/core";
 import { FaAngleRight } from "react-icons/fa6";
 import { TonConnectButton } from "@tonconnect/ui-react";
 import Divider from "@/components/Divider";
 import CustomCard from "../atoms/cards/CustomCard";
+import PreRegistrationTasks from "./PreRegistrationTasks";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -388,13 +388,6 @@ const MainButtonHandler = React.memo(() => {
   const { user } = useUserStore();
   const router = useRouter();
 
-  const canManageEvent = canUserManageEvent(user, {
-    data: {
-      owner: eventData?.data?.owner,
-      accessRoles: eventData?.data?.accessRoles,
-    },
-  });
-
   const userCompletedTasks =
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
     user?.wallet_address;
@@ -403,40 +396,47 @@ const MainButtonHandler = React.memo(() => {
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
 
-  return (
-    <>
-      {userCompletedTasks && hasEnteredPassword && isCheckedIn && (
-        <ClaimRewardButton
-          initData={initData}
-          eventId={eventData.data?.event_uuid ?? ""}
-        />
-      )}
-      {userCompletedTasks && hasEnteredPassword && !isCheckedIn && isEventActive && eventData.data?.registrant_uuid && (
+  if (userCompletedTasks && hasEnteredPassword) {
+    if (isCheckedIn) {
+      return (
+        <PreRegistrationTasks>
+          <ClaimRewardButton
+            initData={initData}
+            eventId={eventData.data?.event_uuid ?? ""}
+          />
+        </PreRegistrationTasks>
+      );
+    } else if (isEventActive && eventData.data?.registrant_uuid) {
+      return (
         <MainButton
           text="Check In"
           onClick={() =>
             router.push(`/events/${eventData.data?.event_uuid}/registrant/${eventData.data?.registrant_uuid}/qr`)
           }
         />
-      )}
+      );
+    }
+  }
 
-      {!canManageEvent && !isStarted && isNotEnded && (
-        <MainButton
-          text="Event Not Started Yet"
-          disabled
-          color="secondary"
-        />
-      )}
+  if (!isStarted && isNotEnded) {
+    return (
+      <MainButton
+        text="Event Not Started Yet"
+        disabled
+        color="secondary"
+      />
+    );
+  } else if (!isNotEnded) {
+    return (
+      <MainButton
+        text="Event Has Ended"
+        disabled
+        color="secondary"
+      />
+    );
+  }
 
-      {!canManageEvent && !isNotEnded && (
-        <MainButton
-          text="Event Has Ended"
-          disabled
-          color="secondary"
-        />
-      )}
-    </>
-  );
+  return null;
 });
 MainButtonHandler.displayName = "MainButtonHandler";
 
@@ -464,7 +464,10 @@ const EventHeader = React.memo(() => {
       </CustomCard>
 
       {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <CustomCard title={"Claim Your Reward"}>
+        <CustomCard
+          title={"Claim Your Reward"}
+          defaultPadding
+        >
           <EventPasswordAndWalletInput />
         </CustomCard>
       )}

@@ -1,4 +1,5 @@
 import Typography from "@/components/Typography";
+import { cn } from "@/lib/utils";
 import { Card } from "konsta/react";
 import React, { ReactNode } from "react";
 
@@ -10,9 +11,10 @@ interface CustomCardProps {
    * By default it's false
    */
   defaultPadding?: boolean;
+  className?: string;
 }
 
-const CustomCard: React.FC<CustomCardProps> = ({ title, description, children, defaultPadding = false }) => {
+const CustomCard: React.FC<CustomCardProps> = ({ title, description, children, defaultPadding = false, className }) => {
   return (
     <Card
       header={
@@ -40,6 +42,7 @@ const CustomCard: React.FC<CustomCardProps> = ({ title, description, children, d
       }
       contentWrap={defaultPadding}
       margin="m-0"
+      className={cn(className)}
     >
       {children}
     </Card>

@@ -1,6 +1,6 @@
 import { fetchOntonSetting } from "../db/db";
 import { logger } from "../utils/logger";
-import { getCache ,cacheKeys} from "../lib/redisTools";
+import { getCache, cacheKeys } from "../lib/redisTools";
 
 // Initialize config and configProtected as empty objects
 let config: { [key: string]: string | null } = {};
@@ -20,9 +20,7 @@ let configProtected: { [key: string]: string | null } = {};
 
     config = ontonConfig.config;
     configProtected = ontonConfig.configProtected;
-    
-    logger.log('configProtected' , configProtected);
-    logger.log('config' , config);
+
 
   } catch (error) {
     logger.error("Error fetching Onton settings:", error);

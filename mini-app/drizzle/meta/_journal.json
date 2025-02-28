@@ -64,6 +64,20 @@
       "when": 1739161702736,
       "tag": "0008_dusty_annihilus",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1740295510278,
+      "tag": "0009_eager_chronomancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1740602406532,
+      "tag": "0010_lucky_stature",
+      "breakpoints": true
     }
   ]
 }

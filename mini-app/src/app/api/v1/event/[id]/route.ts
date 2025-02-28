@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { nftItems, orders } from "@/db/schema";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { type NextRequest } from "next/server";
 import { usersDB } from "@/server/db/users";
 import tonCenter from "@/server/routers/services/tonCenter";
@@ -11,7 +11,8 @@ import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { OrderRow } from "@/db/schema/orders";
 import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
 import "@/lib/gracefullyShutdown";
-import eventDB, { fetchEventById } from "@/server/db/events";
+import eventDB from "@/server/db/events";
+import ordersDB from "@/server/db/orders.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -129,33 +130,29 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 
     let event_payment_info;
-    if (event.ticketToCheckIn) {
+    let isSoldOut: boolean | undefined;
+    if (event.has_payment) {
       event_payment_info = await db.query.eventPayment.findFirst({
         where(fields, { eq }) {
           return eq(fields.event_uuid, event.event_uuid as string);
         },
       });
-      if (!event_payment_info) {
-        console.warn(`Ticket not found for event ID: ${event_uuid}`);
+      if (event_payment_info) {
+        const eventTicketingType = event_payment_info?.ticket_type;
+
+        const ticketOrderTypeMap = {
+          NFT: "nft_mint",
+          TSCSBT: "ts_csbt_ticket",
+        } as const;
+
+        // Ensure TypeScript recognizes the valid key
+        const ticketOrderType = ticketOrderTypeMap[eventTicketingType];
+
+        // Use the shared sold-out check function
+        const { isSoldOut: iso } = await ordersDB.checkIfSoldOut(event_uuid, ticketOrderType, event.capacity || 0);
+        isSoldOut = iso;
       }
     }
-
-    const soldTicketsCount = await db
-      .select({
-        count: sql`count
-            (*)`.mapWith(Number),
-      })
-      .from(orders)
-      .where(
-        and(
-          eq(orders.event_uuid, event_uuid),
-          or(eq(orders.state, "completed"), eq(orders.state, "processing")),
-          eq(orders.order_type, "nft_mint")
-        )
-      )
-      .execute();
-
-    const isSoldOut = (soldTicketsCount[0].count as unknown as number) >= (event.capacity || 0);
 
     if (dataOnly === "true") {
       return Response.json(

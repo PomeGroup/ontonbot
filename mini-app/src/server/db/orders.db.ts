@@ -1,7 +1,8 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema";
-import { and, eq, or, sql } from "drizzle-orm";
+import { and, count, eq, or } from "drizzle-orm";
 import { is_dev_env, is_stage_env } from "../utils/evnutils";
+import { OrderTypeValues } from "@/db/schema/orders";
 
 const getEventOrders = async (event_uuid: string) => {
   return db
@@ -78,12 +79,51 @@ const getPromoteToOrganizerOrder = async (userId: number) => {
   });
 };
 
+async function checkIfSoldOut(event_uuid: string, ticketOrderType: OrderTypeValues, capacity: number) {
+  const TicketsCount = await db
+    .select({ ticket_count: count() })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.event_uuid, event_uuid),
+        or(eq(orders.state, "completed"), eq(orders.state, "processing")),
+        eq(orders.order_type, ticketOrderType)
+      )
+    )
+    .execute();
+
+  return { isSoldOut: TicketsCount[0].ticket_count >= capacity, soldCount: TicketsCount[0].ticket_count };
+}
+
+/**
+ * Check if there's already a completed order for this event, user, and orderType.
+ */
+const findExistingCompletedOrder = async (eventUuid: string, telegramUserId: number, orderType: OrderTypeValues) =>
+  db.query.orders.findFirst({
+    where: and(
+      eq(orders.user_id, telegramUserId),
+      eq(orders.order_type, orderType),
+      eq(orders.event_uuid, eventUuid),
+      eq(orders.state, "completed")
+    ),
+  });
+
+const findOrderByEventUser = async (eventUuid: string, telegramUserId: number) => {
+  return db.query.orders.findMany({
+    where: and(eq(orders.event_uuid, eventUuid), eq(orders.user_id, telegramUserId)),
+    orderBy: (fields, { desc }) => [desc(fields.created_at)], // or desc(fields.id)
+  });
+};
+
 const ordersDB = {
   getEventOrders,
   updateOrderState,
   findPromoteToOrganizerOrder,
   createPromoteToOrganizerOrder,
   getPromoteToOrganizerOrder,
+  checkIfSoldOut,
+  findExistingCompletedOrder,
+  findOrderByEventUser,
 };
 
 export default ordersDB;

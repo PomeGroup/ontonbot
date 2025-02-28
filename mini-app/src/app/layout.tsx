@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import Script from "next/script";
 import React from "react";
 import NotificationHandler from "@/app/_components/NotificationHandler";
+import ModalsContainer from "./_components/ModalsContainer";
 
 const mainFont = Roboto({
   subsets: ["latin"],
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             src="http://localhost:8097"
           ></script>
         )}
+        <ModalsContainer />
       </body>
     </html>
   );

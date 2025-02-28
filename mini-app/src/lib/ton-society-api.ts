@@ -1,13 +1,13 @@
 // The integration with ton society apis will be here
-import { TonSocietyRegisterActivityResponse } from "@/types/event.types";
+import { TonSocietyActivityFullResponse, TonSocietyRegisterActivityResponse } from "@/types/event.types";
 import { findActivityResponseType, TSAPIoperations } from "@/types/ton-society-api-types";
 import { CreateUserRewardLinkReturnType, type CreateUserRewardLinkInputType } from "@/types/user.types";
-import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import axios, { AxiosError } from "axios";
 import { HubsResponse, SocietyHub } from "@/types";
 import { redisTools } from "@/lib/redisTools";
 import { configDotenv } from "dotenv";
+import { logger } from "@/server/utils/logger";
 
 configDotenv();
 // ton society client to send http requests to https://ton-society.github.io/sbt-platform
@@ -27,34 +27,60 @@ export async function createUserRewardLink(
   activityId: number,
   data: CreateUserRewardLinkInputType
 ): Promise<{ data: CreateUserRewardLinkReturnType }> {
+  // 1) Check if the reward link already exists
   try {
-    return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
+    const getResponse = await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
       `/activities/${activityId}/rewards/${data.telegram_user_id}`
     );
+
+    // If reward_link is present, return it and skip creation
+    if (getResponse?.data?.data?.reward_link) {
+      return { data: getResponse.data };
+    }
+    // If we got a 2xx response but no reward_link, we'll create a new one below
   } catch (error) {
-    try {
-      return await tonSocietyClient.post<CreateUserRewardLinkReturnType>(`/activities/${activityId}/rewards`, data);
-    } catch (error) {
-      if (
-        error instanceof AxiosError &&
-        (error.response?.data?.message === "reward link with such activity id and wallet address already created" ||
-          error.response?.data?.message === "reward link with such activity id and telegram user id already created")
-      ) {
-        return await tonSocietyClient.get<CreateUserRewardLinkReturnType>(
-          `/activities/${activityId}/rewards/${data.telegram_user_id}`
+    // if GET fails, check if it's a 404 -> meaning "reward link not found" is expected
+    // if (error instanceof AxiosError && error.response?.status !== 404) {
+    //   // any non-404 error is unexpected; rethrow it
+    //   throw error;
+    // }
+    logger.error(
+      `Error getting reward link (will try to create) for activityId=${activityId}, data=${JSON.stringify(data)}`,
+      error
+    );
+    // if it was 404, we do nothing and proceed to POST below
+  }
+
+  try {
+    // 2) If the GET succeeded but `reward_link` is missing, create a new link
+    const postResponse = await tonSocietyClient.post<CreateUserRewardLinkReturnType>(
+      `/activities/${activityId}/rewards`,
+      data
+    );
+
+    // Validate that we got a reward_link
+    if (!postResponse?.data?.data?.reward_link) {
+      throw new Error(`Failed to create reward link for activityId=${activityId}, data=${JSON.stringify(data)}`);
+    }
+
+    return { data: postResponse.data };
+  } catch (error) {
+    // log and rethrow the error
+    if ((error as AxiosError).response?.data) {
+      if ((error as AxiosError).response?.status === 429) {
+        logger.error(
+          `REWARD_LINK_RATE_LIMIT Error creating reward link for activityId=${activityId}, data=${JSON.stringify(data)}`,
+          (error as AxiosError).response?.status
         );
       }
-
-      // console.error(`CREATE_REWARD_ERROR_${Date.now()}`, error);
-      // console.error(
-      //   `CREATE_REWARD_ERROR_REQUEST_${Date.now()}`,
-      //   `/activities/${activityId}/rewards/${data.telegram_user_id}`
-      // );
-
-      await sleep(100);
-
-      throw error;
+      logger.error(
+        `Error creating reward link for activityId=${activityId}, data=${JSON.stringify(data)}`,
+        (error as AxiosError).response?.status
+      );
+    } else {
+      // console.error(`Error creating reward link for activityId=${activityId}, data=${JSON.stringify(data)}`, error);
     }
+    throw error;
   }
 }
 
@@ -84,6 +110,7 @@ export async function updateActivity(
       code: "BAD_REQUEST",
       message: "event does not have a valid activity id",
     });
+  logger.info(`Updating activity ${activity_id} with details`, activityDetails);
   const response = await tonSocietyClient.patch(`/activities/${activity_id}`, activityDetails);
   return response.data as { status: "success"; data: {} };
 }
@@ -196,5 +223,51 @@ export async function getRewardStatus(
     return {
       status: "error",
     };
+  }
+}
+
+export async function getFullActivityDetails(activityId: number): Promise<TonSocietyActivityFullResponse> {
+  if (!activityId) {
+    throw new Error("Activity ID must be provided");
+  }
+
+  try {
+    const response = await tonSocietyClient.get<TonSocietyActivityFullResponse>(`/activities/${activityId}`);
+
+    // verify response.data.status === "success"
+    if (response.data.status !== "success") {
+      throw new Error(`Unexpected status: ${response.data.status}`);
+    }
+
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      // Handle HTTP errors
+      const status = error.response?.status;
+      if (status === 404) {
+        logger.warn(`Activity ${activityId} not found on Ton Society (404).`);
+        throw new Error(`Activity ${activityId} not found (404).`);
+      }
+      if (status === 500) {
+        logger.error(`Server error (500) when fetching activity ${activityId}.`);
+        throw new Error(`Internal server error (500) fetching activity ${activityId}.`);
+      }
+      if (status === 403) {
+        logger.error(`Forbidden error (403) when fetching activity ${activityId}.`);
+        throw new Error(`Forbidden error (403) fetching activity ${activityId}.`);
+      }
+      if (status === 429) {
+        logger.error(`Rate limit error (429) when fetching activity ${activityId}.`);
+        throw new Error(`Rate limit error (429) fetching activity ${activityId}.`);
+      }
+
+      // You can handle other status codes if desired
+      logger.error(`Error fetching activity ${activityId} from Ton Society:`, status);
+      throw error; // rethrow or throw a custom error
+    } else {
+      // Non-Axios error (network or other issue)
+      logger.error(`Unexpected error fetching activity ${activityId}:`, error);
+      throw error; // or wrap it in a new error
+    }
   }
 }

@@ -1,19 +1,27 @@
 import { db } from "@/db/db";
 import { RewardStatus, RewardType } from "@/db/enum";
 import { RewardTonSocietyStatusType, visitors } from "@/db/schema";
+import { RewardType as RewardTypeParitial } from "@/types/event.types";
+
 import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
-import { and, eq, sql } from "drizzle-orm";
-
+import { and, eq, sql ,or ,asc} from "drizzle-orm";
+import { logger } from "@/server/utils/logger";
 export interface RewardChunkRow {
   reward_id: string; // or `uuid` type depending on your schema
   visitor_id: number;
 }
 
+
+
 // Utility function to generate cache keys
 const generateCacheKey = (visitor_id: number, reward_id?: string) => {
   return `reward:${visitor_id}${reward_id ? `:${reward_id}` : ""}`;
+};
+
+const generateCacheKeyForLinkEvent = (event_uuid: string) => {
+  return `reward:link:${event_uuid}`;
 };
 // Function to check if a reward already exists for a visitor
 const checkExistingReward = async (visitor_id: number): Promise<Maybe<RewardsSelectType>> => {
@@ -237,6 +245,100 @@ export async function fetchNotClaimedRewardsForEvent(
     .execute();
 }
 
+const updateRewardStatus = async (
+  rewardId: string,
+  status?: string,
+  options?: {
+    tryCount: number;
+    data: any;
+  }
+) => {
+  const reward = (await db.select().from(rewards).where(eq(rewards.id, rewardId)))[0];
+
+  await db
+    .update(rewards)
+    .set({
+      status,
+      ...(options?.data && {
+        ...(typeof reward?.data === "object" && reward.data),
+        ...options.data,
+      }),
+      tryCount: options?.tryCount,
+      updatedBy: "system",
+      updatedAt: new Date(),
+    })
+    .where(eq(rewards.id, rewardId));
+};
+
+const handleRewardError = async (reward: RewardTypeParitial, error: any) => {
+  const shouldFail = reward.tryCount >= 10;
+  const newStatus = shouldFail ? "notification_failed" : undefined;
+  const newData = shouldFail ? { fail_reason: error.message } : undefined;
+
+  try {
+    await rewardDB.updateRewardStatus(reward.id, newStatus, {
+      tryCount: reward.tryCount + 1,
+      data: newData,
+    });
+  } catch (dbError) {
+    logger.error("DB_ERROR", dbError);
+  }
+};
+
+/**
+ * Fetch pending rewards for a specific event, in a paginated (offset/limit) manner.
+ */
+export const fetchPendingRewardsForEvent = async (
+  eventUuid: string,
+  limit: number,
+  offset: number
+): Promise<RewardTypeParitial[]> =>
+  db.query.rewards.findMany({
+    where: (fields, { eq, and, inArray }) =>
+      and(
+        eq(fields.status, "pending_creation"),
+        inArray(fields.visitor_id, db.select({ id: visitors.id }).from(visitors).where(eq(visitors.event_uuid, eventUuid)))
+      ),
+    limit,
+    offset,
+    orderBy: [asc(rewards.created_at)],
+  });
+
+/**
+ * Finds the first visitor for the given eventUuid,
+ * then returns the first "created" reward linked to that visitor.
+ *
+ * Returns `RewardTypeParitial` if found, otherwise `null`.
+ */
+export const fetchRewardLinkForEvent = async (eventUuid: string): Promise<RewardTypeParitial | null> => {
+  const cacheKey = generateCacheKeyForLinkEvent(eventUuid);
+  const cachedReward = await redisTools.getCache(cacheKey);
+  if (cachedReward) {
+    return cachedReward;
+  }
+  // 1) Find a single visitor for the given eventUuid
+  const singleVisitor = await db.query.visitors.findFirst({
+    where: (fields, { eq }) => eq(fields.event_uuid, eventUuid),
+    orderBy: [asc(visitors.created_at)], // or your preferred sorting
+  });
+  if (!singleVisitor) {
+    // If no visitor found, return null
+    return null;
+  }
+
+  // 2) Using that visitor's ID, find one reward with status "created"
+  //    Return `null` if not found
+  const reward = await db.query.rewards.findFirst({
+    where: (fields, { eq, and }) =>
+      and(or(eq(fields.status, "created"), eq(fields.status, "notified")), eq(fields.visitor_id, singleVisitor.id)),
+    orderBy: [asc(rewards.created_at)],
+  });
+  if (reward) {
+    await redisTools.setCache(cacheKey, reward, redisTools.cacheLvl.short);
+  }
+  // 3) Convert `undefined` to `null` for TypeScript consistency
+  return reward ?? null;
+};
 const rewardDB = {
   checkExistingReward,
   insert,
@@ -250,6 +352,10 @@ const rewardDB = {
   updateRewardWithConditions,
   updateTonSocietyStatusByVisitorId,
   fetchNotClaimedRewardsForEvent,
+  updateRewardStatus,
+  handleRewardError,
+  fetchPendingRewardsForEvent,
+  fetchRewardLinkForEvent,
 };
 
 export default rewardDB;

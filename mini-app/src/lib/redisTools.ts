@@ -284,6 +284,8 @@ export const cacheKeys = {
   event_uuid: "event_uuid:",
   event_id: "event_id:",
   dynamic_fields: "dynamic_fields:event_id:",
+  join_task_tg_ch: "join_task_tg_ch:", // channel
+  join_task_tg_gp: "join_task_tg_gp:", // group
   usersScore: "usersScore:",
 };
 export const cacheLvl = {

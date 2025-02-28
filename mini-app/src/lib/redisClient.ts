@@ -9,11 +9,11 @@ const connectToRedis = async (): Promise<void> => {
     });
 
     redisClient.on("error", (err) => {
-      console.error("Redis error:", err);
+      process.env.NODE_ENV !== "development" && console.error("Redis error:", err);
     });
 
     redisClient.on("connect", () => {
-      console.log("Connected to Redis");
+      process.env.NODE_ENV !== "development" && console.log("Connected to Redis");
     });
 
     await redisClient.connect();

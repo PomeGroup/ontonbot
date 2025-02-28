@@ -45,8 +45,8 @@ export const fetchEventByUuid = async (eventUuid: string): Promise<EventRow | nu
   }
   const result = (await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute()).pop();
   if (result) {
-    await redisTools.setCache(getEventUUIDCacheKey(eventUuid), result, redisTools.cacheLvl.short);
-    await redisTools.setCache(getEventIDCacheKey(result.event_id), result, redisTools.cacheLvl.short);
+    await redisTools.setCache(getEventUUIDCacheKey(eventUuid), result, redisTools.cacheLvl.long);
+    await redisTools.setCache(getEventIDCacheKey(result.event_id), result, redisTools.cacheLvl.long);
     return result;
   }
   return null;
@@ -59,8 +59,8 @@ export const fetchEventById = async (eventId: number): Promise<EventRow | null> 
   }
   const result = (await db.select().from(events).where(eq(events.event_id, eventId)).execute()).pop();
   if (result) {
-    await redisTools.setCache(getEventIDCacheKey(eventId), result, redisTools.cacheLvl.short);
-    await redisTools.setCache(getEventUUIDCacheKey(result.event_uuid), result, redisTools.cacheLvl.short);
+    await redisTools.setCache(getEventIDCacheKey(eventId), result, redisTools.cacheLvl.long);
+    await redisTools.setCache(getEventUUIDCacheKey(result.event_uuid), result, redisTools.cacheLvl.long);
     return result;
   }
   return null;
@@ -426,6 +426,8 @@ export const getEventsWithFilters = async (
     } else if (sortBy === "most_people_reached") {
       orderByClause = sql`visitor_count
       DESC`;
+    } else if (sortBy === "do_not_order") {
+      orderByClause = sql``;
     }
 
     // @ts-expect-error
@@ -595,6 +597,22 @@ export async function fetchEventsWithNonNullActivityIdAfterStartDateDESC(
     .execute();
 }
 
+/**
+ * Fetch all events (via visitors) that have pending rewards, sorted by event end_date descending.
+ */
+export const fetchEventsWithPendingRewards = async () =>
+  db
+    .select({
+      eventUuid: events.event_uuid,
+      eventEndDate: events.end_date,
+    })
+    .from(rewards)
+    .innerJoin(visitors, eq(visitors.id, rewards.visitor_id))
+    .innerJoin(events, eq(visitors.event_uuid, events.event_uuid))
+    .where(eq(rewards.status, "pending_creation"))
+    .groupBy(events.event_uuid, events.end_date)
+    .orderBy(desc(events.end_date));
+
 const eventDB = {
   checkIsEventOwner,
   checkIsAdminOrOrganizer,
@@ -612,6 +630,7 @@ const eventDB = {
   fetchEventById,
   deleteEventCache,
   fetchEventByActivityId,
+  fetchEventsWithPendingRewards,
   fetchEventsWithNonNullActivityIdDESC,
   fetchEventsWithNonNullActivityIdAfterStartDateDESC,
 };

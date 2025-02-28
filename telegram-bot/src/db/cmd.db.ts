@@ -1,5 +1,5 @@
 import { pool } from "./db";
-import { redisTools } from "src/lib/redisTools";
+import { redisTools } from "../lib/redisTools";
 
 export async function hideCmd(event_uuid: string, hide: boolean) {
   const client = await pool.connect();

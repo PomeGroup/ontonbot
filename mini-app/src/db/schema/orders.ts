@@ -4,13 +4,15 @@ import { events } from "@/db/schema/events";
 import { users } from "@/db/schema/users";
 import { InferSelectModel, relations } from "drizzle-orm";
 
-export const orderTypes = pgEnum("order_types", [
+const orderTypeValues = [
   "nft_mint",
   "event_creation",
   "event_capacity_increment",
   "promote_to_organizer",
   "ts_csbt_ticket",
-]);
+] as const;
+export type OrderTypeValues = (typeof orderTypeValues)[number];
+export const orderTypes = pgEnum("order_types", orderTypeValues);
 
 export const orders = pgTable(
   "orders",
@@ -47,7 +49,7 @@ export const orders = pgTable(
 );
 
 // Relations
-export const orderRelations = relations(orders, ({ one, many }) => ({
+export const orderRelations = relations(orders, ({ one }) => ({
   event: one(events, {
     fields: [orders.event_uuid],
     references: [events.event_uuid],
@@ -59,4 +61,3 @@ export const orderRelations = relations(orders, ({ one, many }) => ({
 }));
 
 export type OrderRow = InferSelectModel<typeof orders>;
-

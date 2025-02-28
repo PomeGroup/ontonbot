@@ -6,6 +6,7 @@ import {
   renderModerationEventMessage,
   renderUpdateEventMessage,
   sendLogNotification,
+  sendToEventsTgChannel,
 } from "@/lib/tgBot";
 import { findActivity, registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
@@ -37,7 +38,7 @@ import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyServi
 import { usersDB, getUserCacheKey } from "../db/users";
 import { redisTools } from "@/lib/redisTools";
 import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
-import { tgBotModerationMenu } from "@/lib/TgBotTools";
+import { tgBotModerationMenu } from "@/moderationBot/menu";
 import { userRolesDB } from "@/server/db/userRoles.db";
 
 dotenv.config();
@@ -57,15 +58,6 @@ async function shouldEventBeHidden(event_is_paid: boolean, user_id: number) {
 
   return false;
 }
-
-/* -------------------------------------------------------------------------- -------------------------------------------- */
-/* -------------------------------------------------------------------------- -------------------------------------------- */
-/* -------------------------------------------------------------------------- -------------------------------------------- */
-/* -------------------------------------------------------------------------- -------------------------------------------- */
-/* -------------------------------------------------------------------------- -------------------------------------------- */
-/* -------------------------------------------------------------------------- -------------------------------------------- */
-
-/* -------------------------------------------------------------------------- -------------------------------------------- */
 
 async function updateEventSbtCollection(
   start_date: number | null | undefined,
@@ -114,7 +106,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
 
-  if (!eventData) {
+  if (!eventData.event_id) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "event not found",
@@ -439,10 +431,20 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           message: logMessage,
           topic: "event",
         });
+        await sendToEventsTgChannel({
+          image: eventData.image_url,
+          title: eventData.title,
+          subtitle: eventData.subtitle,
+          s_date: eventData.start_date,
+          e_date: eventData.end_date,
+          timezone: eventData.timezone,
+          event_uuid: eventData.event_uuid,
+          participationType: eventData.participationType,
+        });
       } else if (!is_paid) {
         /* --------------------------- Moderation Message --------------------------- */
         const moderation_group_id = configProtected?.moderation_group_id;
-        const logMessage = renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
+        const logMessage = await renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
         await sendLogNotification({
           group_id: moderation_group_id,
           image: eventData.image_url,

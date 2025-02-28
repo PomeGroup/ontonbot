@@ -23,7 +23,7 @@ export const initDataProtectedProcedure = trpcApiInstance.procedure.use(async (o
 
   if (opts.ctx.user.role === "ban") {
     throw new TRPCError({
-      code: "UNAUTHORIZED",
+      code: "FORBIDDEN",
       message: "user is banned",
     });
   }

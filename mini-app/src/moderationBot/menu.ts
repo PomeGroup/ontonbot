@@ -1,9 +1,11 @@
 import { InlineKeyboard } from "grammy";
+import { logger } from "@/server/utils/logger";
 
 /**
- * Build the main menu (with "Reject (Custom)" added)
+ * The main moderation menu (Approve/Reject/etc.)
+ * Called BEFORE an event is approved.
  */
-export  function tgBotModerationMenu(eventUuid: string) {
+export function tgBotModerationMenu(eventUuid: string) {
   return new InlineKeyboard()
     .text("✅ Approve", `approve_${eventUuid}`)
     .row()
@@ -19,11 +21,24 @@ export  function tgBotModerationMenu(eventUuid: string) {
     .text("❌ Copyright", `rejectCopyright_${eventUuid}`)
     .text("❌ Custom reason", `rejectCustom_${eventUuid}`)
     .row()
-    // NEW! Buttons to update event
-    .text("🔃 Update Data", `updateEventData_${eventUuid}`)
-
+    .text("🔃 Update Data", `updateEventData_${eventUuid}`);
 }
 
+/**
+ * A simpler menu displayed AFTER the event is approved.
+ * Moderator can send a notice to the organizer (or add more buttons as needed).
+ */
+export function tgBotApprovedMenu(eventUuid: string) {
+  logger.log("tgBotApprovedMenu");
+  return new InlineKeyboard()
+    .text("🔔 Send Notice", `sendNotice_${eventUuid}`)
+    .row()
+    .text("🔃 Update Data", `updateEventData_${eventUuid}`);
+}
+
+/**
+ * Convert short keys (e.g. "Duplicate") to descriptive strings used for rejection messages.
+ */
 export function parseRejectReason(reason: string): string {
   switch (reason) {
     case "Duplicate":

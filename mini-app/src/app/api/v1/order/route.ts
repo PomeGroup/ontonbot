@@ -4,9 +4,10 @@ import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import eventDB from "@/server/db/events";
 import { Address } from "@ton/core";
-import { and, count, eq, or } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import "@/lib/gracefullyShutdown";
+import ordersDB from "@/server/db/orders.db";
 
 const addOrderSchema = z.object({
   event_uuid: z.string().uuid(),
@@ -71,26 +72,9 @@ export async function POST(request: Request) {
   // Ensure TypeScript recognizes the valid key
   const ticketOrderType = ticketOrderTypeMap[eventTicketingType];
 
-  /* -------------------------------------------------------------------------- */
-  /*                                      ⬆                                     */
-  /* -------------------------------------------------------------------------- */
+  const { isSoldOut } = await ordersDB.checkIfSoldOut(body.data.event_uuid, ticketOrderType, eventData.capacity || 0);
 
-  /* -------------------------------------------------------------------------- */
-  /*                               Sold Out Check                               */
-  /* -------------------------------------------------------------------------- */
-  const TicketsCount = await db
-    .select({ ticket_count: count() })
-    .from(orders)
-    .where(
-      and(
-        eq(orders.event_uuid, body.data.event_uuid),
-        or(eq(orders.state, "completed"), eq(orders.state, "processing")),
-        eq(orders.order_type, ticketOrderType)
-      )
-    )
-    .execute();
-
-  if (TicketsCount[0].ticket_count >= (eventData.capacity || 0)) {
+  if (isSoldOut) {
     return Response.json(
       {
         message: "Event tickets are sold out",

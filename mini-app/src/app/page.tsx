@@ -74,6 +74,7 @@ function PromotedEventsSlider() {
     filter: {
       event_uuids: event_uuids as string[],
     },
+    sortBy: "do_not_order" as const,
   };
 
   const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery<
@@ -148,6 +149,7 @@ function PromotedEventsList() {
     {
       limit: 10,
       filter: { event_uuids: itemIds },
+      sortBy: "do_not_order" as const,
     },
     {
       enabled: Array.isArray(itemIds) && typeof itemIds[0] === "string",

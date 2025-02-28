@@ -4,7 +4,7 @@ import * as React from "react";
 import { PiMicrosoftOutlookLogoFill } from "react-icons/pi";
 import { Block } from "konsta/react";
 import { LucideCalendarPlus } from "lucide-react";
-import ReusableSheet from "./Sheet/ReusableSheet";
+import CustomSheet from "./Sheet/CustomSheet";
 import CustomButton from "./Button/CustomButton";
 import Divider from "@/components/Divider";
 import { AiFillYahoo } from "react-icons/ai";
@@ -63,10 +63,11 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
       >
         Add to Calendar
       </CustomButton>
-      <ReusableSheet
+      <CustomSheet
         opened={isOpen}
         onClose={() => setIsOpen(false)}
         title="Add to Calendar"
+        defaultPadding={false}
       >
         <Block className="flex flex-col gap-2 justify-between">
           <div className="p-4 w-full flex flex-col gap-1">
@@ -105,7 +106,7 @@ const AddToCalendar = ({ title, startDate, endDate, description }: Props) => {
             Close
           </CustomButton>
         </Block>
-      </ReusableSheet>
+      </CustomSheet>
     </>
   );
 };

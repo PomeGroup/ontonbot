@@ -86,6 +86,8 @@ x-common-env: &common-env
   SOCKET_PORT: ${SOCKET_PORT}
   JWT_SECRET_SOCKET: ${JWT_SECRET_SOCKET}
   ONTON_API_SECRET: ${ONTON_API_SECRET}
+  SWAGGER_UI_DOMAIN: ${SWAGGER_UI_DOMAIN}
+  SWAGGER_UI_PORT: ${SWAGGER_UI_PORT}
 
 services:
   minio:
@@ -672,38 +674,63 @@ services:
         tag: "docker.${BRANCH_NAME}-rabbitmq"
         fluentd-async-connect: "true"
 
-#  client-web:
-#    hostname: client-web
-#    <<: *default-extra-hosts
-#    image: ${REGISTRY_URL}/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
-#    ports:
-#      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
-#    environment:
-#      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
-#      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
-#      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
-#      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
-#      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
-#      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
-#    networks:
-#      - onton-network
-#    logging:
-#        driver: "fluentd"
-#        options:
-#            syslog-address: "logstash:5044"
-#            tag: "docker.${BRANCH_NAME}-client-web"
-#            fluentd-async-connect: "true"
+  #  client-web:
+  #    hostname: client-web
+  #    <<: *default-extra-hosts
+  #    image: ${REGISTRY_URL}/${GITHUB_REPO}/client-web:${BRANCH_NAME}-latest
+  #    ports:
+  #      - "${PORT_CLIENT_WEB}:${PORT_CLIENT_WEB}"
+  #    environment:
+  #      NEXT_PUBLIC_BACKEND_URL_CLIENT: ${NEXT_PUBLIC_BACKEND_URL_CLIENT}
+  #      CLIENT_API_JWT_SECRET: ${CLIENT_API_JWT_SECRET}
+  #      CLIENT_API_FIXED_KEY: ${CLIENT_API_FIXED_KEY}
+  #      CLIENT_API_FIXED_USER: ${CLIENT_API_FIXED_USER}
+  #      CLIENT_API_FIXED_ORGANIZER: ${CLIENT_API_FIXED_ORGANIZER}
+  #      PORT_CLIENT_WEB: ${PORT_CLIENT_WEB}
+  #    networks:
+  #      - onton-network
+  #    logging:
+  #        driver: "fluentd"
+  #        options:
+  #            syslog-address: "logstash:5044"
+  #            tag: "docker.${BRANCH_NAME}-client-web"
+  #            fluentd-async-connect: "true"
 
 
-#  swagger-ui:
-#    image: swaggerapi/swagger-ui
-#    environment:
-#      SWAGGER_JSON: /swagger.yaml
-#    volumes:
-#      - ./swagger/swagger.yaml:/swagger.yaml
-#    networks:
-#      onton-network:
-#        ipv4_address: "${IP_SWAGGER_UI}"
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    hostname: swagger-ui
+    # Adjust the port mapping to your preference
+    ports:
+      - "${SWAGGER_UI_PORT}:8080"
+    environment:
+      <<: *common-env
+      SWAGGER_JSON: "/swagger.yaml"
+    volumes:
+      - ./swagger/ExternalSeller.yml:/usr/share/nginx/html/ExternalSeller.yaml
+      - ./swagger/GameRewards.yml:/usr/share/nginx/html/GameRewards.yaml
+      - ./swagger/swagger-initializer.js:/usr/share/nginx/html/swagger-initializer.js
+      - ./swagger/custom.css:/usr/share/nginx/html/custom.css
+      - ./swagger/home.html:/usr/share/nginx/html/home.html
+    networks:
+      - onton-network
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 30s
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-swagger-ui"
+        fluentd-async-connect: "true"
 
 networks:
   onton-network:

@@ -1,0 +1,1 @@
+ALTER TYPE "payment_types" ADD VALUE 'STAR';

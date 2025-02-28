@@ -61,7 +61,7 @@ export async function listActiveUserRolesForUser(userId: number): Promise<Active
       .execute();
 
     // 3) Set cache
-    await redisTools.setCache(cacheKey, rows, redisTools.cacheLvl.short);
+    await redisTools.setCache(cacheKey, rows, redisTools.cacheLvl.long);
 
     return rows;
   } catch (error) {
@@ -151,7 +151,7 @@ export async function listAllUserRolesForEvent(
       .execute();
 
     // 3) Cache the result
-    await redisTools.setCache(cacheKey, rows, redisTools.cacheLvl.short);
+    await redisTools.setCache(cacheKey, rows, redisTools.cacheLvl.long);
     return rows;
   } catch (error) {
     logger.error(`Error listing all user roles for item [${itemType}, ID=${itemId}]`, error);
@@ -193,7 +193,7 @@ export async function listActiveUserRolesForEvent(itemType: accessRoleItemType, 
       .execute();
 
     // 3) Cache the result
-    await redisTools.setCache(cacheKey, rows, redisTools.cacheLvl.short);
+    await redisTools.setCache(cacheKey, rows, redisTools.cacheLvl.long);
     return rows;
   } catch (error) {
     logger.error(`Error listing *active* user roles for item [${itemType}, ID=${itemId}]`, error);
