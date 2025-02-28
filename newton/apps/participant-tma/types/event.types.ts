@@ -54,6 +54,7 @@ export interface EventDataOnlyType {
   hidden: boolean;
   ticketToCheckIn: boolean;
   created_at: string;
+  accessRoles: Array<{ user_id: number; role: string }> | undefined;
 }
 
 export interface EventType extends EventDataOnlyType {

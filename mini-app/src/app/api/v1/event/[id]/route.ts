@@ -13,6 +13,7 @@ import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
 import "@/lib/gracefullyShutdown";
 import eventDB from "@/server/db/events";
 import ordersDB from "@/server/db/orders.db";
+import { userRolesDB } from "@/server/db/userRoles.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -120,9 +121,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return Response.json({ error: "Event not found" }, { status: 400 });
     }
 
-    const event = removeKey(unsafeEvent, "secret_phrase");
+    const eventData = removeKey(unsafeEvent, "secret_phrase");
+    const accessData = await userRolesDB.listActiveUserRolesForEvent("event", Number(eventData.event_id));
+    const accessRoles = accessData.map(({ userId, role }) => ({
+      user_id: userId,
+      role: role,
+    }));
 
-    const organizer = await usersDB.selectUserById(event.owner as number);
+    const organizer = await usersDB.selectUserById(eventData.owner as number);
 
     if (!organizer) {
       console.error(`Organizer not found for event ID: ${event_uuid}`);
@@ -131,10 +137,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     let event_payment_info;
     let isSoldOut: boolean | undefined;
-    if (event.has_payment) {
+    if (eventData.has_payment) {
       event_payment_info = await db.query.eventPayment.findFirst({
         where(fields, { eq }) {
-          return eq(fields.event_uuid, event.event_uuid as string);
+          return eq(fields.event_uuid, eventData.event_uuid as string);
         },
       });
       if (event_payment_info) {
@@ -149,7 +155,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const ticketOrderType = ticketOrderTypeMap[eventTicketingType];
 
         // Use the shared sold-out check function
-        const { isSoldOut: iso } = await ordersDB.checkIfSoldOut(event_uuid, ticketOrderType, event.capacity || 0);
+        const { isSoldOut: iso } = await ordersDB.checkIfSoldOut(event_uuid, ticketOrderType, eventData.capacity || 0);
         isSoldOut = iso;
       }
     }
@@ -157,10 +163,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     if (dataOnly === "true") {
       return Response.json(
         {
-          ...event,
+          ...eventData,
           organizer,
           eventTicket: event_payment_info,
           isSoldOut,
+          accessRoles,
         },
         {
           status: 200,
@@ -281,7 +288,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 
     const data = {
-      ...event,
+      ...eventData,
       userHasTicket: userHasTicket,
       needToUpdateTicket: userHasTicket && needToUpdateTicket,
       chosenNFTaddress,
@@ -294,6 +301,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       usedCollectionAddress: event_payment_info?.collectionAddress!,
       valid_nfts_no_info,
       valid_nfts_with_info,
+
+      accessRoles,
     };
 
     return Response.json(data, {
