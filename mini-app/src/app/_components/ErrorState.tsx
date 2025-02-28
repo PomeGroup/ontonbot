@@ -8,6 +8,7 @@ import { Page } from "konsta/react";
 import useWebApp from "@/hooks/useWebApp";
 import { TG_BOT_LINK, TG_SUPPORT_GROUP } from "@/constants";
 import { useRouter } from "next/navigation";
+import { wait } from "@/lib/utils";
 
 interface ErrorStateProps {
   errorCode: "blocked_bot" | "banned" | "event_not_found" | "something_went_wrong";
@@ -25,7 +26,11 @@ export const ErrorState: FC<ErrorStateProps> = ({ errorCode }) => {
       buttonTextPrimary: "Unblock Bot",
       buttonTextSecondary: "Maybe Later",
       dataStatus: "blocked" as DataStatusProps["status"],
-      primaryHandler: () => webApp?.openTelegramLink(TG_BOT_LINK), // Call utility to unblock bot
+      primaryHandler: async () => {
+        webApp?.openTelegramLink(`${TG_BOT_LINK}?start=unblock`);
+        await wait(200);
+        webApp?.close();
+      }, // Call utility to unblock bot
       secondaryHandler: () => webApp?.close(), // clsoe the miniapp
     },
     banned: {
@@ -34,7 +39,11 @@ export const ErrorState: FC<ErrorStateProps> = ({ errorCode }) => {
       buttonTextPrimary: "Contact Support",
       buttonTextSecondary: "Close",
       dataStatus: "rejected" as DataStatusProps["status"],
-      primaryHandler: () => webApp?.openTelegramLink(TG_SUPPORT_GROUP), // Open support channel
+      primaryHandler: async () => {
+        webApp?.openTelegramLink(TG_SUPPORT_GROUP);
+        await wait(200);
+        webApp?.close();
+      }, // Open support channel
       secondaryHandler: () => webApp?.close(), // clsoe the miniapp
     },
     event_not_found: {
