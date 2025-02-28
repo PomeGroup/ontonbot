@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import Images from "@/app/_components/atoms/images";
 import EventDates from "@/app/_components/EventDates";
 import { useEventData } from "./eventPageContext";
@@ -23,15 +23,7 @@ import { Address } from "@ton/core";
 import { FaAngleRight } from "react-icons/fa6";
 import { TonConnectButton } from "@tonconnect/ui-react";
 import Divider from "@/components/Divider";
-import CustomSheet from "../Sheet/CustomSheet";
-import CustomButton from "../Button/CustomButton";
-import Task from "../Task";
 import CustomCard from "../atoms/cards/CustomCard";
-import { trpc } from "@/app/_trpc/client";
-import useWebApp from "@/hooks/useWebApp";
-import { sleep } from "@/utils";
-import { useConfig } from "@/context/ConfigContext";
-import { TG_SUPPORT_GROUP } from "@/constants";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -394,8 +386,6 @@ const MainButtonHandler = React.memo(() => {
   const { eventData, hasEnteredPassword, isStarted, isNotEnded, initData } = useEventData();
   const { user } = useUserStore();
   const router = useRouter();
-  const [isTasksOpen, setIsTasksOpen] = useState(false);
-  const webApp = useWebApp();
 
   const userCompletedTasks =
     (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
@@ -404,93 +394,6 @@ const MainButtonHandler = React.memo(() => {
   const isOnlineEvent = eventData.data?.participationType === "online";
   const isCheckedIn = eventData.data?.registrant_status === "checkedin" || isOnlineEvent;
   const isEventActive = isStarted && isNotEnded;
-
-  const joinTaskStatus = trpc.users.joinOntonTasks.useQuery(undefined, {
-    refetchOnWindowFocus: true,
-  });
-  const [isJoinedX, setJoinedX] = useState<"done" | "not_done" | "checking">(
-    localStorage.getItem("n-j-x")
-      ? "not_done"
-      : joinTaskStatus.isSuccess
-        ? joinTaskStatus.data?.all_done
-          ? "done"
-          : "not_done"
-        : "done"
-  );
-  const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data.gp && isJoinedX;
-  const config = useConfig();
-
-  if (!config.tjo && !joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
-    return <MainButton progress />;
-  }
-
-  if (!config.tjo && (!joinTaskStatus.data?.all_done || isJoinedX !== "done" || isTasksOpen)) {
-    const closeTasksOpen = () => {
-      setIsTasksOpen(false);
-    };
-
-    return (
-      <>
-        {!isTasksOpen && (
-          <MainButton
-            text="Complete tasks to Attend"
-            onClick={() => {
-              setIsTasksOpen(true);
-              localStorage.setItem("n-j-x", "88a0bd0a-39fb-4dd0-ad5e-cfb73a2ac54a");
-            }}
-          />
-        )}
-
-        <CustomSheet
-          title="Pre-registration tasks"
-          opened={isTasksOpen}
-          onClose={closeTasksOpen}
-        >
-          <div className="space-y-4">
-            <Task
-              title="ONTON Community Chat"
-              status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.gp ? "done" : "not_done"}
-              onClick={() => {
-                webApp?.openTelegramLink(TG_SUPPORT_GROUP);
-              }}
-            />
-            <Task
-              title="ONTON Announcement Channel"
-              status={joinTaskStatus.isFetching ? "checking" : !!joinTaskStatus.data?.ch ? "done" : "not_done"}
-              onClick={() => {
-                webApp?.openTelegramLink("https://t.me/ontonlive");
-              }}
-            />
-            <Task
-              title="Follow ONTON on X"
-              status={
-                joinTaskStatus.isFetching || isJoinedX === "checking"
-                  ? "checking"
-                  : isJoinedX === "done"
-                    ? "done"
-                    : "not_done"
-              }
-              onClick={async () => {
-                setJoinedX("checking");
-                webApp?.openLink("https://x.com/ontonbot");
-                await sleep(30_000);
-                setJoinedX("done");
-                localStorage.removeItem("n-j-x");
-              }}
-            />
-          </div>
-          <div className="mt-6">
-            <CustomButton
-              variant={allTasksDone ? undefined : "outline"}
-              onClick={closeTasksOpen}
-            >
-              Close
-            </CustomButton>
-          </div>
-        </CustomSheet>
-      </>
-    );
-  }
 
   if (userCompletedTasks && hasEnteredPassword) {
     if (isCheckedIn) {
