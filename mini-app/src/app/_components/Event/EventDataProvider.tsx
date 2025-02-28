@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import zod from "zod";
 import { EventDataContext } from "./eventPageContext";
 import { useGetEvent } from "@/hooks/events.hooks";
+import { ErrorState } from "../ErrorState";
 
 export const EventDataProvider = ({ children, eventHash }: { children: React.ReactNode; eventHash: string }) => {
   const webApp = useWebApp();
@@ -30,7 +31,7 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
     if (userEventFields.isSuccess) {
       trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
     }
-  }, [userEventFields.isSuccess, userEventFields.data]);
+  }, [userEventFields.isSuccess, userEventFields.data, trpcUtils.users.getVisitorReward]);
 
   useEffect(() => {
     if (webApp?.initData && !isInitialized) {
@@ -65,14 +66,21 @@ export const EventDataProvider = ({ children, eventHash }: { children: React.Rea
       startUTC,
       location,
     };
-  }, [eventData.data?.start_date, eventData.data?.end_date, eventData.data?.location]);
+  }, [eventData.data]);
 
   const userEventPasswordField = useMemo(() => {
-    // console.log(userEventFields.data);
     if (eventPasswordField?.id) {
       return userEventFields.data?.[eventPasswordField.id];
     }
-  }, [eventPasswordField?.id, userEventFields.isFetching, userEventFields.isSuccess]);
+  }, [eventPasswordField?.id, userEventFields.data]);
+
+  if (eventData.isError) {
+    if (eventData.error.data?.code === "NOT_FOUND") {
+      return <ErrorState errorCode="event_not_found" />;
+    } else {
+      return <ErrorState errorCode="something_went_wrong" />;
+    }
+  }
 
   return (
     <EventDataContext.Provider

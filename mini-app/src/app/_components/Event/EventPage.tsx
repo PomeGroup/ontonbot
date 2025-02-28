@@ -15,10 +15,6 @@ const EventDataQueryState = () => {
   switch (true) {
     case eventData.isLoading || !initData:
       return <EventPageLoadingSkeleton />;
-    case eventData.isError || !eventData.isSuccess:
-      return <div>Something went wrong...</div>;
-    case eventData.data === null:
-      return <div>Event Not Found</div>;
     default:
       return <EventSections />;
   }

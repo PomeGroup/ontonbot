@@ -15,7 +15,7 @@ export const pool = new Pool({
   connectionTimeoutMillis: 2000, // return an error after 2s if connection could not be established
 });
 
-async function createDatabase() {
+const createDatabase = async () => {
   const client = await pool.connect();
 
   try {
@@ -45,9 +45,9 @@ async function createDatabase() {
   } finally {
     client.release();
   }
-}
+};
 
-export async function getEvent(uuid: string) {
+export const getEvent = async (uuid: string) => {
   const client = await pool.connect();
 
   let event:
@@ -78,11 +78,11 @@ export async function getEvent(uuid: string) {
   }
 
   return event;
-}
+};
 
-export async function countReferrals(
+export const countReferrals = async (
   userId: number,
-): Promise<{ totalReferrals: number; todayReferrals: number }> {
+): Promise<{ totalReferrals: number; todayReferrals: number }> => {
   const client = await pool.connect();
 
   try {
@@ -108,9 +108,9 @@ export async function countReferrals(
   } finally {
     client.release();
   }
-}
+};
 
-export async function addVisitor(visitor: TVisitor) {
+export const addVisitor = async (visitor: TVisitor) => {
   const client = await pool.connect();
 
   try {
@@ -133,9 +133,9 @@ export async function addVisitor(visitor: TVisitor) {
   } finally {
     client.release();
   }
-}
+};
 
-export async function changeRole(newRole: string, username: string) {
+export const changeRole = async (newRole: string, username: string) => {
   const client = await pool.connect();
 
   try {
@@ -192,9 +192,9 @@ export async function changeRole(newRole: string, username: string) {
     client.release();
     throw error;
   }
-}
+};
 
-export async function getUser(usernameOrId: string) {
+export const getUser = async (usernameOrId: string) => {
   const client = await pool.connect();
 
   const user = await client.query(
@@ -206,18 +206,18 @@ export async function getUser(usernameOrId: string) {
   );
   client.release();
   return user.rows[0];
-}
+};
 
-export async function isUserAdmin(usernameOrId: string) {
+export const isUserAdmin = async (usernameOrId: string) => {
   const user = await getUser(usernameOrId);
   if (!user) {
     return { isAdmin: false, user: null };
   }
   return { isAdmin: user.role === "admin", user };
-}
+};
 
 
-export async function getEventTickets(uuid: string) {
+export const getEventTickets = async (uuid: string) => {
   const client = await pool.connect();
 
   let event: {
@@ -242,9 +242,9 @@ export async function getEventTickets(uuid: string) {
   }
 
   return event;
-}
+};
 
-export async function fetchOntonSetting() {
+export const fetchOntonSetting = async () => {
   try {
     const client = await pool.connect();
 
@@ -273,9 +273,9 @@ export async function fetchOntonSetting() {
   } catch (error) {
     logger.error(error);
   }
-}
+};
 
-export async function getAdminOrganizerUsers() {
+export const getAdminOrganizerUsers = async () => {
   const client = await pool.connect();
 
   try {
@@ -288,9 +288,9 @@ export async function getAdminOrganizerUsers() {
   } finally {
     client.release();
   }
-}
+};
 
-export async function updateUserProfile(
+export const updateUserProfile = async (
   userId: number,
   {
     isPremium,
@@ -303,7 +303,7 @@ export async function updateUserProfile(
     photoUrl?: string;
     hasBlockedBot?: boolean;
   },
-) {
+) => {
   const client = await pool.connect();
 
   try {
@@ -328,12 +328,17 @@ export async function updateUserProfile(
       setClauses.push(`has_blocked_the_bot = $${values.length}`);
     }
 
-    // If there’s nothing to update, return early
+    // If there are no field changes, just return early
     if (!setClauses.length) return;
+
+    // Also update updated_at to the current timestamp
+    // (Note: We do this unconditionally, because at least one field is changing)
+    setClauses.push(`updated_at = NOW()`);
 
     // Finally push userId
     values.push(userId);
     await redisTools.deleteCache(getUserCacheKey(userId));
+
     const query = `
         UPDATE users
         SET ${setClauses.join(", ")}
@@ -344,8 +349,7 @@ export async function updateUserProfile(
   } finally {
     client.release();
   }
-}
-
+};
 
 // We'll define an interface for each result row
 interface SbtDistResult {
@@ -362,10 +366,10 @@ interface SbtDistResult {
  * 4) Insert "rewards" if none exist, or skip
  * 5) Return array of { user_id, user_name, process_result }
  */
-export async function processCsvLinesForSbtDist(
+export const processCsvLinesForSbtDist = async (
   eventUUID: string,
   userIdLines: string[],
-): Promise<SbtDistResult[]> {
+): Promise<SbtDistResult[]> => {
   const results: SbtDistResult[] = [];
 
   const client = await pool.connect();
@@ -486,10 +490,10 @@ export async function processCsvLinesForSbtDist(
   } finally {
     client.release();
   }
-}
+};
 
 // This function returns an array of rows, each with user_id
-export async function getApprovedRegistrants(eventUUID: string) {
+export const getApprovedRegistrants = async (eventUUID: string) => {
   const client = await pool.connect();
   try {
     const query = `
@@ -506,7 +510,7 @@ export async function getApprovedRegistrants(eventUUID: string) {
   } finally {
     client.release();
   }
-}
+};
 
 createDatabase().then(() => {
   logger.log("Database created successfully");

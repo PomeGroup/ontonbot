@@ -45,8 +45,8 @@ export const fetchEventByUuid = async (eventUuid: string): Promise<EventRow | nu
   }
   const result = (await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute()).pop();
   if (result) {
-    await redisTools.setCache(getEventUUIDCacheKey(eventUuid), result, redisTools.cacheLvl.short);
-    await redisTools.setCache(getEventIDCacheKey(result.event_id), result, redisTools.cacheLvl.short);
+    await redisTools.setCache(getEventUUIDCacheKey(eventUuid), result, redisTools.cacheLvl.long);
+    await redisTools.setCache(getEventIDCacheKey(result.event_id), result, redisTools.cacheLvl.long);
     return result;
   }
   return null;
@@ -59,8 +59,8 @@ export const fetchEventById = async (eventId: number): Promise<EventRow | null> 
   }
   const result = (await db.select().from(events).where(eq(events.event_id, eventId)).execute()).pop();
   if (result) {
-    await redisTools.setCache(getEventIDCacheKey(eventId), result, redisTools.cacheLvl.short);
-    await redisTools.setCache(getEventUUIDCacheKey(result.event_uuid), result, redisTools.cacheLvl.short);
+    await redisTools.setCache(getEventIDCacheKey(eventId), result, redisTools.cacheLvl.long);
+    await redisTools.setCache(getEventUUIDCacheKey(result.event_uuid), result, redisTools.cacheLvl.long);
     return result;
   }
   return null;

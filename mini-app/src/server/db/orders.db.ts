@@ -95,6 +95,26 @@ async function checkIfSoldOut(event_uuid: string, ticketOrderType: OrderTypeValu
   return { isSoldOut: TicketsCount[0].ticket_count >= capacity, soldCount: TicketsCount[0].ticket_count };
 }
 
+/**
+ * Check if there's already a completed order for this event, user, and orderType.
+ */
+const findExistingCompletedOrder = async (eventUuid: string, telegramUserId: number, orderType: OrderTypeValues) =>
+  db.query.orders.findFirst({
+    where: and(
+      eq(orders.user_id, telegramUserId),
+      eq(orders.order_type, orderType),
+      eq(orders.event_uuid, eventUuid),
+      eq(orders.state, "completed")
+    ),
+  });
+
+const findOrderByEventUser = async (eventUuid: string, telegramUserId: number) => {
+  return db.query.orders.findMany({
+    where: and(eq(orders.event_uuid, eventUuid), eq(orders.user_id, telegramUserId)),
+    orderBy: (fields, { desc }) => [desc(fields.created_at)], // or desc(fields.id)
+  });
+};
+
 const ordersDB = {
   getEventOrders,
   updateOrderState,
@@ -102,6 +122,8 @@ const ordersDB = {
   createPromoteToOrganizerOrder,
   getPromoteToOrganizerOrder,
   checkIfSoldOut,
+  findExistingCompletedOrder,
+  findOrderByEventUser,
 };
 
 export default ordersDB;

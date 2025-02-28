@@ -106,7 +106,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
 
-  if (!eventData) {
+  if (!eventData.event_id) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "event not found",

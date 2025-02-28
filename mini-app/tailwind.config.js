@@ -29,6 +29,17 @@ module.exports = konstaConfig({
         "2xl": "1400px",
       },
     },
+    fontWeight: {
+      thin: "100",
+      extralight: "200",
+      light: "300",
+      normal: "400",
+      medium: "510",
+      semibold: "590",
+      bold: "700",
+      extrabold: "800",
+      black: "900",
+    },
     listStyleType: {
       disc: "disc",
       circle: "circle",

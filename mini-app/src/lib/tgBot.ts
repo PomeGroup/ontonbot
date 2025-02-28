@@ -13,6 +13,7 @@ import { logger } from "@/server/utils/logger";
 import { InlineKeyboardMarkup } from "grammy/types";
 import moderationLogDB from "@/server/db/moderationLogger.db";
 import { getNoticeEmoji } from "@/moderationBot/helpers";
+import { TG_SUPPORT_GROUP } from "@/constants";
 
 // Helper to post to your custom Telegram server
 const tgClientPost = (path: string, data: any) =>
@@ -362,7 +363,7 @@ export async function sendToEventsTgChannel(props: {
 <i>${props.subtitle}</i>
 
 📍 <i>${props.participationType.split("_").join(" ").charAt(0).toUpperCase() + props.participationType.split("_").join(" ").slice(1)} ${props.ticketPrice ? "Paid" : "Free"}</i>
-${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : props.ticketPrice.paymentType === "star" ? "⭐" : "💲"} <b>Ticket Price:</b> ${props.ticketPrice.amount} ${props.ticketPrice.amount}\n` : ""}
+${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : props.ticketPrice.paymentType === "star" ? "⭐" : "💲"} <b>Ticket Price:</b> ${props.ticketPrice.amount}${props.ticketPrice.paymentType}\n` : ""}
 👉 <a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
 
 ⏰ <b>Starts at:</b> ${new Date(props.s_date * 1000).toLocaleString("en-US", {
@@ -385,7 +386,7 @@ ${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : pr
           hour12: false,
         })}
 
-🔵 <b>ONTON <a href="https://t.me/+eErXwpP8fDw3ODY0">News</a> | <a href="https://t.me/ontonsupport">Community</a> | <a href="https://t.me/theontonbot">ONTON bot</a> | <a href="https://x.com/ontonbot">X</a> | <a href="https://t.me/ontonsupport/122863">Tutorials</a></b> | <a href="https://t.me/onton_events">Events</a>`,
+🔵 <b>ONTON <a href="https://t.me/+eErXwpP8fDw3ODY0">News</a> | <a href="${TG_SUPPORT_GROUP}">Community</a> | <a href="https://t.me/theontonbot">ONTON bot</a> | <a href="https://x.com/ontonbot">X</a> | <a href="${TG_SUPPORT_GROUP}/122863">Tutorials</a></b> | <a href="https://t.me/onton_events">Events</a>`,
         parse_mode: "HTML",
       }
     );

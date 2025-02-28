@@ -1,0 +1,309 @@
+openapi: 3.0.3
+info:
+  title: External Seller API
+  version: 1.0.0
+  description: |
+    API used by external sellers create an order.
+    It requires an API key (or `Authorization` header) to authenticate the request.
+
+servers:
+  - url: https://staging-app.toncloud.observer
+    description: Staging server
+  - url: https://dev-app.toncloud.observer
+    description: Development server
+  - url: https://app.onton.live
+    description: Production server
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+paths:
+  /api/externalSeller/verifiedAsPaid:
+    options:
+      summary: "Handle preflight requests for CORS"
+      description: "Preflight endpoint returning 204."
+      responses:
+        "204":
+          description: "No Content"
+
+    post:
+      summary: "Verify a user's payment and create a ticket"
+      description: >
+        This endpoint:<br>
+        1. Authenticates the request using the `api_key` or `Authorization` header.<br> 
+        2. Validates Telegram user info, event ownership, and payment details.<br> 
+        3. issues a CSBT ticket . <br> 
+
+      tags:
+        - External Seller
+      security:
+        - ApiKeyAuth: [ ]
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - telegramUserId
+                - telegramUsername
+                - eventUuid
+                - paymentType
+                - paymentAmount
+              properties:
+                telegramUserId:
+                  type: integer
+                  description: The Telegram user ID of the paying user.
+                  example: 123456789
+                telegramUsername:
+                  type: string
+                  description: The Telegram username, including '@'.
+                  example: "@user_name"
+                eventUuid:
+                  type: string
+                  format: uuid
+                  description: The UUID of the event to which the ticket belongs.
+                  example: "82be2f44-8d0c-4bd9-a3c1-c71613163abe"
+                paymentType:
+                  type: string
+                  enum: [ STAR, TON, USDT ]
+                  description: The method of payment used by the user.
+                  example: "STAR"
+                paymentAmount:
+                  type: number
+                  format: float
+                  description: The amount paid by the user.
+                  example: 50
+
+      responses:
+        "200":
+          description: Payment verified successfully, and a CSBT ticket may have been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  isOntonUser:
+                    type: boolean
+                    example: true
+                  sbtClaimLink:
+                    type: string
+                    example: "https://t.me/ton_society_bot/start?startapp=csbt-test-for-ton-fest&mode=compact"
+        "400":
+          description: Bad Request (validation failure or other client error).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Invalid request body or internal server error"
+                  status:
+                    type: array
+                    items:
+                      type: string
+                    example: "bad_request"
+        "401":
+          description: Unauthorized (No or invalid API key, or user mismatch).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized: invalid Api Key"
+        "404":
+          description: Resource not found (e.g., event not found, payment info not found).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Event not found"
+                  status:
+                    type: array
+                    items:
+                      type: string
+                    example: "event_not_exist"
+        "410":
+          description: Resource gone or no longer available (e.g., event not active, sold out).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Event tickets are sold out"
+                  status:
+                    type: array
+                    items:
+                      type: string
+                    example: "sold_out"
+        "500":
+          description: Server error (unexpected issue in DB or external call).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Something went wrong"
+
+
+  /api/externalSeller/refund:
+    options:
+      summary: Handle preflight requests (CORS)
+      responses:
+        "204":
+          description: No Content
+
+    post:
+      summary: "Refund a user's order"
+      description: |
+        1. Authenticates the request using the `api_key` or `Authorization` header.  
+        2. Validates that the event belongs to the authenticated owner.  
+        3. Searches for the user's orders for the specified event.  
+        4. If a "completed" order is found, it sets that order state to "cancelled" and the eventRegistrant status to "rejected".  
+        5. If no "completed" order exists but a "cancelled" order does, it returns "order_already_cancelled".  
+        6. Otherwise returns an error indicating the order cannot be refunded or wasn't found.
+
+      tags:
+        - External Seller
+      security:
+        - ApiKeyAuth: [ ]   # Adjust to your chosen security scheme
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - telegramUserId
+                - eventUuid
+              properties:
+                telegramUserId:
+                  type: integer
+                  description: The Telegram user ID whose order you want to refund
+                  example: 123456789
+                eventUuid:
+                  type: string
+                  format: uuid
+                  description: The UUID of the event
+                  example: "c5f9bd59-a46b-4dce-91cb-3cd146b255a5"
+      responses:
+        "200":
+          description: Refund was successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Order refunded successfully"
+                  status:
+                    type: string
+                    example: "order_refunded"
+        "204":
+          description: Preflight response for OPTIONS requests
+        "400":
+          description: Bad request or internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Internal server error"
+                  status:
+                    type: string
+                    example: "bad_request"
+        "401":
+          description: Unauthorized (invalid API key or event mismatch)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized Access to event"
+        "404":
+          description: Event or order not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "No order found for this user & event"
+                  status:
+                    type: string
+                    example: "order_not_found"
+        "409":
+          description: Order was previously cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Order was cancelled before"
+                  status:
+                    type: string
+                    example: "order_already_cancelled"
+        "410":
+          description: Event not published or tickets are sold out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Event not published yet"
+                  status:
+                    type: string
+                    example: "event_not_active"
+

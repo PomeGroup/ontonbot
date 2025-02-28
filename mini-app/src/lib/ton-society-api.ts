@@ -8,7 +8,6 @@ import { HubsResponse, SocietyHub } from "@/types";
 import { redisTools } from "@/lib/redisTools";
 import { configDotenv } from "dotenv";
 import { logger } from "@/server/utils/logger";
-import { sleep } from "@/utils";
 
 configDotenv();
 // ton society client to send http requests to https://ton-society.github.io/sbt-platform
