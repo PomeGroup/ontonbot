@@ -64,20 +64,6 @@
       "when": 1739161702736,
       "tag": "0008_dusty_annihilus",
       "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1739527335616,
-      "tag": "0009_deep_hawkeye",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1739894725991,
-      "tag": "0010_giant_zombie",
-      "breakpoints": true
     }
   ]
 }
