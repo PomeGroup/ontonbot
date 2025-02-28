@@ -30,11 +30,11 @@ export async function createContext({ req }: { req: Request }) {
 
       if (user.role === "ban") {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
+          code: "FORBIDDEN",
           message: "user is banned",
         });
       }
-      
+
       return user;
     }
     return null;

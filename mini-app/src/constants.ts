@@ -690,3 +690,6 @@ export const nonVerifiedHubs = [
 
 export const MAIN_TG_CHANNEL_ID = -1002188275713;
 export const MAIN_TG_CHAT_ID = -1002129089489;
+
+export const TG_BOT_LINK = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`;
+export const TG_SUPPORT_GROUP = "https://t.me/ontonsupport";

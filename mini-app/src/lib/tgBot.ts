@@ -13,6 +13,7 @@ import { logger } from "@/server/utils/logger";
 import { InlineKeyboardMarkup } from "grammy/types";
 import moderationLogDB from "@/server/db/moderationLogger.db";
 import { getNoticeEmoji } from "@/moderationBot/helpers";
+import { TG_SUPPORT_GROUP } from "@/constants";
 
 // Helper to post to your custom Telegram server
 const tgClientPost = (path: string, data: any) =>
@@ -385,7 +386,7 @@ ${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : pr
           hour12: false,
         })}
 
-🔵 <b>ONTON <a href="https://t.me/+eErXwpP8fDw3ODY0">News</a> | <a href="https://t.me/ontonsupport">Community</a> | <a href="https://t.me/theontonbot">ONTON bot</a> | <a href="https://x.com/ontonbot">X</a> | <a href="https://t.me/ontonsupport/122863">Tutorials</a></b> | <a href="https://t.me/onton_events">Events</a>`,
+🔵 <b>ONTON <a href="https://t.me/+eErXwpP8fDw3ODY0">News</a> | <a href="${TG_SUPPORT_GROUP}">Community</a> | <a href="https://t.me/theontonbot">ONTON bot</a> | <a href="https://x.com/ontonbot">X</a> | <a href="${TG_SUPPORT_GROUP}/122863">Tutorials</a></b> | <a href="https://t.me/onton_events">Events</a>`,
         parse_mode: "HTML",
       }
     );
