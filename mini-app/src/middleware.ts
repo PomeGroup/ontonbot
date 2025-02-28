@@ -110,3 +110,4 @@ type ProtectedRoute = {
   methods: string[]; // Array of HTTP methods (GET, POST, etc.)
   pattern: RegExp; // Regular expression for matching paths
 };
+//
