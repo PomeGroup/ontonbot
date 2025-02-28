@@ -237,7 +237,7 @@ export const selectUserById = async (
 
       // 6) Cache extended user (optional)
       if (update_cache) {
-        await redisTools.setCache(cacheKey, extendedUser, redisTools.cacheLvl.short);
+        await redisTools.setCache(cacheKey, extendedUser, redisTools.cacheLvl.long);
       }
 
       return extendedUser;
@@ -355,7 +355,7 @@ const selectWalletById: (user_id: number) => Promise<{ wallet: string | null }> 
     .execute();
 
   if (walletInfo.length > 0) {
-    await redisTools.setCache(cacheKey, walletInfo[0], redisTools.cacheLvl.short);
+    await redisTools.setCache(cacheKey, walletInfo[0], redisTools.cacheLvl.long);
     return walletInfo[0];
   }
 
