@@ -17,7 +17,7 @@ import Papa from "papaparse";
 import { selectVisitorsByEventUuid } from "@/server/db/visitors";
 import { VisitorsWithDynamicFields } from "@/server/db/dynamicType/VisitorsWithDynamicFields";
 import axios from "axios";
-import { getSBTClaimedStaus } from "@/lib/ton-society-api";
+import { getSBTClaimedStatus } from "@/lib/ton-society-api";
 import { usersDB } from "@/server/db/users";
 import couponSchema from "@/zodSchema/couponSchema";
 import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
@@ -120,7 +120,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
                 ? row.event_registrants.register_info
                 : JSON.parse(String(row.event_registrants.register_info || "{}"));
 
-            const sbtClaimStatus = await getSBTClaimedStaus(eventData.activity_id!, row.users.user_id);
+            const sbtClaimStatus = await getSBTClaimedStatus(eventData.activity_id!, row.users.user_id);
 
             const expandedRow = {
               ...row.event_registrants,
@@ -184,7 +184,7 @@ const requestExportFile = evntManagerPP.mutation(async (opts) => {
               delete visitorData.ticket_id;
             }
 
-            const sbtClaimStatus = await getSBTClaimedStaus(eventData?.activity_id!, visitorData.user_id!);
+            const sbtClaimStatus = await getSBTClaimedStatus(eventData?.activity_id!, visitorData.user_id!);
 
             delete visitorData.dynamicFields;
             return {
