@@ -65,44 +65,46 @@ export const ErrorState: FC<ErrorStateProps> = ({ errorCode }) => {
   return (
     <Page className="p-4 flex flex-col gap-4">
       <CustomCard
-        className="flex-1 flex flex-col items-center justify-center text-center gap-9"
+        className="flex-1 flex items-center"
         defaultPadding
       >
-        <Typography
-          variant="title1"
-          weight="bold"
-        >
-          {errorMessage.split(/(NTON)/).map((part, index) =>
-            part === "NTON" ? (
-              <React.Fragment key={index}>
-                <Image
-                  src="/onton_logo.svg"
-                  alt="onton icon"
-                  width={22}
-                  height={22}
-                  className="inline align-baseline"
-                  style={{
-                    marginBottom: -1,
-                  }}
-                />
-                {part}
-              </React.Fragment>
-            ) : (
-              part
-            )
-          )}
-        </Typography>
-        <DataStatus
-          status={dataStatus}
-          size="lg"
-        />
-        <Typography
-          weight="normal"
-          variant="title3"
-          className="text-balance"
-        >
-          {desc}
-        </Typography>
+        <div className="flex flex-col items-center justify-center text-center gap-9">
+          <Typography
+            variant="title1"
+            weight="bold"
+          >
+            {errorMessage.split(/(NTON)/).map((part, index) =>
+              part === "NTON" ? (
+                <React.Fragment key={index}>
+                  <Image
+                    src="/onton_logo.svg"
+                    alt="onton icon"
+                    width={22}
+                    height={22}
+                    className="inline align-baseline"
+                    style={{
+                      marginBottom: -1,
+                    }}
+                  />
+                  {part}
+                </React.Fragment>
+              ) : (
+                part
+              )
+            )}
+          </Typography>
+          <DataStatus
+            status={dataStatus}
+            size="lg"
+          />
+          <Typography
+            weight="normal"
+            variant="title3"
+            className="text-balance"
+          >
+            {desc}
+          </Typography>
+        </div>
       </CustomCard>
       <div className="flex flex-col gap-3">
         <CustomButton onClick={primaryHandler}>{buttonTextPrimary}</CustomButton>
