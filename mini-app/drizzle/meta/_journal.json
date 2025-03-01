@@ -78,6 +78,13 @@
       "when": 1740602406532,
       "tag": "0010_lucky_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1740768509607,
+      "tag": "0011_flashy_boomerang",
+      "breakpoints": true
     }
   ]
 }

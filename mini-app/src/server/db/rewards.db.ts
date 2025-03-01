@@ -1,12 +1,19 @@
 import { db } from "@/db/db";
 import { RewardStatus, RewardType } from "@/db/enum";
+import { RewardTonSocietyStatusType, visitors } from "@/db/schema";
 import { RewardType as RewardTypeParitial } from "@/types/event.types";
-import { visitors } from "@/db/schema";
+
 import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
-import { asc, eq, or, sql } from "drizzle-orm";
+import { and, eq, sql ,or ,asc} from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
+export interface RewardChunkRow {
+  reward_id: string; // or `uuid` type depending on your schema
+  visitor_id: number;
+}
+
+
 
 // Utility function to generate cache keys
 const generateCacheKey = (visitor_id: number, reward_id?: string) => {
@@ -195,6 +202,49 @@ const updateRewardWithConditions = async (
     .execute();
 };
 
+const updateTonSocietyStatusByVisitorId = async (visitor_id: number, newTonSocietyStatus: RewardTonSocietyStatusType) => {
+  // Perform the update
+  const updatedVisitor = await db
+    .update(rewards)
+    .set({
+      tonSocietyStatus: newTonSocietyStatus,
+      updatedBy: "system",
+    })
+    .where(eq(rewards.visitor_id, visitor_id))
+    .returning()
+    .execute();
+
+  // Update the cache with the new record
+  const cacheKey = generateCacheKey(visitor_id);
+  await redisTools.setCache(cacheKey, updatedVisitor?.[0], redisTools.cacheLvl.medium);
+
+  // Return the first updated row, or null if none
+  return updatedVisitor?.[0] ?? null;
+};
+
+/**
+ * Fetch a chunk of rewards for a given event_uuid where
+ * tonSocietyStatus is "NOT_CLAIMED".
+ */
+export async function fetchNotClaimedRewardsForEvent(
+  event_uuid: string,
+  limit: number,
+  offset: number
+): Promise<RewardChunkRow[]> {
+  return await db
+    .select({
+      reward_id: rewards.id,
+      visitor_id: rewards.visitor_id,
+    })
+    .from(rewards)
+    .innerJoin(sql`visitors as v`, eq(sql`v.id`, rewards.visitor_id))
+    .where(and(eq(sql`v.event_uuid`, event_uuid), eq(rewards.tonSocietyStatus, "NOT_CLAIMED")))
+    .orderBy(sql`${rewards.id} ASC`)
+    .limit(limit)
+    .offset(offset)
+    .execute();
+}
+
 const updateRewardStatus = async (
   rewardId: string,
   status?: string,
@@ -300,6 +350,8 @@ const rewardDB = {
   selectRewardsWithVisitorDetails,
   updateReward,
   updateRewardWithConditions,
+  updateTonSocietyStatusByVisitorId,
+  fetchNotClaimedRewardsForEvent,
   updateRewardStatus,
   handleRewardError,
   fetchPendingRewardsForEvent,

@@ -18,6 +18,7 @@ import { registrantRouter } from "@/server/routers/registrant";
 import { organizerRouter } from "@/server/routers/organizers";
 import { couponRouter } from "@/server/routers/couponRouter";
 import { userRolesRouter } from "@/server/routers/userRolesRouter";
+import { UsersScoreRouter } from "@/server/routers/UsersScore";
 import "@/lib/gracefullyShutdown";
 
 export const appRouter = router({
@@ -39,6 +40,7 @@ export const appRouter = router({
   registrant: registrantRouter,
   coupon: couponRouter,
   userRoles: userRolesRouter,
+  usersScore: UsersScoreRouter,
 });
 
 export type AppRouter = typeof appRouter;

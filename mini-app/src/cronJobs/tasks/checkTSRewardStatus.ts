@@ -1,0 +1,88 @@
+import rewardDB from "@/server/db/rewards.db";
+import pLimit from "p-limit";
+import { logger } from "@/server/utils/logger";
+import eventDB from "@/server/db/events";
+import { handleSingleRewardUpdate } from "@/cronJobs/helper/handleSingleRewardUpdate";
+
+const EVENTS_BATCH_SIZE = 50;
+const REWARDS_BATCH_SIZE = 30;
+const MAX_CONCURRENT_API_CALLS = 10;
+
+/**
+ * Main function to sync Ton Society status in a large-scale manner,
+ * with batching & concurrency limiting, optionally filtering by start_date.
+ *
+ * @param startDateCutoff Optional minimum start_date (epoch seconds).
+ *   If > 0, only events whose start_date is greater than this are processed.
+ *   Otherwise, all events with a non-null activity_id are processed.
+ */
+export const syncTonSocietyStatusLargeScale = async (startDateCutoff: number = 0) => {
+  try {
+    let offset = 0;
+    let totalEventsProcessed = 0;
+
+    while (true) {
+      // 1) If a startDateCutoff is provided, fetch only events with start_date > cutoff
+      //    Otherwise, fetch all events that have a non-null activity_id.
+      const eventChunk =
+        startDateCutoff > 0
+          ? await eventDB.fetchEventsWithNonNullActivityIdAfterStartDateDESC(EVENTS_BATCH_SIZE, offset, startDateCutoff)
+          : await eventDB.fetchEventsWithNonNullActivityIdDESC(EVENTS_BATCH_SIZE, offset);
+
+      if (eventChunk.length === 0) {
+        logger.log("No more events with activity_id to process.");
+        break;
+      }
+
+      for (const eventRow of eventChunk) {
+        const { event_id, event_uuid, activity_id } = eventRow;
+        logger.log(`\n[Event ${event_id}] Starting sync for activity_id=${activity_id}`);
+
+        if (!activity_id) continue;
+
+        let rewardOffset = 0;
+        while (true) {
+          const rewardChunk = await rewardDB.fetchNotClaimedRewardsForEvent(event_uuid, REWARDS_BATCH_SIZE, rewardOffset);
+
+          if (rewardChunk.length === 0) {
+            logger.log(`[Event ${event_id}] No more rewards to process.`);
+            break;
+          }
+
+          // Concurrency limiting
+          const limit = pLimit(MAX_CONCURRENT_API_CALLS);
+
+          const updatePromises = rewardChunk.map(({ reward_id, visitor_id }) =>
+            limit(async () => {
+              await handleSingleRewardUpdate(activity_id, visitor_id, event_id);
+            })
+          );
+
+          await Promise.all(updatePromises);
+
+          logger.log(`[Event ${event_id}] Processed ${rewardChunk.length} rewards [offset: ${rewardOffset}]`);
+          rewardOffset += REWARDS_BATCH_SIZE;
+        }
+
+        logger.log(`[Event ${event_id}] Done syncing rewards for activity_id=${activity_id}`);
+      }
+
+      offset += EVENTS_BATCH_SIZE;
+      totalEventsProcessed += eventChunk.length;
+      logger.log(`\nProcessed ${eventChunk.length} events. Total so far: ${totalEventsProcessed}.`);
+    }
+
+    logger.log("All events processed. Sync complete.");
+  } catch (error) {
+    logger.error("Error in syncTonSocietyStatusLargeScale:", error);
+    throw error;
+  }
+};
+
+/**
+ * Wrapper function exposed as a cron job.
+ */
+export const CheckSbtStatus = async () => {
+  // If you need a startDateCutoff other than 0, pass it here
+  await syncTonSocietyStatusLargeScale(0);
+};
