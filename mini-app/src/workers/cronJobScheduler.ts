@@ -63,6 +63,19 @@ async function MainCronJob() {
     true // (waitForCompletion) => wait for onTick to finish
     // No errorHandler passed
   );
+
+  new CronJob(
+    "*/10 * * * * *", // Every 10 seconds
+    cronJobs.runPendingCallbackTasks, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
 }
 
 MainCronJob().then(() => logger.log("Cron Jobs Started"));

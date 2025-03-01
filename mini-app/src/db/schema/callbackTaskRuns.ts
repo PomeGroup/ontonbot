@@ -41,11 +41,13 @@ export const callbackTaskRuns = pgTable(
     created_at: timestamp("created_at").defaultNow(),
     updated_at: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),
     updated_by: text("updated_by").default("system").notNull(),
+    next_run_at: timestamp("next_run_at", { mode: "date", precision: 3 }),
   },
   (table) => ({
     runUuidIdx: index("callback_task_runs_run_uuid_idx").on(table.run_uuid),
     callbackTaskIdIdx: index("callback_task_runs_callback_task_id_idx").on(table.callback_task_id),
     runUuidUnique: uniqueIndex("callback_task_runs_run_uuid_unique").on(table.run_uuid),
+    nextRunAtIdx: index("callback_task_runs_next_run_at_idx").on(table.next_run_at),
   })
 );
 

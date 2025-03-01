@@ -251,7 +251,44 @@ export const connectRedis = async (): Promise<void> => {
     console.error("Error connecting to Redis:", err);
   }
 };
+/**
+ * Acquires a lock using Redis SET NX EX pattern.
+ *
+ * @param lockKey - The key used for locking
+ * @param ttl - The lock time-to-live in seconds
+ * @returns true if lock is acquired, false otherwise
+ */
+export const acquireLock = async (lockKey: string, ttl: number): Promise<boolean> => {
+  if (!CACHE_ENABLED) return true; // If cache is disabled, we "simulate" a lock success
 
+  try {
+    const redisClient = await getRedisClient();
+    // NX => Only set if key doesn't exist
+    // EX => Expire the key after <ttl> seconds
+    const result = await redisClient.set(lockKey, "locked", { NX: true, EX: ttl });
+    // result === "OK" => lock acquired; null => lock not acquired
+    return result === "OK";
+  } catch (err) {
+    console.error(`Error acquiring lock for key ${lockKey}:`, err);
+    // Fall back to false => can't acquire lock
+    return false;
+  }
+};
+
+/**
+ * Releases a lock by deleting the given lock key.
+ *
+ * @param lockKey - The key to unlock
+ */
+export const releaseLock = async (lockKey: string): Promise<void> => {
+  if (!CACHE_ENABLED) return;
+  try {
+    const redisClient = await getRedisClient();
+    await redisClient.del(lockKey);
+  } catch (err) {
+    console.error(`Error releasing lock for key ${lockKey}:`, err);
+  }
+};
 /**
  * Cache keys
  */
@@ -287,6 +324,8 @@ export const cacheKeys = {
   join_task_tg_ch: "join_task_tg_ch:", // channel
   join_task_tg_gp: "join_task_tg_gp:", // group
   usersScore: "usersScore:",
+  rateLimitRequestApi: "rate-limit-request-api:",
+  callbackTask: "callbackTask:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
@@ -313,6 +352,8 @@ export const redisTools = {
   persistKey,
   quitRedis,
   connectRedis,
+  acquireLock,
+  releaseLock,
   cacheKeys,
   cacheLvl,
 };

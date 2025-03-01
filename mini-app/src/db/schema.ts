@@ -64,6 +64,8 @@ import {
   CallbackTasksRow,
   CallBackTaskItemType,
   CallBackTaskStepNameType,
+  CallBackTaskSHttpMethodType,
+  CallBackTaskFunctionType,
 } from "./schema/callbackTasks";
 import { callbackTaskRuns, CallbackTaskRunsRow, callbackTaskRunStatusType } from "./schema/callbackTaskRuns";
 
@@ -160,3 +162,5 @@ export type { CallBackTaskStepNameType };
 export type { CallBackTaskAPINameType };
 export type { CallbackTaskRunsRow };
 export type { callbackTaskRunStatusType };
+export type { CallBackTaskSHttpMethodType };
+export type { CallBackTaskFunctionType };
