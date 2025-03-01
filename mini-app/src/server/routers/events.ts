@@ -6,6 +6,7 @@ import {
   renderModerationEventMessage,
   renderUpdateEventMessage,
   sendLogNotification,
+  sendToEventsTgChannel,
 } from "@/lib/tgBot";
 import { findActivity, registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
@@ -105,7 +106,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   let registrant_status: "pending" | "rejected" | "approved" | "checkedin" | "" = "";
   let registrant_uuid = "";
 
-  if (!eventData) {
+  if (!eventData.event_id) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "event not found",
@@ -429,6 +430,16 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         await sendLogNotification({
           message: logMessage,
           topic: "event",
+        });
+        await sendToEventsTgChannel({
+          image: eventData.image_url,
+          title: eventData.title,
+          subtitle: eventData.subtitle,
+          s_date: eventData.start_date,
+          e_date: eventData.end_date,
+          timezone: eventData.timezone,
+          event_uuid: eventData.event_uuid,
+          participationType: eventData.participationType,
         });
       } else if (!is_paid) {
         /* --------------------------- Moderation Message --------------------------- */

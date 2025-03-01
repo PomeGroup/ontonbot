@@ -27,7 +27,7 @@ const findVisitorByUserAndEvent = async (user_id: number, event_uuid: string) =>
 
   // Cache the result
   if (visitor) {
-    await redisTools.setCache(cacheKey, JSON.stringify(visitor), redisTools.cacheLvl.medium);
+    await redisTools.setCache(cacheKey, JSON.stringify(visitor), redisTools.cacheLvl.long);
   }
 
   return visitor;
@@ -48,7 +48,7 @@ const insertNewVisitor = async (user_id: number, event_uuid: string) => {
   // Cache the newly inserted visitor
   if (visitor) {
     const cacheKey = getVisitorCacheKey(user_id, event_uuid);
-    await redisTools.setCache(cacheKey, JSON.stringify(visitor), redisTools.cacheLvl.medium);
+    await redisTools.setCache(cacheKey, JSON.stringify(visitor), redisTools.cacheLvl.long);
   }
 
   return visitor;
@@ -100,10 +100,19 @@ export const selectValidVisitorById = async (visitorId: number) => {
         isNotNull(events.start_date),
         isNotNull(events.end_date),
         isNotNull(users.wallet_address),
-        between(visitors.last_visit, sql`TO_TIMESTAMP(events.start_date)`, sql`TO_TIMESTAMP(events.end_date)`),
+        between(
+          visitors.last_visit,
+          sql`TO_TIMESTAMP
+            (events.start_date)`,
+          sql`TO_TIMESTAMP
+            (events.end_date)`
+        ),
         eq(
           db
-            .select({ count: sql`count(*)`.mapWith(Number) })
+            .select({
+              count: sql`count
+                  (*)`.mapWith(Number),
+            })
             .from(userEventFields)
             .where(
               and(
@@ -113,7 +122,10 @@ export const selectValidVisitorById = async (visitorId: number) => {
               )
             ),
           db
-            .select({ count: sql`count(*)`.mapWith(Number) })
+            .select({
+              count: sql`count
+                  (*)`.mapWith(Number),
+            })
             .from(eventFields)
             .where(and(eq(eventFields.event_id, events.event_id)))
         )
@@ -151,10 +163,25 @@ export const selectVisitorsByEventUuid = async (
         ticket_company: sql`null`.as("ticket_company"),
         ticket_nft_address: sql`null`.as("ticket_nft_address"),
         badge_info: sql<string>`
-          CASE 
-            WHEN ${users.username} = 'null' THEN 'https://t.me/theontonbot'
-            ELSE CONCAT('https://t.me/', REPLACE(${users.username}, '@', ''))
-          END
+            CASE 
+            WHEN
+            ${users.username}
+            =
+            'null'
+            THEN
+            'https://t.me/theontonbot'
+            ELSE
+            CONCAT
+            (
+            'https://t.me/',
+            REPLACE
+            (
+            ${users.username},
+            '@',
+            ''
+            )
+            )
+            END
         `.as("badge"),
       })
       .from(visitors)
@@ -184,10 +211,30 @@ export const selectVisitorsByEventUuid = async (
       .select({
         user_id: tickets.user_id,
         username: sql<string>`
-          CASE 
-            WHEN TRIM(${tickets.telegram}) = '@null' THEN CAST(${users.user_id} AS VARCHAR)
-            ELSE REPLACE(TRIM(${tickets.telegram}), '@', '')
-          END
+            CASE 
+            WHEN TRIM(
+            ${tickets.telegram}
+            )
+            =
+            '@null'
+            THEN
+            CAST
+            (
+            ${users.user_id}
+            AS
+            VARCHAR
+            )
+            ELSE
+            REPLACE
+            (
+            TRIM
+            (
+            ${tickets.telegram}
+            ),
+            '@',
+            ''
+            )
+            END
         `.as("username"),
         first_name: tickets.name,
         last_name: sql<string>`''`.as("last_name"),
@@ -203,10 +250,25 @@ export const selectVisitorsByEventUuid = async (
         ticket_nft_address: tickets.nftAddress,
         ticket_created_at: tickets.created_at,
         badge_info: sql<string>`
-          CASE 
-            WHEN ${tickets.telegram} = '@null' THEN 'https://t.me/theontonbot'
-            ELSE CONCAT('https://t.me/', REPLACE(${tickets.telegram}, '@', ''))
-          END
+            CASE 
+            WHEN
+            ${tickets.telegram}
+            =
+            '@null'
+            THEN
+            'https://t.me/theontonbot'
+            ELSE
+            CONCAT
+            (
+            'https://t.me/',
+            REPLACE
+            (
+            ${tickets.telegram},
+            '@',
+            ''
+            )
+            )
+            END
         `.as("badge"),
       })
       .from(tickets)
@@ -233,43 +295,94 @@ export const selectVisitorsByEventUuid = async (
       const specialGuestQueryData = await db
         .select({
           user_id: sql<number>`
-      CASE 
-        WHEN ${specialGuests.userId} IS NULL THEN ${specialGuests.id}
-        ELSE ${specialGuests.userId}
-      END
-    `.as("user_id"),
+              CASE 
+        WHEN
+              ${specialGuests.userId}
+              IS
+              NULL
+              THEN
+              ${specialGuests.id}
+              ELSE
+              ${specialGuests.userId}
+              END
+          `.as("user_id"),
           username: sql<string>`
-  CASE 
-    WHEN ${specialGuests.telegram} IS NULL THEN CONCAT('VIP', TRIM(CAST(${specialGuests.id} AS TEXT)))
-    ELSE REPLACE(TRIM(${specialGuests.telegram}), '@', '')
-  END
-`.as("username"),
+              CASE 
+    WHEN
+              ${specialGuests.telegram}
+              IS
+              NULL
+              THEN
+              CONCAT
+              (
+              'VIP',
+              TRIM
+              (
+              CAST
+              (
+              ${specialGuests.id}
+              AS
+              TEXT
+              )
+              )
+              )
+              ELSE
+              REPLACE
+              (
+              TRIM
+              (
+              ${specialGuests.telegram}
+              ),
+              '@',
+              ''
+              )
+              END
+          `.as("username"),
           first_name: specialGuests.name,
-          last_name: sql<string>`COALESCE(${specialGuests.surname}, '')`.as("last_name"),
+          last_name: sql<string>`COALESCE
+              (${specialGuests.surname}, '')`.as("last_name"),
           wallet_address: sql`null`.as("wallet_address"),
-          created_at: sql`NOW()`.as("created_at"),
+          created_at: sql`NOW
+              ()`.as("created_at"),
           has_ticket: sql<boolean>`true`.as("has_ticket"),
           ticket_status: specialGuests.type,
           ticket_id: sql<number>`null`.as("ticket_id"),
           ticket_order_id: sql<string>`
-            CONCAT(
-              LEFT(md5(CAST(${specialGuests.id} AS TEXT)), 8), '-',
-              LEFT(md5(CAST(${specialGuests.id} AS TEXT)), 4), '-',
-              LEFT(md5(CAST(${specialGuests.id} AS TEXT)), 4), '-',
-              LEFT(md5(CAST(${specialGuests.id} AS TEXT)), 4), '-',
-              LEFT(md5(CAST(${specialGuests.id} AS TEXT)), 12)
-            )
+              CONCAT
+              ( LEFT(md5(CAST (${specialGuests.id} AS TEXT)), 8), '-',
+                  LEFT (md5(CAST (${specialGuests.id} AS TEXT)), 4), '-',
+                  LEFT (md5(CAST (${specialGuests.id} AS TEXT)), 4), '-',
+                  LEFT (md5(CAST (${specialGuests.id} AS TEXT)), 4), '-',
+                  LEFT (md5(CAST (${specialGuests.id} AS TEXT)), 12))
           `.as("ticket_order_id"),
           ticket_qr_code: sql`null`.as("ticket_qr_code"),
-          ticket_position: sql`COALESCE(${specialGuests.position}, '' )`.as("ticket_position"),
-          ticket_company: sql`COALESCE(${specialGuests.company}, '' )`.as("ticket_position"),
+          ticket_position: sql`COALESCE
+              (${specialGuests.position}, '')`.as("ticket_position"),
+          ticket_company: sql`COALESCE
+              (${specialGuests.company}, '')`.as("ticket_position"),
           ticket_nft_address: sql`null`.as("ticket_nft_address"),
-          ticket_created_at: sql`NOW()`.as("ticket_created_at"),
+          ticket_created_at: sql`NOW
+              ()`.as("ticket_created_at"),
           badge_info: sql<string>`
-            CASE 
-              WHEN ${specialGuests.telegram} IS NULL THEN 'https://t.me/theontonbot'
-              ELSE CONCAT('https://t.me/', REPLACE(${specialGuests.telegram}, '@', ''))
-            END
+              CASE 
+              WHEN
+              ${specialGuests.telegram}
+              IS
+              NULL
+              THEN
+              'https://t.me/theontonbot'
+              ELSE
+              CONCAT
+              (
+              'https://t.me/',
+              REPLACE
+              (
+              ${specialGuests.telegram},
+              '@',
+              ''
+              )
+              )
+              END
           `.as("badge"),
         })
         .from(specialGuests)
@@ -342,7 +455,8 @@ export const updateVisitorLastVisit = async (id: number) => {
   return db
     .update(visitors)
     .set({
-      last_visit: sql`now()`,
+      last_visit: sql`now
+          ()`,
       updatedBy: "system",
     })
     .where(eq(visitors.id, id));
@@ -395,7 +509,7 @@ export const findVisitorByUserAndEventUuid = async (user_id: number, event_uuid:
 
   // Cache the result if it exists
   if (visitor) {
-    await redisTools.setCache(cacheKey, JSON.stringify(visitor), redisTools.cacheLvl.medium);
+    await redisTools.setCache(cacheKey, JSON.stringify(visitor), redisTools.cacheLvl.long);
   }
 
   return visitor;

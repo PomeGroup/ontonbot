@@ -11,13 +11,36 @@ import { removeKey, removeSecretKey } from "@/lib/utils";
 import { EventRow } from "@/db/schema/events";
 import { logger } from "@/server/utils/logger";
 import { InlineKeyboardMarkup } from "grammy/types";
-import { parseRejectReason, tgBotApprovedMenu, tgBotModerationMenu } from "@/moderationBot/menu";
 import moderationLogDB from "@/server/db/moderationLogger.db";
 import { getNoticeEmoji } from "@/moderationBot/helpers";
+import { TG_SUPPORT_GROUP } from "@/constants";
 
 // Helper to post to your custom Telegram server
 const tgClientPost = (path: string, data: any) =>
   tgClient.post(`http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/${path}`, data);
+
+let botInstance: Bot | null = null;
+const MAX_WAIT_TIME = 30000; // 30 seconds max wait time
+const CHECK_INTERVAL = 100; // Check every 100ms
+
+// Helper function to get or create the bot instance
+async function getEventsChannelBotInstance() {
+  // If the bot is already created, return it
+  if (botInstance) return botInstance;
+
+  // Wait for the token to be available
+  const startTime = Date.now();
+  while (!configProtected.onton_events_publisher_bot) {
+    if (Date.now() - startTime > MAX_WAIT_TIME) {
+      throw new Error("Timed out waiting for bot token to be available.");
+    }
+    await new Promise((resolve) => setTimeout(resolve, CHECK_INTERVAL));
+  }
+
+  // Once the token is available, create the bot instance
+  botInstance = new Bot(configProtected.onton_events_publisher_bot);
+  return botInstance;
+}
 
 // =========== Send Telegram Message ===========
 export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
@@ -265,8 +288,8 @@ export const renderUpdateEventMessage = (
   username: string | number,
   eventUuid: string,
   event_title: string,
-  oldChanges: any,
-  updateChanges: any
+  _oldChanges: any,
+  _updateChanges: any
 ): string => {
   return `
 @${username} <b>Updated</b> event <code>${event_title}</code> successfully
@@ -296,7 +319,6 @@ export async function renderModerationEventMessage(username: string | number, ev
   const circleEmoji = getNoticeEmoji(totalNotices);
 
   // 3) Prepare event data display (excluding the `description`)
-  const eventDataWithoutDescription = removeSecretKey(removeKey(eventData, "description"));
 
   // 4) Return message with a notice count line
   return `
@@ -310,4 +332,65 @@ ${circleEmoji} User currently has <b>${totalNotices}</b> notice(s).
 
 Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}
 `;
+}
+
+// ======================================== //
+//     PUBLISH EVENT ON EVENTS CHANNEL      //
+// ======================================== //
+export async function sendToEventsTgChannel(props: {
+  image: string;
+  title: string;
+  subtitle: string;
+  s_date: number;
+  e_date: number;
+  event_uuid: string;
+  timezone: string | null;
+  participationType: string;
+  ticketPrice?: {
+    paymentType: string;
+    amount: number;
+  };
+}) {
+  try {
+    const eventChannelPublisherBot = await getEventsChannelBotInstance();
+
+    return await eventChannelPublisherBot.api.sendPhoto(
+      Number(configProtected.events_channel),
+      props.image, // image url
+      {
+        caption: `<b>${props.title}</b>
+
+<i>${props.subtitle}</i>
+
+📍 <i>${props.participationType.split("_").join(" ").charAt(0).toUpperCase() + props.participationType.split("_").join(" ").slice(1)} ${props.ticketPrice ? "Paid" : "Free"}</i>
+${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : props.ticketPrice.paymentType === "star" ? "⭐" : "💲"} <b>Ticket Price:</b> ${props.ticketPrice.amount}${props.ticketPrice.paymentType}\n` : ""}
+👉 <a href="https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${props.event_uuid}">Open event on ONTON</a>
+
+⏰ <b>Starts at:</b> ${new Date(props.s_date * 1000).toLocaleString("en-US", {
+          timeZone: props.timezone || "UTC",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZoneName: "short",
+          hour12: false,
+        })}
+
+⏰ <b>Ends at:</b> ${new Date(props.e_date * 1000).toLocaleString("en-US", {
+          timeZone: props.timezone || "UTC",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZoneName: "short",
+          hour12: false,
+        })}
+
+🔵 <b>ONTON <a href="https://t.me/+eErXwpP8fDw3ODY0">News</a> | <a href="${TG_SUPPORT_GROUP}">Community</a> | <a href="https://t.me/theontonbot">ONTON bot</a> | <a href="https://x.com/ontonbot">X</a> | <a href="${TG_SUPPORT_GROUP}/122863">Tutorials</a></b> | <a href="https://t.me/onton_events">Events</a>`,
+        parse_mode: "HTML",
+      }
+    );
+  } catch (err) {
+    logger.error("FAILED_TO_PUBLISH_ON_EVENTS_CHANNEL:", err);
+  }
 }

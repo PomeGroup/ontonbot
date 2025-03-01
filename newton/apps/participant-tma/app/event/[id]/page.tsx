@@ -29,6 +29,24 @@ type EventParams = {
   searchParams: { [key: string]: string | undefined };
 };
 
+function canUserManageEvent(
+  user: { user_id: number; role: string } | null,
+  eventData: { data?: { owner?: number | null; accessRoles?: Array<{ user_id: number; role: string }> } }
+): boolean {
+  console.log("eventData", eventData);
+  if (!user || !eventData?.data?.owner || !eventData.data.accessRoles) {
+    return false;
+  }
+  const isAdmin = user.role === "admin";
+  const isOwner = user.user_id === eventData?.data?.owner;
+
+  // accessRoles is an array of { user_id: number, role: string }
+  const accessRoles = eventData?.data?.accessRoles ?? [];
+  const isInAccessRoles = accessRoles.some((ar) => ar.user_id === user.user_id);
+
+  return isAdmin || isOwner || isInAccessRoles;
+}
+
 const Event = async ({ params, searchParams }: EventParams) => {
   noStore();
   const [userId, error] = getAuthenticatedUser();
@@ -55,8 +73,8 @@ const Event = async ({ params, searchParams }: EventParams) => {
     );
   }
 
-  const event = await getEventDataOnly(params.id);
-  if (!event) {
+  const eventData = await getEventDataOnly(params.id);
+  if (!eventData) {
     return (
       <QueryState
         isError
@@ -69,20 +87,30 @@ const Event = async ({ params, searchParams }: EventParams) => {
     console.log("ptma_event_page_utm", `utm_campaign=${page_utm} , user_id=${userId}`);
   }
 
-  const eventManagerRole =
-    (user?.role && user?.role === "admin") || (user?.user_id && event?.owner && user.user_id === event.owner);
-  const websiteLink = event?.website?.link;
-  const websiteLabel = event?.website?.label;
+  const eventManagerRole = canUserManageEvent(
+    {
+      role: user.role,
+      user_id: user.user_id,
+    },
+    {
+      data: {
+        accessRoles: eventData.accessRoles,
+        owner: eventData.owner,
+      },
+    }
+  );
+  const websiteLink = eventData?.website?.link;
+  const websiteLabel = eventData?.website?.label;
 
   const attributes: [string, ReactNode][] = [];
 
-  attributes.push(["Location", event.location]);
+  attributes.push(["Location", eventData.location]);
 
-  if (event.eventTicket) {
-    attributes.push(["Ticket Price", `${event.eventTicket?.price} ${event.eventTicket.payment_type}`]);
+  if (eventData.eventTicket) {
+    attributes.push(["Ticket Price", `${eventData.eventTicket?.price} ${eventData.eventTicket.payment_type}`]);
   }
 
-  if (event?.website && websiteLabel && websiteLink) {
+  if (eventData?.website && websiteLabel && websiteLink) {
     attributes.push([
       "Website",
       <WebsiteLink
@@ -103,21 +131,21 @@ const Event = async ({ params, searchParams }: EventParams) => {
             priority
             width={352}
             height={352}
-            src={event.image_url}
+            src={eventData.image_url}
             alt={`event-${params.id}`}
             className="border-wallet-separator-color w-full rounded-lg border-[0.33px] object-contain"
           />
         </SectionCoverImage>
         <EventHeader
-          event_uuid={event.event_uuid}
-          title={event.title}
-          description={event.subtitle}
+          event_uuid={eventData.event_uuid}
+          title={eventData.title}
+          description={eventData.subtitle}
         />
         <SeparatorTma />
         <EventAttributes
           event={{
-            end_date: event.end_date,
-            start_date: event.start_date,
+            end_date: eventData.end_date,
+            start_date: eventData.start_date,
           }}
           data={attributes}
         />
@@ -128,10 +156,10 @@ const Event = async ({ params, searchParams }: EventParams) => {
       >
         {eventManagerRole && <ManageEventButton />}
         <AddToCalendar
-          description={event.subtitle}
-          title={event.title}
-          startDate={Number(event.start_date) * 1000}
-          endDate={Number(event.end_date) * 1000}
+          description={eventData.subtitle}
+          title={eventData.title}
+          startDate={Number(eventData.start_date) * 1000}
+          endDate={Number(eventData.end_date) * 1000}
         />
       </Section>
       <Section
@@ -141,7 +169,7 @@ const Event = async ({ params, searchParams }: EventParams) => {
         <WalletButton />
       </Section>
       {/* Just Agenda Section Only For gateway event */}
-      {event?.event_uuid === "6acf01ed-3122-498a-a937-329766b459aa" && (
+      {eventData?.event_uuid === "6acf01ed-3122-498a-a937-329766b459aa" && (
         <Section
           variant={"rounded"}
           className={"py-6"}
@@ -154,31 +182,31 @@ const Event = async ({ params, searchParams }: EventParams) => {
         variant="rounded"
         className={"py-6"}
       >
-        <EventContent content={event.description} />
+        <EventContent content={eventData.description} />
       </Section>
-      {event.organizer && (
+      {eventData.organizer && (
         <Section
           variant="rounded"
           className="py-6"
         >
-          <OrganizerSection data={event.organizer} />
+          <OrganizerSection data={eventData.organizer} />
         </Section>
       )}
-      {event?.sbt_collection_address && (
+      {eventData?.sbt_collection_address && (
         <Section
           variant="topRounded"
           className="py-6"
         >
           <SBTCollectionSection
-            collection_address={event.sbt_collection_address}
-            rewardImage={event?.image_url}
-            title={event.title}
+            collection_address={eventData.sbt_collection_address}
+            rewardImage={eventData?.image_url}
+            title={eventData.title}
           />
         </Section>
       )}
       {/* Telegram Main Button */}
       <EventTmaSettings
-        requiresTicketToChekin={event.ticketToCheckIn}
+        requiresTicketToChekin={eventData.ticketToCheckIn}
         eventId={params.id}
         utm={page_utm}
       />

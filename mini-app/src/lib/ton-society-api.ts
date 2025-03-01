@@ -8,11 +8,6 @@ import { HubsResponse, SocietyHub } from "@/types";
 import { redisTools } from "@/lib/redisTools";
 import { configDotenv } from "dotenv";
 import { logger } from "@/server/utils/logger";
-import { sleep } from "@/utils";
-import rewardsDb from "@/server/db/rewards.db";
-import rewardDB from "@/server/db/rewards.db";
-import eventDB from "@/server/db/events";
-import visitorsDB from "@/server/db/visitors";
 
 configDotenv();
 // ton society client to send http requests to https://ton-society.github.io/sbt-platform
@@ -120,7 +115,7 @@ export async function updateActivity(
   return response.data as { status: "success"; data: {} };
 }
 
-export async function getSBTClaimedStaus(activity_id: number, user_id: number | string) {
+export async function getSBTClaimedStatus(activity_id: number, user_id: number | string) {
   if (!user_id || !activity_id) {
     return { status: `Wrong_avtivity_${activity_id}` };
   }
@@ -133,7 +128,7 @@ export async function getSBTClaimedStaus(activity_id: number, user_id: number | 
     };
   } catch (error) {
     return {
-      status: "NOT_ELIGBLE",
+      status: "NOT_ELIGIBLE",
     };
   }
 }
@@ -192,6 +187,42 @@ export async function getHubs(): Promise<SocietyHub[]> {
       code: "INTERNAL_SERVER_ERROR",
       message: "Failed to fetch hubs data",
     });
+  }
+}
+
+/**
+ * Fetch status of a unique reward link
+ *
+ * Endpoint:
+ * GET /activities/{path}/rewards/{participant_id}/status
+ *
+ * @param activity_id - Activity's internal ID or friendly collection address
+ * @param user_id - Unique identifier of the activity participant,
+ *   either wallet address (friendly format) or Telegram user ID
+ * @returns The full response from the Ton Society API, which includes the status
+ */
+export async function getRewardStatus(
+  activity_id: number,
+  user_id: number
+): Promise<{
+  status: string;
+  data?: {
+    status: "NOT_CLAIMED" | "CLAIMED" | "RECEIVED" | string;
+  };
+}> {
+  if (!activity_id || !user_id) {
+    // Return or throw—depending on your desired error handling
+    return { status: `Invalid parameters: activity_id=${activity_id}, user_id=${user_id}` };
+  }
+
+  try {
+    const response = await tonSocietyClient.get(`/activities/${activity_id}/rewards/${user_id}/status`);
+    return response.data;
+  } catch (error) {
+    // You can refine error handling as needed
+    return {
+      status: "error",
+    };
   }
 }
 

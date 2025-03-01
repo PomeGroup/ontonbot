@@ -15,10 +15,10 @@ interface CustomButtonProps {
   onClick?: (_e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-const customButtonVariants = cva(" min-w-20", {
+const customButtonVariants = cva("!p-0 min-w-20", {
   variants: {
     size: {
-      lg: "h-12 rounded-2lg",
+      lg: "h-12.5 rounded-2lg",
       md: "h-9 rounded-md",
     },
     color: {
@@ -36,8 +36,8 @@ const customButtonVariants = cva(" min-w-20", {
 const CustomButton: React.FC<CustomButtonProps> = ({
   children,
   icon,
-  fontWeight = "semibold",
-  fontSize = "headline",
+  fontWeight = "medium",
+  fontSize = "body",
   variant = "primary",
   size,
   color,

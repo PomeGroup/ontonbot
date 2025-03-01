@@ -7,6 +7,7 @@ import { useEventData } from "../../Event/eventPageContext";
 import CustomButton from "../../Button/CustomButton";
 import { sleep } from "@/utils";
 import CustomCard from "../cards/CustomCard";
+import { TG_SUPPORT_GROUP } from "@/constants";
 
 const SupportButtons = () => {
   const webApp = useWebApp();
@@ -31,7 +32,7 @@ const SupportButtons = () => {
         variant="outline"
         onClick={() => {
           hapticfeedback?.impactOccurred("medium");
-          webApp?.openTelegramLink("https://t.me/ontonsupport");
+          webApp?.openTelegramLink(TG_SUPPORT_GROUP);
         }}
       >
         ONTON Support

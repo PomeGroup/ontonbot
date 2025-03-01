@@ -6,7 +6,7 @@ import { removeKey, roundDateToInterval } from "@/lib/utils";
 import { selectUserById } from "@/server/db/users";
 import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { and, asc, desc, eq, gt, inArray, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
@@ -45,8 +45,8 @@ export const fetchEventByUuid = async (eventUuid: string): Promise<EventRow | nu
   }
   const result = (await db.select().from(events).where(eq(events.event_uuid, eventUuid)).execute()).pop();
   if (result) {
-    await redisTools.setCache(getEventUUIDCacheKey(eventUuid), result, redisTools.cacheLvl.short);
-    await redisTools.setCache(getEventIDCacheKey(result.event_id), result, redisTools.cacheLvl.short);
+    await redisTools.setCache(getEventUUIDCacheKey(eventUuid), result, redisTools.cacheLvl.long);
+    await redisTools.setCache(getEventIDCacheKey(result.event_id), result, redisTools.cacheLvl.long);
     return result;
   }
   return null;
@@ -59,8 +59,8 @@ export const fetchEventById = async (eventId: number): Promise<EventRow | null> 
   }
   const result = (await db.select().from(events).where(eq(events.event_id, eventId)).execute()).pop();
   if (result) {
-    await redisTools.setCache(getEventIDCacheKey(eventId), result, redisTools.cacheLvl.short);
-    await redisTools.setCache(getEventUUIDCacheKey(result.event_uuid), result, redisTools.cacheLvl.short);
+    await redisTools.setCache(getEventIDCacheKey(eventId), result, redisTools.cacheLvl.long);
+    await redisTools.setCache(getEventUUIDCacheKey(result.event_uuid), result, redisTools.cacheLvl.long);
     return result;
   }
   return null;
@@ -564,6 +564,40 @@ export const fetchOngoingEvents = async () => {
 };
 
 /**
+ * Fetch a chunk of events that have a non-null activity_id,
+ * sorted descending by event_id.
+ */
+export async function fetchEventsWithNonNullActivityIdDESC(limit: number, offset: number): Promise<EventRow[]> {
+  return await db
+    .select()
+    .from(events)
+    .where(isNotNull(events.activity_id))
+    .orderBy(sql`${events.event_id} DESC`)
+    .limit(limit)
+    .offset(offset)
+    .execute();
+}
+
+/**
+ * Fetch events with a non-null activity_id and start_date > given cutoff,
+ * in descending order by event_id.
+ */
+export async function fetchEventsWithNonNullActivityIdAfterStartDateDESC(
+  limit: number,
+  offset: number,
+  startDateCutoff: number
+): Promise<EventRow[]> {
+  return await db
+    .select()
+    .from(events)
+    .where(and(isNotNull(events.activity_id), gt(events.start_date, startDateCutoff)))
+    .orderBy(sql`${events.event_id} DESC`)
+    .limit(limit)
+    .offset(offset)
+    .execute();
+}
+
+/**
  * Fetch all events (via visitors) that have pending rewards, sorted by event end_date descending.
  */
 export const fetchEventsWithPendingRewards = async () =>
@@ -597,5 +631,7 @@ const eventDB = {
   deleteEventCache,
   fetchEventByActivityId,
   fetchEventsWithPendingRewards,
+  fetchEventsWithNonNullActivityIdDESC,
+  fetchEventsWithNonNullActivityIdAfterStartDateDESC,
 };
 export default eventDB;

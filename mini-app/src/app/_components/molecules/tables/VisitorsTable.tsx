@@ -28,12 +28,7 @@ interface VisitorsTableProps {
   needRefresh: boolean;
 }
 
-const VisitorsTable: FC<VisitorsTableProps> = ({
-  event_uuid,
-  handleVisitorsExport,
-  setNeedRefresh,
-  needRefresh,
-}) => {
+const VisitorsTable: FC<VisitorsTableProps> = ({ event_uuid, handleVisitorsExport, setNeedRefresh, needRefresh }) => {
   const webApp = useWebApp();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -78,7 +73,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
         setNeedRefresh(false);
       });
     }
-  }, [needRefresh]);
+  }, [needRefresh, refetchVisitors, setNeedRefresh]);
 
   useEffect(() => {
     if (entry?.isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -99,9 +94,10 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     };
   }, [searchQuery]);
   // Flatten all pages to include newly fetched data
-  const flatData: Visitor[] =
+  const flatData: Visitor[] = useMemo(() => {
     // @ts-expect-error
-    data?.pages.flatMap((page) => page?.visitorsData) || [];
+    return data?.pages.flatMap((page) => page?.visitorsData) || [];
+  }, [data?.pages]);
 
   // Check the visitor count on the first page
   const firstPageVisitorCount = data?.pages[0]?.visitorsData.length || 0;
@@ -113,9 +109,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
     return flatData.filter((visitor) => {
       const matchesSearch =
         visitor?.username?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        `${visitor?.first_name} ${visitor?.last_name}`
-          .toLowerCase()
-          .includes(debouncedSearchQuery.toLowerCase());
+        `${visitor?.first_name} ${visitor?.last_name}`.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
       const matchesStatus =
         statusFilter === "All" ||
         (statusFilter === "Waiting" && visitor.ticket_status === "UNUSED") ||
@@ -137,17 +131,14 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
 
       if (
         debouncedSearchQuery.length === 0 ||
-        (debouncedSearchQuery.length > 0 &&
-          filteredVisitors.length === 0 &&
-          !isFetchingNextPage &&
-          !isLoadingVisitors)
+        (debouncedSearchQuery.length > 0 && filteredVisitors.length === 0 && !isFetchingNextPage && !isLoadingVisitors)
       ) {
         setShowNoResults(true); // Show message immediately if no results and not loading
       }
     } else {
       setShowNoResults(false); // Reset the message if results are found or search changes
     }
-  }, [debouncedSearchQuery, filteredVisitors, isFetchingNextPage, isTyping]);
+  }, [debouncedSearchQuery, filteredVisitors, isFetchingNextPage, isLoadingVisitors, isTyping]);
 
   return (
     <div className="mt-0 overflow-x-auto">
@@ -170,7 +161,7 @@ const VisitorsTable: FC<VisitorsTableProps> = ({
         <div className="flex flex-col py-0">
           <div className="flex w-full p-0 border-b-gray-800 border-b-2">
             <div className="inline-flex py-0 items-center text-lg w-full">
-              {data?.pages[0]?.event.ticketToCheckIn ? (
+              {data?.pages[0]?.event.has_payment ? (
                 <Tabs
                   defaultValue="All"
                   className="bg-transparent px-0 py-0"
