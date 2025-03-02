@@ -1,6 +1,11 @@
 import { db } from "@/db/db";
-import { callbackTasks } from "@/db/schema/callbackTasks";
-import { eq } from "drizzle-orm";
+import {
+  CallBackTaskAPINameType,
+  CallBackTaskFunctionType,
+  CallBackTaskItemType,
+  callbackTasks,
+} from "@/db/schema/callbackTasks";
+import { and, eq, isNull } from "drizzle-orm";
 import type { CallbackTasksRow } from "@/db/schema/callbackTasks";
 import { redisTools } from "@/lib/redisTools"; // your existing redis tools
 
@@ -39,8 +44,53 @@ export const fetchCallbackTaskById = async (id: number): Promise<CallbackTasksRo
   }
 };
 
+/**
+ * A helper to find the callback_tasks row for a given config, or throw an error if not found.
+ */
+const findCallbackTaskStrict = async (params: {
+  apiName: CallBackTaskAPINameType;
+  taskFunction: CallBackTaskFunctionType;
+  itemType?: CallBackTaskItemType | null;
+  itemId?: number | null;
+}): Promise<CallbackTasksRow> => {
+  const { apiName, taskFunction, itemType, itemId } = params;
+
+  // Build a query that tries to match itemType/itemId if provided
+  // If itemType is not provided, we can either ignore that condition or check if it's null
+  // likewise for itemId
+  const conditions = [eq(callbackTasks.api_name, apiName), eq(callbackTasks.task_function, taskFunction)];
+
+  if (itemType != null) {
+    conditions.push(eq(callbackTasks.item_type, itemType));
+  } else {
+    // optional: push something like isNull(callbackTasks.item_type)
+    // or skip if you want item_type ignored
+    conditions.push(isNull(callbackTasks.item_type));
+  }
+
+  if (itemId != null) {
+    conditions.push(eq(callbackTasks.item_id, itemId));
+  } else {
+    conditions.push(isNull(callbackTasks.item_id));
+  }
+
+  const [task] = await db
+    .select()
+    .from(callbackTasks)
+    .where(and(...conditions))
+    .limit(1);
+
+  if (!task) {
+    throw new Error(
+      `No callback_tasks found for apiName=${apiName}, taskFunction=${taskFunction}, itemType=${itemType}, itemId=${itemId}`
+    );
+  }
+  return task;
+};
+
 const callbackTasksDB = {
   fetchCallbackTaskById,
+  findCallbackTaskStrict,
 };
 
 export default callbackTasksDB;

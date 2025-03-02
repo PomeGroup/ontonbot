@@ -2,6 +2,7 @@ import { db } from "@/db/db";
 import { callbackTaskRuns, callbackTaskRunStatusEnum, callbackTaskRunStatusType } from "@/db/schema/callbackTaskRuns";
 import { and, eq, isNull, lte, or } from "drizzle-orm";
 import { CallbackTaskRunsRow } from "@/db/schema/callbackTaskRuns";
+import { addUserTicketFromOnton } from "@/cronJobs/helper/tonfestHandlers";
 
 const MAX_ATTEMPTS = 3;
 
@@ -43,9 +44,29 @@ export const computeNextStatus = (currentAttempts: number): callbackTaskRunStatu
     : callbackTaskRunStatusEnum.enumValues[0]; // 'PENDING'
 };
 
+/**
+ * Insert a new row in callback_task_runs with the given status & data.
+ */
+const createRunRecord = async (params: {
+  callbackTaskId: number;
+  status: "SUCCESS" | "PENDING" | "FAILURE";
+  response: any;
+  attempts: number;
+  payload: any;
+}) => {
+  const { callbackTaskId, status, response, attempts, payload } = params;
+  await db.insert(callbackTaskRuns).values({
+    callback_task_id: callbackTaskId,
+    status,
+    response,
+    attempts,
+    payload,
+  });
+};
 const callbackTaskRunsDB = {
   fetchPendingCallbackRuns,
   updateCallbackTaskRun,
   computeNextStatus,
+  createRunRecord,
 };
 export default callbackTaskRunsDB;
