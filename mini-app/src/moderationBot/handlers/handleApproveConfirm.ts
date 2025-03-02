@@ -1,5 +1,5 @@
 import { logger } from "@/server/utils/logger";
-import eventDB, { fetchEventByUuid } from "@/server/db/events";
+import eventDB from "@/server/db/events";
 import moderationLogDB from "@/server/db/moderationLogger.db";
 import { tgBotApprovedMenu } from "@/moderationBot/menu";
 import { onCallBackModerateEvent } from "@/moderationBot/callBacks/onCallBackModerateEvent";

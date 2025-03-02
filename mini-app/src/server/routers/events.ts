@@ -4,6 +4,7 @@ import { hashPassword } from "@/lib/bcrypt";
 import {
   renderAddEventMessage,
   renderModerationEventMessage,
+  renderModerationFlowup,
   renderUpdateEventMessage,
   sendLogNotification,
   sendToEventsTgChannel,
@@ -443,15 +444,24 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         });
       } else if (!is_paid) {
         /* --------------------------- Moderation Message --------------------------- */
+
         const moderation_group_id = configProtected?.moderation_group_id;
         const logMessage = await renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
-        await sendLogNotification({
+        const moderationMessageResult = await sendLogNotification({
           group_id: moderation_group_id,
           image: eventData.image_url,
           message: logMessage,
           topic: "no_topic",
           inline_keyboard: tgBotModerationMenu(eventData.event_uuid),
         });
+        await trx
+          .update(events)
+          .set({ moderationMessageId: moderationMessageResult.message_id })
+          .where(eq(events.event_id, eventData.event_id))
+          .execute();
+        logger.log(
+          `moderationMessageResult: for ${eventData.event_id} ${eventData.event_uuid} with message_id ${moderationMessageResult.message_id}`
+        );
       }
       // Clear the organizer user cache so it will be reloaded next time
       await redisTools.deleteCache(userCacheKey);
@@ -521,6 +531,11 @@ const updateEvent = eventManagerPP
         }
 
         const canUpdateRegistrationSetting = oldEvent.has_registration;
+        const is_paid = oldEvent.has_payment;
+        const is_ts_verified = await organizerTsVerified(user_id);
+        const canSendModerationMessage = Boolean(
+          oldEvent.moderationMessageId && !is_paid && !is_ts_verified && !oldEvent.activity_id
+        );
 
         /* -------------------------------------------------------------------------- */
         /*                                 Paid Event                                 */
@@ -632,8 +647,42 @@ const updateEvent = eventManagerPP
           .where(eq(events.event_uuid, eventUuid))
           .returning()
           .execute();
-        await eventDB.deleteEventCache(eventUuid);
 
+        await eventDB.deleteEventCache(eventUuid);
+        if (canSendModerationMessage) {
+          const followUpText = renderModerationFlowup(opts.ctx.user.username || opts.ctx.user.user_id);
+          try {
+            const moderationMessageResponse = await sendLogNotification({
+              message: followUpText,
+              topic: "event",
+              reply_to_message_id: oldEvent.moderationMessageId,
+            });
+            logger.log(
+              `moderationMessage for ${eventUuid} with message_id ${moderationMessageResponse.message_id} was sent`
+            );
+          } catch (error) {
+            logger.log(
+              `error_while_sending_moderation_followup THE ADD EVENT MESSAGE WAS DELETED FOR ${eventUuid} AND ${oldEvent.moderationMessageId}`
+            );
+            const moderation_group_id = configProtected?.moderation_group_id;
+            const logMessage = await renderModerationEventMessage(opts.ctx.user.username || user_id, oldEvent, false);
+            const moderationMessageResult = await sendLogNotification({
+              group_id: moderation_group_id,
+              image: eventData.image_url,
+              message: logMessage,
+              topic: "no_topic",
+              inline_keyboard: tgBotModerationMenu(oldEvent.event_uuid),
+            });
+            await trx
+              .update(events)
+              .set({ moderationMessageId: moderationMessageResult.message_id })
+              .where(eq(events.event_id, oldEvent.event_id))
+              .execute();
+            logger.log(
+              `moderationMessageResult_NEW_FOR_UPDATED: for ${oldEvent.event_id} ${oldEvent.event_uuid} with message_id ${moderationMessageResult.message_id}`
+            );
+          }
+        }
         //Only recipient_address and price can be updated
         if (eventData.paid_event?.has_payment && oldEvent.has_payment) {
           let price = Math.max(eventData.paid_event.payment_amount || 0, 0.001); // Price > 0.001
