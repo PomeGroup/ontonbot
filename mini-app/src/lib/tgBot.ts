@@ -1,12 +1,6 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Bot, InputFile } from "grammy";
 import { configProtected } from "@/server/config";
-
-const tgClient = axios.create({
-  baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
-});
-
-import { AxiosError } from "axios";
 import { removeKey, removeSecretKey } from "@/lib/utils";
 import { EventRow } from "@/db/schema/events";
 import { logger } from "@/server/utils/logger";
@@ -14,6 +8,10 @@ import { InlineKeyboardMarkup } from "grammy/types";
 import moderationLogDB from "@/server/db/moderationLogger.db";
 import { getNoticeEmoji } from "@/moderationBot/helpers";
 import { TG_SUPPORT_GROUP } from "@/constants";
+
+const tgClient = axios.create({
+  baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
+});
 
 // Helper to post to your custom Telegram server
 const tgClientPost = (path: string, data: any) =>
@@ -144,26 +142,32 @@ export const sendLogNotification = async (
     message: string;
     topic: "event" | "ticket" | "system" | "payments" | "no_topic";
     image?: string | null;
-    inline_keyboard?: InlineKeyboardMarkup; // optional
+    inline_keyboard?: InlineKeyboardMarkup;
     group_id?: number | string | null;
+    reply_to_message_id?: number | null; // <---   optional param
   } = {
     message: "",
     topic: "event",
     image: undefined,
     inline_keyboard: undefined,
     group_id: undefined,
+    reply_to_message_id: undefined,
   }
 ) => {
+  // 1) Validate config
   if (!configProtected?.bot_token_logs || !configProtected?.logs_group_id) {
     logger.error("Bot token or logs group ID not found in configProtected for this environment");
     throw new Error("Bot token or logs group ID not found in configProtected for this environment");
   }
+
   let { bot_token_logs: BOT_TOKEN_LOGS, logs_group_id: LOGS_GROUP_ID } = configProtected;
 
+  // 2) If the caller provided a custom group_id, override
   if (props.group_id) {
     LOGS_GROUP_ID = props.group_id.toString();
   }
 
+  // 3) Determine pinned topic message if any
   const topicMapping: Record<"no_topic" | "event" | "ticket" | "system" | "payments", string | null> = {
     event: configProtected.events_topic,
     ticket: configProtected.tickets_topic,
@@ -178,48 +182,47 @@ export const sendLogNotification = async (
     throw new Error(`Invalid or unconfigured topic: ${props.topic}`);
   }
 
+  // 4) Create a grammY bot instance
   const logBot = new Bot(BOT_TOKEN_LOGS);
 
+  // 5) Decide the final 'reply_to_message_id'
+  //    - if props.reply_to_message_id is provided, use it
+  //    - else if topic != "no_topic", use pinned topic message_id
+  //    - else undefined (no reply)
+  let finalReplyTo: number | undefined;
+  if (typeof props.reply_to_message_id === "number") {
+    finalReplyTo = props.reply_to_message_id;
+  } else if (topicMessageId !== "no_topic") {
+    finalReplyTo = Number(topicMessageId);
+  }
+
+  // 6) If sending an image
   if (props.image) {
     const response = await axios.get(props.image, { responseType: "arraybuffer" });
     const buffer = response.data;
+
     logger.log("Sending telegram photo message", Number(LOGS_GROUP_ID), props.image, {
       caption: props.message,
-      reply_parameters:
-        topicMessageId === "no_topic"
-          ? undefined
-          : {
-              message_id: Number(topicMessageId),
-            },
+      reply_to_message_id: finalReplyTo, // <--- Use grammY's reply_to_message_id
       reply_markup: props.inline_keyboard,
       parse_mode: "HTML",
     });
 
-    return await logBot.api.sendPhoto(Number(LOGS_GROUP_ID), new InputFile(buffer), {
+    return logBot.api.sendPhoto(Number(LOGS_GROUP_ID), new InputFile(buffer), {
       caption: props.message,
-      reply_parameters:
-        topicMessageId === "no_topic"
-          ? undefined
-          : {
-              message_id: Number(topicMessageId),
-            },
+      reply_to_message_id: finalReplyTo, // optional
       reply_markup: props.inline_keyboard,
       parse_mode: "HTML",
-    });
-  } else {
-    // Plain text
-    return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
-      reply_parameters:
-        topicMessageId === "no_topic"
-          ? undefined
-          : {
-              message_id: Number(topicMessageId),
-            },
-      reply_markup: props.inline_keyboard,
-      parse_mode: "HTML",
-      link_preview_options: { is_disabled: true },
     });
   }
+
+  // 7) Otherwise, plain text message
+  return logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
+    parse_mode: "HTML",
+    reply_to_message_id: finalReplyTo, // optional
+    reply_markup: props.inline_keyboard,
+    link_preview_options: { is_disabled: true },
+  });
 };
 // CSV log sender
 export type CsvLogProps = {
@@ -309,7 +312,11 @@ Open Event: https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=
 `;
 };
 
-export async function renderModerationEventMessage(username: string | number, eventData: EventRow): Promise<string> {
+export async function renderModerationEventMessage(
+  username: string | number,
+  eventData: EventRow,
+  isNewMessage: boolean = true
+): Promise<string> {
   const eventUuid = eventData.event_uuid;
 
   // 1) Count how many notices the event owner has
@@ -321,7 +328,10 @@ export async function renderModerationEventMessage(username: string | number, ev
   // 3) Prepare event data display (excluding the `description`)
 
   // 4) Return message with a notice count line
+  const UpdateText = isNewMessage ? "🆕🆕New Event 🆕🆕" : `🔄Updated But Reply To message not found🔄`;
   return `
+${UpdateText}
+
 <b>${eventData.title}</b> ${circleEmoji}
 
 ${eventData.subtitle}
@@ -394,3 +404,11 @@ ${props.ticketPrice ? `\n${props.ticketPrice.paymentType === "ton" ? "💎" : pr
     logger.error("FAILED_TO_PUBLISH_ON_EVENTS_CHANNEL:", err);
   }
 }
+
+export const renderModerationFlowup = (username: string | number): string =>
+  `
+<b>Event Updated Again</b>
+by @${username}
+
+Please re-check this event (needs moderation).
+`.trim();
