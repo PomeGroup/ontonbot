@@ -48,7 +48,6 @@ import { user_custom_flags, user_flags, userFlagsType } from "./schema/user_cust
 import { moderationLog, ModerationLogActionType } from "./schema/moderation_log";
 
 import { usersScore, UsersScoreType, UsersScoreActivityType, UserScoreItemType } from "./schema/usersScore";
-// ---- NEW IMPORTS for user_roles ----
 import {
   accessRoleItemType,
   accessRoleEnum,
@@ -58,6 +57,17 @@ import {
   accessRoleEnumType,
   userRoleStatusEnum,
 } from "./schema/userRoles";
+
+import {
+  callbackTasks,
+  CallBackTaskAPINameType,
+  CallbackTasksRow,
+  CallBackTaskItemType,
+  CallBackTaskStepNameType,
+  CallBackTaskSHttpMethodType,
+  CallBackTaskFunctionType,
+} from "./schema/callbackTasks";
+import { callbackTaskRuns, CallbackTaskRunsRow, callbackTaskRunStatusType } from "./schema/callbackTaskRuns";
 
 // export all the enums
 export {
@@ -121,12 +131,12 @@ export {
   coupon_definition,
   coupon_items,
   user_custom_flags,
-
-  // --- Export the new userRoles table & relations
   userRoles,
   userRolesRelations,
   moderationLog,
   usersScore,
+  callbackTasks,
+  callbackTaskRuns,
 };
 
 // Type Exports
@@ -145,3 +155,12 @@ export type { UserScoreItemType };
 export type { UsersScoreActivityType };
 export type { RewardTonSocietyStatusType };
 export type { RewardsSelectType as RewardType };
+
+export type { CallbackTasksRow };
+export type { CallBackTaskItemType };
+export type { CallBackTaskStepNameType };
+export type { CallBackTaskAPINameType };
+export type { CallbackTaskRunsRow };
+export type { callbackTaskRunStatusType };
+export type { CallBackTaskSHttpMethodType };
+export type { CallBackTaskFunctionType };

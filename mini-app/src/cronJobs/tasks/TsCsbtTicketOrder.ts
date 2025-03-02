@@ -8,6 +8,8 @@ import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { CsbtTicket } from "@/server/routers/services/rewardsService";
 import { selectUserById } from "@/server/db/users";
 import { sendLogNotification } from "@/lib/tgBot";
+import { callTonfestForOnOntonPayment } from "@/cronJobs/helper/callTonfestForOnOntonPayment";
+import { CheckTransactions } from "@/cronJobs/tasks/CheckTransactions";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -27,7 +29,7 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   /*                               ORDER PROCCESS                               */
   /* -------------------------------------------------------------------------- */
   for (const ordr of results) {
-    await pushLockTTl();
+    if (pushLockTTl) await pushLockTTl();
     try {
       const event_uuid = ordr.event_uuid;
 
@@ -57,7 +59,6 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
         logger.error("no_collection_address", event_uuid);
         continue;
       }
-      // const eventData = await  selectEventByUuid(event_uuid!);
 
       try {
         if (ordr.user_id) {
@@ -76,6 +77,7 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
 
           logger.log(`tscsbt_user_approved_${ordr.user_id}`);
         }
+        await callTonfestForOnOntonPayment(ordr, event_uuid!!);
         await CsbtTicket(event_uuid!, ordr.user_id!);
       } catch (error) {
         console.log("create_tscsbt_ticket_failed", error);
@@ -110,8 +112,7 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
       } catch (error) {
         logger.error("TsCsbtTicket_Order-sendLogNotification-error--:", error);
       }
-
-      await pushLockTTl();
+      if (pushLockTTl) await pushLockTTl();
     } catch (error) {
       logger.log(`tscsbt_mint_error , ${error}`);
     }
