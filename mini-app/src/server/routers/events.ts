@@ -133,6 +133,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   //    We'll rename org_* fields to 'organizer: { ... }' in the returned object.
   const ownerUserId = eventData.owner; // This is the user_id who created the event
   const ownerUser = await usersDB.selectUserById(Number(ownerUserId));
+  const is_ts_verified = await organizerTsVerified(Number(ownerUserId));
 
   // Build an organizer object with the org_* fields (or null if no user found)
   const organizer = ownerUser
@@ -149,6 +150,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
         username: ownerUser.username,
         first_name: ownerUser.first_name,
         hosted_event_count: ownerUser.hosted_event_count,
+        is_ts_verified,
       }
     : null;
 

@@ -8,10 +8,12 @@ import { sleep } from "@/utils";
 import CustomSheet from "../Sheet/CustomSheet";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import { useConfig } from "@/context/ConfigContext";
+import { useEventData } from "./eventPageContext";
 
 const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
   const webApp = useWebApp();
   const config = useConfig();
+  const eventData = useEventData();
 
   const [isTasksOpen, setIsTasksOpen] = useState(false);
   const joinTaskStatus = trpc.users.joinOntonTasks.useQuery(undefined, {
@@ -30,15 +32,19 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
 
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data?.gp && isJoinedX === "done";
 
+  // if it was not ts verified and lock was not set we will show it
+  const areTasksRequired = !eventData.organizer?.is_ts_verified && !config.tjo;
+  console.log("areTasksRequired: ", areTasksRequired);
+
   const closeTasksOpen = () => {
     setIsTasksOpen(false);
   };
 
-  if (!config.tjo && !joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
+  if (areTasksRequired && !joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
     return <MainButton progress />;
   }
 
-  if (!config.tjo && (!joinTaskStatus.data?.all_done || isJoinedX !== "done" || isTasksOpen)) {
+  if (areTasksRequired && (!joinTaskStatus.data?.all_done || isJoinedX !== "done" || isTasksOpen)) {
     return (
       <>
         {!isTasksOpen && (
