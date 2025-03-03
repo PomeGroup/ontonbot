@@ -11,14 +11,13 @@ export async function middleware(req: NextRequest) {
 
     const utm_source = req.nextUrl.searchParams.get("utm_source");
 
-
     if (tgAppStartParam) {
       const isEdit = tgAppStartParam.startsWith("edit_");
       const isOrganizerProfile = tgAppStartParam.startsWith("channels_");
       const isGatewaySideEvent = tgAppStartParam.startsWith("gateway");
-      if(isOrganizerProfile){
-              console.log("redirecting to organizer profile");
-              return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
+      if (isOrganizerProfile) {
+        console.log("redirecting to organizer profile");
+        return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
       }
       if (isGatewaySideEvent) {
         console.log("redirecting to gateway");
@@ -32,17 +31,14 @@ export async function middleware(req: NextRequest) {
       }
       const isMysteryUtm = tgAppStartParam.length >= 7 && tgAppStartParam.length <= 12;
       if (isMysteryUtm) {
-
         // console.log(`affilate_redirect_${tgAppStartParam}`)
-        const mysteryUUID = "4ddfab00-33c0-426a-b03f-a50bdcd72454";
+        const mysteryUUID = "9d4fc2e4-2487-4504-8fb0-a575f17f6ce7";
         const url = new URL(`/ptma/event/${mysteryUUID}`, req.nextUrl.origin);
         url.searchParams.set("not_authenticated", userToken ? "false" : "true");
 
         url.searchParams.set("utm_source", "telegram");
         url.searchParams.set("utm_medium", "notification");
         url.searchParams.set("utm_campaign", tgAppStartParam);
-
-
 
         return NextResponse.redirect(url);
       }
