@@ -1,16 +1,23 @@
 import { sendHttpRequest } from "@/lib/httpHelpers";
+import { configProtected } from "@/server/config";
+import { logger } from "@/server/utils/logger";
 
 export const addUserTicketFromOnton = async (payload: any): Promise<{ success: boolean; data: any }> => {
-  const endpoint = "https://api-public-test.ton-fest.com/external-partners/onton/addUserTicketFromOnton";
-
+  const BaseUrl = configProtected?.TONFEST_API?.[0] || "";
+  const Authorization = configProtected?.TONFEST_API?.[1] || "";
+  const endpoint = BaseUrl + "external-partners/onton/addUserTicketFromOnton";
+  logger.log(`Calling TonFest endpoint: ${endpoint}`);
   // Construct headers, method, etc. right here
   const headers = {
     "Content-Type": "application/json",
-    Authorization: process.env.TONFEST_AUTH_TOKEN || "",
   };
 
   try {
-    const { success, data } = await sendHttpRequest("POST", endpoint, headers, payload);
+    const finalPayload = {
+      ...payload,
+      authorization: Authorization,
+    };
+    const { success, data } = await sendHttpRequest("POST", endpoint, headers, finalPayload);
     if (!data.success) {
       console.error("Failed to add user ticket from Onton:", data);
       return { success: false, data: { error: data.error } };
