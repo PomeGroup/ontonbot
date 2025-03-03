@@ -14,7 +14,7 @@ export const callTonfestForOnOntonPayment = async (ordr: OrderRow, eventUuid: st
 
   // Build the payload from your order & event context
   const payloadForTonfest = {
-    trxHash: ordr.uuid, // or any unique ID as the "trxHash"
+    trxHash: ordr.trx_hash,
     userTelegramId: ordr.user_id ?? 0,
     telegramUsername,
     ownerWallet: ordr.owner_address,
