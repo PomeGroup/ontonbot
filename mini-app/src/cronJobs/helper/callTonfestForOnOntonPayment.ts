@@ -6,7 +6,7 @@ import eventDB from "@/server/db/events";
 
 export const callTonfestForOnOntonPayment = async (ordr: OrderRow, eventUuid: string) => {
   // Only proceed if order.payment_type is not "STAR"
-  if (ordr.payment_type !== "STAR") return;
+  if (ordr.payment_type === "STAR") return;
   const eventData = await eventDB.fetchEventByUuid(eventUuid);
   // If there's a user_id, fetch the user for telegram username
   const user = ordr.user_id ? await usersDB.selectUserById(ordr.user_id) : null;
