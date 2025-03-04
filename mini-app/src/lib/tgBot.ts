@@ -208,7 +208,7 @@ export const sendLogNotification = async (
       parse_mode: "HTML",
     });
 
-    return logBot.api.sendPhoto(Number(LOGS_GROUP_ID), new InputFile(buffer), {
+    return await logBot.api.sendPhoto(Number(LOGS_GROUP_ID), new InputFile(buffer), {
       caption: props.message,
       reply_to_message_id: finalReplyTo, // optional
       reply_markup: props.inline_keyboard,
