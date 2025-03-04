@@ -1,0 +1,99 @@
+"use client";
+
+import { useState } from "react";
+import { useUserStore } from "@/context/store/user.store";
+import BottomNavigation from "@/components/BottomNavigation";
+import TotalPointsBox from "@/app/my/points/TotalPointsBox";
+import EventPointsGroup from "./EventPointsGroup";
+import EventPointsCard from "./EventPointsCard";
+import { trpc } from "@/app/_trpc/client";
+import ChevronDownIconAccord from "@/app/my/points/ChevronDownIcon";
+
+export default function MyPointsPage() {
+  const { user } = useUserStore();
+  const [isOpen, setIsOpen] = useState(true);
+
+  const { data: paidOnlineData, isLoading: loadingPaidOnline } =
+    trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
+      activityType: "paid_online_event",
+    });
+  const { data: freeOnlineData, isLoading: loadingFreeOnline } =
+    trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
+      activityType: "free_online_event",
+    });
+  const { data: paidOfflineData, isLoading: loadingPaidOfflineData } =
+    trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
+      activityType: "paid_offline_event",
+    });
+  const { data: freeOfflineData, isLoading: loadingFreeOffline } =
+    trpc.usersScore.getTotalScoreByActivityTypeAndUserId.useQuery({
+      activityType: "free_offline_event",
+    });
+  const { data: totalPoints, isLoading: loadingTotalPoints } = trpc.usersScore.getTotalScoreByUserId.useQuery();
+  // Optionally, handle loading states here (e.g., show a spinner)
+  if (!user) return null;
+  if (loadingPaidOnline || loadingFreeOnline || loadingPaidOfflineData || loadingFreeOffline || loadingTotalPoints) {
+    return null;
+  }
+
+  return (
+    <div className="bg-[#EFEFF4] min-h-screen overflow-y-auto mb-[40px]">
+      {/* 1) Display the total points at the top */}
+      <div className="p-4">
+        <TotalPointsBox totalPoints={totalPoints ?? 0} />
+      </div>
+
+      {/* 2) The accordion container */}
+      <div className="mx-4 bg-white rounded-md p-4">
+        {/* Heading row with a toggle button on the right */}
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-semibold">Event Participation</h1>
+          <button
+            className="ml-2 text-gray-700"
+            onClick={() => setIsOpen((prev) => !prev)}
+          >
+            <ChevronDownIconAccord isOpen={isOpen} />
+          </button>
+        </div>
+
+        <p className="text-xs text-gray-500 mb-2">4 Tasks</p>
+
+        {/* Slide-down area */}
+        <div className={`overflow-hidden transition-all duration-300 ${isOpen ? "max-h-[1000px]" : "max-h-0"}`}>
+          <EventPointsGroup title="Online Events">
+            <EventPointsCard
+              eventTitle="Attend paid online events"
+              tasksCount={paidOnlineData?.count ?? 0}
+              description="10 Points + 1 Point per USDT price"
+              totalPoints={paidOnlineData?.total ?? 0}
+            />
+            <EventPointsCard
+              eventTitle="Attend free online events"
+              tasksCount={freeOnlineData?.count ?? 0}
+              description="2 Points"
+              totalPoints={freeOnlineData?.total ?? 0}
+            />
+          </EventPointsGroup>
+
+          <EventPointsGroup title="Offline Events">
+            <EventPointsCard
+              eventTitle="Attend paid offline events"
+              tasksCount={paidOfflineData?.count ?? 0}
+              description="10 Points + 1 Point per USDT price"
+              totalPoints={paidOfflineData?.total ?? 0}
+            />
+            <EventPointsCard
+              eventTitle="Attend free offline events"
+              tasksCount={freeOfflineData?.count ?? 0}
+              description="2 Points"
+              totalPoints={freeOfflineData?.total ?? 0}
+            />
+          </EventPointsGroup>
+        </div>
+      </div>
+
+      {/* 3) Bottom navigation */}
+      <BottomNavigation active="My ONTON" />
+    </div>
+  );
+}

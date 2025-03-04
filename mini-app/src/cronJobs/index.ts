@@ -10,6 +10,8 @@ import { notifyUsersForRewards } from "@/cronJobs/tasks/notifyUsersForRewards";
 import { cronJobRunner } from "@/cronJobs/cornJobRunner";
 import { syncSbtCollectionsForEvents } from "@/cronJobs/tasks/syncSbtCollectionsForEvents";
 import { CheckAllUsersBlock } from "@/cronJobs/tasks/checkBlockStatus";
+import { CheckSbtStatus } from "@/cronJobs/tasks/checkTSRewardStatus";
+import { runPendingCallbackTasks } from "@/cronJobs/tasks/runAPIPendingCallbackTasks";
 
 const cronJobs = {
   CheckTransactions,
@@ -23,6 +25,8 @@ const cronJobs = {
   notifyUsersForRewards,
   syncSbtCollectionsForEvents,
   CheckAllUsersBlock,
+  CheckSbtStatus,
+  runPendingCallbackTasks,
 };
 export { cronJobRunner };
 export default cronJobs;

@@ -1,4 +1,4 @@
-import { index, integer, json, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { index, integer, json, pgEnum, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { rewardStatus, rewardType } from "@/db/schema";
 import { visitors } from "@/db/schema/visitors";
 import { InferSelectModel } from "drizzle-orm";
@@ -9,6 +9,13 @@ export type RewardDataTyepe =
       ok: true;
     }
   | { fail_reason: string; ok: false };
+
+export const tonSocietyStatusEnum = pgEnum("ton_society_status_enum", [
+  "NOT_CLAIMED",
+  "CLAIMED",
+  "RECEIVED",
+  "NOT_ELIGIBLE",
+]);
 
 export const rewards = pgTable(
   "rewards",
@@ -29,6 +36,7 @@ export const rewards = pgTable(
       precision: 3,
     }).$onUpdate(() => new Date()),
     updatedBy: text("updated_by").default("system").notNull(),
+    tonSocietyStatus: tonSocietyStatusEnum("ton_society_status").notNull().default("NOT_CLAIMED"),
   },
   (table) => ({
     visitorIdIdx: index("rewards_visitor_id_idx").on(table.visitor_id),
@@ -40,3 +48,4 @@ export const rewards = pgTable(
 );
 
 export type RewardsSelectType = InferSelectModel<typeof rewards>;
+export type RewardTonSocietyStatusType = (typeof tonSocietyStatusEnum.enumValues)[number];

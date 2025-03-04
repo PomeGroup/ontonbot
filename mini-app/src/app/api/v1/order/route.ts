@@ -92,7 +92,8 @@ export async function POST(request: Request) {
     where: and(
       eq(orders.user_id, userId),
       eq(orders.order_type, ticketOrderType),
-      eq(orders.event_uuid, eventData.event_uuid)
+      eq(orders.event_uuid, eventData.event_uuid),
+      eq(orders.payment_type, eventPaymentInfo.payment_type)
     ),
   });
 

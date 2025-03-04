@@ -31,7 +31,7 @@ import { giataCity } from "./schema/giataCity";
 import { ontoSetting } from "./schema/ontoSetting";
 import { orders, orderTypes } from "./schema/orders";
 import { notifications } from "./schema/notifications";
-import { rewards } from "./schema/rewards";
+import { rewards, RewardTonSocietyStatusType, RewardsSelectType } from "./schema/rewards";
 import { sbtRewardCollections } from "./schema/sbtRewardCollections";
 import { tickets, ticketsRelations } from "./schema/tickets";
 import { specialGuests } from "@/db/schema/specialGuest";
@@ -47,7 +47,7 @@ import { coupon_item_status, coupon_items } from "./schema/coupon_items";
 import { user_custom_flags, user_flags, userFlagsType } from "./schema/user_custom_flags";
 import { moderationLog, ModerationLogActionType } from "./schema/moderation_log";
 
-// ---- NEW IMPORTS for user_roles ----
+import { usersScore, UsersScoreType, UsersScoreActivityType, UserScoreItemType } from "./schema/usersScore";
 import {
   accessRoleItemType,
   accessRoleEnum,
@@ -57,6 +57,17 @@ import {
   accessRoleEnumType,
   userRoleStatusEnum,
 } from "./schema/userRoles";
+
+import {
+  callbackTasks,
+  CallBackTaskAPINameType,
+  CallbackTasksRow,
+  CallBackTaskItemType,
+  CallBackTaskStepNameType,
+  CallBackTaskSHttpMethodType,
+  CallBackTaskFunctionType,
+} from "./schema/callbackTasks";
+import { callbackTaskRuns, CallbackTaskRunsRow, callbackTaskRunStatusType } from "./schema/callbackTaskRuns";
 
 // export all the enums
 export {
@@ -123,6 +134,9 @@ export {
   userRoles,
   userRolesRelations,
   moderationLog,
+  usersScore,
+  callbackTasks,
+  callbackTaskRuns,
 };
 
 // Type Exports
@@ -136,3 +150,17 @@ export type { accessRoleItemType };
 export type { accessRoleEnumType };
 export type { userFlagsType };
 export type { ModerationLogActionType };
+export type { UsersScoreType };
+export type { UserScoreItemType };
+export type { UsersScoreActivityType };
+export type { RewardTonSocietyStatusType };
+export type { RewardsSelectType as RewardType };
+
+export type { CallbackTasksRow };
+export type { CallBackTaskItemType };
+export type { CallBackTaskStepNameType };
+export type { CallBackTaskAPINameType };
+export type { CallbackTaskRunsRow };
+export type { callbackTaskRunStatusType };
+export type { CallBackTaskSHttpMethodType };
+export type { CallBackTaskFunctionType };

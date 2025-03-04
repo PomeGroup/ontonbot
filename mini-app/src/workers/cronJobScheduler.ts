@@ -49,6 +49,33 @@ async function MainCronJob() {
     true // (waitForCompletion) => wait for onTick to finish
     // No errorHandler passed
   );
+
+  new CronJob(
+    "0 1 * * *", // (cronTime) => at 1:00 AM
+    cronJobs.CheckSbtStatus, // (onTick)   => function to run
+    null, // (onComplete) => no special callback after job
+    true, // (start) => start immediately
+    null, // (timeZone) => e.g. "UTC" or your local
+    null, // (context)
+    false, // (runOnInit) => don't run immediately on app start
+    null, // (utcOffset)
+    false, // (unrefTimeout)
+    true // (waitForCompletion) => wait for onTick to finish
+    // No errorHandler passed
+  );
+
+  new CronJob(
+    "*/10 * * * * *", // Every 10 seconds
+    cronJobs.runPendingCallbackTasks, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
 }
 
 MainCronJob().then(() => logger.log("Cron Jobs Started"));

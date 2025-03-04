@@ -7,12 +7,12 @@ import { redisTools } from "@/lib/redisTools";
 export const getUserFlagsCacheKey = (flag: string, userId: number) =>
   `${redisTools.cacheKeys.user_flags}${userId}:flags:${flag}`;
 
-export async function organizerTsVerified(user_id: number) {
+export async function organizerTsVerified(user_id: number): Promise<boolean> {
   const cacheKey = getUserFlagsCacheKey("ton_society_verified", user_id);
 
   const cachedFlag = await redisTools.getCache(cacheKey);
   if (cachedFlag !== null && cachedFlag !== undefined) {
-    return cachedFlag;
+    return Boolean(cachedFlag);
   }
   const result = await db.query.user_custom_flags.findFirst({
     where: and(
@@ -27,10 +27,7 @@ export async function organizerTsVerified(user_id: number) {
   const cache_value = result ? result : false;
   await redisTools.setCache(cacheKey, cache_value, redisTools.cacheLvl.medium);
 
-  if (!result) return false;
-  if (result) {
-    return Boolean(result.value);
-  }
+  return Boolean(result?.value);
 }
 
 export async function checkUserCustomFlagBoolean(user_id: number, flag: userFlagsType): Promise<boolean> {

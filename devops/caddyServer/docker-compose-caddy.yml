@@ -1,19 +1,19 @@
 services:
   caddy:
-    image: ${REGISTRY_URL}/${GITHUB_REPO}/caddy:dev-latest
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/caddy:main-latest
     hostname: caddy
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
     extra_hosts:
-         - host.docker.internal:host-gateway
+      - host.docker.internal:host-gateway
     depends_on:
       - fluentd
     deploy:
       resources:
         limits:
-          memory:  6000M
+          memory: 6000M
           cpus: '4.0'
       mode: global
       update_config:
@@ -67,21 +67,21 @@ services:
       # Mount the data directory
       - registry_data:/data
     deploy:
-        resources:
-            limits:
-              memory:  4000M
-              cpus: '2.0'
-        mode: global
-        update_config:
-            failure_action: rollback
-            order: stop-first
-            parallelism: 1
-        placement:
-            constraints:
-            - node.role == manager
-        restart_policy:
-            condition: on-failure
-            delay: 10s
+      resources:
+        limits:
+          memory: 4000M
+          cpus: '2.0'
+      mode: global
+      update_config:
+        failure_action: rollback
+        order: stop-first
+        parallelism: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 10s
     networks:
       - caddy-network
     logging:
@@ -128,41 +128,41 @@ services:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - caddy-network
-#  prometheus:
-#    image: prom/prometheus:latest
-#    hostname: prometheus
-#    ports:
-#      - "9090:9090"
-#    volumes:
-#      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-#    deploy:
-#      resources:
-#        limits:
-#          memory: 2g
-#          cpus: '2.0'
-#      replicas: 1
-#      restart_policy:
-#        condition: on-failure
-#    networks:
-#      - caddy-network
+  #  prometheus:
+  #    image: prom/prometheus:latest
+  #    hostname: prometheus
+  #    ports:
+  #      - "9090:9090"
+  #    volumes:
+  #      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #    deploy:
+  #      resources:
+  #        limits:
+  #          memory: 2g
+  #          cpus: '2.0'
+  #      replicas: 1
+  #      restart_policy:
+  #        condition: on-failure
+  #    networks:
+  #      - caddy-network
 
   fluentd:
     image: fluent/fluentd:v1.18-debian-1
     hostname: fluentd
     user: root # Run as root to install plugins
     deploy:
-        resources:
-          limits:
-            memory: 5g
-            cpus: '2.0'
-        replicas: 1
-        restart_policy:
-            condition: on-failure
-        update_config:
-            parallelism: 2
-            delay: 10s
-            order: start-first
-            failure_action: rollback
+      resources:
+        limits:
+          memory: 5g
+          cpus: '2.0'
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 2
+        delay: 10s
+        order: start-first
+        failure_action: rollback
     ports:
       - "24224:24224"
       - "24224:24224/udp"

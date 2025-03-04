@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Page, Block, Button } from "konsta/react";
 // svg icons
 import guestListIcon from "./guest-list.svg";
-// import promotionCodeIcon from "./promotion-code.svg";
+import promotionCodeIcon from "./promotion-code.svg";
 import ordersIcon from "./orders.svg";
 import coOrganizerIcon from "./co-organizers.svg";
 
@@ -15,6 +15,8 @@ import { useSectionStore } from "@/zustand/useSectionStore";
 import { useGetEvent } from "@/hooks/events.hooks";
 import { useUserStore } from "@/context/store/user.store";
 import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
+import { ALLOWED_USER_TO_TEST } from "@/constants";
+import CheckUserInList from "@/app/_components/CheckUserInList";
 
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
@@ -38,15 +40,6 @@ export default function ManageIndexPage() {
 
   const canEditEvent = canUserEditEvent({ user, owner: eventData?.owner, accessRoles: eventData?.accessRoles });
 
-  if (user) {
-    console.log("canEditEvent", canEditEvent);
-    console.log(
-      "accessRolesArray some ",
-      eventData?.accessRoles.some(
-        (ar: { user_id: number; role: string }) => ar.user_id === user.user_id && ar.role === "admin"
-      )
-    );
-  }
   const guestListAccess = canUserPerformRole({
     user,
     accessRoles: eventData?.accessRoles,
@@ -101,18 +94,22 @@ export default function ManageIndexPage() {
               footerTexts={[]}
               className="!m-0"
             />
-
-            {/*<ActionCard*/}
-            {/*  onClick={() => router.push(`/events/${eventData.event_uuid}/manage/promotion-code`)}*/}
-            {/*  iconSrc={promotionCodeIcon}*/}
-            {/*  title="Promotion Codes"*/}
-            {/*  subtitle="Generate and manage codes"*/}
-            {/*  footerTexts={[*/}
-            {/*    { count: codesTotal, items: "Codes" },*/}
-            {/*    { count: codesActive, items: "Active" },*/}
-            {/*    { count: codesUsed, items: "Used" },*/}
-            {/*  ]}*/}
-            {/*/>*/}
+            <CheckUserInList
+              userList={ALLOWED_USER_TO_TEST}
+              currentUserId={user?.user_id}
+            >
+              <ActionCard
+                onClick={() => router.push(`/events/${eventData.event_uuid}/manage/promotion-code`)}
+                iconSrc={promotionCodeIcon}
+                title="Promotion Codes"
+                subtitle="Generate and manage codes"
+                footerTexts={[
+                  { count: 1, items: "Codes" },
+                  { count: 1, items: "Active" },
+                  { count: 1, items: "Used" },
+                ]}
+              />
+            </CheckUserInList>
           </>
         )}
 

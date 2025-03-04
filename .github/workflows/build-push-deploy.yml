@@ -169,7 +169,11 @@ jobs:
           image_name="${{ secrets.REGISTRY_URL }}/${repository}/${service}"
           tag_commit="${image_name}:${branch_name}-${{ github.run_id }}"
           tag_latest="${image_name}:${branch_name}-latest"
-
+          echo "Building image: $tag_commit"
+            echo "Building image: $tag_latest"
+          echo "Branch name: $branch_name"
+          echo "Repository: $repository"
+          echo "image name: $image_name"
           echo "Processing service: $service"
           echo "Build path: $build_path"
 
