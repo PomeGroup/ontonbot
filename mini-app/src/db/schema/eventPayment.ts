@@ -1,10 +1,12 @@
-import { index, integer, pgTable, serial, text, timestamp, uuid, uniqueIndex, real, pgEnum } from "drizzle-orm/pg-core";
 import { events } from "@/db/schema/events";
-import { paymentTypes } from "../enum";
 import { InferSelectModel } from "drizzle-orm";
+import { index, integer, pgEnum, pgTable, real, serial, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { paymentTypes } from "../enum";
 
 export const organizerPaymentStatus = pgEnum("organizer_payment_status", ["not_payed", "payed_to_organizer", "refunded"]);
-export const ticketTypes = pgEnum("ticket_types", ["NFT", "TSCSBT"]);
+
+export const ticketTypes = ["NFT", "TSCSBT"] as const;
+export const pgTicketTypes = pgEnum("ticket_types", ticketTypes);
 
 export const eventPayment = pgTable(
   "event_payment_info",
@@ -18,7 +20,7 @@ export const eventPayment = pgTable(
     recipient_address: text("recipient_address").notNull(),
     bought_capacity: integer("bought_capacity").notNull(),
     /* -------------------------------------------------------------------------- */
-    ticket_type: ticketTypes("ticket_type").notNull(),
+    ticket_type: pgTicketTypes("ticket_type").notNull(),
     /* ----------------------------- USED IF HAS NFT ---------------------------- */
     ticketImage: text("ticket_image"),
     ticketVideo: text("ticket_video"),
@@ -40,4 +42,4 @@ export const eventPayment = pgTable(
 
 export type EventPaymentSelectType = InferSelectModel<typeof eventPayment>;
 export type EventPaymentType = (typeof paymentTypes.enumValues)[number];
-export type EventTicketType = (typeof ticketTypes.enumValues)[number];
+export type EventTicketType = (typeof ticketTypes)[number];
