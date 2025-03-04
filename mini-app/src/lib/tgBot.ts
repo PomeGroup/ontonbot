@@ -217,7 +217,7 @@ export const sendLogNotification = async (
   }
 
   // 7) Otherwise, plain text message
-  return logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
+  return await logBot.api.sendMessage(Number(LOGS_GROUP_ID), props.message, {
     parse_mode: "HTML",
     reply_to_message_id: finalReplyTo, // optional
     reply_markup: props.inline_keyboard,
