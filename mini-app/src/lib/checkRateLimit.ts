@@ -10,6 +10,10 @@ export const checkRateLimit = async (
   limit = 10,
   windowSeconds = 60
 ): Promise<{ allowed: boolean; remaining: number }> => {
+  if (process.env.CACHE_ENABLED === "false") {
+    return { allowed: true, remaining: 100 };
+  }
+
   const redisClient = await getRedisClient();
 
   // Build a unique key for this user + route

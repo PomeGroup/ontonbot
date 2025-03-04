@@ -1,15 +1,15 @@
-import axios from "axios";
-import sizeOf from "image-size";
-import { z } from "zod";
-import { TRPCError } from "@trpc/server";
-import { adminOrganizerCoOrganizerProtectedProcedure, adminOrganizerProtectedProcedure, router } from "../trpc";
-import { validateMimeType } from "@/lib/validateMimeType";
-import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
-import FormData from "form-data";
-import { logger } from "@/server/utils/logger";
-import jwt from "jsonwebtoken";
+import { UPLOAD_IMAGE_RATE_LIMIT } from "@/constants";
 import { checkRateLimit } from "@/lib/checkRateLimit";
-import { UPLOAD_IMAGE_RATE_LIMIT, UPLOAD_VIDEO_RATE_LIMIT } from "@/constants";
+import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
+import { validateMimeType } from "@/lib/validateMimeType";
+import { TRPCError } from "@trpc/server";
+import axios from "axios";
+import FormData from "form-data";
+import sizeOf from "image-size";
+import jwt from "jsonwebtoken";
+import { z } from "zod";
+import { adminOrganizerCoOrganizerProtectedProcedure, router } from "../trpc";
+import { logger } from "../utils/logger";
 // Base URL for Next.js API routes
 const API_BASE_URL = (process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000") + "/api/";
 
@@ -54,7 +54,6 @@ export const fieldsRouter = router({
                   message: "File is too large",
                 });
               }
-
               return true;
             },
             { message: "Invalid image data" }
@@ -94,7 +93,6 @@ export const fieldsRouter = router({
                 message: "Malicious file detected",
               });
             }
-
             return { buffer, mimeType };
           }),
         subfolder: z.enum(["event", "sbt", "channels"]),

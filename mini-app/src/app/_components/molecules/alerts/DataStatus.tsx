@@ -1,6 +1,6 @@
-import React, { ReactNode } from "react";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { cn } from "@/utils";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { ReactNode } from "react";
 
 export type DataStatusProps = {
   status: keyof typeof DATA_STATUS_ANIMATIONS;
