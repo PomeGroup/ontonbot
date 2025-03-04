@@ -322,9 +322,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           recipient_address: input_event_data.paid_event.payment_recipient_address,
           bought_capacity: input_event_data.capacity,
           /* -------------------------------------------------------------------------- */
-          ticket_type: "NFT",
+          ticket_type: ticketType,
           ticketImage: input_event_data.paid_event.nft_image_url,
-          ticketVideo: input_event_data.paid_event.nft_video_url,
+          ticketVideo:
+            input_event_data.paid_event.nft_video_url || "https://storage.onton.live/sbt-collections/Hubs/Onton/1.mp4",
           title: input_event_data.paid_event.nft_title,
           description: input_event_data.paid_event.nft_description,
           collectionAddress: null,
