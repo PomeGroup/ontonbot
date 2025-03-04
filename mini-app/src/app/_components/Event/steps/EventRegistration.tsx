@@ -1,17 +1,16 @@
-import React, { useLayoutEffect } from "react";
-import { UserRegistrationForm } from "./UserRegistrationForm";
-import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useMainButton } from "@/hooks/useMainButton";
-import PaidEventCreationInputs from "./PaidEventCreationInputs";
-import { useTonWallet } from "@tonconnect/ui-react";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useSectionStore } from "@/zustand/useSectionStore";
+import { useTonWallet } from "@tonconnect/ui-react";
+import React, { useLayoutEffect } from "react";
+import PaidEventCreationInputs from "./PaidEventCreationInputs";
+import { UserRegistrationForm } from "./UserRegistrationForm";
 
 const RegistrationStep = () => {
   const formRef = React.useRef<HTMLFormElement>(null);
 
   const tonWallet = useTonWallet();
   const { setSection } = useSectionStore();
-
 
   const { eventData, setEventData, submitMainbutton, isEdit } = useCreateEventStore((state) => ({
     eventData: state.eventData,
@@ -40,8 +39,8 @@ const RegistrationStep = () => {
         submitMainbutton(tonWallet?.account.address || null);
       }}
     >
-      { <UserRegistrationForm />}
-      { <PaidEventCreationInputs />}
+      <UserRegistrationForm />
+      <PaidEventCreationInputs />
     </form>
   );
 };
