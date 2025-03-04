@@ -693,3 +693,12 @@ export const MAIN_TG_CHAT_ID = -1002129089489;
 
 export const TG_BOT_LINK = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`;
 export const TG_SUPPORT_GROUP = "https://t.me/ontonsupport";
+
+export const ALLOWED_USER_TO_TEST = [
+  748891997, // samyar_kd
+  185027333, // sid_hazrati
+  23932283, // Mfarimani
+  7013087032, // Ontonadmin
+  548648769, // Radiophp
+  70992667, // Pari_che_hr
+];

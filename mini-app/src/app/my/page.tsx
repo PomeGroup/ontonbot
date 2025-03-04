@@ -22,6 +22,8 @@ import ActionCard from "@/ActionCard";
 import { useSectionStore } from "@/zustand/useSectionStore";
 import LoadableImage from "@/components/LoadableImage";
 import solarCupOutline from "@/components/icons/solar-cup-outline.svg";
+import CheckUserInList from "@/app/_components/CheckUserInList";
+import { ALLOWED_USER_TO_TEST } from "@/constants";
 
 export default function ProfilePage() {
   const { user } = useUserStore();
@@ -62,15 +64,20 @@ export default function ProfilePage() {
           paid ? { items: "Events", count: user?.hosted_event_count || 0 } : { items: "Become an organizer first" },
         ]}
       />
-      <ActionCard
-        onClick={() => {
-          router.push("/my/points/");
-        }}
-        iconSrc={solarCupOutline}
-        title="My Points"
-        subtitle="You Acheived"
-        footerTexts={[{ items: "Points", count: totalPoints || 0 }]}
-      />
+      <CheckUserInList
+        userList={ALLOWED_USER_TO_TEST}
+        currentUserId={user?.user_id}
+      >
+        <ActionCard
+          onClick={() => {
+            router.push("/my/points/");
+          }}
+          iconSrc={solarCupOutline}
+          title="My Points"
+          subtitle="You Acheived"
+          footerTexts={[{ items: "Points", count: totalPoints || 0 }]}
+        />
+      </CheckUserInList>
       <ConnectWalletCard />
       <PaymentCard visible={!paid && hasWallet} />
 
