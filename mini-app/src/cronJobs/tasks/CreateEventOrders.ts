@@ -63,7 +63,7 @@ async function processOrderCreation(order: OrderRow) {
 
     // Create the main Ton Society Event if missing
     let mainEventActivityId = event.activity_id;
-    if (!mainEventActivityId) {
+    if (!mainEventActivityId && process.env.ENV !== "local") {
       const tonSocietyResult = await registerActivity(eventDraft);
       mainEventActivityId = tonSocietyResult.data.activity_id;
     }

@@ -28,10 +28,14 @@ export const createTsCsbtActivity = async (event: EventRow, paymentInfo: EventPa
     },
     `${event.event_uuid}-ticket`
   );
-
-  const ticketActivityResult = await registerActivity(ticketDraft);
-  const ticketActivityId = ticketActivityResult.data.activity_id;
-  logger.log(`Created TSCSBT ticket activity ${ticketActivityId} for event ${event.event_uuid}`);
-
-  return ticketActivityId;
+  logger.log(`Created TSCSBT ticket draft for event ${event.event_uuid}` + ticketDraft);
+  if (process.env.ENV !== "local") {
+    const ticketActivityResult = await registerActivity(ticketDraft);
+    const ticketActivityId = ticketActivityResult.data.activity_id;
+    logger.log(`Created TSCSBT ticket activity ${ticketActivityId} for event ${event.event_uuid}`);
+    return ticketActivityId;
+  } else {
+    logger.log(`for local env, skipping registerActivity call`);
+    return 0;
+  }
 };
