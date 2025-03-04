@@ -13,7 +13,7 @@ import { useEventData } from "./eventPageContext";
 const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
   const webApp = useWebApp();
   const config = useConfig();
-  const eventData = useEventData();
+  const { eventData } = useEventData();
 
   const [isTasksOpen, setIsTasksOpen] = useState(false);
   const joinTaskStatus = trpc.users.joinOntonTasks.useQuery(undefined, {
@@ -33,8 +33,8 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data?.gp && isJoinedX === "done";
 
   // if it was not ts verified and lock was not set we will show it
-  const areTasksRequired = !eventData.organizer?.is_ts_verified && !config.tjo;
-  console.log("areTasksRequired: ", areTasksRequired, eventData.organizer?.is_ts_verified, config.tjo);
+  const areTasksRequired = !eventData.data?.organizer?.is_ts_verified && !config.tjo;
+  console.log("areTasksRequired: ", areTasksRequired, eventData.data?.organizer?.is_ts_verified, config.tjo);
 
   const closeTasksOpen = () => {
     setIsTasksOpen(false);
