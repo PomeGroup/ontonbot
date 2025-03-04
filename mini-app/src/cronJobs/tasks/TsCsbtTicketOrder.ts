@@ -9,7 +9,6 @@ import { CsbtTicket } from "@/server/routers/services/rewardsService";
 import { selectUserById } from "@/server/db/users";
 import { sendLogNotification } from "@/lib/tgBot";
 import { callTonfestForOnOntonPayment } from "@/cronJobs/helper/callTonfestForOnOntonPayment";
-import { CheckTransactions } from "@/cronJobs/tasks/CheckTransactions";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted

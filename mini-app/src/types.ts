@@ -158,6 +158,7 @@ export const PaidEventSchema = z
     nft_title: z.string({ required_error: "NFT title is required" }).optional().default(""),
     nft_description: z.string({ required_error: "NFT description is required" }).optional().default(""),
     nft_image_url: z.string({ required_error: "NFT image URL is required" }).optional(),
+    nft_video_url: z.string({ required_error: "NFT video URL is required" }).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.has_payment) {
@@ -195,6 +196,8 @@ export const PaidEventSchema = z
       if (data.has_nft) {
         if (!data.nft_image_url)
           ctx.addIssue({ code: "custom", path: ["nft_image_url"], message: "Nft image url is required" });
+        if (!data.nft_video_url)
+          ctx.addIssue({ code: "custom", path: ["nft_video_url"], message: "Nft video url is required" });
 
         if (!data.nft_title) ctx.addIssue({ code: "custom", path: ["nft_title"], message: "Nft title is required" });
 

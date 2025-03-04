@@ -14,6 +14,7 @@ import { eq, and } from "drizzle-orm";
 import eventDB, { selectEventByUuid } from "@/server/db/events";
 import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
+import eventPaymentDB from "@/server/db/eventPayment.db";
 
 //TODO - Put this in db functions files
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
@@ -316,39 +317,75 @@ export const createUserReward = async (
   }
 };
 
+/**
+ * Creates a CSBT ticket reward for the given user/event.
+ * 1) Checks if there's an existing reward; if so, returns immediately
+ * 2) Looks up the eventPayment row to ensure it's TSCSBT + has a ticket_activity_id
+ * 3) Calls createUserRewardLink(ticket_activity_id, ...)
+ * 4) Inserts the new reward into the DB
+ */
 export async function CsbtTicket(event_uuid: string, user_id: number) {
+  // 1) Create (or fetch) a visitor record for this user + event
   const visitor = await addVisitor(user_id, event_uuid);
+
+  // 2) Fetch the main event (for organizer/society_hub info, etc.)
   const eventData = await selectEventByUuid(event_uuid);
-  if (!eventData || !eventData.activity_id) {
-    logger.error("CsbtTicketRewardService eventData or activity_id is null");
-    throw new Error("CsbtTicketRewardService eventData or activity_id is null");
+  if (!eventData) {
+    logger.error("CsbtTicketRewardService: eventData is null");
+    throw new Error("CsbtTicketRewardService: eventData is null");
   }
-  // Create the user reward link
-  const society_hub_value =
+
+  // 3) Fetch the eventPayment info to ensure TSCSBT + ticket_activity_id
+  const paymentInfo = await eventPaymentDB.fetchPaymentInfoForCronjob(event_uuid);
+
+  if (!paymentInfo) {
+    logger.error(`CsbtTicketRewardService: No payment info found for event ${event_uuid}`);
+    throw new Error(`No payment info found for event ${event_uuid}`);
+  }
+  if (paymentInfo.ticket_type !== "TSCSBT") {
+    logger.error(`CsbtTicketRewardService: Event is not TSCSBT ${event_uuid}`);
+    throw new Error("Event is not TSCSBT");
+  }
+  if (!paymentInfo.ticketActivityId) {
+    logger.error(`CsbtTicketRewardService: Missing ticket_activity_id for TSCSBT event ${event_uuid}`);
+    throw new Error("Missing ticket_activity_id for TSCSBT event");
+  }
+
+  // 4) Check if a reward already exists for this visitor
+  const existingReward = await rewardDB.checkExistingRewardWithType(visitor.id, "ton_society_csbt_ticket");
+  if (existingReward) {
+    logger.debug(`Reward already exists for visitor ${visitor.id}, skipping creation`);
+    return;
+  }
+
+  // 5) Build optional trait for "Organizer"
+  const societyHubValue =
     typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
 
-  const reward = await rewardDB.checkExistingReward(visitor.id);
-  if (reward) return;
+  const attributes =
+    eventData.society_hub && societyHubValue ? [{ trait_type: "Organizer", value: societyHubValue }] : undefined;
 
-  const res = await createUserRewardLink(eventData.activity_id, {
+  // 6) Call Ton Society to create user reward link (using ticket_activity_id!)
+  const res = await createUserRewardLink(paymentInfo.ticketActivityId, {
     telegram_user_id: user_id,
-    attributes: eventData?.society_hub
-      ? [
-          {
-            trait_type: "Organizer",
-            value: society_hub_value,
-          },
-        ]
-      : undefined,
+    attributes,
   });
 
-  // Ensure the response contains data
-  if (!res || !res.data || !res.data.data) {
+  if (!res?.data?.data) {
+    logger.error("Failed to create user reward link: response was empty");
     throw new Error("Failed to create user reward link.");
   }
 
-  // Insert the reward into the database
-  await rewardsDb.insertRewardWithData(visitor.id, user_id.toString(), "ton_society_sbt", res.data.data, "created");
+  // 7) Insert the reward into the DB
+  await rewardDB.insertRewardWithData(
+    visitor.id,
+    user_id.toString(),
+    "ton_society_csbt_ticket", // Reward type
+    res.data.data,
+    "created"
+  );
+
+  logger.log(`CSBT Ticket reward created for user=${user_id}, event=${event_uuid}`);
 
   return res.data.data;
 }

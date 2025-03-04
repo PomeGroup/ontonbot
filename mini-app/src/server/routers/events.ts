@@ -324,6 +324,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
           /* -------------------------------------------------------------------------- */
           ticket_type: "NFT",
           ticketImage: input_event_data.paid_event.nft_image_url,
+          ticketVideo: input_event_data.paid_event.nft_video_url,
           title: input_event_data.paid_event.nft_title,
           description: input_event_data.paid_event.nft_description,
           collectionAddress: null,
@@ -715,6 +716,51 @@ const updateEvent = eventManagerPP
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
               message: `Failed to update ton Society activity_id : ${opts.ctx.event.activity_id}`,
+            });
+          }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /*   If this is a paid event with TSCSBT ticket, also update the ticket's    */
+        /*   separate activity. (We assume there's a ticket_activity_id to update.)  */
+        /* -------------------------------------------------------------------------- */
+        if (process.env.ENV !== "local" && oldEvent.has_payment) {
+          // fetch the updated payment info
+          const [updatedPaymentInfo] = await trx
+            .select()
+            .from(eventPayment)
+            .where(eq(eventPayment.event_uuid, eventUuid))
+            .execute();
+
+          if (updatedPaymentInfo && updatedPaymentInfo.ticket_type === "TSCSBT" && updatedPaymentInfo.ticketActivityId) {
+            // Build a separate ticketDraft if you need different data for the ticket
+            // For now, reusing the updated event data
+            const ticketDraft: TonSocietyRegisterActivityT = {
+              ...eventDraft,
+              title: updatedPaymentInfo.title ?? `${eventData.title} - Ticket`,
+              subtitle: updatedPaymentInfo.description ?? eventData.subtitle,
+              end_date: timestampToIsoString(eventData.end_date),
+            };
+
+            try {
+              await updateActivity(ticketDraft, updatedPaymentInfo.ticketActivityId);
+              logger.log(`TSCSBT ticket activity updated: ID ${updatedPaymentInfo.ticketActivityId}`);
+            } catch (error) {
+              logger.log("update_ts_csbt_activity_failed", JSON.stringify(ticketDraft));
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: `Failed to update TSCSBT ticket activity_id: ${updatedPaymentInfo.ticketActivityId}`,
+              });
+            }
+          } else if (
+            updatedPaymentInfo &&
+            updatedPaymentInfo.ticket_type === "TSCSBT" &&
+            !updatedPaymentInfo.ticketActivityId
+          ) {
+            logger.log(`No ticketActivityId found for TSCSBT ticket in event ${eventUuid}`);
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: `No ticketActivityId found for TSCSBT ticket in event ${eventUuid}`,
             });
           }
         }
