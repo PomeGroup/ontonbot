@@ -653,8 +653,10 @@ const updateEvent = eventManagerPP
         await eventDB.deleteEventCache(eventUuid);
         if (canSendModerationMessage) {
           const followUpText = renderModerationFlowup(opts.ctx.user.username || opts.ctx.user.user_id);
+          const moderation_group_id = configProtected?.moderation_group_id;
           try {
             const moderationMessageResponse = await sendLogNotification({
+              group_id: moderation_group_id,
               message: followUpText,
               topic: "event",
               reply_to_message_id: oldEvent.moderationMessageId,
@@ -666,7 +668,7 @@ const updateEvent = eventManagerPP
             logger.log(
               `error_while_sending_moderation_followup THE ADD EVENT MESSAGE WAS DELETED FOR ${eventUuid} AND ${oldEvent.moderationMessageId}`
             );
-            const moderation_group_id = configProtected?.moderation_group_id;
+
             const logMessage = await renderModerationEventMessage(opts.ctx.user.username || user_id, oldEvent, false);
             const moderationMessageResult = await sendLogNotification({
               group_id: moderation_group_id,
