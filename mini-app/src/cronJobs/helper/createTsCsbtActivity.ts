@@ -14,17 +14,17 @@ export const createTsCsbtActivity = async (event: EventRow, paymentInfo: EventPa
 
   const ticketDraft = await CreateTonSocietyDraft(
     {
-      title: paymentInfo.title ?? "TSCSBT Ticket",
-      subtitle: "",
-      description: paymentInfo.description ?? "TSCSBT Ticket for the event",
+      title: paymentInfo.title ?? `${event.title} - Ticket`,
+      subtitle: event.subtitle ?? "",
+      description: paymentInfo.description ?? event.description,
       location: event.location ?? "",
       countryId: event.countryId,
       society_hub: { id: event.society_hub_id ?? "" },
       start_date: nowInSeconds,
       end_date: event.end_date,
-      ts_reward_url: null,
-      video_url: null,
-      eventLocationType: "online",
+      ts_reward_url: paymentInfo.ticketImage,
+      video_url: paymentInfo.ticketVideo,
+      eventLocationType: event.participationType,
     },
     `${event.event_uuid}-ticket`
   );

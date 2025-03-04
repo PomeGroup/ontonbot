@@ -21,6 +21,7 @@ export const eventPayment = pgTable(
     ticket_type: ticketTypes("ticket_type").notNull(),
     /* ----------------------------- USED IF HAS NFT ---------------------------- */
     ticketImage: text("ticket_image"),
+    ticketVideo: text("ticket_video"),
     collectionAddress: text("collection_address"), // NFT & TSCSBT
     title: text("title"),
     description: text("description").notNull(),
