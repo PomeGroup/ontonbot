@@ -22,7 +22,7 @@ import {
 
 import { airdropRoutineRelations, airdropRoutines } from "./schema/airdropRoutines";
 import { eventFieldRelations, eventFields } from "./schema/eventFields";
-import { eventPayment, organizerPaymentStatus, ticketTypes } from "./schema/eventPayment";
+import { eventPayment, organizerPaymentStatus, ticketTypes, EventTicketType } from "./schema/eventPayment";
 import { event_details_search_list } from "./schema/event_details_search_list";
 import { eventPoaTriggers, eventPoaTriggersIndexes } from "./schema/eventPoaTriggers";
 import { eventPoaResults, eventPoaResultsIndexes } from "./schema/eventPoaResults";
@@ -164,3 +164,4 @@ export type { CallbackTaskRunsRow };
 export type { callbackTaskRunStatusType };
 export type { CallBackTaskSHttpMethodType };
 export type { CallBackTaskFunctionType };
+export type { EventTicketType };
