@@ -34,7 +34,7 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
 
   // if it was not ts verified and lock was not set we will show it
   const areTasksRequired = !eventData.organizer?.is_ts_verified && !config.tjo;
-  console.log("areTasksRequired: ", areTasksRequired);
+  console.log("areTasksRequired: ", areTasksRequired, eventData.organizer?.is_ts_verified, config.tjo);
 
   const closeTasksOpen = () => {
     setIsTasksOpen(false);
