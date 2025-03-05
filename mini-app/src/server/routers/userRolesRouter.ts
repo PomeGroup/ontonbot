@@ -99,9 +99,9 @@ export const userRolesRouter = router({
         for (const { username, status, role } of userList) {
           // remove leading '@'
           const usernameStripped = username.replace(/^@/, "");
-          console.log("usernameStripped: ", usernameStripped);
+
           const dbUser = await usersDB.selectUserByUsername(usernameStripped);
-          console.log("dbUser: ", dbUser);
+
           if (dbUser === null) {
             // user not exist => throw error
             throw new TRPCError({
