@@ -1,6 +1,10 @@
+import { NonVerifiedHubsIds } from "@/constants";
 import { db } from "@/db/db";
-import { eventFields, events, eventPayment, orders } from "@/db/schema";
+import { eventFields, eventPayment, events, orders } from "@/db/schema";
+import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { hashPassword } from "@/lib/bcrypt";
+import { timestampToIsoString } from "@/lib/DateAndTime";
+import { redisTools } from "@/lib/redisTools";
 import {
   renderAddEventMessage,
   renderModerationEventMessage,
@@ -9,91 +13,35 @@ import {
   sendLogNotification,
   sendToEventsTgChannel,
 } from "@/lib/tgBot";
-import { findActivity, registerActivity, updateActivity } from "@/lib/ton-society-api";
+import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
+import { tgBotModerationMenu } from "@/moderationBot/menu";
+import eventFieldsDB from "@/server/db/eventFields.db";
+import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
+import eventDB from "@/server/db/events";
+import { userRolesDB } from "@/server/db/userRoles.db";
+import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
+import { logger } from "@/server/utils/logger";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
+import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
 import { and, eq, ne } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import eventDB from "@/server/db/events";
+import { config, configProtected } from "../config";
+import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
+import { getUserCacheKey, usersDB } from "../db/users";
 import {
   adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure as eventManagerPP,
   initDataProtectedProcedure,
   router,
 } from "../trpc";
-import { NonVerifiedHubsIds } from "@/constants";
-import { TonSocietyRegisterActivityT } from "@/types/event.types";
-import eventFieldsDB from "@/server/db/eventFields.db";
 import { internal_server_error } from "../utils/error_utils";
-import { EventPaymentSelectType } from "@/db/schema/eventPayment";
-import { is_dev_env, is_stage_env } from "../utils/evnutils";
-import { config, configProtected } from "../config";
-import { logger } from "@/server/utils/logger";
-import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
-import { timestampToIsoString } from "@/lib/DateAndTime";
-import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
-import { usersDB, getUserCacheKey } from "../db/users";
-import { redisTools } from "@/lib/redisTools";
-import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
-import { tgBotModerationMenu } from "@/moderationBot/menu";
-import { userRolesDB } from "@/server/db/userRoles.db";
 
 dotenv.config();
-
-function get_paid_event_price(capacity: number) {
-  const reduced_price = is_dev_env() || is_stage_env();
-
-  return reduced_price ? 0.001 + 0.00055 * capacity : 10 + 0.06 * capacity;
-}
-
-async function shouldEventBeHidden(event_is_paid: boolean, user_id: number) {
-  if (event_is_paid) return true;
-
-  const is_ts_verified = await organizerTsVerified(user_id);
-
-  if (!is_ts_verified) return true;
-
-  return false;
-}
-
-async function updateEventSbtCollection(
-  start_date: number | null | undefined,
-  end_date: number | null | undefined,
-  activity_id: number | null | undefined,
-  sbt_collection_address: string | null | undefined,
-  event_uuid: string | null | undefined
-) {
-  if (!start_date || !end_date || !activity_id) return;
-  /* -------------------------------------------------------------------------- */
-  const now = Date.now();
-  if (now < start_date) return;
-  /* -------------------------------------------------------------------------- */
-  if (sbt_collection_address) return;
-  /* -------------------------------------------------------------------------- */
-  // Keeping Low Load if sbt-collection is not
-  // Check only 10% of time if event is not ended
-  const checkSbtCollection = now > end_date ? now % 3 !== 1 : now % 10 === 1;
-  if (checkSbtCollection) {
-    try {
-      const result = await findActivity(activity_id);
-      const sbt_collection_address = result.data.rewards.collection_address;
-      if (sbt_collection_address) {
-        await db
-          .update(events)
-          .set({ sbt_collection_address: sbt_collection_address })
-          .where(eq(events.activity_id, activity_id))
-          .execute();
-        await eventDB.deleteEventCache(event_uuid!!);
-      }
-    } catch (error) {
-      return;
-    }
-  }
-}
 
 const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.string() })).query(async (opts) => {
   const userId = opts.ctx.user.user_id;
@@ -114,7 +62,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
     });
   }
   //update sbt_collection_address from ton-society if not exists
-  await updateEventSbtCollection(
+  await eventDB.updateEventSbtCollection(
     eventData.start_date,
     eventData.end_date,
     eventData.activity_id,
@@ -264,17 +212,6 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
   };
 });
 
-// // private
-// const getEvents = adminOrganizerProtectedProcedure.query(async (opts) => {
-//   if (opts.ctx.userRole !== "admin" && opts.ctx.userRole !== "organizer") {
-//     throw new TRPCError({
-//       code: "UNAUTHORIZED",
-//       message: `Unauthorized access, invalid role for ${opts.ctx.user?.user_id}`,
-//     });
-//   }
-//   return await eventDB.getEventsForSpecialRole(opts.ctx.userRole, opts.ctx.user?.user_id);
-// });
-
 /* -------------------------------------------------------------------------- */
 /*                                  🆕Add Event🆕                            */
 /* -------------------------------------------------------------------------- */
@@ -311,7 +248,7 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "ONTON_WALLET_ADDRESS NOT SET error" });
       }
 
-      const event_should_hidden = await shouldEventBeHidden(is_paid, user_id);
+      const event_should_hidden = await eventDB.shouldEventBeHidden(is_paid, user_id);
 
       const newEvent = await trx
         .insert(events)
@@ -361,7 +298,14 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         if (!input_event_data.capacity)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
 
-        const order_price = get_paid_event_price(input_event_data.capacity);
+        if (opts.input.eventData?.paid_event?.ticket_type === undefined)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Ticket Type Required for paid events" });
+
+        if (input_event_data.paid_event.payment_type === undefined)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Payment Type Required for paid events" });
+
+        const ticketType = opts.input.eventData?.paid_event?.ticket_type;
+        const order_price = eventDB.getPaidEventPrice(input_event_data.capacity, ticketType);
 
         await trx.insert(orders).values({
           event_uuid: eventData.event_uuid,
@@ -380,13 +324,14 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         await trx.insert(eventPayment).values({
           event_uuid: newEvent[0].event_uuid,
           /* -------------------------------------------------------------------------- */
-          payment_type: input_event_data.paid_event.payment_type || "TON",
+          payment_type: input_event_data.paid_event.payment_type,
           price: event_ticket_price,
           recipient_address: input_event_data.paid_event.payment_recipient_address,
           bought_capacity: input_event_data.capacity,
           /* -------------------------------------------------------------------------- */
-          ticket_type: "NFT",
+          ticket_type: ticketType,
           ticketImage: input_event_data.paid_event.nft_image_url,
+          ticketVideo: input_event_data.paid_event.nft_video_url,
           title: input_event_data.paid_event.nft_title,
           description: input_event_data.paid_event.nft_description,
           collectionAddress: null,
@@ -552,6 +497,10 @@ const updateEvent = eventManagerPP
               code: "BAD_REQUEST",
               message: "Paid Events Must have capacity",
             });
+
+          if (opts.input.eventData?.paid_event?.ticket_type === undefined) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Ticket Type Required for paid events" });
+          }
           /* -------------------------------------------------------------------------- */
           const paymentInfo = (
             await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
@@ -569,11 +518,11 @@ const updateEvent = eventManagerPP
               ne(orders.state, "completed")
             );
             const createEventOrder = await trx.query.orders.findFirst({ where: where_condition });
-
+            const ticketType = opts.input.eventData?.paid_event?.ticket_type;
             if (createEventOrder) {
               await trx
                 .update(orders)
-                .set({ total_price: get_paid_event_price(eventData.capacity) })
+                .set({ total_price: eventDB.getPaidEventPrice(eventData.capacity, ticketType) })
                 .where(where_condition)
                 .execute();
               await trx.update(eventPayment).set({ bought_capacity: eventData.capacity });
@@ -779,6 +728,51 @@ const updateEvent = eventManagerPP
             throw new TRPCError({
               code: "INTERNAL_SERVER_ERROR",
               message: `Failed to update ton Society activity_id : ${opts.ctx.event.activity_id}`,
+            });
+          }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /*   If this is a paid event with TSCSBT ticket, also update the ticket's    */
+        /*   separate activity. (We assume there's a ticket_activity_id to update.)  */
+        /* -------------------------------------------------------------------------- */
+        if (process.env.ENV !== "local" && oldEvent.has_payment) {
+          // fetch the updated payment info
+          const [updatedPaymentInfo] = await trx
+            .select()
+            .from(eventPayment)
+            .where(eq(eventPayment.event_uuid, eventUuid))
+            .execute();
+
+          if (updatedPaymentInfo && updatedPaymentInfo.ticket_type === "TSCSBT" && updatedPaymentInfo.ticketActivityId) {
+            // Build a separate ticketDraft if you need different data for the ticket
+            // For now, reusing the updated event data
+            const ticketDraft: TonSocietyRegisterActivityT = {
+              ...eventDraft,
+              title: updatedPaymentInfo.title ?? `${eventData.title} - Ticket`,
+              subtitle: updatedPaymentInfo.description ?? eventData.subtitle,
+              end_date: timestampToIsoString(eventData.end_date),
+            };
+
+            try {
+              await updateActivity(ticketDraft, updatedPaymentInfo.ticketActivityId);
+              logger.log(`TSCSBT ticket activity updated: ID ${updatedPaymentInfo.ticketActivityId}`);
+            } catch (error) {
+              logger.log("update_ts_csbt_activity_failed", JSON.stringify(ticketDraft));
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: `Failed to update TSCSBT ticket activity_id: ${updatedPaymentInfo.ticketActivityId}`,
+              });
+            }
+          } else if (
+            updatedPaymentInfo &&
+            updatedPaymentInfo.ticket_type === "TSCSBT" &&
+            !updatedPaymentInfo.ticketActivityId
+          ) {
+            logger.log(`No ticketActivityId found for TSCSBT ticket in event ${eventUuid}`);
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: `No ticketActivityId found for TSCSBT ticket in event ${eventUuid}`,
             });
           }
         }

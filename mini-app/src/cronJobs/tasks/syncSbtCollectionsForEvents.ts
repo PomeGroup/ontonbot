@@ -1,37 +1,73 @@
 import { db } from "@/db/db";
 import { events } from "@/db/schema/events";
+import { eventPayment } from "@/db/schema/eventPayment";
 import { eq, and, isNull, isNotNull, not, desc } from "drizzle-orm";
-
 import eventDB from "@/server/db/events";
 import { logger } from "@/server/utils/logger";
 import { getFullActivityDetails } from "@/lib/ton-society-api";
 import { sleep } from "@/utils";
-import { sendLogNotificationWithCsv } from "@/lib/tgBot";
+import {
+  sendLogNotificationWithCsv,
+  // sendLogNotification, // (optionally, if you want a plain notification for "nothing to do")
+} from "@/lib/tgBot";
 import { csvEscape, formatCountMessage } from "../helper/syncSbtCollectionsForEvent.helpers";
 
-const BATCH_SIZE = 30000; // do not change this value. this will break the code
+interface RecordBase {
+  activityId: number;
+  title: string;
+  createdAt: Date | null;
+}
+
+// A record for an "event"
+interface EventRecord extends RecordBase {
+  recordType: "event";
+  eventUuid: string; // This is never null for events
+}
+
+// A record for a "ticket"
+interface TicketRecord extends RecordBase {
+  recordType: "ticket";
+  eventUuid: string | null; // This may be null for tickets
+}
+
+// The union type
+type CombinedRecord = EventRecord | TicketRecord;
+/**
+ * We'll reuse the same BATCH_SIZE for both events & tickets.
+ * Adjust as needed.
+ */
+const BATCH_SIZE = 30000;
 
 export const syncSbtCollectionsForEvents = async () => {
-  let offset = 0;
+  let offsetEvents = 0;
+  let offsetTickets = 0;
 
   // Arrays to track problem cases
-  const notFoundOrErrorEvents: {
+  const notFoundOrErrorRecords: {
+    recordType: "event" | "ticket";
     eventUuid: string;
-    Title: string;
+    title: string;
     activityId: number;
     error: string;
     createdAt: Date | null;
   }[] = [];
-  const noCollectionEvents: {
+
+  const noCollectionRecords: {
+    recordType: "event" | "ticket";
     eventUuid: string;
-    Title: string;
+    title: string;
     activityId: number;
     createdAt: Date | null;
   }[] = [];
 
-  // 1) Loop in batches to find events missing SBT collection address
+  /**
+   * We'll process repeatedly until no more 'event' or 'ticket' results
+   * come back. If both queries eventually return zero, we break.
+   */
   while (true) {
-    await sleep(100); // Small delay to avoid spamming the external API
+    await sleep(100);
+
+    // 1) Find events missing sbt_collection_address
     const pendingEvents = await db
       .select({
         eventUuid: events.event_uuid,
@@ -45,86 +81,167 @@ export const syncSbtCollectionsForEvents = async () => {
           isNotNull(events.activity_id),
           eq(events.hidden, false),
           not(eq(events.activity_id, -100)),
-          isNull(events.sbt_collection_address)
+          isNull(events.sbt_collection_address) // missing SBT collection
         )
       )
       .orderBy(desc(events.event_id))
       .limit(BATCH_SIZE)
-      .offset(offset);
-    logger.info(`Found ${pendingEvents.length} events missing sbt_collection_address`);
+      .offset(offsetEvents);
 
-    if (pendingEvents.length === 0) {
-      break; // no more events to process
+    // 2) Find TSCSBT tickets missing collectionAddress
+    //    They need a valid ticket_activity_id
+    const pendingTickets = await db
+      .select({
+        eventUuid: eventPayment.event_uuid,
+        activityId: eventPayment.ticketActivityId,
+        title: eventPayment.title,
+        createdAt: eventPayment.created_at,
+      })
+      .from(eventPayment)
+      .where(
+        and(
+          eq(eventPayment.ticket_type, "TSCSBT"),
+          isNotNull(eventPayment.ticketActivityId),
+          isNull(eventPayment.collectionAddress) // missing collection
+        )
+      )
+      .orderBy(desc(eventPayment.id))
+      .limit(BATCH_SIZE)
+      .offset(offsetTickets);
+
+    logger.info(`Found ${pendingEvents.length} events + ${pendingTickets.length} TSCSBT tickets missing collection`);
+
+    // If we have nothing in either query, we're done
+    if (pendingEvents.length === 0 && pendingTickets.length === 0) {
+      break;
     }
-    offset += pendingEvents.length;
 
-    // 2) For each event in this batch, try fetching from Ton Society
-    for (const evt of pendingEvents) {
+    // Increase offsets
+    offsetEvents += pendingEvents.length;
+    offsetTickets += pendingTickets.length;
+
+    // Combine into a single array with recordType
+    const combinedRecords: CombinedRecord[] = [
+      ...pendingEvents.map<CombinedRecord>((evt) => ({
+        recordType: "event",
+        eventUuid: evt.eventUuid,
+        activityId: evt.activityId!,
+        title: evt.title,
+        createdAt: evt.createdAt,
+      })),
+      ...pendingTickets.map<CombinedRecord>((tkt) => ({
+        recordType: "ticket",
+        // If ticket can have `null` eventUuid, we keep it as is
+        eventUuid: tkt.eventUuid,
+        activityId: tkt.activityId!,
+        title: tkt.title ?? "",
+        createdAt: tkt.createdAt,
+      })),
+    ];
+
+    for (const record of combinedRecords) {
       try {
-        const activityResponse = await getFullActivityDetails(evt.activityId!!);
-        const sbt_collection_address = activityResponse.data?.rewards?.collection_address;
+        // We fetch the Ton Society details using the record's activityId
+        const activityResponse = await getFullActivityDetails(record.activityId);
+        const collection_address = activityResponse.data?.rewards?.collection_address;
 
-        if (sbt_collection_address) {
-          // Update your DB record
-          await db.update(events).set({ sbt_collection_address }).where(eq(events.event_uuid, evt.eventUuid)).execute();
+        // If the API returned a collection address
+        if (collection_address) {
+          if (record.recordType === "event") {
+            // Update the events table
+            await db
+              .update(events)
+              .set({ sbt_collection_address: collection_address })
+              .where(eq(events.event_uuid, record.eventUuid))
+              .execute();
 
-          // Clear event cache
-          await eventDB.deleteEventCache(evt.eventUuid);
+            await eventDB.deleteEventCache(record.eventUuid);
 
-          logger.info(
-            `Updated event "${evt.eventUuid}" with sbt_collection_address: ${sbt_collection_address} (activity ${evt.activityId})`
-          );
+            logger.info(
+              `Updated event "${record.eventUuid}" with sbt_collection_address: ${collection_address} (activity ${record.activityId})`
+            );
+          } else {
+            // recordType === "ticket"
+            // Update the eventPayment table
+            await db
+              .update(eventPayment)
+              .set({ collectionAddress: collection_address })
+              .where(eq(eventPayment.event_uuid, record.eventUuid!!))
+              .execute();
+
+            logger.info(
+              `Updated TSCSBT ticket for event "${record.eventUuid}" with collectionAddress: ${collection_address} (ticket_activity_id ${record.activityId})`
+            );
+          }
         } else {
           // No collection address from the API
-          noCollectionEvents.push({
-            eventUuid: evt.eventUuid,
-            Title: evt.title,
-            activityId: evt.activityId!!,
-            createdAt: evt.createdAt,
+          noCollectionRecords.push({
+            recordType: record.recordType,
+            eventUuid: record.eventUuid!!,
+            title: record.title,
+            activityId: record.activityId,
+            createdAt: record.createdAt,
           });
-          logger.info(`No sbt_collection_address in activity ${evt.activityId} for event "${evt.eventUuid}"`);
+          logger.info(
+            `No collection address in activity ${record.activityId} for ${record.recordType} "${record.eventUuid}"`
+          );
         }
 
-        // Small delay to avoid spamming the external API
+        // Small delay
         await sleep(100);
       } catch (error: any) {
-        // Keep track of errors
-        notFoundOrErrorEvents.push({
-          eventUuid: evt.eventUuid,
-          Title: evt.title,
-          activityId: evt.activityId!!,
+        notFoundOrErrorRecords.push({
+          recordType: record.recordType,
+          eventUuid: record.eventUuid!!,
+          title: record.title,
+          activityId: record.activityId,
           error: String(error.message || error),
-          createdAt: evt.createdAt,
+          createdAt: record.createdAt,
         });
-        logger.error(`Failed to sync sbt_collection_address for event "${evt.eventUuid}"`, error);
+        logger.error(`Failed to sync collection address for ${record.recordType} "${record.eventUuid}"`, error);
       }
     }
   }
 
-  // 3) Build a final summary message with red/green indicators
-  const missingMsg = formatCountMessage(noCollectionEvents.length, "event missing collection", "events missing collection");
-  const errorMsg = formatCountMessage(notFoundOrErrorEvents.length, "error", "errors");
+  // Final summary
+  const missingMsg = formatCountMessage(
+    noCollectionRecords.length,
+    "record missing collection",
+    "records missing collection"
+  );
+  const errorMsg = formatCountMessage(notFoundOrErrorRecords.length, "error", "errors");
   const finalMessage = `<b>🔄 SBT Sync Completed</b>\n${missingMsg}\n${errorMsg}`;
 
-  // 4) If we have any problem events, attach them in a CSV. Otherwise, just send a plain text notification
-  if (noCollectionEvents.length > 0 || notFoundOrErrorEvents.length > 0) {
-    // Build CSV with both missing-collection events + error events
-    const csvRows = ["event_uuid,Title,activity_id,error_message,CreationDate"];
+  // If we have any problems, produce a CSV
+  if (noCollectionRecords.length > 0 || notFoundOrErrorRecords.length > 0) {
+    const csvRows = ["recordType,event_uuid,Title,activity_id,error_message,CreationDate"];
 
-    // Error events
-    for (const ev of notFoundOrErrorEvents) {
+    // Error records
+    for (const ev of notFoundOrErrorRecords) {
       const sanitizedError = ev.error.replace(/[\r\n]/g, " ");
       csvRows.push(
-        [csvEscape(ev.eventUuid), csvEscape(ev.Title), ev.activityId, csvEscape(sanitizedError), ev.createdAt ?? ""].join(
-          ","
-        )
+        [
+          ev.recordType,
+          csvEscape(ev.eventUuid),
+          csvEscape(ev.title),
+          ev.activityId,
+          csvEscape(sanitizedError),
+          ev.createdAt ?? "",
+        ].join(",")
       );
     }
 
-    // Missing-collection events
-    for (const ev of noCollectionEvents) {
+    // Missing-collection records
+    for (const ev of noCollectionRecords) {
       csvRows.push(
-        [csvEscape(ev.eventUuid), csvEscape(ev.Title), ev.activityId, "NO_COLLECTION_IN_API", ev.createdAt ?? ""].join(",")
+        [
+          ev.recordType,
+          csvEscape(ev.eventUuid),
+          csvEscape(ev.title),
+          ev.activityId,
+          "NO_COLLECTION_IN_API",
+          ev.createdAt ?? "",
+        ].join(",")
       );
     }
 
@@ -133,14 +250,13 @@ export const syncSbtCollectionsForEvents = async () => {
     await sendLogNotificationWithCsv({
       message: finalMessage,
       topic: "system",
-      csvFileName: "MissingSBTCollectionEvents.csv",
+      csvFileName: "MissingSBTCollectionRecords.csv",
       csvContent,
     });
   } else {
-    // No errors or missing addresses: just send a basic text message
-    logger.log(`there are no missing or error events`);
-    // or sendLogNotification({ message: finalMessage, topic: "system" });
+    // If no issues
+    logger.log(`No missing or error records`);
+    // Optionally send a simple text notification
+    // await sendLogNotification({ message: finalMessage, topic: "system" });
   }
-
-  return;
 };

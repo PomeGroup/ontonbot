@@ -9,7 +9,6 @@ import { CsbtTicket } from "@/server/routers/services/rewardsService";
 import { selectUserById } from "@/server/db/users";
 import { sendLogNotification } from "@/lib/tgBot";
 import { callTonfestForOnOntonPayment } from "@/cronJobs/helper/callTonfestForOnOntonPayment";
-import { CheckTransactions } from "@/cronJobs/tasks/CheckTransactions";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -54,11 +53,11 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
         logger.error("error_what the fuck : ", "event Does not have payment !!!", event_uuid);
         continue;
       }
-
-      if (!paymentInfo.collectionAddress) {
-        logger.error("no_collection_address", event_uuid);
-        continue;
-      }
+      //
+      // if (!paymentInfo.collectionAddress) {
+      //   logger.error("no_collection_address", event_uuid);
+      //   continue;
+      // }
 
       try {
         if (ordr.user_id) {

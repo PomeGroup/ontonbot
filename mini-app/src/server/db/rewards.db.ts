@@ -6,14 +6,13 @@ import { RewardType as RewardTypeParitial } from "@/types/event.types";
 import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
-import { and, eq, sql ,or ,asc} from "drizzle-orm";
+import { and, eq, sql, or, asc } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
+
 export interface RewardChunkRow {
   reward_id: string; // or `uuid` type depending on your schema
   visitor_id: number;
 }
-
-
 
 // Utility function to generate cache keys
 const generateCacheKey = (visitor_id: number, reward_id?: string) => {
@@ -36,6 +35,16 @@ const checkExistingReward = async (visitor_id: number): Promise<Maybe<RewardsSel
   });
 
   if (dbReward) await redisTools.setCache(cacheKey, dbReward, redisTools.cacheLvl.long); // Cache the result
+
+  return dbReward;
+};
+
+const checkExistingRewardWithType = async (visitor_id: number, type: RewardType): Promise<Maybe<RewardsSelectType>> => {
+  const dbReward = await db.query.rewards.findFirst({
+    where(fields, { eq }) {
+      return and(eq(fields.visitor_id, visitor_id), eq(fields.type, type));
+    },
+  });
 
   return dbReward;
 };
@@ -356,6 +365,7 @@ const rewardDB = {
   handleRewardError,
   fetchPendingRewardsForEvent,
   fetchRewardLinkForEvent,
+  checkExistingRewardWithType,
 };
 
 export default rewardDB;

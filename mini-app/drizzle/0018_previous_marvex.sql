@@ -1,0 +1,1 @@
+ALTER TYPE "reward_types" ADD VALUE 'ton_society_csbt_ticket';

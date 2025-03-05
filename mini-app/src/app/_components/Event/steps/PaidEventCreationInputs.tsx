@@ -1,12 +1,12 @@
-import ListLayout from "../../atoms/cards/ListLayout";
-import { Segmented, SegmentedButton, Toggle } from "konsta/react";
-import { SiTether, SiTon } from "react-icons/si";
-import { cn } from "@/utils";
 import { UploadImageFile } from "@/components/ui/upload-file";
-import { ListInput, ListItem } from "konsta/react";
+import { UploadVideoFile } from "@/components/ui/upload-video-file";
+import { cn } from "@/utils";
 import { useCreateEventStore } from "@/zustand/createEventStore";
+import { ListInput, ListItem, Segmented, SegmentedButton, Toggle } from "konsta/react";
+import { SiTether, SiTon } from "react-icons/si";
+import ListLayout from "../../atoms/cards/ListLayout";
 
-function SelectPayment() {
+function NFTPayment() {
   const { payment, changePaymentType, isEdit } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     changePaymentType: state.changePaymentType,
@@ -96,15 +96,14 @@ function PaymentAmount() {
   );
 }
 
-function PaymentsRecepient() {
-  const { eventData, setEventData, recepient_error_messages } = useCreateEventStore((state) => ({
+function PaymentsRecipient() {
+  const { eventData, setEventData, recipient_error_messages } = useCreateEventStore((state) => ({
     eventData: state.eventData,
     setEventData: state.setEventData,
-    recepient_error_messages: state.paid_info_errors.payment_recipient_address,
+    recipient_error_messages: state.paid_info_errors.payment_recipient_address,
   }));
 
   const handleInputChange = (value: string) => {
-
     setEventData({
       paid_event: {
         ...eventData.paid_event,
@@ -122,12 +121,73 @@ function PaymentsRecepient() {
           <ListInput
             outline
             required
+            style={{
+              marginInline: "-16px",
+            }}
             label="Wallet Address"
             placeholder="Enter wallet address"
             value={eventData.paid_event?.payment_recipient_address || ""}
             onChange={(e) => handleInputChange(e.target.value)}
-            error={recepient_error_messages?.length  && recepient_error_messages?.[0]}
+            error={recipient_error_messages?.length && recipient_error_messages?.[0]}
           />
+        </>
+      }
+    />
+  );
+}
+
+/**
+ * Whether the nft is soulbound or just normal nft. (NFT or cSBT)
+ */
+function TicketType() {
+  const { paymentInfo, changeTicketType, isEdit } = useCreateEventStore((state) => ({
+    paymentInfo: state.eventData?.paid_event,
+    changeTicketType: state.changeTicketType,
+    isEdit: Boolean(state.edit?.eventHash),
+    eventTicketType: state.eventData.paid_event.ticket_type,
+  }));
+
+  const ticketType = paymentInfo.ticket_type;
+
+  return (
+    <ListItem
+      title="Ticket Type"
+      className={cn(isEdit && "cursor-not-allowed opacity-50")}
+      footer={
+        <>
+          <p>
+            Ticket details cannot be changed after event is created. Ticked will be minted as NFT (Transferable) or cSBT
+            (Soul-Bound, users can not transfer or sell the tickets).
+          </p>
+          <Segmented
+            strong
+            aria-disabled={isEdit}
+          >
+            <SegmentedButton
+              strong
+              onClick={(e) => {
+                e.preventDefault();
+                if (!isEdit) changeTicketType("NFT");
+              }}
+              active={ticketType === "NFT"}
+              itemType="button"
+              className={cn(ticketType === "NFT" && "text-black font-extrabold")}
+            >
+              NFT
+            </SegmentedButton>
+            <SegmentedButton
+              strong
+              active={ticketType === "TSCSBT"}
+              onClick={(e) => {
+                e.preventDefault();
+                if (!isEdit) changeTicketType("TSCSBT");
+              }}
+              itemType="button"
+              className={cn(ticketType === "TSCSBT" && "text-black font-extrabold")}
+            >
+              cSBT
+            </SegmentedButton>
+          </Segmented>
         </>
       }
     />
@@ -141,18 +201,54 @@ function NFTImage() {
     nft_image: state.eventData.paid_event.nft_image_url,
     isEdit: Boolean(state.edit?.eventHash),
   }));
+  const { payment } = useCreateEventStore((state) => ({ payment: state.eventData.paid_event }));
+  const label = payment.ticket_type === "TSCSBT" ? "cSBT" : "NFT";
 
   return (
-    <div className="p-4">
-      <UploadImageFile
-        infoText="This image is used as the NFT ticket"
-        changeText="Change Ticket Image"
-        disabled={isEdit}
-        triggerText="Upload Ticket Image"
-        onImageChange={changeNFTImage}
-        defaultImage={nft_image}
-        isError={Boolean(paid_info_errors.nft_image_url?.[0])}
-      />
+    <UploadImageFile
+      infoText={`This image is used as the ${label} ticket`}
+      changeText="Change Ticket Image"
+      disabled={isEdit}
+      triggerText="Upload Ticket Image"
+      onImageChange={changeNFTImage}
+      defaultImage={nft_image}
+      isError={Boolean(paid_info_errors.nft_image_url?.[0])}
+    />
+  );
+}
+
+function NFTVideo() {
+  const { changeNFTVideo, paid_info_errors, nft_video, isEdit } = useCreateEventStore((state) => ({
+    changeNFTVideo: state.changeNFTVideo,
+    paid_info_errors: state.paid_info_errors,
+    nft_video: state.eventData.paid_event.nft_video_url,
+    isEdit: Boolean(state.edit?.eventHash),
+  }));
+  const { payment } = useCreateEventStore((state) => ({ payment: state.eventData.paid_event }));
+  const label = payment.ticket_type === "TSCSBT" ? "cSBT" : "NFT";
+
+  return (
+    <UploadVideoFile
+      infoText={`This video is used as the ${label} ticket`}
+      changeText="Change Ticket Video"
+      triggerText="Upload Ticket Video"
+      onVideoChange={changeNFTVideo}
+      defaultVideo={nft_video}
+      disabled={isEdit}
+      isError={Boolean(paid_info_errors.nft_image_url?.[0])}
+    />
+  );
+}
+
+function TicketMedia() {
+  const { ticketType } = useCreateEventStore((state) => ({
+    ticketType: state.eventData.paid_event.ticket_type,
+  }));
+
+  return (
+    <div className="flex flex-col gap-4 pt-0 p-4">
+      <NFTImage />
+      {ticketType === "TSCSBT" && <NFTVideo />}
     </div>
   );
 }
@@ -166,48 +262,52 @@ function NFTInfo() {
     isEdit: Boolean(state.edit?.eventHash),
   }));
 
+  const ticketLabel = payment.ticket_type === "TSCSBT" ? "cSBT" : "NFT";
+
   return (
     <>
+      <TicketType />
       <ListInput
         outline
         required
-        placeholder="Title used for NFT ticket"
-        title="NFT Title"
+        placeholder={`Title used for ${ticketLabel} ticket`}
+        title="Ticket Title"
         inputClassName={cn(isEdit && "cursor-not-allowed opacity-50")}
         value={payment.nft_title}
-        onChange={(e) => {
-          changeTitle(e.target.value);
-        }}
-        info="You will not be able to change this information about your nft collection later after event creation."
+        onChange={(e) => changeTitle(e.target.value)}
+        info={`You will *not* be able to change this information about your ${ticketLabel} collection later after event creation.`}
         disabled={isEdit}
         error={paid_info_errors.nft_title?.[0]}
       />
       <ListInput
         outline
         required
-        placeholder="Description used for NFT ticket"
+        placeholder={`Description used for ${ticketLabel} ticket`}
         inputClassName={cn(isEdit && "cursor-not-allowed opacity-50")}
-        info="You will not be able to change this information about your nft collection later after event creation."
-        title="NFT Description"
+        info={`You will not be able to change this information about your ${ticketLabel} collection later after event creation.`}
+        title="Ticket Description"
         value={payment.nft_description}
-        onChange={(e) => {
-          changeDescription(e.target.value);
-        }}
+        onChange={(e) => changeDescription(e.target.value)}
         disabled={isEdit}
         error={paid_info_errors.nft_description?.[0]}
       />
+      <Capacity />
+      <TicketMedia />
     </>
   );
 }
 
 function Capacity() {
-  const { capacity, setEventData, paid_info_errors, isEdit, bought_capacity } = useCreateEventStore((state) => ({
+  const { capacity, setEventData, paid_info_errors, isEdit, bought_capacity, eventData } = useCreateEventStore((state) => ({
     capacity: state.eventData?.capacity,
     setEventData: state.setEventData,
     paid_info_errors: state.paid_info_errors,
     isEdit: Boolean(state.edit?.eventHash),
     bought_capacity: state.eventData.paid_event.bought_capacity,
+    eventData: state.eventData,
   }));
+
+  const ticketLabel = eventData?.paid_event?.ticket_type === "TSCSBT" ? "cSBT" : "NFT";
 
   return (
     <>
@@ -224,7 +324,7 @@ function Capacity() {
         }}
         label="Capacity"
         required
-        info="Number of users who can buy your NFT, 0.06 TON for each NFT (minting fee)"
+        info={`Number of users who can buy your Ticket, 0.06 TON for each ${ticketLabel} (minting fee)`}
       />
 
       {isEdit && (
@@ -244,20 +344,15 @@ function Capacity() {
  * The default export and this is used to combine all other above ones
  */
 const PaidEventCreationInputs = () => {
-  const { payment, toggleIsPaidEvent, editOptions, eventData ,has_registration  } = useCreateEventStore((state) => ({
+  const { payment, toggleIsPaidEvent, editOptions, eventData } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     toggleIsPaidEvent: state.togglePaidEvent,
     editOptions: state.edit,
     eventData: state.eventData,
-    has_registration: state.eventData?.has_registration,
   }));
-  if(!has_registration) {
-    return null;
-  }
-  // if(eventData?.eventLocationType === "online") {
-  //   return null;
-  // }
-  const disablePaidToggle = Boolean(editOptions?.eventHash)  ;
+
+  const disablePaidToggle = Boolean(editOptions?.eventHash);
+
   return (
     <ListLayout title="Paid Event">
       <ListItem
@@ -274,16 +369,14 @@ const PaidEventCreationInputs = () => {
             })}
           />
         }
-        footer={<p >Cannot be changed after the event is created.</p>}
+        footer={<p>Ticket details cannot be changed after event is created.</p>}
       />
       {payment.has_payment && (
         <>
-          <SelectPayment />
+          <NFTPayment />
           <PaymentAmount />
-          <PaymentsRecepient />
-          <NFTImage />
+          <PaymentsRecipient />
           <NFTInfo />
-          <Capacity />
         </>
       )}
     </ListLayout>

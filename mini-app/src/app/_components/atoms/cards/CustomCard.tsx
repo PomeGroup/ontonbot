@@ -20,14 +20,7 @@ const CustomCard: React.FC<CustomCardProps> = ({ title, description, children, d
       header={
         title || description ? (
           <>
-            {title && (
-              <Typography
-                weight={"bold"}
-                variant="title3"
-              >
-                {title}
-              </Typography>
-            )}
+            {title && <Typography variant="title3">{title}</Typography>}
             {description && (
               <Typography
                 variant="body"

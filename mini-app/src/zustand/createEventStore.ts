@@ -1,10 +1,11 @@
 import { GeneralFormErrors, RewardFormErrors, TimePlaceFormErorrs } from "@/app/_components/Event/steps/types";
+import { EventTicketType } from "@/db/schema";
 import { EventDataSchemaAllOptional, PaidEventSchema, PaidEventType } from "@/types";
+import type {} from "@redux-devtools/extension";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import type {} from "@redux-devtools/extension";
-import { PaymentTypes } from "@/db/enum"; // required for devtools typing
+// required for devtools typing
 
 export type StoreEventData = Omit<EventDataSchemaAllOptional, "paid_event"> & {
   /*
@@ -31,6 +32,7 @@ type PaidInfoErrors = {
   nft_title?: string[] | undefined;
   nft_description?: string[] | undefined;
   nft_image_url?: string[] | undefined;
+  nft_video_url?: string[] | undefined;
   capacity?: string[] | undefined;
 };
 
@@ -60,6 +62,7 @@ export type CreateEventStoreType = {
   clearRewardStepErrors: () => void;
   clearTimePlaceStepErrors: () => void;
   clearImageErrors: () => void;
+  clearVideoErrors: () => void;
   resetReward: () => void;
 
   // REGISTRATION
@@ -69,15 +72,17 @@ export type CreateEventStoreType = {
    * PAID EVENT CREATION ACTIONS
    */
   togglePaidEvent: () => void;
-  changePaymentType: (_: PaymentType) => void;
-  changePaymentAmount: (_: number) => void;
+  changePaymentType: (paymentType: PaymentType) => void;
+  changeTicketType: (ticketType: EventTicketType) => void;
+  changePaymentAmount: (amount: number) => void;
   // --- // nft info
-  changeNFTImage: (_: string) => void;
-  changeNFTTitle: (_title: string) => void;
-  changeNFTDescription: (_desc: string) => void;
+  changeNFTImage: (url: string) => void;
+  changeNFTVideo: (url: string) => void;
+  changeNFTTitle: (title: string) => void;
+  changeNFTDescription: (desc: string) => void;
 
   /**** REGISTRATION STEP MAIN BUTTON CLICK ****/
-  registrationStepMainButtonClick: (_recepient: string | null) => void;
+  registrationStepMainButtonClick: (_recipient: string | null) => void;
 
   /**** ⭕ PAID EVENT INPUT ERRORS ⭕ ****/
   paid_info_errors: PaidInfoErrors;
@@ -86,7 +91,15 @@ export type CreateEventStoreType = {
 
 const defaultState = {
   event: {
-    dynamic_fields: [],
+    dynamic_fields: [] as {
+      type: string;
+      title: string;
+      description: string;
+      emoji: string;
+      id?: number | undefined;
+      placeholder?: string | undefined;
+      url?: string | undefined;
+    }[],
     owner: 0,
     type: 0,
     hasEnded: true,
@@ -111,6 +124,12 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
         set((state) => ({
           ...state,
           generalStepErrors: { ...state.generalStepErrors, image_url: undefined },
+        }));
+      },
+      clearVideoErrors: () => {
+        set((state) => ({
+          ...state,
+          generalStepErrors: { ...state.generalStepErrors, video_url: undefined },
         }));
       },
       setGeneralStepErrors: (errors) => {
@@ -206,6 +225,7 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
             has_payment: !state.eventData?.paid_event?.has_payment,
             has_nft: true,
             payment_type: "TON",
+            ticket_type: "NFT",
             payment_amount: 1,
           } as Partial<PaidEventType>;
 
@@ -215,7 +235,7 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           if (!state.eventData.paid_event.has_payment) {
             try {
               window.Telegram.WebApp.showConfirm(
-                "You will need pay 10 TON to create a paid event + 0.06 TON for each person buying the ticket (minting fees)",
+                "You will need to pay 10 TON to create a paid event if the ticket type is NFT it will include 0.06 TON for each person buying the ticket (minting fees) this does not include cSBT ticket type",
                 (confirmed) => {
                   if (confirmed) {
                     set((state) => {
@@ -248,9 +268,19 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           state.eventData.paid_event.payment_amount = isNaN(amount) || !amount ? undefined : Math.abs(amount);
         });
       },
+      changeTicketType(ticketType) {
+        set((state) => {
+          state.eventData.paid_event.ticket_type = ticketType;
+        });
+      },
       changeNFTImage(image) {
         set((state) => {
           state.eventData.paid_event.nft_image_url = image;
+        });
+      },
+      changeNFTVideo(video) {
+        set((state) => {
+          state.eventData.paid_event.nft_video_url = video;
         });
       },
       changeNFTTitle: (title) => {
