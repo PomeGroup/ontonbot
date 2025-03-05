@@ -442,7 +442,7 @@ export const processCsvLinesForSbtDist = async (
 
         // 4) Check if there's already a reward
         const { rows: rewardRows } = await client.query(
-          "SELECT id, status FROM rewards WHERE visitor_id = $1",
+          "SELECT id, status FROM rewards WHERE visitor_id = $1 and type = 'ton_society_sbt'",
           [visitorId],
         );
         if (rewardRows.length > 0) {
