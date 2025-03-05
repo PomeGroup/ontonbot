@@ -65,7 +65,9 @@ async function processOrderCreation(order: OrderRow) {
     let mainEventActivityId = event.activity_id;
     if (!mainEventActivityId) {
       //&& process.env.ENV !== "local"
+      logger.log(`registerActivity for event ${event_uuid}:`, eventDraft);
       const tonSocietyResult = await registerActivity(eventDraft);
+      logger.log(`registerActivity for event ${event_uuid}:`, tonSocietyResult);
       mainEventActivityId = tonSocietyResult.data.activity_id;
     }
 
