@@ -14,18 +14,18 @@ export const sendNftDeployedNotifications = async (
     message: `Deployed collection for <b>${event.title}</b>\n\n🎈<a href='https://${prefix}getgems.io/collection/${collectionAddress}'>Collection</a>\n\n👤Capacity: ${event.capacity}`,
     topic: "event",
   });
-  await sendToEventsTgChannel({
-    image: event.image_url,
-    title: event.title,
-    subtitle: event.subtitle,
-    s_date: event.start_date,
-    e_date: event.end_date,
-    timezone: event.timezone,
-    event_uuid: event.event_uuid,
-    participationType: event.participationType,
-    ticketPrice: {
-      amount: paymentInfo.price,
-      paymentType: paymentInfo.payment_type.toLowerCase(),
-    },
-  });
+  // await sendToEventsTgChannel({
+  //   image: event.image_url,
+  //   title: event.title,
+  //   subtitle: event.subtitle,
+  //   s_date: event.start_date,
+  //   e_date: event.end_date,
+  //   timezone: event.timezone,
+  //   event_uuid: event.event_uuid,
+  //   participationType: event.participationType,
+  //   ticketPrice: {
+  //     amount: paymentInfo.price,
+  //     paymentType: paymentInfo.payment_type.toLowerCase(),
+  //   },
+  // });
 };

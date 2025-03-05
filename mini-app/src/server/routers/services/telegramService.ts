@@ -17,11 +17,11 @@ export const sendRewardNotification = async (
     const rewardLink = rewardLinkZod.parse(reward.data).reward_link;
     const message =
       rewardDbData.type === "ton_society_sbt"
-        ? `🎫 Your CSBT for the event ${event.title} has been created. 
-Please click on the link below to claim it`
-        : `👋Hey there
+        ? `👋Hey there
 🎈 Your CSBT for the event ${event.title}
-👇 Please click on the link below to claim it.`;
+👇 Please click on the link below to claim it.`
+        : `🎫 Your Ticket for the event ${event.title} has been created. 
+Please click on the link below to claim it`;
     const linkText = rewardDbData.type === "ton_society_sbt" ? "Claim your CSBT" : "Claim your Ticket";
     // Send the message and return success if no error occurs
     const response = await sendTelegramMessage({
