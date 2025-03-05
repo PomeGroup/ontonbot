@@ -201,10 +201,12 @@ function NFTImage() {
     nft_image: state.eventData.paid_event.nft_image_url,
     isEdit: Boolean(state.edit?.eventHash),
   }));
+  const { payment } = useCreateEventStore((state) => ({ payment: state.eventData.paid_event }));
+  const label = payment.ticket_type === "TSCSBT" ? "cSBT" : "NFT";
 
   return (
     <UploadImageFile
-      infoText="This image is used as the NFT/cSBT ticket"
+      infoText={`This image is used as the ${label} ticket`}
       changeText="Change Ticket Image"
       disabled={isEdit}
       triggerText="Upload Ticket Image"
@@ -222,10 +224,12 @@ function NFTVideo() {
     nft_video: state.eventData.paid_event.nft_video_url,
     isEdit: Boolean(state.edit?.eventHash),
   }));
+  const { payment } = useCreateEventStore((state) => ({ payment: state.eventData.paid_event }));
+  const label = payment.ticket_type === "TSCSBT" ? "cSBT" : "NFT";
 
   return (
     <UploadVideoFile
-      infoText="This video is used as the NFT/cSBT ticket"
+      infoText={`This video is used as the ${label} ticket`}
       changeText="Change Ticket Video"
       triggerText="Upload Ticket Video"
       onVideoChange={changeNFTVideo}
@@ -288,6 +292,7 @@ function NFTInfo() {
         error={paid_info_errors.nft_description?.[0]}
       />
       <Capacity />
+      <TicketMedia />
     </>
   );
 }
@@ -372,7 +377,6 @@ const PaidEventCreationInputs = () => {
           <PaymentAmount />
           <PaymentsRecipient />
           <NFTInfo />
-          <TicketMedia />
         </>
       )}
     </ListLayout>
