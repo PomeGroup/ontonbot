@@ -19,8 +19,10 @@ async function sendRewardNotification(createdReward: RewardType) {
     }
 
     const event = await eventDB.fetchEventByUuid(visitor.event_uuid);
-
+    const rewardDbData = await rewardDB.checkExistingReward(visitor.id);
     if (!event) throw new Error("Event not found");
+
+    if (!rewardDbData) throw new Error("Reward data not found");
 
     const rewardRes = await tonSocietyClient.get<{
       status: "success";
@@ -30,7 +32,7 @@ async function sendRewardNotification(createdReward: RewardType) {
     }>(`/activities/${event.activity_id}/rewards/${visitor.user_id}/status`);
 
     if (rewardRes.data.data.status === "NOT_CLAIMED") {
-      await telegramService.sendRewardNotification(createdReward, visitor, event);
+      await telegramService.sendRewardNotification(createdReward, visitor, event, rewardDbData);
     }
 
     await rewardDB.updateRewardStatus(createdReward.id, "notified");
@@ -44,7 +46,7 @@ export const notifyUsersForRewards = async (pushLockTTl: () => any) => {
   const chunkSize = 10;
   let offset = 0;
   let createdRewards: RewardType[] = [];
-  
+
   do {
     createdRewards = await db.query.rewards.findMany({
       where: (fields, { eq }) => eq(fields.status, "created"),

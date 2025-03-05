@@ -218,7 +218,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
 // private
 const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: EventDataSchema })).mutation(async (opts) => {
   const input_event_data = opts.input.eventData;
-  const ticketType = "TSCSBT";
+
   const user_id = opts.ctx.user.user_id;
   const userCacheKey = getUserCacheKey(user_id);
   const is_ts_verified = await organizerTsVerified(user_id);
@@ -298,6 +298,13 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         if (!input_event_data.capacity)
           throw new TRPCError({ code: "BAD_REQUEST", message: "Capacity Required for paid events" });
 
+        if (opts.input.eventData?.paid_event?.ticket_type === undefined)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Ticket Type Required for paid events" });
+
+        if (input_event_data.paid_event.payment_type === undefined)
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Payment Type Required for paid events" });
+
+        const ticketType = opts.input.eventData?.paid_event?.ticket_type;
         const order_price = eventDB.getPaidEventPrice(input_event_data.capacity, ticketType);
 
         await trx.insert(orders).values({
@@ -317,15 +324,14 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
         await trx.insert(eventPayment).values({
           event_uuid: newEvent[0].event_uuid,
           /* -------------------------------------------------------------------------- */
-          payment_type: input_event_data.paid_event.payment_type || "TON",
+          payment_type: input_event_data.paid_event.payment_type,
           price: event_ticket_price,
           recipient_address: input_event_data.paid_event.payment_recipient_address,
           bought_capacity: input_event_data.capacity,
           /* -------------------------------------------------------------------------- */
           ticket_type: ticketType,
           ticketImage: input_event_data.paid_event.nft_image_url,
-          ticketVideo:
-            input_event_data.paid_event.nft_video_url || "https://storage.onton.live/sbt-collections/Hubs/Onton/1.mp4",
+          ticketVideo: input_event_data.paid_event.nft_video_url,
           title: input_event_data.paid_event.nft_title,
           description: input_event_data.paid_event.nft_description,
           collectionAddress: null,
@@ -457,7 +463,6 @@ const updateEvent = eventManagerPP
     const eventUuid = opts.ctx.event.event_uuid;
     const eventId = opts.ctx.event.event_id;
     const user_id = opts.ctx.user.user_id;
-    const ticketType = "TSCSBT";
 
     try {
       return await db.transaction(async (trx) => {
@@ -492,6 +497,10 @@ const updateEvent = eventManagerPP
               code: "BAD_REQUEST",
               message: "Paid Events Must have capacity",
             });
+
+          if (opts.input.eventData?.paid_event?.ticket_type === undefined) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Ticket Type Required for paid events" });
+          }
           /* -------------------------------------------------------------------------- */
           const paymentInfo = (
             await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
@@ -509,7 +518,7 @@ const updateEvent = eventManagerPP
               ne(orders.state, "completed")
             );
             const createEventOrder = await trx.query.orders.findFirst({ where: where_condition });
-
+            const ticketType = opts.input.eventData?.paid_event?.ticket_type;
             if (createEventOrder) {
               await trx
                 .update(orders)
