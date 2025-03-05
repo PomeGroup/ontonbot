@@ -41,12 +41,18 @@ async function getEventsChannelBotInstance() {
 }
 
 // =========== Send Telegram Message ===========
-export const sendTelegramMessage = async (props: { chat_id: string | number; message: string; link?: string }) => {
+export const sendTelegramMessage = async (props: {
+  chat_id: string | number;
+  message: string;
+  link?: string;
+  linkText?: string;
+}) => {
   try {
     const response = await tgClientPost("send-message", {
       chat_id: props.chat_id,
       custom_message: props.message,
       link: props.link,
+      linkText: props?.linkText || "Claim Reward",
     });
 
     if (response.data.success) {

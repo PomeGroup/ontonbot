@@ -13,6 +13,7 @@ export const sendRewardNotification = async (
 ) => {
   try {
     // Validate reward link and send Telegram message
+
     const rewardLink = rewardLinkZod.parse(reward.data).reward_link;
     const message =
       rewardDbData.type === "ton_society_sbt"
@@ -21,11 +22,13 @@ Please click on the link below to claim it`
         : `👋Hey there
 🎈 Your CSBT for the event ${event.title}
 👇 Please click on the link below to claim it.`;
+    const linkText = rewardDbData.type === "ton_society_sbt" ? "Claim your CSBT" : "Claim your Ticket";
     // Send the message and return success if no error occurs
     const response = await sendTelegramMessage({
       link: rewardLink,
       chat_id: visitor.user_id as number,
       message: message,
+      linkText: linkText,
     });
 
     // If the response was not successful, return the error

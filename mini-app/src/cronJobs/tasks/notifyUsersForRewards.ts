@@ -3,7 +3,6 @@ import { db } from "@/db/db";
 import { sleep } from "@/utils";
 import { findVisitorById } from "@/server/db/visitors";
 import eventDB from "@/server/db/events";
-import { tonSocietyClient } from "@/lib/ton-society-api";
 import telegramService from "@/server/routers/services/telegramService";
 import rewardDB from "@/server/db/rewards.db";
 import { logger } from "@/server/utils/logger";
@@ -11,7 +10,6 @@ import { getErrorMessages } from "@/lib/error";
 
 async function sendRewardNotification(createdReward: RewardType) {
   try {
-    logger.log("sendRewardNotification", createdReward);
     const visitor = await findVisitorById(createdReward.visitor_id);
     if (!visitor) {
       logger.error(`Visitor not found for reward ${createdReward.id}`);
@@ -24,19 +22,10 @@ async function sendRewardNotification(createdReward: RewardType) {
 
     if (!rewardDbData) throw new Error("Reward data not found");
 
-    const rewardRes = await tonSocietyClient.get<{
-      status: "success";
-      data: {
-        status: "NOT_CLAIMED" | "CLAIMED";
-      };
-    }>(`/activities/${event.activity_id}/rewards/${visitor.user_id}/status`);
-
-    if (rewardRes.data.data.status === "NOT_CLAIMED") {
-      await telegramService.sendRewardNotification(createdReward, visitor, event, rewardDbData);
-    }
-
+    await telegramService.sendRewardNotification(createdReward, visitor, event, rewardDbData);
     await rewardDB.updateRewardStatus(createdReward.id, "notified");
   } catch (error) {
+    console.error("Error sending reward notification:", error);
     logger.error("BOT_API_ERROR", getErrorMessages(error));
     await rewardDB.handleRewardError(createdReward, error);
   }
