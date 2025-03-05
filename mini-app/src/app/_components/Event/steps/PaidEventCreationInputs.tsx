@@ -137,7 +137,7 @@ function PaymentsRecipient() {
 }
 
 /**
- * Whether the nft is soulbound or just normal nft. (NFT or SBT)
+ * Whether the nft is soulbound or just normal nft. (NFT or cSBT)
  */
 function TicketType() {
   const { paymentInfo, changeTicketType, isEdit } = useCreateEventStore((state) => ({
@@ -156,7 +156,7 @@ function TicketType() {
       footer={
         <>
           <p>
-            Ticket details cannot be changed after event is created. Ticked will be minted as NFT (Transferable) or SBT
+            Ticket details cannot be changed after event is created. Ticked will be minted as NFT (Transferable) or cSBT
             (Soul-Bound, users can not transfer or sell the tickets).
           </p>
           <Segmented
@@ -185,7 +185,7 @@ function TicketType() {
               itemType="button"
               className={cn(ticketType === "TSCSBT" && "text-black font-extrabold")}
             >
-              SBT
+              cSBT
             </SegmentedButton>
           </Segmented>
         </>
@@ -204,7 +204,7 @@ function NFTImage() {
 
   return (
     <UploadImageFile
-      infoText="This image is used as the NFT/SBT ticket"
+      infoText="This image is used as the NFT/cSBT ticket"
       changeText="Change Ticket Image"
       disabled={isEdit}
       triggerText="Upload Ticket Image"
@@ -225,7 +225,7 @@ function NFTVideo() {
 
   return (
     <UploadVideoFile
-      infoText="This video is used as the NFT/SBT ticket"
+      infoText="This video is used as the NFT/cSBT ticket"
       changeText="Change Ticket Video"
       triggerText="Upload Ticket Video"
       onVideoChange={changeNFTVideo}
@@ -264,23 +264,23 @@ function NFTInfo() {
       <ListInput
         outline
         required
-        placeholder="Title used for NFT ticket"
+        placeholder="Title used for NFT/cSBT ticket"
         title="Ticket Title"
         inputClassName={cn(isEdit && "cursor-not-allowed opacity-50")}
         value={payment.nft_title}
         onChange={(e) => {
           changeTitle(e.target.value);
         }}
-        info="You will not be able to change this information about your nft collection later after event creation."
+        info="You will *not* be able to change this information about your NFT/cSBT collection later after event creation."
         disabled={isEdit}
         error={paid_info_errors.nft_title?.[0]}
       />
       <ListInput
         outline
         required
-        placeholder="Description used for NFT ticket"
+        placeholder="Description used for NFT/cSBT ticket"
         inputClassName={cn(isEdit && "cursor-not-allowed opacity-50")}
-        info="You will not be able to change this information about your nft collection later after event creation."
+        info="You will not be able to change this information about your NFT/cSBT collection later after event creation."
         title="Ticket Description"
         value={payment.nft_description}
         onChange={(e) => {
@@ -317,7 +317,7 @@ function Capacity() {
         }}
         label="Capacity"
         required
-        info="Number of users who can buy your Ticket, 0.06 TON for each NFT/SBT (minting fee)"
+        info="Number of users who can buy your Ticket, 0.06 TON for each NFT/cSBT (minting fee)"
       />
 
       {isEdit && (

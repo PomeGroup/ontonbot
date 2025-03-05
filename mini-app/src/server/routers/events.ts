@@ -1,6 +1,10 @@
+import { NonVerifiedHubsIds } from "@/constants";
 import { db } from "@/db/db";
-import { eventFields, events, eventPayment, orders } from "@/db/schema";
+import { eventFields, eventPayment, events, orders } from "@/db/schema";
+import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 import { hashPassword } from "@/lib/bcrypt";
+import { timestampToIsoString } from "@/lib/DateAndTime";
+import { redisTools } from "@/lib/redisTools";
 import {
   renderAddEventMessage,
   renderModerationEventMessage,
@@ -11,35 +15,31 @@ import {
 } from "@/lib/tgBot";
 import { registerActivity, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
+import { tgBotModerationMenu } from "@/moderationBot/menu";
+import eventFieldsDB from "@/server/db/eventFields.db";
+import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
+import eventDB from "@/server/db/events";
+import { userRolesDB } from "@/server/db/userRoles.db";
+import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
+import { logger } from "@/server/utils/logger";
 import { EventDataSchema, UpdateEventDataSchema } from "@/types";
+import { TonSocietyRegisterActivityT } from "@/types/event.types";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
 import { and, eq, ne } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import eventDB from "@/server/db/events";
+import { config, configProtected } from "../config";
+import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
+import { getUserCacheKey, usersDB } from "../db/users";
 import {
   adminOrganizerProtectedProcedure,
   eventManagementProtectedProcedure as eventManagerPP,
   initDataProtectedProcedure,
   router,
 } from "../trpc";
-import { NonVerifiedHubsIds } from "@/constants";
-import { TonSocietyRegisterActivityT } from "@/types/event.types";
-import eventFieldsDB from "@/server/db/eventFields.db";
 import { internal_server_error } from "../utils/error_utils";
-import { EventPaymentSelectType } from "@/db/schema/eventPayment";
-import { config, configProtected } from "../config";
-import { logger } from "@/server/utils/logger";
-import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
-import { timestampToIsoString } from "@/lib/DateAndTime";
-import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
-import { usersDB, getUserCacheKey } from "../db/users";
-import { redisTools } from "@/lib/redisTools";
-import { organizerTsVerified, userHasModerationAccess } from "../db/userFlags.db";
-import { tgBotModerationMenu } from "@/moderationBot/menu";
-import { userRolesDB } from "@/server/db/userRoles.db";
 
 dotenv.config();
 
