@@ -29,7 +29,7 @@ export const createTsCsbtActivity = async (event: EventRow, paymentInfo: EventPa
     `${event.event_uuid}-ticket`
   );
   logger.log(`Created TSCSBT ticket draft for event ${event.event_uuid}` + JSON.stringify(ticketDraft));
-  if (process.env.ENV !== "local") {
+  if (process.env.ENV !== "local" || 1) {
     const ticketActivityResult = await registerActivity(ticketDraft);
     const ticketActivityId = ticketActivityResult.data.activity_id;
     logger.log(`Created TSCSBT ticket activity ${ticketActivityId} for event ${event.event_uuid}`);

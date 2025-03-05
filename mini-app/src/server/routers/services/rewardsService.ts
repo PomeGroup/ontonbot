@@ -79,7 +79,7 @@ export const createUserRewardSBT = async (props: {
       reward = createRewardResult.data;
       // Send notification to the user
       if (reward?.status === "created") {
-        const notificationResult = await sendRewardNotification(createRewardResult.data, visitor, eventData);
+        const notificationResult = await sendRewardNotification(createRewardResult.data, visitor, eventData, reward);
 
         // If notification was sent successfully, update the reward status
         if (notificationResult.success) {

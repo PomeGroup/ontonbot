@@ -53,11 +53,11 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
         logger.error("error_what the fuck : ", "event Does not have payment !!!", event_uuid);
         continue;
       }
-
-      if (!paymentInfo.collectionAddress) {
-        logger.error("no_collection_address", event_uuid);
-        continue;
-      }
+      //
+      // if (!paymentInfo.collectionAddress) {
+      //   logger.error("no_collection_address", event_uuid);
+      //   continue;
+      // }
 
       try {
         if (ordr.user_id) {

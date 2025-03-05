@@ -1,7 +1,7 @@
 import { Address, Cell } from "@ton/core";
 import axios from "axios";
 import { TonClient } from "@ton/ton";
-import { is_prod_env, is_stage_env } from "@/server/utils/evnutils";
+import { is_local_env, is_prod_env, is_stage_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
 
 export const is_mainnet = is_prod_env() || is_stage_env();
@@ -58,6 +58,7 @@ export function v2_client() {
 
 /* -------------------------------------------------------------------------- */
 /*                                  FETCH NFT                                 */
+
 /* -------------------------------------------------------------------------- */
 
 export interface NFTItem {
@@ -190,6 +191,7 @@ async function fetchCollection(collection_address: string, limit: number = 100, 
 
 /* -------------------------------------------------------------------------- */
 /*                                Jetton Wallet                               */
+
 /* -------------------------------------------------------------------------- */
 
 async function getJettonWallet(address: string, retries: number = 3, limit = 1, offset = 0) {
@@ -214,6 +216,7 @@ async function getJettonWallet(address: string, retries: number = 3, limit = 1, 
 
 /* -------------------------------------------------------------------------- */
 /*                                Transactions                                */
+
 /* -------------------------------------------------------------------------- */
 interface FetchTransactionsParams {
   account: string;

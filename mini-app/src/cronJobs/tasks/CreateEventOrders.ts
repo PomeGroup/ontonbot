@@ -63,7 +63,8 @@ async function processOrderCreation(order: OrderRow) {
 
     // Create the main Ton Society Event if missing
     let mainEventActivityId = event.activity_id;
-    if (!mainEventActivityId && process.env.ENV !== "local") {
+    if (!mainEventActivityId) {
+      //&& process.env.ENV !== "local"
       const tonSocietyResult = await registerActivity(eventDraft);
       mainEventActivityId = tonSocietyResult.data.activity_id;
     }
@@ -131,10 +132,11 @@ async function updateDatabaseRecords(
 
       // If we have a new TSCSBT ticket activity
       if (ticketActivityId) {
-        updates.ticket_activity_id = ticketActivityId;
+        updates.ticketActivityId = ticketActivityId;
       }
 
-      const hasPaymentInfoUpdates = updates.collectionAddress || updates.ticket_activity_id;
+      const hasPaymentInfoUpdates = updates.collectionAddress || updates.ticketActivityId;
+
       if (hasPaymentInfoUpdates) {
         await trx.update(eventPayment).set(updates).where(eq(eventPayment.id, paymentInfo.id)).execute();
         logger.log(`Update eventPayment for event ${event.event_uuid}:`, JSON.stringify(updates));

@@ -63,8 +63,7 @@ export const notifyUsersForRewards = async (pushLockTTl: () => any) => {
     for (const notification of notificationPromises) {
       await notification();
     }
-
-    await pushLockTTl();
+    if (pushLockTTl) await pushLockTTl();
     await sleep(1500);
   } while (createdRewards.length > 0);
 
