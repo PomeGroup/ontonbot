@@ -258,49 +258,51 @@ function NFTInfo() {
     isEdit: Boolean(state.edit?.eventHash),
   }));
 
+  const ticketLabel = payment.ticket_type === "TSCSBT" ? "cSBT" : "NFT";
+
   return (
     <>
       <TicketType />
       <ListInput
         outline
         required
-        placeholder="Title used for NFT/cSBT ticket"
+        placeholder={`Title used for ${ticketLabel} ticket`}
         title="Ticket Title"
         inputClassName={cn(isEdit && "cursor-not-allowed opacity-50")}
         value={payment.nft_title}
-        onChange={(e) => {
-          changeTitle(e.target.value);
-        }}
-        info="You will *not* be able to change this information about your NFT/cSBT collection later after event creation."
+        onChange={(e) => changeTitle(e.target.value)}
+        info={`You will *not* be able to change this information about your ${ticketLabel} collection later after event creation.`}
         disabled={isEdit}
         error={paid_info_errors.nft_title?.[0]}
       />
       <ListInput
         outline
         required
-        placeholder="Description used for NFT/cSBT ticket"
+        placeholder={`Description used for ${ticketLabel} ticket`}
         inputClassName={cn(isEdit && "cursor-not-allowed opacity-50")}
-        info="You will not be able to change this information about your NFT/cSBT collection later after event creation."
+        info={`You will not be able to change this information about your ${ticketLabel} collection later after event creation.`}
         title="Ticket Description"
         value={payment.nft_description}
-        onChange={(e) => {
-          changeDescription(e.target.value);
-        }}
+        onChange={(e) => changeDescription(e.target.value)}
         disabled={isEdit}
         error={paid_info_errors.nft_description?.[0]}
       />
+      <Capacity />
     </>
   );
 }
 
 function Capacity() {
-  const { capacity, setEventData, paid_info_errors, isEdit, bought_capacity } = useCreateEventStore((state) => ({
+  const { capacity, setEventData, paid_info_errors, isEdit, bought_capacity, eventData } = useCreateEventStore((state) => ({
     capacity: state.eventData?.capacity,
     setEventData: state.setEventData,
     paid_info_errors: state.paid_info_errors,
     isEdit: Boolean(state.edit?.eventHash),
     bought_capacity: state.eventData.paid_event.bought_capacity,
+    eventData: state.eventData,
   }));
+
+  const ticketLabel = eventData?.paid_event?.ticket_type === "TSCSBT" ? "cSBT" : "NFT";
 
   return (
     <>
@@ -317,7 +319,7 @@ function Capacity() {
         }}
         label="Capacity"
         required
-        info="Number of users who can buy your Ticket, 0.06 TON for each NFT/cSBT (minting fee)"
+        info={`Number of users who can buy your Ticket, 0.06 TON for each ${ticketLabel} (minting fee)`}
       />
 
       {isEdit && (
@@ -370,7 +372,6 @@ const PaidEventCreationInputs = () => {
           <PaymentAmount />
           <PaymentsRecipient />
           <NFTInfo />
-          <Capacity />
           <TicketMedia />
         </>
       )}
