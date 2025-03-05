@@ -69,6 +69,9 @@ async function processOrderCreation(order: OrderRow) {
       const tonSocietyResult = await registerActivity(eventDraft);
       logger.log(`registerActivity for event ${event_uuid}:`, tonSocietyResult);
       mainEventActivityId = tonSocietyResult.data.activity_id;
+      if (mainEventActivityId) {
+        await eventDB.updateActivityId(event_uuid, mainEventActivityId);
+      }
     }
 
     // Handle ticket-type specific logic (NFT or TSCSBT)

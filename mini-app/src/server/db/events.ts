@@ -14,7 +14,7 @@ import { logger } from "../utils/logger";
 import { EventRow } from "@/db/schema/events";
 import eventFieldsDB from "@/server/db/eventFields.db";
 import { findActivity } from "@/lib/ton-society-api";
-import { is_dev_env, is_prod_env, is_stage_env } from "@/server/utils/evnutils";
+import { is_prod_env } from "@/server/utils/evnutils";
 import { organizerTsVerified } from "@/server/db/userFlags.db";
 
 export const getEventIDCacheKey = (eventID: number) => redisTools.cacheKeys.event_id + eventID;
@@ -683,7 +683,10 @@ const shouldEventBeHidden = async (event_is_paid: boolean, user_id: number) => {
 
   return false;
 };
-
+const updateActivityId = async (event_uuid: string, activity_id: number) => {
+  await db.update(events).set({ activity_id }).where(eq(events.event_uuid, event_uuid)).execute();
+  await eventDB.deleteEventCache(event_uuid);
+};
 const eventDB = {
   checkIsEventOwner,
   checkIsAdminOrOrganizer,
@@ -707,5 +710,6 @@ const eventDB = {
   updateEventSbtCollection,
   getPaidEventPrice,
   shouldEventBeHidden,
+  updateActivityId,
 };
 export default eventDB;
