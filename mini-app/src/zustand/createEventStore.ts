@@ -263,9 +263,9 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
           state.eventData.paid_event.payment_amount = payment_type === "USDT" ? 5 : 1;
         });
       },
-      changePaymentAmount(amount) {
+      changePaymentAmount(amount: number) {
         set((state) => {
-          state.eventData.paid_event.payment_amount = isNaN(amount) || !amount ? undefined : Math.abs(amount);
+          state.eventData.paid_event.payment_amount = isNaN(amount) ? undefined : amount < 0 ? Math.abs(amount) : amount;
         });
       },
       changeTicketType(ticketType) {

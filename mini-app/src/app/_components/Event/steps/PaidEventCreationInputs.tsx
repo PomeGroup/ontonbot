@@ -74,21 +74,12 @@ function PaymentAmount() {
         outline
         required
         title="Price"
-        type="number"
         inputMode="decimal" // Allows decimals on mobile devices
-        step="0.001"
         placeholder={`Payment amount in ${payment.payment_type}`}
         value={payment.payment_amount?.toString() || ""} // Display as a string
         onChange={(e) => {
-          const inputValue = e.target.value;
-
-          // Match up to 3 decimal places using regex
-          const formattedValue = inputValue.match(/^\d*\.?\d{0,3}/)?.[0] || "";
-
-          // Parse as a float if valid; otherwise, 0
-          const parsedValue = formattedValue ? parseFloat(formattedValue) : 0;
-
-          changePaymentAmount(parsedValue);
+          const amount = e.target.value;
+          changePaymentAmount(amount);
         }}
         error={paid_info_errors.payment_amount?.[0]}
       />
