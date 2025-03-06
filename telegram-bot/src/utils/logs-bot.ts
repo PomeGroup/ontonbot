@@ -32,7 +32,7 @@ export const sendTopicMessage = async (
   text: string,
 ) => {
   try {
-    console.log('meesage_send' , Number(configProtected["logs_group_id"]) ,  Number(configProtected[topic]))
+
     await logsBot.api.sendMessage(
       Number(configProtected["logs_group_id"]),
       text,

@@ -8,10 +8,15 @@ export const affiliateLinks = pgTable(
   "affiliate_links",
   {
     id: bigint("id", { mode: "number" }).primaryKey().default(sql`nextval
-        ('affiliate_links_id_seq'::regclass)`),
+          ('affiliate_links_id_seq'::regclass)`),
     Item_id: bigint("Item_id", { mode: "number" }).notNull(),
     item_type: affiliateItemType("item_type").notNull(),
     creator_user_id: bigint("creator_user_id", { mode: "number" }).notNull(),
+
+    // New columns
+    title: varchar("title", { length: 255 }),
+    group_title: varchar("group_title", { length: 255 }),
+
     link_hash: varchar("link_hash", { length: 255 }).notNull(),
     total_clicks: bigint("total_clicks", { mode: "number" }).default(0),
     total_purchase: bigint("total_purchase", { mode: "number" }).default(0),

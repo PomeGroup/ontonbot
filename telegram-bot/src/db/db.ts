@@ -2,6 +2,7 @@ import { TVisitor } from "../utils/types";
 import { Pool } from "pg";
 import { logger } from "../utils/logger";
 import { redisTools } from "../lib/redisTools";
+import { generateRandomHash } from "../helpers/generateRandomHash";
 
 
 // cache keys
@@ -80,35 +81,117 @@ export const getEvent = async (uuid: string) => {
   return event;
 };
 
-export const countReferrals = async (
-  userId: number,
-): Promise<{ totalReferrals: number; todayReferrals: number }> => {
+
+/**
+ * A separate function for creating affiliate links in the database.
+ * Returns an array of newly created links and the final groupTitle.
+ */
+export const createAffiliateLinks = async (params: {
+  eventId: number;
+  userId: number;
+  itemType: string;  // "EVENT" or "HOME"
+  baseTitle: string;
+  count: number;
+}) => {
+  const { eventId, userId, itemType, baseTitle, count } = params;
+
+  // We'll return these
+  const links: {
+    id: number;
+    link_hash: string;
+    title: string;
+    group_title: string;
+  }[] = [];
+
+  let groupTitle: string | null = null;
+  let firstLinkId: number | null = null;
+
+  // Acquire a client for the entire insertion
   const client = await pool.connect();
-
   try {
-    // Total referrals
-    const totalReferralsQuery =
-      "SELECT COUNT(*) AS total FROM referrals WHERE referee = $1";
-    const totalRefResult = await client.query(totalReferralsQuery, [userId]);
-    const totalReferrals = totalRefResult.rows[0].total;
+    for (let i = 0; i < count; i++) {
+      const singleLinkTitle = `${baseTitle}-${i + 1}`;
+      const linkHash = generateRandomHash(8);
 
-    // Today's referrals
-    const todayReferralsQuery = `
-        SELECT COUNT(*) AS today
-        FROM referrals
-        WHERE referee = $1
-          AND DATE(created_at) = CURRENT_DATE`;
-    const todayRefResult = await client.query(todayReferralsQuery, [userId]);
-    const todayReferrals = todayRefResult.rows[0].today;
+      // Insert statement
+      const insertQuery = `
+          INSERT INTO affiliate_links ("Item_id",
+                                       "item_type",
+                                       "creator_user_id",
+                                       "link_hash",
+                                       "total_clicks",
+                                       "total_purchase",
+                                       "active",
+                                       "affiliator_user_id",
+                                       "created_at",
+                                       "updated_at",
+                                       "title",
+                                       "group_title")
+          VALUES ($1, $2, $3, $4,
+                  0, 0, true,
+                  $5, CURRENT_DATE, NULL,
+                  $6, $7)
+          RETURNING id, link_hash, title, group_title
+      `;
 
-    return { totalReferrals, todayReferrals };
-  } catch (error) {
-    logger.error("Error in countReferrals:", error);
-    throw error;
+      // If this is the first link, we temporarily insert with empty group_title
+      if (i === 0) {
+        const result = await client.query(insertQuery, [
+          eventId,
+          itemType,
+          userId,
+          linkHash,
+          userId,
+          singleLinkTitle,
+          "", // empty group_title for now
+        ]);
+
+        const newLink = result.rows[0];
+        firstLinkId = newLink.id;
+        groupTitle = `${baseTitle}`; // e.g. "HelloWorld"
+
+        // Now update the first link with the final group_title
+        await client.query(
+          `UPDATE affiliate_links
+           SET "group_title" = $1
+           WHERE "id" = $2`,
+          [groupTitle, firstLinkId],
+        );
+
+        // Push to array with the new groupTitle
+        links.push({
+          id: newLink.id,
+          link_hash: newLink.link_hash,
+          title: singleLinkTitle,
+          group_title: groupTitle,
+        });
+      } else {
+        // For subsequent links, we know groupTitle
+        const result = await client.query(insertQuery, [
+          eventId,
+          itemType,
+          userId,
+          linkHash,
+          userId,
+          singleLinkTitle,
+          groupTitle, // re-use existing groupTitle
+        ]);
+        const newLink = result.rows[0];
+        links.push({
+          id: newLink.id,
+          link_hash: newLink.link_hash,
+          title: newLink.title,
+          group_title: newLink.group_title,
+        });
+      }
+    }
   } finally {
     client.release();
   }
+
+  return { links, groupTitle: groupTitle || "" };
 };
+
 
 export const addVisitor = async (visitor: TVisitor) => {
   const client = await pool.connect();
@@ -214,6 +297,13 @@ export const isUserAdmin = async (usernameOrId: string) => {
     return { isAdmin: false, user: null };
   }
   return { isAdmin: user.role === "admin", user };
+};
+export const isUserOrganizerOrAdmin = async (usernameOrId: string) => {
+  const user = await getUser(usernameOrId);
+  if (!user) {
+    return { isOrganizerOrAdmin: false, user: null };
+  }
+  return { isOrganizerOrAdmin: user.role === "organizer" || user.role === "admin", user };
 };
 
 
@@ -511,6 +601,7 @@ export const getApprovedRegistrants = async (eventUUID: string) => {
     client.release();
   }
 };
+
 
 createDatabase().then(() => {
   logger.log("Database created successfully");
