@@ -6,6 +6,7 @@ import { hashPassword } from "@/lib/bcrypt";
 import { timestampToIsoString } from "@/lib/DateAndTime";
 import { redisTools } from "@/lib/redisTools";
 import {
+  getEventsChannelBotInstance,
   renderAddEventMessage,
   renderModerationEventMessage,
   renderModerationFlowup,
@@ -13,7 +14,7 @@ import {
   sendLogNotification,
   sendToEventsTgChannel,
 } from "@/lib/tgBot";
-import { registerActivity, updateActivity } from "@/lib/ton-society-api";
+import { registerActivity, tonSocietyClient, updateActivity } from "@/lib/ton-society-api";
 import { getObjectDifference, removeKey } from "@/lib/utils";
 import { tgBotModerationMenu } from "@/moderationBot/menu";
 import eventFieldsDB from "@/server/db/eventFields.db";
@@ -28,6 +29,8 @@ import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import dotenv from "dotenv";
 import { and, eq, ne } from "drizzle-orm";
+import { Bot } from "grammy";
+import { Message } from "grammy/types";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { config, configProtected } from "../config";
@@ -368,48 +371,10 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       }
 
       const eventDraft = await CreateTonSocietyDraft(input_event_data, eventData.event_uuid);
+
       logger.log("eventDraft", JSON.stringify(eventDraft));
       logger.log("eventData", eventData);
 
-      /* ------------- Generate the message using the render function ------------- */
-      if (is_ts_verified && !is_paid) {
-        /* -------------------------- Just Send The Message ------------------------- */
-        const logMessage = renderAddEventMessage(opts.ctx.user.username || user_id, eventData);
-        await sendLogNotification({
-          message: logMessage,
-          topic: "event",
-        });
-        await sendToEventsTgChannel({
-          image: eventData.image_url,
-          title: eventData.title,
-          subtitle: eventData.subtitle,
-          s_date: eventData.start_date,
-          e_date: eventData.end_date,
-          timezone: eventData.timezone,
-          event_uuid: eventData.event_uuid,
-          participationType: eventData.participationType,
-        });
-      } else if (!is_paid) {
-        /* --------------------------- Moderation Message --------------------------- */
-
-        const moderation_group_id = configProtected?.moderation_group_id;
-        const logMessage = await renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
-        const moderationMessageResult = await sendLogNotification({
-          group_id: moderation_group_id,
-          image: eventData.image_url,
-          message: logMessage,
-          topic: "no_topic",
-          inline_keyboard: tgBotModerationMenu(eventData.event_uuid),
-        });
-        await trx
-          .update(events)
-          .set({ moderationMessageId: moderationMessageResult.message_id })
-          .where(eq(events.event_id, eventData.event_id))
-          .execute();
-        logger.log(
-          `moderationMessageResult: for ${eventData.event_id} ${eventData.event_uuid} with message_id ${moderationMessageResult.message_id}`
-        );
-      }
       // Clear the organizer user cache so it will be reloaded next time
       await redisTools.deleteCache(userCacheKey);
 
@@ -417,18 +382,119 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
       //  local development  || paid event registers organizer pays initial payment || org must be verified
       const register_to_ts = process.env.ENV !== "local" && !event_should_hidden;
 
-      if (register_to_ts) {
-        const res = await registerActivity(eventDraft);
+      // IN CASE OF ERROR ROLLBACK
+      // WE WILL USE THESE IDS TO DELETE THEM
+      let tsActivityId: number | undefined = undefined;
+      const sentTelegramMsgs: Message[] = [];
 
-        await trx
-          .update(events)
-          .set({
-            activity_id: res.data.activity_id,
-            updatedBy: user_id.toString(),
-            updatedAt: new Date(),
-          })
-          .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
-          .execute();
+      /**
+       * THIRD PARTY REQUESTS
+       * in case of failures we will rollback the requests by deleting the
+       * created activity and msgs
+       */
+      try {
+        if (register_to_ts) {
+          const res = await registerActivity(eventDraft);
+          tsActivityId = res.data.activity_id;
+
+          await trx
+            .update(events)
+            .set({
+              activity_id: res.data.activity_id,
+              updatedBy: user_id.toString(),
+              updatedAt: new Date(),
+            })
+            .where(eq(events.event_uuid, newEvent[0].event_uuid as string))
+            .execute();
+        }
+
+        /* ------------- Generate the message using the render function ------------- */
+        if (is_ts_verified && !is_paid) {
+          /* -------------------------- Just Send The Message ------------------------- */
+          const logMessage = renderAddEventMessage(opts.ctx.user.username || user_id, eventData);
+
+          const notificationMsg = await sendLogNotification({
+            message: logMessage,
+            topic: "event",
+          });
+          sentTelegramMsgs.push(notificationMsg);
+
+          const eventsMsg = await sendToEventsTgChannel({
+            image: eventData.image_url,
+            title: eventData.title,
+            subtitle: eventData.subtitle,
+            s_date: eventData.start_date,
+            e_date: eventData.end_date,
+            timezone: eventData.timezone,
+            event_uuid: eventData.event_uuid,
+            participationType: eventData.participationType,
+          });
+
+          eventsMsg && sentTelegramMsgs.push(eventsMsg);
+        } else if (!is_paid) {
+          /* --------------------------- Moderation Message --------------------------- */
+
+          const moderation_group_id = configProtected?.moderation_group_id;
+          const logMessage = await renderModerationEventMessage(opts.ctx.user.username || user_id, eventData);
+
+          // SEND MESSAGE TO TELEGRAM MODERATION GROUP
+          const moderationMessageResult = await sendLogNotification({
+            group_id: moderation_group_id,
+            image: eventData.image_url,
+            message: logMessage,
+            topic: "no_topic",
+            inline_keyboard: tgBotModerationMenu(eventData.event_uuid),
+          });
+
+          await trx
+            .update(events)
+            .set({ moderationMessageId: moderationMessageResult.message_id })
+            .where(eq(events.event_id, eventData.event_id))
+            .execute();
+
+          sentTelegramMsgs.push(moderationMessageResult);
+
+          logger.log(
+            `moderationMessageResult: for ${eventData.event_id} ${eventData.event_uuid} with message_id ${moderationMessageResult.message_id}`
+          );
+        }
+      } catch (error) {
+        // ❄ THIRD PARTY CLEANUP ❄
+        // rollback thirdparty requests
+
+        // remove activity
+        if (tsActivityId) {
+          try {
+            await tonSocietyClient.delete("/activities/" + tsActivityId);
+          } catch (error) {
+            // if failed do nothing
+            logger.error(`error_while_deleting_activity`, error);
+          }
+        }
+
+        try {
+          let { bot_token_logs: BOT_TOKEN_LOGS } = configProtected;
+          const tgEventsBot = await getEventsChannelBotInstance();
+          const tgLogsBot = BOT_TOKEN_LOGS && new Bot(BOT_TOKEN_LOGS);
+          // remove messages
+          for (const msg of sentTelegramMsgs) {
+            try {
+              if (msg.chat.id === Number(configProtected.events_channel)) {
+                await tgEventsBot.api.deleteMessage(msg.chat.id, msg.message_id);
+              } else {
+                if (tgLogsBot) {
+                  await tgLogsBot.api.deleteMessage(msg.chat.id, msg.message_id);
+                }
+              }
+            } catch (error) {
+              logger.error(`error_while_deleting_message`, error);
+            }
+          }
+        } catch (error) {
+          logger.error(`error_while_creating_bot_instances_for_delete`, error);
+        }
+
+        throw error;
       }
 
       return newEvent;

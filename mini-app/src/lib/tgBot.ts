@@ -1,13 +1,13 @@
+import { TG_SUPPORT_GROUP } from "@/constants";
+import { EventRow } from "@/db/schema/events";
+import { removeKey, removeSecretKey } from "@/lib/utils";
+import { getNoticeEmoji } from "@/moderationBot/helpers";
+import { configProtected } from "@/server/config";
+import moderationLogDB from "@/server/db/moderationLogger.db";
+import { logger } from "@/server/utils/logger";
 import axios, { AxiosError } from "axios";
 import { Bot, InputFile } from "grammy";
-import { configProtected } from "@/server/config";
-import { removeKey, removeSecretKey } from "@/lib/utils";
-import { EventRow } from "@/db/schema/events";
-import { logger } from "@/server/utils/logger";
 import { InlineKeyboardMarkup } from "grammy/types";
-import moderationLogDB from "@/server/db/moderationLogger.db";
-import { getNoticeEmoji } from "@/moderationBot/helpers";
-import { TG_SUPPORT_GROUP } from "@/constants";
 
 const tgClient = axios.create({
   baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
@@ -22,7 +22,7 @@ const MAX_WAIT_TIME = 30000; // 30 seconds max wait time
 const CHECK_INTERVAL = 100; // Check every 100ms
 
 // Helper function to get or create the bot instance
-async function getEventsChannelBotInstance() {
+export async function getEventsChannelBotInstance() {
   // If the bot is already created, return it
   if (botInstance) return botInstance;
 
