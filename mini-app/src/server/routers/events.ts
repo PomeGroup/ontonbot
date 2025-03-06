@@ -498,9 +498,6 @@ const updateEvent = eventManagerPP
               message: "Paid Events Must have capacity",
             });
 
-          if (opts.input.eventData?.paid_event?.ticket_type === undefined) {
-            throw new TRPCError({ code: "BAD_REQUEST", message: "Ticket Type Required for paid events" });
-          }
           /* -------------------------------------------------------------------------- */
           const paymentInfo = (
             await trx.select().from(eventPayment).where(eq(eventPayment.event_uuid, eventUuid)).execute()
@@ -508,7 +505,9 @@ const updateEvent = eventManagerPP
 
           if (!paymentInfo)
             throw new TRPCError({ code: "BAD_REQUEST", message: `error: paymentInfo not found for ${eventUuid}` });
-
+          if (paymentInfo.ticket_type === undefined) {
+            throw new TRPCError({ code: "BAD_REQUEST", message: "Ticket Type Required for paid events" });
+          }
           // Update Create Order If Event is not published yet
           if (!oldEvent.enabled && eventData.capacity < paymentInfo!.bought_capacity) {
             const where_condition = and(
@@ -518,7 +517,7 @@ const updateEvent = eventManagerPP
               ne(orders.state, "completed")
             );
             const createEventOrder = await trx.query.orders.findFirst({ where: where_condition });
-            const ticketType = opts.input.eventData?.paid_event?.ticket_type;
+            const ticketType = paymentInfo.ticket_type;
             if (createEventOrder) {
               await trx
                 .update(orders)
