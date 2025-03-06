@@ -77,7 +77,7 @@ export const RewardStep = () => {
       video_url: eventData?.video_url,
       secret_phrase: passwordDisabled ? undefined : formDataObject.secret_phrase,
     };
-    console.log("stepInputsObject", stepInputsObject);
+
     if (sbtOption === "custom" && (!eventData?.ts_reward_url || !eventData?.video_url) && !editOptions?.eventHash) {
       const errors = {
         ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
@@ -133,7 +133,7 @@ export const RewardStep = () => {
       secret_phrase: eventData?.secret_phrase || formDataParsed.data.secret_phrase,
       paid_event: {
         ...eventData.paid_event,
-        payment_amount: eventData.paid_event.payment_amount,
+        payment_amount: Number(eventData.paid_event.payment_amount),
       },
     };
 
