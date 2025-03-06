@@ -92,7 +92,6 @@ export default function ManageIndexPage() {
               title="Orders"
               subtitle="Event creation payments"
               footerTexts={[]}
-              className="!m-0"
             />
             <CheckUserInList
               userList={ALLOWED_USER_TO_TEST}
