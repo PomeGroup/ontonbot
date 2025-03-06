@@ -3,6 +3,7 @@ import { UploadVideoFile } from "@/components/ui/upload-video-file";
 import { cn } from "@/utils";
 import { useCreateEventStore } from "@/zustand/createEventStore";
 import { ListInput, ListItem, Segmented, SegmentedButton, Toggle } from "konsta/react";
+import { useState } from "react";
 import { SiTether, SiTon } from "react-icons/si";
 import ListLayout from "../../atoms/cards/ListLayout";
 
@@ -62,28 +63,42 @@ function NFTPayment() {
 }
 
 function PaymentAmount() {
-  const { payment, changePaymentAmount, paid_info_errors } = useCreateEventStore((state) => ({
+  const { payment, changePaymentAmount, paid_info_errors, setPaidInfoErrors } = useCreateEventStore((state) => ({
     payment: state.eventData?.paid_event,
     changePaymentAmount: state.changePaymentAmount,
     paid_info_errors: state.paid_info_errors,
+    setPaidInfoErrors: state.setPaidInfoErrors,
   }));
 
+  const [inputError, setInputError] = useState("");
+
   return (
-    <>
-      <ListInput
-        outline
-        required
-        title="Price"
-        inputMode="decimal" // Allows decimals on mobile devices
-        placeholder={`Payment amount in ${payment.payment_type}`}
-        value={payment.payment_amount?.toString() || ""} // Display as a string
-        onChange={(e) => {
-          const amount = e.target.value;
-          changePaymentAmount(amount);
-        }}
-        error={paid_info_errors.payment_amount?.[0]}
-      />
-    </>
+    <ListInput
+      outline
+      required
+      title="Price"
+      pattern="[+\-]?(?:0|[1-9]\d*)(?:\.\d{1,3})?"
+      inputMode="decimal" // Allows decimals on mobile devices
+      placeholder={`Payment amount in ${payment.payment_type}`}
+      value={payment.payment_amount?.toString() || ""} // Display as a string
+      onChange={(e) => {
+        const amount = e.target.value;
+        changePaymentAmount(amount);
+        amount && setPaidInfoErrors("payment_amount", []);
+        if (!e.target.validity.valid) {
+          if (e.target.validity.valueMissing) {
+            setInputError("Payment amount is required.");
+          } else if (e.target.validity.patternMismatch) {
+            setInputError("Invalid format: please enter a number with up to 3 decimal places (minimum = 0.001).");
+          } else {
+            setInputError("Invalid payment amount.");
+          }
+        } else {
+          setInputError("");
+        }
+      }}
+      error={inputError || paid_info_errors.payment_amount?.[0]}
+    />
   );
 }
 

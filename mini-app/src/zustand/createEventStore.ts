@@ -264,8 +264,10 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
         });
       },
       changePaymentAmount(amount: number) {
+        const handledValue = isNaN(amount) ? undefined : amount < 0 ? Math.abs(amount) : amount;
+
         set((state) => {
-          state.eventData.paid_event.payment_amount = isNaN(amount) ? undefined : amount < 0 ? Math.abs(amount) : amount;
+          state.eventData.paid_event.payment_amount = handledValue;
         });
       },
       changeTicketType(ticketType) {
