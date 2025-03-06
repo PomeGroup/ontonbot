@@ -324,7 +324,7 @@ function Capacity() {
         }}
         label="Capacity"
         required
-        info={`Number of users who can buy your Ticket, 0.06 TON for each ${ticketLabel} (minting fee)`}
+        info={`Number of users who can buy your Ticket${eventData?.paid_event?.ticket_type === "NFT" ? ` 0.06 TON for each ${ticketLabel} (minting fee)` : ""}.`}
       />
 
       {isEdit && (
