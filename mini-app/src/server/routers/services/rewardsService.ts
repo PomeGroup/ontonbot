@@ -4,17 +4,17 @@ import { createUserRewardLink } from "@/lib/ton-society-api";
 import { getAndValidateVisitor } from "@/server/routers/services/visitorService";
 
 import { db } from "@/db/db";
+import { eventRegistrants } from "@/db/schema";
+import eventPaymentDB from "@/server/db/eventPayment.db";
+import eventDB, { selectEventByUuid } from "@/server/db/events";
 import rewardsDb from "@/server/db/rewards.db";
 import visitorsDB, { addVisitor, findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/server/db/visitors";
 import { validateEventData, validateEventDates } from "@/server/routers/services/eventService";
 import { sendRewardNotification } from "@/server/routers/services/telegramService";
-import { TRPCError } from "@trpc/server";
-import { eventRegistrants } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
-import eventDB, { selectEventByUuid } from "@/server/db/events";
 import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
-import eventPaymentDB from "@/server/db/eventPayment.db";
+import { TRPCError } from "@trpc/server";
+import { and, eq } from "drizzle-orm";
 
 //TODO - Put this in db functions files
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
@@ -177,12 +177,13 @@ export const createUserReward = async (
     if (!eventData || !event_uuid) {
       throw new TRPCError({ code: "BAD_REQUEST", message: "event not found." });
     }
-    /* -------------------------------------------------------------------------- */
-    /*                              Fetch the visitor                             */
-    /* -------------------------------------------------------------------------- */
+
+    /*---------------------------
+               Fetch visitor
+      ---------------------------*/
     let visitor = null;
     if (force) {
-      //Force Add Visitor
+      // Force Add Visitor
       visitor = await addVisitor(props.user_id, event_uuid);
     } else {
       // Find the Visitor
@@ -196,14 +197,9 @@ export const createUserReward = async (
         message: "Visitor not found with the provided user ID and event UUID.",
       });
 
-    /* -------------------------------------------------------------------------- */
-
-    /* -------------------------------------------------------------------------- */
-    /*                            1. Validate the visitor                            */
-    /* -------------------------------------------------------------------------- */
-    /* -------------------------------------------------------------------------- */
-    /*                               2. Only For Online(Not Forced)                              */
-    /* -------------------------------------------------------------------------- */
+    // ---------------------------------
+    // Validate visitor and registration
+    // ---------------------------------
     const isValidVisitor = await selectValidVisitorById(visitor.id);
     if (!isValidVisitor.length && eventData?.participationType === "online" && !force) {
       throw new TRPCError({
@@ -256,9 +252,12 @@ export const createUserReward = async (
         code: "FORBIDDEN",
       });
     }
-
+    // ---------------------------------
+    // 🟢 All conditions are met 🟢
+    // Try to create the reward
+    // If it failed we will add it as *pending*
+    // ---------------------------------
     try {
-      // Create the user reward link
       const society_hub_value =
         typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
 
@@ -276,10 +275,8 @@ export const createUserReward = async (
 
       // Ensure the response contains data
       if (!res || !res.data || !res.data.data) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "Failed to create user reward link.",
-        });
+        await rewardDB.insertReward(visitor.id, props.user_id.toString(), "pending_creation", "ton_society_sbt");
+        return;
       }
 
       // Insert the reward into the database
@@ -293,19 +290,10 @@ export const createUserReward = async (
 
       return res.data.data;
     } catch (error) {
-      // logger.error("error ehile creating reward link", error);
-      if (error instanceof TRPCError) {
-        throw error;
-      }
-      // Ensure the response contains data
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "Failed to create user reward link.",
-        cause: error,
-      });
+      // Insert pending reward if the third party SBT creation failed
+      await rewardDB.insertReward(visitor.id, props.user_id.toString(), "pending_creation", "ton_society_sbt");
     }
   } catch (error) {
-    // logger.error("Error in createUserReward mutation:", error);
     if (error instanceof TRPCError) {
       throw error;
     } else {
