@@ -2,11 +2,18 @@ import { cookies } from "next/headers";
 import { env } from "~/env.mjs";
 import { EventDataOnlyType, EventType } from "~/types/event.types";
 
-export async function getEventDataOnly(id: string, page_affiliate: string | null): Promise<EventDataOnlyType | null> {
+export async function getEventDataOnly(
+  id: string,
+  userId?: number | null,
+  page_affiliate?: string | null
+): Promise<EventDataOnlyType | null> {
   console.log("getEventDataOnly", id, env.NEXT_PUBLIC_API_BASE_URL);
   let affiliateParam = "";
   const isAffiliate = Boolean(page_affiliate);
   affiliateParam = isAffiliate ? `&is-affiliate=1` : "";
+  if (isAffiliate) {
+    affiliateParam += `&user_id=${userId}`;
+  }
   const eventResponse = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/event/${id}?data_only=true${affiliateParam}`, {
     method: "GET",
     headers: {

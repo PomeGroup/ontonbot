@@ -8,12 +8,12 @@ export async function middleware(req: NextRequest) {
     const tgAppStartParam = req.nextUrl.searchParams.get("tgWebAppStartParam");
 
     const userToken = req.cookies.get("token");
-
+    console.log("tgAppStartParam", tgAppStartParam);
     const utm_source = req.nextUrl.searchParams.get("utm_source");
 
     if (tgAppStartParam) {
       const isEdit = tgAppStartParam.startsWith("edit_");
-      const isAffiliate = tgAppStartParam.startsWith("affiliate-");
+      const isAffiliate = tgAppStartParam.includes("-affiliate-");
       const isOrganizerProfile = tgAppStartParam.startsWith("channels_");
 
       if (isOrganizerProfile) {
@@ -26,11 +26,15 @@ export async function middleware(req: NextRequest) {
         console.log("redirecting to edit event", eventId);
         return NextResponse.redirect(new URL(`/events/${eventId}/manage`, req.nextUrl.origin));
       }
-    
+
       if (isAffiliate) {
-        const affiliateId = tgAppStartParam.replace("affiliate-", "");
-        const url = new URL(`/ptma/event/${affiliateId}`, req.nextUrl.origin);
+        const splitAffiliate = tgAppStartParam.split("-affiliate-");
+        const affiliateId = splitAffiliate[1] ?? "";
+        console.log("redirecting to affiliate", splitAffiliate);
+        const url = new URL(`/ptma/event/${splitAffiliate[0]}`, req.nextUrl.origin);
         url.searchParams.set("is_affiliate", "1");
+        url.searchParams.set("affiliate_id", affiliateId);
+        console.log("redirecting to affiliate", url.searchParams);
         return NextResponse.redirect(url);
       }
 

@@ -7,7 +7,20 @@ import { generateRandomHash } from "../helpers/generateRandomHash";
 
 // cache keys
 export const getUserCacheKey = (userId: number) => `${redisTools.cacheKeys.user}${userId}`;
-
+export const getEventById = async (id: number) => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT *
+       FROM events
+       WHERE event_id = $1`,
+      [id],
+    );
+    return result.rows[0];
+  } finally {
+    client.release();
+  }
+};
 // Create a single pool instance for your entire application
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -101,6 +114,8 @@ export const createAffiliateLinks = async (params: {
     link_hash: string;
     title: string;
     group_title: string;
+    item_type: string;
+    item_id?: number;
   }[] = [];
 
   let groupTitle: string | null = null;
@@ -164,6 +179,8 @@ export const createAffiliateLinks = async (params: {
           link_hash: newLink.link_hash,
           title: singleLinkTitle,
           group_title: groupTitle,
+          item_type: itemType,
+          item_id: eventId,
         });
       } else {
         // For subsequent links, we know groupTitle
@@ -182,6 +199,8 @@ export const createAffiliateLinks = async (params: {
           link_hash: newLink.link_hash,
           title: newLink.title,
           group_title: newLink.group_title,
+          item_type: itemType,
+          item_id: eventId,
         });
       }
     }

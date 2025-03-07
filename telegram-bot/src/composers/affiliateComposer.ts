@@ -2,7 +2,7 @@ import { Composer, InlineKeyboard, InputFile } from "grammy";
 import { MyContext } from "../types/MyContext";
 import {
   createAffiliateLinks,
-  getEvent,
+  getEvent, getEventById,
   isUserAdmin,
   isUserOrganizerOrAdmin,
   pool,
@@ -268,7 +268,7 @@ affiliateComposer.callbackQuery("aff_act_report", async (ctx) => {
   //    2 requests allowed, window of 15 minutes (900s).
   const userId = ctx.from?.id?.toString() || "";
   const routeName = "get_report"; // or any unique identifier
-  const { allowed, remaining } = await checkRateLimit(userId, routeName, 3, 900);
+  const { allowed } = await checkRateLimit(userId, routeName, 3, 900);
 
   if (!allowed) {
     await ctx.reply("You have reached the maximum of 3 reports per 15 minutes. Please try again later.");
@@ -296,7 +296,9 @@ affiliateComposer.callbackQuery("aff_act_report", async (ctx) => {
                  title,
                  group_title,
                  "total_clicks"   AS clicks,
-                 "total_purchase" AS purchases
+                 "total_purchase" AS purchases,
+                 "item_type"      AS itemType,
+                 "Item_id"        AS itemId
           FROM affiliate_links
           WHERE "Item_id" = $1
           ORDER BY id ASC
@@ -310,8 +312,16 @@ affiliateComposer.callbackQuery("aff_act_report", async (ctx) => {
 
       // Build CSV
       const header = "link_id,link_hash,title,group_title,clicks,purchases";
-      const csvRows = rows.map((r: any) =>
-        `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""},${r.clicks},${r.purchases}`,
+      const csvRows = await Promise.all(
+        rows.map(async (r: any) => {
+          console.log(r);
+          if (r.itemtype === "EVENT" && r.itemid) {
+            const eventData = await getEventById(r.itemid);
+            return `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}-affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""},${r.clicks},${r.purchases}`;
+          } else {
+            return `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""},${r.clicks},${r.purchases}`;
+          }
+        }),
       );
       const finalCsv = [header, ...csvRows].join("\n");
       const csvStream = Readable.from(finalCsv);
@@ -411,12 +421,22 @@ affiliateComposer.on("message:text", async (ctx, next) => {
         itemType,
         baseTitle,
         count,
+
       });
 
       // Build CSV
       const header = "link_hash,title,group_title,item_type,event_id";
-      const csvRows = links.map(
-        (row) => `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=affiliate-${row.link_hash},${row.title},${row.group_title},${itemType},${eventId}`,
+
+      const csvRows = await Promise.all(
+        links.map(async (r: any) => {
+          console.log(r);
+          if (r.item_type === "EVENT" && r.item_id) {
+            const eventData = await getEventById(r.item_id);
+            return `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}-affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""},${r.clicks},${r.purchases}`;
+          } else {
+            return `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""},${r.clicks},${r.purchases}`;
+          }
+        }),
       );
       const finalCsv = [header, ...csvRows].join("\n");
       const csvStream = Readable.from(finalCsv);

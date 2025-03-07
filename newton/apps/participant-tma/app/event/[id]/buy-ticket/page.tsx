@@ -20,14 +20,10 @@ type BuyTicketProps = {
 const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
   const { data: event, isError, isLoading } = useEventData(params.id);
 
-  const utm_tag = searchParams.utm_campaign || null;
+  const affiliate_id = searchParams.affiliate || null;
 
   if (isLoading) {
     return <QueryState />;
-  }
-
-  if (utm_tag) {
-    console.log("ptma_buy_ticket_page_utm", `utm_campaign = ${utm_tag}`);
   }
 
   if (isError || !event) {
@@ -105,7 +101,7 @@ const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
         sendTo={event.wallet_address}
         event_uuid={event.event_uuid}
         price={event.eventTicket.price}
-        utm_tag={utm_tag}
+        affiliate_id={affiliate_id}
         paymentType={event.eventTicket.payment_type}
       />
     </PageTma>

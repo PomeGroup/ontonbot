@@ -11,7 +11,6 @@ import EventAttributes from "~/components/event/EventAttributes";
 import EventContent from "~/components/event/EventContent";
 import EventHeader from "~/components/event/EventHeader";
 import EventTmaSettings from "~/components/event/EventTmaSettings";
-import GatewayAgenda from "~/components/event/GatewayAgenda";
 import ManageEventButton from "~/components/event/ManageEventButton";
 import WalletButton from "~/components/event/WalletButton";
 import WebsiteLink from "~/components/event/WebsiteLink";
@@ -33,7 +32,6 @@ function canUserManageEvent(
   user: { user_id: number; role: string } | null,
   eventData: { data?: { owner?: number | null; accessRoles?: Array<{ user_id: number; role: string }> } }
 ): boolean {
-  console.log("eventData", eventData);
   if (!user || !eventData?.data?.owner || !eventData.data.accessRoles) {
     return false;
   }
@@ -51,8 +49,7 @@ const Event = async ({ params, searchParams }: EventParams) => {
   noStore();
   const [userId, error] = getAuthenticatedUser();
 
-  const page_utm = searchParams.utm_campaign || null;
-  const page_affiliate = searchParams.is_affiliate || null;
+  const affiliate_id = searchParams.affiliate_id || null;
 
   if (error) {
     return (
@@ -74,7 +71,7 @@ const Event = async ({ params, searchParams }: EventParams) => {
     );
   }
 
-  const eventData = await getEventDataOnly(params.id, page_affiliate);
+  const eventData = await getEventDataOnly(params.id, userId, affiliate_id);
   if (!eventData) {
     return (
       <QueryState
@@ -82,10 +79,6 @@ const Event = async ({ params, searchParams }: EventParams) => {
         text={`Event #${params.id} Not Found`}
       />
     );
-  }
-
-  if (page_utm) {
-    console.log("ptma_event_page_utm", `utm_campaign=${page_utm} , user_id=${userId}`);
   }
 
   const eventManagerRole = canUserManageEvent(
@@ -169,16 +162,7 @@ const Event = async ({ params, searchParams }: EventParams) => {
       >
         <WalletButton />
       </Section>
-      {/* Just Agenda Section Only For gateway event */}
-      {eventData?.event_uuid === "6acf01ed-3122-498a-a937-329766b459aa" && (
-        <Section
-          variant={"rounded"}
-          className={"py-6"}
-        >
-          <GatewayAgenda />
-        </Section>
-      )}
-      {/* Agenda Section END */}
+
       <Section
         variant="rounded"
         className={"py-6"}
@@ -209,7 +193,7 @@ const Event = async ({ params, searchParams }: EventParams) => {
       <EventTmaSettings
         requiresTicketToChekin={eventData.ticketToCheckIn}
         eventId={params.id}
-        utm={page_utm}
+        pageAffiliate={affiliate_id}
       />
     </PageTma>
   );

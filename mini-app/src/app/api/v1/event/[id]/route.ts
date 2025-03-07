@@ -16,6 +16,7 @@ import ordersDB from "@/server/db/orders.db";
 import { userRolesDB } from "@/server/db/userRoles.db";
 import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
 import { logger } from "@/server/utils/logger";
+import { affiliateClicksDB, enqueueClick } from "@/server/db/affiliateClicks.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -63,7 +64,7 @@ async function getValidNfts(
 
         // Check if there's exactly one ticket for this NFT
         // if (ticketsResult.length !== 1) {
-        //   console.error(`Unexpected number of tickets found for NFT ${nft.address}`);
+        //   logger.error(`Unexpected number of tickets found for NFT ${nft.address}`);
         //   continue;
         // }
 
@@ -84,7 +85,7 @@ async function getValidNfts(
         const nft_db = (await db.select().from(nftItems).where(eq(nftItems.nft_address, nft.address)).execute()).pop();
 
         if (!nft_db) {
-          console.error("Critical_API_V1_event NFT not found in our db ", nft.address);
+          logger.error("Critical_API_V1_event NFT not found in our db ", nft.address);
         }
 
         if (
@@ -98,7 +99,7 @@ async function getValidNfts(
           valid_nfts_no_info.push(nft);
         }
       } catch (error) {
-        console.error(`Error fetching NFT data or querying database: ${error}`);
+        logger.error(`Error fetching NFT data or querying database: ${error}`);
       }
     }
   }
@@ -108,26 +109,35 @@ async function getValidNfts(
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const event_uuid = params.id;
+    const finderParam = params.id;
+
     const searchParams = req.nextUrl.searchParams;
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
     const isAffiliate = searchParams.get("is-affiliate") === "1";
-    logger.log("searchParams", searchParams);
+    let unsafeEventUuid;
+    let affiliateId;
+    if (isAffiliate && finderParam.includes("-affiliate-")) {
+      const splitAffiliate = finderParam.split("-affiliate-");
+      affiliateId = splitAffiliate[1] ?? "";
+      unsafeEventUuid = splitAffiliate[0];
+    } else unsafeEventUuid = finderParam;
     let unsafeEvent;
+    let unsafeUserId = searchParams.get("user_id") ? Number(searchParams.get("user_id")) : undefined;
+
     // Check if the event is accessed via an affiliate link
-    logger.log("isAffiliate", isAffiliate);
-    logger.log("event_uuid", event_uuid);
-    if (isAffiliate) {
-      const eventIdByAffiliate = await affiliateLinksDB.getAffiliateLinkByHash(event_uuid);
-      logger.log("eventIdByAffiliate", eventIdByAffiliate);
+    if (isAffiliate && affiliateId) {
+      const eventIdByAffiliate = await affiliateLinksDB.getAffiliateLinkByHash(affiliateId, true, unsafeUserId);
+
       if (eventIdByAffiliate) {
         unsafeEvent = await eventDB.fetchEventById(eventIdByAffiliate.itemId);
-        logger.log("unsafeEvent", unsafeEvent);
+      } else {
+        logger.error(`affiliate_not_exist: Event not found for affiliate link: ${finderParam}`);
+        return Response.json({ error: "Event not found" }, { status: 400 });
       }
     }
     // If the event is not accessed via an affiliate link, fetch the event by its UUID
     if (!unsafeEvent) {
-      unsafeEvent = await eventDB.fetchEventByUuid(event_uuid);
+      unsafeEvent = await eventDB.fetchEventByUuid(unsafeEventUuid);
     }
     // If the event is not found, return an error
     if (!unsafeEvent?.event_uuid) {
@@ -144,7 +154,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const organizer = await usersDB.selectUserById(eventData.owner as number);
 
     if (!organizer) {
-      console.error(`Organizer not found for event ID: ${eventData.event_uuid}`);
+      logger.error(`Organizer not found for event ID: ${eventData.event_uuid}`);
       return Response.json({ error: `Organizer not found for event ID: ${eventData.event_uuid}` }, { status: 400 });
     }
 
@@ -190,13 +200,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           status: 200,
         }
       );
-    }
-
-    const [userId, unauthorized] = getAuthenticatedUser();
-
-    if (unauthorized) {
-      console.warn(`Unauthorized access attempt for event ID: ${eventData.event_uuid}`);
-      return unauthorized;
     }
 
     const proof_token = searchParams.get("proof_token");
@@ -253,7 +256,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         }
       );
     }
-
+    const [userId, unauthorized] = getAuthenticatedUser();
+    logger.log(`User ${userId} is trying to access event ${eventData.event_uuid} `);
+    if (unauthorized) {
+      logger.warn(`Unauthorized access attempt for finderParam: `, finderParam);
+      return unauthorized;
+    }
+    await affiliateClicksDB.enqueueClick(finderParam, userId);
     const ownerAddress = decoded.address;
     let chosenNFTaddress = "";
     let needToUpdateTicket = false;
@@ -288,7 +297,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
       if (userHasTicket && needToUpdateTicket) {
         chosenNFTaddress = valid_nfts_no_info[0].address;
-        console.log(`User ${userId} can claim ${chosenNFTaddress} `);
+        logger.log(`User ${userId} can claim ${chosenNFTaddress} `);
       } else if (userHasTicket) {
         chosenNFTaddress = valid_nfts_with_info[0].address;
       }
@@ -331,7 +340,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       status: 200,
     });
   } catch (error) {
-    console.error(`Error processing request for event ID: ${params.id}`, error);
+    logger.error(`Error processing request for event ID: ${params.id}`, error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -9,6 +9,7 @@ import { CsbtTicket } from "@/server/routers/services/rewardsService";
 import { selectUserById } from "@/server/db/users";
 import { sendLogNotification } from "@/lib/tgBot";
 import { callTonfestForOnOntonPayment } from "@/cronJobs/helper/callTonfestForOnOntonPayment";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -84,7 +85,13 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
       }
 
       await db.transaction(async (trx) => {
-        await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
+        const updateResult = (
+          await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).returning().execute()
+        ).pop();
+        // Increment Affiliate Purchase
+        if (updateResult && updateResult.utm_source)
+          await affiliateLinksDB.incrementAffiliatePurchase(updateResult.utm_source);
+
         logger.log(`tscsbt_order_completed_${ordr.uuid}`);
       });
 
@@ -98,6 +105,7 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
           .where(
             and(eq(orders.event_uuid, event_uuid!), eq(orders.order_type, "ts_csbt_ticket"), eq(orders.state, "completed"))
           );
+
         await sendLogNotification({
           message: `CSBT Ticket ${order_count}
 <b>${paymentInfo.title}</b>
