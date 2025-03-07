@@ -44,6 +44,7 @@ export async function getAffiliateLinkByHash(
     }
     const cacheKey = getAffiliateLinkCacheKey(linkHash);
     const cached = await redisTools.getCache(cacheKey);
+    logger.log(`Enqueuing clickjj for linkHash=${linkHash}, userId=${userId}`);
     if (cached) {
       if (increaseClick && userId) {
         await affiliateClicksDB.enqueueClick(linkHash, userId);
@@ -57,7 +58,7 @@ export async function getAffiliateLinkByHash(
       await redisTools.setCache(cacheKey, row, redisTools.cacheLvl.medium);
     }
     if (increaseClick && userId) {
-      await incrementAffiliateClicks(linkHash, userId);
+      await affiliateClicksDB.enqueueClick(linkHash, userId);
     }
     return row;
   } catch (error) {

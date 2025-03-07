@@ -114,20 +114,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const searchParams = req.nextUrl.searchParams;
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
     const isAffiliate = searchParams.get("is-affiliate") === "1";
-    let unsafeEventUuid;
-    let affiliateId;
-    if (isAffiliate && finderParam.includes("-affiliate-")) {
-      const splitAffiliate = finderParam.split("-affiliate-");
-      affiliateId = splitAffiliate[1] ?? "";
-      unsafeEventUuid = splitAffiliate[0];
-    } else unsafeEventUuid = finderParam;
+    const affiliateHash = searchParams.get("affiliateHash") ?? "";
+
     let unsafeEvent;
     let unsafeUserId = searchParams.get("user_id") ? Number(searchParams.get("user_id")) : undefined;
 
     // Check if the event is accessed via an affiliate link
-    if (isAffiliate && affiliateId) {
-      const eventIdByAffiliate = await affiliateLinksDB.getAffiliateLinkByHash(affiliateId, true, unsafeUserId);
-
+    if (isAffiliate && affiliateHash && dataOnly && !affiliateHash.includes("-")) {
+      const eventIdByAffiliate = await affiliateLinksDB.getAffiliateLinkByHash(affiliateHash, true, unsafeUserId);
+      logger.log(`eventIdByAffiliate: ${JSON.stringify(eventIdByAffiliate)}`);
       if (eventIdByAffiliate) {
         unsafeEvent = await eventDB.fetchEventById(eventIdByAffiliate.itemId);
       } else {
@@ -136,8 +131,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       }
     }
     // If the event is not accessed via an affiliate link, fetch the event by its UUID
-    if (!unsafeEvent) {
-      unsafeEvent = await eventDB.fetchEventByUuid(unsafeEventUuid);
+    if (!isAffiliate && !affiliateHash) {
+      unsafeEvent = await eventDB.fetchEventByUuid(finderParam);
     }
     // If the event is not found, return an error
     if (!unsafeEvent?.event_uuid) {

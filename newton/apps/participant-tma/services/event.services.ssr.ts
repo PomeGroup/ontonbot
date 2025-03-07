@@ -10,7 +10,7 @@ export async function getEventDataOnly(
   console.log("getEventDataOnly", id, env.NEXT_PUBLIC_API_BASE_URL);
   let affiliateParam = "";
   const isAffiliate = Boolean(page_affiliate);
-  affiliateParam = isAffiliate ? `&is-affiliate=1` : "";
+  affiliateParam = isAffiliate ? `&is-affiliate=1&affiliateHash=${page_affiliate}` : "";
   if (isAffiliate) {
     affiliateParam += `&user_id=${userId}`;
   }
