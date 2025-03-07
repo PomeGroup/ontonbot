@@ -215,7 +215,8 @@ export const createUserReward = async (
       };
     }
 
-    if (reward?.status !== "failed") {
+    // if reward existed and was not failed do not create the reward
+    if (reward?.status && reward.status !== "failed") {
       return;
     }
 
