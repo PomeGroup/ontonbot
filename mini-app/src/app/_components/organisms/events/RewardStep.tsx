@@ -110,7 +110,7 @@ export const RewardStep = () => {
             key="secret_phrase"
             className="flex items-center"
           >
-            <FiAlertCircle className="mr-2" /> {errors.secret_phrase[0]}
+            {errors.secret_phrase[0]}
           </div>
         ) : null,
         errors.ts_reward_url ? (
@@ -118,7 +118,7 @@ export const RewardStep = () => {
             key="ts_reward_url"
             className="flex items-center"
           >
-            <FiAlertCircle className="mr-2" /> {errors.ts_reward_url[0] || "Please upload a reward image"}
+            {errors.ts_reward_url[0] || "Please upload a reward image"}
           </div>
         ) : null,
       ].filter(Boolean);
@@ -131,11 +131,14 @@ export const RewardStep = () => {
       ...eventData,
       ...formDataParsed.data,
       secret_phrase: eventData?.secret_phrase || formDataParsed.data.secret_phrase,
-      paid_event: {
+    };
+
+    if (eventData.paid_event.has_payment) {
+      dataToSubmit.paid_event = {
         ...eventData.paid_event,
         payment_amount: Number(eventData.paid_event.payment_amount),
-      },
-    };
+      };
+    }
 
     if (editOptions?.eventHash) {
       const updateParsedData = UpdateEventDataSchema.safeParse(dataToSubmit);
@@ -148,9 +151,13 @@ export const RewardStep = () => {
       } else {
         const errors = updateParsedData.error.flatten().fieldErrors;
         console.error("Update event validation errors:", errors);
-        const errorMessages = Object.values(errors)
-          .flat()
-          .map((v, i) => <div key={i}>* {v}</div>);
+        const errorMessages = Object.entries(errors).flatMap(([field, messages]) =>
+          messages.map((msg, idx) => (
+            <div key={`${field}-${idx}`}>
+              {field}: {msg}
+            </div>
+          ))
+        );
         toast.error(errorMessages);
       }
       return;
@@ -165,9 +172,13 @@ export const RewardStep = () => {
     } else {
       const errors = parsedEventData.error.flatten().fieldErrors;
       console.error("Create event validation errors:", errors);
-      const errorMessages = Object.values(errors)
-        .flat()
-        .map((v, i) => <div key={i}>* {v}</div>);
+      const errorMessages = Object.entries(errors).flatMap(([field, messages]) =>
+        messages.map((msg, i) => (
+          <div key={`${field}-${i}`}>
+            {field}: {msg}
+          </div>
+        ))
+      );
       toast.error(errorMessages);
     }
   };
