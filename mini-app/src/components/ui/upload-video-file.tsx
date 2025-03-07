@@ -2,19 +2,20 @@
 
 import useWebApp from "@/hooks/useWebApp";
 import { cn } from "@/lib/utils";
+import { Block, BlockTitle, Sheet } from "konsta/react";
 import { CircleArrowUp } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { Button, KButton } from "./button";
-import { Block, BlockTitle, Sheet } from "konsta/react";
 import { createPortal } from "react-dom";
+import { Button, KButton } from "./button";
 
 type UploadFileProps = {
   triggerText: React.ReactNode;
   infoText: React.ReactNode;
   changeText: React.ReactNode;
-  onVideoChange?: (_video_url: string) => void;
+  onVideoChange?: (video_url: string) => void;
   isError?: boolean;
-  onDone?: (_video_url: string) => void;
+  onDone?: (video_url: string) => void;
+  disabled?: boolean;
   defaultVideo?: string;
   drawerDescriptionText?: string;
 };
@@ -138,9 +139,10 @@ export const UploadVideoFile = (props: UploadFileProps) => {
       <Button
         className={cn(
           "w-full h-auto flex flex-col gap-3.5 border border-dashed rounded-xl p-3",
-          props.isError ? "border-red-300 bg-red-400/10" : "border-cn-primary"
+          props.isError ? "border-red-300 bg-red-400/10" : "border-cn-primary",
+          props.disabled && "cursor-not-allowed opacity-50"
         )}
-        onClick={() => setIsSheetOpen(true)}
+        onClick={() => !props.disabled && setIsSheetOpen(true)}
         type="button"
         variant={props.isError ? "destructive" : "outline"}
       >
@@ -156,7 +158,10 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               playsInline
               className="rounded-xl"
             >
-              <source src={videoPreview} type="video/mp4" />
+              <source
+                src={videoPreview}
+                type="video/mp4"
+              />
             </video>
             <p className="font-semibold flex items-center gap-2 text-lg">
               <CircleArrowUp className="w-5" />
@@ -169,11 +174,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               <CircleArrowUp className="w-5" />
               {props.triggerText}
             </p>
-            {props.infoText && (
-              <p className="text-cn-muted-foreground text-sm w-full text-balance">
-                {props.infoText}
-              </p>
-            )}
+            {props.infoText && <p className="text-cn-muted-foreground text-sm w-full text-balance">{props.infoText}</p>}
           </>
         )}
       </Button>
@@ -186,12 +187,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
         >
           <BlockTitle>Upload Video</BlockTitle>
           <Block className="space-y-2">
-            {!videoPreview && (
-              <p>
-                {props.drawerDescriptionText ||
-                  "Upload an MP4 video from your device (max 5 MB)"}
-              </p>
-            )}
+            {!videoPreview && <p>{props.drawerDescriptionText || "Upload an MP4 video from your device (max 5 MB)"}</p>}
 
             {videoPreview && (
               <video
@@ -201,16 +197,15 @@ export const UploadVideoFile = (props: UploadFileProps) => {
                 height="100"
                 className="w-full h-auto"
               >
-                <source src={videoPreview} type="video/mp4" />
+                <source
+                  src={videoPreview}
+                  type="video/mp4"
+                />
               </video>
             )}
 
             {/* Error messages */}
-            {error && (
-              <div className="text-red-500 text-sm w-full text-balance mt-2">
-                {error}
-              </div>
-            )}
+            {error && <div className="text-red-500 text-sm w-full text-balance mt-2">{error}</div>}
 
             <input
               ref={videoInputRef}
@@ -226,7 +221,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               itemType="button"
               clear
               className="w-full h-12.5 flex items-center gap-2"
-              disabled={isUploading}
+              disabled={isUploading || props.disabled}
               onClick={(e) => {
                 e.preventDefault();
                 videoInputRef.current?.click();

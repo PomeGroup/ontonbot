@@ -6,6 +6,7 @@ interface SendRewardLinkBody {
   chat_id: number;
   link: string;
   custom_message: string;
+  linkText?: string;
 }
 
 /**
@@ -22,7 +23,7 @@ export const sendMessage = async (
 ): Promise<Response> => {
   try {
     // Destructure the request body
-    const { chat_id, link, custom_message }: SendRewardLinkBody = req.body;
+    const { chat_id, link, custom_message, linkText }: SendRewardLinkBody = req.body;
 
     // Input validation
     if (!chat_id || typeof Number(chat_id) !== "number") {
@@ -44,7 +45,7 @@ export const sendMessage = async (
         inline_keyboard: [
           [
             {
-              text: "Claim Reward",
+              text: linkText || "Claim Reward",
               url: link,
             },
           ],

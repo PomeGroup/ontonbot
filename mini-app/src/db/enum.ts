@@ -1,7 +1,7 @@
 import { pgEnum } from "drizzle-orm/pg-core";
 
 export const eventParticipationType = pgEnum("event_participation_type", ["in_person", "online"]);
-export const rewardType = pgEnum("reward_types", ["ton_society_sbt"]);
+export const rewardType = pgEnum("reward_types", ["ton_society_sbt", "ton_society_csbt_ticket"]);
 export const rewardStatus = pgEnum("reward_status", [
   "pending_creation",
   "created",

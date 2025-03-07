@@ -1,12 +1,11 @@
 "use client";
-import { useEffect, useRef } from "react";
-import { useCreateEventStore } from "@/zustand/createEventStore";
-import { toast } from "sonner";
-import * as React from "react";
 import TimePlaceForm from "@/app/_components/Event/steps/TimePlaceForm";
-import { timeplaceStepValidation } from "@/zodSchema/event/validation";
 import { useMainButton } from "@/hooks/useMainButton";
+import { timeplaceStepValidation } from "@/zodSchema/event/validation";
+import { useCreateEventStore } from "@/zustand/createEventStore";
 import { useSectionStore } from "@/zustand/useSectionStore";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 
 export const TimePlaceStep = () => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -37,9 +36,6 @@ export const TimePlaceStep = () => {
     formDataObject.eventLocationType = eventData?.eventLocationType || "online";
     formDataObject.cityId = eventData?.cityId ? Number(eventData.cityId) : undefined;
     formDataObject.countryId = eventData?.countryId ? Number(eventData.countryId) : undefined;
-    if (formDataObject?.location) {
-      formDataObject.location = formDataObject.location ? formDataObject?.location?.toLowerCase() : undefined;
-    }
 
     const secondStepDataSchema = timeplaceStepValidation(editOptions, startDateLimit, eventData, formDataObject);
 

@@ -115,6 +115,14 @@ const findOrderByEventUser = async (eventUuid: string, telegramUserId: number) =
   });
 };
 
+/** Returns all "event_creation" orders in a "processing" state. */
+const getProcessingEventCreationOrders = async () =>
+  db
+    .select()
+    .from(orders)
+    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "event_creation")))
+    .execute();
+
 const ordersDB = {
   getEventOrders,
   updateOrderState,
@@ -124,6 +132,7 @@ const ordersDB = {
   checkIfSoldOut,
   findExistingCompletedOrder,
   findOrderByEventUser,
+  getProcessingEventCreationOrders,
 };
 
 export default ordersDB;

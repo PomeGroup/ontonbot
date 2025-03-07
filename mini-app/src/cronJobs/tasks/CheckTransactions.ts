@@ -36,6 +36,7 @@ export const CheckTransactions = async () => {
   const start_utime = start_lt ? null : hour_ago;
 
   const transactions = await tonCenter.fetchAllTransactions(wallet_address, start_utime, start_lt);
+
   const parsed_orders = await tonCenter.parseTransactions(transactions);
 
   for (const o of parsed_orders) {

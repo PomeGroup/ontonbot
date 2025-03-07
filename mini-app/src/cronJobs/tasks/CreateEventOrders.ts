@@ -1,187 +1,173 @@
 import { db } from "@/db/db";
 import { orders } from "@/db/schema/orders";
-import { and, eq } from "drizzle-orm";
+import { eventPayment } from "@/db/schema/eventPayment";
+import { events } from "@/db/schema/events";
+import { eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import eventDB from "@/server/db/events";
-import { CreateTonSocietyDraft } from "@/server/routers/services/tonSocietyService";
-import { eventPayment } from "@/db/schema/eventPayment";
 import { registerActivity } from "@/lib/ton-society-api";
-import { uploadJsonToMinio } from "@/lib/minioTools";
-import { deployCollection } from "@/lib/nft";
-import { is_mainnet } from "@/server/routers/services/tonCenter";
-import { sendLogNotification, sendToEventsTgChannel } from "@/lib/tgBot";
-import { events } from "@/db/schema/events";
+import type { OrderRow } from "@/db/schema/orders";
+import type { EventRow } from "@/db/schema/events";
+import type { EventPaymentSelectType } from "@/db/schema/eventPayment";
+import { buildEventDraft } from "@/cronJobs/helper/buildEventDraft";
+import ordersDB from "@/server/db/orders.db";
+import eventPaymentDB from "@/server/db/eventPayment.db";
+import { handleTicketType } from "@/cronJobs/helper/handleTicketType";
 
+/**
+ * Main entry for your cron job:
+ * 1) Fetch orders where state = 'processing' and order_type = 'event_creation'
+ * 2) Process each order
+ */
 export const CreateEventOrders = async () => {
-  // Get Pending(paid) Orders to create event
-  // Register ton society activity
-  // create collection
-  // Update (DB) Event (tonSociety data)
-  // Update (DB) EventPayment (Collection Address)
-  // Update (DB) Orders (mark order as completed)
-  //todo : Minter Wallet Check
-  // logger.log("!!! CreateEventOrders !!! ");
+  try {
+    // 1) Retrieve all event-creation orders that are still in "processing"
+    const processingOrders = await ordersDB.getProcessingEventCreationOrders();
 
-  const results = await db
-    .select()
-    .from(orders)
-    .where(and(eq(orders.state, "processing"), eq(orders.order_type, "event_creation")))
-    .execute();
-
-  /* -------------------------------------------------------------------------- */
-  /*                               Event Creation                               */
-  /* -------------------------------------------------------------------------- */
-  for (const order of results) {
-    try {
-      const event_uuid = order.event_uuid;
-      if (!event_uuid) {
-        //NOTE - tg log
-        logger.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
-        continue;
-      }
-      // const event = await db.select().from(events).where(eq(events.event_uuid, event_uuid)).execute();
-      const event = await eventDB.selectEventByUuid(event_uuid);
-      if (!event) {
-        //NOTE - tg log
-        logger.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
-        continue;
-      }
-      const eventData = event;
-      const eventDraft = await CreateTonSocietyDraft(
-        {
-          title: eventData.title,
-          subtitle: eventData.subtitle,
-          description: eventData.description,
-          location: eventData.location!,
-          countryId: eventData.countryId,
-          society_hub: { id: eventData.society_hub_id! },
-          start_date: eventData.start_date,
-          end_date: eventData.end_date,
-          ts_reward_url: eventData.tsRewardImage,
-          video_url: eventData.tsRewardVideo,
-          eventLocationType: eventData.participationType,
-        },
-        event_uuid
-      );
-      const paymentInfo = (
-        await db.select().from(eventPayment).where(eq(eventPayment.event_uuid, event_uuid)).execute()
-      ).pop();
-
-      if (!paymentInfo) {
-        //NOTE - tg log
-        logger.error("what the fuck : ", "event Does not have payment !!!");
-      }
-
-      /* -------------------------------------------------------------------------- */
-      /*                          Create Ton Society Event                          */
-      /* -------------------------------------------------------------------------- */
-      let ton_society_result = undefined;
-      if (!eventData.activity_id) ton_society_result = await registerActivity(eventDraft);
-
-      /* -------------------------------------------------------------------------- */
-      /*                              Create Collection                             */
-      /* -------------------------------------------------------------------------- */
-      let collectionAddress = paymentInfo?.collectionAddress || null;
-      let collection_address_in_db = true;
-      if (paymentInfo && !paymentInfo?.collectionAddress) {
-        /* -------------------------------------------------------------------------- */
-        /*                               NFT COLLECTION                               */
-        /* -------------------------------------------------------------------------- */
-        if (paymentInfo.ticket_type === "NFT") {
-          /* -------------------------------------------------------------------------- */
-          /* ----------------------------- MetaData Upload ---------------------------- */
-          let metaDataUrl = "";
-          metaDataUrl = await uploadJsonToMinio(
-            {
-              name: paymentInfo?.title,
-              description: paymentInfo?.description,
-              image: paymentInfo?.ticketImage,
-              cover_image: paymentInfo?.ticketImage,
-            },
-            "ontoncollection"
-          );
-          if (!metaDataUrl) continue; //failed
-
-          logger.log("MetaDataUrl_CreateEvent_CronJob : " + metaDataUrl);
-
-          /* ---------------------------- Collection Deploy --------------------------- */
-          logger.log(`paid_event_deploy_collection_${eventData.event_uuid}`);
-          collection_address_in_db = false;
-          collectionAddress = await deployCollection(metaDataUrl);
-          logger.log(`paid_event_deployed_collection_${eventData.event_uuid}_${collectionAddress}`);
-          try {
-            const prefix = is_mainnet ? "" : "testnet.";
-            await sendLogNotification({
-              message: `Deployed collection for <b>${eventData.title}</b>\n\n🎈<a href='https://${prefix}getgems.io/collection/${collectionAddress}'>Collection</a>\n\n👤Capacity: ${eventData.capacity}`,
-              topic: "event",
-            });
-            await sendToEventsTgChannel({
-              image: eventData.image_url,
-              title: eventData.title,
-              subtitle: eventData.subtitle,
-              s_date: eventData.start_date,
-              e_date: eventData.end_date,
-              timezone: eventData.timezone,
-              event_uuid: eventData.event_uuid,
-              participationType: eventData.participationType,
-              ticketPrice: {
-                amount: paymentInfo.price,
-                paymentType: paymentInfo.payment_type.toLocaleLowerCase(),
-              },
-            });
-          } catch (error) {
-            logger.log(`paid_event_deployed_collection_send_error_${event_uuid}_${error}`);
-          }
-        } else if (paymentInfo.ticket_type === "TSCSBT") {
-          //No Collection Deploy
-          collectionAddress = "tsCsbt-collection-address";
-        }
-      }
-
-      /* -------------------------------------------------------------------------- */
-      /*                                  Update DB                                 */
-      /* -------------------------------------------------------------------------- */
-      await db.transaction(async (trx) => {
-        /* --------------------------- Update Activity Id --------------------------- */
-        if (eventData.activity_id || ton_society_result) {
-          const activity_id = eventData.activity_id || ton_society_result!.data.activity_id;
-          await trx
-            .update(events)
-            .set({
-              activity_id: activity_id,
-              hidden: false,
-              enabled: true,
-              updatedBy: "CreateEventOrders-JOB",
-              updatedAt: new Date(),
-            })
-            .where(eq(events.event_uuid, event_uuid))
-            .execute();
-          await eventDB.deleteEventCache(event_uuid);
-          logger.log(`paid_event_add_activity_${eventData.event_uuid}_${activity_id}`);
-        }
-        /* ------------------------ Update Collection Address ----------------------- */
-        if (paymentInfo && collectionAddress) {
-          await trx
-            .update(eventPayment)
-            .set({ collectionAddress: collectionAddress, updatedBy: "CreateEventOrders", updatedAt: new Date() })
-            .where(eq(eventPayment.id, paymentInfo.id))
-            .execute();
-          collection_address_in_db = true;
-          logger.log(`paid_event_add_collection_${eventData.event_uuid}_${collectionAddress}`);
-        }
-
-        /* ------------------------- Mark Order as Completed ------------------------ */
-        if (paymentInfo && collection_address_in_db && (ton_society_result || eventData.activity_id)) {
-          await trx
-            .update(orders)
-            .set({ state: "completed", updatedBy: "CreateEventOrders", updatedAt: new Date() })
-            .where(eq(orders.uuid, order.uuid))
-            .execute();
-          logger.log(`paid_event_creation_completed_${eventData.event_uuid}`);
-        }
-      });
-    } catch (error) {
-      logger.log(`event_creation_error ${error}`);
+    // 2) Process each order
+    for (const order of processingOrders) {
+      await processOrderCreation(order);
     }
+  } catch (error) {
+    logger.error(`CreateEventOrders cron job encountered an error: ${error}`);
   }
 };
+
+/**
+ * Processes a single "event_creation" order:
+ * - Fetches the associated event & payment data
+ * - Registers main TonSociety event if missing
+ * - Handles NFT or TSCSBT logic
+ * - Updates DB in a transaction
+ */
+async function processOrderCreation(order: OrderRow) {
+  try {
+    const event_uuid = order.event_uuid;
+    if (!event_uuid) {
+      logger.error("CronJob--CreateOrUpdateEvent_Orders---eventUUID is null order=", order.uuid);
+      return;
+    }
+
+    // Fetch the main event
+    const event = await eventDB.fetchEventByUuid(event_uuid);
+    if (!event) {
+      logger.error("CronJob--CreateOrUpdateEvent_Orders---event is null event=", event_uuid);
+      return;
+    }
+
+    // Prepare the main TonSociety draft for the event
+    const eventDraft = await buildEventDraft(event);
+
+    // Fetch associated payment info
+    const paymentInfo = await eventPaymentDB.fetchPaymentInfoForCronjob(event_uuid);
+
+    // Create the main Ton Society Event if missing
+    let mainEventActivityId = event.activity_id;
+    if (!mainEventActivityId) {
+      //&& process.env.ENV !== "local"
+      logger.log(`registerActivity for event ${event_uuid}:`, eventDraft);
+      const tonSocietyResult = await registerActivity(eventDraft);
+      logger.log(`registerActivity for event ${event_uuid}:`, tonSocietyResult);
+      mainEventActivityId = tonSocietyResult.data.activity_id;
+      if (mainEventActivityId) {
+        await eventDB.updateActivityId(event_uuid, mainEventActivityId);
+      }
+    }
+
+    // Handle ticket-type specific logic (NFT or TSCSBT)
+    const { collectionAddress, ticketActivityId } = await handleTicketType(event, paymentInfo);
+
+    // Update DB in a transaction
+    await updateDatabaseRecords(order, event, paymentInfo, mainEventActivityId, collectionAddress, ticketActivityId);
+  } catch (error) {
+    console.error(`event_creation_error ${error}`);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              Helper Functions                              */
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Updates the DB records in a transaction:
+ *  - Updates the event's activity_id if newly created
+ *  - Updates eventPayment with new collectionAddress or ticket_activity_id
+ *  - Marks the order as completed if everything is in place
+ */
+async function updateDatabaseRecords(
+  order: OrderRow,
+  event: EventRow,
+  paymentInfo: EventPaymentSelectType | undefined,
+  mainEventActivityId: number | null | undefined,
+  collectionAddress: string | null,
+  ticketActivityId: number | null
+) {
+  await db.transaction(async (trx) => {
+    // Update main event activity_id if newly created
+    if (mainEventActivityId && event.activity_id !== mainEventActivityId) {
+      await trx
+        .update(events)
+        .set({
+          activity_id: mainEventActivityId,
+          hidden: false,
+          enabled: true,
+          updatedBy: "CreateEventOrders-JOB",
+          updatedAt: new Date(),
+        })
+        .where(eq(events.event_uuid, event.event_uuid))
+        .execute();
+
+      // Clear event cache
+      await eventDB.deleteEventCache(event.event_uuid);
+      logger.log(`paid_event_add_activity_${event.event_uuid}_${mainEventActivityId}`);
+    }
+
+    // Update eventPayment fields if needed (collection address / ticket_activity_id)
+    if (paymentInfo) {
+      const updates: Record<string, any> = {
+        updatedBy: "CreateEventOrders",
+        updatedAt: new Date(),
+      };
+
+      // If we have a new NFT collection address
+      if (collectionAddress && collectionAddress !== paymentInfo.collectionAddress) {
+        updates.collectionAddress = collectionAddress;
+      }
+
+      // If we have a new TSCSBT ticket activity
+      if (ticketActivityId) {
+        updates.ticketActivityId = ticketActivityId;
+      }
+
+      const hasPaymentInfoUpdates = updates.collectionAddress || updates.ticketActivityId;
+
+      if (hasPaymentInfoUpdates) {
+        await trx.update(eventPayment).set(updates).where(eq(eventPayment.id, paymentInfo.id)).execute();
+        logger.log(`Update eventPayment for event ${event.event_uuid}:`, JSON.stringify(updates));
+      }
+    }
+
+    // Mark order as completed if we have the main event activity and
+    // either an NFT collection address or TSCSBT activity.
+    const hasMainActivity = mainEventActivityId || event.activity_id;
+    const hasNFTorTicketInfo =
+      paymentInfo?.ticket_type === "NFT" ? collectionAddress : ticketActivityId || paymentInfo?.ticketActivityId;
+
+    if (hasMainActivity && hasNFTorTicketInfo) {
+      await trx
+        .update(orders)
+        .set({
+          state: "completed",
+          updatedBy: "CreateEventOrders",
+          updatedAt: new Date(),
+        })
+        .where(eq(orders.uuid, order.uuid))
+        .execute();
+
+      logger.log(`paid_event_creation_completed_${event.event_uuid}`);
+    } else {
+      throw new Error(`paid_event_creation_error Missing data for event ${event.event_uuid}`);
+    }
+  });
+}

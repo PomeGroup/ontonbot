@@ -1,19 +1,19 @@
 // RewardStep.tsx
 "use client";
 
+import { trpc } from "@/app/_trpc/client";
+import { useMainButton } from "@/hooks/useMainButton";
+import { EventDataSchema, UpdateEventDataSchema } from "@/types";
+import { rewardStepValidation } from "@/zodSchema/event/validation";
+import { useCreateEventStore } from "@/zustand/createEventStore";
+import { useSectionStore } from "@/zustand/useSectionStore";
 import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
+import { FiAlertCircle } from "react-icons/fi";
 import { IoInformationCircle } from "react-icons/io5";
 import { toast } from "sonner";
-import { useCreateEventStore } from "@/zustand/createEventStore";
-import { EventDataSchema, UpdateEventDataSchema } from "@/types";
-import { FiAlertCircle } from "react-icons/fi";
-import { trpc } from "@/app/_trpc/client";
 import { RewardForm } from "../../Event/steps/RewardStepFrom";
-import { rewardStepValidation } from "@/zodSchema/event/validation";
 import UpdateEventSuccessDialog from "../../Event/steps/UpdateEventSuccessDialog";
-import { useMainButton } from "@/hooks/useMainButton";
-import { useSectionStore } from "@/zustand/useSectionStore";
 
 export const RewardStep = () => {
   const { setEventData, eventData, edit: editOptions, setRewardStepErrors, clearRewardStepErrors } = useCreateEventStore();
@@ -30,14 +30,13 @@ export const RewardStep = () => {
 
   const addEvent = trpc.events.addEvent.useMutation({
     onSuccess(data) {
-
       toast("Event created successfully", {
         icon: <IoInformationCircle />,
         duration: 4000,
       });
       setEventData({});
 
-      router.replace(`/events/${data?.eventHash}/manage`)
+      router.replace(`/events/${data?.eventHash}/manage`);
       setSection("none");
     },
     onError(error) {
@@ -56,12 +55,10 @@ export const RewardStep = () => {
       if (eventData?.paid_event?.has_payment) {
         setShowSuccessDialog(true);
       } else {
-
         setSection("none");
         router.replace(`/events/${data?.eventId}`);
         clearSections();
       }
-
     },
     onError(error) {
       toast.error(error.message);
@@ -80,7 +77,7 @@ export const RewardStep = () => {
       video_url: eventData?.video_url,
       secret_phrase: passwordDisabled ? undefined : formDataObject.secret_phrase,
     };
-    console.log("stepInputsObject", stepInputsObject);
+
     if (sbtOption === "custom" && (!eventData?.ts_reward_url || !eventData?.video_url) && !editOptions?.eventHash) {
       const errors = {
         ts_reward_url: !eventData?.ts_reward_url ? ["Please upload a reward image."] : undefined,
@@ -99,11 +96,10 @@ export const RewardStep = () => {
     }
     const isPaid = eventData?.paid_event?.has_payment ?? false;
     const hasRegistration = eventData?.has_registration ?? false;
-    const thirdStepDataSchema = rewardStepValidation(isPaid, hasRegistration, Boolean(editOptions?.eventHash))
+    const thirdStepDataSchema = rewardStepValidation(isPaid, hasRegistration, Boolean(editOptions?.eventHash));
     const formDataParsed = thirdStepDataSchema.safeParse(stepInputsObject);
 
     if (!formDataParsed.success) {
-
       const errors = formDataParsed.error.flatten().fieldErrors;
 
       console.error("Third step validation errors:", errors);
@@ -135,6 +131,10 @@ export const RewardStep = () => {
       ...eventData,
       ...formDataParsed.data,
       secret_phrase: eventData?.secret_phrase || formDataParsed.data.secret_phrase,
+      paid_event: {
+        ...eventData.paid_event,
+        payment_amount: Number(eventData.paid_event.payment_amount),
+      },
     };
 
     if (editOptions?.eventHash) {
@@ -193,28 +193,26 @@ export const RewardStep = () => {
 
   return (
     <>
-    <form
-      ref={formRef}
-      onSubmit={handleSubmit}
-    >
-      <RewardForm
-        passwordDisabled={passwordDisabled}
-        setPasswordDisabled={setPasswordDisabled}
-        passwordValue={passwordValue}
-        setPasswordValue={setPasswordValue}
-        sbtOption={sbtOption}
-        setSbtOption={setSbtOption}
-        clearImageError={clearImageError}
-        clearVideoError={clearVideoError}
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+      >
+        <RewardForm
+          passwordDisabled={passwordDisabled}
+          setPasswordDisabled={setPasswordDisabled}
+          passwordValue={passwordValue}
+          setPasswordValue={setPasswordValue}
+          sbtOption={sbtOption}
+          setSbtOption={setSbtOption}
+          clearImageError={clearImageError}
+          clearVideoError={clearVideoError}
+        />
+      </form>
+      <UpdateEventSuccessDialog
+        open={showSuccessDialog}
+        eventUuid={editOptions?.eventHash}
+        onClose={() => setShowSuccessDialog(false)}
       />
-
-    </form>
-    <UpdateEventSuccessDialog
-      open={showSuccessDialog}
-
-      eventUuid={editOptions?.eventHash}
-      onClose={() => setShowSuccessDialog(false)}
-    />
     </>
   );
 };
