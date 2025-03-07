@@ -1,19 +1,19 @@
-import { rewardLinkZod } from "@/types/user.types";
-import { validateMiniAppData } from "@/utils";
-import { TRPCError } from "@trpc/server";
-import { z } from "zod";
-import { findVisitorByUserAndEventUuid } from "../db/visitors";
+import { MAIN_TG_CHANNEL_ID, MAIN_TG_CHAT_ID } from "@/constants";
+import { cacheKeys, cacheLvl, redisTools } from "@/lib/redisTools";
 import { default as rewardDB } from "@/server/db/rewards.db";
 import { usersDB } from "@/server/db/users";
-import { adminOrganizerProtectedProcedure, initDataProtectedProcedure, publicProcedure, router } from "../trpc";
-import visitorService from "@/server/routers/services/visitorService";
 import rewardService from "@/server/routers/services/rewardsService";
-import { logger } from "../utils/logger";
-import { Bot } from "grammy";
-import { cacheKeys, cacheLvl, redisTools } from "@/lib/redisTools";
-import { MAIN_TG_CHANNEL_ID, MAIN_TG_CHAT_ID } from "@/constants";
-import { fetchOntonSettings } from "../db/ontoSetting";
+import visitorService from "@/server/routers/services/visitorService";
+import { rewardLinkZod } from "@/types/user.types";
+import { validateMiniAppData } from "@/utils";
 import { tgSafeCall } from "@/utils/tgSafeCall";
+import { TRPCError } from "@trpc/server";
+import { Bot } from "grammy";
+import { z } from "zod";
+import { fetchOntonSettings } from "../db/ontoSetting";
+import { findVisitorByUserAndEventUuid } from "../db/visitors";
+import { adminOrganizerProtectedProcedure, initDataProtectedProcedure, publicProcedure, router } from "../trpc";
+import { logger } from "../utils/logger";
 
 export const usersRouter = router({
   validateUserInitData: publicProcedure.input(z.string()).query(async (opts) => {
@@ -142,20 +142,7 @@ export const usersRouter = router({
           });
         } catch (error) {
           if (error instanceof TRPCError) {
-            logger.log("getVisitorReward_error_createUserReward", error, error.message);
-            if (error.code === "CONFLICT") {
-              await rewardDB.insertReward(
-                visitor.id,
-                opts.ctx.user.user_id.toString(),
-                "pending_creation",
-                "ton_society_sbt"
-              );
-              return {
-                type: "wait_for_reward",
-                message: "We successfully collected your data, you'll receive your reward link through a bot message.",
-                data: null,
-              } as const;
-            }
+            logger.log("getVisitorReward_error_createUserReward", error, error.message, opts.ctx.user.user_id);
           }
         }
 

@@ -801,7 +801,7 @@ const updateEvent = eventManagerPP
         /*   If this is a paid event with TSCSBT ticket, also update the ticket's    */
         /*   separate activity. (We assume there's a ticket_activity_id to update.)  */
         /* -------------------------------------------------------------------------- */
-        if (process.env.ENV !== "local" && oldEvent.has_payment) {
+        if (oldEvent.has_payment) {
           // fetch the updated payment info
           const [updatedPaymentInfo] = await trx
             .select()
@@ -812,15 +812,24 @@ const updateEvent = eventManagerPP
           if (updatedPaymentInfo && updatedPaymentInfo.ticket_type === "TSCSBT" && updatedPaymentInfo.ticketActivityId) {
             // Build a separate ticketDraft if you need different data for the ticket
             // For now, reusing the updated event data
+            const nowInSeconds = Math.floor(Date.now() / 1000);
             const ticketDraft: TonSocietyRegisterActivityT = {
               ...eventDraft,
               title: updatedPaymentInfo.title ?? `${eventData.title} - Ticket`,
               subtitle: updatedPaymentInfo.description ?? eventData.subtitle,
+              start_date: timestampToIsoString(nowInSeconds),
               end_date: timestampToIsoString(eventData.end_date),
             };
 
             try {
-              await updateActivity(ticketDraft, updatedPaymentInfo.ticketActivityId);
+              logger.log(
+                `Updating TSCSBT ticket activity: ID ${updatedPaymentInfo.ticketActivityId} for event ${eventUuid} and ticket ${updatedPaymentInfo.id}`,
+                ticketDraft
+              );
+              if (process.env.ENV !== "local") {
+                await updateActivity(ticketDraft, updatedPaymentInfo.ticketActivityId);
+              }
+
               logger.log(`TSCSBT ticket activity updated: ID ${updatedPaymentInfo.ticketActivityId}`);
             } catch (error) {
               logger.log("update_ts_csbt_activity_failed", JSON.stringify(ticketDraft));
