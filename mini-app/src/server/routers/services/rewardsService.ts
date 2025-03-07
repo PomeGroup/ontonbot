@@ -215,6 +215,10 @@ export const createUserReward = async (
       };
     }
 
+    if (reward?.status === "pending_creation") {
+      return;
+    }
+
     if (!eventData?.activity_id || eventData.activity_id < 0) {
       throw new TRPCError({
         code: "BAD_REQUEST",
