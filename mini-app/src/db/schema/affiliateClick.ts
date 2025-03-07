@@ -6,14 +6,14 @@ export const affiliateClick = pgTable(
   {
     id: integer("id").primaryKey().default(sql`nextval
         ('affiliate_click_id_seq'::regclass)`),
-    affiliate_link_id: bigint("affiliate_lnk_id", { mode: "number" }).notNull(),
-    user_id: bigint("user_id", { mode: "number" }).notNull(),
-    created_at: timestamp("created_at", { precision: 6 }).notNull(),
+    affiliateLinkId: bigint("affiliate_lnk_id", { mode: "number" }).notNull(),
+    userId: bigint("user_id", { mode: "number" }).notNull(),
+    createdAt: timestamp("created_at", { precision: 6 }).notNull(),
   },
   (table) => {
     return {
-      affiliateLinkIdIdx: index("affiliate_click_affiliate_link_id_idx").on(table.affiliate_link_id),
-      userIdIdx: index("affiliate_click_user_id_idx").on(table.user_id),
+      affiliateLinkIdIdx: index("affiliate_click_affiliate_link_id_idx").on(table.affiliateLinkId),
+      userIdIdx: index("affiliate_click_user_id_idx").on(table.userId),
     };
   }
 );

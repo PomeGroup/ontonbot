@@ -326,6 +326,7 @@ export const cacheKeys = {
   usersScore: "usersScore:",
   rateLimitRequestApi: "rate-limit-request-api:",
   callbackTask: "callbackTask:",
+  affiliateLinkById: "affiliateLinkById:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes

@@ -10,6 +10,7 @@ import {
 import { Readable } from "stream";
 import { logger } from "../utils/logger";
 import { checkRateLimit } from "../utils/checkRateLimit";
+import * as process from "node:process";
 
 export const affiliateComposer = new Composer<MyContext>();
 
@@ -310,7 +311,7 @@ affiliateComposer.callbackQuery("aff_act_report", async (ctx) => {
       // Build CSV
       const header = "link_id,link_hash,title,group_title,clicks,purchases";
       const csvRows = rows.map((r: any) =>
-        `${r.id},${r.link_hash},${r.title || ""},${r.group_title || ""},${r.clicks},${r.purchases}`,
+        `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""},${r.clicks},${r.purchases}`,
       );
       const finalCsv = [header, ...csvRows].join("\n");
       const csvStream = Readable.from(finalCsv);
@@ -415,7 +416,7 @@ affiliateComposer.on("message:text", async (ctx, next) => {
       // Build CSV
       const header = "link_hash,title,group_title,item_type,event_id";
       const csvRows = links.map(
-        (row) => `${row.link_hash},${row.title},${row.group_title},${itemType},${eventId}`,
+        (row) => `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=affiliate-${row.link_hash},${row.title},${row.group_title},${itemType},${eventId}`,
       );
       const finalCsv = [header, ...csvRows].join("\n");
       const csvStream = Readable.from(finalCsv);

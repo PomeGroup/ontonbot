@@ -14,6 +14,8 @@ import "@/lib/gracefullyShutdown";
 import eventDB from "@/server/db/events";
 import ordersDB from "@/server/db/orders.db";
 import { userRolesDB } from "@/server/db/userRoles.db";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { logger } from "@/server/utils/logger";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -109,14 +111,25 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const event_uuid = params.id;
     const searchParams = req.nextUrl.searchParams;
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
-
-    // const unsafeEvent = await db.query.events.findFirst({
-    //   where(fields, { eq }) {
-    //     return eq(fields.event_uuid, event_uuid);
-    //   },
-    // });
-    const unsafeEvent = await eventDB.fetchEventByUuid(event_uuid);
-
+    const isAffiliate = searchParams.get("is-affiliate") === "1";
+    logger.log("searchParams", searchParams);
+    let unsafeEvent;
+    // Check if the event is accessed via an affiliate link
+    logger.log("isAffiliate", isAffiliate);
+    logger.log("event_uuid", event_uuid);
+    if (isAffiliate) {
+      const eventIdByAffiliate = await affiliateLinksDB.getAffiliateLinkByHash(event_uuid);
+      logger.log("eventIdByAffiliate", eventIdByAffiliate);
+      if (eventIdByAffiliate) {
+        unsafeEvent = await eventDB.fetchEventById(eventIdByAffiliate.itemId);
+        logger.log("unsafeEvent", unsafeEvent);
+      }
+    }
+    // If the event is not accessed via an affiliate link, fetch the event by its UUID
+    if (!unsafeEvent) {
+      unsafeEvent = await eventDB.fetchEventByUuid(event_uuid);
+    }
+    // If the event is not found, return an error
     if (!unsafeEvent?.event_uuid) {
       return Response.json({ error: "Event not found" }, { status: 400 });
     }
@@ -131,8 +144,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const organizer = await usersDB.selectUserById(eventData.owner as number);
 
     if (!organizer) {
-      console.error(`Organizer not found for event ID: ${event_uuid}`);
-      return Response.json({ error: `Organizer not found for event ID: ${event_uuid}` }, { status: 400 });
+      console.error(`Organizer not found for event ID: ${eventData.event_uuid}`);
+      return Response.json({ error: `Organizer not found for event ID: ${eventData.event_uuid}` }, { status: 400 });
     }
 
     let event_payment_info;
@@ -155,7 +168,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const ticketOrderType = ticketOrderTypeMap[eventTicketingType];
 
         // Use the shared sold-out check function
-        const { isSoldOut: iso } = await ordersDB.checkIfSoldOut(event_uuid, ticketOrderType, eventData.capacity || 0);
+        const { isSoldOut: iso } = await ordersDB.checkIfSoldOut(
+          eventData.event_uuid,
+          ticketOrderType,
+          eventData.capacity || 0
+        );
         isSoldOut = iso;
       }
     }
@@ -178,7 +195,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const [userId, unauthorized] = getAuthenticatedUser();
 
     if (unauthorized) {
-      console.warn(`Unauthorized access attempt for event ID: ${event_uuid}`);
+      console.warn(`Unauthorized access attempt for event ID: ${eventData.event_uuid}`);
       return unauthorized;
     }
 
@@ -246,7 +263,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     let valid_nfts_with_info: NFTItem[] | never[] = [];
 
     if (event_payment_info?.ticket_type === "NFT") {
-      const vaildNFTsResult = await getValidNfts(ownerAddress, event_payment_info?.collectionAddress!, userId, event_uuid);
+      const vaildNFTsResult = await getValidNfts(
+        ownerAddress,
+        event_payment_info?.collectionAddress!,
+        userId,
+        eventData.event_uuid
+      );
 
       valid_nfts_no_info = vaildNFTsResult.valid_nfts_no_info;
       valid_nfts_with_info = vaildNFTsResult.valid_nfts_with_info;
@@ -256,7 +278,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       userOrder = await db.query.orders.findFirst({
         where: and(
           eq(orders.user_id, userId),
-          eq(orders.event_uuid, event_uuid),
+          eq(orders.event_uuid, eventData.event_uuid),
           eq(orders.order_type, "nft_mint"),
           eq(orders.state, "processing")
         ),
@@ -271,11 +293,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         chosenNFTaddress = valid_nfts_with_info[0].address;
       }
     } else if (event_payment_info?.ticket_type === "TSCSBT") {
-      const event_registrant = await getByEventUuidAndUserId(event_uuid, userId);
+      const event_registrant = await getByEventUuidAndUserId(eventData.event_uuid, userId);
       userOrder = await db.query.orders.findFirst({
         where: and(
           eq(orders.user_id, userId),
-          eq(orders.event_uuid, event_uuid),
+          eq(orders.event_uuid, eventData.event_uuid),
           eq(orders.order_type, "ts_csbt_ticket"),
           eq(orders.state, "processing")
         ),

@@ -52,6 +52,7 @@ const Event = async ({ params, searchParams }: EventParams) => {
   const [userId, error] = getAuthenticatedUser();
 
   const page_utm = searchParams.utm_campaign || null;
+  const page_affiliate = searchParams.is_affiliate || null;
 
   if (error) {
     return (
@@ -73,7 +74,7 @@ const Event = async ({ params, searchParams }: EventParams) => {
     );
   }
 
-  const eventData = await getEventDataOnly(params.id);
+  const eventData = await getEventDataOnly(params.id, page_affiliate);
   if (!eventData) {
     return (
       <QueryState
