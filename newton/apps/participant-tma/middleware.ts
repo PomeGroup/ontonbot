@@ -16,9 +16,11 @@ export async function middleware(req: NextRequest) {
       const isAffiliate = tgAppStartParam.includes("-affiliate-");
       const isOrganizerProfile = tgAppStartParam.startsWith("channels_");
 
+
       if (isOrganizerProfile) {
         console.log("redirecting to organizer profile");
         return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
+
       }
 
       if (isEdit) {
@@ -26,6 +28,7 @@ export async function middleware(req: NextRequest) {
         console.log("redirecting to edit event", eventId);
         return NextResponse.redirect(new URL(`/events/${eventId}/manage`, req.nextUrl.origin));
       }
+
 
       if (isAffiliate) {
         const splitAffiliate = tgAppStartParam.split("-affiliate-");
@@ -35,6 +38,7 @@ export async function middleware(req: NextRequest) {
         url.searchParams.set("is_affiliate", "1");
         url.searchParams.set("affiliate_id", affiliateId);
         console.log("redirecting to affiliate", url.searchParams);
+
         return NextResponse.redirect(url);
       }
 
