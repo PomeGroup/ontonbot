@@ -8,20 +8,19 @@ export async function middleware(req: NextRequest) {
     const tgAppStartParam = req.nextUrl.searchParams.get("tgWebAppStartParam");
 
     const userToken = req.cookies.get("token");
-
+    console.log("tgAppStartParam", tgAppStartParam);
     const utm_source = req.nextUrl.searchParams.get("utm_source");
 
     if (tgAppStartParam) {
       const isEdit = tgAppStartParam.startsWith("edit_");
+      const isAffiliate = tgAppStartParam.includes("-affiliate-");
       const isOrganizerProfile = tgAppStartParam.startsWith("channels_");
-      const isGatewaySideEvent = tgAppStartParam.startsWith("gateway");
+
+
       if (isOrganizerProfile) {
         console.log("redirecting to organizer profile");
         return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
-      }
-      if (isGatewaySideEvent) {
-        console.log("redirecting to gateway");
-        return NextResponse.redirect(new URL(`/gateway/`, req.nextUrl.origin));
+
       }
 
       if (isEdit) {
@@ -29,21 +28,21 @@ export async function middleware(req: NextRequest) {
         console.log("redirecting to edit event", eventId);
         return NextResponse.redirect(new URL(`/events/${eventId}/manage`, req.nextUrl.origin));
       }
-      const isMysteryUtm = tgAppStartParam.length >= 7 && tgAppStartParam.length <= 12;
-      if (isMysteryUtm) {
-        // console.log(`affilate_redirect_${tgAppStartParam}`)
-        const mysteryUUID = "9d4fc2e4-2487-4504-8fb0-a575f17f6ce7";
-        const url = new URL(`/ptma/event/${mysteryUUID}`, req.nextUrl.origin);
-        url.searchParams.set("not_authenticated", userToken ? "false" : "true");
 
-        url.searchParams.set("utm_source", "telegram");
-        url.searchParams.set("utm_medium", "notification");
-        url.searchParams.set("utm_campaign", tgAppStartParam);
+
+      if (isAffiliate) {
+        const splitAffiliate = tgAppStartParam.split("-affiliate-");
+        const affiliateId = splitAffiliate[1] ?? "";
+        console.log("redirecting to affiliate", splitAffiliate);
+        const url = new URL(`/ptma/event/${splitAffiliate[0]}`, req.nextUrl.origin);
+        url.searchParams.set("is_affiliate", "1");
+        url.searchParams.set("affiliate_id", affiliateId);
+        console.log("redirecting to affiliate", url.searchParams);
 
         return NextResponse.redirect(url);
       }
 
-      const event = await getEventDataOnly(tgAppStartParam);
+      const event = await getEventDataOnly(tgAppStartParam, null);
       const ptam_utm_link = utm_source ? `&utm_source=${utm_source}` : "";
 
       if (event?.ticketToCheckIn) {

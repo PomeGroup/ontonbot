@@ -6,7 +6,7 @@ import { sendTopicMessage } from "../utils/logs-bot";
 
 export const orgHandler = async (ctx: Context, next: () => Promise<void>) => {
   // get user from database
-  console.log("orgHandler");
+
   const { isAdmin } = await isUserAdmin(ctx.from.id.toString());
 
   if (!isAdmin) {

@@ -3,6 +3,7 @@ import { user_custom_flags } from "@/db/schema/user_custom_flags";
 import { and, eq } from "drizzle-orm";
 import { verify } from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { logger } from "@/server/utils/logger";
 
 export function getAuthenticatedUser(): [number, null] | [null, Response] {
   const userToken = cookies().get("token");

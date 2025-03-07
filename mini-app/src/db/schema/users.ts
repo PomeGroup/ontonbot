@@ -1,16 +1,5 @@
-import {
-  bigint,
-  text,
-  timestamp,
-  boolean,
-  integer,
-  varchar,
-  index,
-  pgTable,
-} from "drizzle-orm/pg-core";
+import { bigint, text, timestamp, boolean, integer, varchar, index, pgTable } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-
-// Import your related schemas
 import { airdropRoutines } from "@/db/schema/airdropRoutines";
 import { tickets } from "@/db/schema/tickets";
 import { userEventFields } from "@/db/schema/userEventFields";
@@ -48,7 +37,7 @@ export const users = pgTable(
     /* -------------------------------------------------------------------------- */
     /*                                   Points                                   */
     /* -------------------------------------------------------------------------- */
-    user_point : integer('user_point').notNull().default(0)
+    user_point: integer("user_point").notNull().default(0),
   },
   (table) => ({
     usernameIdx: index("users_username_idx").on(table.username),
@@ -57,12 +46,8 @@ export const users = pgTable(
     createdAtIdx: index("users_created_at_idx").on(table.created_at),
     updatedAtIdx: index("users_updated_at_idx").on(table.updatedAt),
     isPremiumIdx: index("users_is_premium_idx").on(table.is_premium),
-    hostedEventCountIdx: index("users_hosted_event_count_idx").on(
-      table.hosted_event_count
-    ),
-    orgChannelNameIdx: index("users_org_channel_name_idx").on(
-      table.org_channel_name
-    ),
+    hostedEventCountIdx: index("users_hosted_event_count_idx").on(table.hosted_event_count),
+    orgChannelNameIdx: index("users_org_channel_name_idx").on(table.org_channel_name),
     userIdIdx: index("users_id").on(table.user_id),
   })
 );

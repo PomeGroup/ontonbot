@@ -15,7 +15,7 @@ const addOrderSchema = z.object({
   telegram: z.string(),
   company: z.string(),
   position: z.string(),
-  utm: z.string().nullable(),
+  affiliate_id: z.string().nullable(),
   owner_address: z.string().refine((data) => Address.isAddress(Address.parse(data))),
 });
 
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
         order_id: userOrder.uuid,
         message: "order reactivated successfully",
         payment_type: userOrder.payment_type,
-        utm_tag: body.data.utm,
+        utm_tag: body.data.affiliate_id,
         total_price: userOrder.total_price,
       });
     }
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
           state: "confirming",
           order_type: ticketOrderType,
 
-          utm_source: body.data.utm,
+          utm_source: body.data.affiliate_id,
           updatedBy: "system",
         })
         .returning()
@@ -188,7 +188,7 @@ export async function POST(request: Request) {
     return Response.json({
       order_id: new_order_uuid,
       message: "order created successfully",
-      utm_tag: body.data.utm,
+      utm_tag: body.data.affiliate_id,
       payment_type: eventPaymentInfo.payment_type,
       total_price: new_order_price,
     });

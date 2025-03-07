@@ -14,6 +14,9 @@ import "@/lib/gracefullyShutdown";
 import eventDB from "@/server/db/events";
 import ordersDB from "@/server/db/orders.db";
 import { userRolesDB } from "@/server/db/userRoles.db";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { logger } from "@/server/utils/logger";
+import { affiliateClicksDB, enqueueClick } from "@/server/db/affiliateClicks.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -61,7 +64,7 @@ async function getValidNfts(
 
         // Check if there's exactly one ticket for this NFT
         // if (ticketsResult.length !== 1) {
-        //   console.error(`Unexpected number of tickets found for NFT ${nft.address}`);
+        //   logger.error(`Unexpected number of tickets found for NFT ${nft.address}`);
         //   continue;
         // }
 
@@ -82,7 +85,7 @@ async function getValidNfts(
         const nft_db = (await db.select().from(nftItems).where(eq(nftItems.nft_address, nft.address)).execute()).pop();
 
         if (!nft_db) {
-          console.error("Critical_API_V1_event NFT not found in our db ", nft.address);
+          logger.error("Critical_API_V1_event NFT not found in our db ", nft.address);
         }
 
         if (
@@ -96,7 +99,7 @@ async function getValidNfts(
           valid_nfts_no_info.push(nft);
         }
       } catch (error) {
-        console.error(`Error fetching NFT data or querying database: ${error}`);
+        logger.error(`Error fetching NFT data or querying database: ${error}`);
       }
     }
   }
@@ -106,17 +109,32 @@ async function getValidNfts(
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const event_uuid = params.id;
+    const finderParam = params.id;
+
     const searchParams = req.nextUrl.searchParams;
     const dataOnly = searchParams.get("data_only") as "true" | undefined;
+    const isAffiliate = searchParams.get("is-affiliate") === "1";
+    const affiliateHash = searchParams.get("affiliateHash") ?? "";
 
-    // const unsafeEvent = await db.query.events.findFirst({
-    //   where(fields, { eq }) {
-    //     return eq(fields.event_uuid, event_uuid);
-    //   },
-    // });
-    const unsafeEvent = await eventDB.fetchEventByUuid(event_uuid);
+    let unsafeEvent;
+    let unsafeUserId = searchParams.get("user_id") ? Number(searchParams.get("user_id")) : undefined;
 
+    // Check if the event is accessed via an affiliate link
+    if (isAffiliate && affiliateHash && dataOnly && !affiliateHash.includes("-")) {
+      const eventIdByAffiliate = await affiliateLinksDB.getAffiliateLinkByHash(affiliateHash, true, unsafeUserId);
+      logger.log(`eventIdByAffiliate: ${JSON.stringify(eventIdByAffiliate)}`);
+      if (eventIdByAffiliate) {
+        unsafeEvent = await eventDB.fetchEventById(eventIdByAffiliate.itemId);
+      } else {
+        logger.error(`affiliate_not_exist: Event not found for affiliate link: ${finderParam}`);
+        return Response.json({ error: "Event not found" }, { status: 400 });
+      }
+    }
+    // If the event is not accessed via an affiliate link, fetch the event by its UUID
+    if (!isAffiliate && !affiliateHash) {
+      unsafeEvent = await eventDB.fetchEventByUuid(finderParam);
+    }
+    // If the event is not found, return an error
     if (!unsafeEvent?.event_uuid) {
       return Response.json({ error: "Event not found" }, { status: 400 });
     }
@@ -131,8 +149,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const organizer = await usersDB.selectUserById(eventData.owner as number);
 
     if (!organizer) {
-      console.error(`Organizer not found for event ID: ${event_uuid}`);
-      return Response.json({ error: `Organizer not found for event ID: ${event_uuid}` }, { status: 400 });
+      logger.error(`Organizer not found for event ID: ${eventData.event_uuid}`);
+      return Response.json({ error: `Organizer not found for event ID: ${eventData.event_uuid}` }, { status: 400 });
     }
 
     let event_payment_info;
@@ -155,7 +173,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         const ticketOrderType = ticketOrderTypeMap[eventTicketingType];
 
         // Use the shared sold-out check function
-        const { isSoldOut: iso } = await ordersDB.checkIfSoldOut(event_uuid, ticketOrderType, eventData.capacity || 0);
+        const { isSoldOut: iso } = await ordersDB.checkIfSoldOut(
+          eventData.event_uuid,
+          ticketOrderType,
+          eventData.capacity || 0
+        );
         isSoldOut = iso;
       }
     }
@@ -173,13 +195,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           status: 200,
         }
       );
-    }
-
-    const [userId, unauthorized] = getAuthenticatedUser();
-
-    if (unauthorized) {
-      console.warn(`Unauthorized access attempt for event ID: ${event_uuid}`);
-      return unauthorized;
     }
 
     const proof_token = searchParams.get("proof_token");
@@ -236,7 +251,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         }
       );
     }
-
+    const [userId, unauthorized] = getAuthenticatedUser();
+    logger.log(`User ${userId} is trying to access event ${eventData.event_uuid} `);
+    if (unauthorized) {
+      logger.warn(`Unauthorized access attempt for finderParam: `, finderParam);
+      return unauthorized;
+    }
+    await affiliateClicksDB.enqueueClick(finderParam, userId);
     const ownerAddress = decoded.address;
     let chosenNFTaddress = "";
     let needToUpdateTicket = false;
@@ -246,7 +267,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     let valid_nfts_with_info: NFTItem[] | never[] = [];
 
     if (event_payment_info?.ticket_type === "NFT") {
-      const vaildNFTsResult = await getValidNfts(ownerAddress, event_payment_info?.collectionAddress!, userId, event_uuid);
+      const vaildNFTsResult = await getValidNfts(
+        ownerAddress,
+        event_payment_info?.collectionAddress!,
+        userId,
+        eventData.event_uuid
+      );
 
       valid_nfts_no_info = vaildNFTsResult.valid_nfts_no_info;
       valid_nfts_with_info = vaildNFTsResult.valid_nfts_with_info;
@@ -256,7 +282,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       userOrder = await db.query.orders.findFirst({
         where: and(
           eq(orders.user_id, userId),
-          eq(orders.event_uuid, event_uuid),
+          eq(orders.event_uuid, eventData.event_uuid),
           eq(orders.order_type, "nft_mint"),
           eq(orders.state, "processing")
         ),
@@ -266,16 +292,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
       if (userHasTicket && needToUpdateTicket) {
         chosenNFTaddress = valid_nfts_no_info[0].address;
-        console.log(`User ${userId} can claim ${chosenNFTaddress} `);
+        logger.log(`User ${userId} can claim ${chosenNFTaddress} `);
       } else if (userHasTicket) {
         chosenNFTaddress = valid_nfts_with_info[0].address;
       }
     } else if (event_payment_info?.ticket_type === "TSCSBT") {
-      const event_registrant = await getByEventUuidAndUserId(event_uuid, userId);
+      const event_registrant = await getByEventUuidAndUserId(eventData.event_uuid, userId);
       userOrder = await db.query.orders.findFirst({
         where: and(
           eq(orders.user_id, userId),
-          eq(orders.event_uuid, event_uuid),
+          eq(orders.event_uuid, eventData.event_uuid),
           eq(orders.order_type, "ts_csbt_ticket"),
           eq(orders.state, "processing")
         ),
@@ -309,7 +335,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       status: 200,
     });
   } catch (error) {
-    console.error(`Error processing request for event ID: ${params.id}`, error);
+    logger.error(`Error processing request for event ID: ${params.id}`, error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }

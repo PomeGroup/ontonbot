@@ -22,6 +22,7 @@ import { connectRedis } from "./lib/redisTools";
 import { checkRateLimit } from "./utils/checkRateLimit";
 import { RATE_LIMIT_OPTIONS } from "./constants";
 import { MyContext } from "./types/MyContext";
+import { affiliateHandler } from "./handlers/affiliateHandler";
 
 (async function bootstrap() {
   try {
@@ -72,6 +73,8 @@ import { MyContext } from "./types/MyContext";
     bot.command("banner", bannerHandler);
     bot.command("start", startHandler);
     bot.command("sbtdist", sbtdistHandler);
+
+
     bot.use(mainComposer);
 
 

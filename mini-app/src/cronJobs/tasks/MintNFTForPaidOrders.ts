@@ -11,6 +11,7 @@ import { is_mainnet } from "@/server/routers/services/tonCenter";
 import { selectUserById } from "@/server/db/users";
 import { sendLogNotification } from "@/lib/tgBot";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
 
 export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -124,7 +125,11 @@ export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
       }
 
       await db.transaction(async (trx) => {
-        await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).execute();
+        const updateResult = (
+          await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).returning().execute()
+        ).pop();
+        if (updateResult && updateResult.utm_source)
+          await affiliateLinksDB.incrementAffiliatePurchase(updateResult.utm_source);
         logger.log(`nft_mint_order_completed_${ordr.uuid}`);
         await trx
           .insert(nftItems)
