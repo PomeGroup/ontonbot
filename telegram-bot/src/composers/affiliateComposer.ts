@@ -391,7 +391,7 @@ affiliateComposer.on("message:text", async (ctx, next) => {
 affiliateComposer.on("message:text", async (ctx, next) => {
 
   if (ctx.session.affiliateStep === "askTitleOfLinks") {
-    const baseTitle = ctx.message.text.trim();
+    const baseTitle = ctx.message.text.trim().replace(/,/g, " ");
     if (!baseTitle) {
       await ctx.reply("Please enter a non-empty title.");
       return;
@@ -425,16 +425,16 @@ affiliateComposer.on("message:text", async (ctx, next) => {
       });
 
       // Build CSV
-      const header = "link_hash,title,group_title,item_type,event_id";
+      const header = "link_id,link_hash,title,group_title";
 
       const csvRows = await Promise.all(
         links.map(async (r: any) => {
           console.log(r);
           if (r.item_type === "EVENT" && r.item_id) {
             const eventData = await getEventById(r.item_id);
-            return `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}-affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""},${r.clicks},${r.purchases}`;
+            return `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}-affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""}`;
           } else {
-            return `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""},${r.clicks},${r.purchases}`;
+            return `${r.id},https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=affiliate-${r.link_hash},${r.title || ""},${r.group_title || ""}`;
           }
         }),
       );
