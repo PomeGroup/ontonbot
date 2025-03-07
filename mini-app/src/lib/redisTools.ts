@@ -326,6 +326,7 @@ export const cacheKeys = {
   usersScore: "usersScore:",
   rateLimitRequestApi: "rate-limit-request-api:",
   callbackTask: "callbackTask:",
+  affiliateLinkById: "affiliateLinkById:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
@@ -335,7 +336,9 @@ export const cacheLvl = {
   extraLong: 60 * 60 * 24 * 30, //  30 days
   authApiOtpTimeout: 60 * 5, // 5 minutes
 };
-
+export const rQueues = {
+  CLICK_QUEUE_KEY: "affiliate_clicks_queue",
+};
 // Export all the functions in one object as well
 export const redisTools = {
   setCache,
@@ -356,4 +359,5 @@ export const redisTools = {
   releaseLock,
   cacheKeys,
   cacheLvl,
+  rQueues,
 };

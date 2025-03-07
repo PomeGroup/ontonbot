@@ -8,7 +8,7 @@ export async function addOrder(body: {
   position: string;
   owner_address: string;
   event_uuid: string;
-  utm: string | null;
+  affiliate_id: string | null;
   coupon_code: string | null;
 }) {
   const orderResponse = await fetch(`${env.NEXT_PUBLIC_API_BASE_URL}/order`, {

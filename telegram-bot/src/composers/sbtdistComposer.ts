@@ -3,15 +3,10 @@ import { MyContext } from "../types/MyContext";
 import { getApprovedRegistrants, getEvent, processCsvLinesForSbtDist } from "../db/db";
 import { Readable } from "stream";
 import axios from "axios";
+import { additionalRecipients } from "../constants";
+import { logger } from "../utils/logger";
 
-const additionalRecipients = [
-  748891997, // samyar_kd
-  185027333, // sid_hazrati
-  23932283, // Mfarimani
-  7013087032, // Ontonadmin
-  91896720, //elbabix
-  548648769, // Radiophp
-];
+
 export const sbtdistComposer = new Composer<MyContext>();
 /**
  * STEP 1: askEventUUID
@@ -93,7 +88,7 @@ sbtdistComposer.on("message:text", async (ctx, next) => {
    */
   if (ctx.session.sbtdistStep === "chooseDistributionMethod") {
     const text = ctx.message.text.trim().toLowerCase();
-    console.log("chooseDistributionMethod", text);
+    logger.log("chooseDistributionMethod", text);
     if (text === "csv") {
       // The original flow
       ctx.session.sbtdistStep = "askCsvFile";
@@ -209,7 +204,7 @@ sbtdistComposer.on("message:document", async (ctx, next) => {
     // 11) Reuse file_id to forward to additional recipients
     const fileId = message.document?.file_id;
     if (!fileId) {
-      console.error("Could not get file_id from Telegram!");
+      logger.error("Could not get file_id from Telegram!");
       return;
     }
 

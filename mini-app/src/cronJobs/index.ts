@@ -12,6 +12,7 @@ import { syncSbtCollectionsForEvents } from "@/cronJobs/tasks/syncSbtCollections
 import { CheckAllUsersBlock } from "@/cronJobs/tasks/checkBlockStatus";
 import { CheckSbtStatus } from "@/cronJobs/tasks/checkTSRewardStatus";
 import { runPendingCallbackTasks } from "@/cronJobs/tasks/runAPIPendingCallbackTasks";
+import { consumeClickBatch } from "@/cronJobs/tasks/consumeClickBatch";
 
 const cronJobs = {
   CheckTransactions,
@@ -27,6 +28,7 @@ const cronJobs = {
   CheckAllUsersBlock,
   CheckSbtStatus,
   runPendingCallbackTasks,
+  consumeClickBatch,
 };
 export { cronJobRunner };
 export default cronJobs;

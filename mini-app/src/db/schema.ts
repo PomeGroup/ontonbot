@@ -46,6 +46,8 @@ import { userEventFieldRelations, userEventFields } from "./schema/userEventFiel
 import { userRelations, users } from "./schema/users";
 import { visitors } from "./schema/visitors";
 import { walletChecks } from "./schema/walletChecks";
+import { affiliateLinks, AffiliateLinksRow, AffiliateItemTypeEnum } from "./schema/affiliateLinks";
+import { affiliateClick, AffiliateClickRow } from "./schema/affiliateClick";
 
 import {
   accessRoleEnum,
@@ -138,6 +140,8 @@ export {
   usersScore,
   visitors,
   walletChecks,
+  affiliateLinks,
+  affiliateClick,
 };
 
 // Type Exports
@@ -169,4 +173,7 @@ export type {
   CallbackTasksRow,
   CallBackTaskStepNameType,
   EventTicketType,
+  AffiliateLinksRow,
+  AffiliateItemTypeEnum,
+  AffiliateClickRow,
 };

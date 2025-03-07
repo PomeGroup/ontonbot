@@ -2,18 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  useBackButton,
-  useClosingBehavior,
-  useMainButton,
-  useMiniApp,
-  useUtils,
-} from "@tma.js/sdk-react";
-import {
-  useTonConnectModal,
-  useTonConnectUI,
-  useTonWallet,
-} from "@tonconnect/ui-react";
+import { useBackButton, useClosingBehavior, useMainButton, useMiniApp, useUtils } from "@tma.js/sdk-react";
+import { useTonConnectModal, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { toast } from "@ui/base/sonner";
 
 import { useEventData } from "~/hooks/queries/useEventData";
@@ -22,14 +12,10 @@ import { RequestError } from "~/utils/custom-error";
 type EventMainButtonProps = {
   eventId: string;
   requiresTicketToChekin: boolean;
-  utm: string | null;
+  pageAffiliate: string | null;
 };
 
-const EventTmaSettings = ({
-  eventId,
-  requiresTicketToChekin,
-  utm,
-}: EventMainButtonProps) => {
+const EventTmaSettings = ({ eventId, requiresTicketToChekin, pageAffiliate }: EventMainButtonProps) => {
   const mainButton = useMainButton(true);
   const backButton = useBackButton(true);
   const closeBehavior = useClosingBehavior(true);
@@ -40,24 +26,14 @@ const EventTmaSettings = ({
   const tonConnectModal = useTonConnectModal();
   const [tonConnectUi] = useTonConnectUI();
 
-  const {
-    data: event,
-    isLoading,
-    isError,
-    isSuccess,
-    error,
-  } = useEventData(eventId);
+  const { data: event, isLoading, isError, isSuccess, error } = useEventData(eventId);
 
   const needsInfoUpdate = event?.needToUpdateTicket;
 
   const isEnded = event?.end_date !== undefined && event.end_date < Date.now() / 1000;
 
   useEffect(() => {
-    if (
-      isError &&
-      error instanceof RequestError &&
-      error.name === "REQUEST_401_ERROR"
-    ) {
+    if (isError && error instanceof RequestError && error.name === "REQUEST_401_ERROR") {
       tonConnectUi.disconnect();
       toast.error(error.message);
     }
@@ -67,36 +43,17 @@ const EventTmaSettings = ({
     if (isLoading) return;
 
     const goToTicketPage = () => router.push(`/ticket/${eventId}`);
-    const goToUpdateInfoPage = () =>
-      router.push(`/event/${eventId}/claim-ticket`);
+    const goToUpdateInfoPage = () => router.push(`/event/${eventId}/claim-ticket`);
     const mainBtnOnClick = () =>
-      router.push(
-        `/event/${eventId}/buy-ticket${utm ? `?utm_source=telegram&utm_medium=notification&utm_campaign=${utm}` : ""}`,
-      );
+      router.push(`/event/${eventId}/buy-ticket${pageAffiliate ? `?affiliate=${pageAffiliate}` : ""}`);
     const openTonConnectModal = () => tonConnectModal.open();
 
-    const setupMainButton = (
-      bgColor: `#${string}`,
-      textColor: `#${string}`,
-      text: string,
-      onClick: () => void,
-    ) => {
-      mainButton
-        ?.setBgColor(bgColor)
-        .setTextColor(textColor)
-        .setText(text)
-        .enable()
-        .show()
-        .on("click", onClick);
+    const setupMainButton = (bgColor: `#${string}`, textColor: `#${string}`, text: string, onClick: () => void) => {
+      mainButton?.setBgColor(bgColor).setTextColor(textColor).setText(text).enable().show().on("click", onClick);
     };
 
     if (!wallet?.account.address) {
-      setupMainButton(
-        "#e1efff",
-        "#007aff",
-        "Connect Your Wallet",
-        openTonConnectModal,
-      );
+      setupMainButton("#e1efff", "#007aff", "Connect Your Wallet", openTonConnectModal);
       return () => {
         mainButton?.hide().off("click", openTonConnectModal);
       };
@@ -107,12 +64,7 @@ const EventTmaSettings = ({
     const { userHasTicket, orderAlreadyPlace, isSoldOut } = event;
 
     if (userHasTicket && needsInfoUpdate) {
-      setupMainButton(
-        "#007AFF",
-        "#ffffff",
-        "Update Ticket Info",
-        goToUpdateInfoPage,
-      );
+      setupMainButton("#007AFF", "#ffffff", "Update Ticket Info", goToUpdateInfoPage);
       return () => {
         mainButton?.hide().off("click", goToUpdateInfoPage);
       };
@@ -149,7 +101,7 @@ const EventTmaSettings = ({
       };
     }
 
-    if(isEnded) {
+    if (isEnded) {
       setupMainButton("#E9E8E8", "#BABABA", "Event Ended", () => {});
       return () => {
         mainButton?.hide();

@@ -28,7 +28,7 @@ type BuyTicketFormProps = {
   orderAlreadyPlace: boolean;
   event_uuid: string;
   sendTo: string;
-  utm_tag: string | null;
+  affiliate_id: string | null;
   paymentType: PaymentType;
 };
 
@@ -52,7 +52,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   const mainButton = useMainButton(true);
   const transfer = useTransferTon();
 
-  const utm = params.utm_tag || null;
+  const affiliate_id = params.affiliate_id || null;
 
   const buyTicketOnClick: FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
@@ -73,7 +73,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
     try {
       const orderData = await addOrder.mutateAsync({
         event_uuid: params.event_uuid,
-        utm,
+        affiliate_id,
         ...data,
         coupon_code: "todo : get the coupon code",
       });
