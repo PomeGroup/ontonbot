@@ -215,7 +215,7 @@ export const createUserReward = async (
       };
     }
 
-    if (reward?.status === "pending_creation") {
+    if (reward?.status !== "failed") {
       return;
     }
 
