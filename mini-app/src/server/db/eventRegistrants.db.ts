@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { eventRegistrants, notifications, visitors, events } from "@/db/schema";
-import { and, asc, count, eq, gt, inArray, ne, not, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNotNull, ne, not, or, sql } from "drizzle-orm";
 
 export const fetchApprovedUsers = async (
   eventUuid: string,
@@ -120,6 +120,61 @@ export const getEventsByUserIdForListing = async (userId: number) => {
   }
 };
 
+/**
+ * Fetch registrants who are rejected but still have a stored invite link.
+ */
+export const fetchRejectedUsersWithLink = async (eventUuid: string) =>
+  await db
+    .select()
+    .from(eventRegistrants)
+    .where(
+      and(
+        eq(eventRegistrants.event_uuid, eventUuid),
+        eq(eventRegistrants.status, "rejected"),
+        isNotNull(eventRegistrants.telegram_invite_link)
+      )
+    )
+    .execute();
+
+/**
+ * Set `telegram_invite_link = NULL` for a specific registrant by ID.
+ */
+export const clearInviteLink = async (registrantId: number) => {
+  await db
+    .update(eventRegistrants)
+    .set({ telegram_invite_link: null })
+    .where(eq(eventRegistrants.id, registrantId))
+    .execute();
+};
+
+/**
+ * Fetch registrants who have status = approved or checkedin
+ * but do NOT have an invitation link yet.
+ */
+export const fetchNeedInviteLink = async (eventUuid: string) =>
+  await db
+    .select()
+    .from(eventRegistrants)
+    .where(
+      and(
+        eq(eventRegistrants.event_uuid, eventUuid),
+        inArray(eventRegistrants.status, ["approved", "checkedin"]),
+        sql`${eventRegistrants.telegram_invite_link} IS NULL`
+      )
+    )
+    .execute();
+
+/**
+ * Update a registrant's row to store the newly created invite link.
+ */
+export const setInviteLink = async (registrantId: number, inviteLink: string) => {
+  await db
+    .update(eventRegistrants)
+    .set({ telegram_invite_link: inviteLink })
+    .where(eq(eventRegistrants.id, registrantId))
+    .execute();
+};
+
 export const eventRegistrantsDB = {
   fetchApprovedUsers,
   getByEventUuidAndUserId,
@@ -127,4 +182,8 @@ export const eventRegistrantsDB = {
   getApprovedRequestsCount,
   getRegistrantRequest,
   getEventsByUserIdForListing,
+  fetchRejectedUsersWithLink,
+  clearInviteLink,
+  fetchNeedInviteLink,
+  setInviteLink,
 };
