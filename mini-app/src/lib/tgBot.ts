@@ -418,3 +418,42 @@ by @${username}
 
 Please re-check this event (needs moderation).
 `.trim();
+
+export const callCreateInviteLink = async (
+  chat_id: number,
+  options: { creates_join_request?: boolean; name?: string }
+): Promise<{ success: boolean; invite_link?: string }> => {
+  try {
+    // This is just an example; replace with your actual endpoint
+    const resp = await tgClientPost(`create-invite`, {
+      chat_id,
+      creates_join_request: options.creates_join_request,
+      name: options.name,
+    });
+
+    if (resp.data.success) {
+      return { success: true, invite_link: resp.data.invite_link };
+    }
+    return { success: false };
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const callDeleteInviteLink = async (chat_id: number, invite_link: string): Promise<{ success: boolean }> => {
+  try {
+    const resp = await tgClientPost(`delete-invite`, {
+      chat_id,
+      invite_link,
+    });
+    return { success: resp.data.success === true };
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const callCheckBotAdmin = async (chatId: number): Promise<{ success: boolean; chatInfo?: any }> => {
+  const body = { chat_id: chatId };
+  const resp = await tgClientPost("check-bot-admin", body);
+  return resp.data; // e.g. { success: true, chatInfo: { ... } }
+};

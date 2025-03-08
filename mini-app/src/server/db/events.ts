@@ -687,6 +687,19 @@ const updateActivityId = async (event_uuid: string, activity_id: number) => {
   await db.update(events).set({ activity_id }).where(eq(events.event_uuid, event_uuid)).execute();
   await eventDB.deleteEventCache(event_uuid);
 };
+
+export const fetchUpcomingEventsWithGroup = async (timeInSeconds: number) =>
+  await db
+    .select()
+    .from(events)
+    .where(
+      and(
+        isNotNull(events.eventTelegramGroup),
+        gt(events.end_date, timeInSeconds) // i.e., event end time > current time
+      )
+    )
+    .execute();
+
 const eventDB = {
   checkIsEventOwner,
   checkIsAdminOrOrganizer,
@@ -711,5 +724,6 @@ const eventDB = {
   getPaidEventPrice,
   shouldEventBeHidden,
   updateActivityId,
+  fetchUpcomingEventsWithGroup,
 };
 export default eventDB;

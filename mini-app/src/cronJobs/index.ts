@@ -13,6 +13,7 @@ import { CheckAllUsersBlock } from "@/cronJobs/tasks/checkBlockStatus";
 import { CheckSbtStatus } from "@/cronJobs/tasks/checkTSRewardStatus";
 import { runPendingCallbackTasks } from "@/cronJobs/tasks/runAPIPendingCallbackTasks";
 import { consumeClickBatch } from "@/cronJobs/tasks/consumeClickBatch";
+import { generateInviteLinksCron } from "@/cronJobs/tasks/generateInviteLinksCron";
 
 const cronJobs = {
   CheckTransactions,
@@ -29,6 +30,7 @@ const cronJobs = {
   CheckSbtStatus,
   runPendingCallbackTasks,
   consumeClickBatch,
+  generateInviteLinksCron,
 };
 export { cronJobRunner };
 export default cronJobs;

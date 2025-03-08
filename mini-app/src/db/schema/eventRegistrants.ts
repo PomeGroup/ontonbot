@@ -15,11 +15,9 @@ export const eventRegistrants = pgTable(
     status: eventRegistrantStatus("status").default("pending").notNull(),
     register_info: json("register_info").notNull().default({}).$type<Record<string, string | null>>(),
 
-    registrant_uuid: uuid("registrant_uuid")
-      .unique()
-      .notNull()
-      .default(sql`gen_random_uuid()`),
-
+    registrant_uuid: uuid("registrant_uuid").unique().notNull().default(sql`gen_random_uuid
+        ()`),
+    telegram_invite_link: text("telegram_invite_link").default(""),
     created_at: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", {
       mode: "date",
