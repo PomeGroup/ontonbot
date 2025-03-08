@@ -1,20 +1,18 @@
 import { logger } from "@/server/utils/logger";
-import {
-  callCreateInviteLink,
-  callDeleteInviteLink,
-  callCheckBotAdmin, // <--- You add or import this
-} from "@/lib/tgBot";
+import { callCreateInviteLink, callDeleteInviteLink, callCheckBotAdmin, sendTelegramMessage } from "@/lib/tgBot";
 
-// Import the separate DB methods:
 import { fetchUpcomingEventsWithGroup } from "@/server/db/events";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
+import { sleep } from "@/utils";
+import { AxiosError } from "axios";
 
 /**
- * This cron job:
+ * Cron job that:
  * 1) Finds upcoming events (start_date > now, have a telegram group)
- * 2) Checks if the bot is an admin in that group
- * 3) Revokes links for rejected users who still have a stored link
- * 4) Creates new invite links for approved/checkedin users who have no link
+ * 2) Checks if the bot is admin
+ * 3) Revokes links for rejected users
+ * 4) Creates invite links for approved/checkedin users who have none
+ * 5) Sends a DM with the link to each user, then only updates DB if DM succeeded
  */
 export const generateInviteLinksCron = async () => {
   try {
@@ -30,15 +28,15 @@ export const generateInviteLinksCron = async () => {
 
     for (const evt of upcomingEvents) {
       const chatId = evt.eventTelegramGroup; // The group ID
-      if (!chatId) continue; // Just in case
+      if (!chatId) continue;
 
       const eventUuid = evt.event_uuid;
+      const eventTitle = evt.title || "this event";
 
-      // 2) Check if the bot is an admin in this group
+      // 2) Check if bot is admin
       let isAdmin = false;
       try {
         const adminCheckResult = await callCheckBotAdmin(chatId);
-        // Expect something like: { success: true/false, chatInfo: {...} }
         if (adminCheckResult?.success) {
           isAdmin = true;
         }
@@ -48,19 +46,16 @@ export const generateInviteLinksCron = async () => {
 
       if (!isAdmin) {
         logger.warn(`Bot is not admin in chat ${chatId}, skipping event ${eventUuid}.`);
-        continue; // Skip this event
+        continue;
       }
 
-      // 3) Handle REJECTED but still have an invite link => revoke it
+      // 3) Revoke links for REJECTED users
       const rejectedUsersWithLink = await eventRegistrantsDB.fetchRejectedUsersWithLink(eventUuid);
-
       for (const reg of rejectedUsersWithLink) {
         const oldInviteLink = reg.telegram_invite_link!;
         try {
-          // Call your Telegram Bot service to DELETE the link
           const revokeResult = await callDeleteInviteLink(chatId, oldInviteLink);
           if (revokeResult.success) {
-            // If success, update DB and remove the link
             await eventRegistrantsDB.clearInviteLink(reg.id);
             logger.log(`Revoked link for user_id=${reg.user_id} event=${eventUuid}`);
           }
@@ -69,23 +64,43 @@ export const generateInviteLinksCron = async () => {
         }
       }
 
-      // 4) Handle APPROVED/CHECKEDIN but have NO invite link => create a new link
+      // 4) Create invite links for APPROVED/CHECKEDIN with no link
       const needInviteLink = await eventRegistrantsDB.fetchNeedInviteLink(eventUuid);
 
       for (const reg of needInviteLink) {
+        // Skip if no user_id
+        if (!reg.user_id) continue;
+
         try {
-          // Call your Telegram Bot to CREATE a link
+          // Create the invite link
           const createResult = await callCreateInviteLink(chatId, {
             creates_join_request: false,
             name: `Event_${eventUuid}_User_${reg.user_id}`,
           });
 
           if (createResult.success && createResult.invite_link) {
-            // Store the new link in the database
-            await eventRegistrantsDB.setInviteLink(reg.id, createResult.invite_link);
-            logger.log(`Created invite link for user_id=${reg.user_id} event=${eventUuid}`);
+            // 5) Send a DM to the user with the link
+            const userTelegramId = reg.user_id; // ensure this is the correct Telegram user ID
+            const inviteLink = createResult.invite_link;
+            const customMessage =
+              `👋 Here is your invite link for <b>${eventTitle}</b>. \n` +
+              `⚠️ This is a <u>one-time link</u>, so if someone else uses it, you won’t be able to join.\n` +
+              `Please keep it private.`;
+
+            const dmResult = await sendTelegramMessage({
+              chat_id: userTelegramId,
+              message: customMessage,
+              link: inviteLink,
+              linkText: "🔗 Join Group",
+            });
+            if (dmResult.success) {
+              logger.log(`Sent DM to user_id=${reg.user_id} event=${eventUuid} with invite link. Link: ${inviteLink}`);
+              await eventRegistrantsDB.setInviteLink(reg.id, inviteLink);
+            }
+            await sleep(200); // Sleep for 1 second to avoid rate limits
           }
         } catch (err) {
+          console.error(err);
           logger.error(`Failed to create link for user_id=${reg.user_id} event=${eventUuid}:`, err);
         }
       }

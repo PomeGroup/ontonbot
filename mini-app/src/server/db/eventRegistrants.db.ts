@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { eventRegistrants, notifications, visitors, events } from "@/db/schema";
-import { and, asc, count, eq, gt, inArray, isNotNull, ne, not, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNotNull, isNull, ne, not, or, sql } from "drizzle-orm";
 
 export const fetchApprovedUsers = async (
   eventUuid: string,
@@ -159,7 +159,7 @@ export const fetchNeedInviteLink = async (eventUuid: string) =>
       and(
         eq(eventRegistrants.event_uuid, eventUuid),
         inArray(eventRegistrants.status, ["approved", "checkedin"]),
-        sql`${eventRegistrants.telegram_invite_link} IS NULL`
+        or(eq(eventRegistrants.telegram_invite_link, ""), isNull(eventRegistrants.telegram_invite_link))
       )
     )
     .execute();
@@ -170,7 +170,7 @@ export const fetchNeedInviteLink = async (eventUuid: string) =>
 export const setInviteLink = async (registrantId: number, inviteLink: string) => {
   await db
     .update(eventRegistrants)
-    .set({ telegram_invite_link: inviteLink })
+    .set({ telegram_invite_link: inviteLink, updatedBy: "invitor" })
     .where(eq(eventRegistrants.id, registrantId))
     .execute();
 };

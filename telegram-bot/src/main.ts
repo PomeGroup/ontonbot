@@ -77,6 +77,10 @@ import { announceBotAdded } from "./handlers/announceBotAdded";
     bot.command("banner", bannerHandler);
     bot.command("start", startHandler);
     bot.command("sbtdist", sbtdistHandler);
+    bot.command("id", async (ctx) => {
+      await announceBotAdded(ctx);
+
+    });
     bot.on("my_chat_member", async (ctx) => {
       // Check if the bot is newly added or promoted
       if (isBotNewlyAddedOrPromoted(ctx)) {

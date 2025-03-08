@@ -28,7 +28,7 @@ affiliateComposer.use(async (ctx, next) => {
   const { isOrganizerOrAdmin } = await isUserOrganizerOrAdmin(userIdString);
   if (!isOrganizerOrAdmin) {
     // Stop the flow
-    await ctx.reply("You are not authorized to run this command.");
+    // await ctx.reply("You are not authorized to run this command.");
     return;
   }
 

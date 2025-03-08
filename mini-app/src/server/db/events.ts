@@ -688,14 +688,14 @@ const updateActivityId = async (event_uuid: string, activity_id: number) => {
   await eventDB.deleteEventCache(event_uuid);
 };
 
-export const fetchUpcomingEventsWithGroup = async (nowInSeconds: number) =>
+export const fetchUpcomingEventsWithGroup = async (timeInSeconds: number) =>
   await db
     .select()
     .from(events)
     .where(
       and(
         isNotNull(events.eventTelegramGroup),
-        gt(events.start_date, nowInSeconds) // i.e., event start time > current time
+        gt(events.end_date, timeInSeconds) // i.e., event end time > current time
       )
     )
     .execute();
