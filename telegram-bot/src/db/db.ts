@@ -621,6 +621,71 @@ export const getApprovedRegistrants = async (eventUUID: string) => {
   }
 };
 
+export interface EventRow {
+  event_id: number;
+  event_uuid: string;
+  title: string;
+  owner: number;
+  end_date: number;
+  event_telegram_group?: number | null;
+}
+
+// 1) For admin: fetch all upcoming "online" + "registration" events
+export async function getUpcomingOnlineRegEventsForAdmin(): Promise<EventRow[]> {
+  const client = await pool.connect();
+  try {
+    const sql = `
+        SELECT event_id, event_uuid, title, owner, end_date, event_telegram_group
+        FROM events
+        WHERE participation_type = 'online'
+          AND has_registration = TRUE
+          AND end_date > EXTRACT(EPOCH FROM now())
+        ORDER BY end_date ASC
+        LIMIT 100
+    `;
+    const res = await client.query(sql);
+    return res.rows;
+  } finally {
+    client.release();
+  }
+}
+
+// 2) For organizer: fetch only the user’s events that are upcoming, online, and have registration
+export const getUpcomingOnlineRegEventsForOrganizer = async (userId: number): Promise<EventRow[]> => {
+  const client = await pool.connect();
+  try {
+    const sql = `
+        SELECT event_id, event_uuid, title, owner, end_date, event_telegram_group
+        FROM events
+        WHERE participation_type = 'online'
+          AND has_registration = TRUE
+          AND end_date > EXTRACT(EPOCH FROM now())
+          AND owner = $1
+        ORDER BY end_date ASC
+        LIMIT 100
+    `;
+    const res = await client.query(sql, [userId]);
+    return res.rows;
+  } finally {
+    client.release();
+  }
+};
+
+
+// 4) Update event_telegram_group in DB
+export const updateEventTelegramGroup = async (eventId: number, groupId: number): Promise<void> => {
+  const client = await pool.connect();
+  try {
+    await client.query(
+      `UPDATE events
+       SET event_telegram_group = $1
+       WHERE event_id = $2`,
+      [groupId, eventId],
+    );
+  } finally {
+    client.release();
+  }
+};
 
 createDatabase().then(() => {
   logger.log("Database created successfully");

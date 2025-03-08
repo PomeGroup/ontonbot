@@ -22,7 +22,11 @@ import { connectRedis } from "./lib/redisTools";
 import { checkRateLimit } from "./utils/checkRateLimit";
 import { RATE_LIMIT_OPTIONS } from "./constants";
 import { MyContext } from "./types/MyContext";
-import { affiliateHandler } from "./handlers/affiliateHandler";
+import { checkBotAdminHandler } from "./controllers/checkBotAdminHandler";
+import { createInviteLinkHandler } from "./controllers/createInviteLinkHandler";
+import { deleteInviteLinkHandler } from "./controllers/deleteInviteLinkHandler";
+import { isBotNewlyAddedOrPromoted } from "./helpers/isBotNewlyAddedOrPromoted";
+import { announceBotAdded } from "./handlers/announceBotAdded";
 
 (async function bootstrap() {
   try {
@@ -73,7 +77,16 @@ import { affiliateHandler } from "./handlers/affiliateHandler";
     bot.command("banner", bannerHandler);
     bot.command("start", startHandler);
     bot.command("sbtdist", sbtdistHandler);
+    bot.command("id", async (ctx) => {
+      await announceBotAdded(ctx);
 
+    });
+    bot.on("my_chat_member", async (ctx) => {
+      // Check if the bot is newly added or promoted
+      if (isBotNewlyAddedOrPromoted(ctx)) {
+        await announceBotAdded(ctx);
+      }
+    });
 
     bot.use(mainComposer);
 
@@ -107,6 +120,9 @@ import { affiliateHandler } from "./handlers/affiliateHandler";
     app.post("/send-photo", handlePhotoMessage);
     app.post("/share-organizer", handleShareOrganizer);
     app.post("/check-block-status", handleCheckBlockStatus);
+    app.post("/check-bot-admin", checkBotAdminHandler);
+    app.post("/create-invite", createInviteLinkHandler);
+    app.post("/delete-invite", deleteInviteLinkHandler);
     // 7) Start listening, store the server instance
     const server = app.listen(port, () =>
       logger.log(`Telegram Bot API service on port ${port}`),

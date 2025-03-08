@@ -55,7 +55,7 @@ export const events = pgTable(
     countryId: integer("country_id").references(() => giataCity.id),
     tsRewardImage: text("ts_reward_image"),
     tsRewardVideo: text("ts_reward_video"),
-
+    eventTelegramGroup: bigint("event_telegram_group", { mode: "number" }),
     /* ------------------------- // < Event Registration ------------------------ */
     has_registration: boolean("has_registration").default(false),
     has_approval: boolean("has_approval").default(false),
