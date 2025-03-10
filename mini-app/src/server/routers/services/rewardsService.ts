@@ -440,6 +440,7 @@ export const CsbtTicketForApi = async (event_uuid: string, user_id: number) => {
           null, // no reward link data
           "pending_creation" // custom status
         );
+        break;
       } catch (insertErr) {
         // If even that fails, just log it
         logger.error("Error inserting pending creation reward record", insertErr);

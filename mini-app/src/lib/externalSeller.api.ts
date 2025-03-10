@@ -32,16 +32,16 @@ const refundSchema = z.object({
 
 /* -------------------------------------------------------------------------- */
 const externalSellerApiAccessLimit = async (eventUuid: string) => {
-  if (eventUuid !== "c5f9bd59-a46b-4dce-91cb-3cd146b255a5" && !is_local_env()) {
-    throw {
-      status: 500,
-      errorBody: {
-        success: false,
-        message: "Your API KEY has Not permission to use this endpoint",
-        status: "access_blocked",
-      },
-    };
-  }
+  // if (!is_local_env()) {
+  //   throw {
+  //     status: 500,
+  //     errorBody: {
+  //       success: false,
+  //       message: "Your API KEY has Not permission to use this endpoint",
+  //       status: "access_blocked",
+  //     },
+  //   };
+  // }
 };
 
 /**
