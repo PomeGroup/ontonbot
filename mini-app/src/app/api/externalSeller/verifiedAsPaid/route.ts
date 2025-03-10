@@ -4,6 +4,7 @@ import externalSellerApi from "@/lib/externalSeller.api";
 import ordersDB from "@/server/db/orders.db";
 import { isStructuredErrorShape } from "@/lib/openAPIErrorHandler";
 import { is_local_env } from "@/server/utils/evnutils";
+import { logger } from "@/server/utils/logger";
 
 export async function POST(request: Request) {
   if (request.method === "OPTIONS") {
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
     if (isStructuredErrorShape(err)) {
       return new Response(JSON.stringify(err.errorBody), { status: err.status });
     }
-    console.error("Error in POST /api/externalSeller/verifiedAsPaid", err);
+    logger.error("Error in POST /api/externalSeller/verifiedAsPaid", err);
     // fallback
     return new Response(
       JSON.stringify({
