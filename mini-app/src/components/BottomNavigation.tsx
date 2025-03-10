@@ -25,7 +25,7 @@ const tabs = [
     icon: <UserIcon />,
     url: "/my",
   },
-];
+] as const;
 
 export default function BottomNavigation({ active }: { active: (typeof tabs)[number]["title"] }) {
   const router = useRouter();
