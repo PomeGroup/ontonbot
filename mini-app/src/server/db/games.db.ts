@@ -24,10 +24,7 @@ export const addGame = async (gameData: GamesRowInsert): Promise<GamesRow | unde
   }
 };
 
-export const insertGameTx = async (
-  tx: PgTransaction<PostgresJsQueryResultHKT, Record<string, never>, Record<string, never>>,
-  data: GamesRowInsert
-) => {
+export const insertGameTx = async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0], data: GamesRowInsert) => {
   const [inserted] = await tx.insert(games).values(data).returning().execute();
   return inserted;
 };

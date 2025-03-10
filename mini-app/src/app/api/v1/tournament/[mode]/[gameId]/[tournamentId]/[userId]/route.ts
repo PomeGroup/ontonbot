@@ -187,19 +187,7 @@ export async function POST(
     // f) Insert into local DB with a transaction (game + tournament)
     try {
       const numericUserId = parseInt(userId, 10) || 0;
-      await db.transaction(async (tx) => {
-        // 'tx' is a PgTransaction
-        const newGame = await insertGameTx(tx, {
-          hostGameId: "abc123",
-          // ...
-        });
 
-        // Do another insert in the same Tx
-        const newTournament = await insertTournamentTx(tx, {
-          // ...
-          gameId: newGame.id,
-        });
-      });
       const result = await db.transaction(async (trx) => {
         // Insert game
         const gameRow = await gamesDB.insertGameTx(trx, {

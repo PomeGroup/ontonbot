@@ -37,6 +37,13 @@ export const getTournamentById = async (tournamentId: number): Promise<Tournamen
   }
 };
 
+export const insertTournamentTx = async (
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  data: TournamentsRowInsert
+) => {
+  const [inserted] = await tx.insert(tournaments).values(data).returning().execute();
+  return inserted;
+};
 /**
  * Optional: Add more methods, e.g. getTournamentByHostTournamentId, updateTournament, etc.
  */
@@ -44,4 +51,5 @@ export const getTournamentById = async (tournamentId: number): Promise<Tournamen
 export const tournamentsDB = {
   addTournament,
   getTournamentById,
+  insertTournamentTx,
 };
