@@ -48,7 +48,15 @@ import { visitors } from "./schema/visitors";
 import { walletChecks } from "./schema/walletChecks";
 import { affiliateLinks, AffiliateLinksRow, AffiliateItemTypeEnum } from "./schema/affiliateLinks";
 import { affiliateClick, AffiliateClickRow } from "./schema/affiliateClick";
-
+import {
+  tournaments,
+  TournamentsRow,
+  tournamentStateType,
+  tournamentEntryType,
+  tournamentPrizePoolStatusType,
+  tournamentPrizeType,
+} from "./schema/tournaments";
+import { games } from "./schema/games";
 import {
   accessRoleEnum,
   accessRoleEnumType,
@@ -142,6 +150,8 @@ export {
   walletChecks,
   affiliateLinks,
   affiliateClick,
+  tournaments,
+  games,
 };
 
 // Type Exports
@@ -176,4 +186,9 @@ export type {
   AffiliateLinksRow,
   AffiliateItemTypeEnum,
   AffiliateClickRow,
+  TournamentsRow,
+  tournamentStateType,
+  tournamentEntryType,
+  tournamentPrizePoolStatusType,
+  tournamentPrizeType,
 };
