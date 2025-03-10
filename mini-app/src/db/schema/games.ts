@@ -31,3 +31,4 @@ export const games = pgTable(
 
 // Drizzle type for selecting rows
 export type GamesRow = InferSelectModel<typeof games>;
+export type GamesRowInsert = Omit<GamesRow, "id" | "createdAt" | "updatedAt">;

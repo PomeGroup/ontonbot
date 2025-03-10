@@ -51,12 +51,13 @@ import { affiliateClick, AffiliateClickRow } from "./schema/affiliateClick";
 import {
   tournaments,
   TournamentsRow,
+  TournamentsRowInsert,
   tournamentStateType,
   tournamentEntryType,
   tournamentPrizePoolStatusType,
   tournamentPrizeType,
 } from "./schema/tournaments";
-import { games } from "./schema/games";
+import { games, GamesRowInsert } from "./schema/games";
 import {
   accessRoleEnum,
   accessRoleEnumType,
@@ -181,6 +182,7 @@ export type {
   callbackTaskRunStatusType,
   CallBackTaskSHttpMethodType,
   CallbackTasksRow,
+  TournamentsRowInsert,
   CallBackTaskStepNameType,
   EventTicketType,
   AffiliateLinksRow,
@@ -191,4 +193,5 @@ export type {
   tournamentEntryType,
   tournamentPrizePoolStatusType,
   tournamentPrizeType,
+  GamesRowInsert,
 };

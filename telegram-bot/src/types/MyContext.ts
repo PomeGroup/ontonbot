@@ -43,6 +43,21 @@ export interface SessionData {
   groupEventUUID?: string;
   groupEventTitle?: string;
   pendingGroupId?: number;
+  /* ------------------ Tournament Flow ------------------ */
+  tournamentStep?:
+    | "askGameId"
+    | "askTournamentId"
+    | "askTournamentPhoto"
+    | "done"
+    | undefined;
+
+  // If you prefer to store the tournament data in an object:
+  tournamentData?: {
+    gameId?: string;
+    tournamentId?: string;
+    photoFileId?: string;
+  };
+
 }
 
 export type MyContext = Context & SessionFlavor<SessionData>;

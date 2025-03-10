@@ -102,6 +102,7 @@ export const tournaments = pgTable(
 );
 
 export type TournamentsRow = InferSelectModel<typeof tournaments>;
+export type TournamentsRowInsert = Omit<TournamentsRow, "id" | "createdAt" | "updatedAt">;
 export type tournamentStateType = (typeof tournamentStateEnum.enumValues)[number];
 export type tournamentEntryType = (typeof entryTypeEnum.enumValues)[number];
 export type tournamentPrizePoolStatusType = (typeof prizePoolStatusEnum.enumValues)[number];
