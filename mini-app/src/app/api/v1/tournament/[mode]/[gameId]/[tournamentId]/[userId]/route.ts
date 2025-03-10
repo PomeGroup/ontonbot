@@ -15,6 +15,7 @@ interface IParams {
   mode: string; // "check" or "create"
   gameId: string; // e.g. "f50fcb6e-591b-4345-8233-f97db10c40fb" (Elympics UUID)
   tournamentId: string; // e.g. "o17yuwmr"
+  userId: number;
 }
 
 /**
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest, { params }: { params: IParams }) {
     return new Response(JSON.stringify({ message: "unauthorized" }), { status: 401 });
   }
 
-  const { mode, gameId, tournamentId } = params;
+  const { mode, gameId, tournamentId, userId } = params;
   if (!gameId || !tournamentId) {
     return new Response(JSON.stringify({ message: "missing_game_or_tournament_id" }), {
       status: 400,
@@ -88,7 +89,7 @@ export async function GET(req: NextRequest, { params }: { params: IParams }) {
         hostTournamentId: details.Id, // e.g. "o17yuwmr"
         hostTournamentGuid: details.TournamentGuid, // e.g. "4d28ea98-a01c-41ca-a2b2-dc7cffe6b1ef"
         gameId: gameRow?.id ?? 1, // references games.id
-        createdByUserId: 123, // e.g. from your user or session
+        createdByUserId: userId, // e.g. from your user or session
         owner: null, // optional
         name: details.Name,
         imageUrl: "",
