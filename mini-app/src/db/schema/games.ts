@@ -17,7 +17,7 @@ export const games = pgTable(
     // If you want to store additional data from host about the game,
     // you could add a JSON column:
     rawGameJson: json("raw_game_json").$type<Record<string, unknown>>(),
-
+    userId: serial("user_id").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),
   },

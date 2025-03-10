@@ -2,6 +2,8 @@ import { db } from "@/db/db";
 import { eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import { games, GamesRow, GamesRowInsert } from "@/db/schema/games";
+import type { PgTransaction } from "drizzle-orm/pg-core/session";
+import { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 
 /**
  * Insert a new row in the 'games' table.
@@ -20,6 +22,14 @@ export const addGame = async (gameData: GamesRowInsert): Promise<GamesRow | unde
     logger.error("Error inserting game:", error);
     throw error;
   }
+};
+
+export const insertGameTx = async (
+  tx: PgTransaction<PostgresJsQueryResultHKT, Record<string, never>, Record<string, never>>,
+  data: GamesRowInsert
+) => {
+  const [inserted] = await tx.insert(games).values(data).returning().execute();
+  return inserted;
 };
 
 /**
@@ -43,5 +53,6 @@ export const getGameById = async (gameId: number): Promise<GamesRow | undefined>
 
 export const gamesDB = {
   addGame,
+  insertGameTx,
   getGameById,
 };
