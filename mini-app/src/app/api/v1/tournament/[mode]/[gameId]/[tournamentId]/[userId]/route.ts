@@ -4,48 +4,172 @@ import { getTournamentDetails } from "@/lib/elympicsApi";
 import { gamesDB } from "@/server/db/games.db";
 import { tournamentsDB } from "@/server/db/tournaments.db";
 import { logger } from "@/server/utils/logger";
+import sizeOf from "image-size";
+import { scanFileWithClamAV } from "@/lib/scanFileWithClamAV";
+import axios from "axios";
+import FormData from "form-data";
+import formidable, { Fields, Files, File as FormidableFile } from "formidable";
+import jwt from "jsonwebtoken";
+import fs from "fs";
+import { toNodeJsRequest } from "@/app/api/files/helpers/toNodeJsRequest";
 
-// Example environment variables used for Elympics API calls
-const ELYMPICS_PUBLISHER_KEY = process.env.ELYMPICS_PUBLISHER_KEY || "onton-key-79bb98e150253efbcffffc9c";
-const ELYMPICS_BEARER_TOKEN =
-  process.env.ELYMPICS_BEARER_TOKEN ||
-  "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIyNTAzYmFjZi1iODZlLTQ3M2QtOGYxMC1jYTY2NDA4NTZhYWEiLCJhdXRoLXR5cGUiOiJjbGllbnQtc2VjcmV0IiwibmJmIjoxNzQxNjE0ODE2LCJleHAiOjE3NDE3MDEyMTYsImlhdCI6MTc0MTYxNDgxNn0.EvYNon9G0QiY28VgQgef_6Bg_ENnOEmpQlmOchgUFrSLtAA_RQZUv1SKcOUDOXbJGFVTQz7TPYb3pAg6JIv2ORqzfVPLJVVOHKsziU1BnO5E5lo9z128rgP0y-056OQSDJD9EdFK5DpBh6O1tqyStc6WJwNX5wAgwV937h--9zjMfM_YSrK5Zz_fSqP-NXCwQCV8G6NLvWmDb4SnYmxRzUdXwvskesoI6hhAOyDH1GyzpFMC0JsY3B8IMjZM686e8VjCTsbnz-TnOX04CPIcXx-1-jwIdIHMqhInNh5u5fDrpphNd_2X2rACRNKgjz7ltcH7f_VlYe1j3rXMMw_bCxE4ISFKM_GyjpNMp_mufDpvUhRSCOiAvKa2uZsdHq1zxJd70oqtCvp6mfWAfgfAg4p-Qz99eTwEjaYShEINMtW-7PfwFctkb_xxvyTj7nCnQhVmZjgpQIuWJOFfPEtUh2zl11hpVpuGWzL4JDekae9YsXRzBWVmE01KxOHKexKgCYEaOGKnPEXasup7KKy4PEtuXuksLcnhttw3M0euKc9t43wh25jYO1WFhrJA-u0AKFiRejuj02GR5b5_htR5jgCnrnlAeFi53926irggyVwMqHva0fNznfrSETMP7xEo2JtWRT10sL35EdmQ8CGTcjsrT8_li4ipS4LPCq187RE";
+const ELYMPICS_PUBLISHER_KEY = process.env.ELYMPICS_PUBLISHER_KEY || "";
+const ELYMPICS_BEARER_TOKEN = process.env.ELYMPICS_BEARER_TOKEN || "";
+const UPLOAD_FILE_ENDPOINT = process.env.UPLOAD_FILE_ENDPOINT || "http://localhost:3000/api/files/upload";
+const UPLOAD_TOKEN = process.env.ONTON_API_SECRET || "fallback-secret";
 
-interface IParams {
-  mode: string; // "check" or "create"
-  gameId: string; // e.g. "f50fcb6e-591b-4345-8233-f97db10c40fb" (Elympics UUID)
-  tournamentId: string; // e.g. "o17yuwmr"
-  userId: number;
+// Ensure we're using the Node.js runtime (not Edge)
+export const config = {
+  runtime: "nodejs",
+};
+
+/**
+ * 1) parseMultipartForm:
+ *    - Reads the entire request body into a Buffer
+ *    - Wraps it in a Node.js Readable stream
+ *    - Parses with Formidable
+ */
+export async function parseMultipartForm(req: NextRequest): Promise<{ fields: Fields; files: Files }> {
+  const contentType = req.headers.get("content-type") || "";
+  if (!contentType.startsWith("multipart/form-data")) {
+    throw new Error("Must be multipart/form-data");
+  }
+
+  // Create Formidable instance (10 MB limit, etc.)
+  const form = formidable({
+    maxFileSize: 10 * 1024 * 1024,
+    keepExtensions: true,
+    multiples: false,
+  });
+  const nodeReq = await toNodeJsRequest(req);
+
+  // Parse the Node.js stream with Formidable
+  return new Promise((resolve, reject) => {
+    form.parse(nodeReq, (err, fields, files) => {
+      if (err) {
+        logger.log(`Error parsing formData: ${err}`);
+        return reject(err);
+      }
+      resolve({ fields, files });
+    });
+  });
 }
 
 /**
- * GET /api/tournament/[mode]/[gameId]/[tournamentId]
+ * POST /api/tournament/create/[gameId]/[tournamentId]/[telegramId]
  *
- * mode = "check"   => fetch Elympics data & return
- * mode = "create" => fetch Elympics data, compare with route's gameId, insert in DB
+ * Expects multipart/form-data with a "file" field for the tournament image.
+ * Steps:
+ * 1) Auth checks
+ * 2) Parse + read file from 'fileData.filepath' => Buffer
+ * 3) Validate image dimension + ClamAV
+ * 4) Upload to Minio (via your /files/upload endpoint)
+ * 5) Fetch Elympics => create local DB record => return success
  */
-export async function GET(req: NextRequest, { params }: { params: IParams }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { gameId: string; tournamentId: string; userId: string } }
+) {
   // 1) Auth checks
-
+  const [, userError] = getAuthenticatedUser();
   const apiKeyError = apiKeyAuthentication(req);
-  if (apiKeyError) {
+  if (userError && apiKeyError) {
     return new Response(JSON.stringify({ message: "unauthorized" }), { status: 401 });
   }
 
-  const { mode, gameId, tournamentId, userId } = params;
+  const { gameId, tournamentId, userId } = params;
   if (!gameId || !tournamentId) {
-    return new Response(JSON.stringify({ message: "missing_game_or_tournament_id" }), {
-      status: 400,
-    });
+    return new Response(JSON.stringify({ message: "missing_game_or_tournament_id" }), { status: 400 });
   }
 
-  // 2) Fetch Elympics tournament details
+  // 2) Parse the form => get 'file' from Formidable
+  let fileBuffer: Buffer | null = null;
+  let mimeType: string | null = null;
+
+  try {
+    const { files } = await parseMultipartForm(req);
+    if (!files || !files.file) {
+      return new Response(JSON.stringify({ message: "file_required" }), { status: 400 });
+    }
+
+    // If multiple files, just pick the first
+    const fileData = Array.isArray(files.file) ? files.file[0] : files.file;
+
+    // Use fs.readFileSync(...) on the 'filepath'
+    const filePath = (fileData as FormidableFile).filepath;
+    fileBuffer = fs.readFileSync(filePath);
+    mimeType = (fileData as FormidableFile).mimetype || "image/png";
+  } catch (err) {
+    logger.error("Error parsing multipart form:", err);
+    return new Response(JSON.stringify({ message: "parse_form_error" }), { status: 400 });
+  }
+
+  if (!fileBuffer) {
+    return new Response(JSON.stringify({ message: "file_buffer_empty" }), { status: 400 });
+  }
+
+  // 2a) Validate image dimensions
+  try {
+    const dimensions = sizeOf(fileBuffer);
+    if (!dimensions.width || !dimensions.height) {
+      return new Response(JSON.stringify({ message: "invalid_image_dimensions" }), { status: 400 });
+    }
+    if (dimensions.width < 400 || dimensions.height < 400) {
+      return new Response(JSON.stringify({ message: "Image too small. Min 400x400." }), { status: 400 });
+    }
+  } catch (err) {
+    logger.error("Error reading image dimensions:", err);
+    return new Response(JSON.stringify({ message: "failed_image_dimensions" }), { status: 400 });
+  }
+
+  // 2b) ClamAV scan
+  let isClean = false;
+  try {
+    isClean = await scanFileWithClamAV(fileBuffer);
+  } catch (err) {
+    logger.error("Error scanning file with ClamAV:", err);
+    return new Response(JSON.stringify({ message: "clamav_scan_error" }), { status: 400 });
+  }
+  if (!isClean) {
+    return new Response(JSON.stringify({ message: "malicious_file_detected" }), { status: 400 });
+  }
+
+  // 3) Upload to your file endpoint (/files/upload) with FormData
+  let uploadedImageUrl = "";
+  try {
+    const formData = new FormData();
+    formData.append("image", fileBuffer, {
+      filename: "tournament_image.png",
+      contentType: mimeType,
+    });
+    formData.append("subfolder", "event");
+    const token = jwt.sign({ scope: "uploadImage" }, UPLOAD_TOKEN, { expiresIn: "1h" });
+    const res = await axios.post(UPLOAD_FILE_ENDPOINT, formData, {
+      headers: {
+        ...formData.getHeaders(),
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.data?.imageUrl) {
+      return new Response(JSON.stringify({ message: "upload_failed_no_imageUrl" }), { status: 500 });
+    }
+    uploadedImageUrl = res.data.imageUrl;
+  } catch (err) {
+    logger.error("Error uploading image to /files/upload:", err);
+    return new Response(JSON.stringify({ message: "file_upload_error" }), { status: 500 });
+  }
+
+  // 4) Fetch Elympics data => validate
   let details;
   try {
     details = await getTournamentDetails(ELYMPICS_PUBLISHER_KEY, ELYMPICS_BEARER_TOKEN, tournamentId);
     if (!details) {
-      return new Response(JSON.stringify({ message: "tournament_not_found_in_elympics" }), {
-        status: 404,
+      return new Response(JSON.stringify({ message: "tournament_not_found_in_elympics" }), { status: 404 });
+    }
+    if (details.GameId !== gameId) {
+      return new Response(JSON.stringify({ message: "mismatched_game_id", expected: gameId, actual: details.GameId }), {
+        status: 400,
       });
     }
   } catch (error) {
@@ -53,82 +177,53 @@ export async function GET(req: NextRequest, { params }: { params: IParams }) {
     return new Response(JSON.stringify({ message: "elympics_fetch_error" }), { status: 500 });
   }
 
-  // 3) Confirm the Elympics data's GameId matches our route param 'gameId'
-  if (details.GameId !== gameId) {
-    return new Response(
-      JSON.stringify({
-        message: "mismatched_game_id",
-        expected: gameId,
-        actual: details.GameId,
-      }),
-      { status: 400 }
-    );
-  }
+  // 5) Insert into local DB => games + tournaments
+  try {
+    // Insert game if needed
+    const gameRow = await gamesDB.addGame({
+      hostGameId: gameId,
+      name: details.Name ?? "",
+      imageUrl: "",
+      rawGameJson: details as any,
+    });
 
-  // 4) If mode is just "check", return the data
-  if (mode === "check") {
-    return new Response(JSON.stringify({ data: details }), {
+    // Insert tournament (store 'uploadedImageUrl' in the DB)
+    const insertedTournament = await tournamentsDB.addTournament({
+      hostTournamentId: details.Id,
+      hostTournamentGuid: details.TournamentGuid,
+      gameId: gameRow?.id ?? 1,
+      createdByUserId: parseInt(params.userId, 10) || 0,
+      owner: parseInt(params.userId, 10) || 0,
+      name: details.Name,
+      imageUrl: uploadedImageUrl,
+      state: details.State === "Active" ? "Active" : "Concluded",
+      createDate: details.CreateDate ? new Date(details.CreateDate) : null,
+      startDate: details.StartDate ? new Date(details.StartDate) : null,
+      endDate: details.EndDate ? new Date(details.EndDate) : null,
+      playersCount: details.PlayersCount,
+      entryFee: details.EntryFee,
+      tonEntryType: details.TonDetails?.EntryType === "Tickets" ? "Tickets" : "Pass",
+      tonTournamentAddress: details.TonDetails?.TournamentAddress,
+      prizePoolStatus: "Undefined",
+      prizeType: details.PrizeType === "Coin" ? "Coin" : "None",
+      currentPrizePool: details.CurrentPrizePool,
+      activityId: null,
+      tsRewardImage: null,
+      tsRewardVideo: null,
+      hidden: false,
+      rawHostJson: details as any,
+    });
+
+    if (!insertedTournament) {
+      return new Response(JSON.stringify({ message: "failed_to_insert_tournament" }), { status: 500 });
+    }
+
+    return new Response(JSON.stringify({ message: "success", tournament: insertedTournament }), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
+  } catch (err) {
+    logger.error("Error creating tournament in DB:", err);
+    return new Response(JSON.stringify({ message: "db_insert_error" }), { status: 500 });
   }
-
-  // 5) If mode === "create", insert game + tournament in DB
-  if (mode === "create") {
-    try {
-      // Insert game if not already exist (this snippet always inserts new row—real code might check first)
-      const gameRow = await gamesDB.addGame({
-        hostGameId: gameId,
-        name: details.Name, // optional
-        imageUrl: "", // optional
-        rawGameJson: details as any,
-      });
-
-      // Insert tournament
-      const tournamentRow = await tournamentsDB.addTournament({
-        hostTournamentId: details.Id, // e.g. "o17yuwmr"
-        hostTournamentGuid: details.TournamentGuid, // e.g. "4d28ea98-a01c-41ca-a2b2-dc7cffe6b1ef"
-        gameId: gameRow?.id ?? 1, // references games.id
-        createdByUserId: userId, // e.g. from your user or session
-        owner: null, // optional
-        name: details.Name,
-        imageUrl: "",
-        state: details.State === "Active" ? "Active" : "Concluded", // example
-        createDate: details.CreateDate ? new Date(details.CreateDate) : null,
-        startDate: details.StartDate ? new Date(details.StartDate) : null,
-        endDate: details.EndDate ? new Date(details.EndDate) : null,
-        playersCount: details.PlayersCount,
-        entryFee: details.EntryFee,
-        tonEntryType: details.TonDetails?.EntryType === "Tickets" ? "Tickets" : "Pass",
-        tonTournamentAddress: details.TonDetails?.TournamentAddress,
-        prizePoolStatus: "Undefined",
-        prizeType: details.PrizeType === "Coin" ? "Coin" : "None",
-        currentPrizePool: details.CurrentPrizePool,
-        activityId: null,
-        tsRewardImage: null,
-        tsRewardVideo: null,
-        hidden: false,
-        rawHostJson: details as any,
-      });
-
-      if (!tournamentRow) {
-        return new Response(JSON.stringify({ message: "failed_to_insert_tournament" }), {
-          status: 500,
-        });
-      }
-
-      return new Response(JSON.stringify({ insertedTournament: tournamentRow }), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      });
-    } catch (err) {
-      logger.error("Error creating tournament in DB:", err);
-      return new Response(JSON.stringify({ message: "db_insert_error" }), {
-        status: 500,
-      });
-    }
-  }
-
-  // If mode not recognized
-  return new Response(JSON.stringify({ message: "invalid_mode" }), { status: 400 });
 }
