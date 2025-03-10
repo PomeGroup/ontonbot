@@ -9,6 +9,7 @@ export async function POST(request: Request) {
   if (request.method === "OPTIONS") {
     return Response.json(null, { status: 204 }); // Handle preflight requests
   }
+
   // 1) Authentication check
   const [eventOwner, authError] = await getAuthenticatedUserApi(request);
   if (authError) {
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
       await externalSellerApi.parseAndValidateRequest(request);
 
     await externalSellerApi.externalSellerApiAccessLimit(eventUuid);
-    
+
     // 3) Fetch & validate event (ownership, etc.)
     const eventData = await externalSellerApi.fetchAndValidateEvent(eventUuid, eventOwner);
 
@@ -74,7 +75,7 @@ export async function POST(request: Request) {
     if (isStructuredErrorShape(err)) {
       return new Response(JSON.stringify(err.errorBody), { status: err.status });
     }
-
+    console.error("Error in POST /api/externalSeller/verifiedAsPaid", err);
     // fallback
     return new Response(
       JSON.stringify({
