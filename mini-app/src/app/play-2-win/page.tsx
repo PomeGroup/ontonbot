@@ -2,9 +2,10 @@
 
 import BottomNavigation from "@/components/BottomNavigation";
 import Typography from "@/components/Typography";
-import { Page } from "konsta/react";
+import { Button, Page } from "konsta/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 import "swiper/css";
 import { Pagination } from "swiper/modules";
@@ -13,8 +14,16 @@ import CustomCard from "../_components/atoms/cards/CustomCard";
 import CustomButton from "../_components/Button/CustomButton";
 
 const PlayToWin: React.FC = () => {
+  const router = useRouter();
   return (
     <Page>
+      <Button
+        onClick={() => {
+          router.push("/play-2-win/www/leaderboard");
+        }}
+      >
+        Leaderboard
+      </Button>
       <div className="p-4 flex flex-col gap-2 mb-12">
         <Typography variant="title2">Featured Contests</Typography>
         <div>
