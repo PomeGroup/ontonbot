@@ -183,6 +183,13 @@
       "when": 1741707463426,
       "tag": "0025_overrated_silver_surfer",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1741727469913,
+      "tag": "0026_silent_alex_wilder",
+      "breakpoints": true
     }
   ]
 }
