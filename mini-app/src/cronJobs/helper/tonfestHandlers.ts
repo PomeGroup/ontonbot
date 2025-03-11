@@ -27,7 +27,7 @@ export const addUserTicketFromOnton = async (payload: any): Promise<{ success: b
     };
     const { success, data } = await sendHttpRequest("POST", endpoint, headers, finalPayload);
     if (!data.success) {
-      console.error("Failed to add user ticket from Onton:", data);
+      logger.error("Failed to add user ticket from Onton:", data);
       return { success: false, data: { error: data.error } };
     }
     return { success, data };

@@ -80,7 +80,7 @@ async function processOrderCreation(order: OrderRow) {
     // Update DB in a transaction
     await updateDatabaseRecords(order, event, paymentInfo, mainEventActivityId, collectionAddress, ticketActivityId);
   } catch (error) {
-    console.error(`event_creation_error ${error}`);
+    logger.error(`event_creation_error ${error}`);
   }
 }
 

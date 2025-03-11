@@ -62,7 +62,7 @@ const insert = async (visitor_id: number, data: any, user_id: number, type: Rewa
       return ops.eq(fields.event_uuid, visitor?.event_uuid!);
     },
   });
-  console.log("insert", visitor_id, data, user_id, type, status);
+
   const result = await db
     .insert(rewards)
     .values({
@@ -142,7 +142,6 @@ const insertRewardWithData = async (
   data: any,
   status: RewardStatus
 ) => {
-  console.log("insertRewardWithData", visitor_id, user_id, type, data, status);
   return await rewardDB.insert(
     visitor_id,
     data, // Data from response or any other source
