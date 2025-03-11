@@ -62,7 +62,7 @@ const insert = async (visitor_id: number, data: any, user_id: number, type: Rewa
       return ops.eq(fields.event_uuid, visitor?.event_uuid!);
     },
   });
-
+  console.log("insert", visitor_id, data, user_id, type, status);
   const result = await db
     .insert(rewards)
     .values({
@@ -73,6 +73,7 @@ const insert = async (visitor_id: number, data: any, user_id: number, type: Rewa
       event_start_date: event?.start_date!,
       status: status,
       updatedBy: user_id.toString(),
+      tonSocietyStatus: "NOT_CLAIMED",
     })
     .returning()
     .execute();
@@ -141,6 +142,7 @@ const insertRewardWithData = async (
   data: any,
   status: RewardStatus
 ) => {
+  console.log("insertRewardWithData", visitor_id, user_id, type, data, status);
   return await rewardDB.insert(
     visitor_id,
     data, // Data from response or any other source
@@ -170,6 +172,7 @@ const insertReward = async (visitor_id: number, user_id: string, status: RewardS
       event_end_date: event?.end_date!,
       event_start_date: event?.start_date!,
       visitor_id: visitor_id, // Visitor ID as a parameter
+      tonSocietyStatus: "NOT_CLAIMED", // Default tonSocietyStatus
       updatedBy: user_id, // Updated by user ID as a parameter
     })
     .execute();

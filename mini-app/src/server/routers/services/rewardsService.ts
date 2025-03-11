@@ -4,7 +4,7 @@ import { createUserRewardLink } from "@/lib/ton-society-api";
 import { getAndValidateVisitor } from "@/server/routers/services/visitorService";
 
 import { db } from "@/db/db";
-import { eventRegistrants } from "@/db/schema";
+import { eventRegistrants, rewards } from "@/db/schema";
 import eventPaymentDB from "@/server/db/eventPayment.db";
 import eventDB, { selectEventByUuid } from "@/server/db/events";
 import rewardsDb from "@/server/db/rewards.db";
@@ -15,6 +15,7 @@ import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
+import { RewardDataTyepe } from "@/db/schema/rewards";
 
 //TODO - Put this in db functions files
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
@@ -392,9 +393,22 @@ export const CsbtTicketForApi = async (event_uuid: string, user_id: number) => {
     // In a normal CsbtTicket, we'd throw. But let's do so here as well:
     throw new Error("CsbtTicketRewardService eventData or activity_id is null");
   }
+  const paymentInfo = await eventPaymentDB.fetchPaymentInfoForCronjob(event_uuid);
 
+  if (!paymentInfo) {
+    logger.error(`CsbtTicketRewardService: No payment info found for event ${event_uuid}`);
+    throw new Error(`No payment info found for event ${event_uuid}`);
+  }
+  if (paymentInfo.ticket_type !== "TSCSBT") {
+    logger.error(`CsbtTicketRewardService: Event is not TSCSBT ${event_uuid}`);
+    throw new Error("Event is not TSCSBT");
+  }
+  if (!paymentInfo.ticketActivityId) {
+    logger.error(`CsbtTicketRewardService: Missing ticket_activity_id for TSCSBT event ${event_uuid}`);
+    throw new Error("Missing ticket_activity_id for TSCSBT event");
+  }
   // 2) Check if a reward already exists for this visitor
-  const existingReward = await rewardDB.checkExistingReward(visitor.id);
+  const existingReward = await rewardDB.checkExistingRewardWithType(visitor.id, "ton_society_csbt_ticket");
   if (existingReward) {
     // If there's already a reward, we do nothing further
     logger.info(`Reward already exists for visitor ${visitor.id}, skipping creation.`);
@@ -411,7 +425,7 @@ export const CsbtTicketForApi = async (event_uuid: string, user_id: number) => {
 
     try {
       // 4) Call your external API to create the user reward link
-      const response = await createUserRewardLink(eventData.activity_id, {
+      const response = await createUserRewardLink(paymentInfo.ticketActivityId, {
         telegram_user_id: user_id,
         attributes: [
           {
@@ -427,19 +441,39 @@ export const CsbtTicketForApi = async (event_uuid: string, user_id: number) => {
       }
 
       // 5) Insert the newly created reward into your DB
-      await rewardsDb.insertRewardWithData(visitor.id, user_id.toString(), "ton_society_sbt", response.data.data, "created");
-
+      await db
+        .insert(rewards)
+        .values({
+          visitor_id: visitor.id,
+          type: "ton_society_csbt_ticket",
+          data: response.data.data as RewardDataTyepe,
+          event_end_date: eventData?.end_date!,
+          event_start_date: eventData?.start_date!,
+          status: "created",
+          updatedBy: user_id.toString(),
+          tonSocietyStatus: "NOT_CLAIMED",
+        })
+        .returning()
+        .execute();
       logger.info(`CSBT Ticket created successfully for user ${user_id}.`);
       return response.data.data; // Return the reward link data
     } catch (error) {
+      console.error("Error creating CSBT ticket reward:", error);
       try {
-        await rewardsDb.insertRewardWithData(
-          visitor.id,
-          user_id.toString(),
-          "ton_society_sbt",
-          null, // no reward link data
-          "pending_creation" // custom status
-        );
+        await db
+          .insert(rewards)
+          .values({
+            visitor_id: visitor.id,
+            type: "ton_society_csbt_ticket",
+            data: null,
+            event_end_date: eventData?.end_date!,
+            event_start_date: eventData?.start_date!,
+            status: "pending_creation",
+            updatedBy: user_id.toString(),
+            tonSocietyStatus: "NOT_CLAIMED",
+          })
+          .returning()
+          .execute();
         break;
       } catch (insertErr) {
         // If even that fails, just log it
