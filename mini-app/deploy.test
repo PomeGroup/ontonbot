@@ -15,3 +15,4 @@ dep stage
 deploy verify test
 
 deploy after reset
+dev deploy
