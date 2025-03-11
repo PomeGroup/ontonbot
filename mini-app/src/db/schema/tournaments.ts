@@ -1,23 +1,23 @@
+import { InferSelectModel } from "drizzle-orm";
 import {
+  bigint,
+  boolean,
+  index,
+  integer,
+  json,
+  pgEnum,
   pgTable,
   serial,
   text,
   timestamp,
-  bigint,
-  integer,
-  json,
-  uuid,
-  index,
   uniqueIndex,
-  pgEnum,
-  boolean,
+  uuid,
 } from "drizzle-orm/pg-core";
-import { InferSelectModel } from "drizzle-orm";
 
 // Import references to other tables.
 // Adjust the import paths to match your project structure.
-import { games } from "./games";
 import { users } from "@/db/schema/users"; // or wherever your 'users' table is defined
+import { games } from "./games";
 
 /*** Enums ***/
 export const tournamentStateEnum = pgEnum("tournament_state", ["Active", "Concluded", "TonAddressPending"]);
@@ -54,7 +54,7 @@ export const tournaments = pgTable(
 
     // Basic fields
     name: text("name"),
-    imageUrl: text("image_url"),
+    imageUrl: text("image_url").notNull(),
     state: tournamentStateEnum("state"), // "Active", "Concluded", etc.
 
     // Start/end dates
