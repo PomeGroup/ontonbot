@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { configDotenv } from "dotenv";
 import { redisTools } from "@/lib/redisTools";
+import { configProtected } from "@/server/config";
 
 configDotenv();
 
@@ -118,7 +119,7 @@ const getMasterApiBearerToken = async (): Promise<string> => {
 
   if (!authData) {
     // No cached token, fetch a new one
-    const clientSecret = process.env.ELYMPICS_CLIENT_SECRET || "YOUR-CLIENT-SECRET";
+    const clientSecret = configProtected.ELYMPIC_API_KEY || "";
 
     const res = await authenticateUserViaClientSecret({
       clientSecret,
