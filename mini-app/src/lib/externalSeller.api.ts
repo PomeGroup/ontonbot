@@ -32,7 +32,11 @@ const refundSchema = z.object({
 
 /* -------------------------------------------------------------------------- */
 const externalSellerApiAccessLimit = async (eventUuid: string) => {
-  if (eventUuid !== "c5f9bd59-a46b-4dce-91cb-3cd146b255a5" && !is_local_env()) {
+
+  if (
+    !(eventUuid === "c5f9bd59-a46b-4dce-91cb-3cd146b255a5" || eventUuid === "839960c1-12ec-405e-b372-be88ece4fa18") &&
+    !is_local_env()
+  ) {
     throw {
       status: 500,
       errorBody: {
@@ -42,6 +46,7 @@ const externalSellerApiAccessLimit = async (eventUuid: string) => {
       },
     };
   }
+
 };
 
 /**

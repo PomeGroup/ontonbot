@@ -9,6 +9,7 @@ import eventDB from "@/server/db/events";
 import { AxiosError } from "axios";
 import { sleep } from "@/utils";
 import rewardDB from "@/server/db/rewards.db";
+import eventPaymentDB from "@/server/db/eventPayment.db";
 
 // ---------------------------------------------------------------------
 // HELPER: Build the Ton Society Activity "draft" for updating
@@ -99,8 +100,21 @@ export const processSingleReward = async (pendingReward: RewardType): Promise<vo
       if (!event) {
         throw new Error(`Event ${visitor.event_uuid} not found`);
       }
-
-      const response = await createUserRewardLink(event.activity_id as number, {
+      let activity_id;
+      if (pendingReward.type === "ton_society_sbt") {
+        activity_id = event.activity_id;
+      } else if (pendingReward.type === "ton_society_csbt_ticket") {
+        const paymentInfo = await eventPaymentDB.fetchPaymentInfoForCronjob(event.event_uuid);
+        if (!paymentInfo) {
+          logger.error("error event Does not have payment !!!", event.event_uuid);
+          return;
+        }
+        activity_id = paymentInfo.ticketActivityId;
+      }
+      if (activity_id === undefined) {
+        logger.error(`Activity id is undefined for event ${event.event_uuid}`);
+      }
+      const response = await createUserRewardLink(activity_id as number, {
         telegram_user_id: visitor.user_id as number,
         attributes: [{ trait_type: "Organizer", value: event.society_hub.name as string }],
       });
