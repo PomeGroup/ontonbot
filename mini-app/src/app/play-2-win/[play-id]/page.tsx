@@ -10,6 +10,7 @@ import Typography from "@/components/Typography";
 import { usePageTournament } from "@/hooks/tournaments.hook";
 import useWebApp from "@/hooks/useWebApp";
 import { Skeleton } from "@mui/material";
+import { fromNano } from "@ton/core";
 import { Page } from "konsta/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -31,47 +32,69 @@ const EventImage = React.memo(() => {
 });
 EventImage.displayName = "EventImage";
 
-const EventSubtitle = React.memo(() => {
-  return (
-    <Typography
-      variant="body"
-      weight="medium"
-    >
-      eventData.data?.subtitle
-    </Typography>
-  );
-});
-EventSubtitle.displayName = "EventSubtitle";
-
 const EventTicketPrice = React.memo(() => {
+  const tournament = usePageTournament();
+
   return (
     <EventKeyValue
       label="Ticket Price"
-      value={"Free"}
+      value={
+        tournament.data?.rawHostJson?.EntryFee
+          ? `${fromNano(BigInt(tournament.data.rawHostJson.EntryFee as number))}`
+          : "Free"
+      }
     />
   );
 });
 EventTicketPrice.displayName = "EventTicketPrice";
 
 const EventAttributes = React.memo(() => {
+  const tournament = usePageTournament();
+
   return (
     <div className="flex flex-col gap-4">
       <EventTicketPrice />
       <EventKeyValue
         label="Start Date"
-        value={<time>{new Date().toDateString()}</time>}
+        value={
+          tournament.data?.startDate ? (
+            <time>
+              {new Date(tournament.data.startDate).toLocaleDateString("en-US", {
+                day: "numeric",
+                month: "short",
+              })}
+              {" - "}
+              {new Date(tournament.data.startDate).toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              })}
+            </time>
+          ) : (
+            "TBD"
+          )
+        }
       />
       <EventKeyValue
         label="Duration"
-        value={"1 hour"}
+        value={
+          tournament.data?.startDate && tournament.data?.endDate
+            ? (() => {
+                const start = new Date(tournament.data.startDate);
+                const end = new Date(tournament.data.endDate);
+                const hours = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60));
+                return `${hours} hour${hours === 1 ? "" : "s"}`;
+              })()
+            : "TBD"
+        }
       />
-      <EventKeyValue
+      {/* <EventKeyValue
         label="Prize Distribution"
         value={"TOP 10"}
-      />
+      /> */}
       <EventKeyValue
         label="Joined"
-        value={"2001"}
+        value={tournament.data?.playersCount}
       />
     </div>
   );
@@ -79,6 +102,8 @@ const EventAttributes = React.memo(() => {
 EventAttributes.displayName = "EventAttributes";
 
 const EventTitle = React.memo(() => {
+  const tournament = usePageTournament();
+
   return (
     <div className="mt-4 space-y-4">
       <div className="grid grid-cols-12 items-start">
@@ -87,10 +112,9 @@ const EventTitle = React.memo(() => {
           weight="bold"
           className="self-center col-span-10"
         >
-          eventData.data?.title
+          {tournament.data?.name}
         </Typography>
       </div>
-      <EventSubtitle />
     </div>
   );
 });
