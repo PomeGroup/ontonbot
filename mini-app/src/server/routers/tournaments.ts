@@ -1,4 +1,5 @@
 // ...import additional operators as needed
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { tournamentsDB } from "../db/tournaments.db";
 import { initDataProtectedProcedure, router } from "../trpc";
@@ -36,5 +37,18 @@ export const tournamentsRouter = router({
 
       return { tournaments: tournamentsData, nextCursor };
     }),
-  // ...existing code...
+  getTournamentById: initDataProtectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+      })
+    )
+    .query(async ({ input }) => {
+      const { id } = input;
+      const tournament = await tournamentsDB.getTournamentById(id);
+      if (!tournament) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Tournament not found" });
+      }
+      return tournament;
+    }),
 });

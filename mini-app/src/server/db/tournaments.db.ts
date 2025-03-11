@@ -29,8 +29,18 @@ export const addTournament = async (tData: TournamentsRowInsert): Promise<Tourna
  * Returns a TournamentsRow or undefined if not found.
  */
 export const getTournamentById = async (tournamentId: number): Promise<TournamentsRow | undefined> => {
+  const cacheKey = redisTools.cacheKeys.getTournamentById + tournamentId;
+  const cachedTournament: TournamentsRow = await redisTools.getCache(cacheKey);
+  if (cachedTournament) {
+    return cachedTournament;
+  }
+
   try {
     const [row] = await db.select().from(tournaments).where(eq(tournaments.id, tournamentId)).execute();
+
+    if (row) {
+      await redisTools.setCache(cacheKey, row, redisTools.cacheLvl.guard);
+    }
 
     return row;
   } catch (error) {

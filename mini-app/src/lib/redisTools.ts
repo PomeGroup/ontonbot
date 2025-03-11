@@ -328,6 +328,7 @@ export const cacheKeys = {
   callbackTask: "callbackTask:",
   affiliateLinkById: "affiliateLinkById:",
   getTournamentsWithFilters: "getTournamentsWithFilters:",
+  getTournamentById: "getTournamentById:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
