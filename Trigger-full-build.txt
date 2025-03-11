@@ -14,3 +14,4 @@ full build after registery clear
 full build
 full build after clear registery2s
 full build for dev
+full build for dev

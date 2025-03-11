@@ -20,9 +20,7 @@ import { z } from "zod";
 const UPLOAD_FILE_ENDPOINT = process.env.UPLOAD_FILE_ENDPOINT || "http://localhost:3000/api/files/upload";
 const UPLOAD_TOKEN = process.env.ONTON_API_SECRET || "fallback-secret";
 
-export const config = {
-  runtime: "nodejs", // Ensure Node.js runtime, not Edge
-};
+export const runtime = "nodejs";
 
 /** Zod schema: If provided, must be a valid URL. */
 const linkSchema = z.string().url("invalid_tournament_link").optional();
