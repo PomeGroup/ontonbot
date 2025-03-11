@@ -2,6 +2,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { tournamentsDB } from "../db/tournaments.db";
+import { usersDB } from "../db/users";
 import { initDataProtectedProcedure, router } from "../trpc";
 
 export const tournamentsRouter = router({
@@ -49,6 +50,7 @@ export const tournamentsRouter = router({
       if (!tournament) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Tournament not found" });
       }
-      return tournament;
+      const tournamentOrganizer = await usersDB.getOrganizerById(tournament.owner);
+      return { ...tournament, organizer: tournamentOrganizer.data! };
     }),
 });

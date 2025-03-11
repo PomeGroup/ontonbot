@@ -1,3 +1,5 @@
+import "server-only";
+
 import { getRedisClient } from "./redisClient"; // Use getRedisClient to ensure a valid Redis client
 
 const CACHE_ENABLED = process.env.CACHE_ENABLED ? process.env.CACHE_ENABLED.toLowerCase() === "true" : true;
@@ -339,7 +341,7 @@ export const cacheLvl = {
   long: 60 * 60 * 24, // 1 day
   extraLong: 60 * 60 * 24 * 30, //  30 days
   authApiOtpTimeout: 60 * 5, // 5 minutes
-};
+} as const;
 export const rQueues = {
   CLICK_QUEUE_KEY: "affiliate_clicks_queue",
 };

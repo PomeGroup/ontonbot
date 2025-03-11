@@ -50,7 +50,9 @@ export const tournaments = pgTable(
       .notNull(),
 
     // New field: event organizer / “owner”
-    owner: bigint("owner", { mode: "number" }).references(() => users.user_id), // remove `.notNull()` if optional
+    owner: bigint("owner", { mode: "number" })
+      .notNull()
+      .references(() => users.user_id), // remove `.notNull()` if optional
 
     // Basic fields
     name: text("name"),
