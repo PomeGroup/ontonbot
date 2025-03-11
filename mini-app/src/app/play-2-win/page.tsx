@@ -68,7 +68,7 @@ const PlayToWin: React.FC = () => {
               defaultPadding
             >
               <DataStatus
-                status="danger"
+                status="searching"
                 title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
                 description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading tournaments."}
               />
