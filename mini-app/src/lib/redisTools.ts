@@ -328,6 +328,8 @@ export const cacheKeys = {
   callbackTask: "callbackTask:",
   affiliateLinkById: "affiliateLinkById:",
   getTournamentsWithFilters: "getTournamentsWithFilters:",
+  elympicsMasterJwt: "elympicsMasterJwt:",
+  leaderboard: "leaderboard:",
   getTournamentById: "getTournamentById:",
 };
 export const cacheLvl = {

@@ -1,52 +1,49 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { configDotenv } from "dotenv";
+import { redisTools } from "@/lib/redisTools";
 
 configDotenv();
 
-// 1) Create an Axios client. Adapt the base URL if needed.
-//    Typically: https://api.elympics.cc/v2
+/**
+ * 1) Create an Axios client. Adapt the base URL if needed.
+ *    Typically: https://api.elympics.cc/v2
+ */
 export const elympicsClient: AxiosInstance = axios.create({
   baseURL: process.env.ELYMPICS_BASE_URL || "https://api.elympics.cc/v2",
-  // If you need default headers, place them here or pass them per-request
 });
 
-// 2) Type definitions for request/response
+/**
+ * 2) Type definitions for your requests and responses
+ */
+export interface ClientSecretAuthRequest {
+  clientSecret: string;
+}
 
-/** Response from POST /auth/user/telegram-auth-v2 */
-export interface TelegramAuthResponse {
+export interface ClientSecretAuthResponse {
   jwtToken: string;
   userId: string;
   nickname: string;
-  avatarUrl: string;
 }
 
-/** Payload for POST /auth/user/telegram-auth-v2 */
-export interface TelegramAuthRequest {
-  typedData: Record<string, unknown>; // or more specific type
-  gameId: string;
-  initDataRaw: string;
-}
-
-// GET /v2/tournament/tournament?tournamentId=xxxx
 export interface TournamentDetailsResponse {
-  Id: string; // 'o17yuwmr', for example
+  Id: string;
   TournamentGuid: string;
   GameId: string;
   Name: string;
   OwnerId: string;
   State: "Active" | "Planned" | "Finished" | string;
-  CreateDate: string; // e.g. "2025-03-09T20:47:18.132941Z"
-  StartDate: string; // e.g. "2025-03-09T20:47:18.999Z"
-  EndDate: string; // e.g. "2025-03-09T21:47:18.999Z"
+  CreateDate: string;
+  StartDate: string;
+  EndDate: string;
   IsDefault: boolean;
   PlayersCount: number;
-  Prizes: any[]; // or define if known
+  Prizes: any[];
   TonDetails: {
     RequiredTickets: boolean;
     TournamentAddress: string;
-    EntryType: string; // e.g. "Tickets"
+    EntryType: string;
   };
-  Scores: any[]; // or define if known
+  Scores: any[];
   TotalGamesCount: number;
   GamesLeftToPlay: number;
   PrizePool: any[];
@@ -70,20 +67,16 @@ export interface TournamentDetailsResponse {
   DistributionPercents: number[];
 }
 
-/** Leaderboard entry */
-export interface LeaderboardEntry {
-  userId: string;
-  nickname: string;
-  matchId: string;
-  tournamentId: string;
-  position: number;
-  points: number;
-  endedAt: string; // e.g. "2025-03-09T21:16:13.765Z"
-}
-
-/** Response from /leaderboard endpoint */
 export interface LeaderboardResponse {
-  data: LeaderboardEntry[];
+  data: {
+    userId: string;
+    nickname: string;
+    matchId: string;
+    tournamentId: string;
+    position: number;
+    points: number;
+    endedAt: string;
+  }[];
   pageNumber: number;
   pageSize: number;
   firstPage: string;
@@ -92,44 +85,67 @@ export interface LeaderboardResponse {
   totalRecords: number;
 }
 
-// 3) Define functions for each relevant Elympics endpoint
+/**
+ * 3) Utility: central Axios error handler
+ */
+function handleAxiosError(error: unknown, message: string): never {
+  if (error instanceof AxiosError && error.response) {
+    throw new Error(`${message}. HTTP Status: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+  }
+  throw new Error(`${message}. Unknown error: ${String(error)}`);
+}
 
 /**
- * 3.1) Authenticate user via Telegram (POST /auth/user/telegram-auth-v2)
- * @param apiBearerToken  The Bearer token for the "client-secret" auth
- * @param payload         The request body: gameId, initDataRaw, typedData
- * @returns               TelegramAuthResponse with jwtToken, userId, etc.
+ * 4) Fetch a new Master API token from Elympics (PUT /auth/user/clientSecretAuth)
  */
-export async function authenticateUserViaTelegram(
-  apiBearerToken: string,
-  payload: TelegramAuthRequest
-): Promise<TelegramAuthResponse> {
+async function authenticateUserViaClientSecret(payload: ClientSecretAuthRequest): Promise<ClientSecretAuthResponse> {
   try {
-    const response = await elympicsClient.post<TelegramAuthResponse>("/auth/user/telegram-auth-v2", payload, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiBearerToken}`,
-      },
+    const response = await elympicsClient.put<ClientSecretAuthResponse>("/auth/user/clientSecretAuth", payload, {
+      headers: { "Content-Type": "application/json" },
     });
     return response.data;
   } catch (error) {
-    handleAxiosError(error, "Error authenticating user via Telegram");
+    handleAxiosError(error, "Error authenticating user via client secret");
   }
 }
 
 /**
- * 3.2) Get Tournament Details (GET /tournament/tournament?tournamentId=xxx)
- * @param apiPublisherKey  The "Elympics-Publisher-API-Key"
- * @param apiBearerToken   The "Authorization: Bearer ..." token
- * @param tournamentId     The ID (slug) of the tournament (e.g., "o17yuwmr")
+ * 5) Retrieve the Master API token, cached in Redis for 10 minutes
  */
-export async function getTournamentDetails(
+const getMasterApiBearerToken = async (): Promise<string> => {
+  // Attempt to retrieve the entire auth object from Redis
+  let authData = await redisTools.getCache(redisTools.cacheKeys.elympicsMasterJwt);
+
+  if (!authData) {
+    // No cached token, fetch a new one
+    const clientSecret = process.env.ELYMPICS_CLIENT_SECRET || "YOUR-CLIENT-SECRET";
+
+    const res = await authenticateUserViaClientSecret({
+      clientSecret,
+    });
+
+    // Store the entire response { jwtToken, userId, nickname } in Redis
+    // with a 10-minute TTL (cacheLvl.short is 600 seconds if that's how it's set)
+    authData = { ...res };
+    await redisTools.setCache(redisTools.cacheKeys.elympicsMasterJwt, authData, redisTools.cacheLvl.short);
+  }
+
+  // authData is { jwtToken, userId, nickname }
+  return authData.jwtToken;
+};
+
+/**
+ * 6) Get Tournament Details, automatically uses the cached Master Bearer token
+ *    GET /tournament/tournament?tournamentId=xxx
+ */
+export const getTournamentDetails = async (
   apiPublisherKey: string,
-  apiBearerToken: string,
   tournamentId: string
-): Promise<TournamentDetailsResponse> {
+): Promise<TournamentDetailsResponse> => {
   try {
+    const apiBearerToken = await getMasterApiBearerToken();
     const url = `/tournament/tournament?tournamentId=${encodeURIComponent(tournamentId)}`;
+
     const response = await elympicsClient.get<TournamentDetailsResponse>(url, {
       headers: {
         "Elympics-Publisher-API-Key": apiPublisherKey,
@@ -140,40 +156,48 @@ export async function getTournamentDetails(
   } catch (error) {
     handleAxiosError(error, "Error fetching tournament details");
   }
-}
+};
 
 /**
- * 3.3) Get Leaderboard (GET /leaderboardservice/leaderboard?GameId=...&TournamentId=...)
- * @param apiBearerToken  The "Authorization: Bearer ..." token
- * @param gameId          Elympics game ID (UUID)
- * @param tournamentId    Elympics tournament ID
+ * Get Tournament Leaderboard
+ *
+ * GET /leaderboardservice/leaderboard?GameId=...&TournamentId=...
+ * Caches the result for 1 minute.
  */
-export async function getTournamentLeaderboard(
-  apiBearerToken: string,
-  gameId: string,
-  tournamentId: string
-): Promise<LeaderboardResponse> {
+export async function getTournamentLeaderboard(gameId: string, tournamentId: string): Promise<LeaderboardResponse> {
   try {
+    // 1) Construct a Redis cache key (e.g. "leaderboard:gameId:tournamentId")
+    const cacheKey = `${redisTools.cacheKeys.leaderboard}${gameId}:${tournamentId}`;
+
+    // 2) Check if we have a cached response in Redis
+    const cached = await redisTools.getCache(cacheKey);
+    if (cached) {
+      // If yes, return that immediately
+      return cached as LeaderboardResponse;
+    }
+
+    // 3) If not cached, fetch a valid Bearer token from getMasterApiBearerToken()
+    const apiBearerToken = await getMasterApiBearerToken();
+
+    // 4) Build the request URL
     const url =
       `/leaderboardservice/leaderboard?GameId=${encodeURIComponent(gameId)}` +
       `&TournamentId=${encodeURIComponent(tournamentId)}`;
 
+    // 5) Make the request
     const response = await elympicsClient.get<LeaderboardResponse>(url, {
       headers: {
         Authorization: `Bearer ${apiBearerToken}`,
       },
     });
+
+    // 6) Cache the result for 1 minute
+    // You can use a hardcoded 60 seconds or your existing cacheLvl.guard (if set to 60)
+    await redisTools.setCache(cacheKey, response.data, 60);
+
+    // 7) Return the freshly fetched data
     return response.data;
   } catch (error) {
     handleAxiosError(error, "Error fetching leaderboard");
   }
-}
-
-// 4) Utility: central Axios error handler
-function handleAxiosError(error: unknown, message: string): never {
-  if (error instanceof AxiosError && error.response) {
-    // Log or handle HTTP error response details
-    throw new Error(`${message}. HTTP Status: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
-  }
-  throw new Error(`${message}. Unknown error: ${String(error)}`);
 }
