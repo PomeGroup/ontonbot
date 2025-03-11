@@ -33,9 +33,9 @@ export const insertGameTx = async (tx: Parameters<Parameters<typeof db.transacti
  * Fetch a game by its local primary key (games.id).
  * Returns a GamesRow or undefined if not found.
  */
-export const getGameById = async (gameId: number): Promise<GamesRow | undefined> => {
+export const getGameById = async (gameId: string): Promise<GamesRow | undefined> => {
   try {
-    const [row] = await db.select().from(games).where(eq(games.id, gameId)).execute();
+    const [row] = await db.select().from(games).where(eq(games.hostGameId, gameId)).execute();
 
     return row;
   } catch (error) {

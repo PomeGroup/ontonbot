@@ -1,0 +1,1 @@
+ALTER TABLE "tournaments" ADD COLUMN "tournament_link" text;

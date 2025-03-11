@@ -13,6 +13,7 @@ import { File as FormidableFile } from "formidable";
 import jwt from "jsonwebtoken";
 import fs from "fs";
 import { parseMultipartForm } from "@/lib/parseMultipartForm";
+import { z } from "zod";
 
 /** Env config / constants **/
 const ELYMPICS_PUBLISHER_KEY = process.env.ELYMPICS_PUBLISHER_KEY || "";
@@ -20,21 +21,19 @@ const ELYMPICS_BEARER_TOKEN = process.env.ELYMPICS_BEARER_TOKEN || "";
 const UPLOAD_FILE_ENDPOINT = process.env.UPLOAD_FILE_ENDPOINT || "http://localhost:3000/api/files/upload";
 const UPLOAD_TOKEN = process.env.ONTON_API_SECRET || "fallback-secret";
 
-// Ensure Node.js runtime, not Edge
 export const config = {
-  runtime: "nodejs",
+  runtime: "nodejs", // Ensure Node.js runtime, not Edge
 };
+
+/** Zod schema: If provided, must be a valid URL. */
+const linkSchema = z.string().url("invalid_tournament_link").optional();
 
 /**
  * POST /api/tournament/[mode]/[gameId]/[tournamentId]/[userId]
  *
  * Steps:
- *  - If mode === "check":
- *      -> fetch from Elympics, validate gameId, return data
- *  - If mode === "create":
- *      -> parse + validate file, upload to Minio
- *      -> fetch Elympics, validate gameId
- *      -> transaction: insert game (with userId), insert tournament (with userId), return new row
+ *  - If mode === "check": fetch from Elympics, validate gameId, return data
+ *  - If mode === "create": parse form (file + tournament_link), validate, upload, fetch Elympics, DB insert
  */
 export async function POST(
   req: NextRequest,
@@ -52,7 +51,7 @@ export async function POST(
     return new Response(JSON.stringify({ message: "missing_required_params" }), { status: 400 });
   }
 
-  // 2) If mode === 'check', just fetch & return data from Elympics
+  // 2) If mode === 'check' => fetch & return data
   if (mode === "check") {
     try {
       const details = await getTournamentDetails(ELYMPICS_PUBLISHER_KEY, ELYMPICS_BEARER_TOKEN, tournamentId);
@@ -66,9 +65,7 @@ export async function POST(
             expected: gameId,
             actual: details.GameId,
           }),
-          {
-            status: 400,
-          }
+          { status: 400 }
         );
       }
       // Return the Elympics data
@@ -82,22 +79,37 @@ export async function POST(
     }
   }
 
-  // 3) If mode === 'create', parse the file, upload, etc.
+  // 3) If mode === 'create' => parse form + link + file => upload => DB insert
   if (mode === "create") {
-    // a) Parse the multipart form => get the file
+    // a) parse multipart form => get file + tournament_link
     let fileBuffer: Buffer | null = null;
     let mimeType: string | null = null;
+    let tLink: string | null = null;
 
     try {
-      const { files } = await parseMultipartForm(req);
+      const { fields, files } = await parseMultipartForm(req);
       if (!files || !files.file) {
         return new Response(JSON.stringify({ message: "file_required" }), { status: 400 });
       }
-
+      if (!fields?.tournament_link) {
+        return new Response(JSON.stringify({ message: "tournament_link_required" }), { status: 400 });
+      }
+      // read the file
       const fileData = Array.isArray(files.file) ? files.file[0] : files.file;
       const filePath = (fileData as FormidableFile).filepath;
       fileBuffer = fs.readFileSync(filePath);
       mimeType = (fileData as FormidableFile).mimetype || "image/png";
+      const link = Array.isArray(fields.tournament_link) ? fields.tournament_link[0] : fields.tournament_link;
+      // parse optional tournament_link from fields
+      logger.log("fields?.tournament_link", link);
+      // validate link with Zod
+      try {
+        const parsedLink = linkSchema.parse(link);
+        tLink = parsedLink || null; // if not provided => null
+      } catch (zerr) {
+        logger.error("Zod link error =>", zerr);
+        return new Response(JSON.stringify({ message: "invalid_tournament_link" }), { status: 400 });
+      }
     } catch (err) {
       logger.error("Error parsing multipart form:", err);
       return new Response(JSON.stringify({ message: "parse_form_error" }), { status: 400 });
@@ -107,7 +119,7 @@ export async function POST(
       return new Response(JSON.stringify({ message: "file_buffer_empty" }), { status: 400 });
     }
 
-    // b) Validate image size/dimensions
+    // b) Validate image size/dimensions (≥400x400, we won't enforce square if you want keep it consistent)
     try {
       const dimensions = sizeOf(fileBuffer);
       if (!dimensions.width || !dimensions.height) {
@@ -116,6 +128,10 @@ export async function POST(
       if (dimensions.width < 400 || dimensions.height < 400) {
         return new Response(JSON.stringify({ message: "Image too small. Min 400x400." }), { status: 400 });
       }
+      // If you want to enforce a square image, uncomment below:
+      // if (dimensions.width !== dimensions.height) {
+      //   return new Response(JSON.stringify({ message: "image_must_be_square" }), { status: 400 });
+      // }
     } catch (err) {
       logger.error("Error reading image dimensions:", err);
       return new Response(JSON.stringify({ message: "failed_image_dimensions" }), { status: 400 });
@@ -133,12 +149,13 @@ export async function POST(
       return new Response(JSON.stringify({ message: "malicious_file_detected" }), { status: 400 });
     }
 
-    // d) Upload image to your file endpoint
+    // d) Upload image
     let uploadedImageUrl = "";
     try {
       const formData = new FormData();
+      const ext = mimeType.split("/")[1] || "png";
       formData.append("image", fileBuffer, {
-        filename: "tournament_image.png",
+        filename: `tournament_image_${tournamentId}_user_${userId}.${ext}`,
         contentType: mimeType,
       });
       formData.append("subfolder", "event");
@@ -150,7 +167,6 @@ export async function POST(
           Authorization: `Bearer ${token}`,
         },
       });
-
       if (!res.data?.imageUrl) {
         return new Response(JSON.stringify({ message: "upload_failed_no_imageUrl" }), { status: 500 });
       }
@@ -160,7 +176,7 @@ export async function POST(
       return new Response(JSON.stringify({ message: "file_upload_error" }), { status: 500 });
     }
 
-    // e) Fetch Elympics data => validate
+    // e) Fetch Elympics => validate
     let details;
     try {
       details = await getTournamentDetails(ELYMPICS_PUBLISHER_KEY, ELYMPICS_BEARER_TOKEN, tournamentId);
@@ -174,9 +190,7 @@ export async function POST(
             expected: gameId,
             actual: details.GameId,
           }),
-          {
-            status: 400,
-          }
+          { status: 400 }
         );
       }
     } catch (error) {
@@ -187,18 +201,19 @@ export async function POST(
     // f) Insert into local DB with a transaction (game + tournament)
     try {
       const numericUserId = parseInt(userId, 10) || 0;
-
       const result = await db.transaction(async (trx) => {
-        // Insert game
-        const gameRow = await gamesDB.insertGameTx(trx, {
-          hostGameId: gameId,
-          userId: numericUserId, // newly added user_id field in 'games'
-          name: details.Name ?? "",
-          imageUrl: "",
-          rawGameJson: details as any,
-        });
-
-        // Insert tournament (store 'uploadedImageUrl')
+        // 1) If you only want to create a new game if not found, do something like:
+        let gameRow = await gamesDB.getGameById(gameId);
+        if (!gameRow) {
+          gameRow = await gamesDB.insertGameTx(trx, {
+            hostGameId: gameId,
+            userId: numericUserId,
+            name: details.Name ?? "",
+            imageUrl: "",
+            rawGameJson: details as any,
+          });
+        }
+        // 2) Insert tournament (store 'uploadedImageUrl' + optional tournament_link)
         const insertedTournament = await tournamentsDB.insertTournamentTx(trx, {
           hostTournamentId: details.Id,
           hostTournamentGuid: details.TournamentGuid,
@@ -223,12 +238,12 @@ export async function POST(
           tsRewardVideo: null,
           hidden: false,
           rawHostJson: details as any,
+          tournamentLink: tLink, // Insert the validated link here
         });
 
         if (!insertedTournament) {
           throw new Error("failed_to_insert_tournament");
         }
-
         return { insertedTournament };
       });
 

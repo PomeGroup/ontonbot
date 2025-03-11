@@ -80,7 +80,7 @@ export const tournaments = pgTable(
     tsRewardImage: text("ts_reward_image"),
     tsRewardVideo: text("ts_reward_video"),
     hidden: boolean("hidden").default(false),
-
+    tournamentLink: text("tournament_link"),
     // Store raw host JSON if needed
     rawHostJson: json("raw_host_json").$type<Record<string, unknown>>(),
 

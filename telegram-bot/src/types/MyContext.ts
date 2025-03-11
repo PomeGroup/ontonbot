@@ -47,15 +47,21 @@ export interface SessionData {
   tournamentStep?:
     | "askGameId"
     | "askTournamentId"
+    | "confirmInsert"
+    | "check"
+    | "confirmCreate"
     | "askTournamentPhoto"
+    | "askTournamentLink"
     | "done"
     | undefined;
 
-  // If you prefer to store the tournament data in an object:
   tournamentData?: {
     gameId?: string;
     tournamentId?: string;
     photoFileId?: string;
+    existingTournament?: any;  // to store check result if needed
+    createConfirmed?: boolean;
+    tournamentLink?: string;
   };
 
 }
