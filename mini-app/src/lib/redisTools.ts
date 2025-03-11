@@ -327,6 +327,7 @@ export const cacheKeys = {
   rateLimitRequestApi: "rate-limit-request-api:",
   callbackTask: "callbackTask:",
   affiliateLinkById: "affiliateLinkById:",
+  getTournamentsWithFilters: "getTournamentsWithFilters:",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
