@@ -1,9 +1,9 @@
-import { Composer, InlineKeyboard } from "grammy";
-import { MyContext } from "../types/MyContext";
-import { logger } from "../utils/logger";
-import axios, { AxiosError } from "axios";
-import FormData from "form-data";
-import * as process from "node:process";
+import axios, { AxiosError } from "axios"
+import FormData from "form-data"
+import { Composer, InlineKeyboard } from "grammy"
+import * as process from "node:process"
+import { MyContext } from "../types/MyContext"
+import { logger } from "../utils/logger"
 
 export const tournamentComposer = new Composer<MyContext>();
 
