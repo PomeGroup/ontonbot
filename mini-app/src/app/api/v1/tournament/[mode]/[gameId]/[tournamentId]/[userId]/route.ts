@@ -16,8 +16,7 @@ import { parseMultipartForm } from "@/lib/parseMultipartForm";
 import { z } from "zod";
 
 /** Env config / constants **/
-const ELYMPICS_PUBLISHER_KEY = process.env.ELYMPICS_PUBLISHER_KEY || "";
-const ELYMPICS_BEARER_TOKEN = process.env.ELYMPICS_BEARER_TOKEN || "";
+
 const UPLOAD_FILE_ENDPOINT = process.env.UPLOAD_FILE_ENDPOINT || "http://localhost:3000/api/files/upload";
 const UPLOAD_TOKEN = process.env.ONTON_API_SECRET || "fallback-secret";
 
@@ -54,7 +53,7 @@ export async function POST(
   // 2) If mode === 'check' => fetch & return data
   if (mode === "check") {
     try {
-      const details = await getTournamentDetails(ELYMPICS_PUBLISHER_KEY, ELYMPICS_BEARER_TOKEN, tournamentId);
+      const details = await getTournamentDetails(tournamentId);
       if (!details) {
         return new Response(JSON.stringify({ message: "tournament_not_found_in_elympics" }), { status: 404 });
       }
@@ -179,7 +178,7 @@ export async function POST(
     // e) Fetch Elympics => validate
     let details;
     try {
-      details = await getTournamentDetails(ELYMPICS_PUBLISHER_KEY, ELYMPICS_BEARER_TOKEN, tournamentId);
+      details = await getTournamentDetails(tournamentId);
       if (!details) {
         return new Response(JSON.stringify({ message: "tournament_not_found_in_elympics" }), { status: 404 });
       }

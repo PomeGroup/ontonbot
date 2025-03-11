@@ -1,7 +1,14 @@
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { configDotenv } from "dotenv";
-import { redisTools } from "@/lib/redisTools";
-import { configProtected } from "@/server/config";
+import { redisTools } from "@/lib/redisTools"; // Adjust path as needed
+import { configProtected } from "@/server/config"; // Adjust path as needed
+import { logger } from "@/server/utils/logger"; // Adjust path as needed
+import {
+  ClientSecretAuthRequest,
+  ClientSecretAuthResponse,
+  LeaderboardResponse,
+  TournamentDetailsResponse,
+} from "@/types/elympicsAPI.types";
 
 configDotenv();
 
@@ -14,85 +21,53 @@ export const elympicsClient: AxiosInstance = axios.create({
 });
 
 /**
- * 2) Type definitions for your requests and responses
+ * 2) Type definitions (using `type` rather than `interface`)
  */
-export interface ClientSecretAuthRequest {
-  clientSecret: string;
-}
 
-export interface ClientSecretAuthResponse {
-  jwtToken: string;
-  userId: string;
-  nickname: string;
-}
+/**
+ * A utility to run an Elympics API request with automatic token refresh
+ * if we get a 401/403 response.
+ *
+ * @param requestFn A function that takes a token, performs the request, and returns the data.
+ * @returns The response data from the requestFn.
+ */
+export async function fetchWithAuth<T>(requestFn: (_token: string) => Promise<T>): Promise<T> {
+  // First, get the token from cache or by calling clientSecretAuth
+  let token = await getMasterApiBearerToken();
 
-export interface TournamentDetailsResponse {
-  Id: string;
-  TournamentGuid: string;
-  GameId: string;
-  Name: string;
-  OwnerId: string;
-  State: "Active" | "Planned" | "Finished" | string;
-  CreateDate: string;
-  StartDate: string;
-  EndDate: string;
-  IsDefault: boolean;
-  PlayersCount: number;
-  Prizes: any[];
-  TonDetails: {
-    RequiredTickets: boolean;
-    TournamentAddress: string;
-    EntryType: string;
-  };
-  Scores: any[];
-  TotalGamesCount: number;
-  GamesLeftToPlay: number;
-  PrizePool: any[];
-  PrizePoolText: string;
-  Coin: {
-    Currency: {
-      Ticker: string;
-      Address: string;
-      Decimals: number;
-      IconUrl: string;
-    };
-    Chain: {
-      ExternalId: number;
-      Type: string; // "TON", for example
-    };
-  };
-  EntryFee: number;
-  PrizePoolStatus: string;
-  PrizeType: string;
-  CurrentPrizePool: number;
-  DistributionPercents: number[];
-}
+  try {
+    // Attempt the request
+    return await requestFn(token);
+  } catch (err) {
+    logger.error("=============Error fetching with auth:", err);
 
-export interface LeaderboardResponse {
-  data: {
-    userId: string;
-    nickname: string;
-    matchId: string;
-    tournamentId: string;
-    position: number;
-    points: number;
-    endedAt: string;
-  }[];
-  pageNumber: number;
-  pageSize: number;
-  firstPage: string;
-  lastPage: string;
-  totalPages: number;
-  totalRecords: number;
+    // Check if it's an AxiosError with 401 or 403 => attempt a one-time re-auth
+    if (err instanceof AxiosError && err.response && [401, 403].includes(err.response.status)) {
+      // 1) Delete the cached token so we get a fresh one
+      await redisTools.deleteCache(redisTools.cacheKeys.elympicsMasterJwt);
+
+      // 2) Re-fetch a new token
+      token = await getMasterApiBearerToken();
+
+      // 3) Retry the request once
+      return await requestFn(token);
+    }
+    // Otherwise, throw the original error
+    throw err;
+  }
 }
 
 /**
  * 3) Utility: central Axios error handler
+ *    - IMPORTANT: We re-throw the original AxiosError so that `fetchWithAuth` can see the actual status code.
  */
 function handleAxiosError(error: unknown, message: string): never {
   if (error instanceof AxiosError && error.response) {
-    throw new Error(`${message}. HTTP Status: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
+    // Enhance the existing AxiosError message but re-throw the same AxiosError
+    error.message = `${message}. HTTP Status: ${error.response.status} - ${JSON.stringify(error.response.data)}`;
+    throw error; // Rethrow the *same* AxiosError
   }
+  // Otherwise, throw a generic error
   throw new Error(`${message}. Unknown error: ${String(error)}`);
 }
 
@@ -118,18 +93,18 @@ const getMasterApiBearerToken = async (): Promise<string> => {
   let authData = await redisTools.getCache(redisTools.cacheKeys.elympicsMasterJwt);
 
   if (!authData) {
-    // No cached token, fetch a new one
+    // No cached token => fetch a new one
     const clientSecret = configProtected.ELYMPIC_API_KEY || "";
+    const res = await authenticateUserViaClientSecret({ clientSecret });
 
-    const res = await authenticateUserViaClientSecret({
-      clientSecret,
-    });
+    logger.log("Bearer token:", res);
 
-    // Store the entire response { jwtToken, userId, nickname } in Redis
-    // with a 10-minute TTL (cacheLvl.short is 600 seconds if that's how it's set)
+    // Store the entire response in Redis with a 10-minute TTL
     authData = { ...res };
     await redisTools.setCache(redisTools.cacheKeys.elympicsMasterJwt, authData, redisTools.cacheLvl.short);
   }
+
+  logger.log("Bearer token:", authData.jwtToken);
 
   // authData is { jwtToken, userId, nickname }
   return authData.jwtToken;
@@ -139,66 +114,67 @@ const getMasterApiBearerToken = async (): Promise<string> => {
  * 6) Get Tournament Details, automatically uses the cached Master Bearer token
  *    GET /tournament/tournament?tournamentId=xxx
  */
-export const getTournamentDetails = async (
-  apiPublisherKey: string,
-  tournamentId: string
-): Promise<TournamentDetailsResponse> => {
-  try {
-    const apiBearerToken = await getMasterApiBearerToken();
-    const url = `/tournament/tournament?tournamentId=${encodeURIComponent(tournamentId)}`;
-
-    const response = await elympicsClient.get<TournamentDetailsResponse>(url, {
-      headers: {
-        "Elympics-Publisher-API-Key": apiPublisherKey,
-        Authorization: `Bearer ${apiBearerToken}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    handleAxiosError(error, "Error fetching tournament details");
-  }
+export const getTournamentDetails = async (tournamentId: string): Promise<TournamentDetailsResponse> => {
+  return fetchWithAuth<TournamentDetailsResponse>(async (token) => {
+    try {
+      const url = `/tournament/tournament?tournamentId=${encodeURIComponent(tournamentId)}`;
+      const response = await elympicsClient.get<TournamentDetailsResponse>(url, {
+        headers: {
+          "Elympics-Publisher-API-Key": configProtected.ELYMPIC_API_KEY || "",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      handleAxiosError(error, "Error fetching tournament details");
+    }
+  });
 };
 
 /**
- * Get Tournament Leaderboard
- *
- * GET /leaderboardservice/leaderboard?GameId=...&TournamentId=...
- * Caches the result for 1 minute.
+ * 7) Fetch the Elympics leaderboard for a given (gameId, tournamentId)
+ *    using Elympics' native pagination (pageSize & pageNumber).
+ *    Caches the result for 1 minute in Redis.
  */
-export async function getTournamentLeaderboard(gameId: string, tournamentId: string): Promise<LeaderboardResponse> {
-  try {
-    // 1) Construct a Redis cache key (e.g. "leaderboard:gameId:tournamentId")
-    const cacheKey = `${redisTools.cacheKeys.leaderboard}${gameId}:${tournamentId}`;
+export async function getTournamentLeaderboard(
+  gameId: string | null,
+  tournamentId: string,
+  pageSize: number,
+  pageNumber: number
+): Promise<LeaderboardResponse> {
+  // 1) Construct a unique cache key
+  const cacheKey = `${redisTools.cacheKeys.leaderboard}${gameId}:${tournamentId}:pageSize=${pageSize}:pageNumber=${pageNumber}`;
 
-    // 2) Check if we have a cached response in Redis
-    const cached = await redisTools.getCache(cacheKey);
-    if (cached) {
-      // If yes, return that immediately
-      return cached as LeaderboardResponse;
-    }
-
-    // 3) If not cached, fetch a valid Bearer token from getMasterApiBearerToken()
-    const apiBearerToken = await getMasterApiBearerToken();
-
-    // 4) Build the request URL
-    const url =
-      `/leaderboardservice/leaderboard?GameId=${encodeURIComponent(gameId)}` +
-      `&TournamentId=${encodeURIComponent(tournamentId)}`;
-
-    // 5) Make the request
-    const response = await elympicsClient.get<LeaderboardResponse>(url, {
-      headers: {
-        Authorization: `Bearer ${apiBearerToken}`,
-      },
-    });
-
-    // 6) Cache the result for 1 minute
-    // You can use a hardcoded 60 seconds or your existing cacheLvl.guard (if set to 60)
-    await redisTools.setCache(cacheKey, response.data, 60);
-
-    // 7) Return the freshly fetched data
-    return response.data;
-  } catch (error) {
-    handleAxiosError(error, "Error fetching leaderboard");
+  // 2) Check if we have a cached response
+  const cached = await redisTools.getCache(cacheKey);
+  if (cached) {
+    return cached as LeaderboardResponse;
   }
+
+  // 3) Use fetchWithAuth to handle token (and potential refresh)
+  const data = await fetchWithAuth<LeaderboardResponse>(async (token) => {
+    try {
+      // Build URL
+      const gameIdParam = gameId ? `&GameId=${encodeURIComponent(gameId)}` : "";
+      const url =
+        `/leaderboardservice/leaderboard?TournamentId=${encodeURIComponent(tournamentId)}` +
+        `${gameIdParam}&pageSize=${pageSize}&pageNumber=${pageNumber}`;
+
+      // Make the request
+      const response = await elympicsClient.get<LeaderboardResponse>(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      handleAxiosError(error, "Error fetching leaderboard");
+    }
+  });
+
+  // 4) Cache the result for 1 minute
+  await redisTools.setCache(cacheKey, data, 60);
+
+  // 5) Return the data
+  return data;
 }

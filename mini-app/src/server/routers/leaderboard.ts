@@ -1,45 +1,54 @@
 import { z } from "zod";
 import { initDataProtectedProcedure, router } from "../trpc";
 
-import { getTournamentLeaderboard, LeaderboardResponse } from "@/lib/elympicsApi";
+import { getTournamentLeaderboard } from "@/lib/elympicsApi";
+import { LeaderboardResponse } from "@/types/elympicsAPI.types";
 
 export const leaderboardRouter = router({
   /**
    * Get a page of the leaderboard for a specific tournament.
    */
-  getTournamentLeaderboardPage: initDataProtectedProcedure
+  getTournamentLeaderboard: initDataProtectedProcedure
     .input(
       z.object({
-        gameId: z.string(), // or z.string().uuid() if guaranteed
-        tournamentId: z.string(), // or z.string().uuid()
-        limit: z.number().min(1).max(50).default(10),
-        cursor: z.number().nullable().default(null), // treat as offset
+        // If your Elympics requires gameId, set it as string; if optional, do .nullable() with default(null)
+        gameId: z.string().nullable().default(null),
+        tournamentId: z.string(),
+        limit: z.number().min(1).max(50).default(10), // pageSize
+        cursor: z.number().nullable().default(1), // pageNumber
       })
     )
     .query(async ({ input }) => {
       const { gameId, tournamentId, limit, cursor } = input;
 
-      // 1. Fetch full leaderboard data from your Elympics function
-      const fullLeaderboard: LeaderboardResponse = await getTournamentLeaderboard(gameId, tournamentId);
+      // 1) Elympics is 1-based paging, so treat 'cursor' as the current page number (default = 1)
+      const safeCursor = cursor ?? 0; // if null, become 0
+      const pageNumber = Math.floor(safeCursor / (limit ?? 1)) + 1;
 
-      // 2. We'll slice the data in-memory to simulate pagination.
-      //    The official Elympics endpoint doesn't support native pagination as of now.
-      const startIndex = cursor ?? 0;
-      const endIndex = startIndex + limit;
+      // 2) Get that page from Elympics
+      const leaderboardResponse: LeaderboardResponse = await getTournamentLeaderboard(
+        gameId,
+        tournamentId,
+        limit,
+        pageNumber
+      );
 
-      // fullLeaderboard.data is an array of leaderboard entries
-      const pageData = fullLeaderboard.data.slice(startIndex, endIndex);
-
-      // 3. If there's more data after endIndex, set nextCursor to endIndex
+      // 3) If the Elympics response says totalPages is, for example, 5,
+      //    and you're currently on pageNumber=2, then nextCursor=3
       let nextCursor: number | null = null;
-      if (endIndex < fullLeaderboard.data.length) {
-        nextCursor = endIndex;
+      if (pageNumber < leaderboardResponse.totalPages) {
+        nextCursor = leaderboardResponse.data.length * pageNumber + 1;
       }
 
+      // 4) Return the "paged" results
+      //    Elympics already returns data for just this page
       return {
-        leaderboard: pageData,
+        leaderboard: leaderboardResponse.data, // current page's data
+        pageNumber: leaderboardResponse.pageNumber, // or pageNumber
+        pageSize: leaderboardResponse.pageSize, // or limit
+        totalPages: leaderboardResponse.totalPages,
+        totalRecords: leaderboardResponse.totalRecords,
         nextCursor,
-        totalRecords: fullLeaderboard.data.length,
       };
     }),
 });
