@@ -16,6 +16,7 @@ export const tournamentsRouter = router({
           .object({
             tournamentState: z.enum(["Active", "Concluded", "TonAddressPending"]).optional(),
             entryType: z.enum(["Tickets", "Pass"]).optional(),
+            status: z.enum(["ongoing", "upcoming", "ended", "notended"]).optional(),
           })
           .optional(),
         sortBy: z.enum(["prize", "entryFee", "timeRemaining"]).default("timeRemaining"),

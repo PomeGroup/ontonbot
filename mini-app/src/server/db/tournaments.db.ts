@@ -3,7 +3,7 @@ import { tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/t
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import crypto from "crypto";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, lt, lte } from "drizzle-orm";
 
 /**
  * Insert a new row in the 'tournaments' table.
@@ -69,6 +69,7 @@ export const getTournamentsWithFiltersDB = async ({
   filter?: {
     tournamentState?: "Active" | "Concluded" | "TonAddressPending";
     entryType?: "Tickets" | "Pass";
+    status?: "ongoing" | "upcoming" | "ended" | "notended";
   };
   sortBy: "prize" | "entryFee" | "timeRemaining";
   sortOrder: "asc" | "desc";
@@ -97,6 +98,19 @@ export const getTournamentsWithFiltersDB = async ({
     query.orderBy(sortOrder === "asc" ? asc(tournaments.entryFee) : desc(tournaments.entryFee));
   } else if (sortBy === "timeRemaining") {
     query.orderBy(sortOrder === "asc" ? asc(tournaments.endDate) : desc(tournaments.endDate));
+  }
+
+  if (filter?.status) {
+    const now = new Date();
+    if (filter.status === "ongoing") {
+      query.where(and(lte(tournaments.startDate, now), gte(tournaments.endDate, now)));
+    } else if (filter.status === "upcoming") {
+      query.where(gt(tournaments.startDate, now));
+    } else if (filter.status === "ended") {
+      query.where(lt(tournaments.endDate, now));
+    } else if (filter.status === "notended") {
+      query.where(gte(tournaments.endDate, now));
+    }
   }
 
   // Use cursor as an offset for simplicity

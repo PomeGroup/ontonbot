@@ -19,6 +19,9 @@ const PlayToWin: React.FC = () => {
   const tournomants = trpc.tournaments.getTournaments.useInfiniteQuery(
     {
       limit: 50,
+      filter: {
+        status: "notended",
+      },
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -62,6 +65,18 @@ const PlayToWin: React.FC = () => {
 
         <Typography variant="title2">Discover</Typography>
         <div className="grid grid-cols-2 gap-4">
+          {!tournomants.data?.pages[0].tournaments.length && (
+            <CustomCard
+              className="col-span-2"
+              defaultPadding
+            >
+              <DataStatus
+                status="not_found"
+                title="No tournaments found"
+                description="No ongoing tournaments were found."
+              />
+            </CustomCard>
+          )}
           {tournomants.isError && (
             <CustomCard
               className="col-span-2"
