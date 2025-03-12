@@ -118,7 +118,7 @@ const DiscoverTournaments: React.FC = () => {
     <>
       <Typography variant="title2">Discover</Typography>
       <div className="grid grid-cols-2 gap-4">
-        {!tournomants.data?.pages[0].tournaments.length && (
+        {tournomants.isSuccess && !tournomants.data?.pages[0].tournaments.length && (
           <CustomCard
             className="col-span-2"
             defaultPadding
