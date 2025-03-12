@@ -1,8 +1,9 @@
 import { ConversationFlavor, conversations, createConversation, type Conversation } from "@grammyjs/conversations"
-import { Composer, Context } from "grammy"
+import { Composer } from "grammy"
+import { MyContext } from "src/types/MyContext"
 import { getPlay2winFeatured, isUserAdmin, upsertPlay2winFeatured } from "../db/db"
 
-type FeaturedContext = Context & ConversationFlavor
+type FeaturedContext = MyContext & ConversationFlavor
 type FeaturedConversation = Conversation<FeaturedContext>
 
 export const play2winFeatured = new Composer<FeaturedContext>()
