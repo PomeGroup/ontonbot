@@ -52,12 +52,11 @@ export async function handleShareTournament(
     const caption = `
 <b>🏆 ${name || "Tournament"}</b>
 
-⏰ <b>Start:</b> ${formatDate(startDate)}
-⏰ <b>End:</b>   ${formatDate(endDate)}
-<b>State:</b>   ${state || "?"}
-<b>Entry Fee:</b> ${entryFee ? String(entryFee) : "Free"}
+⏰ <b>Start:</b> ${formatDate(startDate)} UTC
+⏰ <b>End:</b>   ${formatDate(endDate)} UTC
+💎 <b>Entry Fee:</b> ${entryFee ? String(entryFee) : "Free"}
 
-Join here: ${share_link}
+🔗 Join here: ${share_link}
 `;
 
     // 3) Inline keyboard with e.g. a single "Open" button
