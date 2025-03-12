@@ -1,5 +1,3 @@
-import "server-only";
-
 import { getRedisClient } from "./redisClient"; // Use getRedisClient to ensure a valid Redis client
 
 const CACHE_ENABLED = process.env.CACHE_ENABLED ? process.env.CACHE_ENABLED.toLowerCase() === "true" : true;
