@@ -52,6 +52,7 @@ export type TournamentDetailsResponse = {
 
 export type LeaderboardEntry = {
   userId: string;
+  telegramId: string;
   nickname: string;
   matchId: string;
   tournamentId: string;
