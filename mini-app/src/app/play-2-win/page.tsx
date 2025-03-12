@@ -100,7 +100,7 @@ const Play2WinFeatured = () => {
   );
 };
 
-const PlayToWin: React.FC = () => {
+const DiscoverTournaments: React.FC = () => {
   const router = useRouter();
   const tournomants = trpc.tournaments.getTournaments.useInfiniteQuery(
     {
@@ -113,99 +113,116 @@ const PlayToWin: React.FC = () => {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     }
   );
+  return (
+    <>
+      <Typography variant="title2">Discover</Typography>
+      <div className="grid grid-cols-2 gap-4">
+        {!tournomants.data?.pages[0].tournaments.length && (
+          <CustomCard
+            className="col-span-2"
+            defaultPadding
+          >
+            <DataStatus
+              status="not_found"
+              title="No tournaments found"
+              description="No ongoing tournaments were found."
+            />
+          </CustomCard>
+        )}
+        {tournomants.isError && (
+          <CustomCard
+            className="col-span-2"
+            defaultPadding
+          >
+            <DataStatus
+              status="searching"
+              title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
+              description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading tournaments."}
+            />
+          </CustomCard>
+        )}
+        {tournomants.isLoading
+          ? Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
+              >
+                <Skeleton
+                  variant="rectangular"
+                  width={120}
+                  height={120}
+                  className="rounded-md"
+                />
+                <Skeleton
+                  variant="rectangular"
+                  width={80}
+                  height={36}
+                  className="rounded-md mt-2"
+                />
+              </div>
+            ))
+          : tournomants.data?.pages.map((page) =>
+              page.tournaments.map((tournament) => (
+                <Link
+                  key={tournament.id}
+                  href={`/play-2-win/${tournament.id}`}
+                >
+                  <CustomCard defaultPadding>
+                    <div className="flex flex-col gap-3">
+                      <Image
+                        src={tournament.imageUrl}
+                        width={120}
+                        height={120}
+                        className="mx-auto rounded-md"
+                        alt="game card"
+                      />
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-0.5">
+                          <Typography
+                            variant="callout"
+                            truncate
+                          >
+                            {tournament.name}
+                          </Typography>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <CustomButton
+                            variant="outline"
+                            size="md"
+                            onClick={() => {
+                              router.push(`/play-2-win/${tournament.id}`);
+                            }}
+                          >
+                            Play
+                          </CustomButton>
+                        </div>
+                      </div>
+                    </div>
+                  </CustomCard>
+                </Link>
+              ))
+            )}
+      </div>
+    </>
+  );
+};
 
+/**
+ * @component PlayToWin
+ *
+ * @description
+ * This component renders the Play2Win page containing both the featured contests
+ * and the discover tournaments sections.
+ *
+ * @default
+ * 😎🚀✨ This is the default export of the PlayToWin page component!
+ */
+const PlayToWin: React.FC = () => {
   return (
     <Page>
       <div className="p-4 flex flex-col gap-2 mb-12">
         <Play2WinFeatured />
-        <Typography variant="title2">Discover</Typography>
-        <div className="grid grid-cols-2 gap-4">
-          {!tournomants.data?.pages[0].tournaments.length && (
-            <CustomCard
-              className="col-span-2"
-              defaultPadding
-            >
-              <DataStatus
-                status="not_found"
-                title="No tournaments found"
-                description="No ongoing tournaments were found."
-              />
-            </CustomCard>
-          )}
-          {tournomants.isError && (
-            <CustomCard
-              className="col-span-2"
-              defaultPadding
-            >
-              <DataStatus
-                status="searching"
-                title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
-                description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading tournaments."}
-              />
-            </CustomCard>
-          )}
-          {tournomants.isLoading
-            ? Array.from({ length: 5 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
-                >
-                  <Skeleton
-                    variant="rectangular"
-                    width={120}
-                    height={120}
-                    className="rounded-md"
-                  />
-                  <Skeleton
-                    variant="rectangular"
-                    width={80}
-                    height={36}
-                    className="rounded-md mt-2"
-                  />
-                </div>
-              ))
-            : tournomants.data?.pages.map((page) =>
-                page.tournaments.map((tournament) => (
-                  <Link
-                    key={tournament.id}
-                    href={`/play-2-win/${tournament.id}`}
-                  >
-                    <CustomCard defaultPadding>
-                      <div className="flex flex-col gap-3">
-                        <Image
-                          src={tournament.imageUrl}
-                          width={120}
-                          height={120}
-                          className="mx-auto rounded-md"
-                          alt="game card"
-                        />
-                        <div className="flex flex-col gap-2">
-                          <div className="flex flex-col gap-0.5">
-                            <Typography
-                              variant="callout"
-                              truncate
-                            >
-                              {tournament.name}
-                            </Typography>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <CustomButton
-                              variant="outline"
-                              size="md"
-                              onClick={() => {
-                                router.push(`/play-2-win/${tournament.id}`);
-                              }}
-                            >
-                              Play
-                            </CustomButton>
-                          </div>
-                        </div>
-                      </div>
-                    </CustomCard>
-                  </Link>
-                ))
-              )}
-        </div>
+        <DiscoverTournaments />
       </div>
       <BottomNavigation active="Play2Win" />
     </Page>
