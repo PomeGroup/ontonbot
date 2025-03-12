@@ -133,19 +133,19 @@ const EventHeader = React.memo(() => {
 });
 EventHeader.displayName = "EventHeader";
 
-const SponsorCard = React.memo(() => {
+const OrganizerCard = React.memo(() => {
   const router = useRouter();
   const tournament = usePageTournament();
 
   return (
-    <CustomCard title="Sponsor">
+    <CustomCard title="Organizer">
       <div
         onClick={() => router.push(`/channels/${748891997}/`)}
         className="flex items-center justify-between cursor-pointer p-4 pt-0"
       >
         <div className="flex items-center gap-3">
           <LoadableImage
-            alt="play 2 win game sponsor"
+            alt="play 2 win game Organizer"
             src={tournament.data?.organizer.photo_url || "/template-images/user-placeholder.png"}
             width={48}
             height={48}
@@ -175,7 +175,7 @@ const SponsorCard = React.memo(() => {
     </CustomCard>
   );
 });
-SponsorCard.displayName = "SponsorCard";
+OrganizerCard.displayName = "SponsorCard";
 
 const Play2WinPage: React.FC<{
   params: {
@@ -266,7 +266,7 @@ const Play2WinPage: React.FC<{
       ) : (
         <div className="flex flex-col gap-4 p-4">
           <EventHeader />
-          <SponsorCard />
+          <OrganizerCard />
           <MainButton
             text="Play"
             onClick={() => {
