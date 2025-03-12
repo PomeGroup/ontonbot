@@ -77,6 +77,7 @@ const Play2WinFeatured = () => {
       <div>
         <Swiper
           slidesPerView="auto"
+          className="!-mx-3 !pe-8"
           spaceBetween={12}
           pagination={{ clickable: true }}
           autoHeight
