@@ -1,6 +1,6 @@
 import { Pool } from "pg"
 import { generateRandomHash } from "../helpers/generateRandomHash"
-import { redisTools } from "../lib/redisTools"
+import { cacheKeys, redisTools } from "../lib/redisTools"
 import { logger } from "../utils/logger"
 import { TVisitor } from "../utils/types"
 
@@ -338,6 +338,13 @@ export const upsertPlay2winFeatured = async (value: string, env?: string): Promi
       `,
       [environment, value],
     );
+
+    try {
+      await redisTools.deleteCache(cacheKeys.ontonSettings)
+    } catch (error) {
+      logger.log("Error in upsertPlay2winFeatured:", error); 
+    }
+
   } finally {
     client.release();
   }
