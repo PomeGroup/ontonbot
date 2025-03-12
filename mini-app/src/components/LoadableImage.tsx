@@ -27,15 +27,9 @@ export default function LoadableImage({ src, alt, width, height, className, wrap
   }, []);
 
   return (
-    <div className={cn(`relative rounded-lg flex-shrink-0`, wrapperClassName)}>
+    <div className={cn(`relative rounded-lg flex-shrink-0`, wrapperClassName, width && `min-w-[${width}px])`)}>
       {!loaded && (
-        <div
-          style={{
-            maxWidth: width,
-            maxHeight: height,
-          }}
-          className={cn("absolute w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse mx-auto rounded-lg", className)}
-        />
+        <div className={cn("absolute w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg", className)} />
       )}
       <Image
         src={src || defaultImage}
@@ -43,7 +37,7 @@ export default function LoadableImage({ src, alt, width, height, className, wrap
         width={width}
         height={height}
         className={cn(
-          `rounded-md w-full h-full transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`,
+          `w-[${width}] rounded-[6px] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`,
           className
         )}
         onError={onError}
