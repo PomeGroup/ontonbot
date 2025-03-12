@@ -24,6 +24,7 @@ import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
 import { couponItemsDB } from "@/server/db/couponItems.db";
 import { convertSvgToJpegBuffer } from "@/lib/convertSvgToJpegBuffer";
 import { tournamentsDB } from "@/server/db/tournaments.db";
+import { fromNano } from "@ton/core";
 
 const requestShareEvent = initDataProtectedProcedure
   .input(
@@ -486,15 +487,14 @@ export const requestShareTournament = initDataProtectedProcedure
           jpegBuffer = undefined;
         }
       }
-
       // 3) Prepare the data object for shareTournamentRequest
       const tournamentDataForBot = {
         name: tournament.name || `Tournament #${tournament.id}`,
-        startDate: tournament.startDate ? Math.floor(tournament.startDate.getTime() / 1000) : null,
-        endDate: tournament.endDate ? Math.floor(tournament.endDate.getTime() / 1000) : null,
+        startDate: tournament.startDate ? Math.floor(new Date(tournament.startDate).getTime() / 1000) : null,
+        endDate: tournament.endDate ? Math.floor(new Date(tournament.endDate).getTime() / 1000) : null,
         imageUrl: jpegBuffer ?? finalImageUrl, // either a buffer or a string
         state: tournament.state,
-        entryFee: Number(tournament.entryFee) || 0,
+        entryFee: Number(fromNano(Number(tournament.entryFee))) || 0,
       };
 
       // 4) Call the telegramService method

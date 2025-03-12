@@ -215,7 +215,7 @@ export const shareTournamentRequest = async (
   // 1) Construct share link + webapp URL
   //    (Adapt these to your “mini app” or web front-end’s routing)
   const share_link = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tournaments_${tournamentId}`;
-  const url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/tournaments/${tournamentId}`;
+  const url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/play-2-win/${tournamentId}`;
 
   try {
     // 2) Send a POST to the new /share-tournament route

@@ -16,6 +16,7 @@ import { Page } from "konsta/react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { FaAngleRight } from "react-icons/fa6";
+import TournamentShareButton from "@/app/_components/tournaments/TournamentShareButton";
 
 const TournamentImage = React.memo(() => {
   const tournament = usePageTournament();
@@ -117,6 +118,7 @@ const EventTitle = React.memo(() => {
         >
           {tournament.data?.name}
         </Typography>
+        <TournamentShareButton tournamentId={tournament.data?.id} />
       </div>
     </div>
   );
