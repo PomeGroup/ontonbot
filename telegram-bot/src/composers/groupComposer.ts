@@ -10,7 +10,8 @@ import {
   getUpcomingOnlineRegEventsForOrganizer,
   getEventById,
   updateEventTelegramGroup,
-} from "../db/db"; // or wherever you put them
+} from "../db/db";
+import { isNewCommand } from "../helpers/isNewCommand"; // or wherever you put them
 
 export const groupComposer = new Composer<MyContext>();
 
@@ -210,6 +211,7 @@ groupComposer.callbackQuery("grpev_no", async (ctx) => {
  * 5) Wait for the group ID from user text
  */
 groupComposer.on("message:text", async (ctx, next) => {
+  if (isNewCommand(ctx)) return next();
   if (ctx.session.groupStep !== "askGroupId") {
     return next(); // not in group ID input step
   }
