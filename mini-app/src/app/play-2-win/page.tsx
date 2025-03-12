@@ -1,6 +1,11 @@
 "use client";
 
+import "swiper/css";
+import { Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+
 import BottomNavigation from "@/components/BottomNavigation";
+import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import { Skeleton } from "@mui/material";
 import { Page } from "konsta/react";
@@ -8,14 +13,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
-import "swiper/css";
-import { Pagination } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
 import CustomCard from "../_components/atoms/cards/CustomCard";
 import CustomButton from "../_components/Button/CustomButton";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { trpc } from "../_trpc/client";
-
 interface TournamentCardProps {
   tournamentId: string;
 }
@@ -36,15 +37,16 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
   }
 
   return (
-    <SwiperSlide
-      key={tournamentId}
-      className="!w-[220px]"
-    >
+    <>
       {tournament.isLoading ? (
-        <Skeleton className="w-[220px] h-[220px] rounded-md" />
+        <Skeleton
+          key={tournamentId}
+          className="w-[220px] h-[220px] rounded-md"
+        />
       ) : (
-        <Image
+        <LoadableImage
           src={tournament.data?.imageUrl}
+          key={tournamentId}
           width={220}
           height={220}
           onClick={() => {
@@ -54,7 +56,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
           alt="tournament image card"
         />
       )}
-    </SwiperSlide>
+    </>
   );
 };
 
@@ -74,8 +76,7 @@ const Play2WinFeatured = () => {
       <Typography variant="title2">Featured Contests</Typography>
       <div>
         <Swiper
-          slidesPerView="auto"
-          className="-mx-3"
+          slidesPerView={1}
           spaceBetween={12}
           pagination={{ clickable: true }}
           autoHeight
@@ -83,10 +84,15 @@ const Play2WinFeatured = () => {
           wrapperClass="swiper-wrapper pb-3 px-4"
         >
           {parsedFeaturedEvents.map((tId) => (
-            <TournamentCard
-              tournamentId={tId}
+            <SwiperSlide
               key={tId}
-            />
+              className="!w-[220px] !h-[220px]"
+            >
+              <TournamentCard
+                tournamentId={tId}
+                key={tId}
+              />
+            </SwiperSlide>
           ))}
         </Swiper>
       </div>
