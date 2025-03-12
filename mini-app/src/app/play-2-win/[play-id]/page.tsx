@@ -4,6 +4,8 @@ import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { ErrorState } from "@/app/_components/ErrorState";
 import EventKeyValue from "@/app/_components/organisms/events/EventKewValue";
+import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
+import TournamentShareButton from "@/app/_components/tournaments/TournamentShareButton";
 import Divider from "@/components/Divider";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
@@ -12,25 +14,27 @@ import useWebApp from "@/hooks/useWebApp";
 import { Skeleton } from "@mui/material";
 import { fromNano } from "@ton/core";
 import { Page } from "konsta/react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { FaAngleRight } from "react-icons/fa6";
 
-const EventImage = React.memo(() => {
+const TournamentImage = React.memo(() => {
   const tournament = usePageTournament();
 
   return (
-    <Image
-      width={320}
-      height={320}
-      className="w-full rounded-2lg"
-      src={tournament.data?.imageUrl!}
-      alt="event image"
-    />
+    <div className="relative isolate">
+      <LoadableImage
+        width={328}
+        height={328}
+        className="w-full rounded-2lg"
+        src={tournament.data?.imageUrl!}
+        alt="event image"
+      />
+      <TournamentTimeRemaining endDate={tournament.data?.endDate!} />
+    </div>
   );
 });
-EventImage.displayName = "EventImage";
+TournamentImage.displayName = "TournamentImage";
 
 const EventTicketPrice = React.memo(() => {
   const tournament = usePageTournament();
@@ -114,6 +118,7 @@ const EventTitle = React.memo(() => {
         >
           {tournament.data?.name}
         </Typography>
+        <TournamentShareButton tournamentId={tournament.data?.id} />
       </div>
     </div>
   );
@@ -123,7 +128,7 @@ EventTitle.displayName = "EventHead";
 const EventHeader = React.memo(() => {
   return (
     <CustomCard defaultPadding>
-      <EventImage />
+      <TournamentImage />
 
       <EventTitle />
       <Divider margin="medium" />

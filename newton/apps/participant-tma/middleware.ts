@@ -15,12 +15,17 @@ export async function middleware(req: NextRequest) {
       const isEdit = tgAppStartParam.startsWith("edit_");
       const isAffiliate = tgAppStartParam.includes("-affiliate-");
       const isOrganizerProfile = tgAppStartParam.startsWith("channels_");
-
+      const isTournament = tgAppStartParam.startsWith("tournaments_");
 
       if (isOrganizerProfile) {
         console.log("redirecting to organizer profile");
         return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
-
+      }
+      if (isTournament) {
+        console.log("redirecting to tournament");
+        return NextResponse.redirect(
+          new URL(`/play-2-win/${tgAppStartParam.replace("tournaments_", "")}`, req.nextUrl.origin)
+        );
       }
 
       if (isEdit) {
@@ -28,7 +33,6 @@ export async function middleware(req: NextRequest) {
         console.log("redirecting to edit event", eventId);
         return NextResponse.redirect(new URL(`/events/${eventId}/manage`, req.nextUrl.origin));
       }
-
 
       if (isAffiliate) {
         const splitAffiliate = tgAppStartParam.split("-affiliate-");

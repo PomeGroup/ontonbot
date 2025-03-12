@@ -1,32 +1,33 @@
-import bodyParser from "body-parser"
-import "dotenv/config"
-import express from "express"
-import fileUpload from "express-fileupload"
-import { Bot, session } from "grammy"
-import { mainComposer } from "./composers"
-import { RATE_LIMIT_OPTIONS } from "./constants"
-import { checkBotAdminHandler } from "./controllers/checkBotAdminHandler"
-import { createInviteLinkHandler } from "./controllers/createInviteLinkHandler"
-import { deleteInviteLinkHandler } from "./controllers/deleteInviteLinkHandler"
-import { handleCheckBlockStatus } from "./controllers/handleCheckBlockStatus"
-import { handleFileSend } from "./controllers/handleFileSend"
-import { handlePhotoMessage } from "./controllers/handlePhotoMessage"
-import { handleSendQRCode } from "./controllers/handleSendQRCode"
-import { handleShareEvent } from "./controllers/handleShareEvent"
-import { handleShareOrganizer } from "./controllers/handleShareOrganizer"
-import { sendMessage } from "./controllers/sendMessage"
-import { announceBotAdded } from "./handlers/announceBotAdded"
-import { bannerHandler } from "./handlers/bannerHandler"
-import { cmdHandler } from "./handlers/cmdHandler"
-import { orgHandler } from "./handlers/orgHandler"
-import { sbtdistHandler } from "./handlers/sbtdistHandler"
-import { startHandler } from "./handlers/startHandler"
-import { updateAdminOrganizerProfilesHandler } from "./handlers/updateAdminOrganizerProfilesHandler"
-import { isBotNewlyAddedOrPromoted } from "./helpers/isBotNewlyAddedOrPromoted"
-import { connectRedis } from "./lib/redisTools"
-import { MyContext } from "./types/MyContext"
-import { checkRateLimit } from "./utils/checkRateLimit"
-import { logger } from "./utils/logger"
+import bodyParser from "body-parser";
+import "dotenv/config";
+import express from "express";
+import fileUpload from "express-fileupload";
+import { Bot, session } from "grammy";
+import { mainComposer } from "./composers";
+import { RATE_LIMIT_OPTIONS } from "./constants";
+import { checkBotAdminHandler } from "./controllers/checkBotAdminHandler";
+import { createInviteLinkHandler } from "./controllers/createInviteLinkHandler";
+import { deleteInviteLinkHandler } from "./controllers/deleteInviteLinkHandler";
+import { handleCheckBlockStatus } from "./controllers/handleCheckBlockStatus";
+import { handleFileSend } from "./controllers/handleFileSend";
+import { handlePhotoMessage } from "./controllers/handlePhotoMessage";
+import { handleSendQRCode } from "./controllers/handleSendQRCode";
+import { handleShareEvent } from "./controllers/handleShareEvent";
+import { handleShareOrganizer } from "./controllers/handleShareOrganizer";
+import { sendMessage } from "./controllers/sendMessage";
+import { announceBotAdded } from "./handlers/announceBotAdded";
+import { bannerHandler } from "./handlers/bannerHandler";
+import { cmdHandler } from "./handlers/cmdHandler";
+import { orgHandler } from "./handlers/orgHandler";
+import { sbtdistHandler } from "./handlers/sbtdistHandler";
+import { startHandler } from "./handlers/startHandler";
+import { updateAdminOrganizerProfilesHandler } from "./handlers/updateAdminOrganizerProfilesHandler";
+import { isBotNewlyAddedOrPromoted } from "./helpers/isBotNewlyAddedOrPromoted";
+import { connectRedis } from "./lib/redisTools";
+import { MyContext } from "./types/MyContext";
+import { checkRateLimit } from "./utils/checkRateLimit";
+import { logger } from "./utils/logger";
+import { handleShareTournament } from "./handlers/handleShareTournament";
 
 (async function bootstrap() {
   try {
@@ -119,6 +120,7 @@ import { logger } from "./utils/logger"
     app.post("/send-message", sendMessage);
     app.post("/send-photo", handlePhotoMessage);
     app.post("/share-organizer", handleShareOrganizer);
+    app.post("/share-tournament", handleShareTournament);
     app.post("/check-block-status", handleCheckBlockStatus);
     app.post("/check-bot-admin", checkBotAdminHandler);
     app.post("/create-invite", createInviteLinkHandler);
