@@ -1,13 +1,15 @@
-import Image from "next/image";
-import Link from "next/link";
 import { Address } from "@ton/ton";
 import { Page } from "@ui/base/page";
 import { Section } from "@ui/base/section";
 import QueryState from "@ui/components/blocks/QueryState";
 import SectionCoverImage from "@ui/components/blocks/SectionCoverImage";
 import SeparatorTma from "@ui/components/Separator";
+import Image from "next/image";
+import Link from "next/link";
 import { FiExternalLink } from "react-icons/fi";
 
+import { redirect } from "next/navigation";
+import { ClaimTicketButton } from "~/components/ticket/ClaimTicketButton";
 import SectionContent from "~/components/ticket/SectionContent";
 import TicketAttributes from "~/components/ticket/TicketAttributes";
 import TicketTmaSettings from "~/components/ticket/TicketTmaSettings";
@@ -16,7 +18,6 @@ import { getTicketByEventUuid } from "~/services/ticket.services.ssr";
 import { TicketAttributes as TicketAttributesType } from "~/types/ticket.types";
 import { contractAddressShortner } from "~/utils/contractAddressShortner";
 import { getAuthenticatedUser } from "~/utils/getAuthenticatedUser";
-import { redirect } from "next/navigation";
 
 type TicketParams = {
   params: {
@@ -87,6 +88,7 @@ const Ticket = async ({ params }: TicketParams) => {
         />
         <SeparatorTma />
         <TicketAttributes data={attributes} />
+        {ticket.userSbtTicket?.data?.ok && <ClaimTicketButton link={ticket.userSbtTicket?.data?.reward_link} />}
       </Section>
       <TicketTmaSettings
         ticketId={params.id}

@@ -1,5 +1,12 @@
 import { ReactNode } from "react";
 
+export type RewardDataTyepe =
+  | {
+      reward_link: string;
+      ok: true;
+    }
+  | { fail_reason: string; ok: false };
+
 export type TicketType = {
   id: number;
   full_name: string;
@@ -23,6 +30,29 @@ export type TicketType = {
     count: number;
     collectionAddress: string | null;
     created_at: string;
+  };
+  userSbtTicket?: {
+    id: string;
+    data: RewardDataTyepe | null;
+    type: "ton_society_sbt" | "ton_society_csbt_ticket" | null;
+    created_at: Date | null;
+    updatedAt: Date | null;
+    updatedBy: string;
+    status:
+      | "failed"
+      | "pending_creation"
+      | "created"
+      | "created_by_ui"
+      | "received"
+      | "notified"
+      | "notified_by_ui"
+      | "notification_failed"
+      | "fixed_failed";
+    visitor_id: number;
+    tryCount: number;
+    event_start_date: number;
+    event_end_date: number;
+    tonSocietyStatus: "NOT_CLAIMED" | "CLAIMED" | "RECEIVED" | "NOT_ELIGIBLE";
   };
   needsInfoUpdate: boolean;
 };
