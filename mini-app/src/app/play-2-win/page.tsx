@@ -1,6 +1,11 @@
 "use client";
 
+import "swiper/css";
+import { Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+
 import BottomNavigation from "@/components/BottomNavigation";
+import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import { Skeleton } from "@mui/material";
 import { Page } from "konsta/react";
@@ -8,13 +13,95 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
-import "swiper/css";
 import CustomCard from "../_components/atoms/cards/CustomCard";
 import CustomButton from "../_components/Button/CustomButton";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { trpc } from "../_trpc/client";
+interface TournamentCardProps {
+  tournamentId: string;
+}
 
-const PlayToWin: React.FC = () => {
+const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
+  const router = useRouter();
+
+  const queryEnabeld = !isNaN(Number(tournamentId));
+  const tournament = trpc.tournaments.getTournamentById.useQuery(
+    { id: Number(tournamentId) },
+    {
+      enabled: queryEnabeld,
+    }
+  );
+
+  if (tournament.isError || !queryEnabeld) {
+    return null;
+  }
+
+  return (
+    <>
+      {tournament.isLoading ? (
+        <Skeleton
+          key={tournamentId}
+          className="w-[220px] h-[220px] rounded-md"
+        />
+      ) : (
+        <LoadableImage
+          src={tournament.data?.imageUrl}
+          key={tournamentId}
+          width={220}
+          height={220}
+          onClick={() => {
+            router.push(`/play-2-win/${tournamentId}`);
+          }}
+          className="w-[220px] rounded-md hover:cursor-pointer"
+          alt="tournament image card"
+        />
+      )}
+    </>
+  );
+};
+
+const Play2WinFeatured = () => {
+  const config = trpc.config.getConfig.useQuery();
+  // Get the featured events from the config: tId,tId,tId
+  const play2winFeaturedEvents = config.data?.config["play-2-win-featured"];
+  const parsedFeaturedEvents =
+    typeof play2winFeaturedEvents === "string" ? play2winFeaturedEvents?.split(",").map((tId) => tId.trim()) : undefined;
+
+  if (!parsedFeaturedEvents?.length) {
+    return null;
+  }
+
+  return (
+    <>
+      <Typography variant="title2">Featured Contests</Typography>
+      <div>
+        <Swiper
+          slidesPerView="auto"
+          className="!-mx-3 !pe-8"
+          spaceBetween={12}
+          pagination={{ clickable: true }}
+          autoHeight
+          modules={[Pagination]}
+          wrapperClass="swiper-wrapper pb-3 px-4"
+        >
+          {parsedFeaturedEvents.map((tId) => (
+            <SwiperSlide
+              key={tId}
+              className="!w-[220px] !h-[220px]"
+            >
+              <TournamentCard
+                tournamentId={tId}
+                key={tId}
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    </>
+  );
+};
+
+const DiscoverTournaments: React.FC = () => {
   const router = useRouter();
   const tournomants = trpc.tournaments.getTournaments.useInfiniteQuery(
     {
@@ -27,130 +114,116 @@ const PlayToWin: React.FC = () => {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     }
   );
+  return (
+    <>
+      <Typography variant="title2">Discover</Typography>
+      <div className="grid grid-cols-2 gap-4">
+        {!tournomants.data?.pages[0].tournaments.length && (
+          <CustomCard
+            className="col-span-2"
+            defaultPadding
+          >
+            <DataStatus
+              status="not_found"
+              title="No tournaments found"
+              description="No ongoing tournaments were found."
+            />
+          </CustomCard>
+        )}
+        {tournomants.isError && (
+          <CustomCard
+            className="col-span-2"
+            defaultPadding
+          >
+            <DataStatus
+              status="searching"
+              title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
+              description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading tournaments."}
+            />
+          </CustomCard>
+        )}
+        {tournomants.isLoading
+          ? Array.from({ length: 5 }).map((_, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
+              >
+                <Skeleton
+                  variant="rectangular"
+                  width={120}
+                  height={120}
+                  className="rounded-md"
+                />
+                <Skeleton
+                  variant="rectangular"
+                  width={80}
+                  height={36}
+                  className="rounded-md mt-2"
+                />
+              </div>
+            ))
+          : tournomants.data?.pages.map((page) =>
+              page.tournaments.map((tournament) => (
+                <Link
+                  key={tournament.id}
+                  href={`/play-2-win/${tournament.id}`}
+                >
+                  <CustomCard defaultPadding>
+                    <div className="flex flex-col gap-3">
+                      <Image
+                        src={tournament.imageUrl}
+                        width={120}
+                        height={120}
+                        className="mx-auto rounded-md"
+                        alt="game card"
+                      />
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-0.5">
+                          <Typography
+                            variant="callout"
+                            truncate
+                          >
+                            {tournament.name}
+                          </Typography>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <CustomButton
+                            variant="outline"
+                            size="md"
+                            onClick={() => {
+                              router.push(`/play-2-win/${tournament.id}`);
+                            }}
+                          >
+                            Play
+                          </CustomButton>
+                        </div>
+                      </div>
+                    </div>
+                  </CustomCard>
+                </Link>
+              ))
+            )}
+      </div>
+    </>
+  );
+};
 
+/**
+ * @component PlayToWin
+ *
+ * @description
+ * This component renders the Play2Win page containing both the featured contests
+ * and the discover tournaments sections.
+ *
+ * @default
+ * 😎🚀✨ This is the default export of the PlayToWin page component!
+ */
+const PlayToWin: React.FC = () => {
   return (
     <Page>
       <div className="p-4 flex flex-col gap-2 mb-12">
-        {/* <Typography variant="title2">Featured Contests</Typography>
-        <div>
-          <Swiper
-            slidesPerView="auto"
-            className="-mx-3"
-            spaceBetween={12}
-            pagination={{ clickable: true }}
-            autoHeight
-            modules={[Pagination]}
-            wrapperClass="swiper-wrapper pb-3 px-4"
-          >
-            <SwiperSlide className="!w-[220px]">
-              <Image
-                src="https://s3-alpha-sig.figma.com/img/1e4c/449e/2570818513b584eeb180eaadace966f7?Expires=1742169600&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=EGzjtweOC4U3JDfHqwxE6wHMlvKOqJ2XFAjHkDw58Jv8kYGB-koNwkXSlevC8V0DKBalxTvtaEaja0pCtOXNe5lQaVudFzHgfkJzJdug4UcXI~0u1BSLkJ31UE0JXqEVqq2sl5NXH5WG8IL0l8Pm5SPRsbMT3FflSLqO~~MP8RE3lhXjr7L2VD9upfsb5o25iu7L2aSXY2AUfnlSF1n~rfy576w0xHVppHsJQDgHOq2l0zEVhXSjAkYFK9rJPeL7YdTElO2ODk-2awveH6P1Xu75spLEhyTus4mVv9xiTa8HpIHnW8C0YvZaCqENRGYJ0FFWxPqzzXHMAgzkbActVQ__"
-                width={220}
-                height={220}
-                className="w-[220px] rounded-md"
-                alt="game card"
-              />
-            </SwiperSlide>
-            <SwiperSlide className="w-[220px]">
-              <Image
-                src="https://s3-alpha-sig.figma.com/img/1e4c/449e/2570818513b584eeb180eaadace966f7?Expires=1742169600&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=EGzjtweOC4U3JDfHqwxE6wHMlvKOqJ2XFAjHkDw58Jv8kYGB-koNwkXSlevC8V0DKBalxTvtaEaja0pCtOXNe5lQaVudFzHgfkJzJdug4UcXI~0u1BSLkJ31UE0JXqEVqq2sl5NXH5WG8IL0l8Pm5SPRsbMT3FflSLqO~~MP8RE3lhXjr7L2VD9upfsb5o25iu7L2aSXY2AUfnlSF1n~rfy576w0xHVppHsJQDgHOq2l0zEVhXSjAkYFK9rJPeL7YdTElO2ODk-2awveH6P1Xu75spLEhyTus4mVv9xiTa8HpIHnW8C0YvZaCqENRGYJ0FFWxPqzzXHMAgzkbActVQ__"
-                width={220}
-                height={220}
-                className="w-[220px] rounded-md"
-                alt="game card"
-              />
-            </SwiperSlide>
-          </Swiper>
-        </div> */}
-
-        <Typography variant="title2">Discover</Typography>
-        <div className="grid grid-cols-2 gap-4">
-          {!tournomants.data?.pages[0].tournaments.length && (
-            <CustomCard
-              className="col-span-2"
-              defaultPadding
-            >
-              <DataStatus
-                status="not_found"
-                title="No tournaments found"
-                description="No ongoing tournaments were found."
-              />
-            </CustomCard>
-          )}
-          {tournomants.isError && (
-            <CustomCard
-              className="col-span-2"
-              defaultPadding
-            >
-              <DataStatus
-                status="searching"
-                title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
-                description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading tournaments."}
-              />
-            </CustomCard>
-          )}
-          {tournomants.isLoading
-            ? Array.from({ length: 5 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
-                >
-                  <Skeleton
-                    variant="rectangular"
-                    width={120}
-                    height={120}
-                    className="rounded-md"
-                  />
-                  <Skeleton
-                    variant="rectangular"
-                    width={80}
-                    height={36}
-                    className="rounded-md mt-2"
-                  />
-                </div>
-              ))
-            : tournomants.data?.pages.map((page) =>
-                page.tournaments.map((tournament) => (
-                  <Link
-                    key={tournament.id}
-                    href={`/play-2-win/${tournament.id}`}
-                  >
-                    <CustomCard defaultPadding>
-                      <div className="flex flex-col gap-3">
-                        <Image
-                          src={tournament.imageUrl}
-                          width={120}
-                          height={120}
-                          className="mx-auto rounded-md"
-                          alt="game card"
-                        />
-                        <div className="flex flex-col gap-2">
-                          <div className="flex flex-col gap-0.5">
-                            <Typography
-                              variant="callout"
-                              truncate
-                            >
-                              {tournament.name}
-                            </Typography>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <CustomButton
-                              variant="outline"
-                              size="md"
-                              onClick={() => {
-                                router.push(`/play-2-win/${tournament.id}`);
-                              }}
-                            >
-                              Play
-                            </CustomButton>
-                          </div>
-                        </div>
-                      </div>
-                    </CustomCard>
-                  </Link>
-                ))
-              )}
-        </div>
+        <Play2WinFeatured />
+        <DiscoverTournaments />
       </div>
       <BottomNavigation active="Play2Win" />
     </Page>

@@ -1,9 +1,9 @@
-import axios, { AxiosError } from "axios"
-import FormData from "form-data"
-import { Composer, InlineKeyboard } from "grammy"
-import * as process from "node:process"
-import { MyContext } from "../types/MyContext"
-import { logger } from "../utils/logger"
+import axios, { AxiosError } from "axios";
+import FormData from "form-data";
+import { Composer, InlineKeyboard } from "grammy";
+import * as process from "node:process";
+import { MyContext } from "../types/MyContext";
+import { logger } from "../utils/logger";
 
 export const tournamentComposer = new Composer<MyContext>();
 
@@ -132,7 +132,7 @@ tournamentComposer.on("message:photo", async (ctx) => {
     if (tournamentLink && tournamentLink.toLowerCase() !== "skip") {
       formData.append("tournament_link", tournamentLink);
     }
-
+    logger.info("Form data =>", formData);
     const res = await axios.post(createUrl, formData, {
       headers: {
         ...formData.getHeaders(),
