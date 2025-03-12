@@ -44,17 +44,25 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
           className="w-[220px] h-[220px] rounded-md"
         />
       ) : (
-        <LoadableImage
-          src={tournament.data?.imageUrl}
-          key={tournamentId}
-          width={220}
-          height={220}
-          onClick={() => {
-            router.push(`/play-2-win/${tournamentId}`);
-          }}
-          className="w-[220px] rounded-md hover:cursor-pointer"
-          alt="tournament image card"
-        />
+        <div className="relative isolate">
+          <LoadableImage
+            src={tournament.data?.imageUrl}
+            key={tournamentId}
+            width={220}
+            height={220}
+            onClick={() => {
+              router.push(`/play-2-win/${tournamentId}`);
+            }}
+            className="w-[220px] rounded-md hover:cursor-pointer"
+            alt="tournament image card"
+          />
+
+          <TournamentTimeRemaining
+            space="sm"
+            closeOnly
+            endDate={tournament.data.endDate!}
+          />
+        </div>
       )}
     </>
   );
@@ -170,15 +178,18 @@ const DiscoverTournaments: React.FC = () => {
                 >
                   <CustomCard defaultPadding>
                     <div className="flex flex-col gap-3">
-                      <div className="relative isolate">
+                      <div className="relative isolate mx-auto">
                         <LoadableImage
                           src={tournament.imageUrl}
                           width={120}
                           height={120}
-                          className="mx-auto rounded-md"
                           alt="game card"
                         />
-                        <TournamentTimeRemaining endDate={tournament.endDate!} />
+                        <TournamentTimeRemaining
+                          closeOnly
+                          space="sm"
+                          endDate={tournament.endDate!}
+                        />
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="flex flex-col gap-0.5">
