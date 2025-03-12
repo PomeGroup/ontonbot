@@ -97,12 +97,10 @@ const getMasterApiBearerToken = async (): Promise<string> => {
     const clientSecret = configProtected.ELYMPIC_API_KEY || "";
     const res = await authenticateUserViaClientSecret({ ClientSecret: clientSecret });
 
-    logger.log("new Bearer token:", res.jwtToken);
     // Store the entire response in Redis with a 10-minute TTL
     authData = { ...res };
     await redisTools.setCache(redisTools.cacheKeys.elympicsMasterJwt, authData, redisTools.cacheLvl.short);
   }
-  logger.log("Bearer token from cache:", authData.jwtToken);
 
   // authData is { jwtToken, userId, nickname }
   return authData.jwtToken;

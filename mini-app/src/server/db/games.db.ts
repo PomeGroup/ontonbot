@@ -44,6 +44,15 @@ export const getGameById = async (gameId: string): Promise<GamesRow | undefined>
   }
 };
 
+export const updateGameTx = async (
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  gameId: string,
+  data: Partial<GamesRowInsert>
+) => {
+  const result = await tx.update(games).set(data).where(eq(games.hostGameId, gameId)).execute();
+  return result;
+};
+
 /**
  * Optional: Add more CRUD methods, e.g. getGameByHostGameId, updateGame, etc.
  */
@@ -52,4 +61,5 @@ export const gamesDB = {
   addGame,
   insertGameTx,
   getGameById,
+  updateGameTx,
 };
