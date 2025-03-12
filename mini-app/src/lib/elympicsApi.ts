@@ -95,16 +95,14 @@ const getMasterApiBearerToken = async (): Promise<string> => {
   if (!authData) {
     // No cached token => fetch a new one
     const clientSecret = configProtected.ELYMPIC_API_KEY || "";
-    const res = await authenticateUserViaClientSecret({ clientSecret });
+    const res = await authenticateUserViaClientSecret({ ClientSecret: clientSecret });
 
-    logger.log("Bearer token:", res);
-
+    logger.log("new Bearer token:", res.jwtToken);
     // Store the entire response in Redis with a 10-minute TTL
     authData = { ...res };
     await redisTools.setCache(redisTools.cacheKeys.elympicsMasterJwt, authData, redisTools.cacheLvl.short);
   }
-
-  logger.log("Bearer token:", authData.jwtToken);
+  logger.log("Bearer token from cache:", authData.jwtToken);
 
   // authData is { jwtToken, userId, nickname }
   return authData.jwtToken;
@@ -118,11 +116,12 @@ export const getTournamentDetails = async (tournamentId: string): Promise<Tourna
   return fetchWithAuth<TournamentDetailsResponse>(async (token) => {
     try {
       const url = `/tournament/tournament?tournamentId=${encodeURIComponent(tournamentId)}`;
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
       const response = await elympicsClient.get<TournamentDetailsResponse>(url, {
-        headers: {
-          "Elympics-Publisher-API-Key": configProtected.ELYMPIC_API_KEY || "",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: headers,
       });
       return response.data;
     } catch (error) {

@@ -1,5 +1,5 @@
 export type ClientSecretAuthRequest = {
-  clientSecret: string;
+  ClientSecret: string;
 };
 
 export type ClientSecretAuthResponse = {
