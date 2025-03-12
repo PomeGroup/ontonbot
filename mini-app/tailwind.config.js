@@ -16,6 +16,8 @@ module.exports = konstaConfig({
       "brand-light": "#E4E4E5",
       "brand-divider": "#eeeef0",
       "brand-link": "#68A8FF",
+      "brand-light-destructive": "#FF3B30",
+      "IOS-light-wallet-accent_orange": "#FF9500",
     },
   },
   darkMode: ["class"],

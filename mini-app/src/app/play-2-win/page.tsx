@@ -9,13 +9,13 @@ import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import { Skeleton } from "@mui/material";
 import { Page } from "konsta/react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
 import CustomCard from "../_components/atoms/cards/CustomCard";
 import CustomButton from "../_components/Button/CustomButton";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
+import { TournamentTimeRemaining } from "../_components/Tournament/TournamentRemainingTime";
 import { trpc } from "../_trpc/client";
 interface TournamentCardProps {
   tournamentId: string;
@@ -170,13 +170,16 @@ const DiscoverTournaments: React.FC = () => {
                 >
                   <CustomCard defaultPadding>
                     <div className="flex flex-col gap-3">
-                      <Image
-                        src={tournament.imageUrl}
-                        width={120}
-                        height={120}
-                        className="mx-auto rounded-md"
-                        alt="game card"
-                      />
+                      <div className="relative isolate">
+                        <LoadableImage
+                          src={tournament.imageUrl}
+                          width={120}
+                          height={120}
+                          className="mx-auto rounded-md"
+                          alt="game card"
+                        />
+                        <TournamentTimeRemaining endDate={tournament.endDate!} />
+                      </div>
                       <div className="flex flex-col gap-2">
                         <div className="flex flex-col gap-0.5">
                           <Typography
