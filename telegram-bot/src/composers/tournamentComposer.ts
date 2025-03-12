@@ -4,6 +4,7 @@ import { Composer, InlineKeyboard } from "grammy";
 import * as process from "node:process";
 import { MyContext } from "../types/MyContext";
 import { logger } from "../utils/logger";
+import { isNewCommand } from "../helpers/isNewCommand";
 
 export const tournamentComposer = new Composer<MyContext>();
 
@@ -24,7 +25,7 @@ tournamentComposer.command("tournament", async (ctx) => {
 // 2) On text => handle flow logic
 tournamentComposer.on("message:text", async (ctx, next) => {
   if (!ctx.session.tournamentStep) return next();
-
+  if (isNewCommand(ctx)) return next();
   // (A) Ask for Game ID
   if (ctx.session.tournamentStep === "askGameId") {
     const gameId = ctx.message.text.trim();
@@ -92,9 +93,9 @@ tournamentComposer.callbackQuery(["tourn_insert", "tourn_create", "tourn_cancel"
 });
 
 // 4) On receiving a photo => finalize creation flow
-tournamentComposer.on("message:photo", async (ctx) => {
+tournamentComposer.on("message:photo", async (ctx, next) => {
   if (ctx.session.tournamentStep !== "askTournamentPhoto") return;
-
+  if (isNewCommand(ctx)) return next();
   const { gameId, tournamentId, tournamentLink } = ctx.session.tournamentData ?? {};
   if (!gameId || !tournamentId) {
     await ctx.reply("Missing IDs in session. Please /tournament to start again.");
