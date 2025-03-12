@@ -5,6 +5,7 @@ import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { ErrorState } from "@/app/_components/ErrorState";
 import EventKeyValue from "@/app/_components/organisms/events/EventKewValue";
 import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
+import TournamentShareButton from "@/app/_components/tournaments/TournamentShareButton";
 import Divider from "@/components/Divider";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
@@ -16,7 +17,6 @@ import { Page } from "konsta/react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { FaAngleRight } from "react-icons/fa6";
-import TournamentShareButton from "@/app/_components/tournaments/TournamentShareButton";
 
 const TournamentImage = React.memo(() => {
   const tournament = usePageTournament();
@@ -24,8 +24,8 @@ const TournamentImage = React.memo(() => {
   return (
     <div className="relative isolate">
       <LoadableImage
-        width={320}
-        height={320}
+        width={328}
+        height={328}
         className="w-full rounded-2lg"
         src={tournament.data?.imageUrl!}
         alt="event image"

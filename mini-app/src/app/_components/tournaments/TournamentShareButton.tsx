@@ -1,9 +1,9 @@
 import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { wait } from "@/lib/utils";
-import shareIcon from "./share.svg";
-import Image from "next/image";
 import { LoaderIcon } from "lucide-react";
+import Image from "next/image";
+import shareIcon from "./share.svg";
 
 interface TournamentShareProps {
   tournamentId: number | undefined;
@@ -34,7 +34,7 @@ export default function TournamentShareButton({ tournamentId }: TournamentShareP
 
   return (
     <button
-      className="w-8 h-8 bg-[#efeff4] rounded-[10px] p-2 flex items-center justify-center"
+      className="w-8 h-8 bg-[#efeff4] rounded-md p-2 flex col-start-12 items-center justify-center"
       onClick={share}
       disabled={shareTournamentMutation.isLoading}
       title="Share this tournament"

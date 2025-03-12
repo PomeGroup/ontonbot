@@ -27,22 +27,25 @@ export default function LoadableImage({ src, alt, width, height, className, wrap
   }, []);
 
   return (
-    <div
-      style={{
-        width,
-        height,
-      }}
-      className={cn(`relative rounded-lg flex-shrink-0`, wrapperClassName)}
-    >
+    <div className={cn(`relative rounded-lg flex-shrink-0`, wrapperClassName)}>
       {!loaded && (
-        <div className={cn("absolute w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg", className)} />
+        <div
+          style={{
+            maxWidth: width,
+            maxHeight: height,
+          }}
+          className={cn("absolute w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse mx-auto rounded-lg", className)}
+        />
       )}
       <Image
         src={src || defaultImage}
         alt={alt || ""}
         width={width}
         height={height}
-        className={cn(`rounded-md transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`, className)}
+        className={cn(
+          `rounded-md w-full h-full transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`,
+          className
+        )}
         onError={onError}
         onLoad={onLoad}
         loading="lazy"
