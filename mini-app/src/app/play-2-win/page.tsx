@@ -76,7 +76,7 @@ const Play2WinFeatured = () => {
       <Typography variant="title2">Featured Contests</Typography>
       <div>
         <Swiper
-          slidesPerView={1}
+          slidesPerView="auto"
           spaceBetween={12}
           pagination={{ clickable: true }}
           autoHeight
