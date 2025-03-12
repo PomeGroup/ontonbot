@@ -1,10 +1,14 @@
 import { db } from "@/db/db";
+import { games } from "@/db/schema";
 import { tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/tournaments";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import crypto from "crypto";
 import { and, asc, desc, eq, gt, gte, lt, lte } from "drizzle-orm";
 
+const getTournamentCacheKey = (tournamentId: number) => {
+  return redisTools.cacheKeys.getTournamentById + tournamentId;
+};
 /**
  * Insert a new row in the 'tournaments' table.
  * Returns the inserted row (TournamentsRow) or undefined if none.
@@ -29,7 +33,7 @@ export const addTournament = async (tData: TournamentsRowInsert): Promise<Tourna
  * Returns a TournamentsRow or undefined if not found.
  */
 export const getTournamentById = async (tournamentId: number): Promise<TournamentsRow | undefined> => {
-  const cacheKey = redisTools.cacheKeys.getTournamentById + tournamentId;
+  const cacheKey = getTournamentCacheKey(tournamentId);
   const cachedTournament: TournamentsRow = await redisTools.getCache(cacheKey);
   if (cachedTournament) {
     return cachedTournament;
@@ -124,12 +128,46 @@ export const getTournamentsWithFiltersDB = async ({
 };
 
 /**
- * Optional: Add more methods, e.g. getTournamentByHostTournamentId, updateTournament, etc.
+ * Retrieves all tournaments whose endDate >= cutoffDate,
+ * along with the associated game, via INNER JOIN.
  */
+export const getTournamentsEndingAfter = async (cutoffDate: Date) => {
+  return db
+    .select({
+      tournaments: {
+        id: tournaments.id,
+        hostTournamentId: tournaments.hostTournamentId,
+        endDate: tournaments.endDate,
+      },
+      game: {
+        id: games.id,
+        hostGameId: games.hostGameId,
+        name: games.name,
+      },
+    })
+    .from(tournaments)
+    .innerJoin(games, eq(tournaments.gameId, games.id))
+    .where(gte(tournaments.endDate, cutoffDate))
+    .execute();
+};
+
+export const updateTournamentTx = async (
+  trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tournamentId: number,
+  updatedFields: any
+) => {
+  const result = (
+    await trx.update(tournaments).set(updatedFields).where(eq(tournaments.id, tournamentId)).returning().execute()
+  ).pop();
+  await redisTools.deleteCache(getTournamentCacheKey(tournamentId));
+  return result;
+};
 
 export const tournamentsDB = {
   addTournament,
   getTournamentById,
   insertTournamentTx,
   getTournamentsWithFiltersDB,
+  getTournamentsEndingAfter,
+  updateTournamentTx,
 };

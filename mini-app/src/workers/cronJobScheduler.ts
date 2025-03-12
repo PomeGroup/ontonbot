@@ -90,8 +90,21 @@ async function MainCronJob() {
   );
 
   new CronJob(
-    "*/60 * * * * *", // Every 10 seconds
+    "*/60 * * * * *", // Every 60 seconds
     cronJobs.consumeClickBatch, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
+
+  new CronJob(
+    "*/60 * * * * *", // Every 60 seconds
+    cronJobs.updateAllTournaments, // The function to run
     null, // onComplete (not needed)
     true, // start immediately
     null, // timeZone
