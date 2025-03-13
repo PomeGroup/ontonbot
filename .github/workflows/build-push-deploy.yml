@@ -155,6 +155,8 @@ jobs:
           declare -A services=(
             ["participant-tma"]="newton/apps/participant-tma"
             ["mini-app-sbt-worker"]="mini-app"
+            ["mini-app-ordinary-worker"]="mini-app"
+            ["mini-app-reward-worker"]="mini-app"
             ["mini-app"]="mini-app"
             ["telegram-bot"]="telegram-bot"
             ["website"]="website"
@@ -462,6 +464,8 @@ jobs:
             mkdir -p /home/tonont/$branch_name
             mkdir -p /home/tonont/$branch_name/mini-app
             mkdir -p /home/tonont/$branch_name/mini-app-sbt-worker
+            mkdir -p /home/tonont/$branch_name/mini-app-ordinary-worker
+            mkdir -p /home/tonont/$branch_name/mini-app-reward-worker
             mkdir -p /home/tonont/$branch_name/mini-app-poa-worker
             mkdir -p /home/tonont/$branch_name/mini-app-notification-socket
             mkdir -p /home/tonont/$branch_name/telegram-bot
@@ -579,6 +583,12 @@ jobs:
           
                 echo "Updating $branch_name_mini-app-sbt-worker"
                 docker service update --update-failure-action rollback --update-max-failure-ratio 0.2 --force $branch_name\_\mini-app-sbt-worker
+          
+                echo "Updating $branch_name_mini-app-ordinary-worker"
+                docker service update --update-failure-action rollback --update-max-failure-ratio 0.2 --force $branch_name\_\mini-app-ordinary-worker
+          
+                echo "Updating $branch_name_mini-app-reward-worker"
+                docker service update --update-failure-action rollback --update-max-failure-ratio 0.2 --force $branch_name\_\mini-app-reward-worker
           
                 echo "Updating $branch_name_mini-app-moderation-bot"
                 docker service update --update-failure-action rollback --update-max-failure-ratio 0.2 --force $branch_name\_\mini-app-moderation-bot
