@@ -4,6 +4,7 @@ import { RewardTonSocietyStatusType } from "@/db/schema/rewards";
 import { logger } from "@sentry/core";
 import rewardDB from "@/server/db/rewards.db";
 import { maybeInsertUserScore } from "@/cronJobs/helper/maybeInsertUserScore";
+import { informTonfestUserClaim } from "@/cronJobs/helper/informTonfestUserClaim";
 
 /**
  * Updates Ton Society status for a single reward record:
@@ -35,6 +36,7 @@ export const handleSingleRewardUpdate = async (activity_id: number, visitor_id: 
     // 4) If newly claimed, add user score — "CLAIMED" or "RECEIVED" implies the user actually claimed it
     if (tonSocietyStatus === "CLAIMED" || tonSocietyStatus === "RECEIVED") {
       await maybeInsertUserScore(userId, event_id); // <-- NEW
+      await informTonfestUserClaim(userId, event_id); // <-- NEW
     }
   }
 };

@@ -33,7 +33,7 @@ export const stepNameEnum = pgEnum("step_name_enum", [
 export const httpMethodEnum = pgEnum("http_method_enum", ["GET", "POST", "PUT", "PATCH", "DELETE"]);
 export const taskFunctionEnum = pgEnum("task_function_enum", ["addUserTicketFromOnton"]);
 
-export type CallBackTaskFunctionType = "addUserTicketFromOnton";
+export type CallBackTaskFunctionType = "addUserTicketFromOnton" | "addSbtFromOnton";
 export type CallBackTaskAPINameType = "TONFEST" | "TS_API";
 
 export interface RetryPolicy {

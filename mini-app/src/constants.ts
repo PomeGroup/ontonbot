@@ -702,3 +702,5 @@ export const ALLOWED_USER_TO_TEST = [
   548648769, // Radiophp
   70992667, // Pari_che_hr
 ];
+
+export const ALLOWED_TONFEST_EVENT_UUIDS = ["c5f9bd59-a46b-4dce-91cb-3cd146b255a5", "839960c1-12ec-405e-b372-be88ece4fa18"];
