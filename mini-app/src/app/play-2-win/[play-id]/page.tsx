@@ -1,5 +1,6 @@
 "use client";
 
+import SupportButtons from "@/app/_components/atoms/buttons/SupportButton";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import CustomButton from "@/app/_components/Button/CustomButton";
@@ -286,6 +287,7 @@ const Play2WinPage: React.FC<{
         <div className="flex flex-col gap-4 p-4">
           <TournamentHeader />
           <OrganizerCard />
+          <SupportButtons orgSupportTelegramUserName={tournament.data?.organizer.org_support_telegram_user_name} />
           <MainButton
             text="Play"
             onClick={() => {
