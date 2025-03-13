@@ -21,7 +21,12 @@ export const handleSingleRewardUpdate = async (
   rewardType: RewardType
 ) => {
   // 1) Get the visitor to find user_id
-
+  if (!activity_id || !visitor_id || !event_id || !rewardType) {
+    logger.error(
+      `[Event ${event_id}] Invalid input: activity_id=${activity_id}, visitor_id=${visitor_id}, event_id=${event_id}, rewardType=${rewardType}`
+    );
+    return;
+  }
   const visitorRow = await visitorsDB.findVisitorById(visitor_id);
   if (!visitorRow) return;
 

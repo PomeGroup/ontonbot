@@ -59,7 +59,10 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
       //   logger.error("no_collection_address", event_uuid);
       //   continue;
       // }
-
+      if (!paymentInfo.ticketActivityId) {
+        logger.error(`error_what the fuck : NO_ACTIVITY_ID_FOR_CSBT_TICKET ${event_uuid}`);
+        continue;
+      }
       try {
         if (ordr.user_id) {
           // if ordr.user_id === null order is manual mint(Gift)
