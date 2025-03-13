@@ -131,7 +131,7 @@ export async function runPendingCallbackTasks() {
       // Filter out any we've processed this invocation
       const newRuns = pendingRuns.filter((r) => !processedRuns.has(r.id));
       if (newRuns.length === 0) {
-        logger.debug("No newly unprocessed pending runs found; finishing.");
+        // logger.debug("No newly unprocessed pending runs found; finishing.");
         break;
       }
 

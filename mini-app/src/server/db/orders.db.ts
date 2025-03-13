@@ -115,6 +115,13 @@ const findOrderByEventUser = async (eventUuid: string, telegramUserId: number) =
   });
 };
 
+const findOrderByEventUserByType = async (eventUuid: string, telegramUserId: number, orderType: OrderTypeValues) => {
+  return db.query.orders.findMany({
+    where: and(eq(orders.event_uuid, eventUuid), eq(orders.user_id, telegramUserId), eq(orders.order_type, orderType)),
+    orderBy: (fields, { desc }) => [desc(fields.created_at)], // or desc(fields.id)
+  });
+};
+
 /** Returns all "event_creation" orders in a "processing" state. */
 const getProcessingEventCreationOrders = async () =>
   db
@@ -133,6 +140,7 @@ const ordersDB = {
   findExistingCompletedOrder,
   findOrderByEventUser,
   getProcessingEventCreationOrders,
+  findOrderByEventUserByType,
 };
 
 export default ordersDB;

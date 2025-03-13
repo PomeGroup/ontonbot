@@ -1,22 +1,21 @@
 import { db } from "@/db/db";
 import { nftItems, orders } from "@/db/schema";
+import { OrderRow } from "@/db/schema/orders";
+import "@/lib/gracefullyShutdown";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
-import { and, eq } from "drizzle-orm";
-import { type NextRequest } from "next/server";
-import { usersDB } from "@/server/db/users";
-import tonCenter from "@/server/routers/services/tonCenter";
-import { NFTItem } from "@/server/routers/services/tonCenter";
-import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
-import { OrderRow } from "@/db/schema/orders";
+import { affiliateClicksDB } from "@/server/db/affiliateClicks.db";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
 import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
-import "@/lib/gracefullyShutdown";
 import eventDB from "@/server/db/events";
 import ordersDB from "@/server/db/orders.db";
 import { userRolesDB } from "@/server/db/userRoles.db";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { usersDB } from "@/server/db/users";
+import tonCenter, { NFTItem } from "@/server/routers/services/tonCenter";
+import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { logger } from "@/server/utils/logger";
-import { affiliateClicksDB, enqueueClick } from "@/server/db/affiliateClicks.db";
+import { and, eq } from "drizzle-orm";
+import { type NextRequest } from "next/server";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {

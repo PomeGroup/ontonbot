@@ -1,11 +1,11 @@
 "use client";
 
+import { useMiniApp, useUtils } from "@tma.js/sdk-react";
 import Image from "next/image";
+import { FaArrowRight } from "react-icons/fa";
+import { env } from "~/env.mjs";
 import { OrganizerType } from "~/types/event.types";
 import channelAvatar from "./channel-avatar.svg";
-import { FaArrowRight } from "react-icons/fa";
-import { useUtils } from "@tma.js/sdk-react";
-import { env } from "~/env.mjs";
 
 interface Props {
   data: OrganizerType;
@@ -13,12 +13,13 @@ interface Props {
 
 export default function OrganizerSection({ data }: Props) {
   const tmaUtils = useUtils(true);
+  const tma = useMiniApp(true);
 
   return (
     <div
       onClick={() => {
         tmaUtils?.openTelegramLink(`https://t.me/${env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=channels_${data.user_id}`);
-        (tmaUtils as any)?.close();
+        tma?.close();
       }}
       className={"text-telegram-text-color grid gap-2 cursor-pointer"}
     >

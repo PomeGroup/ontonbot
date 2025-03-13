@@ -11,6 +11,7 @@ import { PaymentTypes } from "@/db/enum";
 import rewardDB from "@/server/db/rewards.db";
 import { and, eq } from "drizzle-orm";
 import { is_local_env } from "@/server/utils/evnutils";
+import { ALLOWED_TONFEST_EVENT_UUIDS } from "@/constants";
 
 /* -------------------------------------------------------------------------- */
 /*                           Zod Schema Definition                            */
@@ -32,11 +33,7 @@ const refundSchema = z.object({
 
 /* -------------------------------------------------------------------------- */
 const externalSellerApiAccessLimit = async (eventUuid: string) => {
-
-  if (
-    !(eventUuid === "c5f9bd59-a46b-4dce-91cb-3cd146b255a5" || eventUuid === "839960c1-12ec-405e-b372-be88ece4fa18") &&
-    !is_local_env()
-  ) {
+  if (!ALLOWED_TONFEST_EVENT_UUIDS.includes(eventUuid) && !is_local_env()) {
     throw {
       status: 500,
       errorBody: {
@@ -46,7 +43,6 @@ const externalSellerApiAccessLimit = async (eventUuid: string) => {
       },
     };
   }
-
 };
 
 /**
