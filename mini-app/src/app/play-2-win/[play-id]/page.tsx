@@ -2,7 +2,9 @@
 
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
+import CustomButton from "@/app/_components/Button/CustomButton";
 import { ErrorState } from "@/app/_components/ErrorState";
+import PrizeCupIcon from "@/app/_components/icons/prize-cup";
 import EventKeyValue from "@/app/_components/organisms/events/EventKewValue";
 import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
 import TournamentShareButton from "@/app/_components/tournaments/TournamentShareButton";
@@ -42,11 +44,7 @@ const EventTicketPrice = React.memo(() => {
   return (
     <EventKeyValue
       label="Ticket Price"
-      value={
-        tournament.data?.rawHostJson?.EntryFee
-          ? `${fromNano(BigInt(tournament.data.rawHostJson.EntryFee as number))}`
-          : "Free"
-      }
+      value={tournament.data?.rawHostJson?.EntryFee ? `${fromNano(BigInt(tournament.data.entryFee as number))}` : "Free"}
     />
   );
 });
@@ -125,7 +123,10 @@ const EventTitle = React.memo(() => {
 });
 EventTitle.displayName = "EventHead";
 
-const EventHeader = React.memo(() => {
+const TournamentHeader = React.memo(() => {
+  const router = useRouter();
+  const tournament = usePageTournament();
+
   return (
     <CustomCard defaultPadding>
       <TournamentImage />
@@ -133,10 +134,23 @@ const EventHeader = React.memo(() => {
       <EventTitle />
       <Divider margin="medium" />
       <EventAttributes />
+      <div className="mt-4">
+        <CustomButton
+          variant="outline"
+          size="md"
+          icon={<PrizeCupIcon />}
+          fontSize={"subheadline1"}
+          onClick={() => {
+            router.push(`/play-2-win/${tournament.data?.id}/leaderboard`);
+          }}
+        >
+          Leader Board
+        </CustomButton>
+      </div>
     </CustomCard>
   );
 });
-EventHeader.displayName = "EventHeader";
+TournamentHeader.displayName = "TournamentHeader";
 
 const OrganizerCard = React.memo(() => {
   const router = useRouter();
@@ -270,7 +284,7 @@ const Play2WinPage: React.FC<{
         </div>
       ) : (
         <div className="flex flex-col gap-4 p-4">
-          <EventHeader />
+          <TournamentHeader />
           <OrganizerCard />
           <MainButton
             text="Play"
