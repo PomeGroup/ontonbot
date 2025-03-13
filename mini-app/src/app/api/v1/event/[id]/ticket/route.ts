@@ -1,27 +1,16 @@
 import { db } from "@/db/db";
-import { eventPayment, eventRegistrants, nftItems } from "@/db/schema";
+import { eventPayment, eventRegistrants, nftItems, orders, rewards } from "@/db/schema";
+import "@/lib/gracefullyShutdown";
 import { getAuthenticatedUser } from "@/server/auth";
 import { and, eq, or } from "drizzle-orm";
-import "@/lib/gracefullyShutdown";
 
 export async function GET(_: Request, { params }: { params: { id: string } }) {
   const event_uuid = params.id;
-  // return Response.json({})
   const [userId, unauthorized] = getAuthenticatedUser();
 
   if (unauthorized) {
     return unauthorized;
   }
-
-  // const ticket = (
-  //   await db
-  //     .select()
-  //     .from(tickets)
-  //     .where(and(eq(tickets.event_uuid, event_uuid), eq(tickets.user_id, userId), eq(tickets.status, "UNUSED")))
-  //     .orderBy(desc(tickets.updatedAt))
-
-  //     .execute()
-  // ).pop();
 
   const registrant = await db
     .select()
@@ -63,12 +52,26 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
       ? user_registration.register_info
       : JSON.parse(String(user_registration.register_info || "{}"));
 
+  let userSbtTicket;
+  if (eventPaymentinfo?.ticket_type === "TSCSBT") {
+    const visitor = await db.query.visitors.findFirst({
+      where: and(eq(orders.user_id, userId), eq(orders.event_uuid, event_uuid)),
+    });
+
+    if (visitor) {
+      userSbtTicket = await db.query.rewards.findFirst({
+        where: and(eq(rewards.visitor_id, visitor.id), eq(rewards.type, "ton_society_csbt_ticket")),
+      });
+    }
+  }
+
   const data = {
     ...user_registration,
     nftAddress: nft_address,
     order_uuid: user_registration.registrant_uuid,
     ticketData: eventPaymentinfo,
     ...register_info_object,
+    userSbtTicket,
   };
 
   return Response.json(data);

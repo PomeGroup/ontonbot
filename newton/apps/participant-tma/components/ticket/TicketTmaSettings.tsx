@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useBackButton, useMainButton, useMiniApp } from "@tma.js/sdk-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 type EventMainButtonProps = {
   ticketId: string;
@@ -10,16 +10,12 @@ type EventMainButtonProps = {
   eventId: string;
 };
 
-const TicketTmaSettings = ({
-  ticketId,
-  orderUuid,
-  eventId,
-}: EventMainButtonProps) => {
+const TicketTmaSettings = ({ ticketId, orderUuid, eventId }: EventMainButtonProps) => {
   const mainButton = useMainButton(true);
   const backButton = useBackButton(true);
+
   const tma = useMiniApp(true);
   const router = useRouter();
-
   useEffect(() => {
     mainButton?.hideLoader();
 

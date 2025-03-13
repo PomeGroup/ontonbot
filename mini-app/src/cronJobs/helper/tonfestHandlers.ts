@@ -36,4 +36,35 @@ export const addUserTicketFromOnton = async (payload: any): Promise<{ success: b
   }
 };
 
-// If you have more TonFest endpoints, define them similarly...
+/**
+ * function for adding SBT from Onton.
+ * Usage: calls the endpoint /external-partners/onton/addSbtFromOnton
+ * with { authorization: "...", userTelegramId: "..." }
+ */
+export const addSbtFromOnton = async (payload: any): Promise<{ success: boolean; data: any }> => {
+  const BaseUrl = configProtected?.TONFEST_API?.[0] || "";
+  const Authorization = configProtected?.TONFEST_API?.[1] || "";
+  const endpoint = BaseUrl + "external-partners/onton/addSbtFromOnton";
+  logger.log(`Calling TonFest endpoint: ${endpoint}`);
+
+  const headers = { "Content-Type": "application/json" };
+
+  try {
+    // Similar to above, merge the auth token into payload
+    const finalPayload = {
+      ...payload,
+      authorization: Authorization,
+    };
+
+    const { success, data } = await sendHttpRequest("POST", endpoint, headers, finalPayload);
+
+    // If the TonFest API returns { success: false }, treat it as a failure
+    if (!data.success) {
+      console.error("Failed to add SBT from Onton:", data);
+      return { success: false, data: { error: data.error } };
+    }
+    return { success, data };
+  } catch (err: any) {
+    return { success: false, data: { error: err.message } };
+  }
+};
