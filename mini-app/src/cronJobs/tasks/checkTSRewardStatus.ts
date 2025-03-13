@@ -3,6 +3,8 @@ import pLimit from "p-limit";
 import { logger } from "@/server/utils/logger";
 import eventDB from "@/server/db/events";
 import { handleSingleRewardUpdate } from "@/cronJobs/helper/handleSingleRewardUpdate";
+import eventPaymentDB, { fetchPaymentInfoForCronjob } from "@/server/db/eventPayment.db";
+import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 
 const EVENTS_BATCH_SIZE = 50;
 const REWARDS_BATCH_SIZE = 30;
@@ -39,11 +41,15 @@ export const syncTonSocietyStatusLargeScale = async (startDateCutoff: number = 0
         logger.log(`\n[Event ${event_id}] Starting sync for activity_id=${activity_id}`);
 
         if (!activity_id) continue;
-
+        logger.log(`[Event ${event_id}] Processing rewards for activity_id=${activity_id}`);
+        let eventPaymentInfo: EventPaymentSelectType | undefined = undefined;
+        if (eventRow.has_payment) {
+          eventPaymentInfo = await eventPaymentDB.fetchPaymentInfoForCronjob(event_uuid);
+        }
         let rewardOffset = 0;
         while (true) {
           const rewardChunk = await rewardDB.fetchNotClaimedRewardsForEvent(event_uuid, REWARDS_BATCH_SIZE, rewardOffset);
-
+          logger.log(`salam ${event_id}`);
           if (rewardChunk.length === 0) {
             logger.log(`[Event ${event_id}] No more rewards to process.`);
             break;
@@ -51,13 +57,21 @@ export const syncTonSocietyStatusLargeScale = async (startDateCutoff: number = 0
 
           // Concurrency limiting
           const limit = pLimit(MAX_CONCURRENT_API_CALLS);
-
+          logger.log(`[---Event ${event_id}] Processing ${rewardChunk.length} rewards [offset: ${rewardOffset}]`);
           const updatePromises = rewardChunk.map(({ reward_id, visitor_id }) =>
             limit(async () => {
-              await handleSingleRewardUpdate(activity_id, visitor_id, event_id);
+              await handleSingleRewardUpdate(activity_id, visitor_id, event_id, "ton_society_sbt");
+              if (eventPaymentInfo !== undefined && eventPaymentInfo?.ticketActivityId) {
+                await handleSingleRewardUpdate(
+                  eventPaymentInfo.ticketActivityId,
+                  visitor_id,
+                  event_id,
+                  "ton_society_csbt_ticket"
+                );
+              }
             })
           );
-
+          logger.log(`[Event ${event_id}] Processing ${rewardChunk.length} rewards [offset: ${rewardOffset}]`);
           await Promise.all(updatePromises);
 
           logger.log(`[Event ${event_id}] Processed ${rewardChunk.length} rewards [offset: ${rewardOffset}]`);

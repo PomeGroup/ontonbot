@@ -574,7 +574,7 @@ export async function fetchEventsWithNonNullActivityIdDESC(limit: number, offset
   return await db
     .select()
     .from(events)
-    .where(isNotNull(events.activity_id))
+    .where(and(isNotNull(events.activity_id), eq(events.event_id, 1971)))
     .orderBy(sql`${events.event_id} DESC`)
     .limit(limit)
     .offset(offset)

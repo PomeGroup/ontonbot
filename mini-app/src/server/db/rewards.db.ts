@@ -214,7 +214,11 @@ const updateRewardWithConditions = async (
     .execute();
 };
 
-const updateTonSocietyStatusByVisitorId = async (visitor_id: number, newTonSocietyStatus: RewardTonSocietyStatusType) => {
+const updateTonSocietyStatusByVisitorIdAndRewardType = async (
+  visitor_id: number,
+  newTonSocietyStatus: RewardTonSocietyStatusType,
+  rewardType: RewardType
+) => {
   // Perform the update
   const updatedVisitor = await db
     .update(rewards)
@@ -222,7 +226,7 @@ const updateTonSocietyStatusByVisitorId = async (visitor_id: number, newTonSocie
       tonSocietyStatus: newTonSocietyStatus,
       updatedBy: "system",
     })
-    .where(eq(rewards.visitor_id, visitor_id))
+    .where(and(eq(rewards.visitor_id, visitor_id), eq(rewards.type, rewardType)))
     .returning()
     .execute();
 
@@ -251,7 +255,7 @@ export async function fetchNotClaimedRewardsForEvent(
     .from(rewards)
     .innerJoin(sql`visitors as v`, eq(sql`v.id`, rewards.visitor_id))
     .where(and(eq(sql`v.event_uuid`, event_uuid), eq(rewards.tonSocietyStatus, "NOT_CLAIMED")))
-    .orderBy(sql`${rewards.id} ASC`)
+    .orderBy(sql`${rewards.created_at} ASC`)
     .limit(limit)
     .offset(offset)
     .execute();
@@ -362,7 +366,7 @@ const rewardDB = {
   selectRewardsWithVisitorDetails,
   updateReward,
   updateRewardWithConditions,
-  updateTonSocietyStatusByVisitorId,
+  updateTonSocietyStatusByVisitorIdAndRewardType,
   fetchNotClaimedRewardsForEvent,
   updateRewardStatus,
   handleRewardError,

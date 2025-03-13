@@ -3,6 +3,7 @@ import { logger } from "@/server/utils/logger";
 import eventDB from "@/server/db/events";
 import { ALLOWED_TONFEST_EVENT_UUIDS } from "@/constants";
 import ordersDB from "@/server/db/orders.db";
+import { is_local_env } from "@/server/utils/evnutils";
 
 export const informTonfestUserClaim = async (userId: number, event_id: number) => {
   // Example condition: skip if payment_type is "STAR"
@@ -14,10 +15,10 @@ export const informTonfestUserClaim = async (userId: number, event_id: number) =
   }
   const eventUuid = eventData?.event_uuid;
 
-  if (!ALLOWED_TONFEST_EVENT_UUIDS.includes(eventUuid)) {
+  if (!ALLOWED_TONFEST_EVENT_UUIDS.includes(eventUuid) && !is_local_env()) {
     return;
   }
-  
+
   const order = (await ordersDB.findOrderByEventUserByType(eventUuid, userId, "ts_csbt_ticket")).pop();
   if (!order) {
     logger.error(`informTonfestUserClaim: Order not found for user ${userId} and event ${eventUuid}`);
@@ -35,7 +36,7 @@ export const informTonfestUserClaim = async (userId: number, event_id: number) =
   const payloadForTonfest = {
     userTelegramId: order.user_id ?? 0,
   };
-
+  logger.log(`💎💎💎💎💎💎💎💎Tonfest payload for order=${order.uuid}: ${JSON.stringify(payloadForTonfest)}`);
   // Make the immediate call to addSbtFromOnton
   const immediateResult = await callTaskImmediate({
     apiName: "TONFEST",
