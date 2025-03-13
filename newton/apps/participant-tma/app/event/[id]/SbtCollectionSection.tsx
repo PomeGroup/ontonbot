@@ -21,7 +21,7 @@ export default function SBTCollectionSection({ collection_address, rewardImage, 
       }}
       className={"text-telegram-text-color grid gap-2 cursor-pointer truncate"}
     >
-      <h2 className={"type-title-3 font-bold mb-1"}>NFT Collection</h2>
+      <h2 className={"type-title-3 font-bold mb-1"}>Ticket Collection</h2>
       <div className="flex gap-3 items-stretch w-full truncate">
         {rewardImage && (
           <Image
