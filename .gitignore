@@ -71,3 +71,4 @@ mini-app/Onton.session.sql
 */pnpm-lock.yaml
 
 mini-app/.env.sentry-build-plugin
+mini-app/bun.lock

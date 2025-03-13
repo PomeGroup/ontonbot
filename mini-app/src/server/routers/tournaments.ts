@@ -8,6 +8,7 @@ import { initDataProtectedProcedure, router } from "../trpc";
 import { getTournamentLeaderboard } from "@/lib/elympicsApi";
 import { selectUserById } from "@/server/db/users";
 import { LeaderboardResponse } from "@/types/elympicsAPI.types";
+import { tournamentsListSortOptions } from "../utils/tournaments.utils";
 
 export const tournamentsRouter = router({
   // Updated infinite query with filtering and sorting
@@ -23,7 +24,7 @@ export const tournamentsRouter = router({
             status: z.enum(["ongoing", "upcoming", "ended", "notended"]).optional(),
           })
           .optional(),
-        sortBy: z.enum(["prize", "entryFee", "timeRemaining"]).default("timeRemaining"),
+        sortBy: z.enum(tournamentsListSortOptions).default("timeRemaining"),
         sortOrder: z.enum(["asc", "desc"]).default("asc"),
       })
     )
