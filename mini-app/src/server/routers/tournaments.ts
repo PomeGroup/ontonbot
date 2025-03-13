@@ -65,7 +65,7 @@ export const tournamentsRouter = router({
     .input(
       z.object({
         gameId: z.string().nullable().default(null),
-        tournamentId: z.string(),
+        tournamentId: z.number(),
         limit: z.number().min(1).max(50).default(10),
         cursor: z.number().nullable().default(1),
       })
@@ -77,10 +77,15 @@ export const tournamentsRouter = router({
       const safeCursor = cursor ?? 1; // if null, default to page 1
       const pageNumber = Math.floor(safeCursor / (limit || 1)) + 1;
 
+      const tournament = await tournamentsDB.getTournamentById(tournamentId);
+      if (!tournament) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Tournament not found" });
+      }
+
       // 2) Get the raw leaderboard from Elympics
       const leaderboardResponse: LeaderboardResponse = await getTournamentLeaderboard(
         gameId,
-        tournamentId,
+        tournament.hostTournamentId,
         limit,
         pageNumber
       );
@@ -107,7 +112,7 @@ export const tournamentsRouter = router({
 
           if (!localUser) {
             // User not found -> Ghost user
-            firstName = "Ghost user";
+            firstName = entry.nickname;
           } else {
             // Found user in DB
             firstName = localUser.first_name || "Unknown user";
