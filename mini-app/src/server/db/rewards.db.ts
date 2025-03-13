@@ -142,7 +142,6 @@ const insertRewardWithData = async (
   data: any,
   status: RewardStatus
 ) => {
-  console.log("insertRewardWithData", visitor_id, user_id, type, data, status);
   return await rewardDB.insert(
     visitor_id,
     data, // Data from response or any other source
