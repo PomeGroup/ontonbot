@@ -1,32 +1,33 @@
+import bodyParser from "body-parser";
 import "dotenv/config";
 import express from "express";
-import { Bot, session } from "grammy";
-import { logger } from "./utils/logger";
-import bodyParser from "body-parser";
 import fileUpload from "express-fileupload";
+import { Bot, session } from "grammy";
+import { mainComposer } from "./composers";
+import { RATE_LIMIT_OPTIONS } from "./constants";
+import { checkBotAdminHandler } from "./controllers/checkBotAdminHandler";
+import { createInviteLinkHandler } from "./controllers/createInviteLinkHandler";
+import { deleteInviteLinkHandler } from "./controllers/deleteInviteLinkHandler";
 import { handleCheckBlockStatus } from "./controllers/handleCheckBlockStatus";
 import { handleFileSend } from "./controllers/handleFileSend";
-import { handleShareOrganizer } from "./controllers/handleShareOrganizer";
 import { handlePhotoMessage } from "./controllers/handlePhotoMessage";
 import { handleSendQRCode } from "./controllers/handleSendQRCode";
 import { handleShareEvent } from "./controllers/handleShareEvent";
+import { handleShareOrganizer } from "./controllers/handleShareOrganizer";
 import { sendMessage } from "./controllers/sendMessage";
+import { announceBotAdded } from "./handlers/announceBotAdded";
 import { bannerHandler } from "./handlers/bannerHandler";
 import { cmdHandler } from "./handlers/cmdHandler";
 import { orgHandler } from "./handlers/orgHandler";
 import { sbtdistHandler } from "./handlers/sbtdistHandler";
 import { startHandler } from "./handlers/startHandler";
 import { updateAdminOrganizerProfilesHandler } from "./handlers/updateAdminOrganizerProfilesHandler";
-import { mainComposer } from "./composers";
-import { connectRedis } from "./lib/redisTools";
-import { checkRateLimit } from "./utils/checkRateLimit";
-import { RATE_LIMIT_OPTIONS } from "./constants";
-import { MyContext } from "./types/MyContext";
-import { checkBotAdminHandler } from "./controllers/checkBotAdminHandler";
-import { createInviteLinkHandler } from "./controllers/createInviteLinkHandler";
-import { deleteInviteLinkHandler } from "./controllers/deleteInviteLinkHandler";
 import { isBotNewlyAddedOrPromoted } from "./helpers/isBotNewlyAddedOrPromoted";
-import { announceBotAdded } from "./handlers/announceBotAdded";
+import { connectRedis } from "./lib/redisTools";
+import { MyContext } from "./types/MyContext";
+import { checkRateLimit } from "./utils/checkRateLimit";
+import { logger } from "./utils/logger";
+import { handleShareTournament } from "./handlers/handleShareTournament";
 
 (async function bootstrap() {
   try {
@@ -36,10 +37,8 @@ import { announceBotAdded } from "./handlers/announceBotAdded";
 
     // 2) Initialize your bot
     const bot = new Bot<MyContext>(process.env.BOT_TOKEN || "");
-    await bot.init();
     bot.use(session({ initial: () => ({}) }));
     logger.log("Starting bot... v2");
-
     // --- RATE LIMIT MIDDLEWARE ---
     bot.use(async (ctx, next) => {
       const user = ctx.from;
@@ -95,7 +94,9 @@ import { announceBotAdded } from "./handlers/announceBotAdded";
 
     // 4) Start the bot (non-blocking)
     bot
-      .start()
+      .start({
+        drop_pending_updates: true,
+      })
       .then(() => logger.log("Bot started"))
       .catch((err) => logger.error("Bot start error:", err));
 
@@ -119,6 +120,7 @@ import { announceBotAdded } from "./handlers/announceBotAdded";
     app.post("/send-message", sendMessage);
     app.post("/send-photo", handlePhotoMessage);
     app.post("/share-organizer", handleShareOrganizer);
+    app.post("/share-tournament", handleShareTournament);
     app.post("/check-block-status", handleCheckBlockStatus);
     app.post("/check-bot-admin", checkBotAdminHandler);
     app.post("/create-invite", createInviteLinkHandler);

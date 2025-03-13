@@ -14,6 +14,7 @@ import { CheckSbtStatus } from "@/cronJobs/tasks/checkTSRewardStatus";
 import { runPendingCallbackTasks } from "@/cronJobs/tasks/runAPIPendingCallbackTasks";
 import { consumeClickBatch } from "@/cronJobs/tasks/consumeClickBatch";
 import { generateInviteLinksCron } from "@/cronJobs/tasks/generateInviteLinksCron";
+import { updateAllTournaments } from "@/cronJobs/tasks/updateTournaments";
 
 const cronJobs = {
   CheckTransactions,
@@ -31,6 +32,7 @@ const cronJobs = {
   runPendingCallbackTasks,
   consumeClickBatch,
   generateInviteLinksCron,
+  updateAllTournaments,
 };
 export { cronJobRunner };
 export default cronJobs;

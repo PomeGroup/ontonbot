@@ -5,6 +5,7 @@ import { Readable } from "stream";
 import axios from "axios";
 import { additionalRecipients } from "../constants";
 import { logger } from "../utils/logger";
+import { isNewCommand } from "../helpers/isNewCommand";
 
 
 export const sbtdistComposer = new Composer<MyContext>();
@@ -18,6 +19,7 @@ export const sbtdistComposer = new Composer<MyContext>();
  * STEP 1: askEventUUID
  */
 sbtdistComposer.on("message:text", async (ctx, next) => {
+  if (isNewCommand(ctx)) return next();
   if (ctx.session.sbtdistStep === "askEventUUID") {
     const text = ctx.message.text.trim();
     if (text.length !== 36) {
@@ -117,7 +119,7 @@ sbtdistComposer.on("message:document", async (ctx, next) => {
   if (ctx.session.sbtdistStep !== "askCsvFile") {
     return next();
   }
-
+  if (isNewCommand(ctx)) return next();
   // 1) Basic checks
   const document = ctx.message.document;
   if (!document) {

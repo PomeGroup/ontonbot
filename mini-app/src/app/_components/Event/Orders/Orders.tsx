@@ -1,15 +1,14 @@
-import { Button, ListItem } from "konsta/react";
-import React from "react";
-import ListLayout from "../../atoms/cards/ListLayout";
-import { useGetEventOrders } from "@/hooks/events.hooks";
-import { SiTon } from "react-icons/si";
-import { TonConnectButton, useTonConnectUI } from "@tonconnect/ui-react";
 import { useConfig } from "@/context/ConfigContext";
-import { beginCell, toNano } from "@ton/core";
-import { toast } from "sonner";
+import { useGetEventOrders } from "@/hooks/events.hooks";
 import { useUpdateOrder } from "@/hooks/orders.hooks";
-import { useParams } from "next/navigation";
 import { InferArrayType } from "@/lib/utils";
+import { beginCell, toNano } from "@ton/core";
+import { TonConnectButton, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
+import { Button, ListItem } from "konsta/react";
+import { useParams } from "next/navigation";
+import { SiTon } from "react-icons/si";
+import { toast } from "sonner";
+import ListLayout from "../../atoms/cards/ListLayout";
 import DataStatus from "../../molecules/alerts/DataStatus";
 
 const EventOrders = () => {
@@ -18,12 +17,12 @@ const EventOrders = () => {
   const updateOrder = useUpdateOrder({ event_uuid: params.hash });
   const config = useConfig();
   const [tonConnectUI] = useTonConnectUI();
-  const { account } = tonConnectUI;
+  const wallet = useTonWallet();
   type OrderType = InferArrayType<typeof orders>;
 
   const handlePayment = async (order: OrderType) => {
     try {
-      if (!account?.address) {
+      if (!wallet?.account.address) {
         tonConnectUI.openModal();
         return;
       }
@@ -102,7 +101,7 @@ const EventOrders = () => {
                   {renderOrderDescription(order)}
                 </p>
                 {order.state === "new" && (
-                  <Button onClick={() => handlePayment(order)}>{account?.address ? "Pay" : "Connect Wallet"}</Button>
+                  <Button onClick={() => handlePayment(order)}>{wallet?.account.address ? "Pay" : "Connect Wallet"}</Button>
                 )}
               </div>
             }

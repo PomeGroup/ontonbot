@@ -1,8 +1,8 @@
-import { TVisitor } from "../utils/types";
-import { Pool } from "pg";
-import { logger } from "../utils/logger";
-import { redisTools } from "../lib/redisTools";
-import { generateRandomHash } from "../helpers/generateRandomHash";
+import { Pool } from "pg"
+import { generateRandomHash } from "../helpers/generateRandomHash"
+import { cacheKeys, redisTools } from "../lib/redisTools"
+import { logger } from "../utils/logger"
+import { TVisitor } from "../utils/types"
 
 
 // cache keys
@@ -325,6 +325,49 @@ export const isUserOrganizerOrAdmin = async (usernameOrId: string) => {
   return { isOrganizerOrAdmin: user.role === "organizer" || user.role === "admin", user };
 };
 
+export const upsertPlay2winFeatured = async (value: string, env?: string): Promise<void> => {
+  const client = await pool.connect();
+  const environment = env ?? process.env.ENV ?? "development";
+  try {
+    await client.query(
+      `
+      INSERT INTO onton_setting (env, var, value, "protected")
+      VALUES ($1, 'play-2-win-featured', $2, false)
+      ON CONFLICT (env, var)
+      DO UPDATE SET value = EXCLUDED.value, "protected" = EXCLUDED."protected"
+      `,
+      [environment, value],
+    );
+
+    try {
+      await redisTools.deleteCache(cacheKeys.ontonSettings)
+    } catch (error) {
+      logger.log("Error in upsertPlay2winFeatured:", error); 
+    }
+
+  } finally {
+    client.release();
+  }
+};
+
+export const getPlay2winFeatured = async (env?: string): Promise<string | null> => {
+  const client = await pool.connect();
+  const environment = env ?? process.env.ENV ?? "development";
+  try {
+    const result = await client.query(
+      `
+      SELECT value
+      FROM onton_setting
+      WHERE env = $1 AND var = 'play-2-win-featured'
+      LIMIT 1
+      `,
+      [environment],
+    );
+    return result.rows.length > 0 ? result.rows[0].value : null;
+  } finally {
+    client.release();
+  }
+};
 
 export const getEventTickets = async (uuid: string) => {
   const client = await pool.connect();

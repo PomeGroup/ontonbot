@@ -6,16 +6,16 @@ export const typographyVariants = cva("break-words", {
   variants: {
     variant: {
       title1: "text-[28px] font-normal leading-[34px] tracking-[0.38px]",
-      title2: "text-[22px] font-thin leading-[28px]",
+      title2: "text-[22px] font-bold leading-[28px]",
       title3: "text-[20px] font-bold leading-[24px] tracking-[-0.45px]",
-      headline: "text-lg font-light leading-[22px]",
+      headline: "text-lg font-semibold leading-[22px]",
       body: "!text-base font-thin leading-[22px] tracking-[-0.43px]",
-      callout: "text-base font-light leading-[22px]",
+      callout: "text-base font-semibold leading-[22px]",
       subheadline1: "text-sm font-extralight leading-5",
-      subheadline2: "text-sm font-light leading-[18px]",
+      subheadline2: "text-sm font-normal leading-[18px]",
       caption1: "text-xs font-light leading-[16px]",
-      caption2: "text-[11px] font-light leading-[13px]",
-      footnote: "text-[13px] font-light leading-[18px]",
+      caption2: "text-[11px] font-normal leading-[13px]",
+      footnote: "text-[13px] font-normal leading-[18px]",
     },
     weight: {
       thin: "font-thin", // font-weight: 100

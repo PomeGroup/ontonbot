@@ -155,6 +155,41 @@
       "when": 1741453817150,
       "tag": "0021_mute_domino",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1741615899065,
+      "tag": "0022_spicy_madame_hydra",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1741647059186,
+      "tag": "0023_hard_hellion",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1741652737444,
+      "tag": "0024_previous_sharon_carter",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1741707463426,
+      "tag": "0025_overrated_silver_surfer",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1741727469913,
+      "tag": "0026_silent_alex_wilder",
+      "breakpoints": true
     }
   ]
 }

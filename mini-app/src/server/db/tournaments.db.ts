@@ -1,0 +1,173 @@
+import { db } from "@/db/db";
+import { games } from "@/db/schema";
+import { tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/tournaments";
+import { redisTools } from "@/lib/redisTools";
+import { logger } from "@/server/utils/logger";
+import crypto from "crypto";
+import { and, asc, desc, eq, gt, gte, lt, lte } from "drizzle-orm";
+
+const getTournamentCacheKey = (tournamentId: number) => {
+  return redisTools.cacheKeys.getTournamentById + tournamentId;
+};
+/**
+ * Insert a new row in the 'tournaments' table.
+ * Returns the inserted row (TournamentsRow) or undefined if none.
+ */
+export const addTournament = async (tData: TournamentsRowInsert): Promise<TournamentsRow | undefined> => {
+  try {
+    const [inserted] = await db.insert(tournaments).values(tData).returning().execute();
+
+    if (inserted) {
+      logger.log("Tournament inserted:", inserted);
+      return inserted;
+    }
+    return undefined;
+  } catch (error) {
+    logger.error("Error inserting tournament:", error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch a tournament by its local primary key (tournaments.id).
+ * Returns a TournamentsRow or undefined if not found.
+ */
+export const getTournamentById = async (tournamentId: number): Promise<TournamentsRow | undefined> => {
+  const cacheKey = getTournamentCacheKey(tournamentId);
+  const cachedTournament: TournamentsRow = await redisTools.getCache(cacheKey);
+  if (cachedTournament) {
+    return cachedTournament;
+  }
+
+  try {
+    const [row] = await db.select().from(tournaments).where(eq(tournaments.id, tournamentId)).execute();
+
+    if (row) {
+      await redisTools.setCache(cacheKey, row, redisTools.cacheLvl.guard);
+    }
+
+    return row;
+  } catch (error) {
+    logger.error("Error getting tournament by ID:", error);
+    throw error;
+  }
+};
+
+export const insertTournamentTx = async (
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  data: TournamentsRowInsert
+) => {
+  const [inserted] = await tx.insert(tournaments).values(data).returning().execute();
+  return inserted;
+};
+
+export const getTournamentsWithFiltersDB = async ({
+  limit,
+  cursor,
+  filter,
+  sortBy,
+  sortOrder,
+}: {
+  limit: number;
+  cursor: number | null;
+  filter?: {
+    tournamentState?: "Active" | "Concluded" | "TonAddressPending";
+    entryType?: "Tickets" | "Pass";
+    status?: "ongoing" | "upcoming" | "ended" | "notended";
+  };
+  sortBy: "prize" | "entryFee" | "timeRemaining";
+  sortOrder: "asc" | "desc";
+}) => {
+  // Generate cache key based on input parameters
+  const cacheParams = { limit, cursor, filter, sortBy, sortOrder };
+  const hash = crypto.createHash("md5").update(JSON.stringify(cacheParams)).digest("hex");
+  const cacheKey = redisTools.cacheKeys.getTournamentsWithFilters + hash;
+  // Check and return cached result if available
+  const cachedResult: TournamentsRow[] = await redisTools.getCache(cacheKey);
+  if (cachedResult) return cachedResult;
+
+  let query = db.select().from(tournaments);
+
+  query.where(
+    and(
+      filter?.tournamentState ? eq(tournaments.state, filter.tournamentState) : undefined,
+      filter?.entryType ? eq(tournaments.tonEntryType, filter.entryType) : undefined
+    )
+  );
+
+  // Apply sorting based on sortBy
+  if (sortBy === "prize") {
+    query.orderBy(sortOrder === "asc" ? asc(tournaments.currentPrizePool) : desc(tournaments.currentPrizePool));
+  } else if (sortBy === "entryFee") {
+    query.orderBy(sortOrder === "asc" ? asc(tournaments.entryFee) : desc(tournaments.entryFee));
+  } else if (sortBy === "timeRemaining") {
+    query.orderBy(sortOrder === "asc" ? asc(tournaments.endDate) : desc(tournaments.endDate));
+  }
+
+  if (filter?.status) {
+    const now = new Date();
+    if (filter.status === "ongoing") {
+      query.where(and(lte(tournaments.startDate, now), gte(tournaments.endDate, now)));
+    } else if (filter.status === "upcoming") {
+      query.where(gt(tournaments.startDate, now));
+    } else if (filter.status === "ended") {
+      query.where(lt(tournaments.endDate, now));
+    } else if (filter.status === "notended") {
+      query.where(gte(tournaments.endDate, now));
+    }
+  }
+
+  // Use cursor as an offset for simplicity
+  const offset = cursor ?? 0;
+  query.limit(limit).offset(offset);
+
+  // Execute the query and cache the result
+  const result = await query.execute();
+  await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.guard);
+  return result;
+};
+
+/**
+ * Retrieves all tournaments whose endDate >= cutoffDate,
+ * along with the associated game, via INNER JOIN.
+ */
+export const getTournamentsEndingAfter = async (cutoffDate: Date) => {
+  return db
+    .select({
+      tournaments: {
+        id: tournaments.id,
+        hostTournamentId: tournaments.hostTournamentId,
+        endDate: tournaments.endDate,
+      },
+      game: {
+        id: games.id,
+        hostGameId: games.hostGameId,
+        name: games.name,
+      },
+    })
+    .from(tournaments)
+    .innerJoin(games, eq(tournaments.gameId, games.id))
+    .where(gte(tournaments.endDate, cutoffDate))
+    .execute();
+};
+
+export const updateTournamentTx = async (
+  trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  tournamentId: number,
+  updatedFields: any
+) => {
+  const result = (
+    await trx.update(tournaments).set(updatedFields).where(eq(tournaments.id, tournamentId)).returning().execute()
+  ).pop();
+  await redisTools.deleteCache(getTournamentCacheKey(tournamentId));
+  return result;
+};
+
+export const tournamentsDB = {
+  addTournament,
+  getTournamentById,
+  insertTournamentTx,
+  getTournamentsWithFiltersDB,
+  getTournamentsEndingAfter,
+  updateTournamentTx,
+};

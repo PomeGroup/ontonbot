@@ -1,15 +1,16 @@
-import { Composer, Context, GrammyError } from "grammy";
 import {
   type Conversation,
   type ConversationFlavor,
   conversations,
   createConversation,
-} from "@grammyjs/conversations";
-import { z } from "zod";
-import { getEvent, getEventTickets, isUserAdmin } from "../db/db";
-import { sleep } from "../utils/utils";
+} from "@grammyjs/conversations"
+import { Composer, Context, GrammyError } from "grammy"
+import { MyContext } from "src/types/MyContext"
+import { z } from "zod"
+import { getEvent, getEventTickets, isUserAdmin } from "../db/db"
+import { sleep } from "../utils/utils"
 
-type BroadcastContext = Context & ConversationFlavor;
+type BroadcastContext = MyContext & ConversationFlavor;
 type BroadcastConversation = Conversation<BroadcastContext>;
 
 export const broadcastComposer = new Composer<BroadcastContext>()

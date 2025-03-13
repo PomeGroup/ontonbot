@@ -1,0 +1,1 @@
+ALTER TABLE "tournaments" ALTER COLUMN "image_url" SET NOT NULL;
