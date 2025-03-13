@@ -1,6 +1,6 @@
 "use client";
 
-import { useUtils } from "@tma.js/sdk-react";
+import { useMiniApp, useUtils } from "@tma.js/sdk-react";
 import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa";
 
@@ -12,12 +12,13 @@ interface Props {
 
 export default function SBTCollectionSection({ collection_address, rewardImage, title }: Props) {
   const tmaUtils = useUtils(true);
+  const tma = useMiniApp(true);
 
   return (
     <div
       onClick={() => {
         tmaUtils?.openLink(`https://getgems.io/collection/${collection_address}`);
-        (tmaUtils as any)?.close();
+        tma?.close();
       }}
       className={"text-telegram-text-color grid gap-2 cursor-pointer truncate"}
     >
