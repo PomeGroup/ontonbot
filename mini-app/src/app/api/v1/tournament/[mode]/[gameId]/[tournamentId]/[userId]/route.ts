@@ -17,7 +17,7 @@ import { z } from "zod";
 
 /** Env config / constants **/
 
-const UPLOAD_FILE_ENDPOINT = process.env.UPLOAD_FILE_ENDPOINT || "http://localhost:3000/api/files/upload";
+const UPLOAD_FILE_ENDPOINT = (process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000") + "/api/files/upload";
 const UPLOAD_TOKEN = process.env.ONTON_API_SECRET || "fallback-secret";
 
 export const runtime = "nodejs";
