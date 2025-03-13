@@ -360,7 +360,7 @@ services:
       - drizzle_data_cron:/app/drizzle
     networks:
       - onton-network
-    command: [ "yarn", "run", "start-cron" ]
+    command: [ "yarn", "run", "start-cron-payment" ]
     secrets:
       - registry-onton-config
     logging:
@@ -368,6 +368,95 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-sbt-worker"
+        fluentd-async-connect: "true"
+
+
+  mini-app-reward-worker:
+    hostname: mini-app-reward-worker
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    <<: *default-extra-hosts
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+          cpus: "2.0"
+      mode: global
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 20
+        window: 300s
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
+    environment:
+      <<: *common-env
+      MNEMONIC: ${MNEMONIC}
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - fluentd
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      - onton-network
+    command: [ "yarn", "run", "start-cron-reward" ]
+    secrets:
+      - registry-onton-config
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app-reward-worker"
+        fluentd-async-connect: "true"
+
+  mini-app-ordinary-worker:
+    hostname: mini-app-ordinary-worker
+    image: ${REGISTRY_URL}/${GITHUB_REPO}/mini-app:${BRANCH_NAME}-latest
+    <<: *default-extra-hosts
+    deploy:
+      resources:
+        limits:
+          memory: 2000M
+          cpus: "2.0"
+      mode: global
+      update_config:
+        failure_action: rollback
+        order: start-first
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 20
+        window: 300s
+    stop_grace_period: 10s
+    stop_signal: SIGTERM
+    environment:
+      <<: *common-env
+      MNEMONIC: ${MNEMONIC}
+      TON_SOCIETY_API_KEY: ${TON_SOCIETY_API_KEY}
+      TON_SOCIETY_BASE_URL: ${TON_SOCIETY_BASE_URL}
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - fluentd
+    volumes:
+      - drizzle_data_cron:/app/drizzle
+    networks:
+      - onton-network
+    command: [ "yarn", "run", "start-cron-ordinary" ]
+    secrets:
+      - registry-onton-config
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: "127.0.0.1:24224"
+        tag: "docker.${BRANCH_NAME}-mini-app-ordinary-worker"
         fluentd-async-connect: "true"
 
   mini-app-moderation-bot:
