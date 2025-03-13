@@ -88,7 +88,7 @@ const Ticket = async ({ params }: TicketParams) => {
         />
         <SeparatorTma />
         <TicketAttributes data={attributes} />
-        {ticket.userSbtTicket?.data?.ok && <ClaimTicketButton link={ticket.userSbtTicket?.data?.reward_link} />}
+        {ticket.userSbtTicket?.data?.reward_link && <ClaimTicketButton link={ticket.userSbtTicket?.data?.reward_link} />}
       </Section>
       <TicketTmaSettings
         ticketId={params.id}

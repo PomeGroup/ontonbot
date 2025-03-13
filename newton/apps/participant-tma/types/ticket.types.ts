@@ -1,11 +1,8 @@
 import { ReactNode } from "react";
 
-export type RewardDataTyepe =
-  | {
-      reward_link: string;
-      ok: true;
-    }
-  | { fail_reason: string; ok: false };
+export type RewardDataTyepe = {
+  reward_link?: string;
+};
 
 export type TicketType = {
   id: number;
