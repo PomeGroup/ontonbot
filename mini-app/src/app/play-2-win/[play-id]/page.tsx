@@ -44,7 +44,7 @@ const EventTicketPrice = React.memo(() => {
   return (
     <EventKeyValue
       label="Ticket Price"
-      value={tournament.data?.rawHostJson?.EntryFee ? `${fromNano(BigInt(tournament.data.entryFee as number))}` : "Free"}
+      value={tournament.data?.entryFee ? `${fromNano(BigInt(tournament.data.entryFee as number))} TON` : "Free"}
     />
   );
 });
