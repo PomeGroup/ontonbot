@@ -15,7 +15,7 @@ import { Skeleton } from "@mui/material";
 import { Page } from "konsta/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 import { BsFilterLeft } from "react-icons/bs";
 import { FiCheck } from "react-icons/fi";
 import { HiOutlineArrowNarrowUp } from "react-icons/hi";
@@ -117,10 +117,14 @@ const Play2WinFeatured = () => {
   );
 };
 
-const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: SortOptions) => void }> = ({
-  selected,
-  setSelected,
-}) => {
+const FilterTournaments: React.FC<{
+  selected: SortOptions;
+  setSelected: (s: SortOptions) => void;
+  selectedGame: number;
+  setSelectedGame: (g: number) => void;
+}> = ({ selected, setSelected, selectedGame, setSelectedGame }) => {
+  const gameIds = trpc.tournaments.getGameIds.useQuery();
+
   return (
     <div className="grid grid-cols-2 gap-3">
       <DropdownMenu>
@@ -172,7 +176,7 @@ const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: Sort
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
               <HiOutlineArrowNarrowUp />
-              <span className="truncate">{formatSortTournamentSelectOption(selected)}</span>
+              <span className="truncate">{gameIds.data?.find((g) => g.id === selectedGame)?.name}</span>
               <BsFilterLeft size={18} />
             </button>
           </DropdownMenuTrigger>
@@ -183,23 +187,23 @@ const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: Sort
             weight="normal"
             className="px-2"
           >
-            Sort By
+            Contest type
           </Typography>
           <Divider
             className="my-1"
             color={"dark"}
             height={"1"}
           />
-          {tournamentsListSortOptions.map((o) => {
+          {gameIds.data?.toReversed().map((game) => {
             return (
               <DropdownMenuItem
-                key={o}
-                onClick={() => setSelected(o)}
-                className={cn(selected === o && "text-primary")}
+                key={game.id}
+                onClick={() => setSelectedGame(game.id)}
+                className={cn(selectedGame === game.id && "text-primary")}
               >
                 <HiOutlineArrowNarrowUp />
-                {formatSortTournamentSelectOption(o)}
-                <FiCheck className={cn(selected !== o && "opacity-0")} />
+                {game.name}
+                <FiCheck className={cn(selectedGame !== game.id && "opacity-0")} />
               </DropdownMenuItem>
             );
           })}
@@ -212,12 +216,14 @@ const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: Sort
 const DiscoverTournaments: React.FC = () => {
   const router = useRouter();
   const [sortSelected, setSortSelected] = React.useState<SortOptions>("timeRemaining");
+  const [selectedGame, setSelectedGame] = useState(-1);
 
   const tournomants = trpc.tournaments.getTournaments.useInfiniteQuery(
     {
       limit: 50,
       filter: {
         status: "notended",
+        gameId: selectedGame,
       },
       sortBy: sortSelected,
     },
@@ -237,6 +243,8 @@ const DiscoverTournaments: React.FC = () => {
         setSelected={(o) => {
           setSortSelected(o);
         }}
+        selectedGame={selectedGame}
+        setSelectedGame={setSelectedGame}
       />
 
       <div className="grid grid-cols-2 gap-4">

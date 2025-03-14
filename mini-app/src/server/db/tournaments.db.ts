@@ -74,6 +74,7 @@ export const getTournamentsWithFiltersDB = async ({
     tournamentState?: "Active" | "Concluded" | "TonAddressPending";
     entryType?: "Tickets" | "Pass";
     status?: "ongoing" | "upcoming" | "ended" | "notended";
+    gameId?: number;
   };
   sortBy: "prize" | "entryFee" | "timeRemaining";
   sortOrder: "asc" | "desc";
@@ -88,13 +89,33 @@ export const getTournamentsWithFiltersDB = async ({
 
   let query = db.select().from(tournaments);
 
-  query.where(
-    and(
-      filter?.tournamentState ? eq(tournaments.state, filter.tournamentState) : undefined,
-      filter?.entryType ? eq(tournaments.tonEntryType, filter.entryType) : undefined
-    )
-  );
-
+  // Gather filters into an array instead of calling where repeatedly
+  const conditions = [];
+  if (filter?.tournamentState) {
+    conditions.push(eq(tournaments.state, filter.tournamentState));
+  }
+  if (filter?.entryType) {
+    conditions.push(eq(tournaments.tonEntryType, filter.entryType));
+  }
+  if (filter?.status) {
+    const now = new Date();
+    if (filter.status === "ongoing") {
+      conditions.push(lte(tournaments.startDate, now));
+      conditions.push(gte(tournaments.endDate, now));
+    } else if (filter.status === "upcoming") {
+      conditions.push(gt(tournaments.startDate, now));
+    } else if (filter.status === "ended") {
+      conditions.push(lt(tournaments.endDate, now));
+    } else if (filter.status === "notended") {
+      conditions.push(gte(tournaments.endDate, now));
+    }
+  }
+  if (filter?.gameId && filter.gameId !== -1) {
+    conditions.push(eq(tournaments.gameId, filter.gameId));
+  }
+  if (conditions.length > 0) {
+    query.where(and(...conditions));
+  }
   // Apply sorting based on sortBy
   if (sortBy === "prize") {
     query.orderBy(sortOrder === "asc" ? asc(tournaments.currentPrizePool) : desc(tournaments.currentPrizePool));
@@ -103,24 +124,9 @@ export const getTournamentsWithFiltersDB = async ({
   } else if (sortBy === "timeRemaining") {
     query.orderBy(sortOrder === "asc" ? asc(tournaments.endDate) : desc(tournaments.endDate));
   }
-
-  if (filter?.status) {
-    const now = new Date();
-    if (filter.status === "ongoing") {
-      query.where(and(lte(tournaments.startDate, now), gte(tournaments.endDate, now)));
-    } else if (filter.status === "upcoming") {
-      query.where(gt(tournaments.startDate, now));
-    } else if (filter.status === "ended") {
-      query.where(lt(tournaments.endDate, now));
-    } else if (filter.status === "notended") {
-      query.where(gte(tournaments.endDate, now));
-    }
-  }
-
   // Use cursor as an offset for simplicity
   const offset = cursor ?? 0;
   query.limit(limit).offset(offset);
-
   // Execute the query and cache the result
   const result = await query.execute();
   await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.guard);

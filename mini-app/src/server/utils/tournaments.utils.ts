@@ -14,3 +14,5 @@ export function formatSortTournamentSelectOption(option: SortOptions): string {
 }
 
 export type SortOptions = (typeof tournamentsListSortOptions)[number];
+
+export type GameFilterId = { id: number; name: string | null };
