@@ -160,7 +160,7 @@ const OrganizerCard = React.memo(() => {
   return (
     <CustomCard title="Organizer">
       <div
-        onClick={() => router.push(`/channels/${748891997}/`)}
+        onClick={() => router.push(`/channels/${tournament.data?.organizer.user_id}/`)}
         className="flex items-center justify-between cursor-pointer p-4 pt-0"
       >
         <div className="flex items-center gap-3">
