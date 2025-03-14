@@ -308,7 +308,10 @@ export const useCreateEventStore = create<CreateEventStoreType>()(
 
         if (hasPayment) {
           // Validate Paid Event Data
-          const paymentParsed = PaidEventSchema.safeParse(paid_event);
+          const paymentParsed = PaidEventSchema.safeParse({
+            ...paid_event,
+            payment_amount: Number(paid_event.payment_amount!),
+          });
 
           if (paymentParsed.error) {
             const fieldErrors = paymentParsed.error.flatten().fieldErrors;

@@ -5,18 +5,26 @@ import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import BottomNavigation from "@/components/BottomNavigation";
+import Divider from "@/components/Divider";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { formatSortTournamentSelectOption, SortOptions, tournamentsListSortOptions } from "@/server/utils/tournaments.utils";
+import { cn } from "@/utils";
 import { Skeleton } from "@mui/material";
 import { Page } from "konsta/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { BsFilterLeft } from "react-icons/bs";
+import { FiCheck } from "react-icons/fi";
+import { HiOutlineArrowNarrowUp } from "react-icons/hi";
 import CustomCard from "../_components/atoms/cards/CustomCard";
 import CustomButton from "../_components/Button/CustomButton";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { TournamentTimeRemaining } from "../_components/Tournament/TournamentRemainingTime";
 import { trpc } from "../_trpc/client";
+
 interface TournamentCardProps {
   tournamentId: string;
 }
@@ -109,22 +117,86 @@ const Play2WinFeatured = () => {
   );
 };
 
+const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: SortOptions) => void }> = ({
+  selected,
+  setSelected,
+}) => {
+  return (
+    <div className="grid grid-cols-2">
+      <DropdownMenu>
+        <Typography
+          variant={"body"}
+          weight={"medium"}
+        >
+          <DropdownMenuTrigger asChild>
+            <button className="w-full flex items-center gap-1 bg-[#E0E0E5] rounded-md py-1 px-2 justify-between">
+              <HiOutlineArrowNarrowUp />
+              {formatSortTournamentSelectOption(selected)}
+              <BsFilterLeft size={18} />
+            </button>
+          </DropdownMenuTrigger>
+        </Typography>
+        <DropdownMenuContent className="bg-[#E0E0E5] border-[#C8C7CB] w-full">
+          <Typography
+            variant="body"
+            weight="normal"
+            className="px-2"
+          >
+            Sort By
+          </Typography>
+          <Divider
+            className="bg-[#C8C7CB]"
+            height={"1"}
+          />
+          {tournamentsListSortOptions.map((o) => {
+            return (
+              <DropdownMenuItem
+                key={o}
+                onClick={() => setSelected(o)}
+                className={cn(selected === o && "text-primary")}
+              >
+                <HiOutlineArrowNarrowUp />
+                {formatSortTournamentSelectOption(o)}
+                <FiCheck className={cn(selected !== o && "opacity-0")} />
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
+
 const DiscoverTournaments: React.FC = () => {
   const router = useRouter();
+  const [sortSelected, setSortSelected] = React.useState<SortOptions>("timeRemaining");
+
   const tournomants = trpc.tournaments.getTournaments.useInfiniteQuery(
     {
       limit: 50,
       filter: {
         status: "notended",
       },
+      sortBy: sortSelected,
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     }
   );
+
   return (
     <>
       <Typography variant="title2">Discover</Typography>
+      {/* 
+      Sort dropdown
+      */}
+      <FilterTournaments
+        selected={sortSelected}
+        setSelected={(o) => {
+          setSortSelected(o);
+        }}
+      />
+
       <div className="grid grid-cols-2 gap-4">
         {tournomants.isSuccess && !tournomants.data?.pages[0].tournaments.length && (
           <CustomCard

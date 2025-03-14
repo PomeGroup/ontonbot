@@ -1,5 +1,6 @@
 "use client";
 
+import SupportButtons from "@/app/_components/atoms/buttons/SupportButton";
 import MainButton from "@/app/_components/atoms/buttons/web-app/MainButton";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import CustomButton from "@/app/_components/Button/CustomButton";
@@ -44,7 +45,7 @@ const EventTicketPrice = React.memo(() => {
   return (
     <EventKeyValue
       label="Ticket Price"
-      value={tournament.data?.rawHostJson?.EntryFee ? `${fromNano(BigInt(tournament.data.entryFee as number))}` : "Free"}
+      value={tournament.data?.entryFee ? `${fromNano(BigInt(tournament.data.entryFee as number))} TON` : "Free"}
     />
   );
 });
@@ -159,7 +160,7 @@ const OrganizerCard = React.memo(() => {
   return (
     <CustomCard title="Organizer">
       <div
-        onClick={() => router.push(`/channels/${748891997}/`)}
+        onClick={() => router.push(`/channels/${tournament.data?.organizer.user_id}/`)}
         className="flex items-center justify-between cursor-pointer p-4 pt-0"
       >
         <div className="flex items-center gap-3">
@@ -286,6 +287,7 @@ const Play2WinPage: React.FC<{
         <div className="flex flex-col gap-4 p-4">
           <TournamentHeader />
           <OrganizerCard />
+          <SupportButtons orgSupportTelegramUserName={tournament.data?.organizer.org_support_telegram_user_name} />
           <MainButton
             text="Play"
             onClick={() => {
