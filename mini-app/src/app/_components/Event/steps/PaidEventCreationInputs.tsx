@@ -81,25 +81,28 @@ function PaymentAmount() {
       inputMode="decimal" // Allows decimals on mobile devices
       placeholder={`Payment amount in ${payment.payment_type}`}
       value={payment.payment_amount?.toString() || ""} // Display as a string
-      onChange={(e) => {
-        const amount = e.target.value;
-        changePaymentAmount(amount);
-        amount && setPaidInfoErrors("payment_amount", []);
-        if (!e.target.validity.valid) {
-          if (e.target.validity.valueMissing) {
-            setInputError("Payment amount is required.");
-          } else if (e.target.validity.patternMismatch) {
-            setInputError("Invalid format: please enter a number with up to 3 decimal places (minimum = 0.001).");
-          } else {
-            setInputError("Invalid payment amount.");
-          }
-        } else {
-          setInputError("");
-        }
-      }}
+      onChange={paymentAmountInputHandler}
+      onBlur={paymentAmountInputHandler}
       error={inputError || paid_info_errors.payment_amount?.[0]}
     />
   );
+
+  function paymentAmountInputHandler(e: any) {
+    const amount = e.target.value;
+    changePaymentAmount(amount);
+    amount && setPaidInfoErrors("payment_amount", []);
+    if (!e.target.validity.valid) {
+      if (e.target.validity.valueMissing) {
+        setInputError("Payment amount is required.");
+      } else if (e.target.validity.patternMismatch) {
+        setInputError("Invalid format: please enter a number with up to 3 decimal places (minimum = 0.001).");
+      } else {
+        setInputError("Invalid payment amount.");
+      }
+    } else {
+      setInputError("");
+    }
+  }
 }
 
 function PaymentsRecipient() {
