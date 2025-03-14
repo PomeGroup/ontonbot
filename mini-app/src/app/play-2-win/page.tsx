@@ -20,6 +20,7 @@ import { BsFilterLeft } from "react-icons/bs";
 import { FiCheck } from "react-icons/fi";
 import { HiOutlineArrowNarrowUp } from "react-icons/hi";
 import CustomCard from "../_components/atoms/cards/CustomCard";
+import { FloatingBadge } from "../_components/Badge/FloatingBadge";
 import CustomButton from "../_components/Button/CustomButton";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { TournamentTimeRemaining } from "../_components/Tournament/TournamentRemainingTime";
@@ -70,6 +71,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
             closeOnly
             endDate={tournament.data.endDate!}
           />
+          <FloatingBadge position={"bc-md"}>
+            <Typography variant="caption2">+{tournament.data.playersCount} joined</Typography>
+          </FloatingBadge>
         </div>
       )}
     </>
