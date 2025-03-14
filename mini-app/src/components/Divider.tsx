@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { cva, VariantProps } from "class-variance-authority";
 
-const dividerVariants = cva("w-full bg-brand-divider", {
+const dividerVariants = cva("w-full", {
   variants: {
     height: {
       "1": "h-0.25",
@@ -16,14 +16,19 @@ const dividerVariants = cva("w-full bg-brand-divider", {
       medium: "my-4",
       large: "my-6",
     },
+    color: {
+      dark: "bg-brand-divider-dark",
+      light: "bg-brand-divider",
+    },
   },
   defaultVariants: {
     height: "2",
+    color: "light",
   },
 });
 
-const Divider = ({ height, margin, className }: VariantProps<typeof dividerVariants> & { className?: string }) => {
-  return <div className={cn(dividerVariants({ height, margin }), className)} />;
+const Divider = ({ height, margin, className, color }: VariantProps<typeof dividerVariants> & { className?: string }) => {
+  return <div className={cn(dividerVariants({ height, margin, color }), className)} />;
 };
 
 export default Divider;

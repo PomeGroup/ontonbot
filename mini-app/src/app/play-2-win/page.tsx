@@ -129,14 +129,14 @@ const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: Sort
           weight={"medium"}
         >
           <DropdownMenuTrigger asChild>
-            <button className="w-full flex items-center gap-1 bg-[#E0E0E5] rounded-md py-1 px-2 justify-between">
+            <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
               <HiOutlineArrowNarrowUp />
-              {formatSortTournamentSelectOption(selected)}
+              <span className="truncate">{formatSortTournamentSelectOption(selected)}</span>
               <BsFilterLeft size={18} />
             </button>
           </DropdownMenuTrigger>
         </Typography>
-        <DropdownMenuContent className="bg-[#E0E0E5] border-[#C8C7CB] w-full">
+        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
           <Typography
             variant="body"
             weight="normal"
@@ -145,7 +145,8 @@ const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: Sort
             Sort By
           </Typography>
           <Divider
-            className="bg-[#C8C7CB]"
+            className="my-1"
+            color={"dark"}
             height={"1"}
           />
           {tournamentsListSortOptions.map((o) => {
