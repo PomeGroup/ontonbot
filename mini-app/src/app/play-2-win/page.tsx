@@ -5,18 +5,27 @@ import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import BottomNavigation from "@/components/BottomNavigation";
+import Divider from "@/components/Divider";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { formatSortTournamentSelectOption, SortOptions, tournamentsListSortOptions } from "@/server/utils/tournaments.utils";
+import { cn } from "@/utils";
 import { Skeleton } from "@mui/material";
 import { Page } from "konsta/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
+import { BsFilterLeft } from "react-icons/bs";
+import { FiCheck } from "react-icons/fi";
+import { HiOutlineArrowNarrowUp } from "react-icons/hi";
 import CustomCard from "../_components/atoms/cards/CustomCard";
+import { FloatingBadge } from "../_components/Badge/FloatingBadge";
 import CustomButton from "../_components/Button/CustomButton";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { TournamentTimeRemaining } from "../_components/Tournament/TournamentRemainingTime";
 import { trpc } from "../_trpc/client";
+
 interface TournamentCardProps {
   tournamentId: string;
 }
@@ -62,6 +71,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
             closeOnly
             endDate={tournament.data.endDate!}
           />
+          <FloatingBadge position={"bc-md"}>
+            <Typography variant="caption2">+{tournament.data.playersCount} joined</Typography>
+          </FloatingBadge>
         </div>
       )}
     </>
@@ -109,22 +121,136 @@ const Play2WinFeatured = () => {
   );
 };
 
+const FilterTournaments: React.FC<{
+  selected: SortOptions;
+  setSelected: (s: SortOptions) => void;
+  selectedGame: number;
+  setSelectedGame: (g: number) => void;
+}> = ({ selected, setSelected, selectedGame, setSelectedGame }) => {
+  const gameIds = trpc.tournaments.getGameIds.useQuery();
+
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <DropdownMenu>
+        <Typography
+          variant={"body"}
+          weight={"medium"}
+        >
+          <DropdownMenuTrigger asChild>
+            <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
+              <HiOutlineArrowNarrowUp />
+              <span className="truncate">{formatSortTournamentSelectOption(selected)}</span>
+              <BsFilterLeft size={18} />
+            </button>
+          </DropdownMenuTrigger>
+        </Typography>
+        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
+          <Typography
+            variant="body"
+            weight="normal"
+            className="px-2"
+          >
+            Sort By
+          </Typography>
+          <Divider
+            className="my-1"
+            color={"dark"}
+            height={"1"}
+          />
+          {tournamentsListSortOptions.map((o) => {
+            return (
+              <DropdownMenuItem
+                key={o}
+                onClick={() => setSelected(o)}
+                className={cn(selected === o && "text-primary")}
+              >
+                <HiOutlineArrowNarrowUp />
+                {formatSortTournamentSelectOption(o)}
+                <FiCheck className={cn(selected !== o && "opacity-0")} />
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <Typography
+          variant={"body"}
+          weight={"medium"}
+        >
+          <DropdownMenuTrigger asChild>
+            <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
+              <HiOutlineArrowNarrowUp />
+              <span className="truncate">{gameIds.data?.find((g) => g.id === selectedGame)?.name}</span>
+              <BsFilterLeft size={18} />
+            </button>
+          </DropdownMenuTrigger>
+        </Typography>
+        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
+          <Typography
+            variant="body"
+            weight="normal"
+            className="px-2"
+          >
+            Contest type
+          </Typography>
+          <Divider
+            className="my-1"
+            color={"dark"}
+            height={"1"}
+          />
+          {gameIds.data?.toReversed().map((game) => {
+            return (
+              <DropdownMenuItem
+                key={game.id}
+                onClick={() => setSelectedGame(game.id)}
+                className={cn(selectedGame === game.id && "text-primary")}
+              >
+                <HiOutlineArrowNarrowUp />
+                {game.name}
+                <FiCheck className={cn(selectedGame !== game.id && "opacity-0")} />
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
+
 const DiscoverTournaments: React.FC = () => {
   const router = useRouter();
+  const [sortSelected, setSortSelected] = React.useState<SortOptions>("timeRemaining");
+  const [selectedGame, setSelectedGame] = useState(-1);
+
   const tournomants = trpc.tournaments.getTournaments.useInfiniteQuery(
     {
       limit: 50,
       filter: {
         status: "notended",
+        gameId: selectedGame,
       },
+      sortBy: sortSelected,
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     }
   );
+
   return (
     <>
       <Typography variant="title2">Discover</Typography>
+      {/* 
+      Sort dropdown
+      */}
+      <FilterTournaments
+        selected={sortSelected}
+        setSelected={(o) => {
+          setSortSelected(o);
+        }}
+        selectedGame={selectedGame}
+        setSelectedGame={setSelectedGame}
+      />
+
       <div className="grid grid-cols-2 gap-4">
         {tournomants.isSuccess && !tournomants.data?.pages[0].tournaments.length && (
           <CustomCard

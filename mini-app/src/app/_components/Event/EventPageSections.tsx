@@ -1,30 +1,30 @@
-import React, { useMemo } from "react";
 import Images from "@/app/_components/atoms/images";
+import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
 import EventDates from "@/app/_components/EventDates";
-import { useEventData } from "./eventPageContext";
-import { EventActions } from "./EventActions";
-import ShareEventButton from "../ShareEventButton";
-import { EventPasswordAndWalletInput } from "./EventPasswordInput";
-import EventKeyValue from "../organisms/events/EventKewValue";
-import { ClaimRewardButton } from "./ClaimRewardButton";
-import { ManageEventButton } from "./ManageEventButton";
-import { useUserStore } from "@/context/store/user.store";
-import MainButton from "../atoms/buttons/web-app/MainButton";
-import UserRegisterForm from "./UserRegisterForm";
-import DataStatus from "../molecules/alerts/DataStatus";
-import { useRouter } from "next/navigation";
-import SupportButtons from "../atoms/buttons/SupportButton";
-import { ListItem, List, Block } from "konsta/react";
-import Typography from "@/components/Typography";
+import Divider from "@/components/Divider";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import LoadableImage from "@/components/LoadableImage";
-import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
+import Typography from "@/components/Typography";
+import { useUserStore } from "@/context/store/user.store";
 import { Address } from "@ton/core";
-import { FaAngleRight } from "react-icons/fa6";
 import { TonConnectButton } from "@tonconnect/ui-react";
-import Divider from "@/components/Divider";
+import { Block, List, ListItem } from "konsta/react";
+import { useRouter } from "next/navigation";
+import React, { useMemo } from "react";
+import { FaAngleRight } from "react-icons/fa6";
+import SupportButtons from "../atoms/buttons/SupportButton";
+import MainButton from "../atoms/buttons/web-app/MainButton";
 import CustomCard from "../atoms/cards/CustomCard";
+import DataStatus from "../molecules/alerts/DataStatus";
+import EventKeyValue from "../organisms/events/EventKewValue";
+import ShareEventButton from "../ShareEventButton";
+import { ClaimRewardButton } from "./ClaimRewardButton";
+import { EventActions } from "./EventActions";
+import { useEventData } from "./eventPageContext";
+import { EventPasswordAndWalletInput } from "./EventPasswordInput";
+import { ManageEventButton } from "./ManageEventButton";
 import PreRegistrationTasks from "./PreRegistrationTasks";
+import UserRegisterForm from "./UserRegisterForm";
 
 // Base components with memoization where beneficial
 const EventImage = React.memo(() => {
@@ -478,6 +478,8 @@ EventHeader.displayName = "EventHeader";
 
 // Main component
 export const EventSections = () => {
+  const { eventData } = useEventData();
+
   return (
     <div className="flex flex-col gap-3 p-4">
       <EventHeader />
@@ -488,7 +490,7 @@ export const EventSections = () => {
       <EventDescription />
       <EventRegistrationStatus />
 
-      <SupportButtons />
+      <SupportButtons orgSupportTelegramUserName={eventData.data?.organizer?.org_support_telegram_user_name || undefined} />
 
       {/* --------------------------------------- */}
       {/* ---------- MainButtonHandler ---------- */}

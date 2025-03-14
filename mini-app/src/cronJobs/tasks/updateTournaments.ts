@@ -58,7 +58,7 @@ export const updateAllTournaments = async () => {
             const gameRow = localTournament.game;
             const updatedGameData = {
               // Suppose we only update name, but you can also store raw JSON, or do logic on State, etc.
-              name: details.Name || gameRow.name,
+              // name: details.Name || gameRow.name,
               // For reference: gameRow.imageUrl might not need changes unless you have new info
               rawGameJson: details as any, // If you store raw JSON
             };

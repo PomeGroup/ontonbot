@@ -13,8 +13,9 @@ module.exports = konstaConfig({
       "brand-purple": "#6d28d9",
       "brand-fill-bg": "#747480",
       "brand-muted": "#8e8e93",
-      "brand-light": "#E4E4E5",
+      "brand-light": "#E0E0E5", // updated to use new hex value
       "brand-divider": "#eeeef0",
+      "brand-divider-dark": "#C8C7CB", // updated to use new hex value
       "brand-link": "#68A8FF",
       "brand-light-destructive": "#FF3B30",
       "IOS-light-wallet-accent_orange": "#FF9500",

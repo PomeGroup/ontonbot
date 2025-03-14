@@ -5,9 +5,13 @@ import { tournamentsDB } from "../db/tournaments.db";
 import { usersDB } from "../db/users";
 import { initDataProtectedProcedure, router } from "../trpc";
 
+import { db } from "@/db/db";
+import { games } from "@/db/schema";
 import { getTournamentLeaderboard } from "@/lib/elympicsApi";
+import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { selectUserById } from "@/server/db/users";
 import { LeaderboardResponse } from "@/types/elympicsAPI.types";
+import { GameFilterId, tournamentsListSortOptions } from "../utils/tournaments.utils";
 
 export const tournamentsRouter = router({
   // Updated infinite query with filtering and sorting
@@ -21,9 +25,10 @@ export const tournamentsRouter = router({
             tournamentState: z.enum(["Active", "Concluded", "TonAddressPending"]).optional(),
             entryType: z.enum(["Tickets", "Pass"]).optional(),
             status: z.enum(["ongoing", "upcoming", "ended", "notended"]).optional(),
+            gameId: z.number().optional(),
           })
           .optional(),
-        sortBy: z.enum(["prize", "entryFee", "timeRemaining"]).default("timeRemaining"),
+        sortBy: z.enum(tournamentsListSortOptions).default("timeRemaining"),
         sortOrder: z.enum(["asc", "desc"]).default("asc"),
       })
     )
@@ -43,6 +48,31 @@ export const tournamentsRouter = router({
 
       return { tournaments: tournamentsData, nextCursor };
     }),
+
+  getGameIds: initDataProtectedProcedure.query(async () => {
+    const cachedGameIds = await redisTools.getCache(cacheKeys.gameIds);
+
+    if (cachedGameIds) {
+      return cachedGameIds as GameFilterId[];
+    }
+
+    const gameIds = await db
+      .select({
+        id: games.id,
+        name: games.name,
+      })
+      .from(games);
+
+    gameIds.push({
+      id: -1,
+      name: "All Challenges",
+    });
+
+    await redisTools.setCache(cacheKeys.gameIds, gameIds);
+
+    return gameIds;
+  }),
+
   getTournamentById: initDataProtectedProcedure
     .input(
       z.object({

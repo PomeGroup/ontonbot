@@ -701,6 +701,7 @@ export const ALLOWED_USER_TO_TEST = [
   7013087032, // Ontonadmin
   548648769, // Radiophp
   70992667, // Pari_che_hr
+  470003279, // Shantell7
 ];
 
 export const ALLOWED_TONFEST_EVENT_UUIDS = [

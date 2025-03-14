@@ -81,6 +81,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
                     />
                   </div>
 
+                  <Typography variant="footnote">{participant.name}</Typography>
+
                   <div
                     className={cn(
                       "mt-1 px-3 py-0.5 rounded-full text-center",

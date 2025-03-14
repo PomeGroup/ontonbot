@@ -18,7 +18,7 @@ interface CustomButtonProps {
 const customButtonVariants = cva("!p-0 min-w-20", {
   variants: {
     size: {
-      lg: "h-12.5 rounded-2lg",
+      lg: "h-12 rounded-2lg",
       md: "h-9 rounded-2lg",
     },
     color: {

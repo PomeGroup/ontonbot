@@ -45,8 +45,9 @@ export interface SessionData {
   pendingGroupId?: number;
   /* ------------------ Tournament Flow ------------------ */
   tournamentStep?:
-    | "askGameId"
+    | "pickGame"
     | "askTournamentId"
+    | "askInviteMessage"
     | "confirmInsert"
     | "check"
     | "confirmCreate"
