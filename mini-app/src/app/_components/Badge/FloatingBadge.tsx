@@ -1,3 +1,4 @@
+import { cn } from "@/utils";
 import { cva, VariantProps } from "class-variance-authority";
 import React, { ReactNode } from "react";
 
@@ -28,10 +29,12 @@ interface BadgeProps extends VariantProps<typeof badgeVariants> {
 export const FloatingBadge: React.FC<BadgeProps> = ({ position, children, className }) => {
   return (
     <div
-      className={badgeVariants({
-        className,
-        position,
-      })}
+      className={cn(
+        badgeVariants({
+          position,
+        }),
+        className
+      )}
     >
       {children}
     </div>
