@@ -1,13 +1,13 @@
+import NotificationHandler from "@/app/_components/NotificationHandler";
+import { cn } from "@/lib/utils";
 import { GoogleTagManager } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
 import { Roboto } from "next/font/google";
-import "./globals.css";
-import Providers from "./providers";
-import { cn } from "@/lib/utils";
 import Script from "next/script";
 import React from "react";
-import NotificationHandler from "@/app/_components/NotificationHandler";
 import ModalsContainer from "./_components/ModalsContainer";
+import "./globals.css";
+import Providers from "./providers";
 
 const mainFont = Roboto({
   subsets: ["latin"],

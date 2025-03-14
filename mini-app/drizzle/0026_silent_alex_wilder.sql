@@ -1,0 +1,1 @@
+ALTER TABLE "tournaments" ALTER COLUMN "owner" SET NOT NULL;

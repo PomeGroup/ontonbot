@@ -195,6 +195,53 @@ export const shareOrganizerRequest = async (
     };
   }
 };
+
+export const shareTournamentRequest = async (
+  // The user (who wants to share the tournament)
+  requestingUserId: string,
+  // The tournament we want to share
+  tournamentId: string,
+  // The relevant tournament fields for the bot to render
+  tournamentData: {
+    name: string | null;
+    startDate: number | null; // or string, if you prefer
+    endDate: number | null; // or string
+    imageUrl: string | Buffer | null;
+    state?: string | null; // "Active", "Concluded", etc.
+    entryFee?: number | null;
+    // any additional fields you want the bot to show
+  }
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+  // 1) Construct share link + webapp URL
+  //    (Adapt these to your “mini app” or web front-end’s routing)
+  const share_link = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tournaments_${tournamentId}`;
+  const url = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/play-2-win/${tournamentId}`;
+
+  try {
+    // 2) Send a POST to the new /share-tournament route
+    const response = await axios.post(
+      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/share-tournament`,
+      {
+        requesting_user: requestingUserId,
+        tournament_id: tournamentId,
+        share_link,
+        url,
+        // pass the extra tournament data so the bot can render them
+        tournament_data: tournamentData,
+      }
+    );
+
+    // 3) If successful, return the response data
+    return { success: true, data: response.data };
+  } catch (error) {
+    logger.error("Error sharing tournament: ", error);
+    return {
+      success: false,
+      error: (error as Error).message || "An unexpected error occurred",
+    };
+  }
+};
+
 /****** export telegramService ******/
 
 const tgService = {
@@ -205,6 +252,7 @@ const tgService = {
   sendTelegramMessage,
   sendEventPhoto,
   shareOrganizerRequest,
+  shareTournamentRequest,
 };
 
 export default tgService;

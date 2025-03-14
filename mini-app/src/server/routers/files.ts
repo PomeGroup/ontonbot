@@ -10,7 +10,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { adminOrganizerCoOrganizerProtectedProcedure, router } from "../trpc";
 import { logger } from "../utils/logger";
-// Base URL for Next.js API routes
+
 const API_BASE_URL = (process.env.NEXT_PUBLIC_APP_BASE_URL || "http://localhost:3000") + "/api/";
 
 // JWT secret from env

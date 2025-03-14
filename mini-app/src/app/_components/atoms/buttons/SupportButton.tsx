@@ -1,21 +1,24 @@
 "use client";
 
 import Typography from "@/components/Typography";
-import useWebApp from "@/hooks/useWebApp";
-import React from "react";
-import { useEventData } from "../../Event/eventPageContext";
-import CustomButton from "../../Button/CustomButton";
-import { sleep } from "@/utils";
-import CustomCard from "../cards/CustomCard";
 import { TG_SUPPORT_GROUP } from "@/constants";
+import useWebApp from "@/hooks/useWebApp";
+import { sleep } from "@/utils";
+import React from "react";
+import CustomButton from "../../Button/CustomButton";
+import CustomCard from "../cards/CustomCard";
 
-const SupportButtons = () => {
+interface SupportButtonsProps {
+  orgSupportTelegramUserName?: string | null;
+}
+
+const SupportButtons: React.FC<SupportButtonsProps> = ({ orgSupportTelegramUserName }) => {
   const webApp = useWebApp();
   const hapticfeedback = webApp?.HapticFeedback;
 
-  const { eventData } = useEventData();
-  // trim @ from the start of the username
-  const orgSupportTelegramUserName = eventData.data?.organizer?.org_support_telegram_user_name?.replace(/^@/, "");
+  // trim @ from the start of the username if provided
+  const trimmedOrgSupport = orgSupportTelegramUserName?.replace(/^@/, "");
+
   return (
     <CustomCard
       title={"Support"}
@@ -30,6 +33,7 @@ const SupportButtons = () => {
       </Typography>
       <CustomButton
         variant="outline"
+        fontWeight={"semibold"}
         onClick={() => {
           hapticfeedback?.impactOccurred("medium");
           webApp?.openTelegramLink(TG_SUPPORT_GROUP);
@@ -37,7 +41,7 @@ const SupportButtons = () => {
       >
         ONTON Support
       </CustomButton>
-      {orgSupportTelegramUserName && (
+      {trimmedOrgSupport && (
         <>
           <Typography
             variant="body"
@@ -48,9 +52,10 @@ const SupportButtons = () => {
           </Typography>
           <CustomButton
             variant="outline"
+            fontWeight={"semibold"}
             onClick={() => {
               hapticfeedback?.impactOccurred("medium");
-              webApp?.openTelegramLink(`https://t.me/${orgSupportTelegramUserName}`);
+              webApp?.openTelegramLink(`https://t.me/${trimmedOrgSupport}`);
               sleep(100).then(() => {
                 webApp?.close();
               });

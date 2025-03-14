@@ -327,6 +327,11 @@ export const cacheKeys = {
   rateLimitRequestApi: "rate-limit-request-api:",
   callbackTask: "callbackTask:",
   affiliateLinkById: "affiliateLinkById:",
+  getTournamentsWithFilters: "getTournamentsWithFilters:",
+  elympicsMasterJwt: "elympicsMasterJwt:",
+  leaderboard: "leaderboard:",
+  getTournamentById: "getTournamentById:",
+  gameIds: "gameIds",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
@@ -335,7 +340,7 @@ export const cacheLvl = {
   long: 60 * 60 * 24, // 1 day
   extraLong: 60 * 60 * 24 * 30, //  30 days
   authApiOtpTimeout: 60 * 5, // 5 minutes
-};
+} as const;
 export const rQueues = {
   CLICK_QUEUE_KEY: "affiliate_clicks_queue",
 };

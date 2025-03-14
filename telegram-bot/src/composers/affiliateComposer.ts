@@ -11,6 +11,7 @@ import { Readable } from "stream";
 import { logger } from "../utils/logger";
 import { checkRateLimit } from "../utils/checkRateLimit";
 import * as process from "node:process";
+import { isNewCommand } from "../helpers/isNewCommand";
 
 export const affiliateComposer = new Composer<MyContext>();
 
@@ -348,6 +349,7 @@ affiliateComposer.callbackQuery("aff_act_report", async (ctx) => {
  * STEP 4: askCountOfLinks => user types a number
  */
 affiliateComposer.on("message:text", async (ctx, next) => {
+  if (isNewCommand(ctx)) return next();
   if (ctx.session.affiliateStep === "askCountOfLinks") {
     const countInput = ctx.message.text.trim();
     const countNum = parseInt(countInput, 10);
@@ -389,7 +391,7 @@ affiliateComposer.on("message:text", async (ctx, next) => {
  * STEP 5: askTitleOfLinks => user enters baseTitle => create links
  */
 affiliateComposer.on("message:text", async (ctx, next) => {
-
+  if (isNewCommand(ctx)) return next();
   if (ctx.session.affiliateStep === "askTitleOfLinks") {
     const baseTitle = ctx.message.text.trim().replace(/,/g, " ");
     if (!baseTitle) {

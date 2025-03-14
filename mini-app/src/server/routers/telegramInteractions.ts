@@ -23,6 +23,8 @@ import couponSchema from "@/zodSchema/couponSchema";
 import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
 import { couponItemsDB } from "@/server/db/couponItems.db";
 import { convertSvgToJpegBuffer } from "@/lib/convertSvgToJpegBuffer";
+import { tournamentsDB } from "@/server/db/tournaments.db";
+import { fromNano } from "@ton/core";
 
 const requestShareEvent = initDataProtectedProcedure
   .input(
@@ -457,10 +459,81 @@ const getCouponItemsCSV = eventManagementProtectedProcedure
     }
   });
 
+export const requestShareTournament = initDataProtectedProcedure
+  .input(
+    z.object({
+      tournamentId: z.number(), // The ID in your local DB
+      platform: z.string().optional(),
+    })
+  )
+  .mutation(async (opts) => {
+    try {
+      // 1) Fetch the tournament record from DB
+      const tournament = await tournamentsDB.getTournamentById(opts.input.tournamentId);
+      if (!tournament) {
+        return { status: "fail", data: `Tournament not found: ${opts.input.tournamentId}` };
+      }
+
+      // 2) Decide finalImageUrl
+      let finalImageUrl = tournament.imageUrl?.trim() ?? "";
+      let jpegBuffer: Buffer | undefined;
+
+      // If it's an SVG -> convert to JPEG
+      if (finalImageUrl.toLowerCase().endsWith(".svg")) {
+        try {
+          jpegBuffer = await convertSvgToJpegBuffer(finalImageUrl);
+        } catch (err) {
+          logger.error("Error converting SVG to JPEG:", err);
+          jpegBuffer = undefined;
+        }
+      }
+      // 3) Prepare the data object for shareTournamentRequest
+      const tournamentDataForBot = {
+        name: tournament.name || `Tournament #${tournament.id}`,
+        startDate: tournament.startDate ? Math.floor(new Date(tournament.startDate).getTime() / 1000) : null,
+        endDate: tournament.endDate ? Math.floor(new Date(tournament.endDate).getTime() / 1000) : null,
+        imageUrl: jpegBuffer ?? finalImageUrl, // either a buffer or a string
+        state: tournament.state,
+        entryFee: Number(fromNano(Number(tournament.entryFee))) || 0,
+      };
+
+      // 4) Call the telegramService method
+      const result = await telegramService.shareTournamentRequest(
+        // The user who is requesting the share
+        opts.ctx.user.user_id.toString(),
+        // The local tournament ID or hostTournamentId if needed
+        tournament.id.toString(),
+        // Additional data
+        tournamentDataForBot
+      );
+
+      logger.log("shareTournamentRequest => ", result);
+
+      if (result.success) {
+        return { status: "success", data: null };
+      } else {
+        logger.error("Failed to share the tournament:", result.error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to share the tournament",
+          cause: result.error,
+        });
+      }
+    } catch (error) {
+      logger.error("Error while sharing tournament: ", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to share the tournament",
+        cause: error,
+      });
+    }
+  });
+
 export const telegramInteractionsRouter = router({
   requestShareEvent,
   requestExportFile,
   requestSendQRCode,
   requestShareOrganizer,
   getCouponItemsCSV,
+  requestShareTournament,
 });

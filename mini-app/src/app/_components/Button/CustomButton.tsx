@@ -1,7 +1,7 @@
-import React, { ReactNode } from "react";
-import { Button, Preloader } from "konsta/react";
 import Typography, { TypographyProps } from "@/components/Typography";
 import { cva } from "class-variance-authority";
+import { Button, Preloader } from "konsta/react";
+import React, { ReactNode } from "react";
 
 interface CustomButtonProps {
   children: ReactNode;
@@ -18,8 +18,8 @@ interface CustomButtonProps {
 const customButtonVariants = cva("!p-0 min-w-20", {
   variants: {
     size: {
-      lg: "h-12.5 rounded-2lg",
-      md: "h-9 rounded-md",
+      lg: "h-12 rounded-2lg",
+      md: "h-9 rounded-2lg",
     },
     color: {
       success: "k-color-brand-green",
@@ -63,12 +63,10 @@ const CustomButton: React.FC<CustomButtonProps> = ({
       {isLoading ? (
         <Preloader size="w-4 h-4" />
       ) : (
-        <>
-          <div className="flex gap-2 items-center">
-            {icon}
-            <span>{children}</span>
-          </div>
-        </>
+        <div className="flex gap-2 items-center">
+          {icon && <span>{icon}</span>}
+          <span>{children}</span>
+        </div>
       )}
     </Typography>
   </Button>
