@@ -5,7 +5,10 @@ import { tournamentsDB } from "../db/tournaments.db";
 import { usersDB } from "../db/users";
 import { initDataProtectedProcedure, router } from "../trpc";
 
+import { db } from "@/db/db";
+import { games } from "@/db/schema";
 import { getTournamentLeaderboard } from "@/lib/elympicsApi";
+import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { selectUserById } from "@/server/db/users";
 import { LeaderboardResponse } from "@/types/elympicsAPI.types";
 import { tournamentsListSortOptions } from "../utils/tournaments.utils";
@@ -44,6 +47,26 @@ export const tournamentsRouter = router({
 
       return { tournaments: tournamentsData, nextCursor };
     }),
+
+  getGameIds: initDataProtectedProcedure.query(async () => {
+    const cachedGameIds = await redisTools.getCache(cacheKeys.gameIds);
+
+    if (cachedGameIds) {
+      return cachedGameIds as { id: number; name: string };
+    }
+
+    const gameIds = await db
+      .select({
+        id: games.id,
+        name: games.name,
+      })
+      .from(games);
+
+    await redisTools.setCache(cacheKeys.gameIds, gameIds);
+
+    return gameIds;
+  }),
+
   getTournamentById: initDataProtectedProcedure
     .input(
       z.object({

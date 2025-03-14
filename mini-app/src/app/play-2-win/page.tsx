@@ -122,7 +122,48 @@ const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: Sort
   setSelected,
 }) => {
   return (
-    <div className="grid grid-cols-2">
+    <div className="grid grid-cols-2 gap-3">
+      <DropdownMenu>
+        <Typography
+          variant={"body"}
+          weight={"medium"}
+        >
+          <DropdownMenuTrigger asChild>
+            <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
+              <HiOutlineArrowNarrowUp />
+              <span className="truncate">{formatSortTournamentSelectOption(selected)}</span>
+              <BsFilterLeft size={18} />
+            </button>
+          </DropdownMenuTrigger>
+        </Typography>
+        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
+          <Typography
+            variant="body"
+            weight="normal"
+            className="px-2"
+          >
+            Sort By
+          </Typography>
+          <Divider
+            className="my-1"
+            color={"dark"}
+            height={"1"}
+          />
+          {tournamentsListSortOptions.map((o) => {
+            return (
+              <DropdownMenuItem
+                key={o}
+                onClick={() => setSelected(o)}
+                className={cn(selected === o && "text-primary")}
+              >
+                <HiOutlineArrowNarrowUp />
+                {formatSortTournamentSelectOption(o)}
+                <FiCheck className={cn(selected !== o && "opacity-0")} />
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
       <DropdownMenu>
         <Typography
           variant={"body"}
