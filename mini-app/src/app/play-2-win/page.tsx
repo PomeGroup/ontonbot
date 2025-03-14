@@ -15,11 +15,12 @@ import { Skeleton } from "@mui/material";
 import { Page } from "konsta/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
 import { BsFilterLeft } from "react-icons/bs";
 import { FiCheck } from "react-icons/fi";
 import { HiOutlineArrowNarrowUp } from "react-icons/hi";
 import CustomCard from "../_components/atoms/cards/CustomCard";
+import { FloatingBadge } from "../_components/Badge/FloatingBadge";
 import CustomButton from "../_components/Button/CustomButton";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { TournamentTimeRemaining } from "../_components/Tournament/TournamentRemainingTime";
@@ -70,6 +71,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
             closeOnly
             endDate={tournament.data.endDate!}
           />
+          <FloatingBadge position={"bc-md"}>
+            <Typography variant="caption2">+{tournament.data.playersCount} joined</Typography>
+          </FloatingBadge>
         </div>
       )}
     </>
@@ -117,26 +121,30 @@ const Play2WinFeatured = () => {
   );
 };
 
-const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: SortOptions) => void }> = ({
-  selected,
-  setSelected,
-}) => {
+const FilterTournaments: React.FC<{
+  selected: SortOptions;
+  setSelected: (s: SortOptions) => void;
+  selectedGame: number;
+  setSelectedGame: (g: number) => void;
+}> = ({ selected, setSelected, selectedGame, setSelectedGame }) => {
+  const gameIds = trpc.tournaments.getGameIds.useQuery();
+
   return (
-    <div className="grid grid-cols-2">
+    <div className="grid grid-cols-2 gap-3">
       <DropdownMenu>
         <Typography
           variant={"body"}
           weight={"medium"}
         >
           <DropdownMenuTrigger asChild>
-            <button className="w-full flex items-center gap-1 bg-[#E0E0E5] rounded-md py-1 px-2 justify-between">
+            <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
               <HiOutlineArrowNarrowUp />
-              {formatSortTournamentSelectOption(selected)}
+              <span className="truncate">{formatSortTournamentSelectOption(selected)}</span>
               <BsFilterLeft size={18} />
             </button>
           </DropdownMenuTrigger>
         </Typography>
-        <DropdownMenuContent className="bg-[#E0E0E5] border-[#C8C7CB] w-full">
+        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
           <Typography
             variant="body"
             weight="normal"
@@ -145,7 +153,8 @@ const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: Sort
             Sort By
           </Typography>
           <Divider
-            className="bg-[#C8C7CB]"
+            className="my-1"
+            color={"dark"}
             height={"1"}
           />
           {tournamentsListSortOptions.map((o) => {
@@ -163,6 +172,47 @@ const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: Sort
           })}
         </DropdownMenuContent>
       </DropdownMenu>
+      <DropdownMenu>
+        <Typography
+          variant={"body"}
+          weight={"medium"}
+        >
+          <DropdownMenuTrigger asChild>
+            <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
+              <HiOutlineArrowNarrowUp />
+              <span className="truncate">{gameIds.data?.find((g) => g.id === selectedGame)?.name}</span>
+              <BsFilterLeft size={18} />
+            </button>
+          </DropdownMenuTrigger>
+        </Typography>
+        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
+          <Typography
+            variant="body"
+            weight="normal"
+            className="px-2"
+          >
+            Contest type
+          </Typography>
+          <Divider
+            className="my-1"
+            color={"dark"}
+            height={"1"}
+          />
+          {gameIds.data?.toReversed().map((game) => {
+            return (
+              <DropdownMenuItem
+                key={game.id}
+                onClick={() => setSelectedGame(game.id)}
+                className={cn(selectedGame === game.id && "text-primary")}
+              >
+                <HiOutlineArrowNarrowUp />
+                {game.name}
+                <FiCheck className={cn(selectedGame !== game.id && "opacity-0")} />
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };
@@ -170,12 +220,14 @@ const FilterTournaments: React.FC<{ selected: SortOptions; setSelected: (s: Sort
 const DiscoverTournaments: React.FC = () => {
   const router = useRouter();
   const [sortSelected, setSortSelected] = React.useState<SortOptions>("timeRemaining");
+  const [selectedGame, setSelectedGame] = useState(-1);
 
   const tournomants = trpc.tournaments.getTournaments.useInfiniteQuery(
     {
       limit: 50,
       filter: {
         status: "notended",
+        gameId: selectedGame,
       },
       sortBy: sortSelected,
     },
@@ -195,6 +247,8 @@ const DiscoverTournaments: React.FC = () => {
         setSelected={(o) => {
           setSortSelected(o);
         }}
+        selectedGame={selectedGame}
+        setSelectedGame={setSelectedGame}
       />
 
       <div className="grid grid-cols-2 gap-4">

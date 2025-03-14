@@ -331,6 +331,7 @@ export const cacheKeys = {
   elympicsMasterJwt: "elympicsMasterJwt:",
   leaderboard: "leaderboard:",
   getTournamentById: "getTournamentById:",
+  gameIds: "gameIds",
 };
 export const cacheLvl = {
   guard: 60, // 1 minutes
