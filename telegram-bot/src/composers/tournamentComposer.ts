@@ -5,13 +5,52 @@ import * as process from "node:process";
 import { MyContext } from "../types/MyContext";
 import { logger } from "../utils/logger";
 import { isNewCommand } from "../helpers/isNewCommand";
+import { GameRowType, getGames } from "../db/db";
 
 export const tournamentComposer = new Composer<MyContext>();
+
+/**
+ * Utility function to parse the invite message and extract:
+ *   - the entire link: e.g. "t.me/xxx?start=xxx-league-YYY"
+ *   - the tournament ID from after the last dash: "YYY" in the example
+ */
+function parseInviteMessage(text: string) {
+  // 1) Find "t.me/..." in the message
+  const linkRegex = /(t\.me\/[^\s]+)/i;
+  const match = text.match(linkRegex);
+
+  if (!match) {
+    return { link: null, tournamentId: null };
+  }
+
+  // 2) Extract the link from "t.me..." up to next whitespace
+  let link = match[1];
+
+  // 3) Ensure the link starts with "https://"
+  //    or "http://". If not, prepend "https://".
+  if (!/^https?:\/\//i.test(link)) {
+    link = "https://" + link;
+  }
+
+  // Example link: https://t.me/cut_the_zero_bot?start=code-fsghgoji__league-slpbcmb6
+  // We want the portion after the last dash => "slpbcmb6"
+  const dashIndex = link.lastIndexOf("-");
+  if (dashIndex === -1) {
+    // If there's no dash, we can't parse a tournament ID
+    return { link, tournamentId: null };
+  }
+
+  // 4) Extract everything after the dash
+  const tournamentId = link.slice(dashIndex + 1);
+
+  // 5) Return both
+  return { link, tournamentId };
+}
 
 // 1) Command: /tournament => begin flow
 tournamentComposer.command("tournament", async (ctx) => {
   // Clear any prior session state
-  ctx.session.tournamentStep = "askGameId";
+  ctx.session.tournamentStep = "pickGame";
   ctx.session.tournamentData = {
     gameId: "",
     tournamentId: "",
@@ -19,54 +58,84 @@ tournamentComposer.command("tournament", async (ctx) => {
     photoFileId: "",
   };
 
-  await ctx.reply("Please send me the **Game ID** now.");
-});
-
-// 2) On text => handle flow logic
-tournamentComposer.on("message:text", async (ctx, next) => {
-  if (!ctx.session.tournamentStep) return next();
-  if (isNewCommand(ctx)) return next();
-  // (A) Ask for Game ID
-  if (ctx.session.tournamentStep === "askGameId") {
-    const gameId = ctx.message.text.trim();
-    ctx.session.tournamentData.gameId = gameId;
-
-    ctx.session.tournamentStep = "askTournamentId";
-    await ctx.reply(`Game ID saved: ${gameId}\nNow send me the **Tournament ID**.`);
+  // Fetch games from DB
+  let games: GameRowType[];
+  try {
+    games = await getGames(); // => [{ name, host_game_id }, ...]
+  } catch (error) {
+    await ctx.reply("Failed to fetch games from database. Please try again later.");
+    logger.error("Error fetching games =>", error);
     return;
   }
 
-  // (B) Ask for Tournament ID
-  if (ctx.session.tournamentStep === "askTournamentId") {
-    const tournamentId = ctx.message.text.trim();
+  // Build an inline keyboard of the returned games
+  const kb = new InlineKeyboard();
+  for (const game of games) {
+    // We'll store the host_game_id in the callback data
+    kb.text(game.name, `pick_game_${game.host_game_id}`).row();
+  }
+
+  if (games.length === 0) {
+    await ctx.reply("No games found in the database.");
+    return;
+  }
+
+  await ctx.reply("Please pick a game from the list below:", {
+    reply_markup: kb,
+  });
+});
+
+// 2) Callback query => handle game selection
+tournamentComposer.callbackQuery(/^pick_game_(.+)$/, async (ctx) => {
+  const selectedGameId = ctx.match[1]; // The part after "pick_game_"
+  await ctx.answerCallbackQuery();
+
+  // Store the selected game ID in session
+  ctx.session.tournamentData.gameId = selectedGameId;
+  ctx.session.tournamentStep = "askInviteMessage";
+
+  await ctx.reply(
+    `Game selected: ${selectedGameId}\n` +
+    `Now please **forward** or **paste** the full invite message.`,
+  );
+});
+
+// 3) On text => handle the invite message
+tournamentComposer.on("message:text", async (ctx, next) => {
+  if (!ctx.session.tournamentStep) return next();
+  if (isNewCommand(ctx)) return next();
+
+  // We expect user to send the invite message
+  if (ctx.session.tournamentStep === "askInviteMessage") {
+    const text = ctx.message.text;
+    const { link, tournamentId } = parseInviteMessage(text);
+
+    if (!link || !tournamentId) {
+      await ctx.reply(
+        "Could not find a valid link or tournament ID in your message.\n" +
+        "Please make sure to send the exact invite message that includes the link with a dash.",
+      );
+      return;
+    }
+
+    // Store in session
+    ctx.session.tournamentData.tournamentLink = link;
     ctx.session.tournamentData.tournamentId = tournamentId;
 
     // Next => call "check" endpoint
     ctx.session.tournamentStep = "check";
-    await ctx.reply(`Tournament ID saved: ${tournamentId}\nChecking...`);
+    await ctx.reply(
+      `Invite link parsed: ${link}\nTournament ID parsed: ${tournamentId}\nChecking...`,
+    );
 
     return doCheckEndpoint(ctx);
   }
 
-  // (C) If user chooses "Insert," we ask for the link => "askTournamentLink"
-  if (ctx.session.tournamentStep === "askTournamentLink") {
-    // Store the tournament link
-    const link = ctx.message.text.trim();
-    ctx.session.tournamentData.tournamentLink = link;
-
-    // Next => ask photo
-    ctx.session.tournamentStep = "askTournamentPhoto";
-    await ctx.reply(
-      `Tournament link saved: ${link}\nNow please send a **photo** for the tournament.`,
-    );
-    return;
-  }
-
-  // If user typed text but we’re expecting a photo or something else
+  // If we are expecting something else
   await ctx.reply("Please follow instructions or type /tournament to start again.");
 });
 
-// 3) Callback => Insert / Create / Cancel
+// 4) Callback => Insert / Create / Cancel
 tournamentComposer.callbackQuery(["tourn_insert", "tourn_create", "tourn_cancel"], async (ctx) => {
   await ctx.answerCallbackQuery();
 
@@ -76,26 +145,26 @@ tournamentComposer.callbackQuery(["tourn_insert", "tourn_create", "tourn_cancel"
     return;
   }
 
-  // If user tapped "Insert" => from confirmInsert step => ask for link
+  // If user tapped "Insert" => from confirmInsert step => ask for photo
   if (ctx.session.tournamentStep === "confirmInsert" && ctx.callbackQuery.data === "tourn_insert") {
-    ctx.session.tournamentStep = "askTournamentLink";
-    await ctx.reply("Please send me the **Tournament Link** now (or type 'skip'):");
+    ctx.session.tournamentStep = "askTournamentPhoto";
+    await ctx.reply("Please send me a **photo** for the tournament now.");
     return;
   }
 
-  // If user tapped "Create" => from confirmCreate step => skip link or do the same?
-  // If your logic also wants a link for "create," do the same step:
+  // If user tapped "Create" => from confirmCreate step => ask for photo
   if (ctx.session.tournamentStep === "confirmCreate" && ctx.callbackQuery.data === "tourn_create") {
-    ctx.session.tournamentStep = "askTournamentLink";
-    await ctx.reply("Please send me the **Tournament Link** now (or type 'skip'):");
+    ctx.session.tournamentStep = "askTournamentPhoto";
+    await ctx.reply("Please send me a **photo** for the tournament now.");
     return;
   }
 });
 
-// 4) On receiving a photo => finalize creation flow
+// 5) On receiving a photo => finalize creation flow
 tournamentComposer.on("message:photo", async (ctx, next) => {
-  if (ctx.session.tournamentStep !== "askTournamentPhoto") return;
+  if (ctx.session.tournamentStep !== "askTournamentPhoto") return next();
   if (isNewCommand(ctx)) return next();
+
   const { gameId, tournamentId, tournamentLink } = ctx.session.tournamentData ?? {};
   if (!gameId || !tournamentId) {
     await ctx.reply("Missing IDs in session. Please /tournament to start again.");
@@ -128,11 +197,14 @@ tournamentComposer.on("message:photo", async (ctx, next) => {
     logger.info("Create URL => " + createUrl);
 
     const formData = new FormData();
-    formData.append("file", fileBuffer, { filename: "my_tournament_photo.png", contentType: "image/png" });
-    // Also append "tournament_link" if user typed one
-    if (tournamentLink && tournamentLink.toLowerCase() !== "skip") {
-      formData.append("tournament_link", tournamentLink);
-    }
+    formData.append("file", fileBuffer, {
+      filename: "my_tournament_photo.png",
+      contentType: "image/png",
+    });
+
+    // Include the link we parsed from the invite message
+    formData.append("tournament_link", tournamentLink);
+
     logger.info("Form data =>", formData);
     const res = await axios.post(createUrl, formData, {
       headers: {
@@ -158,7 +230,8 @@ tournamentComposer.on("message:photo", async (ctx, next) => {
 async function doCheckEndpoint(ctx: MyContext) {
   const userId = ctx.from?.id || 0;
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-  const url = `${baseUrl}/tournament/check/${ctx.session.tournamentData.gameId}/${ctx.session.tournamentData.tournamentId}/${userId}`;
+  const { gameId, tournamentId } = ctx.session.tournamentData!;
+  const url = `${baseUrl}/tournament/check/${gameId}/${tournamentId}/${userId}`;
   logger.info("Check URL => " + url);
 
   try {
@@ -178,7 +251,9 @@ async function doCheckEndpoint(ctx: MyContext) {
     // Show info
     await ctx.reply(
       `Tournament found in Elympics:\n` +
-      `Name: ${details.Name}\nState: ${details.State}\nOwnerId: ${details.OwnerId ?? "(none)"}\n...`,
+      `Name: ${details.Name}\n` +
+      `State: ${details.State}\n` +
+      `OwnerId: ${details.OwnerId ?? "(none)"}\n...`,
     );
 
     // Offer to insert
@@ -189,7 +264,6 @@ async function doCheckEndpoint(ctx: MyContext) {
       reply_markup: kb,
     });
     ctx.session.tournamentStep = "confirmInsert";
-
   } catch (err) {
     handleCheckError(ctx, err);
   }
@@ -214,7 +288,9 @@ function handleCheckError(ctx: MyContext, error: unknown) {
 
     if (status === 404) {
       logger.warn("Tournament not found => 404 => user can create new.");
-      const kb = new InlineKeyboard().text("Create", "tourn_create").text("Cancel", "tourn_cancel");
+      const kb = new InlineKeyboard()
+        .text("Create", "tourn_create")
+        .text("Cancel", "tourn_cancel");
       ctx.reply("Tournament not found in Elympics. Create it anyway?", {
         reply_markup: kb,
       });
@@ -252,6 +328,7 @@ function handleCreateError(ctx: MyContext, error: unknown) {
 }
 
 function handleCreateResponse(ctx: MyContext, finalData: any) {
+
   const msg = finalData?.message;
   if (!msg) {
     ctx.reply("No message returned from create endpoint. Possibly unknown error.");

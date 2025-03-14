@@ -1,8 +1,8 @@
-import { Pool } from "pg"
-import { generateRandomHash } from "../helpers/generateRandomHash"
-import { cacheKeys, redisTools } from "../lib/redisTools"
-import { logger } from "../utils/logger"
-import { TVisitor } from "../utils/types"
+import { Pool } from "pg";
+import { generateRandomHash } from "../helpers/generateRandomHash";
+import { cacheKeys, redisTools } from "../lib/redisTools";
+import { logger } from "../utils/logger";
+import { TVisitor } from "../utils/types";
 
 
 // cache keys
@@ -17,6 +17,24 @@ export const getEventById = async (id: number) => {
       [id],
     );
     return result.rows[0];
+  } finally {
+    client.release();
+  }
+};
+export type GameRowType = {
+  name: string;
+  host_game_id: string;
+}
+export const getGames = async (): Promise<GameRowType[] | undefined> => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(
+      `SELECT name, host_game_id
+       FROM games
+       ORDER BY name;`,
+    );
+    // result.rows => array of { game_name, host_game_id }
+    return result.rows;
   } finally {
     client.release();
   }
@@ -331,18 +349,19 @@ export const upsertPlay2winFeatured = async (value: string, env?: string): Promi
   try {
     await client.query(
       `
-      INSERT INTO onton_setting (env, var, value, "protected")
-      VALUES ($1, 'play-2-win-featured', $2, false)
-      ON CONFLICT (env, var)
-      DO UPDATE SET value = EXCLUDED.value, "protected" = EXCLUDED."protected"
+          INSERT INTO onton_setting (env, var, value, "protected")
+          VALUES ($1, 'play-2-win-featured', $2, false)
+          ON CONFLICT (env, var)
+              DO UPDATE SET value       = EXCLUDED.value,
+                            "protected" = EXCLUDED."protected"
       `,
       [environment, value],
     );
 
     try {
-      await redisTools.deleteCache(cacheKeys.ontonSettings)
+      await redisTools.deleteCache(cacheKeys.ontonSettings);
     } catch (error) {
-      logger.log("Error in upsertPlay2winFeatured:", error); 
+      logger.log("Error in upsertPlay2winFeatured:", error);
     }
 
   } finally {
@@ -356,10 +375,11 @@ export const getPlay2winFeatured = async (env?: string): Promise<string | null> 
   try {
     const result = await client.query(
       `
-      SELECT value
-      FROM onton_setting
-      WHERE env = $1 AND var = 'play-2-win-featured'
-      LIMIT 1
+          SELECT value
+          FROM onton_setting
+          WHERE env = $1
+            AND var = 'play-2-win-featured'
+          LIMIT 1
       `,
       [environment],
     );
