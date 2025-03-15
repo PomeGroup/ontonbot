@@ -141,8 +141,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 16000M
-          cpus: "5.0"
+          memory: 30720M
+          cpus: "6.0"
       mode: global
       update_config:
         failure_action: rollback
@@ -159,7 +159,15 @@ services:
     stop_signal: SIGTERM
     environment:
       <<: *common-env
-    command: postgres -p ${POSTGRES_PORT}
+    command: >
+      postgres -p ${POSTGRES_PORT}
+      -c max_connections=500
+      -c shared_buffers=8GB
+      -c effective_cache_size=24GB
+      -c maintenance_work_mem=2GB
+      -c work_mem=32MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
