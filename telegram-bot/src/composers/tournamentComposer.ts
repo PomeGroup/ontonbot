@@ -103,7 +103,10 @@ tournamentComposer.callbackQuery(/^pick_game_(.+)$/, async (ctx) => {
 // 3) On text => handle the invite message
 tournamentComposer.on("message:text", async (ctx, next) => {
   if (!ctx.session.tournamentStep) return next();
-  if (isNewCommand(ctx)) return next();
+  if (isNewCommand(ctx)) {
+    ctx.session = {};
+    return next();
+  }
 
   // We expect user to send the invite message
   if (ctx.session.tournamentStep === "askInviteMessage") {
@@ -131,8 +134,7 @@ tournamentComposer.on("message:text", async (ctx, next) => {
     return doCheckEndpoint(ctx);
   }
 
-  // If we are expecting something else
-  await ctx.reply("Please follow instructions or type /tournament to start again.");
+
 });
 
 // 4) Callback => Insert / Create / Cancel
@@ -163,7 +165,10 @@ tournamentComposer.callbackQuery(["tourn_insert", "tourn_create", "tourn_cancel"
 // 5) On receiving a photo => finalize creation flow
 tournamentComposer.on("message:photo", async (ctx, next) => {
   if (ctx.session.tournamentStep !== "askTournamentPhoto") return next();
-  if (isNewCommand(ctx)) return next();
+  if (isNewCommand(ctx)) {
+    ctx.session = {};
+    return next();
+  }
 
   const { gameId, tournamentId, tournamentLink } = ctx.session.tournamentData ?? {};
   if (!gameId || !tournamentId) {

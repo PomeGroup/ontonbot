@@ -6,9 +6,10 @@ export interface SessionData {
     | "askEventUUID"
     | "confirmEventSelection"
     | "chooseDistributionMethod"
-    | "handleAllApproved"
     | "askCsvFile"
+    | "handleAllApproved"
     | "done";
+
   sbtEventUUID?: string;
   sbtEventTitle?: string;
 
@@ -64,6 +65,12 @@ export interface SessionData {
     createConfirmed?: boolean;
     tournamentLink?: string;
   };
+  /* ------------------ Play2Win Featured Flow ------------------ */
+  play2winStep?: "askList" | "done";
+  /* ------------------ Broadcast Flow ------------------ */
+  broadcastStep?: "askEventId" | "askMessage" | "confirm" | "done";
+  broadcastEventId?: string;
+  broadcastMessage?: string;
 
 }
 

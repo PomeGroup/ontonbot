@@ -7,6 +7,6 @@ import { MyContext } from "../types/MyContext";
 export function isNewCommand(ctx: MyContext) {
   const entities = ctx.message?.entities;
   if (!entities) return false;
-
+ 
   return entities.some((ent) => ent.type === "bot_command");
 }

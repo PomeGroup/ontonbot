@@ -1,126 +1,191 @@
-import { Composer, InputFile, Keyboard } from "grammy";
+import { Composer, InlineKeyboard, InputFile } from "grammy";
 import { MyContext } from "../types/MyContext";
-import { getApprovedRegistrants, getEvent, processCsvLinesForSbtDist } from "../db/db";
+import {
+  getApprovedRegistrants,
+  getEvent,
+  processCsvLinesForSbtDist,
+} from "../db/db";
 import { Readable } from "stream";
 import axios from "axios";
 import { additionalRecipients } from "../constants";
 import { logger } from "../utils/logger";
 import { isNewCommand } from "../helpers/isNewCommand";
-
+import { sleep } from "../utils/utils";
 
 export const sbtdistComposer = new Composer<MyContext>();
+
 /**
- * STEP 1: askEventUUID
- * - Validate user input as a 36-char UUID
- * - Check DB if it exists
- * - Prompt user for "Are you sure...?" using a reply keyboard
+ * /sbtdist command:
+ * - Initialize the session flow
+ * - Prompt user to send the Event UUID
  */
+sbtdistComposer.command("sbtdist", async (ctx) => {
+  // Reset any previous data
+  ctx.session.sbtdistStep = "askEventUUID";
+  ctx.session.sbtEventUUID = undefined;
+  ctx.session.sbtEventTitle = undefined;
+
+  await ctx.reply(
+    "Please send the Event UUID (36 characters). Type /cancel to abort.",
+  );
+});
+
 /**
- * STEP 1: askEventUUID
+ *  Handle text messages based on current sbtdistStep
  */
 sbtdistComposer.on("message:text", async (ctx, next) => {
-  if (isNewCommand(ctx)) return next();
-  if (ctx.session.sbtdistStep === "askEventUUID") {
-    const text = ctx.message.text.trim();
-    if (text.length !== 36) {
-      await ctx.reply("Invalid Event UUID. Must be 36 characters. Try again or /cancel.");
-      return;
-    }
-    const eventRow = await getEvent(text);
-    if (!eventRow) {
-      await ctx.reply("Event not found. Please check the UUID and try again.");
-      return;
-    }
-    ctx.session.sbtEventUUID = text;
-    ctx.session.sbtEventTitle = eventRow.title;
-    ctx.session.sbtdistStep = "confirmEventSelection";
-
-    const kb = new Keyboard().text("Yes").text("No").row();
-    await ctx.reply(
-      `Are you sure you want to send rewards for event "${eventRow.title}"?\n` +
-      `Tap "Yes" or "No" below.`,
-      {
-        reply_markup: {
-          keyboard: kb.build(),
-          resize_keyboard: true,
-          one_time_keyboard: true,
-        },
-      },
-    );
-    return;
+  // If user typed a new command, reset session & go next
+  if (isNewCommand(ctx)) {
+    ctx.session = {};
+    return next();
   }
 
-  /**
-   * STEP 2: confirmEventSelection
-   */
-  if (ctx.session.sbtdistStep === "confirmEventSelection") {
-    const text = ctx.message.text.trim().toLowerCase();
-    if (text === "yes") {
-      // Move to method selection
+  const step = ctx.session.sbtdistStep;
+  if (!step || step === "done") {
+    return next();
+  }
+
+  if (step === "askEventUUID") {
+    return handleAskEventUUID(ctx);
+  }
+
+  // If user types text in any other step that expects a callback (like "confirmEventSelection"),
+  // we can choose to ignore or prompt them. We'll just ignore here.
+  return next();
+});
+
+/**
+ *  Handle document messages (CSV) only if step=askCsvFile
+ */
+sbtdistComposer.on("message:document", async (ctx, next) => {
+  // Only proceed if we are in the CSV upload step
+  if (ctx.session.sbtdistStep !== "askCsvFile") {
+    return next();
+  }
+  if (isNewCommand(ctx)) {
+    ctx.session = {};
+    return next();
+  }
+
+  await handleCsvFile(ctx);
+});
+
+/**
+ *  Handle inline button presses
+ */
+sbtdistComposer.on("callback_query:data", async (ctx, next) => {
+  const step = ctx.session.sbtdistStep;
+  if (!step || step === "done") {
+    return next();
+  }
+
+  const data = ctx.callbackQuery.data;
+
+  // Step 2: confirmEventSelection
+  if (step === "confirmEventSelection") {
+    if (data === "confirmEventDist") {
+      await ctx.answerCallbackQuery();
       ctx.session.sbtdistStep = "chooseDistributionMethod";
-
-      const kb = new Keyboard().text("CSV").text("ALL APPROVED GUESTS").row();
-      await ctx.reply(
-        `Choose your distribution method:\n` +
-        `- "CSV": Upload a CSV of user IDs\n` +
-        `- "ALL APPROVED GUEST": Create rewards for all approved registrants`,
-        {
-          reply_markup: {
-            keyboard: kb.build(),
-            resize_keyboard: true,
-            one_time_keyboard: true,
-          },
-        },
-      );
-      return;
+      return showDistributionMethodMenu(ctx);
+    } else if (data === "cancelEventDist") {
+      await ctx.answerCallbackQuery();
+      await cancelFlow(ctx, "Event selection canceled. Type /sbtdist to start over.");
     }
-    if (text === "no") {
-      ctx.session.sbtdistStep = undefined;
-      ctx.session.sbtEventUUID = undefined;
-      ctx.session.sbtEventTitle = undefined;
-      await ctx.reply("Cancelled. Type /sbtdist to try again.");
-      return;
-    }
-    await ctx.reply("Please reply with \"Yes\" or \"No\".");
     return;
   }
 
-  /**
-   * STEP 3: chooseDistributionMethod
-   */
-  if (ctx.session.sbtdistStep === "chooseDistributionMethod") {
-    const text = ctx.message.text.trim().toLowerCase();
-    logger.log("chooseDistributionMethod", text);
-    if (text === "csv") {
-      // The original flow
+  // Step 3: chooseDistributionMethod
+  if (step === "chooseDistributionMethod") {
+    if (data === "chooseCsv") {
+      await ctx.answerCallbackQuery();
       ctx.session.sbtdistStep = "askCsvFile";
       await ctx.reply(
-        `Alright! Please upload the CSV file for event "${ctx.session.sbtEventTitle}".`,
+        `Please upload the CSV file for the event "${ctx.session.sbtEventTitle}".`,
       );
-      return;
-    } else if (text === "all approved guests") {
-      // Immediately fetch all approved and handle
+    } else if (data === "chooseAllApproved") {
+      await ctx.answerCallbackQuery();
       ctx.session.sbtdistStep = "handleAllApproved";
-
-      // We'll call a helper function to handle "ALL" logic
       await handleAllApproved(ctx);
-      return;
     } else {
-      await ctx.reply("Please reply with \"CSV\" or \"ALL Approved Guests\".");
-      return;
+      await ctx.answerCallbackQuery();
+      await ctx.reply("Unknown choice. Please try again.");
     }
+    return;
   }
 
   // If no match, pass to next
   return next();
 });
 
-sbtdistComposer.on("message:document", async (ctx, next) => {
-  if (ctx.session.sbtdistStep !== "askCsvFile") {
-    return next();
+/* -------------------------------------------------------------------------- */
+/*                           Handler Functions                                */
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * STEP 1: handleAskEventUUID
+ * - Validate user input is 36 chars
+ * - Check if event exists
+ * - If valid => step=confirmEventSelection => show inline keyboard
+ */
+async function handleAskEventUUID(ctx: MyContext) {
+  const text = ctx.message?.text?.trim();
+  if (!text) return;
+
+  if (text.length !== 36) {
+    await ctx.reply(
+      "Invalid Event UUID. Must be 36 characters. Try again or /cancel.",
+    );
+    return;
   }
-  if (isNewCommand(ctx)) return next();
-  // 1) Basic checks
+
+  const eventRow = await getEvent(text);
+  if (!eventRow) {
+    await ctx.reply("Event not found. Please check the UUID and try again.");
+    return;
+  }
+
+  // Store info in session
+  ctx.session.sbtEventUUID = text;
+  ctx.session.sbtEventTitle = eventRow.title;
+  ctx.session.sbtdistStep = "confirmEventSelection";
+
+  // Inline keyboard for confirm or cancel
+  const keyboard = new InlineKeyboard()
+    .text("✅ Confirm", "confirmEventDist")
+    .text("❌ Cancel", "cancelEventDist");
+
+  await ctx.reply(
+    `Are you sure you want to send rewards for event "${eventRow.title}"?`,
+    { reply_markup: keyboard },
+  );
+}
+
+/**
+ * STEP 2 -> 3: showDistributionMethodMenu
+ * - Called after user confirms the event
+ */
+async function showDistributionMethodMenu(ctx: MyContext) {
+  // Provide inline buttons for CSV or ALL APPROVED
+  const keyboard = new InlineKeyboard()
+    .text("CSV", "chooseCsv")
+    .text("ALL Approved Guests", "chooseAllApproved");
+
+  await ctx.reply(
+    `How do you want to distribute?\n- "CSV": Upload a CSV of user IDs\n` +
+    `- "ALL Approved Guests": Create rewards for all approved registrants`,
+    { reply_markup: keyboard },
+  );
+}
+
+/**
+ * STEP 4: handleCsvFile
+ * - We are in step=askCsvFile => user uploads CSV
+ * - Validate, parse, upsert data, return summary CSV
+ * - Then step=done
+ */
+async function handleCsvFile(ctx: MyContext) {
+  // Basic checks
   const document = ctx.message.document;
   if (!document) {
     await ctx.reply("No file found in this message. Please upload a CSV.");
@@ -131,30 +196,29 @@ sbtdistComposer.on("message:document", async (ctx, next) => {
     return;
   }
 
-  // 2) Retrieve the file info from Telegram
+  // Retrieve the file from Telegram
   const fileInfo = await ctx.api.getFile(document.file_id);
   if (!fileInfo.file_path) {
     await ctx.reply("Unable to retrieve file path from Telegram.");
     return;
   }
 
-  // 3) Construct the download URL
   const fileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${fileInfo.file_path}`;
 
   try {
-    // 4) Download the file
-    const axiosRes = await axios.get<ArrayBuffer>(fileUrl, { responseType: "arraybuffer" });
+    const axiosRes = await axios.get<ArrayBuffer>(fileUrl, {
+      responseType: "arraybuffer",
+    });
     const fileBuffer = Buffer.from(axiosRes.data);
 
-    // 5) Parse the CSV
+    // Parse CSV
     const fileContent = fileBuffer.toString("utf-8");
     const lines = fileContent.trim().split("\n");
     const eventUUIDInFile = lines[0]?.trim();
-
-    // 6) Check event UUID
     const eventUUIDInSession = ctx.session.sbtEventUUID;
+
     if (!eventUUIDInSession) {
-      await ctx.reply("No valid event UUID in session. Please start over with /sbtdist.");
+      await cancelFlow(ctx, "No valid event UUID in session. Please start over with /sbtdist.");
       return;
     }
     if (eventUUIDInFile !== eventUUIDInSession) {
@@ -165,116 +229,103 @@ sbtdistComposer.on("message:document", async (ctx, next) => {
       return;
     }
 
-    // 7) Process user IDs (lines[1..])
+    // Process user IDs
     const userIdLines = lines.slice(1);
     const results = await processCsvLinesForSbtDist(eventUUIDInSession, userIdLines);
 
-    // 8) Build the result CSV
-    const header = "user_id,user_name,process_result";
-    const csvRows = results.map(r => `${r.userId},${r.user_name},${r.process_result}`);
-    const finalCsvString = [header, ...csvRows].join("\n");
-
-    // 9) Prepare to send back
-
-    const eventTitle = ctx.session.sbtEventTitle || "untitled_event";
-    // e.g. "Event Name 2025" -> "event_name_2025"
-    const sanitizedEventTitle = eventTitle
-      .toLowerCase()
-      .replace(/[^\w]+/g, "_") // replace non-alphanumeric with underscores
-      .replace(/_+/g, "_")     // compress multiple underscores
-      .replace(/^_+|_+$/g, ""); // remove leading/trailing underscores
-
-    // Example final name: sbt-dist-event_name_2025.csv
-    const finalFileName = `sbt-dist-${sanitizedEventTitle || "no_title"}.csv`;
-
-    const fileStream = Readable.from(finalCsvString);
-    const inputFile = new InputFile(fileStream, finalFileName);
-
-    // Grab the uploader’s username, or a fallback
-    const uploaderUsername = ctx.from?.username
-      ? `@${ctx.from.username}`
-      : (ctx.from?.first_name || ctx.from?.id || "Unknown");
-
-    // 10) Send document to the uploader
-    const message = await ctx.replyWithDocument(inputFile, {
-      caption:
-        `CSV processed successfully for "${ctx.session.sbtEventTitle}"!\n` +
-        `Total rows processed: ${results.length}\n` +
-        `Distributed by: ${uploaderUsername}`,
-    });
-
-    // 11) Reuse file_id to forward to additional recipients
-    const fileId = message.document?.file_id;
-    if (!fileId) {
-      logger.error("Could not get file_id from Telegram!");
-      return;
-    }
-
-
-    for (const recipientId of additionalRecipients) {
-      if (ctx.from?.id !== recipientId) {
-        await ctx.api.sendDocument(recipientId, fileId, {
-          caption:
-            `CSV processed successfully for "${ctx.session.sbtEventTitle}"!\n` +
-            `Total rows processed: ${results.length}\n` +
-            `Distributed by: ${uploaderUsername}`,
-        });
-      }
-    }
-
-  } catch (error) {
-    await ctx.reply(`Error processing CSV file: ${error}`);
-    return;
-  }
-
-  // 12) Reset the flow
-  ctx.session.sbtdistStep = "done";
-  ctx.session.sbtEventUUID = undefined;
-  ctx.session.sbtEventTitle = undefined;
-});
-
-/**
- * STEP 5: handleAllApproved => fetch all 'approved' registrants
- * Create rewards, produce a summary CSV, send to user, forward to additional recipients
- */
-async function handleAllApproved(ctx: MyContext) {
-  try {
-    const eventUUID = ctx.session.sbtEventUUID;
-    if (!eventUUID) {
-      await ctx.reply("No valid event UUID in session. Please start over with /sbtdist.");
-      // reset everything
-      ctx.session.sbtdistStep = undefined;
-      return;
-    }
-
-    // 1) fetch approved registrants
-    // you can define `getApprovedRegistrants(eventUUID)` in your DB code
-    const approvedRegistrants = await getApprovedRegistrants(eventUUID);
-    if (!approvedRegistrants.length) {
-      await ctx.reply(`No approved registrants found for event ${eventUUID}.`);
-      // end flow
-      ctx.session.sbtdistStep = undefined;
-      ctx.session.sbtEventUUID = undefined;
-      ctx.session.sbtEventTitle = undefined;
-      return;
-    }
-
-    // 2) Create an array of user IDs from the rows
-    const userIdLines = approvedRegistrants.map((row) => String(row.user_id));
-
-    // 3) Pass to processCsvLinesForSbtDist
-    // re-use the same logic that upserts visitors + rewards
-    const results = await processCsvLinesForSbtDist(eventUUID, userIdLines);
-
-    // 4) Build the result CSV
+    // Build the result CSV
     const header = "user_id,user_name,process_result";
     const csvRows = results.map(
       (r) => `${r.userId},${r.user_name},${r.process_result}`,
     );
     const finalCsvString = [header, ...csvRows].join("\n");
 
-    // 5) Prepare a file name
+    // Prepare to send back
     const eventTitle = ctx.session.sbtEventTitle || "untitled_event";
+    const sanitizedEventTitle = eventTitle
+      .toLowerCase()
+      .replace(/[^\w]+/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    const finalFileName = `sbt-dist-${sanitizedEventTitle || "no_title"}.csv`;
+
+    const fileStream = Readable.from(finalCsvString);
+    const inputFile = new InputFile(fileStream, finalFileName);
+
+    const uploaderUsername = ctx.from?.username
+      ? `@${ctx.from.username}`
+      : ctx.from?.first_name || String(ctx.from?.id) || "Unknown";
+
+    // Send document to the uploader
+    const message = await ctx.replyWithDocument(inputFile, {
+      caption:
+        `CSV processed for "${eventTitle}"!\n` +
+        `Total rows processed: ${results.length}\n` +
+        `Distributed by: ${uploaderUsername}`,
+    });
+
+    // Forward to additional recipients
+    const fileId = message.document?.file_id;
+    if (fileId) {
+      for (const recipientId of additionalRecipients) {
+        if (ctx.from?.id !== recipientId) {
+          await ctx.api.sendDocument(recipientId, fileId, {
+            caption:
+              `CSV processed for "${eventTitle}"!\n` +
+              `Total rows processed: ${results.length}\n` +
+              `Distributed by: ${uploaderUsername}`,
+          });
+        }
+      }
+    }
+  } catch (error) {
+    await ctx.reply(`Error processing CSV file: ${error}`);
+    return;
+  }
+
+  // Done
+  ctx.session.sbtdistStep = "done";
+  ctx.session.sbtEventUUID = undefined;
+  ctx.session.sbtEventTitle = undefined;
+}
+
+/**
+ * handleAllApproved => step=handleAllApproved
+ * - Distributes to all "approved" registrants
+ * - Creates summary CSV
+ * - Then step=done
+ */
+async function handleAllApproved(ctx: MyContext) {
+  try {
+    const eventUUID = ctx.session.sbtEventUUID;
+    const eventTitle = ctx.session.sbtEventTitle || "untitled_event";
+
+    if (!eventUUID) {
+      await cancelFlow(ctx, "No valid event UUID in session. Please start over with /sbtdist.");
+      return;
+    }
+
+    // 1) fetch approved registrants
+    const approvedRegistrants = await getApprovedRegistrants(eventUUID);
+    if (!approvedRegistrants.length) {
+      await ctx.reply(`No approved registrants found for event ${eventUUID}.`);
+      return cancelFlow(ctx);
+    }
+
+    // 2) user IDs
+    const userIdLines = approvedRegistrants.map((row) => String(row.user_id));
+
+    // 3) upsert logic
+    const results = await processCsvLinesForSbtDist(eventUUID, userIdLines);
+
+    // 4) build CSV
+    const header = "user_id,user_name,process_result";
+    const csvRows = results.map(
+      (r) => `${r.userId},${r.user_name},${r.process_result}`,
+    );
+    const finalCsvString = [header, ...csvRows].join("\n");
+
+    // 5) file name
     const sanitizedEventTitle = eventTitle
       .toLowerCase()
       .replace(/[^\w]+/g, "_")
@@ -282,45 +333,58 @@ async function handleAllApproved(ctx: MyContext) {
       .replace(/^_+|_+$/g, "");
     const finalFileName = `sbt-dist-approved-${sanitizedEventTitle || "no_title"}.csv`;
 
-    // 6) Convert CSV string to an InputFile
+    // 6) convert to InputFile
     const fileStream = Readable.from(finalCsvString);
     const inputFile = new InputFile(fileStream, finalFileName);
 
-    // 7) Uploader's name
+    // 7) Uploader name
     const uploaderUsername = ctx.from?.username
       ? `@${ctx.from.username}`
       : ctx.from?.first_name || String(ctx.from?.id) || "Unknown";
 
-    // 8) Send doc to the current user
+    // 8) send doc to current user
     const message = await ctx.replyWithDocument(inputFile, {
       caption:
-        `Rewards created for all approved registrants of "${ctx.session.sbtEventTitle}".\n` +
+        `Rewards created for all approved registrants of "${eventTitle}".\n` +
         `Total rows processed: ${results.length}\n` +
         `Distributed by: ${uploaderUsername}`,
     });
 
-    // 9) Forward to additional recipients if desired
+    // 9) forward to recipients
     const fileId = message.document?.file_id;
     if (fileId) {
-
       for (const recipientId of additionalRecipients) {
         if (recipientId !== ctx.from?.id) {
           await ctx.api.sendDocument(recipientId, fileId, {
             caption:
-              `Rewards created for all approved registrants of "${ctx.session.sbtEventTitle}".\n` +
+              `Rewards created for all approved registrants of "${eventTitle}".\n` +
               `Total rows processed: ${results.length}\n` +
               `Distributed by: ${uploaderUsername}`,
           });
         }
       }
     }
-
   } catch (err) {
     await ctx.reply(`Error creating rewards for all approved: ${err}`);
   }
 
-  // 10) reset flow
-  ctx.session.sbtdistStep = undefined;
+  // Done
+  ctx.session.sbtdistStep = "done";
+  ctx.session.sbtEventUUID = undefined;
+  ctx.session.sbtEventTitle = undefined;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                           Utility Helpers                                  */
+
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Cancel flow with an optional message
+ */
+async function cancelFlow(ctx: MyContext, msg?: string) {
+  if (msg) await ctx.reply(msg);
+  ctx.session.sbtdistStep = "done";
   ctx.session.sbtEventUUID = undefined;
   ctx.session.sbtEventTitle = undefined;
 }

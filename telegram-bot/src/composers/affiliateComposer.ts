@@ -50,16 +50,20 @@ affiliateComposer.command("affiliate", async (ctx) => {
   ctx.session.affiliateLinkCount = undefined;
   ctx.session.affiliateLinkTitle = undefined;
   ctx.session.existingLinksCount = undefined;
-
+  logger.log(`User ${ctx.from?.id} is an admin for /affiliate`);
   // Inline keyboard: "Event", "Play-to-Earn"
   const inlineKb = new InlineKeyboard()
     .text("Event", "aff_event")
     .row()
     .text("Play-to-Earn (disabled)", "aff_p2e");
 
-  await ctx.reply("Which type of affiliation do you want to create?", {
-    reply_markup: inlineKb,
-  });
+  await ctx.reply(
+    "Which type of affiliation do you want to create?\n" +
+    "Or Type /cancel to cancel the operation.`"
+
+    , {
+      reply_markup: inlineKb,
+    });
 });
 
 /**
@@ -349,7 +353,11 @@ affiliateComposer.callbackQuery("aff_act_report", async (ctx) => {
  * STEP 4: askCountOfLinks => user types a number
  */
 affiliateComposer.on("message:text", async (ctx, next) => {
-  if (isNewCommand(ctx)) return next();
+  if (isNewCommand(ctx)) {
+    ctx.session = {};
+    return next();
+  }
+
   if (ctx.session.affiliateStep === "askCountOfLinks") {
     const countInput = ctx.message.text.trim();
     const countNum = parseInt(countInput, 10);

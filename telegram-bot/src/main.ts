@@ -75,7 +75,7 @@ import { handleShareTournament } from "./handlers/handleShareTournament";
     bot.command("cmd", cmdHandler);
     bot.command("banner", bannerHandler);
     bot.command("start", startHandler);
-    bot.command("sbtdist", sbtdistHandler);
+    //bot.command("sbtdist", sbtdistHandler);
     bot.command("id", async (ctx) => {
       await announceBotAdded(ctx);
 
