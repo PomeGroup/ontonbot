@@ -11,5 +11,5 @@ export async function sbtdistHandler(ctx: MyContext) {
   // 2) Set session step to ask for event UUID
   ctx.session.sbtdistStep = "askEventUUID";
   ctx.session.sbtEventUUID = undefined; // clear any stale data
-  await ctx.reply("Please provide the Event UUID:");
+  await ctx.reply("Please provide the Event UUID: \n or type /cancel to cancel the operation.");
 }
