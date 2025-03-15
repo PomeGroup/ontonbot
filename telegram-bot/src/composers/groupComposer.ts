@@ -211,7 +211,10 @@ groupComposer.callbackQuery("grpev_no", async (ctx) => {
  * 5) Wait for the group ID from user text
  */
 groupComposer.on("message:text", async (ctx, next) => {
-  if (isNewCommand(ctx)) return next();
+  if (isNewCommand(ctx)) {
+    ctx.session = {};
+    return next();
+  }
   if (ctx.session.groupStep !== "askGroupId") {
     return next(); // not in group ID input step
   }
