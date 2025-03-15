@@ -188,6 +188,7 @@ services:
         tag: "docker.${BRANCH_NAME}-postgres"
         fluentd-async-connect: "true"
 
+
   redis:
     image: redis:7.4.1-bookworm
     hostname: redis
