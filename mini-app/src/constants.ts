@@ -701,7 +701,17 @@ export const ALLOWED_USER_TO_TEST = [
   7013087032, // Ontonadmin
   548648769, // Radiophp
   70992667, // Pari_che_hr
+  91896720, //  elbabix
+
+  // society jamaat
   470003279, // Shantell7
+  1130820342, //  mdab121
+  5872958474, //  TheSharkBoy
+  869195676, //  sabotazysta
+  441142520, //  yeknowlove
+  1636770068, //  jackk
+  538106266, //  ekintuna
+  1317651295, //  tomkopera
 ];
 
 export const ALLOWED_TONFEST_EVENT_UUIDS = [

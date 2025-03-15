@@ -168,6 +168,10 @@ services:
       -c work_mem=32MB
       -c checkpoint_completion_target=0.9
       -c wal_buffers=16MB
+      -c log_min_duration_statement=2000    
+      -c log_destination=stderr             
+      -c logging_collector=off            
+      -c log_statement=none
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -183,6 +187,7 @@ services:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-postgres"
         fluentd-async-connect: "true"
+
 
   redis:
     image: redis:7.4.1-bookworm
