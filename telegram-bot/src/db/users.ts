@@ -165,3 +165,30 @@ export async function getAdminOrganizerUsers() {
     client.release();
   }
 }
+
+
+/**
+ * Finds a user by their Telegram user_id in the 'users' table.
+ * Returns the row object if found; otherwise, null.
+ */
+export async function findUserById(userId: number) {
+  const client = await pool.connect();
+  try {
+    const res = await client.query(
+      `
+          SELECT user_id, username, first_name
+          FROM users
+          WHERE user_id = $1
+      `,
+      [userId],
+    );
+
+    if (res.rows.length === 0) {
+      return null;
+    }
+    return res.rows[0];
+  } finally {
+    client.release();
+  }
+}
+

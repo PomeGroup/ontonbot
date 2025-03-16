@@ -44,42 +44,6 @@ export async function getEvent(uuid: string) {
   }
 }
 
-/** Fetch all upcoming paid events (admin or user-owned) — or tailor the logic as needed */
-export async function getUpcomingPaidEvents(
-  userId?: number,    // optional, used if the user is not admin
-  isAdmin?: boolean,
-): Promise<EventRow[]> {
-  const client = await pool.connect();
-  try {
-    let sql = `
-        SELECT event_uuid, event_id, title, end_date, owner
-        FROM events
-        WHERE end_date > EXTRACT(EPOCH FROM now())
-          AND has_payment = true
-        ORDER BY end_date ASC
-        LIMIT 50
-    `;
-    let params: any[] = [];
-
-    if (!isAdmin && userId) {
-      sql = `
-          SELECT event_uuid, event_id, title, end_date, owner
-          FROM events
-          WHERE end_date > EXTRACT(EPOCH FROM now())
-            AND has_payment = true
-            AND owner = $1
-          ORDER BY end_date ASC
-          LIMIT 50
-      `;
-      params = [userId];
-    }
-
-    const res = await client.query(sql, params);
-    return res.rows;
-  } finally {
-    client.release();
-  }
-}
 
 /** For admin: fetch all upcoming "online" + "registration" events */
 export async function getUpcomingOnlineRegEventsForAdmin(): Promise<EventRow[]> {
@@ -167,6 +131,40 @@ export async function hideCmd(event_uuid: string, hide: boolean): Promise<void> 
     // Invalidate cache
     await redisTools.deleteCache(`${redisTools.cacheKeys.event_uuid}${event_uuid}`);
     await redisTools.deleteCache(`${redisTools.cacheKeys.event_id}${eventId}`);
+  } finally {
+    client.release();
+  }
+}
+
+export async function getUpcomingPaidEvents(isAdmin: boolean, userId: string) {
+  let sqlQuery = `
+      SELECT event_uuid, event_id, title, end_date
+      FROM events
+      WHERE end_date > EXTRACT(EPOCH FROM now())
+        AND has_payment = true
+      ORDER BY end_date ASC
+      LIMIT 50
+  `;
+  let sqlParams: any[] = [];
+
+  // If not admin, add ownership constraint
+  if (!isAdmin) {
+    sqlQuery = `
+        SELECT event_uuid, event_id, title, end_date
+        FROM events
+        WHERE end_date > EXTRACT(EPOCH FROM now())
+          AND has_payment = true
+          AND owner = $1
+        ORDER BY end_date ASC
+        LIMIT 50
+    `;
+    sqlParams = [userId];
+  }
+
+  const client = await pool.connect();
+  try {
+    const res = await client.query(sqlQuery, sqlParams);
+    return res.rows;
   } finally {
     client.release();
   }

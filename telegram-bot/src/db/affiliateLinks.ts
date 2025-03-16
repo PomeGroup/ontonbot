@@ -99,3 +99,27 @@ export async function createAffiliateLinks(params: {
 
   return { links, groupTitle: groupTitle || "" };
 }
+
+
+export async function getAffiliateLinksByItemId(itemId: number | string) {
+  const client = await pool.connect();
+  try {
+    const sql = `
+        SELECT id,
+               link_hash,
+               title,
+               group_title,
+               "total_clicks"   AS clicks,
+               "total_purchase" AS purchases,
+               "item_type"      AS itemType,
+               "Item_id"        AS itemId
+        FROM affiliate_links
+        WHERE "Item_id" = $1
+        ORDER BY id ASC
+    `;
+    const { rows } = await client.query(sql, [itemId]);
+    return rows;
+  } finally {
+    client.release();
+  }
+}

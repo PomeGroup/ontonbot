@@ -28,6 +28,7 @@ import { MyContext } from "./types/MyContext";
 import { checkRateLimit } from "./utils/checkRateLimit";
 import { logger } from "./utils/logger";
 import { handleShareTournament } from "./handlers/handleShareTournament";
+import { parse } from "csv-parse/sync";
 
 (async function bootstrap() {
   try {
@@ -105,7 +106,7 @@ import { handleShareTournament } from "./handlers/handleShareTournament";
     const app = express();
 
     app.use(bodyParser.json());
-    app.use(fileUpload());
+    app.use(fileUpload() as unknown as express.RequestHandler);
     app.use((req, _, next) => {
       // @ts-expect-error fix express.d.ts
       req.bot = bot;

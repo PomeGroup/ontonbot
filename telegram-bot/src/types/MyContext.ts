@@ -24,6 +24,11 @@ export interface SessionData {
     | "askCountOfLinks"
     | "askTitleOfLinks"
     | "generatingLinks"
+    | "chooseLinkCreationMode"
+    | "waitingForCsvUpload"
+    | "reviewCsvRows"
+    | "askMessageToAffiliatorsCsv"
+    | "askTitleOfLinksCsv"
     | undefined;
   affiliateLinkType?: "EVENT" | "HOME";
   affiliateEventUUID?: string;
@@ -32,6 +37,8 @@ export interface SessionData {
   affiliateLinkCount?: number;
   affiliateLinkTitle?: string;
   existingLinksCount?: number;
+  csvCreatedLinks?: { affiliator_user_id: string; link_hash: string }[];
+  csvRows?: any[];
 
   /* ------------------ Group Linking Flow ------------------ */
   groupStep?:

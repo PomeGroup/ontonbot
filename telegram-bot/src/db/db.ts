@@ -19,10 +19,11 @@ export {
   changeRole,
   updateUserProfile,
   getAdminOrganizerUsers,
+  findUserById,
 } from "./users";
 
 // Re-export affiliate links
-export { createAffiliateLinks } from "./affiliateLinks";
+export { createAffiliateLinks, getAffiliateLinksByItemId } from "./affiliateLinks";
 
 // Re-export visitors
 export { addTelegramBotVisitor } from "./visitors";
