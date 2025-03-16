@@ -1,7 +1,7 @@
 import { Context } from "grammy";
 import { getEvent, isUserAdmin } from "../db/db";
 import { editOrSend } from "../utils/utils";
-import { setBanner } from "../db/cmd.db";
+import { setBanner } from "../db/db";
 import { deleteCache } from "../lib/redisTools";
 
 export const bannerHandler = async (
