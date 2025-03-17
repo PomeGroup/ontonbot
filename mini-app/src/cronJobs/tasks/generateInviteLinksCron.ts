@@ -100,7 +100,7 @@ export const generateInviteLinksCron = async () => {
             await sleep(200); // Sleep for 1 second to avoid rate limits
           }
         } catch (err) {
-          console.error(err);
+          logger.error(err);
           logger.error(`Failed to create link for user_id=${reg.user_id} event=${eventUuid}:`, err);
         }
       }

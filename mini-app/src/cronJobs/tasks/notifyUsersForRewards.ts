@@ -25,7 +25,7 @@ async function sendRewardNotification(createdReward: RewardType) {
     await telegramService.sendRewardNotification(createdReward, visitor, event, rewardDbData);
     await rewardDB.updateRewardStatus(createdReward.id, "notified");
   } catch (error) {
-    console.error("Error sending reward notification:", error);
+    logger.error("Error sending reward notification:", error);
     logger.error("BOT_API_ERROR", getErrorMessages(error));
     await rewardDB.handleRewardError(createdReward, error);
   }

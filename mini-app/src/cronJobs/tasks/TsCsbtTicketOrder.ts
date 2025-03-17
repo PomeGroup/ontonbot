@@ -10,6 +10,7 @@ import { selectUserById } from "@/server/db/users";
 import { sendLogNotification } from "@/lib/tgBot";
 import { callTonfestForOnOntonPayment } from "@/cronJobs/helper/callTonfestForOnOntonPayment";
 import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { callPridipieForOnOntonPayment } from "@/cronJobs/helper/callPridipieForOnOntonPayment";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -81,6 +82,7 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
           logger.log(`tscsbt_user_approved_${ordr.user_id}`);
         }
         await callTonfestForOnOntonPayment(ordr, event_uuid!!);
+        await callPridipieForOnOntonPayment(ordr, event_uuid!!);
         await CsbtTicket(event_uuid!, ordr.user_id!);
       } catch (error) {
         logger.log("create_tscsbt_ticket_failed", error);
