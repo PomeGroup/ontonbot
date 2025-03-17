@@ -1,16 +1,14 @@
 "use client";
 
-import { Block } from "konsta/react";
-import Typography from "../../components/Typography";
-import BottomNavigation from "../../components/BottomNavigation";
-import Link from "next/link";
-import { Channel } from "@/types";
-import usePaginatedChannels from "./usePaginatedChannels";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
-import { ForwardedRef, forwardRef, Fragment, useCallback, useRef } from "react";
-import { noop } from "lodash";
-import PromotedChannels from "./PromotedChannels";
 import LoadableImage from "@/components/LoadableImage";
+import { Channel } from "@/types";
+import { noop } from "lodash";
+import Link from "next/link";
+import { ForwardedRef, forwardRef, Fragment, useCallback, useRef } from "react";
+import Typography from "../../../components/Typography";
+import PromotedChannels from "./PromotedChannels";
+import usePaginatedChannels from "./usePaginatedChannels";
 
 export default function ChannelsPage() {
   const { data, isFetchingNextPage, fetchNextPage, hasNextPage, status } = usePaginatedChannels();
@@ -34,10 +32,7 @@ export default function ChannelsPage() {
   if (status === "error") return <p>Error fetching data</p>;
 
   return (
-    <Block
-      margin="0"
-      className="bg-[rgba(239,239,244,1)] pt-4 pb-16 min-h-screen"
-    >
+    <>
       <PromotedChannels />
       <div className="flex flex-wrap gap-4 mt-4">
         {data?.pages.map((page, pageIndex) => (
@@ -55,9 +50,7 @@ export default function ChannelsPage() {
           </Fragment>
         ))}
       </div>
-
-      <BottomNavigation active="Channels" />
-    </Block>
+    </>
   );
 }
 

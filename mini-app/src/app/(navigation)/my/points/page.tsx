@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useUserStore } from "@/context/store/user.store";
-import BottomNavigation from "@/components/BottomNavigation";
-import TotalPointsBox from "@/app/my/points/TotalPointsBox";
-import EventPointsGroup from "./EventPointsGroup";
-import EventPointsCard from "./EventPointsCard";
 import { trpc } from "@/app/_trpc/client";
-import ChevronDownIconAccord from "@/app/my/points/ChevronDownIcon";
+import { useUserStore } from "@/context/store/user.store";
+import { useState } from "react";
+import ChevronDownIconAccord from "./ChevronDownIcon";
+import EventPointsCard from "./EventPointsCard";
+import EventPointsGroup from "./EventPointsGroup";
+import TotalPointsBox from "./TotalPointsBox";
 
 export default function MyPointsPage() {
   const { user } = useUserStore();
@@ -37,14 +36,12 @@ export default function MyPointsPage() {
   }
 
   return (
-    <div className="bg-[#EFEFF4] min-h-screen overflow-y-auto mb-[40px]">
+    <div className="flex flex-col gap-4">
       {/* 1) Display the total points at the top */}
-      <div className="p-4">
-        <TotalPointsBox totalPoints={totalPoints ?? 0} />
-      </div>
+      <TotalPointsBox totalPoints={totalPoints ?? 0} />
 
       {/* 2) The accordion container */}
-      <div className="mx-4 bg-white rounded-md p-4">
+      <div className="bg-white rounded-md p-4">
         {/* Heading row with a toggle button on the right */}
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-semibold">Event Participation</h1>
@@ -91,9 +88,6 @@ export default function MyPointsPage() {
           </EventPointsGroup>
         </div>
       </div>
-
-      {/* 3) Bottom navigation */}
-      <BottomNavigation active="My ONTON" />
     </div>
   );
 }

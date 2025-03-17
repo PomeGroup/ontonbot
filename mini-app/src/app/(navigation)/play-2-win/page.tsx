@@ -4,7 +4,12 @@ import "swiper/css";
 import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-import BottomNavigation from "@/components/BottomNavigation";
+import CustomCard from "@/app/_components/atoms/cards/CustomCard";
+import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
+import CustomButton from "@/app/_components/Button/CustomButton";
+import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
+import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
+import { trpc } from "@/app/_trpc/client";
 import Divider from "@/components/Divider";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
@@ -12,19 +17,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { formatSortTournamentSelectOption, SortOptions, tournamentsListSortOptions } from "@/server/utils/tournaments.utils";
 import { cn } from "@/utils";
 import { Skeleton } from "@mui/material";
-import { Page } from "konsta/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { BsFilterLeft } from "react-icons/bs";
 import { FiCheck } from "react-icons/fi";
 import { HiOutlineArrowNarrowUp } from "react-icons/hi";
-import CustomCard from "../_components/atoms/cards/CustomCard";
-import { FloatingBadge } from "../_components/Badge/FloatingBadge";
-import CustomButton from "../_components/Button/CustomButton";
-import DataStatus from "../_components/molecules/alerts/DataStatus";
-import { TournamentTimeRemaining } from "../_components/Tournament/TournamentRemainingTime";
-import { trpc } from "../_trpc/client";
 
 interface TournamentCardProps {
   tournamentId: string;
@@ -360,13 +358,10 @@ const DiscoverTournaments: React.FC = () => {
  */
 const PlayToWin: React.FC = () => {
   return (
-    <Page>
-      <div className="p-4 flex flex-col gap-2 mb-12">
-        <Play2WinFeatured />
-        <DiscoverTournaments />
-      </div>
-      <BottomNavigation active="Play2Win" />
-    </Page>
+    <>
+      <Play2WinFeatured />
+      <DiscoverTournaments />
+    </>
   );
 };
 

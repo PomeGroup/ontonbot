@@ -1,13 +1,13 @@
-import { Block, Button, Card, Page, Popup, Sheet } from "konsta/react";
-import { useCallback, useState } from "react";
-import Typography from "../../components/Typography";
 import OntonDialog from "@/components/OntonDialog";
+import Typography from "@/components/Typography";
+import useDisableScrollbar from "@/hooks/ui/useDisableScrollbar";
+import { cn } from "@/utils";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { Block, Button, Card, Page, Popup, Sheet } from "konsta/react";
 import Image from "next/image";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import greenCheckIcon from "./green-check.svg";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { cn } from "@/utils";
-import useDisableScrollbar from "@/hooks/ui/useDisableScrollbar";
 import usePollPromoteToOrganizer from "./usePollPromoteToOrganizer";
 
 export default function PaymentCard({ visible }: { visible: boolean }) {
@@ -17,24 +17,27 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
   const onFail = useCallback(() => {
     toast.error("Transaction was not successfull. Please try again");
     setConfirmPayDialogOpen(false);
-  }, [])
+  }, []);
 
-  const onPollFinished = useCallback((success: boolean) => {
-    setConfirmPayDialogOpen(false);
-    setTimeout(() => {
-      if (success) {
-        setCongratsDrawerOpen(true);
-      } else {
-        onFail()
-      }
-    }, 300);
-  }, [onFail])
+  const onPollFinished = useCallback(
+    (success: boolean) => {
+      setConfirmPayDialogOpen(false);
+      setTimeout(() => {
+        if (success) {
+          setCongratsDrawerOpen(true);
+        } else {
+          onFail();
+        }
+      }, 300);
+    },
+    [onFail]
+  );
 
-  const { state, onPay } = usePollPromoteToOrganizer(onPollFinished)
+  const { state, onPay } = usePollPromoteToOrganizer(onPollFinished);
 
   const handlePay = async () => {
     setConfirmPayDialogOpen(false);
-    onPay()
+    onPay();
   };
 
   return (
@@ -63,10 +66,10 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
         open={congratsDrawerOpen}
         onClose={() => {
           setCongratsDrawerOpen(false);
-          window.location.reload()
+          window.location.reload();
         }}
       />
-      <LoadingPopup open={state === 'processing'} />
+      <LoadingPopup open={state === "processing"} />
     </>
   );
 }

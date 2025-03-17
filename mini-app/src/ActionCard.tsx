@@ -1,8 +1,9 @@
 import { Card } from "konsta/react";
-import { MouseEventHandler } from "react";
 import { ArrowRight } from "lucide-react";
-import Typography from "./components/Typography";
 import Image from "next/image";
+import { MouseEventHandler } from "react";
+import Typography from "./components/Typography";
+import { cn } from "./utils";
 
 interface Props {
   onClick: MouseEventHandler<HTMLElement>;
@@ -20,7 +21,7 @@ export default function ActionCard({ onClick, iconSrc, title, subtitle, footerTe
   return (
     <Card
       onClick={onClick}
-      className={onClick !== undefined ? "cursor-pointer" : ""}
+      className={cn("!mx-0 w-full ", onClick !== undefined ? "cursor-pointer" : "")}
     >
       <div className="flex gap-3 align-stretch">
         <div className="bg-[#efeff4] p-4 rounded-[10px]">
@@ -33,12 +34,17 @@ export default function ActionCard({ onClick, iconSrc, title, subtitle, footerTe
         </div>
         <div className="flex flex-col flex-1 gap-1">
           <Typography
-            className='font-semibold'
+            className="font-semibold"
             variant="title3"
           >
             {title}
           </Typography>
-          <Typography variant="body" className='font-light'>{subtitle}</Typography>
+          <Typography
+            variant="body"
+            className="font-light"
+          >
+            {subtitle}
+          </Typography>
           <Typography
             variant="caption1"
             className="mt-auto flex gap-4"
