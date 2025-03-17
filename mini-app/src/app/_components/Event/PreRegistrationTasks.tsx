@@ -1,13 +1,13 @@
-import React, { FC, ReactNode, useState } from "react";
-import Task from "../Task";
-import CustomButton from "../Button/CustomButton";
 import { trpc } from "@/app/_trpc/client";
 import { TG_SUPPORT_GROUP } from "@/constants";
+import { useConfig } from "@/context/ConfigContext";
 import useWebApp from "@/hooks/useWebApp";
 import { sleep } from "@/utils";
+import { FC, ReactNode, useState } from "react";
+import CustomButton from "../Button/CustomButton";
 import CustomSheet from "../Sheet/CustomSheet";
+import Task from "../Task";
 import MainButton from "../atoms/buttons/web-app/MainButton";
-import { useConfig } from "@/context/ConfigContext";
 import { useEventData } from "./eventPageContext";
 
 const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
@@ -20,14 +20,9 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
     refetchOnWindowFocus: true,
   });
 
+  // Removed localStorage functionality; default to "not_done"
   const [isJoinedX, setJoinedX] = useState<"done" | "not_done" | "checking">(
-    localStorage.getItem("n-j-x")
-      ? "not_done"
-      : joinTaskStatus.isSuccess
-        ? joinTaskStatus.data?.all_done
-          ? "done"
-          : "not_done"
-        : "done"
+    joinTaskStatus.data?.ch && joinTaskStatus.data?.gp ? "done" : "not_done"
   );
 
   const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data?.gp && isJoinedX === "done";
@@ -52,7 +47,6 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
             text="Complete tasks to Attend"
             onClick={() => {
               setIsTasksOpen(true);
-              localStorage.setItem("n-j-x", "88a0bd0a-39fb-4dd0-ad5e-cfb73a2ac54a");
             }}
           />
         )}
@@ -82,16 +76,17 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
               status={
                 joinTaskStatus.isFetching || isJoinedX === "checking"
                   ? "checking"
-                  : isJoinedX === "done"
+                  : joinTaskStatus.data?.ch && joinTaskStatus.data?.gp
                     ? "done"
-                    : "not_done"
+                    : isJoinedX === "done"
+                      ? "done"
+                      : "not_done"
               }
               onClick={async () => {
                 setJoinedX("checking");
                 webApp?.openLink("https://x.com/ontonbot");
                 await sleep(30000);
                 setJoinedX("done");
-                localStorage.removeItem("n-j-x");
               }}
             />
           </div>
