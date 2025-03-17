@@ -1,6 +1,6 @@
 import { Context } from "grammy";
 import { isUserAdmin } from "../db/db";
-import { hideCmd } from "../db/cmd.db";
+import { hideCmd } from "../db/db";
 import { sendTopicMessage } from "../utils/logs-bot";
 import { editOrSend } from "../utils/utils";
 import { startKeyboard } from "../markups";

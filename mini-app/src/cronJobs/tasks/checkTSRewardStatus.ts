@@ -7,7 +7,7 @@ import eventPaymentDB, { fetchPaymentInfoForCronjob } from "@/server/db/eventPay
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 
 const EVENTS_BATCH_SIZE = 50;
-const REWARDS_BATCH_SIZE = 30;
+const REWARDS_BATCH_SIZE = 5000;
 const MAX_CONCURRENT_API_CALLS = 10;
 
 /**
@@ -49,7 +49,7 @@ export const syncTonSocietyStatusLargeScale = async (startDateCutoff: number = 0
         let rewardOffset = 0;
         while (true) {
           const rewardChunk = await rewardDB.fetchNotClaimedRewardsForEvent(event_uuid, REWARDS_BATCH_SIZE, rewardOffset);
-          logger.log(`salam ${event_id}`);
+
           if (rewardChunk.length === 0) {
             logger.log(`[Event ${event_id}] No more rewards to process.`);
             break;
