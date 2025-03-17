@@ -42,7 +42,7 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
 
   return (
     <>
-      <Card className={cn("-mt-8 mb-12 hidden", visible && "!block")}>
+      <Card className={cn("mx-0 w-full hidden", visible && "!block")}>
         <Typography
           bold
           variant="headline"
