@@ -80,8 +80,16 @@ const Event = async ({ params, searchParams }: EventParams) => {
       />
     );
   }
+  const isNotPublished = userId !== eventData.owner && user.role !== "admin" && eventData.hidden;
 
-  if (eventData.hidden) {
+  console.log(
+    "[Event Page] isPublished value:",
+    isNotPublished,
+    userId !== eventData.owner,
+    user.role !== "admin",
+    eventData.hidden
+  );
+  if (isNotPublished) {
     return (
       <QueryState
         isError
@@ -125,6 +133,7 @@ const Event = async ({ params, searchParams }: EventParams) => {
 
   return (
     <PageTma variant={"withSections"}>
+      {eventData.hidden && <Section className="text-center my-4 text-red-400">Event is not published yet</Section>}
       <Section
         variant={"bottomRounded"}
         className={"pb-2"}
