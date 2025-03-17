@@ -1,8 +1,9 @@
 "use client";
 import ActionCard from "@/ActionCard";
+import CustomButton from "@/app/_components/Button/CustomButton";
 import CheckUserInList from "@/app/_components/CheckUserInList";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
-import BottomNavigation from "@/components/BottomNavigation";
+import { trpc } from "@/app/_trpc/client";
 import LoadableImage from "@/components/LoadableImage";
 import OntonDialog from "@/components/OntonDialog";
 import Typography from "@/components/Typography";
@@ -21,7 +22,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { trpc } from "../_trpc/client";
 import PaymentCard from "./PaymentCard";
 import calendarStarIcon from "./calendar-star.svg";
 
@@ -35,7 +35,7 @@ export default function ProfilePage() {
   if (!user || loadingTotalPoints) return null;
 
   return (
-    <div className="bg-[#EFEFF4] py-4 min-h-screen mb-[calc(-1*var(--tg-safe-area-inset-bottom))]">
+    <div>
       {paid ? <InlineChannelCard data={user} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <ActionCard
         onClick={() => router.push("/my/participated")}
@@ -82,17 +82,15 @@ export default function ProfilePage() {
       <PaymentCard visible={!paid && hasWallet} />
 
       {paid && (
-        <Button
-          className="-my-8 py-6 mb-12 max-w-[calc(100%-2rem)] mx-auto rounded-[10px]"
+        <CustomButton
           onClick={() => {
             setSection("event_setup_form_general_step");
             router.push("/events/create");
           }}
         >
           Create New Event
-        </Button>
+        </CustomButton>
       )}
-      <BottomNavigation active="My ONTON" />
     </div>
   );
 }
@@ -103,7 +101,7 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
   if (!data) return null;
   return (
     <Card
-      className="mt-0 cursor-pointer"
+      className="!m-0 w-full cursor-pointer"
       onClick={() => {
         router.push(`/my/edit`);
       }}
@@ -134,7 +132,7 @@ function InlineChannelCard({ data }: { data: Channel | undefined }) {
 
 function OrganizerProgress({ step }: { step: 1 | 2 }) {
   return (
-    <Card className="border border-[#007AFF] mt-0">
+    <Card className="border border-[#007AFF] w-full !m-0">
       <Typography
         bold
         variant="headline"
@@ -164,7 +162,7 @@ function ConnectWalletCard() {
 
   const hasWallet = !!useTonAddress();
   return (
-    <Card className="mb-12">
+    <Card className="w-full !mx-0">
       <Typography
         bold
         variant="headline"

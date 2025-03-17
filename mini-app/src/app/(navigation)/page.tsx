@@ -1,24 +1,20 @@
 "use client";
-import React from "react";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import { Pagination } from "swiper/modules";
 // import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { useConfig } from "@/context/ConfigContext";
-import { Block } from "konsta/react";
-import { trpc } from "./_trpc/client";
 // import { useTheme } from "next-themes";
+import "@/app/page.css";
 import "swiper/css";
-import "./page.css";
 
-import BottomNavigation from "../components/BottomNavigation";
 import EventBanner from "@/components/EventBanner";
 import { OntonEvent } from "@/types";
-import { Swiper, SwiperSlide } from "swiper/react";
 import { ChevronRightIcon } from "lucide-react";
-import Typography from "@/components/Typography";
 import { useRouter } from "next/navigation";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { trpc } from "../_trpc/client";
 
 // const currentDateTime = Math.floor(Date.now() / 1000);
 
@@ -34,10 +30,7 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   return (
-    <Block
-      margin="0"
-      className="bg-[#EFEFF4] pb-16 min-h-screen"
-    >
+    <>
       <div className="flex flex-col pt-3">
         <div className="w-full pb-3">
           <SearchBar />
@@ -51,8 +44,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <BottomNavigation active="Events" />
-    </Block>
+    </>
   );
 }
 

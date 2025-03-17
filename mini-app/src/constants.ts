@@ -712,6 +712,7 @@ export const ALLOWED_USER_TO_TEST = [
   1636770068, //  jackk
   538106266, //  ekintuna
   1317651295, //  tomkopera
+  361016529, //  dshumov
 ];
 
 export const ALLOWED_TONFEST_EVENT_UUIDS = [
