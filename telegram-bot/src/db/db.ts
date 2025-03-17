@@ -38,3 +38,5 @@ export { getEventTickets, getApprovedRegistrants } from "./eventRegistrants";
 export { processCsvLinesForSbtDist } from "./rewards";
 
 export { getGames, GameRowType } from "./games";
+
+export { createCollection, getCollectionsByHubId, updateCollection } from "./sbtRewardCollections";

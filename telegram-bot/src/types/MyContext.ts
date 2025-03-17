@@ -1,4 +1,6 @@
 import { Context, SessionFlavor } from "grammy";
+import { SbtRewardCollection } from "./SbtRewardCollection";
+import { HubType } from "src/composers/collectionComposer";
 
 export interface SessionData {
   /* ------------------ SBT Distribution Flow ------------------ */
@@ -79,6 +81,27 @@ export interface SessionData {
   broadcastEventId?: string;
   broadcastMessage?: string;
 
+  /* ------------------ SBT Collection Flow ------------------ */
+  collectionStep?:
+    | "CHOOSE_HUB"
+    | "CHOOSE_ACTION"
+    | "NAVIGATE_COLLECTIONS"
+    | "UPLOAD_IMAGE"
+    | "UPLOAD_VIDEO"
+    | "DONE";
+
+  collectionData?: {
+    hubId?: number;
+    hubName?: string;
+    collections?: SbtRewardCollection[]; // We'll define this interface below
+    currentIndex?: number;
+    selectedCollectionId?: number;
+    imageBuffer?: Buffer;
+    videoBuffer?: Buffer;
+    navigationMessageId?: number;
+    imageLink?: string;
+    hubs?: HubType[];
+  };
 }
 
 export type MyContext = Context & SessionFlavor<SessionData>;
