@@ -4,27 +4,26 @@ import "swiper/css";
 import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-import BottomNavigation from "@/components/BottomNavigation";
+import CustomCard from "@/app/_components/atoms/cards/CustomCard";
+import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
+import CustomButton from "@/app/_components/Button/CustomButton";
+import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
+import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
+import { trpc } from "@/app/_trpc/client";
 import Divider from "@/components/Divider";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import useWebApp from "@/hooks/useWebApp";
 import { formatSortTournamentSelectOption, SortOptions, tournamentsListSortOptions } from "@/server/utils/tournaments.utils";
 import { cn } from "@/utils";
 import { Skeleton } from "@mui/material";
-import { Page } from "konsta/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { BsFilterLeft } from "react-icons/bs";
 import { FiCheck } from "react-icons/fi";
 import { HiOutlineArrowNarrowUp } from "react-icons/hi";
-import CustomCard from "../_components/atoms/cards/CustomCard";
-import { FloatingBadge } from "../_components/Badge/FloatingBadge";
-import CustomButton from "../_components/Button/CustomButton";
-import DataStatus from "../_components/molecules/alerts/DataStatus";
-import { TournamentTimeRemaining } from "../_components/Tournament/TournamentRemainingTime";
-import { trpc } from "../_trpc/client";
 
 interface TournamentCardProps {
   tournamentId: string;
@@ -121,7 +120,7 @@ const Play2WinFeatured = () => {
   );
 };
 
-const FilterTournaments: React.FC<{
+const TournamentFilter: React.FC<{
   selected: SortOptions;
   setSelected: (s: SortOptions) => void;
   selectedGame: number;
@@ -162,10 +161,12 @@ const FilterTournaments: React.FC<{
               <DropdownMenuItem
                 key={o}
                 onClick={() => setSelected(o)}
-                className={cn(selected === o && "text-primary")}
+                className={cn("flex justify-between items-center", selected === o && "text-primary")}
               >
-                <HiOutlineArrowNarrowUp />
-                {formatSortTournamentSelectOption(o)}
+                <span className="flex gap-1 items-center">
+                  <HiOutlineArrowNarrowUp />
+                  {formatSortTournamentSelectOption(o)}
+                </span>
                 <FiCheck className={cn(selected !== o && "opacity-0")} />
               </DropdownMenuItem>
             );
@@ -179,7 +180,6 @@ const FilterTournaments: React.FC<{
         >
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
-              <HiOutlineArrowNarrowUp />
               <span className="truncate">{gameIds.data?.find((g) => g.id === selectedGame)?.name}</span>
               <BsFilterLeft size={18} />
             </button>
@@ -203,10 +203,9 @@ const FilterTournaments: React.FC<{
               <DropdownMenuItem
                 key={game.id}
                 onClick={() => setSelectedGame(game.id)}
-                className={cn(selectedGame === game.id && "text-primary")}
+                className={cn("flex justify-between items-center", selectedGame === game.id && "text-primary")}
               >
-                <HiOutlineArrowNarrowUp />
-                {game.name}
+                <span>{game.name}</span>
                 <FiCheck className={cn(selectedGame !== game.id && "opacity-0")} />
               </DropdownMenuItem>
             );
@@ -221,6 +220,7 @@ const DiscoverTournaments: React.FC = () => {
   const router = useRouter();
   const [sortSelected, setSortSelected] = React.useState<SortOptions>("timeRemaining");
   const [selectedGame, setSelectedGame] = useState(-1);
+  const webApp = useWebApp();
 
   const tournomants = trpc.tournaments.getTournaments.useInfiniteQuery(
     {
@@ -242,7 +242,7 @@ const DiscoverTournaments: React.FC = () => {
       {/* 
       Sort dropdown
       */}
-      <FilterTournaments
+      <TournamentFilter
         selected={sortSelected}
         setSelected={(o) => {
           setSortSelected(o);
@@ -331,7 +331,8 @@ const DiscoverTournaments: React.FC = () => {
                             variant="outline"
                             size="md"
                             onClick={() => {
-                              router.push(`/play-2-win/${tournament.id}`);
+                              tournament.tournamentLink && webApp?.openTelegramLink(tournament.tournamentLink);
+                              webApp?.close();
                             }}
                           >
                             Play
@@ -360,13 +361,10 @@ const DiscoverTournaments: React.FC = () => {
  */
 const PlayToWin: React.FC = () => {
   return (
-    <Page>
-      <div className="p-4 flex flex-col gap-2 mb-12">
-        <Play2WinFeatured />
-        <DiscoverTournaments />
-      </div>
-      <BottomNavigation active="Play2Win" />
-    </Page>
+    <>
+      <Play2WinFeatured />
+      <DiscoverTournaments />
+    </>
   );
 };
 

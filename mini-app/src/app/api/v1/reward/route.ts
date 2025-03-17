@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     } catch (error) {
       if (error instanceof TRPCError) return handleTrpcError(error);
 
-      console.log(eventData.activity_id, {
+      logger.log(eventData.activity_id, {
         telegram_user_id: body.data.reward_user_id,
         attributes: eventData?.society_hub
           ? [

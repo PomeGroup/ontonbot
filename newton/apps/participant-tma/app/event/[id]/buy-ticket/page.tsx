@@ -1,14 +1,14 @@
 "use client";
-import Image from "next/image";
 import { Card, CardContent } from "@ui/base/card";
 import { Section } from "@ui/base/section";
 import ButtonTma from "@ui/components/Button";
 import PageTma from "@ui/components/Page";
+import Image from "next/image";
 import { FaMinus, FaPlus } from "react-icons/fa";
 
+import QueryState from "@ui/components/blocks/QueryState";
 import BuyTicketForm from "~/components/event/buy-ticket/BuyTicketForm";
 import { useEventData } from "~/hooks/queries/useEventData";
-import QueryState from "@ui/components/blocks/QueryState";
 
 type BuyTicketProps = {
   params: {
@@ -28,6 +28,10 @@ const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
 
   if (isError || !event) {
     return <QueryState isError={isError} />;
+  }
+
+  if (event.hidden) {
+    return <QueryState description={"Event is not published yet"} />;
   }
 
   if (!event.eventTicket || !event.ticketToCheckIn) {

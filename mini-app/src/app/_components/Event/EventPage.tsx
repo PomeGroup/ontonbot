@@ -1,13 +1,13 @@
 "use client";
 
-import EventPageLoadingSkeleton from "../../events/[hash]/loading";
-import { useEventData } from "./eventPageContext";
-import { EventDataProvider } from "./EventDataProvider";
-import { EventSections } from "./EventPageSections";
 import { Page } from "konsta/react";
+import EventPageLoadingSkeleton from "../../events/[hash]/loading";
+import { EventDataProvider } from "./EventDataProvider";
+import { useEventData } from "./eventPageContext";
+import { EventSections } from "./EventPageSections";
 
-import { useEffect } from "react";
 import { useTheme } from "next-themes";
+import { useEffect } from "react";
 
 const EventDataQueryState = () => {
   const { eventData, initData } = useEventData();

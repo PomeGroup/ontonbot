@@ -57,48 +57,53 @@ const Leaderboard: React.FC<LeaderboardProps> = ({
 
           {/* Top 3 Participants */}
           <div className="flex justify-between items-end mb-6 bg-[#C8C7CB33] rounded-[30px] p-4">
-            {topThreeParticipants.map((participant, index) => {
-              const isWinner = index === 1; // Middle position (index 1) is the winner
-
-              return (
-                <div
-                  key={participant.id}
-                  className="flex flex-col items-center isolate relative"
-                >
-                  {isWinner && <div className="-top-4 z-10 absolute -rotate-[35deg] left-1 text-2xl">👑</div>}
-
+            {(() => {
+              const reorderedTopThree =
+                topThreeParticipants.length === 3
+                  ? [topThreeParticipants[1], topThreeParticipants[0], topThreeParticipants[2]]
+                  : topThreeParticipants;
+              return reorderedTopThree.map((participant, index) => {
+                const isWinner = index === 1;
+                return (
                   <div
-                    className={cn(
-                      "relative rounded-full overflow-hidden border-2",
-                      isWinner ? "w-16 h-16 border-blue-500" : "w-14 h-14 border-transparent"
-                    )}
+                    key={participant.id}
+                    className="flex flex-col items-center isolate relative"
                   >
-                    <Image
-                      src={participant.avatar || "/template-images/user-placeholder.png"}
-                      alt={participant.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+                    {isWinner && <div className="-top-4 z-10 absolute -rotate-[35deg] left-1 text-2xl">👑</div>}
 
-                  <Typography variant="footnote">{participant.name}</Typography>
-
-                  <div
-                    className={cn(
-                      "mt-1 px-3 py-0.5 rounded-full text-center",
-                      isWinner ? "bg-blue-500 text-white" : "text-black"
-                    )}
-                  >
-                    <Typography
-                      variant="caption1"
-                      weight="medium"
+                    <div
+                      className={cn(
+                        "relative rounded-full overflow-hidden border-2",
+                        isWinner ? "w-16 h-16 border-blue-500" : "w-14 h-14 border-transparent"
+                      )}
                     >
-                      {participant.points} Points
-                    </Typography>
+                      <Image
+                        src={participant.avatar || "/template-images/user-placeholder.png"}
+                        alt={participant.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+
+                    <Typography variant="footnote">{participant.name}</Typography>
+
+                    <div
+                      className={cn(
+                        "mt-1 px-3 py-0.5 rounded-full text-center",
+                        isWinner ? "bg-blue-500 text-white" : "text-black"
+                      )}
+                    >
+                      <Typography
+                        variant="caption1"
+                        weight="medium"
+                      >
+                        {participant.points} Points
+                      </Typography>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
 
           {/* Remaining Participants */}
@@ -347,13 +352,27 @@ export default function LeaderboardPage() {
       </div>
     );
   }
+
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
       <Leaderboard
         bestScore={121}
         timesPlayed={2}
         position="1: 2"
-        participants={participants}
+        participants={
+          participants.length < 3
+            ? [
+                ...participants,
+                ...Array.from({ length: 3 - participants.length }, (_, i) => ({
+                  id: `placeholder-${i}`,
+                  name: "Placeholder",
+                  points: 0,
+                  avatar: null,
+                  position: participants.length + i + 1,
+                })),
+              ]
+            : participants
+        }
       />
 
       {/* Sentinel element for triggering fetchNextPage */}
