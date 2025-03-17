@@ -86,7 +86,7 @@ export const tournamentsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Tournament not found" });
       }
       const tournamentOrganizer = await usersDB.getOrganizerById(tournament.owner);
-      return { ...tournament, organizer: tournamentOrganizer.data! };
+      return { ...tournament, organizer: tournamentOrganizer.data };
     }),
   /**
    * Get a page of the leaderboard for a specific tournament.

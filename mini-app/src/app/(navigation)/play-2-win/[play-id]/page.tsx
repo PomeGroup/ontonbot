@@ -157,16 +157,20 @@ const OrganizerCard = React.memo(() => {
   const router = useRouter();
   const tournament = usePageTournament();
 
+  if (!tournament.data?.organizer) {
+    return;
+  }
+
   return (
     <CustomCard title="Organizer">
       <div
-        onClick={() => router.push(`/channels/${tournament.data?.organizer.user_id}/`)}
+        onClick={() => router.push(`/channels/${tournament.data?.organizer?.user_id}/`)}
         className="flex items-center justify-between cursor-pointer p-4 pt-0"
       >
         <div className="flex items-center gap-3">
           <LoadableImage
             alt="play 2 win game Organizer"
-            src={tournament.data?.organizer.photo_url || "/template-images/user-placeholder.png"}
+            src={tournament.data?.organizer?.photo_url || "/template-images/user-placeholder.png"}
             width={48}
             height={48}
           />
@@ -287,7 +291,9 @@ const Play2WinPage: React.FC<{
         <div className="flex flex-col gap-4 p-4">
           <TournamentHeader />
           <OrganizerCard />
-          <SupportButtons orgSupportTelegramUserName={tournament.data?.organizer.org_support_telegram_user_name} />
+          {tournament.data?.organizer?.org_support_telegram_user_name && (
+            <SupportButtons orgSupportTelegramUserName={tournament.data?.organizer.org_support_telegram_user_name} />
+          )}
           <MainButton
             text="Play"
             onClick={() => {
