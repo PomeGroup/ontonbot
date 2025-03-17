@@ -6,6 +6,7 @@ import { play2winFeatured } from "./play2winfetured";
 import { sbtdistComposer } from "./sbtdistComposer";
 import { tournamentComposer } from "./tournamentComposer";
 import { cancelComposer } from "./cancelComposer";
+import { collectionComposer } from "../composers/collectionComposer";
 
 // join other composers here
 export const mainComposer = new Composer();
@@ -16,4 +17,5 @@ mainComposer.use(affiliateComposer);
 mainComposer.use(groupComposer);
 mainComposer.use(tournamentComposer);
 mainComposer.use(play2winFeatured);
+mainComposer.use(collectionComposer);
 mainComposer.use(cancelComposer);

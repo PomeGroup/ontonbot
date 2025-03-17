@@ -6,6 +6,13 @@ ARG TELEGRAM_BOT_PORT
 ENV TELEGRAM_BOT_PORT=${TELEGRAM_BOT_PORT}
 RUN apk update
 RUN apk add nano
+RUN apk add --no-cache \
+    bash \
+    curl \
+    ca-certificates \
+    ffmpeg \
+    freetype \
+    ttf-dejavu
 # Install pnpm globally
 RUN npm install -g pnpm
 # Set the working directory

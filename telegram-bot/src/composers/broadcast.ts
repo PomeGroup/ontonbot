@@ -1,9 +1,10 @@
-import { Composer, InlineKeyboard, GrammyError } from "grammy";
+import { Composer, InlineKeyboard } from "grammy";
 import { MyContext } from "../types/MyContext";
 import { isUserAdmin, getEvent, getEventTickets } from "../db/db";
 import { logger } from "../utils/logger";
 import { isNewCommand } from "../helpers/isNewCommand";
 import { sleep } from "../utils/utils";
+import { sendMessageWithInfinityRetry } from "../helpers/sendMessageWithInfinityRetry";
 
 export const broadcastComposer = new Composer<MyContext>();
 
@@ -180,7 +181,7 @@ async function handleBroadcastConfirm(ctx: MyContext) {
   await ctx.reply(`📣 Broadcasting to ${tickets.length} users...`);
   for (let i = 0; i < tickets.length; i++) {
     const ticket = tickets[i];
-    await sendMessage(ticket.user_id, message, ctx);
+    await sendMessageWithInfinityRetry(ticket.user_id, message, ctx);
 
     // Optional: progress updates
     if (i > 0 && i % 100 === 0) {
@@ -196,24 +197,4 @@ async function handleBroadcastConfirm(ctx: MyContext) {
   ctx.session.broadcastStep = "done";
 }
 
-/* -------------------------------------------------------------------------- */
-/*                       Helper: Send Message With Retry                      */
 
-/* -------------------------------------------------------------------------- */
-
-async function sendMessage(user_id: number | string, msg: string, ctx: MyContext) {
-  try {
-    await ctx.api.sendMessage(user_id, msg);
-  } catch (error) {
-    if (error instanceof GrammyError) {
-      // Rate-limiting or blocked etc.
-      if (error.error_code === 429) {
-        // Wait and try again
-        await sleep(100);
-        return sendMessage(user_id, msg, ctx);
-      }
-      // If user blocked the bot or something, we can ignore or log
-      logger.error(`Failed to send broadcast to ${user_id}: ${error.description}`);
-    }
-  }
-}

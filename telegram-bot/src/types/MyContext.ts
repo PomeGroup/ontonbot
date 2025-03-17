@@ -1,4 +1,6 @@
 import { Context, SessionFlavor } from "grammy";
+import { SbtRewardCollection } from "./SbtRewardCollection";
+import { HubType } from "src/composers/collectionComposer";
 
 export interface SessionData {
   /* ------------------ SBT Distribution Flow ------------------ */
@@ -24,6 +26,11 @@ export interface SessionData {
     | "askCountOfLinks"
     | "askTitleOfLinks"
     | "generatingLinks"
+    | "chooseLinkCreationMode"
+    | "waitingForCsvUpload"
+    | "reviewCsvRows"
+    | "askMessageToAffiliatorsCsv"
+    | "askTitleOfLinksCsv"
     | undefined;
   affiliateLinkType?: "EVENT" | "HOME";
   affiliateEventUUID?: string;
@@ -32,6 +39,8 @@ export interface SessionData {
   affiliateLinkCount?: number;
   affiliateLinkTitle?: string;
   existingLinksCount?: number;
+  csvCreatedLinks?: { affiliator_user_id: string; link_hash: string }[];
+  csvRows?: any[];
 
   /* ------------------ Group Linking Flow ------------------ */
   groupStep?:
@@ -72,6 +81,27 @@ export interface SessionData {
   broadcastEventId?: string;
   broadcastMessage?: string;
 
+  /* ------------------ SBT Collection Flow ------------------ */
+  collectionStep?:
+    | "CHOOSE_HUB"
+    | "CHOOSE_ACTION"
+    | "NAVIGATE_COLLECTIONS"
+    | "UPLOAD_IMAGE"
+    | "UPLOAD_VIDEO"
+    | "DONE";
+
+  collectionData?: {
+    hubId?: number;
+    hubName?: string;
+    collections?: SbtRewardCollection[]; // We'll define this interface below
+    currentIndex?: number;
+    selectedCollectionId?: number;
+    imageBuffer?: Buffer;
+    videoBuffer?: Buffer;
+    navigationMessageId?: number;
+    imageLink?: string;
+    hubs?: HubType[];
+  };
 }
 
 export type MyContext = Context & SessionFlavor<SessionData>;
