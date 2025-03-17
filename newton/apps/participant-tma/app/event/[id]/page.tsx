@@ -1,12 +1,13 @@
-import { ReactNode } from "react";
-import { unstable_noStore as noStore } from "next/cache";
-import Image from "next/image";
 import { Section } from "@ui/base/section";
 import QueryState from "@ui/components/blocks/QueryState";
 import SectionCoverImage from "@ui/components/blocks/SectionCoverImage";
 import PageTma from "@ui/components/Page";
 import SeparatorTma from "@ui/components/Separator";
+import { unstable_noStore as noStore } from "next/cache";
+import Image from "next/image";
+import { ReactNode } from "react";
 
+import AddToCalendar from "~/components/event/AddToCalendar";
 import EventAttributes from "~/components/event/EventAttributes";
 import EventContent from "~/components/event/EventContent";
 import EventHeader from "~/components/event/EventHeader";
@@ -17,7 +18,6 @@ import WebsiteLink from "~/components/event/WebsiteLink";
 import { getEventDataOnly } from "~/services/event.services.ssr";
 import { getUser } from "~/services/user.services";
 import { getAuthenticatedUser } from "~/utils/getAuthenticatedUser";
-import AddToCalendar from "~/components/event/AddToCalendar";
 import OrganizerSection from "./OrganizerSection";
 import SBTCollectionSection from "./SbtCollectionSection";
 
@@ -77,6 +77,15 @@ const Event = async ({ params, searchParams }: EventParams) => {
       <QueryState
         isError
         text={`Event #${params.id} Not Found`}
+      />
+    );
+  }
+
+  if (eventData.hidden) {
+    return (
+      <QueryState
+        isError
+        text={`Event #${params.id} not published`}
       />
     );
   }
