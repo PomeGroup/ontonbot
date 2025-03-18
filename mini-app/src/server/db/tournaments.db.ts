@@ -29,6 +29,29 @@ export const addTournament = async (tData: TournamentsRowInsert): Promise<Tourna
 };
 
 /**
+ * Update the activityId of a tournament.
+ * Returns the updated row (TournamentsRow) or undefined if none.
+ */
+export const updateActivityIdTrx = async (
+  trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  activityId: number,
+  tournamentId: number
+) => {
+  try {
+    const result = await trx
+      .update(tournaments)
+      .set({ activityId })
+      .where(eq(tournaments.id, tournamentId))
+      .returning()
+      .execute();
+    await redisTools.deleteCache(getTournamentCacheKey(tournamentId));
+    return result;
+  } catch (error) {
+    logger.error("Error updating tournament activityId:", error);
+    throw error;
+  }
+};
+/**
  * Fetch a tournament by its local primary key (tournaments.id).
  * Returns a TournamentsRow or undefined if not found.
  */
@@ -176,4 +199,5 @@ export const tournamentsDB = {
   getTournamentsWithFiltersDB,
   getTournamentsEndingAfter,
   updateTournamentTx,
+  updateActivityIdTrx,
 };

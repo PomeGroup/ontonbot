@@ -1,4 +1,4 @@
-import { bigint, index, integer, pgTable, serial, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, index, integer, pgTable, serial, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { games, tournaments, users } from "@/db/schema";
 import { InferSelectModel } from "drizzle-orm";
 
@@ -26,7 +26,9 @@ export const gameLeaderboard = pgTable(
     position: integer("position"),
     points: integer("points"),
     endedAt: timestamp("ended_at"),
-
+    rewardCreated: boolean("reward_created").default(false),
+    notificationReceived: boolean("notification_received").default(false),
+    hasClaimed: boolean("has_claimed").default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).defaultNow(),
   },
@@ -38,3 +40,7 @@ export const gameLeaderboard = pgTable(
 );
 
 export type GameLeaderboardRow = InferSelectModel<typeof gameLeaderboard>;
+export type GameLeaderboardRowInsert = Omit<
+  GameLeaderboardRow,
+  "id" | "createdAt" | "updatedAt" | "rewardCreated" | "notificationReceived" | "hasClaimed"
+>;

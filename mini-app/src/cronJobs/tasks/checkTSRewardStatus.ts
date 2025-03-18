@@ -7,7 +7,7 @@ import eventPaymentDB, { fetchPaymentInfoForCronjob } from "@/server/db/eventPay
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 
 const EVENTS_BATCH_SIZE = 50;
-const REWARDS_BATCH_SIZE = 5000;
+const REWARDS_BATCH_SIZE = 30;
 const MAX_CONCURRENT_API_CALLS = 10;
 
 /**
@@ -62,6 +62,9 @@ export const syncTonSocietyStatusLargeScale = async (startDateCutoff: number = 0
             limit(async () => {
               await handleSingleRewardUpdate(activity_id, visitor_id, event_id, "ton_society_sbt");
               if (eventPaymentInfo !== undefined && eventPaymentInfo?.ticketActivityId) {
+                logger.log(
+                  `[Event ${event_id}] Processing rewards for ticket with payment activity_id=${eventPaymentInfo.ticketActivityId}`
+                );
                 await handleSingleRewardUpdate(
                   eventPaymentInfo.ticketActivityId,
                   visitor_id,
