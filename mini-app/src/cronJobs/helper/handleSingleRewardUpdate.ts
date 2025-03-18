@@ -41,6 +41,9 @@ export const handleSingleRewardUpdate = async (
   // 3) If it’s one of our known statuses, update local DB
   if (tsStatus && ["NOT_CLAIMED", "CLAIMED", "RECEIVED"].includes(tsStatus)) {
     const tonSocietyStatus = tsStatus as RewardTonSocietyStatusType;
+    logger.log(
+      `[Event ${event_id}] Updating Ton Society status for visitor_id=${visitor_id}  user_id=${userId} to ${rewardType} ${tonSocietyStatus}`
+    );
     await rewardDB.updateTonSocietyStatusByVisitorIdAndRewardType(visitor_id, tonSocietyStatus, rewardType);
 
     // 4) If newly claimed, add user score — "CLAIMED" or "RECEIVED" implies the user actually claimed it
