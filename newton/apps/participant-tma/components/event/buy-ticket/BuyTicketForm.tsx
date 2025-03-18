@@ -1,7 +1,5 @@
 "use client";
 
-import React, { FormEventHandler, useCallback, useEffect, useRef } from "react";
-import Image from "next/image";
 import { useMainButton } from "@tma.js/sdk-react";
 import { useTonWallet } from "@tonconnect/ui-react";
 import { Card, CardContent } from "@ui/base/card";
@@ -10,15 +8,18 @@ import { Section } from "@ui/base/section";
 import { toast } from "@ui/base/sonner";
 import SeparatorTma from "@ui/components/Separator";
 import { useAtom, useSetAtom } from "jotai";
+import Image from "next/image";
+import React, { FormEventHandler, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 import BuyTicketTmaSettings from "~/components/event/buy-ticket/BuyTicketTmaSettings";
+import { useTransferTon } from "~/hooks/ton.hooks";
 import { useAddOrderMutation } from "~/hooks/useAddOrderMutation";
 import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
 import { useUserStore } from "~/store/user.store";
-import BuyTicketTxQueryState from "./BuyTicketTxQueryState";
-import { useTransferTon } from "~/hooks/ton.hooks";
 import { PaymentType } from "~/types/order.types";
+import { ALLOWED_TONFEST_EVENT_UUIDS } from "~/utils/constants";
+import BuyTicketTxQueryState from "./BuyTicketTxQueryState";
 
 type BuyTicketFormProps = {
   id: string;
@@ -63,8 +64,8 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
     const data = Object.fromEntries(formdata) as {
       full_name: string;
       telegram: string;
-      company: string;
-      position: string;
+      company?: string;
+      position?: string;
       owner_address: string;
     };
 
@@ -100,7 +101,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   };
 
   const validateForm = useCallback(() => {
-    const fields = ["full_name", "telegram", "company", "position"];
+    const fields = ["full_name", "telegram"];
     let isValid = true;
 
     fields.forEach((field) => {
@@ -153,18 +154,22 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
               name="telegram"
               placeholder="@username"
             />
-            <SeparatorTma className={"m-0"} />
-            <CheckoutInput
-              label="Company"
-              name="company"
-              placeholder="Company"
-            />
-            <SeparatorTma className={"m-0"} />
-            <CheckoutInput
-              label="Position"
-              name="position"
-              placeholder="Designer"
-            />
+            {!ALLOWED_TONFEST_EVENT_UUIDS.includes(params.event_uuid) && (
+              <>
+                <SeparatorTma className={"m-0"} />
+                <CheckoutInput
+                  label="Company"
+                  name="company"
+                  placeholder="Company"
+                />
+                <SeparatorTma className={"m-0"} />
+                <CheckoutInput
+                  label="Position"
+                  name="position"
+                  placeholder="Designer"
+                />
+              </>
+            )}
             {/* other data */}
             <input
               type="hidden"

@@ -3,7 +3,7 @@ import { TG_SUPPORT_GROUP } from "@/constants";
 import { useConfig } from "@/context/ConfigContext";
 import useWebApp from "@/hooks/useWebApp";
 import { sleep } from "@/utils";
-import { FC, ReactNode, useState } from "react";
+import { FC, ReactNode, useEffect, useState } from "react";
 import CustomButton from "../Button/CustomButton";
 import CustomSheet from "../Sheet/CustomSheet";
 import Task from "../Task";
@@ -21,11 +21,9 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
   });
 
   // Removed localStorage functionality; default to "not_done"
-  const [isJoinedX, setJoinedX] = useState<"done" | "not_done" | "checking">(
-    joinTaskStatus.data?.ch && joinTaskStatus.data?.gp ? "done" : "not_done"
-  );
+  const [isJoinedX, setJoinedX] = useState<"done" | "not_done" | "checking">("checking");
 
-  const allTasksDone = joinTaskStatus.data?.ch && joinTaskStatus.data?.gp && isJoinedX === "done";
+  const allTasksDone = joinTaskStatus.data?.all_done && isJoinedX === "done";
 
   // if it was not ts verified and lock was not set we will show it
   const areTasksRequired = !eventData.data?.organizer?.is_ts_verified && !config.tjo;
@@ -34,6 +32,14 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
   const closeTasksOpen = () => {
     setIsTasksOpen(false);
   };
+
+  useEffect(() => {
+    if (joinTaskStatus.data?.all_done) {
+      setJoinedX("done");
+    } else {
+      setJoinedX("not_done");
+    }
+  }, [joinTaskStatus.data?.all_done]);
 
   if (areTasksRequired && !joinTaskStatus.isFetched && joinTaskStatus.isLoading) {
     return <MainButton progress />;

@@ -15,6 +15,8 @@ import { runPendingCallbackTasks } from "@/cronJobs/tasks/runAPIPendingCallbackT
 import { consumeClickBatch } from "@/cronJobs/tasks/consumeClickBatch";
 import { generateInviteLinksCron } from "@/cronJobs/tasks/generateInviteLinksCron";
 import { updateAllTournaments } from "@/cronJobs/tasks/updateTournaments";
+import { processRecentlyEndedTournaments } from "@/cronJobs/tasks/tournamentRewards";
+import { sendTournamentRewardsNotifications } from "@/cronJobs/tasks/sendTournamentRewardsNotifications";
 
 const cronJobs = {
   CheckTransactions,
@@ -33,6 +35,8 @@ const cronJobs = {
   consumeClickBatch,
   generateInviteLinksCron,
   updateAllTournaments,
+  processRecentlyEndedTournaments,
+  sendTournamentRewardsNotifications,
 };
 export { cronJobRunner };
 export default cronJobs;

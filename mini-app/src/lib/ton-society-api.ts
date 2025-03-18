@@ -92,6 +92,10 @@ export async function registerActivity(
   activityDetails: TSAPIoperations["createEvent"]["requestBody"]["content"]["application/json"]
 ) {
   const response = await tonSocietyClient.post("/activities", activityDetails);
+  // log error if response status is not 200
+  if (response.status !== 200) {
+    logger.error(`Error registering activity: ${response}`);
+  }
   return response.data as TonSocietyRegisterActivityResponse;
 }
 

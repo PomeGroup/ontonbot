@@ -16,6 +16,7 @@ import { isNewCommand } from "../helpers/isNewCommand";
 import { parse } from "csv-parse/sync";
 import { sendMessageWithInfinityRetry } from "../helpers/sendMessageWithInfinityRetry"; // CSV parser
 
+const affiliateLinksLimitCount = 150;
 // For Node < 18, you might need "node-fetch" to enable global fetch.
 // import fetch from "node-fetch";
 
@@ -514,14 +515,14 @@ affiliateComposer.on("message:text", async (ctx, next) => {
       return;
     }
 
-    // Check total limit 50
+    // Check total limit affiliateLinksLimitCount
     const existing = ctx.session.existingLinksCount ?? 0;
     const newTotal = existing + validRows.length;
-    if (newTotal > 50) {
-      const remaining = 50 - existing;
+    if (newTotal > affiliateLinksLimitCount) {
+      const remaining = affiliateLinksLimitCount - existing;
       if (remaining <= 0) {
         await ctx.reply(
-          `This event already has ${existing} affiliate links. Limit is 50 total. Cannot create more.`,
+          `This event already has ${existing} affiliate links. Limit is ${affiliateLinksLimitCount} total. Cannot create more.`,
         );
       } else {
         await ctx.reply(
@@ -707,14 +708,14 @@ affiliateComposer.on("message:text", async (ctx, next) => {
       return;
     }
 
-    // Check limit 50
+    // Check limit affiliateLinksLimitCount
     const existing = ctx.session.existingLinksCount ?? 0;
     const newTotal = existing + countNum;
-    if (newTotal > 50) {
-      const remaining = 50 - existing;
+    if (newTotal > affiliateLinksLimitCount) {
+      const remaining = affiliateLinksLimitCount - existing;
       if (remaining <= 0) {
         await ctx.reply(
-          `This event already has ${existing} affiliate links. Limit is 50 total.`,
+          `This event already has ${existing} affiliate links. Limit is ${affiliateLinksLimitCount} total.`,
         );
         ctx.session.affiliateStep = undefined;
         return;

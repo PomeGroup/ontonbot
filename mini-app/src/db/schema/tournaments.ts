@@ -85,7 +85,7 @@ export const tournaments = pgTable(
     tournamentLink: text("tournament_link"),
     // Store raw host JSON if needed
     rawHostJson: json("raw_host_json").$type<Record<string, unknown>>(),
-
+    rewardLink: text("reward_link"),
     // Timestamps
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),

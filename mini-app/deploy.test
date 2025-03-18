@@ -16,3 +16,4 @@ deploy verify test
 
 deploy after reset
 dev deploy
+deploy to dev

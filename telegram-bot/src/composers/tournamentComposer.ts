@@ -1,21 +1,27 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import FormData from "form-data";
 import { Composer, InlineKeyboard } from "grammy";
 import * as process from "node:process";
 import { MyContext } from "../types/MyContext";
 import { logger } from "../utils/logger";
 import { isNewCommand } from "../helpers/isNewCommand";
-import { GameRowType, getGames } from "../db/db";
+import { GameRowType, getGames, getCollectionsByHubId, getLocalTournamentById } from "../db/db";
+import { SbtRewardCollection } from "../types/SbtRewardCollection";
+import { handleCreateResponse } from "../helpers/tournaments/handleCreateResponse";
+import { resetTournamentFlow } from "../helpers/tournaments/resetTournamentFlow";
+import { handleCreateError } from "../helpers/tournaments/handleCreateError";
+import { handleCheckError } from "../helpers/tournaments/handleCheckError";
+import { transformInviteLink } from "../helpers/tournaments/transformInviteLink";
 
 export const tournamentComposer = new Composer<MyContext>();
 
 /**
- * Utility function to parse the invite message and extract:
- *   - the entire link: e.g. "t.me/xxx?start=xxx-league-YYY"
- *   - the tournament ID from after the last dash: "YYY" in the example
+ * parseInviteMessage:
+ *  - extracts "t.me/..." link from a user message
+ *  - returns { link, tournamentId } or null if not found
  */
 function parseInviteMessage(text: string) {
-  // 1) Find "t.me/..." in the message
+  // 1) Find "t.me/..." in the text
   const linkRegex = /(t\.me\/[^\s]+)/i;
   const match = text.match(linkRegex);
 
@@ -23,33 +29,81 @@ function parseInviteMessage(text: string) {
     return { link: null, tournamentId: null };
   }
 
-  // 2) Extract the link from "t.me..." up to next whitespace
   let link = match[1];
-
-  // 3) Ensure the link starts with "https://"
-  //    or "http://". If not, prepend "https://".
+  // ensure we have http or https
   if (!/^https?:\/\//i.test(link)) {
     link = "https://" + link;
   }
 
-  // Example link: https://t.me/cut_the_zero_bot?start=code-fsghgoji__league-slpbcmb6
-  // We want the portion after the last dash => "slpbcmb6"
+  // last dash => tournament ID
   const dashIndex = link.lastIndexOf("-");
   if (dashIndex === -1) {
-    // If there's no dash, we can't parse a tournament ID
     return { link, tournamentId: null };
   }
 
-  // 4) Extract everything after the dash
   const tournamentId = link.slice(dashIndex + 1);
-
-  // 5) Return both
   return { link, tournamentId };
 }
 
-// 1) Command: /tournament => begin flow
+/**
+ * showCollectionNavigation:
+ *  - displays a single SBT collection with Prev/Next/Select
+ *  - if isFirstTime => sends a new message
+ *  - otherwise => edits existing
+ */
+async function showCollectionNavigation(
+  ctx: MyContext,
+  coll: SbtRewardCollection,
+  isFirstTime: boolean,
+) {
+  const kb = new InlineKeyboard()
+    .text("<< Prev", "collection_prev")
+    .text(`ID ${coll.id}`, "collection_noop")
+    .text("Next >>", "collection_next")
+    .row()
+    .text("Select This", `collection_select_${coll.id}`);
+
+  const imageUrl = coll.imageLink || "";
+  const caption = `Viewing collection ID: ${coll.id}`;
+
+  if (isFirstTime) {
+    // send new message
+    if (imageUrl) {
+      const msg = await ctx.replyWithPhoto(imageUrl, { caption, reply_markup: kb });
+      ctx.session.tournamentData.navigationMessageId = msg.message_id;
+    } else {
+      const msg = await ctx.reply(`${caption}\n(No image)`, { reply_markup: kb });
+      ctx.session.tournamentData.navigationMessageId = msg.message_id;
+    }
+  } else {
+    // edit existing
+    const messageId = ctx.session.tournamentData.navigationMessageId;
+    if (!messageId) {
+      return showCollectionNavigation(ctx, coll, true);
+    }
+    try {
+      if (imageUrl) {
+        await ctx.api.editMessageMedia(
+          ctx.chat!.id,
+          messageId,
+          { type: "photo", media: imageUrl, caption },
+          { reply_markup: kb },
+        );
+      } else {
+        await ctx.api.editMessageText(ctx.chat!.id, messageId, caption + "\n(No image)", {
+          reply_markup: kb,
+        });
+      }
+    } catch (err) {
+      logger.error("Error editing collection nav =>", err);
+      await ctx.reply("Failed to edit the message. Sending a new one instead...");
+      await showCollectionNavigation(ctx, coll, true);
+    }
+  }
+}
+
+// 1) /tournament => begin flow
 tournamentComposer.command("tournament", async (ctx) => {
-  // Clear any prior session state
   ctx.session.tournamentStep = "pickGame";
   ctx.session.tournamentData = {
     gameId: "",
@@ -58,86 +112,140 @@ tournamentComposer.command("tournament", async (ctx) => {
     photoFileId: "",
   };
 
-  // Fetch games from DB
+  // load games
   let games: GameRowType[];
   try {
-    games = await getGames(); // => [{ name, host_game_id }, ...]
-  } catch (error) {
-    await ctx.reply("Failed to fetch games from database. Please try again later.");
-    logger.error("Error fetching games =>", error);
+    games = await getGames();
+  } catch (err) {
+    logger.error("Failed to fetch games =>", err);
+    await ctx.reply("Failed to fetch games. Please try again later.");
     return;
   }
 
-  // Build an inline keyboard of the returned games
+  if (!games.length) {
+    await ctx.reply("No games found in DB.");
+    return;
+  }
+
   const kb = new InlineKeyboard();
-  for (const game of games) {
-    // We'll store the host_game_id in the callback data
-    kb.text(game.name, `pick_game_${game.host_game_id}`).row();
+  for (const g of games) {
+    kb.text(g.name, `pick_game_${g.host_game_id}`).row();
   }
 
-  if (games.length === 0) {
-    await ctx.reply("No games found in the database.");
-    return;
-  }
-
-  await ctx.reply("Please pick a game from the list below:", {
-    reply_markup: kb,
-  });
+  await ctx.reply("Please pick a game from the list below:", { reply_markup: kb });
 });
 
-// 2) Callback query => handle game selection
+// 2) callback => pickGame
 tournamentComposer.callbackQuery(/^pick_game_(.+)$/, async (ctx) => {
-  const selectedGameId = ctx.match[1]; // The part after "pick_game_"
+  const gameId = ctx.match[1];
   await ctx.answerCallbackQuery();
 
-  // Store the selected game ID in session
-  ctx.session.tournamentData.gameId = selectedGameId;
+  ctx.session.tournamentData.gameId = gameId;
   ctx.session.tournamentStep = "askInviteMessage";
 
   await ctx.reply(
-    `Game selected: ${selectedGameId}\n` +
-    `Now please **forward** or **paste** the full invite message.`,
+    `Game selected: ${gameId}\n` +
+    "Now please **forward** or **paste** the full invite message.",
   );
 });
 
-// 3) On text => handle the invite message
+// 3) on text => parse the invite => do "check"
 tournamentComposer.on("message:text", async (ctx, next) => {
   if (!ctx.session.tournamentStep) return next();
   if (isNewCommand(ctx)) {
+    // user typed a new command => reset
     ctx.session = {};
     return next();
   }
 
-  // We expect user to send the invite message
   if (ctx.session.tournamentStep === "askInviteMessage") {
     const text = ctx.message.text;
     const { link, tournamentId } = parseInviteMessage(text);
 
     if (!link || !tournamentId) {
       await ctx.reply(
-        "Could not find a valid link or tournament ID in your message.\n" +
-        "Please make sure to send the exact invite message that includes the link with a dash.",
+        "Could not extract a valid link or tournament ID.\n" +
+        "Please forward/paste the invite with a dash ('-') in it.",
       );
       return;
     }
 
-    // Store in session
+    // -- NEW: Check if this tournament ID already exists in local DB
+    try {
+      const existing = await getLocalTournamentById(tournamentId);
+      if (existing) {
+        await ctx.reply(
+          `A local record for Tournament ID ${tournamentId} already exists!\n` +
+          "We cannot insert it again. Please /tournament to start over.",
+        );
+        resetTournamentFlow(ctx);
+        return;
+      }
+    } catch (dbErr) {
+      logger.error("Failed checking existing tournament =>", dbErr);
+      await ctx.reply(
+        "There was a DB error checking existing tournaments. Please try again later or /tournament to restart.",
+      );
+      resetTournamentFlow(ctx);
+      return;
+    }
+
+    // store
     ctx.session.tournamentData.tournamentLink = link;
     ctx.session.tournamentData.tournamentId = tournamentId;
 
-    // Next => call "check" endpoint
     ctx.session.tournamentStep = "check";
-    await ctx.reply(
-      `Invite link parsed: ${link}\nTournament ID parsed: ${tournamentId}\nChecking...`,
-    );
+    await ctx.reply(`Invite link: ${link}\nID: ${tournamentId}\nChecking...`);
 
-    return doCheckEndpoint(ctx);
+    // inline check logic
+    const userId = ctx.from?.id || 0;
+    const { gameId } = ctx.session.tournamentData;
+    if (!gameId) {
+      await ctx.reply("Missing game ID in session. /tournament to restart.");
+      resetTournamentFlow(ctx);
+      return;
+    }
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+    const checkUrl = `${baseUrl}/tournament/check/${gameId}/${tournamentId}/${userId}`;
+    logger.info("Check URL => " + checkUrl);
+
+    try {
+      const resp = await axios.post(checkUrl, {}, {
+        headers: { "x-api-key": process.env.ONTON_API_KEY || "" },
+      });
+      const details = resp.data?.data;
+      if (!details) {
+        await ctx.reply("No details returned from check. Unknown error.");
+        resetTournamentFlow(ctx);
+        return;
+      }
+
+      await ctx.reply(
+        `Tournament found:\nName: ${details.Name}\nState: ${details.State}\nOwnerId: ${details.OwnerId ?? "(none)"}\n...`,
+      );
+
+      // show Insert/Cancel
+      const kb = new InlineKeyboard()
+        .text("Insert", "tourn_insert")
+        .text("Cancel", "tourn_cancel");
+
+      await ctx.reply("Would you like to insert this tournament in local DB?", {
+        reply_markup: kb,
+      });
+
+      // step => confirmInsert
+      ctx.session.tournamentStep = "confirmInsert";
+    } catch (err) {
+      handleCheckError(ctx, err);
+    }
+
+    return;
   }
 
-
+  return next();
 });
 
-// 4) Callback => Insert / Create / Cancel
+// 4) callback => Insert / Cancel
 tournamentComposer.callbackQuery(["tourn_insert", "tourn_create", "tourn_cancel"], async (ctx) => {
   await ctx.answerCallbackQuery();
 
@@ -147,22 +255,104 @@ tournamentComposer.callbackQuery(["tourn_insert", "tourn_create", "tourn_cancel"
     return;
   }
 
-  // If user tapped "Insert" => from confirmInsert step => ask for photo
+  // If user tapped "Insert"
   if (ctx.session.tournamentStep === "confirmInsert" && ctx.callbackQuery.data === "tourn_insert") {
-    ctx.session.tournamentStep = "askTournamentPhoto";
-    await ctx.reply("Please send me a **photo** for the tournament now.");
+    // We want to pick a collection BEFORE asking for a photo
+    ctx.session.tournamentData._postCollectionStep = "askTournamentPhoto";
+
+    // Attempt to fetch from DB immediately
+    try {
+      // for example hub=33
+      const allColls = await getCollectionsByHubId(33);
+      if (!allColls.length) {
+        await ctx.reply("No collections found for hub=33. We'll skip collection linking.");
+        // jump to askPhoto
+        ctx.session.tournamentStep = "askTournamentPhoto";
+        await ctx.reply("Please send me a **photo** for the tournament now.");
+        return;
+      }
+
+      // store them
+      ctx.session.tournamentData.collections = allColls;
+      ctx.session.tournamentData.currentIndex = 0;
+      ctx.session.tournamentStep = "NAVIGATE_COLLECTIONS";
+
+      await ctx.reply("Please select an SBT Collection from hub=33 now.");
+      // show the first
+      await showCollectionNavigation(ctx, allColls[0], true);
+    } catch (err) {
+      logger.error("Failed to fetch SBT coll =>", err);
+      await ctx.reply("Failed to fetch collections. We'll skip linking.");
+      // fallback => askPhoto
+      ctx.session.tournamentStep = "askTournamentPhoto";
+      await ctx.reply("Please send me a **photo** for the tournament now.");
+    }
     return;
   }
 
-  // If user tapped "Create" => from confirmCreate step => ask for photo
+  // If user tapped "Create" => from confirmCreate step (if you also use confirmCreate)
   if (ctx.session.tournamentStep === "confirmCreate" && ctx.callbackQuery.data === "tourn_create") {
-    ctx.session.tournamentStep = "askTournamentPhoto";
-    await ctx.reply("Please send me a **photo** for the tournament now.");
-    return;
+    // do a similar approach
+    ctx.session.tournamentData._postCollectionStep = "askTournamentPhoto";
+    // fetch coll from DB, set step => "NAVIGATE_COLLECTIONS" ...
+    // or skip if none found
   }
 });
 
-// 5) On receiving a photo => finalize creation flow
+// 5) The "NAVIGATE_COLLECTIONS" sub-flow
+tournamentComposer.callbackQuery(
+  ["collection_noop", "collection_prev", "collection_next", /^collection_select_(\d+)$/],
+  async (ctx) => {
+    if (ctx.session.tournamentStep !== "NAVIGATE_COLLECTIONS") {
+      await ctx.answerCallbackQuery();
+      return;
+    }
+    await ctx.answerCallbackQuery();
+
+    const data = ctx.callbackQuery.data;
+    const flow = ctx.session.tournamentData;
+    const colls = flow.collections ?? [];
+    let idx = flow.currentIndex ?? 0;
+
+    if (!colls.length) return;
+
+    if (data === "collection_noop") return;
+    if (data === "collection_prev") {
+      idx = idx - 1 < 0 ? colls.length - 1 : idx - 1;
+      flow.currentIndex = idx;
+      return showCollectionNavigation(ctx, colls[idx], false);
+    }
+    if (data === "collection_next") {
+      idx = idx + 1 >= colls.length ? 0 : idx + 1;
+      flow.currentIndex = idx;
+      return showCollectionNavigation(ctx, colls[idx], false);
+    }
+
+    // "collection_select_X"
+    const m = data.match(/^collection_select_(\d+)$/);
+    if (!m) return;
+    const selectedId = Number(m[1]);
+    flow.selectedCollectionId = selectedId;
+
+    await ctx.reply(`Collection #${selectedId} selected!`);
+
+    // next step => askTournamentPhoto
+    const nextStep = flow._postCollectionStep;
+    ctx.session.tournamentStep = nextStep;
+
+    // clean up nav
+    delete flow.collections;
+    delete flow.currentIndex;
+    delete flow.navigationMessageId;
+    delete flow._postCollectionStep;
+
+    if (nextStep === "askTournamentPhoto") {
+      await ctx.reply("Please send me a **photo** for the tournament now.");
+    }
+  },
+);
+
+// 6) on photo => finalize creation
 tournamentComposer.on("message:photo", async (ctx, next) => {
   if (ctx.session.tournamentStep !== "askTournamentPhoto") return next();
   if (isNewCommand(ctx)) {
@@ -170,9 +360,11 @@ tournamentComposer.on("message:photo", async (ctx, next) => {
     return next();
   }
 
-  const { gameId, tournamentId, tournamentLink } = ctx.session.tournamentData ?? {};
+  const { gameId, tournamentId, tournamentLink, selectedCollectionId } =
+  ctx.session.tournamentData ?? {};
+
   if (!gameId || !tournamentId) {
-    await ctx.reply("Missing IDs in session. Please /tournament to start again.");
+    await ctx.reply("Missing game/tournament ID in session. Please /tournament to start again.");
     resetTournamentFlow(ctx);
     return;
   }
@@ -190,11 +382,11 @@ tournamentComposer.on("message:photo", async (ctx, next) => {
     fileBuffer = Buffer.from(resp.data);
   } catch (err) {
     logger.error("Error downloading photo =>", err);
-    await ctx.reply("Failed to download the photo. Try again.");
+    await ctx.reply("Failed to download the photo. Try again later or /tournament to restart.");
     return;
   }
 
-  // Now call the create endpoint
+  // Now call your create endpoint
   try {
     const userId = ctx.from?.id || 0;
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -207,8 +399,16 @@ tournamentComposer.on("message:photo", async (ctx, next) => {
       contentType: "image/png",
     });
 
-    // Include the link we parsed from the invite message
-    formData.append("tournament_link", tournamentLink);
+    const newLink = transformInviteLink(tournamentLink);
+    // Now pass newLink to the formData
+    formData.append("tournament_link", newLink);
+
+    formData.append("society_hub_id", "33");
+
+
+    if (selectedCollectionId) {
+      formData.append("sbt_collection_id", selectedCollectionId.toString());
+    }
 
     logger.info("Form data =>", formData);
     const res = await axios.post(createUrl, formData, {
@@ -218,159 +418,10 @@ tournamentComposer.on("message:photo", async (ctx, next) => {
       },
     });
 
-    const finalData = res.data;
-    handleCreateResponse(ctx, finalData);
+    handleCreateResponse(ctx, res.data);
   } catch (err) {
     handleCreateError(ctx, err);
   } finally {
     resetTournamentFlow(ctx);
   }
 });
-
-/* -------------------------------------------------------------------------- */
-/*                          Checking Endpoint Flow                            */
-
-/* -------------------------------------------------------------------------- */
-
-async function doCheckEndpoint(ctx: MyContext) {
-  const userId = ctx.from?.id || 0;
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-  const { gameId, tournamentId } = ctx.session.tournamentData!;
-  const url = `${baseUrl}/tournament/check/${gameId}/${tournamentId}/${userId}`;
-  logger.info("Check URL => " + url);
-
-  try {
-    const res = await axios.post(url, {}, {
-      headers: {
-        "x-api-key": process.env.ONTON_API_KEY || "",
-      },
-    });
-
-    const details = res.data?.data;
-    if (!details) {
-      await ctx.reply("No details returned from check. Possibly unknown error.");
-      resetTournamentFlow(ctx);
-      return;
-    }
-
-    // Show info
-    await ctx.reply(
-      `Tournament found in Elympics:\n` +
-      `Name: ${details.Name}\n` +
-      `State: ${details.State}\n` +
-      `OwnerId: ${details.OwnerId ?? "(none)"}\n...`,
-    );
-
-    // Offer to insert
-    const kb = new InlineKeyboard()
-      .text("Insert", "tourn_insert")
-      .text("Cancel", "tourn_cancel");
-    await ctx.reply("Would you like to insert this tournament in local DB?", {
-      reply_markup: kb,
-    });
-    ctx.session.tournamentStep = "confirmInsert";
-  } catch (err) {
-    handleCheckError(ctx, err);
-  }
-}
-
-/* -------------------------------------------------------------------------- */
-/*                       Error & Response Handling Helpers                    */
-
-/* -------------------------------------------------------------------------- */
-
-function resetTournamentFlow(ctx: MyContext) {
-  ctx.session.tournamentStep = "done";
-  ctx.session.tournamentData = undefined;
-}
-
-function handleCheckError(ctx: MyContext, error: unknown) {
-  if (axios.isAxiosError(error)) {
-    const axErr = error as AxiosError;
-    const status = axErr.response?.status;
-    const data = axErr.response?.data as any;
-    const msg = data?.message;
-
-    if (status === 404) {
-      logger.warn("Tournament not found => 404 => user can create new.");
-      const kb = new InlineKeyboard()
-        .text("Create", "tourn_create")
-        .text("Cancel", "tourn_cancel");
-      ctx.reply("Tournament not found in Elympics. Create it anyway?", {
-        reply_markup: kb,
-      });
-      ctx.session.tournamentStep = "confirmCreate";
-    } else if (status === 400 && msg === "mismatched_game_id") {
-      ctx.reply("Game ID does not match Elympics data. Aborting.");
-      resetTournamentFlow(ctx);
-    } else if (status === 400 && msg === "invalid_mode") {
-      ctx.reply("Invalid mode from server. Aborting.");
-      resetTournamentFlow(ctx);
-    } else if (status === 500 && msg === "elympics_fetch_error") {
-      ctx.reply("Server encountered an error fetching Elympics. Try again later.");
-      resetTournamentFlow(ctx);
-    } else {
-      logger.error("Check endpoint error =>", msg || axErr.message);
-      ctx.reply("Error during check. Please try again later.");
-      resetTournamentFlow(ctx);
-    }
-  } else {
-    ctx.reply("Unknown check error. Please try again later.");
-    resetTournamentFlow(ctx);
-  }
-}
-
-function handleCreateError(ctx: MyContext, error: unknown) {
-  if (axios.isAxiosError(error)) {
-    const axErr = error as AxiosError;
-    const data = axErr.response?.data as any;
-    const msg = data?.message;
-    logger.error("Error calling create =>", msg || axErr.message);
-    ctx.reply(`Failed to create tournament. Error: ${msg || axErr.message}`);
-  } else {
-    ctx.reply("Failed to create tournament. Please try again later.");
-  }
-}
-
-function handleCreateResponse(ctx: MyContext, finalData: any) {
-
-  const msg = finalData?.message;
-  if (!msg) {
-    ctx.reply("No message returned from create endpoint. Possibly unknown error.");
-    return;
-  }
-
-  switch (msg) {
-    case "success":
-      if (finalData.tournament) {
-        ctx.reply(
-          `Tournament inserted!\n` +
-          `Local ID: ${finalData.tournament.id}\n` +
-          `State: ${finalData.tournament.state}`,
-        );
-      } else {
-        ctx.reply("Tournament created, but no tournament data returned.");
-      }
-      break;
-
-    case "Image must be square.":
-      ctx.reply("The server says the image must be square. Please retry with a square photo.");
-      break;
-
-    case "db_insert_error":
-      ctx.reply("Database insert error. Possibly a duplicate or internal error.");
-      break;
-
-    case "duplicate_tournament":
-      ctx.reply("That tournament was already inserted. No changes made.");
-      break;
-
-    case "mismatched_game_id":
-      ctx.reply("Server says the game ID does not match Elympics data. Aborting.");
-      break;
-
-    default:
-      ctx.reply(`Tournament creation responded: ${JSON.stringify(finalData)}`);
-      break;
-  }
-}

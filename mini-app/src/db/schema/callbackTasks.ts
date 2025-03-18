@@ -17,9 +17,9 @@ import {
 /*                              Enum Definitions                              */
 /* -------------------------------------------------------------------------- */
 // Add an enum for API names if you want to constrain possible values:
-export const apiNameEnum = pgEnum("api_name_enum", ["TONFEST", "TS_API"]);
+export const apiNameEnum = pgEnum("api_name_enum", ["TONFEST", "TS_API", "PRIDIPIE_API"]);
 // Add an enum for item types if you want to constrain possible values:
-export const itemTypeEnum = pgEnum("item_type_enum", ["EVENT", "ALL_ITEMS"]);
+export const itemTypeEnum = pgEnum("item_type_enum", ["EVENT", "ALL_ITEMS", "EVENT_ORGANIZER"]);
 // Add an enum for steps if you want to constrain possible values:
 export const stepNameEnum = pgEnum("step_name_enum", [
   "event_created",
@@ -31,10 +31,10 @@ export const stepNameEnum = pgEnum("step_name_enum", [
 ]);
 // Add an enum for methods if you want to constrain possible values:
 export const httpMethodEnum = pgEnum("http_method_enum", ["GET", "POST", "PUT", "PATCH", "DELETE"]);
-export const taskFunctionEnum = pgEnum("task_function_enum", ["addUserTicketFromOnton", "addSbtFromOnton"]);
+export const taskFunctionEnum = pgEnum("task_function_enum", ["addUserTicketFromOnton", "addSbtFromOnton", "PridipieAUTH"]);
 
-export type CallBackTaskFunctionType = "addUserTicketFromOnton" | "addSbtFromOnton";
-export type CallBackTaskAPINameType = "TONFEST" | "TS_API";
+export type CallBackTaskFunctionType = "addUserTicketFromOnton" | "addSbtFromOnton" | "PridipieAUTH";
+export type CallBackTaskAPINameType = "TONFEST" | "TS_API" | "PRIDIPIE_API";
 
 export interface RetryPolicy {
   max_attempt?: number; // optional

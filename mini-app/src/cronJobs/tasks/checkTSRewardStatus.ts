@@ -62,6 +62,9 @@ export const syncTonSocietyStatusLargeScale = async (startDateCutoff: number = 0
             limit(async () => {
               await handleSingleRewardUpdate(activity_id, visitor_id, event_id, "ton_society_sbt");
               if (eventPaymentInfo !== undefined && eventPaymentInfo?.ticketActivityId) {
+                logger.log(
+                  `[Event ${event_id}] Processing rewards for ticket with payment activity_id=${eventPaymentInfo.ticketActivityId}`
+                );
                 await handleSingleRewardUpdate(
                   eventPaymentInfo.ticketActivityId,
                   visitor_id,

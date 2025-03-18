@@ -40,3 +40,5 @@ export { processCsvLinesForSbtDist } from "./rewards";
 export { getGames, GameRowType } from "./games";
 
 export { createCollection, getCollectionsByHubId, updateCollection } from "./sbtRewardCollections";
+
+export { getLocalTournamentById } from "./tournament";
