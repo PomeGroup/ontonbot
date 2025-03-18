@@ -70,6 +70,7 @@ import {
 import { UserScoreItemType, usersScore, UsersScoreActivityType, UsersScoreType } from "./schema/usersScore";
 
 import { callbackTaskRuns, CallbackTaskRunsRow, callbackTaskRunStatusType } from "./schema/callbackTaskRuns";
+import { gameLeaderboard, GameLeaderboardRow, GameLeaderboardRowInsert } from "./schema/gameLeaderboard";
 import {
   CallBackTaskAPINameType,
   CallBackTaskFunctionType,
@@ -153,6 +154,7 @@ export {
   affiliateClick,
   tournaments,
   games,
+  gameLeaderboard,
 };
 
 // Type Exports
@@ -194,4 +196,6 @@ export type {
   tournamentPrizePoolStatusType,
   tournamentPrizeType,
   GamesRowInsert,
+  GameLeaderboardRow,
+  GameLeaderboardRowInsert,
 };
