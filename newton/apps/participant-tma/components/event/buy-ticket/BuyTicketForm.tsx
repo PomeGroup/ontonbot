@@ -101,7 +101,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   };
 
   const validateForm = useCallback(() => {
-    const fields = ["full_name", "telegram", "company", "position"];
+    const fields = ["full_name", "telegram"];
     let isValid = true;
 
     fields.forEach((field) => {

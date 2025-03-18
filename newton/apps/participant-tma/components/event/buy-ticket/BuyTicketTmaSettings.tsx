@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useBackButton, useMainButton, useMiniApp } from "@tma.js/sdk-react";
 import { useTonConnectUI } from "@tonconnect/ui-react";
 import { useAtomValue } from "jotai";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
+import { PaymentType } from "~/types/order.types";
 import BuyTicketConnectWalletButton from "./BuyTicketConnectWalletButton";
 import BuyTicketSendTransactionButton from "./BuyTicketSendTransactionButton";
-import { PaymentType } from "~/types/order.types";
 
 type BuyTicketTmaSettingsProps = {
   eventId: string;
