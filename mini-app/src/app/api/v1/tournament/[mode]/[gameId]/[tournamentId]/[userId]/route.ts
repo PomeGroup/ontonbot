@@ -15,7 +15,7 @@ import fs from "fs";
 import { parseMultipartForm } from "@/lib/parseMultipartForm";
 import { z } from "zod";
 import { TonSocietyRegisterActivityT } from "@/types/event.types";
-import { timestampToIsoString } from "@/lib/DateAndTime";
+
 import { PLACEHOLDER_IMAGE, PLACEHOLDER_VIDEO } from "@/constants";
 import { fetchSBTRewardCollectionById, SBTRewardCollectionDB } from "@/server/db/SBTRewardCollection.db";
 import { registerActivity } from "@/lib/ton-society-api";

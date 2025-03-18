@@ -49,7 +49,7 @@ async function getJustEndedTournaments(): Promise<
     .innerJoin(games, eq(tournaments.gameId, games.id))
     // get  tournaments that ended 5 to 120 minutes ago
     .where(
-      and(lt(tournaments.endDate, thirtyMinAgo), gt(tournaments.endDate, fiveMinAgo), not(isNull(tournaments.rewardLink)))
+      and(lt(tournaments.endDate, fiveMinAgo), not(isNull(tournaments.rewardLink)), not(iisNull(tournaments.activityId)))
     );
 
   return endedTournies;
