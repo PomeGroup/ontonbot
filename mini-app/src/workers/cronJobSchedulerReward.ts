@@ -6,6 +6,7 @@ import "@/lib/gracefullyShutdown";
 import cronJobs, { cronJobRunner } from "@/cronJobs";
 import { redisTools } from "@/lib/redisTools";
 import { processRecentlyEndedTournaments } from "@/cronJobs/tasks/tournamentRewards";
+import { is_prod_env, is_stage_env } from "@/server/utils/evnutils";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -30,8 +31,10 @@ async function MainCronJob() {
   new CronJob("*/1 * * * *", cronJobRunner(cronJobs.CreateRewards), null, true);
   new CronJob("*/3 * * * *", cronJobRunner(cronJobs.notifyUsersForRewards), null, true);
 
-  // has been disabled because of high rate limit usage
-  //new CronJob("0 */30 * * * *", cronJobs.syncSbtCollectionsForEvents, null, true); // has been disabled because of high rate limit usage
+  if (is_prod_env() || is_stage_env()) {
+    new CronJob("0 4 * * * *", cronJobs.syncSbtCollectionsForEvents, null, true); // has been disabled because of high rate limit usage
+  }
+
   new CronJob(
     "0 */1 * * *", // (cronTime) =>  every hour
     cronJobs.CheckSbtStatus, // (onTick)   => function to run
