@@ -5,6 +5,7 @@ import { logger } from "@/server/utils/logger";
 import "@/lib/gracefullyShutdown";
 import cronJobs, { cronJobRunner } from "@/cronJobs";
 import { redisTools } from "@/lib/redisTools";
+import { processRecentlyEndedTournaments } from "@/cronJobs/tasks/tournamentRewards";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -33,6 +34,34 @@ async function MainCronJob() {
   new CronJob(
     "0 */1 * * *", // (cronTime) =>  every hour
     cronJobs.CheckSbtStatus, // (onTick)   => function to run
+    null, // (onComplete) => no special callback after job
+    true, // (start) => start immediately
+    null, // (timeZone) => e.g. "UTC" or your local
+    null, // (context)
+    false, // (runOnInit) => don't run immediately on app start
+    null, // (utcOffset)
+    false, // (unrefTimeout)
+    true // (waitForCompletion) => wait for onTick to finish
+    // No errorHandler passed
+  );
+
+  new CronJob(
+    "*/5 * * * *", // (cronTime) =>  every 5 minutes
+    cronJobs.processRecentlyEndedTournaments, // (onTick)   => function to run
+    null, // (onComplete) => no special callback after job
+    true, // (start) => start immediately
+    null, // (timeZone) => e.g. "UTC" or your local
+    null, // (context)
+    false, // (runOnInit) => don't run immediately on app start
+    null, // (utcOffset)
+    false, // (unrefTimeout)
+    true // (waitForCompletion) => wait for onTick to finish
+    // No errorHandler passed
+  );
+
+  new CronJob(
+    "*/5 * * * *", // (cronTime) =>  every 5 minutes
+    cronJobs.sendTournamentRewardsNotifications, // (onTick)   => function to run
     null, // (onComplete) => no special callback after job
     true, // (start) => start immediately
     null, // (timeZone) => e.g. "UTC" or your local

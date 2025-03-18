@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { tournaments } from "@/db/schema/tournaments";
 import { gameLeaderboard } from "@/db/schema/gameLeaderboard";
 import { eq, and, gt, lt } from "drizzle-orm/expressions";
-import { inArray, isNull, sql } from "drizzle-orm";
+import { inArray, isNull, not, sql } from "drizzle-orm";
 import { getTournamentLeaderboard } from "@/lib/elympicsApi"; // <-- your existing function
 import { logger } from "@/server/utils/logger";
 import axios, { AxiosError } from "axios";
@@ -48,7 +48,9 @@ async function getJustEndedTournaments(): Promise<
     .from(tournaments)
     .innerJoin(games, eq(tournaments.gameId, games.id))
     // get  tournaments that ended 5 to 120 minutes ago
-    .where(and(lt(tournaments.endDate, thirtyMinAgo), gt(tournaments.endDate, fiveMinAgo), isNull(tournaments.rewardLink)));
+    .where(
+      and(lt(tournaments.endDate, thirtyMinAgo), gt(tournaments.endDate, fiveMinAgo), not(isNull(tournaments.rewardLink)))
+    );
 
   return endedTournies;
 }
