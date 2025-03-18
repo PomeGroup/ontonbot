@@ -3,22 +3,23 @@ import { pool } from "./pool";
 
 // The shape of each row in the "games" table
 export interface GameRowType {
-  name: string;
-  host_game_id: string;
+  id: number;
 }
+
 
 /**
  * Fetch all games in ascending name order.
  */
-export async function getGames(): Promise<GameRowType[]> {
+export async function getLocalTournamentById(tid: string): Promise<GameRowType> {
   const client = await pool.connect();
   try {
     const result = await client.query<GameRowType>(
-      `SELECT name, host_game_id
-       FROM games
-       ORDER BY name;`,
+      `SELECT id
+       FROM tournaments
+       WHERE host_tournament_id = $1;`,
+      [tid],
     );
-    return result.rows;
+    return result.rows[0];
   } finally {
     client.release();
   }
