@@ -2,7 +2,7 @@ import { db } from "@/db/db";
 import { tournaments } from "@/db/schema/tournaments";
 import { gameLeaderboard } from "@/db/schema/gameLeaderboard";
 import { eq, and, gt, lt } from "drizzle-orm/expressions";
-import { inArray, isNull, not, sql } from "drizzle-orm";
+import { inArray, isNotNull, isNull, not, sql } from "drizzle-orm";
 import { getTournamentLeaderboard } from "@/lib/elympicsApi"; // <-- your existing function
 import { logger } from "@/server/utils/logger";
 import axios, { AxiosError } from "axios";
@@ -24,7 +24,7 @@ interface GamerData {
  * 1) A helper that returns tournaments whose endDate is
  * between 5 minutes ago and 30 minutes ago
  */
-async function getJustEndedTournaments(): Promise<
+export async function getJustEndedTournaments(): Promise<
   {
     id: number;
     gameId: number;
@@ -35,9 +35,9 @@ async function getJustEndedTournaments(): Promise<
 > {
   const now = new Date();
   const fiveMinAgo = new Date(now.getTime() - 5 * 60_000); // 5 minutes ago
-  const thirtyMinAgo = new Date(now.getTime() - 5 * 60 * 60_000); //  2 hours ago
 
-  const endedTournies = await db
+  // 1) Build the query, but don't execute yet
+  const query = db
     .select({
       id: tournaments.id,
       gameId: tournaments.gameId,
@@ -47,10 +47,19 @@ async function getJustEndedTournaments(): Promise<
     })
     .from(tournaments)
     .innerJoin(games, eq(tournaments.gameId, games.id))
-    // get  tournaments that ended 5 to 120 minutes ago
-    .where(
-      and(lt(tournaments.endDate, fiveMinAgo), not(isNull(tournaments.rewardLink)), not(isNull(tournaments.activityId)))
-    );
+    .where(and(lt(tournaments.endDate, fiveMinAgo), isNull(tournaments.rewardLink), isNotNull(tournaments.activityId)));
+  //,
+  // 2) Convert to SQL
+  const compiled = query.toSQL();
+  // compiled.sql => the SQL string
+  // compiled.params => the array of parameters
+
+  logger.info("getJustEndedTournaments SQL:", compiled.sql);
+  logger.info("getJustEndedTournaments params:", compiled.params);
+
+  // 3) Now execute the query
+  const endedTournies = await query;
+  logger.info("Just ended tournaments =>", endedTournies);
 
   return endedTournies;
 }
