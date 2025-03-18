@@ -60,7 +60,7 @@ async function MainCronJob() {
   );
 
   new CronJob(
-    "*/5 * * * *", // (cronTime) =>  every 5 minutes
+    "*/2 * * * *", // (cronTime) =>  every 5 minutes
     cronJobs.sendTournamentRewardsNotifications, // (onTick)   => function to run
     null, // (onComplete) => no special callback after job
     true, // (start) => start immediately
