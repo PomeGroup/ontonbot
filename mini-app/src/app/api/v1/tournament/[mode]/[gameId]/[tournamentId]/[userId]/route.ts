@@ -329,6 +329,7 @@ export async function POST(
         logger.log(
           `Created activity in Ton Society with ID: ${ton_society_result.data.activity_id} for tournament ID: ${insertedTournament.id}`
         );
+        // Update the tournament with the activity ID
         await tournamentsDB.updateActivityIdTrx(trx, ton_society_result.data.activity_id, insertedTournament.id);
 
         return { insertedTournament, activity_id: ton_society_result.data.activity_id };
