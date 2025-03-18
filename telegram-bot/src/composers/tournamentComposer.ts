@@ -11,6 +11,7 @@ import { handleCreateResponse } from "../helpers/tournaments/handleCreateRespons
 import { resetTournamentFlow } from "../helpers/tournaments/resetTournamentFlow";
 import { handleCreateError } from "../helpers/tournaments/handleCreateError";
 import { handleCheckError } from "../helpers/tournaments/handleCheckError";
+import { transformInviteLink } from "../helpers/tournaments/transformInviteLink";
 
 export const tournamentComposer = new Composer<MyContext>();
 
@@ -397,7 +398,11 @@ tournamentComposer.on("message:photo", async (ctx, next) => {
       filename: "my_tournament_photo.png",
       contentType: "image/png",
     });
-    formData.append("tournament_link", tournamentLink);
+
+    const newLink = transformInviteLink(tournamentLink);
+    // Now pass newLink to the formData
+    formData.append("tournament_link", newLink);
+
     formData.append("society_hub_id", "33");
 
 
