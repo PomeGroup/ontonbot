@@ -11,6 +11,7 @@ export function handleCheckError(ctx: MyContext, error: unknown) {
     const data = axErr.response?.data as any;
     const msg = data?.message;
 
+
     if (status === 404) {
       logger.warn("Tournament not found => 404 => user can create new.");
       const kb = new InlineKeyboard()
