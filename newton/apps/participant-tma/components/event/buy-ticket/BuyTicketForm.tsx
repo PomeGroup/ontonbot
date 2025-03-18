@@ -154,9 +154,9 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
               name="telegram"
               placeholder="@username"
             />
-            <SeparatorTma className={"m-0"} />
             {!ALLOWED_TONFEST_EVENT_UUIDS.includes(params.event_uuid) && (
               <>
+                <SeparatorTma className={"m-0"} />
                 <CheckoutInput
                   label="Company"
                   name="company"
