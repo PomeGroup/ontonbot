@@ -295,7 +295,7 @@ export async function POST(
                 url: process.env.ENV !== "local" ? (insertedTournament.tsRewardImage ?? undefined) : PLACEHOLDER_IMAGE,
               },
               cover: {
-                url: process.env.ENV !== "local" ? (insertedTournament.tsRewardVideo ?? undefined) : PLACEHOLDER_IMAGE,
+                url: process.env.ENV !== "local" ? (insertedTournament.tsRewardImage ?? undefined) : PLACEHOLDER_IMAGE,
               },
               item_title: details.Name,
               item_description: "Reward for participation",
