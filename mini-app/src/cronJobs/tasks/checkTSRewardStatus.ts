@@ -7,7 +7,7 @@ import eventPaymentDB, { fetchPaymentInfoForCronjob } from "@/server/db/eventPay
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
 
 const EVENTS_BATCH_SIZE = 50;
-const REWARDS_BATCH_SIZE = 5000;
+const REWARDS_BATCH_SIZE = 30;
 const MAX_CONCURRENT_API_CALLS = 10;
 
 /**
