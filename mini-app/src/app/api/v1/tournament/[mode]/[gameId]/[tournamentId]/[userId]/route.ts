@@ -14,6 +14,11 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import { parseMultipartForm } from "@/lib/parseMultipartForm";
 import { z } from "zod";
+import { TonSocietyRegisterActivityT } from "@/types/event.types";
+import { timestampToIsoString } from "@/lib/DateAndTime";
+import { PLACEHOLDER_IMAGE, PLACEHOLDER_VIDEO } from "@/constants";
+import { fetchSBTRewardCollectionById, SBTRewardCollectionDB } from "@/server/db/SBTRewardCollection.db";
+import { registerActivity } from "@/lib/ton-society-api";
 
 /** Env config / constants **/
 
@@ -82,7 +87,8 @@ export async function POST(
     let fileBuffer: Buffer | null = null;
     let mimeType: string | null = null;
     let tLink: string | null = null;
-
+    let society_hub_id: string | null = null;
+    let sbt_collection_id: string | null = null;
     try {
       const { fields, files } = await parseMultipartForm(req);
       if (!files || !files.file) {
@@ -91,12 +97,27 @@ export async function POST(
       if (!fields?.tournament_link) {
         return new Response(JSON.stringify({ message: "tournament_link_required" }), { status: 400 });
       }
+      if (!fields?.sbt_collection_id) {
+        return new Response(JSON.stringify({ message: "sbt_collection_id_required" }), { status: 400 });
+      }
+      if (!fields?.society_hub_id) {
+        return new Response(JSON.stringify({ message: "society_hub_id_required" }), { status: 400 });
+      }
+      if (fields.sbt_collection_id) {
+        const sbtCollection = await fetchSBTRewardCollectionById(Number(fields.sbt_collection_id));
+        if (!sbtCollection) {
+          return new Response(JSON.stringify({ message: "sbt_collection_not_found" }), { status: 404 });
+        }
+      }
+      society_hub_id = Array.isArray(fields.society_hub_id) ? fields.society_hub_id[0] : fields.society_hub_id;
+      sbt_collection_id = Array.isArray(fields.sbt_collection_id) ? fields.sbt_collection_id[0] : fields.sbt_collection_id;
       // read the file
       const fileData = Array.isArray(files.file) ? files.file[0] : files.file;
       const filePath = (fileData as FormidableFile).filepath;
       fileBuffer = fs.readFileSync(filePath);
       mimeType = (fileData as FormidableFile).mimetype || "image/png";
       const link = Array.isArray(fields.tournament_link) ? fields.tournament_link[0] : fields.tournament_link;
+
       // parse optional tournament_link from fields
       logger.log("fields?.tournament_link", link);
       // validate link with Zod
@@ -125,10 +146,10 @@ export async function POST(
       if (dimensions.width < 400 || dimensions.height < 400) {
         return new Response(JSON.stringify({ message: "Image too small. Min 400x400." }), { status: 400 });
       }
-      // If you want to enforce a square image, uncomment below:
-      // if (dimensions.width !== dimensions.height) {
-      //   return new Response(JSON.stringify({ message: "image_must_be_square" }), { status: 400 });
-      // }
+
+      if (dimensions.width !== dimensions.height) {
+        return new Response(JSON.stringify({ message: "image_must_be_square" }), { status: 400 });
+      }
     } catch (err) {
       logger.error("Error reading image dimensions:", err);
       return new Response(JSON.stringify({ message: "failed_image_dimensions" }), { status: 400 });
@@ -197,6 +218,10 @@ export async function POST(
 
     // f) Insert into local DB with a transaction (game + tournament)
     try {
+      const sbtCollection = await SBTRewardCollectionDB.fetchSBTRewardCollectionById(Number(sbt_collection_id));
+      if (!sbtCollection) {
+        return new Response(JSON.stringify({ message: "sbt_collection_not_found" }), { status: 404 });
+      }
       const numericUserId = parseInt(userId, 10) || 0;
       const result = await db.transaction(async (trx) => {
         // 1) If you only want to create a new game if not found, do something like:
@@ -209,6 +234,10 @@ export async function POST(
             imageUrl: "",
             rawGameJson: details as any,
           });
+        }
+        if (!gameRow) {
+          logger.error("Failed to insert game:", gameId);
+          throw new Error("Failed to insert game");
         }
         // 2) Insert tournament (store 'uploadedImageUrl' + optional tournament_link)
         const insertedTournament = await tournamentsDB.insertTournamentTx(trx, {
@@ -231,19 +260,79 @@ export async function POST(
           prizeType: details.PrizeType === "Coin" ? "Coin" : "None",
           currentPrizePool: details.CurrentPrizePool,
           activityId: null,
-          tsRewardImage: null,
-          tsRewardVideo: null,
+          tsRewardImage: sbtCollection.imageLink ?? null,
+          tsRewardVideo: sbtCollection.videoLink ?? null,
           hidden: false,
           rawHostJson: details as any,
           tournamentLink: tLink, // Insert the validated link here
+          rewardLink: null,
         });
 
         if (!insertedTournament) {
-          throw new Error("failed_to_insert_tournament");
+          logger.error("Failed to insert tournament:", details.Id);
+          throw new Error("Failed to insert tournament");
         }
-        return { insertedTournament };
-      });
 
+        const tournamentDraft: TonSocietyRegisterActivityT = {
+          title: details.Name,
+          subtitle: gameRow.name ?? "",
+          description: `${details.Name} - ${gameRow.name}`,
+          hub_id: parseInt(society_hub_id),
+          start_date: details.StartDate,
+          end_date: details.EndDate,
+          additional_info: "Online",
+          cta_button: {
+            link: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tournaments_${insertedTournament.id}`,
+            label: "Enter Tournament",
+          },
+
+          rewards: {
+            mint_type: "manual",
+            collection: {
+              title: details.Name,
+              description: `${details.Name} - ${gameRow.name}`,
+              image: {
+                url: process.env.ENV !== "local" ? (insertedTournament.tsRewardImage ?? undefined) : PLACEHOLDER_IMAGE,
+              },
+              cover: {
+                url: process.env.ENV !== "local" ? (insertedTournament.tsRewardVideo ?? undefined) : PLACEHOLDER_IMAGE,
+              },
+              item_title: details.Name,
+              item_description: "Reward for participation",
+              item_image: {
+                url: process.env.ENV !== "local" ? (insertedTournament.tsRewardImage ?? undefined) : PLACEHOLDER_IMAGE,
+              },
+              ...(insertedTournament.tsRewardVideo
+                ? {
+                    item_video: {
+                      url:
+                        process.env.ENV !== "local"
+                          ? new URL(insertedTournament.tsRewardVideo).origin +
+                            new URL(insertedTournament.tsRewardVideo).pathname
+                          : PLACEHOLDER_VIDEO,
+                    },
+                  }
+                : {}),
+              item_metadata: {
+                activity_type: "event",
+                place: {
+                  type: "Online",
+                },
+              },
+            },
+          },
+        };
+        const ton_society_result = await registerActivity(tournamentDraft);
+        if (!ton_society_result.data.activity_id) {
+          throw new Error("Failed to create activity in Ton Society");
+        }
+        logger.log(
+          `Created activity in Ton Society with ID: ${ton_society_result.data.activity_id} for tournament ID: ${insertedTournament.id}`
+        );
+        await tournamentsDB.updateActivityIdTrx(trx, ton_society_result.data.activity_id, insertedTournament.id);
+
+        return { insertedTournament, activity_id: ton_society_result.data.activity_id };
+      });
       return new Response(JSON.stringify({ message: "success", tournament: result.insertedTournament }), {
         status: 200,
         headers: { "content-type": "application/json" },
