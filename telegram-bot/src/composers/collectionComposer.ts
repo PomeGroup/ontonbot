@@ -6,16 +6,8 @@ import { isUserAdmin } from "../db/users";
 import { createCollection, getCollectionsByHubId, updateCollection } from "../db/db";
 import { SbtRewardCollection } from "../types/SbtRewardCollection";
 import { uploadImageToMinio, uploadVideoToMinio } from "../utils/uploadHelpers";
+import { getHubs, HubType, SocietyHub } from "../helpers/getHubs";
 
-export interface Attributes {
-  title: string;
-  url: string;
-}
-
-export interface HubType {
-  id: number;
-  attributes: Attributes;
-}
 
 export const collectionComposer = new Composer<MyContext>();
 
@@ -31,11 +23,11 @@ collectionComposer.command("collections", async (ctx) => {
   }
 
   // 2) Fetch hubs from the external endpoint
-  let hubs: HubType[] = [];
+  let hubs: SocietyHub[] = [];
   try {
-    const resp = await axios.get("https://society.ton.org/v1/hubs?_start=0&_end=100");
+
     // The top-level shape is { data: HubType[] }
-    hubs = resp.data.data;
+    hubs = await getHubs();
   } catch (error) {
     logger.error("Error fetching hubs:", error);
     await ctx.reply("Failed to fetch hubs. Please try again later.");
@@ -49,8 +41,8 @@ collectionComposer.command("collections", async (ctx) => {
 
   // 3) Build an inline keyboard for available hubs
   const kb = new InlineKeyboard();
-  hubs.forEach((hub: HubType) => {
-    kb.text(hub.attributes.title || `Hub ${hub.id}`, `hub_select_${hub.id}`).row();
+  hubs.forEach((hub: SocietyHub) => {
+    kb.text(hub.name || `Hub ${hub.id}`, `hub_select_${hub.id}`).row();
   });
 
   // 4) Initialize session flow
@@ -84,7 +76,7 @@ collectionComposer.callbackQuery(/^hub_select_(\d+)$/, async (ctx) => {
 
   // 1) Find the selected hub in the stored array
   const storedHubs = ctx.session.collectionData?.hubs ?? [];
-  const selectedHub = storedHubs.find((h) => h.id === hubId);
+  const selectedHub = storedHubs.find((h) => String(h.id) === String(hubId));
 
   // If for some reason we can't find it, fallback
   if (!selectedHub) {
@@ -95,7 +87,7 @@ collectionComposer.callbackQuery(/^hub_select_(\d+)$/, async (ctx) => {
 
   // 2) Store hubId and hubName in session
   ctx.session.collectionData!.hubId = hubId;
-  ctx.session.collectionData!.hubName = selectedHub.attributes.title || `Hub ${hubId}`;
+  ctx.session.collectionData!.hubName = selectedHub.name || `Hub ${hubId}`;
 
   // 3) Prompt user for Add or Edit
   ctx.session.collectionStep = "CHOOSE_ACTION";
@@ -163,11 +155,11 @@ async function showOrEditCollectionNavigation(
   isFirstTime: boolean,
 ) {
   const kb = new InlineKeyboard()
-    .text("<< Prev", "collection_prev")
-    .text(`ID ${collection.id}`, "collection_noop")
-    .text("Next >>", "collection_next")
+    .text("<< Prev", "collection_prev_col")
+    .text(`ID ${collection.id}`, "collection_noop_col")
+    .text("Next >>", "collection_next_col")
     .row()
-    .text("Select This", `collection_select_${collection.id}`);
+    .text("Select This", `collection_select_col_${collection.id}`);
 
   const imageUrl = collection.imageLink || "";
 
@@ -223,8 +215,9 @@ async function showOrEditCollectionNavigation(
 }
 
 collectionComposer.callbackQuery(
-  ["collection_prev", "collection_next", /^collection_select_(\d+)$/, "collection_noop"],
+  ["collection_prev_col", "collection_next_col", /^collection_select_col_(\d+)$/, "collection_noop_col"],
   async (ctx) => {
+    logger.info("collectionComposer.callbackQuery" + ctx.callbackQuery.data);
     if (ctx.session.collectionStep !== "NAVIGATE_COLLECTIONS") {
       await ctx.answerCallbackQuery();
       return;
@@ -236,18 +229,18 @@ collectionComposer.callbackQuery(
     const flow = ctx.session.collectionData!;
     let index = flow.currentIndex ?? 0;
 
-    if (data === "collection_noop") {
+    if (data === "collection_noop_col") {
       return;
     }
 
-    if (data === "collection_prev") {
+    if (data === "collection_prev_col") {
       index = index - 1 < 0 ? flow.collections!.length - 1 : index - 1;
       flow.currentIndex = index;
       await showOrEditCollectionNavigation(ctx, flow.collections![index], false);
       return;
     }
 
-    if (data === "collection_next") {
+    if (data === "collection_next_col") {
       index = index + 1 >= flow.collections!.length ? 0 : index + 1;
       flow.currentIndex = index;
       await showOrEditCollectionNavigation(ctx, flow.collections![index], false);
@@ -255,7 +248,7 @@ collectionComposer.callbackQuery(
     }
 
     // /^collection_select_(\d+)$/
-    const match = data.match(/^collection_select_(\d+)$/);
+    const match = data.match(/^collection_select_col_(\d+)$/);
     if (!match) return;
     const selectedId = Number(match[1]);
     flow.selectedCollectionId = selectedId;

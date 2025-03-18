@@ -30,7 +30,8 @@ async function MainCronJob() {
   new CronJob("*/1 * * * *", cronJobRunner(cronJobs.CreateRewards), null, true);
   new CronJob("*/3 * * * *", cronJobRunner(cronJobs.notifyUsersForRewards), null, true);
 
-  new CronJob("0 */30 * * * *", cronJobs.syncSbtCollectionsForEvents, null, true);
+  // has been disabled because of high rate limit usage
+  //new CronJob("0 */30 * * * *", cronJobs.syncSbtCollectionsForEvents, null, true); // has been disabled because of high rate limit usage
   new CronJob(
     "0 */1 * * *", // (cronTime) =>  every hour
     cronJobs.CheckSbtStatus, // (onTick)   => function to run
