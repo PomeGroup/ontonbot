@@ -4,8 +4,8 @@ import { GetOrderResponse, PaymentType } from "~/types/order.types";
 export async function addOrder(body: {
   full_name: string;
   telegram: string;
-  company: string;
-  position: string;
+  company?: string;
+  position?: string;
   owner_address: string;
   event_uuid: string;
   affiliate_id: string | null;
