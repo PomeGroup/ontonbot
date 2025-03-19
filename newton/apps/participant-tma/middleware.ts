@@ -16,11 +16,27 @@ export async function middleware(req: NextRequest) {
       const isAffiliate = tgAppStartParam.includes("-affiliate-");
       const isOrganizerProfile = tgAppStartParam.startsWith("channels_");
       const isTournament = tgAppStartParam.startsWith("tournaments_");
+      const isTab = tgAppStartParam.startsWith("tab_");
 
       if (isOrganizerProfile) {
         console.log("redirecting to organizer profile");
         return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
       }
+
+      if (isTab) {
+        const tab = tgAppStartParam.replace("tab_", "");
+        switch (tab) {
+          case "play":
+            return NextResponse.redirect(new URL(`/play-2-win`, req.nextUrl.origin));
+          case "my":
+            return NextResponse.redirect(new URL(`/my`, req.nextUrl.origin));
+          case "channels":
+            return NextResponse.redirect(new URL(`/channels`, req.nextUrl.origin));
+          default:
+            return NextResponse.redirect(new URL(`/`, req.nextUrl.origin));
+        }
+      }
+
       if (isTournament) {
         console.log("redirecting to tournament");
         return NextResponse.redirect(
