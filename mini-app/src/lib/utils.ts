@@ -45,30 +45,6 @@ export const redirectTo = (path: string) => {
   return false;
 };
 
-/**
- * Converts a duration in milliseconds to a human-readable time format (HH:MM:SS.SSS).
- *
- * @param {number} duration - The duration in milliseconds.
- * @return {string} The time in the format HH:MM:SS.SSS.
- */
-export const msToTime = (duration: number): string => {
-  const milliseconds = Math.floor((duration % 1000) / 100);
-  let seconds: number | string = Math.floor((duration / 1000) % 60);
-  let minutes: number | string = Math.floor((duration / (1000 * 60)) % 60);
-  let hours: number | string = Math.floor((duration / (1000 * 60 * 60)) % 24);
-
-  hours = hours < 10 ? `0${hours}` : hours;
-  minutes = minutes < 10 ? `0${minutes}` : minutes;
-  seconds = seconds < 10 ? `0${seconds}` : seconds;
-
-  return `${hours}:${minutes}:${seconds}.${milliseconds}`;
-};
-
-// Converts a date to  round date to interval
-export const roundDateToInterval = (date: number | undefined, interval: number): number | undefined => {
-  return date ? Math.floor(date / interval) * interval : date;
-};
-
 export const removeSecretKey = (changes: any) =>
   JSON.stringify(changes ? removeKey(changes, "secret_phrase") : null, null, 2);
 
