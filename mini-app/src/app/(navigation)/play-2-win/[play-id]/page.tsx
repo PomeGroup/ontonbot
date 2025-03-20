@@ -14,6 +14,7 @@ import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import { usePageTournament } from "@/hooks/tournaments.hook";
 import useWebApp from "@/hooks/useWebApp";
+import { getDiffValueAndSuffix } from "@/lib/time.utils";
 import { Skeleton } from "@mui/material";
 import { fromNano } from "@ton/core";
 import { Page } from "konsta/react";
@@ -82,12 +83,7 @@ const EventAttributes = React.memo(() => {
         label="Duration"
         value={
           tournament.data?.startDate && tournament.data?.endDate
-            ? (() => {
-                const start = new Date(tournament.data.startDate);
-                const end = new Date(tournament.data.endDate);
-                const hours = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60));
-                return `${hours} hour${hours === 1 ? "" : "s"}`;
-              })()
+            ? getDiffValueAndSuffix(new Date(tournament.data.startDate), new Date(tournament.data.endDate)).formattedValue
             : "TBD"
         }
       />

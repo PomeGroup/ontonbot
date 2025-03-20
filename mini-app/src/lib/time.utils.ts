@@ -12,7 +12,7 @@ export function getDiffValueAndSuffix(startDate: Date, endDate: Date) {
   const diffValue = isLessThanOneHour ? Math.ceil(diffTime / (1000 * 60)) : Math.ceil(diffTime / oneHour);
   const suffix: "min" | "hour" = isLessThanOneHour ? "min" : "hour";
 
-  return { diffValue, suffix };
+  return { diffValue, suffix, formattedValue: `${diffValue} ${suffix}` };
 }
 
 /**
