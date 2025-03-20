@@ -299,7 +299,6 @@ const Play2WinPage: React.FC<{
             onClick={() => {
               const tLink = tournament.data?.tournamentLink;
               tLink && webapp?.openTelegramLink(tLink);
-              webapp?.close();
             }}
           />
         </div>

@@ -332,7 +332,6 @@ const DiscoverTournaments: React.FC = () => {
                             size="md"
                             onClick={() => {
                               tournament.tournamentLink && webApp?.openTelegramLink(tournament.tournamentLink);
-                              webApp?.close();
                             }}
                           >
                             Play
