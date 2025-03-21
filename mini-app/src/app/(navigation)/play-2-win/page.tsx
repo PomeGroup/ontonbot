@@ -51,6 +51,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
           key={tournamentId}
           className="rounded-md"
           height={220}
+          width={220}
           sx={{ transform: "unset" }}
         />
       ) : (

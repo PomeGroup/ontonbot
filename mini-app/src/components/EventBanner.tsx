@@ -41,10 +41,11 @@ export default function EventBanner({ skeleton, event, className }: Props) {
     }
   };
 
-  return !imageLoaded || skeleton ? (
+  return skeleton ? (
     <Skeleton
       className="rounded-md"
       height={220}
+      width={220}
       sx={{ transform: "unset" }}
     />
   ) : (
