@@ -45,7 +45,8 @@ export const UpdateEventCapacity = async () => {
       }
 
       await db.transaction(async (trx) => {
-        const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.06);
+        //const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.06);
+        const newCapacity = Math.floor((paymentInfo?.bought_capacity || 0) + order.total_price / 0.06 + Number.EPSILON);
         logger.log(
           `( bought_capacity ${paymentInfo?.bought_capacity}  + order.total_price ${order.total_price} ) => newCapacity  ${newCapacity}`
         );
