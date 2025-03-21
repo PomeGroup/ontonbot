@@ -52,7 +52,7 @@ export const handleSingleRewardUpdate = async (
         await maybeInsertUserScore(userId, event_id);
       }
       if (rewardType === "ton_society_csbt_ticket") {
-        await informTonfestUserClaim(userId, event_id); // <-- NEW
+        await informTonfestUserClaim(userId, event_id, tonSocietyStatus === "CLAIMED" ? "addSbtFromOnton" : "setSbtPending");
       }
     }
   }

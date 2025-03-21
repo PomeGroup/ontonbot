@@ -31,9 +31,14 @@ export const stepNameEnum = pgEnum("step_name_enum", [
 ]);
 // Add an enum for methods if you want to constrain possible values:
 export const httpMethodEnum = pgEnum("http_method_enum", ["GET", "POST", "PUT", "PATCH", "DELETE"]);
-export const taskFunctionEnum = pgEnum("task_function_enum", ["addUserTicketFromOnton", "addSbtFromOnton", "PridipieAUTH"]);
+export const taskFunctionEnum = pgEnum("task_function_enum", [
+  "addUserTicketFromOnton",
+  "addSbtFromOnton",
+  "setSbtPending",
+  "PridipieAUTH",
+]);
 
-export type CallBackTaskFunctionType = "addUserTicketFromOnton" | "addSbtFromOnton" | "PridipieAUTH";
+export type CallBackTaskFunctionType = "addUserTicketFromOnton" | "addSbtFromOnton" | "PridipieAUTH" | "setSbtPending";
 export type CallBackTaskAPINameType = "TONFEST" | "TS_API" | "PRIDIPIE_API";
 
 export interface RetryPolicy {
