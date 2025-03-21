@@ -46,7 +46,9 @@ export const UpdateEventCapacity = async () => {
 
       await db.transaction(async (trx) => {
         const newCapacity = Number(paymentInfo?.bought_capacity! + order.total_price / 0.06);
-
+        logger.log(
+          `( bought_capacity ${paymentInfo?.bought_capacity}  + order.total_price ${order.total_price} ) => newCapacity  ${newCapacity}`
+        );
         await trx.update(events).set({ capacity: newCapacity }).where(eq(events.event_uuid, eventData.event_uuid)).execute();
         await eventDB.deleteEventCache(eventData.event_uuid);
 
