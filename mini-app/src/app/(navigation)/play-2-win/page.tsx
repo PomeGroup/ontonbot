@@ -49,7 +49,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
       {tournament.isLoading ? (
         <Skeleton
           key={tournamentId}
-          className="w-[220px] h-[220px] rounded-md"
+          className="rounded-md"
+          height={220}
+          sx={{ transform: "unset" }}
         />
       ) : (
         <div className="relative isolate">
@@ -96,7 +98,7 @@ const Play2WinFeatured = () => {
       <div>
         <Swiper
           slidesPerView="auto"
-          className="!-mx-3 !pe-8"
+          className="!-mx-4 !pe-8"
           spaceBetween={12}
           pagination={{ clickable: true }}
           autoHeight

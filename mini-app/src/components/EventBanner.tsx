@@ -1,10 +1,10 @@
 import useWebApp from "@/hooks/useWebApp";
-import Image from "next/image";
-import { useState } from "react";
 import { isValidImageUrl } from "@/lib/isValidImageUrl";
 import { OntonEvent } from "@/types";
-import { cn } from "@/utils";
+import { Skeleton } from "@mui/material";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 type SkeletonProps = { skeleton: true; event?: null };
 type EventProps = {
@@ -41,18 +41,18 @@ export default function EventBanner({ skeleton, event, className }: Props) {
     }
   };
 
-  // Skeleton Loader for Image
-  const renderImageSkeleton = () => (
-    <div className="w-full h-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg"></div>
-  );
-
-  return (
+  return !imageLoaded || skeleton ? (
+    <Skeleton
+      className="rounded-md"
+      height={220}
+      sx={{ transform: "unset" }}
+    />
+  ) : (
     <div
-      className={cn("relative w-full h-auto overflow-hidden cursor-pointer", className)}
+      className="relative"
       onClick={handleEventClick}
       key={`detailed-${eventUuid}`}
     >
-      {(!imageLoaded || skeleton) && renderImageSkeleton()}
       {!skeleton && (
         <Image
           // if date now before 5 november 2024 show special image
