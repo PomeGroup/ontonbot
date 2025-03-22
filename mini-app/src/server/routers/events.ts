@@ -444,6 +444,13 @@ const addEvent = adminOrganizerProtectedProcedure.input(z.object({ eventData: Ev
             message: logMessage,
             topic: "no_topic",
             inline_keyboard: tgBotModerationMenu(eventData.event_uuid),
+            media_group: [
+              { type: "photo", url: eventData.tsRewardImage!! },
+              {
+                type: "video",
+                url: eventData.tsRewardVideo!!,
+              },
+            ],
           });
 
           await trx
@@ -690,6 +697,13 @@ const updateEvent = eventManagerPP
               message: logMessage,
               topic: "no_topic",
               inline_keyboard: tgBotModerationMenu(oldEvent.event_uuid),
+              media_group: [
+                { type: "photo", url: eventData.ts_reward_url!! },
+                {
+                  type: "video",
+                  url: eventData.video_url!!,
+                },
+              ],
             });
             await trx
               .update(events)

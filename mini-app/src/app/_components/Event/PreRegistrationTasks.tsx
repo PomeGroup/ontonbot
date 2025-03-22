@@ -36,6 +36,8 @@ const PreRegistrationTasks: FC<{ children: ReactNode }> = (props) => {
   useEffect(() => {
     if (joinTaskStatus.data?.all_done) {
       setJoinedX("done");
+    } else {
+      setJoinedX("not_done");
     }
   }, [joinTaskStatus.data?.all_done]);
 

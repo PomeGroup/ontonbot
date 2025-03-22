@@ -1,20 +1,20 @@
 import { db } from "@/db/db";
 import { eventRegistrants, orders } from "@/db/schema";
+import "@/lib/gracefullyShutdown";
 import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import eventDB from "@/server/db/events";
+import ordersDB from "@/server/db/orders.db";
 import { Address } from "@ton/core";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import "@/lib/gracefullyShutdown";
-import ordersDB from "@/server/db/orders.db";
 
 const addOrderSchema = z.object({
   event_uuid: z.string().uuid(),
   full_name: z.string(),
   telegram: z.string(),
-  company: z.string(),
-  position: z.string(),
+  company: z.string().optional(),
+  position: z.string().optional(),
   affiliate_id: z.string().nullable(),
   owner_address: z.string().refine((data) => Address.isAddress(Address.parse(data))),
 });
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       status: 400,
     });
   }
+
   const eventData = await eventDB.selectEventByUuid(body.data.event_uuid);
   if (!eventData) {
     return Response.json({ message: "event not found" }, { status: 400 });

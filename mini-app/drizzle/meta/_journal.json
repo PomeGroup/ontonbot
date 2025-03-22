@@ -225,6 +225,13 @@
       "when": 1742264613526,
       "tag": "0031_sleepy_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1742558506493,
+      "tag": "0032_chief_spacker_dave",
+      "breakpoints": true
     }
   ]
 }

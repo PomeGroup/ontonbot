@@ -1,6 +1,6 @@
 import { Context, SessionFlavor } from "grammy";
 import { SbtRewardCollection } from "./SbtRewardCollection";
-import { HubType } from "src/composers/collectionComposer";
+import { HubType, SocietyHub } from "../helpers/getHubs";
 
 export interface SessionData {
   /* ------------------ SBT Distribution Flow ------------------ */
@@ -111,8 +111,13 @@ export interface SessionData {
     videoBuffer?: Buffer;
     navigationMessageId?: number;
     imageLink?: string;
-    hubs?: HubType[];
+    hubs?: SocietyHub[];
   };
+  toIdStep?:
+    | "askMethod"
+    | "askFile"
+    | "askText"
+    | "done";
 }
 
 export type MyContext = Context & SessionFlavor<SessionData>;

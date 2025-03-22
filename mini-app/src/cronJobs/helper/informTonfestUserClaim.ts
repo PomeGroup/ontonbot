@@ -4,8 +4,13 @@ import eventDB from "@/server/db/events";
 import { ALLOWED_TONFEST_EVENT_UUIDS } from "@/constants";
 import ordersDB from "@/server/db/orders.db";
 import { is_local_env } from "@/server/utils/evnutils";
+import { CallBackTaskFunctionType } from "@/db/schema/callbackTasks";
 
-export const informTonfestUserClaim = async (userId: number, event_id: number) => {
+export const informTonfestUserClaim = async (
+  userId: number,
+  event_id: number,
+  calimCallEndpoint: CallBackTaskFunctionType
+) => {
   // Example condition: skip if payment_type is "STAR"
   // or if the event UUID doesn't match certain known IDs.
   const eventData = await eventDB.fetchEventById(event_id);
@@ -36,11 +41,13 @@ export const informTonfestUserClaim = async (userId: number, event_id: number) =
   const payloadForTonfest = {
     userTelegramId: order.user_id ?? 0,
   };
-  logger.log(`💎💎💎💎💎💎💎💎Tonfest payload for order=${order.uuid}: ${JSON.stringify(payloadForTonfest)}`);
+  logger.log(
+    `💎💎💎💎💎💎💎💎Tonfest payload for order=${order.uuid} for endpoint=${calimCallEndpoint}: ${JSON.stringify(payloadForTonfest)}`
+  );
   // Make the immediate call to addSbtFromOnton
   const immediateResult = await callTaskImmediate({
     apiName: "TONFEST",
-    taskFunction: "addSbtFromOnton", // <--- calls the TonFest endpoint
+    taskFunction: calimCallEndpoint,
     payload: payloadForTonfest,
     itemType: "EVENT", // for callback_tasks referencing
     itemId: eventData?.event_id ?? 0, // fallback to 0 if not found

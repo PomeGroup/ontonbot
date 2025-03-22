@@ -1,4 +1,5 @@
 import Typography from "@/components/Typography";
+import { getDiffValueAndSuffix } from "@/lib/time.utils";
 import { cn } from "@/utils";
 import { TimerIcon } from "lucide-react";
 import React from "react";
@@ -9,32 +10,22 @@ export const TournamentTimeRemaining: React.FC<{
   closeOnly?: boolean;
   space?: "sm" | "md";
 }> = (props) => {
-  const now = new Date();
-  const end = new Date(props.endDate);
-  const diffTime = end.getTime() - now.getTime();
-  const oneHour = 1000 * 60 * 60;
-
-  if (props.closeOnly && diffTime >= oneHour * 3) {
-    return null;
-  }
-
-  const isLessThanOneHour = diffTime < oneHour;
-  const diffValue = isLessThanOneHour ? Math.ceil(diffTime / (1000 * 60)) : Math.ceil(diffTime / oneHour);
+  const { diffValue, suffix } = getDiffValueAndSuffix(new Date(), new Date(props.endDate));
 
   return (
     <FloatingBadge
       position={`tl-${props.space || "md"}`}
       className={cn(
-        diffTime <= 0
+        diffValue <= 0
           ? "text-brand-red"
-          : diffTime < oneHour
+          : suffix === "min"
             ? "text-brand-light-destructive"
-            : diffTime < oneHour * 3
+            : diffValue < 3
               ? "text-IOS-light-wallet-accent_orange"
               : "text-white"
       )}
     >
-      {diffTime <= 0 ? (
+      {diffValue <= 0 ? (
         <Typography
           variant="subheadline1"
           weight="bold"
@@ -50,7 +41,7 @@ export const TournamentTimeRemaining: React.FC<{
           >
             {diffValue}
           </Typography>
-          <Typography variant="footnote">{isLessThanOneHour ? "min" : "hour"}</Typography>
+          <Typography variant="footnote">{suffix}</Typography>
         </>
       )}
     </FloatingBadge>
