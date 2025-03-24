@@ -3,18 +3,22 @@ import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import "@/app/page.css";
-import { useConfig } from "@/context/ConfigContext";
-import "swiper/css";
-import "swiper/css/pagination";
-import { Pagination } from "swiper/modules";
-
 import EventBanner from "@/components/EventBanner";
 import Typography from "@/components/Typography";
+import { useConfig } from "@/context/ConfigContext";
 import { OntonEvent } from "@/types";
+import { Skeleton } from "@mui/material";
 import { ChevronRightIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import TournamentCard from "../_components/Tournaments/TournamentCard";
+import CustomCard from "../_components/atoms/cards/CustomCard";
+import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { trpc } from "../_trpc/client";
+
+import "swiper/css";
+import "swiper/css/pagination";
 
 export default function Home() {
   return (
@@ -28,6 +32,7 @@ export default function Home() {
           <div className="flex-grow pb-4">
             {/* Slider Event */}
             <PromotedEventsSlider />
+            <FeaturedContests />
             <PromotedEventsList />
           </div>
         </div>
@@ -122,62 +127,140 @@ function PromotedEventsSlider() {
 function PromotedEventsList() {
   const config = useConfig();
   const itemIds = config?.homeListEventUUID as unknown as string[];
-  const router = useRouter();
+  const queryEnabled = Array.isArray(itemIds) && typeof itemIds[0] === "string";
+
   const { isError, isLoading, data } = trpc.events.getEventsWithFilters.useQuery(
     {
       limit: 10,
       filter: { event_uuids: itemIds },
       sortBy: "do_not_order" as const,
     },
-    {
-      enabled: Array.isArray(itemIds) && typeof itemIds[0] === "string",
-    }
+    { enabled: queryEnabled }
   );
 
   if (isError) {
-    return "something went wrong";
+    return <div>Something went wrong</div>;
   }
 
-  if (!isLoading && data.data?.length === 0) {
+  if (!isLoading && (!data?.data || data.data.length === 0)) {
     return null;
-  }
-
-  let content = (
-    <>
-      <EventCardSkeleton />
-      <EventCardSkeleton />
-    </>
-  );
-  if (data?.data?.length) {
-    content = (
-      <>
-        {data.data?.map((event) => (
-          <EventCard
-            key={(event as any).event_uuid}
-            event={event}
-            currentUserId={0}
-          />
-        ))}
-      </>
-    );
   }
 
   return (
     <>
       <div className="w-full pb-2 flex justify-between items-center">
         <Typography variant="title2">Events</Typography>
-        <a
-          onClick={() => router.push("/search/")}
-          className={`text-[#007AFF] font-medium flex align-center`}
+        <Link
+          href="/search/"
+          className="text-primary font-medium flex align-center"
         >
           <span>See All</span>
           <ChevronRightIcon
             width={20}
             className="ml-1 -my-0.5"
           />
-        </a>
+        </Link>
       </div>
-      {content}
+      {/* Loading state */}
+      {isLoading ? (
+        <>
+          <EventCardSkeleton />
+          <EventCardSkeleton />
+        </>
+      ) : (
+        data.data?.map((event) => (
+          <EventCard
+            key={(event as any).event_uuid}
+            event={event}
+            currentUserId={0}
+          />
+        ))
+      )}
     </>
   );
 }
+
+const FeaturedContests = () => {
+  const tournomants = trpc.tournaments.getTournaments.useQuery({
+    limit: 5,
+    filter: {
+      status: "notended",
+    },
+    sortBy: "timeRemaining",
+  });
+
+  return (
+    <>
+      <div className="w-full pb-2 flex justify-between items-center">
+        <Typography variant="title2">Featured Contests</Typography>
+        <Link
+          href={"/play-2-win/"}
+          className={`text-primary font-medium flex align-center`}
+        >
+          <span>All Contests</span>
+          <ChevronRightIcon
+            width={20}
+            className="ml-1 -my-0.5"
+          />
+        </Link>
+      </div>
+      {tournomants.isError && (
+        <CustomCard
+          className="col-span-2"
+          defaultPadding
+        >
+          <DataStatus
+            status="searching"
+            title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
+            description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading tournaments."}
+          />
+        </CustomCard>
+      )}
+      {tournomants.isLoading ? (
+        <div className="grid grid-cols-2 gap-4">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
+            >
+              <Skeleton
+                variant="rectangular"
+                width={120}
+                height={120}
+                className="rounded-md"
+              />
+              <Skeleton
+                variant="rectangular"
+                width={80}
+                height={36}
+                className="rounded-md mt-2"
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <Swiper
+          slidesPerView="auto"
+          className="!-mx-4 !pe-8"
+          spaceBetween={12}
+          pagination
+          autoHeight
+          modules={[Pagination]}
+          wrapperClass="swiper-wrapper pb-8 px-4"
+        >
+          {tournomants.data?.tournaments.map((tournament) => (
+            <SwiperSlide
+              className="!w-[160px]"
+              key={tournament.id}
+            >
+              <TournamentCard
+                key={tournament.id}
+                tournament={tournament}
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      )}
+    </>
+  );
+};

@@ -6,19 +6,17 @@ import { Swiper, SwiperSlide } from "swiper/react";
 
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
-import CustomButton from "@/app/_components/Button/CustomButton";
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
+import TournamentCard from "@/app/_components/Tournaments/TournamentCard";
 import { trpc } from "@/app/_trpc/client";
 import Divider from "@/components/Divider";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import useWebApp from "@/hooks/useWebApp";
 import { formatSortTournamentSelectOption, SortOptions, tournamentsListSortOptions } from "@/server/utils/tournaments.utils";
 import { cn } from "@/utils";
 import { Skeleton } from "@mui/material";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { BsFilterLeft } from "react-icons/bs";
@@ -29,7 +27,7 @@ interface TournamentCardProps {
   tournamentId: string;
 }
 
-const TournamentCard: React.FC<TournamentCardProps> = ({ tournamentId }) => {
+const TournamentSlide: React.FC<TournamentCardProps> = ({ tournamentId }) => {
   const router = useRouter();
 
   const queryEnabeld = !isNaN(Number(tournamentId));
@@ -111,7 +109,7 @@ const Play2WinFeatured = () => {
               key={tId}
               className="!w-[220px] !h-[220px]"
             >
-              <TournamentCard
+              <TournamentSlide
                 tournamentId={tId}
                 key={tId}
               />
@@ -220,10 +218,8 @@ const TournamentFilter: React.FC<{
 };
 
 const DiscoverTournaments: React.FC = () => {
-  const router = useRouter();
   const [sortSelected, setSortSelected] = React.useState<SortOptions>("timeRemaining");
   const [selectedGame, setSelectedGame] = useState(-1);
-  const webApp = useWebApp();
 
   const tournomants = trpc.tournaments.getTournaments.useInfiniteQuery(
     {
@@ -301,49 +297,10 @@ const DiscoverTournaments: React.FC = () => {
             ))
           : tournomants.data?.pages.map((page) =>
               page.tournaments.map((tournament) => (
-                <Link
+                <TournamentCard
                   key={tournament.id}
-                  href={`/play-2-win/${tournament.id}`}
-                >
-                  <CustomCard defaultPadding>
-                    <div className="flex flex-col gap-3">
-                      <div className="relative isolate mx-auto">
-                        <LoadableImage
-                          src={tournament.imageUrl}
-                          width={120}
-                          height={120}
-                          alt="game card"
-                        />
-                        <TournamentTimeRemaining
-                          closeOnly
-                          space="sm"
-                          endDate={tournament.endDate!}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <div className="flex flex-col gap-0.5">
-                          <Typography
-                            variant="callout"
-                            truncate
-                          >
-                            {tournament.name}
-                          </Typography>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <CustomButton
-                            variant="outline"
-                            size="md"
-                            onClick={() => {
-                              tournament.tournamentLink && webApp?.openTelegramLink(tournament.tournamentLink);
-                            }}
-                          >
-                            Play
-                          </CustomButton>
-                        </div>
-                      </div>
-                    </div>
-                  </CustomCard>
-                </Link>
+                  tournament={tournament}
+                />
               ))
             )}
       </div>
