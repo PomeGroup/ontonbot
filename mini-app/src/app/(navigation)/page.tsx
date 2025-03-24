@@ -9,6 +9,7 @@ import "swiper/css/pagination";
 import { Pagination } from "swiper/modules";
 
 import EventBanner from "@/components/EventBanner";
+import Typography from "@/components/Typography";
 import { OntonEvent } from "@/types";
 import { ChevronRightIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -164,7 +165,7 @@ function PromotedEventsList() {
   return (
     <>
       <div className="w-full pb-2 flex justify-between items-center">
-        <h2 className="font-bold text-lg">Events</h2>
+        <Typography variant="title2">Events</Typography>
         <a
           onClick={() => router.push("/search/")}
           className={`text-[#007AFF] font-medium flex align-center`}

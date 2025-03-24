@@ -53,9 +53,11 @@ body {
 
 .swiper-pagination-bullet.swiper-pagination-bullet-active {
   background-color: black !important;
+  border: black solid 1px;
 }
 
-.swiper-pagination-bullet {
-  background-color: white !important;
+span.swiper-pagination-bullet {
+  background-color: transparent !important;
+  opacity: 1 !important;
   border: #8e8e93 solid 1px;
 }
