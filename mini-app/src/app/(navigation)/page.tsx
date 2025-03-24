@@ -99,9 +99,8 @@ function PromotedEventsSlider() {
   if (!isLoadingSlider) {
     content = (
       <Swiper
-        // onSlideChange={handleSlideChange}
         slidesPerView="auto"
-        className="-mx-3"
+        className="!-mx-4 !pe-8"
         spaceBetween={12}
         pagination={{ clickable: true }}
         autoHeight
@@ -111,11 +110,10 @@ function PromotedEventsSlider() {
         {/* <div className='flex gap-3'> */}
         {sliderEventData?.data.map((event) => (
           <SwiperSlide
-            className="w-[220px]"
+            className="!w-[220px] !h-[220px]"
             key={event.event_uuid}
           >
             <EventBanner
-              className="w-[220px]"
               event={event}
               key={event.event_uuid}
             />

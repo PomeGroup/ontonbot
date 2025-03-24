@@ -1,5 +1,5 @@
 import type { CallBackTaskAPINameType, CallBackTaskFunctionType } from "@/db/schema/callbackTasks";
-import { addSbtFromOnton, addUserTicketFromOnton } from "@/cronJobs/helper/tonfestHandlers";
+import { addSbtFromOnton, addUserTicketFromOnton, setSbtPending } from "@/cronJobs/helper/tonfestHandlers";
 import { PridipieAUTH } from "@/lib/pridipieAPI";
 
 // Each handler function's signature
@@ -27,6 +27,7 @@ export const ApiTaskRouter: ApiTaskRouterType = {
   TONFEST: {
     addUserTicketFromOnton,
     addSbtFromOnton,
+    setSbtPending,
   },
   TS_API: {
     // For TS_API, you can add something like someOtherFunction: ...

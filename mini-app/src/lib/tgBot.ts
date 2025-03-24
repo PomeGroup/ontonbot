@@ -7,7 +7,12 @@ import moderationLogDB from "@/server/db/moderationLogger.db";
 import { logger } from "@/server/utils/logger";
 import axios, { AxiosError } from "axios";
 import { Bot, InputFile } from "grammy";
-import { InlineKeyboardMarkup } from "grammy/types";
+import { InlineKeyboardMarkup, InputMediaPhoto, InputMediaVideo } from "grammy/types";
+
+interface MediaGroupItem {
+  type: "photo" | "video";
+  url: string;
+}
 
 const tgClient = axios.create({
   baseURL: `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}`,
@@ -151,6 +156,11 @@ export const sendLogNotification = async (
     inline_keyboard?: InlineKeyboardMarkup;
     group_id?: number | string | null;
     reply_to_message_id?: number | null; // <---   optional param
+    /**
+     * If set, we'll send multiple photos/videos as a separate message (media group).
+     * Then we'll send the "main" message below (possibly with an inline keyboard).
+     */
+    media_group?: MediaGroupItem[];
   } = {
     message: "",
     topic: "event",
@@ -158,6 +168,7 @@ export const sendLogNotification = async (
     inline_keyboard: undefined,
     group_id: undefined,
     reply_to_message_id: undefined,
+    media_group: undefined,
   }
 ) => {
   // 1) Validate config
@@ -202,6 +213,40 @@ export const sendLogNotification = async (
     finalReplyTo = Number(topicMessageId);
   }
 
+  if (props.media_group && props.media_group.length > 0) {
+    // Telegram does not allow inline keyboards or individual captions on media groups.
+    // We'll fetch each item from the URL and build the array of InputMedia.
+    const mediaArray: (InputMediaPhoto | InputMediaVideo)[] = [];
+
+    for (const item of props.media_group) {
+      // 6a) Download the file
+      const response = await axios.get(item.url, { responseType: "arraybuffer" });
+      const buffer = response.data;
+
+      if (item.type === "photo") {
+        mediaArray.push({
+          type: "photo",
+          media: new InputFile(buffer), // or direct URL if Telegram can handle it
+        });
+      } else {
+        // treat as "video"
+        mediaArray.push({
+          type: "video",
+          media: new InputFile(buffer),
+        });
+      }
+    }
+
+    // 6b) sendMediaGroup has no 'reply_markup' support
+    //     We can optionally thread it via reply_to_message_id
+    const mediaGroupMessageId = await logBot.api.sendMediaGroup(Number(LOGS_GROUP_ID), mediaArray, {
+      reply_to_message_id: finalReplyTo,
+    });
+    logger.log("Sent media group message", Number(LOGS_GROUP_ID), mediaGroupMessageId);
+    // Note: If you want a single “caption” for the entire media group, you can put it
+    // on the *first* item’s caption field. But then you can't do multiple separate captions
+    // for each item in the group.
+  }
   // 6) If sending an image
   if (props.image) {
     const response = await axios.get(props.image, { responseType: "arraybuffer" });

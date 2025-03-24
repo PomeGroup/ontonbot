@@ -21,7 +21,7 @@ const verifiedAsPaidSchema = z.object({
   telegramUsername: z.string().min(1),
   eventUuid: z.string().uuid(),
   paymentType: z.enum(["STAR", "TON", "USDT"]),
-  paymentAmount: z.number().positive(),
+  paymentAmount: z.number().default(0),
 });
 
 const refundSchema = z.object({

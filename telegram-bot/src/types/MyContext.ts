@@ -113,6 +113,11 @@ export interface SessionData {
     imageLink?: string;
     hubs?: SocietyHub[];
   };
+  toIdStep?:
+    | "askMethod"
+    | "askFile"
+    | "askText"
+    | "done";
 }
 
 export type MyContext = Context & SessionFlavor<SessionData>;
