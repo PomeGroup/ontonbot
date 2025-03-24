@@ -8,6 +8,7 @@ import { useConfig } from "@/context/ConfigContext";
 // import { useTheme } from "next-themes";
 import "@/app/page.css";
 import "swiper/css";
+import "swiper/css/pagination";
 
 import EventBanner from "@/components/EventBanner";
 import { OntonEvent } from "@/types";
@@ -102,10 +103,10 @@ function PromotedEventsSlider() {
         slidesPerView="auto"
         className="!-mx-4 !pe-8"
         spaceBetween={12}
-        pagination={{ clickable: true }}
+        pagination
         autoHeight
         modules={[Pagination]}
-        wrapperClass="swiper-wrapper pb-3 px-4"
+        wrapperClass="swiper-wrapper pb-8 px-4"
       >
         {/* <div className='flex gap-3'> */}
         {sliderEventData?.data.map((event) => (
