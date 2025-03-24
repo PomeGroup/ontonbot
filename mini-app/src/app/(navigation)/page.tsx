@@ -2,13 +2,11 @@
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
-import { Pagination } from "swiper/modules";
-// import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { useConfig } from "@/context/ConfigContext";
-// import { useTheme } from "next-themes";
 import "@/app/page.css";
+import { useConfig } from "@/context/ConfigContext";
 import "swiper/css";
 import "swiper/css/pagination";
+import { Pagination } from "swiper/modules";
 
 import EventBanner from "@/components/EventBanner";
 import { OntonEvent } from "@/types";
@@ -16,18 +14,6 @@ import { ChevronRightIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { trpc } from "../_trpc/client";
-
-// const currentDateTime = Math.floor(Date.now() / 1000);
-
-// const upcomingEventsParams = searchEventsInputZod.parse({
-//   limit: 2,
-//   offset: 0,
-//   filter: {
-//     participationType: ["online", "in_person"],
-//     startDate: currentDateTime,
-//   },
-//   sortBy: "start_date_asc",
-// });
 
 export default function Home() {
   return (
@@ -194,43 +180,3 @@ function PromotedEventsList() {
     </>
   );
 }
-
-// interface HorizontalEventsProps {
-//   title: string;
-//   link: string;
-//   items?: any[];
-//   isLoading: boolean;
-// }
-
-// function HorizontalEvents({ title, link, items = [], isLoading }: HorizontalEventsProps) {
-//   const webApp = useWebApp();
-//   const userId = webApp?.initDataUnsafe?.user?.id;
-
-//   return isLoading ? (
-//     <>
-//       <EventCardSkeleton />
-//       <EventCardSkeleton />
-//     </>
-//   ) : (
-//     items.length > 0 && (
-//       <>
-//         <div className="pt-4 w-full pb-4 flex justify-between items-center">
-//           <h2 className="font-bold text-lg">{title}</h2>
-//           <a
-//             href={link}
-//             className="text-[#007AFF] border-2 border-[#007aff] rounded-lg py-1.5 px-4 hover:underline"
-//           >
-//             See All
-//           </a>
-//         </div>
-//         {items.map((event) => (
-//           <EventCard
-//             key={event.event_uuid}
-//             event={event}
-//             currentUserId={userId}
-//           />
-//         ))}
-//       </>
-//     )
-//   );
-// }
