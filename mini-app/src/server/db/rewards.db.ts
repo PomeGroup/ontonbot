@@ -18,7 +18,9 @@ export interface RewardChunkRow {
 const generateCacheKey = (visitor_id: number, reward_id?: string) => {
   return `reward:${visitor_id}${reward_id ? `:${reward_id}` : ""}`;
 };
-
+const generateCacheKeyWithRewardType = (visitor_id: number, type: RewardType) => {
+  return `reward:${type}:${visitor_id}`;
+};
 const generateCacheKeyForLinkEvent = (event_uuid: string) => {
   return `reward:link:${event_uuid}`;
 };
@@ -40,12 +42,15 @@ const checkExistingReward = async (visitor_id: number): Promise<Maybe<RewardsSel
 };
 
 const checkExistingRewardWithType = async (visitor_id: number, type: RewardType): Promise<Maybe<RewardsSelectType>> => {
+  const cacheKey = generateCacheKeyWithRewardType(visitor_id, type);
+  const cachedReward = await redisTools.getCache(cacheKey);
+  if (cachedReward) return cachedReward;
   const dbReward = await db.query.rewards.findFirst({
     where(fields, { eq }) {
       return and(eq(fields.visitor_id, visitor_id), eq(fields.type, type));
     },
   });
-
+  if (dbReward) await redisTools.setCache(cacheKey, dbReward, redisTools.cacheLvl.long);
   return dbReward;
 };
 
@@ -354,6 +359,34 @@ export const fetchRewardLinkForEvent = async (eventUuid: string): Promise<Reward
   // 3) Convert `undefined` to `null` for TypeScript consistency
   return reward ?? null;
 };
+
+const insertRewardRow = async (
+  visitor_id: number,
+  data: RewardDataTyepe | null,
+  user_id: number,
+  type: RewardType,
+  status: RewardStatus,
+  event: { start_date: number; end_date: number }
+) => {
+  const result = await db
+    .insert(rewards)
+    .values({
+      visitor_id,
+      type,
+      data,
+      event_end_date: event.end_date,
+      event_start_date: event.start_date,
+      status,
+      updatedBy: user_id.toString(),
+      tonSocietyStatus: "NOT_CLAIMED",
+    })
+    .returning()
+    .execute();
+
+  // Returning the first row (since .returning() returns an array)
+  return result[0];
+};
+
 const rewardDB = {
   checkExistingReward,
   insert,
@@ -361,6 +394,7 @@ const rewardDB = {
   updateRewardById,
   insertReward,
   insertRewardWithData,
+  insertRewardRow,
   findRewardByVisitorId,
   selectRewardsWithVisitorDetails,
   updateReward,

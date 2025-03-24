@@ -1,6 +1,9 @@
 import { bigint, index, integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { users } from "@/db/schema/users";
 import { events } from "@/db/schema/events";
+import { infer } from "zod";
+import { InferSelectModel } from "drizzle-orm";
+
 export const visitors = pgTable(
   "visitors",
   {
@@ -28,3 +31,5 @@ export const visitors = pgTable(
     updatedAtIdx: index("visitors_updated_at_idx").on(table.updatedAt),
   })
 );
+
+export type VisitorsRow = InferSelectModel<typeof visitors>;
