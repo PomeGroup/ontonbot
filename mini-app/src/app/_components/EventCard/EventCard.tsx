@@ -1,14 +1,17 @@
 "use client";
 
-import React, { ForwardedRef, forwardRef, memo } from "react";
+import { Calendar, MapPin } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import type React from "react";
+import { type ForwardedRef } from "react";
 
+import Typography from "@/components/Typography";
 import { Badge } from "@/components/ui/badge";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
-import { Card } from "konsta/react";
-import Typography from "@/components/Typography";
-import LoadableImage from "@/components/LoadableImage";
+import { cn } from "@/lib/utils";
+import CustomCard from "../atoms/cards/CustomCard";
 
 interface EventCardProps {
   event: {
@@ -34,19 +37,22 @@ interface EventCardProps {
     participationType?: string;
     hidden?: number;
     paymentType?: string;
+    organizerImageUrl?: string;
   };
   currentUserId?: number;
   children?: React.ReactNode;
 }
 
 /**
- * This card shows event info, and if `canEdit` is true,
- * also shows an "Edit Event Info" button that calls `onEditClick`.
+ * Event card component that displays event information in a clean, modern layout
  */
-function UnforwardedEventCard(
-  { event, currentUserId = 0, children }: EventCardProps,
-  ref: ForwardedRef<HTMLDivElement> | null
-) {
+function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: ForwardedRef<HTMLDivElement> | null) {
+  // ------------------------- //
+  //          HOOKS            //
+  // ------------------------- //
+  const webApp = useWebApp();
+  const router = useRouter();
+
   // Destructure event fields
   const {
     eventUuid,
@@ -54,7 +60,7 @@ function UnforwardedEventCard(
     startDate,
     endDate,
     location = "No Location",
-    imageUrl = "/template-images/default.webp",
+    imageUrl = "/placeholder.svg?height=200&width=200",
     organizerChannelName = "",
     organizerUserId = null,
     ticketToCheckIn = false,
@@ -65,20 +71,22 @@ function UnforwardedEventCard(
     participationType = "unknown",
     hidden = false,
     paymentType = "unknown",
+    organizerImageUrl,
   } = event;
 
-  // If time zone is invalid, fallback
+  // Validate timezone; fallback to "GMT" if invalid
   const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
 
   // Build location display
-  const geoLocation =
-    city || country ? `${city}, ${country}` : location.length > 15 ? `${location.slice(0, 15)}...` : location;
+  const displayLocation = city && country ? `${city}, ${country}` : location;
 
-  const isOnline = participationType === "online" ? "Online" : participationType === "in_person" ? geoLocation : "unknown";
-  const isPublished = !hidden;
-  // We open the card or route
-  const webApp = useWebApp();
-  const router = useRouter();
+  // Format location for display (truncate if needed)
+  const formattedLocation = displayLocation.length > 30 ? `${displayLocation.slice(0, 30)}...` : displayLocation;
+
+  // Determine event participation type
+  const isOnline = participationType === "online";
+
+  // Determine currency for ticket price
   const validCurrencies = ["USDT", "TON"];
   const currency = validCurrencies.includes(paymentType?.toUpperCase()) ? paymentType?.toUpperCase() : "";
 
@@ -92,74 +100,114 @@ function UnforwardedEventCard(
     }
   };
 
-  return (
-    <Card
-      className="overflow-hidden cursor-pointer radius-[10px]"
-      margin="mb-3"
-      contentWrapPadding="p-2"
-    >
-      <div
-        className="flex gap-4 items-stretch flex-nowrap relative"
-        ref={ref}
-        onClick={handleEventClick}
-      >
-        {/* LEFT: Event Image */}
-        <LoadableImage
-          src={imageUrl}
-          alt={title}
-          width={100}
-          height={100}
-        />
+  // Format date and time for display
+  const formattedDate = formatDateRange(startDate, endDate, validTimezone);
 
-        <div className="flex flex-col grow overflow-hidden">
-          <Typography
-            className="font-semibold mb-1 line-clamp-2 overflow-hidden"
-            variant="body"
-          >
-            {title}
-          </Typography>
-          {organizerChannelName.trim().length > 0 && (
+  return (
+    <div onClick={handleEventClick}>
+      <CustomCard className="p-2">
+        <div className="flex gap-4">
+          {/* Event Image */}
+          <Image
+            src={imageUrl || "/placeholder.svg"}
+            alt={title}
+            width={100}
+            height={100}
+            className="overflow-hidden w-[100px] h-[100px] rounded-md"
+          />
+
+          {/* Event Details */}
+          <div className="flex flex-col flex-grow overflow-hidden">
+            {/* Event Title */}
             <Typography
-              className="font-medium overflow-hidden text-ellipsis whitespace-nowrap"
-              variant="subheadline2"
+              variant="headline"
+              className="mb-2 line-clamp-2"
             >
-              by {organizerChannelName}
+              {title}
             </Typography>
-          )}
-          <div className="mt-auto text-[#8E8E93]">
-            <Typography
-              variant="subheadline2"
-              className="font-medium mb-1"
-            >
-              {isOnline} {isPublished ? "" : " • Not Published"}
-            </Typography>
-            <div className="flex justify-between">
+
+            {/* Date and Time */}
+            <div className="flex items-center text-gray-500 mb-1">
+              <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
               <Typography
                 variant="subheadline2"
-                className="font-medium"
+                className="truncate"
               >
-                {formatDateRange(startDate, endDate, validTimezone)}
+                {formattedDate}
               </Typography>
-              <div className="flex gap-[6px]">
-                {/* Badge on the right: "hosted" if user is the organizer, else price */}
-                {currentUserId === organizerUserId && <Badge variant="ontonLight">hosted</Badge>}
-                <Badge variant="ontonLight">{ticketPrice > 0 ? `${ticketPrice} ${currency}` : "Free"}</Badge>
+            </div>
+
+            {/* Location */}
+            <div className="flex items-center text-gray-500 mb-2">
+              <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+              <Typography
+                variant="subheadline2"
+                className="truncate"
+              >
+                {isOnline ? "zoom.com/kdl9-skj9-lz-scxks..." : formattedLocation}
+              </Typography>
+            </div>
+
+            {/* Bottom row with organizer and badges */}
+            <div className="flex items-center justify-between mt-auto">
+              {/* Organizer or Hosting Status */}
+              <div className="flex items-center">
+                {currentUserId === organizerUserId ? (
+                  <Typography
+                    variant="subheadline1"
+                    className="font-medium"
+                  >
+                    Hosting
+                  </Typography>
+                ) : organizerChannelName ? (
+                  <div className="flex items-center max-w-32">
+                    {organizerImageUrl && (
+                      <div className="relative w-6 h-6 rounded-full overflow-hidden mr-2">
+                        <Image
+                          src={organizerImageUrl || "/placeholder.svg"}
+                          alt={organizerChannelName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                    <Typography
+                      variant="subheadline2"
+                      className="text-blue-500 truncate"
+                    >
+                      {organizerChannelName}
+                    </Typography>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Tags/Badges */}
+              <div className="flex gap-2">
+                <Badge
+                  className={cn(
+                    "rounded-md px-1 font-normal text-xs cursor-pointer",
+                    isOnline ? "bg-gray-200 text-gray-700" : "bg-gray-200 text-gray-700"
+                  )}
+                >
+                  {isOnline ? "Online" : "In-Person"}
+                </Badge>
+
+                <Badge
+                  className={cn(
+                    "rounded-md px-1 font-normal text-xs cursor-pointer",
+                    ticketPrice > 0 ? "bg-gray-200 text-gray-700" : "bg-gray-200 text-gray-700"
+                  )}
+                >
+                  {ticketPrice > 0 ? `${ticketPrice} ${currency}` : "Free"}
+                </Badge>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      {children}
-    </Card>
+        {children}
+      </CustomCard>
+    </div>
   );
 }
 
-// Use memo + forwardRef
-const UnmemorizedEventCard = forwardRef(UnforwardedEventCard);
-const EventCard = memo(UnmemorizedEventCard, (prevProps, nextProps) => {
-  // Compare event UUID to avoid re-renders
-  return prevProps.event.eventUuid === nextProps.event.eventUuid;
-});
-
-EventCard.displayName = "EventCard";
 export default EventCard;

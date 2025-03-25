@@ -1,4 +1,4 @@
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import searchEventsInputZod, { eventStatusValues } from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
 
 type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
@@ -20,7 +20,10 @@ export default function parseSearchParams(searchParams: URLSearchParams) {
   const term = searchParams.get("query") || "";
 
   // ONGOING FILTER
-  const ongoing = searchParams.get("ongoing") === "true";
+  const eventStatusParam = searchParams.get("eventStatus");
+  const eventStatus = eventStatusValues.includes(eventStatusParam as any)
+    ? eventStatusValues.find((v) => v === eventStatusParam)!
+    : ("ongoing" as const);
 
   return {
     search: term,
@@ -28,7 +31,7 @@ export default function parseSearchParams(searchParams: URLSearchParams) {
     filter: {
       participationType,
       society_hub_id: selectedHubsFromParams.map(Number).filter(Boolean),
-      ongoing,
+      eventStatus,
     },
   };
 }

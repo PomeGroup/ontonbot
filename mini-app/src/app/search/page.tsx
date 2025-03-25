@@ -27,9 +27,6 @@ export default function Search() {
       {
         ...searchInput,
         limit: LIMIT,
-        // We can add more fields if needed:
-        // filter: finalSearchInput.filter
-        // search: finalSearchInput.search
       },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
@@ -100,7 +97,7 @@ export default function Search() {
               </div>
             )
           ) : (
-            <>
+            <div className="flex flex-col gap-2">
               {allEvents.map((event, eventIndex) => {
                 // Mark the last 1-2 events with a special class for IntersectionObserver
                 const isNearEnd = eventIndex === allEvents.length - 1 || eventIndex === allEvents.length - 2;
@@ -122,7 +119,7 @@ export default function Search() {
                   <div className="loader">Loading results...</div>
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

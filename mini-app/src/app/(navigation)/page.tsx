@@ -29,7 +29,7 @@ export default function Home() {
         </div>
 
         <div className=" flex-grow">
-          <div className="flex-grow pb-4">
+          <div className="flex-grow flex flex-col gap-6">
             {/* Slider Event */}
             <PromotedEventsSlider />
             <FeaturedContests />
@@ -118,10 +118,10 @@ function PromotedEventsSlider() {
   }
 
   return (
-    <>
+    <div>
       <h2 className="font-bold text-lg mb-2">Featured Events</h2>
       {content}
-    </>
+    </div>
   );
 }
 
@@ -139,7 +139,7 @@ const FeaturedContests = () => {
   }
 
   return (
-    <>
+    <div>
       <div className="w-full pb-2 flex justify-between items-center">
         <Typography variant="title2">Featured Contests</Typography>
         <Link
@@ -210,7 +210,7 @@ const FeaturedContests = () => {
           ))}
         </Swiper>
       )}
-    </>
+    </div>
   );
 };
 
@@ -224,12 +224,12 @@ const OngoingEvents = () => {
   });
 
   return (
-    <>
+    <div className="flex flex-col gap-2">
       <div className="w-full pb-2 flex justify-between items-center">
         <Typography variant="title2">Ongoing Events</Typography>
         <Link
-          href={"/search?" + new URLSearchParams({ ongoing: "true" }).toString()}
-          className={`text-primary font-medium flex align-center`}
+          href={"/search?" + new URLSearchParams({ eventStatus: "ongoing" }).toString()}
+          className="text-primary font-medium flex align-center"
         >
           <span>Show more</span>
           <ChevronRightIcon
@@ -283,7 +283,7 @@ const OngoingEvents = () => {
           />
         ))
       )}
-    </>
+    </div>
   );
 };
 
@@ -362,14 +362,14 @@ const UpcomingEvents = () => {
   }
 
   return (
-    <>
+    <div>
       <div className="w-full pb-2 flex justify-between items-center">
         <Typography variant="title2">Upcoming Events</Typography>
         <Link
           href={
             "/search?" +
             new URLSearchParams({
-              ongoing: "true",
+              eventStatus: "upcoming",
             }).toString()
           }
           className="text-primary font-medium flex align-center"
@@ -388,18 +388,17 @@ const UpcomingEvents = () => {
               {group.day}
               <div className="rounded-full bg-black w-2 h-2 absolute -translate-x-1/2 -translate-y-1/2 -ms-2 top-1/2" />
             </h3>
-            <div className="flex w-full flex-col">
+            <div className="flex w-full flex-col gap-2">
               {group.items.map((event) => (
                 <EventCard
                   key={event.event_uuid}
                   event={event}
-                  currentUserId={0}
                 />
               ))}
             </div>
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 };

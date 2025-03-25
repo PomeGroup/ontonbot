@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const eventStatusValues = ["ongoing", "upcoming", "not_ended", "ended"] as const;
+
 const searchEventsInputZod = z.object({
   limit: z.number().min(0).max(100).optional(),
   cursor: z.number().optional().default(0),
@@ -17,7 +19,7 @@ const searchEventsInputZod = z.object({
       society_hub_id: z.array(z.number()).optional(),
       user_id: z.number().optional(),
       role: z.enum(["organizer", "admin"]).optional(),
-      eventStatus: z.enum(["ongoing", "upcoming", "not_ended", "ended"]).optional(),
+      eventStatus: z.enum(eventStatusValues).optional(),
     })
     .optional(),
   sortBy: z
