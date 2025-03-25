@@ -33,6 +33,7 @@ export default function Home() {
             {/* Slider Event */}
             <PromotedEventsSlider />
             <FeaturedContests />
+            <OngoingEvents />
             <PromotedEventsList />
           </div>
         </div>
@@ -189,6 +190,10 @@ const FeaturedContests = () => {
     sortBy: "timeRemaining",
   });
 
+  if (tournomants.isSuccess && tournomants.data?.tournaments.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <div className="w-full pb-2 flex justify-between items-center">
@@ -260,6 +265,79 @@ const FeaturedContests = () => {
             </SwiperSlide>
           ))}
         </Swiper>
+      )}
+    </>
+  );
+};
+
+const OngoingEvents = () => {
+  const ongoingEvents = trpc.events.getEventsWithFilters.useQuery({
+    filter: {
+      ongoing: true,
+    },
+    sortBy: "random",
+    limit: 2,
+  });
+
+  return (
+    <>
+      <div className="w-full pb-2 flex justify-between items-center">
+        <Typography variant="title2">Ongoing Events</Typography>
+        <Link
+          href={"/search?" + new URLSearchParams({ ongoing: "true" }).toString()}
+          className={`text-primary font-medium flex align-center`}
+        >
+          <span>Show more</span>
+          <ChevronRightIcon
+            width={20}
+            className="ml-1 -my-0.5"
+          />
+        </Link>
+      </div>
+      {ongoingEvents.isError && (
+        <CustomCard
+          className="col-span-2"
+          defaultPadding
+        >
+          <DataStatus
+            status="searching"
+            title={`Error${ongoingEvents.error instanceof Error ? `: ${ongoingEvents.error.name}` : ""}`}
+            description={
+              ongoingEvents.error instanceof Error ? ongoingEvents.error.message : "Error loading ongoing events."
+            }
+          />
+        </CustomCard>
+      )}
+      {ongoingEvents.isLoading ? (
+        <div className="grid grid-cols-2 gap-4">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
+            >
+              <Skeleton
+                variant="rectangular"
+                width={120}
+                height={120}
+                className="rounded-md"
+              />
+              <Skeleton
+                variant="rectangular"
+                width={80}
+                height={36}
+                className="rounded-md mt-2"
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        ongoingEvents.data?.data?.map((event, idx) => (
+          <EventCard
+            key={idx}
+            event={event}
+            currentUserId={0}
+          />
+        ))
       )}
     </>
   );

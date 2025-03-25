@@ -72,15 +72,15 @@ export default function MyPointsPage() {
             />
           </EventPointsGroup>
 
-          <EventPointsGroup title="Offline Events">
+          <EventPointsGroup title="In-Person Events">
             <EventPointsCard
-              eventTitle="Attend paid offline events"
+              eventTitle="Attend paid in-person events"
               tasksCount={paidOfflineData?.count ?? 0}
               description="10 Points + 1 Point per USDT price"
               totalPoints={paidOfflineData?.total ?? 0}
             />
             <EventPointsCard
-              eventTitle="Attend free offline events"
+              eventTitle="Attend free in-person events"
               tasksCount={freeOfflineData?.count ?? 0}
               description="2 Points"
               totalPoints={freeOfflineData?.total ?? 0}

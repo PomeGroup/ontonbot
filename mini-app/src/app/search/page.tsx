@@ -1,27 +1,27 @@
 "use client";
-import React, { useEffect, useRef } from "react";
-import Image from "next/image";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
 import { trpc } from "@/app/_trpc/client";
-import { useSearchParams } from "next/navigation";
-import { Block } from "konsta/react";
-import parseSearchParams from "./parseSearchParams";
 import { useUserStore } from "@/context/store/user.store";
+import { Block } from "konsta/react";
+import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import "swiper/css";
+import parseSearchParams from "./parseSearchParams";
 
 /** The maximum number of items per page */
 const LIMIT = 5;
 
 export default function Search() {
   const searchParams = useSearchParams();
-  const { user } = useUserStore()
+  const { user } = useUserStore();
 
   // For the infinite scroll observer
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  const searchInput = parseSearchParams(searchParams)
+  const searchInput = parseSearchParams(searchParams);
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
       {
@@ -64,7 +64,10 @@ export default function Search() {
   }, [allEvents, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <Block className="bg-[#EFEFF4] min-h-screen py-3" margin="0">
+    <Block
+      className="bg-[#EFEFF4] min-h-screen py-3"
+      margin="0"
+    >
       <div className="flex flex-col">
         {/* Sticky top bar with SearchBar & TabTriggers */}
         <div className="w-full pb-3">
@@ -74,52 +77,55 @@ export default function Search() {
         {/* Scrollable area containing the Swiper slides */}
         <div className="overflow-y-auto flex-grow">
           {/* Show skeleton if loading and no data */}
-          {allEvents.length === 0 ? isLoading ? (
-            <div className="flex flex-col gap-2">
-              {Array.from({ length: LIMIT }).map((_, i) => (
-                <EventCardSkeleton
-                  key={i}
+          {allEvents.length === 0 ? (
+            isLoading ? (
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: LIMIT }).map((_, i) => (
+                  <EventCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
+                <Image
+                  src="/template-images/no-search-result.gif"
+                  alt="No search results found"
+                  width={180}
+                  height={180}
                 />
-              ))}
-            </div>
-          ) : (<div className="flex flex-col items-center justify-center min-h-screen text-center space-y-4">
-            <Image
-              src="/template-images/no-search-result.gif"
-              alt="No search results found"
-              width={180}
-              height={180}
-            />
-            <div className="text-gray-500 max-w-md">
-              No Events were found
-              <br />
-              matching your Search.
-            </div>
-          </div>)
-            : <>{allEvents.map((event, eventIndex) => {
-              // Mark the last 1-2 events with a special class for IntersectionObserver
-              const isNearEnd = eventIndex === allEvents.length - 1 || eventIndex === allEvents.length - 2;
-
-              return (
-                <div
-                  key={event.eventId}
-                  className={isNearEnd ? `last-event-card` : ""}
-                >
-                  <EventCard
-                    event={event}
-                    currentUserId={user?.user_id}
-                  />
+                <div className="text-gray-500 max-w-md">
+                  No Events were found
+                  <br />
+                  matching your Search.
                 </div>
-              );
-            })}
+              </div>
+            )
+          ) : (
+            <>
+              {allEvents.map((event, eventIndex) => {
+                // Mark the last 1-2 events with a special class for IntersectionObserver
+                const isNearEnd = eventIndex === allEvents.length - 1 || eventIndex === allEvents.length - 2;
+
+                return (
+                  <div
+                    key={event.eventId}
+                    className={isNearEnd ? `last-event-card` : ""}
+                  >
+                    <EventCard
+                      event={event}
+                      currentUserId={user?.user_id}
+                    />
+                  </div>
+                );
+              })}
               {isFetchingNextPage && hasNextPage && (
                 <div className="text-center py-4 pb-5 w-full">
                   <div className="loader">Loading results...</div>
                 </div>
               )}
             </>
-          }
+          )}
         </div>
       </div>
     </Block>
   );
-};
+}

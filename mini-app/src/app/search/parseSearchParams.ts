@@ -19,12 +19,16 @@ export default function parseSearchParams(searchParams: URLSearchParams) {
   const sortByQ = (searchParams.get("sortBy") as SortBy) || "start_date_desc";
   const term = searchParams.get("query") || "";
 
+  // ONGOING FILTER
+  const ongoing = searchParams.get("ongoing") === "true";
+
   return {
     search: term,
     sortBy: sortByQ,
     filter: {
       participationType,
-      society_hub_id: selectedHubsFromParams.map(Number).filter(Boolean)
-    }
-  }
+      society_hub_id: selectedHubsFromParams.map(Number).filter(Boolean),
+      ongoing,
+    },
+  };
 }

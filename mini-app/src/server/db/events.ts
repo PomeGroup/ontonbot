@@ -400,6 +400,17 @@ export const getEventsWithFilters = async (
     }
   }
 
+  // Add ongoing events filter
+  if (filter?.ongoing) {
+    const currentTime = Math.floor(Date.now() / 1000);
+    conditions.push(
+      and(
+        sql`${event_details_search_list.startDate} <= ${currentTime}`,
+        sql`${event_details_search_list.endDate} > ${currentTime}`
+      )
+    );
+  }
+
   // Apply search filters
   if (search) {
     const searchPattern = `%${search}%`;
