@@ -5,7 +5,7 @@ import InfiniteEventList from "@/components/InfiniteEventList";
 import useWebApp from "@/hooks/useWebApp";
 
 export default function MyParticipatedEventsPage() {
-  const webApp = useWebApp()
+  const webApp = useWebApp();
   const userId = webApp?.initDataUnsafe?.user?.id;
 
   const infiniteApi = trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(

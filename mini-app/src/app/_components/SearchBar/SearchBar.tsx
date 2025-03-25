@@ -1,30 +1,23 @@
 "use client";
 
-import React, {
-  useEffect,
-  useState,
-  ChangeEvent,
-  useMemo,
-  KeyboardEventHandler,
-  useCallback,
-} from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ChangeEvent, KeyboardEventHandler, useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 
 import useWebApp from "@/hooks/useWebApp";
 
-import MainFilterDrawer from "./MainFilterDrawer";
+import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
 import EventTypeDrawer from "./EventTypeDrawer";
 import HubSelectorDrawer from "./HubSelectorDrawer";
-import ParticipantErrorDialog from "@/app/_components/SearchBar/ParticipantErrorDialog";
+import MainFilterDrawer from "./MainFilterDrawer";
 
-import { SearchIcon } from "lucide-react";
-import { useDebouncedCallback } from "@mantine/hooks";
-import parseSearchParams, { allParticipationTypes } from "@/app/search/parseSearchParams";
 import { trpc } from "@/app/_trpc/client";
+import parseSearchParams, { allParticipationTypes } from "@/app/search/parseSearchParams";
+import { useDebouncedCallback } from "@mantine/hooks";
 import { noop } from "lodash";
+import { SearchIcon } from "lucide-react";
 
 /** TypeScript types from your Zod schema */
 type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
@@ -32,24 +25,20 @@ type FilterType = NonNullable<SearchEventsInput["filter"]>;
 type SortBy = SearchEventsInput["sortBy"];
 type ParticipationType = FilterType["participationType"];
 
-
-
 const buildQueryParams = (newVals: ReturnType<typeof parseSearchParams>) => {
   const pType = (
-    Array.isArray(newVals.filter.participationType) ?
-      newVals.filter.participationType :
-      allParticipationTypes
-  ).join(",")
+    Array.isArray(newVals.filter.participationType) ? newVals.filter.participationType : allParticipationTypes
+  ).join(",");
 
   return new URLSearchParams({
     query: newVals.search,
     participationType: pType,
-    selectedHubs: (newVals.filter.society_hub_id).join(","),
+    selectedHubs: newVals.filter.society_hub_id.join(","),
     sortBy: newVals.sortBy,
   });
 };
 
-const defaultVal = [] as { id: string, name: string }[]
+const defaultVal = [] as { id: string; name: string }[];
 function SearchBar() {
   const [showDialogParticipantError, setShowDialogParticipantError] = useState(false);
 
@@ -70,68 +59,76 @@ function SearchBar() {
     queryKey: ["hubs.getHubs", undefined],
   });
 
-  const isSearchPage = usePathname().includes('/search')
+  const isSearchPage = usePathname().includes("/search");
 
-  const parsedSearchParams = useMemo(() => parseSearchParams(searchParams), [searchParams])
+  const parsedSearchParams = useMemo(() => parseSearchParams(searchParams), [searchParams]);
   const {
-    filter: {
-      participationType: participationTypeLocal,
-    }
-  } = parsedSearchParams
+    filter: { participationType: participationTypeLocal },
+  } = parsedSearchParams;
 
-  const defaultFilters = useMemo(() => ({
-    search: '',
-    sortBy: 'default' as SortBy,
-    filter: {
-      participationType: allParticipationTypes,
-      society_hub_id: hubs.map(h => h.id).map(Number)
-    }
-  }), [hubs])
+  const defaultFilters = useMemo(
+    () => ({
+      search: "",
+      sortBy: "default" as SortBy,
+      filter: {
+        participationType: allParticipationTypes,
+        society_hub_id: hubs.map((h) => h.id).map(Number),
+        eventStatus: "not_ended" as const,
+      },
+    }),
+    [hubs]
+  );
 
-  const [localFilters, setLocalFilters] = useState<ReturnType<typeof parseSearchParams>>(defaultFilters)
+  const [localFilters, setLocalFilters] = useState<ReturnType<typeof parseSearchParams>>(defaultFilters);
 
   useEffect(() => {
-    setLocalFilters(parsedSearchParams)
-  }, [parsedSearchParams])
+    setLocalFilters(parsedSearchParams);
+  }, [parsedSearchParams]);
 
-  const applyFilters = useCallback((newVals: ReturnType<typeof parseSearchParams>) => {
-    const qs = buildQueryParams({
-      ...defaultFilters,
-      ...newVals,
-      filter: {
-        ...defaultFilters.filter,
-        ...newVals.filter
+  const applyFilters = useCallback(
+    (newVals: ReturnType<typeof parseSearchParams>) => {
+      const qs = buildQueryParams({
+        ...defaultFilters,
+        ...newVals,
+        filter: {
+          ...defaultFilters.filter,
+          ...newVals.filter,
+        },
+      });
+
+      const searchUrl = `/search?${qs.toString()}`;
+      if (!isSearchPage) {
+        router.push(searchUrl);
+      } else {
+        router.replace(searchUrl);
       }
-    });
+    },
+    [defaultFilters, isSearchPage, router]
+  );
 
-    const searchUrl = `/search?${qs.toString()}`
-    if (!isSearchPage) {
-      router.push(searchUrl);
-    } else {
-      router.replace(searchUrl)
-    }
-  }, [defaultFilters, isSearchPage, router]);
+  const debouncedApplyFilters = useDebouncedCallback(applyFilters, 500);
+  const handleSearchInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const val = event.target.value;
 
-  const debouncedApplyFilters = useDebouncedCallback(applyFilters, 500)
-  const handleSearchInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
-    const val = event.target.value;
-
-    setLocalFilters(prev => {
-      const newVal = {
-        ...prev,
-        search: val
-      }
-      if (isSearchPage) debouncedApplyFilters(newVal)
-      return newVal
-    })
-  }, [debouncedApplyFilters, isSearchPage]);
+      setLocalFilters((prev) => {
+        const newVal = {
+          ...prev,
+          search: val,
+        };
+        if (isSearchPage) debouncedApplyFilters(newVal);
+        return newVal;
+      });
+    },
+    [debouncedApplyFilters, isSearchPage]
+  );
 
   /** ---------------
    *  Reset all filters
    * ---------------
    */
   const resetFilters = () => {
-    applyFilters(defaultFilters)
+    applyFilters(defaultFilters);
     hapticFeedback?.selectionChanged();
   };
 
@@ -141,32 +138,32 @@ function SearchBar() {
    */
   const setParticipationTypes = (types: ParticipationType) => {
     hapticFeedback?.selectionChanged();
-    setLocalFilters(prev => ({
+    setLocalFilters((prev) => ({
       ...prev,
       filter: {
         ...prev.filter,
-        participationType: types.length === 0 ? allParticipationTypes : types
-      }
-    }))
+        participationType: types.length === 0 ? allParticipationTypes : types,
+      },
+    }));
   };
 
   const setSelectedHubsArray = (hubIds: string[]) => {
     if (hubIds.length === 0) {
-      setLocalFilters(prev => ({
+      setLocalFilters((prev) => ({
         ...prev,
         filter: {
           ...prev.filter,
-          society_hub_id: hubs.map(h => h.id).map(Number)
-        }
-      }))
+          society_hub_id: hubs.map((h) => h.id).map(Number),
+        },
+      }));
     } else {
-      setLocalFilters(prev => ({
+      setLocalFilters((prev) => ({
         ...prev,
         filter: {
           ...prev.filter,
-          society_hub_id: hubIds.map(Number)
-        }
-      }))
+          society_hub_id: hubIds.map(Number),
+        },
+      }));
     }
   };
 
@@ -175,13 +172,15 @@ function SearchBar() {
    * ---------------
    */
   const handleShowAll = () => {
-    setParticipationTypes([])
+    setParticipationTypes([]);
     setShowDialogParticipantError(false);
   };
 
-  const { filter: { society_hub_id } } = localFilters
-  const selectedHubs = society_hub_id || []
-  let hubText = 'All'
+  const {
+    filter: { society_hub_id },
+  } = localFilters;
+  const selectedHubs = society_hub_id || [];
+  let hubText = "All";
   if (selectedHubs && selectedHubs?.length !== 0 && selectedHubs?.length !== hubs?.length) {
     hubText = selectedHubs
       .map((hubId: number) => hubs.find((h) => h.id === String(hubId))?.name)
@@ -189,21 +188,22 @@ function SearchBar() {
       .join(", ");
   }
 
-  const handleSearchFromHome: KeyboardEventHandler = useCallback((e) => {
-    if (e.key !== 'Enter' || localFilters.search?.length < 2) return
-    setTimeout(() => {
-      applyFilters(localFilters)
-    }, 10)
-  }, [applyFilters, localFilters])
+  const handleSearchFromHome: KeyboardEventHandler = useCallback(
+    (e) => {
+      if (e.key !== "Enter" || localFilters.search?.length < 2) return;
+      setTimeout(() => {
+        applyFilters(localFilters);
+      }, 10);
+    },
+    [applyFilters, localFilters]
+  );
 
   return (
     <div className="relative flex flex-col">
       {/* Top row: search + filter icon */}
       <div className="relative flex items-center">
-        <div
-          className={`flex-grow transition-all duration-300`}
-        >
-          <div className='relative mr-3 text-[#8e8e93] focus-within:text-[#007aff]'>
+        <div className={`flex-grow transition-all duration-300`}>
+          <div className="relative mr-3 text-[#8e8e93] focus-within:text-[#007aff]">
             <SearchIcon className="absolute top-[6px] left-2 z-10" />
             <input
               className={`rounded-md bg-[#E0E0E5] w-full py-3 leading-[16px] pl-10 caret-[#007aff] text-black`}
@@ -222,10 +222,12 @@ function SearchBar() {
           applyFilters={() => applyFilters(localFilters)}
           participationType={localFilters.filter.participationType}
           sortBy={localFilters.sortBy}
-          setSortBy={(newSort: SortBy) => setLocalFilters(prev => ({
-            ...prev,
-            sortBy: newSort
-          }))}
+          setSortBy={(newSort: SortBy) =>
+            setLocalFilters((prev) => ({
+              ...prev,
+              sortBy: newSort,
+            }))
+          }
         />
       </div>
 

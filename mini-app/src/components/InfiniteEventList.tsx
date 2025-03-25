@@ -13,7 +13,7 @@ interface Props {
   title: string;
   infiniteApi: UseTRPCInfiniteQueryResult<
     {
-      items: any[];
+      items: { eventsData: any[]; rowsCount: number };
       nextCursor: number | null;
     },
     TRPCClientErrorBase<DefaultErrorShape>
@@ -43,7 +43,7 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
   if (status === "loading") return null;
   if (status === "error") return <p>Error fetching data</p>;
 
-  const hasItems = data?.pages[0]?.items?.length > 0;
+  const hasItems = data?.pages[0]?.items?.eventsData.length > 0;
   return (
     <Block
       margin="0"
@@ -60,8 +60,8 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
         {hasItems ? (
           data?.pages.map((page, pageIndex) => (
             <Fragment key={pageIndex}>
-              {page.items.map((item, index) => {
-                const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.length - 1;
+              {page.items.eventsData.map((item, index) => {
+                const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.eventsData.length - 1;
                 return (
                   <div
                     key={item.id}

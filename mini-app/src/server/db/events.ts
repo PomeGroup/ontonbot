@@ -560,22 +560,30 @@ export const getOrganizerHosted = async (params: {
   hidden: boolean;
   offset: number;
   limit: number;
-}) => {
+}): Promise<{ eventsData: any[]; rowsCount: number }> => {
   const { organizerId, hidden = false, offset, limit } = params;
 
   if (!organizerId) {
-    return [];
+    return { eventsData: [], rowsCount: 0 };
   }
+
   try {
+    const conditions = and(
+      eq(event_details_search_list.hidden, hidden),
+      eq(event_details_search_list.organizerUserId, organizerId)
+    );
     const query = db
       .select()
       .from(event_details_search_list)
-      .where(and(eq(event_details_search_list.hidden, hidden), eq(event_details_search_list.organizerUserId, organizerId)))
+      .where(conditions)
       .orderBy(desc(event_details_search_list.startDate))
       .offset(offset)
       .limit(limit);
 
-    return await query.execute();
+    const rowsCount = (await db.select({ count: count() }).from(event_details_search_list).where(conditions))[0].count;
+    const eventsData = await query.execute();
+
+    return { eventsData, rowsCount };
   } catch (error) {
     logger.error("Error in getOrganizerHosted", error);
     throw new Error("Error in getOrganizerHosted");
