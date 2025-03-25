@@ -401,7 +401,7 @@ export const getEventsWithFilters = async (
   }
 
   // Add ongoing events filter
-  if (filter?.ongoing) {
+  if (filter?.eventStatus === "ongoing") {
     const currentTime = Math.floor(Date.now() / 1000);
     conditions.push(
       and(
@@ -409,6 +409,15 @@ export const getEventsWithFilters = async (
         sql`${event_details_search_list.endDate} > ${currentTime}`
       )
     );
+  } else if (filter?.eventStatus === "upcoming") {
+    const currentTime = Math.floor(Date.now() / 1000);
+    conditions.push(sql`${event_details_search_list.startDate} > ${currentTime}`);
+  } else if (filter?.eventStatus === "not_ended") {
+    const currentTime = Math.floor(Date.now() / 1000);
+    conditions.push(sql`${event_details_search_list.endDate} > ${currentTime}`);
+  } else if (filter?.eventStatus === "ended") {
+    const currentTime = Math.floor(Date.now() / 1000);
+    conditions.push(sql`${event_details_search_list.endDate} <= ${currentTime}`);
   }
 
   // Apply search filters

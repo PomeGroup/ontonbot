@@ -17,7 +17,7 @@ const searchEventsInputZod = z.object({
       society_hub_id: z.array(z.number()).optional(),
       user_id: z.number().optional(),
       role: z.enum(["organizer", "admin"]).optional(),
-      ongoing: z.boolean().optional(), // new filter for ongoing events
+      eventStatus: z.enum(["ongoing", "upcoming", "not_ended", "ended"]).optional(),
     })
     .optional(),
   sortBy: z
@@ -33,4 +33,5 @@ const searchEventsInputZod = z.object({
     .default("start_date_desc"),
   useCache: z.boolean().optional().default(true),
 });
+
 export default searchEventsInputZod;
