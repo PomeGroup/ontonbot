@@ -8,7 +8,6 @@ import { Block } from "konsta/react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
-import "swiper/css";
 import parseSearchParams from "./parseSearchParams";
 
 /** The maximum number of items per page */
@@ -34,7 +33,7 @@ export default function Search() {
     );
 
   // Combine all pages of data into one array
-  const allEvents = data?.pages.flatMap((page) => page.items) ?? [];
+  const allEvents = data?.pages.flatMap((page) => page.items.eventsData) ?? [];
 
   /**
    * IntersectionObserver that triggers fetchNextPage()

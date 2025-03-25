@@ -1,13 +1,13 @@
+import EventCard from "@/app/_components/EventCard/EventCard";
+import useWebApp from "@/hooks/useWebApp";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { TRPCClientErrorBase } from "@trpc/react-query";
 import { UseTRPCInfiniteQueryResult } from "@trpc/react-query/shared";
+import { DefaultErrorShape } from "@trpc/server";
 import { Block } from "konsta/react";
+import { noop } from "lodash";
 import { Fragment, useCallback, useRef } from "react";
 import Typography from "./Typography";
-import EventCard from "@/app/_components/EventCard/EventCard";
-import { noop } from "lodash";
-import { TRPCClientErrorBase } from "@trpc/react-query";
-import { DefaultErrorShape } from "@trpc/server";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import useWebApp from '@/hooks/useWebApp';
 
 interface Props {
   title: string;
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function InfiniteEventList({ title, infiniteApi }: Props) {
-  const webApp = useWebApp()
+  const webApp = useWebApp();
   const userId = webApp?.initDataUnsafe?.user?.id;
   const { data, isFetchingNextPage, hasNextPage, fetchNextPage, status } = infiniteApi;
 
@@ -63,13 +63,15 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
               {page.items.map((item, index) => {
                 const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.length - 1;
                 return (
-                  <EventCard
-                    event={item}
+                  <div
                     key={item.id}
                     ref={isLastItem ? lastItemRef : noop}
-                    currentUserId={userId}
-
-                  />
+                  >
+                    <EventCard
+                      event={item}
+                      currentUserId={userId}
+                    />
+                  </div>
                 );
               })}
             </Fragment>

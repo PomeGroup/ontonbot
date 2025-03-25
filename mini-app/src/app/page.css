@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --default-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial,
-    "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei", "Source Han Sans CN", sans-serif;
+  --default-font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei", "Source Han Sans CN", sans-serif;
 }
 
 .main-container {
@@ -53,11 +54,11 @@ body {
 
 .swiper-pagination-bullet.swiper-pagination-bullet-active {
   background-color: black !important;
-  border: black solid 1px;
+  border: black solid 1px !important;
 }
 
 span.swiper-pagination-bullet {
   background-color: transparent !important;
   opacity: 1 !important;
-  border: #8e8e93 solid 1px;
+  border: #8e8e93 solid 1px !important;
 }

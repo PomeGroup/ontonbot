@@ -9,16 +9,14 @@ import { OntonEvent } from "@/types";
 import { Skeleton } from "@mui/material";
 import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
-import { Pagination } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
 import TournamentCard from "../_components/Tournaments/TournamentCard";
 import CustomCard from "../_components/atoms/cards/CustomCard";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { trpc } from "../_trpc/client";
 
 import { useMemo } from "react";
-import "swiper/css";
-import "swiper/css/pagination";
+import CustomSwiper from "../_components/CustomSwiper";
+import EventCardSkeleton from "../_components/EventCard/EventCardSkeleton";
 
 export default function Home() {
   return (
@@ -92,28 +90,15 @@ function PromotedEventsSlider() {
 
   if (!isLoadingSlider) {
     content = (
-      <Swiper
-        slidesPerView="auto"
-        className="!-mx-4 !pe-8"
-        spaceBetween={12}
-        pagination
-        autoHeight
-        modules={[Pagination]}
-        wrapperClass="swiper-wrapper pb-8 px-4"
-      >
+      <CustomSwiper>
         {/* <div className='flex gap-3'> */}
         {sliderEventData?.data.map((event) => (
-          <SwiperSlide
-            className="!w-[220px] !h-[220px]"
+          <EventBanner
+            event={event}
             key={event.event_uuid}
-          >
-            <EventBanner
-              event={event}
-              key={event.event_uuid}
-            />
-          </SwiperSlide>
+          />
         ))}
-      </Swiper>
+      </CustomSwiper>
     );
   }
 
@@ -126,7 +111,7 @@ function PromotedEventsSlider() {
 }
 
 const FeaturedContests = () => {
-  const tournomants = trpc.tournaments.getTournaments.useQuery({
+  const tournomantsQuery = trpc.tournaments.getTournaments.useQuery({
     limit: 5,
     filter: {
       status: "notended",
@@ -134,7 +119,9 @@ const FeaturedContests = () => {
     sortBy: "timeRemaining",
   });
 
-  if (tournomants.isSuccess && tournomants.data?.tournaments.length === 0) {
+  const tournaments = tournomantsQuery.data?.tournaments;
+
+  if (tournomantsQuery.isSuccess && tournomantsQuery.data?.tournaments.length === 0) {
     return null;
   }
 
@@ -153,19 +140,21 @@ const FeaturedContests = () => {
           />
         </Link>
       </div>
-      {tournomants.isError && (
+      {tournomantsQuery.isError && (
         <CustomCard
           className="col-span-2"
           defaultPadding
         >
           <DataStatus
             status="searching"
-            title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
-            description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading tournaments."}
+            title={`Error${tournomantsQuery.error instanceof Error ? `: ${tournomantsQuery.error.name}` : ""}`}
+            description={
+              tournomantsQuery.error instanceof Error ? tournomantsQuery.error.message : "Error loading tournaments."
+            }
           />
         </CustomCard>
       )}
-      {tournomants.isLoading ? (
+      {tournomantsQuery.isLoading ? (
         <div className="grid grid-cols-2 gap-4">
           {Array.from({ length: 2 }).map((_, index) => (
             <div
@@ -188,27 +177,26 @@ const FeaturedContests = () => {
           ))}
         </div>
       ) : (
-        <Swiper
-          slidesPerView="auto"
-          className="!-mx-4 !pe-8"
-          spaceBetween={12}
-          pagination
-          autoHeight
-          modules={[Pagination]}
-          wrapperClass="swiper-wrapper pb-8 px-4"
-        >
-          {tournomants.data?.tournaments.map((tournament) => (
-            <SwiperSlide
-              className="!w-[160px]"
-              key={tournament.id}
-            >
-              <TournamentCard
-                key={tournament.id}
-                tournament={tournament}
-              />
-            </SwiperSlide>
+        <CustomSwiper>
+          {tournomantsQuery.data?.tournaments.map((tournament, idx) => (
+            <TournamentCard
+              key={`${tournament.id}-${idx}-1`}
+              tournament={tournament}
+            />
           ))}
-        </Swiper>
+          {tournomantsQuery.data?.tournaments.map((tournament, idx) => (
+            <TournamentCard
+              key={`${tournament.id}-${idx}-2`}
+              tournament={tournament}
+            />
+          ))}
+          {tournomantsQuery.data?.tournaments.map((tournament, idx) => (
+            <TournamentCard
+              key={`${tournament.id}-${idx}-3`}
+              tournament={tournament}
+            />
+          ))}
+        </CustomSwiper>
       )}
     </div>
   );
@@ -226,7 +214,9 @@ const OngoingEvents = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="w-full pb-2 flex justify-between items-center">
-        <Typography variant="title2">Ongoing Events</Typography>
+        <Typography variant="title2">
+          Ongoing Events {ongoingEvents.data?.data?.rowsCount ? `(${ongoingEvents.data?.data?.rowsCount})` : ""}
+        </Typography>
         <Link
           href={"/search?" + new URLSearchParams({ eventStatus: "ongoing" }).toString()}
           className="text-primary font-medium flex align-center"
@@ -275,7 +265,7 @@ const OngoingEvents = () => {
           ))}
         </div>
       ) : (
-        ongoingEvents.data?.data?.map((event, idx) => (
+        ongoingEvents.data?.data?.eventsData?.map((event, idx) => (
           <EventCard
             key={idx}
             event={event}
@@ -300,7 +290,7 @@ const UpcomingEvents = () => {
   const groupedEvents = useMemo(() => {
     const groups: { [day: string]: any[] } = {};
 
-    upcomingEvents.data?.data?.forEach((event) => {
+    upcomingEvents.data?.data?.eventsData?.forEach((event) => {
       // Convert the timestamp (in seconds) to a Date, then format it.
       const eventDate = new Date(event.startDate * 1000);
       const dayString = eventDate.toLocaleDateString("en-US", {
@@ -316,7 +306,7 @@ const UpcomingEvents = () => {
 
     // Convert the groups object into the desired array format.
     return Object.entries(groups).map(([day, items]) => ({ day, items }));
-  }, [upcomingEvents.data?.data?.length]);
+  }, [upcomingEvents.data?.data?.eventsData?.length]);
 
   if (upcomingEvents.isError) {
     return (
@@ -343,18 +333,8 @@ const UpcomingEvents = () => {
             key={index}
             className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
           >
-            <Skeleton
-              variant="rectangular"
-              width={120}
-              height={120}
-              className="rounded-md"
-            />
-            <Skeleton
-              variant="rectangular"
-              width={80}
-              height={36}
-              className="rounded-md mt-2"
-            />
+            <EventCardSkeleton />
+            <EventCardSkeleton />
           </div>
         ))}
       </div>
@@ -364,7 +344,9 @@ const UpcomingEvents = () => {
   return (
     <div>
       <div className="w-full pb-2 flex justify-between items-center">
-        <Typography variant="title2">Upcoming Events</Typography>
+        <Typography variant="title2">
+          Upcoming Events {upcomingEvents.data?.data?.rowsCount ? `(${upcomingEvents.data?.data?.rowsCount})` : ""}
+        </Typography>
         <Link
           href={
             "/search?" +

@@ -1,11 +1,8 @@
 "use client";
 
-import "swiper/css";
-import { Pagination } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
-
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
+import CustomSwiper from "@/app/_components/CustomSwiper";
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
 import TournamentCard from "@/app/_components/Tournaments/TournamentCard";
@@ -53,7 +50,7 @@ const TournamentSlide: React.FC<TournamentCardProps> = ({ tournamentId }) => {
           sx={{ transform: "unset" }}
         />
       ) : (
-        <div className="relative isolate">
+        <div className="relative isolate w-[220px] h-[220px]">
           <LoadableImage
             src={tournament.data?.imageUrl}
             key={tournamentId}
@@ -62,7 +59,7 @@ const TournamentSlide: React.FC<TournamentCardProps> = ({ tournamentId }) => {
             onClick={() => {
               router.push(`/play-2-win/${tournamentId}`);
             }}
-            className="w-[220px] rounded-md hover:cursor-pointer"
+            className="w-[220px] h-[220px] rounded-md hover:cursor-pointer"
             alt="tournament image card"
           />
 
@@ -95,27 +92,14 @@ const Play2WinFeatured = () => {
     <>
       <Typography variant="title2">Featured Contests</Typography>
       <div>
-        <Swiper
-          slidesPerView="auto"
-          className="!-mx-4 !pe-8"
-          spaceBetween={12}
-          pagination={{ clickable: true }}
-          autoHeight
-          modules={[Pagination]}
-          wrapperClass="swiper-wrapper pb-8 px-4"
-        >
+        <CustomSwiper>
           {parsedFeaturedEvents.map((tId) => (
-            <SwiperSlide
+            <TournamentSlide
+              tournamentId={tId}
               key={tId}
-              className="!w-[220px] !h-[220px]"
-            >
-              <TournamentSlide
-                tournamentId={tId}
-                key={tId}
-              />
-            </SwiperSlide>
+            />
           ))}
-        </Swiper>
+        </CustomSwiper>
       </div>
     </>
   );

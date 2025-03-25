@@ -899,7 +899,7 @@ const getEventsWithFilters = initDataProtectedProcedure.input(searchEventsInputZ
 
   try {
     const events = await eventDB.getEventsWithFilters(opts.input, opts.ctx.user.user_id);
-    return { status: "success", data: events };
+    return { status: "success", data: events, totalCount: events };
   } catch (error) {
     logger.error("Error fetching events:", error);
     return { status: "fail", data: null };
@@ -930,9 +930,9 @@ export const getEventsWithFiltersInfinite = initDataProtectedProcedure.input(sea
   const actualLimit = input.limit ?? 10;
   let nextCursor: number | null = null;
 
-  if (dbResult.length > actualLimit) {
+  if (dbResult.eventsData.length > actualLimit) {
     nextCursor = input.cursor + 1;
-    dbResult.pop(); // remove the extra row
+    dbResult.eventsData.pop(); // remove the extra row
   }
 
   return {

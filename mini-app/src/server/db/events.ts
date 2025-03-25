@@ -13,7 +13,7 @@ import { validateMiniAppData } from "@/utils";
 import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
 import { TRPCError } from "@trpc/server";
 import crypto from "crypto";
-import { and, asc, desc, eq, gt, inArray, isNotNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray, isNotNull, lt, or, sql } from "drizzle-orm";
 import { unionAll } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import { logger } from "../utils/logger";
@@ -301,7 +301,7 @@ export const getOrganizerEvents = async (
 export const getEventsWithFilters = async (
   params: z.infer<typeof searchEventsInputZod>,
   user_id: number
-): Promise<any[]> => {
+): Promise<{ eventsData: any[]; rowsCount: number }> => {
   const { limit = 10, cursor = 0, search, filter, sortBy = "default", useCache = false } = params;
   const roundMinutesInMs = 60; // don't touch this fucking value it will break the cache or made unexpected results
 
@@ -324,8 +324,6 @@ export const getEventsWithFilters = async (
   const cacheKey = redisTools.cacheKeys.getEventsWithFilters + hash;
   const cachedResult = await redisTools.getCache(cacheKey);
   if (cachedResult && useCache) {
-    /// show return from cache and time
-    //logger.log("👙👙 cachedResult 👙👙" + Date.now());
     return cachedResult;
   }
 
@@ -353,7 +351,7 @@ export const getEventsWithFilters = async (
     if (userEventUuids.length) {
       filter.event_uuids = userEventUuids;
     } else {
-      return [];
+      return { eventsData: [], rowsCount: 0 };
     }
   }
   // Apply date filters
@@ -501,8 +499,14 @@ export const getEventsWithFilters = async (
     }
   }
 
-  // Apply pagination
+  const rowsCount = (
+    await db
+      .select({ count: count() })
+      .from(event_details_search_list)
+      .where(and(...conditions))
+  )[0].count;
 
+  // Apply pagination
   if (limit) {
     // @ts-expect-error
     query = query.limit(limit).offset(cursor * (limit - 1));
@@ -511,8 +515,10 @@ export const getEventsWithFilters = async (
   //logSQLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
 
-  await redisTools.setCache(cacheKey, eventsData, redisTools.cacheLvl.guard);
-  return eventsData;
+  const queryResult = { eventsData, rowsCount } as const;
+  await redisTools.setCache(cacheKey, queryResult, redisTools.cacheLvl.guard);
+
+  return queryResult;
 };
 
 export const getEventByUuid = async (eventUuid: string, removeSecret: boolean = true) => {
