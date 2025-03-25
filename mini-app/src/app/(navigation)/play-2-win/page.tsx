@@ -35,7 +35,18 @@ const TournamentSlide: React.FC<TournamentCardProps> = ({ tournamentId }) => {
     }
   );
 
-  if (tournament.isError || !queryEnabeld) {
+  if (!queryEnabeld) {
+    return null;
+  }
+
+  if (tournament.isError) {
+    if (tournament.error.data?.httpStatus === 404) {
+      return (
+        <div className="w-[220px] bg-brand-muted animate-pulse h-[220px] flex items-center justify-center border rounded-md">
+          <Typography variant="caption2">Not found</Typography>
+        </div>
+      );
+    }
     return null;
   }
 
@@ -93,7 +104,7 @@ const Play2WinFeatured = () => {
       <Typography variant="title2">Featured Contests</Typography>
       <div>
         <CustomSwiper>
-          {parsedFeaturedEvents.map((tId) => (
+          {parsedFeaturedEvents?.map((tId) => (
             <TournamentSlide
               tournamentId={tId}
               key={tId}

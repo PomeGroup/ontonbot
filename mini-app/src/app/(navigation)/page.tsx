@@ -178,7 +178,7 @@ const FeaturedContests = () => {
         </div>
       ) : (
         <CustomSwiper>
-          {tournomantsQuery.data?.tournaments.map((tournament, idx) => (
+          {tournaments?.map((tournament, idx) => (
             <TournamentCard
               key={`${tournament.id}-${idx}-1`}
               tournament={tournament}
