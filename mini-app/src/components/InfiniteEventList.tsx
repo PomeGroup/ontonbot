@@ -56,7 +56,7 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
       >
         {title}
       </Typography>
-      <div className="flex flex-col w-full">
+      <div className="flex flex-col w-full gap-2">
         {hasItems ? (
           data?.pages.map((page, pageIndex) => (
             <Fragment key={pageIndex}>
