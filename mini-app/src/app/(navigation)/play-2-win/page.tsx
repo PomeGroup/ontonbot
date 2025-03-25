@@ -102,7 +102,7 @@ const Play2WinFeatured = () => {
           pagination={{ clickable: true }}
           autoHeight
           modules={[Pagination]}
-          wrapperClass="swiper-wrapper pb-3 px-4"
+          wrapperClass="swiper-wrapper pb-8 px-4"
         >
           {parsedFeaturedEvents.map((tId) => (
             <SwiperSlide
