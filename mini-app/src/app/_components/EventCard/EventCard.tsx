@@ -106,18 +106,18 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
   return (
     <div onClick={handleEventClick}>
       <CustomCard className="p-2">
-        <div className="flex gap-4">
+        <div className="grid grid-cols-[100px_1fr] gap-4">
           {/* Event Image */}
           <Image
             src={imageUrl || "/placeholder.svg"}
             alt={title}
             width={100}
             height={100}
-            className="overflow-hidden w-[100px] h-[100px] rounded-md"
+            className="overflow-hidden !w-[100px] h-[100px] rounded-md self-center"
           />
 
           {/* Event Details */}
-          <div className="flex flex-col flex-grow overflow-hidden">
+          <div className="flex flex-col overflow-hidden">
             {/* Event Title */}
             <Typography
               variant="headline"

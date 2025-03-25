@@ -184,18 +184,6 @@ const FeaturedContests = () => {
               tournament={tournament}
             />
           ))}
-          {tournomantsQuery.data?.tournaments.map((tournament, idx) => (
-            <TournamentCard
-              key={`${tournament.id}-${idx}-2`}
-              tournament={tournament}
-            />
-          ))}
-          {tournomantsQuery.data?.tournaments.map((tournament, idx) => (
-            <TournamentCard
-              key={`${tournament.id}-${idx}-3`}
-              tournament={tournament}
-            />
-          ))}
         </CustomSwiper>
       )}
     </div>
@@ -215,7 +203,7 @@ const OngoingEvents = () => {
     <div className="flex flex-col gap-2">
       <div className="w-full pb-2 flex justify-between items-center">
         <Typography variant="title2">
-          Ongoing Events {ongoingEvents.data?.data?.rowsCount ? `(${ongoingEvents.data?.data?.rowsCount})` : ""}
+          Ongoing Events{ongoingEvents.data?.data?.rowsCount ? `(${ongoingEvents.data?.data?.rowsCount})` : ""}
         </Typography>
         <Link
           href={"/search?" + new URLSearchParams({ eventStatus: "ongoing" }).toString()}
@@ -345,7 +333,7 @@ const UpcomingEvents = () => {
     <div>
       <div className="w-full pb-2 flex justify-between items-center">
         <Typography variant="title2">
-          Upcoming Events {upcomingEvents.data?.data?.rowsCount ? `(${upcomingEvents.data?.data?.rowsCount})` : ""}
+          Upcoming Events{upcomingEvents.data?.data?.rowsCount ? `(${upcomingEvents.data?.data?.rowsCount})` : ""}
         </Typography>
         <Link
           href={
