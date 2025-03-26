@@ -35,6 +35,7 @@ const buildQueryParams = (newVals: ReturnType<typeof parseSearchParams>) => {
     participationType: pType,
     selectedHubs: newVals.filter.society_hub_id.join(","),
     sortBy: newVals.sortBy,
+    eventStatus: newVals.filter.eventStatus,
   });
 };
 
@@ -103,7 +104,7 @@ function SearchBar() {
         router.replace(searchUrl);
       }
     },
-    [defaultFilters, isSearchPage, router]
+    [defaultFilters, isSearchPage, router, localFilters]
   );
 
   const debouncedApplyFilters = useDebouncedCallback(applyFilters, 500);
@@ -195,7 +196,7 @@ function SearchBar() {
         applyFilters(localFilters);
       }, 10);
     },
-    [applyFilters, localFilters]
+    [applyFilters, localFilters, localFilters.filter.eventStatus]
   );
 
   return (
@@ -228,6 +229,17 @@ function SearchBar() {
               sortBy: newSort,
             }))
           }
+          setFilter={(eventStatus) =>
+            // @ts-expect-error
+            setLocalFilters((prev) => ({
+              ...prev,
+              filter: {
+                ...prev.filter,
+                eventStatus: eventStatus ? eventStatus : undefined,
+              },
+            }))
+          }
+          filter={localFilters.filter.eventStatus}
         />
       </div>
 

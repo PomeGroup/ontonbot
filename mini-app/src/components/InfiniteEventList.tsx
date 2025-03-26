@@ -57,22 +57,20 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
         {hasItems ? (
           data?.pages.map((page, pageIndex) => (
             <Fragment key={pageIndex}>
-              {page.items.eventsData
-                .filter((i) => !i.hidden)
-                .map((item, index) => {
-                  const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.eventsData.length - 1;
-                  return (
-                    <div
-                      key={item.id}
-                      ref={isLastItem ? lastItemRef : noop}
-                    >
-                      <EventCard
-                        event={item}
-                        currentUserId={userId}
-                      />
-                    </div>
-                  );
-                })}
+              {page.items.eventsData.map((item, index) => {
+                const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.eventsData.length - 1;
+                return (
+                  <div
+                    key={item.id}
+                    ref={isLastItem ? lastItemRef : noop}
+                  >
+                    <EventCard
+                      event={item}
+                      currentUserId={userId}
+                    />
+                  </div>
+                );
+              })}
             </Fragment>
           ))
         ) : (

@@ -67,13 +67,11 @@ function EventCard(
     location = "No Location",
     imageUrl = "/placeholder.svg?height=200&width=200",
     organizerChannelName = "",
-    organizerUserId = null,
     ticketToCheckIn = false,
     ticketPrice = 0,
     city = null,
     country = null,
     participationType = "unknown",
-    hidden = false,
     paymentType = "unknown",
     organizerImageUrl,
 
@@ -113,8 +111,6 @@ function EventCard(
   const datePart = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   const timePart = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "numeric", hour12: true });
   const formattedDate = timeOnly ? `${timePart}` : `${datePart} | ${timePart}`;
-
-  if (hidden) return null;
 
   return (
     <div
