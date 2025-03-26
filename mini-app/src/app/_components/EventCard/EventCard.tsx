@@ -78,6 +78,7 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
 
     // ---------- has properties
     hasRegistration,
+    hasPayment,
   } = event;
 
   // Validate timezone; fallback to "GMT" if invalid
@@ -98,7 +99,7 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
 
   const handleEventClick = () => {
     // If ticketToCheckIn => open Telegram link
-    if (ticketToCheckIn) {
+    if (hasPayment || ticketToCheckIn) {
       webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`);
     } else {
       // Otherwise, push to /events/[eventUuid]
