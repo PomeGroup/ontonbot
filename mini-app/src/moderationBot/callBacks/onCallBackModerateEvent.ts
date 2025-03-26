@@ -11,7 +11,7 @@ export const onCallBackModerateEvent = async (status: string, event_uuid: string
   const isLocal = process.env.ENV === "local";
   if (!eventData) return false;
 
-  if (!isLocal || 1) {
+  if (!isLocal) {
     const eventDraft = await CreateTonSocietyDraft(
       {
         title: eventData.title,
