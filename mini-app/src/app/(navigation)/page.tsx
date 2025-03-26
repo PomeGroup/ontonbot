@@ -14,6 +14,7 @@ import CustomCard from "../_components/atoms/cards/CustomCard";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { trpc } from "../_trpc/client";
 
+import { cn } from "@/utils";
 import { useMemo } from "react";
 import CustomSwiper from "../_components/CustomSwiper";
 import EventCardSkeleton from "../_components/EventCard/EventCardSkeleton";
@@ -111,13 +112,18 @@ function PromotedEventsSlider() {
 }
 
 const FeaturedContests = () => {
-  const tournomantsQuery = trpc.tournaments.getTournaments.useQuery({
-    limit: 5,
-    filter: {
-      status: "notended",
+  const tournomantsQuery = trpc.tournaments.getTournaments.useQuery(
+    {
+      limit: 5,
+      filter: {
+        status: "notended",
+      },
+      sortBy: "timeRemaining",
     },
-    sortBy: "timeRemaining",
-  });
+    {
+      staleTime: Infinity,
+    }
+  );
 
   const tournaments = tournomantsQuery.data?.tournaments;
 
@@ -191,13 +197,18 @@ const FeaturedContests = () => {
 };
 
 const OngoingEvents = () => {
-  const ongoingEvents = trpc.events.getEventsWithFilters.useQuery({
-    filter: {
-      eventStatus: "ongoing",
+  const ongoingEvents = trpc.events.getEventsWithFilters.useQuery(
+    {
+      filter: {
+        eventStatus: "ongoing",
+      },
+      sortBy: "random",
+      limit: 2,
     },
-    sortBy: "random",
-    limit: 2,
-  });
+    {
+      staleTime: Infinity,
+    }
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -266,13 +277,18 @@ const OngoingEvents = () => {
 };
 
 const UpcomingEvents = () => {
-  const upcomingEvents = trpc.events.getEventsWithFilters.useQuery({
-    filter: {
-      eventStatus: "upcoming",
+  const upcomingEvents = trpc.events.getEventsWithFilters.useQuery(
+    {
+      filter: {
+        eventStatus: "upcoming",
+      },
+      sortBy: "start_date_asc",
+      limit: 6,
     },
-    sortBy: "start_date_asc",
-    limit: 6,
-  });
+    {
+      staleTime: Infinity,
+    }
+  );
 
   // Helper function that groups events based on day (formatted as "Sep 10")
   const groupedEvents = useMemo(() => {
@@ -352,9 +368,9 @@ const UpcomingEvents = () => {
         </Link>
       </div>
       <div className="border-s border-dashed border-brand-muted ps-2 isolate">
-        {groupedEvents.map((group) => (
+        {groupedEvents.map((group, idx) => (
           <div key={group.day}>
-            <h3 className="font-semibold w-full text-lg -mb-2 mt-3 -translate-y-1/2 relative">
+            <h3 className={cn("font-semibold w-full text-lg relative mt-4 mb-3", idx === 0 && "-translate-y-1/2 mb-0")}>
               {group.day}
               <div className="rounded-full bg-black w-2 h-2 absolute -translate-x-1/2 -translate-y-1/2 -ms-2 top-1/2" />
             </h3>

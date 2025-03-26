@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
 import useWebApp from "@/hooks/useWebApp";
-import EventsSkeleton from "./molecules/skeletons/EventsSkeleton";
 import * as Sentry from "@sentry/nextjs";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import EventsSkeleton from "./molecules/skeletons/EventsSkeleton";
 
 import { useUserStore } from "@/context/store/user.store";
 import { useSectionStore } from "@/zustand/useSectionStore";
@@ -116,14 +116,7 @@ export default function WebAppProvider({ children }: { children: React.ReactNode
       backButton.hide();
     };
   }, [isInitialized, pathname, router, goBack]);
-  // 4) Haptic feedback on route change
-    useEffect(() => {
-      if (!isInitialized) return;
-      if (typeof window === "undefined" || !window.Telegram?.WebApp) return;
 
-      window.Telegram.WebApp.HapticFeedback.impactOccurred("light");
-
-    }, [pathname, isInitialized]);
   // 5) If we don't have initData => show skeleton
   if (!initData) {
     return <EventsSkeleton />;
