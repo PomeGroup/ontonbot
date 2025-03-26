@@ -62,13 +62,13 @@ function PromotedEventsSlider() {
     sortBy: "do_not_order" as const,
   };
 
-  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery<
-    any,
-    EventsResponseType
-  >(sliderEventParams, {
-    enabled: eventCount > 0,
-    staleTime: Infinity,
-  });
+  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery(
+    sliderEventParams,
+    {
+      enabled: eventCount > 0,
+      staleTime: Infinity,
+    }
+  );
 
   if (!isLoadingSlider && !sliderEventData?.data?.length) return null;
 
@@ -92,11 +92,10 @@ function PromotedEventsSlider() {
   if (!isLoadingSlider) {
     content = (
       <CustomSwiper>
-        {/* <div className='flex gap-3'> */}
         {sliderEventData?.data.map((event) => (
           <EventBanner
             event={event}
-            key={event.event_uuid}
+            key={event.eventUuid}
           />
         ))}
       </CustomSwiper>
@@ -105,7 +104,12 @@ function PromotedEventsSlider() {
 
   return (
     <div>
-      <h2 className="font-bold text-lg mb-2">Featured Events</h2>
+      <Typography
+        variant="title2"
+        className="mb-3"
+      >
+        Featured Events{" "}
+      </Typography>
       {content}
     </div>
   );
@@ -214,7 +218,7 @@ const OngoingEvents = () => {
     <div className="flex flex-col gap-2">
       <div className="w-full pb-2 flex justify-between items-center">
         <Typography variant="title2">
-          Ongoing Events{ongoingEvents.data?.data?.rowsCount ? `(${ongoingEvents.data?.data?.rowsCount})` : ""}
+          Ongoing Events{ongoingEvents.data?.totalCount ? `(${ongoingEvents.data?.totalCount})` : ""}
         </Typography>
         <Link
           href={"/search?" + new URLSearchParams({ eventStatus: "ongoing" }).toString()}
@@ -264,7 +268,7 @@ const OngoingEvents = () => {
           ))}
         </div>
       ) : (
-        ongoingEvents.data?.data?.eventsData?.map((event, idx) => (
+        ongoingEvents.data?.data?.map((event, idx) => (
           <EventCard
             key={idx}
             event={event}
@@ -294,7 +298,7 @@ const UpcomingEvents = () => {
   const groupedEvents = useMemo(() => {
     const groups: { [day: string]: any[] } = {};
 
-    upcomingEvents.data?.data?.eventsData?.forEach((event) => {
+    upcomingEvents.data?.data?.forEach((event) => {
       // Convert the timestamp (in seconds) to a Date, then format it.
       const eventDate = new Date(event.startDate * 1000);
       const dayString = eventDate.toLocaleDateString("en-US", {
@@ -310,7 +314,7 @@ const UpcomingEvents = () => {
 
     // Convert the groups object into the desired array format.
     return Object.entries(groups).map(([day, items]) => ({ day, items }));
-  }, [upcomingEvents.data?.data?.eventsData?.length]);
+  }, [upcomingEvents.data?.data?.length]);
 
   if (upcomingEvents.isError) {
     return (
@@ -349,7 +353,7 @@ const UpcomingEvents = () => {
     <div>
       <div className="w-full pb-2 flex justify-between items-center">
         <Typography variant="title2">
-          Upcoming Events{upcomingEvents.data?.data?.rowsCount ? `(${upcomingEvents.data?.data?.rowsCount})` : ""}
+          Upcoming Events{upcomingEvents.data?.totalCount ? `(${upcomingEvents.data?.totalCount})` : ""}
         </Typography>
         <Link
           href={

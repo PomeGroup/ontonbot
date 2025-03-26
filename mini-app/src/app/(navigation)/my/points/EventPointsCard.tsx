@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { Badge } from "@/components/ui/badge";
 
 interface EventPointsCardProps {
@@ -15,7 +14,8 @@ export default function EventPointsCard({ eventTitle, tasksCount, description, t
       <div className="flex justify-between items-center">
         {/* Event title and tasks (e.g. "Attend paid online events x3") */}
         <div className="text-sm font-medium">
-          {eventTitle} <span className="text-xs font-normal text-gray-500">x{tasksCount}</span>
+          {eventTitle}
+          {/* <span className="text-xs font-normal text-gray-500">x{tasksCount}</span> */}
         </div>
 
         {/* Black circle showing total points (right side) */}

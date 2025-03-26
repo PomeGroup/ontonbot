@@ -892,6 +892,7 @@ const getEventsWithFilters = initDataProtectedProcedure.input(searchEventsInputZ
 
   if (opts.input.filter?.organizer_user_id) {
     const organizer = await usersDB.selectUserById(opts.input.filter.organizer_user_id);
+
     if (organizer?.role !== "organizer" && organizer?.role !== "admin") {
       throw new TRPCError({ code: "NOT_FOUND", message: "Organizer not found" });
     }
@@ -899,10 +900,15 @@ const getEventsWithFilters = initDataProtectedProcedure.input(searchEventsInputZ
 
   try {
     const events = await eventDB.getEventsWithFilters(opts.input, opts.ctx.user.user_id);
-    return { status: "success", data: events, totalCount: events };
+
+    return { status: "success", data: events.eventsData, totalCount: events.rowsCount };
   } catch (error) {
     logger.error("Error fetching events:", error);
-    return { status: "fail", data: null };
+
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Error fetching events",
+    });
   }
 });
 
