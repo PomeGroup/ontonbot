@@ -250,26 +250,13 @@ const OngoingEvents = () => {
         </CustomCard>
       )}
       {ongoingEvents.isLoading ? (
-        <div className="grid grid-cols-2 gap-4">
-          {Array.from({ length: 2 }).map((_, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
-            >
-              <Skeleton
-                variant="rectangular"
-                width={120}
-                height={120}
-                className="rounded-md"
-              />
-              <Skeleton
-                variant="rectangular"
-                width={80}
-                height={36}
-                className="rounded-md mt-2"
-              />
-            </div>
-          ))}
+        <div className="flex flex-col gap-2">
+          <Typography variant="title2">Ongoing Events</Typography>
+          <div className="grid gap-4">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <EventCardSkeleton key={index} />
+            ))}
+          </div>
         </div>
       ) : (
         ongoingEvents.data?.data?.map((event, idx) => (
@@ -339,16 +326,13 @@ const UpcomingEvents = () => {
 
   if (upcomingEvents.isLoading) {
     return (
-      <div className="grid grid-cols-2 gap-4">
-        {Array.from({ length: 2 }).map((_, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
-          >
-            <EventCardSkeleton />
-            <EventCardSkeleton />
-          </div>
-        ))}
+      <div className="flex flex-col gap-2">
+        <Typography variant="title2">Upcoming Events</Typography>
+        <div className="grid gap-4">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <EventCardSkeleton key={index} />
+          ))}
+        </div>
       </div>
     );
   }
