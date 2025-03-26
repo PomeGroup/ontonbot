@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type React from "react";
@@ -9,7 +9,6 @@ import { type ForwardedRef } from "react";
 import Typography from "@/components/Typography";
 import { Badge } from "@/components/ui/badge";
 import useWebApp from "@/hooks/useWebApp";
-import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
 import CustomCard from "../atoms/cards/CustomCard";
 
 interface EventCardProps {
@@ -43,13 +42,17 @@ interface EventCardProps {
     hasRegistration: boolean;
   };
   currentUserId?: number;
+  timeOnly?: boolean;
   children?: React.ReactNode;
 }
 
 /**
  * Event card component that displays event information in a clean, modern layout
  */
-function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: ForwardedRef<HTMLDivElement> | null) {
+function EventCard(
+  { event, currentUserId = 0, children, timeOnly }: EventCardProps,
+  ref: ForwardedRef<HTMLDivElement> | null
+) {
   // ------------------------- //
   //          HOOKS            //
   // ------------------------- //
@@ -61,13 +64,11 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
     eventUuid,
     title = "No Title",
     startDate,
-    endDate,
     location = "No Location",
     imageUrl = "/placeholder.svg?height=200&width=200",
     organizerChannelName = "",
     organizerUserId = null,
     ticketToCheckIn = false,
-    timezone = "GMT",
     ticketPrice = 0,
     city = null,
     country = null,
@@ -80,9 +81,6 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
     hasRegistration,
     hasPayment,
   } = event;
-
-  // Validate timezone; fallback to "GMT" if invalid
-  const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
 
   // Build location display
   const displayLocation = city && country ? `${city}, ${country}` : location;
@@ -108,7 +106,10 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
   };
 
   // Format date and time for display
-  const formattedDate = formatDateRange(startDate, endDate, validTimezone);
+  const start = new Date(startDate);
+  const datePart = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const timePart = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "numeric", hour12: true });
+  const formattedDate = timeOnly ? `${timePart}` : `${datePart} | ${timePart}`;
 
   if (hidden) return null;
 
@@ -137,7 +138,11 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
 
             {/* Date and Time */}
             <div className="flex items-center text-gray-500 mb-1">
-              <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+              {timeOnly ? (
+                <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+              ) : (
+                <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+              )}
               <Typography
                 variant="subheadline2"
                 className="truncate"
@@ -158,18 +163,11 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
             </div>
 
             {/* Bottom row with organizer and badges */}
-            <div className="flex items-center justify-between mt-auto">
+            <div className="flex items-center justify-between mt-auto gap-2 flex-wrap">
               {/* Organizer or Hosting Status */}
               <div className="flex items-center">
-                {currentUserId === organizerUserId ? (
-                  <Typography
-                    variant="subheadline1"
-                    className="font-medium"
-                  >
-                    Hosting
-                  </Typography>
-                ) : organizerChannelName ? (
-                  <div className="flex items-center max-w-32">
+                {organizerChannelName ? (
+                  <div className="flex items-center !max-w-32">
                     {organizerImageUrl && (
                       <div className="relative w-6 h-6 rounded-full overflow-hidden mr-2">
                         <Image
@@ -183,6 +181,7 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
                     <Typography
                       variant="subheadline2"
                       className="text-blue-500 truncate"
+                      truncate
                     >
                       {organizerChannelName}
                     </Typography>
@@ -191,7 +190,7 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
               </div>
 
               {/* Tags/Badges */}
-              <div className="flex gap-2 flex-wrap justify-end">
+              <div className="flex gap-2 flex-wrap justify-self-end justify-end">
                 <Badge className="rounded-md px-1 font-normal text-xs bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700">
                   {isOnline ? "Online" : "In-Person"}
                 </Badge>

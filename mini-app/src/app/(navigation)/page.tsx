@@ -387,6 +387,7 @@ const UpcomingEvents = () => {
                 <EventCard
                   key={event.event_uuid}
                   event={event}
+                  timeOnly
                 />
               ))}
             </div>

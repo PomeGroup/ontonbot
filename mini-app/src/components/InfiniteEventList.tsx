@@ -4,7 +4,6 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { TRPCClientErrorBase } from "@trpc/react-query";
 import { UseTRPCInfiniteQueryResult } from "@trpc/react-query/shared";
 import { DefaultErrorShape } from "@trpc/server";
-import { Block } from "konsta/react";
 import { noop } from "lodash";
 import { Fragment, useCallback, useRef } from "react";
 import Typography from "./Typography";
@@ -44,15 +43,13 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
   if (status === "error") return <p>Error fetching data</p>;
 
   const hasItems = data?.pages[0]?.items?.eventsData.length > 0;
+
   return (
-    <Block
-      margin="0"
-      className="flex-wrap bg-[rgba(239,239,244,1)] pt-8 pb-16 min-h-screen"
-    >
+    <div className="bg-brand-bg p-4 min-h-screen">
       <Typography
         variant="title3"
         bold
-        className="mb-6"
+        className="mb-4"
       >
         {title}
       </Typography>
@@ -60,20 +57,22 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
         {hasItems ? (
           data?.pages.map((page, pageIndex) => (
             <Fragment key={pageIndex}>
-              {page.items.eventsData.map((item, index) => {
-                const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.eventsData.length - 1;
-                return (
-                  <div
-                    key={item.id}
-                    ref={isLastItem ? lastItemRef : noop}
-                  >
-                    <EventCard
-                      event={item}
-                      currentUserId={userId}
-                    />
-                  </div>
-                );
-              })}
+              {page.items.eventsData
+                .filter((i) => !i.hidden)
+                .map((item, index) => {
+                  const isLastItem = pageIndex === data.pages.length - 1 && index === page.items.eventsData.length - 1;
+                  return (
+                    <div
+                      key={item.id}
+                      ref={isLastItem ? lastItemRef : noop}
+                    >
+                      <EventCard
+                        event={item}
+                        currentUserId={userId}
+                      />
+                    </div>
+                  );
+                })}
             </Fragment>
           ))
         ) : (
@@ -90,6 +89,6 @@ export default function InfiniteEventList({ title, infiniteApi }: Props) {
           </div>
         )}
       </div>
-    </Block>
+    </div>
   );
 }
