@@ -37,9 +37,9 @@ interface EventCardProps {
     paymentType?: string;
     organizerImageUrl?: string;
     // Has
-    hasApproval: boolean;
-    hasPayment: boolean;
-    hasRegistration: boolean;
+    hasApproval?: boolean | null;
+    hasPayment?: boolean | null;
+    hasRegistration?: boolean | null;
   };
   currentUserId?: number;
   timeOnly?: boolean;

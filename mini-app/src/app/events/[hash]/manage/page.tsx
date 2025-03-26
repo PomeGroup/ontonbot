@@ -1,22 +1,21 @@
 "use client";
 
-import React from "react";
+import { Block, Button, Page } from "konsta/react";
 import { useParams, useRouter } from "next/navigation";
-import { Page, Block, Button } from "konsta/react";
 // svg icons
-import guestListIcon from "./guest-list.svg";
-import promotionCodeIcon from "./promotion-code.svg";
-import ordersIcon from "./orders.svg";
 import coOrganizerIcon from "./co-organizers.svg";
+import guestListIcon from "./guest-list.svg";
+import ordersIcon from "./orders.svg";
+import promotionCodeIcon from "./promotion-code.svg";
 
+import CheckUserInList from "@/app/_components/CheckUserInList";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import ActionCard from "@/components/ActionCard";
-import { useSectionStore } from "@/zustand/useSectionStore";
-import { useGetEvent } from "@/hooks/events.hooks";
-import { useUserStore } from "@/context/store/user.store";
-import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
 import { ALLOWED_USER_TO_TEST } from "@/constants";
-import CheckUserInList from "@/app/_components/CheckUserInList";
+import { useUserStore } from "@/context/store/user.store";
+import { useGetEvent } from "@/hooks/events.hooks";
+import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
+import { useSectionStore } from "@/zustand/useSectionStore";
 
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
@@ -63,6 +62,9 @@ export default function ManageIndexPage() {
             subtitle: eventData.subtitle ?? "",
             organizerUserId: eventData.owner ?? 0,
             organizerChannelName: eventData?.organizer?.org_channel_name ?? "",
+            hasApproval: eventData.has_approval,
+            hasPayment: eventData.has_payment,
+            hasRegistration: eventData.has_registration,
           }}
         >
           {canEditEvent && (
