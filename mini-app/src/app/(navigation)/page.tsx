@@ -62,33 +62,44 @@ function PromotedEventsSlider() {
     sortBy: "do_not_order" as const,
   };
 
-  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery(
-    sliderEventParams,
-    {
-      enabled: eventCount > 0,
-      staleTime: Infinity,
-    }
-  );
+  const {
+    data: sliderEventData,
+    isLoading: isLoadingSlider,
+    isSuccess,
+    isError,
+  } = trpc.events.getEventsWithFilters.useQuery(sliderEventParams, {
+    enabled: eventCount > 0,
+    staleTime: Infinity,
+  });
 
-  if (!isLoadingSlider && !sliderEventData?.data?.length) return null;
+  // ------------ //
+  //  🔴 ERROR    //
+  // ------------ //
+  if ((isSuccess && !sliderEventData?.data?.length) || isError) return null;
 
+  // ------------ //
+  //  🟡 LOADING  //
+  // ------------ //
   let content = (
-    <div className="flex gap-3 overflow-x-hidden -mx-3 px-3 pb-3">
+    <CustomSwiper>
       <EventBanner
         skeleton
-        className="flex-[0_0_220px] h-[220px]"
+        className="flex-[0_0_220px] h-[220px] !w-[220px]"
       />
       <EventBanner
         skeleton
-        className="flex-[0_0_220px] h-[220px]"
+        className="flex-[0_0_220px] h-[220px] !w-[220px]"
       />
       <EventBanner
         skeleton
-        className="flex-[0_0_220px] h-[220px]"
+        className="flex-[0_0_220px] h-[220px] !w-[220px]"
       />
-    </div>
+    </CustomSwiper>
   );
 
+  // ------------ //
+  //  🟢 SUCCESS  //
+  // ------------ //
   if (!isLoadingSlider) {
     content = (
       <CustomSwiper>
@@ -172,7 +183,6 @@ const FeaturedContests = () => {
               className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
             >
               <Skeleton
-                variant="rectangular"
                 width={120}
                 height={120}
                 className="rounded-md"

@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
+import { cn } from "@/utils";
 import "swiper/css";
 import "swiper/css/pagination";
 
@@ -46,7 +47,18 @@ const CustomSwiper: React.FC<CustomSwiperProps> = ({ children, containerClassNam
 
       <div
         ref={paginationRef}
-        className="flex justify-center gap-2 pt-4"
+        id="custom-pagination"
+        className={cn(
+          "flex justify-center gap-2 pt-4",
+          // CUSTOM PAGINATION BUTTONS
+          `[&_span.swiper-pagination-bullet]:bg-transparent
+     [&_span.swiper-pagination-bullet]:opacity-100
+     [&_span.swiper-pagination-bullet]:border
+     [&_span.swiper-pagination-bullet]:border-brand-muted
+     [&_.swiper-pagination-bullet.swiper-pagination-bullet-active]:bg-black
+     [&_.swiper-pagination-bullet.swiper-pagination-bullet-active]:border
+     [&_.swiper-pagination-bullet.swiper-pagination-bullet-active]:border-black`
+        )}
       />
     </div>
   );

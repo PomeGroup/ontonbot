@@ -51,14 +51,3 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
  */
-
-.swiper-pagination-bullet.swiper-pagination-bullet-active {
-  background-color: black !important;
-  border: black solid 1px !important;
-}
-
-span.swiper-pagination-bullet {
-  background-color: transparent !important;
-  opacity: 1 !important;
-  border: #8e8e93 solid 1px !important;
-}
