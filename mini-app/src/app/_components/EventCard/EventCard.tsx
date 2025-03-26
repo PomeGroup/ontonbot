@@ -3,12 +3,12 @@
 import { Calendar, Clock, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type React from "react";
 import { type ForwardedRef } from "react";
 
 import Typography from "@/components/Typography";
 import { Badge } from "@/components/ui/badge";
 import useWebApp from "@/hooks/useWebApp";
+import { cn } from "@/utils";
 import CustomCard from "../atoms/cards/CustomCard";
 
 interface EventCardProps {
@@ -43,14 +43,14 @@ interface EventCardProps {
   };
   currentUserId?: number;
   timeOnly?: boolean;
-  children?: React.ReactNode;
+  noClick?: boolean;
 }
 
 /**
  * Event card component that displays event information in a clean, modern layout
  */
 function EventCard(
-  { event, currentUserId = 0, children, timeOnly }: EventCardProps,
+  { event, currentUserId = 0, timeOnly, noClick }: EventCardProps,
   ref: ForwardedRef<HTMLDivElement> | null
 ) {
   // ------------------------- //
@@ -96,6 +96,9 @@ function EventCard(
   const currency = validCurrencies.includes(paymentType?.toUpperCase()) ? paymentType?.toUpperCase() : "";
 
   const handleEventClick = () => {
+    // If noClick prop is set, do nothing
+    if (noClick) return;
+
     // If ticketToCheckIn => open Telegram link
     if (hasPayment || ticketToCheckIn) {
       webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`);
@@ -114,7 +117,10 @@ function EventCard(
   if (hidden) return null;
 
   return (
-    <div onClick={handleEventClick}>
+    <div
+      onClick={handleEventClick}
+      className={cn(!noClick && "cursor-pointer")}
+    >
       <CustomCard className="p-2">
         <div className="grid grid-cols-[100px_1fr] gap-4">
           {/* Event Image */}
@@ -202,7 +208,6 @@ function EventCard(
             </div>
           </div>
         </div>
-        {children}
       </CustomCard>
     </div>
   );
