@@ -10,7 +10,6 @@ import Typography from "@/components/Typography";
 import { Badge } from "@/components/ui/badge";
 import useWebApp from "@/hooks/useWebApp";
 import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
-import { cn } from "@/lib/utils";
 import CustomCard from "../atoms/cards/CustomCard";
 
 interface EventCardProps {
@@ -38,6 +37,10 @@ interface EventCardProps {
     hidden?: number;
     paymentType?: string;
     organizerImageUrl?: string;
+    // Has
+    hasApproval: boolean;
+    hasPayment: boolean;
+    hasRegistration: boolean;
   };
   currentUserId?: number;
   children?: React.ReactNode;
@@ -72,6 +75,9 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
     hidden = false,
     paymentType = "unknown",
     organizerImageUrl,
+
+    // ---------- has properties
+    hasRegistration,
   } = event;
 
   // Validate timezone; fallback to "GMT" if invalid
@@ -103,6 +109,8 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
   // Format date and time for display
   const formattedDate = formatDateRange(startDate, endDate, validTimezone);
 
+  if (hidden) return null;
+
   return (
     <div onClick={handleEventClick}>
       <CustomCard className="p-2">
@@ -113,7 +121,7 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
             alt={title}
             width={100}
             height={100}
-            className="overflow-hidden !w-[100px] h-[100px] rounded-md self-center"
+            className="overflow-hidden object-contain !w-[100px] h-[100px] rounded-md self-center"
           />
 
           {/* Event Details */}
@@ -144,7 +152,7 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
                 variant="subheadline2"
                 className="truncate"
               >
-                {isOnline ? "zoom.com/kdl9-skj9-lz-scxks..." : formattedLocation}
+                {isOnline ? (hasRegistration ? "Register to see" : location) : formattedLocation}
               </Typography>
             </div>
 
@@ -182,22 +190,12 @@ function EventCard({ event, currentUserId = 0, children }: EventCardProps, ref: 
               </div>
 
               {/* Tags/Badges */}
-              <div className="flex gap-2">
-                <Badge
-                  className={cn(
-                    "rounded-md px-1 font-normal text-xs cursor-pointer",
-                    isOnline ? "bg-gray-200 text-gray-700" : "bg-gray-200 text-gray-700"
-                  )}
-                >
+              <div className="flex gap-2 flex-wrap justify-end">
+                <Badge className="rounded-md px-1 font-normal text-xs bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700">
                   {isOnline ? "Online" : "In-Person"}
                 </Badge>
 
-                <Badge
-                  className={cn(
-                    "rounded-md px-1 font-normal text-xs cursor-pointer",
-                    ticketPrice > 0 ? "bg-gray-200 text-gray-700" : "bg-gray-200 text-gray-700"
-                  )}
-                >
+                <Badge className="rounded-md px-1 font-normal text-xs bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700">
                   {ticketPrice > 0 ? `${ticketPrice} ${currency}` : "Free"}
                 </Badge>
               </div>

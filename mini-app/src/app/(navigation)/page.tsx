@@ -5,7 +5,6 @@ import "@/app/page.css";
 import EventBanner from "@/components/EventBanner";
 import Typography from "@/components/Typography";
 import { useConfig } from "@/context/ConfigContext";
-import { OntonEvent } from "@/types";
 import { Skeleton } from "@mui/material";
 import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
@@ -40,11 +39,6 @@ export default function Home() {
     </>
   );
 }
-
-type EventsResponseType = {
-  status: "success";
-  data: (OntonEvent & { event_uuid: string })[];
-};
 
 function PromotedEventsSlider() {
   const config = useConfig();

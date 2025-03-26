@@ -16,8 +16,14 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
   const webApp = useWebApp();
 
   return (
-    <Link href={`/play-2-win/${tournament.id}`}>
-      <CustomCard defaultPadding>
+    <Link
+      href={`/play-2-win/${tournament.id}`}
+      className="block w-[160px]"
+    >
+      <CustomCard
+        defaultPadding
+        className="w-full"
+      >
         <div className="flex flex-col gap-3">
           <div className="relative isolate mx-auto">
             <LoadableImage
@@ -35,7 +41,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({ tournament }) => {
             )}
           </div>
           <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5 max-w-[136px]">
               <Typography
                 variant="callout"
                 truncate
