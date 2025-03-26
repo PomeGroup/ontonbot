@@ -8,7 +8,9 @@ export const visitors = pgTable(
   "visitors",
   {
     id: serial("id").primaryKey(),
-    user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
+    user_id: bigint("user_id", { mode: "number" })
+      .references(() => users.user_id)
+      .notNull(),
     event_uuid: uuid("event_uuid")
       .references(() => events.event_uuid)
       .notNull(),

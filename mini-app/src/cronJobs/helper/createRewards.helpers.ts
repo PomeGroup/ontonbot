@@ -8,8 +8,11 @@ import { findVisitorById } from "@/server/db/visitors";
 import eventDB from "@/server/db/events";
 import { AxiosError } from "axios";
 import { sleep } from "@/utils";
-import rewardDB from "@/server/db/rewards.db";
+import rewardDB, { markRewardsAsCreated } from "@/server/db/rewards.db";
 import eventPaymentDB from "@/server/db/eventPayment.db";
+import { RewardVisitorTypePartial } from "@/db/schema/rewards";
+import { generateTelegramCsv } from "@/cronJobs/helper/generateTelegramCsv";
+import { postTelegramCsvToTonSociety } from "@/cronJobs/helper/postTelegramCsvToTonSociety";
 
 // ---------------------------------------------------------------------
 // HELPER: Build the Ton Society Activity "draft" for updating
@@ -82,7 +85,7 @@ export const revertEndDateIfNeeded = async (localEvent: EventRow) => {
 /**
  * Handles a single reward creation with retry/backoff logic.
  */
-export const processSingleReward = async (pendingReward: RewardType): Promise<void> => {
+export const processSingleReward = async (pendingReward: RewardVisitorTypePartial): Promise<void> => {
   let attempts = 0;
   const maxAttempts = 3; // Retries for non-429 errors
 
@@ -91,9 +94,9 @@ export const processSingleReward = async (pendingReward: RewardType): Promise<vo
     await sleep(20);
 
     try {
-      const visitor = await findVisitorById(pendingReward.visitor_id);
+      const visitor = await findVisitorById(pendingReward.visitorId);
       if (!visitor) {
-        throw new Error(`Visitor ${pendingReward.visitor_id} not found`);
+        throw new Error(`Visitor ${pendingReward.visitorId} not found`);
       }
 
       const event = await eventDB.selectEventByUuid(visitor.event_uuid);
@@ -119,22 +122,22 @@ export const processSingleReward = async (pendingReward: RewardType): Promise<vo
         attributes: [{ trait_type: "Organizer", value: event.society_hub.name as string }],
       });
 
-      await rewardDB.updateReward(pendingReward.id, response.data.data);
+      await rewardDB.updateReward(pendingReward.rewardId, response.data.data);
       return; // success, exit the loop
     } catch (error) {
       // Handle HTTP 429 (rate limit)
       if (error instanceof AxiosError && error.response?.status === 429) {
-        logger.warn(`Hit 429 rate limit for reward ${pendingReward.id}, waiting 30s before retry...`);
+        logger.warn(`Hit 429 rate limit for reward ${pendingReward.rewardId}, waiting 30s before retry...`);
         await sleep(30000); // wait 30s, then retry indefinitely on 429
       } else {
         // Other errors: retry up to maxAttempts
         attempts++;
         if (attempts < maxAttempts) {
-          logger.warn(`Error (attempt #${attempts}) processing reward ${pendingReward.id}, retrying...`);
+          logger.warn(`Error (attempt #${attempts}) processing reward ${pendingReward.rewardId}, retrying...`);
           await sleep(1000);
         } else {
           // After final attempt, mark as failed
-          logger.error(`Failed to process reward ${pendingReward.id} after ${maxAttempts} attempts`, error);
+          logger.error(`Failed to process reward ${pendingReward.rewardId} after ${maxAttempts} attempts`, error);
           await rewardDB.handleRewardError(pendingReward, error);
           return; // give up on this reward
         }
@@ -146,23 +149,49 @@ export const processSingleReward = async (pendingReward: RewardType): Promise<vo
 // ---------------------------------------------------------------------
 // HELPER: Process Rewards in Parallel Chunks
 // ---------------------------------------------------------------------
+
 /**
- * Processes rewards in parallel chunks (size=15),
- * with retry/backoff for rate limits (429) and other errors.
+ * Processes all pending rewards in a single batch.
+ *  1) Gathers telegram IDs from `pendingRewards`.
+ *  2) Generates a CSV.
+ *  3) Posts once to Ton Society.
+ *  4) On success, marks rewards as created (and updates them in DB).
  */
-export const processRewardChunkParallel = async (pendingRewards: RewardType[]) => {
-  const chunkSize = 15;
+export const processRewardsBatch = async (pendingRewards: RewardVisitorTypePartial[], activityId: number) => {
+  if (!pendingRewards.length) {
+    logger.info("No pending rewards found; skipping batch process.");
+    return;
+  }
 
-  for (let i = 0; i < pendingRewards.length; i += chunkSize) {
-    const chunk = pendingRewards.slice(i, i + chunkSize);
+  try {
+    // 1) Map to an array of { telegramId } objects
+    const participants = pendingRewards.map((reward) => ({
+      telegramId: reward.userId,
+      // or `reward.visitorId` if that field is your actual telegram ID.
+      // Just make sure it matches the ID you want to pass to Ton Society.
+    }));
 
-    // For each reward in the chunk, create a Promise that handles its own retry logic
-    const promises = chunk.map((pendingReward) => processSingleReward(pendingReward));
+    // 2) Generate single CSV from these participants
+    const csvBuffer = generateTelegramCsv(participants);
 
-    // Wait for all promises in this chunk to settle
-    await Promise.allSettled(promises);
+    // 3) Post to Ton Society
+    const rewardLink = await postTelegramCsvToTonSociety(activityId, csvBuffer);
+    if (!rewardLink) {
+      logger.error(`Failed to create reward link, skipping mark-as-created. Activity ID: ${activityId}`);
+      return;
+    }
 
-    // Small pause between chunks
-    await sleep(1000);
+    // 4) Mark these rewards as created in DB
+    await rewardDB.markRewardsAsCreated(
+      pendingRewards.map((r) => r.rewardId),
+      rewardLink
+    );
+
+    logger.info(
+      `Successfully processed ${pendingRewards.length} rewards in a single batch. Link: ${rewardLink} for activityId: ${activityId}`
+    );
+  } catch (error) {
+    logger.error("Error in processRewardsBatch:", error);
+    // Decide if you want to rethrow or handle it here
   }
 };
