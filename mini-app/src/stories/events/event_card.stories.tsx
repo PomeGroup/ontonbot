@@ -5,17 +5,24 @@ import type { Meta, StoryObj } from "@storybook/react";
 type EventCardProps = {
   org_name: string;
   title: string;
+  startDate: Date;
+  endDate: Date;
 };
 
-const EventCardStory = ({ org_name, title }: EventCardProps) => {
+const EventCardStory = ({ org_name, title, endDate, startDate }: EventCardProps) => {
+  console.log("Dates", {
+    startDate: startDate,
+    endDate: endDate,
+  });
+
   return (
     <KonstaAppProvider>
-      <div className="bg-brand-bg p-4 w-[400px] rounded flex flex-col gap-4">
+      <div className="bg-brand-bg p-4 w-[400px] rounded flex flex-col gap-4 resize overflow-auto">
         <EventCard
           event={{
             eventUuid: "event-uuid",
             startDate: 1742902251,
-            endDate: 1782902251,
+            endDate: 1783912251,
             title: "Sample Event",
             subtitle: "This is a sample event subtitle for testing purposes.",
             location: "https://calendar.google.com/calendar/u/0/r",
@@ -25,11 +32,11 @@ const EventCardStory = ({ org_name, title }: EventCardProps) => {
             imageUrl: "https://storage.onton.live/onton/event/a4eac5f8d7_1742791654102_event_image.png",
             organizerChannelName: org_name,
             organizerUserId: 1,
-            ticketToCheckIn: true,
-            ticketPrice: 10,
+            hasPayment: true,
+            ticketPrice: 69,
+            paymentType: "USDT",
             timezone: "GMT",
             participationType: "online",
-            paymentType: "free",
             organizerFirstName: "John",
             organizerLastName: "Doe",
             organizerUsername: "john_doe",
@@ -56,7 +63,7 @@ const EventCardStory = ({ org_name, title }: EventCardProps) => {
             ticketPrice: 10,
             timezone: "GMT",
             participationType: "in-person",
-            paymentType: "free",
+            paymentType: "TON",
             organizerFirstName: "John",
             organizerLastName: "Doe",
             organizerUsername: "john_doe",
@@ -67,8 +74,8 @@ const EventCardStory = ({ org_name, title }: EventCardProps) => {
         <EventCard
           event={{
             eventUuid: "event-uuid",
-            startDate: 1742902251,
-            endDate: 1782902251,
+            startDate: new Date(startDate).getTime() / 1000,
+            endDate: new Date(endDate).getTime() / 1000,
             title,
             subtitle: "This is a sample event subtitle for testing purposes.",
             location: "Main Hall",
@@ -78,8 +85,6 @@ const EventCardStory = ({ org_name, title }: EventCardProps) => {
             imageUrl: "https://storage.onton.live/onton/event/a4eac5f8d7_1742791654102_event_image.png",
             organizerChannelName: org_name,
             organizerUserId: 1,
-            ticketToCheckIn: true,
-            ticketPrice: 10,
             timezone: "GMT",
             participationType: "in-person",
             paymentType: "free",
@@ -100,6 +105,8 @@ const meta: Meta<typeof EventCardStory> = {
   args: {
     org_name: "Sample Organization",
     title: "Sample Event has a long title and it is more than one line",
+    startDate: new Date(),
+    endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 10),
   },
 };
 

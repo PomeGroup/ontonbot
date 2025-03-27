@@ -65,6 +65,7 @@ function EventCard(
     eventUuid,
     title = "No Title",
     startDate,
+    endDate,
     location = "No Location",
     imageUrl = "/placeholder.svg?height=200&width=200",
     organizerChannelName = "",
@@ -107,11 +108,38 @@ function EventCard(
     }
   };
 
-  // Format date and time for display
-  const start = new Date(startDate);
-  const datePart = start.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const timePart = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "numeric", hour12: true });
-  const formattedDate = timeOnly ? `${timePart}` : `${datePart} | ${timePart}`;
+  const start = new Date(startDate * 1000);
+  const end = new Date(endDate * 1000);
+
+  // Helper to format time without seconds and using lowercase am/pm
+  const formatTime = (date: Date) => {
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? "pm" : "am";
+    hours = hours % 12 || 12;
+    return minutes === 0 ? `${hours}${period}` : `${hours}:${minutes < 10 ? "0" : ""}${minutes}${period}`;
+  };
+
+  // Build the date part
+  const startMonth = start.toLocaleString("en-US", { month: "short" });
+  const endMonth = end.toLocaleString("en-US", { month: "short" });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  const sameDay = start.toDateString() === end.toDateString();
+
+  let datePart = "";
+  if (sameDay) {
+    datePart = `${startMonth} ${startDay}`;
+  } else if (startMonth === endMonth) {
+    datePart = `${startMonth} ${startDay} - ${endDay}`;
+  } else {
+    datePart = `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+  }
+
+  // Build the time part
+  const timePart = `${formatTime(start)} - ${formatTime(end)}`;
+
+  const formattedDate = timeOnly ? timePart : `${datePart} | ${timePart}`;
 
   return (
     <div
@@ -140,7 +168,10 @@ function EventCard(
             </Typography>
 
             {/* Date and Time */}
-            <div className="flex items-center text-gray-500 mb-1">
+            <div
+              title={formattedDate}
+              className="flex items-center text-gray-500 mb-1"
+            >
               {timeOnly ? (
                 <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
               ) : (
@@ -155,7 +186,10 @@ function EventCard(
             </div>
 
             {/* Location */}
-            <div className="flex items-center text-gray-500 mb-1">
+            <div
+              title={isOnline ? "Online" : formattedLocation}
+              className="flex items-center text-gray-500 mb-1"
+            >
               {isOnline ? (
                 <PiLinkSimple className="w-4 h-4 mr-2 flex-shrink-0" />
               ) : (
@@ -170,38 +204,38 @@ function EventCard(
             </div>
 
             {/* Bottom row with organizer and badges */}
-            <div className="flex items-center justify-between mt-auto gap-2 flex-wrap">
+            <div className="flex items-center justify-between mt-auto gap-2">
               {/* Organizer or Hosting Status */}
-              <div className="flex items-center">
-                {organizerChannelName ? (
-                  <div className="flex items-center !max-w-32">
-                    {organizerImageUrl && (
-                      <div className="relative w-6 h-6 rounded-full overflow-hidden mr-2">
-                        <Image
-                          src={organizerImageUrl || "/placeholder.svg"}
-                          alt={organizerChannelName}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-                    <Typography
-                      variant="subheadline2"
-                      className="text-blue-500 truncate"
-                      truncate
-                    >
-                      {organizerChannelName}
-                    </Typography>
-                  </div>
-                ) : null}
-              </div>
+              {organizerChannelName && (
+                <div
+                  title={organizerChannelName}
+                  className="flex items-center flex-1 min-w-0"
+                >
+                  {organizerImageUrl && (
+                    <div className="relative w-6 h-6 rounded-full overflow-hidden mr-2">
+                      <Image
+                        src={organizerImageUrl || "/placeholder.svg"}
+                        alt={organizerChannelName}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                  <Typography
+                    variant="subheadline2"
+                    className="text-blue-500 truncate"
+                    truncate
+                  >
+                    {organizerChannelName}
+                  </Typography>
+                </div>
+              )}
 
               {/* Tags/Badges */}
-              <div className="flex gap-2 flex-wrap justify-self-end justify-end">
+              <div className="flex flex-nowrap gap-2 justify-end">
                 <Badge className="rounded-md px-1 font-normal text-xs bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700">
                   {isOnline ? "Online" : "In-Person"}
                 </Badge>
-
                 <Badge className="rounded-md px-1 font-normal text-xs bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700">
                   {ticketPrice > 0 ? `${ticketPrice} ${currency}` : "Free"}
                 </Badge>
