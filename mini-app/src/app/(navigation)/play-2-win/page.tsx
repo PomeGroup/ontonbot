@@ -11,6 +11,7 @@ import Divider from "@/components/Divider";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { RouterOutput } from "@/server";
 import { formatSortTournamentSelectOption, SortOptions, tournamentsListSortOptions } from "@/server/utils/tournaments.utils";
 import { cn } from "@/utils";
 import { Skeleton } from "@mui/material";
@@ -21,82 +22,44 @@ import { FiCheck } from "react-icons/fi";
 import { HiOutlineArrowNarrowUp } from "react-icons/hi";
 
 interface TournamentCardProps {
-  tournamentId: string;
+  tournament: RouterOutput["tournaments"]["getFeaturedTournaments"][0];
 }
 
-const TournamentSlide: React.FC<TournamentCardProps> = ({ tournamentId }) => {
+const TournamentSlide: React.FC<TournamentCardProps> = ({ tournament }) => {
   const router = useRouter();
 
-  const queryEnabeld = !isNaN(Number(tournamentId));
-  const tournament = trpc.tournaments.getTournamentById.useQuery(
-    { id: Number(tournamentId) },
-    {
-      enabled: queryEnabeld,
-    }
-  );
-
-  if (!queryEnabeld) {
-    return null;
-  }
-
-  if (tournament.isError) {
-    if (tournament.error.data?.httpStatus === 404) {
-      return (
-        <div className="w-[220px] bg-brand-muted animate-pulse h-[220px] flex items-center justify-center border rounded-md">
-          <Typography variant="caption2">Not found</Typography>
-        </div>
-      );
-    }
-    return null;
-  }
-
   return (
-    <>
-      {tournament.isLoading ? (
-        <Skeleton
-          key={tournamentId}
-          className="rounded-md"
-          height={220}
-          width={220}
-          sx={{ transform: "unset" }}
-        />
-      ) : (
-        <div className="relative isolate w-[220px] h-[220px]">
-          <LoadableImage
-            src={tournament.data?.imageUrl}
-            key={tournamentId}
-            width={220}
-            height={220}
-            onClick={() => {
-              router.push(`/play-2-win/${tournamentId}`);
-            }}
-            className="w-[220px] h-[220px] rounded-md hover:cursor-pointer"
-            alt="tournament image card"
-          />
+    <div className="relative isolate w-[220px] h-[220px]">
+      <LoadableImage
+        src={tournament.imageUrl}
+        key={tournament.id}
+        width={220}
+        height={220}
+        onClick={() => {
+          router.push(`/play-2-win/${tournament.id}`);
+        }}
+        className="w-[220px] h-[220px] rounded-md hover:cursor-pointer"
+        alt="tournament image card"
+      />
 
-          <TournamentTimeRemaining
-            space="sm"
-            closeOnly
-            endDate={tournament.data.endDate!}
-          />
-          <FloatingBadge position={"bc-md"}>
-            <Typography variant="caption2">+{tournament.data.playersCount} joined</Typography>
-          </FloatingBadge>
-        </div>
-      )}
-    </>
+      <TournamentTimeRemaining
+        space="sm"
+        closeOnly
+        endDate={tournament.endDate!}
+      />
+      <FloatingBadge position={"bc-md"}>
+        <Typography variant="caption2">+{tournament.playersCount} joined</Typography>
+      </FloatingBadge>
+    </div>
   );
 };
 
 const Play2WinFeatured = () => {
-  const config = trpc.config.getConfig.useQuery();
-  // Get the featured events from the config: tId,tId,tId
-  const play2winFeaturedEvents = config.data?.config["play-2-win-featured"];
-  const parsedFeaturedEvents =
-    typeof play2winFeaturedEvents === "string" ? play2winFeaturedEvents?.split(",").map((tId) => tId.trim()) : undefined;
+  const featuredEvents = trpc.tournaments.getFeaturedTournaments.useQuery();
 
-  if (!parsedFeaturedEvents?.length) {
-    return null;
+  // if error or no result return null
+  if (featuredEvents.isError || (featuredEvents.isSuccess && !featuredEvents.data)) {
+    return;
   }
 
   return (
@@ -104,10 +67,20 @@ const Play2WinFeatured = () => {
       <Typography variant="title2">Featured Contests</Typography>
       <div>
         <CustomSwiper>
-          {parsedFeaturedEvents?.map((tId) => (
+          {featuredEvents.isLoading &&
+            Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton
+                key={index}
+                className="rounded-md"
+                height={220}
+                width={220}
+                sx={{ transform: "unset" }}
+              />
+            ))}
+          {featuredEvents.data?.map((tournament) => (
             <TournamentSlide
-              tournamentId={tId}
-              key={tId}
+              tournament={tournament}
+              key={tournament.id}
             />
           ))}
         </CustomSwiper>

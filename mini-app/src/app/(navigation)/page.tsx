@@ -121,22 +121,13 @@ function PromotedEventsSlider() {
 }
 
 const FeaturedContests = () => {
-  const tournomantsQuery = trpc.tournaments.getTournaments.useQuery(
-    {
-      limit: 5,
-      filter: {
-        status: "notended",
-      },
-      sortBy: "timeRemaining",
-    },
-    {
-      staleTime: Infinity,
-    }
-  );
+  const tournomantsQuery = trpc.tournaments.getFeaturedTournaments.useQuery(undefined, {
+    staleTime: Infinity,
+  });
 
-  const tournaments = tournomantsQuery.data?.tournaments;
+  const tournaments = tournomantsQuery.data;
 
-  if (tournomantsQuery.isSuccess && tournomantsQuery.data?.tournaments.length === 0) {
+  if (tournomantsQuery.isSuccess && !tournaments) {
     return null;
   }
 
