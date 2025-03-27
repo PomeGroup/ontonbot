@@ -9,6 +9,7 @@ import Typography from "@/components/Typography";
 import { Badge } from "@/components/ui/badge";
 import useWebApp from "@/hooks/useWebApp";
 import { cn } from "@/utils";
+import { PiLinkSimple } from "react-icons/pi";
 import CustomCard from "../atoms/cards/CustomCard";
 
 interface EventCardProps {
@@ -132,8 +133,8 @@ function EventCard(
           <div className="flex flex-col overflow-hidden">
             {/* Event Title */}
             <Typography
-              variant="headline"
-              className="mb-2 line-clamp-2"
+              variant="callout"
+              className="mb-[5.5px] h-8 line-clamp-2"
             >
               {title}
             </Typography>
@@ -154,13 +155,17 @@ function EventCard(
             </div>
 
             {/* Location */}
-            <div className="flex items-center text-gray-500 mb-2">
-              <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+            <div className="flex items-center text-gray-500 mb-1">
+              {isOnline ? (
+                <PiLinkSimple className="w-4 h-4 mr-2 flex-shrink-0" />
+              ) : (
+                <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+              )}
               <Typography
                 variant="subheadline2"
                 className="truncate"
               >
-                {isOnline ? (hasRegistration ? "Register to see" : location) : formattedLocation}
+                {isOnline ? "Online" : formattedLocation}
               </Typography>
             </div>
 

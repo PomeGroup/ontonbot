@@ -10,7 +10,7 @@ export const typographyVariants = cva("break-words", {
       title3: "text-[20px] font-bold leading-[24px] tracking-[-0.45px]",
       headline: "text-lg font-semibold leading-[22px]",
       body: "!text-base font-thin leading-[22px] tracking-[-0.43px]",
-      callout: "text-base font-semibold leading-[22px]",
+      callout: "text-base font-semibold leading-[18px]",
       subheadline1: "text-sm font-extralight leading-5",
       subheadline2: "text-sm font-normal leading-[18px]",
       caption1: "text-xs font-light leading-[16px]",
