@@ -162,7 +162,7 @@ function EventCard(
             {/* Event Title */}
             <Typography
               variant="callout"
-              className="mb-[5.5px] h-8 line-clamp-2"
+              className="mb-[5.5px] h-8 line-clamp-2 leading-[17px]"
             >
               {title}
             </Typography>
