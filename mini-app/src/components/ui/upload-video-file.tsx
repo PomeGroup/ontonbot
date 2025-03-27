@@ -31,22 +31,6 @@ export const UploadVideoFile = (props: UploadFileProps) => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if the video is square (client-side)
-  const checkIfSquareVideo = async (file: File): Promise<boolean> => {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement("video");
-      video.onloadedmetadata = () => {
-        URL.revokeObjectURL(video.src);
-        resolve(video.videoWidth === video.videoHeight);
-      };
-      video.onerror = () => {
-        URL.revokeObjectURL(video.src);
-        reject(new Error("Failed to load video metadata. Please ensure the video is a valid MP4 file."));
-      };
-      video.src = URL.createObjectURL(file);
-    });
-  };
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     if (!e.target.files || e.target.files.length === 0) return;
@@ -66,13 +50,6 @@ export const UploadVideoFile = (props: UploadFileProps) => {
     }
 
     try {
-      // Check if the video is square
-      const isSquare = await checkIfSquareVideo(file);
-      if (!isSquare) {
-        setError("Only square videos are allowed");
-        return;
-      }
-
       // Prepare multipart/form-data
       const formData = new FormData();
       formData.append("video", file);
@@ -160,7 +137,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
             >
               <source
                 src={videoPreview}
-                type="video/mp4"
+                type="video/*"
               />
             </video>
             <p className="font-semibold flex items-center gap-2 text-lg">
@@ -199,7 +176,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               >
                 <source
                   src={videoPreview}
-                  type="video/mp4"
+                  type="video/*"
                 />
               </video>
             )}
@@ -211,7 +188,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               ref={videoInputRef}
               type="file"
               name="video"
-              accept="video/mp4"
+              accept="video/*"
               onChange={handleFileChange}
               id="event_video_input"
               className="hidden"
