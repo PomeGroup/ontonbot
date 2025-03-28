@@ -81,33 +81,26 @@ export const getTournamentById = async (tournamentId: number): Promise<Tournamen
  * Results are cached based on the provided IDs.
  */
 export const getTournamentsByIds = async (ids: number[]): Promise<TournamentsRow[]> => {
-  logger.log("getTournamentsByIds called with ids:", ids);
   if (ids.length === 0) {
-    logger.log("No ids provided; returning an empty array");
     return [];
   }
   // Create a cache key by hashing the ids array
   const hash = crypto.createHash("md5").update(JSON.stringify(ids)).digest("hex");
   const cacheKey = cacheKeys.getTournamentsByIds + hash;
-  logger.log("Generated cache key:", cacheKey);
 
   const cachedResult: TournamentsRow[] = await redisTools.getCache(cacheKey);
   if (cachedResult) {
-    logger.log("Cache hit for key:", cacheKey);
     return cachedResult;
   }
-  logger.log("Cache miss for key:", cacheKey);
 
   const result = await db
     .select()
     .from(tournaments)
     .where(or(...ids.map((id) => eq(tournaments.id, id))))
     .execute();
-  logger.log("Executed query; rows returned:", result.length);
 
   // Cache the result
   await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.guard);
-  logger.log("Result cached for key:", cacheKey);
 
   return result;
 };
