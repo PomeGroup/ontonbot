@@ -1,4 +1,4 @@
-import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
+import searchEventsInputZod, { eventStatusValues } from "@/zodSchema/searchEventsInputZod";
 import { z } from "zod";
 
 type SearchEventsInput = z.infer<typeof searchEventsInputZod>;
@@ -19,12 +19,19 @@ export default function parseSearchParams(searchParams: URLSearchParams) {
   const sortByQ = (searchParams.get("sortBy") as SortBy) || "start_date_desc";
   const term = searchParams.get("query") || "";
 
+  // ONGOING FILTER
+  const eventStatusParam = searchParams.get("eventStatus");
+  const eventStatus = eventStatusValues.includes(eventStatusParam as any)
+    ? eventStatusValues.find((v) => v === eventStatusParam)!
+    : ("ongoing" as const);
+
   return {
     search: term,
     sortBy: sortByQ,
     filter: {
       participationType,
-      society_hub_id: selectedHubsFromParams.map(Number).filter(Boolean)
-    }
-  }
+      society_hub_id: selectedHubsFromParams.map(Number).filter(Boolean),
+      eventStatus,
+    },
+  };
 }

@@ -1,22 +1,22 @@
 "use client";
 
-import React from "react";
+import { Block, Page } from "konsta/react";
 import { useParams, useRouter } from "next/navigation";
-import { Page, Block, Button } from "konsta/react";
 // svg icons
-import guestListIcon from "./guest-list.svg";
-import promotionCodeIcon from "./promotion-code.svg";
-import ordersIcon from "./orders.svg";
 import coOrganizerIcon from "./co-organizers.svg";
+import guestListIcon from "./guest-list.svg";
+import ordersIcon from "./orders.svg";
+import promotionCodeIcon from "./promotion-code.svg";
 
+import CustomButton from "@/app/_components/Button/CustomButton";
+import CheckUserInList from "@/app/_components/CheckUserInList";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import ActionCard from "@/components/ActionCard";
-import { useSectionStore } from "@/zustand/useSectionStore";
-import { useGetEvent } from "@/hooks/events.hooks";
-import { useUserStore } from "@/context/store/user.store";
-import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
 import { ALLOWED_USER_TO_TEST } from "@/constants";
-import CheckUserInList from "@/app/_components/CheckUserInList";
+import { useUserStore } from "@/context/store/user.store";
+import { useGetEvent } from "@/hooks/events.hooks";
+import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
+import { useSectionStore } from "@/zustand/useSectionStore";
 
 export default function ManageIndexPage() {
   // 1) We get eventData from the layout's context:
@@ -51,7 +51,7 @@ export default function ManageIndexPage() {
   return (
     <Page>
       {/* Show an EventCard with the event data */}
-      <Block className="bg-white p-4 rounded-[10px] mx-4 !mb-0">
+      <div className="bg-white rounded-2lg mx-4 mt-4 pb-3">
         <EventCard
           event={{
             eventUuid: eventData.event_uuid,
@@ -63,27 +63,30 @@ export default function ManageIndexPage() {
             subtitle: eventData.subtitle ?? "",
             organizerUserId: eventData.owner ?? 0,
             organizerChannelName: eventData?.organizer?.org_channel_name ?? "",
+            hasApproval: eventData.has_approval,
+            hasPayment: eventData.has_payment,
+            hasRegistration: eventData.has_registration,
           }}
-        >
-          {canEditEvent && (
-            <div className="mt-3 -mb-2">
-              <Button
-                className="px-3 rounded-[6px] py-4"
-                outline={true}
-                onClick={() => {
-                  setSection("event_setup_form_general_step");
-                  router.push(`/events/${eventData.event_uuid}/manage/edit`);
-                }}
-              >
-                Edit Event Info
-              </Button>
-            </div>
-          )}
-        </EventCard>
-      </Block>
+          noClick
+        />
+        {canEditEvent && (
+          <div className="mx-3 mt-3">
+            <CustomButton
+              onClick={() => {
+                setSection("event_setup_form_general_step");
+                router.push(`/events/${eventData.event_uuid}/manage/edit`);
+              }}
+              variant="outline"
+              size="md"
+            >
+              Edit Event Info
+            </CustomButton>
+          </div>
+        )}
+      </div>
 
       {/* Action Cards for each sub-route */}
-      <Block className="-mx-4 my-3">
+      <Block className="-mx-4 !my-0">
         {eventData.has_payment && canEditEvent && (
           <>
             <ActionCard
