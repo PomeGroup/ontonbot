@@ -41,7 +41,6 @@ const TournamentSlide: React.FC<TournamentCardProps> = ({ tournament }) => {
         className="w-[220px] h-[220px] rounded-md hover:cursor-pointer"
         alt="tournament image card"
       />
-
       <TournamentTimeRemaining
         space="sm"
         closeOnly
@@ -58,7 +57,7 @@ const Play2WinFeatured = () => {
   const featuredEvents = trpc.tournaments.getFeaturedTournaments.useQuery();
 
   // if error or no result return null
-  if (featuredEvents.isError || (featuredEvents.isSuccess && !featuredEvents.data)) {
+  if (featuredEvents.isError || (featuredEvents.isSuccess && !featuredEvents.data.length)) {
     return;
   }
 
@@ -67,22 +66,22 @@ const Play2WinFeatured = () => {
       <Typography variant="title2">Featured Contests</Typography>
       <div>
         <CustomSwiper>
-          {featuredEvents.isLoading &&
-            Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton
-                key={index}
-                className="rounded-md"
-                height={220}
-                width={220}
-                sx={{ transform: "unset" }}
-              />
-            ))}
-          {featuredEvents.data?.map((tournament) => (
-            <TournamentSlide
-              tournament={tournament}
-              key={tournament.id}
-            />
-          ))}
+          {featuredEvents.isLoading
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="rounded-md"
+                  height={220}
+                  width={220}
+                  sx={{ transform: "unset" }}
+                />
+              ))
+            : featuredEvents.data.map((tournament) => (
+                <TournamentSlide
+                  tournament={tournament}
+                  key={tournament.id}
+                />
+              ))}
         </CustomSwiper>
       </div>
     </>
