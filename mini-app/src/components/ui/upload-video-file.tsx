@@ -137,7 +137,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
             >
               <source
                 src={videoPreview}
-                type="video/*"
+                type="video/mp4"
               />
             </video>
             <p className="font-semibold flex items-center gap-2 text-lg">
@@ -176,7 +176,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               >
                 <source
                   src={videoPreview}
-                  type="video/*"
+                  type="video/mp4"
                 />
               </video>
             )}
@@ -188,7 +188,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
               ref={videoInputRef}
               type="file"
               name="video"
-              accept="video/*"
+              accept="video/mp4"
               onChange={handleFileChange}
               id="event_video_input"
               className="hidden"
