@@ -12,6 +12,7 @@ import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { selectUserById } from "@/server/db/users";
 import { LeaderboardResponse } from "@/types/elympicsAPI.types";
 import { config } from "../config";
+import { logger } from "../utils/logger";
 import { GameFilterId, tournamentsListSortOptions } from "../utils/tournaments.utils";
 
 export const tournamentsRouter = router({
@@ -173,9 +174,11 @@ export const tournamentsRouter = router({
     }),
   getFeaturedTournaments: initDataProtectedProcedure.query(async () => {
     const play2winFeaturedEvents = config?.["play-2-win-featured"];
+    logger.log("play2winFeaturedEvents:", play2winFeaturedEvents);
 
     const parsedFeaturedEvents =
       typeof play2winFeaturedEvents === "string" ? play2winFeaturedEvents.split(",").map((tId) => tId.trim()) : undefined;
+    logger.log("parsedFeaturedEvents:", parsedFeaturedEvents);
 
     if (!parsedFeaturedEvents || parsedFeaturedEvents.length === 0) {
       return [] as TournamentsRow[];
@@ -183,6 +186,7 @@ export const tournamentsRouter = router({
 
     // Convert the tournament IDs to numbers and filter out invalid ones
     const tournamentIds = parsedFeaturedEvents.map((id) => Number(id)).filter((n) => !isNaN(n));
+    logger.log("tournamentIds:", tournamentIds);
 
     // Fetch tournaments from the DB and filter out any undefined results
     const featured = await tournamentsDB.getTournamentsByIds(tournamentIds);
