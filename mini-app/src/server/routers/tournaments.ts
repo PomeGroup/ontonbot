@@ -8,11 +8,10 @@ import { initDataProtectedProcedure, router } from "../trpc";
 import { db } from "@/db/db";
 import { games, TournamentsRow } from "@/db/schema";
 import { getTournamentLeaderboard } from "@/lib/elympicsApi";
-import { cacheKeys, cacheLvl, redisTools } from "@/lib/redisTools";
+import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { selectUserById } from "@/server/db/users";
 import { LeaderboardResponse } from "@/types/elympicsAPI.types";
-import crypto from "crypto";
-import { config } from "../config";
+import { fetchOntonSettings } from "../db/ontoSetting";
 import { GameFilterId, tournamentsListSortOptions } from "../utils/tournaments.utils";
 
 export const tournamentsRouter = router({
@@ -173,6 +172,7 @@ export const tournamentsRouter = router({
       };
     }),
   getFeaturedTournaments: initDataProtectedProcedure.query(async () => {
+    const { config } = await fetchOntonSettings();
     const play2winFeaturedEvents = config?.["play-2-win-featured"];
 
     const parsedFeaturedEvents =
@@ -185,20 +185,9 @@ export const tournamentsRouter = router({
     // Convert the tournament IDs to numbers and filter out invalid ones
     const tournamentIds = parsedFeaturedEvents.map((id) => Number(id)).filter((n) => !isNaN(n));
 
-    // Create a cache key using the tournamentIds array
-    const cacheKey = "featuredTournaments:" + crypto.createHash("md5").update(JSON.stringify(tournamentIds)).digest("hex");
-
-    // Attempt to get cached data at guard level
-    const cached = await redisTools.getCache(cacheKey);
-    if (cached) {
-      return cached as TournamentsRow[];
-    }
-
     // Fetch tournaments from the DB and filter out any undefined results
     const featured = await tournamentsDB.getTournamentsByIds(tournamentIds);
 
-    // Cache the result with guard level TTL
-    await redisTools.setCache(cacheKey, featured, cacheLvl.guard);
     return featured as TournamentsRow[];
   }),
 });
