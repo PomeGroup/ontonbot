@@ -81,11 +81,10 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
 
           logger.log(`tscsbt_user_approved_${ordr.user_id}`);
         }
-        logger.log(`call CsbtTicket`);
+        logger.log(`call CsbtTicket for event ${event_uuid} user ${ordr.user_id} order ${ordr.uuid}`);
+
         await CsbtTicket(event_uuid!, ordr.user_id!);
-        logger.log(`call callTonfestForOnOntonPayment`);
         await callTonfestForOnOntonPayment(ordr, event_uuid!!);
-        logger.log(`call callPridipieForOnOntonPayment`);
         await callPridipieForOnOntonPayment(ordr, event_uuid!!);
       } catch (error) {
         console.log("create_tscsbt_ticket_failed", error);

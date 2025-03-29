@@ -2,6 +2,7 @@ import { index, integer, json, pgEnum, pgTable, serial, text, timestamp, uuid } 
 import { rewardStatus, rewardType } from "@/db/schema";
 import { visitors } from "@/db/schema/visitors";
 import { InferSelectModel } from "drizzle-orm";
+import { RewardStatus, RewardType } from "@/db/enum";
 
 export type RewardDataTyepe =
   | {
@@ -24,11 +25,11 @@ export const rewards = pgTable(
     visitor_id: serial("visitor_id")
       .references(() => visitors.id)
       .notNull(),
-    type: rewardType("type"),
+    type: rewardType("type").notNull(),
     data: json("data").$type<RewardDataTyepe>(),
     tryCount: integer("try_count").default(0).notNull(),
     status: rewardStatus("status").notNull().default("created"),
-    created_at: timestamp("created_at").defaultNow(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
     event_start_date: integer("event_start_date").notNull(),
     event_end_date: integer("event_end_date").notNull(),
     updatedAt: timestamp("updated_at", {
@@ -49,3 +50,17 @@ export const rewards = pgTable(
 
 export type RewardsSelectType = InferSelectModel<typeof rewards>;
 export type RewardTonSocietyStatusType = (typeof tonSocietyStatusEnum.enumValues)[number];
+
+//// most use  join query types
+// to join rewards with visitors
+export type RewardVisitorTypePartial = {
+  rewardId: string;
+  status: RewardStatus;
+  data: RewardDataTyepe | null; // or a more specific type
+  type: RewardType;
+  tryCount: number;
+  createdAt: Date;
+  visitorId: number;
+  eventUuid: string;
+  userId: number;
+};

@@ -1,11 +1,16 @@
 import { bigint, index, integer, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { users } from "@/db/schema/users";
 import { events } from "@/db/schema/events";
+import { infer } from "zod";
+import { InferSelectModel } from "drizzle-orm";
+
 export const visitors = pgTable(
   "visitors",
   {
     id: serial("id").primaryKey(),
-    user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
+    user_id: bigint("user_id", { mode: "number" })
+      .references(() => users.user_id)
+      .notNull(),
     event_uuid: uuid("event_uuid")
       .references(() => events.event_uuid)
       .notNull(),
@@ -28,3 +33,5 @@ export const visitors = pgTable(
     updatedAtIdx: index("visitors_updated_at_idx").on(table.updatedAt),
   })
 );
+
+export type VisitorsRow = InferSelectModel<typeof visitors>;

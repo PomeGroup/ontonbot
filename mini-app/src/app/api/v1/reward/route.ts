@@ -1,11 +1,12 @@
 import eventDB from "@/server/db/events";
 import { z } from "zod";
-import { TRPCError } from "@trpc/server";
 import { logger } from "@/server/utils/logger";
 import { getAuthenticatedUserApi } from "@/server/auth";
-import { handleTrpcError } from "@/server/utils/error_utils";
 import { createUserRewardLink } from "@/lib/ton-society-api";
 import "@/lib/gracefullyShutdown";
+import rewardDB from "@/server/db/rewards.db";
+import rewardService from "@/server/routers/services/rewardsService";
+import externalSellerApi from "@/lib/externalSeller.api";
 /* -------------------------------------------------------------------------- */
 /*                              Reward Api Schema                             */
 /* -------------------------------------------------------------------------- */
@@ -19,6 +20,10 @@ const rewardCreateSchema = z.object({
 
 /* -------------------------------------------------------------------------- */
 export async function POST(request: Request) {
+  let sbtClaimLink;
+  let tryCount = 0;
+  const tryInterval = 1000;
+  const maxTries = 10;
   try {
     const [userId, error] = await getAuthenticatedUserApi(request);
     if (error) {
@@ -48,49 +53,65 @@ export async function POST(request: Request) {
 
     if (eventData.start_date > now || now < eventData.end_date)
       return Response.json({ message: "Event is not ongoing" }, { status: 400 });
-
-    const society_hub_value =
-      typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
-    try {
-      const res = await createUserRewardLink(eventData.activity_id, {
-        telegram_user_id: body.data.reward_user_id,
-        attributes: eventData?.society_hub
-          ? [
-              {
-                trait_type: "Organizer",
-                value: society_hub_value,
-              },
-            ]
-          : undefined,
-      });
-
-      // Ensure the response contains data
-      if (!res || !res.data || !res.data.data) {
-        return Response.json({ message: "Someting is Wrong with Creating reward" }, { status: 500 });
+    // Check to create user if not exists
+    await externalSellerApi.ensureUserExists(body.data.reward_user_id, "GameReward", `Game_${userId}`);
+    const eventRewardLink = await rewardDB.fetchRewardLinkForEvent(eventData.event_uuid, "ton_society_sbt");
+    if (
+      eventRewardLink &&
+      typeof eventRewardLink.data === "object" &&
+      "reward_link" in (eventRewardLink.data as Record<string, unknown>) &&
+      typeof (eventRewardLink.data as { reward_link?: unknown }).reward_link === "string"
+    ) {
+      sbtClaimLink = (eventRewardLink.data as { reward_link: string }).reward_link;
+    }
+    if (!sbtClaimLink) {
+      const society_hub_value =
+        typeof eventData.society_hub === "string"
+          ? eventData.society_hub
+          : eventData.society_hub?.name || ("Onton" as const);
+      while (tryCount <= maxTries) {
+        try {
+          const res = await createUserRewardLink(eventData.activity_id, {
+            telegram_user_id: body.data.reward_user_id,
+            attributes: eventData?.society_hub
+              ? [
+                  {
+                    trait_type: "Organizer",
+                    value: society_hub_value,
+                  },
+                ]
+              : undefined,
+          });
+          if (res.data && res.data.data && res.data.data.reward_link) {
+            sbtClaimLink = res.data.data.reward_link;
+            return Response.json(res.data, { status: 200 });
+          } else if (tryCount === maxTries) {
+            if (!res || !res.data || !res.data.data) {
+              logger.error(`reward_api_creation_error for last time ${tryCount} event_uuid: ${eventData.event_uuid}`, res);
+              return Response.json({ message: "Someting is Wrong with Creating reward" }, { status: 500 });
+            }
+          }
+        } catch (error) {
+          logger.error(`reward_api_creation_error for first time ${tryCount} event_uuid: ${eventData.event_uuid}`, error);
+        }
+        tryCount++;
+        await new Promise((resolve) => setTimeout(resolve, tryInterval));
       }
-
-      return Response.json(res.data);
-    } catch (error) {
-      if (error instanceof TRPCError) return handleTrpcError(error);
-
-      logger.log(eventData.activity_id, {
-        telegram_user_id: body.data.reward_user_id,
-        attributes: eventData?.society_hub
-          ? [
-              {
-                trait_type: "Organizer",
-                value: society_hub_value,
-              },
-            ]
-          : undefined,
-      });
-      console.error("reward_api_creation_error", error);
-      return Response.json({ message: "Someting Went Wrong with Creating reward" }, { status: 500 });
+    } else {
+      await rewardService.createTonSocietySBTReward(eventData.event_uuid, body.data.reward_user_id);
+      return Response.json(
+        {
+          message: "Reward Created",
+          status: "status",
+          data: { reward_link: sbtClaimLink },
+        },
+        { status: 200 }
+      );
     }
   } catch (error) {
-    console.error("reward_api_general_error", error);
+    logger.error("reward_api_general_error", error);
 
-    return Response.json({ message: "Someting Went Wrong" }, { status: 500 });
+    return Response.json({ message: "Something Went Wrong" }, { status: 500 });
   }
 }
 

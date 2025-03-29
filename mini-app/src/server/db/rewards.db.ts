@@ -3,10 +3,10 @@ import { RewardStatus, RewardType } from "@/db/enum";
 import { RewardTonSocietyStatusType, visitors } from "@/db/schema";
 import { RewardType as RewardTypeParitial } from "@/types/event.types";
 
-import { RewardDataTyepe, rewards, RewardsSelectType } from "@/db/schema/rewards";
+import { RewardDataTyepe, rewards, RewardsSelectType, RewardVisitorTypePartial } from "@/db/schema/rewards";
 import { redisTools } from "@/lib/redisTools";
 import { Maybe } from "@trpc/server";
-import { and, eq, sql, or, asc } from "drizzle-orm";
+import { and, eq, sql, or, asc, inArray } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 
 export interface RewardChunkRow {
@@ -18,7 +18,9 @@ export interface RewardChunkRow {
 const generateCacheKey = (visitor_id: number, reward_id?: string) => {
   return `reward:${visitor_id}${reward_id ? `:${reward_id}` : ""}`;
 };
-
+const generateCacheKeyWithRewardType = (visitor_id: number, type: RewardType) => {
+  return `reward:${type}:${visitor_id}`;
+};
 const generateCacheKeyForLinkEvent = (event_uuid: string) => {
   return `reward:link:${event_uuid}`;
 };
@@ -40,12 +42,15 @@ const checkExistingReward = async (visitor_id: number): Promise<Maybe<RewardsSel
 };
 
 const checkExistingRewardWithType = async (visitor_id: number, type: RewardType): Promise<Maybe<RewardsSelectType>> => {
+  const cacheKey = generateCacheKeyWithRewardType(visitor_id, type);
+  const cachedReward = await redisTools.getCache(cacheKey);
+  if (cachedReward) return cachedReward;
   const dbReward = await db.query.rewards.findFirst({
     where(fields, { eq }) {
       return and(eq(fields.visitor_id, visitor_id), eq(fields.type, type));
     },
   });
-
+  if (dbReward) await redisTools.setCache(cacheKey, dbReward, redisTools.cacheLvl.long);
   return dbReward;
 };
 
@@ -285,13 +290,13 @@ const updateRewardStatus = async (
     .where(eq(rewards.id, rewardId));
 };
 
-const handleRewardError = async (reward: RewardTypeParitial, error: any) => {
+const handleRewardError = async (reward: RewardVisitorTypePartial, error: any) => {
   const shouldFail = reward.tryCount >= 10;
   const newStatus = shouldFail ? "notification_failed" : undefined;
   const newData = shouldFail ? { fail_reason: error.message } : undefined;
 
   try {
-    await rewardDB.updateRewardStatus(reward.id, newStatus, {
+    await rewardDB.updateRewardStatus(reward.rewardId, newStatus, {
       tryCount: reward.tryCount + 1,
       data: newData,
     });
@@ -303,29 +308,64 @@ const handleRewardError = async (reward: RewardTypeParitial, error: any) => {
 /**
  * Fetch pending rewards for a specific event, in a paginated (offset/limit) manner.
  */
+
 export const fetchPendingRewardsForEvent = async (
   eventUuid: string,
+  rewardType: RewardType,
   limit: number,
   offset: number
-): Promise<RewardTypeParitial[]> =>
-  db.query.rewards.findMany({
-    where: (fields, { eq, and, inArray }) =>
-      and(
-        eq(fields.status, "pending_creation"),
-        inArray(fields.visitor_id, db.select({ id: visitors.id }).from(visitors).where(eq(visitors.event_uuid, eventUuid)))
-      ),
-    limit,
-    offset,
-    orderBy: [asc(rewards.created_at)],
-  });
+): Promise<RewardVisitorTypePartial[]> => {
+  const rows = await db
+    .select({
+      rewardId: rewards.id,
+      status: rewards.status,
+      data: rewards.data,
+      type: rewards.type,
+      tryCount: rewards.tryCount,
+      createdAt: rewards.created_at,
+      visitorId: rewards.visitor_id,
+      eventUuid: visitors.event_uuid, // pulled from visitors
+      userId: visitors.user_id, // pulled from visitors
+    })
+    .from(rewards)
+    .innerJoin(visitors, eq(rewards.visitor_id, visitors.id))
+    .where(and(eq(rewards.status, "pending_creation"), eq(visitors.event_uuid, eventUuid), eq(rewards.type, rewardType)))
+    .orderBy(asc(rewards.created_at))
+    .limit(limit)
+    .offset(offset);
 
+  return rows;
+};
+
+export const fetchCreatedRewards = async (chunkSize: number, offset: number): Promise<RewardVisitorTypePartial[]> => {
+  const rows = await db
+    .select({
+      rewardId: rewards.id,
+      status: rewards.status,
+      data: rewards.data,
+      type: rewards.type,
+      tryCount: rewards.tryCount,
+      createdAt: rewards.created_at,
+      visitorId: rewards.visitor_id,
+      eventUuid: visitors.event_uuid, // from visitors
+      userId: visitors.user_id, // from visitors
+    })
+    .from(rewards)
+    .innerJoin(visitors, eq(rewards.visitor_id, visitors.id))
+    .where(eq(rewards.status, "created"))
+    .orderBy(asc(rewards.created_at))
+    .limit(chunkSize)
+    .offset(offset);
+
+  return rows;
+};
 /**
  * Finds the first visitor for the given eventUuid,
  * then returns the first "created" reward linked to that visitor.
  *
  * Returns `RewardTypeParitial` if found, otherwise `null`.
  */
-export const fetchRewardLinkForEvent = async (eventUuid: string): Promise<RewardTypeParitial | null> => {
+export const fetchRewardLinkForEvent = async (eventUuid: string, Type: RewardType): Promise<RewardTypeParitial | null> => {
   const cacheKey = generateCacheKeyForLinkEvent(eventUuid);
   const cachedReward = await redisTools.getCache(cacheKey);
   if (cachedReward) {
@@ -345,7 +385,11 @@ export const fetchRewardLinkForEvent = async (eventUuid: string): Promise<Reward
   //    Return `null` if not found
   const reward = await db.query.rewards.findFirst({
     where: (fields, { eq, and }) =>
-      and(or(eq(fields.status, "created"), eq(fields.status, "notified")), eq(fields.visitor_id, singleVisitor.id)),
+      and(
+        or(eq(fields.status, "created"), eq(fields.status, "notified")),
+        eq(fields.visitor_id, singleVisitor.id),
+        eq(fields.type, Type)
+      ),
     orderBy: [asc(rewards.created_at)],
   });
   if (reward) {
@@ -354,6 +398,68 @@ export const fetchRewardLinkForEvent = async (eventUuid: string): Promise<Reward
   // 3) Convert `undefined` to `null` for TypeScript consistency
   return reward ?? null;
 };
+
+const insertRewardRow = async (
+  visitor_id: number,
+  data: RewardDataTyepe | null,
+  user_id: number,
+  type: RewardType,
+  status: RewardStatus,
+  event: { start_date: number; end_date: number }
+) => {
+  const result = await db
+    .insert(rewards)
+    .values({
+      visitor_id,
+      type,
+      data,
+      event_end_date: event.end_date,
+      event_start_date: event.start_date,
+      status,
+      updatedBy: user_id.toString(),
+      tonSocietyStatus: "NOT_CLAIMED",
+    })
+    .returning()
+    .execute();
+
+  // Returning the first row (since .returning() returns an array)
+  return result[0];
+};
+
+export const markRewardsAsCreated = async (
+  rewardIds: string[],
+  rewardLink: string
+): Promise<{ rewardId: number | string; visitorId: number; type: RewardType }[]> => {
+  if (!rewardIds.length) return [];
+
+  // 1) Perform bulk update
+  // 2) Use `.returning(...)` to retrieve necessary fields
+  const updatedRows = await db
+    .update(rewards)
+    .set({
+      status: "created",
+      data: {
+        ok: true,
+        reward_link: rewardLink,
+      },
+    })
+    .where(inArray(rewards.id, rewardIds))
+    .returning({
+      rewardId: rewards.id,
+      visitorId: rewards.visitor_id,
+      type: rewards.type,
+    });
+  // delete all caches for the updated rewards
+  updatedRows.forEach((row) => {
+    const cacheKey = generateCacheKey(row.visitorId, row.rewardId);
+    const cacheKeyWithType = generateCacheKeyWithRewardType(row.visitorId, row.type);
+    redisTools.deleteCache(cacheKey);
+    redisTools.deleteCache(cacheKeyWithType);
+  });
+  // The returned rows contain the fields we need to clear caches, etc.
+  return updatedRows;
+};
+
 const rewardDB = {
   checkExistingReward,
   insert,
@@ -361,6 +467,7 @@ const rewardDB = {
   updateRewardById,
   insertReward,
   insertRewardWithData,
+  insertRewardRow,
   findRewardByVisitorId,
   selectRewardsWithVisitorDetails,
   updateReward,
@@ -372,6 +479,8 @@ const rewardDB = {
   fetchPendingRewardsForEvent,
   fetchRewardLinkForEvent,
   checkExistingRewardWithType,
+  markRewardsAsCreated,
+  fetchCreatedRewards,
 };
 
 export default rewardDB;
