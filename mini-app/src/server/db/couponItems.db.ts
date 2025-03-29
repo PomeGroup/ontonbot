@@ -102,6 +102,16 @@ const hasActiveCouponItems = async (event_uuid: string) => {
   return results.length > 0;
 };
 
+const getByCodeAndEventUuid = async (code: string, event_uuid: string) => {
+  const results = await db
+    .select()
+    .from(coupon_items)
+    .where(and(eq(coupon_items.code, code), eq(coupon_items.event_uuid, event_uuid)))
+    .execute();
+
+  return results.length > 0 ? results[0] : null;
+};
+
 export const couponItemsDB = {
   addCouponItems,
   updateCouponItemStatus,
@@ -109,4 +119,5 @@ export const couponItemsDB = {
   getCouponItemsByDefinitionId,
   getCouponItemsByEventUuid,
   hasActiveCouponItems,
+  getByCodeAndEventUuid,
 };
