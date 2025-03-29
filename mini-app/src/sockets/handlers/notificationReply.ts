@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { notificationsDB } from "@/server/db/notifications.db";
-import { NotificationStatus, NotificationType, NotificationItemType } from "@/db/schema";
+import { NotificationStatus } from "@/db/schema";
 import { eventPoaResultsDB } from "@/server/db/eventPoaResults.db";
 import { eventPoaTriggersDB } from "@/server/db/eventPoaTriggers.db";
 import { NOTIFICATION_TIMEOUT_MARGIN, PASSWORD_RETRY_LIMIT } from "@/sockets/constants";
@@ -12,12 +12,10 @@ import bcryptLib from "@/lib/bcrypt";
 import userEventFieldsDB from "@/server/db/userEventFields.db";
 import { logger } from "@/server/utils/logger";
 
-import {
-  getCache, setCache, deleteCache,
-  cacheKeys
-} from "@/lib/redisTools";
+import { getCache, setCache, deleteCache, cacheKeys } from "@/lib/redisTools";
 import { Server } from "socket.io";
-import { createUserReward } from "@/server/routers/services/rewardsService";
+import visitorsDB from "@/server/db/visitors";
+import rewardDB from "@/server/db/rewards.db";
 
 type CallbackFunction = (response: { status: string; message: string }) => void;
 
@@ -29,7 +27,7 @@ export const handleNotificationReply = async (
   data: any,
   callback: CallbackFunction,
   sanitizedUsername: string,
-  userId: number,
+  userId: number
 ) => {
   try {
     // Validate input
@@ -172,7 +170,10 @@ export const handleNotificationReply = async (
       }
 
       // If not yet exceeded, check the password
-      const inputField = await eventFieldsDB.getEventFieldByTitleAndEventId("secret_phrase_onton_input", relatedPOATrigger.eventId);
+      const inputField = await eventFieldsDB.getEventFieldByTitleAndEventId(
+        "secret_phrase_onton_input",
+        relatedPOATrigger.eventId
+      );
       if (!inputField) {
         logger.warn(`Event Field not found for ID ${relatedPOATrigger.eventId}`);
         callback({
@@ -224,17 +225,50 @@ export const handleNotificationReply = async (
       // If correct password => clear tries from Redis, proceed
       await deleteCache(redisKey);
 
-      try{
+      try {
         // Hash & store the entered password as userEventField
         const hashedPassword = await bcryptLib.hashPassword(enteredPassword);
-        logger.log(`SBT::UserEventFields::Upserting user event field for user ${userId} and event ${relatedPOATrigger.eventId}`);
-        const userEventField =await userEventFieldsDB.upsertUserEventFields(userId, relatedPOATrigger.eventId, inputField.id, hashedPassword);
-        logger.log(`SBT::UserEventFields::Upserted user event field for user ${userId} and event ${relatedPOATrigger.eventId}` ,userEventField);
+        logger.log(
+          `SBT::UserEventFields::Upserting user event field for user ${userId} and event ${relatedPOATrigger.eventId}`
+        );
+        const userEventField = await userEventFieldsDB.upsertUserEventFields(
+          userId,
+          relatedPOATrigger.eventId,
+          inputField.id,
+          hashedPassword
+        );
+        logger.log(
+          `SBT::UserEventFields::Upserted user event field for user ${userId} and event ${relatedPOATrigger.eventId}`,
+          userEventField
+        );
         logger.log(`SBT::Reward::Creating user reward for user ${userId} and event ${relatedPOATrigger.eventId}`);
-        const SBTResult = await createUserReward( { event_id: relatedPOATrigger.eventId,  user_id: userId } , true);
-        logger.log(`SBT::Reward::Created user reward for user ${userId} and event ${relatedPOATrigger.eventId} with result:`, SBTResult?.reward_link);
-      }
-      catch(e){
+
+        const visitor = await visitorsDB.addVisitor(userId, eventData.event_uuid);
+
+        if (!visitor) {
+          logger.error(`Visitor ${userId} not found for event ${eventData.event_uuid} in handleNotificationReply`);
+          throw new Error(`Visitor ${userId} not found`);
+        }
+        const existingReward = await rewardDB.checkExistingRewardWithType(visitor?.id, "ton_society_sbt");
+        if (!existingReward) {
+          const reward = await rewardDB.insertRewardRow(
+            visitor.id,
+            null,
+            userId,
+            "ton_society_sbt",
+            "pending_creation",
+            eventData
+          );
+          logger.log(
+            `SBT::Reward::Created user reward for user ${userId} and event ${relatedPOATrigger.eventId} with result notification ID ${notificationIdNumber}:`,
+            reward
+          );
+        } else {
+          logger.log(
+            `SBT::Reward::User reward already exists for user ${userId} and event ${relatedPOATrigger.eventId} notification ID ${notificationIdNumber}`
+          );
+        }
+      } catch (e) {
         logger.error(`SBT::Reward::Error creating user reward for user ${userId} and event ID ${relatedPOATrigger.eventId}`);
         logger.error(e);
       }
@@ -242,13 +276,14 @@ export const handleNotificationReply = async (
 
     // If it's not POA_PASSWORD, or password check was correct, continue
     const newStatus: NotificationStatus = "REPLIED";
-    const actionReply = { answer: (foundNotification.type === "POA_PASSWORD") ? await bcryptLib.hashPassword(answer) : answer };
+    const actionReply = {
+      answer: foundNotification.type === "POA_PASSWORD" ? await bcryptLib.hashPassword(answer) : answer,
+    };
     logger.log(`Updating notification ${notificationIdNumber} status to ${newStatus} with reply:`, actionReply);
     await notificationsDB.updateNotificationStatusAndReply(notificationIdNumber, newStatus, actionReply);
 
     // If item_type === "POA_TRIGGER", handle POA result insertion
     if (foundNotification.item_type === "POA_TRIGGER") {
-
       const eventPoaTrigger = await eventPoaTriggersDB.getEventPoaTriggerById(foundNotification.itemId);
       if (!eventPoaTrigger) {
         logger.warn(`Event POA Trigger not found for ID ${foundNotification.itemId}`);
@@ -258,7 +293,7 @@ export const handleNotificationReply = async (
           userId,
           eventId: eventPoaTrigger.eventId,
           poaId: foundNotification.itemId,
-          poaAnswer:  (foundNotification.type === "POA_PASSWORD") ? "correct_password" : answer,
+          poaAnswer: foundNotification.type === "POA_PASSWORD" ? "correct_password" : answer,
           status: "REPLIED",
           repliedAt: new Date(),
           notificationId: notificationIdNumber,

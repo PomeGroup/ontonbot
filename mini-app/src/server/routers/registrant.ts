@@ -1,18 +1,19 @@
 import { eventManagementProtectedProcedure as evntManagerPP, initDataProtectedProcedure, router } from "@/server/trpc";
 import { z } from "zod";
-import eventDB, { selectEventByUuid } from "@/server/db/events";
+import eventDB from "@/server/db/events";
 import { TRPCError } from "@trpc/server";
 import { db, dbLower } from "@/db/db";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { and, desc, eq, like, lt, ne, or } from "drizzle-orm";
-import rewardService from "@/server/routers/services/rewardsService";
 import telegramService from "@/server/routers/services/telegramService";
 import { CombinedEventRegisterSchema } from "@/types";
 import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
-import { addVisitor } from "@/server/db/visitors";
+import visitorsDB, { addVisitor } from "@/server/db/visitors";
 import { users } from "@/db/schema/users";
 import { redisTools } from "@/lib/redisTools";
 import { getUserCacheKey } from "@/server/db/users";
+import { logger } from "@/server/utils/logger";
+import rewardDB from "@/server/db/rewards.db";
 
 const checkinRegistrantRequest = evntManagerPP
   .input(
@@ -62,13 +63,23 @@ const checkinRegistrantRequest = evntManagerPP
       });
     }
 
-    await rewardService.createUserReward(
-      {
-        user_id: registrant.user_id as number,
-        event_uuid: event_uuid,
-      },
-      true
-    );
+    const userId = registrant.user_id;
+    const visitor = await visitorsDB.addVisitor(userId, event_uuid);
+
+    if (!visitor) {
+      logger.error(`Visitor ${userId} not found for event ${event_uuid} in handleNotificationReply`);
+      throw new Error(`Visitor ${userId} not found`);
+    }
+    const existingReward = await rewardDB.checkExistingRewardWithType(visitor?.id, "ton_society_sbt");
+    if (!existingReward) {
+      const reward = await rewardDB.insertRewardRow(visitor.id, null, userId, "ton_society_sbt", "pending_creation", event);
+      logger.log(
+        `CHECKIN::SBT::Reward::Created user reward for user ${userId} and event uuid ${event_uuid} with reward ID ${reward.id}`,
+        reward
+      );
+    } else {
+      logger.log(`CHECKIN::SBT::Reward::User reward already exists for user ${userId} and event uuid ${event_uuid}`);
+    }
 
     await db
       .update(eventRegistrants)
