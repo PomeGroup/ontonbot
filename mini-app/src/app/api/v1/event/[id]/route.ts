@@ -16,6 +16,7 @@ import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { logger } from "@/server/utils/logger";
 import { and, eq } from "drizzle-orm";
 import { type NextRequest } from "next/server";
+import { couponItemsDB } from "@/server/db/couponItems.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -140,6 +141,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const eventData = removeKey(unsafeEvent, "secret_phrase");
     const accessData = await userRolesDB.listActiveUserRolesForEvent("event", Number(eventData.event_id));
+    const hasActiveCoupon = await couponItemsDB.hasActiveCouponItems(eventData.event_uuid);
     const accessRoles = accessData.map(({ userId, role }) => ({
       user_id: userId,
       role: role,
@@ -188,6 +190,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           organizer,
           eventTicket: event_payment_info,
           isSoldOut,
+          hasActiveCoupon: hasActiveCoupon,
           accessRoles,
         },
         {
@@ -321,7 +324,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       organizer,
       eventTicket: event_payment_info,
       isSoldOut,
-
+      hasActiveCoupon: hasActiveCoupon,
       ownerAddress,
       usedCollectionAddress: event_payment_info?.collectionAddress!,
       valid_nfts_no_info,
