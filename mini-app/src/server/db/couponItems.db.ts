@@ -112,6 +112,18 @@ const getByCodeAndEventUuid = async (code: string, event_uuid: string) => {
   return results.length > 0 ? results[0] : null;
 };
 
+const makeCouponItemUsedTrx = async (
+  trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  coupon_item_id: number,
+  event_uuid: string
+) => {
+  await trx
+    .update(coupon_items)
+    .set({ coupon_status: "used" })
+    .where(and(eq(coupon_items.id, coupon_item_id), eq(coupon_items.event_uuid, event_uuid)))
+    .execute();
+};
+
 export const couponItemsDB = {
   addCouponItems,
   updateCouponItemStatus,
@@ -120,4 +132,5 @@ export const couponItemsDB = {
   getCouponItemsByEventUuid,
   hasActiveCouponItems,
   getByCodeAndEventUuid,
+  makeCouponItemUsedTrx,
 };

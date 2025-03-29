@@ -239,6 +239,13 @@
       "when": 1742957594211,
       "tag": "0033_unique_arclight",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1743255724183,
+      "tag": "0034_adorable_polaris",
+      "breakpoints": true
     }
   ]
 }
