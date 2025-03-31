@@ -1,10 +1,12 @@
-import { pgTable, varchar, jsonb, bigint, serial, timestamp, text, index } from "drizzle-orm/pg-core";
+import { pgTable, varchar, jsonb, bigint, serial, timestamp, text, index, pgEnum } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
+import { campaignTypes } from "@/db/enum";
 
 export const tokenCampaignNftCollections = pgTable(
   "token_campaign_nft_collections",
   {
     id: serial("id").notNull().primaryKey(),
+    campaignType: campaignTypes("campaign_type").notNull(),
     name: varchar("name", { length: 255 }),
     description: varchar("description", { length: 500 }),
     image: varchar("image", { length: 255 }),

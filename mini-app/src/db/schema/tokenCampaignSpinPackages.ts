@@ -1,11 +1,13 @@
 import { pgTable, bigint, varchar, boolean, numeric, text, serial, timestamp, index, integer } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { paymentTypes } from "@/db/schema";
+import { campaignTypes } from "@/db/enum";
 
 export const tokenCampaignSpinPackages = pgTable(
   "token_campaign_spin_packages",
   {
     id: serial("id").notNull().primaryKey(),
+    campaignType: campaignTypes("campaign_type").notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     description: text("description"),
     imageUrl: varchar("image_url", { length: 255 }),

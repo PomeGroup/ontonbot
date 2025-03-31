@@ -18,6 +18,8 @@ import {
   rewardStatus,
   rewardType,
   ticketStatus,
+  CampaignType,
+  campaignTypes,
 } from "@/db/enum";
 
 import { specialGuests } from "@/db/schema/specialGuest";
@@ -235,4 +237,5 @@ export type {
   TokenCampaignOrdersInsert,
   TokenCampaignNftCollections,
   TokenCampaignNftCollectionsInsert,
+  CampaignType,
 };
