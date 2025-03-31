@@ -6,6 +6,8 @@ import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
 import eventDB from "@/server/db/events";
 import { checkRateLimit } from "@/lib/checkRateLimit";
 import { NextResponse } from "next/server";
+import { db } from "@/db/db";
+import { applyCouponDiscount } from "@/lib/applyCouponDiscount";
 /* -------------------------------------------------------------------------- */
 /*                             Schema Definition                              */
 /* -------------------------------------------------------------------------- */
@@ -64,12 +66,40 @@ export async function GET(request: Request, { params }: { params: { id: number; 
     if (coupon_definition.cpd_status !== "active") {
       return Response.json({ message: "Coupon definition is not active" }, { status: 400 });
     }
+
+    const eventPaymentInfo = await db.query.eventPayment.findFirst({
+      where(fields, { eq }) {
+        return eq(fields.event_uuid, event_uuid);
+      },
+    });
+
+    if (!eventPaymentInfo) {
+      return Response.json(
+        {
+          message: "Event payment info does not exist",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    const { discountedPrice, couponId, errorResponse } = await applyCouponDiscount(
+      coupon_code,
+      event_uuid,
+      eventPaymentInfo
+    );
+    if (errorResponse) {
+      return errorResponse;
+    }
     const definitionOutput = {
       cpd_type: coupon_definition.cpd_type,
       cpd_status: coupon_definition.cpd_status,
       value: coupon_definition.value,
       start_date: coupon_definition.start_date,
       end_date: coupon_definition.end_date,
+      discounted_price: discountedPrice,
+      coupon_id: couponId,
     };
     // 3) If all checks pass, return coupon info
     return Response.json(
