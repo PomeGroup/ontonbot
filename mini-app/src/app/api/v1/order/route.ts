@@ -8,6 +8,9 @@ import ordersDB from "@/server/db/orders.db";
 import { Address } from "@ton/core";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
+import { couponItemsDB } from "@/server/db/couponItems.db";
+import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
+import { logger } from "@/server/utils/logger";
 
 const addOrderSchema = z.object({
   event_uuid: z.string().uuid(),
@@ -17,6 +20,7 @@ const addOrderSchema = z.object({
   position: z.string().optional(),
   affiliate_id: z.string().nullable(),
   owner_address: z.string().refine((data) => Address.isAddress(Address.parse(data))),
+  coupon_code: z.string().optional(),
 });
 
 //create order if order for that event and user does not exist
@@ -86,6 +90,10 @@ export async function POST(request: Request) {
     );
   }
   /* -------------------------------------------------------------------------- */
+  /*                            Coupon Code Handling                            */
+  /* -------------------------------------------------------------------------- */
+
+  /* -------------------------------------------------------------------------- */
   /*                                      ⬆                                     */
   /* -------------------------------------------------------------------------- */
 
@@ -97,12 +105,25 @@ export async function POST(request: Request) {
       eq(orders.payment_type, eventPaymentInfo.payment_type)
     ),
   });
-
+  /* -------------------------------------------------------------------------- */
+  /*                            Apply Coupon Discount                            */
+  /* -------------------------------------------------------------------------- */
+  const { discountedPrice, couponId, errorResponse } = await applyCouponDiscount(
+    body.data.coupon_code,
+    body.data.event_uuid,
+    eventPaymentInfo
+  );
+  if (errorResponse) {
+    return errorResponse;
+  }
   /* -------------------------------------------------------------------------- */
   /*                            Already Have an Order                           */
   /* -------------------------------------------------------------------------- */
   if (userOrder) {
     if (userOrder.state === "failed" || userOrder.state === "cancelled") {
+      if (errorResponse) {
+        return errorResponse;
+      }
       // Reactivate Order
       await db
         .update(orders)
@@ -115,20 +136,22 @@ export async function POST(request: Request) {
         payment_type: userOrder.payment_type,
         utm_tag: body.data.affiliate_id,
         total_price: userOrder.total_price,
+        default_price: eventPaymentInfo.price,
       });
     }
 
     if (userOrder.state === "new" || userOrder.state === "confirming") {
       await db
         .update(orders)
-        .set({ state: "new", updatedAt: new Date(), total_price: eventPaymentInfo.price }) //TODO - Apply Coupon Here
+        .set({ state: "new", updatedAt: new Date(), total_price: discountedPrice })
         .where(eq(orders.uuid, userOrder.uuid))
         .execute();
       return Response.json({
         order_id: userOrder.uuid,
         message: "order is placed",
         payment_type: userOrder.payment_type,
-        total_price: userOrder.total_price,
+        total_price: discountedPrice,
+        default_price: eventPaymentInfo.price,
       });
     }
   }
@@ -140,8 +163,10 @@ export async function POST(request: Request) {
   /* -------------------------------------------------------------------------- */
   /*                              Create New Order                              */
   /* -------------------------------------------------------------------------- */
+
   await db.transaction(async (trx) => {
-    //TODO - Apply Coupon Here
+    logger.info("Coupon Code: ", body.data.coupon_code);
+
     new_order = (
       await trx
         .insert(orders)
@@ -149,7 +174,8 @@ export async function POST(request: Request) {
           event_uuid: body.data.event_uuid,
           user_id: userId,
 
-          total_price: eventPaymentInfo.price,
+          default_price: eventPaymentInfo.price,
+          total_price: discountedPrice,
           payment_type: eventPaymentInfo.payment_type,
 
           state: "confirming",
@@ -157,6 +183,7 @@ export async function POST(request: Request) {
 
           utm_source: body.data.affiliate_id,
           updatedBy: "system",
+          coupon_id: couponId,
         })
         .returning()
         .execute()
@@ -164,6 +191,7 @@ export async function POST(request: Request) {
 
     new_order_price = new_order?.total_price || -1;
 
+    // insert event registrants
     const register_info = removeKey(body.data, "event_uuid");
     await trx
       .insert(eventRegistrants)
@@ -192,12 +220,87 @@ export async function POST(request: Request) {
       utm_tag: body.data.affiliate_id,
       payment_type: eventPaymentInfo.payment_type,
       total_price: new_order_price,
+      default_price: eventPaymentInfo.price,
     });
   } else {
     return Response.json({
       message: "failed to insert the order",
     });
   }
+}
+
+export async function applyCouponDiscount(
+  couponCode: string | undefined,
+  eventUuid: string,
+  eventPaymentInfo: { price: number }
+): Promise<{
+  discountedPrice: number;
+  couponId: number | null;
+  errorResponse?: Response;
+}> {
+  // Start with the default price and no coupon
+  let discountedPrice = eventPaymentInfo.price;
+  let couponId: number | null = null;
+
+  if (logger) {
+    logger.info("Coupon Code Received:", couponCode);
+  }
+
+  // If there's no coupon code or it's empty, just return the defaults
+  if (!couponCode || couponCode.trim() === "") {
+    return { discountedPrice, couponId: null };
+  }
+
+  // --- 1) Lookup the coupon ---
+  const coupon = await couponItemsDB.getByCodeAndEventUuid(couponCode, eventUuid);
+  if (!coupon) {
+    return {
+      discountedPrice,
+      couponId,
+      errorResponse: Response.json({ message: "Coupon not found" }, { status: 404 }),
+    };
+  }
+
+  // --- 2) Fetch & validate coupon definition ---
+  const couponDefinition = await couponDefinitionsDB.getCouponDefinitionById(coupon.coupon_definition_id);
+  if (!couponDefinition) {
+    return {
+      discountedPrice,
+      couponId,
+      errorResponse: Response.json({ message: "Coupon definition not found" }, { status: 404 }),
+    };
+  }
+
+  // --- 3) Validate coupon & definition status ---
+  if (coupon.coupon_status === "used") {
+    return {
+      discountedPrice,
+      couponId,
+      errorResponse: Response.json({ message: "Coupon is inactive" }, { status: 400 }),
+    };
+  }
+
+  if (couponDefinition.cpd_status !== "active") {
+    return {
+      discountedPrice,
+      couponId,
+      errorResponse: Response.json({ message: "Coupon definition is not active" }, { status: 400 }),
+    };
+  }
+
+  // --- 4) Apply discount ---
+  couponId = coupon.id;
+  if (couponDefinition.cpd_type === "percent") {
+    // Percent discount
+    discountedPrice = eventPaymentInfo.price - eventPaymentInfo.price * (couponDefinition.value / 100);
+  } else if (couponDefinition.cpd_type === "fixed") {
+    // Fixed discount
+    discountedPrice = eventPaymentInfo.price - couponDefinition.value;
+  }
+  // Prevent negative price
+  discountedPrice = Math.max(discountedPrice, 0);
+
+  return { discountedPrice, couponId };
 }
 
 export const dynamic = "force-dynamic";

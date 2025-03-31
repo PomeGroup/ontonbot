@@ -1,7 +1,7 @@
 import { db } from "@/db/db";
 import { and, eq } from "drizzle-orm";
 import { coupon_items, CouponItem } from "@/db/schema/coupon_items";
-import {  generateRandomCode } from "@/server/utils/utils";
+import { generateRandomCode } from "@/server/utils/utils";
 
 interface BulkAddCouponItemsParams {
   coupon_definition_id: number;
@@ -64,7 +64,7 @@ export const addCouponItems = async (params: BulkAddCouponItemsParams) => {
 /**
  * Updates coupon_status by `id` and `event_uuid`.
  */
-async function updateCouponItemStatus(params: { id: number; event_uuid: string; coupon_status: "used" | "unused" }) {
+const updateCouponItemStatus = async (params: { id: number; event_uuid: string; coupon_status: "used" | "unused" }) => {
   const { id, event_uuid, coupon_status } = params;
 
   await db
@@ -72,27 +72,65 @@ async function updateCouponItemStatus(params: { id: number; event_uuid: string; 
     .set({ coupon_status })
     .where(and(eq(coupon_items.id, id), eq(coupon_items.event_uuid, event_uuid)))
     .execute();
-}
+};
 
 /**
  * Retrieves a single coupon_item by `id`.
  */
-async function getCouponItemById(id: number) {
+const getCouponItemById = async (id: number) => {
   const results = await db.select().from(coupon_items).where(eq(coupon_items.id, id)).execute();
 
   return results.length > 0 ? results[0] : null;
-}
+};
 
 /**
  * Retrieves all coupon_items by `coupon_definition_id` (the "group ID").
  */
-async function getCouponItemsByDefinitionId(coupon_definition_id: number) {
-  return await db.select().from(coupon_items).where(eq(coupon_items.coupon_definition_id, coupon_definition_id)).execute();
-}
+const getCouponItemsByDefinitionId = async (coupon_definition_id: number) =>
+  await db.select().from(coupon_items).where(eq(coupon_items.coupon_definition_id, coupon_definition_id)).execute();
+
+const getCouponItemsByEventUuid = async (event_uuid: string) =>
+  await db.select().from(coupon_items).where(eq(coupon_items.event_uuid, event_uuid)).execute();
+
+const hasActiveCouponItems = async (event_uuid: string) => {
+  const results = await db
+    .select()
+    .from(coupon_items)
+    .where(and(eq(coupon_items.event_uuid, event_uuid), eq(coupon_items.coupon_status, "unused")))
+    .execute();
+
+  return results.length > 0;
+};
+
+const getByCodeAndEventUuid = async (code: string, event_uuid: string) => {
+  const results = await db
+    .select()
+    .from(coupon_items)
+    .where(and(eq(coupon_items.code, code), eq(coupon_items.event_uuid, event_uuid)))
+    .execute();
+
+  return results.length > 0 ? results[0] : null;
+};
+
+const makeCouponItemUsedTrx = async (
+  trx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  coupon_item_id: number,
+  event_uuid: string
+) => {
+  await trx
+    .update(coupon_items)
+    .set({ coupon_status: "used" })
+    .where(and(eq(coupon_items.id, coupon_item_id), eq(coupon_items.event_uuid, event_uuid)))
+    .execute();
+};
 
 export const couponItemsDB = {
   addCouponItems,
   updateCouponItemStatus,
   getCouponItemById,
   getCouponItemsByDefinitionId,
+  getCouponItemsByEventUuid,
+  hasActiveCouponItems,
+  getByCodeAndEventUuid,
+  makeCouponItemUsedTrx,
 };

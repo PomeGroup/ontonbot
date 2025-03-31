@@ -21,3 +21,14 @@ export async function getEventWithUserData(id: string, params: { proof_token: st
 
   return event;
 }
+
+export async function checkCoupon(eventId: number, discountCode: string) {
+  const response = await fetch(`/api/v1/event/${eventId}/checkCoupon/${encodeURIComponent(discountCode)}`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error("Invalid coupon code");
+  }
+  return (await response.json()).data;
+}
