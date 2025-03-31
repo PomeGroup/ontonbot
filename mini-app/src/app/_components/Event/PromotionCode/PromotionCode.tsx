@@ -1,22 +1,21 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Page, Navbar, Block } from "konsta/react";
+import { Block, Page } from "konsta/react";
+import { useEffect, useState } from "react";
 
-import useWebApp from "@/hooks/useWebApp";
+import { useDownloadCSV } from "@/app/_components/Event/PromotionCode/useDownloadCSV";
 import { trpc } from "@/app/_trpc/client";
-import { Download } from "lucide-react";
-import promotionCodeNoResult from "./promotion-code-no-result.svg";
 import NavigationButtons from "@/components/NavigationButtons";
+import { useGetEvent } from "@/hooks/events.hooks";
+import useWebApp from "@/hooks/useWebApp";
+import { Download } from "lucide-react";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import MainButton from "../../atoms/buttons/web-app/MainButton";
 import ActionCardWithMenu from "./ActionCardWithMenu";
 import CreatePromotionForm from "./CreatePromotionForm";
 import EditPromotionDatesForm from "./EditPromotionDatesForm";
-import { useDownloadCSV } from "@/app/_components/Event/PromotionCode/useDownloadCSV";
-import Image from "next/image";
-import { useParams } from "next/navigation";
-import { useGetEvent } from "@/hooks/events.hooks";
-
-
+import promotionCodeNoResult from "./promotion-code-no-result.svg";
 
 // The shape of a coupon definition from your server
 // If your start/end date come as strings, convert them or adjust the type
@@ -26,14 +25,14 @@ interface Definition {
   value: number;
   used: number;
   start_date: Date; // or string => Date if needed
-  end_date: Date;   // or string => Date if needed
+  end_date: Date; // or string => Date if needed
   cpd_status: "active" | "inactive" | "expired";
 }
 
 export default function PromotionCode() {
-  // 1) Hide Telegram back button on unmount
+  // 1) Hide Telegram basck button on unmount
   const { hash } = useParams() as { hash?: string };
-  const {data:eventData ,isLoading : eventDataLoading ,isError :eventDataError } = useGetEvent(hash);
+  const { data: eventData, isLoading: eventDataLoading, isError: eventDataError } = useGetEvent(hash);
 
   const webApp = useWebApp();
   useEffect(() => {
@@ -49,26 +48,19 @@ export default function PromotionCode() {
 
   // 3) CSV logic
   const { isCSVLoading, handleDownloadCSV } = useDownloadCSV();
-  if(eventDataError) {
-    return <div>something went wrong</div>
+  if (eventDataError) {
+    return <div>something went wrong</div>;
   }
-  if(!eventData?.event_uuid || eventDataLoading ) {
+  if (!eventData?.event_uuid || eventDataLoading) {
     return <div>Loading...</div>;
   }
   const eventUuid = eventData.event_uuid;
 
   // 4) tRPC query: get coupon definitions
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = trpc.coupon.getCouponDefinitions.useQuery(
+  const { data, isLoading, isError, error, refetch } = trpc.coupon.getCouponDefinitions.useQuery(
     { event_uuid: eventUuid },
     { enabled: Boolean(eventUuid) }
   );
-
 
   // 5) Status update (activate/deactivate) logic
   //    We'll show an item in the 3-dot menu that calls this
@@ -88,8 +80,6 @@ export default function PromotionCode() {
     setShowCreateForm(false);
     refetch(); // refresh definitions after creation
   };
-
-
 
   // 7) If showCreateForm => show <CreatePromotionForm />
   if (showCreateForm) {
@@ -126,9 +116,7 @@ export default function PromotionCode() {
         <div className="px-4">
           <h1 className="text-lg font-bold">Create Your Codes</h1>
         </div>
-        <Block className="text-center mt-4">
-          Loading promotion codes...
-        </Block>
+        <Block className="text-center mt-4">Loading promotion codes...</Block>
       </Page>
     );
   }
@@ -138,9 +126,7 @@ export default function PromotionCode() {
         <div className="px-4">
           <h1 className="text-lg font-bold">Create Your Codes</h1>
         </div>
-        <Block className="text-center mt-4 text-red-600">
-          Failed to load codes: {error.message}
-        </Block>
+        <Block className="text-center mt-4 text-red-600">Failed to load codes: {error.message}</Block>
       </Page>
     );
   }
@@ -159,13 +145,10 @@ export default function PromotionCode() {
               alt=""
             />
           </div>
-          <p className="font-bold text-lg">
-            No discount code generated!
-          </p>
+          <p className="font-bold text-lg">No discount code generated!</p>
           <p className="text-gray-500 text-sm mt-2 text-center max-w-[300px]">
-            You can generate one-time discount codes and share them with
-            your audience so they can benefit from discounts when purchasing
-            this event’s tickets.
+            You can generate one-time discount codes and share them with your audience so they can benefit from discounts
+            when purchasing this event’s tickets.
           </p>
         </Block>
 
@@ -183,10 +166,8 @@ export default function PromotionCode() {
 
   // 10) Otherwise => render the list with ActionCardWithMenu
   return (
-    <Page>
-      <Navbar title="Promotion Codes" />
-
-      <Block className="space-y-2">
+    <>
+      <div className="space-y-2">
         {data.map((def) => {
           // Convert string => Date if needed
           // e.g. def.start_date = new Date(def.start_date)
@@ -194,8 +175,8 @@ export default function PromotionCode() {
 
           // We'll build footers
           const footerTexts = [
-            { count: def.count, items: "codes" },
-            { count: def.used, items: "used" },
+            { count: def.count, value: "codes" },
+            { count: def.used, value: "used" },
           ];
 
           // Build dynamic "Activate/Deactivate" item based on cpd_status
@@ -268,7 +249,7 @@ export default function PromotionCode() {
               key={def.id}
               iconSrc="/icons/ticket.png"
               title={`${def.count} codes`}
-              subtitle={`%${def.value} discount - ${def.used} used`}
+              subtitle={`%${Number(def.value)} discount - ${def.used} used`}
               footerTexts={footerTexts}
               menuItems={menuItems}
               onCardClick={() => {
@@ -277,17 +258,13 @@ export default function PromotionCode() {
             />
           );
         })}
-      </Block>
+      </div>
       {eventData.isNotEnded && (
-        <NavigationButtons
-          actions={[
-            {
-              label: "Create Promotion",
-              onClick: handleCreatePromotion,
-            },
-          ]}
+        <MainButton
+          text="Create Promotion"
+          onClick={handleCreatePromotion}
         />
       )}
-    </Page>
+    </>
   );
 }

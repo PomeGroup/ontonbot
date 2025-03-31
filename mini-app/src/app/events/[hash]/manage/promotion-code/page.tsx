@@ -1,18 +1,15 @@
 "use client";
 
-import React from "react";
-import { Page, Block } from "konsta/react";
 import PromotionCode from "@/app/_components/Event/PromotionCode/PromotionCode";
+import Typography from "@/components/Typography";
+import { Page } from "konsta/react";
 
 export default function PromotionCodePage() {
-
   return (
-    <Page>
-      <Block className="px-4 pt-4">
-        <h1 className="text-lg font-bold">Promotion Codes</h1>
-      </Block>
+    <Page className="p-4 space-y-3">
+      <Typography variant="title2">Promotion Codes</Typography>
 
-      <PromotionCode  />
+      <PromotionCode />
     </Page>
   );
 }
