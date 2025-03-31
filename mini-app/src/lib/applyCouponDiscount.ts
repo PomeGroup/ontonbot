@@ -65,7 +65,7 @@ export async function applyCouponDiscount(
   couponId = coupon.id;
   if (couponDefinition.cpd_type === "percent") {
     // Percent discount
-    discountedPrice = eventPaymentInfo.price - eventPaymentInfo.price * (couponDefinition.value / 100);
+    discountedPrice = eventPaymentInfo.price - eventPaymentInfo.price * (couponDefinition.value / 100 + Number.EPSILON);
   } else if (couponDefinition.cpd_type === "fixed") {
     // Fixed discount
     discountedPrice = eventPaymentInfo.price - couponDefinition.value;
