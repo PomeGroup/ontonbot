@@ -6,6 +6,7 @@ import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import { affiliateClicksDB } from "@/server/db/affiliateClicks.db";
 import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { couponItemsDB } from "@/server/db/couponItems.db";
 import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
 import eventDB from "@/server/db/events";
 import ordersDB from "@/server/db/orders.db";
@@ -16,7 +17,6 @@ import { decodePayloadToken, verifyToken } from "@/server/utils/jwt";
 import { logger } from "@/server/utils/logger";
 import { and, eq } from "drizzle-orm";
 import { type NextRequest } from "next/server";
-import { couponItemsDB } from "@/server/db/couponItems.db";
 
 // Helper function for retrying the HTTP request
 async function getRequestWithRetry(uri: string, retries: number = 3): Promise<any> {
@@ -190,7 +190,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           organizer,
           eventTicket: event_payment_info,
           isSoldOut,
-          hasActiveCoupon: hasActiveCoupon,
+          hasActiveCoupon,
           accessRoles,
         },
         {
@@ -324,7 +324,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       organizer,
       eventTicket: event_payment_info,
       isSoldOut,
-      hasActiveCoupon: hasActiveCoupon,
+      hasActiveCoupon,
       ownerAddress,
       usedCollectionAddress: event_payment_info?.collectionAddress!,
       valid_nfts_no_info,

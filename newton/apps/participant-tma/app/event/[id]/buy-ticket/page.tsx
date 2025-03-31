@@ -1,5 +1,4 @@
 "use client";
-import { Card, CardContent } from "@ui/base/card";
 import { Section } from "@ui/base/section";
 import ButtonTma from "@ui/components/Button";
 import PageTma from "@ui/components/Page";
@@ -7,6 +6,7 @@ import Image from "next/image";
 import { FaMinus, FaPlus } from "react-icons/fa";
 
 import QueryState from "@ui/components/blocks/QueryState";
+import CheckoutCard from "~/components/event/buy-ticket/BuyTicketCard";
 import BuyTicketForm from "~/components/event/buy-ticket/BuyTicketForm";
 import { useEventData } from "~/hooks/queries/useEventData";
 
@@ -15,6 +15,65 @@ type BuyTicketProps = {
     id: string;
   };
   searchParams: { [key: string]: string | undefined };
+};
+
+type TicketInfoProps = {
+  ticket: {
+    ticketImage: string;
+    price: number | string;
+    payment_type: string;
+    title: string;
+  };
+};
+
+const TicketInfo = ({ ticket }: TicketInfoProps) => {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <Image
+          priority
+          alt={"ticket image"}
+          width={64}
+          height={64}
+          className="h-16 w-16 rounded-sm border-[0.34px]"
+          src={ticket.ticketImage}
+        />
+        <div className="flex flex-col">
+          <h5 className="type-headline font-semibold">
+            {ticket.price} {ticket.payment_type}
+          </h5>
+          <p className="type-subtitle-2 text-telegram-hint-color font-normal">{ticket.title}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <ButtonTma
+          buttonColor={"gray"}
+          disabled
+          className="h-8 w-8 rounded-full"
+        >
+          <FaMinus
+            fill="#8E8E93"
+            className="h-4 w-4"
+            width={32}
+            height={32}
+          />
+        </ButtonTma>
+        <span className="text-[17px] font-semibold">1</span>
+        <ButtonTma
+          buttonColor={"gray"}
+          disabled
+          className="h-8 w-8 rounded-full"
+        >
+          <FaPlus
+            fill="#8E8E93"
+            className="h-4 w-4"
+            width={32}
+            height={32}
+          />
+        </ButtonTma>
+      </div>
+    </div>
+  );
 };
 
 const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
@@ -48,54 +107,14 @@ const BuyTicket = ({ params, searchParams }: BuyTicketProps) => {
         className="grid gap-4 pt-7"
         variant={"plain"}
       >
-        <h2 className="type-title-3 font-bold">Checkout</h2>
-        <Card>
-          <CardContent className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Image
-                priority
-                alt={"ticket image"}
-                width={64}
-                height={64}
-                className="h-16 w-16 rounded-sm border-[0.34px]"
-                src={event.eventTicket.ticketImage as string}
-              />
-              <div className={"flex flex-col"}>
-                <h5 className="type-headline font-semibold">
-                  {event.eventTicket.price} {event.eventTicket.payment_type}
-                </h5>
-                <p className="type-subtitle-2 text-telegram-hint-color font-normal">{event.eventTicket.title}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <ButtonTma
-                buttonColor={"gray"}
-                disabled
-                className=" h-8 w-8 rounded-full"
-              >
-                <FaMinus
-                  fill="#8E8E93"
-                  className="h-4 w-4"
-                  width={32}
-                  height={32}
-                />
-              </ButtonTma>
-              <span className="text-[17px] font-semibold">1</span>
-              <ButtonTma
-                buttonColor={"gray"}
-                disabled
-                className="h-8 w-8 rounded-full"
-              >
-                <FaPlus
-                  fill="#8E8E93"
-                  className="h-4 w-4"
-                  width={32}
-                  height={32}
-                />
-              </ButtonTma>
-            </div>
-          </CardContent>
-        </Card>
+        <CheckoutCard
+          eventImage={event.eventTicket.ticketImage}
+          eventName={event.eventTicket.title}
+          initialPrice={event.eventTicket.price}
+          currency={event.eventTicket.payment_type}
+          has_discount={event.hasActiveCoupon}
+          eventId={event.event_id}
+        />
       </Section>
       <BuyTicketForm
         isSoldOut={event.isSoldOut}

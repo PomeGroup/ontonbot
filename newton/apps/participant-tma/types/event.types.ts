@@ -55,6 +55,7 @@ export interface EventDataOnlyType {
   ticketToCheckIn: boolean;
   created_at: string;
   accessRoles: Array<{ user_id: number; role: string }> | undefined;
+  hasActiveCoupon: boolean;
 }
 
 export interface EventType extends EventDataOnlyType {

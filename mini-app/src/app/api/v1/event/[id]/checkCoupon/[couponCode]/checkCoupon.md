@@ -9,13 +9,13 @@ This document provides guidance on consuming the **Check Coupon** API endpoint w
 ## Endpoint Details
 
 - **HTTP Method**: `GET`
-- **Endpoint**:  
+- **Endpoint**:
   ```
   /api/v1/event/:id/checkCoupon/:couponCode
   ```
   - `:id` corresponds to an **Event ID** (positive integer).
   - `:couponCode` is the **Coupon Code** (non-empty string).
-- **Example**:  
+- **Example**:
   ```
   https://<your-domain>/api/v1/event/2053/checkCoupon/ABC123
   ```
@@ -52,14 +52,14 @@ GET /api/v1/event/2053/checkCoupon/SAVE10
 
 ## Possible Responses
 
-| Status | Meaning                                     | Example Body |
-|--------|---------------------------------------------|--------------|
-| 200    | Success – Coupon is valid                   | `{ "message": "Coupon is valid", "data": { ... } }` |
-| 400    | Invalid input or coupon in invalid state    | `{ "message": "Coupon is not active" }` |
-| 404    | Resource not found (event or coupon)        | `{ "message": "Coupon not found" }` |
-| 401    | Unauthorized / Authentication failure       | Custom auth error response |
-| 429    | Rate limit exceeded                         | `{ "message": "Rate limit exceeded. Please wait a minute." }` |
-| 500    | Internal server error                       | `{ "message": "Something Went Wrong" }` |
+| Status | Meaning                                  | Example Body                                                  |
+| ------ | ---------------------------------------- | ------------------------------------------------------------- |
+| 200    | Success – Coupon is valid                | `{ "message": "Coupon is valid", "data": { ... } }`           |
+| 400    | Invalid input or coupon in invalid state | `{ "message": "Coupon is not active" }`                       |
+| 404    | Resource not found (event or coupon)     | `{ "message": "Coupon not found" }`                           |
+| 401    | Unauthorized / Authentication failure    | Custom auth error response                                    |
+| 429    | Rate limit exceeded                      | `{ "message": "Rate limit exceeded. Please wait a minute." }` |
+| 500    | Internal server error                    | `{ "message": "Something Went Wrong" }`                       |
 
 ---
 
@@ -76,7 +76,7 @@ GET /api/v1/event/2053/checkCoupon/SAVE10
       "coupon_definition_id": 9876
     },
     "definition": {
-      "cpd_type": "...",
+      "cpd_type": "fixed" | "percent",
       "cpd_status": "active",
       "value": 10,
       "start_date": 1672531200000,
@@ -127,8 +127,16 @@ export default function CouponChecker() {
 
   return (
     <div>
-      <input type="number" value={eventId} onChange={(e) => setEventId(Number(e.target.value))} />
-      <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} />
+      <input
+        type="number"
+        value={eventId}
+        onChange={(e) => setEventId(Number(e.target.value))}
+      />
+      <input
+        type="text"
+        value={couponCode}
+        onChange={(e) => setCouponCode(e.target.value)}
+      />
       <button onClick={handleCheckCoupon}>Check Coupon</button>
       {result && <pre>{result}</pre>}
     </div>
