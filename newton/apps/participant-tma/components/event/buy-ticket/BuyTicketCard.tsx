@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@ui/base/card";
+import { toast } from "@ui/base/sonner";
 import { useSetAtom } from "jotai";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -55,15 +56,15 @@ export default function CheckoutCard({
       {
         onSuccess: (data) => {
           const { definition } = data;
-          let discountPercentage = 0;
           let discountAmount = 0;
           if (definition.cpd_type === "percent") {
-            discountPercentage = definition.value;
-            discountAmount = (initialPrice * discountPercentage) / 100;
-            setDiscount(discountPercentage);
+            const cleanValue = Number(definition.value);
+            discountAmount = (initialPrice * cleanValue) / 100;
+            setDiscount(cleanValue);
           } else if (definition.cpd_type === "fixed") {
-            discountAmount = definition.value;
-            setDiscount(discountAmount);
+            const cleanValue = Number(definition.value);
+            discountAmount = Math.max(cleanValue, 0);
+            setDiscount(cleanValue);
           }
           setCouponType(definition.cpd_type);
           setFinalPrice(initialPrice - discountAmount);
@@ -74,7 +75,8 @@ export default function CheckoutCard({
         onError: () => {
           setDiscount(0);
           setFinalPrice(initialPrice);
-          console.error("Invalid coupon code");
+          toast.error("Invalid coupon code");
+          setEventDiscountCode(undefined);
         },
       }
     );
@@ -86,7 +88,7 @@ export default function CheckoutCard({
 
   return (
     <div className="max-w-md mx-auto w-full">
-      <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+      <h1 className="text-xl font-bold mb-4">Checkout</h1>
       <Card>
         <CardContent className="p-2 flex flex-col divide-y divide-[#C8C7CB]">
           <div className="flex justify-between gap-3">
@@ -107,22 +109,26 @@ export default function CheckoutCard({
                   </span>
                 }
               />
-              <TicketAttribute
-                attributeKey="Discount"
-                attributeValue={
-                  <span className="text-[14px] text-[#8E8E93] font-normal">
-                    {couponType === "percent" ? `%${discount}` : `${discount} ${currency}`}
-                  </span>
-                }
-              />
-              <TicketAttribute
-                attributeKey="Final Price"
-                attributeValue={
-                  <span className="text-[#007AFF] font-semibold">
-                    {finalPrice} {currency}
-                  </span>
-                }
-              />
+              {has_discount && (
+                <>
+                  <TicketAttribute
+                    attributeKey="Discount"
+                    attributeValue={
+                      <span className="text-[14px] text-[#8E8E93] font-normal">
+                        {couponType === "fixed" ? `${discount} ${currency}` : `%${discount}`}
+                      </span>
+                    }
+                  />
+                  <TicketAttribute
+                    attributeKey="Final Price"
+                    attributeValue={
+                      <span className="text-[#007AFF] font-semibold">
+                        {finalPrice} {currency}
+                      </span>
+                    }
+                  />
+                </>
+              )}
             </div>
           </div>
           {has_discount && (
