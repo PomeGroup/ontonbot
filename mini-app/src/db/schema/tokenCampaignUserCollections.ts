@@ -18,8 +18,8 @@ export const tokenCampaignUserCollections = pgTable(
   },
   // indexes
   (table) => ({
-    userIdIdx: index("user_id_idx").on(table.userId),
-    collectionIdIdx: index("collection_id_idx").on(table.collectionId),
+    userIdIdx: index("tcuc_user_id_idx").on(table.userId),
+    collectionIdIdx: index("tcuc_collection_id_idx").on(table.collectionId),
   })
 );
 

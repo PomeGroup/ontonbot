@@ -18,9 +18,9 @@ export const tokenCampaignUserSpins = pgTable(
   },
   // indexes
   (table) => ({
-    userIdIdx: index("user_id_idx").on(table.userId),
-    spinPackageIdIdx: index("spin_package_id_idx").on(table.spinPackageId),
-    nftCollectionIdIdx: index("nft_collection_id_idx").on(table.nftCollectionId),
+    userIdIdx: index("tcus_user_id_idx").on(table.userId),
+    spinPackageIdIdx: index("tcus_spin_package_id_idx").on(table.spinPackageId),
+    nftCollectionIdIdx: index("tcus_nft_collection_id_idx").on(table.nftCollectionId),
   })
 );
 

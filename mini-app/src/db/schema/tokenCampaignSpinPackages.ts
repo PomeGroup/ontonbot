@@ -23,11 +23,11 @@ export const tokenCampaignSpinPackages = pgTable(
   },
   // indexes
   (table) => ({
-    nameIdx: index("name_idx").on(table.name),
-    activeIdx: index("active_idx").on(table.active),
-    autoActivationDateIdx: index("auto_activation_date_idx").on(table.autoActivationDate),
-    autoDeactivationDateIdx: index("auto_deactivation_date_idx").on(table.autoDeactivationDate),
-    isForSaleIdx: index("is_for_sale_idx").on(table.isForSale),
+    nameIdx: index("tcps_name_idx").on(table.name),
+    activeIdx: index("tcps_active_idx").on(table.active),
+    autoActivationDateIdx: index("tcps_auto_activation_date_idx").on(table.autoActivationDate),
+    autoDeactivationDateIdx: index("tcps_auto_deactivation_date_idx").on(table.autoDeactivationDate),
+    isForSaleIdx: index("tcps_is_for_sale_idx").on(table.isForSale),
   })
 );
 
