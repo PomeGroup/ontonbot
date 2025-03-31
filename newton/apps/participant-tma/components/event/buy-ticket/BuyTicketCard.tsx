@@ -56,18 +56,15 @@ export default function CheckoutCard({
       {
         onSuccess: (data) => {
           const { definition } = data;
-          let discountAmount = 0;
           if (definition.cpd_type === "percent") {
             const cleanValue = Number(definition.value);
-            discountAmount = (initialPrice * cleanValue) / 100;
             setDiscount(cleanValue);
           } else if (definition.cpd_type === "fixed") {
             const cleanValue = Number(definition.value);
-            discountAmount = Math.max(cleanValue, 0);
             setDiscount(cleanValue);
           }
           setCouponType(definition.cpd_type);
-          setFinalPrice(initialPrice - discountAmount);
+          setFinalPrice(data.definition.discounted_price);
 
           // set atom
           setEventDiscountCode(discountCode);
