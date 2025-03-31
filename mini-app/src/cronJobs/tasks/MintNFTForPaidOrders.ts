@@ -12,6 +12,7 @@ import { selectUserById } from "@/server/db/users";
 import { sendLogNotification } from "@/lib/tgBot";
 import { eventRegistrants } from "@/db/schema/eventRegistrants";
 import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { couponItemsDB } from "@/server/db/couponItems.db";
 
 export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -128,6 +129,9 @@ export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
         const updateResult = (
           await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).returning().execute()
         ).pop();
+        // make coupon item used
+        if (ordr.coupon_id !== null) await couponItemsDB.makeCouponItemUsedTrx(trx, ordr.coupon_id, ordr.event_uuid!);
+        // Increment Affiliate Purchase
         if (updateResult && updateResult.utm_source)
           await affiliateLinksDB.incrementAffiliatePurchase(updateResult.utm_source);
         logger.log(`nft_mint_order_completed_${ordr.uuid}`);

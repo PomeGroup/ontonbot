@@ -2,14 +2,11 @@ import { logger } from "@/server/utils/logger";
 // DB & Models
 import eventDB from "@/server/db/events";
 import rewardDB from "@/server/db/rewards.db";
-// Types
-import type { RewardType } from "@/types/event.types";
 // Helpers
-import {
-  extendEndDateIfNeeded,
-  processRewardChunkParallel,
-  revertEndDateIfNeeded,
-} from "@/cronJobs/helper/createRewards.helpers";
+import { extendEndDateIfNeeded, processRewardsBatch, revertEndDateIfNeeded } from "@/cronJobs/helper/createRewards.helpers";
+// Types
+import { RewardVisitorTypePartial } from "@/db/schema/rewards";
+import eventPaymentDB from "@/server/db/eventPayment.db";
 
 // ---------------------------------------------------------------------
 // MAIN: createRewards
@@ -24,8 +21,7 @@ export const CreateRewards = async (pushLockTTl: () => any) => {
   const eventsWithPending = await eventDB.fetchEventsWithPendingRewards();
   // e.g. => { eventUuid: string, eventEndDate: number }[]
 
-  const resultPerPage = 300;
-  let totalProcessed = 0;
+  const resultPerPage = 350000; //  ton society limit for create rewards with csv
 
   // 2) For each event (descending by end_date), process rewards in chunks
   for (const evt of eventsWithPending) {
@@ -51,27 +47,49 @@ export const CreateRewards = async (pushLockTTl: () => any) => {
 
     try {
       let offset = 0;
-      let pendingRewards: RewardType[] = [];
+      let pendingRewards: RewardVisitorTypePartial[] = [];
 
+      // fetch CSBT Tickets SBT
+      const paymentInfo = await eventPaymentDB.fetchPaymentInfoForCronjob(localEvent.event_uuid);
+      if (paymentInfo && paymentInfo.ticket_type === "TSCSBT") {
+        do {
+          // Fetch up to pending rewards for this specific event
+          pendingRewards = await rewardDB.fetchPendingRewardsForEvent(
+            evt.eventUuid,
+            "ton_society_csbt_ticket",
+            resultPerPage,
+            offset
+          );
+          if (pendingRewards.length === 0) {
+            break;
+          }
+          if (!paymentInfo.ticketActivityId) {
+            logger.error(
+              `WTF: CSBT TICKET No activity_id found for event ${evt.eventUuid} with paymentInfo ${JSON.stringify(paymentInfo)}`
+            );
+            break;
+          }
+          offset += pendingRewards.length;
+          // Process them in parallel
+          await processRewardsBatch(pendingRewards, paymentInfo.ticketActivityId);
+        } while (pendingRewards.length === resultPerPage);
+      }
+
+      // fetch normal sbt rewards
       do {
-        // 3) Fetch up to "resultPerPage" pending rewards for this specific event
-        pendingRewards = await rewardDB.fetchPendingRewardsForEvent(evt.eventUuid, resultPerPage, offset);
-
+        //  Fetch up to pending rewards for this specific event
+        pendingRewards = await rewardDB.fetchPendingRewardsForEvent(evt.eventUuid, "ton_society_sbt", resultPerPage, offset);
         if (pendingRewards.length === 0) {
           break;
         }
-
         offset += pendingRewards.length;
-
-        // 4) Process them in parallel
-        await processRewardChunkParallel(pendingRewards);
-
-        if (pushLockTTl) {
-          await pushLockTTl(); // extend lock or TTL if needed
-        }
-
-        totalProcessed += pendingRewards.length;
+        // Process them in parallel
+        await processRewardsBatch(pendingRewards, localEvent.activity_id);
       } while (pendingRewards.length === resultPerPage);
+
+      if (pushLockTTl) {
+        await pushLockTTl(); // extend lock or TTL if needed
+      }
     } finally {
       // 5) If we extended the end date, revert it
       if (didExtend) {

@@ -1,5 +1,5 @@
-import { useCallback, useEffect } from "react";
 import { useMainButton } from "@tma.js/sdk-react";
+import { useCallback, useEffect } from "react";
 
 const BuyTicketSendTransactionButton = (props: {
   price: string | number;
@@ -18,7 +18,7 @@ const BuyTicketSendTransactionButton = (props: {
 
   useEffect(() => {
     mainButton?.setBgColor("#007AFF");
-    mainButton?.setTextColor("#ffffff").setText(`Pay ${props.price} ${props.paymentType}`);
+    mainButton?.setTextColor("#ffffff").setText("Pay");
     mainButton?.enable().show();
     mainButton?.hideLoader();
 

@@ -1,32 +1,22 @@
 "use client";
 import EventCard from "@/app/_components/EventCard/EventCard";
-import EventCardSkeleton from "@/app/_components/EventCard/EventCardSkeleton";
 import SearchBar from "@/app/_components/SearchBar/SearchBar";
-import { Pagination } from "swiper/modules";
-// import searchEventsInputZod from "@/zodSchema/searchEventsInputZod";
-import { useConfig } from "@/context/ConfigContext";
-// import { useTheme } from "next-themes";
 import "@/app/page.css";
-import "swiper/css";
-
 import EventBanner from "@/components/EventBanner";
-import { OntonEvent } from "@/types";
+import Typography from "@/components/Typography";
+import { useConfig } from "@/context/ConfigContext";
+import { Skeleton } from "@mui/material";
 import { ChevronRightIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { Swiper, SwiperSlide } from "swiper/react";
+import Link from "next/link";
+import TournamentCard from "../_components/Tournaments/TournamentCard";
+import CustomCard from "../_components/atoms/cards/CustomCard";
+import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { trpc } from "../_trpc/client";
 
-// const currentDateTime = Math.floor(Date.now() / 1000);
-
-// const upcomingEventsParams = searchEventsInputZod.parse({
-//   limit: 2,
-//   offset: 0,
-//   filter: {
-//     participationType: ["online", "in_person"],
-//     startDate: currentDateTime,
-//   },
-//   sortBy: "start_date_asc",
-// });
+import { cn } from "@/utils";
+import { useMemo } from "react";
+import CustomSwiper from "../_components/CustomSwiper";
+import EventCardSkeleton from "../_components/EventCard/EventCardSkeleton";
 
 export default function Home() {
   return (
@@ -37,21 +27,18 @@ export default function Home() {
         </div>
 
         <div className=" flex-grow">
-          <div className="flex-grow pb-4">
+          <div className="flex-grow flex flex-col gap-6">
             {/* Slider Event */}
             <PromotedEventsSlider />
-            <PromotedEventsList />
+            <FeaturedContests />
+            <OngoingEvents />
+            <UpcomingEvents />
           </div>
         </div>
       </div>
     </>
   );
 }
-
-type EventsResponseType = {
-  status: "success";
-  data: (OntonEvent & { event_uuid: string })[];
-};
 
 function PromotedEventsSlider() {
   const config = useConfig();
@@ -69,167 +56,319 @@ function PromotedEventsSlider() {
     sortBy: "do_not_order" as const,
   };
 
-  const { data: sliderEventData, isLoading: isLoadingSlider } = trpc.events.getEventsWithFilters.useQuery<
-    any,
-    EventsResponseType
-  >(sliderEventParams, {
+  const {
+    data: sliderEventData,
+    isLoading: isLoadingSlider,
+    isSuccess,
+    isError,
+  } = trpc.events.getEventsWithFilters.useQuery(sliderEventParams, {
     enabled: eventCount > 0,
     staleTime: Infinity,
   });
 
-  if (!isLoadingSlider && !sliderEventData?.data?.length) return null;
+  // ------------ //
+  //  🔴 ERROR    //
+  // ------------ //
+  if ((isSuccess && !sliderEventData?.data?.length) || isError) return null;
 
+  // ------------ //
+  //  🟡 LOADING  //
+  // ------------ //
   let content = (
-    <div className="flex gap-3 overflow-x-hidden -mx-3 px-3 pb-3">
+    <CustomSwiper>
       <EventBanner
         skeleton
-        className="flex-[0_0_220px] h-[220px]"
+        className="flex-[0_0_220px] h-[220px] !w-[220px]"
       />
       <EventBanner
         skeleton
-        className="flex-[0_0_220px] h-[220px]"
+        className="flex-[0_0_220px] h-[220px] !w-[220px]"
       />
       <EventBanner
         skeleton
-        className="flex-[0_0_220px] h-[220px]"
+        className="flex-[0_0_220px] h-[220px] !w-[220px]"
       />
-    </div>
+    </CustomSwiper>
   );
 
+  // ------------ //
+  //  🟢 SUCCESS  //
+  // ------------ //
   if (!isLoadingSlider) {
     content = (
-      <Swiper
-        slidesPerView="auto"
-        className="!-mx-4 !pe-8"
-        spaceBetween={12}
-        pagination={{ clickable: true }}
-        autoHeight
-        modules={[Pagination]}
-        wrapperClass="swiper-wrapper pb-3 px-4"
-      >
-        {/* <div className='flex gap-3'> */}
+      <CustomSwiper>
         {sliderEventData?.data.map((event) => (
-          <SwiperSlide
-            className="!w-[220px] !h-[220px]"
-            key={event.event_uuid}
-          >
-            <EventBanner
-              event={event}
-              key={event.event_uuid}
-            />
-          </SwiperSlide>
+          <EventBanner
+            event={event}
+            key={event.eventUuid}
+          />
         ))}
-      </Swiper>
+      </CustomSwiper>
     );
   }
 
   return (
-    <>
-      <h2 className="font-bold text-lg mb-2">Featured Events</h2>
+    <div>
+      <Typography
+        variant="title2"
+        className="mb-3"
+      >
+        Featured Events{" "}
+      </Typography>
       {content}
-    </>
+    </div>
   );
 }
 
-function PromotedEventsList() {
-  const config = useConfig();
-  const itemIds = config?.homeListEventUUID as unknown as string[];
-  const router = useRouter();
-  const { isError, isLoading, data } = trpc.events.getEventsWithFilters.useQuery(
-    {
-      limit: 10,
-      filter: { event_uuids: itemIds },
-      sortBy: "do_not_order" as const,
-    },
-    {
-      enabled: Array.isArray(itemIds) && typeof itemIds[0] === "string",
-    }
-  );
+const FeaturedContests = () => {
+  const tournomantsQuery = trpc.tournaments.getFeaturedTournaments.useQuery(undefined, {
+    staleTime: Infinity,
+  });
 
-  if (isError) {
-    return "something went wrong";
-  }
+  const tournaments = tournomantsQuery.data;
 
-  if (!isLoading && data.data?.length === 0) {
+  if (tournomantsQuery.isSuccess && !tournaments) {
     return null;
   }
 
-  let content = (
-    <>
-      <EventCardSkeleton />
-      <EventCardSkeleton />
-    </>
-  );
-  if (data?.data?.length) {
-    content = (
-      <>
-        {data.data?.map((event) => (
-          <EventCard
-            key={(event as any).event_uuid}
-            event={event}
-            currentUserId={0}
-          />
-        ))}
-      </>
-    );
-  }
-
   return (
-    <>
+    <div>
       <div className="w-full pb-2 flex justify-between items-center">
-        <h2 className="font-bold text-lg">Events</h2>
-        <a
-          onClick={() => router.push("/search/")}
-          className={`text-[#007AFF] font-medium flex align-center`}
+        <Typography variant="title2">Featured Contests</Typography>
+        <Link
+          href={"/play-2-win/"}
+          className={`text-primary font-medium flex align-center`}
         >
-          <span>See All</span>
+          <span>All Contests</span>
           <ChevronRightIcon
             width={20}
             className="ml-1 -my-0.5"
           />
-        </a>
+        </Link>
       </div>
-      {content}
-    </>
+      {tournomantsQuery.isError && (
+        <CustomCard
+          className="col-span-2"
+          defaultPadding
+        >
+          <DataStatus
+            status="searching"
+            title={`Error${tournomantsQuery.error instanceof Error ? `: ${tournomantsQuery.error.name}` : ""}`}
+            description={
+              tournomantsQuery.error instanceof Error ? tournomantsQuery.error.message : "Error loading tournaments."
+            }
+          />
+        </CustomCard>
+      )}
+      {tournomantsQuery.isLoading ? (
+        <div className="grid grid-cols-2 gap-4">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
+            >
+              <Skeleton
+                width={120}
+                height={120}
+                className="rounded-md"
+              />
+              <Skeleton
+                variant="rectangular"
+                width={80}
+                height={36}
+                className="rounded-md mt-2"
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <CustomSwiper>
+          {tournaments?.map((tournament, idx) => (
+            <TournamentCard
+              key={`${tournament.id}-${idx}-1`}
+              tournament={tournament}
+            />
+          ))}
+        </CustomSwiper>
+      )}
+    </div>
   );
-}
+};
 
-// interface HorizontalEventsProps {
-//   title: string;
-//   link: string;
-//   items?: any[];
-//   isLoading: boolean;
-// }
+const OngoingEvents = () => {
+  const ongoingEvents = trpc.events.getEventsWithFilters.useQuery(
+    {
+      filter: {
+        eventStatus: "ongoing",
+      },
+      sortBy: "random",
+      limit: 2,
+    },
+    {
+      staleTime: Infinity,
+    }
+  );
 
-// function HorizontalEvents({ title, link, items = [], isLoading }: HorizontalEventsProps) {
-//   const webApp = useWebApp();
-//   const userId = webApp?.initDataUnsafe?.user?.id;
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="w-full pb-2 flex justify-between items-center">
+        <Typography variant="title2">
+          Ongoing Events{ongoingEvents.data?.totalCount ? `(${ongoingEvents.data?.totalCount})` : ""}
+        </Typography>
+        <Link
+          href={"/search?" + new URLSearchParams({ eventStatus: "ongoing" }).toString()}
+          className="text-primary font-medium flex align-center"
+        >
+          <span>Show more</span>
+          <ChevronRightIcon
+            width={20}
+            className="ml-1 -my-0.5"
+          />
+        </Link>
+      </div>
+      {ongoingEvents.isError && (
+        <CustomCard
+          className="col-span-2"
+          defaultPadding
+        >
+          <DataStatus
+            status="searching"
+            title={`Error${ongoingEvents.error instanceof Error ? `: ${ongoingEvents.error.name}` : ""}`}
+            description={
+              ongoingEvents.error instanceof Error ? ongoingEvents.error.message : "Error loading ongoing events."
+            }
+          />
+        </CustomCard>
+      )}
+      {ongoingEvents.isLoading ? (
+        <div className="flex flex-col gap-2">
+          <Typography variant="title2">Ongoing Events</Typography>
+          <div className="grid gap-4">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <EventCardSkeleton key={index} />
+            ))}
+          </div>
+        </div>
+      ) : (
+        ongoingEvents.data?.data?.map((event, idx) => (
+          <EventCard
+            key={idx}
+            event={event}
+            currentUserId={0}
+          />
+        ))
+      )}
+    </div>
+  );
+};
 
-//   return isLoading ? (
-//     <>
-//       <EventCardSkeleton />
-//       <EventCardSkeleton />
-//     </>
-//   ) : (
-//     items.length > 0 && (
-//       <>
-//         <div className="pt-4 w-full pb-4 flex justify-between items-center">
-//           <h2 className="font-bold text-lg">{title}</h2>
-//           <a
-//             href={link}
-//             className="text-[#007AFF] border-2 border-[#007aff] rounded-lg py-1.5 px-4 hover:underline"
-//           >
-//             See All
-//           </a>
-//         </div>
-//         {items.map((event) => (
-//           <EventCard
-//             key={event.event_uuid}
-//             event={event}
-//             currentUserId={userId}
-//           />
-//         ))}
-//       </>
-//     )
-//   );
-// }
+const UpcomingEvents = () => {
+  const upcomingEvents = trpc.events.getEventsWithFilters.useQuery(
+    {
+      filter: {
+        eventStatus: "upcoming",
+      },
+      sortBy: "start_date_asc",
+      limit: 6,
+    },
+    {
+      staleTime: Infinity,
+    }
+  );
+
+  // Helper function that groups events based on day (formatted as "Sep 10")
+  const groupedEvents = useMemo(() => {
+    const groups: { [day: string]: any[] } = {};
+
+    upcomingEvents.data?.data?.forEach((event) => {
+      // Convert the timestamp (in seconds) to a Date, then format it.
+      const eventDate = new Date(event.startDate * 1000);
+      const dayString = eventDate.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+      });
+
+      if (!groups[dayString]) {
+        groups[dayString] = [];
+      }
+      groups[dayString].push(event);
+    });
+
+    // Convert the groups object into the desired array format.
+    return Object.entries(groups).map(([day, items]) => ({ day, items }));
+  }, [upcomingEvents.data?.data?.length]);
+
+  if (upcomingEvents.isError) {
+    return (
+      <CustomCard
+        className="col-span-2"
+        defaultPadding
+      >
+        <DataStatus
+          status="searching"
+          title={`Error${upcomingEvents.error instanceof Error ? `: ${upcomingEvents.error.name}` : ""}`}
+          description={
+            upcomingEvents.error instanceof Error ? upcomingEvents.error.message : "Error loading upcoming events."
+          }
+        />
+      </CustomCard>
+    );
+  }
+
+  if (upcomingEvents.isLoading) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Typography variant="title2">Upcoming Events</Typography>
+        <div className="grid gap-4">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <EventCardSkeleton key={index} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="w-full pb-2 flex justify-between items-center">
+        <Typography variant="title2">
+          Upcoming Events{upcomingEvents.data?.totalCount ? `(${upcomingEvents.data?.totalCount})` : ""}
+        </Typography>
+        <Link
+          href={
+            "/search?" +
+            new URLSearchParams({
+              eventStatus: "upcoming",
+            }).toString()
+          }
+          className="text-primary font-medium flex align-center"
+        >
+          <span>Show more</span>
+          <ChevronRightIcon
+            width={20}
+            className="ml-1 -my-0.5"
+          />
+        </Link>
+      </div>
+      <div className="border-s border-dashed border-brand-muted ps-2 isolate">
+        {groupedEvents.map((group, idx) => (
+          <div key={group.day}>
+            <h3 className={cn("font-semibold w-full text-lg relative mt-4 mb-3", idx === 0 && "-translate-y-1/2 mb-0")}>
+              {group.day}
+              <div className="rounded-full bg-black w-2 h-2 absolute -translate-x-1/2 -translate-y-1/2 -ms-2 top-1/2" />
+            </h3>
+            <div className="flex w-full flex-col gap-2">
+              {group.items.map((event) => (
+                <EventCard
+                  key={event.event_uuid}
+                  event={event}
+                  timeOnly
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

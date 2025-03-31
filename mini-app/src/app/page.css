@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --default-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue",
-    Helvetica, Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
-    "Source Han Sans CN", sans-serif;
+  --default-font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei", "Source Han Sans CN", sans-serif;
 }
 
 .main-container {
@@ -24,7 +24,6 @@ button {
   outline: 0;
 }
 
-
 /*html, body, #root {*/
 /*  width: 100%;*/
 /*  height: 100%;*/
@@ -36,8 +35,8 @@ button {
 /*  overflow-y: auto;*/
 /*}*/
 
-
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   overflow: hidden;

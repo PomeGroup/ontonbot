@@ -11,6 +11,7 @@ import { sendLogNotification } from "@/lib/tgBot";
 import { callTonfestForOnOntonPayment } from "@/cronJobs/helper/callTonfestForOnOntonPayment";
 import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
 import { callPridipieForOnOntonPayment } from "@/cronJobs/helper/callPridipieForOnOntonPayment";
+import { couponItemsDB } from "@/server/db/couponItems.db";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -81,11 +82,10 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
 
           logger.log(`tscsbt_user_approved_${ordr.user_id}`);
         }
-        logger.log(`call CsbtTicket`);
+        logger.log(`call CsbtTicket for event ${event_uuid} user ${ordr.user_id} order ${ordr.uuid}`);
+
         await CsbtTicket(event_uuid!, ordr.user_id!);
-        logger.log(`call callTonfestForOnOntonPayment`);
         await callTonfestForOnOntonPayment(ordr, event_uuid!!);
-        logger.log(`call callPridipieForOnOntonPayment`);
         await callPridipieForOnOntonPayment(ordr, event_uuid!!);
       } catch (error) {
         console.log("create_tscsbt_ticket_failed", error);
@@ -96,6 +96,8 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
         const updateResult = (
           await trx.update(orders).set({ state: "completed" }).where(eq(orders.uuid, ordr.uuid)).returning().execute()
         ).pop();
+        // make coupon item used
+        if (ordr.coupon_id !== null) await couponItemsDB.makeCouponItemUsedTrx(trx, ordr.coupon_id, ordr.event_uuid!);
         // Increment Affiliate Purchase
         if (updateResult && updateResult.utm_source)
           await affiliateLinksDB.incrementAffiliatePurchase(updateResult.utm_source);

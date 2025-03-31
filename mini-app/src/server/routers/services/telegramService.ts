@@ -1,16 +1,11 @@
 import { sendTelegramMessage, sendEventPhoto } from "@/lib/tgBot";
-import { EventTypeSecure, RewardType, VisitorsType } from "@/types/event.types";
+import { EventTypeSecure } from "@/types/event.types";
 import { rewardLinkZod } from "@/types/user.types";
 import axios from "axios";
 import { logger } from "@/server/utils/logger";
-import { RewardsSelectType } from "@/db/schema/rewards";
+import { RewardVisitorTypePartial } from "@/db/schema/rewards";
 // Send reward notification to visitors
-export const sendRewardNotification = async (
-  reward: RewardType,
-  visitor: VisitorsType,
-  event: EventTypeSecure,
-  rewardDbData: RewardsSelectType
-) => {
+export const sendRewardNotification = async (reward: RewardVisitorTypePartial, event: EventTypeSecure) => {
   try {
     // Validate reward link and send Telegram message
 
@@ -26,7 +21,7 @@ Please click on the link below to claim it`;
     // Send the message and return success if no error occurs
     const response = await sendTelegramMessage({
       link: rewardLink,
-      chat_id: visitor.user_id as number,
+      chat_id: reward.userId as number,
       message: message,
       linkText: linkText,
     });

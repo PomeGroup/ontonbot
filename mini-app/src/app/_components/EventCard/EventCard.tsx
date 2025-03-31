@@ -1,14 +1,16 @@
 "use client";
 
-import React, { ForwardedRef, forwardRef, memo } from "react";
+import { Calendar, Clock, MapPin } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { type ForwardedRef } from "react";
 
+import Typography from "@/components/Typography";
 import { Badge } from "@/components/ui/badge";
 import useWebApp from "@/hooks/useWebApp";
-import { formatDateRange, isValidTimezone } from "@/lib/DateAndTime";
-import { Card } from "konsta/react";
-import Typography from "@/components/Typography";
-import LoadableImage from "@/components/LoadableImage";
+import { cn } from "@/utils";
+import { PiLinkSimple } from "react-icons/pi";
+import CustomCard from "../atoms/cards/CustomCard";
 
 interface EventCardProps {
   event: {
@@ -34,19 +36,30 @@ interface EventCardProps {
     participationType?: string;
     hidden?: number;
     paymentType?: string;
+    organizerImageUrl?: string;
+    // Has
+    hasApproval?: boolean | null;
+    hasPayment?: boolean | null;
+    hasRegistration?: boolean | null;
   };
   currentUserId?: number;
-  children?: React.ReactNode;
+  timeOnly?: boolean;
+  noClick?: boolean;
 }
 
 /**
- * This card shows event info, and if `canEdit` is true,
- * also shows an "Edit Event Info" button that calls `onEditClick`.
+ * Event card component that displays event information in a clean, modern layout
  */
-function UnforwardedEventCard(
-  { event, currentUserId = 0, children }: EventCardProps,
+function EventCard(
+  { event, currentUserId = 0, timeOnly, noClick }: EventCardProps,
   ref: ForwardedRef<HTMLDivElement> | null
 ) {
+  // ------------------------- //
+  //          HOOKS            //
+  // ------------------------- //
+  const webApp = useWebApp();
+  const router = useRouter();
+
   // Destructure event fields
   const {
     eventUuid,
@@ -54,37 +67,40 @@ function UnforwardedEventCard(
     startDate,
     endDate,
     location = "No Location",
-    imageUrl = "/template-images/default.webp",
+    imageUrl = "/placeholder.svg?height=200&width=200",
     organizerChannelName = "",
-    organizerUserId = null,
     ticketToCheckIn = false,
-    timezone = "GMT",
     ticketPrice = 0,
     city = null,
     country = null,
     participationType = "unknown",
-    hidden = false,
     paymentType = "unknown",
+    organizerImageUrl,
+
+    // ---------- has properties
+    hasRegistration,
+    hasPayment,
   } = event;
 
-  // If time zone is invalid, fallback
-  const validTimezone = isValidTimezone(timezone) ? timezone : "GMT";
-
   // Build location display
-  const geoLocation =
-    city || country ? `${city}, ${country}` : location.length > 15 ? `${location.slice(0, 15)}...` : location;
+  const displayLocation = city && country ? `${city}, ${country}` : location;
 
-  const isOnline = participationType === "online" ? "Online" : participationType === "in_person" ? geoLocation : "unknown";
-  const isPublished = !hidden;
-  // We open the card or route
-  const webApp = useWebApp();
-  const router = useRouter();
+  // Format location for display (truncate if needed)
+  const formattedLocation = displayLocation.length > 30 ? `${displayLocation.slice(0, 30)}...` : displayLocation;
+
+  // Determine event participation type
+  const isOnline = participationType === "online";
+
+  // Determine currency for ticket price
   const validCurrencies = ["USDT", "TON"];
   const currency = validCurrencies.includes(paymentType?.toUpperCase()) ? paymentType?.toUpperCase() : "";
 
   const handleEventClick = () => {
+    // If noClick prop is set, do nothing
+    if (noClick) return;
+
     // If ticketToCheckIn => open Telegram link
-    if (ticketToCheckIn) {
+    if (hasPayment || ticketToCheckIn) {
       webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventUuid}`);
     } else {
       // Otherwise, push to /events/[eventUuid]
@@ -92,74 +108,144 @@ function UnforwardedEventCard(
     }
   };
 
-  return (
-    <Card
-      className="overflow-hidden cursor-pointer radius-[10px]"
-      margin="mb-3"
-      contentWrapPadding="p-2"
-    >
-      <div
-        className="flex gap-4 items-stretch flex-nowrap relative"
-        ref={ref}
-        onClick={handleEventClick}
-      >
-        {/* LEFT: Event Image */}
-        <LoadableImage
-          src={imageUrl}
-          alt={title}
-          width={100}
-          height={100}
-        />
+  const start = new Date(startDate * 1000);
+  const end = new Date(endDate * 1000);
 
-        <div className="flex flex-col grow overflow-hidden">
-          <Typography
-            className="font-semibold mb-1 line-clamp-2 overflow-hidden"
-            variant="body"
-          >
-            {title}
-          </Typography>
-          {organizerChannelName.trim().length > 0 && (
+  // Helper to format time without seconds and using lowercase am/pm
+  const formatTime = (date: Date) => {
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? "pm" : "am";
+    hours = hours % 12 || 12;
+    return minutes === 0 ? `${hours}${period}` : `${hours}:${minutes < 10 ? "0" : ""}${minutes}${period}`;
+  };
+
+  // Build the date part
+  const startMonth = start.toLocaleString("en-US", { month: "short" });
+  const endMonth = end.toLocaleString("en-US", { month: "short" });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  const sameDay = start.toDateString() === end.toDateString();
+
+  let datePart = "";
+  if (sameDay) {
+    datePart = `${startMonth} ${startDay}`;
+  } else if (startMonth === endMonth) {
+    datePart = `${startMonth} ${startDay} - ${endDay}`;
+  } else {
+    datePart = `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+  }
+
+  // Build the time part
+  const timePart = `${formatTime(start)} - ${formatTime(end)}`;
+
+  const formattedDate = timeOnly ? timePart : `${datePart} | ${timePart}`;
+
+  return (
+    <div
+      onClick={handleEventClick}
+      className={cn(!noClick && "cursor-pointer")}
+    >
+      <CustomCard className="p-2">
+        <div className="grid grid-cols-[100px_1fr] gap-4">
+          {/* Event Image */}
+          <Image
+            src={imageUrl || "/placeholder.svg"}
+            alt={title}
+            width={100}
+            height={100}
+            className="overflow-hidden object-contain !w-[100px] h-[100px] rounded-md self-center"
+          />
+
+          {/* Event Details */}
+          <div className="flex flex-col overflow-hidden">
+            {/* Event Title */}
             <Typography
-              className="font-medium overflow-hidden text-ellipsis whitespace-nowrap"
-              variant="subheadline2"
+              variant="callout"
+              className="mb-[5.5px] h-8 line-clamp-2 leading-[17px]"
             >
-              by {organizerChannelName}
+              {title}
             </Typography>
-          )}
-          <div className="mt-auto text-[#8E8E93]">
-            <Typography
-              variant="subheadline2"
-              className="font-medium mb-1"
+
+            {/* Date and Time */}
+            <div
+              title={formattedDate}
+              className="flex items-center text-gray-500 mb-1"
             >
-              {isOnline} {isPublished ? "" : " • Not Published"}
-            </Typography>
-            <div className="flex justify-between">
+              {timeOnly ? (
+                <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+              ) : (
+                <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+              )}
               <Typography
                 variant="subheadline2"
-                className="font-medium"
+                className="truncate"
               >
-                {formatDateRange(startDate, endDate, validTimezone)}
+                {formattedDate}
               </Typography>
-              <div className="flex gap-[6px]">
-                {/* Badge on the right: "hosted" if user is the organizer, else price */}
-                {currentUserId === organizerUserId && <Badge variant="ontonLight">hosted</Badge>}
-                <Badge variant="ontonLight">{ticketPrice > 0 ? `${ticketPrice} ${currency}` : "Free"}</Badge>
+            </div>
+
+            {/* Location */}
+            <div
+              title={isOnline ? "Online" : formattedLocation}
+              className="flex items-center text-gray-500 mb-1"
+            >
+              {isOnline ? (
+                <PiLinkSimple className="w-4 h-4 mr-2 flex-shrink-0" />
+              ) : (
+                <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
+              )}
+              <Typography
+                variant="subheadline2"
+                className="truncate"
+              >
+                {isOnline ? "Online" : formattedLocation}
+              </Typography>
+            </div>
+
+            {/* Bottom row with organizer and badges */}
+            <div className="flex items-center justify-between mt-auto gap-2">
+              {/* Organizer or Hosting Status */}
+              {organizerChannelName && (
+                <div
+                  title={organizerChannelName}
+                  className="flex items-center flex-1 min-w-0"
+                >
+                  {organizerImageUrl && (
+                    <div className="relative w-6 h-6 rounded-full overflow-hidden mr-2">
+                      <Image
+                        src={organizerImageUrl || "/placeholder.svg"}
+                        alt={organizerChannelName}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+                  <Typography
+                    variant="subheadline2"
+                    className="text-blue-500 truncate"
+                    truncate
+                  >
+                    {organizerChannelName}
+                  </Typography>
+                </div>
+              )}
+
+              {/* Tags/Badges */}
+              <div className="flex flex-nowrap gap-2 justify-end">
+                <Badge className="rounded-md px-1 font-normal text-xs bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700">
+                  {isOnline ? "Online" : "In-Person"}
+                </Badge>
+                <Badge className="rounded-md px-1 font-normal text-xs bg-gray-200 text-gray-700 hover:bg-gray-200 hover:text-gray-700">
+                  {ticketPrice > 0 ? `${ticketPrice} ${currency}` : "Free"}
+                </Badge>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      {children}
-    </Card>
+      </CustomCard>
+    </div>
   );
 }
 
-// Use memo + forwardRef
-const UnmemorizedEventCard = forwardRef(UnforwardedEventCard);
-const EventCard = memo(UnmemorizedEventCard, (prevProps, nextProps) => {
-  // Compare event UUID to avoid re-renders
-  return prevProps.event.eventUuid === nextProps.event.eventUuid;
-});
-
-EventCard.displayName = "EventCard";
 export default EventCard;

@@ -1,10 +1,10 @@
 import { db } from "@/db/db";
 import { games } from "@/db/schema";
 import { tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/tournaments";
-import { redisTools } from "@/lib/redisTools";
+import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import crypto from "crypto";
-import { and, asc, desc, eq, gt, gte, lt, lte } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, lt, lte, or } from "drizzle-orm";
 
 const getTournamentCacheKey = (tournamentId: number) => {
   return redisTools.cacheKeys.getTournamentById + tournamentId;
@@ -74,6 +74,35 @@ export const getTournamentById = async (tournamentId: number): Promise<Tournamen
     logger.error("Error getting tournament by ID:", error);
     throw error;
   }
+};
+
+/**
+ * Retrieve tournaments by an array of IDs.
+ * Results are cached based on the provided IDs.
+ */
+export const getTournamentsByIds = async (ids: number[]): Promise<TournamentsRow[]> => {
+  if (ids.length === 0) {
+    return [];
+  }
+  // Create a cache key by hashing the ids array
+  const hash = crypto.createHash("md5").update(JSON.stringify(ids)).digest("hex");
+  const cacheKey = cacheKeys.getTournamentsByIds + hash;
+
+  const cachedResult: TournamentsRow[] = await redisTools.getCache(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+
+  const result = await db
+    .select()
+    .from(tournaments)
+    .where(or(...ids.map((id) => eq(tournaments.id, id))))
+    .execute();
+
+  // Cache the result
+  await redisTools.setCache(cacheKey, result, redisTools.cacheLvl.guard);
+
+  return result;
 };
 
 export const insertTournamentTx = async (
@@ -200,4 +229,5 @@ export const tournamentsDB = {
   getTournamentsEndingAfter,
   updateTournamentTx,
   updateActivityIdTrx,
+  getTournamentsByIds, // added new function to the exported object
 };

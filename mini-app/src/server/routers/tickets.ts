@@ -4,6 +4,9 @@ import ticketDB from "@/server/db/ticket.db";
 import { TRPCError } from "@trpc/server";
 import rewardsService from "@/server/routers/services/rewardsService";
 import { logger } from "../utils/logger";
+import visitorsDB from "@/server/db/visitors";
+import rewardDB from "@/server/db/rewards.db";
+import eventDB from "@/server/db/events";
 
 // Type guard to check if result is alreadyCheckedIn type
 function isAlreadyCheckedIn(result: any): result is { alreadyCheckedIn: boolean } {
@@ -39,7 +42,6 @@ export const ticketRouter = router({
     .mutation(async (opts) => {
       const result = await ticketDB.checkInTicket(opts.input.ticketUuid);
 
-
       if (!result) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -51,24 +53,47 @@ export const ticketRouter = router({
 
       if (ticketData && ticketData?.user_id && ticketData?.event_uuid) {
         // Create a reward for the user
-        const rewardResult = await rewardsService.createUserRewardSBT({
-          user_id: ticketData.user_id,
-          event_uuid: ticketData.event_uuid,
-          ticketOrderUuid: ticketData.order_uuid,
-        });
-        if (!rewardResult.success) {
-          logger.error("rewardResult", rewardResult);
+        const userId = ticketData.user_id;
+        const visitor = await visitorsDB.addVisitor(userId, ticketData.event_uuid);
+
+        if (!visitor) {
+          logger.error(`Visitor ${userId} not found for event ${ticketData.event_uuid} in handleNotificationReply`);
+          throw new Error(`Visitor ${userId} not found`);
+        }
+        const existingReward = await rewardDB.checkExistingRewardWithType(visitor?.id, "ton_society_sbt");
+        if (!existingReward) {
+          const eventData = await eventDB.fetchEventByUuid(ticketData.event_uuid);
+          if (!eventData) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Event not found",
+            });
+          }
+          const reward = await rewardDB.insertRewardRow(
+            visitor.id,
+            null,
+            userId,
+            "ton_society_sbt",
+            "pending_creation",
+            eventData
+          );
+          logger.log(
+            `CHECKIN::SBT::Reward::Created user reward for user ${userId} and event uuid ${ticketData.event_uuid} with reward ID ${reward.id}`,
+            reward
+          );
+        } else {
+          logger.log(
+            `CHECKIN::SBT::Reward::User reward already exists for user ${userId} and event uuid ${ticketData.event_uuid}`
+          );
         }
         if (isAlreadyCheckedIn(result)) {
           return { alreadyCheckedIn: true, result: result };
         }
 
-
         return {
           checkInSuccess: true,
           result: result,
-
-          rewardResult: rewardResult,
+          rewardResult: "success",
         };
       }
     }),

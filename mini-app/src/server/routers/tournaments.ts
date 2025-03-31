@@ -6,11 +6,12 @@ import { usersDB } from "../db/users";
 import { initDataProtectedProcedure, router } from "../trpc";
 
 import { db } from "@/db/db";
-import { games } from "@/db/schema";
+import { games, TournamentsRow } from "@/db/schema";
 import { getTournamentLeaderboard } from "@/lib/elympicsApi";
 import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { selectUserById } from "@/server/db/users";
 import { LeaderboardResponse } from "@/types/elympicsAPI.types";
+import { fetchOntonSettings } from "../db/ontoSetting";
 import { GameFilterId, tournamentsListSortOptions } from "../utils/tournaments.utils";
 
 export const tournamentsRouter = router({
@@ -170,4 +171,23 @@ export const tournamentsRouter = router({
         nextCursor,
       };
     }),
+  getFeaturedTournaments: initDataProtectedProcedure.query(async () => {
+    const { config } = await fetchOntonSettings();
+    const play2winFeaturedEvents = config?.["play-2-win-featured"];
+
+    const parsedFeaturedEvents =
+      typeof play2winFeaturedEvents === "string" ? play2winFeaturedEvents.split(",").map((tId) => tId.trim()) : undefined;
+
+    if (!parsedFeaturedEvents || parsedFeaturedEvents.length === 0) {
+      return [] as TournamentsRow[];
+    }
+
+    // Convert the tournament IDs to numbers and filter out invalid ones
+    const tournamentIds = parsedFeaturedEvents.map((id) => Number(id)).filter((n) => !isNaN(n));
+
+    // Fetch tournaments from the DB and filter out any undefined results
+    const featured = await tournamentsDB.getTournamentsByIds(tournamentIds);
+
+    return featured as TournamentsRow[];
+  }),
 });

@@ -23,11 +23,6 @@ const meta: Meta<typeof EventDuration> = {
 export default meta;
 type Story = StoryObj<typeof EventDuration>;
 
-enum SpaceEnum {
-  sm = "sm",
-  md = "md",
-}
-
 export const Primary: Story = {
   args: {
     endDate: new Date(Date.now() + 10000000),
