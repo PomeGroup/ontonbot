@@ -1,0 +1,2 @@
+ALTER TABLE "token_campaign_nft_collections" ADD COLUMN "campaign_type" "campaign_type" NOT NULL;--> statement-breakpoint
+ALTER TABLE "token_campaign_spin_packages" ADD COLUMN "campaign_type" "campaign_type" NOT NULL;
