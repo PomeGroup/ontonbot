@@ -229,7 +229,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function applyCouponDiscount(
+async function applyCouponDiscount(
   couponCode: string | undefined,
   eventUuid: string,
   eventPaymentInfo: { price: number }
