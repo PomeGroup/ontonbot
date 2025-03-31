@@ -3,7 +3,7 @@ import { couponItemsDB } from "@/server/db/couponItems.db";
 import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
 
 export async function applyCouponDiscount(
-  couponCode: string | undefined,
+  couponCode: string | undefined | null,
   eventUuid: string,
   eventPaymentInfo: { price: number }
 ): Promise<{
