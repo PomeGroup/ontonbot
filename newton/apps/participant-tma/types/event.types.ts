@@ -79,3 +79,25 @@ export interface EventType extends EventDataOnlyType {
   orderAlreadyPlace: boolean;
   isSoldOut: boolean;
 }
+
+// New type definitions for a valid coupon response
+export interface CouponItem {
+  coupon_id: number;
+  coupon_code: string;
+  coupon_status: string; // Could be refined to a union type if needed
+  coupon_definition_id: number;
+}
+
+export interface CouponDefinition {
+  cpd_type: "fixed" | "percent";
+  cpd_status: "active";
+  value: number;
+  discounted_price: number;
+  start_date: number;
+  end_date: number;
+}
+
+export interface CouponData {
+  item: CouponItem;
+  definition: CouponDefinition;
+}
