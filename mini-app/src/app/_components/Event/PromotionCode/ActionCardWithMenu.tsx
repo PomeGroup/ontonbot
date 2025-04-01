@@ -3,9 +3,9 @@
 import Typography from "@/components/Typography";
 import { List, ListItem, Popover } from "konsta/react";
 import { MoreVertical } from "lucide-react";
-import Image from "next/image";
 import { useRef, useState } from "react";
 import CustomCard from "../../atoms/cards/CustomCard";
+import PromotionCodeIcon from "../../icons/promotion-code-icon";
 
 interface FooterText {
   count?: number;
@@ -19,7 +19,6 @@ interface MenuItem {
 }
 
 interface ActionCardWithMenuProps {
-  iconSrc: string;
   title: string;
   subtitle: string;
   footerTexts: FooterText[];
@@ -28,7 +27,6 @@ interface ActionCardWithMenuProps {
 }
 
 export default function ActionCardWithMenu({
-  iconSrc,
   title,
   subtitle,
   footerTexts,
@@ -55,12 +53,7 @@ export default function ActionCardWithMenu({
     >
       <div className="flex gap-3 align-stretch">
         <div className="bg-[#efeff4] p-4 rounded-[10px]">
-          <Image
-            src={iconSrc}
-            width={48}
-            height={48}
-            alt="icon"
-          />
+          <PromotionCodeIcon className="text-primary" />
         </div>
         <div className="flex flex-col flex-1 gap-1">
           <Typography

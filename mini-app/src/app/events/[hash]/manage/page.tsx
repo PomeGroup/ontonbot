@@ -105,11 +105,7 @@ export default function ManageIndexPage() {
                 iconSrc={promotionCodeIcon}
                 title="Promotion Codes"
                 subtitle="Generate and manage codes"
-                footerTexts={[
-                  { count: 1, items: "Codes" },
-                  { count: 1, items: "Active" },
-                  { count: 1, items: "Used" },
-                ]}
+                footerTexts={[]}
               />
             </CheckUserInList>
           </>

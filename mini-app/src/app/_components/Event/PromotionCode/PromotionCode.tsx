@@ -247,7 +247,6 @@ export default function PromotionCode() {
           return (
             <ActionCardWithMenu
               key={def.id}
-              iconSrc="/icons/ticket.png"
               title={`${def.count} codes`}
               subtitle={`%${Number(def.value)} discount - ${def.used} used`}
               footerTexts={footerTexts}
