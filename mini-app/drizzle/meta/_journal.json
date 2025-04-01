@@ -260,6 +260,13 @@
       "when": 1743458969369,
       "tag": "0036_wet_mister_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1743484861657,
+      "tag": "0037_solid_toad_men",
+      "breakpoints": true
     }
   ]
 }
