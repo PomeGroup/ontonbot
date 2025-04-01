@@ -65,6 +65,7 @@ export default function ManageIndexPage() {
             hasPayment: eventData.has_payment,
             hasRegistration: eventData.has_registration,
             paymentType: eventData.payment_details.payment_type,
+            ticketPrice: eventData.payment_details.price,
           }}
           noClick
         />
