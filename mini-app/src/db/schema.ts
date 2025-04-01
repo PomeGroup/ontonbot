@@ -18,6 +18,8 @@ import {
   rewardStatus,
   rewardType,
   ticketStatus,
+  CampaignType,
+  campaignTypes,
 } from "@/db/enum";
 
 import { specialGuests } from "@/db/schema/specialGuest";
@@ -80,6 +82,28 @@ import {
   CallbackTasksRow,
   CallBackTaskStepNameType,
 } from "./schema/callbackTasks";
+
+import {
+  tokenCampaignUserSpins,
+  TokenCampaignUserSpins,
+  TokenCampaignUserSpinsInsert,
+} from "./schema/tokenCampaignUserSpins";
+import {
+  tokenCampaignSpinPackages,
+  TokenCampaignSpinPackages,
+  TokenCampaignSpinPackagesInsert,
+} from "./schema/tokenCampaignSpinPackages";
+import {
+  tokenCampaignUserCollections,
+  TokenCampaignUserCollections,
+  TokenCampaignUserCollectionsInsert,
+} from "./schema/tokenCampaignUserCollections";
+import { tokenCampaignOrders, TokenCampaignOrders, TokenCampaignOrdersInsert } from "./schema/tokenCampaignOrders";
+import {
+  tokenCampaignNftCollections,
+  TokenCampaignNftCollections,
+  TokenCampaignNftCollectionsInsert,
+} from "./schema/tokenCampaignNftCollections";
 
 // export all the enums
 export {
@@ -155,6 +179,11 @@ export {
   tournaments,
   games,
   gameLeaderboard,
+  tokenCampaignUserSpins,
+  tokenCampaignSpinPackages,
+  tokenCampaignUserCollections,
+  tokenCampaignOrders,
+  tokenCampaignNftCollections,
 };
 
 // Type Exports
@@ -198,4 +227,15 @@ export type {
   GamesRowInsert,
   GameLeaderboardRow,
   GameLeaderboardRowInsert,
+  TokenCampaignUserSpins,
+  TokenCampaignUserSpinsInsert,
+  TokenCampaignSpinPackages,
+  TokenCampaignSpinPackagesInsert,
+  TokenCampaignUserCollections,
+  TokenCampaignUserCollectionsInsert,
+  TokenCampaignOrders,
+  TokenCampaignOrdersInsert,
+  TokenCampaignNftCollections,
+  TokenCampaignNftCollectionsInsert,
+  CampaignType,
 };
