@@ -63,10 +63,35 @@ module.exports = konstaConfig({
         12.5: "50px",
       },
       backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--shadcn-tw-gradient-stops))",
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        // "gradient-radial": "radial-gradient(var(--shadcn-tw-gradient-stops))",
         "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--shadcn-tw-gradient-stops))",
       },
       colors: {
+        // genesis onions campaign
+        // --------------------------------------
+        navy: {
+          DEFAULT: "#0A1C33",
+          extraLight: "#566E8F",
+          superLight: "#24354C",
+          light: "#203248",
+          dark: "#0B1D34",
+        },
+        silverBlue: {
+          1: "#77B8FE",
+          2: "#4C688B",
+        },
+        silver: {
+          DEFAULT: "#DFDDDD",
+          base: "#A4B3C7",
+        },
+        bronze: "#D3766A",
+        gold: {
+          DEFAULT: "#F5DA8A",
+          light: "#FFBD8A",
+        },
+        orange: "#F36A00",
+        // --------------------------------------
         "cn-border": "hsl(var(--shadcn-border))",
         "cn-input": "hsl(var(--shadcn-input))",
         "cn-ring": "hsl(var(--shadcn-ring))",
