@@ -9,10 +9,8 @@ import ordersIcon from "./orders.svg";
 import promotionCodeIcon from "./promotion-code.svg";
 
 import CustomButton from "@/app/_components/Button/CustomButton";
-import CheckUserInList from "@/app/_components/CheckUserInList";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import ActionCard from "@/components/ActionCard";
-import { ALLOWED_USER_TO_TEST } from "@/constants";
 import { useUserStore } from "@/context/store/user.store";
 import { useGetEvent } from "@/hooks/events.hooks";
 import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
@@ -96,22 +94,14 @@ export default function ManageIndexPage() {
               subtitle="Event creation payments"
               footerTexts={[]}
             />
-            <CheckUserInList
-              userList={ALLOWED_USER_TO_TEST}
-              currentUserId={user?.user_id}
-            >
-              <ActionCard
-                onClick={() => router.push(`/events/${eventData.event_uuid}/manage/promotion-code`)}
-                iconSrc={promotionCodeIcon}
-                title="Promotion Codes"
-                subtitle="Generate and manage codes"
-                footerTexts={[
-                  { count: 1, items: "Codes" },
-                  { count: 1, items: "Active" },
-                  { count: 1, items: "Used" },
-                ]}
-              />
-            </CheckUserInList>
+
+            <ActionCard
+              onClick={() => router.push(`/events/${eventData.event_uuid}/manage/promotion-code`)}
+              iconSrc={promotionCodeIcon}
+              title="Promotion Codes"
+              subtitle="Generate and manage codes"
+              footerTexts={[]}
+            />
           </>
         )}
 

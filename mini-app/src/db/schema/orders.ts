@@ -1,5 +1,5 @@
 import { bigint, index, pgTable, text, timestamp, uuid, real, pgEnum } from "drizzle-orm/pg-core";
-import { orderState, paymentTypes } from "@/db/schema";
+import { coupon_items, orderState, paymentTypes } from "@/db/schema";
 import { events } from "@/db/schema/events";
 import { users } from "@/db/schema/users";
 import { InferSelectModel, relations } from "drizzle-orm";
@@ -20,7 +20,7 @@ export const orders = pgTable(
     uuid: uuid("uuid").defaultRandom().primaryKey(),
     event_uuid: uuid("event_uuid").references(() => events.event_uuid),
     user_id: bigint("user_id", { mode: "number" }).references(() => users.user_id),
-
+    default_price: real("default_price").default(0).notNull(),
     total_price: real("total_price").notNull(),
     payment_type: paymentTypes("payment_type").notNull(),
 
@@ -37,12 +37,14 @@ export const orders = pgTable(
       precision: 3,
     }).$onUpdate(() => new Date()),
     updatedBy: text("updated_by").default("system").notNull(),
+    coupon_id: bigint("coupon_id", { mode: "number" }).references(() => coupon_items.id),
   },
   (table) => ({
     eventUuidIdx: index("orders_event_uuid_idx").on(table.event_uuid),
     userIdIdx: index("orders_user_id_idx").on(table.user_id),
     stateIdx: index("orders_state_idx").on(table.state),
     ownerAddressIdx: index("orders_owner_address_idx").on(table.owner_address),
+    couponIdIdx: index("orders_coupon_id_idx").on(table.coupon_id),
     //One event_creation per event_uuid
     // uniqueEventCreation: uniqueIndex("unique_event_creation").on(table.event_uuid, table.order_type).where(eq(table.order_type, "event_creation")),
   })

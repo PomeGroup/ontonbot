@@ -6,6 +6,7 @@ import { removeKey } from "@/lib/utils";
 import { getAuthenticatedUser } from "@/server/auth";
 import { affiliateClicksDB } from "@/server/db/affiliateClicks.db";
 import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { couponItemsDB } from "@/server/db/couponItems.db";
 import { getByEventUuidAndUserId } from "@/server/db/eventRegistrants.db";
 import eventDB from "@/server/db/events";
 import ordersDB from "@/server/db/orders.db";
@@ -140,6 +141,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const eventData = removeKey(unsafeEvent, "secret_phrase");
     const accessData = await userRolesDB.listActiveUserRolesForEvent("event", Number(eventData.event_id));
+    const hasActiveCoupon = await couponItemsDB.hasActiveCouponItems(eventData.event_uuid);
     const accessRoles = accessData.map(({ userId, role }) => ({
       user_id: userId,
       role: role,
@@ -188,6 +190,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
           organizer,
           eventTicket: event_payment_info,
           isSoldOut,
+          hasActiveCoupon,
           accessRoles,
         },
         {
@@ -321,7 +324,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       organizer,
       eventTicket: event_payment_info,
       isSoldOut,
-
+      hasActiveCoupon,
       ownerAddress,
       usedCollectionAddress: event_payment_info?.collectionAddress!,
       valid_nfts_no_info,

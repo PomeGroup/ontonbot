@@ -1,5 +1,5 @@
 import { env } from "~/env.mjs";
-import { EventType } from "~/types/event.types";
+import { CouponData, EventType } from "~/types/event.types";
 import { RequestError } from "~/utils/custom-error";
 
 // NOTE: use this inn client only
@@ -20,4 +20,15 @@ export async function getEventWithUserData(id: string, params: { proof_token: st
   const event: EventType = await eventResponse.json();
 
   return event;
+}
+
+export async function checkCoupon(eventId: number, discountCode: string): Promise<CouponData> {
+  const response = await fetch(`/api/v1/event/${eventId}/checkCoupon/${encodeURIComponent(discountCode)}`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error("Invalid coupon code");
+  }
+  return (await response.json()).data;
 }

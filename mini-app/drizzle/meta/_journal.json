@@ -232,6 +232,20 @@
       "when": 1742558506493,
       "tag": "0032_chief_spacker_dave",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1742957594211,
+      "tag": "0033_unique_arclight",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1743255724183,
+      "tag": "0034_adorable_polaris",
+      "breakpoints": true
     }
   ]
 }

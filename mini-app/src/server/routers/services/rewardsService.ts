@@ -10,12 +10,80 @@ import eventDB, { selectEventByUuid } from "@/server/db/events";
 import rewardsDb from "@/server/db/rewards.db";
 import visitorsDB, { addVisitor, findVisitorByUserAndEventUuid, selectValidVisitorById } from "@/server/db/visitors";
 import { validateEventData, validateEventDates } from "@/server/routers/services/eventService";
-import { sendRewardNotification } from "@/server/routers/services/telegramService";
 import { logger } from "@/server/utils/logger";
 import { sleep } from "@/utils";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import { RewardDataTyepe } from "@/db/schema/rewards";
+import { usersDB } from "@/server/db/users";
+import { rewardLinkZod } from "@/types/user.types";
+import { EventRow } from "@/db/schema/events";
+import { ExtendedUser } from "@/types/extendedUserTypes";
+import { eventRegistrantsDB } from "@/server/db/eventRegistrants.db";
+import userEventFieldsDB from "@/server/db/userEventFields.db";
+
+// --- Helper Validation Functions ----------------------------------
+
+function validateEventActivityId(eventData: EventRow) {
+  if (!eventData.activity_id || eventData.activity_id < 0) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: `This event does not have a valid activity_id: ${eventData?.activity_id}`,
+    });
+  }
+}
+
+function validateEventDateRange(eventData: EventRow) {
+  const startDate = Number(eventData.start_date) * 1000;
+  const endDate = Number(eventData.end_date) * 1000;
+  const now = Date.now();
+
+  if (now < startDate || now > endDate) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Event is ended or not yet started",
+    });
+  }
+}
+
+async function validateRegistrationIfNeeded(eventData: EventRow, userData: ExtendedUser) {
+  if (!eventData.has_registration) {
+    return;
+  }
+
+  const eventRegistrantRequest = await eventRegistrantsDB.getRegistrantRequest(eventData.event_uuid, userData.user_id);
+
+  if (!eventRegistrantRequest) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Event requires registration, but no registration found for this user.",
+    });
+  }
+
+  if (eventRegistrantRequest.status !== "approved") {
+    const eventType = eventData.participationType === "online" ? "Online" : "In-person";
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: `${eventType} event requires approved registration.`,
+    });
+  }
+}
+
+async function validateTaskCompletionIfNeeded(eventData: EventRow, user_id: number) {
+  // If it's an in-person event, no password task is required
+  if (eventData.participationType === "in_person") {
+    return;
+  }
+
+  // Otherwise, check the password task
+  const taskCompleted = await userEventFieldsDB.checkPasswordTask(user_id, eventData.event_id);
+  if (!taskCompleted) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "You have not completed the required task for this event.",
+    });
+  }
+}
 
 //TODO - Put this in db functions files
 async function getRegistrantRequest(event_uuid: string, user_id: number) {
@@ -63,42 +131,18 @@ export const createUserRewardSBT = async (props: {
     // Check if reward already exists
 
     reward = await rewardDB.checkExistingReward(visitor.id);
-    if (reward) {
-      return {
-        success: false,
-        error: `User with ID ${user_id} already received reward for event ${event_uuid}.`,
-        errorCode: "CONFLICT",
-        data: null,
-      };
+    if (!reward) {
+      reward = await rewardDB.insertRewardRow(visitor.id, null, user_id, "ton_society_sbt", "pending_creation", eventData);
     }
 
     // Process reward creation
-    const createRewardResult = await processRewardCreation(eventData, user_id, visitor);
-    // logger.log("createRewardResult", createRewardResult);
-    // If reward creation was successful
-    if (createRewardResult?.success) {
-      reward = createRewardResult.data;
-      // Send notification to the user
-      if (reward?.status === "created") {
-        const notificationResult = await sendRewardNotification(createRewardResult.data, visitor, eventData, reward);
-
-        // If notification was sent successfully, update the reward status
-        if (notificationResult.success) {
-          reward = await rewardDB.updateRewardById(reward.id, {
-            status: "notified_by_ui",
-            updatedBy: "system",
-          });
-        }
-      }
-      return { success: true, data: reward, error: null };
-    }
 
     // If reward creation failed, return error
     return {
-      success: false,
-      error: createRewardResult?.error || "Reward creation failed.",
-      errorCode: "CONFLICT",
-      data: null,
+      success: true,
+      error: null,
+      errorCode: null,
+      data: reward,
     };
   } catch (error) {
     // logger.error(`Error in createUserRewardSBT:`, error);
@@ -109,205 +153,6 @@ export const createUserRewardSBT = async (props: {
       errorCode: "INTERNAL_SERVER_ERROR",
       data: null,
     };
-  }
-};
-
-// Function to process reward creation
-export const processRewardCreation = async (eventData: any, user_id: number, visitor: any) => {
-  let reward;
-  reward = await rewardDB.insert(visitor.id, null, user_id, "ton_society_sbt", "pending_creation");
-
-  try {
-    // Call the function to create a user reward link
-
-    const res = await createUserRewardLink(eventData.activity_id, {
-      telegram_user_id: user_id,
-      attributes: eventData.society_hub ? [{ trait_type: "Organizer", value: eventData.society_hub }] : undefined,
-    });
-
-    // Ensure the result is successful and has the expected data structure
-    if (res.data?.data?.reward_link) {
-      // Update reward in the database with status "created"
-      reward = await rewardDB.updateRewardById(reward.id, {
-        status: "created",
-        data: { ...res.data.data, ok: true },
-        updatedBy: "system",
-      });
-
-      return { success: true, data: reward, error: null };
-    }
-
-    // If it fails, return an appropriate failure response
-    return {
-      success: false,
-      data: reward,
-      error: "Reward link creation failed.",
-    };
-  } catch (error) {
-    // Catch any unexpected errors and return a failure response
-    // logger.error("Error in processRewardCreation:", error);
-    return {
-      success: false,
-      data: reward,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-};
-
-export const createUserReward = async (
-  props: { user_id: number; event_uuid?: string; event_id?: number },
-  force: boolean = false
-) => {
-  try {
-    if (!props.event_uuid && !props.event_id) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "event UUID or event id is required." });
-    }
-
-    let eventData = null;
-    if (props.event_uuid) {
-      eventData = await eventDB.selectEventByUuid(props.event_uuid);
-    } else if (props.event_id) {
-      eventData = await db.query.events.findFirst({
-        where(fields, { eq }) {
-          return eq(fields.event_id, props.event_id!);
-        },
-      });
-    }
-
-    const event_uuid = eventData?.event_uuid!;
-    if (!eventData || !event_uuid) {
-      throw new TRPCError({ code: "BAD_REQUEST", message: "event not found." });
-    }
-
-    /*---------------------------
-               Fetch visitor
-      ---------------------------*/
-    let visitor = null;
-    if (force) {
-      // Force Add Visitor
-      visitor = await addVisitor(props.user_id, event_uuid);
-    } else {
-      // Find the Visitor
-      visitor = await findVisitorByUserAndEventUuid(props.user_id, event_uuid);
-    }
-
-    // Check if visitor exists
-    if (!visitor)
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Visitor not found with the provided user ID and event UUID.",
-      });
-
-    // ---------------------------------
-    // Validate visitor and registration
-    // ---------------------------------
-    const isValidVisitor = await selectValidVisitorById(visitor.id);
-    if (!isValidVisitor.length && eventData?.participationType === "online" && !force) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Invalid visitor: please complete the tasks.",
-      });
-    }
-
-    const reward = await rewardDB.findRewardByVisitorId(visitor.id);
-    if (reward?.data?.ok) {
-      return {
-        reward_link: reward.data?.reward_link,
-      };
-    }
-
-    // if reward existed and was not failed do not create the reward
-    if (reward?.status && reward.status !== "failed") {
-      return;
-    }
-
-    if (!eventData?.activity_id || eventData.activity_id < 0) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: `this event does not have an activity id ${eventData?.activity_id}`,
-      });
-    }
-
-    if (eventData.has_registration) {
-      const eventRegistrantRequest = await getRegistrantRequest(event_uuid, props.user_id);
-
-      if (!eventRegistrantRequest) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: `Event with registration and user is not approved`,
-        });
-      } else if (eventRegistrantRequest.status !== "approved" && eventData.participationType == "online") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: `Online Event with registration needs approval`,
-        });
-      } else if (eventRegistrantRequest.status !== "approved" && eventData.participationType == "in_person") {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: `In-Person Event with registration needs approval`,
-        });
-      }
-    }
-
-    const startDate = Number(eventData.start_date) * 1000;
-    const endDate = Number(eventData.end_date) * 1000;
-
-    if (Date.now() < startDate || Date.now() > endDate) {
-      throw new TRPCError({
-        message: "Event is ended/not started",
-        code: "FORBIDDEN",
-      });
-    }
-    // ---------------------------------
-    // 🟢 All conditions are met 🟢
-    // Try to create the reward
-    // If it failed we will add it as *pending*
-    // ---------------------------------
-    try {
-      const society_hub_value =
-        typeof eventData.society_hub === "string" ? eventData.society_hub : eventData.society_hub?.name || "Onton";
-
-      const res = await createUserRewardLink(eventData.activity_id, {
-        telegram_user_id: props.user_id,
-        attributes: eventData?.society_hub
-          ? [
-              {
-                trait_type: "Organizer",
-                value: society_hub_value,
-              },
-            ]
-          : undefined,
-      });
-
-      // Ensure the response contains data
-      if (!res || !res.data || !res.data.data) {
-        await rewardDB.insertReward(visitor.id, props.user_id.toString(), "pending_creation", "ton_society_sbt");
-        return;
-      }
-
-      // Insert the reward into the database
-      await rewardsDb.insertRewardWithData(
-        visitor.id,
-        props.user_id.toString(),
-        "ton_society_sbt",
-        res.data.data,
-        force ? "created" : "notified_by_ui"
-      );
-
-      return res.data.data;
-    } catch (error) {
-      // Insert pending reward if the third party SBT creation failed
-      await rewardDB.insertReward(visitor.id, props.user_id.toString(), "pending_creation", "ton_society_sbt");
-    }
-  } catch (error) {
-    if (error instanceof TRPCError) {
-      throw error;
-    } else {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "An unexpected error occurred while creating user reward.",
-      });
-    }
   }
 };
 
@@ -344,7 +189,10 @@ export async function CsbtTicket(event_uuid: string, user_id: number) {
     logger.error(`CsbtTicketRewardService: Missing ticket_activity_id for TSCSBT event ${event_uuid}`);
     throw new Error("Missing ticket_activity_id for TSCSBT event");
   }
-
+  if (!visitor) {
+    logger.error(`CsbtTicketRewardService: Visitor not found for user ${user_id} and event ${event_uuid}`);
+    throw new Error("Visitor not found for user ${user_id} and event ${event_uuid}");
+  }
   // 4) Check if a reward already exists for this visitor
   const existingReward = await rewardDB.checkExistingRewardWithType(visitor.id, "ton_society_csbt_ticket");
   if (existingReward) {
@@ -392,6 +240,10 @@ export const CsbtTicketForApi = async (event_uuid: string, user_id: number) => {
     logger.error("CsbtTicketRewardService eventData or activity_id is null");
     // In a normal CsbtTicket, we'd throw. But let's do so here as well:
     throw new Error("CsbtTicketRewardService eventData or activity_id is null");
+  }
+  if (!visitor) {
+    logger.error(`CsbtTicketRewardService: Visitor not found for user ${user_id} and event ${event_uuid}`);
+    throw new Error(`Visitor not found for user ${user_id} and event ${event_uuid}`);
   }
   const paymentInfo = await eventPaymentDB.fetchPaymentInfoForCronjob(event_uuid);
 
@@ -482,12 +334,102 @@ export const CsbtTicketForApi = async (event_uuid: string, user_id: number) => {
     }
   }
 };
+const createTonSocietySBTReward = async (event_uuid: string, user_id: number) => {
+  try {
+    // 1. Fetch event & user from DB
+    const eventData = await eventDB.fetchEventByUuid(event_uuid);
+    const userData = await usersDB.selectUserById(user_id);
 
+    // 2. Validate event & user
+    if (!eventData) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Event not found",
+      });
+    }
+    if (!userData) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "User not found",
+      });
+    }
+    validateEventActivityId(eventData);
+    validateEventDateRange(eventData);
+
+    // 3. Validate registration / tasks if needed
+    await validateRegistrationIfNeeded(eventData, userData);
+    await validateTaskCompletionIfNeeded(eventData, userData.user_id);
+
+    // 4. Ensure visitor is created
+    const visitor = await visitorsDB.addVisitor(userData.user_id, eventData.event_uuid);
+
+    if (!visitor) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Visitor not found with the provided user ID and event UUID.",
+      });
+    }
+
+    // 5. Check existing reward
+    const existingReward = await rewardDB.checkExistingRewardWithType(visitor.id as number, "ton_society_sbt");
+
+    // No existing reward → Insert and let user wait for creation
+    if (!existingReward) {
+      await rewardDB.insertRewardRow(visitor.id, null, userData.user_id, "ton_society_sbt", "pending_creation", eventData);
+
+      return {
+        type: "wait_for_reward",
+        message: "We successfully collected your data; you'll receive your reward link through a bot message.",
+        data: null,
+      } as const;
+    }
+
+    // Reward exists but is still pending → Return waiting state
+    if (existingReward.status === "pending_creation") {
+      return {
+        type: "wait_for_reward",
+        message: "We successfully collected your data; you'll receive your reward link through a bot message.",
+        data: null,
+      } as const;
+    }
+
+    // Reward exists and presumably has data
+    if (existingReward.data) {
+      const dataValidation = rewardLinkZod.safeParse(existingReward.data);
+      if (!dataValidation.success) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: `Reward data is invalid: ${JSON.stringify(existingReward.data)}`,
+        });
+      }
+
+      return {
+        ...existingReward,
+        data: dataValidation.data.reward_link,
+        type: "reward_link_generated",
+      } as const;
+    }
+
+    // Fallback in case there's an edge scenario not covered above
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Reward found but invalid state or data.",
+    });
+  } catch (error) {
+    logger.error("Error in getVisitorReward query:", error);
+    if (error instanceof TRPCError) {
+      throw error;
+    }
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "An unexpected error occurred while retrieving visitor reward.",
+    });
+  }
+};
 const rewardService = {
   createUserRewardSBT,
-  processRewardCreation,
-  createUserReward,
   CsbtTicketForApi,
+  createTonSocietySBTReward,
 };
 
 export default rewardService;

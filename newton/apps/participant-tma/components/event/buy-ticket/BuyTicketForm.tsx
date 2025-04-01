@@ -7,7 +7,7 @@ import { Input } from "@ui/base/input";
 import { Section } from "@ui/base/section";
 import { toast } from "@ui/base/sonner";
 import SeparatorTma from "@ui/components/Separator";
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import Image from "next/image";
 import React, { FormEventHandler, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -15,7 +15,7 @@ import { createPortal } from "react-dom";
 import BuyTicketTmaSettings from "~/components/event/buy-ticket/BuyTicketTmaSettings";
 import { useTransferTon } from "~/hooks/ton.hooks";
 import { useAddOrderMutation } from "~/hooks/useAddOrderMutation";
-import { isRequestingTicketAtom } from "~/store/atoms/event.atoms";
+import { discountCodeAtom, isRequestingTicketAtom } from "~/store/atoms/event.atoms";
 import { useUserStore } from "~/store/user.store";
 import { PaymentType } from "~/types/order.types";
 import { ALLOWED_TONFEST_EVENT_UUIDS } from "~/utils/constants";
@@ -53,6 +53,8 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
   const mainButton = useMainButton(true);
   const transfer = useTransferTon();
 
+  const discountCode = useAtomValue(discountCodeAtom);
+
   const affiliate_id = params.affiliate_id || null;
 
   const buyTicketOnClick: FormEventHandler<HTMLFormElement> = async (e) => {
@@ -76,7 +78,7 @@ const BuyTicketForm = (params: BuyTicketFormProps) => {
         event_uuid: params.event_uuid,
         affiliate_id,
         ...data,
-        coupon_code: "todo : get the coupon code",
+        coupon_code: discountCode || null,
       });
 
       console.log("transfer data", params.sendTo, Number(params.price), orderData.payment_type, {

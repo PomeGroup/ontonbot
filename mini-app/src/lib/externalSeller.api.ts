@@ -157,7 +157,11 @@ const fetchPaymentInfoAndCheckSoldOut = async (eventUuid: string, eventData: any
 /**
  * Insert or update user if needed, based on telegramUserId.
  */
-const ensureUserExists = async (telegramUserId: number, telegramUsername: string) => {
+const ensureUserExists = async (
+  telegramUserId: number,
+  telegramUsername: string = "",
+  defaultFirstName: string = "PaymentFlow"
+) => {
   const existingUser = await usersDB.selectUserById(telegramUserId);
   if (existingUser) return existingUser;
 
@@ -166,7 +170,7 @@ const ensureUserExists = async (telegramUserId: number, telegramUsername: string
     user: {
       id: telegramUserId,
       username: telegramUsername.replace("@", ""),
-      first_name: "PaymentFlow",
+      first_name: defaultFirstName,
       last_name: "",
       language_code: "en",
       is_premium: false,
@@ -296,7 +300,7 @@ const createOrderAndRegistrant = async (
 const getSbtClaimLink = async (eventUuid: string, telegramUserId: number, orderType: string) => {
   // Start with an event-level reward link if it exists
   let sbtClaimLink = `https://onton.live/`;
-  const eventRewardLink = await rewardDB.fetchRewardLinkForEvent(eventUuid);
+  const eventRewardLink = await rewardDB.fetchRewardLinkForEvent(eventUuid, "ton_society_csbt_ticket");
   if (
     eventRewardLink &&
     typeof eventRewardLink.data === "object" &&

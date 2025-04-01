@@ -19,7 +19,7 @@ export const callPridipieForOnOntonPayment = async (ordr: OrderRow, eventUuid: s
     )
   )
     return;
-
+  logger.log(`call callPridipieForOnOntonPayment`);
   // Build the payload for Pridipie
   const payloadForPridipie = {
     telegramId: String(ordr.user_id ?? 0),

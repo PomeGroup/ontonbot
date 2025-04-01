@@ -5,6 +5,7 @@ import { checkEventTicketToCheckIn } from "@/server/db/events";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import { getUserCacheKey } from "@/server/db/users";
+import { VisitorsRow } from "@/db/schema/visitors";
 
 const getVisitorCacheKey = (user_id: number, event_uuid: string) => `visitor:${user_id}:${event_uuid}`;
 
@@ -103,9 +104,9 @@ export const selectValidVisitorById = async (visitorId: number) => {
         between(
           visitors.last_visit,
           sql`TO_TIMESTAMP
-            (events.start_date)`,
+              (events.start_date)`,
           sql`TO_TIMESTAMP
-            (events.end_date)`
+              (events.end_date)`,
         ),
         eq(
           db
@@ -118,8 +119,8 @@ export const selectValidVisitorById = async (visitorId: number) => {
               and(
                 eq(userEventFields.user_id, visitors.user_id),
                 eq(userEventFields.completed, true),
-                eq(userEventFields.event_id, events.event_id)
-              )
+                eq(userEventFields.event_id, events.event_id),
+              ),
             ),
           db
             .select({
@@ -127,9 +128,9 @@ export const selectValidVisitorById = async (visitorId: number) => {
                   (*)`.mapWith(Number),
             })
             .from(eventFields)
-            .where(and(eq(eventFields.event_id, events.event_id)))
-        )
-      )
+            .where(and(eq(eventFields.event_id, events.event_id))),
+        ),
+      ),
     );
 };
 
@@ -138,7 +139,7 @@ export const selectVisitorsByEventUuid = async (
   limit: number,
   cursor: number = 0,
   dynamic_fields: boolean = true,
-  search?: string
+  search?: string,
 ) => {
   const eventTicketToCheckIn = await checkEventTicketToCheckIn(event_uuid);
 
@@ -193,12 +194,12 @@ export const selectVisitorsByEventUuid = async (
           eq(visitors.event_uuid, event_uuid),
           search
             ? or(
-                ilike(users.username, `%${search}%`),
-                ilike(users.first_name, `%${search}%`),
-                ilike(users.last_name, `%${search}%`)
-              )
-            : sql`true`
-        )
+              ilike(users.username, `%${search}%`),
+              ilike(users.first_name, `%${search}%`),
+              ilike(users.last_name, `%${search}%`),
+            )
+            : sql`true`,
+        ),
       )
       .orderBy(desc(visitors.created_at))
       .limit(limit)
@@ -278,12 +279,12 @@ export const selectVisitorsByEventUuid = async (
           eq(tickets.event_uuid, event_uuid),
           search
             ? or(
-                ilike(users.username, `%${search}%`),
-                ilike(users.first_name, `%${search}%`),
-                ilike(users.last_name, `%${search}%`)
-              )
-            : sql`true`
-        )
+              ilike(users.username, `%${search}%`),
+              ilike(users.first_name, `%${search}%`),
+              ilike(users.last_name, `%${search}%`),
+            )
+            : sql`true`,
+        ),
       )
       .limit(limit)
       .offset(cursor || 0);
@@ -391,12 +392,12 @@ export const selectVisitorsByEventUuid = async (
             eq(specialGuests.eventUuid, event_uuid), // Adding event_uuid condition
             search
               ? or(
-                  ilike(specialGuests.telegram, `%${search}%`),
-                  ilike(specialGuests.name, `%${search}%`),
-                  ilike(specialGuests.surname, `%${search}%`)
-                )
-              : sql`true`
-          )
+                ilike(specialGuests.telegram, `%${search}%`),
+                ilike(specialGuests.name, `%${search}%`),
+                ilike(specialGuests.surname, `%${search}%`),
+              )
+              : sql`true`,
+          ),
         )
         .execute();
 
@@ -463,11 +464,11 @@ export const updateVisitorLastVisit = async (id: number) => {
 };
 
 // Function to get visitor by user_id and event_uuid
-export const getVisitor = async (user_id: number, event_uuid: string) => {
+export const getVisitor = async (user_id: number, event_uuid: string): Promise<VisitorsRow | undefined> => {
   return await findVisitorByUserAndEvent(user_id, event_uuid);
 };
 // Function to add a new visitor
-export const addVisitor = async (user_id: number, event_uuid: string) => {
+export const addVisitor = async (user_id: number, event_uuid: string): Promise<VisitorsRow | undefined> => {
   try {
     const existingVisitor = await getVisitor(user_id, event_uuid);
     if (existingVisitor) {
@@ -492,13 +493,16 @@ export const selectVisitorsWithWalletAddress = async (event_uuid: string) => {
     .execute();
 };
 
-export const findVisitorByUserAndEventUuid = async (user_id: number, event_uuid: string) => {
+export const findVisitorByUserAndEventUuid = async (
+  user_id: number,
+  event_uuid: string,
+): Promise<VisitorsRow | undefined> => {
   const cacheKey = getVisitorCacheKey(user_id, event_uuid);
   const cachedVisitor = await redisTools.getCache(cacheKey);
 
   if (cachedVisitor) {
     // logger.log("Cache hit for:", cacheKey);
-    return JSON.parse(cachedVisitor);
+    return JSON.parse(cachedVisitor) as VisitorsRow;
   }
 
   const visitor = await db.query.visitors.findFirst({

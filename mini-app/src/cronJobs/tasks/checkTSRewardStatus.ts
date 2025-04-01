@@ -3,12 +3,13 @@ import pLimit from "p-limit";
 import { logger } from "@/server/utils/logger";
 import eventDB from "@/server/db/events";
 import { handleSingleRewardUpdate } from "@/cronJobs/helper/handleSingleRewardUpdate";
-import eventPaymentDB, { fetchPaymentInfoForCronjob } from "@/server/db/eventPayment.db";
+import eventPaymentDB from "@/server/db/eventPayment.db";
 import { EventPaymentSelectType } from "@/db/schema/eventPayment";
+import { sleep } from "@/utils";
 
 const EVENTS_BATCH_SIZE = 50;
 const REWARDS_BATCH_SIZE = 30;
-const MAX_CONCURRENT_API_CALLS = 10;
+const MAX_CONCURRENT_API_CALLS = 3;
 
 /**
  * Main function to sync Ton Society status in a large-scale manner,
@@ -72,6 +73,7 @@ export const syncTonSocietyStatusLargeScale = async (startDateCutoff: number = 0
                   "ton_society_csbt_ticket"
                 );
               }
+              await sleep(300);
             })
           );
           logger.log(`[Event ${event_id}] Processing ${rewardChunk.length} rewards [offset: ${rewardOffset}]`);
