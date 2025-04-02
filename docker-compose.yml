@@ -113,6 +113,7 @@ services:
     environment:
       <<: *common-env
     <<: *default-extra-hosts
+    network_mode: "host"
     entrypoint: /usr/bin/envsh/generate-caddyfile.sh
 
   minio:
@@ -577,6 +578,7 @@ networks:
   onton-network:
     driver: bridge
     name: ${NETWORK_NAME}
+
     ipam:
       config:
         - subnet: "${IP_RANGE_START}.0.0/${IP_RANGE_SUBNET}"
