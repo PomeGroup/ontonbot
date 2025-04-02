@@ -98,7 +98,12 @@ import {
   TokenCampaignUserCollections,
   TokenCampaignUserCollectionsInsert,
 } from "./schema/tokenCampaignUserCollections";
-import { tokenCampaignOrders, TokenCampaignOrders, TokenCampaignOrdersInsert } from "./schema/tokenCampaignOrders";
+import {
+  tokenCampaignOrders,
+  TokenCampaignOrders,
+  TokenCampaignOrdersInsert,
+  TokenCampaignOrdersStatus,
+} from "./schema/tokenCampaignOrders";
 import {
   tokenCampaignNftCollections,
   TokenCampaignNftCollections,
@@ -235,6 +240,7 @@ export type {
   TokenCampaignUserCollectionsInsert,
   TokenCampaignOrders,
   TokenCampaignOrdersInsert,
+  TokenCampaignOrdersStatus,
   TokenCampaignNftCollections,
   TokenCampaignNftCollectionsInsert,
   CampaignType,

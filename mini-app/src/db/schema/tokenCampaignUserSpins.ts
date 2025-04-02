@@ -12,6 +12,7 @@ export const tokenCampaignUserSpins = pgTable(
     spinPackageId: bigint("spin_package_id", { mode: "number" }),
     spinIndex: bigint("spin_index", { mode: "number" }),
     nftCollectionId: bigint("nft_collection_id", { mode: "number" }),
+
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),
     updatedBy: text("updated_by").default("system").notNull(),
@@ -38,5 +39,5 @@ export type TokenCampaignUserSpins = InferSelectModel<typeof tokenCampaignUserSp
  */
 export type TokenCampaignUserSpinsInsert = Omit<
   InferSelectModel<typeof tokenCampaignUserSpins>,
-  "id" | "createdAt" | "updatedAt"
+  "id" | "createdAt" | "updatedAt" | "updatedBy"
 >;

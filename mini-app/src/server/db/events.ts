@@ -403,19 +403,24 @@ export const getEventsWithFilters = async (
     const currentTime = Math.floor(Date.now() / 1000);
     conditions.push(
       and(
-        sql`${event_details_search_list.startDate} <= ${currentTime}`,
-        sql`${event_details_search_list.endDate} > ${currentTime}`
+        sql`${event_details_search_list.startDate} <=
+        ${currentTime}`,
+        sql`${event_details_search_list.endDate} >
+        ${currentTime}`
       )
     );
   } else if (filter?.eventStatus === "upcoming") {
     const currentTime = Math.floor(Date.now() / 1000);
-    conditions.push(sql`${event_details_search_list.startDate} > ${currentTime}`);
+    conditions.push(sql`${event_details_search_list.startDate} >
+    ${currentTime}`);
   } else if (filter?.eventStatus === "not_ended") {
     const currentTime = Math.floor(Date.now() / 1000);
-    conditions.push(sql`${event_details_search_list.endDate} > ${currentTime}`);
+    conditions.push(sql`${event_details_search_list.endDate} >
+    ${currentTime}`);
   } else if (filter?.eventStatus === "ended") {
     const currentTime = Math.floor(Date.now() / 1000);
-    conditions.push(sql`${event_details_search_list.endDate} <= ${currentTime}`);
+    conditions.push(sql`${event_details_search_list.endDate} <=
+    ${currentTime}`);
   }
 
   // Apply search filters
@@ -512,7 +517,7 @@ export const getEventsWithFilters = async (
     query = query.limit(limit).offset(cursor * (limit - 1));
   }
 
-  //logSQLQuery(query.toSQL().sql, query.toSQL().params);
+  //logSQSLQuery(query.toSQL().sql, query.toSQL().params);
   const eventsData = await query.execute();
 
   const queryResult = { eventsData, rowsCount } as const;

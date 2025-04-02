@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import {
   tokenCampaignSpinPackages,
@@ -130,12 +130,35 @@ export const updateSpinPackageByIdTx = async (
 };
 
 /**
+ * Fetch all *active* spin packages for a given campaign type.
+ * Returns an array (could be empty).
+ */
+export const getActiveSpinPackagesByCampaignType = async (
+  campaignType: CampaignType
+): Promise<TokenCampaignSpinPackages[]> => {
+  try {
+    const rows = await db
+      .select()
+      .from(tokenCampaignSpinPackages)
+      // Require both a matching campaignType *and* active = true
+      .where(and(eq(tokenCampaignSpinPackages.campaignType, campaignType), eq(tokenCampaignSpinPackages.active, true)))
+      .execute();
+
+    return rows;
+  } catch (error) {
+    logger.error("Error fetching active spin packages by campaignType:", error);
+    throw error;
+  }
+};
+
+/**
  * Export a single object containing all methods for convenience.
  */
 export const tokenCampaignSpinPackagesDB = {
   addSpinPackage,
   addSpinPackageTx,
   getSpinPackageById,
+  getActiveSpinPackagesByCampaignType,
   getSpinPackagesByCampaignType,
   updateSpinPackageById,
   updateSpinPackageByIdTx,

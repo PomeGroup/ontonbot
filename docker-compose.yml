@@ -111,6 +111,7 @@ services:
         ipv4_address: "${IP_CADDY}"
     environment:
       <<: *common-env
+    <<: *default-extra-hosts
     entrypoint: /usr/bin/envsh/generate-caddyfile.sh
 
   minio:

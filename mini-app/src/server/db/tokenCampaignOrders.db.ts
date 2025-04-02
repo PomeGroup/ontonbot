@@ -1,7 +1,12 @@
 import { db } from "@/db/db";
 import { eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
-import { tokenCampaignOrders, TokenCampaignOrders, TokenCampaignOrdersInsert } from "@/db/schema/tokenCampaignOrders";
+import {
+  tokenCampaignOrders,
+  TokenCampaignOrders,
+  TokenCampaignOrdersInsert,
+  TokenCampaignOrdersStatus,
+} from "@/db/schema/tokenCampaignOrders";
 import type { PgTransaction } from "drizzle-orm/pg-core/session";
 import { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 
@@ -29,7 +34,7 @@ export const addOrder = async (orderData: TokenCampaignOrdersInsert): Promise<To
  * Returns the inserted row or undefined if none.
  */
 export const addOrderTx = async (
-  tx: PgTransaction<PostgresJsQueryResultHKT>,
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   orderData: TokenCampaignOrdersInsert
 ): Promise<TokenCampaignOrders | undefined> => {
   const [inserted] = await tx.insert(tokenCampaignOrders).values(orderData).returning().execute();
@@ -56,7 +61,7 @@ export const getOrderById = async (id: number): Promise<TokenCampaignOrders | un
 };
 
 /**
- * Optionally fetch orders by userId.
+ * Fetch orders by userId.
  * Returns an array of TokenCampaignOrders (could be empty).
  */
 export const getOrdersByUserId = async (userId: number): Promise<TokenCampaignOrders[]> => {
@@ -103,7 +108,7 @@ export const updateOrderById = async (
  * Returns the updated row or undefined if none.
  */
 export const updateOrderByIdTx = async (
-  tx: PgTransaction<PostgresJsQueryResultHKT>,
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
   id: number,
   updateData: Partial<TokenCampaignOrdersInsert>
 ): Promise<TokenCampaignOrders | undefined> => {
@@ -122,8 +127,47 @@ export const updateOrderByIdTx = async (
 };
 
 /**
- * Export a single object with all the methods
- * for easy import and usage elsewhere.
+ * Update only the 'status' field of an order by ID.
+ * Uses the TokenCampaignOrdersStatus type from your schema.
+ * Returns the updated row or undefined if none.
+ */
+export const updateOrderStatus = async (
+  id: number,
+  newStatus: TokenCampaignOrdersStatus
+): Promise<TokenCampaignOrders | undefined> => {
+  try {
+    const [updated] = await db
+      .update(tokenCampaignOrders)
+      .set({ status: newStatus })
+      .where(eq(tokenCampaignOrders.id, id))
+      .returning()
+      .execute();
+
+    if (updated) {
+      logger.log(`Order #${id} status updated to ${newStatus}`);
+    }
+    return updated;
+  } catch (error) {
+    logger.error(`Error updating order #${id} status:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Example: fetch all orders in a certain status.
+ * (Optional, remove if not needed.)
+ */
+export const getOrdersByStatus = async (status: TokenCampaignOrdersStatus): Promise<TokenCampaignOrders[]> => {
+  try {
+    return await db.select().from(tokenCampaignOrders).where(eq(tokenCampaignOrders.status, status)).execute();
+  } catch (error) {
+    logger.error(`Error fetching orders by status (${status}):`, error);
+    throw error;
+  }
+};
+
+/**
+ * Single export object with all methods
  */
 export const tokenCampaignOrdersDB = {
   addOrder,
@@ -132,4 +176,6 @@ export const tokenCampaignOrdersDB = {
   getOrdersByUserId,
   updateOrderById,
   updateOrderByIdTx,
+  updateOrderStatus,
+  getOrdersByStatus, // optional
 };
