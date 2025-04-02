@@ -1,6 +1,7 @@
 x-common-extra-hosts: &default-extra-hosts
   extra_hosts:
     - "${MINI_APP_DOMAIN}:${IP_RANGE_BASE}"
+    - host.docker.internal: host-gateway
 
 x-common-env: &common-env
   ACME_AGREE: true
