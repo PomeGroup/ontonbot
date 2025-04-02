@@ -1,7 +1,7 @@
 x-common-extra-hosts: &default-extra-hosts
   extra_hosts:
     - "${MINI_APP_DOMAIN}:${IP_RANGE_BASE}"
-    - host.docker.internal: host-gateway
+    - "host.docker.internal:host-gateway"
 
 x-common-env: &common-env
   ACME_AGREE: true
@@ -107,9 +107,9 @@ services:
       - ./data/caddy_config:/config
       - ./devops/generate-caddyfile.sh:/usr/bin/envsh/generate-caddyfile.sh
       - ./devops/cert:/certs
-    networks:
-      onton-network:
-        ipv4_address: "${IP_CADDY}"
+    #    networks:
+    #      onton-network:
+    #        ipv4_address: "${IP_CADDY}"
     environment:
       <<: *common-env
     <<: *default-extra-hosts
