@@ -7,7 +7,7 @@ export const tokenCampaignNftCollections = pgTable(
   {
     id: serial("id").notNull().primaryKey(),
     campaignType: campaignTypes("campaign_type").notNull(),
-    probabilityWeight: bigint("probability_weight", { mode: "number" }).notNull(),
+    probabilityWeight: bigint("probability_weight", { mode: "number" }).notNull().default(1),
     name: varchar("name", { length: 255 }),
     description: varchar("description", { length: 500 }),
     image: varchar("image", { length: 255 }),

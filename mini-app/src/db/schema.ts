@@ -184,6 +184,7 @@ export {
   tournaments,
   games,
   gameLeaderboard,
+  campaignTypes,
   tokenCampaignUserSpins,
   tokenCampaignSpinPackages,
   tokenCampaignUserCollections,
