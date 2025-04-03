@@ -15,6 +15,8 @@ export const tokenCampaignNftCollections = pgTable(
     address: varchar("address", { length: 255 }),
     metadataUrl: varchar("metadata_url", { length: 255 }),
     itemMetaData: jsonb("item_meta_data"),
+    salesVolume: bigint("sales_volume", { mode: "number" }).default(0),
+    salesCount: bigint("sales_count", { mode: "number" }).default(0),
     lastRegisteredItemIndex: bigint("last_registered_item_index", { mode: "number" }),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),

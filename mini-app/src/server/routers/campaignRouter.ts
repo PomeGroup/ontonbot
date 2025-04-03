@@ -48,37 +48,39 @@ export const campaignRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { campaignType } = input;
       const userId = ctx.user?.user_id;
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "User is not logged in." });
+      }
 
-      // Run everything in a transaction
       return await db.transaction(async (tx) => {
-        // 1) Find an existing *unused* spin row for this user & package.
-        //    We'll lock the row with .forUpdate() so no race conditions occur.
+        // 1) Find an existing *unused* spin row
         const spinRow = await tokenCampaignUserSpinsDB.getUnusedSpinForUserTx(tx, userId);
-
         if (!spinRow) {
           throw new TRPCError({
             code: "NOT_FOUND",
-            message: `No unused spin found for userId ${userId} .`,
+            message: `No unused spin found for userId ${userId}.`,
           });
         }
 
-        // 2) Fetch eligible collections for the given campaignType
+        // 2) Fetch eligible collections for the campaign
         const allCollections = await tokenCampaignNftCollectionsDB.getCollectionsByCampaignType(campaignType);
         const itemsWithWeight = allCollections.map((c) => ({
           ...c,
           weight: c.probabilityWeight,
         }));
 
-        // 3) Pick an item using secure weighted random
+        // 3) Weighted random pick
         const selectedCollection = secureWeightedRandom(itemsWithWeight);
 
-        // 4) Assign that collection to the spin row
-        //    We just update the existing spin record to reflect the chosen NFT collection
+        // 4) Assign the chosen collection to the spin row
         await tokenCampaignUserSpinsDB.updateUserSpinByIdTx(tx, spinRow.id, {
           nftCollectionId: selectedCollection.id,
         });
 
-        // 5) Return the chosen collection
+        // 5) Increment salesCount (and optionally salesVolume) for this collection
+        await tokenCampaignNftCollectionsDB.incrementCollectionSalesTx(tx, selectedCollection.id);
+
+        // 6) Return the chosen collection
         return selectedCollection;
       });
     }),

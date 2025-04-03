@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import {
   tokenCampaignNftCollections,
@@ -264,6 +264,43 @@ async function revalidateCache(row: TokenCampaignNftCollections) {
   }
 }
 
+/**
+ * Increments the salesCount (and salesVolume if provided) for a collection,
+ * within the given transaction.
+ *
+ * @param tx - The Drizzle transaction context.
+ * @param collectionId - The ID of the collection to update.
+ * @param volumeIncrement - If > 0, we'll add it to salesVolume.
+ */
+export async function incrementCollectionSalesTx(
+  tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+  collectionId: number,
+  volumeIncrement = 0
+): Promise<void> {
+  try {
+    // Build the updates. We always increment salesCount by 1.
+    // If volumeIncrement > 0, we also increment salesVolume by volumeIncrement.
+    const updateData: Record<string, unknown> = {
+      salesCount: sql`${tokenCampaignNftCollections.salesCount} + 1`,
+    };
+
+    const result = await tx
+      .update(tokenCampaignNftCollections)
+      .set(updateData)
+      .where(eq(tokenCampaignNftCollections.id, collectionId))
+      .returning()
+      .execute();
+    const updatedRow = result[0];
+    if (updatedRow) {
+      await revalidateCache(updatedRow);
+    }
+    logger.log(`Collection #${collectionId} salesCount incremented (volume ${volumeIncrement}).`);
+  } catch (error) {
+    logger.error(`Error incrementing sales for collection #${collectionId}:`, error);
+    throw error;
+  }
+}
+
 /* ------------------------------------------------------------------
    Export a convenient object with all methods
 ------------------------------------------------------------------ */
@@ -275,4 +312,5 @@ export const tokenCampaignNftCollectionsDB = {
   addCollectionTx,
   updateCollectionById,
   updateCollectionByIdTx,
+  incrementCollectionSalesTx,
 };
