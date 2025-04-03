@@ -20,7 +20,7 @@ export const tokenCampaignOrders = pgTable(
       .notNull()
       .references(() => users.user_id),
     createdAt: timestamp("created_at").defaultNow(),
-    updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),
+    updatedAt: timestamp("updated_at").$onUpdate(() => new Date()),
     updatedBy: text("updated_by").default("system").notNull(),
   },
   // indexes
@@ -35,7 +35,7 @@ export const tokenCampaignOrders = pgTable(
  * SELECT type
  * Represents the shape of a row *selected* from the table.
  */
-export type TokenCampaignOrders = InferSelectModel<typeof tokenCampaignOrders>;
+export type TokenCampaignOrders = Omit<InferSelectModel<typeof tokenCampaignOrders>, "createdAt" | "updatedAt">;
 
 /**
  * INSERT type

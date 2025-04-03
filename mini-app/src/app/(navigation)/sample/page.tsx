@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { trpc } from "@/app/_trpc/client"; // your TRPC client
-import { CampaignType, campaignTypes, paymentTypes } from "@/db/schema";
+import { CampaignType, campaignTypes, paymentTypes, TokenCampaignOrders } from "@/db/schema";
 import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
 import { toast } from "sonner"; // or any toast library
 import { useUserStore } from "@/context/store/user.store"; // adjust path
@@ -11,6 +11,8 @@ import tonIcon from "@/components/icons/ton.svg";
 import OntonDialog from "@/components/OntonDialog"; // from your snippet
 import { Card } from "konsta/react";
 import Typography from "@/components/Typography";
+import PaymentFlow from "@/app/(navigation)/sample/PaymentFlow";
+import { useConfig } from "@/context/ConfigContext";
 
 // ====================== //
 //   CONNECT WALLET CARD  //
@@ -129,14 +131,25 @@ export default function CampaignTestPage() {
 
   // 1) ADD ORDER
   const [orderSpinPackageId, setOrderSpinPackageId] = useState<number>(1);
-  const [orderWalletAddress, setOrderWalletAddress] = useState<string>("");
-  const addOrderMutation = trpc.campaign.addOrder.useMutation();
+
+  // We'll store the last created order to show a payment button
+  const [createdOrder, setCreatedOrder] = useState<undefined | TokenCampaignOrders>(undefined);
+  const config = useConfig();
+  const ontonWalletAddress = config?.ONTON_WALLET_ADDRESS || "UQDIh_j4EZPAouFr4MJOZFogV8ux2zSdED36KQ7ODUp-um9H";
+
+  const addOrderMutation = trpc.campaign.addOrder.useMutation({
+    onSuccess(data) {
+      if (!data) return;
+      setCreatedOrder(data);
+      toast.success(`Order #${data.id} created! Now proceed to payment.`);
+    },
+  });
 
   function handleAddOrder(e: React.FormEvent) {
     e.preventDefault();
     addOrderMutation.mutate({
       spinPackageId: orderSpinPackageId,
-      walletAddress: orderWalletAddress,
+      walletAddress: ontonWalletAddress,
     });
   }
 
@@ -234,29 +247,41 @@ export default function CampaignTestPage() {
             </label>
           </div>
 
-          <div>
-            <label className="block mb-1 font-medium">
-              Wallet Address:
-              <input
-                type="text"
-                value={orderWalletAddress}
-                onChange={(e) => setOrderWalletAddress(e.target.value)}
-                className="block w-full mt-1 p-2 border border-gray-300 rounded"
-              />
-            </label>
-          </div>
+          <div></div>
 
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            disabled={addOrderMutation.isLoading}
           >
-            Add Order
+            {addOrderMutation.isLoading ? "Placing order..." : "Add Order"}
           </button>
         </form>
-        {addOrderMutation.isLoading && <p className="mt-2 text-gray-600">Adding order...</p>}
-        {addOrderMutation.data && <p className="mt-2 text-green-600">Order created! ID: {addOrderMutation.data.id}</p>}
+
         {addOrderMutation.error && <p className="mt-2 text-red-600">Error: {addOrderMutation.error.message}</p>}
       </section>
+
+      {/* PaymentFlow for newly created order */}
+      {createdOrder && createdOrder?.wallet_address && (
+        <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
+          <h2 className="text-lg font-semibold mb-2">Pay for Order #{createdOrder.id}</h2>
+          <p className="text-gray-600 mb-2">
+            This order costs <strong>{createdOrder.finalPrice} TON</strong>.
+          </p>
+          <PaymentFlow
+            orderId={createdOrder.id}
+            walletAddress={createdOrder.wallet_address}
+            finalPrice={parseFloat(createdOrder.finalPrice)}
+            onSuccess={() => {
+              toast.success("Order Payment Confirmed!");
+              // Do something else, e.g. refresh or show new status
+            }}
+            onCancel={() => {
+              toast.error("User canceled or transaction failed.");
+            }}
+          />
+        </section>
+      )}
 
       {/* 2) GET ORDER */}
       <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
