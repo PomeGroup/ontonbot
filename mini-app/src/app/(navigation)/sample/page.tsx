@@ -1,9 +1,128 @@
 "use client";
-import React, { useState } from "react";
-import { trpc } from "@/app/_trpc/client"; // Adjust to your TRPC client setup
+import React, { useState, useEffect } from "react";
+import { trpc } from "@/app/_trpc/client"; // your TRPC client
 import { CampaignType, campaignTypes, paymentTypes } from "@/db/schema";
+import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
+import { toast } from "sonner"; // or any toast library
+import { useUserStore } from "@/context/store/user.store"; // adjust path
+import { Button } from "konsta/react";
+import Image from "next/image";
+import tonIcon from "@/components/icons/ton.svg";
+import OntonDialog from "@/components/OntonDialog"; // from your snippet
+import { Card } from "konsta/react";
+import Typography from "@/components/Typography";
 
-// Example usage: campaignTypes.enumValues -> ["onion1", ...], etc.
+// ====================== //
+//   CONNECT WALLET CARD  //
+// ====================== //
+function ConnectWalletCard() {
+  const [isOpen, setOpen] = useState(false);
+
+  const hasWallet = !!useTonAddress();
+
+  return (
+    <Card className="w-full !mx-0 p-4 mb-8 border border-gray-300 rounded shadow-sm">
+      <Typography
+        bold
+        variant="headline"
+        className="mb-4"
+      >
+        Your Wallet
+      </Typography>
+
+      <ConfirmConnectDialog
+        open={isOpen}
+        onClose={() => setOpen(false)}
+      />
+
+      {hasWallet ? (
+        <TonConnectButton className="mx-auto" />
+      ) : (
+        <Button
+          className="py-4 rounded-[10px] w-full bg-blue-600 text-white hover:bg-blue-700"
+          onClick={() => setOpen(true)}
+        >
+          <Image
+            className="mr-2 inline-block"
+            src={tonIcon}
+            alt=""
+            width={15}
+            height={15}
+          />
+          Connect your Wallet
+        </Button>
+      )}
+    </Card>
+  );
+}
+
+// =========================== //
+//  CONFIRM CONNECT DIALOG    //
+// =========================== //
+function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const walletModal = useTonConnectModal();
+  const tonWalletAddress = useTonAddress();
+  const { user } = useUserStore();
+  const addWalletMutation = trpc.users.addWallet.useMutation({
+    onSuccess: () => {
+      // any invalidations if needed
+      onClose();
+    },
+  });
+
+  useEffect(() => {
+    if (!user?.user_id) return;
+    if (tonWalletAddress) {
+      // user has connected wallet or changed wallet
+      onClose();
+      if (!user?.wallet_address) {
+        // If user doesn't have a wallet in DB, update
+        toast.success("Your wallet is now connected");
+        addWalletMutation.mutate({
+          wallet: tonWalletAddress,
+        });
+      }
+    }
+  }, [user, tonWalletAddress, addWalletMutation, onClose]);
+
+  const handleConnect = () => {
+    walletModal.open();
+  };
+
+  return (
+    <OntonDialog
+      open={open}
+      onClose={onClose}
+      title="Connect your wallet"
+    >
+      <Typography
+        variant="body"
+        className="text-center mb-6 font-normal"
+      >
+        <b>You are becoming an ONTON organizer.</b>
+        <br />
+        To create a channel and use special event publishing features, you need to pay 10 TON
+      </Typography>
+      <Button
+        className="py-4 rounded-[10px] mb-3 bg-blue-600 text-white w-full"
+        onClick={handleConnect}
+      >
+        Connect Wallet
+      </Button>
+      <Button
+        className="py-4 rounded-[10px] w-full"
+        outline
+        onClick={onClose}
+      >
+        Maybe Later
+      </Button>
+    </OntonDialog>
+  );
+}
+
+// ====================== //
+//   MAIN CAMPAIGN PAGE   //
+// ====================== //
 export default function CampaignTestPage() {
   const campaignTypeEnum = campaignTypes.enumValues;
   const paymentTypesEnum = paymentTypes.enumValues;
@@ -11,7 +130,6 @@ export default function CampaignTestPage() {
   // 1) ADD ORDER
   const [orderSpinPackageId, setOrderSpinPackageId] = useState<number>(1);
   const [orderWalletAddress, setOrderWalletAddress] = useState<string>("");
-
   const addOrderMutation = trpc.campaign.addOrder.useMutation();
 
   function handleAddOrder(e: React.FormEvent) {
@@ -54,7 +172,7 @@ export default function CampaignTestPage() {
     });
   }
 
-  // 5) GET USER COLLECTIONS RESULT
+  // 5) GET USER COLLECTIONS
   const [collectionsCampaignType, setCollectionsCampaignType] = useState<string>(campaignTypeEnum[0]);
   const getUserCollectionsQuery = trpc.campaign.getUserCollectionsResult.useQuery(
     { campaignType: collectionsCampaignType as any },
@@ -66,7 +184,7 @@ export default function CampaignTestPage() {
     getUserCollectionsQuery.refetch();
   }
 
-  // 6) GET COLLECTIONS
+  // 6) GET COLLECTIONS BY TYPE
   const [collectionsByType, setCollectionsByType] = useState<string>(campaignTypeEnum[0]);
   const getCollectionsByTypeQuery = trpc.campaign.getCollectionsByCampaignType.useQuery(
     { campaignType: collectionsByType as any },
@@ -93,6 +211,9 @@ export default function CampaignTestPage() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Campaign Test Page</h1>
+
+      {/* Connect Wallet Section */}
+      <ConnectWalletCard />
 
       {/* 1) ADD ORDER FORM */}
       <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
@@ -137,7 +258,7 @@ export default function CampaignTestPage() {
         {addOrderMutation.error && <p className="mt-2 text-red-600">Error: {addOrderMutation.error.message}</p>}
       </section>
 
-      {/* 2) GET ORDER FORM */}
+      {/* 2) GET ORDER */}
       <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
         <h2 className="text-lg font-semibold mb-2">Get Order</h2>
         <form
@@ -245,7 +366,6 @@ export default function CampaignTestPage() {
               </select>
             </label>
           </div>
-
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -311,7 +431,7 @@ export default function CampaignTestPage() {
         )}
       </section>
 
-      {/* 6) GET COLLECTIONS (for demonstration of getCollectionsByCampaignType) */}
+      {/* 6) GET COLLECTIONS BY CAMPAIGN TYPE */}
       <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
         <h2 className="text-lg font-semibold mb-2">Get Collections By Campaign Type</h2>
         <form
@@ -381,7 +501,6 @@ export default function CampaignTestPage() {
               />
             </label>
           </div>
-
           <button
             type="submit"
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -389,7 +508,6 @@ export default function CampaignTestPage() {
             Get Spin Stats
           </button>
         </form>
-
         {getUserSpinStatsQuery.isFetching && <p className="mt-2 text-gray-600">Loading spin stats...</p>}
         {getUserSpinStatsQuery.data && (
           <div className="mt-2 text-gray-800">
