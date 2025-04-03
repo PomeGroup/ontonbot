@@ -11,14 +11,19 @@ import promotionCodeIcon from "./promotion-code.svg";
 import CustomButton from "@/app/_components/Button/CustomButton";
 import CheckUserInList from "@/app/_components/CheckUserInList";
 import EventCard from "@/app/_components/EventCard/EventCard";
+import { trpc } from "@/app/_trpc/client";
 import ActionCard from "@/components/ActionCard";
 import { ALLOWED_USER_TO_TEST } from "@/constants";
 import { useUserStore } from "@/context/store/user.store";
 import { useGetEvent } from "@/hooks/events.hooks";
+import useWebApp from "@/hooks/useWebApp";
 import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
+import { wait } from "@/lib/utils";
 import { useSectionStore } from "@/zustand/useSectionStore";
+import { Pen, QrCode } from "lucide-react";
 
 export default function ManageIndexPage() {
+  const webApp = useWebApp();
   // 1) We get eventData from the layout's context:
   const { hash } = useParams() as { hash?: string };
   const { data: eventData, isLoading, isError } = useGetEvent(hash);
@@ -27,6 +32,7 @@ export default function ManageIndexPage() {
   const router = useRouter();
 
   const { user } = useUserStore();
+  const requestSendQRCode = trpc.telegramInteractions.requestSendQRCode.useMutation();
 
   if (isError) {
     return <div>something went wrong</div>;
@@ -70,14 +76,33 @@ export default function ManageIndexPage() {
           noClick
         />
         {canEditEvent && (
-          <div className="mx-3 mt-3">
+          <div className="flex gap-3 mx-3 mt-3">
+            <CustomButton
+              onClick={async () => {
+                if (eventData.event_uuid) {
+                  requestSendQRCode.mutateAsync({
+                    url: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
+                    hub: eventData.society_hub?.name || undefined,
+                    event_uuid: eventData.event_uuid,
+                  });
+                  webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`);
+                  webApp?.HapticFeedback?.impactOccurred("medium");
+                  await wait(200);
+                  webApp?.close();
+                }
+              }}
+              variant="outline"
+              icon={<QrCode />}
+            >
+              Get QR Code
+            </CustomButton>
             <CustomButton
               onClick={() => {
                 setSection("event_setup_form_general_step");
                 router.push(`/events/${eventData.event_uuid}/manage/edit`);
               }}
               variant="outline"
-              size="md"
+              icon={<Pen />}
             >
               Edit Event Info
             </CustomButton>
