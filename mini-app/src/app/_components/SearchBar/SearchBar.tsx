@@ -74,7 +74,7 @@ function SearchBar() {
       filter: {
         participationType: allParticipationTypes,
         society_hub_id: hubs.map((h) => h.id).map(Number),
-        eventStatus: "not_ended" as const,
+        eventStatus: "all" as const,
       },
     }),
     [hubs]
