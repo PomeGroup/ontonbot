@@ -20,7 +20,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
 import { wait } from "@/lib/utils";
 import { useSectionStore } from "@/zustand/useSectionStore";
-import { Pen, QrCode } from "lucide-react";
+import { Pen, QrCode, Scan } from "lucide-react";
 
 export default function ManageIndexPage() {
   const webApp = useWebApp();
@@ -77,25 +77,30 @@ export default function ManageIndexPage() {
         />
         {canEditEvent && (
           <div className="flex gap-3 mx-3 mt-3">
-            <CustomButton
-              onClick={async () => {
-                if (eventData.event_uuid) {
-                  requestSendQRCode.mutateAsync({
-                    url: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
-                    hub: eventData.society_hub?.name || undefined,
-                    event_uuid: eventData.event_uuid,
-                  });
-                  webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`);
-                  webApp?.HapticFeedback?.impactOccurred("medium");
-                  await wait(200);
-                  webApp?.close();
-                }
-              }}
-              variant="outline"
-              icon={<QrCode />}
-            >
-              Get QR Code
-            </CustomButton>
+            {eventData.participationType === "online" ? (
+              <CustomButton
+                onClick={async () => {
+                  if (eventData.event_uuid) {
+                    requestSendQRCode.mutateAsync({
+                      url: `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=${eventData.event_uuid}`,
+                      hub: eventData.society_hub?.name || undefined,
+                      event_uuid: eventData.event_uuid,
+                    });
+                    webApp?.openTelegramLink(`https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}`);
+                    webApp?.HapticFeedback?.impactOccurred("medium");
+                    await wait(200);
+                    webApp?.close();
+                  }
+                }}
+                variant="outline"
+                icon={<QrCode />}
+              >
+                Get QR Code
+              </CustomButton>
+            ) : (
+              // scan qr code
+              <CustomButton icon={<Scan />}>Scan QR Code</CustomButton>
+            )}
             <CustomButton
               onClick={() => {
                 setSection("event_setup_form_general_step");
