@@ -1,5 +1,4 @@
-import { useState, useRef, useMemo } from "react";
-import LoadableImage from "@/components/LoadableImage";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperType } from "swiper";
 
@@ -8,8 +7,16 @@ import { CountdownTimer } from "../CountdownTimer";
 import { generateWeightedArray } from "./RaffleCarousel.utils";
 import { RaffleCarouselItem } from "./RaffleCarousel.types";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { cn } from "@/utils";
 
-export const RaffleCarousel = () => {
+interface Props {
+    onInsufficientBalance: () => void;
+    onSpinStart: () => void;
+    onSpinEnd: (result: RaffleCarouselItem) => void;
+}
+
+export const RaffleCarousel = ({ onInsufficientBalance, onSpinStart, onSpinEnd }: Props) => {
     const swiperRef = useRef<SwiperType>();
     const [isSpinning, setIsSpinning] = useState(false);
     const [result, setResult] = useState<RaffleCarouselItem | null>(null);
@@ -43,6 +50,8 @@ export const RaffleCarousel = () => {
     const spinRaffle = async () => {
         if (!swiperRef.current || isSpinning) return;
 
+        onSpinStart();
+
         setIsSpinning(true);
         setResult(null);
 
@@ -51,7 +60,7 @@ export const RaffleCarousel = () => {
 
         try {
             // Fast spinning phase
-            const fastSpinDuration = 200;
+            const fastSpinDuration = 50;
             swiperRef.current.params.speed = fastSpinDuration;
 
             for (let i = 0; i < Math.floor(slides.length * 0.7); i++) {
@@ -73,7 +82,7 @@ export const RaffleCarousel = () => {
             await waitForTransition();
 
             setResult(targetValue);
-            console.log(slides, targetIndex, targetValue, swiperRef.current);
+            onSpinEnd(targetValue);
         } catch (error) {
             console.error("Error during spin:", error);
             // Fallback to setting result if transition fails
@@ -84,6 +93,15 @@ export const RaffleCarousel = () => {
     };
 
     const remainingSpins = 0;
+
+    const handleButtonClick = () => {
+        if (remainingSpins > 0) {
+            spinRaffle();
+        } else {
+            onInsufficientBalance()
+        }
+    }
+
 
     return (
         <div className="flex flex-col gap-4 relative z-10 w-full max-w-full overflow-hidden">
@@ -97,7 +115,9 @@ export const RaffleCarousel = () => {
                     centeredSlides={true}
                     spaceBetween={12}
                     speed={200}
-                    initialSlide={2}
+                    initialSlide={1}
+                    draggable={false}
+                    allowTouchMove={false}
                 >
                     {slides.map((item, index) => (
                         <SwiperSlide
@@ -105,12 +125,12 @@ export const RaffleCarousel = () => {
                             data-id={item.id}
                         >
                             <div
-                                className={`
-                flex flex-col items-center justify-center gap-3 transform transition-all duration-300
-                ${activeIndex === index ? "scale-100" : "scale-75"}
-              `}
+                                className={cn(
+                                    "flex flex-col items-center justify-center gap-3 transform transition-all duration-300",
+                                    activeIndex === index ? "scale-100" : "scale-75"
+                                )}
                             >
-                                <LoadableImage
+                                <Image
                                     width={240}
                                     height={240}
                                     src={item.image}
@@ -145,11 +165,18 @@ export const RaffleCarousel = () => {
                         variant="subheadline1"
                         className="flex gap-1 justify-center items-end font-semibold"
                     >
-                        You have <Typography variant="headline" className="text-gold-light">{remainingSpins}</Typography> spin{remainingSpins > 1 && "s"} left
+                        You have{" "}
+                        <Typography
+                            variant="headline"
+                            className="text-gold-light"
+                        >
+                            {remainingSpins}
+                        </Typography>{" "}
+                        spins left
                     </Typography>
 
                     <Button
-                        onClick={spinRaffle}
+                        onClick={handleButtonClick}
                         type="button"
                         size="lg"
                         className="h-13 rounded-2lg flex items-center justify-center bg-orange hover:bg-orange group relative overflow-hidden"

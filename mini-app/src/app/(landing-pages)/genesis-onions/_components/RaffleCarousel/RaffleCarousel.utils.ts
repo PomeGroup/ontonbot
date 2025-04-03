@@ -1,7 +1,6 @@
 import { ImageBronze, ImageGolden, ImageSilver } from "../../GenesisOnions.constants";
 import { RaffleCarouselItem } from "./RaffleCarousel.types";
 
-
 export const generateWeightedArray = (): RaffleCarouselItem[] => {
     const items: RaffleCarouselItem[] = [];
     const totalItems = 30; // Total number of items
@@ -21,10 +20,25 @@ export const generateWeightedArray = (): RaffleCarouselItem[] => {
         }));
     };
 
-    items.push(...createItems(goldenCount, ImageGolden.src, "Gold @NION"));
-    items.push(...createItems(silverCount, ImageSilver.src, "Silver @NION"));
-    items.push(...createItems(bronzeCount, ImageBronze.src, "Bronze @NION"));
+    // Ensure first three items are in the required order
+    const firstThreeItems: RaffleCarouselItem[] = [
+        { id: id++, image: ImageBronze.src, label: "Bronze @NION" },
+        { id: id++, image: ImageGolden.src, label: "Gold @NION" },
+        { id: id++, image: ImageSilver.src, label: "Silver @NION" }
+    ];
 
-    // Shuffle array
-    return items.sort(() => Math.random() - 0.5);
+    // Generate remaining items
+    const remainingBronze = createItems(bronzeCount - 1, ImageBronze.src, "Bronze @NION");
+    const remainingGold = createItems(goldenCount - 1, ImageGolden.src, "Gold @NION");
+    const remainingSilver = createItems(silverCount - 1, ImageSilver.src, "Silver @NION");
+
+    const remainingItems = [...remainingBronze, ...remainingGold, ...remainingSilver];
+
+    // Shuffle remaining items
+    for (let i = remainingItems.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [remainingItems[i], remainingItems[j]] = [remainingItems[j], remainingItems[i]];
+    }
+
+    return [...firstThreeItems, ...remainingItems];
 };

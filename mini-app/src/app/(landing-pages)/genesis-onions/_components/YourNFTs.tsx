@@ -1,8 +1,9 @@
 import Typography from "@/components/Typography";
 import { InfoBox } from "./InfoBox";
 import LoadableImage from "@/components/LoadableImage";
-import { ImageBronze, ImageGolden, ImageSilver } from "../GenesisOnions.constants";
+import { Gold, Silver, Bronze } from "../GenesisOnions.constants";
 import { useMemo } from "react";
+import Image from 'next/image'
 
 export const YourNFTs = () => {
     const items = useMemo(() => {
@@ -14,18 +15,18 @@ export const YourNFTs = () => {
             },
             {
                 count: 0,
-                label: "Gold",
-                image: ImageGolden.src
+                label: Gold.name,
+                image: Gold.image.src
             },
             {
                 count: 0,
-                label: "Silver",
-                image: ImageSilver.src
+                label: Silver.name,
+                image: Silver.image.src
             },
             {
                 count: 0,
-                label: "Bronze",
-                image: ImageBronze.src
+                label: Bronze.name,
+                image: Bronze.image.src
             }
         ]
     }, [])
@@ -41,7 +42,7 @@ export const YourNFTs = () => {
                 {items.map(item => (<InfoBox className="px-2 py-1 flex gap-2 flex-1 justify-between items-center" key={item.label}>
                     {
                         typeof item.image === "string" ?
-                            <LoadableImage src={item.image} className="rounded-md" width={32} height={32} />
+                            <Image src={item.image} className="rounded-md" width={32} height={32} />
                             : item.image
                     }
 
@@ -55,7 +56,13 @@ export const YourNFTs = () => {
                 </InfoBox>))}
             </div>
 
-            {nftsCount === 0 && <InfoBox>You haven’t earned any NFTs yet! Get spin chances or invite friends to earn GOLDs faster.</InfoBox>}
+            <InfoBox>
+                {
+                    nftsCount === 0 ?
+                        'You haven’t earned any NFTs yet! Get spin chances or invite friends to earn GOLDs faster.'
+                        : 'Spin or invite friends to claim more Gold, Silver, and Bronze ONIONs now!'
+                }
+            </InfoBox>
         </div>
     );
 };

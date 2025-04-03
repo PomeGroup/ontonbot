@@ -4,7 +4,7 @@ import Typography from "@/components/Typography";
 
 const orbitron = Orbitron({ subsets: ["latin"], weight: "500" });
 
-type CountdownProps = {
+interface CountdownProps {
     targetDate: string; // Format: YYYY-MM-DDTHH:mm:ss (ISO format)
 };
 
