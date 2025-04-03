@@ -14,7 +14,7 @@ export const tokenCampaignSpinPackages = pgTable(
     active: boolean("active").notNull().default(true),
     soldItemsCount: bigint("sold_items_count", { mode: "number" }).notNull().default(0),
     autoActivationDate: bigint("auto_activation_date", { mode: "number" }),
-    price: numeric("price", { precision: 10, scale: 2 }),
+    price: numeric("price", { precision: 10, scale: 2 }).notNull().default("100.00"),
     currency: paymentTypes("currency").notNull(),
     autoDeactivationDate: bigint("auto_deactivation_date", { mode: "number" }),
     spinCount: integer("spin_count").notNull().default(0),

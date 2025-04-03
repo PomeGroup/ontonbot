@@ -233,20 +233,13 @@ export const updateUserSpinByIdTx = async (
  */
 export const getUnusedSpinForUserTx = async (
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  userId: number,
-  spinPackageId: number
+  userId: number
 ): Promise<TokenCampaignUserSpins | undefined> => {
   try {
     const [spinRow] = await tx
       .select()
       .from(tokenCampaignUserSpins)
-      .where(
-        and(
-          eq(tokenCampaignUserSpins.userId, userId),
-          eq(tokenCampaignUserSpins.spinPackageId, spinPackageId),
-          isNull(tokenCampaignUserSpins.nftCollectionId)
-        )
-      )
+      .where(and(eq(tokenCampaignUserSpins.userId, userId), isNull(tokenCampaignUserSpins.nftCollectionId)))
       .limit(1)
       .execute();
 
@@ -382,6 +375,41 @@ export async function getAllUsersCollectionsCount(): Promise<AllUsersCollections
   }
 }
 
+interface SpinStats {
+  used: number;
+  remaining: number;
+}
+
+export const getUserSpinStats = async (userId: number, spinPackageId?: number): Promise<SpinStats> => {
+  try {
+    // Build the WHERE conditions
+    const conditions = [eq(tokenCampaignUserSpins.userId, userId)];
+    if (spinPackageId) {
+      conditions.push(eq(tokenCampaignUserSpins.spinPackageId, spinPackageId));
+    }
+
+    // Single query that sums up used vs. remaining
+    const [row] = await db
+      .select({
+        used: sql<number>`SUM
+            (CASE WHEN ${tokenCampaignUserSpins.nftCollectionId} IS NOT NULL THEN 1 ELSE 0 END)`.mapWith(Number),
+        remaining: sql<number>`SUM
+            (CASE WHEN ${tokenCampaignUserSpins.nftCollectionId} IS NULL THEN 1 ELSE 0 END)`.mapWith(Number),
+      })
+      .from(tokenCampaignUserSpins)
+      .where(and(...conditions))
+      .execute();
+
+    return {
+      used: row?.used ?? 0,
+      remaining: row?.remaining ?? 0,
+    };
+  } catch (error) {
+    logger.error("Error fetching user spin stats:", error);
+    throw error;
+  }
+};
+
 /* ------------------------------------------------------------------
    Export a single object with all the methods
 ------------------------------------------------------------------ */
@@ -397,6 +425,7 @@ export const tokenCampaignUserSpinsDB = {
   getUserSpinsByNftCollectionId,
   getAllCollectionsWithUserCount,
   getAllUsersCollectionsCount,
+  getUserSpinStats,
   updateUserSpinById,
   updateUserSpinByIdTx,
 };

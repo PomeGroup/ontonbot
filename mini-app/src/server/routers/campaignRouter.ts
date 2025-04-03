@@ -1,6 +1,6 @@
 import { router, initDataProtectedProcedure } from "../trpc";
 import { z } from "zod";
-import { campaignTypes, paymentTypes } from "@/db/enum";
+import { campaignTypes } from "@/db/enum";
 import { tokenCampaignNftCollectionsDB } from "@/server/db/tokenCampaignNftCollections.db";
 import { tokenCampaignSpinPackagesDB } from "@/server/db/tokenCampaignSpinPackages.db";
 import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
@@ -8,6 +8,7 @@ import { tokenCampaignUserSpinsDB } from "@/server/db/tokenCampaignUserSpins.db"
 import { db } from "@/db/db";
 import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
 import { TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
+import { TRPCError } from "@trpc/server";
 
 export const campaignRouter = router({
   /**
@@ -42,24 +43,23 @@ export const campaignRouter = router({
     .input(
       z.object({
         campaignType: z.enum(campaignTypes.enumValues),
-        spinPackageId: z.number().int().positive(),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { campaignType, spinPackageId } = input;
+      const { campaignType } = input;
       const userId = ctx.user?.user_id;
-      if (!userId) {
-        throw new Error("User not logged in or missing user ID.");
-      }
 
       // Run everything in a transaction
       return await db.transaction(async (tx) => {
         // 1) Find an existing *unused* spin row for this user & package.
         //    We'll lock the row with .forUpdate() so no race conditions occur.
-        const spinRow = await tokenCampaignUserSpinsDB.getUnusedSpinForUserTx(tx, userId, spinPackageId);
+        const spinRow = await tokenCampaignUserSpinsDB.getUnusedSpinForUserTx(tx, userId);
 
         if (!spinRow) {
-          throw new Error("No remaining spins for this user in this package.");
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `No unused spin found for userId ${userId} .`,
+          });
         }
 
         // 2) Fetch eligible collections for the given campaignType
@@ -90,11 +90,7 @@ export const campaignRouter = router({
     .input(
       z.object({
         spinPackageId: z.number(),
-        finalPrice: z.number(),
-        defaultPrice: z.number(),
         walletAddress: z.string().optional().default(""),
-        // Ensure the currency input matches your allowed payment types (ton, etc.)
-        currency: z.enum(paymentTypes.enumValues),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -104,18 +100,24 @@ export const campaignRouter = router({
         throw new Error("User not logged in or missing user ID.");
       }
 
-      const { spinPackageId, finalPrice, defaultPrice, walletAddress, currency } = input;
-
+      const { spinPackageId, walletAddress } = input;
+      const spinPackage = await tokenCampaignSpinPackagesDB.getSpinPackageById(spinPackageId);
+      if (!spinPackage) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Spin package with ID ${spinPackageId} not found.`,
+        });
+      }
       // Build the TokenCampaignOrdersInsert object
       // (some columns have defaults in DB, e.g. status="new")
       const orderData = {
         userId,
         spinPackageId,
-        finalPrice: finalPrice.toString(),
-        defaultPrice: defaultPrice.toString(),
+        finalPrice: spinPackage.price.toString(),
+        defaultPrice: spinPackage.price.toString(),
         wallet_address: walletAddress,
         status: "new" as TokenCampaignOrdersStatus,
-        currency,
+        currency: spinPackage.currency,
       };
 
       // Insert into the DB
@@ -171,5 +173,25 @@ export const campaignRouter = router({
       // If you only want certain campaign, pass input.campaignType
       const result = await tokenCampaignUserSpinsDB.getAllCollectionsWithUserCount(userId, input.campaignType);
       return result;
+    }),
+
+  /**
+   * 4) Get how many spins a user has used vs. remaining.
+   * Optionally filter by a specific spinPackageId.
+   */
+  getUserSpinStats: initDataProtectedProcedure
+    .input(
+      z.object({
+        spinPackageId: z.number().optional(),
+      })
+    )
+    .query(async ({ input, ctx }) => {
+      const userId = ctx.user?.user_id;
+
+      const { spinPackageId } = input;
+
+      // Fetch aggregator data from DB
+      const stats = await tokenCampaignUserSpinsDB.getUserSpinStats(userId, spinPackageId);
+      return stats; // { used, remaining }
     }),
 });
