@@ -221,6 +221,20 @@ export default function CampaignTestPage() {
     getUserSpinStatsQuery.refetch();
   }
 
+  // 8) CHECK USER ELIGIBILITY
+  // This calls `checkUserEligible` which uses ctx.user?.user_id on the backend.
+  const {
+    data: eligibilityData,
+    isFetching: isFetchingEligibility,
+    error: eligibilityError,
+    refetch: refetchEligibility,
+  } = trpc.campaign.checkUserEligible.useQuery(undefined, { enabled: false });
+
+  function handleCheckEligibility(e: React.FormEvent) {
+    e.preventDefault();
+    refetchEligibility();
+  }
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Campaign Test Page</h1>
@@ -541,6 +555,34 @@ export default function CampaignTestPage() {
           </div>
         )}
         {getUserSpinStatsQuery.error && <p className="mt-2 text-red-600">Error: {getUserSpinStatsQuery.error.message}</p>}
+      </section>
+
+      {/* 8) CHECK USER ELIGIBILITY */}
+      <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
+        <h2 className="text-lg font-semibold mb-2">Check User Eligibility</h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            refetchEligibility();
+          }}
+          className="space-y-4"
+        >
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            disabled={isFetchingEligibility}
+          >
+            {isFetchingEligibility ? "Checking..." : "Check My Eligibility"}
+          </button>
+        </form>
+
+        {/* Show the result */}
+        {eligibilityError && <p className="mt-2 text-red-600">Error: {eligibilityError.message}</p>}
+        {eligibilityData && (
+          <p className="mt-2 text-gray-800">
+            Eligible? <strong>{eligibilityData.eligible ? "Yes" : "No"}</strong>
+          </p>
+        )}
       </section>
     </div>
   );

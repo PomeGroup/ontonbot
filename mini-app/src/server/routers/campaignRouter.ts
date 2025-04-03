@@ -9,6 +9,7 @@ import { db } from "@/db/db";
 import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
 import { TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
 import { TRPCError } from "@trpc/server";
+import userEligibilityDB from "@/server/db/tokenCampaignEligibleUsers.db";
 
 export const campaignRouter = router({
   /**
@@ -98,9 +99,6 @@ export const campaignRouter = router({
     .mutation(async ({ input, ctx }) => {
       // Ensure the user is logged in (ctx.user set by your auth)
       const userId = ctx.user?.user_id;
-      if (!userId) {
-        throw new Error("User not logged in or missing user ID.");
-      }
 
       const { spinPackageId, walletAddress } = input;
       const spinPackage = await tokenCampaignSpinPackagesDB.getSpinPackageById(spinPackageId);
@@ -144,9 +142,6 @@ export const campaignRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const userId = ctx.user?.user_id;
-      if (!userId) {
-        throw new Error("User not logged in or missing user ID.");
-      }
 
       const { orderId } = input;
 
@@ -180,9 +175,6 @@ export const campaignRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const userId = ctx.user?.user_id;
-      if (!userId) {
-        throw new Error("User not logged in or missing user ID.");
-      }
 
       // If you only want certain campaign, pass input.campaignType
       const result = await tokenCampaignUserSpinsDB.getAllCollectionsWithUserCount(userId, input.campaignType);
@@ -247,4 +239,12 @@ export const campaignRouter = router({
 
       return updated;
     }),
+  /**
+   *   Check if a user is eligible for a campaign.
+   */
+  checkUserEligible: initDataProtectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user?.user_id;
+    const found = await userEligibilityDB.isUserEligible(userId);
+    return { eligible: found };
+  }),
 });

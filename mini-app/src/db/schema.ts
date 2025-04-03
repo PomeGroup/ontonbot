@@ -109,7 +109,7 @@ import {
   TokenCampaignNftCollections,
   TokenCampaignNftCollectionsInsert,
 } from "./schema/tokenCampaignNftCollections";
-
+import { tokenCampaignEligibleUsers, TokenCampaignEligibleUsers } from "./schema/tokenCampaignEligibleUsers";
 // export all the enums
 export {
   accessRoleEnum,
@@ -190,6 +190,7 @@ export {
   tokenCampaignUserCollections,
   tokenCampaignOrders,
   tokenCampaignNftCollections,
+  tokenCampaignEligibleUsers,
 };
 
 // Type Exports
@@ -245,4 +246,5 @@ export type {
   TokenCampaignNftCollections,
   TokenCampaignNftCollectionsInsert,
   CampaignType,
+  TokenCampaignEligibleUsers,
 };
