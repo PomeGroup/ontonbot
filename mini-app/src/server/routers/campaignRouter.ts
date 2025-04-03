@@ -122,6 +122,12 @@ export const campaignRouter = router({
 
       // Insert into the DB
       const order = await tokenCampaignOrdersDB.addOrder(orderData);
+      if (!order) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create order.",
+        });
+      }
       return order;
     }),
 
@@ -145,12 +151,18 @@ export const campaignRouter = router({
       // Fetch from the DB
       const order = await tokenCampaignOrdersDB.getOrderById(orderId);
       if (!order) {
-        throw new Error(`Order #${orderId} not found.`);
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Order with ID ${orderId} not found.`,
+        });
       }
 
       // Optional: check if order.userId matches current userId
       if (order.userId !== userId) {
-        throw new Error("You are not authorized to view this order.");
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `Order with ID ${orderId} does not belong to the current user.`,
+        });
       }
 
       return order;
@@ -193,5 +205,44 @@ export const campaignRouter = router({
       // Fetch aggregator data from DB
       const stats = await tokenCampaignUserSpinsDB.getUserSpinStats(userId, spinPackageId);
       return stats; // { used, remaining }
+    }),
+  /**
+   * Only allows transitioning an order to "confirming" or "cancel".
+   */
+  updateOrderStatusConfirmCancel: initDataProtectedProcedure
+    .input(
+      z.object({
+        orderId: z.number(),
+        status: z.enum(["confirming", "cancelled"]),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const userId = ctx.user?.user_id;
+
+      const { orderId, status } = input;
+      const order = await tokenCampaignOrdersDB.getOrderById(orderId);
+      if (!order) {
+        throw new TRPCError({ code: "NOT_FOUND", message: `Order #${orderId} not found.` });
+      }
+
+      if (order.userId !== userId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "You are not the owner of this order." });
+      }
+
+      // Only allow switching from "new" or "confirming" to the new status.
+      if (!["new", "confirming"].includes(order.status)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot transition from ${order.status} to ${status}.`,
+        });
+      }
+
+      // Perform the update
+      const updated = await tokenCampaignOrdersDB.updateOrderById(orderId, { status });
+      if (!updated) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Failed to update order status." });
+      }
+
+      return updated;
     }),
 });

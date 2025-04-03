@@ -52,8 +52,7 @@ class TonConnectSender {
   }
 }
 
-const isTestnet = !["production", "stage", "staging"].includes(process.env.NEXT_PUBLIC_ENV || "development");
-const NETWORK = isTestnet ? "testnet" : "mainnet";
+const NETWORK = "mainnet";
 
 async function assetsSdk(provider: TonConnectUI) {
   const api = await createApi(NETWORK);
@@ -65,9 +64,7 @@ async function assetsSdk(provider: TonConnectUI) {
   });
 }
 
-export const USDT_MASTER_ADDRESS = Address.parse(
-  isTestnet ? "kQD0GKBM8ZbryVk2aESmzfU6b9b_8era_IkvBSELujFZPsyy" : "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
-);
+export const USDT_MASTER_ADDRESS = Address.parse("EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs");
 
 const calculateUsdtAmount = (usd: number): bigint => BigInt(Math.round(usd * 1_000_000));
 
