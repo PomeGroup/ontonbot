@@ -1,57 +1,32 @@
 import Typography from "@/components/Typography";
 import { InfoBox } from "./InfoBox";
-import LoadableImage from "@/components/LoadableImage";
-import { Gold, Silver, Bronze } from "../GenesisOnions.constants";
 import { useMemo } from "react";
-import Image from 'next/image'
+import Image from 'next/image';
+import { useUserCampaign } from "../hooks/useUserCampaign";
 
 export const YourNFTs = () => {
-    const items = useMemo(() => {
-        return [
-            {
-                count: 0,
-                label: "ONION",
-                image: <div className="h-8 aspect-square rounded-md grid place-items-center bg-gradient-radial from-gray-600 to-black">?</div>
-            },
-            {
-                count: 0,
-                label: Gold.name,
-                image: Gold.image.src
-            },
-            {
-                count: 0,
-                label: Silver.name,
-                image: Silver.image.src
-            },
-            {
-                count: 0,
-                label: Bronze.name,
-                image: Bronze.image.src
-            }
-        ]
-    }, [])
+    const { userCollection, isLoadingUserCollection, isErrorUserCollection } = useUserCampaign()
 
     const nftsCount = useMemo(() => {
-        return items.reduce((acc, item) => acc + item.count, 0)
-    }, [items])
+        return userCollection?.reduce((acc, item) => acc + item.count, 0)
+    }, [userCollection])
+
+    if (isLoadingUserCollection) return null
+    if (isErrorUserCollection) return <div>Error loading your NFTs! Please try again.</div>
 
     return (
         <div className="flex flex-col gap-3">
             <Typography variant="subheadline2">Your NFTs</Typography>
             <div className="flex gap-3">
-                {items.map(item => (<InfoBox className="px-2 py-1 flex gap-2 flex-1 justify-between items-center" key={item.label}>
-                    {
-                        typeof item.image === "string" ?
-                            <Image src={item.image} className="rounded-md" width={32} height={32} />
-                            : item.image
-                    }
+                {userCollection?.map(item => (<InfoBox className="px-2 py-1 flex gap-2 flex-1 justify-between items-center" key={item.name}>
+                    {item.image && <Image src={item.image} className="rounded-md" width={32} height={32} alt={`${item.name} NFT`} />}
 
                     <div className="flex flex-col items-center">
                         <div className="flex gap-1">
                             <span>x</span>
                             <Typography variant="headline">{item.count}</Typography>
                         </div>
-                        <Typography variant="caption2">{item.label}</Typography>
+                        <Typography variant="caption2">{item.name}</Typography>
                     </div>
                 </InfoBox>))}
             </div>

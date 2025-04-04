@@ -1,6 +1,7 @@
 import ImageGolden from "./_assets/images/nfts/nft-gold.png";
 import ImageSilver from "./_assets/images/nfts/nft-silver.png";
 import ImageBronze from "./_assets/images/nfts/nft-bronze.png";
+import { campaignTypes } from "@/db/schema";
 
 export const Gold = {
     image: ImageGolden,
@@ -39,3 +40,7 @@ export {
 }
 
 export const SPIN_PRICE_IN_TON = 5
+
+export const GENESIS_ONIONS_CAMPAIGN_TYPE = campaignTypes.enumValues[0]
+export const CLEAR_PRIZE_MODAL_TIMEOUT = 5000 // ms
+export const ORDER_POLLING_INTERVAL = 2000 // ms

@@ -1,27 +1,37 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperType } from "swiper";
-
+import "swiper/css";
 import Typography from "@/components/Typography";
 import { CountdownTimer } from "../CountdownTimer";
-import { generateWeightedArray } from "./RaffleCarousel.utils";
-import { RaffleCarouselItem } from "./RaffleCarousel.types";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cn } from "@/utils";
+import { useSpin } from "../../hooks/useSpin";
+import { TokenCampaignNftCollections } from "@/db/schema";
+import { useUserCampaign } from "../../hooks/useUserCampaign";
 
 interface Props {
+    onEligibilityCheckFailed: () => void;
     onInsufficientBalance: () => void;
     onSpinStart: () => void;
-    onSpinEnd: (result: RaffleCarouselItem) => void;
+    onSpinEnd: (result: TokenCampaignNftCollections) => void;
 }
 
-export const RaffleCarousel = ({ onInsufficientBalance, onSpinStart, onSpinEnd }: Props) => {
+export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance, onSpinStart, onSpinEnd }: Props) => {
     const swiperRef = useRef<SwiperType>();
     const [isSpinning, setIsSpinning] = useState(false);
-    const [result, setResult] = useState<RaffleCarouselItem | null>(null);
-    const slides = useMemo(() => generateWeightedArray(), []);
     const [activeIndex, setActiveIndex] = useState(0);
+    const { slides, isLoadingCollections, isErrorCollections, spin } = useSpin();
+    const { userSpinStats,
+        isLoadingUserSpinStats,
+        isErrorUserSpinStats,
+        refetchUserSpinStats,
+        isEligible,
+        isLoadingEligibility,
+        isErrorEligibility,
+        refetchEligibility
+    } = useUserCampaign();
 
     const waitForTransition = () => {
         return new Promise<void>((resolve, reject) => {
@@ -48,15 +58,16 @@ export const RaffleCarousel = ({ onInsufficientBalance, onSpinStart, onSpinEnd }
     };
 
     const spinRaffle = async () => {
-        if (!swiperRef.current || isSpinning) return;
+        if (!swiperRef.current || isSpinning || !slides?.length) return;
 
         onSpinStart();
-
         setIsSpinning(true);
-        setResult(null);
 
-        const targetIndex = Math.floor(Math.random() * slides.length);
-        const targetValue = slides[targetIndex];
+        const selectedIndex = await spin();
+
+        if (typeof selectedIndex === "undefined") throw new Error("No proper result received!");
+
+        const selectedSlide = slides[selectedIndex];
 
         try {
             // Fast spinning phase
@@ -72,36 +83,47 @@ export const RaffleCarousel = ({ onInsufficientBalance, onSpinStart, onSpinEnd }
             const slowDownDuration = 300;
             for (let i = 0; i < 5; i++) {
                 swiperRef.current.params.speed = slowDownDuration * (i + 1);
-                swiperRef.current.slideTo((targetIndex - 4 + i) % slides.length);
+                swiperRef.current.slideTo((selectedIndex - 4 + i) % slides.length);
                 await waitForTransition();
             }
 
             // Final slide
             swiperRef.current.params.speed = 500;
-            swiperRef.current.slideTo(targetIndex);
+            swiperRef.current.slideTo(selectedIndex);
             await waitForTransition();
 
-            setResult(targetValue);
-            onSpinEnd(targetValue);
+            refetchUserSpinStats();
+            console.log("selectedSlide", selectedSlide);
+            if (selectedSlide) onSpinEnd(selectedSlide);
         } catch (error) {
             console.error("Error during spin:", error);
             // Fallback to setting result if transition fails
-            setResult(targetValue);
         } finally {
             setIsSpinning(false);
         }
     };
 
-    const remainingSpins = 0;
+    const remainingSpins = userSpinStats?.remaining ?? 0;
 
-    const handleButtonClick = () => {
+    const handleButtonClick = async () => {
+        if (isErrorEligibility) {
+            refetchEligibility();
+            throw new Error("Error checking eligibility. Trying to refetch...");
+        }
+
+        if (isEligible === false) {
+            onEligibilityCheckFailed();
+            return;
+        }
         if (remainingSpins > 0) {
             spinRaffle();
         } else {
-            onInsufficientBalance()
+            onInsufficientBalance();
         }
-    }
+    };
 
+    if (isLoadingCollections) return null;
+    if (isErrorCollections) return <div>Error loading slides! Please try again.</div>;
 
     return (
         <div className="flex flex-col gap-4 relative z-10 w-full max-w-full overflow-hidden">
@@ -119,9 +141,9 @@ export const RaffleCarousel = ({ onInsufficientBalance, onSpinStart, onSpinEnd }
                     draggable={false}
                     allowTouchMove={false}
                 >
-                    {slides.map((item, index) => (
+                    {slides?.map((item, index) => (
                         <SwiperSlide
-                            key={item.id}
+                            key={index}
                             data-id={item.id}
                         >
                             <div
@@ -130,18 +152,20 @@ export const RaffleCarousel = ({ onInsufficientBalance, onSpinStart, onSpinEnd }
                                     activeIndex === index ? "scale-100" : "scale-75"
                                 )}
                             >
-                                <Image
-                                    width={240}
-                                    height={240}
-                                    src={item.image}
-                                    alt={item.label}
-                                    className="w-full h-full object-cover object-center rounded-2lg"
-                                />
+                                {item.image && (
+                                    <Image
+                                        width={240}
+                                        height={240}
+                                        src={item.image}
+                                        alt={item.name ?? ""}
+                                        className="w-full h-full object-cover object-center rounded-2lg"
+                                    />
+                                )}
                                 <Typography
                                     variant="footnote"
                                     weight="normal"
                                 >
-                                    {item.label}
+                                    {item.name}
                                 </Typography>
                             </div>
                         </SwiperSlide>
@@ -179,6 +203,7 @@ export const RaffleCarousel = ({ onInsufficientBalance, onSpinStart, onSpinEnd }
                         onClick={handleButtonClick}
                         type="button"
                         size="lg"
+                        disabled={isSpinning || isLoadingUserSpinStats || isErrorUserSpinStats || isLoadingEligibility || isErrorEligibility}
                         className="h-13 rounded-2lg flex items-center justify-center bg-orange hover:bg-orange group relative overflow-hidden"
                     >
                         <div className="absolute border-t-2 border-b-2 inset-0 transition-all bg-gradient-to-r from-orange/0 via-white/85 to-orange/0 group-hover:opacity-20 mix-blend-soft-light" />

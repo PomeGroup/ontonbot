@@ -33,6 +33,11 @@ const tabs: Tab[] = [
     icon: <UserIcon />,
     urls: ["/my", "/my/points"],
   },
+  {
+    title: "Genesis Onions",
+    icon: <UserIcon />,
+    urls: ["/genesis-onions"],
+  }
 ];
 
 export default function BottomNavigation(props: { children: ReactNode }) {
