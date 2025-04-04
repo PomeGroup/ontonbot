@@ -1,8 +1,8 @@
-import { validateWebAppData } from "@grammyjs/validator"
-import * as fs from "fs"
+import { validateWebAppData } from "@grammyjs/validator";
+import * as fs from "fs";
 import { Context, InputFile } from "grammy";
 import { InlineKeyboardMarkup } from "grammy/types";
-import sharp from "sharp"
+import sharp from "sharp";
 
 export const validateMiniAppData = (rawInitData: any): boolean => {
   const initData = new URLSearchParams(rawInitData as string);
@@ -21,27 +21,27 @@ const editOrSend = async (
   ctx: Context,
   text: string,
   markup?: InlineKeyboardMarkup,
-  imagePath: string = __dirname + "/img/onton-logo.png",
-  edit: boolean = true
+  imagePath: string = __dirname + "/img/Onton-HQ.jpg",
+  edit: boolean = true,
 ) => {
   // @ts-ignore
   let messageId = ctx.update.callback_query?.message?.message_id;
 
   if (edit) {
     try {
-      const photoStream = fs.readFileSync(imagePath)
+      const photoStream = fs.readFileSync(imagePath);
       const ontonImage = await sharp(photoStream)
-        .resize(300, 300)
+        .resize(800, 800)
         .extend(
           {
             top: 15, bottom: 15, left: 15, right: 15, background: {
               r: 255,
               g: 255,
-              b: 255
-            }
+              b: 255,
+            },
           }).toBuffer();
 
-      const imageFile = new InputFile(ontonImage)
+      const imageFile = new InputFile(ontonImage);
       await ctx.api.editMessageMedia(
         ctx.chat!.id,
         messageId,
@@ -53,22 +53,22 @@ const editOrSend = async (
         },
         {
           reply_markup: markup,
-        }
+        },
       );
     } catch (error) {
-      const photoStream = fs.readFileSync(imagePath)
+      const photoStream = fs.readFileSync(imagePath);
       const ontonImage = await sharp(photoStream)
-        .resize(300, 300)
+        .resize(800, 800)
         .extend(
           {
             top: 15, bottom: 15, left: 15, right: 15, background: {
               r: 255,
               g: 255,
-              b: 255
-            }
+              b: 255,
+            },
           }).toBuffer();
 
-      const ontonImageFile = new InputFile(ontonImage)
+      const ontonImageFile = new InputFile(ontonImage);
       const sentMessage = await ctx.api.sendPhoto(
         ctx.chat!.id,
         ontonImageFile,
@@ -76,26 +76,26 @@ const editOrSend = async (
           caption: text,
           reply_markup: markup,
           parse_mode: "HTML",
-        }
+        },
       );
 
       messageId = sentMessage.message_id;
     }
   } else {
-    const photoStream = fs.readFileSync(imagePath)
+    const photoStream = fs.readFileSync(imagePath);
     const ontonImage = await sharp(photoStream)
-      .resize(300, 300)
+      .resize(800, 800)
       .extend(
         {
           top: 15, bottom: 15, left: 15, right: 15, background: {
             r: 255,
             g: 255,
-            b: 255
-          }
+            b: 255,
+          },
         }).toBuffer();
 
 
-    const ontonImageFile = new InputFile(ontonImage)
+    const ontonImageFile = new InputFile(ontonImage);
     const sentMessage = await ctx.api.sendPhoto(
       ctx.chat!.id,
       ontonImageFile,
@@ -103,7 +103,7 @@ const editOrSend = async (
         caption: text,
         reply_markup: markup,
         parse_mode: "HTML",
-      }
+      },
     );
 
     messageId = sentMessage.message_id;
@@ -112,7 +112,7 @@ const editOrSend = async (
   return messageId;
 };
 
-export { editOrSend }
+export { editOrSend };
 
 export function sleep(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));

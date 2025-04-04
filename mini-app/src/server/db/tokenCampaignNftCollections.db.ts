@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eq, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import {
   tokenCampaignNftCollections,
@@ -10,12 +10,6 @@ import { redisTools } from "@/lib/redisTools";
 import type { PgTransaction } from "drizzle-orm/pg-core/session";
 import { CampaignType } from "@/db/enum";
 import { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
-
-/**
- * Example TTL (60 minutes) for Redis caching.
- * Adjust to your preference or remove entirely if not needed.
- */
-const CACHE_TTL_SECONDS = 60 * 60;
 
 /* ------------------------------------------------------------------
    Utility functions to build Redis cache keys for each query type
@@ -114,6 +108,7 @@ export const getCollectionsByCampaignType = async (campaignType: CampaignType): 
       .select()
       .from(tokenCampaignNftCollections)
       .where(eq(tokenCampaignNftCollections.campaignType, campaignType))
+      .orderBy(asc(tokenCampaignNftCollections.id))
       .execute();
 
     // Cache the array

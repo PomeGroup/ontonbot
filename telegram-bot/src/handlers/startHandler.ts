@@ -38,7 +38,11 @@ export const startHandler = async (ctx: Context) => {
     // 7) Send or edit a welcome message, showing your start keyboard
     await editOrSend(
       ctx,
-      `<b>Please click the link below to ‘Discover the App’</b>`,
+      `Welcome to ONTON - TON Society Event Bot \n\n` +
+      `Please Click the link Below on <b>“Explore ONTON”</b> for the current and future Events.
+You can Also Spin the wheel, unwrap Onion Genesis NFTs, and collect your ONION airdrop By clicking on <b>“Genesis ONIONs”</b>`
+
+      ,
       startKeyboard(),
       undefined,
       false,

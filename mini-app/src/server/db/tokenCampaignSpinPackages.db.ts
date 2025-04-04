@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import {
   tokenCampaignSpinPackages,
@@ -142,6 +142,7 @@ export const getActiveSpinPackagesByCampaignType = async (
       .from(tokenCampaignSpinPackages)
       // Require both a matching campaignType *and* active = true
       .where(and(eq(tokenCampaignSpinPackages.campaignType, campaignType), eq(tokenCampaignSpinPackages.active, true)))
+      .orderBy(asc(tokenCampaignSpinPackages.price))
       .execute();
 
     return rows;
