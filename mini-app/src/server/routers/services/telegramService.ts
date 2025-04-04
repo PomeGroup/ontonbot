@@ -237,6 +237,39 @@ export const shareTournamentRequest = async (
   }
 };
 
+export const shareAffiliateLinkRequest = async (
+  requestingUserId: string,
+  linkHash: string,
+  shareLink: string,
+  fallbackUrl: string,
+  affiliateData: {
+    linkHash: string;
+    totalSpins: number;
+    imageUrl: string;
+    // any other data fields
+  }
+): Promise<{ success: boolean; data?: any; error?: string }> => {
+  try {
+    const response = await axios.post(
+      `http://${process.env.IP_TELEGRAM_BOT}:${process.env.TELEGRAM_BOT_PORT}/share-affiliate-link`,
+      {
+        requesting_user: requestingUserId,
+        link_hash: linkHash,
+        share_link: shareLink,
+        fallback_url: fallbackUrl,
+        affiliate_data: affiliateData,
+      }
+    );
+
+    return { success: true, data: response.data };
+  } catch (error) {
+    logger.error("Error sharing affiliate link: ", error);
+    return {
+      success: false,
+      error: (error as Error).message || "An unexpected error occurred",
+    };
+  }
+};
 /****** export telegramService ******/
 
 const tgService = {
@@ -248,6 +281,7 @@ const tgService = {
   sendEventPhoto,
   shareOrganizerRequest,
   shareTournamentRequest,
+  shareAffiliateLinkRequest,
 };
 
 export default tgService;

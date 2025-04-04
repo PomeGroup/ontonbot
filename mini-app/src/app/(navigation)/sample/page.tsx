@@ -235,6 +235,32 @@ export default function CampaignTestPage() {
     refetchEligibility();
   }
 
+  // 9) GET ONION CAMPAIGN AFFILIATE DATA
+  // Calls `getOnionCampaignAffiliateData`, which returns { linkHash, totalSpins }
+  const {
+    data: onionAffiliateData,
+    isLoading: isLoadingOnionAff,
+    isFetching: isFetchingOnionAff,
+    error: onionAffError,
+    refetch: refetchOnionAffiliate,
+  } = trpc.campaign.getOnionCampaignAffiliateData.useQuery(undefined, { enabled: false });
+
+  function handleOnionAffiliate(e: React.FormEvent) {
+    e.preventDefault();
+    refetchOnionAffiliate();
+  }
+
+  // 10) SHARE AFFILIATE LINK
+  const shareAffiliateLinkMutation = trpc.telegramInteractions.requestShareAffiliateOnionCampaign.useMutation();
+
+  function handleShareAffiliate(e: React.FormEvent) {
+    e.preventDefault();
+    shareAffiliateLinkMutation.mutate(undefined, {
+      onSuccess: () => toast.success("Affiliate link share requested! Check your Telegram app."),
+      onError: (err) => toast.error(`Error: ${err.message}`),
+    });
+  }
+
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Campaign Test Page</h1>
@@ -583,6 +609,54 @@ export default function CampaignTestPage() {
             Eligible? <strong>{eligibilityData.eligible ? "Yes" : "No"}</strong>
           </p>
         )}
+      </section>
+
+      {/* 9) GET ONION CAMPAIGN AFFILIATE */}
+      <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
+        <h2 className="text-lg font-semibold mb-2">Onion Campaign Affiliate Data</h2>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            refetchOnionAffiliate();
+          }}
+          className="space-y-4"
+        >
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            disabled={isFetchingOnionAff}
+          >
+            {isFetchingOnionAff ? "Loading..." : "Get Onion Campaign Affiliate"}
+          </button>
+        </form>
+
+        {onionAffError && <p className="mt-2 text-red-600">Error: {onionAffError.message}</p>}
+        {onionAffiliateData && (
+          <div className="mt-2 text-gray-800">
+            <p>
+              <strong>Link Hash:</strong> {onionAffiliateData.linkHash}
+            </p>
+            <p>
+              <strong>Total Spins Sold:</strong> {onionAffiliateData.totalSpins}
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
+        <h2 className="text-lg font-semibold mb-2">Share Onion1 Affiliate Link</h2>
+        <form
+          onSubmit={handleShareAffiliate}
+          className="space-y-4"
+        >
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            disabled={shareAffiliateLinkMutation.isLoading}
+          >
+            {shareAffiliateLinkMutation.isLoading ? "Sharing..." : "Share Link on Telegram"}
+          </button>
+        </form>
       </section>
     </div>
   );

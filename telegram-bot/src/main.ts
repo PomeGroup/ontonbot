@@ -29,6 +29,7 @@ import { checkRateLimit } from "./utils/checkRateLimit";
 import { logger } from "./utils/logger";
 import { handleShareTournament } from "./handlers/handleShareTournament";
 import { parse } from "csv-parse/sync";
+import { handleShareAffiliateLink } from "./handlers/handleShareAffiliateLink";
 
 (async function bootstrap() {
   try {
@@ -126,6 +127,7 @@ import { parse } from "csv-parse/sync";
     app.post("/check-bot-admin", checkBotAdminHandler);
     app.post("/create-invite", createInviteLinkHandler);
     app.post("/delete-invite", deleteInviteLinkHandler);
+    app.post("/share-affiliate-link", handleShareAffiliateLink);
     // 7) Start listening, store the server instance
     const server = app.listen(port, () =>
       logger.log(`Telegram Bot API service on port ${port}`),

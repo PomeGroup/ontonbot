@@ -10,6 +10,8 @@ import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
 import { TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
 import { TRPCError } from "@trpc/server";
 import userEligibilityDB from "@/server/db/tokenCampaignEligibleUsers.db";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { generateRandomHash } from "@/lib/generateRandomHash";
 
 export const campaignRouter = router({
   /**
@@ -246,5 +248,30 @@ export const campaignRouter = router({
     const userId = ctx.user?.user_id;
     const found = await userEligibilityDB.isUserEligible(userId);
     return { eligible: found };
+  }),
+
+  getOnionCampaignAffiliateData: initDataProtectedProcedure.query(async ({ ctx }) => {
+    // 1) Check user
+    const userId = ctx.user?.user_id;
+    if (!userId) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "User not logged in" });
+    }
+
+    // 2) See if there's already a link for onion1-campaign
+    let link = await affiliateLinksDB.getAffiliateLinkForOnionCampaign(userId);
+    if (!link) {
+      // 3) If not, create
+      const linkHash = generateRandomHash(8);
+      link = await affiliateLinksDB.createOnionCampaignLink(userId, linkHash);
+    }
+
+    // 4) Sum the spin counts from completed orders with this linkHash
+    const totalSpins = await tokenCampaignOrdersDB.sumSpinCountByAffiliateHash(link.linkHash);
+
+    // 5) Return data
+    return {
+      linkHash: link.linkHash,
+      totalSpins,
+    };
   }),
 });

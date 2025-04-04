@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import {
   tokenCampaignOrders,
@@ -7,6 +7,7 @@ import {
   TokenCampaignOrdersInsert,
   TokenCampaignOrdersStatus,
 } from "@/db/schema/tokenCampaignOrders";
+import { tokenCampaignSpinPackages } from "@/db/schema";
 
 /**
  * Insert a new row in the 'token_campaign_orders' table (outside a transaction).
@@ -165,6 +166,28 @@ export const getOrdersByStatus = async (status: TokenCampaignOrdersStatus): Prom
 };
 
 /**
+ * Returns the *sum* of spin_package.spin_count
+ * across all orders that match:
+ *   affiliateHash = linkHash
+ *   status = "completed"
+ */
+export const sumSpinCountByAffiliateHash = async (linkHash: string): Promise<number> => {
+  // Use a join between token_campaign_orders & token_campaign_spin_packages
+  // Summing spinPackages.spinCount for all "completed" orders with that affiliateHash
+  const [row] = await db
+    .select({
+      totalSpins: sql<number>`SUM
+          (CAST(${tokenCampaignSpinPackages.spinCount} AS INT))`.mapWith(Number),
+    })
+    .from(tokenCampaignOrders)
+    .leftJoin(tokenCampaignSpinPackages, eq(tokenCampaignSpinPackages.id, tokenCampaignOrders.spinPackageId))
+    .where(and(eq(tokenCampaignOrders.affiliateHash, linkHash), eq(tokenCampaignOrders.status, "completed")))
+    .execute();
+
+  return row?.totalSpins ?? 0;
+};
+
+/**
  * Single export object with all methods
  */
 export const tokenCampaignOrdersDB = {
@@ -175,5 +198,6 @@ export const tokenCampaignOrdersDB = {
   updateOrderById,
   updateOrderByIdTx,
   updateOrderStatus,
-  getOrdersByStatus, // optional
+  getOrdersByStatus,
+  sumSpinCountByAffiliateHash,
 };
