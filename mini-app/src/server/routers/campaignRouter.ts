@@ -267,10 +267,10 @@ export const campaignRouter = router({
 
     // 4) Sum the spin counts from completed orders with this linkHash
     const totalSpins = await tokenCampaignOrdersDB.sumSpinCountByAffiliateHash(link.linkHash);
-
+    const botUserName = process.env.NEXT_PUBLIC_BOT_USERNAME || "theontonbot";
     // 5) Return data
     return {
-      linkHash: link.linkHash,
+      linkHash: `https://t.me/${botUserName}/event?startapp=tab_campaign&utm_source=${link.linkHash}`,
       totalSpins,
     };
   }),

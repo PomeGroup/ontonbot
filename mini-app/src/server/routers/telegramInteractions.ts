@@ -547,8 +547,10 @@ export const requestShareAffiliateOnionCampaign = initDataProtectedProcedure.mut
     const totalSpins = Number(affiliateResult.totalPurchase) || 0;
     // 3) Prepare share link data
     // Example deep link or your front-end link:
-    const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/affiliate?startapp=${linkHash}`;
-    const fallbackUrl = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/affiliate/${linkHash}`;
+    // const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/affiliate?startapp=${linkHash}`;
+    // const fallbackUrl = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tab_campaign&utm_source=${linkHash}`;
+    const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tab_campaign&utm_source=${linkHash}`;
+    const fallbackUrl = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/sample/?utm_source=${linkHash}`;
 
     // 4) Build your “affiliate” object to pass to Telegram
     const affiliateDataForBot = {

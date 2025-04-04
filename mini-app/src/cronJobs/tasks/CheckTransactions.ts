@@ -60,6 +60,10 @@ export const CheckTransactions = async () => {
   logger.log("parsed_campaign_orders", parsed_campaign_orders);
   for (const co of parsed_campaign_orders) {
     if (co.verfied) {
+      if (co.order_uuid.length !== 36) {
+        logger.error("cron_trx_campaign_ Invalid Order UUID", co.order_uuid);
+        continue;
+      }
       logger.log("cron_trx_campaign_", co.order_uuid, co.order_type, co.value);
       // Update your 'token_campaign_orders' table:
       await db
@@ -72,7 +76,7 @@ export const CheckTransactions = async () => {
         })
         .where(
           and(
-            eq(tokenCampaignOrders.id, Number(co.order_uuid)),
+            eq(tokenCampaignOrders.uuid, co.order_uuid),
             or(eq(tokenCampaignOrders.status, "new"), eq(tokenCampaignOrders.status, "confirming")),
             // If you want to verify the price matches `co.value`:
             eq(tokenCampaignOrders.finalPrice, co.value.toString())

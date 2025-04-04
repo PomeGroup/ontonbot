@@ -10,6 +10,7 @@ interface PaymentFlowProps {
   finalPrice: number; // in TON or USD
   onSuccess?: () => void;
   onCancel?: () => void;
+  orderUuid: string;
 }
 
 /**
@@ -27,7 +28,14 @@ const FINAL_STATUSES = ["completed", "cancel", "failed"];
  *    - if user cancels or fails, sets order status => "cancel".
  * 3) Continues polling until we see a final status (completed/cancel/failed).
  */
-export default function PaymentFlow({ orderId, walletAddress, finalPrice, onSuccess, onCancel }: PaymentFlowProps) {
+export default function PaymentFlow({
+  orderId,
+  orderUuid,
+  walletAddress,
+  finalPrice,
+  onSuccess,
+  onCancel,
+}: PaymentFlowProps) {
   const [isPaying, setIsPaying] = useState(false);
   const transfer = useTransferPayment();
 
@@ -85,9 +93,9 @@ export default function PaymentFlow({ orderId, walletAddress, finalPrice, onSucc
 
       // (A) First, set order => "confirming"
       await updateStatusMutation.mutateAsync({ orderId, status: "confirming" });
-
+      console.log(`Order #${orderId} status set to "confirming" with comment: "OnionCampaign=${orderUuid}"`);
       // (B) Then do the TonConnect transfer
-      await transfer(walletAddress, finalPrice, "TON", { comment: `OnionCampaign=${orderId}` });
+      await transfer(walletAddress, finalPrice, "TON", { comment: `OnionCampaign=${orderUuid}` });
       toast.success("Transaction broadcasted! We'll keep checking the order status...");
 
       // (C) Rely on cron job or on-chain to set final status => "processing" or "completed"

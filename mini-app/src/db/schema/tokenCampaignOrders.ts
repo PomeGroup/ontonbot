@@ -1,4 +1,4 @@
-import { pgTable, bigint, varchar, numeric, serial, timestamp, text, index } from "drizzle-orm/pg-core";
+import { pgTable, bigint, varchar, numeric, serial, timestamp, text, index, uuid, uniqueIndex } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { users } from "@/db/schema/users";
 import { orderState, paymentTypes } from "@/db/enum";
@@ -7,6 +7,7 @@ export const tokenCampaignOrders = pgTable(
   "token_campaign_orders",
   {
     id: serial("id").notNull().primaryKey(),
+    uuid: uuid("uuid").defaultRandom().notNull(),
     spinPackageId: bigint("spin_package_id", { mode: "number" }).notNull(),
     finalPrice: numeric("final_price", { precision: 10, scale: 2 }).notNull(),
     defaultPrice: numeric("default_price", { precision: 10, scale: 2 }).notNull(), // Consider renaming to `defaultPrice`
@@ -28,6 +29,7 @@ export const tokenCampaignOrders = pgTable(
     spinPackageIdIdx: index("spin_package_id_idx").on(table.spinPackageId),
     userIdIdx: index("user_id_idx").on(table.userId),
     trxHashIdx: index("trx_hash_idx").on(table.trxHash),
+    uuidIdx: uniqueIndex("token_campaign_orders_uuid_idx").on(table.uuid),
   })
 );
 
@@ -45,7 +47,7 @@ export type TokenCampaignOrders = Omit<InferSelectModel<typeof tokenCampaignOrde
  */
 export type TokenCampaignOrdersInsert = Omit<
   InferSelectModel<typeof tokenCampaignOrders>,
-  "id" | "createdAt" | "updatedAt" | "affiliateHash" | "couponId" | "trxHash" | "updatedBy"
+  "id" | "uuid" | "createdAt" | "updatedAt" | "affiliateHash" | "couponId" | "trxHash" | "updatedBy"
 >;
 
 export type TokenCampaignOrdersStatus = (typeof orderState.enumValues)[number];

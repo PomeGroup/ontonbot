@@ -310,6 +310,7 @@ export default function CampaignTestPage() {
           </p>
           <PaymentFlow
             orderId={createdOrder.id}
+            orderUuid={createdOrder.uuid}
             walletAddress={createdOrder.wallet_address}
             finalPrice={parseFloat(createdOrder.finalPrice)}
             onSuccess={() => {
