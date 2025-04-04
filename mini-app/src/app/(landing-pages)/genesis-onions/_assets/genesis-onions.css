@@ -1,0 +1,9 @@
+[data-tc-modal="true"] {
+  z-index: 9999 !important;
+}
+[data-tc-modal="true"] .tc-modal {
+  z-index: 9999 !important;
+}
+[data-tc-modal="true"] .tc-modal__content {
+  z-index: 9999 !important;
+}

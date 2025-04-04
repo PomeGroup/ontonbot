@@ -1,4 +1,5 @@
 "use client";
+import "./_assets/genesis-onions.css";
 import Image from "next/image";
 import GenesisOnionsLogoImage from "./_assets/images/genesis-onions.svg";
 import { YourNFTs } from "./_components/YourNFTs";
@@ -10,14 +11,16 @@ import { AccessRestrictedModal } from "./_components/AccessRestrictedModal";
 import { Header } from "./_components/Header";
 import { PackagesModal } from "./_components/PackagesModal";
 import { Prize } from "./_components/Prize";
-import { TokenCampaignNftCollections } from "@/db/schema";
+import { TokenCampaignNftCollections, TokenCampaignOrders } from "@/db/schema";
 import { useUserCampaign } from "./hooks/useUserCampaign";
+import { CheckOrderModal } from "./_components/CheckOrderModal";
 
 export default function GenesisOnions() {
     const [prize, setPrize] = useState<TokenCampaignNftCollections>();
     const [showPackagesModal, setShowPackagesModal] = useState(false);
     const [showAccessRestrictedModal, setShowAccessRestrictedModal] = useState(false);
-    const { invalidateUserCollection } = useUserCampaign();
+    const { invalidateUserCollection, invalidateUserSpinStats } = useUserCampaign();
+    const [orderToCheck, setOrderToCheck] = useState<TokenCampaignOrders>();
 
     const handleSpinStart = () => {
         setPrize(undefined);
@@ -31,6 +34,19 @@ export default function GenesisOnions() {
 
     const handleInsufficientBalance = () => {
         setShowPackagesModal(true);
+    };
+
+    const handleOrderPaid = (order: TokenCampaignOrders) => {
+        setOrderToCheck(order);
+    };
+
+    const handleOrderSuccess = () => {
+        invalidateUserSpinStats();
+        setOrderToCheck(undefined);
+    };
+
+    const handleOrderCancel = () => {
+        setOrderToCheck(undefined);
     };
 
     return (
@@ -47,6 +63,16 @@ export default function GenesisOnions() {
                 <PackagesModal
                     open={showPackagesModal}
                     onClose={() => setShowPackagesModal(false)}
+                    onOrderPaid={handleOrderPaid}
+                />
+            )}
+
+            {orderToCheck && (
+                <CheckOrderModal
+                    order={orderToCheck}
+                    onClose={() => setOrderToCheck(undefined)}
+                    onSuccess={handleOrderSuccess}
+                    onCancel={handleOrderCancel}
                 />
             )}
 

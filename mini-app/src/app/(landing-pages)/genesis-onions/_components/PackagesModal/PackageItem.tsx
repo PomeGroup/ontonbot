@@ -1,5 +1,5 @@
 import Typography from "@/components/Typography";
-import { TokenCampaignSpinPackages } from "@/db/schema";
+import { TokenCampaignOrders, TokenCampaignSpinPackages } from "@/db/schema";
 import { SPIN_PRICE_IN_TON } from "../../GenesisOnions.constants";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
@@ -12,7 +12,7 @@ import { useOrder } from "../../hooks/useOrder";
 
 interface Props {
     pkg: TokenCampaignSpinPackages;
-    onOpenWalletModal: () => void;
+    onOpenWalletModal: (order?: TokenCampaignOrders) => void;
 }
 
 export const PackageItem = ({ pkg, onOpenWalletModal }: Props) => {
@@ -32,7 +32,7 @@ export const PackageItem = ({ pkg, onOpenWalletModal }: Props) => {
             // create an order
             const order = await submitOrder(pkg.id)
 
-            onOpenWalletModal()
+            onOpenWalletModal(order)
 
             // pay for the order
             await pay(order)

@@ -1,4 +1,4 @@
-import { TokenCampaignSpinPackages } from "@/db/schema";
+import { TokenCampaignOrders, TokenCampaignSpinPackages } from "@/db/schema";
 import { Modal, Box } from "@mui/material";
 import Typography from "@/components/Typography";
 import { PackageItem } from "./PackageItem";
@@ -9,13 +9,22 @@ import { usePackage } from "../../hooks/usePackage";
 interface Props {
     open: boolean;
     onClose: () => void;
+    onOrderPaid: (order: TokenCampaignOrders) => void;
 }
 
-export const PackagesModal = ({ open, onClose }: Props) => {
+export const PackagesModal = ({ open, onClose, onOrderPaid }: Props) => {
     const { packages, isErrorPackages, isLoadingPackages } = usePackage()
 
     if (isLoadingPackages) return null;
     if (isErrorPackages) return <div>Error! Try again later...</div>;
+
+    const handleOpenWalletModal = (order?: TokenCampaignOrders) => {
+        if (order) {
+            onOrderPaid(order);
+        }
+
+        onClose();
+    };
 
     return (
         <Modal
@@ -57,7 +66,7 @@ export const PackagesModal = ({ open, onClose }: Props) => {
                     <div className="grid grid-cols-3 gap-2">
                         {packages?.map((pkg) => (
                             <PackageItem
-                                onOpenWalletModal={onClose}
+                                onOpenWalletModal={handleOpenWalletModal}
                                 key={pkg.id}
                                 pkg={pkg as TokenCampaignSpinPackages}
                             />
