@@ -60,7 +60,7 @@ export const useOrder = () => {
 
             console.log(7)
             // (B) Then do the TonConnect transfer
-            await transfer(walletAddress, parseFloat(theOrder.finalPrice), "TON", { comment: `OnionCampaign=${orderId}` });
+            await transfer(walletAddress, parseFloat(theOrder.finalPrice), "TON", { comment: `OnionCampaign=${theOrder.uuid}` });
             console.log(8)
         } catch (error) {
             console.error("Payment error:", error);
