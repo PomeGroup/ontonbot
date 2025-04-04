@@ -9,6 +9,7 @@ import ordersIcon from "./orders.svg";
 import promotionCodeIcon from "./promotion-code.svg";
 
 import CustomButton from "@/app/_components/Button/CustomButton";
+import ScanRegistrantQRCode from "@/app/_components/Event/ScanRegistrantQRCode";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import { trpc } from "@/app/_trpc/client";
 import ActionCard from "@/components/ActionCard";
@@ -18,7 +19,7 @@ import useWebApp from "@/hooks/useWebApp";
 import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
 import { wait } from "@/lib/utils";
 import { useSectionStore } from "@/zustand/useSectionStore";
-import { Pen, QrCode, Scan } from "lucide-react";
+import { Pen, QrCode, ScanLine } from "lucide-react";
 
 export default function ManageIndexPage() {
   const webApp = useWebApp();
@@ -77,7 +78,7 @@ export default function ManageIndexPage() {
         />
         {canEditEvent && (
           <div className="flex gap-3 mx-3 mt-3">
-            {eventData.participationType === "online" ? (
+            {eventData.participationType !== "online" ? (
               <CustomButton
                 onClick={async () => {
                   if (eventData.event_uuid) {
@@ -98,8 +99,14 @@ export default function ManageIndexPage() {
                 Get QR Code
               </CustomButton>
             ) : (
-              // scan qr code
-              <CustomButton icon={<Scan />}>Scan QR Code</CustomButton>
+              <ScanRegistrantQRCode>
+                <CustomButton
+                  variant="outline"
+                  icon={<ScanLine />}
+                >
+                  Scan QR Code
+                </CustomButton>
+              </ScanRegistrantQRCode>
             )}
             <CustomButton
               onClick={() => {
