@@ -136,6 +136,10 @@ export default function CampaignTestPage() {
   const [createdOrder, setCreatedOrder] = useState<undefined | TokenCampaignOrders>(undefined);
   const config = useConfig();
   const ontonWalletAddress = config?.ONTON_WALLET_ADDRESS || "UQDIh_j4EZPAouFr4MJOZFogV8ux2zSdED36KQ7ODUp-um9H";
+  // get the ending Time from the config
+  const campaignEndingTime = Number(config?.ONION1_EDN_DATE) || 1745269200;
+  // convert to Format: YYYY-MM-DDTHH:mm:ss (ISO format)
+  const campaignEndingDate = new Date(campaignEndingTime * 1000).toISOString().slice(0, 19);
 
   const addOrderMutation = trpc.campaign.addOrder.useMutation({
     onSuccess(data) {
@@ -264,7 +268,13 @@ export default function CampaignTestPage() {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Campaign Test Page</h1>
-
+      {/* Campaign Ending Date */}
+      <section className="mb-8 border border-gray-300 p-4 rounded shadow-sm">
+        <h2 className="text-lg font-semibold mb-2">Campaign Ending Date</h2>
+        <p className="text-gray-600">
+          The campaign will end on: <strong>{campaignEndingDate}</strong>
+        </p>
+      </section>
       {/* Connect Wallet Section */}
       <ConnectWalletCard />
 
