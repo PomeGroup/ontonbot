@@ -138,6 +138,8 @@ export const campaignRouter = router({
         }
         if (AffiliateLinkData.affiliatorUserId !== userId) {
           affiliateHash = input.affiliateHash;
+        } else {
+          logger.error(`CAMPAIGN_LOG:Router: User ${userId} is the owner of the affiliate link ${input.affiliateHash}`);
         }
       }
       // Build the TokenCampaignOrdersInsert object
@@ -319,7 +321,7 @@ export const campaignRouter = router({
     const botUserName = process.env.NEXT_PUBLIC_BOT_USERNAME || "theontonbot";
     // 5) Return data
     return {
-      linkHash: `https://t.me/${botUserName}/event?startapp=tab_campaign&utm_source=${link.linkHash}`,
+      linkHash: `https://t.me/${botUserName}/event?startapp=campaign-aff-${link.linkHash}`,
       totalSpins,
     };
   }),

@@ -549,7 +549,7 @@ export const requestShareAffiliateOnionCampaign = initDataProtectedProcedure.mut
     // Example deep link or your front-end link:
     // const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/affiliate?startapp=${linkHash}`;
     // const fallbackUrl = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tab_campaign&utm_source=${linkHash}`;
-    const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tab_campaign&utm_source=${linkHash}`;
+    const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=campaign-aff-${linkHash}`;
     const fallbackUrl = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/genesis-onions/?affiliate=${linkHash}`;
 
     // 4) Build your “affiliate” object to pass to Telegram

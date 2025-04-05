@@ -18,7 +18,7 @@ export async function middleware(req: NextRequest) {
       const isTournament = tgAppStartParam.startsWith("tournaments_");
       const isTab = tgAppStartParam.startsWith("tab_");
       const isCampaign = tgAppStartParam.startsWith("campaign");
-      console.log("isCampaign", isCampaign);
+
       if (isOrganizerProfile) {
         console.log("redirecting to organizer profile");
         return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
