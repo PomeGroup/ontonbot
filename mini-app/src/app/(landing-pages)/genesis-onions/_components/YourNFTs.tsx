@@ -31,13 +31,10 @@ export const YourNFTs = () => {
                         <Typography
                             variant="caption2"
                             className={cn({
+                                'text-silverBlue-1': true, // default
                                 'text-gold': item.name?.toLowerCase().includes('gold'),
                                 'text-silver': item.name?.toLowerCase().includes('silver'),
                                 'text-bronze': item.name?.toLowerCase().includes('bronze'),
-                                'text-silverBlue-1':
-                                    !item.name?.toLowerCase().includes('gold') &&
-                                    !item.name?.toLowerCase().includes('silver') &&
-                                    !item.name?.toLowerCase().includes('bronze'),
                             })}
                         >
                             {item.name}

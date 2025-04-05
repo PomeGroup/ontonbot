@@ -1,16 +1,14 @@
 import { TokenCampaignNftCollections } from "@/db/schema";
+import { PROBABILITY_WEIGHTS, RAFFLE_CAROUSEL_SLIDES_COUNT } from "../../GenesisOnions.constants";
 
 export const generateWeightedArray = (
     campaigns: TokenCampaignNftCollections[],
-    totalItems = 30
+    totalItems = RAFFLE_CAROUSEL_SLIDES_COUNT
 ): TokenCampaignNftCollections[] => {
-    // Calculate total weight
-    const totalWeight = campaigns.reduce((sum, campaign) => sum + campaign.probabilityWeight, 0);
-
     // Calculate counts for each campaign
     const campaignCounts = campaigns.map(campaign => ({
         campaign,
-        count: Math.floor(totalItems * (campaign.probabilityWeight / totalWeight))
+        count: Math.floor(totalItems * (getCampaignWeight(campaign) / 1))
     }));
 
     // Adjust counts to reach exactly totalItems
@@ -72,3 +70,11 @@ export const generateWeightedArray = (
     // Ensure we have exactly totalItems
     return items.slice(0, totalItems);
 };
+
+const getCampaignWeight = (collection: TokenCampaignNftCollections) => {
+    if (collection.name?.toLowerCase().includes('gold')) return PROBABILITY_WEIGHTS.GOLD
+    if (collection.name?.toLowerCase().includes('silver')) return PROBABILITY_WEIGHTS.SILVER
+    if (collection.name?.toLowerCase().includes('bronze')) return PROBABILITY_WEIGHTS.BRONZE
+
+    return .1
+}

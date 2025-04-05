@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import TonSocietyLogo from '../_assets/images/ts-logo.svg';
 import { X } from "lucide-react";
-import { redirect } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 
 interface Props {
     open: boolean;
@@ -13,21 +13,15 @@ interface Props {
 }
 
 export const AccessRestrictedModal = ({ open, onClose }: Props) => {
+    const router = useRouter();
     const handleOnClick = () => {
-        redirect('/')
+        router.push('/')
     };
 
     return (
-        <Modal open={open} onClose={onClose} className="text-white">
+        <Modal open={open} onClose={onClose} className="text-white grid place-items-center">
             <Box
-                className="bg-navy px-4 py-5 flex flex-col gap-4 rounded-2lg border border-brand-divider-dark"
-                sx={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: 400,
-                }}
+                className="bg-navy px-4 py-5 flex flex-col gap-4 rounded-2lg border border-brand-divider-dark w-10/12"
             >
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="title2">

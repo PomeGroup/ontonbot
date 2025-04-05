@@ -14,7 +14,12 @@ export const useSpin = () => {
 
     const spinMutation = trpc.campaign.spinForNft.useMutation();
     const slides = useMemo(
-        () => (collections?.length ? generateWeightedArray(collections as TokenCampaignNftCollections[]) : null),
+        () => {
+            if (!collections?.length) return null
+            const filteredCollections = collections.filter((collection) => collection.isForSale)
+
+            return generateWeightedArray(filteredCollections as TokenCampaignNftCollections[])
+        },
         [collections]
     );
 
