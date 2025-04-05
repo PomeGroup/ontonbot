@@ -24,7 +24,9 @@ export async function processCampaignAffiliateSpins() {
     for (const link of onionLinks) {
       const totalPurchasedSpins = await tokenCampaignOrdersDB.sumSpinCountByAffiliateHash(link.linkHash);
       const previouslyAwarded = link.totalPurchase || 0;
-
+      logger.info(
+        `processCampaignAffiliateSpins: Processing affiliate link #${link.linkHash} for user #${link.affiliatorUserId} with ${totalPurchasedSpins} purchased spins and ${previouslyAwarded} previously awarded`
+      );
       if (totalPurchasedSpins > previouslyAwarded) {
         logger.log(
           `processCampaignAffiliateSpins: Awarding spins for affiliate link #${link.id} for user #${link.affiliatorUserId}`
