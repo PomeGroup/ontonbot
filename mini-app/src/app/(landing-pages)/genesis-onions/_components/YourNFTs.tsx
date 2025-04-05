@@ -3,6 +3,7 @@ import { InfoBox } from "./InfoBox";
 import { useMemo } from "react";
 import Image from 'next/image';
 import { useUserCampaign } from "../hooks/useUserCampaign";
+import { cn } from "@/utils";
 
 export const YourNFTs = () => {
     const { userCollection, isLoadingUserCollection, isErrorUserCollection } = useUserCampaign()
@@ -18,7 +19,7 @@ export const YourNFTs = () => {
         <div className="flex flex-col gap-3">
             <Typography variant="subheadline2">Your NFTs</Typography>
             <div className="flex gap-3">
-                {userCollection?.map(item => (<InfoBox className="px-2 py-1 flex gap-2 flex-1 justify-between items-center" key={item.name}>
+                {userCollection?.map(item => (<InfoBox className="p-1 flex gap-2 flex-1 justify-between items-center bg-white/10" key={item.name}>
                     {item.image && <Image src={item.image} className="rounded-md" width={32} height={32} alt={`${item.name} NFT`} />}
 
                     <div className="flex flex-col items-center">
@@ -26,17 +27,34 @@ export const YourNFTs = () => {
                             <span>x</span>
                             <Typography variant="headline">{item.count}</Typography>
                         </div>
-                        <Typography variant="caption2">{item.name}</Typography>
+                        <Typography
+                            variant="caption2"
+                            className={cn({
+                                'text-gold': item.name?.toLowerCase().includes('gold'),
+                                'text-silver': item.name?.toLowerCase().includes('silver'),
+                                'text-bronze': item.name?.toLowerCase().includes('bronze'),
+                                'text-silverBlue-1':
+                                    !item.name?.toLowerCase().includes('gold') &&
+                                    !item.name?.toLowerCase().includes('silver') &&
+                                    !item.name?.toLowerCase().includes('bronze'),
+                            })}
+                        >
+                            {item.name}
+                        </Typography>
+
                     </div>
                 </InfoBox>))}
             </div>
 
-            <InfoBox>
-                {
-                    nftsCount === 0 ?
-                        'You haven’t earned any NFTs yet! Get spin chances or invite friends to earn GOLDs faster.'
-                        : 'Spin or invite friends to claim more Gold, Silver, and Bronze ONIONs now!'
-                }
+            <InfoBox className="bg-white/5">
+                <Typography variant="footnote" weight="normal">
+
+                    {
+                        nftsCount === 0 ?
+                            'You have 0 Genesis Onions. Spin or invite friends to claim Gold, Silver, and Bronze ONIONs now!'
+                            : 'Spin or invite friends to claim more Gold, Silver, and Bronze ONIONs now!'
+                    }
+                </Typography>
             </InfoBox>
         </div>
     );

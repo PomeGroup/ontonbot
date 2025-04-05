@@ -16,13 +16,16 @@ export const Footer = () => (<>
 
         <div className="flex justify-between">
             {[Gold, Silver, Bronze].map(item => <div key={item.name} className="flex flex-col gap-2 items-center">
-                <Image src={item.image.src} alt={item.name} width={80} height={80} />
+                <div className="px-3">
+
+                    <Image src={item.image.src} alt={item.name} width={80} height={80} className='rounded-2lg' />
+                </div>
                 <Typography variant="subheadline2" weight="bold">{item.title}</Typography>
             </div>)}
         </div>
 
         <InfoBox>
-            <Typography variant="callout" weight="semibold">Maximize Your Airdrop:</Typography>
-            <Typography variant="subheadline1" weight="medium">Collect all three tiers to receive an ultra-rare Diamond ONION that boosts your entire airdrop!</Typography>
+            <Typography variant="callout" weight="semibold" className='inline'>Maximize Your Airdrop:</Typography>
+            <Typography variant="subheadline1" weight="medium" className='inline ms-1'>Collect all three tiers to receive an ultra-rare Diamond ONION that boosts your entire airdrop!</Typography>
         </InfoBox>
     </div></>)

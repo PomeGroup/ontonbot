@@ -9,7 +9,7 @@ export const useUserCampaign = () => {
         isLoading: isLoadingEligibility,
         isError: isErrorEligibility,
         refetch: refetchEligibility,
-    } = trpc.campaign.checkUserEligible.useQuery(undefined);
+    } = trpc.campaign.checkUserEligible.useQuery();
 
     const {
         data: userSpinStats,
@@ -26,7 +26,7 @@ export const useUserCampaign = () => {
 
     const invalidateUserSpinStats = () => trpcUtils.campaign.getUserSpinStats.invalidate();
     const invalidateUserCollection = () => trpcUtils.campaign.getUserCollectionsResult.invalidate({ campaignType: GENESIS_ONIONS_CAMPAIGN_TYPE });
-    console.log('eligibility', eligibility)
+
     return {
         // user spin stats
         userSpinStats,

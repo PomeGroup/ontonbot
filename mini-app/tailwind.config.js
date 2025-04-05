@@ -73,6 +73,7 @@ module.exports = konstaConfig({
         navy: {
           DEFAULT: "#0A1C33",
           extraLight: "#566E8F",
+          mid: "#31517B",
           superLight: "#24354C",
           light: "#203248",
           dark: "#0B1D34",
@@ -80,6 +81,7 @@ module.exports = konstaConfig({
         silverBlue: {
           1: "#77B8FE",
           2: "#4C688B",
+          3: '#4B5B71'
         },
         silver: {
           DEFAULT: "#DFDDDD",

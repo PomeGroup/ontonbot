@@ -17,10 +17,9 @@ const FINAL_STATUSES = ["completed", "cancel", "failed"];
 export const CheckOrderModal = ({ order: orderArg, onClose, onSuccess, onCancel }: Props) => {
     const orderId = orderArg.id;
 
-    // 1) Query the order
     const { data: order, refetch } = trpc.campaign.getOrder.useQuery({ orderId }, { enabled: true });
 
-    // 2) Local polling logic
+    // do a long polling until you get the desired status
     useEffect(() => {
         if (!order) return;
 
@@ -36,7 +35,7 @@ export const CheckOrderModal = ({ order: orderArg, onClose, onSuccess, onCancel 
         };
     }, [order, refetch]);
 
-    // 3) If order is final, call onSuccess / onCancel
+    // if the order is final, call onSuccess / onCancel
     useEffect(() => {
         if (!order) return;
         if (FINAL_STATUSES.includes(order.status)) {

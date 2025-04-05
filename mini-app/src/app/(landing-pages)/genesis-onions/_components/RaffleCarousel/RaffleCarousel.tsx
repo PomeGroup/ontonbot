@@ -93,7 +93,6 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
             await waitForTransition();
 
             refetchUserSpinStats();
-            console.log("selectedSlide", selectedSlide);
             if (selectedSlide) onSpinEnd(selectedSlide);
         } catch (error) {
             console.error("Error during spin:", error);
@@ -116,6 +115,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
             return;
         }
         if (remainingSpins > 0) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             spinRaffle();
         } else {
             onInsufficientBalance();
@@ -133,9 +133,9 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
                     onSwiper={(swiper) => {
                         swiperRef.current = swiper;
                     }}
-                    slidesPerView={2.6}
+                    slidesPerView={2.3}
                     centeredSlides={true}
-                    spaceBetween={12}
+                    spaceBetween={0}
                     speed={200}
                     initialSlide={1}
                     draggable={false}
@@ -149,7 +149,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
                             <div
                                 className={cn(
                                     "flex flex-col items-center justify-center gap-3 transform transition-all duration-300",
-                                    activeIndex === index ? "scale-100" : "scale-75"
+                                    activeIndex === index ? "scale-100" : "scale-[.88]"
                                 )}
                             >
                                 {item.image && (
@@ -182,7 +182,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
                     Spin the wheel, unwrap Onion Genesis NFTs, and collect your $ONION airdrop.
                 </Typography>
 
-                <CountdownTimer targetDate="2025-04-05T12:00:00" />
+                <CountdownTimer />
 
                 <div className="flex flex-col gap-3">
                     <Typography
@@ -196,7 +196,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
                         >
                             {remainingSpins}
                         </Typography>{" "}
-                        spins left
+                        spins left!
                     </Typography>
 
                     <Button
@@ -204,14 +204,13 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
                         type="button"
                         size="lg"
                         disabled={isSpinning || isLoadingUserSpinStats || isErrorUserSpinStats || isLoadingEligibility || isErrorEligibility}
-                        className="h-13 rounded-2lg flex items-center justify-center bg-orange hover:bg-orange group relative overflow-hidden"
+                        className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all duration-300 transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
                     >
-                        <div className="absolute border-t-2 border-b-2 inset-0 transition-all bg-gradient-to-r from-orange/0 via-white/85 to-orange/0 group-hover:opacity-20 mix-blend-soft-light" />
                         <Typography
                             variant="headline"
                             weight="semibold"
                         >
-                            {remainingSpins === 0 ? "Get More Spins" : "Spin"}
+                            {remainingSpins === 0 ? "Get More Spins" : "Spin to win!"}
                         </Typography>
                     </Button>
                 </div>

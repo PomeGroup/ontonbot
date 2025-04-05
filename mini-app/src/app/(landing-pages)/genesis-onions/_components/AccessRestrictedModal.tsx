@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import TonSocietyLogo from '../_assets/images/ts-logo.svg';
 import { X } from "lucide-react";
+import { redirect } from 'next/navigation'
 
 interface Props {
     open: boolean;
@@ -12,6 +13,10 @@ interface Props {
 }
 
 export const AccessRestrictedModal = ({ open, onClose }: Props) => {
+    const handleOnClick = () => {
+        redirect('/')
+    };
+
     return (
         <Modal open={open} onClose={onClose} className="text-white">
             <Box
@@ -52,7 +57,7 @@ export const AccessRestrictedModal = ({ open, onClose }: Props) => {
                         <Typography variant="body" weight="medium">Dismiss</Typography>
                     </Button>
 
-                    <Button className="flex-1 h-full bg-orange hover:bg-orange/80">
+                    <Button className="flex-1 h-full bg-orange hover:bg-orange/80" onClick={handleOnClick}>
                         <Typography variant="body" weight="medium">Explore ONTON</Typography>
                     </Button>
                 </div>

@@ -21,21 +21,21 @@ export const PackageItem = ({ pkg, onOpenWalletModal }: Props) => {
     const discountAmount = originalPrice - effectivePrice;
     const hasWallet = !!useTonAddress();
     const { walletModal } = useWallet();
-    const { pay, submitOrder, isPaying } = useOrder()
+    const { pay, submitOrder, isPaying } = useOrder();
 
     const handlePay = async () => {
         if (!hasWallet) {
             walletModal.open();
-            onOpenWalletModal()
+            onOpenWalletModal();
             return;
         } else {
             // create an order
-            const order = await submitOrder(pkg.id)
+            const order = await submitOrder(pkg.id);
 
-            onOpenWalletModal(order)
+            onOpenWalletModal(order);
 
             // pay for the order
-            await pay(order)
+            await pay(order);
         }
     };
 
@@ -82,19 +82,17 @@ export const PackageItem = ({ pkg, onOpenWalletModal }: Props) => {
                             <Typography
                                 variant="footnote"
                                 weight="semibold"
-                                className="flex gap-1 items-end"
+                                className="flex gap-1 items-end text-nowrap"
                             >
                                 {effectivePrice} {pkg.currency}
                             </Typography>
                             {effectivePrice < originalPrice && (
                                 <Typography
-                                    className="line-through flex gap-1 items-end"
+                                    className="line-through flex gap-1 items-end text-nowrap"
                                     variant="caption2"
                                     weight="normal"
                                 >
-                                    <span className="line-through">
-                                        {originalPrice} {pkg.currency}
-                                    </span>
+                                    {originalPrice} {pkg.currency}
                                 </Typography>
                             )}
                         </div>

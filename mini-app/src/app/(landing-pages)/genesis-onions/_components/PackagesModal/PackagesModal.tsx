@@ -20,6 +20,7 @@ export const PackagesModal = ({ open, onClose, onOrderPaid }: Props) => {
 
     const handleOpenWalletModal = (order?: TokenCampaignOrders) => {
         if (order) {
+            // TODO: it causes the CheckOrderModal to open while the wallet modal is open in front of it. it'd be better to start polling here, then after transaction made, open that CheckOrderModal
             onOrderPaid(order);
         }
 

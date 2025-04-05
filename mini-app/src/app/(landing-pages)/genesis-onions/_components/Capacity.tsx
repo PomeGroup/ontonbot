@@ -16,7 +16,7 @@ export const Capacity = () => {
             <div className="flex flex-col gap-2">
                 {collections?.map((item) => (
                     <InfoBox
-                        className="px-2 py-1 flex gap-2 justify-between items-center"
+                        className="px-2 py-1 flex gap-2 justify-between items-center border-silverBlue-3 bg-transparent rounded-md"
                         key={item.id}
                     >
                         {item.image && <Image
@@ -27,7 +27,7 @@ export const Capacity = () => {
                             alt={item.name ?? ''}
                         />}
 
-                        {item.salesCount ? <div className="flex flex-col flex-1 gap-y-1.5">
+                        {item.salesCount && item.name !== 'Bronze' ? <div className="flex flex-col flex-1 gap-y-1.5">
                             <div className="flex justify-between items-end">
                                 <Typography variant="footnote">{item.name}</Typography>
 

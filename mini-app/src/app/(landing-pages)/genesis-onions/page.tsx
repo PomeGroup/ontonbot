@@ -14,8 +14,10 @@ import { Prize } from "./_components/Prize";
 import { TokenCampaignNftCollections, TokenCampaignOrders } from "@/db/schema";
 import { useUserCampaign } from "./hooks/useUserCampaign";
 import { CheckOrderModal } from "./_components/CheckOrderModal";
+import { useSpin } from "./hooks/useSpin";
 
 export default function GenesisOnions() {
+    const { refetchCollections } = useSpin();
     const [prize, setPrize] = useState<TokenCampaignNftCollections>();
     const [showPackagesModal, setShowPackagesModal] = useState(false);
     const [showAccessRestrictedModal, setShowAccessRestrictedModal] = useState(false);
@@ -30,6 +32,7 @@ export default function GenesisOnions() {
         setPrize(chosenPrize);
 
         invalidateUserCollection();
+        refetchCollections();
     };
 
     const handleInsufficientBalance = () => {
@@ -76,15 +79,16 @@ export default function GenesisOnions() {
                 />
             )}
 
-            <main className="bg-navy text-white py-5 min-h-screen">
-                <Header />
+            <main className="bg-navy text-white min-h-screen pb-5">
+                <div className="flex flex-col bg-gradient-radial from-navy-mid to-navy items-center justify-center bg-repeat relative mb-3 pt-5">
+                    <Header />
 
-                <div className="flex flex-col bg-gradient-radial from-silver-base via-navy items-center justify-center bg-repeat relative mb-3">
-                    <div className="bg-[url('/rounded-pattern.svg')] h-72 bg-repeat bg-contain w-full absolute top-14 opacity-50 z-0" />
+                    <div className="bg-[url('/rounded-pattern.svg')] h-[292px] bg-repeat bg-contain w-full absolute top-28 opacity-50 z-0" />
+
                     <Image
                         src={GenesisOnionsLogoImage}
                         alt="Secure Your $ONION Airdrop Now"
-                        className="mb-11"
+                        className="mb-8"
                     />
 
                     <RaffleCarousel
