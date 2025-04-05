@@ -20,12 +20,12 @@ export const addUserCollection = async (
     const [inserted] = await db.insert(tokenCampaignUserCollections).values(data).returning().execute();
 
     if (inserted) {
-      logger.log("User collection inserted:", inserted);
+      logger.log("tokenCampaignUserCollectionsDB: User collection inserted:", inserted);
       return inserted;
     }
     return undefined;
   } catch (error) {
-    logger.error("Error inserting user collection:", error);
+    logger.error("tokenCampaignUserCollectionsDB: Error inserting user collection:", error);
     throw error;
   }
 };
@@ -41,7 +41,7 @@ export const addUserCollectionTx = async (
   const [inserted] = await tx.insert(tokenCampaignUserCollections).values(data).returning().execute();
 
   if (inserted) {
-    logger.log("User collection inserted in transaction:", inserted);
+    logger.log("tokenCampaignUserCollectionsDB: User collection inserted in transaction:", inserted);
   }
   return inserted;
 };
@@ -60,7 +60,7 @@ export const getUserCollectionById = async (id: number): Promise<TokenCampaignUs
 
     return row;
   } catch (error) {
-    logger.error("Error fetching user collection by ID:", error);
+    logger.error("tokenCampaignUserCollectionsDB: Error fetching user collection by ID:", error);
     throw error;
   }
 };
@@ -79,7 +79,7 @@ export const getUserCollectionsByUserId = async (userId: number): Promise<TokenC
 
     return rows;
   } catch (error) {
-    logger.error("Error fetching user collections by userId:", error);
+    logger.error("tokenCampaignUserCollectionsDB: Error fetching user collections by userId:", error);
     throw error;
   }
 };
@@ -98,7 +98,7 @@ export const getUserCollectionsByCollectionId = async (collectionId: number): Pr
 
     return rows;
   } catch (error) {
-    logger.error("Error fetching user collections by collectionId:", error);
+    logger.error("tokenCampaignUserCollectionsDB: Error fetching user collections by collectionId:", error);
     throw error;
   }
 };
@@ -121,11 +121,11 @@ export const updateUserCollectionById = async (
       .execute();
 
     if (updated) {
-      logger.log("User collection updated:", updated);
+      logger.log("tokenCampaignUserCollectionsDB: User collection updated:", updated);
     }
     return updated;
   } catch (error) {
-    logger.error("Error updating user collection by ID:", error);
+    logger.error("tokenCampaignUserCollectionsDB: Error updating user collection by ID:", error);
     throw error;
   }
 };
@@ -147,7 +147,7 @@ export const updateUserCollectionByIdTx = async (
     .execute();
 
   if (updated) {
-    logger.log("User collection updated in transaction:", updated);
+    logger.log("tokenCampaignUserCollectionsDB: User collection updated in transaction:", updated);
   }
   return updated;
 };

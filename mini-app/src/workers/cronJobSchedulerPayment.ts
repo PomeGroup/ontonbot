@@ -5,6 +5,7 @@ import { logger } from "@/server/utils/logger";
 import "@/lib/gracefullyShutdown";
 import cronJobs, { cronJobRunner } from "@/cronJobs";
 import { redisTools } from "@/lib/redisTools";
+import { processCampaignAffiliateSpins } from "@/cronJobs/tasks/processCampaignAffiliateSpins";
 
 process.on("unhandledRejection", (err) => {
   const messages = getErrorMessages(err);
@@ -35,7 +36,7 @@ async function MainCronJob() {
   new CronJob("*/11 * * * * *", cronJobRunner(cronJobs.TsCsbtTicketOrder), null, true);
   new CronJob("*/21 * * * * *", cronJobs.OrganizerPromoteProcessing, null, true);
   new CronJob(
-    "*/5 * * * * *",
+    "*/2 * * * * *",
     cronJobs.processCampaignOrders, // The function to run
     null, // onComplete (not needed)
     true, // start immediately
@@ -49,6 +50,18 @@ async function MainCronJob() {
   new CronJob(
     "*/10 * * * * *", // Every 10 seconds
     cronJobs.runPendingCallbackTasks, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
+  new CronJob(
+    "*/2 * * * * *", // Every  2 seconds
+    cronJobs.processCampaignAffiliateSpins, // The function to run
     null, // onComplete (not needed)
     true, // start immediately
     null, // timeZone

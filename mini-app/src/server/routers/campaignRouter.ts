@@ -7,11 +7,13 @@ import { secureWeightedRandom } from "@/lib/secureWeightedRandom";
 import { tokenCampaignUserSpinsDB } from "@/server/db/tokenCampaignUserSpins.db";
 import { db } from "@/db/db";
 import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
-import { TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
+import { TokenCampaignOrdersInsert, TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
 import { TRPCError } from "@trpc/server";
 import userEligibilityDB from "@/server/db/tokenCampaignEligibleUsers.db";
-import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
+import { affiliateLinksDB, getAffiliateLinkByHash } from "@/server/db/affiliateLinks.db";
 import { generateRandomHash } from "@/lib/generateRandomHash";
+import { Address } from "@ton/core";
+import { logger } from "@/server/utils/logger";
 
 export const campaignRouter = router({
   /**
@@ -51,9 +53,6 @@ export const campaignRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { campaignType } = input;
       const userId = ctx.user?.user_id;
-      if (!userId) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "User is not logged in." });
-      }
 
       return await db.transaction(async (tx) => {
         // 1) Find an existing *unused* spin row
@@ -74,15 +73,20 @@ export const campaignRouter = router({
 
         // 3) Weighted random pick
         const selectedCollection = secureWeightedRandom(itemsWithWeight);
-
+        if (!selectedCollection) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `CAMPAIGN_LOG:Router: No collection found for campaign type ${campaignType}.`,
+          });
+        }
         // 4) Assign the chosen collection to the spin row
         await tokenCampaignUserSpinsDB.updateUserSpinByIdTx(tx, spinRow.id, {
           nftCollectionId: selectedCollection.id,
         });
-
+        logger.log(`Assigned collection ${selectedCollection.id} to spin row ${spinRow.id}`);
         // 5) Increment salesCount (and optionally salesVolume) for this collection
         await tokenCampaignNftCollectionsDB.incrementCollectionSalesTx(tx, selectedCollection.id);
-
+        logger.log(`Incremented salesCount for collection ${selectedCollection.id} by 1`);
         // 6) Return the chosen collection
         return selectedCollection;
       });
@@ -95,7 +99,9 @@ export const campaignRouter = router({
     .input(
       z.object({
         spinPackageId: z.number(),
-        walletAddress: z.string().optional().default(""),
+        // walletAddress: z.string().optional().default(""),
+        walletAddress: z.string().refine((data) => Address.isAddress(Address.parse(data))),
+        affiliateHash: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -107,12 +113,26 @@ export const campaignRouter = router({
       if (!spinPackage) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: `Spin package with ID ${spinPackageId} not found.`,
+          message: `CAMPAIGN_LOG:Router: Spin package with ID ${spinPackageId} not found.`,
         });
+      }
+      // Check user must not be the affiliator of affiliateHash
+      let affiliateHash = null;
+      if (input?.affiliateHash) {
+        const AffiliateLinkData = await affiliateLinksDB.getAffiliateLinkByHash(input.affiliateHash);
+        if (!AffiliateLinkData) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `CAMPAIGN_LOG:Router: Affiliate link with hash ${input.affiliateHash} not found. for userId ${userId}`,
+          });
+        }
+        if (AffiliateLinkData.affiliatorUserId !== userId) {
+          affiliateHash = input.affiliateHash;
+        }
       }
       // Build the TokenCampaignOrdersInsert object
       // (some columns have defaults in DB, e.g. status="new")
-      const orderData = {
+      const orderData: TokenCampaignOrdersInsert = {
         userId,
         spinPackageId,
         finalPrice: spinPackage.price.toString(),
@@ -120,16 +140,20 @@ export const campaignRouter = router({
         wallet_address: walletAddress,
         status: "new" as TokenCampaignOrdersStatus,
         currency: spinPackage.currency,
+        affiliateHash: affiliateHash ?? null,
       };
 
       // Insert into the DB
       const order = await tokenCampaignOrdersDB.addOrder(orderData);
+
       if (!order) {
+        logger.error(`CAMPAIGN_LOG:Router: Failed to create order for userId ${userId}:`, orderData, order);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create order.",
+          message: `CAMPAIGN_LOG:Router: Failed to create order.  for userId ${userId}`,
         });
       }
+      logger.info(`CAMPAIGN_LOG:Router: Order created for userId ${userId}:`, order);
       return order;
     }),
 
@@ -152,7 +176,7 @@ export const campaignRouter = router({
       if (!order) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: `Order with ID ${orderId} not found.`,
+          message: `CAMPAIGN_LOG:Router: Order with ID ${orderId} not found. for userId ${userId}`,
         });
       }
 
@@ -160,7 +184,7 @@ export const campaignRouter = router({
       if (order.userId !== userId) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: `Order with ID ${orderId} does not belong to the current user.`,
+          message: `CAMPAIGN_LOG:Router: Order with ID ${orderId} does not belong to the current user. for userId ${userId}`,
         });
       }
 
@@ -218,25 +242,34 @@ export const campaignRouter = router({
       const { orderId, status } = input;
       const order = await tokenCampaignOrdersDB.getOrderById(orderId);
       if (!order) {
-        throw new TRPCError({ code: "NOT_FOUND", message: `Order #${orderId} not found.` });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `CAMPAIGN_LOG:Router:updateOrderStatusConfirmCancel: Order #${orderId} not found. for userId ${userId}`,
+        });
       }
 
       if (order.userId !== userId) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "You are not the owner of this order." });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `CAMPAIGN_LOG:Router:updateOrderStatusConfirmCancel: You are not the owner of this order. for userId ${userId}`,
+        });
       }
 
       // Only allow switching from "new" or "confirming" to the new status.
       if (!["new", "confirming"].includes(order.status)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: `Cannot transition from ${order.status} to ${status}.`,
+          message: `CAMPAIGN_LOG:Router:updateOrderStatusConfirmCancel: Cannot transition from ${order.status} to ${status}. for userId ${userId} and orderId ${orderId}`,
         });
       }
 
       // Perform the update
       const updated = await tokenCampaignOrdersDB.updateOrderById(orderId, { status });
       if (!updated) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Failed to update order status." });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `CAMPAIGN_LOG:Router:updateOrderStatusConfirmCancel: Failed to update order status. for userId ${userId} and orderId ${orderId}`,
+        });
       }
 
       return updated;
@@ -253,9 +286,6 @@ export const campaignRouter = router({
   getOnionCampaignAffiliateData: initDataProtectedProcedure.query(async ({ ctx }) => {
     // 1) Check user
     const userId = ctx.user?.user_id;
-    if (!userId) {
-      throw new TRPCError({ code: "UNAUTHORIZED", message: "User not logged in" });
-    }
 
     // 2) See if there's already a link for onion1-campaign
     let link = await affiliateLinksDB.getAffiliateLinkForOnionCampaign(userId);
@@ -263,6 +293,15 @@ export const campaignRouter = router({
       // 3) If not, create
       const linkHash = generateRandomHash(8);
       link = await affiliateLinksDB.createOnionCampaignLink(userId, linkHash);
+      if (!link) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `CAMPAIGN_LOG:Router:getOnionCampaignAffiliateData: Failed to create affiliate link for userId ${userId}`,
+        });
+      }
+      logger.info(
+        `CAMPAIGN_LOG:Router:getOnionCampaignAffiliateData: Created affiliate link for userId ${userId}: ${link.linkHash}`
+      );
     }
 
     // 4) Sum the spin counts from completed orders with this linkHash

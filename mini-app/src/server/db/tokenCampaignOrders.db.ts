@@ -18,12 +18,12 @@ export const addOrder = async (orderData: TokenCampaignOrdersInsert): Promise<To
     const [inserted] = await db.insert(tokenCampaignOrders).values(orderData).returning().execute();
 
     if (inserted) {
-      logger.log("Order inserted:", inserted);
+      logger.log("tokenCampaignOrdersDB: Order inserted:", inserted);
       return inserted;
     }
     return undefined;
   } catch (error) {
-    logger.error("Error inserting order:", error);
+    logger.error(`tokenCampaignOrdersDB: Error inserting order `, JSON.stringify(orderData), error);
     throw error;
   }
 };
@@ -39,7 +39,7 @@ export const addOrderTx = async (
   const [inserted] = await tx.insert(tokenCampaignOrders).values(orderData).returning().execute();
 
   if (inserted) {
-    logger.log("Order inserted in transaction:", inserted);
+    logger.log("tokenCampaignOrdersDB: Order inserted in transaction:", inserted);
   }
   return inserted;
 };
@@ -54,7 +54,7 @@ export const getOrderById = async (id: number): Promise<TokenCampaignOrders | un
 
     return order;
   } catch (error) {
-    logger.error("Error fetching order by ID:", error);
+    logger.error(`tokenCampaignOrdersDB: Error fetching order by ID (${id}):`, error);
     throw error;
   }
 };
@@ -69,7 +69,7 @@ export const getOrdersByUserId = async (userId: number): Promise<TokenCampaignOr
 
     return ordersResult;
   } catch (error) {
-    logger.error("Error fetching orders by userId:", error);
+    logger.error(`tokenCampaignOrdersDB: Error fetching orders by userId: ${userId}`, error);
     throw error;
   }
 };
@@ -92,12 +92,12 @@ export const updateOrderById = async (
       .execute();
 
     if (updated) {
-      logger.log("Order updated:", updated);
+      logger.log("tokenCampaignOrdersDB: Order updated:", updated);
     }
 
     return updated;
   } catch (error) {
-    logger.error("Error updating order by ID:", error);
+    logger.error("tokenCampaignOrdersDB: Error updating order by ID:", error);
     throw error;
   }
 };
@@ -119,7 +119,7 @@ export const updateOrderByIdTx = async (
     .execute();
 
   if (updated) {
-    logger.log("Order updated in transaction:", updated);
+    logger.log("tokenCampaignOrdersDB: Order updated in transaction:", updated);
   }
 
   return updated;
@@ -143,11 +143,11 @@ export const updateOrderStatus = async (
       .execute();
 
     if (updated) {
-      logger.log(`Order #${id} status updated to ${newStatus}`);
+      logger.log(`tokenCampaignOrdersDB: Order #${id} status updated to ${newStatus}`);
     }
     return updated;
   } catch (error) {
-    logger.error(`Error updating order #${id} status:`, error);
+    logger.error(`tokenCampaignOrdersDB: Error updating order #${id} status:`, error);
     throw error;
   }
 };
@@ -160,7 +160,7 @@ export const getOrdersByStatus = async (status: TokenCampaignOrdersStatus): Prom
   try {
     return await db.select().from(tokenCampaignOrders).where(eq(tokenCampaignOrders.status, status)).execute();
   } catch (error) {
-    logger.error(`Error fetching orders by status (${status}):`, error);
+    logger.error(`tokenCampaignOrdersDB: Error fetching orders by status (${status}):`, error);
     throw error;
   }
 };

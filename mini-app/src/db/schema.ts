@@ -87,6 +87,8 @@ import {
   tokenCampaignUserSpins,
   TokenCampaignUserSpins,
   TokenCampaignUserSpinsInsert,
+  tokenCampaignSpinType,
+  TokenCampaignSpinType,
 } from "./schema/tokenCampaignUserSpins";
 import {
   tokenCampaignSpinPackages,
@@ -187,6 +189,7 @@ export {
   gameLeaderboard,
   campaignTypes,
   tokenCampaignUserSpins,
+  tokenCampaignSpinType,
   tokenCampaignSpinPackages,
   tokenCampaignUserCollections,
   tokenCampaignOrders,
@@ -241,6 +244,7 @@ export type {
   TokenCampaignSpinPackagesInsert,
   TokenCampaignUserCollections,
   TokenCampaignUserCollectionsInsert,
+  TokenCampaignSpinType,
   TokenCampaignOrders,
   TokenCampaignOrdersInsert,
   TokenCampaignOrdersStatus,

@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { affiliateLinks, AffiliateLinksRow } from "@/db/schema/affiliateLinks";
+import { AffiliateItemTypeEnum, affiliateLinks, AffiliateLinksRow } from "@/db/schema/affiliateLinks";
 import { and, eq, sql } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
@@ -137,6 +137,12 @@ export const getAffiliateLinkForOnionCampaign = async (userId: number): Promise<
   return link;
 };
 
+export const getAffiliateLinkByType = async (itemType: AffiliateItemTypeEnum): Promise<AffiliateLinksRow[] | undefined> => {
+  const link = await db.select().from(affiliateLinks).where(eq(affiliateLinks.itemType, itemType)).limit(1).execute();
+
+  return link;
+};
+
 /**
  * Creates a new affiliate link record for the onion1 campaign.
  * itemType = "onion1-campaign"
@@ -172,4 +178,5 @@ export const affiliateLinksDB = {
   incrementAffiliateClicksByLinkId,
   getAffiliateLinkForOnionCampaign,
   createOnionCampaignLink,
+  getAffiliateLinkByType,
 };
