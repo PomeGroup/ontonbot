@@ -15,10 +15,10 @@ export async function handleShareAffiliateLink(req: Request & { bot: Bot }, res:
 
     // Build your message text
     const caption = `
-<b>🍃 Onion1 Campaign 🍃</b>
+<b>🍃 Onion Genesis 🍃</b>
 
 Hey there! Don’t miss your chance to join our exclusive onion token airdrop.
-Buy your Onion1 Campaign NFT spin package now and secure your spot in the next big airdrop event!
+Buy your Onion Genesis Campaign spin package now and secure your spot in the next big airdrop event!
 
 Tap the link below to get started:
 ${share_link}
@@ -40,10 +40,15 @@ Good luck and see you in the onion world! 🏆
     let photoToSend: string | InputFile = imageUrl;
     // Optionally, if imageUrl is a direct URL, fetch & convert to a Buffer + InputFile, etc.
 
-    await req.bot.api.sendPhoto(parseInt(requesting_user, 10), photoToSend, {
-      caption,
+
+    // send a message with the same text without the image
+    await req.bot.api.sendMessage(parseInt(requesting_user, 10), caption, {
       parse_mode: "HTML",
       reply_markup: { inline_keyboard },
+      link_preview_options: {
+        is_disabled: true,
+      },
+
     });
 
     return res.json({ success: true });

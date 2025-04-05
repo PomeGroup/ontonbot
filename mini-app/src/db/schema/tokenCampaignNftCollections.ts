@@ -1,4 +1,4 @@
-import { pgTable, varchar, jsonb, bigint, serial, timestamp, text, index } from "drizzle-orm/pg-core";
+import { pgTable, varchar, jsonb, bigint, serial, timestamp, text, index, boolean } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { campaignTypes } from "@/db/enum";
 
@@ -18,6 +18,8 @@ export const tokenCampaignNftCollections = pgTable(
     salesVolume: bigint("sales_volume", { mode: "number" }).default(0),
     salesCount: bigint("sales_count", { mode: "number" }).default(0),
     lastRegisteredItemIndex: bigint("last_registered_item_index", { mode: "number" }),
+    sorting: bigint("sorting", { mode: "number" }).default(0),
+    isForSale: boolean("is_for_sale").default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date", precision: 3 }).$onUpdate(() => new Date()),
     updatedBy: text("updated_by").default("system").notNull(),
@@ -35,7 +37,22 @@ export const tokenCampaignNftCollections = pgTable(
  * Represents the shape of a row *selected* from the table.
  */
 export type TokenCampaignNftCollections = InferSelectModel<typeof tokenCampaignNftCollections>;
-
+/**
+ * SELECT type secure for public API
+ * remove probabilityWeight, metadataUrl, itemMetaData,address
+ */
+export type TokenCampaignNftCollectionsPublic = Omit<
+  TokenCampaignNftCollections,
+  | "probabilityWeight"
+  | "metadataUrl"
+  | "itemMetaData"
+  | "address"
+  | "updatedBy"
+  | "lastRegisteredItemIndex"
+  | "socialLinks"
+  | "createdAt"
+  | "updatedAt"
+>;
 /**
  * INSERT type
  * Omit columns that:

@@ -545,7 +545,7 @@ export default function CampaignTestPage() {
           <ul className="mt-2 list-disc list-inside text-gray-800">
             {getCollectionsByTypeQuery.data.map((col) => (
               <li key={col.id}>
-                ID: {col.id}, Name: {col.name}, Address: {col.address}
+                ID: {col.id}, Name: {col.name},
               </li>
             ))}
           </ul>

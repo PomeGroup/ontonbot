@@ -110,6 +110,7 @@ import {
   tokenCampaignNftCollections,
   TokenCampaignNftCollections,
   TokenCampaignNftCollectionsInsert,
+  TokenCampaignNftCollectionsPublic,
 } from "./schema/tokenCampaignNftCollections";
 import { tokenCampaignEligibleUsers, TokenCampaignEligibleUsers } from "./schema/tokenCampaignEligibleUsers";
 // export all the enums
@@ -249,6 +250,7 @@ export type {
   TokenCampaignOrdersInsert,
   TokenCampaignOrdersStatus,
   TokenCampaignNftCollections,
+  TokenCampaignNftCollectionsPublic,
   TokenCampaignNftCollectionsInsert,
   CampaignType,
   TokenCampaignEligibleUsers,

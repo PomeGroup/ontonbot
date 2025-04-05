@@ -5,6 +5,7 @@ import {
   tokenCampaignNftCollections,
   TokenCampaignNftCollections,
   TokenCampaignNftCollectionsInsert,
+  TokenCampaignNftCollectionsPublic,
 } from "@/db/schema/tokenCampaignNftCollections";
 import { redisTools } from "@/lib/redisTools";
 import type { PgTransaction } from "drizzle-orm/pg-core/session";
@@ -24,6 +25,10 @@ function buildCacheKeyByAddress(address: string): string {
 
 function buildCacheKeyByCampaignType(campaignType: string): string {
   return `token_campaign_nft_collections:campaign_type:${campaignType}`;
+}
+
+function buildCacheKeyByCampaignTypeSecure(campaignType: string): string {
+  return `token_campaign_nft_collections_secure:campaign_type:${campaignType}`;
 }
 
 /* ------------------------------------------------------------------
@@ -108,7 +113,45 @@ export const getCollectionsByCampaignType = async (campaignType: CampaignType): 
       .select()
       .from(tokenCampaignNftCollections)
       .where(eq(tokenCampaignNftCollections.campaignType, campaignType))
-      .orderBy(asc(tokenCampaignNftCollections.id))
+      .orderBy(asc(tokenCampaignNftCollections.sorting))
+      .execute();
+
+    // Cache the array
+    await redisTools.setCache(cacheKey, JSON.stringify(rows), redisTools.cacheLvl.long);
+
+    return rows;
+  } catch (error) {
+    logger.error("tokenCampaignNftCollectionsDB: Error getting token_campaign_nft_collections by campaignType:", error);
+    throw error;
+  }
+};
+
+export const getCollectionsByCampaignTypeSecure = async (
+  campaignType: CampaignType
+): Promise<TokenCampaignNftCollectionsPublic[]> => {
+  try {
+    const cacheKey = buildCacheKeyByCampaignTypeSecure(campaignType);
+    const cached = await redisTools.getCache(cacheKey);
+    if (cached) {
+      return JSON.parse(cached) as TokenCampaignNftCollectionsPublic[];
+    }
+
+    const rows = await db
+      .select({
+        id: tokenCampaignNftCollections.id,
+        address: tokenCampaignNftCollections.address,
+        name: tokenCampaignNftCollections.name,
+        description: tokenCampaignNftCollections.description,
+        image: tokenCampaignNftCollections.image,
+        campaignType: tokenCampaignNftCollections.campaignType,
+        salesCount: tokenCampaignNftCollections.salesCount,
+        salesVolume: tokenCampaignNftCollections.salesVolume,
+        isForSale: tokenCampaignNftCollections.isForSale,
+        sorting: tokenCampaignNftCollections.sorting,
+      })
+      .from(tokenCampaignNftCollections)
+      .where(eq(tokenCampaignNftCollections.campaignType, campaignType))
+      .orderBy(asc(tokenCampaignNftCollections.sorting))
       .execute();
 
     // Cache the array
@@ -246,7 +289,7 @@ async function revalidateCache(row: TokenCampaignNftCollections) {
   //    a row that belongs to that campaign’s set.
   if (campaignType) {
     const campaignTypeKey = buildCacheKeyByCampaignType(campaignType);
-
+    const campaignTypeSecureKey = buildCacheKeyByCampaignTypeSecure(campaignType);
     // Fetch all from DB
     const rows = await db
       .select()
@@ -256,6 +299,7 @@ async function revalidateCache(row: TokenCampaignNftCollections) {
 
     // Store the updated list
     await redisTools.setCache(campaignTypeKey, JSON.stringify(rows), redisTools.cacheLvl.long);
+    await redisTools.setCache(campaignTypeSecureKey, JSON.stringify(rows), redisTools.cacheLvl.long);
   }
 }
 
@@ -310,4 +354,5 @@ export const tokenCampaignNftCollectionsDB = {
   updateCollectionById,
   updateCollectionByIdTx,
   incrementCollectionSalesTx,
+  getCollectionsByCampaignTypeSecure,
 };

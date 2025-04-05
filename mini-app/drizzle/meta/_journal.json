@@ -351,6 +351,13 @@
       "when": 1743822603033,
       "tag": "0049_awesome_next_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1743840267048,
+      "tag": "0050_amazing_invaders",
+      "breakpoints": true
     }
   ]
 }

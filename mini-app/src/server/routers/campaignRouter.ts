@@ -10,7 +10,7 @@ import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
 import { TokenCampaignOrdersInsert, TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
 import { TRPCError } from "@trpc/server";
 import userEligibilityDB from "@/server/db/tokenCampaignEligibleUsers.db";
-import { affiliateLinksDB, getAffiliateLinkByHash } from "@/server/db/affiliateLinks.db";
+import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
 import { generateRandomHash } from "@/lib/generateRandomHash";
 import { Address } from "@ton/core";
 import { logger } from "@/server/utils/logger";
@@ -28,7 +28,7 @@ export const campaignRouter = router({
     )
     .query(async ({ input }) => {
       const { campaignType } = input;
-      return tokenCampaignNftCollectionsDB.getCollectionsByCampaignType(campaignType);
+      return tokenCampaignNftCollectionsDB.getCollectionsByCampaignTypeSecure(campaignType);
     }),
   /**
    * Get *active* spin packages by campaignType.
@@ -88,7 +88,17 @@ export const campaignRouter = router({
         await tokenCampaignNftCollectionsDB.incrementCollectionSalesTx(tx, selectedCollection.id);
         logger.log(`Incremented salesCount for collection ${selectedCollection.id} by 1`);
         // 6) Return the chosen collection
-        return selectedCollection;
+        // convert selectedCollection to secure type
+        const selectedCollectionSecure = {
+          ...selectedCollection,
+          // Add any additional properties you want to secure
+          itemsWithWeight: undefined,
+          probabilityWeight: undefined,
+          createdAt: undefined,
+          updatedAt: undefined,
+          address: undefined,
+        };
+        return selectedCollectionSecure;
       });
     }),
 

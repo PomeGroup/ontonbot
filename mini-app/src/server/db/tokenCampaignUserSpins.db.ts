@@ -313,6 +313,7 @@ export async function getAllCollectionsWithUserCount(
         tokenCampaignNftCollections.socialLinks,
         tokenCampaignNftCollections.address
       )
+      .orderBy(tokenCampaignNftCollections.sorting)
       .execute();
 
     return result;
