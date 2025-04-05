@@ -42,18 +42,15 @@ interface EventCardProps {
     hasPayment?: boolean | null;
     hasRegistration?: boolean | null;
   };
-  currentUserId?: number;
   timeOnly?: boolean;
   noClick?: boolean;
+  afterTitle?: React.ReactNode;
 }
 
 /**
  * Event card component that displays event information in a clean, modern layout
  */
-function EventCard(
-  { event, currentUserId = 0, timeOnly, noClick }: EventCardProps,
-  ref: ForwardedRef<HTMLDivElement> | null
-) {
+function EventCard({ event, afterTitle, timeOnly, noClick }: EventCardProps, ref: ForwardedRef<HTMLDivElement> | null) {
   // ------------------------- //
   //          HOOKS            //
   // ------------------------- //
@@ -160,12 +157,15 @@ function EventCard(
           {/* Event Details */}
           <div className="flex flex-col overflow-hidden">
             {/* Event Title */}
-            <Typography
-              variant="callout"
-              className="mb-[5.5px] h-8 line-clamp-2 leading-[17px]"
-            >
-              {title}
-            </Typography>
+            <div className="flex items-center justify-between gap-4">
+              <Typography
+                variant="callout"
+                className="mb-[5.5px] h-8 line-clamp-2 leading-[17px]"
+              >
+                {title}
+              </Typography>
+              {afterTitle}
+            </div>
 
             {/* Date and Time */}
             <div

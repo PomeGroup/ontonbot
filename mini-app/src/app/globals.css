@@ -79,11 +79,11 @@ time,
 mark,
 audio,
 video {
-    margin: 0;
-    padding: 0;
-    font-size: 100%;
-    font: inherit;
-    vertical-align: baseline;
+  margin: 0;
+  padding: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
 }
 
 /* HTML5 display-role reset for older browsers */
@@ -98,34 +98,34 @@ hgroup,
 menu,
 nav,
 section {
-    display: block;
+  display: block;
 }
 
 body {
-    line-height: 1;
+  line-height: 1;
 }
 
 ol,
 ul {
-    list-style: none;
+  list-style: none;
 }
 
 blockquote,
 q {
-    quotes: none;
+  quotes: none;
 }
 
 blockquote:before,
 blockquote:after,
 q:before,
 q:after {
-    content: "";
-    content: none;
+  content: "";
+  content: none;
 }
 
 table {
-    border-collapse: collapse;
-    border-spacing: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
 }
 
 @tailwind base;
@@ -133,101 +133,101 @@ table {
 @tailwind utilities;
 
 @layer base {
-    :root {
-        --shadcn-background: #ffffff;
-        --shadcn-shadcn-foreground: 222.2 84% 4.9%;
+  :root {
+    --shadcn-background: #ffffff;
+    --shadcn-shadcn-foreground: 222.2 84% 4.9%;
 
-        --shadcn-card: 0 0% 100%;
-        --shadcn-card-foreground: 222.2 84% 4.9%;
+    --shadcn-card: 0 0% 100%;
+    --shadcn-card-foreground: 222.2 84% 4.9%;
 
-        --shadcn-popover: 0 0% 100%;
-        --shadcn-popover-foreground: 222.2 84% 4.9%;
+    --shadcn-popover: 0 0% 100%;
+    --shadcn-popover-foreground: 222.2 84% 4.9%;
 
-        --shadcn-primary: 211, 100%, 50%;
-        --shadcn-primary-foreground: 0, 0%, 100%;
+    --shadcn-primary: 211, 100%, 50%;
+    --shadcn-primary-foreground: 0, 0%, 100%;
 
-        --shadcn-secondary: 211, 100%, 50%, 0.1;
-        --shadcn-secondary-foreground: 211, 100%, 50%;
+    --shadcn-secondary: 211, 100%, 50%, 0.1;
+    --shadcn-secondary-foreground: 211, 100%, 50%;
 
-        --shadcn-muted: 0, 0%, 90%, 1;
-        --shadcn-muted-foreground: 0, 0%, 35%;
+    --shadcn-muted: 0, 0%, 90%, 1;
+    --shadcn-muted-foreground: 0, 0%, 35%;
 
-        --shadcn-accent: 211, 100%, 50%;
-        --shadcn-accent-foreground: 0, 0%, 100%;
+    --shadcn-accent: 211, 100%, 50%;
+    --shadcn-accent-foreground: 0, 0%, 100%;
 
-        --shadcn-destructive: 3, 99%, 60%, 0.1;
-        --shadcn-destructive-foreground: 3, 100%, 59%;
+    --shadcn-destructive: 3, 99%, 60%, 0.1;
+    --shadcn-destructive-foreground: 3, 100%, 59%;
 
-        --shadcn-border: 214.3 31.8% 91.4%;
-        --shadcn-input: 214.3 31.8% 91.4%;
-        --shadcn-ring: 222.2 84% 4.9%;
+    --shadcn-border: 0, 0%, 50%, 0.55;
+    --shadcn-input: 214.3 31.8% 91.4%;
+    --shadcn-ring: 222.2 84% 4.9%;
 
-        --shadcn-radius: 10px;
-    }
+    --shadcn-radius: 10px;
+  }
 
-    .dark {
-        --shadcn-background: 240, 3%, 11%;
-        --shadcn-foreground: 255, 4%, 79%;
+  .dark {
+    --shadcn-background: 240, 3%, 11%;
+    --shadcn-foreground: 255, 4%, 79%;
 
-        --shadcn-card: 240, 1%, 73%;
-        --shadcn-card-foreground: 0 0.72% 72.75%;
+    --shadcn-card: 240, 1%, 73%;
+    --shadcn-card-foreground: 0 0.72% 72.75%;
 
-        --shadcn-popover: 240, 5%, 24%;
-        --shadcn-popover-foreground: 255, 4%, 79%;
+    --shadcn-popover: 240, 5%, 24%;
+    --shadcn-popover-foreground: 255, 4%, 79%;
 
-        --shadcn-primary: 211 100% 50%;
-        --shadcn-primary-foreground: 0 0% 100%;
+    --shadcn-primary: 211 100% 50%;
+    --shadcn-primary-foreground: 0 0% 100%;
 
-        --shadcn-secondary: 211, 100%, 50%, 0.2;
-        --shadcn-secondary-foreground: 201, 100%, 46%;
+    --shadcn-secondary: 211, 100%, 50%, 0.2;
+    --shadcn-secondary-foreground: 201, 100%, 46%;
 
-        --shadcn-muted: 240, 5%, 24%, 1;
-        --shadcn-muted-foreground: 255, 4%, 79%;
+    --shadcn-muted: 240, 5%, 24%, 1;
+    --shadcn-muted-foreground: 255, 4%, 79%;
 
-        --shadcn-accent: 240, 4%, 16%;
-        --shadcn-accent-foreground: 212.7 26.8% 83.9%;
+    --shadcn-accent: 240, 4%, 16%;
+    --shadcn-accent-foreground: 212.7 26.8% 83.9%;
 
-        --shadcn-destructive: 3, 100%, 59%, 1;
-        --shadcn-destructive-foreground: 210 40% 98%;
+    --shadcn-destructive: 3, 100%, 59%, 1;
+    --shadcn-destructive-foreground: 210 40% 98%;
 
-        --shadcn-border: 240, 1%, 73%;
-        --shadcn-input: 240, 1%, 73%;
-        --shadcn-ring: 217.2 32.6% 17.5%;
-    }
+    --shadcn-border: 0, 0%, 50%, 0.55;
+    --shadcn-input: 240, 1%, 73%;
+    --shadcn-ring: 217.2 32.6% 17.5%;
+  }
 }
 
 @layer base {
-    body {
-        @apply dark:bg-[#1C1C1E] bg-white;
-        @apply box-border;
-    }
+  body {
+    @apply dark:bg-[#1C1C1E] bg-white;
+    @apply box-border;
+  }
 }
 
 /* Custom utility classes to hide scrollbars */
 .hide-scrollbar::-webkit-scrollbar {
-    display: none; /* Hide scrollbar for Webkit browsers */
+  display: none; /* Hide scrollbar for Webkit browsers */
 }
 
 .hide-scrollbar {
-    -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
-    scrollbar-width: none; /* Hide scrollbar for Firefox */
+  -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
 }
 
 @layer base {
-    body {
-        @apply bg-cn-background text-cn-foreground;
-    }
+  body {
+    @apply bg-cn-background text-cn-foreground;
+  }
 }
 
 @layer utilities {
-    .text-gradient {
-        background: linear-gradient(90deg, #624dad 6.9%, #8f7dd5 51.72%, #b3daf9 96.55%);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
+  .text-gradient {
+    background: linear-gradient(90deg, #624dad 6.9%, #8f7dd5 51.72%, #b3daf9 96.55%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 ul > li > div > div > div.text-sm {
-    overflow: visible;
+  overflow: visible;
 }

@@ -13,13 +13,20 @@ import ScanRegistrantQRCode from "@/app/_components/Event/ScanRegistrantQRCode";
 import EventCard from "@/app/_components/EventCard/EventCard";
 import { trpc } from "@/app/_trpc/client";
 import ActionCard from "@/components/ActionCard";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useUserStore } from "@/context/store/user.store";
 import { useGetEvent } from "@/hooks/events.hooks";
 import useWebApp from "@/hooks/useWebApp";
 import { canUserEditEvent, canUserPerformRole, CheckAdminOrOrganizer } from "@/lib/userRolesUtils";
 import { wait } from "@/lib/utils";
 import { useSectionStore } from "@/zustand/useSectionStore";
-import { Pen, QrCode, ScanLine } from "lucide-react";
+import { EllipsisVertical, Pen, QrCode, ScanLine } from "lucide-react";
 
 export default function ManageIndexPage() {
   const webApp = useWebApp();
@@ -74,11 +81,32 @@ export default function ManageIndexPage() {
             paymentType: eventData.payment_details.payment_type,
             ticketPrice: eventData.payment_details.price,
           }}
-          noClick
+          afterTitle={
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <EllipsisVertical className="inline text-primary" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="mr-4">
+                <DropdownMenuItem>
+                  <QrCode />
+                  Get QR Code
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {eventData.participationType === "in_person" && (
+                  <ScanRegistrantQRCode>
+                    <DropdownMenuItem>
+                      <ScanLine />
+                      Scan QR Code
+                    </DropdownMenuItem>
+                  </ScanRegistrantQRCode>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          }
         />
         {canEditEvent && (
-          <div className="flex gap-3 mx-3 mt-3">
-            {eventData.participationType !== "online" ? (
+          <div className="grid xs:grid-cols-2 gap-3 mx-3 mt-3">
+            {eventData.participationType === "online" ? (
               <CustomButton
                 onClick={async () => {
                   if (eventData.event_uuid) {
