@@ -14,9 +14,9 @@ const SectionTitle = ({ children }: PropsWithChildren) => <Typography variant="c
 const SectionBody = ({ children, className }: PropsWithChildren & { className?: string }) => <Typography variant="subheadline1" weight="normal" className={className}>{children}</Typography>;
 
 export const AffiliateInfo = ({ open, onClose }: Props) => {
-    const router = useRouter();
     const handleOnClick = () => {
-        router.push("/");
+        // TODO: replace the following URL with appropriate one
+        window.Telegram.WebApp.openLink("https://onton.live/");
     };
 
     return (
@@ -25,7 +25,7 @@ export const AffiliateInfo = ({ open, onClose }: Props) => {
             onClose={onClose}
             className="text-white grid place-items-center"
         >
-            <Box className="bg-navy px-4 py-5 flex flex-col gap-4 rounded-2lg border border-brand-divider-dark w-10/12">
+            <Box className="bg-navy px-4 py-5 flex flex-col gap-4 rounded-2lg border border-brand-divider-dark w-10/12 max-h-[90vh]">
                 <Box
                     display="flex"
                     justifyContent="space-between"
@@ -39,7 +39,7 @@ export const AffiliateInfo = ({ open, onClose }: Props) => {
                     />
                 </Box>
 
-                <div>
+                <div className="overflow-x-hidden overflow-y-auto">
                     <SectionTitle>Share Your Link</SectionTitle>
                     <SectionBody className="mb-3">Get a personal link to share. Anyone who buys spins through it counts as your referral.</SectionBody>
 

@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/app/_trpc/client";
 import { useAffiliate } from "../hooks/useAffiliate";
 import { customToast } from "../GenesisOnions.utils";
-import { Share } from "lucide-react";
+import { InfoIcon, Share } from "lucide-react";
+import { AffiliateInfo } from "./AffiliateInfo";
+import { useState } from "react";
 
 const rewardsGuide = [
     {
@@ -20,6 +22,7 @@ const rewardsGuide = [
 
 export const ShareAndEarn = () => {
     const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate()
+    const [showAffiliateInfo, setShowAffiliateInfo] = useState(false)
 
     const { data, isLoading, isError } = trpc.campaign.getOnionCampaignAffiliateData.useQuery();
 
@@ -53,6 +56,7 @@ export const ShareAndEarn = () => {
 
     return (
         <div className="multi-step-gradient-bg px-4">
+            <AffiliateInfo open={showAffiliateInfo} onClose={() => setShowAffiliateInfo(false)} />
             <InfoBox className="flex flex-col items-center bg-white/10">
                 <div className="flex flex-col gap-1 items-center mb-2">
                     <Typography
@@ -62,7 +66,13 @@ export const ShareAndEarn = () => {
                         Share & Earn
                     </Typography>
 
-                    <Typography variant="subheadline2">Invite your friends to earn ONIONs.</Typography>
+                    <div className="flex gap-1 items-center">
+                        <button onClick={() => setShowAffiliateInfo(true)} className="border-none bg-transparent outline-none hover:opacity-80">
+                            <InfoIcon size={16} />
+                        </button>
+
+                        <Typography variant="subheadline2">Invite your friends to earn ONIONs.</Typography>
+                    </div>
                 </div>
 
 
