@@ -12,3 +12,5 @@ export const PROBABILITY_WEIGHTS = {
     SILVER: .4,
     BRONZE: .5,
 }
+export const AFFILIATE_HASH_SEARCH_PARAM_KEY = 'affiliate'
+export const AFFILIATE_HASH_LOCAL_KEY = 'genesis-onion-affiliate-id'
