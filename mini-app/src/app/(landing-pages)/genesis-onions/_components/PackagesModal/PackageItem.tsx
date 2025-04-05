@@ -2,40 +2,72 @@ import Typography from "@/components/Typography";
 import { TokenCampaignOrders, TokenCampaignSpinPackages } from "@/db/schema";
 import { SPIN_PRICE_IN_TON } from "../../GenesisOnions.constants";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
 import { ListItem } from "./ListItem";
 import Image from "next/image";
 import { useTonAddress } from "@tonconnect/ui-react";
 import { useWallet } from "../../hooks/useWallet";
-import { usePackage } from "../../hooks/usePackage";
 import { useOrder } from "../../hooks/useOrder";
+import RaffleImage from "../../_assets/images/raffle.svg";
+import { useState } from "react";
+import useTransferPayment from "@/app/(navigation)/sample/useTransferPayment";
 
 interface Props {
     pkg: TokenCampaignSpinPackages;
-    onOpenWalletModal: (order?: TokenCampaignOrders) => void;
+    onOrderPaid: (order: TokenCampaignOrders) => void;
+    onPaymentFailed: (err: Error) => void;
 }
 
-export const PackageItem = ({ pkg, onOpenWalletModal }: Props) => {
+export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed }: Props) => {
+    const [isPaying, setIsPaying] = useState(false);
+    const transfer = useTransferPayment();
+
     const originalPrice = pkg.spinCount * SPIN_PRICE_IN_TON;
     const effectivePrice = Number(pkg.price);
     const discountAmount = originalPrice - effectivePrice;
+
     const hasWallet = !!useTonAddress();
     const { walletModal } = useWallet();
-    const { pay, submitOrder, isPaying } = useOrder();
+    const { updateStatusMutation, submitOrder } = useOrder();
 
     const handlePay = async () => {
+        setIsPaying(true);
+
         if (!hasWallet) {
             walletModal.open();
-            onOpenWalletModal();
+            setIsPaying(false);
             return;
         } else {
             // create an order
             const order = await submitOrder(pkg.id);
 
-            onOpenWalletModal(order);
+            if (!order) throw new Error("Order not created");
 
-            // pay for the order
-            await pay(order);
+
+            try {
+                const walletAddress = order?.wallet_address
+                const orderId = order.id
+
+                if (!walletAddress) {
+                    throw new Error("Wallet address not found");
+                }
+
+                try {
+                    await updateStatusMutation.mutateAsync({ orderId, status: "confirming" });
+
+                    await transfer(walletAddress, parseFloat(order.finalPrice), "TON", { comment: `OnionCampaign=${order.uuid}` });
+
+                    onOrderPaid(order);
+                } catch (error) {
+                    console.error("Payment error:", error);
+                    await updateStatusMutation.mutateAsync({ orderId, status: "cancelled" });
+
+                    throw new Error("Transaction canceled or failed!");
+                }
+            } catch (error) {
+                onPaymentFailed(error instanceof Error ? error : new Error("Unsuccesful payment!"));
+            } finally {
+                setIsPaying(false);
+            }
         }
     };
 
@@ -45,16 +77,12 @@ export const PackageItem = ({ pkg, onOpenWalletModal }: Props) => {
                 <div className="flex flex-col gap-4 bg-white/15 p-2 rounded-2lg border">
                     <div className="flex gap-2">
                         <div>
-                            {pkg.imageUrl ? (
-                                <Image
-                                    src={pkg.imageUrl}
-                                    alt={pkg.name}
-                                    width={36}
-                                    height={36}
-                                />
-                            ) : (
-                                <div className="bg-slate-600 rounded-full w-9 h-9" />
-                            )}
+                            <Image
+                                src={pkg.imageUrl ?? RaffleImage}
+                                alt={pkg.name}
+                                width={36}
+                                height={36}
+                            />
                         </div>
 
                         <div className="flex flex-col gap-1 overflow-hidden">
@@ -63,7 +91,7 @@ export const PackageItem = ({ pkg, onOpenWalletModal }: Props) => {
                                 weight="medium"
                                 className="text-nowrap text-ellipsis overflow-hidden"
                             >
-                                {pkg.description}
+                                {pkg.spinCount} spins
                             </Typography>
 
                             <h3>

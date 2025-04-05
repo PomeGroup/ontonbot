@@ -8,6 +8,7 @@ export type DataStatusProps = {
   description?: ReactNode;
   size?: keyof typeof ANIMATION_SIZES;
   className?: string;
+  canvasWrapperClassName?: string
 };
 
 const DATA_STATUS_ANIMATIONS = {
@@ -45,7 +46,7 @@ export default function DataStatus(props: DataStatusProps) {
         height={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.md}
         // @ts-expect-error
         width={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.md}
-        className={"mx-auto mb-3"}
+        className={cn("mx-auto mb-3", props.canvasWrapperClassName)}
       />
       <h4 className="block text-[20px] font-semibold mb-1">{props.title}</h4>
       <p className="text-center text-cn-muted-foreground">{props.description}</p>

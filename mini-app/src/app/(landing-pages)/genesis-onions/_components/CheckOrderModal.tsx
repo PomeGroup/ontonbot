@@ -65,6 +65,7 @@ export const CheckOrderModal = ({ order: orderArg, onClose, onSuccess, onCancel 
                     status="pending"
                     title={`Checking Your Payment`}
                     description={<div className="text-white my-10 px-10">Hold on a second, we need to make sure the payment went through successfully.</div>}
+                    canvasWrapperClassName="[&>canvas]:max-w-32 max-w-32"
                 />
             </Box>
         </Modal>

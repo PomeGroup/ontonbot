@@ -1,32 +1,29 @@
 import { InfoBox } from "./InfoBox";
 import GiftBoxImage from "../_assets/images/gift-box.svg";
-import ApeImage from "../_assets/images/ape.png";
 import Typography from "@/components/Typography";
-import CapacityProgressBar from "./CapacityProgressBar";
 import { Button } from "@/components/ui/button";
 import ShareIconImage from "../_assets/icons/share_2.svg";
 import Image from "next/image";
 import { trpc } from "@/app/_trpc/client";
 import { toast } from "sonner";
+import { useAffiliate } from "../hooks/useAffiliate";
+import { customToast } from "../GenesisOnions.utils";
 
 export const ShareAndEarn = () => {
-    const shareAffiliateLinkMutation = trpc.telegramInteractions.requestShareAffiliateOnionCampaign.useMutation();
+    const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate()
 
     const { data, isLoading, isError } = trpc.campaign.getOnionCampaignAffiliateData.useQuery();
 
-    const invitesCount = data?.totalSpins ?? 0;
     const shareUrl = `https://t.me/theontonbot/start?startapp=${data?.linkHash}`;
     const shareText = `${shareUrl} \nA friend has invited you to join ONTON, Join, spin and collect Genesis ONIONs`;
 
-    const handleInviteOnTelegram = async () => {
+    const handleInviteOnTelegram = () => {
         try {
-            await shareAffiliateLinkMutation.mutateAsync();
-            window.Telegram.WebApp.close();
-
-        } catch {
-            toast.error('Unable to open the invitation dialogue, please try again later.');
+            inviteOnTelegram();
+        } catch (error) {
+            customToast.error("Unable to open the invitation dialogue, please try again later.");
         }
-    };
+    }
 
     const handleShare = async () => {
         const shareData: ShareData = {
@@ -38,7 +35,7 @@ export const ShareAndEarn = () => {
         try {
             await navigator.share(shareData);
         } catch (err) {
-            toast.error("Error sharing, please try again later.");
+            customToast.error("Error sharing, please try again later.");
         }
     };
 
@@ -103,8 +100,8 @@ export const ShareAndEarn = () => {
                             size="lg"
                             className="rounded-2lg h-full flex flex-1 items-center justify-center bg-orange hover:bg-orange/80 overflow-hidden drop-shadow-md"
                             onClick={handleInviteOnTelegram}
-                            isLoading={shareAffiliateLinkMutation.isLoading}
-                            disabled={shareAffiliateLinkMutation.isLoading}
+                            isLoading={isLoadingInviteOnTelegram}
+                            disabled={isLoadingInviteOnTelegram}
                         >
                             <Typography
                                 variant="body"

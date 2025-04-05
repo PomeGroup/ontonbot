@@ -204,6 +204,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
                         type="button"
                         size="lg"
                         disabled={isSpinning || isLoadingUserSpinStats || isErrorUserSpinStats || isLoadingEligibility || isErrorEligibility}
+                        isLoading={isSpinning}
                         className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all duration-300 transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
                     >
                         <Typography

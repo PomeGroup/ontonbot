@@ -1,3 +1,4 @@
+/* TODO: find a way in https://github.com/ton-connect/sdk to change the modal z-index programmatically */
 [data-tc-modal="true"] {
   z-index: 9999 !important;
 }
@@ -53,5 +54,9 @@
 }
 
 .multi-step-gradient-bg {
-  background: linear-gradient(180deg, #0A1C33 10.5%, #203248 36.95%, #0B1D34 63%, #0A1C33 100%);
+  background: linear-gradient(180deg, #0a1c33 10.5%, #203248 36.95%, #0b1d34 63%, #0a1c33 100%);
+}
+
+.toast {
+  @apply flex gap-4 items-center !bg-zinc-800/80 p-4 rounded-2xl text-white backdrop-blur-sm;
 }

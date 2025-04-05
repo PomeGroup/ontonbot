@@ -10,20 +10,17 @@ export const useWallet = () => {
     const addWalletMutation = trpc.users.addWallet.useMutation();
 
     useEffect(() => {
-        if (!user?.user_id) return;
-        if (tonWalletAddress) {
-            // user has connected wallet or changed wallet
-            if (!user?.wallet_address) {
-                // If user doesn't have a wallet in DB, update
-                // toast.success("Your wallet is now connected");
-                addWalletMutation.mutate({
-                    wallet: tonWalletAddress,
-                });
-            }
+        if (!user?.user_id || !tonWalletAddress) return;
+
+        // user has connected wallet or changed wallet
+        if (!user?.wallet_address) {
+            addWalletMutation.mutate({
+                wallet: tonWalletAddress,
+            });
         }
     }, [user, tonWalletAddress, addWalletMutation]);
 
     return {
         walletModal,
-    }
-}
+    };
+};

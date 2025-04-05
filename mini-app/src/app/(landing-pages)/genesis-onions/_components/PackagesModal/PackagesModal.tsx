@@ -5,26 +5,37 @@ import { PackageItem } from "./PackageItem";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePackage } from "../../hooks/usePackage";
+import { toast } from "sonner";
+import { useAffiliate } from "../../hooks/useAffiliate";
+import { customToast } from "../../GenesisOnions.utils";
 
 interface Props {
     open: boolean;
     onClose: () => void;
     onOrderPaid: (order: TokenCampaignOrders) => void;
+    onOrderPaymentFailed: (err: Error) => void;
 }
 
-export const PackagesModal = ({ open, onClose, onOrderPaid }: Props) => {
-    const { packages, isErrorPackages, isLoadingPackages } = usePackage()
+export const PackagesModal = ({ open, onClose, onOrderPaid, onOrderPaymentFailed }: Props) => {
+    const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate();
+
+    const { packages, isErrorPackages, isLoadingPackages } = usePackage();
 
     if (isLoadingPackages) return null;
     if (isErrorPackages) return <div>Error! Try again later...</div>;
 
-    const handleOpenWalletModal = (order?: TokenCampaignOrders) => {
-        if (order) {
-            // TODO: it causes the CheckOrderModal to open while the wallet modal is open in front of it. it'd be better to start polling here, then after transaction made, open that CheckOrderModal
-            onOrderPaid(order);
-        }
+    const handleOrderPaid = (order: TokenCampaignOrders) => {
+        onOrderPaid(order);
 
         onClose();
+    };
+
+    const handleInviteOnTelegram = () => {
+        try {
+            inviteOnTelegram();
+        } catch (error) {
+            customToast.error("Unable to open the invitation dialogue, please try again later.");
+        }
     };
 
     return (
@@ -67,7 +78,8 @@ export const PackagesModal = ({ open, onClose, onOrderPaid }: Props) => {
                     <div className="grid grid-cols-3 gap-2">
                         {packages?.map((pkg) => (
                             <PackageItem
-                                onOpenWalletModal={handleOpenWalletModal}
+                                onOrderPaid={handleOrderPaid}
+                                onPaymentFailed={onOrderPaymentFailed}
                                 key={pkg.id}
                                 pkg={pkg as TokenCampaignSpinPackages}
                             />
@@ -102,6 +114,9 @@ export const PackagesModal = ({ open, onClose, onOrderPaid }: Props) => {
                     <Button
                         variant="outline"
                         className="h-full text-white border flex-1 bg-transparent"
+                        onClick={handleInviteOnTelegram}
+                        disabled={isLoadingInviteOnTelegram}
+                        isLoading={isLoadingInviteOnTelegram}
                     >
                         <Typography
                             variant="body"

@@ -1,5 +1,5 @@
 import { trpc } from "@/app/_trpc/client";
-import { GENESIS_ONIONS_CAMPAIGN_TYPE } from "../../GenesisOnions.constants";
+import { GENESIS_ONIONS_CAMPAIGN_TYPE, RAFFLE_CAROUSEL_RESULT_PADDING } from "../../GenesisOnions.constants";
 import { useMemo } from "react";
 import { generateWeightedArray } from "./useSpin.utils";
 import { TokenCampaignNftCollections } from "@/db/schema";
@@ -21,14 +21,33 @@ export const useSpin = () => {
     const spin = async () => {
         if (!slides) throw new Error("Spin attempted before slides are ready");
 
-        const response = await spinMutation.mutateAsync({ campaignType: GENESIS_ONIONS_CAMPAIGN_TYPE });
+        const response = await spinMutation.mutateAsync({
+            campaignType: GENESIS_ONIONS_CAMPAIGN_TYPE,
+        });
+
         const resultId = response.id;
 
-        const index = slides.findLastIndex((slide) => slide.id === resultId);
-        if (index == null || index < 0) throw new Error("No index found for the resultId");
+        // Define padding boundaries (adjust as needed)
+        const minIndex = RAFFLE_CAROUSEL_RESULT_PADDING;
+        const maxIndex = slides.length - RAFFLE_CAROUSEL_RESULT_PADDING - 1;
 
-        return index;
+        // Find *all* matching indices
+        const matchingIndices = slides
+            .map((slide, index) => ({ id: slide.id, index }))
+            .filter(({ id, index }) => id === resultId && index >= minIndex && index <= maxIndex)
+            .map(({ index }) => index);
+
+        if (matchingIndices.length === 0) {
+            throw new Error("No index found for the resultId within padded range");
+        }
+
+        // Pick one randomly (or you can pick the middle one, or first one, etc.)
+        const chosenIndex =
+            matchingIndices[Math.floor(Math.random() * matchingIndices.length)];
+
+        return chosenIndex;
     };
+
 
     return {
         collections,

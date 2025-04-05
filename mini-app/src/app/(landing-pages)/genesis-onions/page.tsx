@@ -6,15 +6,30 @@ import { YourNFTs } from "./_components/YourNFTs";
 import { RaffleCarousel } from "./_components/RaffleCarousel";
 import { Capacity } from "./_components/Capacity";
 import { useState } from "react";
-import { Footer } from "./_components/Footer";
-import { AccessRestrictedModal } from "./_components/AccessRestrictedModal";
 import { Header } from "./_components/Header";
-import { PackagesModal } from "./_components/PackagesModal";
-import { Prize } from "./_components/Prize";
 import { TokenCampaignNftCollections, TokenCampaignOrders } from "@/db/schema";
 import { useUserCampaign } from "./hooks/useUserCampaign";
 import { CheckOrderModal } from "./_components/CheckOrderModal";
 import { useSpin } from "./hooks/useSpin";
+import dynamic from "next/dynamic";
+import { Toaster } from "sonner";
+import { customToast } from "./GenesisOnions.utils";
+
+const AccessRestrictedModal = dynamic(
+    () => import("./_components/AccessRestrictedModal").then((mod) => mod.AccessRestrictedModal),
+    {
+        ssr: false,
+    }
+);
+const PackagesModal = dynamic(() => import("./_components/PackagesModal").then((mod) => mod.PackagesModal), {
+    ssr: false,
+});
+const Prize = dynamic(() => import("./_components/Prize").then((mod) => mod.Prize), {
+    ssr: false,
+});
+const Footer = dynamic(() => import("./_components/Footer").then((mod) => mod.Footer), {
+    ssr: false,
+});
 
 export default function GenesisOnions() {
     const { refetchCollections } = useSpin();
@@ -46,14 +61,23 @@ export default function GenesisOnions() {
     const handleOrderSuccess = () => {
         invalidateUserSpinStats();
         setOrderToCheck(undefined);
+        customToast.success("Payment was successful! Spin and Enjoy");
+    };
+
+    const handleOrderPaymentFailed = (error: Error) => {
+        setOrderToCheck(undefined);
+        customToast.error(error.message);
     };
 
     const handleOrderCancel = () => {
         setOrderToCheck(undefined);
+        customToast.error("Payment was not successful! Please try again.");
     };
 
     return (
         <>
+            <Toaster richColors />
+
             <Prize
                 prize={prize}
                 onClose={() => setPrize(undefined)}
@@ -67,6 +91,7 @@ export default function GenesisOnions() {
                     open={showPackagesModal}
                     onClose={() => setShowPackagesModal(false)}
                     onOrderPaid={handleOrderPaid}
+                    onOrderPaymentFailed={handleOrderPaymentFailed}
                 />
             )}
 

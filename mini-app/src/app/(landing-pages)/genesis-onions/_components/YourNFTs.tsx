@@ -4,12 +4,13 @@ import { useMemo } from "react";
 import Image from 'next/image';
 import { useUserCampaign } from "../hooks/useUserCampaign";
 import { cn } from "@/utils";
+import { Info } from "lucide-react";
 
 export const YourNFTs = () => {
     const { userCollection, isLoadingUserCollection, isErrorUserCollection } = useUserCampaign()
 
     const nftsCount = useMemo(() => {
-        return userCollection?.reduce((acc, item) => acc + item.count, 0)
+        return userCollection?.reduce((acc, item) => acc + item.count, 0) ?? 0
     }, [userCollection])
 
     if (isLoadingUserCollection) return null
@@ -46,13 +47,20 @@ export const YourNFTs = () => {
                 </InfoBox>))}
             </div>
 
+            {nftsCount > 0 && <div className="flex gap-1 items-center px-1.5">
+                <Info size={16} />
+                <Typography variant="caption1" weight="normal">NFTs will be minted and sent to your wallet on April 22nd.</Typography>
+            </div>}
+
             <InfoBox className="bg-white/5">
                 <Typography variant="footnote" weight="normal">
 
                     {
                         nftsCount === 0 ?
                             'You have 0 Genesis Onions. Spin or invite friends to claim Gold, Silver, and Bronze ONIONs now!'
-                            : 'Spin or invite friends to claim more Gold, Silver, and Bronze ONIONs now!'
+                            : <div>
+                                <span className="font-bold">Spin</span> or <span className="font-bold">invite friends</span> to claim more <span className="font-bold">Gold</span>, <span className="font-bold">Silver</span>, and <span className="font-bold">Bronze ONIONs</span> now!
+                            </div>
                     }
                 </Typography>
             </InfoBox>
