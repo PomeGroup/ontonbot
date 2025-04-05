@@ -219,10 +219,7 @@ const DiscoverTournaments: React.FC = () => {
 
       <div className="grid grid-cols-[repeat(auto-fill,_minmax(160px,_1fr))] gap-4">
         {tournomants.isSuccess && !tournomants.data?.pages[0].tournaments.length && (
-          <CustomCard
-            className="col-span-2"
-            defaultPadding
-          >
+          <CustomCard defaultPadding>
             <DataStatus
               status="not_found"
               title="No tournaments found"
@@ -231,10 +228,7 @@ const DiscoverTournaments: React.FC = () => {
           </CustomCard>
         )}
         {tournomants.isError && (
-          <CustomCard
-            className="col-span-2"
-            defaultPadding
-          >
+          <CustomCard defaultPadding>
             <DataStatus
               status="searching"
               title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
@@ -252,13 +246,13 @@ const DiscoverTournaments: React.FC = () => {
                   variant="rectangular"
                   width={120}
                   height={120}
-                  className="rounded-md"
+                  className="rounded-md w-full"
                 />
                 <Skeleton
                   variant="rectangular"
                   width={80}
                   height={36}
-                  className="rounded-md mt-2"
+                  className="rounded-md w-full mt-2"
                 />
               </div>
             ))
