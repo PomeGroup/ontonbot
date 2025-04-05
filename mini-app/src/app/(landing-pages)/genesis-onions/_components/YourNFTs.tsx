@@ -20,7 +20,7 @@ export const YourNFTs = () => {
         <div className="flex flex-col gap-3">
             <Typography variant="subheadline2">Your NFTs</Typography>
             <div className="flex gap-3">
-                {userCollection?.map(item => (<InfoBox className="p-1 flex gap-2 flex-1 justify-between items-center bg-white/10" key={item.name}>
+                {userCollection?.map(item => (<InfoBox className="p-1 flex overflow-hidden flex-1 justify-between items-center bg-white/10" key={item.name}>
                     {item.image && <Image src={item.image} className="rounded-md" width={32} height={32} alt={`${item.name} NFT`} />}
 
                     <div className="flex flex-col items-center">

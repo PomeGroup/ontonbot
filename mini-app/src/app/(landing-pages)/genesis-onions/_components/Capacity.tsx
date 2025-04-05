@@ -43,7 +43,12 @@ export const Capacity = () => {
 
                             <CapacityProgressBar total={item.salesVolume ?? 0} progress={item.salesCount ?? 0} />
                         </div>
-                            : <Typography variant="footnote">Unlimited</Typography>
+                            :
+                            <div className="flex flex-1 justify-between items-center">
+                                <Typography variant="footnote">{item.name}</Typography>
+
+                                <Typography variant="footnote">Unlimited</Typography>
+                            </div>
                         }
                     </InfoBox>
                 ))}

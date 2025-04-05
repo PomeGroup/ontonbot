@@ -12,8 +12,8 @@ import { useUserCampaign } from "./hooks/useUserCampaign";
 import { CheckOrderModal } from "./_components/CheckOrderModal";
 import { useSpin } from "./hooks/useSpin";
 import dynamic from "next/dynamic";
-import { Toaster } from "sonner";
 import { customToast } from "./GenesisOnions.utils";
+import { AffiliateInfo } from "./_components/AffiliateInfo";
 
 const AccessRestrictedModal = dynamic(
     () => import("./_components/AccessRestrictedModal").then((mod) => mod.AccessRestrictedModal),
@@ -38,6 +38,7 @@ export default function GenesisOnions() {
     const [showAccessRestrictedModal, setShowAccessRestrictedModal] = useState(false);
     const { invalidateUserCollection, invalidateUserSpinStats } = useUserCampaign();
     const [orderToCheck, setOrderToCheck] = useState<TokenCampaignOrders>();
+    const [showAffiliateInfo, setShowAffiliateInfo] = useState(false)
 
     const handleSpinStart = () => {
         setPrize(undefined);
@@ -76,7 +77,7 @@ export default function GenesisOnions() {
 
     return (
         <>
-            <Toaster richColors />
+            <AffiliateInfo open={showAffiliateInfo} onClose={() => setShowAffiliateInfo(false)} />
 
             <Prize
                 prize={prize}

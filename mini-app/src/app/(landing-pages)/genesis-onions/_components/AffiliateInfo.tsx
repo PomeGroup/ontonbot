@@ -1,17 +1,19 @@
 import { Modal, Box } from "@mui/material";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import TonSocietyLogo from "../_assets/images/ts-logo.svg";
 import { CircleX } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { PropsWithChildren } from "react";
 
 interface Props {
     open: boolean;
     onClose: () => void;
 }
 
-export const AccessRestrictedModal = ({ open, onClose }: Props) => {
+const SectionTitle = ({ children }: PropsWithChildren) => <Typography variant="callout" weight="semibold">{children}</Typography>;
+const SectionBody = ({ children, className }: PropsWithChildren & { className?: string }) => <Typography variant="subheadline1" weight="normal" className={className}>{children}</Typography>;
+
+export const AffiliateInfo = ({ open, onClose }: Props) => {
     const router = useRouter();
     const handleOnClick = () => {
         router.push("/");
@@ -29,7 +31,7 @@ export const AccessRestrictedModal = ({ open, onClose }: Props) => {
                     justifyContent="space-between"
                     alignItems="center"
                 >
-                    <Typography variant="title2">Access Restricted</Typography>
+                    <Typography variant="title2">Affiliate Reward</Typography>
 
                     <CircleX
                         className="cursor-pointer hover:opacity-80"
@@ -37,24 +39,31 @@ export const AccessRestrictedModal = ({ open, onClose }: Props) => {
                     />
                 </Box>
 
-                <div className="flex gap-3">
-                    <Image
-                        src={TonSocietyLogo}
-                        width={60}
-                        height={60}
-                        alt="TON Society Logo"
-                        className="rounded-full border-2"
-                    />
+                <div>
+                    <SectionTitle>Share Your Link</SectionTitle>
+                    <SectionBody className="mb-3">Get a personal link to share. Anyone who buys spins through it counts as your referral.</SectionBody>
 
-                    <Typography
-                        variant="subheadline1"
-                        weight="normal"
-                    >
-                        You need an <strong>TON Society SBT</strong> to start. Please attend an event and claim a TS SBT to continue.
-                    </Typography>
+                    <SectionTitle>Spins Counted</SectionTitle>
+                    <SectionBody className="mb-3">
+                        All spins bought via your link are totaled—and every spin gives you an ONION (no empty spins).
+                    </SectionBody>
+
+                    <SectionTitle>Get Rewards Automatically</SectionTitle>
+                    <SectionBody className="mb-3">
+                        <ul>
+                            <li>Every 5 spins = 1 free spin</li>
+                            <li>Every 20 spins = 1 guaranteed Gold ONION (At 20, only the Gold ONION is given, not both.)</li>
+                        </ul>
+                    </SectionBody>
+
+                    <SectionTitle>Stay Notified</SectionTitle>
+                    <SectionBody className="mb-3">You’ll get a Telegram message each time you earn an ONION.</SectionBody>
+
+                    <SectionTitle>Why It Works</SectionTitle>
+                    <SectionBody>Easy to share, rewards grow with referrals, and everything is auto-tracked.</SectionBody>
                 </div>
 
-                <hr />
+                <hr className="border-brand-divider-dark" />
 
                 <div className="justify-between flex gap-1 h-13">
                     <Button
@@ -78,7 +87,7 @@ export const AccessRestrictedModal = ({ open, onClose }: Props) => {
                             variant="body"
                             weight="medium"
                         >
-                            Explore ONTON
+                            Discover ONION
                         </Typography>
                     </Button>
                 </div>
