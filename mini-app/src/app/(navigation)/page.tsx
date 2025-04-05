@@ -242,7 +242,6 @@ const OngoingEvents = () => {
       )}
       {ongoingEvents.isLoading ? (
         <div className="flex flex-col gap-2">
-          <Typography variant="title2">Ongoing Events</Typography>
           <div className="grid gap-4">
             {Array.from({ length: 2 }).map((_, index) => (
               <EventCardSkeleton key={index} />

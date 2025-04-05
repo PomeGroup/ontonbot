@@ -11,7 +11,7 @@ export type DataStatusProps = {
   className?: string;
 };
 
-const DATA_STATUS_ANIMATIONS = {
+export const DATA_STATUS_ANIMATIONS = {
   not_found: "https://storage.onton.live/ontonimage/looking_duck.lottie",
   approved: "https://storage.onton.live/ontonimage/approved.lottie",
   rejected: "https://storage.onton.live/ontonimage/rejected.lottie",
@@ -21,9 +21,10 @@ const DATA_STATUS_ANIMATIONS = {
   sent: "https://storage.onton.live/ontonimage/send-flying-paper-dart.lottie",
   searching: "https://storage.onton.live/ontonimage/duck-searching.json",
   blocked: "https://storage.onton.live/ontonimage/tea_drinking_green_frog.json",
+  map_looking: "https://storage.onton.live/ontonimage/duck_looking_at_map.json",
 } as const;
 
-const ANIMATION_SIZES = {
+export const ANIMATION_SIZES = {
   lg: 188,
   md: 120,
   sm: 60,
