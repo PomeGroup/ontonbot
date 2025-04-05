@@ -1,0 +1,1 @@
+ALTER TABLE "token_campaign_spin_packages" RENAME COLUMN "payment_type" TO "currency";

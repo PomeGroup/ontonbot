@@ -32,6 +32,8 @@ export async function middleware(req: NextRequest) {
             return NextResponse.redirect(new URL(`/my`, req.nextUrl.origin));
           case "channels":
             return NextResponse.redirect(new URL(`/channels`, req.nextUrl.origin));
+          case "campaign":
+            return NextResponse.redirect(new URL(`/genesis-onions/?affiliate=${utm_source}`, req.nextUrl.origin));
           default:
             return NextResponse.redirect(new URL(`/`, req.nextUrl.origin));
         }

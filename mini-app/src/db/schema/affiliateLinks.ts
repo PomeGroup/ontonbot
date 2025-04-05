@@ -2,7 +2,7 @@ import { pgTable, bigint, boolean, varchar, date, index, uniqueIndex } from "dri
 import { pgEnum } from "drizzle-orm/pg-core";
 import { InferSelectModel, sql } from "drizzle-orm";
 
-export const affiliateItemType = pgEnum("affiliate_item_type", ["EVENT", "HOME"]);
+export const affiliateItemType = pgEnum("affiliate_item_type", ["EVENT", "HOME", "onion1-campaign"]);
 
 export const affiliateLinks = pgTable(
   "affiliate_links",
@@ -22,7 +22,8 @@ export const affiliateLinks = pgTable(
     totalPurchase: bigint("total_purchase", { mode: "number" }).default(0),
     active: boolean("active").notNull().default(true),
     affiliatorUserId: bigint("affiliator_user_id", { mode: "number" }).notNull(),
-    createdAt: date("created_at").notNull(),
+    createdAt: date("created_at").default(sql`now
+        ()`),
     updatedAt: date("updated_at"),
   },
   (table) => {

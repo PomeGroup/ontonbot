@@ -25,7 +25,7 @@ export default function Home() {
         <div className="w-full pb-3">
           <SearchBar />
         </div>
-
+        <Link href={"/sample"}>sample</Link>
         <div className=" flex-grow">
           <div className="flex-grow flex flex-col gap-6">
             {/* Slider Event */}

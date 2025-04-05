@@ -25,6 +25,8 @@ import { couponItemsDB } from "@/server/db/couponItems.db";
 import { convertSvgToJpegBuffer } from "@/lib/convertSvgToJpegBuffer";
 import { tournamentsDB } from "@/server/db/tournaments.db";
 import { fromNano } from "@ton/core";
+import { sumSpinCountByAffiliateHash, tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
+import { affiliateLinksDB, getAffiliateLinkForOnionCampaign } from "@/server/db/affiliateLinks.db";
 
 const requestShareEvent = initDataProtectedProcedure
   .input(
@@ -528,6 +530,66 @@ export const requestShareTournament = initDataProtectedProcedure
       });
     }
   });
+export const requestShareAffiliateOnionCampaign = initDataProtectedProcedure.mutation(async ({ ctx }) => {
+  try {
+    // 1) Verify user
+    const userId = ctx.user?.user_id;
+    if (!userId) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: "User not logged in" });
+    }
+
+    // 2) Fetch onion-campaign affiliate link & spin data
+    const affiliateResult = await affiliateLinksDB.getAffiliateLinkForOnionCampaign(userId);
+    if (!affiliateResult) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Affiliate link not found" });
+    }
+    const linkHash = affiliateResult.linkHash;
+    const totalSpins = Number(affiliateResult.totalPurchase) || 0;
+    // 3) Prepare share link data
+    // Example deep link or your front-end link:
+    // const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/affiliate?startapp=${linkHash}`;
+    // const fallbackUrl = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tab_campaign&utm_source=${linkHash}`;
+    const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tab_campaign&utm_source=${linkHash}`;
+    const fallbackUrl = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/genesis-onions/?affiliate=${linkHash}`;
+
+    // 4) Build your “affiliate” object to pass to Telegram
+    const affiliateDataForBot = {
+      linkHash,
+      totalSpins,
+      // Your fixed image:
+      imageUrl: "https://mohammad-storage.toncloud.observer/campaign/photo_2025-04-01_08-41-17.jpg",
+    };
+
+    // 5) Call telegramService to share
+    const result = await telegramService.shareAffiliateLinkRequest(
+      userId.toString(),
+      linkHash,
+      shareLink,
+      fallbackUrl,
+      affiliateDataForBot
+    );
+
+    logger.log("shareAffiliateLinkRequest => ", result);
+
+    if (result.success) {
+      return { status: "success", data: null };
+    } else {
+      logger.error("Failed to share the affiliate link:", result.error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to share affiliate link",
+        cause: result.error,
+      });
+    }
+  } catch (error) {
+    logger.error("Error while sharing affiliate link: ", error);
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to share affiliate link",
+      cause: error,
+    });
+  }
+});
 
 export const telegramInteractionsRouter = router({
   requestShareEvent,
@@ -536,4 +598,5 @@ export const telegramInteractionsRouter = router({
   requestShareOrganizer,
   getCouponItemsCSV,
   requestShareTournament,
+  requestShareAffiliateOnionCampaign,
 });

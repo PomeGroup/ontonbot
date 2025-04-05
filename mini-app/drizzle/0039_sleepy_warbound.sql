@@ -1,0 +1,1 @@
+ALTER TABLE "token_campaign_nft_collections" ALTER COLUMN "probability_weight" SET DEFAULT 1;

@@ -5,6 +5,7 @@ import { walletChecks } from "@/db/schema/walletChecks";
 import { and, eq, or } from "drizzle-orm";
 import tonCenter from "@/server/routers/services/tonCenter";
 import { orders } from "@/db/schema/orders";
+import { tokenCampaignOrders, TokenCampaignOrdersStatus } from "@/db/schema";
 
 export const CheckTransactions = async () => {
   // Get Orders to be Checked (Sort By Order.TicketDetails.Id)
@@ -37,7 +38,7 @@ export const CheckTransactions = async () => {
 
   const transactions = await tonCenter.fetchAllTransactions(wallet_address, start_utime, start_lt);
 
-  const parsed_orders = await tonCenter.parseTransactions(transactions);
+  const parsed_orders = await tonCenter.parseTransactions(transactions, "onton_order=");
 
   for (const o of parsed_orders) {
     if (o.verfied) {
@@ -55,7 +56,35 @@ export const CheckTransactions = async () => {
         );
     }
   }
-
+  const parsed_campaign_orders = await tonCenter.parseTransactions(transactions, "OnionCampaign=");
+  logger.log("parsed_campaign_orders", parsed_campaign_orders);
+  for (const co of parsed_campaign_orders) {
+    if (co.verfied) {
+      if (co.order_uuid.length !== 36) {
+        logger.error("cron_trx_campaign_ Invalid Order UUID", co.order_uuid);
+        continue;
+      }
+      logger.log("cron_trx_campaign_", co.order_uuid, co.order_type, co.value);
+      // Update your 'token_campaign_orders' table:
+      await db
+        .update(tokenCampaignOrders)
+        .set({
+          status: "processing" as TokenCampaignOrdersStatus, // or "completed", etc.
+          trxHash: co.trx_hash,
+          // If you store an owner_address or something similar:
+          wallet_address: co.owner.toString(),
+        })
+        .where(
+          and(
+            eq(tokenCampaignOrders.uuid, co.order_uuid),
+            or(eq(tokenCampaignOrders.status, "new"), eq(tokenCampaignOrders.status, "confirming")),
+            // If you want to verify the price matches `co.value`:
+            eq(tokenCampaignOrders.finalPrice, co.value.toString())
+          )
+        )
+        .execute();
+    }
+  }
   //-- Finished Checking
   if (transactions && transactions.length) {
     const last_lt = BigInt(transactions[transactions.length - 1].lt);
