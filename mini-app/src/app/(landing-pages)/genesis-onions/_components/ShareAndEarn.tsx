@@ -1,16 +1,27 @@
 import { InfoBox } from "./InfoBox";
-import GiftBoxImage from "../_assets/images/gift-box.svg";
 import Typography from "@/components/Typography";
 import { Button } from "@/components/ui/button";
-import ShareIconImage from "../_assets/icons/share_2.svg";
-import Image from "next/image";
 import { trpc } from "@/app/_trpc/client";
-import { toast } from "sonner";
 import { useAffiliate } from "../hooks/useAffiliate";
 import { customToast } from "../GenesisOnions.utils";
+import { InfoIcon, Share } from "lucide-react";
+import { AffiliateInfo } from "./AffiliateInfo";
+import { useState } from "react";
+
+const rewardsGuide = [
+    {
+        title: "1 Free Spin",
+        subtitle: "Every 5 invites",
+    },
+    {
+        title: "1 Gold ONION",
+        subtitle: "Every 20 invites",
+    },
+];
 
 export const ShareAndEarn = () => {
-    const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate()
+    const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate();
+    const [showAffiliateInfo, setShowAffiliateInfo] = useState(false);
 
     const { data, isLoading, isError } = trpc.campaign.getOnionCampaignAffiliateData.useQuery();
 
@@ -23,7 +34,7 @@ export const ShareAndEarn = () => {
         } catch (error) {
             customToast.error("Unable to open the invitation dialogue, please try again later.");
         }
-    }
+    };
 
     const handleShare = async () => {
         const shareData: ShareData = {
@@ -44,8 +55,12 @@ export const ShareAndEarn = () => {
 
     return (
         <div className="multi-step-gradient-bg px-4">
+            <AffiliateInfo
+                open={showAffiliateInfo}
+                onClose={() => setShowAffiliateInfo(false)}
+            />
             <InfoBox className="flex flex-col items-center bg-white/10">
-                <div className="flex flex-col gap-1 items-center">
+                <div className="flex flex-col gap-1 items-center mb-2">
                     <Typography
                         variant="headline"
                         weight="semibold"
@@ -53,25 +68,51 @@ export const ShareAndEarn = () => {
                         Share & Earn
                     </Typography>
 
-                    <Typography variant="subheadline2">Invite your friends to earn ONIONs.</Typography>
+                    <div className="flex gap-1 items-center">
+                        <button
+                            onClick={() => setShowAffiliateInfo(true)}
+                            className="border-none bg-transparent outline-none hover:opacity-80"
+                        >
+                            <InfoIcon size={16} />
+                        </button>
+
+                        <Typography variant="subheadline2">Invite your friends to earn ONIONs.</Typography>
+                    </div>
                 </div>
 
-                <Image
-                    src={GiftBoxImage}
-                    width={96}
-                    height={96}
-                    className="w-24 h-24 my-2"
-                    alt="Share to Earn"
-                />
-
-                <div className="flex flex-col gap-4">
+                <div className="w-24 h-24 bg-[url('/orange-cards.svg')] bg-no-repeat bg-center flex flex-col gap-1 justify-center items-center mb-4">
                     <Typography
-                        className="px-10 text-center"
-                        variant="footnote"
+                        variant="title2"
                         weight="bold"
                     >
-                        Get a free spin for every 5 successful invites and a Gold ONION for 20 invites!
+                        {data.totalSpins}
                     </Typography>
+
+                    <Typography
+                        variant="caption2"
+                        weight="normal"
+                    >
+                        invites
+                    </Typography>
+                </div>
+
+                <div className="flex flex-col gap-4 w-full">
+                    <div className="flex gap-3 w-full">
+                        {rewardsGuide.map((item) => (
+                            <div
+                                key={item.title}
+                                className="border rounded-md py-2 px-3 flex flex-col gap-2 flex-1 items-center"
+                            >
+                                <Typography
+                                    variant="subheadline2"
+                                    weight="medium"
+                                >
+                                    {item.title}
+                                </Typography>
+                                <Typography variant="caption2">{item.subtitle}</Typography>
+                            </div>
+                        ))}
+                    </div>
 
                     <div className="flex justify-between items-center bg-white/25 rounded-2lg px-4 h-11 gap-2">
                         <input
@@ -82,7 +123,7 @@ export const ShareAndEarn = () => {
                         />
 
                         <button
-                            className="text-orange bg-transparent border-none outline-none"
+                            className="text-orange bg-transparent border-none outline-none hidden"
                             onClick={() => navigator.clipboard.writeText(shareText)}
                         >
                             <Typography
@@ -116,12 +157,9 @@ export const ShareAndEarn = () => {
                             className="bg-white hover:bg-white/80 h-full aspect-square p-0 drop-shadow-md"
                             onClick={handleShare}
                         >
-                            <Image
-                                src={ShareIconImage}
-                                width={32}
-                                height={32}
-                                alt="Share"
-                                className="w-8 h-8"
+                            <Share
+                                size={24}
+                                className="text-orange"
                             />
                         </Button>
                     </div>

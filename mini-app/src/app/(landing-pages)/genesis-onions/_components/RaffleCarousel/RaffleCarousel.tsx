@@ -71,7 +71,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
 
         try {
             // Fast spinning phase
-            const fastSpinDuration = 50;
+            const fastSpinDuration = 100;
             swiperRef.current.params.speed = fastSpinDuration;
 
             for (let i = 0; i < Math.floor(slides.length * 0.7); i++) {
@@ -104,6 +104,15 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
 
     const remainingSpins = userSpinStats?.remaining ?? 0;
 
+    const scrollToTop = () => {
+        const div = document.querySelector('body>div')
+
+        window.requestAnimationFrame(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            div?.scrollTo({ top: 0, behavior: 'smooth' })
+        })
+    }
+
     const handleButtonClick = async () => {
         if (isErrorEligibility) {
             refetchEligibility();
@@ -115,7 +124,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
             return;
         }
         if (remainingSpins > 0) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            scrollToTop()
             spinRaffle();
         } else {
             onInsufficientBalance();
@@ -179,7 +188,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
                     weight="normal"
                     className="px-15 text-center"
                 >
-                    Spin the wheel, unwrap Onion Genesis NFTs, and collect your $ONION airdrop.
+                    Spin the wheel, unwrap Genesis ONION NFTs, and collect your $ONION airdrop.
                 </Typography>
 
                 <CountdownTimer />
@@ -205,7 +214,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
                         size="lg"
                         disabled={isSpinning || isLoadingUserSpinStats || isErrorUserSpinStats || isLoadingEligibility || isErrorEligibility}
                         isLoading={isSpinning}
-                        className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all duration-300 transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
+                        className="w-full btn-gradient btn-shine md:w-96 px-8 py-3 rounded-lg text-white font-semibold text-lg transition-all transform focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 hover:bg-orange hover:animate-none after:bottom-0 before:top-0 relative overflow-hidden isolate"
                     >
                         <Typography
                             variant="headline"

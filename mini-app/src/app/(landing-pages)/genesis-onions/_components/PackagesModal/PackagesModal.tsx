@@ -93,39 +93,6 @@ export const PackagesModal = ({ open, onClose, onOrderPaid, onOrderPaymentFailed
                 >
                     Save time: Spin faster with Spin Bundles to hunt for the rarest ONIONs!
                 </Typography>
-
-                <hr />
-
-                <div className="flex gap-1 items-center h-11 justify-between">
-                    <Typography
-                        variant="footnote"
-                        className="flex-1"
-                    >
-                        <span>Earn 1 free spin for every</span>
-                        <Typography
-                            weight="bold"
-                            className="inline px-1"
-                        >
-                            5
-                        </Typography>
-                        <span>successful invites!</span>
-                    </Typography>
-
-                    <Button
-                        variant="outline"
-                        className="h-full text-white border flex-1 bg-transparent"
-                        onClick={handleInviteOnTelegram}
-                        disabled={isLoadingInviteOnTelegram}
-                        isLoading={isLoadingInviteOnTelegram}
-                    >
-                        <Typography
-                            variant="body"
-                            weight="medium"
-                        >
-                            Invite Friends
-                        </Typography>
-                    </Button>
-                </div>
             </Box>
         </Modal>
     );

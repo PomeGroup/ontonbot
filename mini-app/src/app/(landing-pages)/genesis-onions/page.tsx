@@ -12,7 +12,6 @@ import { useUserCampaign } from "./hooks/useUserCampaign";
 import { CheckOrderModal } from "./_components/CheckOrderModal";
 import { useSpin } from "./hooks/useSpin";
 import dynamic from "next/dynamic";
-import { Toaster } from "sonner";
 import { customToast } from "./GenesisOnions.utils";
 
 const AccessRestrictedModal = dynamic(
@@ -76,8 +75,6 @@ export default function GenesisOnions() {
 
     return (
         <>
-            <Toaster richColors />
-
             <Prize
                 prize={prize}
                 onClose={() => setPrize(undefined)}
