@@ -104,6 +104,15 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
 
     const remainingSpins = userSpinStats?.remaining ?? 0;
 
+    const scrollToTop = () => {
+        const div = document.querySelector('body>div')
+
+        window.requestAnimationFrame(() => {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+            div?.scrollTo({ top: 0, behavior: 'smooth' })
+        })
+    }
+
     const handleButtonClick = async () => {
         if (isErrorEligibility) {
             refetchEligibility();
@@ -115,7 +124,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
             return;
         }
         if (remainingSpins > 0) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            scrollToTop()
             spinRaffle();
         } else {
             onInsufficientBalance();

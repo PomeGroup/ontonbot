@@ -10,19 +10,18 @@ import { useState } from "react";
 
 const rewardsGuide = [
     {
-        title: '1 Free Spin',
-        subtitle: 'Every 5 invites'
+        title: "1 Free Spin",
+        subtitle: "Every 5 invites",
     },
     {
-        title: '1 Gold ONION',
-        subtitle: 'Every 20 invites'
+        title: "1 Gold ONION",
+        subtitle: "Every 20 invites",
     },
-
-]
+];
 
 export const ShareAndEarn = () => {
-    const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate()
-    const [showAffiliateInfo, setShowAffiliateInfo] = useState(false)
+    const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate();
+    const [showAffiliateInfo, setShowAffiliateInfo] = useState(false);
 
     const { data, isLoading, isError } = trpc.campaign.getOnionCampaignAffiliateData.useQuery();
 
@@ -35,7 +34,7 @@ export const ShareAndEarn = () => {
         } catch (error) {
             customToast.error("Unable to open the invitation dialogue, please try again later.");
         }
-    }
+    };
 
     const handleShare = async () => {
         const shareData: ShareData = {
@@ -56,7 +55,10 @@ export const ShareAndEarn = () => {
 
     return (
         <div className="multi-step-gradient-bg px-4">
-            <AffiliateInfo open={showAffiliateInfo} onClose={() => setShowAffiliateInfo(false)} />
+            <AffiliateInfo
+                open={showAffiliateInfo}
+                onClose={() => setShowAffiliateInfo(false)}
+            />
             <InfoBox className="flex flex-col items-center bg-white/10">
                 <div className="flex flex-col gap-1 items-center mb-2">
                     <Typography
@@ -67,7 +69,10 @@ export const ShareAndEarn = () => {
                     </Typography>
 
                     <div className="flex gap-1 items-center">
-                        <button onClick={() => setShowAffiliateInfo(true)} className="border-none bg-transparent outline-none hover:opacity-80">
+                        <button
+                            onClick={() => setShowAffiliateInfo(true)}
+                            className="border-none bg-transparent outline-none hover:opacity-80"
+                        >
                             <InfoIcon size={16} />
                         </button>
 
@@ -75,22 +80,38 @@ export const ShareAndEarn = () => {
                     </div>
                 </div>
 
-
                 <div className="w-24 h-24 bg-[url('/orange-cards.svg')] bg-no-repeat bg-center flex flex-col gap-1 justify-center items-center mb-4">
-                    <Typography variant="title2" weight="bold">
+                    <Typography
+                        variant="title2"
+                        weight="bold"
+                    >
                         {data.totalSpins}
                     </Typography>
 
-                    <Typography variant="caption2" weight="normal">invites</Typography>
+                    <Typography
+                        variant="caption2"
+                        weight="normal"
+                    >
+                        invites
+                    </Typography>
                 </div>
-
 
                 <div className="flex flex-col gap-4 w-full">
                     <div className="flex gap-3 w-full">
-                        {rewardsGuide.map(item => <div key={item.title} className="border rounded-md py-2 px-3 flex flex-col gap-2 flex-1 items-center">
-                            <Typography variant="subheadline2" weight="medium">{item.title}</Typography>
-                            <Typography variant="caption2">{item.subtitle}</Typography>
-                        </div>)}
+                        {rewardsGuide.map((item) => (
+                            <div
+                                key={item.title}
+                                className="border rounded-md py-2 px-3 flex flex-col gap-2 flex-1 items-center"
+                            >
+                                <Typography
+                                    variant="subheadline2"
+                                    weight="medium"
+                                >
+                                    {item.title}
+                                </Typography>
+                                <Typography variant="caption2">{item.subtitle}</Typography>
+                            </div>
+                        ))}
                     </div>
 
                     <div className="flex justify-between items-center bg-white/25 rounded-2lg px-4 h-11 gap-2">
@@ -136,7 +157,10 @@ export const ShareAndEarn = () => {
                             className="bg-white hover:bg-white/80 h-full aspect-square p-0 drop-shadow-md"
                             onClick={handleShare}
                         >
-                            <Share size={24} className="text-orange" />
+                            <Share
+                                size={24}
+                                className="text-orange"
+                            />
                         </Button>
                     </div>
                 </div>

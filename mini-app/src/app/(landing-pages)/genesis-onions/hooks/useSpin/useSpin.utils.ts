@@ -5,13 +5,11 @@ export const generateWeightedArray = (
     campaigns: TokenCampaignNftCollections[],
     totalItems = RAFFLE_CAROUSEL_SLIDES_COUNT
 ): TokenCampaignNftCollections[] => {
-    // Calculate counts for each campaign
     const campaignCounts = campaigns.map(campaign => ({
         campaign,
         count: Math.floor(totalItems * (getCampaignWeight(campaign) / 1))
     }));
 
-    // Adjust counts to reach exactly totalItems
     let countSum = campaignCounts.reduce((sum, { count }) => sum + count, 0);
     const campaignsByWeight = [...campaignCounts].sort((a, b) =>
         b.campaign.probabilityWeight - a.campaign.probabilityWeight
@@ -25,20 +23,17 @@ export const generateWeightedArray = (
         }
     }
 
-    // Generate the items array
     const items: TokenCampaignNftCollections[] = [];
 
-    // Add first occurrence of each campaign (if we have space)
     if (totalItems >= campaigns.length) {
         for (const campaign of campaigns) {
             items.push(campaign);
         }
     }
 
-    // Add remaining items according to their weights
     const remainingCounts = campaignCounts.map(item => ({
         campaign: item.campaign,
-        count: Math.max(0, item.count - 1) // Subtract the first occurrence we already added
+        count: Math.max(0, item.count - 1)
     }));
 
     for (const { campaign, count } of remainingCounts) {
@@ -47,7 +42,6 @@ export const generateWeightedArray = (
         }
     }
 
-    // If we didn't have space for all first occurrences, just fill with weighted distribution
     if (items.length < totalItems) {
         const needed = totalItems - items.length;
         const weightedCampaigns: TokenCampaignNftCollections[] = [];
@@ -58,18 +52,23 @@ export const generateWeightedArray = (
             }
         }
 
-        // Shuffle and take needed items
-        for (let i = weightedCampaigns.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [weightedCampaigns[i], weightedCampaigns[j]] = [weightedCampaigns[j], weightedCampaigns[i]];
-        }
-
+        shuffleArray(weightedCampaigns);
         items.push(...weightedCampaigns.slice(0, needed));
     }
 
-    // Ensure we have exactly totalItems
+    // ✅ Shuffle the entire array to avoid grouping
+    shuffleArray(items);
+
     return items.slice(0, totalItems);
 };
+
+// Fisher-Yates shuffle
+function shuffleArray<T>(arr: T[]): void {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
 
 const getCampaignWeight = (collection: TokenCampaignNftCollections) => {
     if (collection.name?.toLowerCase().includes('gold')) return PROBABILITY_WEIGHTS.GOLD
