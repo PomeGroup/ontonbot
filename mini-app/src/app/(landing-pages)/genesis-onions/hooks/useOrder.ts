@@ -3,8 +3,10 @@ import { ORDER_POLLING_INTERVAL } from "../GenesisOnions.constants";
 import { useConfig } from "@/context/ConfigContext";
 import { useState } from "react";
 import { TokenCampaignOrders } from "@/db/schema";
+import { useAffiliate } from "./useAffiliate";
 
 export const useOrder = () => {
+    const { affiliateHash } = useAffiliate()
     const config = useConfig();
     const ontonWalletAddress = config?.ONTON_WALLET_ADDRESS || "UQDIh_j4EZPAouFr4MJOZFogV8ux2zSdED36KQ7ODUp-um9H";
 
@@ -16,6 +18,7 @@ export const useOrder = () => {
         const order = await addOrderMutation.mutateAsync({
             spinPackageId,
             walletAddress: ontonWalletAddress,
+            affiliateHash: affiliateHash ?? undefined
         });
 
         setSubmittedOrder(order);

@@ -32,11 +32,6 @@ const tabs: Tab[] = [
     title: "My ONTON",
     icon: <UserIcon />,
     urls: ["/my", "/my/points"],
-  },
-  {
-    title: "Genesis Onions",
-    icon: <UserIcon />,
-    urls: ["/genesis-onions"],
   }
 ];
 
