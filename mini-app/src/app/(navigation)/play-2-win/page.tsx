@@ -217,7 +217,7 @@ const DiscoverTournaments: React.FC = () => {
         setSelectedGame={setSelectedGame}
       />
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,_minmax(160px,_1fr))] gap-4">
         {tournomants.isSuccess && !tournomants.data?.pages[0].tournaments.length && (
           <CustomCard
             className="col-span-2"
