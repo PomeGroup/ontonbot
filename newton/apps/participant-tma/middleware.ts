@@ -17,7 +17,8 @@ export async function middleware(req: NextRequest) {
       const isOrganizerProfile = tgAppStartParam.startsWith("channels_");
       const isTournament = tgAppStartParam.startsWith("tournaments_");
       const isTab = tgAppStartParam.startsWith("tab_");
-
+      const isCampaign = tgAppStartParam.startsWith("campaign");
+      console.log("isCampaign", isCampaign);
       if (isOrganizerProfile) {
         console.log("redirecting to organizer profile");
         return NextResponse.redirect(new URL(`/channels/${tgAppStartParam.replace("channels_", "")}`, req.nextUrl.origin));
@@ -33,7 +34,7 @@ export async function middleware(req: NextRequest) {
           case "channels":
             return NextResponse.redirect(new URL(`/channels`, req.nextUrl.origin));
           case "campaign":
-            return NextResponse.redirect(new URL(`/genesis-onions/?affiliate=${utm_source}`, req.nextUrl.origin));
+            return NextResponse.redirect(new URL(`/genesis-onions/`, req.nextUrl.origin));
           default:
             return NextResponse.redirect(new URL(`/`, req.nextUrl.origin));
         }
@@ -45,7 +46,17 @@ export async function middleware(req: NextRequest) {
           new URL(`/play-2-win/${tgAppStartParam.replace("tournaments_", "")}`, req.nextUrl.origin)
         );
       }
+      if (isCampaign) {
+        const splitAffiliate = tgAppStartParam.split("-aff-");
+        const affiliateId = splitAffiliate[1] ?? "";
+        console.log("redirecting to affiliate", splitAffiliate);
+        const url = new URL(`/genesis-onions/`, req.nextUrl.origin);
+        url.searchParams.set("is_affiliate", "1");
+        url.searchParams.set("affiliate", affiliateId);
+        console.log("redirecting to affiliate", url.searchParams);
 
+        return NextResponse.redirect(url);
+      }
       if (isEdit) {
         const eventId = tgAppStartParam.replace("edit_", "");
         console.log("redirecting to edit event", eventId);
