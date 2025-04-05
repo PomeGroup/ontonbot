@@ -2,7 +2,9 @@
 
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
+import CustomButton from "@/app/_components/Button/CustomButton";
 import CustomSwiper from "@/app/_components/CustomSwiper";
+import FilterIcon from "@/app/_components/icons/filter-icon";
 import DataStatus from "@/app/_components/molecules/alerts/DataStatus";
 import { TournamentTimeRemaining } from "@/app/_components/Tournament/TournamentRemainingTime";
 import TournamentCard from "@/app/_components/Tournaments/TournamentCard";
@@ -17,7 +19,6 @@ import { cn } from "@/utils";
 import { Skeleton } from "@mui/material";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { BsFilterLeft } from "react-icons/bs";
 import { FiCheck } from "react-icons/fi";
 import { HiOutlineArrowNarrowUp } from "react-icons/hi";
 
@@ -107,7 +108,7 @@ const TournamentFilter: React.FC<{
             <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
               <HiOutlineArrowNarrowUp />
               <span className="truncate">{formatSortTournamentSelectOption(selected)}</span>
-              <BsFilterLeft size={18} />
+              <FilterIcon />
             </button>
           </DropdownMenuTrigger>
         </Typography>
@@ -149,7 +150,7 @@ const TournamentFilter: React.FC<{
           <DropdownMenuTrigger asChild>
             <button className="w-full flex items-center gap-1 bg-brand-light rounded-md py-1 px-2 justify-between">
               <span className="truncate">{gameIds.data?.find((g) => g.id === selectedGame)?.name}</span>
-              <BsFilterLeft size={18} />
+              <FilterIcon />
             </button>
           </DropdownMenuTrigger>
         </Typography>
@@ -205,9 +206,7 @@ const DiscoverTournaments: React.FC = () => {
   return (
     <>
       <Typography variant="title2">Discover</Typography>
-      {/* 
-      Sort dropdown
-      */}
+      {/* Sort dropdown */}
       <TournamentFilter
         selected={sortSelected}
         setSelected={(o) => {
@@ -217,22 +216,43 @@ const DiscoverTournaments: React.FC = () => {
         setSelectedGame={setSelectedGame}
       />
 
-      <div className="grid grid-cols-[repeat(auto-fill,_minmax(160px,_1fr))] gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,_minmax(160px,_1fr))] gap-4 h-full flex-grow">
         {tournomants.isSuccess && !tournomants.data?.pages[0].tournaments.length && (
-          <CustomCard defaultPadding>
-            <DataStatus
-              status="not_found"
-              title="No tournaments found"
-              description="No ongoing tournaments were found."
-            />
+          <CustomCard
+            defaultPadding
+            className="col-span-full"
+          >
+            <div className="flex flex-col justify-center items-center gap-5 h-full">
+              <DataStatus
+                status="not_found"
+                title="No result found"
+                description="Try different keywords or filter to explore contests"
+                size="lg"
+              />
+              {(selectedGame !== -1 || sortSelected !== "timeRemaining") && (
+                <CustomButton
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedGame(-1);
+                    setSortSelected("timeRemaining");
+                  }}
+                >
+                  Clear Filters
+                </CustomButton>
+              )}
+            </div>
           </CustomCard>
         )}
         {tournomants.isError && (
-          <CustomCard defaultPadding>
+          <CustomCard
+            defaultPadding
+            className="col-span-full"
+          >
             <DataStatus
               status="searching"
               title={`Error${tournomants.error instanceof Error ? `: ${tournomants.error.name}` : ""}`}
-              description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading tournaments."}
+              description={tournomants.error instanceof Error ? tournomants.error.message : "Error loading results."}
+              size="lg"
             />
           </CustomCard>
         )}

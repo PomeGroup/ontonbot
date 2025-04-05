@@ -1,3 +1,4 @@
+import Typography from "@/components/Typography";
 import { cn } from "@/utils";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { ReactNode } from "react";
@@ -47,8 +48,8 @@ export default function DataStatus(props: DataStatusProps) {
         width={ANIMATION_SIZES[props.size] || ANIMATION_SIZES.md}
         className={"mx-auto mb-3"}
       />
-      <h4 className="block text-[20px] font-semibold mb-1">{props.title}</h4>
-      <p className="text-center text-cn-muted-foreground">{props.description}</p>
+      <h4 className="block text-[20px] font-semibold mb-3">{props.title}</h4>
+      <Typography className="w-[248px] text-center">{props.description}</Typography>
     </div>
   );
 }

@@ -1,10 +1,10 @@
-import PlayStationIcon from "@/app/_components/icons/play-station"
-import { useUserStore } from "@/context/store/user.store"
-import { cn } from "@/utils"
-import { Page, Tabbar, TabbarLink } from "konsta/react"
-import { Calendar, UserIcon, Users } from "lucide-react"
-import { usePathname, useRouter } from "next/navigation"
-import { ReactNode } from "react"
+import PlayStationIcon from "@/app/_components/icons/play-station";
+import { useUserStore } from "@/context/store/user.store";
+import { cn } from "@/utils";
+import { Page, Tabbar, TabbarLink } from "konsta/react";
+import { Calendar, UserIcon, Users } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ReactNode } from "react";
 
 interface Tab {
   title: string;
@@ -47,24 +47,23 @@ export default function BottomNavigation(props: { children: ReactNode }) {
 
   return (
     <Page>
-      <div className="p-4 flex flex-col gap-2 mb-12">
+      <div className="p-4 flex flex-col min-h-full gap-2 mb-12">
         {props.children}
         <Tabbar
           labels
           icons
           className={`left-0 bottom-0 h-[calc(48px+(var(--tg-safe-area-inset-bottom,0px)/2))] fixed`}
         >
-          {tabs
-            .map((tab) => (
-              <TabbarLink
-                key={tab.title}
-                active={tab.urls.includes(pathname)}
-                onClick={() => router.push(tab.urls[0])}
-                icon={tab.icon}
-                label={tab.title}
-                linkProps={{ className: cn("pt-1 before:bg-[#CCD1EA4D]") }}
-              />
-            ))}
+          {tabs.map((tab) => (
+            <TabbarLink
+              key={tab.title}
+              active={tab.urls.includes(pathname)}
+              onClick={() => router.push(tab.urls[0])}
+              icon={tab.icon}
+              label={tab.title}
+              linkProps={{ className: cn("pt-1 before:bg-[#CCD1EA4D]") }}
+            />
+          ))}
         </Tabbar>
       </div>
     </Page>

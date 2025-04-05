@@ -47,7 +47,7 @@ const CustomCard: React.FC<CustomCardProps> = ({
       onClick={onClick}
       contentWrap={defaultPadding}
       margin="m-0"
-      className={cn(className)}
+      className={cn("[&>div]:h-full", className)}
     >
       {children}
     </Card>
