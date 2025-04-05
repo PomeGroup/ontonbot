@@ -303,8 +303,7 @@ export async function getAllCollectionsWithUserCount(
         tokenCampaignUserSpins,
         and(
           eq(tokenCampaignNftCollections.id, tokenCampaignUserSpins.nftCollectionId),
-          eq(tokenCampaignUserSpins.userId, userId),
-          eq(tokenCampaignNftCollections.isForSale, true) // Only count if the collection is for sale
+          eq(tokenCampaignUserSpins.userId, userId)
         )
       )
       .where(whereClause ? whereClause : undefined)
