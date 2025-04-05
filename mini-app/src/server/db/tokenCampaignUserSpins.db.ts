@@ -264,6 +264,7 @@ interface CollectionWithCount {
   address: string | null;
   // add or remove any other columns from tokenCampaignNftCollections as needed
   count: number;
+  isForSale: boolean | null;
 }
 
 /**
@@ -292,6 +293,7 @@ export async function getAllCollectionsWithUserCount(
         image: tokenCampaignNftCollections.image,
         socialLinks: tokenCampaignNftCollections.socialLinks,
         address: tokenCampaignNftCollections.address,
+        isForSale: tokenCampaignNftCollections.isForSale,
         // If the user has no spins, COALESCE => 0
         count: sql<number>`COALESCE
             (COUNT(${tokenCampaignUserSpins.id}), 0)`.mapWith(Number),
