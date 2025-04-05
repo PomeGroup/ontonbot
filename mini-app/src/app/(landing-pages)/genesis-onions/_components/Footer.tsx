@@ -31,8 +31,18 @@ export const Footer = () => (<>
         <div className="flex justify-between">
             {items.map(item => <div key={item.title} className="flex flex-col gap-2 items-center">
                 <div className="px-3">
-                    <video src={item.video} autoPlay loop muted className="rounded-2lg" width={80} height={80} />
-                    {/* <Image src={item.image.src} alt={item.name} width={80} height={80} className='rounded-2lg' /> */}
+                    <video
+                        src={item.video}
+                        autoPlay
+                        muted
+                        playsInline
+                        webkit-playsinline
+                        loop
+                        preload="auto"
+                        width={80}
+                        height={80}
+                        className="rounded-2lg object-cover w-20 h-20"
+                    />
                 </div>
                 <Typography variant="subheadline2" weight="bold">{item.title}</Typography>
             </div>)}
