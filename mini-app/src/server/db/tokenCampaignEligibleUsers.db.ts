@@ -17,7 +17,7 @@ export const isUserEligible = async (telegramUserId: number): Promise<boolean> =
 
     return !!row; // true if row is found, false otherwise
   } catch (error) {
-    logger.error("Error checking user eligibility:", error);
+    logger.error(`userEligibilityDB: Error checking user eligibility for ID ${telegramUserId}:`, error);
     throw error;
   }
 };

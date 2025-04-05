@@ -47,7 +47,7 @@ export type TokenCampaignOrders = Omit<InferSelectModel<typeof tokenCampaignOrde
  */
 export type TokenCampaignOrdersInsert = Omit<
   InferSelectModel<typeof tokenCampaignOrders>,
-  "id" | "uuid" | "createdAt" | "updatedAt" | "affiliateHash" | "couponId" | "trxHash" | "updatedBy"
+  "id" | "uuid" | "createdAt" | "updatedAt" | "couponId" | "trxHash" | "updatedBy"
 >;
 
 export type TokenCampaignOrdersStatus = (typeof orderState.enumValues)[number];

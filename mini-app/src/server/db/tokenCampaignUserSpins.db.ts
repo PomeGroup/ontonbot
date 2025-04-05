@@ -92,6 +92,7 @@ export const addUserSpinsForOrderTx = async (
       spinPackageId,
       spinIndex: currentSpinCount + i + 1,
       nftCollectionId: null,
+      spinType: "normal",
     });
   }
 

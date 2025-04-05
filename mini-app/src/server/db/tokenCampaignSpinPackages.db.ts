@@ -21,12 +21,12 @@ export const addSpinPackage = async (
     const [inserted] = await db.insert(tokenCampaignSpinPackages).values(data).returning().execute();
 
     if (inserted) {
-      logger.log("Spin package inserted:", inserted);
+      logger.log("tokenCampaignSpinPackagesDB: Spin package inserted:", inserted);
       return inserted;
     }
     return undefined;
   } catch (error) {
-    logger.error("Error inserting spin package:", error);
+    logger.error("tokenCampaignSpinPackagesDB: Error inserting spin package:", error);
     throw error;
   }
 };
@@ -42,7 +42,7 @@ export const addSpinPackageTx = async (
   const [inserted] = await tx.insert(tokenCampaignSpinPackages).values(data).returning().execute();
 
   if (inserted) {
-    logger.log("Spin package inserted in transaction:", inserted);
+    logger.log("tokenCampaignSpinPackagesDB: Spin package inserted in transaction:", inserted);
   }
   return inserted;
 };
@@ -57,7 +57,7 @@ export const getSpinPackageById = async (id: number): Promise<TokenCampaignSpinP
 
     return row;
   } catch (error) {
-    logger.error("Error fetching spin package by ID:", error);
+    logger.error("tokenCampaignSpinPackagesDB: Error fetching spin package by ID:", error);
     throw error;
   }
 };
@@ -76,7 +76,7 @@ export const getSpinPackagesByCampaignType = async (campaignType: CampaignType):
 
     return rows;
   } catch (error) {
-    logger.error("Error fetching spin packages by campaignType:", error);
+    logger.error("tokenCampaignSpinPackagesDB: Error fetching spin packages by campaignType:", error);
     throw error;
   }
 };
@@ -98,11 +98,11 @@ export const updateSpinPackageById = async (
       .execute();
 
     if (updated) {
-      logger.log("Spin package updated:", updated);
+      logger.log("tokenCampaignSpinPackagesDB:  Spin package updated:", updated);
     }
     return updated;
   } catch (error) {
-    logger.error("Error updating spin package by ID:", error);
+    logger.error("tokenCampaignSpinPackagesDB: Error updating spin package by ID:", error);
     throw error;
   }
 };
@@ -124,7 +124,7 @@ export const updateSpinPackageByIdTx = async (
     .execute();
 
   if (updated) {
-    logger.log("Spin package updated in transaction:", updated);
+    logger.log("tokenCampaignSpinPackagesDB Spin package updated in transaction:", updated);
   }
   return updated;
 };
@@ -147,7 +147,7 @@ export const getActiveSpinPackagesByCampaignType = async (
 
     return rows;
   } catch (error) {
-    logger.error("Error fetching active spin packages by campaignType:", error);
+    logger.error("tokenCampaignSpinPackagesDB: Error fetching active spin packages by campaignType:", error);
     throw error;
   }
 };

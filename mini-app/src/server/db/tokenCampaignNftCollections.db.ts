@@ -57,7 +57,7 @@ export const getCollectionById = async (id: number): Promise<TokenCampaignNftCol
 
     return undefined;
   } catch (error) {
-    logger.error("Error getting token_campaign_nft_collections by ID:", error);
+    logger.error("tokenCampaignNftCollectionsDB: Error getting token_campaign_nft_collections by ID:", error);
     throw error;
   }
 };
@@ -87,7 +87,7 @@ export const getCollectionByAddress = async (address: string): Promise<TokenCamp
 
     return undefined;
   } catch (error) {
-    logger.error("Error getting token_campaign_nft_collections by address:", error);
+    logger.error("tokenCampaignNftCollectionsDB: Error getting token_campaign_nft_collections by address:", error);
     throw error;
   }
 };
@@ -116,7 +116,7 @@ export const getCollectionsByCampaignType = async (campaignType: CampaignType): 
 
     return rows;
   } catch (error) {
-    logger.error("Error getting token_campaign_nft_collections by campaignType:", error);
+    logger.error("tokenCampaignNftCollectionsDB: Error getting token_campaign_nft_collections by campaignType:", error);
     throw error;
   }
 };
@@ -141,7 +141,7 @@ export const addCollection = async (data: TokenCampaignNftCollectionsInsert): Pr
 
     return inserted;
   } catch (error) {
-    logger.error("Error inserting token_campaign_nft_collections:", error);
+    logger.error("tokenCampaignNftCollectionsDB: Error inserting token_campaign_nft_collections:", error);
     throw error;
   }
 };
@@ -155,7 +155,7 @@ export const addCollectionTx = async (
 ): Promise<TokenCampaignNftCollections> => {
   const [inserted] = await tx.insert(tokenCampaignNftCollections).values(data).returning().execute();
 
-  logger.log("Collection inserted in transaction:", inserted);
+  logger.log("tokenCampaignNftCollectionsDB: Collection inserted in transaction:", inserted);
 
   // Revalidate cache
   await revalidateCache(inserted);
@@ -188,7 +188,7 @@ export const updateCollectionById = async (id: number, data: Partial<TokenCampai
 
     return result.length;
   } catch (error) {
-    logger.error("Error updating token_campaign_nft_collections by ID:", error);
+    logger.error("tokenCampaignNftCollectionsDB: Error updating token_campaign_nft_collections by ID:", error);
     throw error;
   }
 };
@@ -289,9 +289,11 @@ export async function incrementCollectionSalesTx(
     if (updatedRow) {
       await revalidateCache(updatedRow);
     }
-    logger.log(`Collection #${collectionId} salesCount incremented (volume ${volumeIncrement}).`);
+    logger.log(
+      `tokenCampaignNftCollectionsDB: Collection #${collectionId} salesCount incremented (volume ${volumeIncrement}).`
+    );
   } catch (error) {
-    logger.error(`Error incrementing sales for collection #${collectionId}:`, error);
+    logger.error(`tokenCampaignNftCollectionsDB: Error incrementing sales for collection #${collectionId}:`, error);
     throw error;
   }
 }
