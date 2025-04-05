@@ -2,8 +2,7 @@ import { trpc } from "@/app/_trpc/client";
 import useWebApp from "@/hooks/useWebApp";
 import { Preloader } from "konsta/react";
 import { ScanLine } from "lucide-react";
-import { useParams } from "next/navigation";
-import { useRouter } from "next/router";
+import { useParams, useRouter } from "next/navigation";
 import React from "react";
 
 type ScanRegistrantQRCodeProps = {
