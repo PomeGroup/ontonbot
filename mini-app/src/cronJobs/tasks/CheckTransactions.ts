@@ -59,6 +59,7 @@ export const CheckTransactions = async () => {
   const parsed_campaign_orders = await tonCenter.parseTransactions(transactions, "OnionCampaign=");
 
   for (const co of parsed_campaign_orders) {
+    logger.log("cron_trx_campaign_heartBeat", co.order_uuid, co.order_type, co.value);
     if (co.verfied) {
       if (co.order_uuid.length !== 36) {
         logger.error("cron_trx_campaign_ Invalid Order UUID", co.order_uuid);
