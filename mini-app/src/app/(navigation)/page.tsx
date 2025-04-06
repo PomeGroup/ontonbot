@@ -253,7 +253,6 @@ const OngoingEvents = () => {
           <EventCard
             key={idx}
             event={event}
-            currentUserId={0}
           />
         ))
       )}

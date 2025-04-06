@@ -90,6 +90,10 @@ module.exports = konstaConfig({
           DEFAULT: "hsla(var(--shadcn-destructive))",
           foreground: "hsl(var(--shadcn-destructive-foreground))",
         },
+        "cn-success": {
+          DEFAULT: "hsla(var(--shadcn-success))",
+          foreground: "hsl(var(--shadcn-success-foreground))",
+        },
         "cn-muted": {
           DEFAULT: "hsla(var(--shadcn-muted))",
           foreground: "hsl(var(--shadcn-muted-foreground))",

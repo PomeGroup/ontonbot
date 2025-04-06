@@ -144,7 +144,7 @@ table {
     --shadcn-popover-foreground: 222.2 84% 4.9%;
 
     --shadcn-primary: 211, 100%, 50%;
-    --shadcn-primary-foreground: 0, 0%, 100%;
+    --shadcn-primary-foreground: 0, 100%, 100%;
 
     --shadcn-secondary: 211, 100%, 50%, 0.1;
     --shadcn-secondary-foreground: 211, 100%, 50%;
@@ -152,11 +152,14 @@ table {
     --shadcn-muted: 0, 0%, 90%, 1;
     --shadcn-muted-foreground: 0, 0%, 35%;
 
-    --shadcn-accent: 211, 100%, 50%;
+    --shadcn-accent: 240, 6%, 94%;
     --shadcn-accent-foreground: 0, 0%, 100%;
 
-    --shadcn-destructive: 3, 99%, 60%, 0.1;
-    --shadcn-destructive-foreground: 3, 100%, 59%;
+    --shadcn-destructive: 3, 100%, 59%;
+    --shadcn-destructive-foreground: 0, 100%, 100%;
+
+    --shadcn-success: 135, 59%, 49%;
+    --shadcn-success-foreground: 0, 100%, 100%;
 
     --shadcn-border: 0, 0%, 50%, 0.55;
     --shadcn-input: 214.3 31.8% 91.4%;
@@ -165,7 +168,7 @@ table {
     --shadcn-radius: 10px;
   }
 
-  .dark {
+  /* .dark {
     --shadcn-background: 240, 3%, 11%;
     --shadcn-foreground: 255, 4%, 79%;
 
@@ -176,7 +179,7 @@ table {
     --shadcn-popover-foreground: 255, 4%, 79%;
 
     --shadcn-primary: 211 100% 50%;
-    --shadcn-primary-foreground: 0 0% 100%;
+    --shadcn-primary-foreground: 0 100% 100%;
 
     --shadcn-secondary: 211, 100%, 50%, 0.2;
     --shadcn-secondary-foreground: 201, 100%, 46%;
@@ -184,7 +187,7 @@ table {
     --shadcn-muted: 240, 5%, 24%, 1;
     --shadcn-muted-foreground: 255, 4%, 79%;
 
-    --shadcn-accent: 240, 4%, 16%;
+    --shadcn-accent: 240, 6%, 94%;
     --shadcn-accent-foreground: 212.7 26.8% 83.9%;
 
     --shadcn-destructive: 3, 100%, 59%, 1;
@@ -193,7 +196,7 @@ table {
     --shadcn-border: 0, 0%, 50%, 0.55;
     --shadcn-input: 240, 1%, 73%;
     --shadcn-ring: 217.2 32.6% 17.5%;
-  }
+  } */
 }
 
 @layer base {

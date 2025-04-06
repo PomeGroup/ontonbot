@@ -1,4 +1,5 @@
 import {
+  Address,
   Slice,
   StateInit,
   WalletContractV1R1,
@@ -92,4 +93,22 @@ export function tryParsePublicKey(stateInit: StateInit): Buffer | null {
   }
 
   return null;
+}
+
+/**
+ * Format wallet address to be more readable
+ * @param address - The wallet address to format, (EQB_tZoxMDBObtHY3cwI1KK9dkE7-ceVrLgObgwmCRyWYMzZ)
+ * @returns The formatted wallet address (EQB_...YMzZ)
+ */
+export function formatWalletAddress(arg_address: string): string {
+  try {
+    const address = Address.parse(arg_address);
+    const friendlyAddress = address.toString({ bounceable: false });
+
+    const formattedAddress = `${friendlyAddress.slice(0, 4)}...${friendlyAddress.slice(-4)}`;
+    return formattedAddress;
+  } catch (error) {
+    console.error("Error formatting wallet address:", error);
+    return arg_address;
+  }
 }

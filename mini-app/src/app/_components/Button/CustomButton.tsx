@@ -1,35 +1,31 @@
 import Typography, { TypographyProps } from "@/components/Typography";
-import { cva } from "class-variance-authority";
-import { Button, Preloader } from "konsta/react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/utils";
+import { cva, VariantProps } from "class-variance-authority";
+import { Preloader } from "konsta/react";
 import React, { ReactNode } from "react";
 
 interface CustomButtonProps {
   children: ReactNode;
-  variant?: "primary" | "outline" | "link";
+  variant?: VariantProps<typeof buttonVariants>["variant"];
   size?: "lg" | "md";
-  color?: "success" | "primary";
   isLoading?: boolean;
   icon?: ReactNode;
   fontSize?: TypographyProps["variant"];
   fontWeight?: TypographyProps["weight"];
+  className?: string;
   onClick?: (_e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-const customButtonVariants = cva("!p-0 min-w-20", {
+const customButtonVariants = cva("p-4 w-full min-w-20 disabled:opacity-70", {
   variants: {
     size: {
       lg: "h-12 rounded-2lg",
       md: "h-9 rounded-2lg",
     },
-    color: {
-      success: "k-color-brand-green",
-      danger: "k-color-brand-red",
-      primary: "",
-    },
   },
   defaultVariants: {
     size: "lg",
-    color: "primary",
   },
 });
 
@@ -40,33 +36,30 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   fontSize = "body",
   variant = "primary",
   size,
-  color,
   isLoading = false,
+  className,
   onClick,
 }) => (
   <Button
     itemType="button"
-    large
-    outline={variant === "outline"}
-    clear={variant === "link"}
     disabled={isLoading}
     onClick={onClick}
-    className={customButtonVariants({ size, color })}
-    // @ts-expect-error the type declaration for this prop does not exist but we should pass it
+    className={customButtonVariants({ size })}
     type="button"
+    variant={variant}
   >
     <Typography
       variant={fontSize}
       weight={fontWeight}
-      className="capitalize"
+      className={cn("capitalize flex gap-2 items-center", className)}
     >
       {isLoading ? (
         <Preloader size="w-4 h-4" />
       ) : (
-        <div className="flex gap-2 items-center">
+        <>
           {icon && <span>{icon}</span>}
           <span>{children}</span>
-        </div>
+        </>
       )}
     </Typography>
   </Button>
