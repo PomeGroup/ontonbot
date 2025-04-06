@@ -246,6 +246,125 @@
       "when": 1743255724183,
       "tag": "0034_adorable_polaris",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1743455923455,
+      "tag": "0035_cuddly_madame_hydra",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1743458969369,
+      "tag": "0036_wet_mister_sinister",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1743484861657,
+      "tag": "0037_solid_toad_men",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1743634065052,
+      "tag": "0038_cooing_vermin",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1743634224908,
+      "tag": "0039_sleepy_warbound",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1743634692739,
+      "tag": "0040_red_psylocke",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1743713718154,
+      "tag": "0041_classy_jack_murdock",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1743716106599,
+      "tag": "0042_living_luckman",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1743725545252,
+      "tag": "0043_brown_carmella_unuscione",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1743726821394,
+      "tag": "0044_typical_angel",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1743759275879,
+      "tag": "0045_serious_silver_sable",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1743759513069,
+      "tag": "0046_zippy_bushwacker",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1743759826491,
+      "tag": "0047_lumpy_human_robot",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1743759886392,
+      "tag": "0048_high_prodigy",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1743822603033,
+      "tag": "0049_awesome_next_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1743840267048,
+      "tag": "0050_amazing_invaders",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1743938312136,
+      "tag": "0051_useful_nightcrawler",
+      "breakpoints": true
     }
   ]
 }

@@ -16,7 +16,7 @@ export interface AffiliateLinkRow {
 export async function createAffiliateLinks(params: {
   eventId: number;
   userId: number;
-  itemType: string;  // "EVENT" or "HOME"
+  itemType: string;
   baseTitle: string;
   count: number;
 }) {

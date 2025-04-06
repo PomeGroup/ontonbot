@@ -1,0 +1,2 @@
+ALTER TABLE "token_campaign_orders" ADD COLUMN "uuid" uuid DEFAULT gen_random_uuid();--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "token_campaign_orders_uuid_idx" ON "token_campaign_orders" USING btree ("uuid");

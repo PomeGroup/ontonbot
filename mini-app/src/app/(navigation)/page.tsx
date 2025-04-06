@@ -17,6 +17,7 @@ import { cn } from "@/utils";
 import { useMemo } from "react";
 import CustomSwiper from "../_components/CustomSwiper";
 import EventCardSkeleton from "../_components/EventCard/EventCardSkeleton";
+import { Banner } from "../(landing-pages)/genesis-onions/_components/Banner";
 
 export default function Home() {
   return (
@@ -25,6 +26,8 @@ export default function Home() {
         <div className="w-full pb-3">
           <SearchBar />
         </div>
+
+        <Banner className="mt-3 mb-6" />
 
         <div className=" flex-grow">
           <div className="flex-grow flex flex-col gap-6">

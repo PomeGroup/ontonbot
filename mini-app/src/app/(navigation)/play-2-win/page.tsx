@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/app/(landing-pages)/genesis-onions/_components/Banner";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
 import CustomSwiper from "@/app/_components/CustomSwiper";
@@ -68,20 +69,20 @@ const Play2WinFeatured = () => {
         <CustomSwiper>
           {featuredEvents.isLoading
             ? Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="rounded-md"
-                  height={220}
-                  width={220}
-                  sx={{ transform: "unset" }}
-                />
-              ))
+              <Skeleton
+                key={index}
+                className="rounded-md"
+                height={220}
+                width={220}
+                sx={{ transform: "unset" }}
+              />
+            ))
             : featuredEvents.data.map((tournament) => (
-                <TournamentSlide
-                  tournament={tournament}
-                  key={tournament.id}
-                />
-              ))}
+              <TournamentSlide
+                tournament={tournament}
+                key={tournament.id}
+              />
+            ))}
         </CustomSwiper>
       </div>
     </>
@@ -204,6 +205,8 @@ const DiscoverTournaments: React.FC = () => {
 
   return (
     <>
+      <Banner className="mb-3" />
+
       <Typography variant="title2">Discover</Typography>
       {/* 
       Sort dropdown
@@ -244,32 +247,32 @@ const DiscoverTournaments: React.FC = () => {
         )}
         {tournomants.isLoading
           ? Array.from({ length: 5 }).map((_, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
-              >
-                <Skeleton
-                  variant="rectangular"
-                  width={120}
-                  height={120}
-                  className="rounded-md"
-                />
-                <Skeleton
-                  variant="rectangular"
-                  width={80}
-                  height={36}
-                  className="rounded-md mt-2"
-                />
-              </div>
-            ))
+            <div
+              key={index}
+              className="bg-white rounded-md p-4 flex flex-col gap-3 items-center"
+            >
+              <Skeleton
+                variant="rectangular"
+                width={120}
+                height={120}
+                className="rounded-md"
+              />
+              <Skeleton
+                variant="rectangular"
+                width={80}
+                height={36}
+                className="rounded-md mt-2"
+              />
+            </div>
+          ))
           : tournomants.data?.pages.map((page) =>
-              page.tournaments.map((tournament) => (
-                <TournamentCard
-                  key={tournament.id}
-                  tournament={tournament}
-                />
-              ))
-            )}
+            page.tournaments.map((tournament) => (
+              <TournamentCard
+                key={tournament.id}
+                tournament={tournament}
+              />
+            ))
+          )}
       </div>
     </>
   );

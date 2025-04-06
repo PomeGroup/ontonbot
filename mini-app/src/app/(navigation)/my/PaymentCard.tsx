@@ -15,7 +15,7 @@ export default function PaymentCard({ visible }: { visible: boolean }) {
   const [congratsDrawerOpen, setCongratsDrawerOpen] = useState(false);
 
   const onFail = useCallback(() => {
-    toast.error("Transaction was not successfull. Please try again");
+    toast.error("Transaction was not successfully. Please try again");
     setConfirmPayDialogOpen(false);
   }, []);
 

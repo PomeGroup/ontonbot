@@ -32,7 +32,7 @@ const tabs: Tab[] = [
     title: "My ONTON",
     icon: <UserIcon />,
     urls: ["/my", "/my/points"],
-  },
+  }
 ];
 
 export default function BottomNavigation(props: { children: ReactNode }) {
