@@ -91,7 +91,7 @@ export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed }: Props) => {
                                 weight="medium"
                                 className="text-nowrap text-ellipsis overflow-hidden"
                             >
-                                {pkg.spinCount} spins
+                                {pkg.description}
                             </Typography>
 
                             <h3>
