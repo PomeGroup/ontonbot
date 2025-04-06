@@ -47,7 +47,7 @@ export const Banner = ({ className }: Props) => {
         onClick={handleOnClick}
       >
         <div className="w-2/3 flex justify-start">
-          <CountdownTimer />
+          <CountdownTimer className="scale-75 origin-left" />
         </div>
 
         <Typography>Unlock the ONION Mystery</Typography>
