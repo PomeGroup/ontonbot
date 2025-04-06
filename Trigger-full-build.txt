@@ -1,7 +1,7 @@
 ### change this file if you want to trigger a full build ###
 Trigger-full-build for check deployment after deleting unused services  : golang server worker and giveaway service
 
-
+add full build for stage
 full build
 full
 even worse than befor
