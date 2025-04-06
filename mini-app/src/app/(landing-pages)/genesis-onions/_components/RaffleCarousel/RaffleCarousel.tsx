@@ -71,7 +71,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
 
         try {
             // Fast spinning phase
-            const fastSpinDuration = 100;
+            const fastSpinDuration = 150;
             swiperRef.current.params.speed = fastSpinDuration;
 
             for (let i = 0; i < Math.floor(slides.length * 0.7); i++) {

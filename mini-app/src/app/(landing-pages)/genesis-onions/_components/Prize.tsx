@@ -57,7 +57,7 @@ export const Prize = ({ prize, onClose }: Props) => {
                             {prize.name}
                         </Typography>
 
-                        <Typography variant="body" weight="normal" className="mb-2">Congrats! you acquired a {prize.name}</Typography>
+                        <Typography variant="body" weight="normal" className="mb-2">Congrats! you acquired a {prize.name} ONION</Typography>
 
                         <div className="px-4 w-full h-12">
                             <Button className="flex-1 h-full bg-orange hover:bg-orange/80 w-full" onClick={onClose}>
