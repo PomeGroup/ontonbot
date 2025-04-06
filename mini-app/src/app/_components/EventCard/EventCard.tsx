@@ -12,7 +12,7 @@ import { cn } from "@/utils";
 import { PiLinkSimple } from "react-icons/pi";
 import CustomCard from "../atoms/cards/CustomCard";
 
-interface EventCardProps {
+export interface EventCardProps {
   event: {
     eventUuid: string;
     title?: string;
