@@ -45,8 +45,11 @@ export const ShareAndEarn = () => {
 
         try {
             await navigator.share(shareData);
-        } catch (err) {
-            customToast.error("Error sharing, please try again later.");
+        } catch (err: any) {
+            // Optional: you can also log the full error for debugging
+            if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+                customToast.error("Error sharing, please try again later.");
+            }
         }
     };
 
