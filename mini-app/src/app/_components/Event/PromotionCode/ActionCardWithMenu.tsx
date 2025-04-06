@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { Card, Popover, List, ListItem } from "konsta/react";
-import { MoreVertical } from "lucide-react";
-import Image from "next/image";
 import Typography from "@/components/Typography";
+import { List, ListItem, Popover } from "konsta/react";
+import { MoreVertical } from "lucide-react";
+import { useRef, useState } from "react";
+import CustomCard from "../../atoms/cards/CustomCard";
+import PromotionCodeIcon from "../../icons/promotion-code-icon";
 
 interface FooterText {
   count?: number;
-  items: string;
+  value: string;
 }
 
 interface MenuItem {
@@ -18,7 +19,6 @@ interface MenuItem {
 }
 
 interface ActionCardWithMenuProps {
-  iconSrc: string;
   title: string;
   subtitle: string;
   footerTexts: FooterText[];
@@ -27,13 +27,12 @@ interface ActionCardWithMenuProps {
 }
 
 export default function ActionCardWithMenu({
-                                             iconSrc,
-                                             title,
-                                             subtitle,
-                                             footerTexts,
-                                             menuItems,
-                                             onCardClick,
-                                           }: ActionCardWithMenuProps) {
+  title,
+  subtitle,
+  footerTexts,
+  menuItems,
+  onCardClick,
+}: ActionCardWithMenuProps) {
   // local state for popover
   const [popoverOpened, setPopoverOpened] = useState(false);
   const threeDotRef = useRef<HTMLDivElement>(null);
@@ -47,13 +46,20 @@ export default function ActionCardWithMenu({
   };
 
   return (
-    <Card onClick={onCardClick} className="cursor-pointer">
+    <CustomCard
+      onClick={onCardClick}
+      className="cursor-pointer"
+      defaultPadding
+    >
       <div className="flex gap-3 align-stretch">
         <div className="bg-[#efeff4] p-4 rounded-[10px]">
-          <Image src={iconSrc} width={48} height={48} alt="icon" />
+          <PromotionCodeIcon className="text-primary" />
         </div>
         <div className="flex flex-col flex-1 gap-1">
-          <Typography bold variant="title3">
+          <Typography
+            bold
+            variant="title3"
+          >
             {title}
           </Typography>
           <Typography variant="body">{subtitle}</Typography>
@@ -63,8 +69,8 @@ export default function ActionCardWithMenu({
           >
             {footerTexts.map((text, index) => (
               <div key={index}>
-                {text.count && <b>{text.count} </b>}
-                {text.items}
+                {(text.count || text.count === 0) && <b>{text.count} </b>}
+                {text.value}
               </div>
             ))}
           </Typography>
@@ -90,7 +96,10 @@ export default function ActionCardWithMenu({
         target={threeDotRef}
         className="w-[160px]"
       >
-        <List strongIos outlineIos>
+        <List
+          strongIos
+          outlineIos
+        >
           {menuItems.map((item, i) => (
             <ListItem
               key={i}
@@ -105,6 +114,6 @@ export default function ActionCardWithMenu({
           ))}
         </List>
       </Popover>
-    </Card>
+    </CustomCard>
   );
 }

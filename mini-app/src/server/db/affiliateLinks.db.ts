@@ -138,7 +138,7 @@ export const getAffiliateLinkForOnionCampaign = async (userId: number): Promise<
 };
 
 export const getAffiliateLinkByType = async (itemType: AffiliateItemTypeEnum): Promise<AffiliateLinksRow[] | undefined> => {
-  const link = await db.select().from(affiliateLinks).where(eq(affiliateLinks.itemType, itemType)).limit(1).execute();
+  const link = await db.select().from(affiliateLinks).where(eq(affiliateLinks.itemType, itemType)).execute();
 
   return link;
 };
