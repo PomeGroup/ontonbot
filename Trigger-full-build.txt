@@ -17,4 +17,4 @@ full build for dev
 full build for dev
 full build for dev remove server only
 add more worker services
-refine deployment flow
+refine deployment flow samyar trigger
