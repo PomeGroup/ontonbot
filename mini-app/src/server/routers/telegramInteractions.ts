@@ -534,21 +534,18 @@ export const requestShareAffiliateOnionCampaign = initDataProtectedProcedure.mut
   try {
     // 1) Verify user
     const userId = ctx.user?.user_id;
-    if (!userId) {
-      throw new TRPCError({ code: "UNAUTHORIZED", message: "User not logged in" });
-    }
 
     // 2) Fetch onion-campaign affiliate link & spin data
     const affiliateResult = await affiliateLinksDB.getAffiliateLinkForOnionCampaign(userId);
     if (!affiliateResult) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Affiliate link not found" });
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: `requestShareAffiliateOnionCampaign: Affiliate link not found for user #${userId}`,
+      });
     }
     const linkHash = affiliateResult.linkHash;
     const totalSpins = Number(affiliateResult.totalPurchase) || 0;
     // 3) Prepare share link data
-    // Example deep link or your front-end link:
-    // const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/affiliate?startapp=${linkHash}`;
-    // const fallbackUrl = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=tab_campaign&utm_source=${linkHash}`;
     const shareLink = `https://t.me/${process.env.NEXT_PUBLIC_BOT_USERNAME}/event?startapp=campaign-aff-${linkHash}`;
     const fallbackUrl = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/genesis-onions/?affiliate=${linkHash}`;
 
@@ -569,12 +566,15 @@ export const requestShareAffiliateOnionCampaign = initDataProtectedProcedure.mut
       affiliateDataForBot
     );
 
-    logger.log("shareAffiliateLinkRequest => ", result);
+    logger.info("requestShareAffiliateOnionCampaign: shareAffiliateLinkRequest => ", result);
 
     if (result.success) {
       return { status: "success", data: null };
     } else {
-      logger.error("Failed to share the affiliate link:", result.error);
+      logger.error(
+        `requestShareAffiliateOnionCampaign: Failed to share the affiliate link for user #${userId}:`,
+        result.error
+      );
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to share affiliate link",
@@ -582,7 +582,10 @@ export const requestShareAffiliateOnionCampaign = initDataProtectedProcedure.mut
       });
     }
   } catch (error) {
-    logger.error("Error while sharing affiliate link: ", error);
+    logger.error(
+      `requestShareAffiliateOnionCampaign: Error while sharing affiliate link for user #${ctx.user?.user_id}:`,
+      error
+    );
     throw new TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Failed to share affiliate link",

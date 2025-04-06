@@ -3,6 +3,9 @@ import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
 import { tokenCampaignUserSpinsDB } from "@/server/db/tokenCampaignUserSpins.db";
 import { TokenCampaignOrdersStatus } from "@/db/schema/tokenCampaignOrders";
 import { logger } from "@/server/utils/logger";
+import { sendLogNotification } from "@/lib/tgBot";
+import { usersDB } from "@/server/db/users";
+import { tokenCampaignSpinPackagesDB } from "@/server/db/tokenCampaignSpinPackages.db";
 
 /**
  * Cron job that checks for "confirming" orders on TON blockchain,
@@ -14,6 +17,16 @@ export async function processCampaignOrders() {
 
   for (const order of pendingOrders) {
     // Wrap updates + spin creation in a transaction
+    const User = await usersDB.selectUserById(order.userId);
+    const spinPackage = await tokenCampaignSpinPackagesDB.getSpinPackageById(order.spinPackageId);
+    if (!spinPackage) {
+      logger.error("processCampaignOrders: Spin package not found for order:", order.id);
+      return;
+    }
+    if (!User) {
+      logger.error("processCampaignOrders: User not found for order:", order.id);
+      return;
+    }
     await db.transaction(async (tx) => {
       // 3a) Mark the order as "processing"
       logger.info("processCampaignOrders: Processing order:", order.id);
@@ -23,12 +36,36 @@ export async function processCampaignOrders() {
 
       // 4) Insert user spins for that order, e.g. spinCount times
       await tokenCampaignUserSpinsDB.addUserSpinsForOrderTx(tx, order.userId, order.spinPackageId);
-      logger.info("processCampaignOrders: User spins created for order:", order.id);
+      logger.info(
+        `processCampaignOrders: starting  process order for user ${User?.username} with  id ${User?.user_id} for package ${spinPackage?.name} 
+        with id ${spinPackage?.id} and order id ${order.id} and trxHash ${order.trxHash} and order.uuid ${order.uuid}   `
+      );
       // 5) Mark the order as "completed" after successful spin insertion
       await tokenCampaignOrdersDB.updateOrderByIdTx(tx, order.id, {
         status: "completed" as TokenCampaignOrdersStatus,
       });
-      logger.info("processCampaignOrders: Order completed:", order.id);
+      // 6) Log the completion
+      try {
+        // make trx hash url encoded
+        const trxHashUrl = encodeURIComponent(order.trxHash || "");
+        await sendLogNotification({
+          message:
+            `💵 Campaign Order 💵 \n` +
+            `Order ID: ${order.id}\n` +
+            `user : @${User?.username}\n` +
+            `userId : ${User?.user_id}\n` +
+            `price: ${order.finalPrice} ${order.currency}\n` +
+            `Trx Hash: <a href='https://tonviewer.com/transaction/${trxHashUrl}'>🔗 TRX</a>\n` +
+            `Spin Package ID: ${spinPackage?.name}`,
+          topic: "campaign",
+        });
+      } catch (e) {
+        logger.warn(`processCampaignOrders: Error sending log notification: for order ${order.id}`, e);
+      }
+      logger.log(
+        `processCampaignOrders: Order completed: order.id ${order.id} and order.uuid ${order.uuid} for user ${User?.username} 
+        with id ${User?.user_id} and spin package ${spinPackage?.name} with id ${spinPackage?.id}`
+      );
     });
   }
 }
