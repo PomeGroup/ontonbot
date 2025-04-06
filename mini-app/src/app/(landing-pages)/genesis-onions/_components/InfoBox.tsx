@@ -6,5 +6,5 @@ interface Props extends PropsWithChildren {
 }
 
 export const InfoBox = ({ children, className }: Props) => {
-    return <div className={cn("border-brand-divider-dark border bg-white/15 rounded-2lg p-3 backdrop-blur-md", className)}>{children}</div>
+    return <div className={cn("bg-white/10 rounded-2lg p-3 backdrop-blur-md", className)}>{children}</div>
 }

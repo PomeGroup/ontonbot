@@ -14,7 +14,8 @@ interface Props {
 export const AccessRestrictedModal = ({ open, onClose }: Props) => {
     const router = useRouter();
     const handleOnClick = () => {
-        router.push("/");
+        router.push("/?from=accessibility-modal");
+        onClose()
     };
 
     return (

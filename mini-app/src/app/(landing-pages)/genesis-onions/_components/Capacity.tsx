@@ -18,7 +18,7 @@ export const Capacity = () => {
             <div className="flex flex-col gap-2">
                 {filteredCollections?.map((item) => (
                     <InfoBox
-                        className="px-2 py-1 flex gap-2 justify-between items-center border-silverBlue-3 bg-transparent rounded-md"
+                        className="px-2 py-1 flex gap-2 justify-between items-center border border-silverBlue-3 bg-transparent rounded-md"
                         key={item.id}
                     >
                         {item.image && <Image

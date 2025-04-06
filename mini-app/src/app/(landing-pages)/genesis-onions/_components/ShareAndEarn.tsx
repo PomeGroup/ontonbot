@@ -62,7 +62,7 @@ export const ShareAndEarn = () => {
                 open={showAffiliateInfo}
                 onClose={() => setShowAffiliateInfo(false)}
             />
-            <InfoBox className="flex flex-col items-center bg-white/10">
+            <InfoBox className="flex flex-col items-center border">
                 <div className="flex flex-col gap-1 items-center mb-2">
                     <Typography
                         variant="headline"
@@ -102,9 +102,9 @@ export const ShareAndEarn = () => {
                 <div className="flex flex-col gap-4 w-full">
                     <div className="flex gap-3 w-full">
                         {rewardsGuide.map((item) => (
-                            <div
+                            <InfoBox
                                 key={item.title}
-                                className="border rounded-md py-2 px-3 flex flex-col gap-2 flex-1 items-center"
+                                className="rounded-md py-2 px-3 flex flex-col gap-2 flex-1 items-center"
                             >
                                 <Typography
                                     variant="subheadline2"
@@ -113,7 +113,7 @@ export const ShareAndEarn = () => {
                                     {item.title}
                                 </Typography>
                                 <Typography variant="caption2">{item.subtitle}</Typography>
-                            </div>
+                            </InfoBox>
                         ))}
                     </div>
 
