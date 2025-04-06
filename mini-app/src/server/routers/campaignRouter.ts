@@ -118,6 +118,14 @@ export const campaignRouter = router({
       // Ensure the user is logged in (ctx.user set by your auth)
       const userId = ctx.user?.user_id;
 
+      const eligibility = await userEligibilityDB.isUserEligible(userId);
+      if (!eligibility) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: `CAMPAIGN_LOG:Router: User ${userId} is not eligible for this campaign.`,
+        });
+      }
+
       const { spinPackageId, walletAddress } = input;
       const spinPackage = await tokenCampaignSpinPackagesDB.getSpinPackageById(spinPackageId);
       if (!spinPackage) {
