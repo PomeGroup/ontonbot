@@ -12,6 +12,8 @@ import { callTonfestForOnOntonPayment } from "@/cronJobs/helper/callTonfestForOn
 import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
 import { callPridipieForOnOntonPayment } from "@/cronJobs/helper/callPridipieForOnOntonPayment";
 import { couponItemsDB } from "@/server/db/couponItems.db";
+import { is_mainnet } from "@/server/routers/services/tonCenter";
+import eventDB from "@/server/db/events";
 
 export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
   // Get Orders to be Minted
@@ -115,13 +117,17 @@ export const TsCsbtTicketOrder = async (pushLockTTl: () => any) => {
           .where(
             and(eq(orders.event_uuid, event_uuid!), eq(orders.order_type, "ts_csbt_ticket"), eq(orders.state, "completed"))
           );
-
+        const trxHashUrl = encodeURIComponent(ordr.trx_hash || "");
+        const prefix = is_mainnet ? "" : "testnet.";
+        const eventData = await eventDB.fetchEventByUuid(event_uuid!);
         await sendLogNotification({
           message: `CSBT Ticket ${order_count}
+<b>${eventData?.title || "Event"}</b>
 <b>${paymentInfo.title}</b>
+Price: ${paymentInfo.price} ${paymentInfo.payment_type}
 👤user_id : <code>${ordr.user_id}</code>
 👤username : @${username}
-
+Trx Hash: <a href='https://${prefix}tonviewer.com/transaction/${trxHashUrl}'>🔗 TRX</a>
           `,
           topic: "ticket",
         });

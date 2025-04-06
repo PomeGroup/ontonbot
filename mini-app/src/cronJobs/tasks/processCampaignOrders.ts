@@ -6,6 +6,7 @@ import { logger } from "@/server/utils/logger";
 import { sendLogNotification } from "@/lib/tgBot";
 import { usersDB } from "@/server/db/users";
 import { tokenCampaignSpinPackagesDB } from "@/server/db/tokenCampaignSpinPackages.db";
+import { is_mainnet } from "@/server/routers/services/tonCenter";
 
 /**
  * Cron job that checks for "confirming" orders on TON blockchain,
@@ -48,6 +49,7 @@ export async function processCampaignOrders() {
       try {
         // make trx hash url encoded
         const trxHashUrl = encodeURIComponent(order.trxHash || "");
+        const prefix = is_mainnet ? "" : "testnet.";
         await sendLogNotification({
           message:
             `💵 Campaign Order 💵 \n` +
@@ -55,7 +57,7 @@ export async function processCampaignOrders() {
             `user : @${User?.username}\n` +
             `userId : ${User?.user_id}\n` +
             `price: ${order.finalPrice} ${order.currency}\n` +
-            `Trx Hash: <a href='https://tonviewer.com/transaction/${trxHashUrl}'>🔗 TRX</a>\n` +
+            `Trx Hash: <a href='https://${prefix}tonviewer.com/transaction/${trxHashUrl}'>🔗 TRX</a>\n` +
             `Spin Package ID: ${spinPackage?.name}`,
           topic: "campaign",
         });
