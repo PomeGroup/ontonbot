@@ -1,10 +1,6 @@
 import { Modal, Box } from "@mui/material";
 import Typography from "@/components/Typography";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import TonSocietyLogo from "../_assets/images/ts-logo.svg";
 import { CircleX } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 interface Props {
     open: boolean;
@@ -12,11 +8,6 @@ interface Props {
 }
 
 export const AccessRestrictedModal = ({ open, onClose }: Props) => {
-    const router = useRouter();
-    const handleOnClick = () => {
-        router.push("/");
-    };
-
     return (
         <Modal
             open={open}
@@ -29,7 +20,12 @@ export const AccessRestrictedModal = ({ open, onClose }: Props) => {
                     justifyContent="space-between"
                     alignItems="center"
                 >
-                    <Typography variant="title2">Access Restricted</Typography>
+                    <Typography
+                        variant="title2"
+                        weight="normal"
+                    >
+                        Access Restricted
+                    </Typography>
 
                     <CircleX
                         className="cursor-pointer hover:opacity-80"
@@ -38,49 +34,21 @@ export const AccessRestrictedModal = ({ open, onClose }: Props) => {
                 </Box>
 
                 <div className="flex gap-3">
-                    <Image
-                        src={TonSocietyLogo}
-                        width={60}
-                        height={60}
-                        alt="TON Society Logo"
-                        className="rounded-full border-2"
-                    />
-
-                    <Typography
-                        variant="subheadline1"
-                        weight="normal"
-                    >
-                        You need an <strong>TON Society SBT</strong> to start. Please attend an event and claim a TS SBT to continue.
-                    </Typography>
-                </div>
-
-                <hr />
-
-                <div className="justify-between flex gap-1 h-13">
-                    <Button
-                        className="flex-1 h-full text-orange"
-                        variant="link"
-                        onClick={onClose}
-                    >
+                    <div className="flex flex-col gap-2">
                         <Typography
-                            variant="body"
-                            weight="medium"
+                            variant="subheadline1"
+                            weight="normal"
                         >
-                            Dismiss
+                            Only ONTON Pioneers, ONION Pioneers and ON Smile SBT holders can access today.
                         </Typography>
-                    </Button>
 
-                    <Button
-                        className="flex-1 h-full bg-orange hover:bg-orange/80"
-                        onClick={handleOnClick}
-                    >
                         <Typography
-                            variant="body"
-                            weight="medium"
+                            variant="subheadline1"
+                            weight="normal"
                         >
-                            Explore ONTON
+                            The access will be open for all SBT holders from Monday 7th April 2 PM UTC
                         </Typography>
-                    </Button>
+                    </div>
                 </div>
             </Box>
         </Modal>

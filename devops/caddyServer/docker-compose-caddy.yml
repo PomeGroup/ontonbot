@@ -49,7 +49,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.caddy-central"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   registry:
     image: registry:latest
@@ -89,7 +89,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.registry-central"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   registry-ui:
     image: joxit/docker-registry-ui:latest
@@ -105,7 +105,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.registry-ui-central"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   elasticsearch:
     image: elasticsearch:8.16.1

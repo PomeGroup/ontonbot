@@ -129,7 +129,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-minio"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   postgres:
     hostname: postgres
@@ -186,7 +186,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-postgres"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
 
   redis:
@@ -233,7 +233,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-redis"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   pgadmin:
     image: dpage/pgadmin4
@@ -286,7 +286,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-telegram-bot"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   mini-app:
     hostname: mini-app
@@ -337,7 +337,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   mini-app-sbt-worker:
     hostname: mini-app-sbt-worker
@@ -381,7 +381,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-sbt-worker"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
 
   mini-app-reward-worker:
@@ -426,7 +426,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-reward-worker"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   mini-app-ordinary-worker:
     hostname: mini-app-ordinary-worker
@@ -470,7 +470,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-ordinary-worker"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   mini-app-moderation-bot:
     hostname: mini-app-moderation-bot
@@ -514,7 +514,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-moderation-bot"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   mini-app-poa-worker:
     hostname: mini-app-poa-worker
@@ -560,7 +560,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-poa-worker"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   mini-app-notification-socket:
     hostname: mini-app-notification-socket
@@ -608,7 +608,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-mini-app-notification-socket"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
 
   participant-tma:
@@ -642,7 +642,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-participant-tma"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   website:
     hostname: website
@@ -674,7 +674,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-website"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   metabase:
     image: metabase/metabase:v0.50.18.3
@@ -726,7 +726,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-metabase"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   rabbitmq:
     image: "rabbitmq:4.0.4-management-alpine"
@@ -774,7 +774,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-rabbitmq"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
   #  client-web:
   #    hostname: client-web
@@ -796,7 +796,7 @@ services:
   #        options:
   #            syslog-address: "logstash:5044"
   #            tag: "docker.${BRANCH_NAME}-client-web"
-  #            fluentd-async-connect: "true"
+  #            #fluentd-async-connect: "true"
 
 
   swagger-ui:
@@ -832,7 +832,7 @@ services:
       options:
         fluentd-address: "127.0.0.1:24224"
         tag: "docker.${BRANCH_NAME}-swagger-ui"
-        fluentd-async-connect: "true"
+        #fluentd-async-connect: "true"
 
 networks:
   onton-network:

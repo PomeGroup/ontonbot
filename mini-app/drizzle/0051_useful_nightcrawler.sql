@@ -1,0 +1,1 @@
+ALTER TYPE "affiliate_item_type" ADD VALUE 'onion1-special-affiliations';

@@ -61,7 +61,7 @@ export default function MyPointsPage() {
             <EventPointsCard
               eventTitle="Attend paid online events"
               tasksCount={paidOnlineData?.count ?? 0}
-              description="10 Points + 1 Point per USDT price"
+              description="10 Points"
               totalPoints={paidOnlineData?.total ?? 0}
             />
             <EventPointsCard
@@ -76,7 +76,7 @@ export default function MyPointsPage() {
             <EventPointsCard
               eventTitle="Attend paid in-person events"
               tasksCount={paidOfflineData?.count ?? 0}
-              description="10 Points + 1 Point per USDT price"
+              description="10 Points"
               totalPoints={paidOfflineData?.total ?? 0}
             />
             <EventPointsCard

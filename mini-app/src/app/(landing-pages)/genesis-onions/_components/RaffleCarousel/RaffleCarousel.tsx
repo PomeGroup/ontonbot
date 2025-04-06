@@ -191,7 +191,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
                     Spin the wheel, unwrap Genesis ONION NFTs, and collect your $ONION airdrop.
                 </Typography>
 
-                <CountdownTimer />
+                <CountdownTimer title="Limited Time Offer! Ends in" />
 
                 <div className="flex flex-col gap-3">
                     <Typography
