@@ -1,10 +1,10 @@
 import PlayStationIcon from "@/app/_components/icons/play-station";
-import { useUserStore } from "@/context/store/user.store";
 import { cn } from "@/utils";
 import { Page, Tabbar, TabbarLink } from "konsta/react";
 import { Calendar, UserIcon, Users } from "lucide-react";
+import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 
 interface Tab {
   title: string;
@@ -38,7 +38,17 @@ const tabs: Tab[] = [
 export default function BottomNavigation(props: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useUserStore();
+
+  // Prefetch routes for faster navigation
+  useEffect(() => {
+    for (const tab of tabs) {
+      for (const url of tab.urls) {
+        router.prefetch(url, {
+          kind: PrefetchKind.FULL,
+        });
+      }
+    }
+  }, [router]);
 
   // Return children if current pathname doesn't exist in any tab's urls
   if (!tabs.some((tab) => tab.urls.includes(pathname))) {
