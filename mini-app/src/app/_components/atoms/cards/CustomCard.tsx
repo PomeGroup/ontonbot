@@ -12,9 +12,20 @@ interface CustomCardProps {
    */
   defaultPadding?: boolean;
   className?: string;
+  /**
+   * Callbacks
+   */
+  onClick?: () => void;
 }
 
-const CustomCard: React.FC<CustomCardProps> = ({ title, description, children, defaultPadding = false, className }) => {
+const CustomCard: React.FC<CustomCardProps> = ({
+  title,
+  description,
+  children,
+  defaultPadding = false,
+  className,
+  onClick,
+}) => {
   return (
     <Card
       header={
@@ -33,6 +44,7 @@ const CustomCard: React.FC<CustomCardProps> = ({ title, description, children, d
           </>
         ) : undefined
       }
+      onClick={onClick}
       contentWrap={defaultPadding}
       margin="m-0"
       className={cn(className)}

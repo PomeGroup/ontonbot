@@ -16,6 +16,7 @@ export const createInviteLinkHandler = async (
   // Build the invite link options
   const linkOptions: Parameters<typeof req.bot.api.createChatInviteLink>[1] = {
     creates_join_request: Boolean(creates_join_request),
+    member_limit: 1,
   };
   if (name) linkOptions.name = name;
 

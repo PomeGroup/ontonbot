@@ -57,7 +57,7 @@ export const CheckTransactions = async () => {
     }
   }
   const parsed_campaign_orders = await tonCenter.parseTransactions(transactions, "OnionCampaign=");
-  logger.log("parsed_campaign_orders", parsed_campaign_orders);
+
   for (const co of parsed_campaign_orders) {
     if (co.verfied) {
       if (co.order_uuid.length !== 36) {

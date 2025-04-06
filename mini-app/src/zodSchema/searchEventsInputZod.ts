@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const eventStatusValues = ["ongoing", "upcoming", "not_ended", "ended"] as const;
+export const eventStatusValues = ["ongoing", "upcoming", "not_ended", "ended", "all"] as const;
 
 const searchEventsInputZod = z.object({
   limit: z.number().min(0).max(100).optional(),

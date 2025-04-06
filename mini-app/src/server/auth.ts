@@ -3,7 +3,6 @@ import { user_custom_flags } from "@/db/schema/user_custom_flags";
 import { and, eq } from "drizzle-orm";
 import { verify } from "jsonwebtoken";
 import { cookies } from "next/headers";
-import { logger } from "@/server/utils/logger";
 
 export function getAuthenticatedUser(): [number, null] | [null, Response] {
   const userToken = cookies().get("token");
@@ -28,7 +27,7 @@ export function getAuthenticatedUser(): [number, null] | [null, Response] {
 
 /**
  * By using this function in routes.
- * that route need to have a 'x-api-key' header to be accessed
+ * that route need to have an 'x-api-key' header to be accessed
  * @param req {Request}
  */
 export function apiKeyAuthentication(req: Request) {

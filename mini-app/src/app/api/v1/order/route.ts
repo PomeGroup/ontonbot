@@ -21,7 +21,7 @@ const addOrderSchema = z.object({
   position: z.string().optional(),
   affiliate_id: z.string().nullable(),
   owner_address: z.string().refine((data) => Address.isAddress(Address.parse(data))),
-  coupon_code: z.string().optional(),
+  coupon_code: z.string().optional().nullable(),
 });
 
 //create order if order for that event and user does not exist

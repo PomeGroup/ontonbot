@@ -23,7 +23,7 @@ export default function parseSearchParams(searchParams: URLSearchParams) {
   const eventStatusParam = searchParams.get("eventStatus");
   const eventStatus = eventStatusValues.includes(eventStatusParam as any)
     ? eventStatusValues.find((v) => v === eventStatusParam)!
-    : ("ongoing" as const);
+    : ("all" as const);
 
   return {
     search: term,

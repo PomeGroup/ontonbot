@@ -108,14 +108,15 @@ export const MintNFTForPaidOrders = async (pushLockTTl: () => any) => {
         const prefix = is_mainnet ? "" : "testnet.";
         let username = "GIFT-USER";
         if (ordr.user_id) username = (await selectUserById(ordr.user_id!))?.username || username;
-
+        // make trx hash url encoded
+        const trxHashUrl = encodeURIComponent(ordr.trx_hash || "");
         await sendLogNotification({
           message: `NFT ${nft_index + 1}
 <b>${paymentInfo.title}</b>
 👤user_id : <code>${ordr.user_id}</code>
 👤username : @${username}
 <a href='https://${prefix}getgems.io/collection/${paymentInfo.collectionAddress}'>🎨Collection</a>
-<a href='https://${prefix}tonviewer.com/transaction/${ordr.trx_hash}'>💰TRX</a>
+<a href='https://${prefix}tonviewer.com/transaction/${trxHashUrl}'>💰TRX</a>
 <a href='https://${prefix}tonviewer.com/${nft_address}'>📦NFT</a>
           `,
           topic: "ticket",

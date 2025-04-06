@@ -64,6 +64,7 @@ const getEvent = initDataProtectedProcedure.input(z.object({ event_uuid: z.strin
       message: "event not found",
     });
   }
+
   //update sbt_collection_address from ton-society if not exists
   await eventDB.updateEventSbtCollection(
     eventData.start_date,
