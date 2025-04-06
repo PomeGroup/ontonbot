@@ -3,24 +3,21 @@ import ActionCard from "@/ActionCard";
 import CustomButton from "@/app/_components/Button/CustomButton";
 import CheckUserInList from "@/app/_components/CheckUserInList";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
+import { ConnectWalletCard } from "@/app/_components/organisms/ConnectWallet";
 import { trpc } from "@/app/_trpc/client";
 import LoadableImage from "@/components/LoadableImage";
-import OntonDialog from "@/components/OntonDialog";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import solarCupOutline from "@/components/icons/solar-cup-outline.svg";
-import tonIcon from "@/components/icons/ton.svg";
 import { ALLOWED_USER_TO_TEST } from "@/constants";
 import { useUserStore } from "@/context/store/user.store";
 import { Channel } from "@/types";
 import { cn } from "@/utils";
 import { useSectionStore } from "@/zustand/useSectionStore";
-import { TonConnectButton, useTonAddress, useTonConnectModal } from "@tonconnect/ui-react";
-import { Button, Card } from "konsta/react";
+import { useTonAddress } from "@tonconnect/ui-react";
+import { Card } from "konsta/react";
 import { ArrowRight } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import PaymentCard from "./PaymentCard";
 import calendarStarIcon from "./calendar-star.svg";
@@ -154,112 +151,5 @@ function OrganizerProgress({ step }: { step: 1 | 2 }) {
         <div className={cn("flex-1", step === 1 ? "bg-[#EEEEF0]" : "bg-[#007AFF]")} />
       </div>
     </Card>
-  );
-}
-
-function ConnectWalletCard() {
-  const [isOpen, setOpen] = useState(false);
-
-  const hasWallet = !!useTonAddress();
-  return (
-    <Card className="w-full !mx-0">
-      <Typography
-        bold
-        variant="headline"
-        className="mb-4"
-      >
-        Your Wallet
-      </Typography>
-
-      <ConfirmConnectDialog
-        open={isOpen}
-        onClose={() => setOpen(false)}
-      />
-
-      {hasWallet ? (
-        <TonConnectButton className="mx-auto" />
-      ) : (
-        <Button
-          className="py-6 rounded-[10px]"
-          onClick={() => setOpen(true)}
-        >
-          <Image
-            className="mr-1"
-            src={tonIcon}
-            alt=""
-            width={15}
-            height={15}
-          />
-          Connect your Wallet
-        </Button>
-      )}
-    </Card>
-  );
-}
-
-function ConfirmConnectDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const walletModal = useTonConnectModal();
-  const tonWalletAddress = useTonAddress();
-
-  const handleConnect = () => {
-    walletModal.open();
-  };
-
-  const trpcUtils = trpc.useUtils();
-
-  const addWalletMutation = trpc.users.addWallet.useMutation({
-    onSuccess: () => {
-      // trpcUtils.users.getVisitorReward.invalidate({}, { refetchType: "all" });
-      trpcUtils.users.getWallet.invalidate({}, { refetchType: "all" });
-      trpcUtils.users.syncUser.invalidate(undefined, { refetchType: "all" });
-      onClose();
-    },
-  });
-
-  const { user } = useUserStore();
-
-  useEffect(() => {
-    if (!user?.user_id) return;
-
-    if (tonWalletAddress) {
-      onClose();
-    }
-
-    if (!user?.wallet_address && tonWalletAddress) {
-      toast.success("Your wallet is now connected");
-      addWalletMutation.mutate({
-        wallet: tonWalletAddress,
-      });
-    }
-  }, [addWalletMutation, onClose, tonWalletAddress, user?.user_id, user?.wallet_address]);
-
-  return (
-    <OntonDialog
-      open={open}
-      onClose={onClose}
-      title="Connect your wallet"
-    >
-      <Typography
-        variant="body"
-        className="text-center mb-6 font-normal"
-      >
-        <b>You are becoming an ONTON organizer.</b>
-        <br />
-        To create a channel and use special event publishing features, you need to pay 10 TON
-      </Typography>
-      <Button
-        className="py-6 rounded-[10px] mb-3"
-        onClick={handleConnect}
-      >
-        Connect Wallet
-      </Button>
-      <Button
-        className="py-6 rounded-[10px]"
-        outline
-        onClick={onClose}
-      >
-        Maybe Later
-      </Button>
-    </OntonDialog>
   );
 }
