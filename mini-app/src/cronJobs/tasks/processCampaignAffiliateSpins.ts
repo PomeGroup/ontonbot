@@ -6,6 +6,8 @@ import { logger } from "@/server/utils/logger";
 import { AffiliateItemTypeEnum } from "@/db/schema/affiliateLinks";
 import { TokenCampaignUserSpinsInsert } from "@/db/schema/tokenCampaignUserSpins";
 import { notifyUserOfAffiliateReward } from "../helper/notifyUserOfAffiliateReward";
+import { sendLogNotification } from "@/lib/tgBot";
+import { usersDB } from "@/server/db/users";
 
 /**
  * Cron job: awarding spins for onion1-campaign affiliates
@@ -13,29 +15,33 @@ import { notifyUserOfAffiliateReward } from "../helper/notifyUserOfAffiliateRewa
 export async function processCampaignAffiliateSpins() {
   const currentCampaign: AffiliateItemTypeEnum = "onion1-campaign";
   const goldenCollectionForReward = 1;
-
+  const countSpinsForGoldenReward = 20;
+  const countSpinsForSpinReward = 5;
   try {
     // 1) fetch links
     const onionLinks = await affiliateLinksDB.getAffiliateLinkByType(currentCampaign);
+
     if (!onionLinks || onionLinks.length === 0) {
       return;
     }
 
     for (const link of onionLinks) {
       const totalPurchasedSpins = await tokenCampaignOrdersDB.sumSpinCountByAffiliateHash(link.linkHash);
+      const User = await usersDB.selectUserById(link.affiliatorUserId);
+
       const previouslyAwarded = link.totalPurchase || 0;
 
       if (totalPurchasedSpins > previouslyAwarded) {
         logger.log(
-          `processCampaignAffiliateSpins: Awarding spins for affiliate link #${link.id} for user #${link.affiliatorUserId}`
+          `processCampaignAffiliateSpins: Found ${onionLinks.length} affiliate links for campaign ${currentCampaign} for user #${User?.username} (${link.affiliatorUserId})`
         );
         await db.transaction(async (tx) => {
           const newSpinsRows: TokenCampaignUserSpinsInsert[] = [];
 
           // for i in range (previouslyAwarded+1 ... totalPurchasedSpins)
           for (let i = previouslyAwarded + 1; i <= totalPurchasedSpins; i++) {
-            // If multiple of 20 => only specific_reward
-            if (i % 20 === 0) {
+            // If multiple of countSpinsForGoldenReward => only specific_reward
+            if (i % countSpinsForGoldenReward === 0) {
               newSpinsRows.push({
                 userId: link.affiliatorUserId,
                 spinType: "specific_reward",
@@ -47,9 +53,26 @@ export async function processCampaignAffiliateSpins() {
               // after push, also notify
               await notifyUserOfAffiliateReward(link.affiliatorUserId, "specific_reward");
               logger.log(`processCampaignAffiliateSpins: Notified user #${link.affiliatorUserId} of specific_reward`);
+              try {
+                await sendLogNotification({
+                  message:
+                    `🥇 Campaign User Reach Golden Collection 🥇\n` +
+                    `user : @${User?.username}\n` +
+                    `userId : ${User?.user_id}\n` +
+                    `total purchased spins by user affiliate link : ${totalPurchasedSpins}\n` +
+                    `total affiliate golden reward : ${totalPurchasedSpins / countSpinsForGoldenReward}\n` +
+                    `user affiliate link : ${link.linkHash}\n`,
+                  topic: "campaign",
+                });
+              } catch (e) {
+                logger.warn(
+                  `processCampaignAffiliateSpins: Error sending log notification: for user ${link.affiliatorUserId}`,
+                  e
+                );
+              }
             }
-            // else if multiple of 5 => rewarded_spin
-            else if (i % 5 === 0) {
+            // else if multiple of countSpinsForSpinReward => rewarded_spin
+            else if (i % countSpinsForSpinReward === 0) {
               newSpinsRows.push({
                 userId: link.affiliatorUserId,
                 spinType: "rewarded_spin",

@@ -23,12 +23,12 @@ export const addUserSpin = async (data: TokenCampaignUserSpinsInsert): Promise<T
     const [inserted] = await db.insert(tokenCampaignUserSpins).values(data).returning().execute();
 
     if (inserted) {
-      logger.log("User spin inserted:", inserted);
+      logger.info("tokenCampaignUserSpinsDB: User spin inserted:", inserted);
       return inserted;
     }
     return undefined;
   } catch (error) {
-    logger.error("Error inserting user spin:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error inserting user spin:", error);
     throw error;
   }
 };
@@ -99,7 +99,9 @@ export const addUserSpinsForOrderTx = async (
   // 4) Insert them in one statement
   const inserted = await tx.insert(tokenCampaignUserSpins).values(newSpins).returning().execute();
 
-  logger.log(`Inserted ${inserted.length} new spins for user #${userId}, package #${spinPackageId}.`);
+  logger.log(
+    `tokenCampaignUserSpinsDB: Inserted ${inserted.length} new spins for user #${userId}, package #${spinPackageId}.`
+  );
   return inserted;
 };
 
@@ -117,7 +119,7 @@ export const getUserSpinById = async (id: number): Promise<TokenCampaignUserSpin
 
     return spin;
   } catch (error) {
-    logger.error("Error fetching user spin by ID:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error fetching user spin by ID:", error);
     throw error;
   }
 };
@@ -132,7 +134,7 @@ export const getUserSpinsByUserId = async (userId: number): Promise<TokenCampaig
 
     return spins;
   } catch (error) {
-    logger.error("Error fetching user spins by userId:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error fetching user spins by userId:", error);
     throw error;
   }
 };
@@ -151,7 +153,7 @@ export const getUserSpinsBySpinPackageId = async (spinPackageId: number): Promis
 
     return spins;
   } catch (error) {
-    logger.error("Error fetching user spins by spinPackageId:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error fetching user spins by spinPackageId:", error);
     throw error;
   }
 };
@@ -170,7 +172,7 @@ export const getUserSpinsByNftCollectionId = async (nftCollectionId: number): Pr
 
     return spins;
   } catch (error) {
-    logger.error("Error fetching user spins by nftCollectionId:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error fetching user spins by nftCollectionId:", error);
     throw error;
   }
 };
@@ -196,11 +198,11 @@ export const updateUserSpinById = async (
       .execute();
 
     if (updated) {
-      logger.log("User spin updated:", updated);
+      logger.log("tokenCampaignUserSpinsDB: User spin updated:", updated);
     }
     return updated;
   } catch (error) {
-    logger.error("Error updating user spin by ID:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error updating user spin by ID:", error);
     throw error;
   }
 };
@@ -222,7 +224,7 @@ export const updateUserSpinByIdTx = async (
     .execute();
 
   if (updated) {
-    logger.log("User spin updated in transaction:", updated);
+    logger.log("tokenCampaignUserSpinsDB: User spin updated in transaction:", updated);
   }
   return updated;
 };
@@ -246,7 +248,7 @@ export const getUnusedSpinForUserTx = async (
 
     return spinRow;
   } catch (error) {
-    logger.error("Error fetching unused spin row:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error fetching unused spin row:", error);
     throw error;
   }
 };
@@ -320,7 +322,7 @@ export async function getAllCollectionsWithUserCount(
 
     return result;
   } catch (error) {
-    logger.error("Error fetching all collections with user count:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error fetching all collections with user count:", error);
     throw error;
   }
 }
@@ -374,7 +376,7 @@ export async function getAllUsersCollectionsCount(): Promise<AllUsersCollections
     const rows = result;
     return rows;
   } catch (error) {
-    logger.error("Error fetching all user-collection counts:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error fetching all user-collection counts:", error);
     throw error;
   }
 }
@@ -409,7 +411,7 @@ export const getUserSpinStats = async (userId: number, spinPackageId?: number): 
       remaining: row?.remaining ?? 0,
     };
   } catch (error) {
-    logger.error("Error fetching user spin stats:", error);
+    logger.error("tokenCampaignUserSpinsDB: Error fetching user spin stats:", error);
     throw error;
   }
 };

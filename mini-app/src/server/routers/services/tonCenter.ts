@@ -282,11 +282,11 @@ async function fetchAllTransactions(
       sort: sort as "asc" | "desc",
       offset: offset,
     });
-    logger.log("fetchTransactions response", response);
+
     if (!response || !response.transactions || response.transactions.length === 0) {
       break;
     }
-
+    logger.info("fetchAllTransactions: response: ", response);
     allTransactions.push(...response.transactions);
 
     offset += limit;
