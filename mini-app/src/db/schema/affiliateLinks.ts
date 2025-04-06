@@ -2,7 +2,12 @@ import { pgTable, bigint, boolean, varchar, date, index, uniqueIndex } from "dri
 import { pgEnum } from "drizzle-orm/pg-core";
 import { InferSelectModel, sql } from "drizzle-orm";
 
-export const affiliateItemType = pgEnum("affiliate_item_type", ["EVENT", "HOME", "onion1-campaign"]);
+export const affiliateItemType = pgEnum("affiliate_item_type", [
+  "EVENT",
+  "HOME",
+  "onion1-campaign",
+  "onion1-special-affiliations",
+]);
 
 export const affiliateLinks = pgTable(
   "affiliate_links",
