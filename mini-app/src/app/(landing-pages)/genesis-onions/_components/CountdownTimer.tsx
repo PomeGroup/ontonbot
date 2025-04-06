@@ -6,8 +6,12 @@ import { useConfig } from "@/context/ConfigContext";
 
 const orbitron = Orbitron({ subsets: ["latin"], weight: "500" });
 
+interface Props {
+    className?: string;
+    title?: string;
+}
 
-export const CountdownTimer = () => {
+export const CountdownTimer = ({ className, title }: Props) => {
     const config = useConfig();
     const targetDate = (Number(config?.ONION1_EDN_DATE) || 1745269200) * 1000;
 
@@ -34,8 +38,15 @@ export const CountdownTimer = () => {
     }, [calculateTimeLeft, targetDate]);
 
     return (
-        <div className="flex flex-col gap-y-1.5">
-            <Typography variant="caption2" className="text-center">Limited Time Offer! Ends in</Typography>
+        <div className={cn("flex flex-col gap-y-1.5", className)}>
+            {title && (
+                <Typography
+                    variant="caption2"
+                    className="text-center"
+                >
+                    {title}
+                </Typography>
+            )}
             <div className={`flex items-center justify-center gap-2`}>
                 <div className="flex flex-col items-center">
                     <span className={cn("text-4xl", orbitron.className)}>{timeLeft.days}</span>
@@ -60,4 +71,3 @@ export const CountdownTimer = () => {
         </div>
     );
 };
-
