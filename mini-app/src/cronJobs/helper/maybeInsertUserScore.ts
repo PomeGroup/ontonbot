@@ -37,17 +37,17 @@ export const maybeInsertUserScore = async (userId: number, eventId: number) => {
 
   if (isPaid && isOnline) {
     chosenActivityType = "paid_online_event";
-    points = 20;
+    points = 10;
   } else if (isPaid && !isOnline) {
     // participationType could be "in_person" or some variation
     chosenActivityType = "paid_offline_event";
-    points = 25;
+    points = 20;
   } else if (!isPaid && isOnline) {
     chosenActivityType = "free_online_event";
-    points = 10;
+    points = 1;
   } else {
     chosenActivityType = "free_offline_event";
-    points = 15;
+    points = 10;
   }
 
   // 3) Insert user score if not exists
