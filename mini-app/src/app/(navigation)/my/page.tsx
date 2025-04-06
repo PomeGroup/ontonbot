@@ -1,6 +1,5 @@
 "use client";
 import ActionCard from "@/ActionCard";
-import CustomButton from "@/app/_components/Button/CustomButton";
 import CheckUserInList from "@/app/_components/CheckUserInList";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
 import { ConnectWalletCard } from "@/app/_components/organisms/ConnectWallet";
@@ -8,6 +7,7 @@ import { trpc } from "@/app/_trpc/client";
 import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
+import FabPlusIcon from "@/components/icons/plus-icon";
 import solarCupOutline from "@/components/icons/solar-cup-outline.svg";
 import { ALLOWED_USER_TO_TEST } from "@/constants";
 import { useUserStore } from "@/context/store/user.store";
@@ -18,6 +18,7 @@ import { useTonAddress } from "@tonconnect/ui-react";
 import { Card } from "konsta/react";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import PaymentCard from "./PaymentCard";
 import calendarStarIcon from "./calendar-star.svg";
@@ -26,14 +27,20 @@ export default function ProfilePage() {
   const { user } = useUserStore();
   const hasWallet = !!useTonAddress();
   const { setSection } = useSectionStore();
-  const paid = user?.role === "organizer" || user?.role === "admin";
   const router = useRouter();
   const { data: totalPoints, isLoading: loadingTotalPoints } = trpc.usersScore.getTotalScoreByUserId.useQuery();
+
+  const hasEventOrganizer = user?.role === "organizer" || user?.role === "admin";
+
+  useEffect(() => {
+    router.prefetch("/events/create");
+  }, [router, hasEventOrganizer]);
+
   if (!user || loadingTotalPoints) return null;
 
   return (
-    <div>
-      {paid ? <InlineChannelCard data={user} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
+    <div className="relative isolate">
+      {hasEventOrganizer ? <InlineChannelCard data={user} /> : <OrganizerProgress step={hasWallet ? 2 : 1} />}
       <ActionCard
         onClick={() => router.push("/my/participated")}
         iconSrc={ticketIcon}
@@ -48,7 +55,7 @@ export default function ProfilePage() {
       />
       <ActionCard
         onClick={() => {
-          if (!paid) {
+          if (!hasEventOrganizer) {
             toast.error("Only organizers can host events");
             return;
           }
@@ -58,7 +65,9 @@ export default function ProfilePage() {
         title="Hosted"
         subtitle="You Created"
         footerTexts={[
-          paid ? { items: "Events", count: user?.hosted_event_count || 0 } : { items: "Become an organizer first" },
+          hasEventOrganizer
+            ? { items: "Events", count: user?.hosted_event_count || 0 }
+            : { items: "Become an organizer first" },
         ]}
       />
       <CheckUserInList
@@ -76,17 +85,18 @@ export default function ProfilePage() {
         />
       </CheckUserInList>
       <ConnectWalletCard />
-      <PaymentCard visible={!paid && hasWallet} />
+      <PaymentCard visible={!hasEventOrganizer && hasWallet} />
 
-      {paid && (
-        <CustomButton
+      {hasEventOrganizer && (
+        <div
+          className="fixed text-primary drop-shadow rounded-full right-8 bottom-16 z-50 cursor-pointer"
           onClick={() => {
             setSection("event_setup_form_general_step");
             router.push("/events/create");
           }}
         >
-          Create New Event
-        </CustomButton>
+          <FabPlusIcon />
+        </div>
       )}
     </div>
   );

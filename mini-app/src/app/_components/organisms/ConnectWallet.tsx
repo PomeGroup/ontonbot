@@ -62,19 +62,21 @@ export function ConnectWalletCard() {
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Button
-          className="py-6 rounded-[10px]"
+        <CustomButton
+          variant="primary"
           onClick={() => setOpen(true)}
+          icon={
+            <Image
+              className="mr-1"
+              src={tonIcon}
+              alt=""
+              width={15}
+              height={15}
+            />
+          }
         >
-          <Image
-            className="mr-1"
-            src={tonIcon}
-            alt=""
-            width={15}
-            height={15}
-          />
           Connect your Wallet
-        </Button>
+        </CustomButton>
       )}
     </Card>
   );
