@@ -5,7 +5,30 @@ export const generateWeightedArray = (
     campaigns: TokenCampaignNftCollections[],
     totalItems = RAFFLE_CAROUSEL_SLIDES_COUNT
 ): TokenCampaignNftCollections[] => {
-    const campaignCounts = campaigns.map(campaign => ({
+    // Separate out one of each: Gold, Silver, Bronze
+    const firstThree: TokenCampaignNftCollections[] = [];
+    const remainingCampaigns: TokenCampaignNftCollections[] = [];
+
+    const pickedTypes = new Set<string>();
+
+    for (const campaign of campaigns) {
+        const name = campaign.name?.toLowerCase() || "";
+        if (name.includes("gold") && !pickedTypes.has("gold")) {
+            firstThree.push(campaign);
+            pickedTypes.add("gold");
+        } else if (name.includes("silver") && !pickedTypes.has("silver")) {
+            firstThree.push(campaign);
+            pickedTypes.add("silver");
+        } else if (name.includes("bronze") && !pickedTypes.has("bronze")) {
+            firstThree.push(campaign);
+            pickedTypes.add("bronze");
+        } else {
+            remainingCampaigns.push(campaign);
+        }
+    }
+
+    const allCampaigns = [...campaigns];
+    const campaignCounts = allCampaigns.map(campaign => ({
         campaign,
         count: Math.floor(totalItems * (getCampaignWeight(campaign) / 1))
     }));
@@ -23,43 +46,30 @@ export const generateWeightedArray = (
         }
     }
 
-    const items: TokenCampaignNftCollections[] = [];
+    // Build the items array excluding the first three
+    const weightedItems: TokenCampaignNftCollections[] = [];
 
-    if (totalItems >= campaigns.length) {
-        for (const campaign of campaigns) {
-            items.push(campaign);
-        }
-    }
-
-    const remainingCounts = campaignCounts.map(item => ({
-        campaign: item.campaign,
-        count: Math.max(0, item.count - 1)
-    }));
+    const remainingCounts = campaignCounts.map(({ campaign, count }) => {
+        const isInFirstThree = firstThree.includes(campaign);
+        return {
+            campaign,
+            count: isInFirstThree ? Math.max(0, count - 1) : count
+        };
+    });
 
     for (const { campaign, count } of remainingCounts) {
         for (let i = 0; i < count; i++) {
-            items.push(campaign);
+            weightedItems.push(campaign);
         }
     }
 
-    if (items.length < totalItems) {
-        const needed = totalItems - items.length;
-        const weightedCampaigns: TokenCampaignNftCollections[] = [];
+    // Shuffle the remaining items
+    shuffleArray(weightedItems);
 
-        for (const { campaign, count } of campaignCounts) {
-            for (let i = 0; i < count; i++) {
-                weightedCampaigns.push(campaign);
-            }
-        }
+    // Combine with the first 3
+    const finalItems = [...firstThree.slice(0, 3), ...weightedItems];
 
-        shuffleArray(weightedCampaigns);
-        items.push(...weightedCampaigns.slice(0, needed));
-    }
-
-    // ✅ Shuffle the entire array to avoid grouping
-    shuffleArray(items);
-
-    return items.slice(0, totalItems);
+    return finalItems.slice(0, totalItems);
 };
 
 // Fisher-Yates shuffle
@@ -71,9 +81,9 @@ function shuffleArray<T>(arr: T[]): void {
 }
 
 const getCampaignWeight = (collection: TokenCampaignNftCollections) => {
-    if (collection.name?.toLowerCase().includes('gold')) return PROBABILITY_WEIGHTS.GOLD
-    if (collection.name?.toLowerCase().includes('silver')) return PROBABILITY_WEIGHTS.SILVER
-    if (collection.name?.toLowerCase().includes('bronze')) return PROBABILITY_WEIGHTS.BRONZE
-
-    return .1
-}
+    const name = collection.name?.toLowerCase() || "";
+    if (name.includes('gold')) return PROBABILITY_WEIGHTS.GOLD;
+    if (name.includes('silver')) return PROBABILITY_WEIGHTS.SILVER;
+    if (name.includes('bronze')) return PROBABILITY_WEIGHTS.BRONZE;
+    return 0.1;
+};
