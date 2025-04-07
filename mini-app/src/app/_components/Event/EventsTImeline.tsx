@@ -2,6 +2,7 @@ import { cn } from "@/utils";
 import Skeleton from "@mui/material/Skeleton";
 import React, { useMemo } from "react";
 import EventCard, { EventCardProps } from "../EventCard/EventCard";
+import EventCardSkeleton from "../EventCard/EventCardSkeleton";
 
 interface EventsTimelineProps {
   events: EventCardProps["event"][] | null;
@@ -65,16 +66,7 @@ const EventsTimeline: React.FC<EventsTimelineProps> = ({ events, isLoading, pres
           {/* Skeletons for events */}
           <div className="flex flex-col gap-2">
             {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="mb-4"
-              >
-                <Skeleton
-                  variant="rectangular"
-                  width="100%"
-                  height={80}
-                />
-              </div>
+              <EventCardSkeleton key={i} />
             ))}
           </div>
         </div>
