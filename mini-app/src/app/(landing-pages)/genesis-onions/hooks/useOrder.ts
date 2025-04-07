@@ -6,46 +6,46 @@ import { TokenCampaignOrders } from "@/db/schema";
 import { useAffiliate } from "./useAffiliate";
 
 export const useOrder = () => {
-    const { affiliateHash } = useAffiliate()
-    const config = useConfig();
-    const ontonWalletAddress = config?.ONTON_WALLET_ADDRESS || "UQDIh_j4EZPAouFr4MJOZFogV8ux2zSdED36KQ7ODUp-um9H";
+  const { affiliateHash } = useAffiliate();
+  const config = useConfig();
+  const ontonWalletAddress = config?.ONTON_WALLET_ADDRESS_CAMPAIGN || "UQDIh_j4EZPAouFr4MJOZFogV8ux2zSdED36KQ7ODUp-um9H";
 
-    const [submittedOrder, setSubmittedOrder] = useState<TokenCampaignOrders | null>(null);
+  const [submittedOrder, setSubmittedOrder] = useState<TokenCampaignOrders | null>(null);
 
-    const addOrderMutation = trpc.campaign.addOrder.useMutation();
+  const addOrderMutation = trpc.campaign.addOrder.useMutation();
 
-    const submitOrder = async (spinPackageId: number) => {
-        const order = await addOrderMutation.mutateAsync({
-            spinPackageId,
-            walletAddress: ontonWalletAddress,
-            affiliateHash: affiliateHash ?? undefined
-        });
+  const submitOrder = async (spinPackageId: number) => {
+    const order = await addOrderMutation.mutateAsync({
+      spinPackageId,
+      walletAddress: ontonWalletAddress,
+      affiliateHash: affiliateHash ?? undefined,
+    });
 
-        setSubmittedOrder(order);
+    setSubmittedOrder(order);
 
-        return order;
-    };
+    return order;
+  };
 
-    const {
-        data: order,
-        isError,
-        isLoading,
-    } = trpc.campaign.getOrder.useQuery(
-        { orderId: submittedOrder?.id! },
-        {
-            enabled: !!submittedOrder?.id,
-            staleTime: ORDER_POLLING_INTERVAL,
-        }
-    );
+  const {
+    data: order,
+    isError,
+    isLoading,
+  } = trpc.campaign.getOrder.useQuery(
+    { orderId: submittedOrder?.id! },
+    {
+      enabled: !!submittedOrder?.id,
+      staleTime: ORDER_POLLING_INTERVAL,
+    }
+  );
 
-    // Mutation to set the status => "confirming" or "cancel"
-    const updateStatusMutation = trpc.campaign.updateOrderStatusConfirmCancel.useMutation();
+  // Mutation to set the status => "confirming" or "cancel"
+  const updateStatusMutation = trpc.campaign.updateOrderStatusConfirmCancel.useMutation();
 
-    return {
-        submitOrder,
-        order,
-        isError,
-        isLoading,
-        updateStatusMutation,
-    };
+  return {
+    submitOrder,
+    order,
+    isError,
+    isLoading,
+    updateStatusMutation,
+  };
 };
