@@ -15,8 +15,9 @@ export const CheckTransactions = async () => {
   // logger.log("@@@@ CheckTransactions  @@@@");
 
   const wallet_address = config?.ONTON_WALLET_ADDRESS;
+  const campaign_wallet_address = config?.ONTON_WALLET_ADDRESS_CAMPAIGN;
 
-  if (!wallet_address) {
+  if (!wallet_address || !campaign_wallet_address) {
     logger.error("ONTON_WALLET_ADDRESS NOT SET");
     return;
   }
@@ -56,9 +57,30 @@ export const CheckTransactions = async () => {
         );
     }
   }
-  const parsed_campaign_orders = await tonCenter.parseTransactions(transactions, "OnionCampaign=");
+  const campaign_wallet_checks_details = await db
+    .select({ checked_lt: walletChecks.checked_lt })
+    .from(walletChecks)
+    .where(eq(walletChecks.wallet_address, campaign_wallet_address || ""))
+    .execute();
+  let campaign_start_lt = null;
+  if (campaign_wallet_checks_details && campaign_wallet_checks_details.length) {
+    if (campaign_wallet_checks_details[0]?.checked_lt) {
+      campaign_start_lt = campaign_wallet_checks_details[0].checked_lt + BigInt(1);
+    }
+  }
+
+  const campaign_start_utime = campaign_start_lt ? null : hour_ago;
+
+  const campaign_transactions = await tonCenter.fetchAllTransactions(
+    campaign_wallet_address,
+    campaign_start_utime,
+    campaign_start_lt
+  );
+
+  const parsed_campaign_orders = await tonCenter.parseTransactions(campaign_transactions, "OnionCampaign=");
 
   for (const co of parsed_campaign_orders) {
+    logger.log("cron_trx_campaign_heartBeat", co.order_uuid, co.order_type, co.value);
     if (co.verfied) {
       if (co.order_uuid.length !== 36) {
         logger.error("cron_trx_campaign_ Invalid Order UUID", co.order_uuid);
@@ -96,6 +118,18 @@ export const CheckTransactions = async () => {
         .execute();
     } else {
       await db.insert(walletChecks).values({ wallet_address: wallet_address, checked_lt: last_lt }).execute();
+    }
+  }
+  if (campaign_transactions && campaign_transactions.length) {
+    const last_lt = BigInt(campaign_transactions[campaign_transactions.length - 1].lt);
+    if (campaign_start_lt) {
+      await db
+        .update(walletChecks)
+        .set({ checked_lt: last_lt })
+        .where(eq(walletChecks.wallet_address, campaign_wallet_address))
+        .execute();
+    } else {
+      await db.insert(walletChecks).values({ wallet_address: campaign_wallet_address, checked_lt: last_lt }).execute();
     }
   }
 };
