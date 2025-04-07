@@ -15,9 +15,10 @@ interface Props {
     pkg: TokenCampaignSpinPackages;
     onOrderPaid: (order: TokenCampaignOrders) => void;
     onPaymentFailed: (err: Error) => void;
+    allowBuy: boolean
 }
 
-export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed }: Props) => {
+export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed, allowBuy }: Props) => {
     const [isPaying, setIsPaying] = useState(false);
     const transfer = useTransferPayment();
 
@@ -129,7 +130,7 @@ export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed }: Props) => {
                             variant="default"
                             className="bg-orange hover:bg-orange/80 drop-shadow-lg"
                             onClick={handlePay}
-                            disabled={isPaying}
+                            disabled={isPaying || !allowBuy}
                             isLoading={isPaying}
                         >
                             <Typography
@@ -143,7 +144,7 @@ export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed }: Props) => {
                 </div>
 
                 <ul className="list-image-none flex flex-col gap-1">
-                    {!discountAmount && (
+                    {discountAmount === 0 && (
                         <ListItem>
                             <Typography
                                 variant="caption1"
@@ -153,7 +154,7 @@ export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed }: Props) => {
                             </Typography>
                         </ListItem>
                     )}
-                    {discountAmount && (
+                    {discountAmount > 0 && (
                         <>
                             <ListItem>
                                 <Typography

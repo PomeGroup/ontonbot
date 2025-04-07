@@ -14,3 +14,4 @@ export const PROBABILITY_WEIGHTS = {
 }
 export const AFFILIATE_HASH_SEARCH_PARAM_KEY = 'affiliate'
 export const AFFILIATE_HASH_LOCAL_KEY = 'genesis-onion-affiliate-id'
+export const DELAY_BETWEEN_PACKAGE_ORDERS = 2000 // ms
