@@ -44,5 +44,6 @@ export const useAffiliate = () => {
         isError,
         affiliateHash,
         resetAffiliateHash,
+        inviteAsync
     };
 };

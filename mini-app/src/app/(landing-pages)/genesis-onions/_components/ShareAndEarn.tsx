@@ -20,25 +20,32 @@ const rewardsGuide = [
 ];
 
 export const ShareAndEarn = () => {
-    const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate();
+    const { inviteAsync, isLoading: isLoadingInviteOnTelegram } = useAffiliate();
     const [showAffiliateInfo, setShowAffiliateInfo] = useState(false);
 
     const { data, isLoading, isError } = trpc.campaign.getOnionCampaignAffiliateData.useQuery();
 
-    const shareUrl = `https://t.me/theontonbot/start?startapp=${data?.linkHash}`;
-    const shareText = `${shareUrl} \nA friend has invited you to join ONTON, Join, spin and collect Genesis ONIONs`;
-
-    const handleInviteOnTelegram = () => {
+    const handleInviteOnTelegram = async () => {
         try {
-            inviteOnTelegram();
+            const msgId = await inviteAsync();
+            console.log(msgId)
+
+            // Doc: https://core.telegram.org/bots/webapps#initializing-mini-apps:~:text=additional%20sharing%20settings.-,shareMessage,-(msg_id%5B%2C%20callback%5D)
+            window.Telegram.WebApp.shareMessage(msgId)
+
+            // window.Telegram.WebApp.close();
+
         } catch (error) {
+            console.error(error);
             customToast.error("Unable to open the invitation dialogue, please try again later.");
         }
     };
 
     const handleShare = async () => {
+        const shareUrl = `https://t.me/theontonbot/start?startapp=${data?.linkHash}`;
+
         const shareData: ShareData = {
-            text: shareText,
+            text: `${shareUrl} \nA friend has invited you to join ONTON, Join, spin and collect Genesis ONIONs`,
             title: `Genesis Onions Airdrop`,
             url: shareUrl,
         };
@@ -51,6 +58,35 @@ export const ShareAndEarn = () => {
                 customToast.error("Error sharing, please try again later.");
             }
         }
+    };
+
+    const handleCopyToClipboard = async () => {
+        if (!data?.linkHash) {
+            customToast.error("No link hash available to copy.");
+            return;
+        }
+
+        const input = document.createElement("input");
+        input.setAttribute("readonly", "");
+        input.value = data.linkHash;
+        input.style.position = "absolute";
+        input.style.left = "-9999px";
+
+        document.body.appendChild(input);
+        input.select();
+
+        try {
+            const successful = document.execCommand("copy");
+            if (successful) {
+                customToast.success("Link copied to clipboard! Let's share it and earn more!");
+            } else {
+                customToast.error("Failed to copy the link. Try again.");
+            }
+        } catch (err) {
+            console.error("Fallback copy failed:", err);
+        }
+
+        document.body.removeChild(input);
     };
 
     if (isLoading) return null;
@@ -126,8 +162,8 @@ export const ShareAndEarn = () => {
                         />
 
                         <button
-                            className="text-orange bg-transparent border-none outline-none hidden"
-                            onClick={() => navigator.clipboard.writeText(shareText)}
+                            className="text-orange bg-transparent border-none outline-none"
+                            onClick={handleCopyToClipboard}
                         >
                             <Typography
                                 variant="body"
