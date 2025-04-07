@@ -1,7 +1,7 @@
 "use client";
 import ActionCard from "@/ActionCard";
 import CustomButton from "@/app/_components/Button/CustomButton";
-import CheckUserInList from "@/app/_components/CheckUserInList";
+// import CheckUserInList from "@/app/_components/CheckUserInList";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
 import { trpc } from "@/app/_trpc/client";
 import LoadableImage from "@/components/LoadableImage";
@@ -10,7 +10,7 @@ import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import solarCupOutline from "@/components/icons/solar-cup-outline.svg";
 import tonIcon from "@/components/icons/ton.svg";
-import { ALLOWED_USER_TO_TEST } from "@/constants";
+// import { ALLOWED_USER_TO_TEST } from "@/constants";
 import { useUserStore } from "@/context/store/user.store";
 import { Channel } from "@/types";
 import { cn } from "@/utils";
@@ -64,20 +64,17 @@ export default function ProfilePage() {
           paid ? { items: "Events", count: user?.hosted_event_count || 0 } : { items: "Become an organizer first" },
         ]}
       />
-      <CheckUserInList
-        userList={ALLOWED_USER_TO_TEST}
-        currentUserId={user?.user_id}
-      >
-        <ActionCard
-          onClick={() => {
-            router.push("/my/points/");
-          }}
-          iconSrc={solarCupOutline}
-          title="My Points"
-          subtitle="You Acheived"
-          footerTexts={[{ items: "Points", count: totalPoints || 0 }]}
-        />
-      </CheckUserInList>
+
+      <ActionCard
+        onClick={() => {
+          router.push("/my/points/");
+        }}
+        iconSrc={solarCupOutline}
+        title="My Points"
+        subtitle="You Acheived"
+        footerTexts={[{ items: "Points", count: totalPoints || 0 }]}
+      />
+
       <ConnectWalletCard />
       <PaymentCard visible={!paid && hasWallet} />
 

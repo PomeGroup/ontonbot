@@ -1,3 +1,4 @@
+import { Banner as OnionBanner } from "@/app/(landing-pages)/genesis-onions/_components/Banner";
 import Images from "@/app/_components/atoms/images";
 import UserCustomRegisterForm from "@/app/_components/Event/UserCustomRegisterForm";
 import EventDates from "@/app/_components/EventDates";
@@ -440,6 +441,28 @@ const MainButtonHandler = React.memo(() => {
 });
 MainButtonHandler.displayName = "MainButtonHandler";
 
+const EventPassword = React.memo(() => {
+  const { eventData, hasEnteredPassword, isStarted, isNotEnded } = useEventData();
+  const { user } = useUserStore();
+  const isOnlineEvent = eventData.data?.participationType === "online";
+  const isEventActive = isStarted && isNotEnded;
+  const userCompletedTasks =
+    (["approved", "checkedin"].includes(eventData.data?.registrant_status!) || !eventData.data?.has_registration) &&
+    user?.wallet_address;
+
+  if (!((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address)) return null;
+
+  return (
+    <CustomCard
+      title="Claim Your Reward"
+      defaultPadding
+    >
+      <EventPasswordAndWalletInput />
+    </CustomCard>
+  );
+});
+EventPassword.displayName = "EventPassword";
+
 const EventHeader = React.memo(() => {
   const { eventData, hasEnteredPassword, isStarted, isNotEnded } = useEventData();
   const { user } = useUserStore();
@@ -463,14 +486,7 @@ const EventHeader = React.memo(() => {
         <EventActions />
       </CustomCard>
 
-      {((userCompletedTasks && !hasEnteredPassword && isEventActive && isOnlineEvent) || !user?.wallet_address) && (
-        <CustomCard
-          title={"Claim Your Reward"}
-          defaultPadding
-        >
-          <EventPasswordAndWalletInput />
-        </CustomCard>
-      )}
+      {/* Removed inline claim reward JSX, now handled by <EventPassword /> */}
     </>
   );
 });
@@ -483,11 +499,13 @@ export const EventSections = () => {
   return (
     <div className="flex flex-col gap-3 p-4">
       <EventHeader />
+      <EventDescription />
+      <OnionBanner />
+      <EventPassword />
       <ManageEventButton />
       <OrganizerCard />
       <SbtCollectionLink />
       <UserWallet />
-      <EventDescription />
       <EventRegistrationStatus />
 
       <SupportButtons orgSupportTelegramUserName={eventData.data?.organizer?.org_support_telegram_user_name || undefined} />
