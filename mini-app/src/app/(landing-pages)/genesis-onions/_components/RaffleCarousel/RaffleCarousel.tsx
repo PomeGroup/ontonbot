@@ -10,7 +10,11 @@ import { cn } from "@/utils";
 import { useSpin } from "../../hooks/useSpin";
 import { TokenCampaignNftCollections } from "@/db/schema";
 import { useUserCampaign } from "../../hooks/useUserCampaign";
+import { customToast } from "../../GenesisOnions.utils";
+import useSound from 'use-sound';
 
+import sound1 from '../../_assets/sounds/mixkit-air-in-a-hit-2161.wav'
+import sound2 from '../../_assets/sounds/mixkit-cinematic-glass-hit-suspense-677.wav'
 interface Props {
     onEligibilityCheckFailed: () => void;
     onInsufficientBalance: () => void;
@@ -19,6 +23,8 @@ interface Props {
 }
 
 export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance, onSpinStart, onSpinEnd }: Props) => {
+    const [play1] = useSound(sound1)
+    const [play2] = useSound(sound2)
     const swiperRef = useRef<SwiperType>();
     const [isSpinning, setIsSpinning] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -75,6 +81,7 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
             swiperRef.current.params.speed = fastSpinDuration;
 
             for (let i = 0; i < Math.floor(slides.length * 0.7); i++) {
+                play1()
                 swiperRef.current.slideTo(i % slides.length);
                 await waitForTransition();
             }
@@ -84,12 +91,14 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
             for (let i = 0; i < 5; i++) {
                 swiperRef.current.params.speed = slowDownDuration * (i + 1);
                 swiperRef.current.slideTo((selectedIndex - 4 + i) % slides.length);
+                play1()
                 await waitForTransition();
             }
 
             // Final slide
             swiperRef.current.params.speed = 500;
             swiperRef.current.slideTo(selectedIndex);
+            play2()
             await waitForTransition();
 
             refetchUserSpinStats();
@@ -116,7 +125,8 @@ export const RaffleCarousel = ({ onEligibilityCheckFailed, onInsufficientBalance
     const handleButtonClick = async () => {
         if (isErrorEligibility) {
             refetchEligibility();
-            throw new Error("Error checking eligibility. Trying to refetch...");
+            customToast.error('Error checking eligibility. Please try again.');
+            return;
         }
 
         if (isEligible === false) {
