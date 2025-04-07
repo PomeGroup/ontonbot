@@ -72,10 +72,14 @@ const mockEvents = [
   },
 ];
 
-const TimelineStory = () => (
+const TimelineStory = (props: { isLoading: boolean; preserveDataOnFetching: boolean }) => (
   <KonstaAppProvider>
     <div className="p-4">
-      <EventsTimeline events={mockEvents} />
+      <EventsTimeline
+        isLoading={props.isLoading}
+        preserveDataOnFetching={props.preserveDataOnFetching}
+        events={mockEvents}
+      />
     </div>
   </KonstaAppProvider>
 );
@@ -83,7 +87,15 @@ const TimelineStory = () => (
 const meta: Meta<typeof TimelineStory> = {
   title: "Events/Timeline",
   component: TimelineStory,
-  args: {},
+  args: {
+    isLoading: false,
+    preserveDataOnFetching: false,
+  },
+  argTypes: {
+    preserveDataOnFetching: {
+      description: "Useful in infante lists",
+    },
+  },
 };
 
 export default meta;
