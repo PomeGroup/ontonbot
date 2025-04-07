@@ -1,13 +1,13 @@
-import "./Banner.css";
-import { useMemo, useState } from "react";
 import Typography from "@/components/Typography";
-import { GENESIS_ONIONS_PAGE_ROUTE } from "../../GenesisOnions.constants";
 import { useConfig } from "@/context/ConfigContext";
 import { cn } from "@/utils";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { GENESIS_ONIONS_PAGE_ROUTE } from "../../GenesisOnions.constants";
 import { useUserCampaign } from "../../hooks/useUserCampaign";
 import { AccessRestrictedModal } from "../AccessRestrictedModal";
-import { useRouter } from "next/navigation";
 import { CountdownTimer } from "../CountdownTimer";
+import "./Banner.css";
 
 interface Props {
   className?: string;
