@@ -3,16 +3,21 @@
 import Section from "@/app/_components/atoms/section";
 import CustomButton from "@/app/_components/Button/CustomButton";
 import EventsTimeline from "@/app/_components/Event/EventsTImeline";
+import SearchIcon from "@/app/_components/icons/search-icon";
 import { trpc } from "@/app/_trpc/client";
+import Typography from "@/components/Typography";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useWebApp from "@/hooks/useWebApp";
+import { useDebouncedState } from "@mantine/hooks";
 
 export default function MyParticipatedEventsPage() {
   const webApp = useWebApp();
   const userId = webApp?.initDataUnsafe?.user?.id;
+  const [inputValue, setInput] = useDebouncedState("", 500);
 
   const infiniteApi = trpc.events.getEventsWithFiltersInfinite.useInfiniteQuery(
-    { filter: { user_id: userId } },
+    { filter: { user_id: userId }, search: inputValue },
     {
       enabled: Boolean(userId),
       getNextPageParam(lastPage) {
@@ -29,7 +34,16 @@ export default function MyParticipatedEventsPage() {
           <TabsTrigger value="contests">Contests</TabsTrigger>
         </TabsList>
         <TabsContent value="events">
-          <Section title={`Participated Events (${infiniteApi.data?.pages[0].items.rowsCount})`}>
+          <Section>
+            <Input
+              className="bg-brand-light mt-2"
+              placeholder="Search Events and Organizers"
+              prefix_icon={<SearchIcon />}
+              onChange={(e) => {
+                setInput(e.target.value);
+              }}
+            />
+            <Typography variant="title2">Participated Events ({infiniteApi.data?.pages[0].items.rowsCount})</Typography>
             <EventsTimeline
               isLoading={infiniteApi.isFetching}
               preserveDataOnFetching
