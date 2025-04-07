@@ -1,11 +1,11 @@
 "use client";
 
 import Section from "@/app/_components/atoms/section";
+import CustomButton from "@/app/_components/Button/CustomButton";
 import EventsTimeline from "@/app/_components/Event/EventsTImeline";
 import { trpc } from "@/app/_trpc/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useWebApp from "@/hooks/useWebApp";
-import { useEffect, useRef } from "react";
 
 export default function MyParticipatedEventsPage() {
   const webApp = useWebApp();
@@ -21,26 +21,10 @@ export default function MyParticipatedEventsPage() {
     }
   );
 
-  const loaderRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const loader = loaderRef.current;
-    if (!loader) return;
-    const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && infiniteApi.hasNextPage && !infiniteApi.isFetchingNextPage) {
-        infiniteApi.fetchNextPage();
-      }
-    });
-    observer.observe(loader);
-    return () => {
-      observer.unobserve(loader);
-    };
-  }, [infiniteApi]);
-
   return (
-    <div className="bg-brand-bg">
+    <div className="bg-brand-bg p-4 min-h-screen flex flex-col gap-4">
       <Tabs defaultValue="events">
-        <TabsList className="">
+        <TabsList>
           <TabsTrigger value="events">Events</TabsTrigger>
           <TabsTrigger value="contests">Contests</TabsTrigger>
         </TabsList>
@@ -51,6 +35,18 @@ export default function MyParticipatedEventsPage() {
               preserveDataOnFetching
               events={infiniteApi.data?.pages.map((p) => p.items.eventsData).flat() || null}
             />
+            {!infiniteApi.isFetching && infiniteApi.data?.pages.at(-1)?.nextCursor && (
+              <CustomButton
+                onClick={() => {
+                  infiniteApi.fetchNextPage();
+                }}
+                variant="link"
+                fontSize="body"
+                size="md"
+              >
+                Load 10 more results
+              </CustomButton>
+            )}
           </Section>
         </TabsContent>
         <TabsContent value="contests">Contests</TabsContent>

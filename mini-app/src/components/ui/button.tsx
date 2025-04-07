@@ -18,7 +18,7 @@ const buttonVariants = cva(
         outline: "border-2 border-cn-primary text-cn-primary hover:border-cn-primary/80",
         secondary: "bg-cn-secondary text-cn-secondary-foreground hover:bg-cn-secondary/30",
         ghost: "hover:bg-cn-accent hover:text-accent-foreground bg-cn-accent",
-        link: "text-cn-primary underline-offset-4 text-zinc hover:underline",
+        link: "text-cn-primary hover:underline",
         success: "bg-cn-success text-cn-success-foreground",
         "success-outline": "border-2 border-cn-success text-cn-success hover:border-cn-success/80",
         "destructive-outline": "border-2 border-cn-destructive text-cn-destructive hover:border-cn-destructive/80",

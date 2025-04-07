@@ -1,25 +1,26 @@
 import Typography from "@/components/Typography";
+import { cn } from "@/utils";
 import React, { forwardRef } from "react";
 
 interface SectionProps {
   title: string;
+  className?: string;
   children?: React.ReactNode;
 }
 
-const Section = forwardRef<HTMLDivElement, SectionProps>(({ title, children }, ref) => {
+const Section = forwardRef<HTMLDivElement, SectionProps>(({ title, children, className }, ref) => {
   return (
     <div
       ref={ref}
-      className="bg-brand-bg p-4 min-h-screen"
+      className={cn("flex flex-col gap-4 bg-brand-bg min-h-screen", className)}
     >
       <Typography
         variant="title3"
         bold
-        className="mb-4"
       >
         {title}
       </Typography>
-      <div className="flex flex-col w-full gap-2">{children}</div>
+      {children}
     </div>
   );
 });

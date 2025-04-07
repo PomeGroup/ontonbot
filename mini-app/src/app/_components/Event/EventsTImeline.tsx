@@ -33,7 +33,7 @@ const EventsTimeline: React.FC<EventsTimelineProps> = ({ events, isLoading, pres
   }, [events]);
 
   return (
-    <div className="border-s border-dashed border-brand-muted ps-2 isolate">
+    <div className="border-s border-dashed mt-4 border-brand-muted ps-2 isolate">
       {(!isLoading || preserveDataOnFetching) &&
         groupedEvents.map((group, idx) => (
           <div key={group.day}>

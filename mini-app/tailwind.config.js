@@ -75,7 +75,7 @@ module.exports = konstaConfig({
         "main-button-color": "#007AFF",
         "disabled-font": "#B9B9BA",
         confirm: "#34C759",
-        "wallet-tertiary_fill_background": "#747480",
+        fill_background: "#747480",
 
         "cn-primary": {
           DEFAULT: "hsl(var(--shadcn-primary))",

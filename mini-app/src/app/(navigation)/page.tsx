@@ -305,7 +305,7 @@ const UpcomingEvents = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="w-full pb-2 flex justify-between items-center">
+      <div className="w-full flex justify-between items-center">
         <Typography variant="title2">
           Upcoming Events{upcomingEvents.data?.totalCount ? `(${upcomingEvents.data?.totalCount})` : ""}
         </Typography>
