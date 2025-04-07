@@ -45,7 +45,7 @@ export const tournamentsRouter = router({
         sortOrder,
       });
 
-      const nextCursor = tournamentsData.length === limit ? cursor || 0 + limit : null;
+      const nextCursor = tournamentsData.length === limit ? (cursor === null ? 0 + limit : cursor + limit) : null;
 
       return { tournaments: tournamentsData, nextCursor };
     }),
