@@ -8,6 +8,8 @@ import { usePackage } from "../../hooks/usePackage";
 import { toast } from "sonner";
 import { useAffiliate } from "../../hooks/useAffiliate";
 import { customToast } from "../../GenesisOnions.utils";
+import { useRef, useState } from "react";
+import { DELAY_BETWEEN_PACKAGE_ORDERS } from "../../GenesisOnions.constants";
 
 interface Props {
     open: boolean;
@@ -17,9 +19,9 @@ interface Props {
 }
 
 export const PackagesModal = ({ open, onClose, onOrderPaid, onOrderPaymentFailed }: Props) => {
-    const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate();
-
+    const [allowBuy, setAllowBuy] = useState(true);
     const { packages, isErrorPackages, isLoadingPackages } = usePackage();
+    const timerId = useRef<NodeJS.Timeout>()
 
     if (isLoadingPackages) return null;
     if (isErrorPackages) return <div>Error! Try again later...</div>;
@@ -30,13 +32,16 @@ export const PackagesModal = ({ open, onClose, onOrderPaid, onOrderPaymentFailed
         onClose();
     };
 
-    const handleInviteOnTelegram = () => {
-        try {
-            inviteOnTelegram();
-        } catch (error) {
-            customToast.error("Unable to open the invitation dialogue, please try again later.");
-        }
-    };
+    const handleOrderPaymentFailed = (err: Error) => {
+        onOrderPaymentFailed(err)
+        setAllowBuy(false)
+
+        if (timerId.current) clearTimeout(timerId.current)
+
+        timerId.current = setTimeout(() => {
+            setAllowBuy(true)
+        }, DELAY_BETWEEN_PACKAGE_ORDERS)
+    }
 
     return (
         <Modal
@@ -79,9 +84,10 @@ export const PackagesModal = ({ open, onClose, onOrderPaid, onOrderPaymentFailed
                         {packages?.map((pkg) => (
                             <PackageItem
                                 onOrderPaid={handleOrderPaid}
-                                onPaymentFailed={onOrderPaymentFailed}
+                                onPaymentFailed={handleOrderPaymentFailed}
                                 key={pkg.id}
                                 pkg={pkg as TokenCampaignSpinPackages}
+                                allowBuy={allowBuy}
                             />
                         ))}
                     </div>
