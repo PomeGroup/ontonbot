@@ -1,4 +1,5 @@
 import { Bot, Composer } from "grammy"
+import { isUserAdmin } from "../db/db"; // added admin check import
 import { fetchOntonSetting } from "../db/ontonSettings"
 import { isNewCommand } from "../helpers/isNewCommand"
 import { MyContext } from "../types/MyContext"
@@ -136,15 +137,17 @@ async function handleRemoveButton(ctx: MyContext) {
 /* -------------------------------------------------------------------------- */
 
 
-// Modify the /channel_button command handler to ask for post ID directly
+// Modify the /channel_button command handler to check admin before proceeding
 channelPostButtonComposer.command("channel_button", async (ctx) => {
-  // Removed fetching posts & inline keyboard code
+  const { isAdmin } = await isUserAdmin(ctx.from?.id.toString() || "");
+  if (!isAdmin) return;
   ctx.session.channelButtonStep = "askPostId";
   await ctx.reply("Please send the channel post ID to edit. send /cancel to exit at any point.");
 });
 
 channelPostButtonComposer.command("remove_button", async (ctx) => {
-  // Removed fetching posts & inline keyboard code
+  const { isAdmin } = await isUserAdmin(ctx.from?.id.toString() || "");
+  if (!isAdmin) return;
   ctx.session.channelButtonStep = "removeButton";
   await ctx.reply("Please send the channel post ID for button removal. send /cancel to exit at any point.");
 });
