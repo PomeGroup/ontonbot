@@ -20,20 +20,16 @@ const rewardsGuide = [
 ];
 
 export const ShareAndEarn = () => {
-    const { inviteAsync, isLoading: isLoadingInviteOnTelegram } = useAffiliate();
+    const { inviteOnTelegram, isLoading: isLoadingInviteOnTelegram } = useAffiliate();
     const [showAffiliateInfo, setShowAffiliateInfo] = useState(false);
 
     const { data, isLoading, isError } = trpc.campaign.getOnionCampaignAffiliateData.useQuery();
 
     const handleInviteOnTelegram = async () => {
         try {
-            const msgId = await inviteAsync();
-            console.log(msgId)
+            await inviteOnTelegram()
 
-            // Doc: https://core.telegram.org/bots/webapps#initializing-mini-apps:~:text=additional%20sharing%20settings.-,shareMessage,-(msg_id%5B%2C%20callback%5D)
-            window.Telegram.WebApp.shareMessage(msgId)
-
-            // window.Telegram.WebApp.close();
+            window.Telegram.WebApp.close();
 
         } catch (error) {
             console.error(error);
