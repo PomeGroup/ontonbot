@@ -1,6 +1,6 @@
-import { Context, SessionFlavor } from "grammy";
-import { SbtRewardCollection } from "./SbtRewardCollection";
-import { HubType, SocietyHub } from "../helpers/getHubs";
+import { Context, SessionFlavor } from "grammy"
+import { SocietyHub } from "../helpers/getHubs"
+import { SbtRewardCollection } from "./SbtRewardCollection"
 
 export interface SessionData {
   /* ------------------ SBT Distribution Flow ------------------ */
@@ -87,6 +87,11 @@ export interface SessionData {
   };
   /* ------------------ Play2Win Featured Flow ------------------ */
   play2winStep?: "askList" | "done";
+
+  /* ------------------ Channel Button Flow ------------------ */
+  channelButtonStep?: "askPostId" | "editButton";
+  channelButtonPostId?: number;
+
   /* ------------------ Broadcast Flow ------------------ */
   broadcastStep?: "askEventId" | "askMessage" | "confirm" | "done";
   broadcastEventId?: string;
