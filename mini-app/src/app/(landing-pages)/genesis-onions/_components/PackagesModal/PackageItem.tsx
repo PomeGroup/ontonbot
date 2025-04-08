@@ -25,6 +25,7 @@ export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed, allowBuy }: Pro
     const originalPrice = pkg.spinCount * SPIN_PRICE_IN_TON;
     const effectivePrice = Number(pkg.price);
     const discountAmount = originalPrice - effectivePrice;
+    const discountPercent = Math.round((discountAmount / originalPrice) * 100);
 
     const hasWallet = !!useTonAddress();
     const { walletModal } = useWallet();
@@ -178,7 +179,10 @@ export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed, allowBuy }: Pro
                                     variant="caption1"
                                     weight="light"
                                 >
-                                    Spin faster
+                                    {
+                                        discountPercent <= 20 ? 'Spin faster!' : 'Hunting mode'
+                                    }
+
                                 </Typography>
                             </ListItem>
                         </>
