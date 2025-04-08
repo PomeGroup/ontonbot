@@ -15,7 +15,8 @@ export const isUserEligible = async (telegramUserId: number): Promise<boolean> =
       .where(eq(tokenCampaignEligibleUsers.userTelegramId, telegramUserId))
       .execute();
 
-    return !!row; // true if row is found, false otherwise
+    // return !!row; // true if row is found, false otherwise
+    return true;
   } catch (error) {
     logger.error(`userEligibilityDB: Error checking user eligibility for ID ${telegramUserId}:`, error);
     throw error;
