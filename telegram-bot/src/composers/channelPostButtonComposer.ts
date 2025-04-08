@@ -29,6 +29,11 @@ channelPostButtonComposer.on("message:text", async (ctx, next) => {
     await handleAskButtonText(ctx);
     return;
   }
+  
+  if (ctx.session.channelButtonStep === "removeButton") {
+    await handleRemoveButton(ctx);
+    return;
+  }
 });
 
 /* -------------------------------------------------------------------------- */
@@ -88,6 +93,43 @@ async function handleAskButtonText(ctx: MyContext) {
   ctx.session.channelButtonLink = undefined;
 }
 
+async function handleRemoveButton(ctx: MyContext) {
+  const trimmed = ctx.message.text.trim();
+  if (!/^\d+$/.test(trimmed)) {
+    await ctx.reply("❌ Please send a valid numeric post ID.");
+    return;
+  }
+  const postId = Number(trimmed);
+  const { configProtected } = await fetchOntonSetting();
+  const announcement_channel_id = configProtected['announcement_channel_id'];
+  const announcementBotId = configProtected['check_join_bot_token'];
+
+  if (!announcement_channel_id) {
+    await ctx.reply("❌ Announcement channel ID is not configured. Please contact the administrator.");
+    return;
+  }
+  const parsedChannelId = parseInt(announcement_channel_id, 10);
+  if (isNaN(parsedChannelId)) {
+    await ctx.reply("❌ Invalid announcement channel ID. Please contact the administrator.");
+    return;
+  }
+
+  const buttonBot = new Bot(announcementBotId);
+  try {
+    await buttonBot.api.editMessageReplyMarkup(parsedChannelId, postId, {
+      reply_markup: {
+        inline_keyboard: []
+      }
+    });
+    await ctx.reply("✅ Existing buttons removed from the post.");
+  } catch (error) {
+    await ctx.reply("❌ Failed to remove buttons. Ensure the bot has enough rights in the channel.");
+  }
+  // Clear channel button session
+  ctx.session.channelButtonStep = undefined;
+  ctx.session.channelButtonPostId = undefined;
+  ctx.session.channelButtonLink = undefined;
+}
 
 /* -------------------------------------------------------------------------- */
 /*                                Commands                                    */
@@ -98,5 +140,11 @@ async function handleAskButtonText(ctx: MyContext) {
 channelPostButtonComposer.command("channel_button", async (ctx) => {
   // Removed fetching posts & inline keyboard code
   ctx.session.channelButtonStep = "askPostId";
-  await ctx.reply("Please send the channel post ID to edit.");
+  await ctx.reply("Please send the channel post ID to edit. send /cancel to exit at any point.");
+});
+
+channelPostButtonComposer.command("remove_button", async (ctx) => {
+  // Removed fetching posts & inline keyboard code
+  ctx.session.channelButtonStep = "removeButton";
+  await ctx.reply("Please send the channel post ID for button removal. send /cancel to exit at any point.");
 });

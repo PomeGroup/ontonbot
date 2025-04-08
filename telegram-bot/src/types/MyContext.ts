@@ -89,7 +89,7 @@ export interface SessionData {
   play2winStep?: "askList" | "done";
 
   /* ------------------ Channel Button Flow ------------------ */
-  channelButtonStep?: "askPostId" | "askLink" | "askButtonText";
+  channelButtonStep?: "askPostId" | "askLink" | "askButtonText" | "removeButton";
   channelButtonPostId?: number;
   channelButtonLink?: string;
 
