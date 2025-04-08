@@ -1,8 +1,8 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
-import { trpc } from "@/app/_trpc/client";
 import { ErrorState } from "@/app/_components/ErrorState";
+import { trpc } from "@/app/_trpc/client";
+import React, { createContext, useContext } from "react";
 
 type ConfigContextType = {
   [key: string]: string | null;
