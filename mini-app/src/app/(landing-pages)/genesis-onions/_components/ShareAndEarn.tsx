@@ -25,30 +25,66 @@ export const ShareAndEarn = () => {
 
     const { data, isLoading, isError } = trpc.campaign.getOnionCampaignAffiliateData.useQuery();
 
-    const shareUrl = `https://t.me/theontonbot/start?startapp=${data?.linkHash}`;
-    const shareText = `${shareUrl} \nA friend has invited you to join ONTON, Join, spin and collect Genesis ONIONs`;
-
-    const handleInviteOnTelegram = () => {
+    const handleInviteOnTelegram = async () => {
         try {
-            inviteOnTelegram();
+            await inviteOnTelegram();
+
+            window.Telegram.WebApp.close();
         } catch (error) {
+            console.error(error);
             customToast.error("Unable to open the invitation dialogue, please try again later.");
         }
     };
 
+    const handleCopyToClipboard = async () => {
+        if (!data?.linkHash) {
+            customToast.error("No link hash available to copy.");
+            return;
+        }
+
+        const input = document.createElement("input");
+        input.setAttribute("readonly", "");
+        input.value = data.linkHash;
+        input.style.position = "absolute";
+        input.style.left = "-9999px";
+
+        document.body.appendChild(input);
+        input.select();
+
+        try {
+            const successful = document.execCommand("copy");
+            if (successful) {
+                customToast.success("Link copied to clipboard! Let's share it and earn more!");
+            } else {
+                customToast.error("Failed to copy the link. Try again.");
+            }
+        } catch (err) {
+            console.error("Fallback copy failed:", err);
+        }
+
+        document.body.removeChild(input);
+    };
+
     const handleShare = async () => {
+        const shareUrl = `https://t.me/theontonbot/start?startapp=${data?.linkHash}`;
+
         const shareData: ShareData = {
-            text: shareText,
             title: `Genesis Onions Airdrop`,
-            url: shareUrl,
+            text: `A friend has invited you to join ONTON. Join, spin, and collect Genesis ONIONs!\n\n${shareUrl}`,
+            url: shareUrl, // removed to avoid issues on Android
         };
 
         try {
             await navigator.share(shareData);
         } catch (err: any) {
-            // Optional: you can also log the full error for debugging
-            if (err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
-                customToast.error("Error sharing, please try again later.");
+            if (err.name !== "AbortError" && err.name !== "NotAllowedError") {
+                try {
+                    await handleCopyToClipboard()
+                    // customToast.info("Sharing not supported. Link copied to clipboard!");
+                } catch (clipboardErr) {
+                    console.log({ clipboardErr })
+                    customToast.error("Error sharing or copying link. Please try again later.");
+                }
             }
         }
     };
@@ -104,7 +140,7 @@ export const ShareAndEarn = () => {
                         {rewardsGuide.map((item) => (
                             <InfoBox
                                 key={item.title}
-                                className="rounded-md py-2 px-3 flex flex-col gap-2 flex-1 items-center"
+                                className="rounded-md py-2 px-3 flex flex-col gap-2 flex-1 items-center backdrop-blur-none"
                             >
                                 <Typography
                                     variant="subheadline2"
@@ -126,8 +162,8 @@ export const ShareAndEarn = () => {
                         />
 
                         <button
-                            className="text-orange bg-transparent border-none outline-none hidden"
-                            onClick={() => navigator.clipboard.writeText(shareText)}
+                            className="text-orange bg-transparent border-none outline-none"
+                            onClick={handleCopyToClipboard}
                         >
                             <Typography
                                 variant="body"
