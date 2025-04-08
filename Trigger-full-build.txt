@@ -19,3 +19,4 @@ full build for dev remove server only
 add more worker services
 refine deployment flow
 worker service
+full build
