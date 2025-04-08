@@ -34,6 +34,9 @@ export default function ProfilePage() {
 
   useEffect(() => {
     router.prefetch("/events/create");
+    router.prefetch("/my/participated");
+    router.prefetch("/my/hosted/");
+    router.prefetch("/my/points/");
   }, [router, hasEventOrganizer]);
 
   if (!user || loadingTotalPoints) return null;
