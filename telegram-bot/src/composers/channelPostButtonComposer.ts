@@ -10,7 +10,7 @@ export const channelPostButtonComposer = new Composer<MyContext>();
  * Global text handler:
  * - This will handle the user replies based on the current session step.
  */
-channelPostButtonComposer.on("message:text", async (ctx, next) => {
+channelPostButtonComposer.on("msg", async (ctx, next) => {
   if (isNewCommand(ctx)) {
     ctx.session = {};
     return next();
@@ -43,6 +43,18 @@ channelPostButtonComposer.on("message:text", async (ctx, next) => {
 
 // New handler functions for step logic
 async function handleAskPostId(ctx: MyContext) {
+  // if the message is forwarded from a channel, copy its post id
+  if (ctx.message.forward_origin?.type ==='channel') {
+    const forwardedPostId = ctx.message.forward_origin.message_id;
+    if (forwardedPostId) {
+      ctx.session.channelButtonPostId = forwardedPostId;
+      ctx.session.channelButtonStep = "askLink";
+      await ctx.reply("Post forwarded. Post ID copied. Now please send the link.");
+      return;
+    }
+  }
+  
+  // fallback to using the text input if it's a valid number
   const trimmed = ctx.message.text.trim();
   if (/^\d+$/.test(trimmed)) {
     ctx.session.channelButtonPostId = Number(trimmed);
