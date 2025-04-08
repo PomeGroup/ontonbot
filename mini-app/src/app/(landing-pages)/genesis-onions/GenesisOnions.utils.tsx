@@ -1,4 +1,4 @@
-import { CircleCheck, CircleX } from "lucide-react";
+import { CircleCheck, CircleX, Info } from "lucide-react";
 import { toast } from "sonner";
 
 export function customToast() { }
@@ -18,5 +18,14 @@ customToast.error = function (message: string) {
         className: 'toast',
         position: 'bottom-center',
         icon: <CircleX className="text-red-400" />
+    });
+}
+
+customToast.info = function (message: string) {
+    toast(message, {
+        unstyled: true,
+        className: 'toast',
+        position: 'bottom-center',
+        icon: <Info className="text-blue-400" />
     });
 }
