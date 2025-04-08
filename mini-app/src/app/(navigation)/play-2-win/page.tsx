@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/app/(landing-pages)/genesis-onions/_components/Banner";
 import CustomCard from "@/app/_components/atoms/cards/CustomCard";
 import { FloatingBadge } from "@/app/_components/Badge/FloatingBadge";
 import CustomButton from "@/app/_components/Button/CustomButton";
@@ -205,6 +206,8 @@ const DiscoverTournaments: React.FC = () => {
 
   return (
     <>
+      <Banner className="mb-3" />
+
       <Typography variant="title2">Discover</Typography>
       {/* Sort dropdown */}
       <TournamentFilter

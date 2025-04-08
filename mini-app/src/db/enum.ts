@@ -44,7 +44,8 @@ export const notificationItemType = pgEnum("notification_item_type", [
   "UNKNOWN",
 ]);
 export const eventPoaResultStatus = pgEnum("event_poa_result_status", ["REPLIED", "EXPIRED"]);
-
+export const campaignTypes = pgEnum("campaign_type", ["onion1"]);
+export type CampaignType = (typeof campaignTypes.enumValues)[number];
 // Type Exports
 export type EventParticipationType = (typeof eventParticipationType.enumValues)[number];
 export type RewardType = (typeof rewardType.enumValues)[number];

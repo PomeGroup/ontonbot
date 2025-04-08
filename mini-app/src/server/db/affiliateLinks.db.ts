@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
-import { affiliateLinks, AffiliateLinksRow } from "@/db/schema/affiliateLinks";
-import { eq, sql } from "drizzle-orm";
+import { AffiliateItemTypeEnum, affiliateLinks, AffiliateLinksRow } from "@/db/schema/affiliateLinks";
+import { and, eq, sql } from "drizzle-orm";
 import { redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import { affiliateClicksDB } from "@/server/db/affiliateClicks.db";
@@ -117,9 +117,66 @@ export async function incrementAffiliatePurchase(linkHash: string, incrementBy =
   }
 }
 
+/**
+ * Finds a single affiliate link by user and item type.
+ */
+export const getAffiliateLinkForOnionCampaign = async (userId: number): Promise<AffiliateLinksRow | undefined> => {
+  const [link] = await db
+    .select()
+    .from(affiliateLinks)
+    .where(
+      and(
+        eq(affiliateLinks.itemType, "onion1-campaign"),
+        eq(affiliateLinks.creatorUserId, userId),
+        eq(affiliateLinks.affiliatorUserId, userId)
+      )
+    )
+    .limit(1)
+    .execute();
+
+  return link;
+};
+
+export const getAffiliateLinkByType = async (itemType: AffiliateItemTypeEnum): Promise<AffiliateLinksRow[] | undefined> => {
+  const link = await db.select().from(affiliateLinks).where(eq(affiliateLinks.itemType, itemType)).execute();
+
+  return link;
+};
+
+/**
+ * Creates a new affiliate link record for the onion1 campaign.
+ * itemType = "onion1-campaign"
+ */
+export const createOnionCampaignLink = async (userId: number, linkHash: string): Promise<AffiliateLinksRow> => {
+  const title = `onion1-campaign-${userId}`;
+
+  const [inserted] = await db
+    .insert(affiliateLinks)
+    .values({
+      itemId: 0,
+      itemType: "onion1-campaign",
+      creatorUserId: userId,
+      affiliatorUserId: userId,
+      linkHash,
+      groupTitle: "onion1-campaign",
+      title,
+    })
+    .returning()
+    .execute();
+
+  if (!inserted) {
+    throw new Error(`Failed to create onion1-campaign link for userId=${userId}`);
+  }
+
+  logger.log(`Created onion1-campaign affiliate link for user #${userId}`, inserted);
+  return inserted;
+};
 export const affiliateLinksDB = {
   getAffiliateLinkByHash,
   incrementAffiliateClicks,
   incrementAffiliatePurchase,
   incrementAffiliateClicksByLinkId,
+  getAffiliateLinkForOnionCampaign,
+  createOnionCampaignLink,
+  getAffiliateLinkByType,
 };

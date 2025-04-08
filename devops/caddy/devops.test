@@ -2,3 +2,4 @@
 #build to add rabbitmq
 #add swagger
 #triger swagger again
+log reset

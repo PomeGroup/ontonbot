@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-sync-scripts */
 import NotificationHandler from "@/app/_components/NotificationHandler";
 import { cn } from "@/lib/utils";
 import { GoogleTagManager } from "@next/third-parties/google";
@@ -29,8 +30,18 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      {process.env.NODE_ENV === "production" && <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />}
-      <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
+      <head>
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
+            <script
+              src="https://dvq1zz1g273yl.cloudfront.net/buyer_v1.0.3.min.js"
+              traffy-key="795"
+            />
+          </>
+        )}
+        <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
+      </head>
       <body className={cn(mainFont.className)}>
         <Providers>
           <NotificationHandler />

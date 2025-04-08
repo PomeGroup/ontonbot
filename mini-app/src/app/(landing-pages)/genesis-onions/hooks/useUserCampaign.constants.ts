@@ -1,0 +1,1 @@
+export const USER_SPIN_STATS_KEY = 'userSpinStats';

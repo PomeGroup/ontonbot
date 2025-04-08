@@ -16,5 +16,6 @@ full build after clear registery2see
 full build for dev
 full build for dev
 full build for dev remove server only
-add more worker servicesii
-refine deployment flow samyar trigger
+add more worker services
+refine deployment flow
+worker service

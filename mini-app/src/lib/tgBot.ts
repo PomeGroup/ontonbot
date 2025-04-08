@@ -151,7 +151,7 @@ export const sendEventPhoto = async (props: { event_id: string; user_id: string 
 export const sendLogNotification = async (
   props: {
     message: string;
-    topic: "event" | "ticket" | "system" | "payments" | "no_topic";
+    topic: "event" | "ticket" | "system" | "payments" | "campaign" | "no_topic";
     image?: string | null;
     inline_keyboard?: InlineKeyboardMarkup;
     group_id?: number | string | null;
@@ -185,11 +185,12 @@ export const sendLogNotification = async (
   }
 
   // 3) Determine pinned topic message if any
-  const topicMapping: Record<"no_topic" | "event" | "ticket" | "system" | "payments", string | null> = {
+  const topicMapping: Record<"no_topic" | "event" | "ticket" | "system" | "payments" | "campaign", string | null> = {
     event: configProtected.events_topic,
     ticket: configProtected.tickets_topic,
     system: configProtected.system_topic,
     payments: configProtected.payments_topic,
+    campaign: configProtected.campaign_topic,
     no_topic: "no_topic",
   };
 

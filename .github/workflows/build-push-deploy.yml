@@ -536,6 +536,7 @@ jobs:
             set -o errexit
             set -o pipefail
             echo "Listing files in branch directory..."     
+          
             cd /home/tonont/$branch_name
             ls -la
             echo "Sourcing .env file..."

@@ -1,6 +1,6 @@
 "use client";
 import ActionCard from "@/ActionCard";
-import CheckUserInList from "@/app/_components/CheckUserInList";
+// import CheckUserInList from "@/app/_components/CheckUserInList";
 import ticketIcon from "@/app/_components/icons/ticket.svg";
 import { ConnectWalletCard } from "@/app/_components/organisms/ConnectWallet";
 import { trpc } from "@/app/_trpc/client";
@@ -9,7 +9,7 @@ import Typography from "@/components/Typography";
 import channelAvatar from "@/components/icons/channel-avatar.svg";
 import FabPlusIcon from "@/components/icons/plus-icon";
 import solarCupOutline from "@/components/icons/solar-cup-outline.svg";
-import { ALLOWED_USER_TO_TEST } from "@/constants";
+// import { ALLOWED_USER_TO_TEST } from "@/constants";
 import { useUserStore } from "@/context/store/user.store";
 import { Channel } from "@/types";
 import { cn } from "@/utils";
@@ -73,20 +73,17 @@ export default function ProfilePage() {
             : { items: "Become an organizer first" },
         ]}
       />
-      <CheckUserInList
-        userList={ALLOWED_USER_TO_TEST}
-        currentUserId={user?.user_id}
-      >
-        <ActionCard
-          onClick={() => {
-            router.push("/my/points/");
-          }}
-          iconSrc={solarCupOutline}
-          title="My Points"
-          subtitle="You Acheived"
-          footerTexts={[{ items: "Points", count: totalPoints || 0 }]}
-        />
-      </CheckUserInList>
+
+      <ActionCard
+        onClick={() => {
+          router.push("/my/points/");
+        }}
+        iconSrc={solarCupOutline}
+        title="My Points"
+        subtitle="You Acheived"
+        footerTexts={[{ items: "Points", count: totalPoints || 0 }]}
+      />
+
       <ConnectWalletCard />
       <PaymentCard visible={!hasEventOrganizer && hasWallet} />
 

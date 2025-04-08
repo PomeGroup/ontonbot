@@ -4,7 +4,8 @@ import { TonClient } from "@ton/ton";
 import { is_local_env, is_prod_env, is_stage_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
 
-export const is_mainnet = is_prod_env() || is_stage_env();
+// export const is_mainnet = is_prod_env() || is_stage_env();
+export const is_mainnet = true;
 // export const is_mainnet = false;
 /* -------------------------------------------------------------------------- */
 /*                                   API KEY                                  */
@@ -285,7 +286,7 @@ async function fetchAllTransactions(
     if (!response || !response.transactions || response.transactions.length === 0) {
       break;
     }
-
+    logger.info("fetchAllTransactions: response: ", response);
     allTransactions.push(...response.transactions);
 
     offset += limit;
@@ -322,7 +323,10 @@ type OrderTransaction = {
   trx_hash: string;
 };
 
-async function parseTransactions(transactions: Transaction[]) {
+async function parseTransactions(
+  transactions: Transaction[],
+  ORDER_PREFIX: string = "onton_order="
+): Promise<OrderTransaction[]> {
   const orders: OrderTransaction[] = [];
   for (const trx of transactions) {
     // logger.log(trx.hash);

@@ -18,6 +18,8 @@ import {
   rewardStatus,
   rewardType,
   ticketStatus,
+  CampaignType,
+  campaignTypes,
 } from "@/db/enum";
 
 import { specialGuests } from "@/db/schema/specialGuest";
@@ -46,7 +48,7 @@ import { userEventFieldRelations, userEventFields } from "./schema/userEventFiel
 import { userRelations, users } from "./schema/users";
 import { visitors } from "./schema/visitors";
 import { walletChecks } from "./schema/walletChecks";
-import { affiliateLinks, AffiliateLinksRow, AffiliateItemTypeEnum } from "./schema/affiliateLinks";
+import { affiliateLinks, AffiliateLinksRow, AffiliateItemTypeEnum, affiliateItemType } from "./schema/affiliateLinks";
 import { affiliateClick, AffiliateClickRow } from "./schema/affiliateClick";
 import {
   tournaments,
@@ -81,6 +83,36 @@ import {
   CallBackTaskStepNameType,
 } from "./schema/callbackTasks";
 
+import {
+  tokenCampaignUserSpins,
+  TokenCampaignUserSpins,
+  TokenCampaignUserSpinsInsert,
+  tokenCampaignSpinType,
+  TokenCampaignSpinType,
+} from "./schema/tokenCampaignUserSpins";
+import {
+  tokenCampaignSpinPackages,
+  TokenCampaignSpinPackages,
+  TokenCampaignSpinPackagesInsert,
+} from "./schema/tokenCampaignSpinPackages";
+import {
+  tokenCampaignUserCollections,
+  TokenCampaignUserCollections,
+  TokenCampaignUserCollectionsInsert,
+} from "./schema/tokenCampaignUserCollections";
+import {
+  tokenCampaignOrders,
+  TokenCampaignOrders,
+  TokenCampaignOrdersInsert,
+  TokenCampaignOrdersStatus,
+} from "./schema/tokenCampaignOrders";
+import {
+  tokenCampaignNftCollections,
+  TokenCampaignNftCollections,
+  TokenCampaignNftCollectionsInsert,
+  TokenCampaignNftCollectionsPublic,
+} from "./schema/tokenCampaignNftCollections";
+import { tokenCampaignEligibleUsers, TokenCampaignEligibleUsers } from "./schema/tokenCampaignEligibleUsers";
 // export all the enums
 export {
   accessRoleEnum,
@@ -106,6 +138,7 @@ export {
   ticketTypes,
   user_flags,
   userRoleStatusEnum,
+  affiliateItemType,
 };
 
 // export all the tables and relations
@@ -155,6 +188,14 @@ export {
   tournaments,
   games,
   gameLeaderboard,
+  campaignTypes,
+  tokenCampaignUserSpins,
+  tokenCampaignSpinType,
+  tokenCampaignSpinPackages,
+  tokenCampaignUserCollections,
+  tokenCampaignOrders,
+  tokenCampaignNftCollections,
+  tokenCampaignEligibleUsers,
 };
 
 // Type Exports
@@ -198,4 +239,19 @@ export type {
   GamesRowInsert,
   GameLeaderboardRow,
   GameLeaderboardRowInsert,
+  TokenCampaignUserSpins,
+  TokenCampaignUserSpinsInsert,
+  TokenCampaignSpinPackages,
+  TokenCampaignSpinPackagesInsert,
+  TokenCampaignUserCollections,
+  TokenCampaignUserCollectionsInsert,
+  TokenCampaignSpinType,
+  TokenCampaignOrders,
+  TokenCampaignOrdersInsert,
+  TokenCampaignOrdersStatus,
+  TokenCampaignNftCollections,
+  TokenCampaignNftCollectionsPublic,
+  TokenCampaignNftCollectionsInsert,
+  CampaignType,
+  TokenCampaignEligibleUsers,
 };

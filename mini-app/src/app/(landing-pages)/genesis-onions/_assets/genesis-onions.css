@@ -1,0 +1,62 @@
+/* TODO: find a way in https://github.com/ton-connect/sdk to change the modal z-index programmatically */
+[data-tc-modal="true"] {
+  z-index: 9999 !important;
+}
+[data-tc-modal="true"] .tc-modal {
+  z-index: 9999 !important;
+}
+[data-tc-modal="true"] .tc-modal__content {
+  z-index: 9999 !important;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-200%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: -100% 50%;
+  }
+}
+
+.btn-shine::before,
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shine 3s linear infinite;
+}
+
+.btn-gradient {
+  background: linear-gradient(90deg, #f36a00 0%, #ff8533 20%, #f36a00 40%);
+  background-size: 200% 100%;
+  animation: gradient 3s linear infinite;
+}
+
+.multi-step-gradient-bg {
+  background: linear-gradient(180deg, #0a1c33 10.5%, #203248 36.95%, #0b1d34 63%, #0a1c33 100%);
+}
+
+.toast {
+  @apply flex gap-4 items-center !bg-zinc-800/80 p-4 rounded-2xl text-white backdrop-blur-sm;
+}
