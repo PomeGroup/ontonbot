@@ -58,7 +58,7 @@ export async function processCampaignOrders() {
             `userId : ${User?.user_id}\n` +
             `price: ${order.finalPrice} ${order.currency}\n` +
             `Trx Hash: <a href='https://${prefix}tonviewer.com/transaction/${trxHashUrl}'>🔗 TRX</a>\n` +
-            `Spin Package ID: ${spinPackage?.name}` +
+            `Spin Package ID: ${spinPackage?.name}\n` +
             `Transaction comment: OnionCampaign=${order.uuid}\n`,
           topic: "campaign",
         });
