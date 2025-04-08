@@ -34,11 +34,13 @@ export const couponRouter = router({
               message: "Can't Create more than 1000 codes",
             });
           }
+          const percentage = Math.floor(Math.max(0, Math.min(input.value, 100)) + Number.EPSILON); // avoid negative values and cap at 100
 
-          if (input.value > 99.0) {
+          if (input.value > 100.0) {
+            // avoid more than 100 percent discount
             throw new TRPCError({
               code: "BAD_REQUEST",
-              message: "more than 99 percent discount is not present",
+              message: "more than 100 percent discount is not present",
             });
           }
 
@@ -46,7 +48,7 @@ export const couponRouter = router({
             event_uuid: input.event_uuid,
             cpd_type: "percent", // Hard-coded to percent
             cpd_status: "active",
-            value: input.value,
+            value: percentage,
             start_date: input.start_date,
             end_date: input.end_date,
             count: input.count,

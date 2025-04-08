@@ -14,6 +14,7 @@ import { affiliateLinksDB } from "@/server/db/affiliateLinks.db";
 import { generateRandomHash } from "@/lib/generateRandomHash";
 import { Address } from "@ton/core";
 import { logger } from "@/server/utils/logger";
+import { checkRateLimit } from "@/lib/checkRateLimit";
 
 export const campaignRouter = router({
   /**
@@ -53,7 +54,13 @@ export const campaignRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { campaignType } = input;
       const userId = ctx.user?.user_id;
-
+      const { allowed } = await checkRateLimit(userId.toString(), "spinForNftCampaign", 30, 60);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "CAMPAIGN_LOG:Router:addOrder: Rate limit exceeded. Try again later.",
+        });
+      }
       return await db.transaction(async (tx) => {
         // 1) Find an existing *unused* spin row
         const spinRow = await tokenCampaignUserSpinsDB.getUnusedSpinForUserTx(tx, userId);
@@ -117,7 +124,13 @@ export const campaignRouter = router({
     .mutation(async ({ input, ctx }) => {
       // Ensure the user is logged in (ctx.user set by your auth)
       const userId = ctx.user?.user_id;
-
+      const { allowed } = await checkRateLimit(userId.toString(), "addOrderCampaign", 30, 60);
+      if (!allowed) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "CAMPAIGN_LOG:Router:addOrder: Rate limit exceeded. Try again later.",
+        });
+      }
       const eligibility = await userEligibilityDB.isUserEligible(userId);
       if (!eligibility) {
         throw new TRPCError({

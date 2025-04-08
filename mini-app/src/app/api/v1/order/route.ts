@@ -8,8 +8,6 @@ import ordersDB from "@/server/db/orders.db";
 import { Address } from "@ton/core";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { couponItemsDB } from "@/server/db/couponItems.db";
-import { couponDefinitionsDB } from "@/server/db/couponDefinitions.db";
 import { logger } from "@/server/utils/logger";
 import { applyCouponDiscount } from "@/lib/applyCouponDiscount";
 
