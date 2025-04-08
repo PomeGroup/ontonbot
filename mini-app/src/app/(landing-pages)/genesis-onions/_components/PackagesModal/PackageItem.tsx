@@ -100,6 +100,7 @@ export const PackageItem = ({ pkg, onOrderPaid, onPaymentFailed, allowBuy }: Pro
                                 <Typography
                                     variant="caption2"
                                     weight="light"
+                                    className="text-nowrap text-ellipsis overflow-hidden"
                                 >
                                     {pkg.name}
                                 </Typography>
