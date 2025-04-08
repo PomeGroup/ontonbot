@@ -20,3 +20,4 @@ add more worker services
 refine deployment flow
 worker service
 full build
+full build
