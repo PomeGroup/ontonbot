@@ -15,14 +15,18 @@ channelPostButtonComposer.on("message:text", async (ctx, next) => {
     return next();
   }
 
-  // Refactored the wait step logic into separate handler functions
   if (ctx.session.channelButtonStep === "askPostId") {
     await handleAskPostId(ctx);
     return;
   }
 
-  if (ctx.session.channelButtonStep === "editButton") {
-    await handleEditButton(ctx);
+  if (ctx.session.channelButtonStep === "askLink") {
+    await handleAskLink(ctx);
+    return;
+  }
+
+  if (ctx.session.channelButtonStep === "askButtonText") {
+    await handleAskButtonText(ctx);
     return;
   }
 });
@@ -36,13 +40,20 @@ async function handleAskPostId(ctx: MyContext) {
   const trimmed = ctx.message.text.trim();
   if (/^\d+$/.test(trimmed)) {
     ctx.session.channelButtonPostId = Number(trimmed);
-    ctx.session.channelButtonStep = "editButton";
-    await ctx.reply("Post found. Now please send a link and button text separated by a comma (e.g., http://example.com,Button Text).");
+    ctx.session.channelButtonStep = "askLink";
+    await ctx.reply("Post found. Now please send the link.");
   }
 }
 
-async function handleEditButton(ctx: MyContext) {
-  const parts = ctx.message.text.split(",");
+async function handleAskLink(ctx: MyContext) {
+  ctx.session.channelButtonLink = ctx.message.text.trim();
+  ctx.session.channelButtonStep = "askButtonText";
+  await ctx.reply("Link received. Now please send the button text.");
+}
+
+async function handleAskButtonText(ctx: MyContext) {
+  const buttonText = ctx.message.text.trim();
+  const link = ctx.session.channelButtonLink;
   const {configProtected} = await fetchOntonSetting()
   const announcement_channel_id = configProtected['announcement_channel_id']
   const announcementBotId = configProtected['check_join_bot_token']
@@ -60,12 +71,6 @@ async function handleEditButton(ctx: MyContext) {
 
   const buttonBot = new Bot(announcementBotId)
 
-  if (parts.length < 2) {
-    await ctx.reply("❌ Invalid input. Please send a link and button text separated by a comma.");
-    return;
-  }
-  const link = parts[0].trim();
-  const buttonText = parts.slice(1).join(",").trim();
   const postId = ctx.session.channelButtonPostId as number;
   try {
     await buttonBot.api.editMessageReplyMarkup(parsedChannelId, postId, {
@@ -80,6 +85,7 @@ async function handleEditButton(ctx: MyContext) {
   // Clear channel button session
   ctx.session.channelButtonStep = undefined;
   ctx.session.channelButtonPostId = undefined;
+  ctx.session.channelButtonLink = undefined;
 }
 
 
