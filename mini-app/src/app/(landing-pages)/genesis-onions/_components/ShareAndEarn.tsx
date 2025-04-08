@@ -136,7 +136,7 @@ export const ShareAndEarn = () => {
                         {rewardsGuide.map((item) => (
                             <InfoBox
                                 key={item.title}
-                                className="rounded-md py-2 px-3 flex flex-col gap-2 flex-1 items-center"
+                                className="rounded-md py-2 px-3 flex flex-col gap-2 flex-1 items-center backdrop-blur-none"
                             >
                                 <Typography
                                     variant="subheadline2"
