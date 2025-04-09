@@ -1,4 +1,5 @@
 import { Bot, Composer } from "grammy"
+import { z } from "zod"
 import { isUserAdmin } from "../db/db"; // added admin check import
 import { fetchOntonSetting } from "../db/ontonSettings"
 import { isNewCommand } from "../helpers/isNewCommand"
@@ -44,22 +45,24 @@ channelPostButtonComposer.on("msg", async (ctx, next) => {
 // New handler functions for step logic
 async function handleAskPostId(ctx: MyContext) {
   // if the message is forwarded from a channel, copy its post id
-  if (ctx.message.forward_origin?.type ==='channel') {
+  if (ctx.message.forward_origin?.type === 'channel') {
     const forwardedPostId = ctx.message.forward_origin.message_id;
-    if (forwardedPostId) {
+    if (typeof forwardedPostId === 'number') {
       ctx.session.channelButtonPostId = forwardedPostId;
       ctx.session.channelButtonStep = "askLink";
       await ctx.reply("Post forwarded. Post ID copied. Now please send the link.");
       return;
     }
   }
-  
+
   // fallback to using the text input if it's a valid number
   const trimmed = ctx.message.text.trim();
   if (/^\d+$/.test(trimmed)) {
     ctx.session.channelButtonPostId = Number(trimmed);
     ctx.session.channelButtonStep = "askLink";
     await ctx.reply("Post found. Now please send the link.");
+  } else {
+    await ctx.reply("❌ Please send a valid numeric post ID.");
   }
 }
 
@@ -68,13 +71,22 @@ async function handleAskLink(ctx: MyContext) {
   ctx.session.channelButtonStep = "askButtonText";
   await ctx.reply("Link received. Now please send the button text.");
 }
-
 async function handleAskButtonText(ctx: MyContext) {
   const buttonText = ctx.message.text.trim();
   const link = ctx.session.channelButtonLink;
-  const {configProtected} = await fetchOntonSetting()
-  const announcement_channel_id = configProtected['announcement_channel_id']
-  const announcementBotId = configProtected['check_join_bot_token']
+
+  // Validate the link using zod
+  const urlSchema = z.string().url();
+  try {
+    urlSchema.parse(link);
+  } catch (error) {
+    await ctx.reply("❌ The provided link is not a valid URL.");
+    return;
+  }
+
+  const { configProtected } = await fetchOntonSetting();
+  const announcement_channel_id = configProtected['announcement_channel_id'];
+  const announcementBotId = configProtected['check_join_bot_token'];
 
   if (!announcement_channel_id) {
     await ctx.reply("❌ Announcement channel ID is not configured. Please contact the administrator.");
@@ -87,13 +99,13 @@ async function handleAskButtonText(ctx: MyContext) {
     return;
   }
 
-  const buttonBot = new Bot(announcementBotId)
+  const buttonBot = new Bot(announcementBotId);
 
   const postId = ctx.session.channelButtonPostId as number;
   try {
     await buttonBot.api.editMessageReplyMarkup(parsedChannelId, postId, {
       reply_markup: {
-        inline_keyboard: [[{text: buttonText, url: link}]]
+        inline_keyboard: [[{ text: buttonText, url: link }]]
       }
     });
     await ctx.reply("✅ Post updated with the new inline button.");
