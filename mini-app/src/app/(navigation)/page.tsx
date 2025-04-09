@@ -13,10 +13,10 @@ import CustomCard from "../_components/atoms/cards/CustomCard";
 import DataStatus from "../_components/molecules/alerts/DataStatus";
 import { trpc } from "../_trpc/client";
 
+import { Banner } from "../(landing-pages)/genesis-onions/_components/Banner";
 import CustomSwiper from "../_components/CustomSwiper";
 import EventsTimeline from "../_components/Event/EventsTImeline";
 import EventCardSkeleton from "../_components/EventCard/EventCardSkeleton";
-import { Banner } from "../(landing-pages)/genesis-onions/_components/Banner";
 
 export default function Home() {
   return (
@@ -129,7 +129,7 @@ const FeaturedContests = () => {
 
   const tournaments = tournomantsQuery.data;
 
-  if (tournomantsQuery.isSuccess && !tournaments) {
+  if (tournomantsQuery.isSuccess && !tournaments?.length) {
     return null;
   }
 
