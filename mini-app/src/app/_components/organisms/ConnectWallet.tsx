@@ -9,9 +9,10 @@ import { useUserStore } from "@/context/store/user.store";
 import { formatWalletAddress } from "@/server/utils/wallets-data";
 import { useTonAddress, useTonConnectModal, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { Button, Card } from "konsta/react";
-import { ChevronDownIcon, Unplug } from "lucide-react";
+import { ChevronDownIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { IoExitOutline } from "react-icons/io5";
 import { toast } from "sonner";
 
 export function ConnectWalletCard() {
@@ -56,7 +57,7 @@ export function ConnectWalletCard() {
               }}
               className="cursor-pointer"
             >
-              <Unplug />
+              <IoExitOutline />
               Disconnect wallet
             </DropdownMenuItem>
           </DropdownMenuContent>

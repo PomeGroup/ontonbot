@@ -127,6 +127,7 @@ export const getTournamentsWithFiltersDB = async ({
     entryType?: "Tickets" | "Pass";
     status?: "ongoing" | "upcoming" | "ended" | "notended";
     gameId?: number;
+    organizer_user_id?: number;
   };
   sortBy: "prize" | "entryFee" | "timeRemaining";
   sortOrder: "asc" | "desc";
@@ -162,6 +163,11 @@ export const getTournamentsWithFiltersDB = async ({
       conditions.push(gte(tournaments.endDate, now));
     }
   }
+
+  if (filter?.organizer_user_id) {
+    conditions.push(eq(tournaments.owner, filter.organizer_user_id));
+  }
+
   if (filter?.gameId && filter.gameId !== -1) {
     conditions.push(eq(tournaments.gameId, filter.gameId));
   }
