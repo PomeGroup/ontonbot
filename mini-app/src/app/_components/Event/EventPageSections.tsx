@@ -8,7 +8,6 @@ import LoadableImage from "@/components/LoadableImage";
 import Typography from "@/components/Typography";
 import { useUserStore } from "@/context/store/user.store";
 import { Address } from "@ton/core";
-import { TonConnectButton } from "@tonconnect/ui-react";
 import { Block, List, ListItem } from "konsta/react";
 import { useRouter } from "next/navigation";
 import React, { useMemo } from "react";
@@ -17,6 +16,7 @@ import SupportButtons from "../atoms/buttons/SupportButton";
 import MainButton from "../atoms/buttons/web-app/MainButton";
 import CustomCard from "../atoms/cards/CustomCard";
 import DataStatus from "../molecules/alerts/DataStatus";
+import { ConnectWalletCard } from "../organisms/ConnectWallet";
 import EventKeyValue from "../organisms/events/EventKewValue";
 import ShareEventButton from "../ShareEventButton";
 import { ClaimRewardButton } from "./ClaimRewardButton";
@@ -138,16 +138,6 @@ const EventDescription = React.memo(() => {
 });
 
 EventDescription.displayName = "EventDescription";
-
-const UserWallet = () => {
-  return (
-    <CustomCard title={"Your Wallet"}>
-      <div className="p-4 pt-0 flex items-center justify-center">
-        <TonConnectButton />
-      </div>
-    </CustomCard>
-  );
-};
 
 const EventTitle = React.memo(() => {
   const { eventHash, eventData } = useEventData();
@@ -284,7 +274,10 @@ const OrganizerCard = React.memo(() => {
   if (!organizer) return null;
 
   return (
-    <CustomCard title={"Organizer"}>
+    <CustomCard
+      title={"Organizer"}
+      className="!pb-2"
+    >
       <List className="!mb-0 !-mt-2">
         <ListItem
           className="cursor-pointer"
@@ -505,7 +498,7 @@ export const EventSections = () => {
       <ManageEventButton />
       <OrganizerCard />
       <SbtCollectionLink />
-      <UserWallet />
+      <ConnectWalletCard />
       <EventRegistrationStatus />
 
       <SupportButtons orgSupportTelegramUserName={eventData.data?.organizer?.org_support_telegram_user_name || undefined} />

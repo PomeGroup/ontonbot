@@ -16,6 +16,7 @@ export const Primary: Story = {
   argTypes: {
     variant: {
       options: [
+        "default",
         "primary",
         "ghost",
         "success",

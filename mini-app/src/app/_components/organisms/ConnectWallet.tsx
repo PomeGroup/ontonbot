@@ -8,35 +8,45 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useUserStore } from "@/context/store/user.store";
 import { formatWalletAddress } from "@/server/utils/wallets-data";
 import { useTonAddress, useTonConnectModal, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
-import { Button, Card } from "konsta/react";
+import { Button } from "konsta/react";
 import { ChevronDownIcon } from "lucide-react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IoExitOutline } from "react-icons/io5";
 import { toast } from "sonner";
+import CustomCard from "../atoms/cards/CustomCard";
 
 export function ConnectWalletCard() {
   const [isOpen, setOpen] = useState(false);
 
   const [tonconnect] = useTonConnectUI();
-
+  const walletModal = useTonConnectModal();
   const tonWallet = useTonWallet();
   const hasWallet = Boolean(tonWallet?.account.address);
 
-  return (
-    <Card className="w-full !mx-0">
-      <Typography
-        bold
-        variant="headline"
-        className="mb-4"
-      >
-        Your Wallet
-      </Typography>
+  const pathanmem = usePathname();
 
-      <ConfirmConnectDialog
-        open={isOpen}
-        onClose={() => setOpen(false)}
-      />
+  const handleConnectClick = () => {
+    if (pathanmem === "/my") {
+      setOpen(true);
+    } else {
+      walletModal.open();
+    }
+  };
+
+  return (
+    <CustomCard
+      title="Your Wallet"
+      className="w-full !mx-0"
+      defaultPadding
+    >
+      {pathanmem === "/my" && (
+        <ConfirmConnectDialog
+          open={isOpen}
+          onClose={() => setOpen(false)}
+        />
+      )}
 
       {hasWallet ? (
         <DropdownMenu>
@@ -65,7 +75,7 @@ export function ConnectWalletCard() {
       ) : (
         <CustomButton
           variant="primary"
-          onClick={() => setOpen(true)}
+          onClick={handleConnectClick}
           icon={
             <Image
               className="mr-1"
@@ -79,7 +89,7 @@ export function ConnectWalletCard() {
           Connect your Wallet
         </CustomButton>
       )}
-    </Card>
+    </CustomCard>
   );
 }
 

@@ -115,7 +115,7 @@ export const UploadVideoFile = (props: UploadFileProps) => {
     <>
       <Button
         className={cn(
-          "w-full h-auto flex flex-col gap-3.5 border border-dashed rounded-xl p-3",
+          "w-full h-auto flex flex-col gap-3.5 border border-dashed rounded-xl p-3 bg-primary/10",
           props.isError ? "border-red-300 bg-red-400/10" : "border-cn-primary",
           props.disabled && "cursor-not-allowed opacity-50"
         )}
