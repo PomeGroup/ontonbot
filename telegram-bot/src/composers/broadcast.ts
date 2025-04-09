@@ -1,55 +1,57 @@
 import { Composer, InlineKeyboard } from "grammy";
 import { MyContext } from "../types/MyContext";
 import { isUserAdmin, getEvent, getEventTickets } from "../db/db";
-import { isNewCommand } from "../helpers/isNewCommand";
 import { parse } from "csv-parse/sync";
 import axios from "axios";
-import { sendMessageWithInfinityRetry } from "../helpers/sendMessageWithInfinityRetry";
+import { isNewCommand } from "../helpers/isNewCommand";
+import { logger } from "../utils/logger";
+import { sleep } from "../utils/utils";
 
 export const broadcastComposer = new Composer<MyContext>();
 
+/* -------------------------------------------------------------------------- */
+/*                           /broadcast Command                               */
+/* -------------------------------------------------------------------------- */
 /**
- * /broadcast command:
- * - Checks admin
- * - Sets step= "chooseType"
- * - Asks user: "Event participant or Custom CSV?"
+ * 1) Checks if user is admin
+ * 2) Step = "chooseTarget"
+ * 3) Asks user: "Event Participants" or "Custom CSV" (inline keyboard)
  */
 broadcastComposer.command("broadcast", async (ctx) => {
-  // 1) Check admin
   const { isAdmin } = await isUserAdmin(ctx.from?.id.toString() || "");
-  if (!isAdmin) return;
+  if (!isAdmin) return; // or ctx.reply("❌ You are not an admin.")
 
-  // 2) Reset session & set step
-  ctx.session.broadcastStep = "chooseType";
+  // Reset session
+  ctx.session.broadcastStep = "chooseTarget";
   ctx.session.broadcastType = undefined;
-  ctx.session.broadcastEventUUID = undefined;
+  ctx.session.broadcastEventUuid = undefined;
+  ctx.session.broadcastEventTitle = undefined;
+  ctx.session.broadcastUserIds = [];
   ctx.session.broadcastCsvUserIds = [];
-  ctx.session.broadcastMessage = undefined;
 
-  // 3) Inline keyboard for the two choices
-  const keyboard = new InlineKeyboard()
+  // Inline keyboard for two broadcast types
+  const kb = new InlineKeyboard()
     .text("Event Participants", "bc_event")
     .text("Custom CSV", "bc_csv");
 
-  await ctx.reply("Who do you want to broadcast to?", {
-    reply_markup: keyboard,
-  });
+  await ctx.reply("Who do you want to broadcast to?", { reply_markup: kb });
 });
 
 /* -------------------------------------------------------------------------- */
-/*             1) Handle Inline Buttons for choosing broadcast type           */
+/*             2) Handle inline buttons for "chooseTarget" step              */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.on("callback_query:data", async (ctx, next) => {
-  if (ctx.session.broadcastStep !== "chooseType") {
+  if (ctx.session.broadcastStep !== "chooseTarget") {
     return next();
   }
+
+  await ctx.answerCallbackQuery(); // Acknowledge button press
   const choice = ctx.callbackQuery.data;
-  await ctx.answerCallbackQuery(); // acknowledges the click
 
   // If user chooses "Event Participants"
   if (choice === "bc_event") {
     ctx.session.broadcastType = "event";
-    ctx.session.broadcastStep = "askEvent";
+    ctx.session.broadcastStep = "askEventUuid";
     await ctx.reply("Please send the Event UUID (36 characters).");
     return;
   }
@@ -58,16 +60,18 @@ broadcastComposer.on("callback_query:data", async (ctx, next) => {
   if (choice === "bc_csv") {
     ctx.session.broadcastType = "csv";
     ctx.session.broadcastStep = "askCsv";
-    await ctx.reply("Please upload your CSV file now.");
+    await ctx.reply("Please upload your CSV file now (one user_id per line).");
     return;
   }
+
+  return next();
 });
 
 /* -------------------------------------------------------------------------- */
-/*        2) Handle messages for askEvent (text) & askCsv (document)          */
+/*     3) Handle the next message: either an event UUID or a CSV document     */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.on("message", async (ctx, next) => {
-  // If user typed a new command, reset
+  // If user typed a new command, reset the flow
   if (isNewCommand(ctx)) {
     ctx.session = {};
     return next();
@@ -75,31 +79,18 @@ broadcastComposer.on("message", async (ctx, next) => {
 
   const step = ctx.session.broadcastStep;
 
-  // (A) If we are asking for Event UUID
-  if (step === "askEvent" && ctx.message?.text) {
-    return handleAskEvent(ctx);
+  // 3A) "askEventUuid" step => next text is the event ID
+  if (step === "askEventUuid" && ctx.message?.text) {
+    return handleEventUuid(ctx);
   }
 
-  // (B) If we are asking for CSV
+  // 3B) "askCsv" step => next doc is the CSV
   if (step === "askCsv" && ctx.message?.document) {
-    return handleAskCsv(ctx);
+    return handleCsvUpload(ctx);
   }
 
-  // If any other message in these steps => do nothing or next
-  return next();
-});
-
-/* -------------------------------------------------------------------------- */
-/*             3) After we have event or CSV, we ask for broadcast msg        */
-/* -------------------------------------------------------------------------- */
-broadcastComposer.on("message:text", async (ctx, next) => {
-  const step = ctx.session.broadcastStep;
-  if (!step || step === "done") {
-    return next();
-  }
-
-  // If we finished collecting event or CSV and are now ready for a message
-  if (step === "askMessage") {
+  // 3C) "askBroadcast" step => next message is the broadcast content
+  if (step === "askBroadcast") {
     return handleBroadcastMessage(ctx);
   }
 
@@ -107,166 +98,147 @@ broadcastComposer.on("message:text", async (ctx, next) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/*                      Handler Functions                                     */
+/*                     Handle "askEventUuid" logic                            */
+
 /* -------------------------------------------------------------------------- */
+async function handleEventUuid(ctx: MyContext) {
+  const uuidCandidate = ctx.message?.text?.trim();
+  if (!uuidCandidate) return;
 
-// Handle "askEvent": validate event, then proceed to ask for broadcast message
-async function handleAskEvent(ctx: MyContext) {
-  const text = ctx.message?.text?.trim();
-  if (!text) return;
-
-  // Basic check for 36-char
-  if (text.length !== 36) {
+  // Quick length check
+  if (uuidCandidate.length !== 36) {
     await ctx.reply("Event UUID must be 36 characters. Try again or /cancel.");
     return;
   }
 
-  // Validate from DB
-  const eventRow = await getEvent(text);
+  // Check if event exists
+  const eventRow = await getEvent(uuidCandidate);
   if (!eventRow) {
     await ctx.reply("Event not found. Please check the UUID and try again.");
     return;
   }
 
-  // Store event
-  ctx.session.broadcastEventUUID = text;
-  ctx.session.broadcastStep = "askMessage";
+  // Fetch participants
+  const tickets = await getEventTickets(uuidCandidate);
+  if (!tickets?.length) {
+    await ctx.reply(
+      `No participants found for event "${eventRow.title}". Nothing to broadcast.`,
+    );
+    // End flow
+    ctx.session.broadcastStep = "done";
+    return;
+  }
 
+  // Store them in session
+  ctx.session.broadcastEventUuid = uuidCandidate;
+  ctx.session.broadcastEventTitle = eventRow.title;
+  ctx.session.broadcastUserIds = tickets.map((t) => String(t.user_id));
+
+  // Next => askBroadcast
+  ctx.session.broadcastStep = "askBroadcast";
   await ctx.reply(
-    `✅ Event found: "${eventRow.title}".\nNow send the broadcast message.`,
+    `✅ Event "${eventRow.title}" found with ${tickets.length} participant(s).\n` +
+    "Now send any message (text, photo, video, etc.) you want to broadcast.",
   );
 }
 
-// Handle "askCsv": parse CSV, then proceed to ask for broadcast message
-async function handleAskCsv(ctx: MyContext) {
-  const document = ctx.message?.document;
-  if (!document) {
-    await ctx.reply("Please upload a valid CSV file.");
+/* -------------------------------------------------------------------------- */
+/*                        Handle "askCsv" logic                               */
+
+/* -------------------------------------------------------------------------- */
+async function handleCsvUpload(ctx: MyContext) {
+  const doc = ctx.message?.document;
+  if (!doc) {
+    await ctx.reply("No file found in this message. Please upload a CSV.");
     return;
   }
 
-  // Basic check for .csv
-  if (!document.file_name?.endsWith(".csv")) {
-    await ctx.reply("Please upload a file ending with .csv");
+  // Basic check for .csv file extension
+  if (!doc.file_name?.endsWith(".csv")) {
+    await ctx.reply("Please upload a file ending with .csv.");
     return;
   }
 
-  // Get file from Telegram
-  const fileInfo = await ctx.api.getFile(document.file_id);
+  // Retrieve file path from Telegram
+  const fileInfo = await ctx.api.getFile(doc.file_id);
   if (!fileInfo.file_path) {
-    await ctx.reply("Could not retrieve file path from Telegram.");
+    await ctx.reply("Unable to retrieve file path from Telegram.");
     return;
   }
-  const fileUrl = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${fileInfo.file_path}`;
 
-  // Download & parse
+  const url = `https://api.telegram.org/file/bot${process.env.BOT_TOKEN}/${fileInfo.file_path}`;
   try {
-    const res = await axios.get<ArrayBuffer>(fileUrl, {
-      responseType: "arraybuffer",
-    });
+    // Download & parse
+    const res = await axios.get<ArrayBuffer>(url, { responseType: "arraybuffer" });
     const buffer = Buffer.from(res.data);
 
-    // Parse CSV
-    const rows = parse(buffer.toString("utf-8"), {
-      skip_empty_lines: true,
-    });
-
-    // Suppose the CSV is just lines of user IDs
-    const userIds: string[] = rows.map((row: string[]) => row[0]?.trim());
+    // Each line => user_id
+    const rows = parse(buffer.toString("utf-8"), { skip_empty_lines: true });
+    const userIds: string[] = rows.map((r: string[]) => r[0]?.trim()).filter(Boolean);
 
     if (!userIds.length) {
-      await ctx.reply("No user IDs found in the CSV.");
+      await ctx.reply("No user IDs found in the CSV. Flow canceled.");
+      ctx.session.broadcastStep = "done";
       return;
     }
 
-    // Store them in session
-    ctx.session.broadcastCsvUserIds = userIds;
+    // Save user IDs
+    ctx.session.broadcastUserIds = userIds;
 
-    // Next => askMessage
-    ctx.session.broadcastStep = "askMessage";
-    await ctx.reply(`✅ Found ${userIds.length} user IDs. Now send the message.`);
+    // Next => "askBroadcast"
+    ctx.session.broadcastStep = "askBroadcast";
+    await ctx.reply(
+      `✅ CSV parsed. Found ${userIds.length} user(s).\n` +
+      "Now send any message (text, photo, video, etc.) you want to broadcast.",
+    );
   } catch (err) {
     await ctx.reply(`Error parsing CSV: ${err}`);
+    ctx.session.broadcastStep = "done";
   }
 }
 
-// Handle "askMessage": we already have either event or CSV => broadcast
+/* -------------------------------------------------------------------------- */
+/*         4) "askBroadcast": next message gets copied to all user IDs        */
+
+/* -------------------------------------------------------------------------- */
 async function handleBroadcastMessage(ctx: MyContext) {
-  const text = ctx.message?.text?.trim();
-  if (!text) return;
-
-  ctx.session.broadcastMessage = text;
-
-  // Send the message depending on broadcastType
-  if (ctx.session.broadcastType === "event") {
-    await sendToEventParticipants(ctx);
-  } else {
-    await sendToCsvUsers(ctx);
+  // Grab the user IDs we have
+  const userIds = ctx.session.broadcastUserIds;
+  if (!userIds?.length) {
+    await ctx.reply("No valid user IDs to broadcast. Flow ended.");
+    ctx.session.broadcastStep = "done";
+    return;
   }
 
-  // Mark flow done
+  // We'll copy the EXACT message the admin just sent
+  const sourceChatId = ctx.chat?.id;
+  const sourceMessageId = ctx.message?.message_id;
+  if (!sourceChatId || !sourceMessageId) {
+    await ctx.reply("Unable to read the message ID or chat ID. Flow ended.");
+    ctx.session.broadcastStep = "done";
+    return;
+  }
+
+  // Start broadcasting
+  await ctx.reply(`Broadcasting this message to ${userIds.length} users...`);
+
+  let successCount = 0;
+  for (let i = 0; i < userIds.length; i++) {
+    const targetUserId = userIds[i];
+    try {
+      // Using copyMessage to replicate exactly the same content
+      await ctx.api.copyMessage(targetUserId, sourceChatId, sourceMessageId);
+      successCount++;
+    } catch (error) {
+      // Optional: log or handle errors
+      logger.warn(`Failed to send to user ${targetUserId}: ${error}`);
+    }
+
+    // Add small delay to reduce risk of hitting rate limits
+    await sleep(50);
+  }
+
+  await ctx.reply(`✅ Broadcast complete. Sent to ${successCount} user(s).`);
+  // End flow
   ctx.session.broadcastStep = "done";
-  ctx.session.broadcastType = undefined;
-  ctx.session.broadcastEventUUID = undefined;
-  ctx.session.broadcastCsvUserIds = [];
-  ctx.session.broadcastMessage = undefined;
-}
-
-/* -------------------------------------------------------------------------- */
-/*                      Actual Broadcast Logic                                */
-/* -------------------------------------------------------------------------- */
-
-// 1) If user chose "Event Participants"
-async function sendToEventParticipants(ctx: MyContext) {
-  const eventId = ctx.session.broadcastEventUUID;
-  const message = ctx.session.broadcastMessage;
-  if (!eventId || !message) {
-    await ctx.reply("Missing eventId or message. Nothing sent.");
-    return;
-  }
-
-  // Query DB for participants
-  const tickets = await getEventTickets(eventId);
-  if (!tickets?.length) {
-    await ctx.reply("No participants found for that event.");
-    return;
-  }
-
-  await ctx.reply(`Sending message to ${tickets.length} participants...`);
-
-  let count = 0;
-  for (const ticket of tickets) {
-    try {
-      await sendMessageWithInfinityRetry(ticket.user_id, message, ctx);
-      count++;
-    } catch {
-      // You can log errors if you want
-    }
-  }
-
-  await ctx.reply(`✅ Message sent to ${count} participants (event).`);
-}
-
-// 2) If user chose "Custom CSV"
-async function sendToCsvUsers(ctx: MyContext) {
-  const userIds = ctx.session.broadcastCsvUserIds || [];
-  const message = ctx.session.broadcastMessage;
-  if (!userIds.length || !message) {
-    await ctx.reply("CSV user IDs or message missing. Nothing sent.");
-    return;
-  }
-
-  await ctx.reply(`Sending message to ${userIds.length} users from CSV...`);
-
-  let count = 0;
-  for (const uid of userIds) {
-    try {
-      await sendMessageWithInfinityRetry(uid, message, ctx);
-      count++;
-    } catch {
-      // You can log errors if you want
-    }
-  }
-
-  await ctx.reply(`✅ Message sent to ${count} users (CSV).`);
 }
