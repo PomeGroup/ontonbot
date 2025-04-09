@@ -4,6 +4,7 @@ import { isUserAdmin } from "../db/db"; // added admin check import
 import { fetchOntonSetting } from "../db/ontonSettings"
 import { isNewCommand } from "../helpers/isNewCommand"
 import { MyContext } from "../types/MyContext"
+import { isUrlValid } from "../utils/utils"
 
 export const channelPostButtonComposer = new Composer<MyContext>();
 
@@ -67,22 +68,22 @@ async function handleAskPostId(ctx: MyContext) {
 }
 
 async function handleAskLink(ctx: MyContext) {
-  ctx.session.channelButtonLink = ctx.message.text.trim();
-  ctx.session.channelButtonStep = "askButtonText";
-  await ctx.reply("Link received. Now please send the button text.");
+  const text = ctx.message.text.trim();
+  const urlSchema = z.string().refine((v) => isUrlValid(v), {  message: "Url is invalid"});
+
+  try {
+    urlSchema.parse(text);
+    ctx.session.channelButtonLink = text;
+    ctx.session.channelButtonStep = "askButtonText";
+    await ctx.reply("Link received. Now please send the button text.");
+  } catch (error) {
+    await ctx.reply("❌ The provided text is not a valid URL. Please try again.");
+  }
 }
+
 async function handleAskButtonText(ctx: MyContext) {
   const buttonText = ctx.message.text.trim();
   const link = ctx.session.channelButtonLink;
-
-  // Validate the link using zod
-  const urlSchema = z.string().url();
-  try {
-    urlSchema.parse(link);
-  } catch (error) {
-    await ctx.reply("❌ The provided link is not a valid URL.");
-    return;
-  }
 
   const { configProtected } = await fetchOntonSetting();
   const announcement_channel_id = configProtected['announcement_channel_id'];
