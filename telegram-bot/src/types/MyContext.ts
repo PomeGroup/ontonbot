@@ -88,10 +88,16 @@ export interface SessionData {
   /* ------------------ Play2Win Featured Flow ------------------ */
   play2winStep?: "askList" | "done";
   /* ------------------ Broadcast Flow ------------------ */
-  broadcastStep?: "askEventId" | "askMessage" | "confirm" | "done";
-  broadcastEventId?: string;
-  broadcastMessage?: string;
+  broadcastStep?: "chooseTarget" | "askEventUuid" | "askCsv" | "askBroadcast" | "done";
+  broadcastType?: "event" | "csv";
 
+  // For Event-based broadcast
+  broadcastEventUuid?: string;
+  broadcastEventTitle?: string;
+  broadcastUserIds?: string[];  // consolidated list of user IDs to broadcast to
+
+  // For CSV-based broadcast
+  broadcastCsvUserIds?: string[];
   /* ------------------ SBT Collection Flow ------------------ */
   collectionStep?:
     | "CHOOSE_HUB"
