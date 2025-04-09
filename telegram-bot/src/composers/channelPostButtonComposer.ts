@@ -82,52 +82,36 @@ async function handleAskLink(ctx: MyContext) {
   }
 }
 async function handleAskButtonText(ctx: MyContext) {
-  logger.debug("handleAskButtonText started");
-  
   const buttonText = ctx.message.text.trim();
   const link = ctx.session.channelButtonLink;
-  logger.debug("Received button text", { buttonText });
-  logger.debug("Channel button link from session", { link });
 
   const { configProtected } = await fetchOntonSetting();
   const announcement_channel_id = configProtected['announcement_channel_id'];
   const announcementBotId = configProtected['check_join_bot_token'];
-  logger.debug("Fetched announcement settings", { announcement_channel_id, announcementBotId });
 
   if (!announcement_channel_id) {
-    logger.debug("Announcement channel ID not configured");
     await ctx.reply("❌ Announcement channel ID is not configured. Please contact the administrator.");
     return;
   }
 
   const parsedChannelId = parseInt(announcement_channel_id);
   if (isNaN(parsedChannelId)) {
-    logger.debug("Invalid announcement channel ID", { announcement_channel_id });
     await ctx.reply("❌ Invalid announcement channel ID. Please contact the administrator.");
     return;
   }
 
   const buttonBot = new Bot(announcementBotId);
   buttonBot.stop();
-  logger.debug("Initialized buttonBot and stopped polling");
 
   const postId = ctx.session.channelButtonPostId as number;
-  logger.debug("Using postId", { postId });
 
   try {
-    logger.debug("Attempting to update the post with inline button", {
-      parsedChannelId,
-      postId,
-      buttonText,
-      link,
-    });
     await buttonBot.api.editMessageReplyMarkup(parsedChannelId, postId, {
       reply_markup: {
         inline_keyboard: [[{ text: buttonText, url: link }]]
       }
     });
     await ctx.reply("✅ Post updated with the new inline button.");
-    logger.debug("Post updated successfully");
   } catch (error) {
     logger.debug("Failed to update the post", { error });
     await ctx.reply("❌ Failed to update the post. Ensure the bot has enough rights in the channel.");
@@ -137,7 +121,6 @@ async function handleAskButtonText(ctx: MyContext) {
   ctx.session.channelButtonStep = undefined;
   ctx.session.channelButtonPostId = undefined;
   ctx.session.channelButtonLink = undefined;
-  logger.debug("Session data cleared");
 }
 
 async function handleRemoveButton(ctx: MyContext) {
