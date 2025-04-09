@@ -10,6 +10,46 @@ import { sleep } from "../utils/utils";
 export const broadcastComposer = new Composer<MyContext>();
 
 /* -------------------------------------------------------------------------- */
+/*                               Helper Function                              */
+
+/* -------------------------------------------------------------------------- */
+/**
+ * copyMessageWithRetries:
+ * - Tries up to 3 times to copy a message from `sourceChatId` to `targetUserId`.
+ * - If it encounters a 429 (rate limit) error, waits 2 seconds, then retries.
+ * - Throws an error after 3 failed attempts.
+ */
+async function copyMessageWithRetries(
+  ctx: MyContext,
+  targetUserId: string,
+  sourceChatId: number,
+  sourceMessageId: number,
+  maxRetries = 3,
+) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await ctx.api.copyMessage(targetUserId, sourceChatId, sourceMessageId);
+      // If successful, return
+      return true;
+    } catch (error: any) {
+      // If it's a rate limit error, wait 2 seconds, then retry (unless this was the last attempt)
+      if (error.error_code === 429) {
+        logger.warn(
+          `Rate limit hit while sending to ${targetUserId}. Attempt ${attempt} of ${maxRetries}. Waiting 2s...`,
+        );
+        if (attempt === maxRetries) throw error;
+        await sleep(2000); // wait 2 seconds
+      } else {
+        // For any other error, just throw immediately
+        throw error;
+      }
+    }
+  }
+  // If all attempts fail for some reason (shouldn't get here unless logic changes)
+  return false;
+}
+
+/* -------------------------------------------------------------------------- */
 /*                           /broadcast Command                               */
 /* -------------------------------------------------------------------------- */
 /**
@@ -38,7 +78,7 @@ broadcastComposer.command("broadcast", async (ctx) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/*             2) Handle inline buttons for "chooseTarget" step              */
+/*          2) Handle inline buttons for "chooseTarget" step                 */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.on("callback_query:data", async (ctx, next) => {
   if (ctx.session.broadcastStep !== "chooseTarget") {
@@ -68,7 +108,7 @@ broadcastComposer.on("callback_query:data", async (ctx, next) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/*     3) Handle the next message: either an event UUID or a CSV document     */
+/*   3) Handle the next message: either an event UUID or a CSV document       */
 /* -------------------------------------------------------------------------- */
 broadcastComposer.on("message", async (ctx, next) => {
   // If user typed a new command, reset the flow
@@ -79,17 +119,17 @@ broadcastComposer.on("message", async (ctx, next) => {
 
   const step = ctx.session.broadcastStep;
 
-  // 3A) "askEventUuid" step => next text is the event ID
+  // "askEventUuid" => next text is the event ID
   if (step === "askEventUuid" && ctx.message?.text) {
     return handleEventUuid(ctx);
   }
 
-  // 3B) "askCsv" step => next doc is the CSV
+  // "askCsv" => next doc is the CSV
   if (step === "askCsv" && ctx.message?.document) {
     return handleCsvUpload(ctx);
   }
 
-  // 3C) "askBroadcast" step => next message is the broadcast content
+  // "askBroadcast" => next message is the broadcast content
   if (step === "askBroadcast") {
     return handleBroadcastMessage(ctx);
   }
@@ -98,7 +138,7 @@ broadcastComposer.on("message", async (ctx, next) => {
 });
 
 /* -------------------------------------------------------------------------- */
-/*                     Handle "askEventUuid" logic                            */
+/*                       Handle "askEventUuid" logic                          */
 
 /* -------------------------------------------------------------------------- */
 async function handleEventUuid(ctx: MyContext) {
@@ -143,7 +183,7 @@ async function handleEventUuid(ctx: MyContext) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                        Handle "askCsv" logic                               */
+/*                         Handle "askCsv" logic                              */
 
 /* -------------------------------------------------------------------------- */
 async function handleCsvUpload(ctx: MyContext) {
@@ -226,16 +266,15 @@ async function handleBroadcastMessage(ctx: MyContext) {
   for (let i = 0; i < userIds.length; i++) {
     const targetUserId = userIds[i];
     try {
-      // Using copyMessage to replicate exactly the same content
-      await ctx.api.copyMessage(targetUserId, sourceChatId, sourceMessageId);
+      // Try up to 3 times, handle 429 with a 2-second pause
+      await copyMessageWithRetries(ctx, targetUserId, sourceChatId, sourceMessageId);
       successCount++;
     } catch (error) {
-      // Optional: log or handle errors
-      logger.warn(`Failed to send to user ${targetUserId}: ${error}`);
+      logger.warn(`Failed to send to user ${targetUserId} after retries: ${error}`);
     }
 
-    // Add small delay to reduce risk of hitting rate limits
-    await sleep(50);
+    // Small delay to reduce risk of immediate rate limit triggers
+    await sleep(100);
   }
 
   await ctx.reply(`✅ Broadcast complete. Sent to ${successCount} user(s).`);
