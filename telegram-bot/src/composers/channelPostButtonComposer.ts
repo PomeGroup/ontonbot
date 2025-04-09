@@ -94,7 +94,7 @@ async function handleAskButtonText(ctx: MyContext) {
     return;
   }
 
-  const parsedChannelId = parseInt(announcement_channel_id, 10);
+  const parsedChannelId = parseInt(announcement_channel_id);
   if (isNaN(parsedChannelId)) {
     await ctx.reply("❌ Invalid announcement channel ID. Please contact the administrator.");
     return;
@@ -134,7 +134,8 @@ async function handleRemoveButton(ctx: MyContext) {
     await ctx.reply("❌ Announcement channel ID is not configured. Please contact the administrator.");
     return;
   }
-  const parsedChannelId = parseInt(announcement_channel_id, 10);
+  
+  const parsedChannelId = parseInt(announcement_channel_id);
   if (isNaN(parsedChannelId)) {
     await ctx.reply("❌ Invalid announcement channel ID. Please contact the administrator.");
     return;
