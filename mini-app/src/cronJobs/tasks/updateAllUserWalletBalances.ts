@@ -39,14 +39,14 @@ export async function updateAllUserWalletBalances() {
         .values({
           userId,
           walletAddress,
-          lastBalance: balance.toString(),
+          lastBalance: balance,
           placeOfConnection: "campaign", // or whatever is appropriate
           // createdAt automatically has a default, or set explicitly if needed
         })
         .onConflictDoUpdate({
           target: [userWalletBalances.userId, userWalletBalances.walletAddress, userWalletBalances.placeOfConnection],
           set: {
-            lastBalance: balance.toString(),
+            lastBalance: balance,
             createdAt: sql`NOW
                 ()`, // or use new Date() if your column is timestamptz
           },

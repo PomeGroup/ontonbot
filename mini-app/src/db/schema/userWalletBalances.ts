@@ -1,4 +1,16 @@
-import { pgTable, integer, text, numeric, timestamp, serial, pgEnum, index, unique, bigint } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  integer,
+  text,
+  numeric,
+  timestamp,
+  serial,
+  pgEnum,
+  index,
+  unique,
+  bigint,
+  real,
+} from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { users } from "@/db/schema";
 
@@ -12,10 +24,7 @@ export const userWalletBalances = pgTable(
       .notNull(), // the user id
     walletAddress: text("wallet_address").notNull(), // the wallet address
     placeOfConnection: placeOfWalletConnection("place_of_connection").notNull(), // the type of connection
-    lastBalance: numeric("last_balance", {
-      precision: 30,
-      scale: 0,
-    }).notNull(),
+    lastBalance: real("last_balance").notNull(),
     createdAt: timestamp("created_at", {
       withTimezone: false,
     })
