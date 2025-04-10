@@ -1,5 +1,5 @@
 import { db } from "@/db/db";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, isNull, not, sql } from "drizzle-orm";
 import { logger } from "@/server/utils/logger";
 import {
   tokenCampaignOrders,
@@ -186,7 +186,26 @@ export const sumSpinCountByAffiliateHash = async (linkHash: string): Promise<num
 
   return row?.totalSpins ?? 0;
 };
-
+/**
+ * Fetch distinct (userId, walletAddress) for 'completed' orders
+ * where walletAddress is not null/empty.
+ */
+export const getDistinctCompletedUserWallets = async (): Promise<
+  {
+    userId: number;
+    walletAddress: string | null;
+  }[]
+> => {
+  return await db
+    .select({
+      userId: tokenCampaignOrders.userId,
+      walletAddress: tokenCampaignOrders.wallet_address,
+    })
+    .from(tokenCampaignOrders)
+    .where(and(not(isNull(tokenCampaignOrders.wallet_address)), eq(tokenCampaignOrders.status, "completed")))
+    .groupBy(tokenCampaignOrders.userId, tokenCampaignOrders.wallet_address)
+    .execute();
+};
 /**
  * Single export object with all methods
  */
@@ -200,4 +219,5 @@ export const tokenCampaignOrdersDB = {
   updateOrderStatus,
   getOrdersByStatus,
   sumSpinCountByAffiliateHash,
+  getDistinctCompletedUserWallets,
 };
