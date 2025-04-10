@@ -71,6 +71,19 @@ async function MainCronJob() {
     false, // unrefTimeout => false
     true // waitForCompletion => true
   );
+
+  new CronJob(
+    "* * */6 * * *", // Every 6 hours
+    cronJobs.updateAllUserWalletBalances, // The function to run
+    null, // onComplete (not needed)
+    true, // start immediately
+    null, // timeZone
+    null, // context
+    false, // runOnInit => false (don't run on app start)
+    null, // utcOffset => null
+    false, // unrefTimeout => false
+    true // waitForCompletion => true
+  );
 }
 
 MainCronJob().then(() => logger.log("Cron Jobs Started"));

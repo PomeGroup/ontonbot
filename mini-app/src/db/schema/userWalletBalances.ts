@@ -13,8 +13,15 @@ import {
 } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
 import { users } from "@/db/schema";
+import { orderTypeValues } from "@/db/schema/orders";
 
-export const placeOfWalletConnection = pgEnum("campaign_type", ["campaign", "event", "sbt"]);
+export const placeOfWalletConnection = pgEnum("campaign_type", [
+  "campaign",
+  "event",
+  "sbt",
+  "just_connected",
+  ...orderTypeValues,
+]);
 export const userWalletBalances = pgTable(
   "user_wallet_balances",
   {
@@ -30,6 +37,9 @@ export const userWalletBalances = pgTable(
     })
       .defaultNow()
       .notNull(),
+    lastCheckedAt: timestamp("last_checked_at", {
+      withTimezone: false,
+    }).notNull(),
   },
   // indexes
   (table) => ({
@@ -39,6 +49,9 @@ export const userWalletBalances = pgTable(
       table.walletAddress,
       table.placeOfConnection
     ),
+    // index on lastCheckedAt
+    lastCheckedAtIdx: index("last_checked_at_idx").on(table.lastCheckedAt),
+    walletAddressIdx: index("user_wallet_balances_wallet_address_idx").on(table.walletAddress),
   })
 );
 // select type

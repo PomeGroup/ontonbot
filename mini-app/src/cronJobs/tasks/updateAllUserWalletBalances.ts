@@ -1,61 +1,129 @@
-import { db } from "@/db/db";
-import { tokenCampaignOrders } from "@/db/schema";
-import { userWalletBalances } from "@/db/schema/userWalletBalances";
+import { tokenCampaignOrdersDB } from "@/server/db/tokenCampaignOrders.db";
+import { userWalletBalancesDB } from "@/server/db/userWalletBalances.db";
+import ordersDB from "@/server/db/orders.db";
+import { usersDB } from "@/server/db/users";
 import { getAccountBalance } from "@/server/routers/services/tonCenter";
-import { eq, sql } from "drizzle-orm";
+import { db } from "@/db/db";
+import { PlaceOfWalletConnection } from "@/db/schema/userWalletBalances";
+import { logger } from "@/server/utils/logger";
 
-/**
- * Example function to update wallet balances for all user-wallet pairs found in token_campaign_orders.
- * You can call this from your cron job.
- */
+const ONE_WEEK_MS = 24 * 60 * 60 * 1000 * 7; // 1 week in ms
+
 export async function updateAllUserWalletBalances() {
-  // 1) Get distinct user_id + wallet_address from orders
-  //    (filter out rows where wallet_address is null or empty if desired)
-  const rows = await db
-    .select({
-      userId: tokenCampaignOrders.userId,
-      walletAddress: tokenCampaignOrders.wallet_address,
-    })
-    .from(tokenCampaignOrders)
-    // If you only care about completed orders:
-    // .where(eq(tokenCampaignOrders.state, "completed"))
-    // Example to exclude null addresses:
-    // .where(sql`${tokenCampaignOrders.walletAddress} IS NOT NULL`)
-    .groupBy(tokenCampaignOrders.userId, tokenCampaignOrders.wallet_address);
+  try {
+    // 1) Fetch from campaign orders
+    const campaignRows = await tokenCampaignOrdersDB.getDistinctCompletedUserWallets();
+    // 2) Fetch from general orders
+    const generalRows = await ordersDB.getDistinctCompletedOwnerWallets();
+    // 3) Fetch user wallets that do NOT appear in orders/campaign orders
+    const unusedUserRows = await usersDB.getDistinctUnusedWallets();
 
-  // 2) For each row, fetch the on-chain balance via tonCenter
-  for (const row of rows) {
-    const { userId, walletAddress } = row;
-    if (!walletAddress) continue; // skip if no address
+    //
+    // -- A) Process campaign orders
+    //
+    for (const { userId, walletAddress } of campaignRows) {
+      if (!walletAddress) continue;
 
-    try {
-      // getAccountBalance() fetches from tonCenter /accountStates endpoint
-      const balance = await getAccountBalance(walletAddress);
+      const skip = await shouldSkipWalletCheck(userId, walletAddress, "campaign", ONE_WEEK_MS);
+      if (skip) {
+        continue;
+      }
 
-      // 3) Upsert into user_wallet_balances
-      //    (requires a unique key on (userId, walletAddress) or a composite PK)
-      await db
-        .insert(userWalletBalances)
-        .values({
+      try {
+        const balance = await getAccountBalance(walletAddress);
+        await userWalletBalancesDB.upsertUserWalletBalance(userId, walletAddress, balance, "campaign");
+        logger.log(
+          `updateAllUserWalletBalances: Updated campaign wallet ${walletAddress} (user ${userId}) with balance ${balance}`
+        );
+      } catch (error) {
+        logger.error(`updateAllUserWalletBalances: Failed to update (campaign) balance for wallet ${walletAddress}`, error);
+      }
+    }
+
+    //
+    // -- B) Process general orders
+    //
+    for (const { userId, walletAddress, orderType } of generalRows) {
+      if (!walletAddress || !userId) continue;
+
+      const skip = await shouldSkipWalletCheck(userId, walletAddress, orderType, ONE_WEEK_MS);
+      if (skip) {
+        continue;
+      }
+
+      try {
+        const balance = await getAccountBalance(walletAddress);
+        await userWalletBalancesDB.upsertUserWalletBalance(
           userId,
           walletAddress,
-          lastBalance: balance,
-          placeOfConnection: "campaign", // or whatever is appropriate
-          // createdAt automatically has a default, or set explicitly if needed
-        })
-        .onConflictDoUpdate({
-          target: [userWalletBalances.userId, userWalletBalances.walletAddress, userWalletBalances.placeOfConnection],
-          set: {
-            lastBalance: balance,
-            createdAt: sql`NOW
-                ()`, // or use new Date() if your column is timestamptz
-          },
-        });
-    } catch (error) {
-      // Handle or log any errors (e.g., network issues, invalid addresses, etc.)
-      console.error(`Failed to update balance for wallet ${walletAddress}`, error);
+          balance,
+          orderType as PlaceOfWalletConnection
+        );
+        logger.log(
+          `updateAllUserWalletBalances: Updated general wallet ${walletAddress} (user ${userId}) with balance ${balance}, orderType=${orderType}`
+        );
+      } catch (error) {
+        logger.error(`updateAllUserWalletBalances: Failed to update (general) balance for wallet ${walletAddress}`, error);
+      }
     }
+
+    //
+    // -- C) Process "just connected" user wallets
+    //    (i.e. user wallets not found in either orders or campaign tables)
+    //
+    for (const { userId, walletAddress } of unusedUserRows) {
+      if (!walletAddress || !userId) continue;
+
+      const skip = await shouldSkipWalletCheck(userId, walletAddress, "just_connected", ONE_WEEK_MS);
+      if (skip) {
+        continue;
+      }
+
+      try {
+        const balance = await getAccountBalance(walletAddress);
+        await userWalletBalancesDB.upsertUserWalletBalance(userId, walletAddress, balance, "just_connected");
+        logger.log(
+          `updateAllUserWalletBalances: Updated "just_connected" wallet ${walletAddress} (user ${userId}) with balance ${balance}`
+        );
+      } catch (error) {
+        logger.error(
+          `updateAllUserWalletBalances: Failed to update (just_connected) balance for wallet ${walletAddress}`,
+          error
+        );
+      }
+    }
+
+    logger.log("updateAllUserWalletBalances: All user wallet balances updated successfully.");
+  } catch (error) {
+    logger.error("updateAllUserWalletBalances: Error updating all user wallet balances:", error);
+  }
+}
+
+/**
+ * Helper function that returns true if we should skip checking
+ * this (userId, walletAddress, placeOfConnection) based on a max age.
+ */
+async function shouldSkipWalletCheck(
+  userId: number,
+  walletAddress: string,
+  placeOfConnection: PlaceOfWalletConnection,
+  maxAgeMs: number
+): Promise<boolean> {
+  const existingBalance = await db.query.userWalletBalances.findFirst({
+    where: (fields, operators) =>
+      operators.and(
+        operators.eq(fields.userId, userId),
+        operators.eq(fields.walletAddress, walletAddress),
+        operators.eq(fields.placeOfConnection, placeOfConnection)
+      ),
+  });
+
+  if (!existingBalance || !existingBalance.lastCheckedAt) {
+    // Not found => we haven't checked it yet
+    return false;
   }
 
-  console.log("All user wallet balances updated successfully.");
+  const lastChecked = Number(existingBalance.lastCheckedAt);
+  const now = Date.now();
+  return now - lastChecked < maxAgeMs;
 }

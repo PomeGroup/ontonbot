@@ -4,7 +4,7 @@ import { events } from "@/db/schema/events";
 import { users } from "@/db/schema/users";
 import { InferSelectModel, relations } from "drizzle-orm";
 
-const orderTypeValues = [
+export const orderTypeValues = [
   "nft_mint",
   "event_creation",
   "event_capacity_increment",
@@ -45,6 +45,7 @@ export const orders = pgTable(
     stateIdx: index("orders_state_idx").on(table.state),
     ownerAddressIdx: index("orders_owner_address_idx").on(table.owner_address),
     couponIdIdx: index("orders_coupon_id_idx").on(table.coupon_id),
+    walletAddressIdx: index("orders_wallet_address_idx").on(table.owner_address),
     //One event_creation per event_uuid
     // uniqueEventCreation: uniqueIndex("unique_event_creation").on(table.event_uuid, table.order_type).where(eq(table.order_type, "event_creation")),
   })

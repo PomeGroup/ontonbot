@@ -3,6 +3,7 @@ import axios from "axios";
 import { TonClient } from "@ton/ton";
 import { is_local_env, is_prod_env, is_stage_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
+import { sleep } from "@/utils";
 
 // export const is_mainnet = is_prod_env() || is_stage_env();
 export const is_mainnet = true;
@@ -12,8 +13,8 @@ export const is_mainnet = true;
 /* -------------------------------------------------------------------------- */
 const apiKeys = is_mainnet
   ? [
-      "e4ae62d46c2e4e9267ce0cc085bccad46225aacef8f8085d90dea06784207d08",
-      "7b1bb4ebea4a47b5b5c061d6269a51c517cc5251b2405eedefd2e636f4ef3266",
+      "f8b7d29d6a483410d47e4452caab2e2753fa3950bc9967c865d3b2d8294190cb",
+      "2a5b072391515cf78962b00ef4b6d574781bb9918927cea35a32c4687b334243",
       "51a79c3e82d6fb3a97360a6406f955e25bd787c75a0fa37ab5383291b20c825c",
       "56f164ae58ab79ade2d4ae1ecb5a1717c320f69aa9b3c52c6069c90a9bbc7552",
     ]
@@ -444,8 +445,9 @@ export async function getAccountBalance(address: string, retries = 3): Promise<n
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
+      await sleep(30);
       const apiKey = getApiKey();
-      logger.log(` ---------------------------- using api key: ${apiKey}`);
+
       // Make the request with axios
       const response = await axios.get<TonCenterAccountStatesResponse>(endpoint, {
         params,
