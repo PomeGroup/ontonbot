@@ -409,6 +409,83 @@ async function parseTransactions(
 }
 
 /* -------------------------------------------------------------------------- */
+/*                                  Accont State                              */
+
+/* -------------------------------------------------------------------------- */
+interface TonCenterAccountStatesResponse {
+  accounts: Array<{
+    account_state_hash: string;
+    address: string;
+    balance: string; // in nanoTON
+    code_boc?: string;
+    code_hash?: string;
+    data_boc?: string;
+    data_hash?: string;
+    extra_currencies?: Record<string, string>;
+    frozen_hash?: string;
+    last_transaction_hash?: string;
+    last_transaction_lt?: string;
+    status?: string;
+  }>;
+  address_book?: Record<
+    string,
+    {
+      domain?: string;
+      user_friendly?: string;
+    }
+  >;
+  metadata?: any;
+}
+
+export async function getAccountBalance(address: string, retries = 3): Promise<number> {
+  // Build the endpoint with query param
+  const endpoint = `${BASE_URL}/accountStates`;
+  const params = { address: address };
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const apiKey = getApiKey();
+      // Make the request with axios
+      const response = await axios.get<TonCenterAccountStatesResponse>(endpoint, {
+        params,
+        headers: {
+          accept: "application/json",
+          "X-Api-Key": apiKey,
+        },
+      });
+
+      // Extract data
+      const data = response.data;
+      if (!data.accounts || data.accounts.length === 0) {
+        throw new Error(`No account data returned for address: ${address}`);
+      }
+
+      const accountInfo = data.accounts[0];
+      if (!accountInfo.balance) {
+        throw new Error(`Account has no 'balance' field. Full item: ${JSON.stringify(accountInfo)}`);
+      }
+
+      // Convert from nanoTON (string) -> number (TON)
+      const nanoBalance = parseInt(accountInfo.balance, 10);
+      const tonBalance = nanoBalance / 1e9;
+
+      return tonBalance; // Return in TON units
+    } catch (error) {
+      // Retry logic
+      logger.log(error);
+      if (attempt === retries) {
+        throw new Error(`getAccountBalance failed after ${retries} retries for ${address}. Last error: ${error}`);
+      }
+      logger.error(`Attempt #${attempt} to fetch account balance failed. Error: ${error}`);
+      await delay(100); // small delay before next retry
+    }
+  }
+
+  // Fallback in case all attempts fail
+  throw new Error("Failed to fetch account balance after multiple retries.");
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                     END                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -418,6 +495,7 @@ const tonCenter = {
   fetchAllTransactions,
   parseTransactions,
   fetchCollection,
+  getAccountBalance,
 };
 
 export default tonCenter;

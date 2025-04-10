@@ -113,6 +113,14 @@ import {
   TokenCampaignNftCollectionsPublic,
 } from "./schema/tokenCampaignNftCollections";
 import { tokenCampaignEligibleUsers, TokenCampaignEligibleUsers } from "./schema/tokenCampaignEligibleUsers";
+
+import {
+  userWalletBalances,
+  placeOfWalletConnection,
+  UserWalletBalances,
+  UserWalletBalancesInsert,
+  PlaceOfWalletConnection,
+} from "./schema/userWalletBalances";
 // export all the enums
 export {
   accessRoleEnum,
@@ -196,6 +204,7 @@ export {
   tokenCampaignOrders,
   tokenCampaignNftCollections,
   tokenCampaignEligibleUsers,
+  userWalletBalances,
 };
 
 // Type Exports
@@ -254,4 +263,6 @@ export type {
   TokenCampaignNftCollectionsInsert,
   CampaignType,
   TokenCampaignEligibleUsers,
+  UserWalletBalances,
+  UserWalletBalancesInsert,
 };
