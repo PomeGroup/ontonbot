@@ -117,7 +117,7 @@ const TournamentFilter: React.FC<{
           <Typography
             variant="body"
             weight="normal"
-            className="px-2"
+            className="px-2 pt-2"
           >
             Sort By
           </Typography>
@@ -159,7 +159,7 @@ const TournamentFilter: React.FC<{
           <Typography
             variant="body"
             weight="normal"
-            className="px-2"
+            className="px-2 pt-2"
           >
             Contest type
           </Typography>
