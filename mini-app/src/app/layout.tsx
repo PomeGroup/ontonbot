@@ -36,8 +36,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM as string} />
             <script
               src="https://dvq1zz1g273yl.cloudfront.net/buyer_v1.0.3.min.js"
-              traffy-key="795"
-            />
+              traffy-key="851"
+            ></script>
           </>
         )}
         <Script src="https://telegram.org/js/telegram-web-app.js"></Script>
