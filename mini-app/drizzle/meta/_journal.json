@@ -379,6 +379,13 @@
       "when": 1744280318120,
       "tag": "0053_flimsy_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1744280722093,
+      "tag": "0054_thin_tarantula",
+      "breakpoints": true
     }
   ]
 }

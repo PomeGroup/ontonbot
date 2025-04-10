@@ -1,0 +1,1 @@
+ALTER TABLE "user_wallet_balances" ADD CONSTRAINT "user_id_wallet_address_idx" UNIQUE("user_id","wallet_address","place_of_connection");
