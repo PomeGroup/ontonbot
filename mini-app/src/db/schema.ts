@@ -205,6 +205,7 @@ export {
   tokenCampaignNftCollections,
   tokenCampaignEligibleUsers,
   userWalletBalances,
+  placeOfWalletConnection,
 };
 
 // Type Exports
@@ -265,4 +266,5 @@ export type {
   TokenCampaignEligibleUsers,
   UserWalletBalances,
   UserWalletBalancesInsert,
+  PlaceOfWalletConnection,
 };
