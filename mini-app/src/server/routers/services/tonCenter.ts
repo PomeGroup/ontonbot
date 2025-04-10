@@ -3,6 +3,7 @@ import axios from "axios";
 import { TonClient } from "@ton/ton";
 import { is_local_env, is_prod_env, is_stage_env } from "@/server/utils/evnutils";
 import { logger } from "@/server/utils/logger";
+import { sleep } from "@/utils";
 
 // export const is_mainnet = is_prod_env() || is_stage_env();
 export const is_mainnet = true;
@@ -12,8 +13,8 @@ export const is_mainnet = true;
 /* -------------------------------------------------------------------------- */
 const apiKeys = is_mainnet
   ? [
-      "e4ae62d46c2e4e9267ce0cc085bccad46225aacef8f8085d90dea06784207d08",
-      "7b1bb4ebea4a47b5b5c061d6269a51c517cc5251b2405eedefd2e636f4ef3266",
+      "f8b7d29d6a483410d47e4452caab2e2753fa3950bc9967c865d3b2d8294190cb",
+      "2a5b072391515cf78962b00ef4b6d574781bb9918927cea35a32c4687b334243",
       "51a79c3e82d6fb3a97360a6406f955e25bd787c75a0fa37ab5383291b20c825c",
       "56f164ae58ab79ade2d4ae1ecb5a1717c320f69aa9b3c52c6069c90a9bbc7552",
     ]
@@ -409,6 +410,85 @@ async function parseTransactions(
 }
 
 /* -------------------------------------------------------------------------- */
+/*                                  Accont State                              */
+
+/* -------------------------------------------------------------------------- */
+interface TonCenterAccountStatesResponse {
+  accounts: Array<{
+    account_state_hash: string;
+    address: string;
+    balance: string; // in nanoTON
+    code_boc?: string;
+    code_hash?: string;
+    data_boc?: string;
+    data_hash?: string;
+    extra_currencies?: Record<string, string>;
+    frozen_hash?: string;
+    last_transaction_hash?: string;
+    last_transaction_lt?: string;
+    status?: string;
+  }>;
+  address_book?: Record<
+    string,
+    {
+      domain?: string;
+      user_friendly?: string;
+    }
+  >;
+  metadata?: any;
+}
+
+export async function getAccountBalance(address: string, retries = 3): Promise<number> {
+  // Build the endpoint with query param
+  const endpoint = `${BASE_URL}/accountStates`;
+  const params = { address: address };
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await sleep(30);
+      const apiKey = getApiKey();
+
+      // Make the request with axios
+      const response = await axios.get<TonCenterAccountStatesResponse>(endpoint, {
+        params,
+        headers: {
+          accept: "application/json",
+          "X-Api-Key": apiKey,
+        },
+      });
+
+      // Extract data
+      const data = response.data;
+      if (!data.accounts || data.accounts.length === 0) {
+        throw new Error(`No account data returned for address: ${address}`);
+      }
+
+      const accountInfo = data.accounts[0];
+      if (!accountInfo.balance) {
+        throw new Error(`Account has no 'balance' field. Full item: ${JSON.stringify(accountInfo)}`);
+      }
+
+      // Convert from nanoTON (string) -> number (TON)
+      const nanoBalance = parseInt(accountInfo.balance, 10);
+      const tonBalance = nanoBalance / 1e9;
+
+      return tonBalance; // Return in TON units
+    } catch (error) {
+      // Retry logic
+
+      if (attempt === retries) {
+        throw new Error(`getAccountBalance failed after ${retries} retries for ${address}. Last error: ${error}`);
+      }
+      logger.error(`Attempt #${attempt} to fetch account balance failed. Error: ${error}`);
+      await delay(100); // small delay before next retry
+    }
+  }
+
+  // Fallback in case all attempts fail
+  throw new Error("Failed to fetch account balance after multiple retries.");
+}
+
+/* -------------------------------------------------------------------------- */
 /*                                     END                                    */
 /* -------------------------------------------------------------------------- */
 
@@ -418,6 +498,7 @@ const tonCenter = {
   fetchAllTransactions,
   parseTransactions,
   fetchCollection,
+  getAccountBalance,
 };
 
 export default tonCenter;

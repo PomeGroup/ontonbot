@@ -19,6 +19,7 @@ import { processRecentlyEndedTournaments } from "@/cronJobs/tasks/tournamentRewa
 import { sendTournamentRewardsNotifications } from "@/cronJobs/tasks/sendTournamentRewardsNotifications";
 import { processCampaignOrders } from "@/cronJobs/tasks/processCampaignOrders";
 import { processCampaignAffiliateSpins } from "@/cronJobs/tasks/processCampaignAffiliateSpins";
+import { updateAllUserWalletBalances } from "@/cronJobs/tasks/updateAllUserWalletBalances";
 
 const cronJobs = {
   CheckTransactions,
@@ -41,6 +42,7 @@ const cronJobs = {
   sendTournamentRewardsNotifications,
   processCampaignOrders,
   processCampaignAffiliateSpins,
+  updateAllUserWalletBalances,
 };
 export { cronJobRunner };
 export default cronJobs;
