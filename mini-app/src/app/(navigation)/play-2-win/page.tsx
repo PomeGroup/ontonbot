@@ -113,7 +113,7 @@ const TournamentFilter: React.FC<{
             </button>
           </DropdownMenuTrigger>
         </Typography>
-        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
+        <DropdownMenuContent className="!bg-brand-light px-2 border-brand-divider-dark border-solid !border w-full">
           <Typography
             variant="body"
             weight="normal"
@@ -155,7 +155,7 @@ const TournamentFilter: React.FC<{
             </button>
           </DropdownMenuTrigger>
         </Typography>
-        <DropdownMenuContent className="bg-brand-light border-brand-divider w-full">
+        <DropdownMenuContent className="!bg-brand-light px-2 border-brand-divider-dark border-solid !border w-full">
           <Typography
             variant="body"
             weight="normal"
