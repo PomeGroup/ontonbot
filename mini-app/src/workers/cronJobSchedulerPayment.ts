@@ -71,9 +71,9 @@ async function MainCronJob() {
     false, // unrefTimeout => false
     true // waitForCompletion => true
   );
-  if (is_prod_env() || is_stage_env()) {
+  if (is_prod_env()) {
     new CronJob(
-      "* * */6 * * *", // Every 6 hours
+      "* */10 * * * *", // Every 10 minutes
       cronJobs.updateAllUserWalletBalances, // The function to run
       null, // onComplete (not needed)
       true, // start immediately
