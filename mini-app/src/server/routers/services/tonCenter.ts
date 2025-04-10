@@ -445,6 +445,7 @@ export async function getAccountBalance(address: string, retries = 3): Promise<n
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const apiKey = getApiKey();
+      logger.log(` ---------------------------- using api key: ${apiKey}`);
       // Make the request with axios
       const response = await axios.get<TonCenterAccountStatesResponse>(endpoint, {
         params,
@@ -472,7 +473,7 @@ export async function getAccountBalance(address: string, retries = 3): Promise<n
       return tonBalance; // Return in TON units
     } catch (error) {
       // Retry logic
-      logger.log(error);
+
       if (attempt === retries) {
         throw new Error(`getAccountBalance failed after ${retries} retries for ${address}. Last error: ${error}`);
       }

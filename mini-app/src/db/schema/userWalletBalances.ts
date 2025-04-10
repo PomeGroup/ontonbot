@@ -1,12 +1,15 @@
-import { pgTable, integer, text, numeric, timestamp, serial, pgEnum, index, unique } from "drizzle-orm/pg-core";
+import { pgTable, integer, text, numeric, timestamp, serial, pgEnum, index, unique, bigint } from "drizzle-orm/pg-core";
 import { InferSelectModel } from "drizzle-orm";
+import { users } from "@/db/schema";
 
 export const placeOfWalletConnection = pgEnum("campaign_type", ["campaign", "event", "sbt"]);
 export const userWalletBalances = pgTable(
   "user_wallet_balances",
   {
     id: serial("id").primaryKey(),
-    userId: integer("user_id").notNull(), // references your user_id
+    userId: bigint("user_id", { mode: "number" })
+      .references(() => users.user_id)
+      .notNull(), // the user id
     walletAddress: text("wallet_address").notNull(), // the wallet address
     placeOfConnection: placeOfWalletConnection("place_of_connection").notNull(), // the type of connection
     lastBalance: numeric("last_balance", {

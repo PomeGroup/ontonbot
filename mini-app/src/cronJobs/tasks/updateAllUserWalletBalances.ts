@@ -44,7 +44,7 @@ export async function updateAllUserWalletBalances() {
           // createdAt automatically has a default, or set explicitly if needed
         })
         .onConflictDoUpdate({
-          target: [userWalletBalances.userId, userWalletBalances.walletAddress],
+          target: [userWalletBalances.userId, userWalletBalances.walletAddress, userWalletBalances.placeOfConnection],
           set: {
             lastBalance: balance.toString(),
             createdAt: sql`NOW
