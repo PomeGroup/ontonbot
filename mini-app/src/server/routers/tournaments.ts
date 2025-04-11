@@ -30,12 +30,13 @@ export const tournamentsRouter = router({
             organizer_user_id: z.number().optional(),
           })
           .optional(),
+        search: z.string().optional(),
         sortBy: z.enum(tournamentsListSortOptions).default("timeRemaining"),
         sortOrder: z.enum(["asc", "desc"]).default("asc"),
       })
     )
     .query(async ({ input }) => {
-      const { limit, cursor, filter, sortBy, sortOrder } = input;
+      const { limit, cursor, filter, sortBy, sortOrder, search } = input;
 
       // Execute query and calculate next cursor value; here using offset pagination
       const tournamentsData = await tournamentsDB.getTournamentsWithFiltersDB({
@@ -44,6 +45,7 @@ export const tournamentsRouter = router({
         filter,
         sortBy,
         sortOrder,
+        search,
       });
 
       const nextCursor = tournamentsData.length === limit ? (cursor === null ? 0 + limit : cursor + limit) : null;

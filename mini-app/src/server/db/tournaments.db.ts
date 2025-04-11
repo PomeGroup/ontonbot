@@ -1,10 +1,10 @@
-import { db } from "@/db/db";
-import { games } from "@/db/schema";
+import { db, dbLower } from "@/db/db";
+import { games, users } from "@/db/schema";
 import { tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/tournaments";
 import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import crypto from "crypto";
-import { and, asc, desc, eq, gt, gte, lt, lte, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, like, lt, lte, or, SQL } from "drizzle-orm";
 
 const getTournamentCacheKey = (tournamentId: number) => {
   return redisTools.cacheKeys.getTournamentById + tournamentId;
@@ -113,12 +113,31 @@ export const insertTournamentTx = async (
   return inserted;
 };
 
+interface TournamentOrganizer {
+  id: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  imageUrl: string;
+  pricePool: {
+    type: "None" | "Coin" | null;
+    value: number;
+  };
+  organizer: {
+    id: number;
+    channel_name: string;
+    imageUrl: string;
+    username: string;
+  };
+}
+
 export const getTournamentsWithFiltersDB = async ({
   limit,
   cursor,
   filter,
   sortBy,
   sortOrder,
+  search,
 }: {
   limit: number;
   cursor: number | null;
@@ -131,19 +150,42 @@ export const getTournamentsWithFiltersDB = async ({
   };
   sortBy: "prize" | "entryFee" | "timeRemaining";
   sortOrder: "asc" | "desc";
+  search?: string;
 }) => {
   // Generate cache key based on input parameters
-  const cacheParams = { limit, cursor, filter, sortBy, sortOrder };
+  const cacheParams = { limit, cursor, filter, sortBy, sortOrder, search };
   const hash = crypto.createHash("md5").update(JSON.stringify(cacheParams)).digest("hex");
   const cacheKey = redisTools.cacheKeys.getTournamentsWithFilters + hash;
   // Check and return cached result if available
-  const cachedResult: TournamentsRow[] = await redisTools.getCache(cacheKey);
+  const cachedResult: TournamentOrganizer[] = await redisTools.getCache(cacheKey);
   if (cachedResult) return cachedResult;
 
-  let query = db.select().from(tournaments);
+  let query = db
+    .select({
+      id: tournaments.id,
+      name: tournaments.name,
+      startDate: tournaments.startDate,
+      endDate: tournaments.endDate,
+      imageUrl: tournaments.imageUrl,
+      pricePool: {
+        type: tournaments.prizeType,
+        value: tournaments.currentPrizePool,
+      },
+      // Organizer
+      organizer: {
+        id: users.user_id,
+        channel_name: users.org_channel_name,
+        imageUrl: users.org_image,
+        username: users.username,
+      },
+    })
+    .from(tournaments)
+    // -------- Join Organizer ---------- //
+    .fullJoin(users, eq(users.user_id, tournaments.owner));
 
   // Gather filters into an array instead of calling where repeatedly
-  const conditions = [];
+  const conditions: SQL[] = [];
+
   if (filter?.tournamentState) {
     conditions.push(eq(tournaments.state, filter.tournamentState));
   }
@@ -171,9 +213,17 @@ export const getTournamentsWithFiltersDB = async ({
   if (filter?.gameId && filter.gameId !== -1) {
     conditions.push(eq(tournaments.gameId, filter.gameId));
   }
+
+  // ------------- Search -------------- //
+  if (search) {
+    conditions.push(like(dbLower(tournaments.name), dbLower(`%${search.trim()}%`)));
+  }
+
+  // ------------- 🔵 Appling Conditions 🔵 -------------- //
   if (conditions.length > 0) {
     query.where(and(...conditions));
   }
+
   // Apply sorting based on sortBy
   if (sortBy === "prize") {
     query.orderBy(sortOrder === "asc" ? asc(tournaments.currentPrizePool) : desc(tournaments.currentPrizePool));
@@ -182,6 +232,7 @@ export const getTournamentsWithFiltersDB = async ({
   } else if (sortBy === "timeRemaining") {
     query.orderBy(sortOrder === "asc" ? asc(tournaments.endDate) : desc(tournaments.endDate));
   }
+
   // Use cursor as an offset for simplicity
   const offset = cursor ?? 0;
   query.limit(limit).offset(offset);

@@ -1,7 +1,7 @@
+import { Column, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
-import { SQL, sql } from "drizzle-orm";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -20,8 +20,9 @@ export const db = drizzle(queryClient, { schema });
 /**
  * Convert text to lowercase using SQL.
  */
-export function dbLower(text: string): SQL {
-  return sql`lower
+export function dbLower(text: string | Column): Column {
+  // @ts-expect-error
+  return sql<Column>`lower
       (${text})`;
 }
 
