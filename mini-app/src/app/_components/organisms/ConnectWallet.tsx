@@ -9,11 +9,10 @@ import { useUserStore } from "@/context/store/user.store";
 import { formatWalletAddress } from "@/server/utils/wallets-data";
 import { useTonAddress, useTonConnectModal, useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
 import { Button } from "konsta/react";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, Wallet } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { IoExitOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import CustomCard from "../atoms/cards/CustomCard";
 
@@ -39,7 +38,6 @@ export function ConnectWalletCard() {
     <CustomCard
       title="Your Wallet"
       className="w-full !mx-0"
-      defaultPadding
     >
       {pathanmem === "/my" && (
         <ConfirmConnectDialog
@@ -48,47 +46,63 @@ export function ConnectWalletCard() {
         />
       )}
 
-      {hasWallet ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger className="w-full">
-            <CustomButton
-              variant="ghost"
-              icon={<ChevronDownIcon />}
-              className="w-full flex-row-reverse justify-between p-4"
+      <div className="p-4 pt-0">
+        {hasWallet ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger className="w-full">
+              <CustomButton
+                variant="ghost"
+                icon={<ChevronDownIcon />}
+                className="w-full flex-row-reverse justify-between"
+              >
+                {formatWalletAddress(tonWallet?.account.address!)}
+              </CustomButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side="top"
+              sideOffset={0}
+              border="dark"
+              fullWidth
+              borderRadius="lg"
             >
-              {formatWalletAddress(tonWallet?.account.address!)}
-            </CustomButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-full">
-            <DropdownMenuItem
-              onClick={() => {
-                tonconnect.disconnect();
-                toast.success("Wallet disconnected");
-              }}
-              className="cursor-pointer"
-            >
-              <IoExitOutline />
-              Disconnect wallet
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <CustomButton
-          variant="primary"
-          onClick={handleConnectClick}
-          icon={
-            <Image
-              className="mr-1"
-              src={tonIcon}
-              alt=""
-              width={15}
-              height={15}
-            />
-          }
-        >
-          Connect your Wallet
-        </CustomButton>
-      )}
+              <DropdownMenuItem
+                onClick={() => {
+                  tonconnect.disconnect();
+                  toast.success("Wallet disconnected");
+                }}
+                className="cursor-pointer !py-3"
+              >
+                <Wallet
+                  className="!text-xl !w-5 !h-5"
+                  size={20}
+                />
+                <Typography
+                  variant="body"
+                  weight="medium"
+                >
+                  Disconnect wallet
+                </Typography>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <CustomButton
+            variant="primary"
+            onClick={handleConnectClick}
+            icon={
+              <Image
+                className="mr-1"
+                src={tonIcon}
+                alt=""
+                width={15}
+                height={15}
+              />
+            }
+          >
+            Connect your Wallet
+          </CustomButton>
+        )}
+      </div>
     </CustomCard>
   );
 }

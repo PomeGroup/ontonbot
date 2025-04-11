@@ -18,9 +18,9 @@ import { RouterOutput } from "@/server";
 import { formatSortTournamentSelectOption, SortOptions, tournamentsListSortOptions } from "@/server/utils/tournaments.utils";
 import { cn } from "@/utils";
 import { Skeleton } from "@mui/material";
+import { CheckIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { FiCheck } from "react-icons/fi";
 import { HiOutlineArrowNarrowUp } from "react-icons/hi";
 
 interface TournamentCardProps {
@@ -116,7 +116,7 @@ const TournamentFilter: React.FC<{
         <DropdownMenuContent className="!bg-brand-light px-2 border-brand-divider-dark border-solid !border w-full">
           <Typography
             variant="body"
-            weight="normal"
+            weight="medium"
             className="px-2 pt-2"
           >
             Sort By
@@ -131,13 +131,20 @@ const TournamentFilter: React.FC<{
               <DropdownMenuItem
                 key={o}
                 onClick={() => setSelected(o)}
-                className={cn("flex justify-between items-center", selected === o && "text-primary")}
+                className={cn("flex justify-between items-center px-0", selected === o && "text-primary")}
               >
-                <span className="flex gap-1 items-center">
+                <Typography
+                  variant="body"
+                  weight="medium"
+                  className="flex gap-1 items-center"
+                >
                   <HiOutlineArrowNarrowUp />
                   {formatSortTournamentSelectOption(o)}
-                </span>
-                <FiCheck className={cn(selected !== o && "opacity-0")} />
+                </Typography>
+                <CheckIcon
+                  strokeWidth={3}
+                  className={cn(selected !== o && "opacity-0")}
+                />
               </DropdownMenuItem>
             );
           })}
@@ -155,10 +162,15 @@ const TournamentFilter: React.FC<{
             </button>
           </DropdownMenuTrigger>
         </Typography>
-        <DropdownMenuContent className="!bg-brand-light px-2 border-brand-divider-dark border-solid !border w-full">
+        <DropdownMenuContent
+          border="dark"
+          borderRadius="md"
+          fullWidth
+          className="px-2 !bg-brand-light"
+        >
           <Typography
             variant="body"
-            weight="normal"
+            weight="medium"
             className="px-2 pt-2"
           >
             Contest type
@@ -173,10 +185,19 @@ const TournamentFilter: React.FC<{
               <DropdownMenuItem
                 key={game.id}
                 onClick={() => setSelectedGame(game.id)}
-                className={cn("flex justify-between items-center", selectedGame === game.id && "text-primary")}
+                className={cn("flex justify-between items-center px-0", selectedGame === game.id && "text-primary")}
               >
-                <span>{game.name}</span>
-                <FiCheck className={cn(selectedGame !== game.id && "opacity-0")} />
+                <Typography
+                  variant="body"
+                  weight="medium"
+                >
+                  {game.name}
+                </Typography>
+                <CheckIcon
+                  size={12}
+                  strokeWidth={3}
+                  className={cn(selectedGame !== game.id && "opacity-0")}
+                />
               </DropdownMenuItem>
             );
           })}

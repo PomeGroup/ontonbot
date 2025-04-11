@@ -30,18 +30,18 @@ const CustomCard: React.FC<CustomCardProps> = ({
     <Card
       header={
         title || description ? (
-          <>
+          <div>
             {title && <Typography variant="title3">{title}</Typography>}
             {description && (
               <Typography
                 variant="body"
                 weight="normal"
-                className="mt-4"
+                className="mt-2"
               >
                 {description}
               </Typography>
             )}
-          </>
+          </div>
         ) : undefined
       }
       onClick={onClick}

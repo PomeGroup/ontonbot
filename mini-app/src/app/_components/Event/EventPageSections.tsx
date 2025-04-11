@@ -336,14 +336,14 @@ const SbtCollectionLink = React.memo(() => {
 
   return (
     <CustomCard
-      title={"SBT Reward Badge"}
+      title={"SBTs"}
       description="Reward you receive by attending the event and submitting proof of attendance."
     >
       <Block
         className="!mt-0 mb-4 cursor-pointer"
         onClick={() => window.open(`https://getgems.io/collection/${collectionAddress}`, "_blank")}
       >
-        <div className="w-full flex gap-3 items-stretch bg-brand-fill-bg/10 p-2 rounded-lg">
+        <div className="w-full flex gap-2 items-stretch bg-brand-fill-bg/10 p-2 rounded-lg">
           {eventData.data?.tsRewardImage && (
             <LoadableImage
               alt={eventData.data?.title}
@@ -448,9 +448,11 @@ const EventPassword = React.memo(() => {
   return (
     <CustomCard
       title="Claim Your Reward"
-      defaultPadding
+      description="Enter the Event Password that the organizer shared to confirm your participation in the event."
     >
-      <EventPasswordAndWalletInput />
+      <div className="p-4 pt-0">
+        <EventPasswordAndWalletInput />
+      </div>
     </CustomCard>
   );
 });

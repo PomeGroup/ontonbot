@@ -229,6 +229,13 @@ table {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+
+  @layer utilities {
+    .dropdown-content-width-full {
+      width: var(--radix-dropdown-menu-trigger-width);
+      max-height: var(--radix-dropdown-menu-content-available-height);
+    }
+  }
 }
 
 ul > li > div > div > div.text-sm {

@@ -321,7 +321,7 @@ const UpcomingEvents = () => {
           }
           className="text-primary font-medium flex align-center"
         >
-          <span>Show more</span>
+          <span>All Events</span>
           <ChevronRightIcon
             width={20}
             className="ml-1 -my-0.5"
