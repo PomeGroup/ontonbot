@@ -1,6 +1,6 @@
 import { logger } from "@/server/utils/logger";
 import { TokenCampaignSpinType } from "@/db/schema/tokenCampaignUserSpins";
-import { sendTelegramMessage } from "@/lib/tgBot";
+import { attemptSendTelegramWithRetries } from "@/cronJobs/helper/attemptSendTelegramWithRetries";
 
 /**
  * Called from the cron job to notify the user that they've received a spin reward.
@@ -59,52 +59,4 @@ keep growing your onion adventure!
     logger.error(`notifyUserOfAffiliateReward: error for user #${telegramUserId}:`, error);
     return false;
   }
-}
-
-/**
- * Example wrapper to demonstrate your existing retry function,
- * but adapted to allow a custom message text.
- */
-async function attemptSendTelegramWithRetries(
-  row: { telegramUserId: string; rewardLink: string; buttonText: string },
-  customMessageText: string
-): Promise<boolean> {
-  // Example usage:
-  let attempts = 0;
-  while (attempts < 10) {
-    attempts++;
-    try {
-      logger.info(`notifyUserOfAffiliateReward:  Sending spin reward to user ${row.telegramUserId}, attempt #${attempts}`);
-
-      // Your actual Telegram sending logic here:
-      // e.g., `sendTelegramMessage` with { chat_id, message: customMessageText, link: row.rewardLink, linkText: "Claim" }
-      const response = await sendTelegramMessage({
-        chat_id: row.telegramUserId,
-        message: customMessageText,
-        link: row.rewardLink,
-        linkText: row.buttonText,
-      });
-
-      if (response.success) {
-        logger.info(`notifyUserOfAffiliateReward: Notification success for user ${row.telegramUserId}`);
-        return true;
-      } else {
-        logger.warn(
-          `notifyUserOfAffiliateReward: Notification attempt #${attempts} failed for user ${row.telegramUserId}: ${response.error}`
-        );
-      }
-    } catch (error) {
-      logger.error(
-        `notifyUserOfAffiliateReward: Notification attempt #${attempts} error for user ${row.telegramUserId} =>`,
-        error
-      );
-    }
-
-    // If we reached here, attempt failed => wait 300ms before next try
-    if (attempts < 10) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
-  }
-  logger.error(`notifyUserOfAffiliateReward: All 10 attempts failed for user ${row.telegramUserId} => giving_up`);
-  return false;
 }
