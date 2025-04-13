@@ -1,0 +1,10 @@
+/* Text stroke for countdown numbers */
+.countdown-number {
+  -webkit-text-stroke: 1px #51aeff;
+  text-stroke: 1px #51aeff;
+  text-shadow:
+    -1px -1px 0 #51aeff,
+    1px -1px 0 #51aeff,
+    -1px 1px 0 #51aeff,
+    1px 1px 0 #51aeff;
+}
