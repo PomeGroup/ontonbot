@@ -46,7 +46,7 @@ function KeyValue({ label, value, icon }: KeyValueProps) {
 export default function GameCard() {
   return (
     <div className="px-2 w-full">
-      <div className="backdrop-blur-xl bg-white/10 rounded-2lg p-2 w-full">
+      <div className="backdrop-blur-md bg-white/10 rounded-2lg p-2 w-full">
         <div className="flex gap-3">
           <Image
             src="https://storage.onton.live/ontonimage/sweet_rush.jpg"
