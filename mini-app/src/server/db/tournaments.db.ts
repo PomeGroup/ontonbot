@@ -1,6 +1,6 @@
 import { db } from "@/db/db";
 import { games } from "@/db/schema";
-import { tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/tournaments";
+import { prizeTypeEnum, tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/tournaments";
 import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import crypto from "crypto";
@@ -256,6 +256,39 @@ export const getOngoingTournaments = async (): Promise<
 
   return ongoingTournies;
 };
+
+/**
+ * Get the first "ongoing" tournament matching the given gameId & prizeType.
+ * Ongoing condition is up to you:
+ *  - eq(tournaments.state, "Active"), or
+ *  - tournaments.endDate > now(), etc.
+ *
+ * @param gameId    - The local gameId from 'games' table
+ * @param prizeType - The prize type (e.g. "Coin", "None", etc.)
+ * @returns A single tournament row or null if none found
+ */
+export const getOneOngoingTournamentByGameAndPrizeType = async (
+  gameId: number,
+  prizeType: (typeof prizeTypeEnum.enumValues)[number]
+): Promise<TournamentsRow | null> => {
+  // Example condition: "state = 'Active'"
+  // Adjust as needed for your definition of "ongoing"
+  const [row] = await db
+    .select()
+    .from(tournaments)
+    .where(
+      and(
+        eq(tournaments.gameId, gameId),
+        eq(tournaments.prizeType, prizeType),
+        eq(tournaments.state, "Active") // or check tournaments.endDate > new Date()
+      )
+    )
+    .orderBy(tournaments.id) // Ascending by default
+    .limit(1); // Return the first record
+
+  return row ?? null;
+};
+
 export const tournamentsDB = {
   addTournament,
   getTournamentById,
@@ -266,4 +299,5 @@ export const tournamentsDB = {
   updateActivityIdTrx,
   getTournamentsByIds,
   getOngoingTournaments,
+  getOneOngoingTournamentByGameAndPrizeType,
 };

@@ -241,4 +241,19 @@ export const tournamentsRouter = router({
       // Return the row or null if not found
       return row ?? null;
     }),
+
+  getOneOngoingTournamentByGameAndPrizeType: initDataProtectedProcedure
+    .input(
+      z.object({
+        gameId: z.number().min(1).default(PLAY2WIN_CAMPAIGN_TARGET_GAME_ID),
+        prizeType: z.enum(prizeTypeEnum.enumValues).default("Coin"), // e.g. "Coin", "None"
+      })
+    )
+    .query(async ({ input }) => {
+      const { gameId, prizeType } = input;
+      const tourney = await tournamentsDB.getOneOngoingTournamentByGameAndPrizeType(gameId, prizeType);
+
+      // Return the found tournament or null if none
+      return tourney;
+    }),
 });
