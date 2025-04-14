@@ -15,7 +15,9 @@ const pageFont = Instrument_Sans({ subsets: ["latin", "latin-ext"], weight: ["40
 
 export default function Play2WinApp() {
   return (
-    <div className={cn("flex flex-col gap-3 min-h-screen p-4 bg-[#050B15] text-white", pageFont.className)}>
+    <div
+      className={cn("flex flex-col gap-3 min-h-screen p-4 bg-[#050B15] text-white overflow-x-hidden", pageFont.className)}
+    >
       {/* Top Section with Radial Gradient */}
       <div
         className="w-full flex flex-col items-center gap-3 relative isolate"

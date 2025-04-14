@@ -1,13 +1,25 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import "@/app/globals.css";
+
 import Image from "next/image";
 import Link from "next/link";
+import Play2WinGenesisButton from "./Play2WinGenesisButton";
 import TicketSvg from "./TicketSvg";
 
 export default function NFTClaimSection() {
   return (
-    <div className="rounded-2lg overflow-hidden p-5 w-full relative isolate">
-      <Link href="/genesis-onions">
+    <>
+      <div
+        onClick={(e) => {
+          if (
+            (e.target instanceof Element && !["A", "BUTTON"].includes(e.target.tagName)) ||
+            !(e.target instanceof Element)
+          ) {
+            console.log("NFT claim section clicked");
+          }
+        }}
+        className="rounded-2lg overflow-hidden p-5 w-full relative isolate cursor-pointer active:opacity-80"
+      >
         <Image
           alt="background image of claim card"
           fill
@@ -24,15 +36,10 @@ export default function NFTClaimSection() {
         <p className="text-white text-center text-sm mb-4">
           Reach the score threshold in today&apos;s game or spin in Genesis ONIONs to earn an NFT.
         </p>
-      </Link>
-      <Button
-        className="w-full text-xl font-semibold rounded-[10px] bg-transparent text-white border-2 border-[#3485FE] hover:bg-[#3485FE]/10 hover:text-white py-3"
-        variant="outline"
-        onClick={() => {}}
-        type="button"
-      >
-        Spin in Genesis ONIONs
-      </Button>
-    </div>
+        <Link href="/genesis-onions">
+          <Play2WinGenesisButton>Spin in Genesis ONIONs</Play2WinGenesisButton>
+        </Link>
+      </div>
+    </>
   );
 }

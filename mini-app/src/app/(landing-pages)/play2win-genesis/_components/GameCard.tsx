@@ -1,14 +1,53 @@
 "use client";
+import Typography from "@/components/Typography";
 import { LucideTrophy } from "lucide-react";
 import Image from "next/image";
 import GemIcon from "./icons/GemIcon";
 import TicketIcon from "./icons/TicketIcon";
 
+interface KeyValueProps {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+}
+
+function KeyValue({ label, value, icon }: KeyValueProps) {
+  return (
+    <div className="flex justify-between items-center">
+      <Typography
+        variant="caption2"
+        className="flex items-center gap-1"
+      >
+        <span className="text-[#51AEFF]">{icon}</span>
+        <span className="text-sm">{label}</span>
+      </Typography>
+      <Typography
+        weight="medium"
+        variant="subheadline2"
+      >
+        {value}
+      </Typography>
+    </div>
+  );
+}
+
+/**
+ * GameCard component displays a game card with details such as the game image, title,
+ * ticket price in TON, trophy reward in dollars, and an experience points threshold.
+ *
+ * This component is used on the play2win-genesis landing page to showcase individual games.
+ *
+ * @component
+ * @example
+ * return (
+ *   <GameCard />
+ * )
+ */
 export default function GameCard() {
   return (
-    <div className="px-1">
-      <div className="backdrop-blur-xl bg-white/10 rounded-2lg p-2 w-full min-w-60">
-        <div className="flex gap-2">
+    <div className="px-2 w-full">
+      <div className="backdrop-blur-xl bg-white/10 rounded-2lg p-2 w-full">
+        <div className="flex gap-3">
           <Image
             src="https://storage.onton.live/ontonimage/sweet_rush.jpg"
             alt="Sweet Rush Game"
@@ -16,40 +55,30 @@ export default function GameCard() {
             width={100}
             height={100}
           />
-          <div className="flex flex-col text-xs justify-center">
-            <h3 className="text-white text-base font-normal mb-2">Sweet Rush</h3>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[#51AEFF]">
-                <TicketIcon />
-              </span>
-              <span
-                className="text-white"
-                style={{ lineHeight: "18px", letterSpacing: "-0.15px" }}
-              >
-                0.5 TON
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[#51AEFF]">
-                <LucideTrophy width={12} />
-              </span>
-              <span
-                className="text-white"
-                style={{ lineHeight: "18px", letterSpacing: "-0.15px" }}
-              >
-                1200 $
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#51AEFF]">
-                <GemIcon />
-              </span>
-              <span
-                className="text-white"
-                style={{ lineHeight: "18px", letterSpacing: "-0.15px" }}
-              >
-                &lt;1500 xp
-              </span>
+          <div className="flex flex-col text-xs justify-center gap-3 w-full">
+            <Typography
+              variant="body"
+              weight="normal"
+              className="leading-[16px]"
+            >
+              Sweet Rush
+            </Typography>
+            <div className="flex flex-col gap-1">
+              <KeyValue
+                icon={<TicketIcon />}
+                label="Ticket price"
+                value="0.5 TON"
+              />
+              <KeyValue
+                icon={<LucideTrophy size={12} />}
+                label="Reward for winner"
+                value="$150"
+              />
+              <KeyValue
+                icon={<GemIcon />}
+                label="Threshold for NFT"
+                value=">1500 xp"
+              />
             </div>
           </div>
         </div>
