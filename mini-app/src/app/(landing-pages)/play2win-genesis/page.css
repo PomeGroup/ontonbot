@@ -19,7 +19,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 1rem; /* rounded-2xl */
+  border-radius: 10px; /* rounded-2xl */
   padding: 1px; /* Border width */
   background: linear-gradient(198.71deg, rgba(255, 255, 255, 0) -0.06%, #ffffff 120.97%);
   -webkit-mask:

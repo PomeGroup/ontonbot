@@ -55,7 +55,7 @@ export default function GameCard() {
             width={100}
             height={100}
           />
-          <div className="flex flex-col text-xs justify-center gap-3 w-full">
+          <div className="flex flex-col text-xs justify-center gap-2 w-full">
             <Typography
               variant="body"
               weight="normal"

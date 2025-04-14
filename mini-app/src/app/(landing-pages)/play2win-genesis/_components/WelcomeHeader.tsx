@@ -1,6 +1,5 @@
 import Image from "next/image";
 import React from "react";
-import Timer from "./Timer";
 
 const WelcomeHeader: React.FC = () => {
   return (
@@ -16,7 +15,6 @@ const WelcomeHeader: React.FC = () => {
       <p className="text-white text-xl">Welcome to</p>
       <h1 className="text-[#51AEFF] text-[48px] leading-[52px] font-normal mb-1">Play2win</h1>
       <p className="text-white text-2xl">Genesis Season</p>
-      <Timer />
     </div>
   );
 };
