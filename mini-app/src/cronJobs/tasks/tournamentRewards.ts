@@ -89,7 +89,7 @@ async function fetchAllElympicsParticipants(hostTournamentId: string, hostGameId
 
   while (true) {
     // Call your getTournamentLeaderboard
-    await sleep(200); // sleep  200ms between requests
+    await sleep(100); // sleep  200ms between requests
     const lbData = await getTournamentLeaderboard(hostGameId, hostTournamentId, pageSize, pageNumber);
     if (!lbData.data.length) break;
     logger.info(`Elympics leaderboard page ${pageNumber} =>`, lbData.data);
@@ -174,7 +174,22 @@ export async function insertParticipantsToLeaderboard(
     endedAt: new Date(p.endedAt),
   }));
 
-  await db.insert(gameLeaderboard).values(rowsToInsert);
+  await db
+    .insert(gameLeaderboard)
+    .values(rowsToInsert)
+    .onConflictDoUpdate({
+      // Columns that define the uniqueness conflict
+      target: [gameLeaderboard.telegramUserId, gameLeaderboard.tournamentId],
+
+      // How to update the other columns when a conflict occurs
+      set: {
+        nickname: sql`excluded.nickname`,
+        position: sql`excluded.position`,
+        points: sql`excluded.points`,
+        matchId: sql`excluded.matchId`,
+        endedAt: sql`excluded.endedAt`,
+      },
+    });
 }
 
 /**
