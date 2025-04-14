@@ -8,3 +8,24 @@
     -1px 1px 0 #51aeff,
     1px 1px 0 #51aeff;
 }
+
+.play-2-win-reward-button-border {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.03); /* Same as bg-white/[3%] */
+  z-index: 1;
+}
+
+.play-2-win-reward-button-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem; /* rounded-2xl */
+  padding: 1px; /* Border width */
+  background: linear-gradient(198.71deg, rgba(255, 255, 255, 0) -0.06%, #ffffff 120.97%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: -1;
+}
