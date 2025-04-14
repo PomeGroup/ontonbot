@@ -1,7 +1,6 @@
 "use client";
 import Typography from "@/components/Typography";
 import { LucideTrophy } from "lucide-react";
-import Image from "next/image";
 import GemIcon from "./icons/GemIcon";
 import TicketIcon from "./icons/TicketIcon";
 
@@ -48,12 +47,14 @@ export default function GameCard() {
     <div className="px-2 w-full">
       <div className="backdrop-blur-md bg-white/10 rounded-2lg p-2 w-full">
         <div className="flex gap-3">
-          <Image
-            src="https://storage.onton.live/ontonimage/sweet_rush.jpg"
-            alt="Sweet Rush Game"
+          <video
+            src="https://storage.onton.live/ontonvideo/event/play-2-win-video.webm"
             className="rounded-md w-25 h-25 object-cover"
             width={100}
             height={100}
+            autoPlay
+            loop
+            muted
           />
           <div className="flex flex-col text-xs justify-center gap-2 w-full">
             <Typography
