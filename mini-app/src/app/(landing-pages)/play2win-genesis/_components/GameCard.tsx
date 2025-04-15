@@ -1,8 +1,10 @@
+// src/app/(landing-pages)/play2win-genesis/_components/GameCard.tsx
 "use client";
 import Typography from "@/components/Typography";
 import { LucideTrophy } from "lucide-react";
 import GemIcon from "./icons/GemIcon";
 import TicketIcon from "./icons/TicketIcon";
+import { usePlay2Win } from "./Play2WinContext";
 
 interface KeyValueProps {
   label: string;
@@ -30,21 +32,9 @@ function KeyValue({ label, value, icon }: KeyValueProps) {
   );
 }
 
-/**
- * GameCard component displays a game card with details such as the game image, title,
- * ticket price in TON, trophy reward in dollars, and an experience points threshold.
- *
- * This component is used on the play2win-genesis landing page to showcase individual games.
- *
- * @component
- * @example
- * return (
- *   <GameCard />
- * )
- */
 export default function GameCard() {
-  const noGame = true;
-
+  const { contest } = usePlay2Win();
+  const { noGame } = contest;
   if (noGame) {
     return (
       <div className="flex flex-col items-center gap-1">
@@ -62,7 +52,6 @@ export default function GameCard() {
       </div>
     );
   }
-
   return (
     <div className="px-2 w-full">
       <div className="backdrop-blur-md bg-white/10 rounded-2lg p-2 w-full">
@@ -82,23 +71,23 @@ export default function GameCard() {
               weight="normal"
               className="leading-[16px]"
             >
-              Sweet Rush
+              {contest.gameTitle}
             </Typography>
             <div className="flex flex-col gap-1">
               <KeyValue
                 icon={<TicketIcon />}
                 label="Ticket price"
-                value="0.5 TON"
+                value={contest.ticketPrice}
               />
               <KeyValue
                 icon={<LucideTrophy size={12} />}
                 label="Reward for winner"
-                value="$150"
+                value={contest.reward}
               />
               <KeyValue
                 icon={<GemIcon />}
                 label="Threshold for NFT"
-                value=">1500 xp"
+                value={contest.threshold}
               />
             </div>
           </div>

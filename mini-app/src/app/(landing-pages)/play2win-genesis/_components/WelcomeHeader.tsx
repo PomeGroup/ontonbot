@@ -1,8 +1,12 @@
+// src/app/(landing-pages)/play2win-genesis/_components/WelcomeHeader.tsx
 import Typography from "@/components/Typography";
 import Image from "next/image";
 import React from "react";
+import { usePlay2Win } from "./Play2WinContext";
 
 const WelcomeHeader: React.FC = () => {
+  const { daysLeft } = usePlay2Win();
+
   return (
     <div className="text-center flex flex-col gap-2">
       <div className="absolute -left-4 -top-4 -z-10 h-[210px] w-screen opacity-40">
@@ -22,7 +26,7 @@ const WelcomeHeader: React.FC = () => {
           variant="caption1"
           className="flex gap-1 items-center justify-center"
         >
-          <span className="font-medium">20</span>
+          <span className="font-medium">{daysLeft}</span>
           Days left
         </Typography>
       </div>
