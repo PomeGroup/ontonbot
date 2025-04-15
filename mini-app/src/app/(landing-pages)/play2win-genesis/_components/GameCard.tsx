@@ -35,6 +35,7 @@ function KeyValue({ label, value, icon }: KeyValueProps) {
 export default function GameCard() {
   const { contest } = usePlay2Win();
   const { noGame } = contest;
+
   if (noGame) {
     return (
       <div className="flex flex-col items-center gap-1">
@@ -48,10 +49,17 @@ export default function GameCard() {
           className="object-cover rounded-[122px] h-[103px]"
         />
         <Typography className="text-[13px] font-normal">No contest at the moment</Typography>
-        <Typography className="text-[20px] font-normal leading-[24px]">Next tournament starts soon!</Typography>
+        <Typography
+          variant="title3"
+          weight="normal"
+          className="leading-[24px]"
+        >
+          Next tournament starts soon!
+        </Typography>
       </div>
     );
   }
+
   return (
     <div className="px-2 w-full">
       <div className="backdrop-blur-md bg-white/10 rounded-2lg p-2 w-full">

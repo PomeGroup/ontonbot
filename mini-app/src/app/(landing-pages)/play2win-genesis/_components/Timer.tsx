@@ -5,6 +5,10 @@ import { usePlay2Win } from "./Play2WinContext";
 export default function Timer() {
   const { contest } = usePlay2Win();
 
+  if (contest.noGame) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col items-center gap-1">
       <div className="flex justify-center items-end gap-2">

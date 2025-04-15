@@ -17,7 +17,7 @@ type Play2WinData = {
     ticketPrice: string;
     reward: string;
     threshold: string;
-    gameLink: string;
+    gameLink: string | null;
   };
   nftReserved: number;
   userScore: number;
@@ -37,7 +37,7 @@ const mockData = {
     ticketPrice: "0.5 TON",
     reward: "$150",
     threshold: ">1500",
-    gameLink: "#",
+    gameLink: null,
   },
   nftReserved: 66,
   userScore: 0,
@@ -55,26 +55,24 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
   const config = useConfig();
 
   const userScoreQuery = trpc.tournaments.getUserMaxScore.useQuery({});
-  const reservedNFTs = trpc.tournaments.getCampaignUserCount.useQuery({});
+  const reservedNFTsQuery = trpc.tournaments.getCampaignUserCount.useQuery({});
+  const play2winGameQuery = trpc.tournaments.getOneOngoingTournamentByGameAndPrizeType.useQuery({});
 
   /*
    SET COUNTDOWN 
   */
   useEffect(() => {
-    if (data.contest.noGame) return;
-
     const endDate = new Date(+config["play2win-enddate"]!);
 
-    const { days, hours, minutes, seconds } = getTimeLeft(endDate);
+    const { days } = getTimeLeft(endDate);
 
     setData((prev) => ({
       ...prev,
       daysLeft: days,
-      contest: { ...prev.contest, minutes, hours, seconds },
     }));
 
     const timer = setInterval(() => {
-      const { days, hours, minutes, seconds } = getTimeLeft(endDate);
+      const { hours, minutes, seconds } = getTimeLeft(endDate);
 
       setData((prev) => ({
         ...prev,
@@ -84,16 +82,21 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [data.contest.noGame]);
+  }, [play2winGameQuery.isSuccess]);
 
   return (
     <Play2WinContext.Provider
       value={{
         ...data,
         userScore: userScoreQuery.data?.maxScore.maxScore ?? 0,
-        nftReserved: reservedNFTs.data?.total ?? 0,
+        nftReserved: reservedNFTsQuery.data?.total ?? 0,
         userPlayed: Boolean(userScoreQuery.data?.maxScore.maxScore),
         reachedMaxScore: (userScoreQuery.data?.maxScore.maxScore ?? 0) >= data.maxScore,
+        contest: {
+          ...data.contest,
+          gameLink: play2winGameQuery.data?.tournamentLink ?? "#",
+          noGame: !Boolean(play2winGameQuery.data?.tournamentLink),
+        },
       }}
     >
       {children}
