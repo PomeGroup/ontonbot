@@ -6,12 +6,21 @@ import Image from "next/image";
 import { usePlay2Win } from "./Play2WinContext";
 
 export default function NFTDisplay() {
-  const { reachedMaxScore } = usePlay2Win();
+  const { reachedMaxScore, setShowNFTDialog } = usePlay2Win();
 
   return (
     <div className="flex flex-col gap-4">
       {/* NFT  */}
-      <div className="play-2-win-reward-button-border rounded-2lg backdrop-blur-md px-[13px] py-2 flex items-center gap-2 w-fit mx-auto">
+      <div
+        className="play-2-win-reward-button-border rounded-2lg backdrop-blur-md px-[13px] py-2 flex items-center gap-2 w-fit mx-auto cursor-pointer"
+        tabIndex={0}
+        onClick={() => {
+          if (reachedMaxScore) setShowNFTDialog(true);
+        }}
+        onKeyDown={(e) => {
+          if (reachedMaxScore && (e.key === "Enter" || e.key === " ")) setShowNFTDialog(true);
+        }}
+      >
         <Image
           alt="Play2Win NFT Image"
           width={44}

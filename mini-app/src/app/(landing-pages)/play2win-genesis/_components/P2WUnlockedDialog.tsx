@@ -3,11 +3,20 @@ import { Button } from "@/components/ui/button";
 import { DialogClose } from "@/components/ui/dialog";
 import Image from "next/image";
 import { FC } from "react";
+import { usePlay2Win } from "./Play2WinContext";
 import { Play2WinGenesisDialog } from "./Play2WinGenesisDialog";
 
 export const P2WUnlockedDialog: FC = () => {
+  const { showNFTDialog, setShowNFTDialog } = usePlay2Win();
+
+  if (!showNFTDialog) return null;
+
   return (
-    <Play2WinGenesisDialog title="Play2win NFT">
+    <Play2WinGenesisDialog
+      open={showNFTDialog}
+      onOpenChange={(open) => setShowNFTDialog(open)}
+      title="Play2win NFT"
+    >
       <div className="flex flex-col gap-4 items-center justify-center text-center">
         <div className="flex flex-col items-center justify-center text-center gap-3">
           <Image
@@ -26,10 +35,11 @@ export const P2WUnlockedDialog: FC = () => {
             <Typography variant="footnote">Your NFT will be minted at May 9th.</Typography>
           </div>
           <div className="flex gap-3 items-center justify-center">
-            <DialogClose>
+            <DialogClose asChild>
               <Button
                 variant="link"
                 className="text-[#5297FF]"
+                onClick={() => setShowNFTDialog(false)}
               >
                 <Typography
                   variant="body"

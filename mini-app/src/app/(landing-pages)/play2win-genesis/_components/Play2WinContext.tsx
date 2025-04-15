@@ -1,10 +1,10 @@
-// src/app/(landing-pages)/play2win-genesis/_components/Play2WinContext.tsx
 "use client";
 
 import { trpc } from "@/app/_trpc/client";
 import { useConfig } from "@/context/ConfigContext";
 import { getTimeLeft } from "@/lib/time.utils";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { P2WUnlockedDialog } from "./P2WUnlockedDialog";
 
 type Play2WinData = {
   daysLeft: number;
@@ -24,6 +24,9 @@ type Play2WinData = {
   maxScore: number;
   userPlayed: boolean;
   reachedMaxScore: boolean;
+  showNFTDialog: boolean;
+  collectionLink: string;
+  setShowNFTDialog: (open: boolean) => void;
 };
 
 const mockData = {
@@ -44,19 +47,33 @@ const mockData = {
   maxScore: 1500,
   userPlayed: true,
   reachedMaxScore: false,
+  showNFTDialog: false,
+  collectionLink: "#",
+  setShowNFTDialog: () => {},
 } satisfies Play2WinData;
 
 const Play2WinContext = createContext<Play2WinData>(mockData);
 
 export const usePlay2Win = () => useContext(Play2WinContext);
 
+const NFT_DIALOG_SHOWN_KEY = "p2wgenesis_nft_dialog_shown";
+
 export const Play2WinProvider = ({ children }: { children: React.ReactNode }) => {
   const [data, setData] = useState<Play2WinData>(mockData);
+  const [showNFTDialog, setShowNFTDialogState] = useState(false);
   const config = useConfig();
 
   const userScoreQuery = trpc.tournaments.getUserMaxScore.useQuery({});
   const reservedNFTsQuery = trpc.tournaments.getCampaignUserCount.useQuery({});
   const play2winGameQuery = trpc.tournaments.getOneOngoingTournamentByGameAndPrizeType.useQuery({});
+
+  // persist dialog shown in localStorage
+  const setShowNFTDialog = useCallback((open: boolean) => {
+    setShowNFTDialogState(open);
+    if (open) {
+      window?.localStorage?.setItem(NFT_DIALOG_SHOWN_KEY, "1");
+    }
+  }, []);
 
   /*
    SET COUNTDOWN 
@@ -84,6 +101,16 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
     return () => clearInterval(timer);
   }, [play2winGameQuery.isSuccess]);
 
+  // Open dialog if reached the max score and dialog never shown before
+  useEffect(() => {
+    const localAlreadyShown = typeof window !== "undefined" && localStorage.getItem(NFT_DIALOG_SHOWN_KEY) === "1";
+    const reachedMaxScore = (userScoreQuery.data?.maxScore.maxScore ?? 0) >= mockData.maxScore;
+    if (reachedMaxScore && !localAlreadyShown) {
+      setShowNFTDialogState(true);
+      window?.localStorage?.setItem(NFT_DIALOG_SHOWN_KEY, "1");
+    }
+  }, [userScoreQuery.data?.maxScore.maxScore]);
+
   return (
     <Play2WinContext.Provider
       value={{
@@ -97,9 +124,12 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
           gameLink: play2winGameQuery.data?.tournamentLink ?? "#",
           noGame: !Boolean(play2winGameQuery.data?.tournamentLink),
         },
+        showNFTDialog,
+        setShowNFTDialog,
       }}
     >
       {children}
+      <P2WUnlockedDialog />
     </Play2WinContext.Provider>
   );
 };
