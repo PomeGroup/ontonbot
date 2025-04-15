@@ -1,6 +1,7 @@
 // src/app/(landing-pages)/play2win-genesis/_components/Play2WinContext.tsx
 "use client";
 
+import { trpc } from "@/app/_trpc/client";
 import { useConfig } from "@/context/ConfigContext";
 import { getTimeLeft } from "@/lib/time.utils";
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -38,7 +39,7 @@ const mockData = {
     gameLink: "#",
   },
   nftReserved: 66,
-  userScore: 480,
+  userScore: 0,
   maxScore: 1500,
   userPlayed: true,
 } satisfies Play2WinData;
@@ -50,7 +51,11 @@ export const usePlay2Win = () => useContext(Play2WinContext);
 export const Play2WinProvider = ({ children }: { children: React.ReactNode }) => {
   const [data, setData] = useState<Play2WinData>(mockData);
   const config = useConfig();
+  const userScoreQuery = trpc.tournaments.getUserMaxScore.useQuery({});
 
+  /*
+   SET COUNTDOWN 
+  */
   useEffect(() => {
     if (data.contest.noGame) return;
 
@@ -78,5 +83,9 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
     return () => clearInterval(timer);
   }, [data.contest.noGame]);
 
-  return <Play2WinContext.Provider value={data}>{children}</Play2WinContext.Provider>;
+  return (
+    <Play2WinContext.Provider value={{ ...data, userScore: userScoreQuery.data?.maxScore.maxScore ?? 0 }}>
+      {children}
+    </Play2WinContext.Provider>
+  );
 };

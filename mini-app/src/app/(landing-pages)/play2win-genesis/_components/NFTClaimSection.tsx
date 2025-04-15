@@ -39,9 +39,12 @@ export default function NFTClaimSection() {
         <h3 className="text-[#9AD0FF] text-[32px] leading-[42px] tracking-[1px] font-normal text-center underline pb-2 mb-3">
           Play2Win NFT
         </h3>
-        <p className="text-white text-center text-sm mb-4">
-          Reach the score threshold in today&apos;s game or spin in Genesis ONIONs to earn an NFT.
-        </p>
+        <div className="text-white text-center text-xs mb-4">
+          <p>Reach the score threshold in today&apos;s game</p>
+          <p>OR</p>
+          <p>spin in Genesis ONIONs and win Gold or Silver to earn a Play2win</p>
+          NFT.
+        </div>
         <Link href="/genesis-onions">
           <Play2WinGenesisButton>Spin in Genesis ONIONs</Play2WinGenesisButton>
         </Link>
