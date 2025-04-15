@@ -5,6 +5,7 @@ import Typography from "@/components/Typography";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { usePlay2Win } from "./Play2WinContext";
 import Play2WinGenesisButton from "./Play2WinGenesisButton";
 import { Play2WinGenesisDialog } from "./Play2WinGenesisDialog";
 import TicketSvg from "./TicketSvg";
@@ -12,6 +13,7 @@ import TicketSvg from "./TicketSvg";
 export default function NFTClaimSection() {
   // Open state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { contest } = usePlay2Win();
 
   return (
     <>
@@ -39,9 +41,12 @@ export default function NFTClaimSection() {
         <h3 className="text-[#9AD0FF] text-[32px] leading-[42px] tracking-[1px] font-normal text-center underline pb-2 mb-3">
           Play2Win NFT
         </h3>
-        <p className="text-white text-center text-sm mb-4">
-          Reach the score threshold in today&apos;s game or spin in Genesis ONIONs to earn an NFT.
-        </p>
+        <div className="text-white text-center text-xs mb-4">
+          <p>Reach the score threshold in today&apos;s game</p>
+          <p>OR</p>
+          <p>spin in Genesis ONIONs and win Gold or Silver to earn a Play2win</p>
+          NFT.
+        </div>
         <Link href="/genesis-onions">
           <Play2WinGenesisButton>Spin in Genesis ONIONs</Play2WinGenesisButton>
         </Link>
@@ -74,7 +79,7 @@ export default function NFTClaimSection() {
               <p className="ml-8">Score 1500+ points, or play 10 times, and the NFT is yours.</p>
               <p className="ml-8">We track your best score and show you how close you are!</p>
               <div className="pt-4">
-                <Play2WinGenesisButton>Play Game</Play2WinGenesisButton>
+                <Play2WinGenesisButton disabled={contest.noGame}>Play Game</Play2WinGenesisButton>
               </div>
             </div>
 
