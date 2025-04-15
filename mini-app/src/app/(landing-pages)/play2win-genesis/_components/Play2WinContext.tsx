@@ -1,6 +1,8 @@
 // src/app/(landing-pages)/play2win-genesis/_components/Play2WinContext.tsx
 "use client";
 
+import { useConfig } from "@/context/ConfigContext";
+import { getTimeLeft } from "@/lib/time.utils";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 type Play2WinData = {
@@ -22,7 +24,7 @@ type Play2WinData = {
   userPlayed: boolean;
 };
 
-const mockData: Play2WinData = {
+const mockData = {
   daysLeft: 20,
   contest: {
     noGame: false,
@@ -39,7 +41,7 @@ const mockData: Play2WinData = {
   userScore: 480,
   maxScore: 1500,
   userPlayed: true,
-};
+} satisfies Play2WinData;
 
 const Play2WinContext = createContext<Play2WinData>(mockData);
 
@@ -47,29 +49,32 @@ export const usePlay2Win = () => useContext(Play2WinContext);
 
 export const Play2WinProvider = ({ children }: { children: React.ReactNode }) => {
   const [data, setData] = useState<Play2WinData>(mockData);
+  const config = useConfig();
 
   useEffect(() => {
     if (data.contest.noGame) return;
-    let timer: NodeJS.Timeout;
-    timer = setInterval(() => {
-      setData((prev) => {
-        let { hours, minutes, seconds } = prev.contest;
-        if (seconds > 0) {
-          seconds -= 1;
-        } else if (minutes > 0) {
-          minutes -= 1;
-          seconds = 59;
-        } else if (hours > 0) {
-          hours -= 1;
-          minutes = 59;
-          seconds = 59;
-        }
-        return {
-          ...prev,
-          contest: { ...prev.contest, hours, minutes, seconds },
-        };
-      });
+
+    const endDate = new Date(+config["play2win-enddate"]!);
+    console.log("endate", endDate);
+
+    const { days, hours, minutes, seconds } = getTimeLeft(endDate);
+
+    setData((prev) => ({
+      ...prev,
+      daysLeft: days,
+      contest: { ...prev.contest, minutes, hours, seconds },
+    }));
+
+    const timer = setInterval(() => {
+      const { days, hours, minutes, seconds } = getTimeLeft(endDate);
+
+      setData((prev) => ({
+        ...prev,
+        daysLeft: days,
+        contest: { ...prev.contest, minutes, hours, seconds },
+      }));
     }, 1000);
+
     return () => clearInterval(timer);
   }, [data.contest.noGame]);
 

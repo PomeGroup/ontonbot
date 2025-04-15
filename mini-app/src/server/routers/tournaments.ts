@@ -5,18 +5,18 @@ import { tournamentsDB } from "../db/tournaments.db";
 import { usersDB } from "../db/users";
 import { initDataProtectedProcedure, router } from "../trpc";
 
+import { PLAY2WIN_CAMPAIGN_MIN_DATE, PLAY2WIN_CAMPAIGN_TARGET_GAME_ID, PLAY2WIN_DEFAULT_CAMPAIGN_TYPE } from "@/constants";
+import { db } from "@/db/db";
 import { games, play2winCampaignType, TournamentsRow } from "@/db/schema";
+import { prizeTypeEnum } from "@/db/schema/tournaments";
 import { getTournamentLeaderboard } from "@/lib/elympicsApi";
 import { cacheKeys, redisTools } from "@/lib/redisTools";
+import gameLeaderboardDB from "@/server/db/gameLeaderboard.db";
+import play2winCampaignsDB from "@/server/db/play2winCampaigns.db";
 import { selectUserById } from "@/server/db/users";
 import { LeaderboardResponse } from "@/types/elympicsAPI.types";
 import { fetchOntonSettings } from "../db/ontoSetting";
 import { GameFilterId, tournamentsListSortOptions } from "../utils/tournaments.utils";
-import gameLeaderboardDB from "@/server/db/gameLeaderboard.db";
-import { prizeTypeEnum } from "@/db/schema/tournaments";
-import play2winCampaignsDB from "@/server/db/play2winCampaigns.db";
-import { db } from "@/db/db";
-import { PLAY2WIN_CAMPAIGN_MIN_DATE, PLAY2WIN_CAMPAIGN_TARGET_GAME_ID, PLAY2WIN_DEFAULT_CAMPAIGN_TYPE } from "@/constants";
 
 export const tournamentsRouter = router({
   // Updated infinite query with filtering and sorting
