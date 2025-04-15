@@ -5,6 +5,7 @@ import Typography from "@/components/Typography";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { usePlay2Win } from "./Play2WinContext";
 import Play2WinGenesisButton from "./Play2WinGenesisButton";
 import { Play2WinGenesisDialog } from "./Play2WinGenesisDialog";
 import TicketSvg from "./TicketSvg";
@@ -12,6 +13,7 @@ import TicketSvg from "./TicketSvg";
 export default function NFTClaimSection() {
   // Open state
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { contest } = usePlay2Win();
 
   return (
     <>
@@ -77,7 +79,7 @@ export default function NFTClaimSection() {
               <p className="ml-8">Score 1500+ points, or play 10 times, and the NFT is yours.</p>
               <p className="ml-8">We track your best score and show you how close you are!</p>
               <div className="pt-4">
-                <Play2WinGenesisButton>Play Game</Play2WinGenesisButton>
+                <Play2WinGenesisButton disabled={contest.noGame}>Play Game</Play2WinGenesisButton>
               </div>
             </div>
 
