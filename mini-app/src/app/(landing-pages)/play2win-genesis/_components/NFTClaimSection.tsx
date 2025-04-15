@@ -32,7 +32,7 @@ export default function NFTClaimSection() {
           alt="background image of claim card"
           fill
           src="https://storage.onton.live/ontonimage/play-2-win-genesis-card.jpg"
-          className="-z-20 opacity-40"
+          className="-z-20 object-center object-cover opacity-40"
         />
         <div className="inset-0 absolute bg-white/10 -z-10 blur-xl" />
 
