@@ -8,9 +8,14 @@ import { play2winCampaigns } from "@/db/schema";
 import { logger } from "@/server/utils/logger";
 import { getCollectionById } from "@/server/db/tokenCampaignNftCollections.db";
 import { attemptSendTelegramWithRetries } from "@/cronJobs/helper/attemptSendTelegramWithRetries";
-import { PLAY2WIN_CAMPAIGN_MIN_DATE, PLAY2WIN_CAMPAIGN_TARGET_GAME_ID, PLAY2WIN_DEFAULT_CAMPAIGN_TYPE } from "@/constants";
+import {
+  PLAY2WIN_CAMPAIGN_MIN_DATE,
+  PLAY2WIN_CAMPAIGN_TARGET_GAME_ID,
+  PLAY2WIN_DEFAULT_CAMPAIGN_TYPE,
+  PLAY2WIN_DEFAULT_MIN_POINTS,
+} from "@/constants";
 // Constants per your requirements
-const MIN_POINTS = 1500;
+const MIN_POINTS = PLAY2WIN_DEFAULT_MIN_POINTS;
 const MIN_DATE = PLAY2WIN_CAMPAIGN_MIN_DATE;
 const TARGET_GAME_ID = PLAY2WIN_CAMPAIGN_TARGET_GAME_ID;
 const CAMPAIGN_TYPE: Play2WinCampaignType = PLAY2WIN_DEFAULT_CAMPAIGN_TYPE;
