@@ -7,7 +7,7 @@ interface Play2WinButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEleme
 
 const Play2WinGenesisButton: React.FC<Play2WinButtonProps> = ({ children, ...props }) => (
   <Button
-    className="w-full text-xl font-semibold rounded-[10px] bg-transparent text-white border-2 border-[#3485FE] hover:bg-[#3485FE]/10 hover:text-white py-3"
+    className="w-full text-lg font-bold rounded-[10px] bg-transparent text-white border-2 border-[#3485FE] hover:bg-[#3485FE]/10 hover:text-white p-[7px]"
     variant="outline"
     type="button"
     {...props}

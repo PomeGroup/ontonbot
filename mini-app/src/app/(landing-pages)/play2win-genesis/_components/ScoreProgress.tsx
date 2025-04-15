@@ -5,7 +5,6 @@ import { usePlay2Win } from "./Play2WinContext";
 export default function ScoreProgress() {
   const { userScore, maxScore, userPlayed } = usePlay2Win();
   const percent = Math.min(Math.max((userScore / maxScore) * 100, 0), 100);
-  console.log({ userScore, maxScore, userPlayed });
 
   const scoreDiff =
     userScore >= maxScore
