@@ -51,7 +51,9 @@ export const usePlay2Win = () => useContext(Play2WinContext);
 export const Play2WinProvider = ({ children }: { children: React.ReactNode }) => {
   const [data, setData] = useState<Play2WinData>(mockData);
   const config = useConfig();
+
   const userScoreQuery = trpc.tournaments.getUserMaxScore.useQuery({});
+  const reservedNFTs = trpc.tournaments.getCampaignUserCount.useQuery({});
 
   /*
    SET COUNTDOWN 
@@ -60,7 +62,6 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
     if (data.contest.noGame) return;
 
     const endDate = new Date(+config["play2win-enddate"]!);
-    console.log("endate", endDate);
 
     const { days, hours, minutes, seconds } = getTimeLeft(endDate);
 
@@ -84,7 +85,14 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
   }, [data.contest.noGame]);
 
   return (
-    <Play2WinContext.Provider value={{ ...data, userScore: userScoreQuery.data?.maxScore.maxScore ?? 0 }}>
+    <Play2WinContext.Provider
+      value={{
+        ...data,
+        userScore: userScoreQuery.data?.maxScore.maxScore ?? 0,
+        nftReserved: reservedNFTs.data?.total ?? 0,
+        userPlayed: Boolean(userScoreQuery.data?.maxScore.maxScore),
+      }}
+    >
       {children}
     </Play2WinContext.Provider>
   );
