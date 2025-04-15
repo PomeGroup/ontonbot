@@ -1,10 +1,10 @@
 import { db } from "@/db/db";
 import { games } from "@/db/schema";
-import { tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/tournaments";
+import { prizeTypeEnum, tournaments, TournamentsRow, TournamentsRowInsert } from "@/db/schema/tournaments";
 import { cacheKeys, redisTools } from "@/lib/redisTools";
 import { logger } from "@/server/utils/logger";
 import crypto from "crypto";
-import { and, asc, desc, eq, gt, gte, lt, lte, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, isNotNull, lt, lte, or } from "drizzle-orm";
 
 const getTournamentCacheKey = (tournamentId: number) => {
   return redisTools.cacheKeys.getTournamentById + tournamentId;
@@ -221,6 +221,74 @@ export const updateTournamentTx = async (
   return result;
 };
 
+export const getOngoingTournaments = async (): Promise<
+  {
+    id: number;
+    gameId: number;
+    hostTournamentId: string;
+    activityId: number | null;
+    hostGameId: string | null;
+  }[]
+> => {
+  const now = new Date();
+
+  // 1) Build the query (do not execute yet)
+  const query = db
+    .select({
+      id: tournaments.id,
+      gameId: tournaments.gameId,
+      hostTournamentId: tournaments.hostTournamentId,
+      activityId: tournaments.activityId,
+      hostGameId: games.hostGameId,
+    })
+    .from(tournaments)
+    .innerJoin(games, eq(tournaments.gameId, games.id))
+    .where(and(lt(tournaments.startDate, now), gt(tournaments.endDate, now), isNotNull(tournaments.activityId)));
+
+  // 2) Convert to SQL (for debugging/logging)
+  const compiled = query.toSQL();
+  logger.info("getOngoingTournaments SQL:", compiled.sql);
+  logger.info("getOngoingTournaments params:", compiled.params);
+
+  // 3) Execute the query
+  const ongoingTournies = await query;
+  logger.info("Ongoing tournaments =>", ongoingTournies);
+
+  return ongoingTournies;
+};
+
+/**
+ * Get the first "ongoing" tournament matching the given gameId & prizeType.
+ * Ongoing condition is up to you:
+ *  - eq(tournaments.state, "Active"), or
+ *  - tournaments.endDate > now(), etc.
+ *
+ * @param gameId    - The local gameId from 'games' table
+ * @param prizeType - The prize type (e.g. "Coin", "None", etc.)
+ * @returns A single tournament row or null if none found
+ */
+export const getOneOngoingTournamentByGameAndPrizeType = async (
+  gameId: number,
+  prizeType: (typeof prizeTypeEnum.enumValues)[number]
+): Promise<TournamentsRow | null> => {
+  // Example condition: "state = 'Active'"
+  // Adjust as needed for your definition of "ongoing"
+  const [row] = await db
+    .select()
+    .from(tournaments)
+    .where(
+      and(
+        eq(tournaments.gameId, gameId),
+        eq(tournaments.prizeType, prizeType),
+        eq(tournaments.state, "Active") // or check tournaments.endDate > new Date()
+      )
+    )
+    .orderBy(tournaments.id) // Ascending by default
+    .limit(1); // Return the first record
+
+  return row ?? null;
+};
+
 export const tournamentsDB = {
   addTournament,
   getTournamentById,
@@ -229,5 +297,7 @@ export const tournamentsDB = {
   getTournamentsEndingAfter,
   updateTournamentTx,
   updateActivityIdTrx,
-  getTournamentsByIds, // added new function to the exported object
+  getTournamentsByIds,
+  getOngoingTournaments,
+  getOneOngoingTournamentByGameAndPrizeType,
 };

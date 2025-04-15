@@ -15,9 +15,10 @@ import { trpc } from "../_trpc/client";
 
 import { cn } from "@/utils";
 import { useMemo } from "react";
+import { Banner } from "../(landing-pages)/genesis-onions/_components/Banner";
+import { Play2WinGenesisBanner } from "../(landing-pages)/play2win-genesis/_components/Play2WinGenesisBanner";
 import CustomSwiper from "../_components/CustomSwiper";
 import EventCardSkeleton from "../_components/EventCard/EventCardSkeleton";
-import { Banner } from "../(landing-pages)/genesis-onions/_components/Banner";
 
 export default function Home() {
   return (
@@ -27,7 +28,8 @@ export default function Home() {
           <SearchBar />
         </div>
 
-        <Banner className="mt-3 mb-6" />
+        <Banner className="mt-3 mb-4" />
+        <Play2WinGenesisBanner className="w-full mb-6" />
 
         <div className=" flex-grow">
           <div className="flex-grow flex flex-col gap-6">
