@@ -23,6 +23,7 @@ type Play2WinData = {
   userScore: number;
   maxScore: number;
   userPlayed: boolean;
+  reachedMaxScore: boolean;
 };
 
 const mockData = {
@@ -35,13 +36,14 @@ const mockData = {
     gameTitle: "Sweet Rush",
     ticketPrice: "0.5 TON",
     reward: "$150",
-    threshold: ">1500 xp",
+    threshold: ">1500",
     gameLink: "#",
   },
   nftReserved: 66,
   userScore: 0,
   maxScore: 1500,
   userPlayed: true,
+  reachedMaxScore: false,
 } satisfies Play2WinData;
 
 const Play2WinContext = createContext<Play2WinData>(mockData);
@@ -91,6 +93,7 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
         userScore: userScoreQuery.data?.maxScore.maxScore ?? 0,
         nftReserved: reservedNFTs.data?.total ?? 0,
         userPlayed: Boolean(userScoreQuery.data?.maxScore.maxScore),
+        reachedMaxScore: (userScoreQuery.data?.maxScore.maxScore ?? 0) >= data.maxScore,
       }}
     >
       {children}
