@@ -10,6 +10,7 @@ import WelcomeHeader from "./_components/WelcomeHeader";
 
 import Image from "next/image";
 import { Play2WinProvider } from "./_components/Play2WinContext";
+import ScoreProgress from "./_components/ScoreProgress";
 import Timer from "./_components/Timer";
 import "./page.css";
 
@@ -30,7 +31,7 @@ function Play2WinApp() {
           <div className="relative w-full flex flex-col items-center gap-3 ">
             <Timer />
             <GameCard />
-            {/* ScoreProgress left as is, implement context if needed */}
+            <ScoreProgress />
             <NFTDisplay />
             <Play2WinCard />
             <div className="absolute -left-12 -z-10 opacity-30 h-full w-[] -right-18 bottom-0">

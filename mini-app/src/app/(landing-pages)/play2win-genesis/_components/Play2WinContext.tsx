@@ -14,8 +14,12 @@ type Play2WinData = {
     ticketPrice: string;
     reward: string;
     threshold: string;
+    gameLink: string;
   };
   nftReserved: number;
+  userScore: number;
+  maxScore: number;
+  userPlayed: boolean;
 };
 
 const mockData: Play2WinData = {
@@ -29,8 +33,12 @@ const mockData: Play2WinData = {
     ticketPrice: "0.5 TON",
     reward: "$150",
     threshold: ">1500 xp",
+    gameLink: "#",
   },
   nftReserved: 66,
+  userScore: 480,
+  maxScore: 1500,
+  userPlayed: true,
 };
 
 const Play2WinContext = createContext<Play2WinData>(mockData);
@@ -38,10 +46,8 @@ const Play2WinContext = createContext<Play2WinData>(mockData);
 export const usePlay2Win = () => useContext(Play2WinContext);
 
 export const Play2WinProvider = ({ children }: { children: React.ReactNode }) => {
-  // Fetch real data in here
   const [data, setData] = useState<Play2WinData>(mockData);
 
-  // For the sake of the timer
   useEffect(() => {
     if (data.contest.noGame) return;
     let timer: NodeJS.Timeout;
