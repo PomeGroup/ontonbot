@@ -256,4 +256,18 @@ export const tournamentsRouter = router({
       // Return the found tournament or null if none
       return tourney;
     }),
+  /**
+   * Returns the total count of users in a given play2win campaign type.
+   */
+  getCampaignUserCount: initDataProtectedProcedure
+    .input(
+      z.object({
+        campaignType: z.enum(play2winCampaignType.enumValues).default(PLAY2WIN_DEFAULT_CAMPAIGN_TYPE),
+      })
+    )
+    .query(async (opts) => {
+      const campaignType = opts.input.campaignType ?? PLAY2WIN_DEFAULT_CAMPAIGN_TYPE;
+      const total = await play2winCampaignsDB.countUsersInCampaignType(campaignType);
+      return { total };
+    }),
 });
