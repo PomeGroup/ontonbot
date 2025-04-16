@@ -49,22 +49,22 @@ export async function checkAndEnrollUserInPlay2WinCampaign(): Promise<void> {
   // groupBy to ensure distinct user IDs if they have multiple rows
 
   // 2) Find order-eligible users
-  const orderEligible = await db
-    .select({
-      userId: tokenCampaignOrders.userId,
-    })
-    .from(tokenCampaignOrders)
-    .where(
-      eq(tokenCampaignOrders.status, "completed") // or your final state for "completed"
-    )
-    .groupBy(tokenCampaignOrders.userId);
+  // const orderEligible = await db
+  //   .select({
+  //     userId: tokenCampaignOrders.userId,
+  //   })
+  //   .from(tokenCampaignOrders)
+  //   .where(
+  //     eq(tokenCampaignOrders.status, "completed") // or your final state for "completed"
+  //   )
+  //   .groupBy(tokenCampaignOrders.userId);
   // groupBy for distinct user IDs
 
   // Combine both sets
   const scoreboardSet = new Set(scoreboardEligible.map((row) => row.userId));
-  const orderSet = new Set(orderEligible.map((row) => row.userId));
+  // const orderSet = new Set(orderEligible.map((row) => row.userId));
 
-  const allEligibleUserIds = new Set<number>([...scoreboardSet, ...orderSet]);
+  const allEligibleUserIds = new Set<number>([...scoreboardSet /*...orderSet*/]);
 
   if (allEligibleUserIds.size === 0) {
     logger.info("No new users found eligible for Play2Win campaign.");
@@ -126,7 +126,7 @@ export async function checkAndEnrollUserInPlay2WinCampaign(): Promise<void> {
 
   // Send a message to each newly-enrolled user
   for (const uid of newlyEligible) {
-    const messageText = `Congratulations! You have been enrolled in the Play2Win campaign and will receive a "${collection.name}" NFT.`;
+    const messageText = `💥 Congratulations\n Your Play2Win NFT reserved to be minted because you reached the threshold in sweet Rush tournament .`;
     const rowForSend = {
       telegramUserId: String(uid), // if the actual Telegram chat_id differs, you'll need to map it
       rewardLink,
