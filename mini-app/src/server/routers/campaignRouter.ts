@@ -319,6 +319,7 @@ export const campaignRouter = router({
 
   getOnionCampaignAffiliateData: initDataProtectedProcedure.query(async ({ ctx }) => {
     // 1) Check user
+
     const userId = ctx.user?.user_id;
 
     // 2) See if there's already a link for onion1-campaign
@@ -333,20 +334,17 @@ export const campaignRouter = router({
           message: `CAMPAIGN_LOG:Router:getOnionCampaignAffiliateData: Failed to create affiliate link for userId ${userId}`,
         });
       }
-
-      await affiliateClicksDB.enqueueClick(link.linkHash, userId);
-
-      logger.info(
+      logger.log(
         `CAMPAIGN_LOG:Router:getOnionCampaignAffiliateData: Created affiliate link for userId ${userId}: ${link.linkHash}`
       );
     }
-
+    await affiliateClicksDB.enqueueClick(link.linkHash, userId);
     // 4) Sum the spin counts from completed orders with this linkHash
     const totalSpins = await tokenCampaignOrdersDB.sumSpinCountByAffiliateHash(link.linkHash);
     const botUserName = process.env.NEXT_PUBLIC_BOT_USERNAME || "theontonbot";
     // 5) Return data
     return {
-      linkHash: `https://t.me/${botUserName}/event?startapp=campaign-aff-${link.linkHash}`,
+      linkHash: `https://t.me/${botUserName}/eeevent?startapp=campaign-aff-${link.linkHash}`,
       totalSpins,
     };
   }),
