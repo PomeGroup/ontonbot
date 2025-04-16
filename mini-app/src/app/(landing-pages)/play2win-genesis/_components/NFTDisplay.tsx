@@ -39,7 +39,7 @@ export default function NFTDisplay() {
       <p className="text-white max-w-[282px] text-center text-xs mx-auto">
         {reachedMaxScore
           ? "You’re a part of elite league now!"
-          : "Claim Your Play2Win NFT by passing the points required for NFT”, join the elite league of players."}
+          : "Claim Your Play2Win NFT by passing the points required for NFT, join the elite league of players."}
       </p>
     </div>
   );
