@@ -100,8 +100,6 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
       const endDate = new Date(play2winGameQuery.data?.endDate!);
       const { hours, minutes, seconds } = getTimeLeft(endDate);
 
-      console.log("prize pool", play2winGameQuery.data?.currentPrizePool);
-
       const roundedReward = play2winGameQuery.data?.currentPrizePool
         ? Math.round(+fromNano(play2winGameQuery.data?.currentPrizePool + Number.EPSILON) * 100) / 100
         : 0;
