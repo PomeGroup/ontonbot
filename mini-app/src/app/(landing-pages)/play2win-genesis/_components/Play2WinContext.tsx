@@ -100,13 +100,16 @@ export const Play2WinProvider = ({ children }: { children: React.ReactNode }) =>
       const endDate = new Date(play2winGameQuery.data?.endDate!);
       const { hours, minutes, seconds } = getTimeLeft(endDate);
 
+      const roundedReward =
+        Math.round(+fromNano(play2winGameQuery.data?.currentPrizePool ?? 0 + Number.EPSILON) * 100) / 100;
+
       setData((prev) => ({
         ...prev,
         contest: {
           ...prev.contest,
           gameLink: play2winGameQuery.data?.tournamentLink ?? "#",
           noGame: !Boolean(play2winGameQuery.data?.tournamentLink),
-          reward: `${fromNano(play2winGameQuery.data?.currentPrizePool ?? 0) ?? 0} TON`,
+          reward: `${roundedReward} TON`,
           ticketPrice: `${fromNano(play2winGameQuery.data?.entryFee ?? 0)} TON`,
           dataFetchStatus: play2winGameQuery.status,
           hours,
